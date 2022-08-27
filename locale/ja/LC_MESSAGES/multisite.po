@@ -1853,11 +1853,6 @@ msgid "A comment or description of this host"
 msgstr "このホストのコメントまたは説明"
 
 msgid ""
-"A compact dashboard which lists your unhandled host and service problems."
-msgstr ""
-"未処理のホストとサービスの問題を一覧表示するコンパクトなダッシュボード。"
-
-msgid ""
 "A couple of switches with broken firmware report that they support 64 bit "
 "counters but do not output any actual data in those counters. Listing those "
 "hosts in this rule forces them to use the interface check with 32 bit "
@@ -2020,11 +2015,6 @@ msgid "A report can not reference itself"
 msgstr "レポートはそれ自体を参照できません"
 
 msgid ""
-"A report showing the availability of the services of an\n"
-"arbitrary view."
-msgstr "任意のビューのサービスの可用性を示すレポート。"
-
-msgid ""
 "A restore is currently running. You can only delete backups while no restore "
 "is running."
 msgstr ""
@@ -2168,14 +2158,6 @@ msgstr "IDが\"%s\"のユーザーは存在しません。"
 
 msgid "A value in seconds"
 msgstr "秒単位の値"
-
-#, python-format
-msgid "A view for searching in the inventory data for %s"
-msgstr "インベントリデータで %sを検索するためのビュー"
-
-#, python-format
-msgid "A view for the %s of one host"
-msgstr "1つのホストの%sのビュー"
 
 msgid "A/V Auth - Bad Requests Received"
 msgstr "A/V 認証 - 不正なリクエストを受信しました"
@@ -4067,9 +4049,6 @@ msgstr "エージェントの署名キー"
 
 msgid "Agent signing"
 msgstr "エージェントの署名"
-
-msgid "Agent update status"
-msgstr "エージェントの更新ステータス"
 
 msgid "Agent updater (Linux, Windows, Solaris)"
 msgstr "エージェントアップデーター(Linux、Windows、Solaris)"
@@ -6085,9 +6064,6 @@ msgstr "1つのホストの影響を受けるBIアグリゲーション"
 msgid "BI Aggregations containing this %s"
 msgstr "この %s を含むBIアグリゲーション"
 
-msgid "BI Availability"
-msgstr "BI の可用性"
-
 msgid "BI Configuration Packs"
 msgstr "BI Configurationパック"
 
@@ -6115,9 +6091,6 @@ msgstr "BIコンパイル"
 msgid "BI configuration"
 msgstr "BI設定"
 
-msgid "BI host details"
-msgstr "BIホストの詳細"
-
 msgid "BI pack"
 msgstr "BIパック"
 
@@ -6133,9 +6106,6 @@ msgstr "BIルールまたは集計"
 #, python-format
 msgid "BI rules %s from BI pack '%s'"
 msgstr "BIルール %s BIパックからの '%s'"
-
-msgid "BI service details"
-msgstr "BIサービスの詳細"
 
 msgid "BI visualization"
 msgstr "BIの視覚化"
@@ -10061,10 +10031,6 @@ msgid "Configured timeperiod parameters"
 msgstr "構成された期間パラメーター"
 
 msgid ""
-"Configures the number of available filters in the network topology view."
-msgstr "ネットワークトポロジビューで使用可能なフィルタの数を設定します。"
-
-msgid ""
 "Configures the roles of the user depending on its group memberships in LDAP."
 "<br><br>Please note: Additionally the user is assigned to the <a href=\"wato."
 "py?mode=edit_configvar&varname=default_user_profile&site=&folder=\">Default "
@@ -11156,9 +11122,6 @@ msgstr "作成された新しいユーザー: %s"
 msgid "Created snapshot %s"
 msgstr "作成されたスナップショット%s"
 
-msgid "Created with Checkmk Version $CHECK_MK_VERSION$"
-msgstr "Checkmkバージョン$ CHECK_MK_VERSION $で作成"
-
 msgid ""
 "Creates a new service that displays information about disk I/O of database "
 "files. This service displays the number of bytes read and written to "
@@ -11367,9 +11330,6 @@ msgstr "現在のパスワード"
 msgid "Current Users"
 msgstr "現在のユーザー"
 
-msgid "Current agent update status of all registered hosts."
-msgstr "登録されているすべてのホストの現在のエージェント更新ステータス。"
-
 msgid "Current check attempt"
 msgstr "現在のチェックの試み"
 
@@ -11471,12 +11431,6 @@ msgstr "現在、このCheckmkエディションではサポートされてい�
 
 msgid "Currently open connections"
 msgstr "現在開いている接続"
-
-msgid "Currently open events of a host that is monitored"
-msgstr "監視されているホストの現在開いているイベント"
-
-msgid "Currently open events of one specific host"
-msgstr "1つの特定のホストの現在開いているイベント"
 
 msgid "Currently running"
 msgstr "現在実行中"
@@ -12273,6 +12227,10 @@ msgstr "データガード統計"
 msgid "Datasource"
 msgstr "データソース"
 
+#, fuzzy
+msgid "Datasource status"
+msgstr "データソース: %s"
+
 #, python-format
 msgid "Datasource: %s"
 msgstr "データソース: %s"
@@ -12499,9 +12457,6 @@ msgstr "トンネルが見つからなくなったときに報告するデフォ
 
 msgid "Default table layout"
 msgstr "デフォルトのテーブルレイアウト"
-
-msgid "Default template for all reports"
-msgstr "すべてのレポートのデフォルトテンプレート"
 
 msgid "Default theme color"
 msgstr "デフォルトのテーマの色"
@@ -13421,12 +13376,6 @@ msgstr "詳細"
 #, fuzzy
 msgid "Details (Previously named: long output)"
 msgstr "詳細(以前の名前:長い出力)"
-
-msgid "Details about a historical event history entry"
-msgstr "履歴イベントエントリの詳細"
-
-msgid "Details about one event"
-msgstr "1つのイベントの詳細"
 
 msgid "Detect network parent hosts"
 msgstr "ネットワークの親ホストを検出する"
@@ -16743,14 +16692,8 @@ msgstr "イベントの作成"
 msgid "Event database"
 msgstr "イベントデータベース"
 
-msgid "Event details"
-msgstr "イベントの詳細"
-
 msgid "Event handlers"
 msgstr "イベントハンドラー"
-
-msgid "Event history entry"
-msgstr "イベント履歴エントリ"
 
 msgid "Event history icons"
 msgstr "アイコンのイベント履歴"
@@ -16760,9 +16703,6 @@ msgstr "イベント履歴の存続期間"
 
 msgid "Event history logfile rotation"
 msgstr "イベント履歴ログファイルのローテーション"
-
-msgid "Event history of host"
-msgstr "ホストのイベント履歴"
 
 msgid "Event icons"
 msgstr "イベントアイコン"
@@ -16793,20 +16733,8 @@ msgstr "ホスト %s でのアプリケーション \"%s\"のイベント"
 msgid "Events of Host %s"
 msgstr "ホスト %sのイベント"
 
-msgid "Events of host"
-msgstr "ホストのイベント"
-
-msgid "Events of host & services"
-msgstr "ホストとサービスのイベント"
-
-msgid "Events of monitored host"
-msgstr "監視対象ホストのイベント"
-
 msgid "Events of recent 4 hours"
 msgstr "最近の4時間のイベント"
-
-msgid "Events of service"
-msgstr "サービスのイベント"
 
 msgid "Events: Hostname"
 msgstr "イベント:ホスト名"
@@ -17057,9 +16985,6 @@ msgstr "実行間隔"
 
 msgid "Execution of checks"
 msgstr "チェックの実行"
-
-msgid "Execution time of Checkmk Agent"
-msgstr "Checkmkエージェントの実行時間"
 
 msgid "Executive"
 msgstr ""
@@ -19216,6 +19141,9 @@ msgstr "ツリーレベルを1つ上げます"
 msgid "Going to update %d sites"
 msgstr "%dサイトを更新します"
 
+msgid "Good"
+msgstr ""
+
 msgid "Google Cloud Platform"
 msgstr ""
 
@@ -19728,9 +19656,6 @@ msgstr "ハードドライブの修正不可能なエラー"
 
 msgid "Hardware"
 msgstr "ハードウェア"
-
-msgid "Hardware & Software Tree"
-msgstr "ハードウェアとソフトウェアツリー"
 
 msgid "Hardware / Software Inventory"
 msgstr "ハードウェア/ソフトウェア インベントリ"
@@ -20679,20 +20604,11 @@ msgstr "ヒストリー"
 msgid "History Line Number"
 msgstr "履歴行番号"
 
-msgid "History entries of one specific event"
-msgstr "1つの特定のイベントの履歴エントリ"
-
-msgid "History entries of one specific host"
-msgstr "1つの特定のホストの履歴エントリ"
-
 msgid "History log rotation: Regular interval of rotations"
 msgstr "履歴ログローテーション:定期的なローテーション間隔"
 
 msgid "History log rotation: Rotate by size (Limit of the size)"
 msgstr "履歴ログローテーション:サイズで回転(サイズの制限)"
-
-msgid "History of Event"
-msgstr "イベントの履歴"
 
 msgid "History of hardware/software inventory"
 msgstr "ハードウェア/ソフトウェアインベントリの履歴"
@@ -20764,9 +20680,6 @@ msgstr ""
 #, python-format
 msgid "Host %s not known in ntopng"
 msgstr "ntopngでホスト %s が不明"
-
-msgid "Host & service problems"
-msgstr "ホストとサービスの問題"
 
 msgid "Host Address"
 msgstr "ホストアドレス"
@@ -20958,9 +20871,6 @@ msgstr "ホストが再び上がる"
 msgid "Host graph"
 msgstr "ホストグラフ"
 
-msgid "Host graphs"
-msgstr "ホストグラフ"
-
 msgid "Host group"
 msgstr "ホストグループ"
 
@@ -20982,12 +20892,6 @@ msgstr "ホストグループ、統合"
 #, python-format
 msgid "Host has tag <b>%s</b>"
 msgstr "ホストにはタグ<b>%s</b>があります"
-
-msgid "Host hover menu shown in BI visualization"
-msgstr "BI視覚化に表示されるホストホバーメニュー"
-
-msgid "Host hover menu shown in topolgoy visualization"
-msgstr "トポロジーの視覚化で表示されるホストホバーメニュー"
 
 msgid "Host icons"
 msgstr "ホストアイコン"
@@ -21103,9 +21007,6 @@ msgstr "ホストのパフォーマンスデータ"
 msgid "Host problem acknowledged"
 msgstr "ホストの問題が確認されました"
 
-msgid "Host problems (all)"
-msgstr ""
-
 msgid "Host problems (unhandled)"
 msgstr ""
 
@@ -21127,9 +21028,6 @@ msgstr "複数のホストのホストレポート"
 
 msgid "Host running Event Console"
 msgstr "イベントコンソールを実行しているホスト"
-
-msgid "Host search"
-msgstr "ホスト検索"
 
 msgid "Host service level"
 msgstr "ホストサービスレベル"
@@ -23898,10 +23796,6 @@ msgstr ""
 msgid "Info"
 msgstr "インフォ"
 
-msgid ""
-"Information about events and actions on events during the recent 24 hours."
-msgstr "最近24時間のイベントおよびイベントに対するアクションに関する情報。"
-
 msgid "Information about size, age and count of files"
 msgstr "ファイルのサイズ、経過時間、数に関する情報"
 
@@ -24080,6 +23974,10 @@ msgid "Installation paths for agent files (Linux, UNIX)"
 msgstr "エージェントファイルのインストールパス(Linux、UNIX)"
 
 msgid "Installed Agent"
+msgstr "インストールされたエージェント"
+
+#, fuzzy
+msgid "Installed RAM"
 msgstr "インストールされたエージェント"
 
 #, python-format
@@ -26440,9 +26338,6 @@ msgstr "Linuxボンディングインターフェースのステータス"
 msgid "Linux distributions"
 msgstr "Linuxディストリビューション"
 
-msgid "Linux hosts"
-msgstr "Linuxホスト"
-
 msgid "Linux interfaces"
 msgstr "Linuxインターフェース"
 
@@ -27518,12 +27413,6 @@ msgstr "メール受信率"
 
 msgid "Main"
 msgstr ""
-
-msgid "Main Overview"
-msgstr "主な概要"
-
-msgid "Main dashboard"
-msgstr "メインダッシュボード"
 
 msgid "Main folder"
 msgstr "メインフォルダ"
@@ -30259,10 +30148,6 @@ msgstr "ネットワーク統計と %s のフロー"
 msgid "Network topology"
 msgstr "ネットワークトポロジー"
 
-#, python-format
-msgid "Network topology of site %s"
-msgstr "ネットワークトポロジ　サイト %s"
-
 msgid "Networking"
 msgstr "ネットワーキング"
 
@@ -31328,12 +31213,6 @@ msgstr "この %s の通知は手動で有効になります"
 msgid ""
 "Notifications are sent out when the status of a host or service changes."
 msgstr "ホストまたはサービスのステータスが変更されると、通知が送信されます。"
-
-msgid "Notifications of contact"
-msgstr "連絡先の通知"
-
-msgid "Notifications of host & services"
-msgstr "ホストとサービスの通知"
 
 msgid "Notified events for hosts"
 msgstr "ホストに通知されたイベント"
@@ -35081,9 +34960,6 @@ msgstr "問題 %s"
 msgid "Problem alerts"
 msgstr "問題のアラート"
 
-msgid "Problem dashboard"
-msgstr "問題のダッシュボード"
-
 msgid "Problem details"
 msgstr "問題の詳細"
 
@@ -35978,9 +35854,6 @@ msgstr "受信メール"
 msgid "Received messages"
 msgstr "受信したメッセージ"
 
-msgid "Recent event history"
-msgstr "最近のイベント履歴"
-
 msgid "Recent hardware/software inventory"
 msgstr "最近のハードウェア/ソフトウェアインベントリ"
 
@@ -36780,17 +36653,6 @@ msgstr "レポート"
 msgid "Report Properties"
 msgstr "レポートのプロパティ"
 
-msgid ""
-"Report created $NOW_DATE$ $NOW_TIME$ by $USER_ALIAS$ ($USER_ID$)\n"
-"\n"
-"Timerange: $RANGE_TITLE$ - from $FROM_DATE$ $FROM_TIME$ until $UNTIL_DATE$ "
-"$UNTIL_TIME$"
-msgstr ""
-"レポートが作成されました $NOW_DATE$ $NOW_TIME$ by $USER_ALIAS$ ($USER_ID$)\n"
-"\n"
-"時間範囲: $RANGE_TITLE$ - from $FROM_DATE$ $FROM_TIME$ until $UNTIL_DATE$ "
-"$UNTIL_TIME$"
-
 msgid "Report generation"
 msgstr "レポートの生成"
 
@@ -36805,12 +36667,6 @@ msgstr "%s / %sのレポート生成"
 msgid "Report generation started in background job <a href=\"%s\">%s</a>"
 msgstr ""
 "レポートの生成はバックグラウンドジョブ<a href=\"%s\">%s</a>で開始されました"
-
-msgid "Report of Host"
-msgstr "ホストのレポート"
-
-msgid "Report of Host Performance Graphs"
-msgstr "ホストパフォーマンスグラフのレポート"
 
 msgid "Report options"
 msgstr "レポートオプション"
@@ -38230,10 +38086,6 @@ msgstr "Nagiosplugisを統合するためのスクリプト"
 msgid "Search"
 msgstr "探す"
 
-#, python-format
-msgid "Search %s"
-msgstr "%s を検索"
-
 msgid "Search all entries one level below the base DN"
 msgstr "ベースDNの1レベル下のすべてのエントリを検索します"
 
@@ -38847,9 +38699,6 @@ msgstr "サービス"
 msgid "Service %s"
 msgstr "サービス %s"
 
-msgid "Service Availability"
-msgstr "サービスの可用性"
-
 msgid "Service Checks"
 msgstr "サービスチェック"
 
@@ -38897,9 +38746,6 @@ msgstr "サービスメトリクス"
 
 msgid "Service Name"
 msgstr "サービス名"
-
-msgid "Service Notifications"
-msgstr "サービス通知"
 
 msgid "Service Perf-O-Meter"
 msgstr "サービス Perf-O-Meter"
@@ -39057,9 +38903,6 @@ msgstr "サービスがメンバーであるサービスグループ"
 msgid "Service groups, merged"
 msgstr "統合されたサービスグループ"
 
-msgid "Service hover menu shown in BI visualization"
-msgstr "BIビジュアライゼーションに表示されるサービスホバーメニュー"
-
 msgid "Service icons"
 msgstr "サービスアイコン"
 
@@ -39137,9 +38980,6 @@ msgstr "サービスプラグインの出力"
 msgid "Service problem acknowledged"
 msgstr "サービスの問題が確認されました"
 
-msgid "Service problems (all)"
-msgstr ""
-
 msgid "Service problems (unhandled)"
 msgstr ""
 
@@ -39151,9 +38991,6 @@ msgstr "複数のサービスのサービスレポート"
 
 msgid "Service retry check interval"
 msgstr "サービス再試行チェック間隔"
-
-msgid "Service search"
-msgstr "サービス検索"
 
 msgid "Service service level"
 msgstr "サービス サービスレベル"
@@ -40157,14 +39994,8 @@ msgstr "サービス出力にボリューム名を表示する"
 msgid "Show/Hide password"
 msgstr "パスワードの表示/非表示"
 
-msgid ""
-"Shows all graphs including timerange selections of a collection of services."
-msgstr ""
-"サービスのコレクションの時間範囲の選択を含むすべてのグラフを表示します。"
-
-msgid ""
-"Shows host graphs including timerange selections of a collection of hosts."
-msgstr "ホストコレクションの時間範囲の選択を含むホストグラフを表示します。"
+msgid "Shows number of alerts grouped for each service."
+msgstr "サービスごとにグループ化されたアラートの数を表示します。"
 
 msgid "Shows the Checkmk logo."
 msgstr ""
@@ -40359,12 +40190,6 @@ msgstr "シングル"
 
 msgid "Single Bit (BOOL)"
 msgstr "シングルビット(BOOL)"
-
-msgid "Single Linux host"
-msgstr ""
-
-msgid "Single Windows host"
-msgstr "単一Windowsホスト"
 
 msgid "Single dataset"
 msgstr "単一のデータセット"
@@ -42704,6 +42529,9 @@ msgstr "通りの名前"
 msgid "Street number"
 msgstr "ストリート番号"
 
+msgid "Strength:"
+msgstr ""
+
 msgid "Strict - Visible if all members are visible"
 msgstr ""
 
@@ -42739,6 +42567,9 @@ msgstr "応答として期待される文字列"
 
 msgid "Strings to expect in server response"
 msgstr "サーバーの応答で予期される文字列"
+
+msgid "Strong"
+msgstr ""
 
 msgid "Style"
 msgstr "スタイル"
@@ -43344,9 +43175,6 @@ msgstr "テーブルの絶対膨満レベル"
 msgid "Table of Contents (only active in frontmatter templates)"
 msgstr "目次(frontmatterテンプレートでのみアクティブ)"
 
-msgid "Table of all currently open events (handled and unhandled)"
-msgstr ""
-
 msgid "Table of available text macros"
 msgstr "利用可能なテキストマクロの表"
 
@@ -43604,18 +43432,6 @@ msgstr "温度、湿度、電気的パラメータなど。"
 
 msgid "Temperatures of NVIDIA graphics card"
 msgstr "NVIDIAグラフィックカードの温度"
-
-msgid "Template for PDF exporting"
-msgstr "PDFエクスポート用のテンプレート"
-
-msgid "Template for PDF exporting of availability views"
-msgstr "可用性ビューのPDFエクスポート用のテンプレート"
-
-msgid "Template for PDF exporting of graph collections"
-msgstr "グラフコレクションのPDFエクスポート用のテンプレート"
-
-msgid "Template for PDF exporting of views"
-msgstr "ビューのPDFエクスポート用のテンプレート"
 
 msgid "Template graphs"
 msgstr "テンプレートグラフ"
@@ -44680,11 +44496,13 @@ msgid ""
 msgstr ""
 "セル間隔は、<b>no</b>ルールがレンダリングされている場合にのみ適用されます。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "The central (Version: %s, Edition: %s) and remote site (Version: %s, "
-"Edition: %s) are not compatible"
+"Edition: %s) are not compatible. Reason: %s"
 msgstr ""
+"中央サイト(バージョン:%s, エディション:%s)は、このリモートサイト(バージョン:"
+"%s, エディション:%s)と互換性がありません。"
 
 #, python-format
 msgid "The character <tt>%s</tt> is not allowed here."
@@ -48398,11 +48216,6 @@ msgstr ""
 msgid "This customer does not exist."
 msgstr "この顧客は存在しません。"
 
-msgid ""
-"This dashboard gives you a general overview on the state of your monitored "
-"devices."
-msgstr ""
-
 msgid "This defaults to the host for which the active check is configured."
 msgstr ""
 "これは、デフォルトでアクティブチェックが設定されているホストになります。"
@@ -49552,31 +49365,6 @@ msgstr ""
 
 msgid "This report element does not exist."
 msgstr "このレポート要素は存在しません。"
-
-msgid ""
-"This report shows the availability of BI aggregations in the time range "
-"\"$RANGE_TITLE$\"."
-msgstr ""
-"このレポートは、時間範囲\"$ RANGE_TITLE $\"でのBIアグリゲーションの可用性を示"
-"しています。"
-
-msgid ""
-"This report shows the service graphs of CPU load and utilization, Number of "
-"threads, Kernel Performance, OMD, Filesystem, Apache Status, TCP Connections "
-"within the time ranges 25 hours and 35 days of a single host."
-msgstr ""
-"このレポートには、単一ホストの25時間35日の時間範囲内での、CPU負荷と使用率、ス"
-"レッド数、カーネルパフォーマンス、OMD、ファイルシステム、Apacheステータス、"
-"TCP接続のサービスグラフが表示されます。"
-
-msgid ""
-"This report shows various information about one single host. It is not "
-"visible in the sidebar, because it needs a host to be called. Call it via a "
-"button at a view that is displaying one host."
-msgstr ""
-"このレポートには、1つのホストに関するさまざまな情報が表示されます。ホストを呼"
-"び出す必要があるため、サイドバーには表示されません。1つのホストを表示している"
-"ビューのボタンを介して呼び出します。"
 
 msgid ""
 "This report will be use only to describe the front matter of a report. It "
@@ -51731,6 +51519,10 @@ msgstr "トップ"
 msgid "Top Talkers"
 msgstr "トップトーカー"
 
+#, fuzzy
+msgid "Top alerters (last 7 days)"
+msgstr "過去8日間"
+
 msgid "Top application traffic: last day view"
 msgstr ""
 
@@ -51758,15 +51550,6 @@ msgstr "\"モニター\" メニューのトピック"
 
 msgid "Topics"
 msgstr "トピック"
-
-msgid "Toplogy host details"
-msgstr "トポロジホストの詳細"
-
-msgid "Topology"
-msgstr "トポロジー"
-
-msgid "Topology filters"
-msgstr "トポロジフィルター"
 
 msgid "Total"
 msgstr "合計"
@@ -52817,20 +52600,6 @@ msgid ""
 msgstr ""
 "ネストされたグループを同期できません(ユーザーベースDN \"%s\" とグループベース"
 "DN \"%s\"の共通ベースDNが見つかりません)"
-
-#, python-format
-msgid ""
-"Unable to transform dashlet %d of dashboard %s. You will need to migrate it "
-"on your own. Definition: %r"
-msgstr ""
-"ダッシュレット %d ダッシュボード %s の を変換できません。自分で移行する必要が"
-"あります。定義: %r"
-
-#, python-format
-msgid ""
-"Unable to transform dashlet %d of dashboard %s: the dashlet is using "
-"\"urlfunc\" which can not be converted automatically."
-msgstr ""
 
 #, python-format
 msgid "Unable to upload icon: %s"
@@ -55133,6 +54902,9 @@ msgstr "垂直方向のスペース"
 msgid "Vertical spacing"
 msgstr "垂直方向の間隔"
 
+msgid "Very Weak"
+msgstr ""
+
 msgid "Very high"
 msgstr ""
 
@@ -55646,6 +55418,9 @@ msgstr ""
 "たデータが欠落している場合、<b>消滅したサービス</b>。このルールは、ピギーバッ"
 "クされたホストデータの処理をより細かく制御するのに役立ちます。ソースホスト名"
 "は、条件フィールド<i>明示的ホスト</i>で設定する必要があります。"
+
+msgid "Weak"
+msgstr ""
 
 msgid "Web"
 msgstr "ウェブ"
@@ -56819,9 +56594,6 @@ msgstr "Windows認証"
 
 msgid "Windows files"
 msgstr "Windowsファイル"
-
-msgid "Windows hosts"
-msgstr "Windowsホスト"
 
 msgid "Windows printers: number of open jobs"
 msgstr "Windowsプリンター: 開いているジョブの数"
@@ -58832,10 +58604,18 @@ msgstr "%s が保存されました。"
 msgid "Your WebAuthn credential is already in use"
 msgstr "WebAuthn認証はすでに使用されています"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "Your central site (Version: %s, Edition: %s) is incompatible with this "
-"remote site (Version: %s, Edition: %s)"
+"remote site (Version: %s, Edition: %s). Reason: %s"
+msgstr ""
+"中央サイト(バージョン:%s, エディション:%s)は、このリモートサイト(バージョン:"
+"%s, エディション:%s)と互換性がありません。"
+
+#, fuzzy, python-format
+msgid ""
+"Your central site (Version: %s, Edition: %s) is incompatible with this "
+"remote site (Version: %s, Edition: %s): Reason: %s"
 msgstr ""
 "中央サイト(バージョン:%s, エディション:%s)は、このリモートサイト(バージョン:"
 "%s, エディション:%s)と互換性がありません。"
@@ -60935,6 +60715,245 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Hardware & Software Tree"
+#~ msgstr "ハードウェアとソフトウェアツリー"
+
+#~ msgid ""
+#~ "A compact dashboard which lists your unhandled host and service problems."
+#~ msgstr ""
+#~ "未処理のホストとサービスの問題を一覧表示するコンパクトなダッシュボード。"
+
+#~ msgid ""
+#~ "A report showing the availability of the services of an\n"
+#~ "arbitrary view."
+#~ msgstr "任意のビューのサービスの可用性を示すレポート。"
+
+#, python-format
+#~ msgid "A view for searching in the inventory data for %s"
+#~ msgstr "インベントリデータで %sを検索するためのビュー"
+
+#, python-format
+#~ msgid "A view for the %s of one host"
+#~ msgstr "1つのホストの%sのビュー"
+
+#~ msgid "Agent update status"
+#~ msgstr "エージェントの更新ステータス"
+
+#~ msgid "BI Availability"
+#~ msgstr "BI の可用性"
+
+#~ msgid "BI host details"
+#~ msgstr "BIホストの詳細"
+
+#~ msgid "BI service details"
+#~ msgstr "BIサービスの詳細"
+
+#~ msgid ""
+#~ "Configures the number of available filters in the network topology view."
+#~ msgstr "ネットワークトポロジビューで使用可能なフィルタの数を設定します。"
+
+#~ msgid "Created with Checkmk Version $CHECK_MK_VERSION$"
+#~ msgstr "Checkmkバージョン$ CHECK_MK_VERSION $で作成"
+
+#~ msgid "Current agent update status of all registered hosts."
+#~ msgstr "登録されているすべてのホストの現在のエージェント更新ステータス。"
+
+#~ msgid "Currently open events of a host that is monitored"
+#~ msgstr "監視されているホストの現在開いているイベント"
+
+#~ msgid "Currently open events of one specific host"
+#~ msgstr "1つの特定のホストの現在開いているイベント"
+
+#~ msgid "Default template for all reports"
+#~ msgstr "すべてのレポートのデフォルトテンプレート"
+
+#~ msgid "Details about a historical event history entry"
+#~ msgstr "履歴イベントエントリの詳細"
+
+#~ msgid "Details about one event"
+#~ msgstr "1つのイベントの詳細"
+
+#~ msgid "Event details"
+#~ msgstr "イベントの詳細"
+
+#~ msgid "Event history entry"
+#~ msgstr "イベント履歴エントリ"
+
+#~ msgid "Event history of host"
+#~ msgstr "ホストのイベント履歴"
+
+#~ msgid "Events of host"
+#~ msgstr "ホストのイベント"
+
+#~ msgid "Events of host & services"
+#~ msgstr "ホストとサービスのイベント"
+
+#~ msgid "Events of monitored host"
+#~ msgstr "監視対象ホストのイベント"
+
+#~ msgid "Events of service"
+#~ msgstr "サービスのイベント"
+
+#~ msgid "Execution time of Checkmk Agent"
+#~ msgstr "Checkmkエージェントの実行時間"
+
+#~ msgid "History entries of one specific event"
+#~ msgstr "1つの特定のイベントの履歴エントリ"
+
+#~ msgid "History entries of one specific host"
+#~ msgstr "1つの特定のホストの履歴エントリ"
+
+#~ msgid "History of Event"
+#~ msgstr "イベントの履歴"
+
+#~ msgid "Host & service problems"
+#~ msgstr "ホストとサービスの問題"
+
+#~ msgid "Host graphs"
+#~ msgstr "ホストグラフ"
+
+#~ msgid "Host hover menu shown in BI visualization"
+#~ msgstr "BI視覚化に表示されるホストホバーメニュー"
+
+#~ msgid "Host hover menu shown in topolgoy visualization"
+#~ msgstr "トポロジーの視覚化で表示されるホストホバーメニュー"
+
+#~ msgid "Host search"
+#~ msgstr "ホスト検索"
+
+#~ msgid ""
+#~ "Information about events and actions on events during the recent 24 hours."
+#~ msgstr "最近24時間のイベントおよびイベントに対するアクションに関する情報。"
+
+#~ msgid "Linux hosts"
+#~ msgstr "Linuxホスト"
+
+#~ msgid "Main Overview"
+#~ msgstr "主な概要"
+
+#~ msgid "Main dashboard"
+#~ msgstr "メインダッシュボード"
+
+#, python-format
+#~ msgid "Network topology of site %s"
+#~ msgstr "ネットワークトポロジ　サイト %s"
+
+#~ msgid "Notifications of contact"
+#~ msgstr "連絡先の通知"
+
+#~ msgid "Notifications of host & services"
+#~ msgstr "ホストとサービスの通知"
+
+#~ msgid "Problem dashboard"
+#~ msgstr "問題のダッシュボード"
+
+#~ msgid "Recent event history"
+#~ msgstr "最近のイベント履歴"
+
+#~ msgid ""
+#~ "Report created $NOW_DATE$ $NOW_TIME$ by $USER_ALIAS$ ($USER_ID$)\n"
+#~ "\n"
+#~ "Timerange: $RANGE_TITLE$ - from $FROM_DATE$ $FROM_TIME$ until $UNTIL_DATE"
+#~ "$ $UNTIL_TIME$"
+#~ msgstr ""
+#~ "レポートが作成されました $NOW_DATE$ $NOW_TIME$ by $USER_ALIAS$ ($USER_ID"
+#~ "$)\n"
+#~ "\n"
+#~ "時間範囲: $RANGE_TITLE$ - from $FROM_DATE$ $FROM_TIME$ until $UNTIL_DATE$ "
+#~ "$UNTIL_TIME$"
+
+#~ msgid "Report of Host"
+#~ msgstr "ホストのレポート"
+
+#~ msgid "Report of Host Performance Graphs"
+#~ msgstr "ホストパフォーマンスグラフのレポート"
+
+#, python-format
+#~ msgid "Search %s"
+#~ msgstr "%s を検索"
+
+#~ msgid "Service Availability"
+#~ msgstr "サービスの可用性"
+
+#~ msgid "Service Notifications"
+#~ msgstr "サービス通知"
+
+#~ msgid "Service hover menu shown in BI visualization"
+#~ msgstr "BIビジュアライゼーションに表示されるサービスホバーメニュー"
+
+#~ msgid "Service search"
+#~ msgstr "サービス検索"
+
+#~ msgid ""
+#~ "Shows all graphs including timerange selections of a collection of "
+#~ "services."
+#~ msgstr ""
+#~ "サービスのコレクションの時間範囲の選択を含むすべてのグラフを表示します。"
+
+#~ msgid ""
+#~ "Shows host graphs including timerange selections of a collection of hosts."
+#~ msgstr "ホストコレクションの時間範囲の選択を含むホストグラフを表示します。"
+
+#~ msgid "Single Windows host"
+#~ msgstr "単一Windowsホスト"
+
+#~ msgid "Template for PDF exporting"
+#~ msgstr "PDFエクスポート用のテンプレート"
+
+#~ msgid "Template for PDF exporting of availability views"
+#~ msgstr "可用性ビューのPDFエクスポート用のテンプレート"
+
+#~ msgid "Template for PDF exporting of graph collections"
+#~ msgstr "グラフコレクションのPDFエクスポート用のテンプレート"
+
+#~ msgid "Template for PDF exporting of views"
+#~ msgstr "ビューのPDFエクスポート用のテンプレート"
+
+#~ msgid ""
+#~ "This report shows the availability of BI aggregations in the time range "
+#~ "\"$RANGE_TITLE$\"."
+#~ msgstr ""
+#~ "このレポートは、時間範囲\"$ RANGE_TITLE $\"でのBIアグリゲーションの可用性"
+#~ "を示しています。"
+
+#~ msgid ""
+#~ "This report shows the service graphs of CPU load and utilization, Number "
+#~ "of threads, Kernel Performance, OMD, Filesystem, Apache Status, TCP "
+#~ "Connections within the time ranges 25 hours and 35 days of a single host."
+#~ msgstr ""
+#~ "このレポートには、単一ホストの25時間35日の時間範囲内での、CPU負荷と使用"
+#~ "率、スレッド数、カーネルパフォーマンス、OMD、ファイルシステム、Apacheス"
+#~ "テータス、TCP接続のサービスグラフが表示されます。"
+
+#~ msgid ""
+#~ "This report shows various information about one single host. It is not "
+#~ "visible in the sidebar, because it needs a host to be called. Call it via "
+#~ "a button at a view that is displaying one host."
+#~ msgstr ""
+#~ "このレポートには、1つのホストに関するさまざまな情報が表示されます。ホスト"
+#~ "を呼び出す必要があるため、サイドバーには表示されません。1つのホストを表示"
+#~ "しているビューのボタンを介して呼び出します。"
+
+#~ msgid "Toplogy host details"
+#~ msgstr "トポロジホストの詳細"
+
+#~ msgid "Topology"
+#~ msgstr "トポロジー"
+
+#~ msgid "Topology filters"
+#~ msgstr "トポロジフィルター"
+
+#, python-format
+#~ msgid ""
+#~ "Unable to transform dashlet %d of dashboard %s. You will need to migrate "
+#~ "it on your own. Definition: %r"
+#~ msgstr ""
+#~ "ダッシュレット %d ダッシュボード %s の を変換できません。自分で移行する必"
+#~ "要があります。定義: %r"
+
+#~ msgid "Windows hosts"
+#~ msgstr "Windowsホスト"
 
 #, fuzzy
 #~| msgid "Event details"
@@ -64387,9 +64406,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Shows details of a host."
 #~ msgstr "ホストの詳細を表示します。"
-
-#~ msgid "Shows number of alerts grouped for each service."
-#~ msgstr "サービスごとにグループ化されたアラートの数を表示します。"
 
 #~ msgid ""
 #~ "Simple summary page of all BI aggregates that is used as a web services."

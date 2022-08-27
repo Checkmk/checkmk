@@ -1975,12 +1975,6 @@ msgid "A comment or description of this host"
 msgstr "Un commento o una descrizione di questo ospite"
 
 msgid ""
-"A compact dashboard which lists your unhandled host and service problems."
-msgstr ""
-"Una dashboard compatta che elenca i vostri problemi di host e di servizio "
-"non gestiti."
-
-msgid ""
 "A couple of switches with broken firmware report that they support 64 bit "
 "counters but do not output any actual data in those counters. Listing those "
 "hosts in this rule forces them to use the interface check with 32 bit "
@@ -2157,13 +2151,6 @@ msgid "A report can not reference itself"
 msgstr "Un rapporto non può fare riferimento a se stesso"
 
 msgid ""
-"A report showing the availability of the services of an\n"
-"arbitrary view."
-msgstr ""
-"Un rapporto che mostra la disponibilità dei servizi di una\n"
-"vista arbitraria."
-
-msgid ""
 "A restore is currently running. You can only delete backups while no restore "
 "is running."
 msgstr ""
@@ -2316,14 +2303,6 @@ msgstr "Un utente con l'id \"%s\" non esiste."
 
 msgid "A value in seconds"
 msgstr "Un valore in secondi"
-
-#, python-format
-msgid "A view for searching in the inventory data for %s"
-msgstr "Una vista per cercare nei dati dell'inventario per %s"
-
-#, python-format
-msgid "A view for the %s of one host"
-msgstr "Una vista per il %s di un host"
 
 msgid "A/V Auth - Bad Requests Received"
 msgstr "Autorizzazione A/V - Richieste ricevute male"
@@ -4304,9 +4283,6 @@ msgstr "Chiavi di firma dell'agente"
 
 msgid "Agent signing"
 msgstr "Firma dell'agente"
-
-msgid "Agent update status"
-msgstr "Stato di aggiornamento dell'agente"
 
 msgid "Agent updater (Linux, Windows, Solaris)"
 msgstr "Agente di aggiornamento (Linux, Windows, Solaris)"
@@ -6425,9 +6401,6 @@ msgstr "Aggregazioni BI interessate da un host"
 msgid "BI Aggregations containing this %s"
 msgstr "Aggregazioni BI che contengono questo %s"
 
-msgid "BI Availability"
-msgstr "Disponibilità della BI"
-
 msgid "BI Configuration Packs"
 msgstr "Pacchetti di configurazione BI"
 
@@ -6456,9 +6429,6 @@ msgstr "Compilazione BI"
 msgid "BI configuration"
 msgstr "Configurazione BI"
 
-msgid "BI host details"
-msgstr "Dettagli sull'host della BI"
-
 msgid "BI pack"
 msgstr "Pacchetto BI"
 
@@ -6474,9 +6444,6 @@ msgstr "Regola o aggregazione di BI"
 #, python-format
 msgid "BI rules %s from BI pack '%s'"
 msgstr "Regole BI %s dal pacchetto BI \"%s"
-
-msgid "BI service details"
-msgstr "Dettagli del servizio BI"
 
 msgid "BI visualization"
 msgstr "Visualizzazione della BI"
@@ -10707,12 +10674,6 @@ msgid "Configured timeperiod parameters"
 msgstr "Parametri del periodo di tempo configurati"
 
 msgid ""
-"Configures the number of available filters in the network topology view."
-msgstr ""
-"Configura il numero di filtri disponibili nella vista della topologia della "
-"rete."
-
-msgid ""
 "Configures the roles of the user depending on its group memberships in LDAP."
 "<br><br>Please note: Additionally the user is assigned to the <a href=\"wato."
 "py?mode=edit_configvar&varname=default_user_profile&site=&folder=\">Default "
@@ -11855,9 +11816,6 @@ msgstr "Creati nuovi utenti: %s"
 msgid "Created snapshot %s"
 msgstr "Creata istantanea %s"
 
-msgid "Created with Checkmk Version $CHECK_MK_VERSION$"
-msgstr "Creato con la versione di Checkmk $CHECK_MK_VERSION$"
-
 msgid ""
 "Creates a new service that displays information about disk I/O of database "
 "files. This service displays the number of bytes read and written to "
@@ -12075,10 +12033,6 @@ msgstr "Password corrente"
 msgid "Current Users"
 msgstr "Utenti attuali"
 
-msgid "Current agent update status of all registered hosts."
-msgstr ""
-"Stato attuale di aggiornamento dell'agente di tutti gli host registrati."
-
 msgid "Current check attempt"
 msgstr "Tentativo di controllo corrente"
 
@@ -12179,12 +12133,6 @@ msgstr "Attualmente non supportato da questa edizione di Checkmk"
 
 msgid "Currently open connections"
 msgstr "Connessioni attualmente aperte"
-
-msgid "Currently open events of a host that is monitored"
-msgstr "Eventi attualmente aperti di un host che è monitorato"
-
-msgid "Currently open events of one specific host"
-msgstr "Eventi attualmente aperti di un host specifico"
 
 msgid "Currently running"
 msgstr "Attualmente in esecuzione"
@@ -13002,6 +12950,10 @@ msgstr "Statistiche Dataguard"
 msgid "Datasource"
 msgstr "Datasource"
 
+#, fuzzy
+msgid "Datasource status"
+msgstr "Fonte dati: %s"
+
 #, python-format
 msgid "Datasource: %s"
 msgstr "Fonte dati: %s"
@@ -13235,9 +13187,6 @@ msgstr ""
 
 msgid "Default table layout"
 msgstr "Layout predefinito della tabella"
-
-msgid "Default template for all reports"
-msgstr "Modello predefinito per tutti i rapporti"
 
 msgid "Default theme color"
 msgstr "Colore predefinito del tema"
@@ -14207,12 +14156,6 @@ msgstr "Dettagli"
 #, fuzzy
 msgid "Details (Previously named: long output)"
 msgstr "Dettagli (precedentemente chiamato: uscita lunga)"
-
-msgid "Details about a historical event history entry"
-msgstr "Dettagli su una voce della storia di un evento storico"
-
-msgid "Details about one event"
-msgstr "Dettagli su un evento"
 
 msgid "Detect network parent hosts"
 msgstr "Rileva gli host genitori della rete"
@@ -17685,16 +17628,8 @@ msgstr "Creazioni di eventi"
 msgid "Event database"
 msgstr "Banca dati degli eventi"
 
-#, fuzzy
-msgid "Event details"
-msgstr "Dettagli dell'evento"
-
 msgid "Event handlers"
 msgstr "Gestori di eventi"
-
-#, fuzzy
-msgid "Event history entry"
-msgstr "Registrazione della storia dell'evento"
 
 #, fuzzy
 msgid "Event history icons"
@@ -17705,9 +17640,6 @@ msgstr "Durata della storia degli eventi"
 
 msgid "Event history logfile rotation"
 msgstr "Rotazione del file di registro della storia degli eventi"
-
-msgid "Event history of host"
-msgstr "Storia dell'inventario dell'host"
 
 #, fuzzy
 msgid "Event icons"
@@ -17740,21 +17672,8 @@ msgstr "Eventi dell'applicazione \"%s\" sull'host %s"
 msgid "Events of Host %s"
 msgstr "Eventi di Host %s"
 
-msgid "Events of host"
-msgstr "Eventi dell'ospite"
-
-msgid "Events of host & services"
-msgstr "Eventi dell'ospite e dei servizi"
-
-#, fuzzy
-msgid "Events of monitored host"
-msgstr "Eventi dell'host monitorato"
-
 msgid "Events of recent 4 hours"
 msgstr "Eventi delle ultime 4 ore"
-
-msgid "Events of service"
-msgstr "Eventi di servizio"
 
 msgid "Events: Hostname"
 msgstr "Eventi: Hostname"
@@ -18014,9 +17933,6 @@ msgstr "Intervallo di esecuzione"
 
 msgid "Execution of checks"
 msgstr "Esecuzione di controlli"
-
-msgid "Execution time of Checkmk Agent"
-msgstr "Tempo di esecuzione di Checkmk Agent"
 
 msgid "Executive"
 msgstr "Esecutivo"
@@ -20285,6 +20201,9 @@ msgstr "Salire di un livello dell'albero"
 msgid "Going to update %d sites"
 msgstr "Aggiornamento di %d siti"
 
+msgid "Good"
+msgstr ""
+
 msgid "Google Cloud Platform"
 msgstr "Piattaforma cloud di Google"
 
@@ -20815,9 +20734,6 @@ msgstr "Errori non correggibili dell'hard disk"
 
 msgid "Hardware"
 msgstr "Hardware"
-
-msgid "Hardware & Software Tree"
-msgstr "Albero hardware e software"
 
 msgid "Hardware / Software Inventory"
 msgstr "Inventario hardware / software"
@@ -21883,12 +21799,6 @@ msgstr "Storia"
 msgid "History Line Number"
 msgstr "Numero di linea della storia"
 
-msgid "History entries of one specific event"
-msgstr "Voci della storia di un evento specifico"
-
-msgid "History entries of one specific host"
-msgstr "Voci della storia di un host specifico"
-
 msgid "History log rotation: Regular interval of rotations"
 msgstr "Rotazione del registro della storia: Intervallo regolare di rotazioni"
 
@@ -21896,9 +21806,6 @@ msgid "History log rotation: Rotate by size (Limit of the size)"
 msgstr ""
 "Rotazione del registro della storia: Ruota per dimensione (limite della "
 "dimensione)"
-
-msgid "History of Event"
-msgstr "Storia dell'evento"
 
 msgid "History of hardware/software inventory"
 msgstr "Storia dell'inventario hardware/software"
@@ -21971,9 +21878,6 @@ msgstr ""
 #, python-format
 msgid "Host %s not known in ntopng"
 msgstr "Host %s non conosciuto in ntopng"
-
-msgid "Host & service problems"
-msgstr "Problemi di host e di servizio"
 
 msgid "Host Address"
 msgstr "Indirizzo dell'host"
@@ -22169,9 +22073,6 @@ msgstr "L'ospite sale di nuovo"
 msgid "Host graph"
 msgstr "Grafico dell'ospite"
 
-msgid "Host graphs"
-msgstr "Grafici dell'host"
-
 msgid "Host group"
 msgstr "Gruppi ospitanti"
 
@@ -22196,12 +22097,6 @@ msgstr "Gruppi di host, fusi"
 #, python-format
 msgid "Host has tag <b>%s</b>"
 msgstr "L'host ha il tag <b>%s</b>"
-
-msgid "Host hover menu shown in BI visualization"
-msgstr "Menu hover mostrato nella visualizzazione BI"
-
-msgid "Host hover menu shown in topolgoy visualization"
-msgstr "Menu hover host mostrato nella visualizzazione topolgoy"
 
 msgid "Host icons"
 msgstr "Icone dell'host"
@@ -22317,10 +22212,6 @@ msgstr "Dati sulle prestazioni dell'host"
 msgid "Host problem acknowledged"
 msgstr "Problema dell'host riconosciuto"
 
-#, fuzzy
-msgid "Host problems (all)"
-msgstr "Problemi con l'host"
-
 msgid "Host problems (unhandled)"
 msgstr "Problemi con l'host (non gestiti)"
 
@@ -22343,9 +22234,6 @@ msgstr "Rapporto host per più host"
 
 msgid "Host running Event Console"
 msgstr "Host che esegue Event Console"
-
-msgid "Host search"
-msgstr "Ricerca dell'ospite"
 
 msgid "Host service level"
 msgstr "Livello di servizio dell'host"
@@ -25393,10 +25281,6 @@ msgstr "Escludi i gruppi di servizi"
 msgid "Info"
 msgstr "Info"
 
-msgid ""
-"Information about events and actions on events during the recent 24 hours."
-msgstr "Informazioni su eventi e azioni su eventi durante le ultime 24 ore."
-
 msgid "Information about size, age and count of files"
 msgstr "Informazioni su dimensioni, età e numero di file"
 
@@ -25590,6 +25474,10 @@ msgid "Installation paths for agent files (Linux, UNIX)"
 msgstr "Percorsi di installazione per i file dell'agente (Linux, UNIX)"
 
 msgid "Installed Agent"
+msgstr "Agente installato"
+
+#, fuzzy
+msgid "Installed RAM"
 msgstr "Agente installato"
 
 #, python-format
@@ -28068,10 +27956,6 @@ msgstr "Stato dell'interfaccia di bonding di Linux"
 msgid "Linux distributions"
 msgstr "Distribuzioni Linux"
 
-#, fuzzy
-msgid "Linux hosts"
-msgstr "(nessun ospite)"
-
 msgid "Linux interfaces"
 msgstr "Interfacce Linux"
 
@@ -29192,12 +29076,6 @@ msgstr "Tasso di posta ricevuta"
 
 msgid "Main"
 msgstr "Principale"
-
-msgid "Main Overview"
-msgstr "Panoramica principale"
-
-msgid "Main dashboard"
-msgstr "Cruscotto principale"
 
 msgid "Main folder"
 msgstr "Cartella principale"
@@ -32055,10 +31933,6 @@ msgstr "Statistiche di rete e flussi di %s"
 msgid "Network topology"
 msgstr "Topologia della rete"
 
-#, python-format
-msgid "Network topology of site %s"
-msgstr "Topologia di rete del sito %s"
-
 msgid "Networking"
 msgstr "Networking"
 
@@ -33189,12 +33063,6 @@ msgid ""
 msgstr ""
 "Le notifiche vengono inviate quando lo stato di un host o di un servizio "
 "cambia."
-
-msgid "Notifications of contact"
-msgstr "Notifiche di contatto"
-
-msgid "Notifications of host & services"
-msgstr "Notifiche di host e servizi"
 
 msgid "Notified events for hosts"
 msgstr "Eventi notificati per gli host"
@@ -37180,9 +37048,6 @@ msgstr "Problema %s"
 msgid "Problem alerts"
 msgstr "Avvisi di problemi"
 
-msgid "Problem dashboard"
-msgstr "Cruscotto dei problemi"
-
 msgid "Problem details"
 msgstr "Dettagli del problema"
 
@@ -38096,10 +37961,6 @@ msgstr "Mail ricevute"
 msgid "Received messages"
 msgstr "Messaggi ricevuti"
 
-#, fuzzy
-msgid "Recent event history"
-msgstr "Storia degli eventi recenti"
-
 msgid "Recent hardware/software inventory"
 msgstr "Inventario recente di hardware/software"
 
@@ -38946,17 +38807,6 @@ msgstr "Segnala"
 msgid "Report Properties"
 msgstr "Proprietà del rapporto"
 
-msgid ""
-"Report created $NOW_DATE$ $NOW_TIME$ by $USER_ALIAS$ ($USER_ID$)\n"
-"\n"
-"Timerange: $RANGE_TITLE$ - from $FROM_DATE$ $FROM_TIME$ until $UNTIL_DATE$ "
-"$UNTIL_TIME$"
-msgstr ""
-"Rapporto creato $NOW_DATE$ $NOW_TIME$ da $USER_ALIAS$ ($USER_ID$)\n"
-"\n"
-"Intervallo di tempo: $RANGE_TITLE$ - da $FROM_DATE$ $FROM_TIME$ fino a "
-"$UNTIL_DATE$ $UNTIL_TIME$"
-
 msgid "Report generation"
 msgstr "Generazione di rapporti"
 
@@ -38972,12 +38822,6 @@ msgid "Report generation started in background job <a href=\"%s\">%s</a>"
 msgstr ""
 "La generazione del rapporto è iniziata nel lavoro in background <a href=\"%s"
 "\">%s</a>"
-
-msgid "Report of Host"
-msgstr "Relazione dell'ospite"
-
-msgid "Report of Host Performance Graphs"
-msgstr "Rapporto dei grafici delle prestazioni dell'host"
 
 msgid "Report options"
 msgstr "Opzioni del rapporto"
@@ -40463,10 +40307,6 @@ msgstr "Script per integrare Nagios plugis"
 msgid "Search"
 msgstr "Cerca"
 
-#, python-format
-msgid "Search %s"
-msgstr "Ricerca %s"
-
 msgid "Search all entries one level below the base DN"
 msgstr "Cerca tutte le voci un livello sotto il DN di base"
 
@@ -41117,9 +40957,6 @@ msgstr "Servizio"
 msgid "Service %s"
 msgstr "Servizio %s"
 
-msgid "Service Availability"
-msgstr "Disponibilità del servizio"
-
 msgid "Service Checks"
 msgstr "Controlli di servizio"
 
@@ -41167,9 +41004,6 @@ msgstr "Metriche di servizio"
 
 msgid "Service Name"
 msgstr "Nome del servizio"
-
-msgid "Service Notifications"
-msgstr "Notifiche di servizio"
 
 msgid "Service Perf-O-Meter"
 msgstr "Servizio Perf-O-Meter"
@@ -41336,9 +41170,6 @@ msgstr "Gruppi di servizi di cui il servizio è membro"
 msgid "Service groups, merged"
 msgstr "Gruppi di servizio, fusi"
 
-msgid "Service hover menu shown in BI visualization"
-msgstr "Menu hover di servizio mostrato nella visualizzazione BI"
-
 msgid "Service icons"
 msgstr "Icone di servizio"
 
@@ -41418,10 +41249,6 @@ msgstr "Uscita del plugin di servizio"
 msgid "Service problem acknowledged"
 msgstr "Problema di servizio riconosciuto"
 
-#, fuzzy
-msgid "Service problems (all)"
-msgstr "Problemi di servizio"
-
 msgid "Service problems (unhandled)"
 msgstr "Problemi di servizio (non gestiti)"
 
@@ -41433,9 +41260,6 @@ msgstr "Rapporto di servizio per servizi multipli"
 
 msgid "Service retry check interval"
 msgstr "Intervallo di controllo dei ritentativi di servizio"
-
-msgid "Service search"
-msgstr "Ricerca di servizio"
 
 msgid "Service service level"
 msgstr "Livello di servizio"
@@ -42505,17 +42329,8 @@ msgstr "Aspetto dei membri del gruppo nell'uscita del servizio"
 msgid "Show/Hide password"
 msgstr "Mostra/Nascondi la password"
 
-msgid ""
-"Shows all graphs including timerange selections of a collection of services."
-msgstr ""
-"Mostra tutti i grafici, comprese le selezioni di intervalli di tempo di una "
-"collezione di servizi."
-
-msgid ""
-"Shows host graphs including timerange selections of a collection of hosts."
-msgstr ""
-"Mostra i grafici degli host, comprese le selezioni di intervalli di tempo di "
-"una collezione di host."
+msgid "Shows number of alerts grouped for each service."
+msgstr "Mostra il numero di avvisi raggruppati per ogni servizio."
 
 msgid "Shows the Checkmk logo."
 msgstr "Mostra il logo Checkmk."
@@ -42739,13 +42554,6 @@ msgstr "Singolo"
 
 msgid "Single Bit (BOOL)"
 msgstr "Bit singolo (BOOL)"
-
-msgid "Single Linux host"
-msgstr "Singolo host Linux"
-
-#, fuzzy
-msgid "Single Windows host"
-msgstr "Su ospite giù"
 
 msgid "Single dataset"
 msgstr "Singolo set di dati"
@@ -45220,6 +45028,9 @@ msgstr "Nome della strada"
 msgid "Street number"
 msgstr "Numero civico"
 
+msgid "Strength:"
+msgstr ""
+
 msgid "Strict - Visible if all members are visible"
 msgstr "Strict - Visibile se tutti i membri sono visibili"
 
@@ -45258,6 +45069,9 @@ msgstr "Stringhe da aspettarsi nella risposta"
 
 msgid "Strings to expect in server response"
 msgstr "Stringhe da aspettarsi nella risposta del server"
+
+msgid "Strong"
+msgstr ""
 
 msgid "Style"
 msgstr "Stile"
@@ -45880,9 +45694,6 @@ msgstr "Tabella livelli assoluti di gonfiore"
 msgid "Table of Contents (only active in frontmatter templates)"
 msgstr "Indice (attivo solo nei modelli di frontmatter)"
 
-msgid "Table of all currently open events (handled and unhandled)"
-msgstr "Tabella di tutti gli eventi attualmente aperti (gestiti e non gestiti)"
-
 msgid "Table of available text macros"
 msgstr "Tabella delle macro di testo disponibili"
 
@@ -46152,18 +45963,6 @@ msgstr "Temperatura, umidità, parametri elettrici, ecc."
 
 msgid "Temperatures of NVIDIA graphics card"
 msgstr "Temperature della scheda grafica NVIDIA"
-
-msgid "Template for PDF exporting"
-msgstr "Template per l'esportazione in PDF"
-
-msgid "Template for PDF exporting of availability views"
-msgstr "Template per l'esportazione in PDF delle viste di disponibilità"
-
-msgid "Template for PDF exporting of graph collections"
-msgstr "Template per l'esportazione in PDF delle collezioni di grafici"
-
-msgid "Template for PDF exporting of views"
-msgstr "Template per l'esportazione delle viste in PDF"
 
 msgid "Template graphs"
 msgstr "Grafici del modello"
@@ -47368,10 +47167,10 @@ msgstr ""
 "La spaziatura delle celle viene applicata solo quando <b>nessuna</b> regola "
 "viene resa."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "The central (Version: %s, Edition: %s) and remote site (Version: %s, "
-"Edition: %s) are not compatible"
+"Edition: %s) are not compatible. Reason: %s"
 msgstr ""
 "Il sito centrale (Versione: %s, Edizione: %s) e il sito remoto (Versione: "
 "%s, Edizione: %s) non sono compatibili"
@@ -51539,13 +51338,6 @@ msgstr ""
 msgid "This customer does not exist."
 msgstr "Questo cliente non esiste."
 
-msgid ""
-"This dashboard gives you a general overview on the state of your monitored "
-"devices."
-msgstr ""
-"Questa dashboard ti dà una panoramica generale sullo stato dei tuoi "
-"dispositivi monitorati."
-
 msgid "This defaults to the host for which the active check is configured."
 msgstr "Questo è l'host per il quale è configurato il controllo attivo."
 
@@ -52885,32 +52677,6 @@ msgstr ""
 
 msgid "This report element does not exist."
 msgstr "Questo elemento di rapporto non esiste."
-
-msgid ""
-"This report shows the availability of BI aggregations in the time range "
-"\"$RANGE_TITLE$\"."
-msgstr ""
-"Questo rapporto mostra la disponibilità delle aggregazioni di BI "
-"nell'intervallo di tempo \"$RANGE_TITLE$\"."
-
-msgid ""
-"This report shows the service graphs of CPU load and utilization, Number of "
-"threads, Kernel Performance, OMD, Filesystem, Apache Status, TCP Connections "
-"within the time ranges 25 hours and 35 days of a single host."
-msgstr ""
-"Questo rapporto mostra i grafici di servizio di carico e utilizzo della CPU, "
-"numero di thread, prestazioni del kernel, OMD, filesystem, stato di Apache, "
-"connessioni TCP negli intervalli di tempo di 25 ore e 35 giorni di un "
-"singolo host."
-
-msgid ""
-"This report shows various information about one single host. It is not "
-"visible in the sidebar, because it needs a host to be called. Call it via a "
-"button at a view that is displaying one host."
-msgstr ""
-"Questo rapporto mostra varie informazioni su un singolo host. Non è visibile "
-"nella barra laterale, perché ha bisogno di un host per essere chiamato. "
-"Chiamalo tramite un pulsante in una vista che sta visualizzando un host."
 
 msgid ""
 "This report will be use only to describe the front matter of a report. It "
@@ -55340,6 +55106,10 @@ msgstr "Top"
 msgid "Top Talkers"
 msgstr "Top Talkers"
 
+#, fuzzy
+msgid "Top alerters (last 7 days)"
+msgstr "Top alerters - %s"
+
 msgid "Top application traffic: last day view"
 msgstr "Top traffico delle applicazioni: vista dell'ultimo giorno"
 
@@ -55367,15 +55137,6 @@ msgstr "Argomento nel menu 'Monitor"
 
 msgid "Topics"
 msgstr "Argomenti"
-
-msgid "Toplogy host details"
-msgstr "Dettagli dell'host di Toplogy"
-
-msgid "Topology"
-msgstr "Topologia"
-
-msgid "Topology filters"
-msgstr "Filtri di topologia"
 
 msgid "Total"
 msgstr "Totale"
@@ -56478,22 +56239,6 @@ msgstr ""
 "Impossibile sincronizzare i gruppi annidati (Trovato nessun DN di base "
 "comune per il DN di base dell'utente \"%s\" e il DN di base del gruppo \"%s"
 "\")"
-
-#, python-format
-msgid ""
-"Unable to transform dashlet %d of dashboard %s. You will need to migrate it "
-"on your own. Definition: %r"
-msgstr ""
-"Impossibile trasformare il dashlet %d del dashboard %s. Dovrai migrare da "
-"solo. Definizione: %r"
-
-#, python-format
-msgid ""
-"Unable to transform dashlet %d of dashboard %s: the dashlet is using "
-"\"urlfunc\" which can not be converted automatically."
-msgstr ""
-"Impossibile trasformare il dashlet %d della dashboard %s: il dashlet sta "
-"usando \"urlfunc\" che non può essere convertito automaticamente."
 
 #, python-format
 msgid "Unable to upload icon: %s"
@@ -58933,6 +58678,9 @@ msgstr "Spazio verticale"
 msgid "Vertical spacing"
 msgstr "Spaziatura verticale"
 
+msgid "Very Weak"
+msgstr ""
+
 msgid "Very high"
 msgstr "Molto alto"
 
@@ -59467,6 +59215,9 @@ msgstr ""
 "intervallo di controllo. Questa regola ti aiuta ad avere più controllo sulla "
 "gestione dei dati degli host piggybacked. I nomi degli host sorgente devono "
 "essere impostati nel campo condizione <i>Explicit hosts</i>."
+
+msgid "Weak"
+msgstr ""
 
 msgid "Web"
 msgstr "Web"
@@ -60808,10 +60559,6 @@ msgstr "Autenticazione Windows"
 
 msgid "Windows files"
 msgstr "File di Windows"
-
-#, fuzzy
-msgid "Windows hosts"
-msgstr "Attività di Windows"
 
 msgid "Windows printers: number of open jobs"
 msgstr "Stampanti Windows: numero di lavori aperti"
@@ -63090,7 +62837,13 @@ msgstr "Credenziali predefinite"
 #, fuzzy, python-format
 msgid ""
 "Your central site (Version: %s, Edition: %s) is incompatible with this "
-"remote site (Version: %s, Edition: %s)"
+"remote site (Version: %s, Edition: %s). Reason: %s"
+msgstr "Non sei collegato al sito remoto."
+
+#, fuzzy, python-format
+msgid ""
+"Your central site (Version: %s, Edition: %s) is incompatible with this "
+"remote site (Version: %s, Edition: %s): Reason: %s"
 msgstr "Non sei collegato al sito remoto."
 
 #, fuzzy
@@ -65242,6 +64995,299 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 
+#~ msgid "Hardware & Software Tree"
+#~ msgstr "Albero hardware e software"
+
+#~ msgid ""
+#~ "A compact dashboard which lists your unhandled host and service problems."
+#~ msgstr ""
+#~ "Una dashboard compatta che elenca i vostri problemi di host e di servizio "
+#~ "non gestiti."
+
+#~ msgid ""
+#~ "A report showing the availability of the services of an\n"
+#~ "arbitrary view."
+#~ msgstr ""
+#~ "Un rapporto che mostra la disponibilità dei servizi di una\n"
+#~ "vista arbitraria."
+
+#, python-format
+#~ msgid "A view for searching in the inventory data for %s"
+#~ msgstr "Una vista per cercare nei dati dell'inventario per %s"
+
+#, python-format
+#~ msgid "A view for the %s of one host"
+#~ msgstr "Una vista per il %s di un host"
+
+#~ msgid "Agent update status"
+#~ msgstr "Stato di aggiornamento dell'agente"
+
+#~ msgid "BI Availability"
+#~ msgstr "Disponibilità della BI"
+
+#~ msgid "BI host details"
+#~ msgstr "Dettagli sull'host della BI"
+
+#~ msgid "BI service details"
+#~ msgstr "Dettagli del servizio BI"
+
+#~ msgid ""
+#~ "Configures the number of available filters in the network topology view."
+#~ msgstr ""
+#~ "Configura il numero di filtri disponibili nella vista della topologia "
+#~ "della rete."
+
+#~ msgid "Created with Checkmk Version $CHECK_MK_VERSION$"
+#~ msgstr "Creato con la versione di Checkmk $CHECK_MK_VERSION$"
+
+#~ msgid "Current agent update status of all registered hosts."
+#~ msgstr ""
+#~ "Stato attuale di aggiornamento dell'agente di tutti gli host registrati."
+
+#~ msgid "Currently open events of a host that is monitored"
+#~ msgstr "Eventi attualmente aperti di un host che è monitorato"
+
+#~ msgid "Currently open events of one specific host"
+#~ msgstr "Eventi attualmente aperti di un host specifico"
+
+#~ msgid "Default template for all reports"
+#~ msgstr "Modello predefinito per tutti i rapporti"
+
+#~ msgid "Details about a historical event history entry"
+#~ msgstr "Dettagli su una voce della storia di un evento storico"
+
+#~ msgid "Details about one event"
+#~ msgstr "Dettagli su un evento"
+
+#, fuzzy
+#~| msgid "Event Details"
+#~ msgid "Event details"
+#~ msgstr "Dettagli dell'evento"
+
+#, fuzzy
+#~| msgid "Event History Entry"
+#~ msgid "Event history entry"
+#~ msgstr "Registrazione della storia dell'evento"
+
+#~ msgid "Event history of host"
+#~ msgstr "Storia dell'inventario dell'host"
+
+#~ msgid "Events of host"
+#~ msgstr "Eventi dell'ospite"
+
+#~ msgid "Events of host & services"
+#~ msgstr "Eventi dell'ospite e dei servizi"
+
+#, fuzzy
+#~| msgid "Events of Monitored Host"
+#~ msgid "Events of monitored host"
+#~ msgstr "Eventi dell'host monitorato"
+
+#~ msgid "Events of service"
+#~ msgstr "Eventi di servizio"
+
+#~ msgid "Execution time of Checkmk Agent"
+#~ msgstr "Tempo di esecuzione di Checkmk Agent"
+
+#~ msgid "History entries of one specific event"
+#~ msgstr "Voci della storia di un evento specifico"
+
+#~ msgid "History entries of one specific host"
+#~ msgstr "Voci della storia di un host specifico"
+
+#~ msgid "History of Event"
+#~ msgstr "Storia dell'evento"
+
+#~ msgid "Host & service problems"
+#~ msgstr "Problemi di host e di servizio"
+
+#~ msgid "Host graphs"
+#~ msgstr "Grafici dell'host"
+
+#~ msgid "Host hover menu shown in BI visualization"
+#~ msgstr "Menu hover mostrato nella visualizzazione BI"
+
+#~ msgid "Host hover menu shown in topolgoy visualization"
+#~ msgstr "Menu hover host mostrato nella visualizzazione topolgoy"
+
+#, fuzzy
+#~ msgid "Host problems (all)"
+#~ msgstr "Problemi con l'host"
+
+#~ msgid "Host search"
+#~ msgstr "Ricerca dell'ospite"
+
+#~ msgid ""
+#~ "Information about events and actions on events during the recent 24 hours."
+#~ msgstr "Informazioni su eventi e azioni su eventi durante le ultime 24 ore."
+
+#, fuzzy
+#~| msgid "(no hosts)"
+#~ msgid "Linux hosts"
+#~ msgstr "(nessun ospite)"
+
+#~ msgid "Main Overview"
+#~ msgstr "Panoramica principale"
+
+#~ msgid "Main dashboard"
+#~ msgstr "Cruscotto principale"
+
+#, python-format
+#~ msgid "Network topology of site %s"
+#~ msgstr "Topologia di rete del sito %s"
+
+#~ msgid "Notifications of contact"
+#~ msgstr "Notifiche di contatto"
+
+#~ msgid "Notifications of host & services"
+#~ msgstr "Notifiche di host e servizi"
+
+#~ msgid "Problem dashboard"
+#~ msgstr "Cruscotto dei problemi"
+
+#, fuzzy
+#~| msgid "Recent Event History"
+#~ msgid "Recent event history"
+#~ msgstr "Storia degli eventi recenti"
+
+#~ msgid ""
+#~ "Report created $NOW_DATE$ $NOW_TIME$ by $USER_ALIAS$ ($USER_ID$)\n"
+#~ "\n"
+#~ "Timerange: $RANGE_TITLE$ - from $FROM_DATE$ $FROM_TIME$ until $UNTIL_DATE"
+#~ "$ $UNTIL_TIME$"
+#~ msgstr ""
+#~ "Rapporto creato $NOW_DATE$ $NOW_TIME$ da $USER_ALIAS$ ($USER_ID$)\n"
+#~ "\n"
+#~ "Intervallo di tempo: $RANGE_TITLE$ - da $FROM_DATE$ $FROM_TIME$ fino a "
+#~ "$UNTIL_DATE$ $UNTIL_TIME$"
+
+#~ msgid "Report of Host"
+#~ msgstr "Relazione dell'ospite"
+
+#~ msgid "Report of Host Performance Graphs"
+#~ msgstr "Rapporto dei grafici delle prestazioni dell'host"
+
+#, python-format
+#~ msgid "Search %s"
+#~ msgstr "Ricerca %s"
+
+#~ msgid "Service Availability"
+#~ msgstr "Disponibilità del servizio"
+
+#~ msgid "Service Notifications"
+#~ msgstr "Notifiche di servizio"
+
+#~ msgid "Service hover menu shown in BI visualization"
+#~ msgstr "Menu hover di servizio mostrato nella visualizzazione BI"
+
+#, fuzzy
+#~ msgid "Service problems (all)"
+#~ msgstr "Problemi di servizio"
+
+#~ msgid "Service search"
+#~ msgstr "Ricerca di servizio"
+
+#~ msgid ""
+#~ "Shows all graphs including timerange selections of a collection of "
+#~ "services."
+#~ msgstr ""
+#~ "Mostra tutti i grafici, comprese le selezioni di intervalli di tempo di "
+#~ "una collezione di servizi."
+
+#~ msgid ""
+#~ "Shows host graphs including timerange selections of a collection of hosts."
+#~ msgstr ""
+#~ "Mostra i grafici degli host, comprese le selezioni di intervalli di tempo "
+#~ "di una collezione di host."
+
+#~ msgid "Single Linux host"
+#~ msgstr "Singolo host Linux"
+
+#, fuzzy
+#~| msgid "On down host"
+#~ msgid "Single Windows host"
+#~ msgstr "Su ospite giù"
+
+#~ msgid "Table of all currently open events (handled and unhandled)"
+#~ msgstr ""
+#~ "Tabella di tutti gli eventi attualmente aperti (gestiti e non gestiti)"
+
+#~ msgid "Template for PDF exporting"
+#~ msgstr "Template per l'esportazione in PDF"
+
+#~ msgid "Template for PDF exporting of availability views"
+#~ msgstr "Template per l'esportazione in PDF delle viste di disponibilità"
+
+#~ msgid "Template for PDF exporting of graph collections"
+#~ msgstr "Template per l'esportazione in PDF delle collezioni di grafici"
+
+#~ msgid "Template for PDF exporting of views"
+#~ msgstr "Template per l'esportazione delle viste in PDF"
+
+#~ msgid ""
+#~ "This dashboard gives you a general overview on the state of your "
+#~ "monitored devices."
+#~ msgstr ""
+#~ "Questa dashboard ti dà una panoramica generale sullo stato dei tuoi "
+#~ "dispositivi monitorati."
+
+#~ msgid ""
+#~ "This report shows the availability of BI aggregations in the time range "
+#~ "\"$RANGE_TITLE$\"."
+#~ msgstr ""
+#~ "Questo rapporto mostra la disponibilità delle aggregazioni di BI "
+#~ "nell'intervallo di tempo \"$RANGE_TITLE$\"."
+
+#~ msgid ""
+#~ "This report shows the service graphs of CPU load and utilization, Number "
+#~ "of threads, Kernel Performance, OMD, Filesystem, Apache Status, TCP "
+#~ "Connections within the time ranges 25 hours and 35 days of a single host."
+#~ msgstr ""
+#~ "Questo rapporto mostra i grafici di servizio di carico e utilizzo della "
+#~ "CPU, numero di thread, prestazioni del kernel, OMD, filesystem, stato di "
+#~ "Apache, connessioni TCP negli intervalli di tempo di 25 ore e 35 giorni "
+#~ "di un singolo host."
+
+#~ msgid ""
+#~ "This report shows various information about one single host. It is not "
+#~ "visible in the sidebar, because it needs a host to be called. Call it via "
+#~ "a button at a view that is displaying one host."
+#~ msgstr ""
+#~ "Questo rapporto mostra varie informazioni su un singolo host. Non è "
+#~ "visibile nella barra laterale, perché ha bisogno di un host per essere "
+#~ "chiamato. Chiamalo tramite un pulsante in una vista che sta visualizzando "
+#~ "un host."
+
+#~ msgid "Toplogy host details"
+#~ msgstr "Dettagli dell'host di Toplogy"
+
+#~ msgid "Topology"
+#~ msgstr "Topologia"
+
+#~ msgid "Topology filters"
+#~ msgstr "Filtri di topologia"
+
+#, python-format
+#~ msgid ""
+#~ "Unable to transform dashlet %d of dashboard %s. You will need to migrate "
+#~ "it on your own. Definition: %r"
+#~ msgstr ""
+#~ "Impossibile trasformare il dashlet %d del dashboard %s. Dovrai migrare da "
+#~ "solo. Definizione: %r"
+
+#, python-format
+#~ msgid ""
+#~ "Unable to transform dashlet %d of dashboard %s: the dashlet is using "
+#~ "\"urlfunc\" which can not be converted automatically."
+#~ msgstr ""
+#~ "Impossibile trasformare il dashlet %d della dashboard %s: il dashlet sta "
+#~ "usando \"urlfunc\" che non può essere convertito automaticamente."
+
+#, fuzzy
+#~| msgid "Windows Tasks"
+#~ msgid "Windows hosts"
+#~ msgstr "Attività di Windows"
+
 #~ msgid ""
 #~ "Agent internal TCP port used to communicate with the agent controller"
 #~ msgstr ""
@@ -65713,10 +65759,6 @@ msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 
 #~ msgid "Top alerters"
 #~ msgstr "Top alerters"
-
-#, python-format
-#~ msgid "Top alerters - %s"
-#~ msgstr "Top alerters - %s"
 
 #, python-format
 #~ msgid "Absolute %s"
@@ -69035,9 +69077,6 @@ msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 
 #~ msgid "Shows details of a host."
 #~ msgstr "Mostra i dettagli di un host."
-
-#~ msgid "Shows number of alerts grouped for each service."
-#~ msgstr "Mostra il numero di avvisi raggruppati per ogni servizio."
 
 #~ msgid ""
 #~ "Simple summary page of all BI aggregates that is used as a web services."

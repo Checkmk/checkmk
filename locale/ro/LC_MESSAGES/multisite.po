@@ -1682,10 +1682,6 @@ msgid "A comment or description of this host"
 msgstr "O descriere sau comentariu despre acest element"
 
 msgid ""
-"A compact dashboard which lists your unhandled host and service problems."
-msgstr ""
-
-msgid ""
 "A couple of switches with broken firmware report that they support 64 bit "
 "counters but do not output any actual data in those counters. Listing those "
 "hosts in this rule forces them to use the interface check with 32 bit "
@@ -1823,11 +1819,6 @@ msgid "A report can not reference itself"
 msgstr ""
 
 msgid ""
-"A report showing the availability of the services of an\n"
-"arbitrary view."
-msgstr ""
-
-msgid ""
 "A restore is currently running. You can only delete backups while no restore "
 "is running."
 msgstr ""
@@ -1936,14 +1927,6 @@ msgstr "Un utilizator cu id-ul \"%s\" nu există."
 #, fuzzy
 msgid "A value in seconds"
 msgstr " secunde "
-
-#, python-format
-msgid "A view for searching in the inventory data for %s"
-msgstr ""
-
-#, python-format
-msgid "A view for the %s of one host"
-msgstr ""
 
 msgid "A/V Auth - Bad Requests Received"
 msgstr ""
@@ -4019,10 +4002,6 @@ msgstr "actualizare"
 msgid "Agent signing"
 msgstr ""
 
-#, fuzzy
-msgid "Agent update status"
-msgstr "Stare adiministrativă"
-
 msgid "Agent updater (Linux, Windows, Solaris)"
 msgstr ""
 
@@ -6043,9 +6022,6 @@ msgstr ""
 msgid "BI Aggregations containing this %s"
 msgstr ""
 
-msgid "BI Availability"
-msgstr ""
-
 #, fuzzy
 msgid "BI Configuration Packs"
 msgstr "Activare Configurare"
@@ -6081,10 +6057,6 @@ msgid "BI configuration"
 msgstr "foloseste configuratia locala"
 
 #, fuzzy
-msgid "BI host details"
-msgstr "servicii"
-
-#, fuzzy
 msgid "BI pack"
 msgstr "Adaugă bookmark"
 
@@ -6101,10 +6073,6 @@ msgstr ""
 #, python-format
 msgid "BI rules %s from BI pack '%s'"
 msgstr ""
-
-#, fuzzy
-msgid "BI service details"
-msgstr "servicii"
 
 #, fuzzy
 msgid "BI visualization"
@@ -9913,10 +9881,6 @@ msgid "Configured timeperiod parameters"
 msgstr ""
 
 msgid ""
-"Configures the number of available filters in the network topology view."
-msgstr ""
-
-msgid ""
 "Configures the roles of the user depending on its group memberships in LDAP."
 "<br><br>Please note: Additionally the user is assigned to the <a href=\"wato."
 "py?mode=edit_configvar&varname=default_user_profile&site=&folder=\">Default "
@@ -11090,9 +11054,6 @@ msgstr ""
 msgid "Created snapshot %s"
 msgstr ""
 
-msgid "Created with Checkmk Version $CHECK_MK_VERSION$"
-msgstr ""
-
 msgid ""
 "Creates a new service that displays information about disk I/O of database "
 "files. This service displays the number of bytes read and written to "
@@ -11311,9 +11272,6 @@ msgstr "Parola"
 msgid "Current Users"
 msgstr "Parola"
 
-msgid "Current agent update status of all registered hosts."
-msgstr ""
-
 msgid "Current check attempt"
 msgstr ""
 
@@ -11423,12 +11381,6 @@ msgstr ""
 #, fuzzy
 msgid "Currently open connections"
 msgstr "Numarul maxim de conexiuni"
-
-msgid "Currently open events of a host that is monitored"
-msgstr ""
-
-msgid "Currently open events of one specific host"
-msgstr ""
 
 msgid "Currently running"
 msgstr ""
@@ -12293,6 +12245,10 @@ msgstr ""
 msgid "Datasource"
 msgstr ""
 
+#, fuzzy
+msgid "Datasource status"
+msgstr "Stare adiministrativă"
+
 #, python-format
 msgid "Datasource: %s"
 msgstr ""
@@ -12530,9 +12486,6 @@ msgid "Default state to report when tunnel can not be found anymore"
 msgstr ""
 
 msgid "Default table layout"
-msgstr ""
-
-msgid "Default template for all reports"
 msgstr ""
 
 #, fuzzy
@@ -13474,12 +13427,6 @@ msgid "Details"
 msgstr ""
 
 msgid "Details (Previously named: long output)"
-msgstr ""
-
-msgid "Details about a historical event history entry"
-msgstr ""
-
-msgid "Details about one event"
 msgstr ""
 
 msgid "Detect network parent hosts"
@@ -16927,16 +16874,8 @@ msgstr "Numele Elementului"
 msgid "Event database"
 msgstr ""
 
-#, fuzzy
-msgid "Event details"
-msgstr "servicii"
-
 msgid "Event handlers"
 msgstr ""
-
-#, fuzzy
-msgid "Event history entry"
-msgstr "Adaungă un nou element"
 
 # georgem ##############
 #, fuzzy
@@ -16948,11 +16887,6 @@ msgstr ""
 
 msgid "Event history logfile rotation"
 msgstr ""
-
-# georgem ##############
-#, fuzzy
-msgid "Event history of host"
-msgstr "Grup nou"
 
 #, fuzzy
 msgid "Event icons"
@@ -16988,22 +16922,7 @@ msgstr ""
 msgid "Events of Host %s"
 msgstr ""
 
-#, fuzzy
-msgid "Events of host"
-msgstr "% / gamă"
-
-msgid "Events of host & services"
-msgstr ""
-
-# georgem ##############
-#, fuzzy
-msgid "Events of monitored host"
-msgstr "Grup nou"
-
 msgid "Events of recent 4 hours"
-msgstr ""
-
-msgid "Events of service"
 msgstr ""
 
 msgid "Events: Hostname"
@@ -17282,10 +17201,6 @@ msgstr "Numele Aplicatiei"
 
 #, fuzzy
 msgid "Execution of checks"
-msgstr "Verificări active"
-
-#, fuzzy
-msgid "Execution time of Checkmk Agent"
 msgstr "Verificări active"
 
 msgid "Executive"
@@ -19467,6 +19382,9 @@ msgstr ""
 msgid "Going to update %d sites"
 msgstr ""
 
+msgid "Good"
+msgstr ""
+
 msgid "Google Cloud Platform"
 msgstr ""
 
@@ -19993,9 +19911,6 @@ msgid "Harddrive uncorrectable errors"
 msgstr ""
 
 msgid "Hardware"
-msgstr ""
-
-msgid "Hardware & Software Tree"
 msgstr ""
 
 msgid "Hardware / Software Inventory"
@@ -20792,19 +20707,10 @@ msgstr ""
 msgid "History Line Number"
 msgstr ""
 
-msgid "History entries of one specific event"
-msgstr ""
-
-msgid "History entries of one specific host"
-msgstr ""
-
 msgid "History log rotation: Regular interval of rotations"
 msgstr ""
 
 msgid "History log rotation: Rotate by size (Limit of the size)"
-msgstr ""
-
-msgid "History of Event"
 msgstr ""
 
 msgid "History of hardware/software inventory"
@@ -20875,10 +20781,6 @@ msgstr ""
 #, python-format
 msgid "Host %s not known in ntopng"
 msgstr ""
-
-#, fuzzy
-msgid "Host & service problems"
-msgstr "(fără Nivel de serviciu)"
 
 #, fuzzy
 msgid "Host Address"
@@ -21088,10 +20990,6 @@ msgid "Host graph"
 msgstr "Grup nou"
 
 #, fuzzy
-msgid "Host graphs"
-msgstr "Grup nou"
-
-#, fuzzy
 msgid "Host group"
 msgstr "Grup nou"
 
@@ -21116,12 +21014,6 @@ msgstr "Grup nou"
 
 #, python-format
 msgid "Host has tag <b>%s</b>"
-msgstr ""
-
-msgid "Host hover menu shown in BI visualization"
-msgstr ""
-
-msgid "Host hover menu shown in topolgoy visualization"
 msgstr ""
 
 msgid "Host icons"
@@ -21246,10 +21138,6 @@ msgid "Host problem acknowledged"
 msgstr ""
 
 #, fuzzy
-msgid "Host problems (all)"
-msgstr "(fără Nivel de serviciu)"
-
-#, fuzzy
 msgid "Host problems (unhandled)"
 msgstr "Confirmă"
 
@@ -21273,9 +21161,6 @@ msgid "Host report for multiple hosts"
 msgstr ""
 
 msgid "Host running Event Console"
-msgstr ""
-
-msgid "Host search"
 msgstr ""
 
 msgid "Host service level"
@@ -23604,10 +23489,6 @@ msgstr "Grup nou"
 msgid "Info"
 msgstr ""
 
-msgid ""
-"Information about events and actions on events during the recent 24 hours."
-msgstr ""
-
 msgid "Information about size, age and count of files"
 msgstr ""
 
@@ -23802,6 +23683,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Installed Agent"
+msgstr "Acces la Agenți"
+
+#, fuzzy
+msgid "Installed RAM"
 msgstr "Acces la Agenți"
 
 #, python-format
@@ -26316,10 +26201,6 @@ msgid "Linux distributions"
 msgstr ""
 
 #, fuzzy
-msgid "Linux hosts"
-msgstr "(fără elemente)"
-
-#, fuzzy
 msgid "Linux interfaces"
 msgstr "Adresă"
 
@@ -27469,13 +27350,6 @@ msgstr ""
 
 msgid "Main"
 msgstr ""
-
-msgid "Main Overview"
-msgstr ""
-
-#, fuzzy
-msgid "Main dashboard"
-msgstr "Adaugă element"
 
 #, fuzzy
 msgid "Main folder"
@@ -30449,10 +30323,6 @@ msgstr " Se potriveste grupurilor: %s"
 msgid "Network topology"
 msgstr "Adresă"
 
-#, python-format
-msgid "Network topology of site %s"
-msgstr ""
-
 msgid "Networking"
 msgstr ""
 
@@ -31537,12 +31407,6 @@ msgstr ""
 
 msgid ""
 "Notifications are sent out when the status of a host or service changes."
-msgstr ""
-
-msgid "Notifications of contact"
-msgstr ""
-
-msgid "Notifications of host & services"
 msgstr ""
 
 msgid "Notified events for hosts"
@@ -35389,10 +35253,6 @@ msgid "Problem alerts"
 msgstr "Probleme"
 
 #, fuzzy
-msgid "Problem dashboard"
-msgstr "Probleme"
-
-#, fuzzy
 msgid "Problem details"
 msgstr "Probleme"
 
@@ -36363,10 +36223,6 @@ msgstr ""
 msgid "Received messages"
 msgstr ""
 
-#, fuzzy
-msgid "Recent event history"
-msgstr "Verificări active"
-
 msgid "Recent hardware/software inventory"
 msgstr ""
 
@@ -37189,13 +37045,6 @@ msgstr ""
 msgid "Report Properties"
 msgstr ""
 
-msgid ""
-"Report created $NOW_DATE$ $NOW_TIME$ by $USER_ALIAS$ ($USER_ID$)\n"
-"\n"
-"Timerange: $RANGE_TITLE$ - from $FROM_DATE$ $FROM_TIME$ until $UNTIL_DATE$ "
-"$UNTIL_TIME$"
-msgstr ""
-
 #, fuzzy
 msgid "Report generation"
 msgstr "Optiuni tabel"
@@ -37209,12 +37058,6 @@ msgstr ""
 
 #, python-format
 msgid "Report generation started in background job <a href=\"%s\">%s</a>"
-msgstr ""
-
-msgid "Report of Host"
-msgstr ""
-
-msgid "Report of Host Performance Graphs"
 msgstr ""
 
 #, fuzzy
@@ -38731,10 +38574,6 @@ msgstr ""
 msgid "Search"
 msgstr "Cautare"
 
-#, python-format
-msgid "Search %s"
-msgstr ""
-
 msgid "Search all entries one level below the base DN"
 msgstr ""
 
@@ -39364,9 +39203,6 @@ msgstr ""
 msgid "Service %s"
 msgstr ""
 
-msgid "Service Availability"
-msgstr ""
-
 msgid "Service Checks"
 msgstr ""
 
@@ -39422,9 +39258,6 @@ msgstr "Grup nou"
 #, fuzzy
 msgid "Service Name"
 msgstr "Numele Elementului"
-
-msgid "Service Notifications"
-msgstr ""
 
 msgid "Service Perf-O-Meter"
 msgstr ""
@@ -39607,9 +39440,6 @@ msgstr ""
 msgid "Service groups, merged"
 msgstr "Grup nou"
 
-msgid "Service hover menu shown in BI visualization"
-msgstr ""
-
 msgid "Service icons"
 msgstr ""
 
@@ -39697,10 +39527,6 @@ msgid "Service problem acknowledged"
 msgstr ""
 
 #, fuzzy
-msgid "Service problems (all)"
-msgstr "(fără Nivel de serviciu)"
-
-#, fuzzy
 msgid "Service problems (unhandled)"
 msgstr "(fără Nivel de serviciu)"
 
@@ -39712,9 +39538,6 @@ msgid "Service report for multiple services"
 msgstr "Un titlu pentru view"
 
 msgid "Service retry check interval"
-msgstr ""
-
-msgid "Service search"
 msgstr ""
 
 msgid "Service service level"
@@ -40764,13 +40587,9 @@ msgstr "servicii"
 msgid "Show/Hide password"
 msgstr "Parola"
 
-msgid ""
-"Shows all graphs including timerange selections of a collection of services."
-msgstr ""
-
-msgid ""
-"Shows host graphs including timerange selections of a collection of hosts."
-msgstr ""
+#, fuzzy
+msgid "Shows number of alerts grouped for each service."
+msgstr "Arata regulile de utilizator"
 
 msgid "Shows the Checkmk logo."
 msgstr ""
@@ -40969,13 +40788,6 @@ msgstr ""
 
 msgid "Single Bit (BOOL)"
 msgstr ""
-
-msgid "Single Linux host"
-msgstr ""
-
-#, fuzzy
-msgid "Single Windows host"
-msgstr "Probleme"
 
 msgid "Single dataset"
 msgstr ""
@@ -43220,6 +43032,9 @@ msgstr ""
 msgid "Street number"
 msgstr ""
 
+msgid "Strength:"
+msgstr ""
+
 msgid "Strict - Visible if all members are visible"
 msgstr ""
 
@@ -43253,6 +43068,9 @@ msgid "Strings to expect in response"
 msgstr ""
 
 msgid "Strings to expect in server response"
+msgstr ""
+
+msgid "Strong"
 msgstr ""
 
 msgid "Style"
@@ -43918,9 +43736,6 @@ msgstr ""
 msgid "Table of Contents (only active in frontmatter templates)"
 msgstr ""
 
-msgid "Table of all currently open events (handled and unhandled)"
-msgstr "Tabel cu toate evenimentele deschise (manipulate si netratate)"
-
 msgid "Table of available text macros"
 msgstr "Tabel cu macro-uri disponibile"
 
@@ -44183,18 +43998,6 @@ msgid "Temperature, Humidity, Electrical Parameters, etc."
 msgstr ""
 
 msgid "Temperatures of NVIDIA graphics card"
-msgstr ""
-
-msgid "Template for PDF exporting"
-msgstr ""
-
-msgid "Template for PDF exporting of availability views"
-msgstr ""
-
-msgid "Template for PDF exporting of graph collections"
-msgstr ""
-
-msgid "Template for PDF exporting of views"
 msgstr ""
 
 msgid "Template graphs"
@@ -45062,7 +44865,7 @@ msgstr ""
 #, python-format
 msgid ""
 "The central (Version: %s, Edition: %s) and remote site (Version: %s, "
-"Edition: %s) are not compatible"
+"Edition: %s) are not compatible. Reason: %s"
 msgstr ""
 
 #, python-format
@@ -48242,11 +48045,6 @@ msgstr ""
 msgid "This customer does not exist."
 msgstr ""
 
-msgid ""
-"This dashboard gives you a general overview on the state of your monitored "
-"devices."
-msgstr ""
-
 msgid "This defaults to the host for which the active check is configured."
 msgstr ""
 
@@ -49161,23 +48959,6 @@ msgid ""
 msgstr ""
 
 msgid "This report element does not exist."
-msgstr ""
-
-msgid ""
-"This report shows the availability of BI aggregations in the time range "
-"\"$RANGE_TITLE$\"."
-msgstr ""
-
-msgid ""
-"This report shows the service graphs of CPU load and utilization, Number of "
-"threads, Kernel Performance, OMD, Filesystem, Apache Status, TCP Connections "
-"within the time ranges 25 hours and 35 days of a single host."
-msgstr ""
-
-msgid ""
-"This report shows various information about one single host. It is not "
-"visible in the sidebar, because it needs a host to be called. Call it via a "
-"button at a view that is displaying one host."
 msgstr ""
 
 msgid ""
@@ -50965,6 +50746,10 @@ msgid "Top Talkers"
 msgstr ""
 
 #, fuzzy
+msgid "Top alerters (last 7 days)"
+msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
 msgid "Top application traffic: last day view"
 msgstr "Adresă"
 
@@ -50995,16 +50780,6 @@ msgstr ""
 
 msgid "Topics"
 msgstr ""
-
-msgid "Toplogy host details"
-msgstr ""
-
-msgid "Topology"
-msgstr ""
-
-#, fuzzy
-msgid "Topology filters"
-msgstr "Adaugă filtre"
 
 msgid "Total"
 msgstr ""
@@ -52101,18 +51876,6 @@ msgstr ""
 msgid ""
 "Unable to synchronize nested groups (Found no common base DN for user base "
 "DN \"%s\" and group base DN \"%s\")"
-msgstr ""
-
-#, python-format
-msgid ""
-"Unable to transform dashlet %d of dashboard %s. You will need to migrate it "
-"on your own. Definition: %r"
-msgstr ""
-
-#, python-format
-msgid ""
-"Unable to transform dashlet %d of dashboard %s: the dashlet is using "
-"\"urlfunc\" which can not be converted automatically."
 msgstr ""
 
 #, python-format
@@ -54514,6 +54277,9 @@ msgstr ""
 msgid "Vertical spacing"
 msgstr ""
 
+msgid "Very Weak"
+msgstr ""
+
 msgid "Very high"
 msgstr ""
 
@@ -55035,6 +54801,9 @@ msgid ""
 "helps you to get more control over the piggybacked host data handling. The "
 "source host names have to be set in the condition field <i>Explicit hosts</"
 "i>."
+msgstr ""
+
+msgid "Weak"
 msgstr ""
 
 msgid "Web"
@@ -55976,10 +55745,6 @@ msgstr "trimite notificare"
 
 #, fuzzy
 msgid "Windows files"
-msgstr "(fără Nivel de serviciu)"
-
-#, fuzzy
-msgid "Windows hosts"
 msgstr "(fără Nivel de serviciu)"
 
 #, fuzzy
@@ -57688,7 +57453,13 @@ msgstr ""
 #, python-format
 msgid ""
 "Your central site (Version: %s, Edition: %s) is incompatible with this "
-"remote site (Version: %s, Edition: %s)"
+"remote site (Version: %s, Edition: %s). Reason: %s"
+msgstr ""
+
+#, python-format
+msgid ""
+"Your central site (Version: %s, Edition: %s) is incompatible with this "
+"remote site (Version: %s, Edition: %s): Reason: %s"
 msgstr ""
 
 msgid "Your central site is incompatible with this remote site"
@@ -59878,6 +59649,92 @@ msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~ msgid "Agent update status"
+#~ msgstr "Stare adiministrativă"
+
+#, fuzzy
+#~ msgid "BI host details"
+#~ msgstr "servicii"
+
+#, fuzzy
+#~ msgid "BI service details"
+#~ msgstr "servicii"
+
+#, fuzzy
+#~ msgid "Event details"
+#~ msgstr "servicii"
+
+#, fuzzy
+#~ msgid "Event history entry"
+#~ msgstr "Adaungă un nou element"
+
+# georgem ##############
+#, fuzzy
+#~ msgid "Event history of host"
+#~ msgstr "Grup nou"
+
+#, fuzzy
+#~ msgid "Events of host"
+#~ msgstr "% / gamă"
+
+# georgem ##############
+#, fuzzy
+#~ msgid "Events of monitored host"
+#~ msgstr "Grup nou"
+
+#, fuzzy
+#~ msgid "Execution time of Checkmk Agent"
+#~ msgstr "Verificări active"
+
+#, fuzzy
+#~ msgid "Host & service problems"
+#~ msgstr "(fără Nivel de serviciu)"
+
+#, fuzzy
+#~ msgid "Host graphs"
+#~ msgstr "Grup nou"
+
+#, fuzzy
+#~ msgid "Host problems (all)"
+#~ msgstr "(fără Nivel de serviciu)"
+
+#, fuzzy
+#~| msgid "(no hosts)"
+#~ msgid "Linux hosts"
+#~ msgstr "(fără elemente)"
+
+#, fuzzy
+#~ msgid "Main dashboard"
+#~ msgstr "Adaugă element"
+
+#, fuzzy
+#~ msgid "Problem dashboard"
+#~ msgstr "Probleme"
+
+#, fuzzy
+#~ msgid "Recent event history"
+#~ msgstr "Verificări active"
+
+#, fuzzy
+#~ msgid "Service problems (all)"
+#~ msgstr "(fără Nivel de serviciu)"
+
+#, fuzzy
+#~ msgid "Single Windows host"
+#~ msgstr "Probleme"
+
+#~ msgid "Table of all currently open events (handled and unhandled)"
+#~ msgstr "Tabel cu toate evenimentele deschise (manipulate si netratate)"
+
+#, fuzzy
+#~ msgid "Topology filters"
+#~ msgstr "Adaugă filtre"
+
+#, fuzzy
+#~ msgid "Windows hosts"
+#~ msgstr "(fără Nivel de serviciu)"
+
+#, fuzzy
 #~ msgid "Current details"
 #~ msgstr "servicii"
 
@@ -60124,10 +59981,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "AWS/SNS Limits"
 #~ msgstr "Adaugă limite"
-
-#, fuzzy
-#~ msgid "Top alerters"
-#~ msgstr "Dezactiveaza Notificarile"
 
 #, python-format
 #~ msgid "Absolute %s"

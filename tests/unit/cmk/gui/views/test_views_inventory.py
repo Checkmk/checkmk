@@ -25,7 +25,7 @@ from cmk.gui.plugins.visuals.inventory import FilterInvtableVersion
 from cmk.gui.view import View
 from cmk.gui.views.inventory import (
     _cmp_inv_generic,
-    _cmp_inventory_node,
+    _decorate_sort_function,
     AttributeDisplayHint,
     AttributesDisplayHint,
     ColumnDisplayHint,
@@ -275,18 +275,8 @@ def test_query_row_multi_table_inventory_add_columns(  # type:ignore[no-untyped-
         (0, 1, -1),
     ],
 )
-def test__cmp_inventory_node(  # type:ignore[no-untyped-def]
-    monkeypatch, val_a, val_b, result
-) -> None:
-    monkeypatch.setattr(cmk.gui.inventory, "get_attribute", lambda val, path: val)
-    assert (
-        _cmp_inventory_node(
-            {"host_inventory": val_a},
-            {"host_inventory": val_b},
-            cmk.gui.inventory.InventoryPath.parse(".any.path"),
-        )
-        == result
-    )
+def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
+    assert _decorate_sort_function(_cmp_inv_generic)(val_a, val_b) == result
 
 
 @pytest.mark.parametrize(
@@ -558,7 +548,7 @@ def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[S
                 paint_function=inv_paint_generic,
                 title="Key",
                 _long_title_function=lambda: "Key",
-                sort_function=_cmp_inv_generic,
+                sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter_class=None,
             ),
         ),
@@ -569,7 +559,7 @@ def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[S
                 paint_function=inv_paint_if_oper_status,
                 title="Operational Status",
                 _long_title_function=lambda: "Network interfaces ➤ Operational Status",
-                sort_function=_cmp_inv_generic,
+                sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter_class=None,
             ),
         ),
@@ -580,7 +570,7 @@ def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[S
                 paint_function=inv_paint_generic,
                 title="Key",
                 _long_title_function=lambda: "Node ➤ Key",
-                sort_function=_cmp_inv_generic,
+                sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter_class=None,
             ),
         ),
@@ -592,8 +582,8 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
     assert hint.title == expected.title
     assert hint.long_title == expected.long_title
     assert hint.long_inventory_title == expected.long_inventory_title
-    assert hint.paint_function == expected.paint_function
-    assert hint.sort_function == expected.sort_function
+    assert callable(hint.paint_function)
+    assert callable(hint.sort_function)
 
 
 @pytest.mark.parametrize(
@@ -605,7 +595,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
                 paint_function=inv_paint_generic,
                 title="Bar",
                 _long_title_function=lambda: "Foo ➤ Bar",
-                sort_function=_cmp_inv_generic,
+                sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter_class=None,
             ),
         ),
@@ -615,7 +605,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
                 paint_function=inv_paint_generic,
                 title="Package Version",
                 _long_title_function=lambda: "Software packages ➤ Package Version",
-                sort_function=cmp_version,
+                sort_function=_decorate_sort_function(cmp_version),
                 filter_class=None,
             ),
         ),
@@ -625,7 +615,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
                 paint_function=inv_paint_generic,
                 title="Version",
                 _long_title_function=lambda: "Software packages ➤ Version",
-                sort_function=cmp_version,
+                sort_function=_decorate_sort_function(cmp_version),
                 filter_class=FilterInvtableVersion,
             ),
         ),
@@ -635,7 +625,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
                 paint_function=inv_paint_number,
                 title="Index",
                 _long_title_function=lambda: "Network interfaces ➤ Index",
-                sort_function=_cmp_inv_generic,
+                sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter_class=None,
             ),
         ),
@@ -645,7 +635,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
                 paint_function=inv_paint_if_oper_status,
                 title="Operational Status",
                 _long_title_function=lambda: "Network interfaces ➤ Operational Status",
-                sort_function=_cmp_inv_generic,
+                sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter_class=None,
             ),
         ),
@@ -660,8 +650,8 @@ def test_make_column_displayhint_from_hint(
     assert hint.title == expected.title
     assert hint.long_title == expected.long_title
     assert hint.long_inventory_title == expected.long_inventory_title
-    assert hint.paint_function == expected.paint_function
-    assert hint.sort_function == expected.sort_function
+    assert callable(hint.paint_function)
+    assert callable(hint.sort_function)
 
 
 @pytest.mark.parametrize(
@@ -696,6 +686,7 @@ def test_sort_attributes_pairs_displayhint(
             AttributeDisplayHint(
                 data_type="str",
                 paint_function=inv_paint_generic,
+                sort_function=_decorate_sort_function(_cmp_inv_generic),
                 title="Key",
                 _long_title_function=lambda: "Key",
                 is_show_more=True,
@@ -707,6 +698,7 @@ def test_sort_attributes_pairs_displayhint(
             AttributeDisplayHint(
                 data_type="size",
                 paint_function=inv_paint_size,
+                sort_function=_decorate_sort_function(_cmp_inv_generic),
                 title="Size",
                 _long_title_function=lambda: "Block Devices ➤ Size",
                 is_show_more=True,
@@ -718,6 +710,7 @@ def test_sort_attributes_pairs_displayhint(
             AttributeDisplayHint(
                 data_type="str",
                 paint_function=inv_paint_generic,
+                sort_function=_decorate_sort_function(_cmp_inv_generic),
                 title="Key",
                 _long_title_function=lambda: "Node ➤ Key",
                 is_show_more=True,
@@ -729,7 +722,8 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
     hint = DISPLAY_HINTS.get_hints(path).get_attribute_hint(key)
 
     assert hint.data_type == expected.data_type
-    assert hint.paint_function == expected.paint_function
+    assert callable(hint.paint_function)
+    assert callable(hint.sort_function)
     assert hint.title == expected.title
     assert hint.long_title == expected.long_title
     assert hint.long_inventory_title == expected.long_inventory_title
@@ -744,6 +738,7 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
             AttributeDisplayHint(
                 data_type="str",
                 paint_function=inv_paint_generic,
+                sort_function=_decorate_sort_function(_cmp_inv_generic),
                 title="Bar",
                 _long_title_function=lambda: "Foo ➤ Bar",
                 is_show_more=True,
@@ -754,6 +749,7 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
             AttributeDisplayHint(
                 data_type="str",
                 paint_function=inv_paint_generic,
+                sort_function=_decorate_sort_function(_cmp_inv_generic),
                 title="CPU Architecture",
                 _long_title_function=lambda: "Processor ➤ CPU Architecture",
                 is_show_more=True,
@@ -764,6 +760,7 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
             AttributeDisplayHint(
                 data_type="str",
                 paint_function=inv_paint_generic,
+                sort_function=_decorate_sort_function(_cmp_inv_generic),
                 title="Product",
                 _long_title_function=lambda: "System ➤ Product",
                 is_show_more=False,
@@ -778,7 +775,8 @@ def test_make_attribute_displayhint_from_hint(
     hint = DISPLAY_HINTS.get_hints(inventory_path.path).get_attribute_hint(inventory_path.key or "")
 
     assert hint.data_type == expected.data_type
-    assert hint.paint_function == expected.paint_function
+    assert callable(hint.paint_function)
+    assert callable(hint.sort_function)
     assert hint.title == expected.title
     assert hint.long_title == expected.long_title
     assert hint.long_inventory_title == expected.long_inventory_title

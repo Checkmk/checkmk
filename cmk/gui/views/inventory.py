@@ -16,9 +16,11 @@ from typing import (
     Iterator,
     Mapping,
     NamedTuple,
+    Protocol,
     Sequence,
     Type,
     TYPE_CHECKING,
+    TypeVar,
 )
 
 from livestatus import LivestatusResponse, OnlySites, SiteId
@@ -599,6 +601,25 @@ def inv_paint_service_status(status: str) -> PaintResult:
 #   |                  |_|            |___/                                |
 #   '----------------------------------------------------------------------'
 
+# TODO This protocol can also be used in cmk.utils.structured_data.py
+
+
+class _Comparable(Protocol):
+    @abc.abstractmethod
+    def __eq__(self, other: object) -> bool:
+        ...
+
+    @abc.abstractmethod
+    def __lt__(self, other: CmpInvValue) -> bool:
+        ...
+
+    @abc.abstractmethod
+    def __gt__(self, other: CmpInvValue) -> bool:
+        ...
+
+
+CmpInvValue = TypeVar("CmpInvValue", bound=_Comparable)
+
 
 def _get_paint_function(raw_hint: InventoryHintSpec) -> tuple[str, PaintFunction]:
     # FIXME At the moment  we need it to get tdclass: Clean this up one day.
@@ -607,6 +628,30 @@ def _get_paint_function(raw_hint: InventoryHintSpec) -> tuple[str, PaintFunction
         return data_type, _get_paint_function_from_globals(data_type)
 
     return "str", inv_paint_generic
+
+
+SortFunction = Callable[[CmpInvValue, CmpInvValue], int]
+
+
+def _make_sort_function(raw_hint: InventoryHintSpec) -> SortFunction:
+    return _decorate_sort_function(raw_hint.get("sort", _cmp_inv_generic))
+
+
+def _decorate_sort_function(sort_function: SortFunction) -> SortFunction:
+    def wrapper(val_a: CmpInvValue | None, val_b: CmpInvValue | None) -> int:
+        if val_a is None:
+            return 0 if val_b is None else -1
+
+        if val_b is None:
+            return 0 if val_a is None else 1
+
+        return sort_function(val_a, val_b)
+
+    return wrapper
+
+
+def _cmp_inv_generic(val_a: CmpInvValue, val_b: CmpInvValue) -> int:
+    return (val_a > val_b) - (val_a < val_b)
 
 
 def _make_title_function(raw_hint: InventoryHintSpec) -> Callable[[str], str]:
@@ -696,7 +741,7 @@ class ColumnDisplayHint:
     title: str
     _long_title_function: Callable[[], str]
     paint_function: PaintFunction
-    sort_function: Callable[[Any, Any], int]  # TODO improve type hints for args
+    sort_function: SortFunction
     filter_class: (
         None
         | Type[FilterInvtableText]
@@ -723,7 +768,7 @@ class ColumnDisplayHint:
             title=title,
             _long_title_function=_make_long_title_function(title, path),
             paint_function=paint_function,
-            sort_function=raw_hint.get("sort", _cmp_inv_generic),
+            sort_function=_make_sort_function(raw_hint),
             filter_class=raw_hint.get("filter"),
         )
 
@@ -774,6 +819,7 @@ class AttributeDisplayHint:
     _long_title_function: Callable[[], str]
     data_type: str
     paint_function: PaintFunction
+    sort_function: SortFunction
     is_show_more: bool
 
     @property
@@ -793,6 +839,7 @@ class AttributeDisplayHint:
             _long_title_function=_make_long_title_function(title, path),
             data_type=data_type,
             paint_function=paint_function,
+            sort_function=_make_sort_function(raw_hint),
             is_show_more=raw_hint.get("is_show_more", True),
         )
 
@@ -1281,11 +1328,13 @@ def _register_attribute_column(
     register_sorter(
         name,
         {
-            "_inventory_path": inventory_path,
             "title": long_inventory_title,
             "columns": ["host_inventory", "host_structured_status"],
             "load_inv": True,
-            "cmp": lambda self, a, b: _cmp_inventory_node(a, b, self._spec["_inventory_path"]),
+            "cmp": lambda self, a, b: hint.sort_function(
+                inventory.get_attribute(a["host_inventory"], inventory_path),
+                inventory.get_attribute(b["host_inventory"], inventory_path),
+            ),
         },
     )
 
@@ -1372,9 +1421,7 @@ def _register_table_column(
         {
             "title": long_inventory_title,
             "columns": [column],
-            "cmp": lambda self, a, b: _decorate_sort_func(hint.sort_function)(
-                a.get(column), b.get(column)
-            ),
+            "cmp": lambda self, a, b: hint.sort_function(a.get(column), b.get(column)),
         },
     )
 
@@ -2509,41 +2556,6 @@ def ajax_inv_render_tree() -> None:
 #   |                   |_| |_|\___|_| .__/ \___|_|                        |
 #   |                                |_|                                   |
 #   '----------------------------------------------------------------------'
-
-
-def _cmp_inventory_node(
-    a: Mapping[str, StructuredDataNode],
-    b: Mapping[str, StructuredDataNode],
-    inventory_path: inventory.InventoryPath,
-) -> int:
-    val_a = inventory.get_attribute(a["host_inventory"], inventory_path)
-    val_b = inventory.get_attribute(b["host_inventory"], inventory_path)
-    return _decorate_sort_func(_cmp_inv_generic)(val_a, val_b)
-
-
-def _cmp_inv_generic(val_a: object, val_b: object) -> int:
-    if isinstance(val_a, (float, int)) and isinstance(val_b, (float, int)):
-        return (val_a > val_b) - (val_a < val_b)
-
-    if isinstance(val_a, str) and isinstance(val_b, str):
-        return (val_a > val_b) - (val_a < val_b)
-
-    raise TypeError(
-        "Unsupported operand types for > and < (%s and %s)" % (type(val_a), type(val_b))
-    )
-
-
-def _decorate_sort_func(f):
-    def wrapper(val_a, val_b):
-        if val_a is None:
-            return 0 if val_b is None else -1
-
-        if val_b is None:
-            return 0 if val_a is None else 1
-
-        return f(val_a, val_b)
-
-    return wrapper
 
 
 def _get_table_rows(

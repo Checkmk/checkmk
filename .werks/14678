@@ -1,0 +1,14 @@
+Title: mk_docker is docker >=6.0.0 compatible
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1661855564
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p12
+
+The mk_docker plugin now works with docker version 6 or later.
+
+Previously, the plugin would fail with a message that the module docker.version was not json serializable.

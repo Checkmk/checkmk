@@ -363,9 +363,7 @@ def discovery_systemd_units(
                 continue
 
 
-def check_systemd_units_services(
-    item: str, params: Mapping[str, Any], section: Section
-) -> CheckResult:
+def check_systemd_units(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     # A service found in the discovery phase can vanish in subsequent runs. I.e. the systemd service was deleted during an update
     if item not in section.services:
         yield Result(state=State(params["else"]), summary="Service not found")
@@ -386,7 +384,7 @@ register.check_plugin(
     discovery_default_parameters={"names": ["(never discover)^"]},
     discovery_ruleset_name="discovery_systemd_units_services_rules",
     discovery_ruleset_type=register.RuleSetType.ALL,
-    check_function=check_systemd_units_services,
+    check_function=check_systemd_units,
     check_default_parameters={
         "states": {
             "active": 0,

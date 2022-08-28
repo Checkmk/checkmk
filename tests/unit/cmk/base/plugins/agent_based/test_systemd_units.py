@@ -10,7 +10,7 @@ import pytest
 from cmk.base.api.agent_based.checking_classes import Result, Service, State
 from cmk.base.plugins.agent_based.systemd_units import (
     _services_split,
-    check_systemd_units_services,
+    check_systemd_units,
     check_systemd_units_services_summary,
     discovery_systemd_units_services,
     discovery_systemd_units_services_summary,
@@ -729,7 +729,7 @@ def test_discover_systemd_units_services_summary(  # type:ignore[no-untyped-def]
 def test_check_systemd_units_services(  # type:ignore[no-untyped-def]
     item, params, section, check_results
 ) -> None:
-    assert list(check_systemd_units_services(item, params, section)) == check_results
+    assert list(check_systemd_units(item, params, section)) == check_results
 
 
 @pytest.mark.parametrize(

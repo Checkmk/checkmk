@@ -5,7 +5,8 @@
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any, Iterable, Iterator, Mapping, Optional, Sequence
+from enum import Enum
+from typing import Any, Iterable, Iterator, Mapping, NamedTuple, Optional, Sequence
 
 from .agent_based_api.v1 import check_levels, regex, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -110,6 +111,32 @@ _SYSTEMD_UNIT_FILE_STATES = [
 _STATUS_SYMBOLS = {"●", "○", "↻", "×", "x", "*"}
 
 
+# See: https://www.freedesktop.org/software/systemd/man/systemd.unit.html
+class UnitTypes(Enum):
+    service = "service"
+
+    @property
+    def suffix(self):
+        return f".{self.value}"
+
+
+@dataclass(frozen=True)
+class UnitStatus:
+    name: str
+    status: str
+    time_since_change: Optional[timedelta]
+
+    @classmethod
+    def from_entry(cls, entry: Sequence[Sequence[str]]) -> "UnitStatus":
+        name = entry[0][1].split(".", 1)[0]
+        timestr = " ".join(entry[2]).split(";", 1)[-1]
+        if "ago" in timestr:
+            time_since_change = _parse_time_str(timestr.replace("ago", "").strip())
+        else:
+            time_since_change = None
+        return cls(name=name, status=entry[2][1], time_since_change=time_since_change)
+
+
 @dataclass(frozen=True)
 class UnitEntry:
     name: str
@@ -120,8 +147,54 @@ class UnitEntry:
     enabled_status: str
     time_since_change: Optional[timedelta] = None
 
+    @classmethod
+    def _parse_name_and_unit_type(cls, raw: str) -> None | tuple[str, UnitTypes]:
+        """
+        >>> UnitEntry._parse_name_and_unit_type("foobar.service")
+        ('foobar', <UnitTypes.service: 'service'>)
+        >>> UnitEntry._parse_name_and_unit_type("another.bar.service")
+        ('another.bar', <UnitTypes.service: 'service'>)
+        >>> UnitEntry._parse_name_and_unit_type("another.bar.not_a_know_unit") is None
+        True
+        """
+        for unit in UnitTypes:
+            if raw.endswith(unit.suffix):
+                return raw.replace(unit.suffix, ""), unit
+        return None
 
-Section = Mapping[str, UnitEntry]
+    @classmethod
+    def try_parse(
+        cls,
+        row: Sequence[str],
+        enabled_status: Mapping[str, str],
+        status_details: Mapping[str, UnitStatus],
+    ) -> Optional[tuple[UnitTypes, "UnitEntry"]]:
+        if not (name_unit := cls._parse_name_and_unit_type(row[0])):
+            return None
+        name, unit_type = name_unit
+        temp = name[: name.find("@") + 1] if "@" in name else name
+        enabled = enabled_status.get(f"{temp}{unit_type.suffix}", "unknown")
+        remains = " ".join(row[1:])
+        loaded_status, active_status, current_state, descr = remains.split(" ", 3)
+        time_since_change = (
+            status_details[name].time_since_change if name in status_details else None
+        )
+        return unit_type, UnitEntry(
+            name=name,
+            loaded_status=loaded_status,
+            active_status=active_status,
+            current_state=current_state,
+            description=descr,
+            enabled_status=enabled,
+            time_since_change=time_since_change,
+        )
+
+
+Units = Mapping[str, UnitEntry]
+
+
+class Section(NamedTuple):
+    services: Units
 
 
 def _parse_list_unit_files(source: Iterator[Sequence[str]]) -> Mapping[str, str]:
@@ -159,54 +232,20 @@ def _parse_time_str(string: str) -> timedelta:
     return timedelta(**kwargs)
 
 
-@dataclass(frozen=True)
-class UnitStatus:
-    name: str
-    status: str
-    time_since_change: Optional[timedelta]
-
-    @classmethod
-    def from_entry(cls, entry: Sequence[Sequence[str]]) -> "UnitStatus":
-        name = entry[0][1].split(".", 1)[0]
-        timestr = " ".join(entry[2]).split(";", 1)[-1]
-        if "ago" in timestr:
-            time_since_change = _parse_time_str(timestr.replace("ago", "").strip())
-        else:
-            time_since_change = None
-        return cls(name=name, status=entry[2][1], time_since_change=time_since_change)
-
-
 def _parse_all(
     source: Iterable[list[str]],
     enabled_status: Mapping[str, str],
     status_details: Mapping[str, UnitStatus],
-) -> Optional[Section]:
-    parsed: dict[str, UnitEntry] = {}
+) -> Section:
+    services: dict[str, UnitEntry] = {}
     for row in source:
         if row[0] in _STATUS_SYMBOLS:
             row = row[1:]
-        if row[0].endswith(".service"):
-            name = row[0].replace(".service", "")
-            temp = name[: name.find("@") + 1] if "@" in name else name
-            enabled = enabled_status.get(f"{temp}.service", "unknown")
-            remains = " ".join(row[1:])
-            loaded_status, active_status, current_state, descr = remains.split(" ", 3)
-            time_since_change = (
-                status_details[name].time_since_change if name in status_details else None
-            )
-            unit = UnitEntry(
-                name,
-                loaded_status,
-                active_status,
-                current_state,
-                descr,
-                enabled,
-                time_since_change=time_since_change,
-            )
-            parsed[unit.name] = unit
-    if parsed == {}:
-        return None
-    return parsed
+        if result := UnitEntry.try_parse(row, enabled_status, status_details):
+            unit_type, unit = result
+            if unit_type is UnitTypes.service:
+                services[unit.name] = unit
+    return Section(services=services)
 
 
 def _is_service_entry(entry: Sequence[Sequence[str]]) -> bool:
@@ -282,9 +321,9 @@ def discovery_systemd_units_services(
     # Filter out volatile systemd service units created by the Checkmk agent which appear and
     # disappear frequently. No matter what the user configures, we do not want to discover them.
     filtered_services = [
-        service
-        for service in section.values()
-        if not regex("^check-mk-agent@.+").match(service.name)
+        unit_entry
+        for unit_entry in section.services.values()
+        if not regex("^check-mk-agent@.+").match(unit_entry.name)
     ]
 
     def regex_match(what: Sequence[str], name: str) -> bool:
@@ -323,10 +362,10 @@ def check_systemd_units_services(
     item: str, params: Mapping[str, Any], section: Section
 ) -> CheckResult:
     # A service found in the discovery phase can vanish in subsequent runs. I.e. the systemd service was deleted during an update
-    if item not in section:
+    if item not in section.services:
         yield Result(state=State(params["else"]), summary="Service not found")
         return
-    service = section[item]
+    service = section.services[item]
     # TODO: this defaults unkown states to CRIT with the default params
     state = params["states"].get(service.active_status, params["states_default"])
     yield Result(state=State(state), summary=f"Status: {service.active_status}")
@@ -433,7 +472,7 @@ def _check_non_ok_services(
 def check_systemd_units_services_summary(
     item: str, params: Mapping[str, Any], section: Section
 ) -> CheckResult:
-    services = section.values()
+    services = section.services.values()
     blacklist = params["ignored"]
     yield Result(state=State.OK, summary=f"Total: {len(services):d}")
     services_organised = _services_split(services, blacklist)

@@ -168,7 +168,7 @@ def test_services_split(services, blacklist, expected) -> None:  # type:ignore[n
                 "UNIT LOAD ACTIVE SUB DESCRIPTION",
                 "0 unit files listed.",
             ],
-            None,
+            Section(services={}),
             id="No systemd units returns empty parsed section",
         ),
         pytest.param(
@@ -182,7 +182,7 @@ def test_services_split(services, blacklist, expected) -> None:  # type:ignore[n
                 "virtualbox.service loaded active exited LSB: VirtualBox Linux kernel module",
                 "1 unit files listed.",
             ],
-            None,
+            Section(services={}),
             id='Missing "[all]" header in agent section leads to empty parsed section',
         ),
         pytest.param(
@@ -192,16 +192,18 @@ def test_services_split(services, blacklist, expected) -> None:  # type:ignore[n
                 "virtualbox.service loaded active exited LSB: VirtualBox Linux kernel module",
                 "1 unit files listed.",
             ],
-            {
-                "virtualbox": UnitEntry(
-                    name="virtualbox",
-                    loaded_status="loaded",
-                    active_status="active",
-                    current_state="exited",
-                    description="LSB: VirtualBox Linux kernel module",
-                    enabled_status="unknown",
-                )
-            },
+            Section(
+                services={
+                    "virtualbox": UnitEntry(
+                        name="virtualbox",
+                        loaded_status="loaded",
+                        active_status="active",
+                        current_state="exited",
+                        description="LSB: VirtualBox Linux kernel module",
+                        enabled_status="unknown",
+                    )
+                }
+            ),
             id="Simple agent section parsed correctly",
         ),
         pytest.param(
@@ -211,16 +213,18 @@ def test_services_split(services, blacklist, expected) -> None:  # type:ignore[n
                 "* virtualbox.service loaded active exited LSB: VirtualBox Linux kernel module",
                 "1 unit files listed.",
             ],
-            {
-                "virtualbox": UnitEntry(
-                    name="virtualbox",
-                    loaded_status="loaded",
-                    active_status="active",
-                    current_state="exited",
-                    description="LSB: VirtualBox Linux kernel module",
-                    enabled_status="unknown",
-                )
-            },
+            Section(
+                services={
+                    "virtualbox": UnitEntry(
+                        name="virtualbox",
+                        loaded_status="loaded",
+                        active_status="active",
+                        current_state="exited",
+                        description="LSB: VirtualBox Linux kernel module",
+                        enabled_status="unknown",
+                    )
+                }
+            ),
             id='Leading "*" in systemd status line is ignored',
         ),
         pytest.param(
@@ -230,7 +234,7 @@ def test_services_split(services, blacklist, expected) -> None:  # type:ignore[n
                 "active plugged ",
                 "1 unit files listed.",
             ],
-            None,
+            Section(services={}),
             id="Invalid systemd status lines are skipped",
         ),
         pytest.param(
@@ -243,16 +247,18 @@ def test_services_split(services, blacklist, expected) -> None:  # type:ignore[n
                 "virtualbox.service loaded active exited LSB: VirtualBox Linux kernel module",
                 "1 unit files listed.",
             ],
-            {
-                "virtualbox": UnitEntry(
-                    name="virtualbox",
-                    loaded_status="loaded",
-                    active_status="active",
-                    current_state="exited",
-                    description="LSB: VirtualBox Linux kernel module",
-                    enabled_status="enabled",
-                )
-            },
+            Section(
+                services={
+                    "virtualbox": UnitEntry(
+                        name="virtualbox",
+                        loaded_status="loaded",
+                        active_status="active",
+                        current_state="exited",
+                        description="LSB: VirtualBox Linux kernel module",
+                        enabled_status="enabled",
+                    )
+                }
+            ),
             id="Systemd unit status found in list-unit-files mapping",
         ),
         pytest.param(
@@ -265,16 +271,18 @@ def test_services_split(services, blacklist, expected) -> None:  # type:ignore[n
                 "virtualbox.service loaded active exited LSB: VirtualBox Linux kernel module",
                 "1 unit files listed.",
             ],
-            {
-                "virtualbox": UnitEntry(
-                    name="virtualbox",
-                    loaded_status="loaded",
-                    active_status="active",
-                    current_state="exited",
-                    description="LSB: VirtualBox Linux kernel module",
-                    enabled_status="unknown",
-                )
-            },
+            Section(
+                services={
+                    "virtualbox": UnitEntry(
+                        name="virtualbox",
+                        loaded_status="loaded",
+                        active_status="active",
+                        current_state="exited",
+                        description="LSB: VirtualBox Linux kernel module",
+                        enabled_status="unknown",
+                    )
+                }
+            ),
             id='Systemd unit status not available in list-unit-files mapping, use "unknown" instead',
         ),
         pytest.param(
@@ -283,16 +291,18 @@ def test_services_split(services, blacklist, expected) -> None:  # type:ignore[n
                 "UNIT LOAD ACTIVE SUB JOB DESCRIPTION",
                 "● kbd.service not-found inactive dead kbd.service",
             ],
-            {
-                "kbd": UnitEntry(
-                    name="kbd",
-                    loaded_status="not-found",
-                    active_status="inactive",
-                    current_state="dead",
-                    description="kbd.service",
-                    enabled_status="unknown",
-                ),
-            },
+            Section(
+                services={
+                    "kbd": UnitEntry(
+                        name="kbd",
+                        loaded_status="not-found",
+                        active_status="inactive",
+                        current_state="dead",
+                        description="kbd.service",
+                        enabled_status="unknown",
+                    ),
+                }
+            ),
             id="C.UTF-8 locale (● instead of * for broken units)",
         ),
         pytest.param(
@@ -314,17 +324,19 @@ def test_services_split(services, blacklist, expected) -> None:  # type:ignore[n
                 "UNIT LOAD ACTIVE SUB JOB DESCRIPTION",
                 "cmktest.service loaded active running NOT FROM SYSTEMD",
             ],
-            {
-                "cmktest": UnitEntry(
-                    name="cmktest",
-                    loaded_status="loaded",
-                    active_status="active",
-                    current_state="running",
-                    description="NOT FROM SYSTEMD",
-                    enabled_status="unknown",
-                    time_since_change=timedelta(minutes=33),
-                ),
-            },
+            Section(
+                services={
+                    "cmktest": UnitEntry(
+                        name="cmktest",
+                        loaded_status="loaded",
+                        active_status="active",
+                        current_state="running",
+                        description="NOT FROM SYSTEMD",
+                        enabled_status="unknown",
+                        time_since_change=timedelta(minutes=33),
+                    ),
+                }
+            ),
             id="parse status change",
         ),
         pytest.param(
@@ -341,17 +353,19 @@ def test_services_split(services, blacklist, expected) -> None:  # type:ignore[n
                 "UNIT LOAD ACTIVE SUB JOB DESCRIPTION",
                 "sssd.service loaded active running SSSD NOT FROM SYSTEMD ONLY FOR TEST",
             ],
-            {
-                "sssd": UnitEntry(
-                    name="sssd",
-                    loaded_status="loaded",
-                    active_status="active",
-                    current_state="running",
-                    description="SSSD NOT FROM SYSTEMD ONLY FOR TEST",
-                    enabled_status="unknown",
-                    time_since_change=None,
-                ),
-            },
+            Section(
+                services={
+                    "sssd": UnitEntry(
+                        name="sssd",
+                        loaded_status="loaded",
+                        active_status="active",
+                        current_state="running",
+                        description="SSSD NOT FROM SYSTEMD ONLY FOR TEST",
+                        enabled_status="unknown",
+                        time_since_change=None,
+                    ),
+                }
+            ),
             id="parse status change works with status inactive (no time information included)",
         ),
         pytest.param(
@@ -373,7 +387,7 @@ def test_services_split(services, blacklist, expected) -> None:  # type:ignore[n
                 "[all]",
                 "UNIT LOAD ACTIVE SUB JOB DESCRIPTION",
             ],
-            None,
+            Section(services={}),
             id="parse status works if '[' appears in output",
         ),
         pytest.param(
@@ -395,7 +409,7 @@ def test_services_split(services, blacklist, expected) -> None:  # type:ignore[n
                 "[all]",
                 "UNIT LOAD ACTIVE SUB JOB DESCRIPTION",
             ],
-            None,
+            Section(services={}),
             id="parse status with misleading status symbol (x)",
         ),
         pytest.param(
@@ -408,7 +422,7 @@ def test_services_split(services, blacklist, expected) -> None:  # type:ignore[n
                 "[all]",
                 "UNIT LOAD ACTIVE SUB JOB DESCRIPTION",
             ],
-            None,
+            Section(services={}),
             id="parse status works with incomplete data (SUP-10799)",
         ),
     ],
@@ -463,17 +477,19 @@ def test_parse_time_since_state_change(time, expected) -> None:  # type:ignore[n
         "UNIT LOAD ACTIVE SUB JOB DESCRIPTION",
         "sssd.service loaded active running SSSD NOT FROM SYSTEMD ONLY FOR TEST",
     ]
-    section = {
-        "sssd": UnitEntry(
-            name="sssd",
-            loaded_status="loaded",
-            active_status="active",
-            current_state="running",
-            description="SSSD NOT FROM SYSTEMD ONLY FOR TEST",
-            enabled_status="unknown",
-            time_since_change=expected,
-        ),
-    }
+    section = Section(
+        services={
+            "sssd": UnitEntry(
+                name="sssd",
+                loaded_status="loaded",
+                active_status="active",
+                current_state="running",
+                description="SSSD NOT FROM SYSTEMD ONLY FOR TEST",
+                enabled_status="unknown",
+                time_since_change=expected,
+            ),
+        }
+    )
     string_table = [el.split() for el in pre_string_table]
     assert parse(string_table) == section
 
@@ -493,17 +509,19 @@ def test_all_possible_service_states_in_status_section(icon) -> None:  # type:ig
         "UNIT LOAD ACTIVE SUB JOB DESCRIPTION",
         "sssd.service loaded active running SSSD NOT FROM SYSTEMD ONLY FOR TEST",
     ]
-    section = {
-        "sssd": UnitEntry(
-            name="sssd",
-            loaded_status="loaded",
-            active_status="active",
-            current_state="running",
-            description="SSSD NOT FROM SYSTEMD ONLY FOR TEST",
-            enabled_status="unknown",
-            time_since_change=timedelta(seconds=3),
-        ),
-    }
+    section = Section(
+        services={
+            "sssd": UnitEntry(
+                name="sssd",
+                loaded_status="loaded",
+                active_status="active",
+                current_state="running",
+                description="SSSD NOT FROM SYSTEMD ONLY FOR TEST",
+                enabled_status="unknown",
+                time_since_change=timedelta(seconds=3),
+            ),
+        }
+    )
     string_table = [el.split() for el in pre_string_table]
     assert parse(string_table) == section
 
@@ -523,64 +541,68 @@ def test_all_possible_service_states_in_all_section(icon) -> None:  # type:ignor
         "UNIT LOAD ACTIVE SUB JOB DESCRIPTION",
         f"{icon} sssd.service loaded active running SSSD NOT FROM SYSTEMD ONLY FOR TEST",
     ]
-    section = {
-        "sssd": UnitEntry(
-            name="sssd",
-            loaded_status="loaded",
-            active_status="active",
-            current_state="running",
-            description="SSSD NOT FROM SYSTEMD ONLY FOR TEST",
-            enabled_status="unknown",
-            time_since_change=timedelta(seconds=3),
-        ),
-    }
+    section = Section(
+        services={
+            "sssd": UnitEntry(
+                name="sssd",
+                loaded_status="loaded",
+                active_status="active",
+                current_state="running",
+                description="SSSD NOT FROM SYSTEMD ONLY FOR TEST",
+                enabled_status="unknown",
+                time_since_change=timedelta(seconds=3),
+            ),
+        }
+    )
     string_table = [el.split() for el in pre_string_table]
     assert parse(string_table) == section
 
 
-SECTION = {
-    "virtualbox": UnitEntry(
-        name="virtualbox",
-        loaded_status="loaded",
-        active_status="active",
-        current_state="exited",
-        description="LSB: VirtualBox Linux kernel module",
-        enabled_status="unknown",
-        time_since_change=timedelta(seconds=2),
-    ),
-    "bar": UnitEntry(
-        name="bar",
-        loaded_status="loaded",
-        active_status="failed",
-        current_state="failed",
-        description="a bar service",
-        enabled_status="unknown",
-    ),
-    "foo": UnitEntry(
-        name="foo",
-        loaded_status="loaded",
-        active_status="failed",
-        current_state="failed",
-        description="Arbitrary Executable File Formats File System Automount Point",
-        enabled_status="unknown",
-    ),
-    "check-mk-agent@738-127.0.0.1:6556-127.0.0.1:51542": UnitEntry(
-        name="check-mk-agent@738-127.0.0.1:6556-127.0.0.1:51542",
-        loaded_status="loaded",
-        active_status="active",
-        current_state="running",
-        description="Checkmk agent (127.0.0.1:51542)",
-        enabled_status="static",
-    ),
-    "check-mk-enterprise-2021.09.07": UnitEntry(
-        name="check-mk-enterprise-2021.09.07",
-        loaded_status="loaded",
-        active_status="active",
-        current_state="exited",
-        description="LSB: OMD sites",
-        enabled_status="generated",
-    ),
-}
+SECTION = Section(
+    services={
+        "virtualbox": UnitEntry(
+            name="virtualbox",
+            loaded_status="loaded",
+            active_status="active",
+            current_state="exited",
+            description="LSB: VirtualBox Linux kernel module",
+            enabled_status="unknown",
+            time_since_change=timedelta(seconds=2),
+        ),
+        "bar": UnitEntry(
+            name="bar",
+            loaded_status="loaded",
+            active_status="failed",
+            current_state="failed",
+            description="a bar service",
+            enabled_status="unknown",
+        ),
+        "foo": UnitEntry(
+            name="foo",
+            loaded_status="loaded",
+            active_status="failed",
+            current_state="failed",
+            description="Arbitrary Executable File Formats File System Automount Point",
+            enabled_status="unknown",
+        ),
+        "check-mk-agent@738-127.0.0.1:6556-127.0.0.1:51542": UnitEntry(
+            name="check-mk-agent@738-127.0.0.1:6556-127.0.0.1:51542",
+            loaded_status="loaded",
+            active_status="active",
+            current_state="running",
+            description="Checkmk agent (127.0.0.1:51542)",
+            enabled_status="static",
+        ),
+        "check-mk-enterprise-2021.09.07": UnitEntry(
+            name="check-mk-enterprise-2021.09.07",
+            loaded_status="loaded",
+            active_status="active",
+            current_state="exited",
+            description="LSB: OMD sites",
+            enabled_status="generated",
+        ),
+    }
+)
 
 
 @pytest.mark.parametrize(
@@ -599,7 +621,7 @@ SECTION = {
             [],
         ),
         (
-            {},
+            Section(services={}),
             [
                 {"names": ["~virtualbox.*"]},
             ],
@@ -699,7 +721,7 @@ def test_discover_systemd_units_services_summary(  # type:ignore[no-untyped-def]
                 "states": {"active": 0, "failed": 2, "inactive": 0},
                 "states_default": 2,
             },
-            {},
+            Section(services={}),
             [Result(state=State.CRIT, summary="Service not found")],
         ),
     ],
@@ -740,16 +762,18 @@ def test_check_systemd_units_services(  # type:ignore[no-untyped-def]
                 "deactivating_levels": (30, 60),
                 "reloading_levels": (30, 60),
             },
-            {
-                "virtualbox": UnitEntry(
-                    name="virtualbox",
-                    loaded_status="loaded",
-                    active_status="active",
-                    current_state="exited",
-                    description="LSB: VirtualBox Linux kernel module",
-                    enabled_status="unknown",
-                ),
-            },
+            Section(
+                services={
+                    "virtualbox": UnitEntry(
+                        name="virtualbox",
+                        loaded_status="loaded",
+                        active_status="active",
+                        current_state="exited",
+                        description="LSB: VirtualBox Linux kernel module",
+                        enabled_status="unknown",
+                    ),
+                }
+            ),
             [
                 Result(state=State.OK, summary="Total: 1"),
                 Result(state=State.OK, summary="Disabled: 0"),
@@ -765,26 +789,28 @@ def test_check_systemd_units_services(  # type:ignore[no-untyped-def]
                 "deactivating_levels": (30, 60),
                 "reloading_levels": (30, 60),
             },
-            {
-                "virtualbox": UnitEntry(
-                    name="virtualbox",
-                    loaded_status="loaded",
-                    active_status="activating",
-                    current_state="exited",
-                    description="LSB: VirtualBox Linux kernel module",
-                    enabled_status="unknown",
-                    time_since_change=timedelta(seconds=2),
-                ),
-                "actualbox": UnitEntry(
-                    name="actualbox",
-                    loaded_status="loaded",
-                    active_status="deactivating",
-                    current_state="finished",
-                    description="A made up service for this test",
-                    enabled_status="unknown",
-                    time_since_change=timedelta(seconds=4),
-                ),
-            },
+            Section(
+                services={
+                    "virtualbox": UnitEntry(
+                        name="virtualbox",
+                        loaded_status="loaded",
+                        active_status="activating",
+                        current_state="exited",
+                        description="LSB: VirtualBox Linux kernel module",
+                        enabled_status="unknown",
+                        time_since_change=timedelta(seconds=2),
+                    ),
+                    "actualbox": UnitEntry(
+                        name="actualbox",
+                        loaded_status="loaded",
+                        active_status="deactivating",
+                        current_state="finished",
+                        description="A made up service for this test",
+                        enabled_status="unknown",
+                        time_since_change=timedelta(seconds=4),
+                    ),
+                }
+            ),
             [
                 Result(state=State.OK, summary="Total: 2"),
                 Result(state=State.OK, summary="Disabled: 0"),
@@ -801,17 +827,19 @@ def test_check_systemd_units_services(  # type:ignore[no-untyped-def]
                 "deactivating_levels": (30, 60),
                 "reloading_levels": (30, 60),
             },
-            {
-                "virtualbox": UnitEntry(
-                    name="virtualbox",
-                    loaded_status="loaded",
-                    active_status="activating",
-                    current_state="exited",
-                    description="LSB: VirtualBox Linux kernel module",
-                    enabled_status="reloading",
-                    time_since_change=timedelta(seconds=2),
-                ),
-            },
+            Section(
+                services={
+                    "virtualbox": UnitEntry(
+                        name="virtualbox",
+                        loaded_status="loaded",
+                        active_status="activating",
+                        current_state="exited",
+                        description="LSB: VirtualBox Linux kernel module",
+                        enabled_status="reloading",
+                        time_since_change=timedelta(seconds=2),
+                    ),
+                }
+            ),
             [
                 Result(state=State.OK, summary="Total: 1"),
                 Result(state=State.OK, summary="Disabled: 0"),
@@ -827,17 +855,19 @@ def test_check_systemd_units_services(  # type:ignore[no-untyped-def]
                 "deactivating_levels": (30, 60),
                 "reloading_levels": (30, 60),
             },
-            {
-                "virtualbox": UnitEntry(
-                    name="virtualbox",
-                    loaded_status="loaded",
-                    active_status="active",
-                    current_state="exited",
-                    description="LSB: VirtualBox Linux kernel module",
-                    enabled_status="reloading",
-                    time_since_change=timedelta(seconds=2),
-                ),
-            },
+            Section(
+                services={
+                    "virtualbox": UnitEntry(
+                        name="virtualbox",
+                        loaded_status="loaded",
+                        active_status="active",
+                        current_state="exited",
+                        description="LSB: VirtualBox Linux kernel module",
+                        enabled_status="reloading",
+                        time_since_change=timedelta(seconds=2),
+                    ),
+                }
+            ),
             [
                 Result(state=State.OK, summary="Total: 1"),
                 Result(state=State.OK, summary="Disabled: 0"),
@@ -853,16 +883,18 @@ def test_check_systemd_units_services(  # type:ignore[no-untyped-def]
                 "deactivating_levels": (30, 60),
                 "reloading_levels": (30, 60),
             },
-            {
-                "virtualbox": UnitEntry(
-                    name="virtualbox",
-                    loaded_status="loaded",
-                    active_status="active",
-                    current_state="exited",
-                    description="LSB: VirtualBox Linux kernel module",
-                    enabled_status="indirect",
-                ),
-            },
+            Section(
+                services={
+                    "virtualbox": UnitEntry(
+                        name="virtualbox",
+                        loaded_status="loaded",
+                        active_status="active",
+                        current_state="exited",
+                        description="LSB: VirtualBox Linux kernel module",
+                        enabled_status="indirect",
+                    ),
+                }
+            ),
             [
                 Result(state=State.OK, summary="Total: 1"),
                 Result(state=State.OK, summary="Disabled: 1"),
@@ -880,16 +912,18 @@ def test_check_systemd_units_services(  # type:ignore[no-untyped-def]
                 "deactivating_levels": (30, 60),
                 "reloading_levels": (30, 60),
             },
-            {
-                "virtualbox": UnitEntry(
-                    name="virtualbox",
-                    loaded_status="loaded",
-                    active_status="somesystemdstate",
-                    current_state="exited",
-                    description="LSB: VirtualBox Linux kernel module",
-                    enabled_status="unknown",
-                ),
-            },
+            Section(
+                services={
+                    "virtualbox": UnitEntry(
+                        name="virtualbox",
+                        loaded_status="loaded",
+                        active_status="somesystemdstate",
+                        current_state="exited",
+                        description="LSB: VirtualBox Linux kernel module",
+                        enabled_status="unknown",
+                    ),
+                }
+            ),
             [
                 Result(state=State.OK, summary="Total: 1"),
                 Result(state=State.OK, summary="Disabled: 0"),

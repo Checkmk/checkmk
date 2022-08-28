@@ -160,7 +160,7 @@ class Section(list):
 
     version_info = {
         "PluginVersion": VERSION,
-        "DockerPyVersion": docker.version,
+        "DockerPyVersion": docker.__version__,
     }
 
     # Should we need to parallelize one day, change this to be

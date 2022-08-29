@@ -13,7 +13,9 @@ from cmk.utils import version
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.type_defs import UserId
 
-from cmk.gui.cee.plugins.metrics.customgraphs import CustomGraphPage
+if not version.is_raw_edition():
+    from cmk.gui.cee.plugins.metrics.customgraphs import CustomGraphPage
+
 from cmk.gui.pagetypes import OverridableInstances
 
 GRAPH_ENDPOINT_TEMPLATE = "/NO_SITE/check_mk/api/1.0/domain-types/graph/actions/{name}/invoke"

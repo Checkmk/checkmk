@@ -57,11 +57,18 @@ class ESXCpu(BaseModel):
         allow_mutation = False
 
 
+class ESXDataStore(BaseModel):
+    name: str
+    free_space: float
+    capacity: float
+
+
 class ESXVm(BaseModel):
     snapshots: Sequence[str]
     power_state: str | None
     memory: ESXMemory | None
     cpu: ESXCpu | None
+    datastores: Sequence[ESXDataStore] | None
 
     class Config:
         allow_mutation = False

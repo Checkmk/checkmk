@@ -6,7 +6,7 @@ from typing import Dict, List, Mapping, Sequence
 
 from .agent_based_api.v1 import HostLabel, register
 from .agent_based_api.v1.type_defs import StringTable
-from .utils.esx_vsphere import ESXCpu, ESXMemory, ESXVm, SectionVM
+from .utils.esx_vsphere import ESXCpu, ESXDataStore, ESXMemory, ESXVm, SectionVM
 
 
 def parse_esx_vsphere_vm(string_table: StringTable) -> SectionVM:
@@ -22,6 +22,7 @@ def parse_esx_vsphere_vm(string_table: StringTable) -> SectionVM:
         power_state=_parse_esx_power_state(grouped_values),
         memory=_parse_esx_memory_section(grouped_values),
         cpu=_parse_esx_cpu_section(grouped_values),
+        datastores=_parse_esx_datastore_section(grouped_values),
     )
 
 
@@ -62,6 +63,38 @@ def _parse_esx_cpu_section(vm_values: Mapping[str, Sequence[str]]) -> ESXCpu | N
         )
     except (KeyError, IndexError):
         return None
+
+
+def _parse_esx_datastore_section(
+    vm_values: Mapping[str, Sequence[str]]
+) -> List[ESXDataStore] | None:
+    """Parse datastores specific values
+
+    # datastore_entries looks like:
+        ['url /vmfs/volumes/513df1e9-12fd7366-ac5a-e41f13e69eaa',
+        'uncommitted 51973812224',
+        'name zmucvm99-lds',
+        'type VMFS',
+        'accessible true',
+        'capacity 578478407680',
+        'freeSpace 68779245568']
+    """
+    if (datastore_urls := vm_values.get("config.datastoreUrl")) is None:
+        return None
+
+    stores = []
+    for datastore_url in " ".join(datastore_urls).split("@@"):
+        datastore_entries = datastore_url.split("|")
+        datastore_details = dict(x.split(" ", 1) for x in datastore_entries)
+        free_space = float(datastore_details.get("freeSpace", 0))
+        stores.append(
+            ESXDataStore(
+                name=datastore_details["name"],
+                capacity=float(datastore_details.get("capacity", 0)),
+                free_space=free_space,
+            )
+        )
+    return stores
 
 
 def host_label_esx_vshpere_vm(section):

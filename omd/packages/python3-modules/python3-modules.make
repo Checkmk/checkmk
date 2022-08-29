@@ -6,7 +6,7 @@ PYTHON3_MODULES_DIR := $(PYTHON3_MODULES)-$(PYTHON3_MODULES_VERS)
 # Note: Because the versions of the individual modules is not reflected in PYTHON3_MODULES_VERS,
 #       like it is done in other OMD packages, we'll have to increase the BUILD_ID on every package
 #       change.
-PYTHON3_MODULES_BUILD_ID := 16
+PYTHON3_MODULES_BUILD_ID := 9
 
 PYTHON3_MODULES_UNPACK:= $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-unpack
 PYTHON3_MODULES_PATCHING := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-patching
@@ -75,7 +75,7 @@ PYTHON3_MODULES_LIST += Werkzeug-2.1.2.tar.gz # Needed by Flask
 PYTHON3_MODULES_LIST += jsonschema-3.2.0.tar.gz # needed by openapi-spec-validator
 PYTHON3_MODULES_LIST += Flask-2.1.2.tar.gz # direct dependency
 PYTHON3_MODULES_LIST += pytz-2020.1.tar.gz # needed by Flask-Babel
-PYTHON3_MODULES_LIST += Babel-2.10.3.tar.gz # needed by Flask-Babel
+PYTHON3_MODULES_LIST += Babel-2.8.0.tar.gz # needed by Flask-Babel
 PYTHON3_MODULES_LIST += Flask-Babel-2.0.0.tar.gz # needed by GUI for i18n support (lazy gettext)
 PYTHON3_MODULES_LIST += openapi-spec-validator-0.2.9.tar.gz # direct dependency
 
@@ -86,7 +86,7 @@ PYTHON3_MODULES_LIST += defusedxml-0.6.0.tar.gz # needed for jira
 PYTHON3_MODULES_LIST += oauthlib-3.1.0.tar.gz # needed for requests-oauthlib and jira
 PYTHON3_MODULES_LIST += requests-oauthlib-1.3.0.tar.gz # needed for jira
 PYTHON3_MODULES_LIST += requests-toolbelt-0.9.1.tar.gz # needed for jira
-PYTHON3_MODULES_LIST += PyJWT-2.4.0.tar.gz # needed for jira
+PYTHON3_MODULES_LIST += PyJWT-1.7.1.tar.gz # needed for jira
 PYTHON3_MODULES_LIST += docutils-0.15.2.tar.gz # needed by boto3, jira
 PYTHON3_MODULES_LIST += jira-2.0.0.tar.gz # needed for jira
 
@@ -97,13 +97,13 @@ PYTHON3_MODULES_LIST += python-ldap-3.3.1.tar.gz # needed by GUI (User sync), py
 PYTHON3_MODULES_LIST += dicttoxml-1.7.4.tar.gz # needed by GUI (API XML format)
 PYTHON3_MODULES_LIST += Cython-0.29.30.tar.gz # needed by numpy
 PYTHON3_MODULES_LIST += numpy-1.22.4.zip # needed by GUI (forecast graphs)
-PYTHON3_MODULES_LIST += reportlab-3.6.11.tar.gz # needed by GUI (reporting)
-PYTHON3_MODULES_LIST += PyPDF2-2.10.2.tar.gz # needed by GUI (reporting)
+PYTHON3_MODULES_LIST += reportlab-3.5.34.tar.gz # needed by GUI (reporting)
+PYTHON3_MODULES_LIST += PyPDF2-1.26.0.tar.gz # needed by GUI (reporting)
 PYTHON3_MODULES_LIST += roman-3.2.tar.gz # needed by reporting frontmatter
 
 PYTHON3_MODULES_LIST += cachetools-4.1.1.tar.gz # needed by kubernetes
 PYTHON3_MODULES_LIST += google-auth-1.21.3.tar.gz # needed by kubernetes
-PYTHON3_MODULES_LIST += rsa-4.9.tar.gz # needed by kubernetes
+PYTHON3_MODULES_LIST += rsa-4.6.tar.gz # needed by kubernetes
 PYTHON3_MODULES_LIST += websocket_client-0.57.0.tar.gz # needed by kubernetes
 PYTHON3_MODULES_LIST += kubernetes-10.0.1.tar.gz # needed by kubernetes
 
@@ -124,7 +124,7 @@ PYTHON3_MODULES_LIST += marshmallow-oneofschema-2.1.0.tar.gz
 PYTHON3_MODULES_LIST += apispec-oneofschema-3.0.0.tar.gz
 
 PYTHON3_MODULES_LIST += mypy_extensions-0.4.3.tar.gz  # direct dependency
-PYTHON3_MODULES_LIST += typing_extensions-4.3.0.tar.gz  # direct dependency
+PYTHON3_MODULES_LIST += typing_extensions-3.7.4.1.tar.gz  # direct dependency
 
 PYTHON3_MODULES_LIST += dnspython-1.16.0.zip  # needed by python-active-directory
 PYTHON3_MODULES_LIST += python-active-directory-1.0.5.tar.gz  # direct dependency
@@ -198,7 +198,7 @@ $(PYTHON3_MODULES_INTERMEDIATE_INSTALL): $(PYTHON3_MODULES_BUILD)
 # solution: don't package test/
 	$(RM) -r $(PYTHON3_MODULES_INSTALL_DIR)/test/
 # Fix python interpreter for kept scripts
-	$(SED) -i '1s|^#!.*/python3$$|#!/usr/bin/env python3|' $(addprefix $(PYTHON3_MODULES_INSTALL_DIR)/bin/,chardetect fakebmc jirashell pbr pyghmicons pyghmiutil pyrsa-decrypt pyrsa-encrypt pyrsa-keygen pyrsa-priv2pub pyrsa-sign pyrsa-verify virshbmc snmpsimd.py)
+	$(SED) -i '1s|^#!.*/python3$$|#!/usr/bin/env python3|' $(addprefix $(PYTHON3_MODULES_INSTALL_DIR)/bin/,chardetect fakebmc jirashell pbr pyghmicons pyghmiutil pyjwt pyrsa-decrypt pyrsa-encrypt pyrsa-keygen pyrsa-priv2pub pyrsa-sign pyrsa-verify virshbmc snmpsimd.py)
 	$(TOUCH) $@
 
 PYTHON3_MODULES_CACHE_PKG_PATH := $(call cache_pkg_path,$(PYTHON3_MODULES_DIR),$(PYTHON3_MODULES_BUILD_ID))

@@ -57,7 +57,7 @@ SCSS_SOURCES := $(wildcard \
 					$(foreach edir,. enterprise managed, \
 						$(foreach subdir,* */*,$(edir)/web/htdocs/themes/$(subdir)/*.scss)))
 
-JAVASCRIPT_MINI    := $(foreach jmini,main mobile side,web/htdocs/js/$(jmini)_min.js)
+JAVASCRIPT_MINI    := $(foreach jmini,main mobile side zxcvbn,web/htdocs/js/$(jmini)_min.js)
 
 PNG_FILES          := $(wildcard $(addsuffix /*.png,web/htdocs/images web/htdocs/images/icons enterprise/web/htdocs/images enterprise/web/htdocs/images/icons managed/web/htdocs/images managed/web/htdocs/images/icons))
 

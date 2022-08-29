@@ -14,9 +14,9 @@ from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.type_defs import UserId
 
 if not version.is_raw_edition():
-    from cmk.gui.cee.plugins.metrics.customgraphs import (
+    from cmk.gui.cee.plugins.metrics.customgraphs import (  # pylint: disable=no-name-in-module
         CustomGraphPage,
-    )  # pylint: disable=no-name-in-module
+    )
 
 from cmk.gui.pagetypes import OverridableInstances
 

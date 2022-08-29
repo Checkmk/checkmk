@@ -21,18 +21,24 @@ _Section = SectionPaloAlto(
     firmware_version="5.0.6",
     ha_local_state="suspended",
     ha_peer_state="unknown",
-    ha_mode="disabled",
+    ha_mode="active-active",
 )
 _Section2 = SectionPaloAlto(
     firmware_version="5.0.6",
+    ha_local_state="non_functional",
+    ha_peer_state="active",
+    ha_mode="active-passive",
+)
+_Section3 = SectionPaloAlto(
+    firmware_version="5.0.6",
     ha_local_state="disabled",
     ha_peer_state="unknown",
-    ha_mode="active-active",
+    ha_mode="disabled",
 )
 
 
 def test_parse() -> None:
-    info: StringTable = [["5.0.6", "suspended", "unknown", "disabled"]]
+    info: StringTable = [["5.0.6", "suspended", "unknown", "active-active"]]
     assert parse(info) == _Section
 
 
@@ -44,24 +50,34 @@ def test_discover() -> None:
     "section, expected_result",
     [
         pytest.param(
-            _Section2,
-            [
-                Result(state=State.OK, notice="Firmware Version: 5.0.6"),
-                Result(state=State.OK, summary="HA mode: active-active"),
-                Result(state=State.OK, summary="HA local state: disabled"),
-                Result(state=State.UNKNOWN, notice="HA peer state: unknown"),
-            ],
-            id="mode active-active",
-        ),
-        pytest.param(
             _Section,
             [
                 Result(state=State.OK, notice="Firmware Version: 5.0.6"),
-                Result(state=State.OK, summary="HA mode: disabled"),
+                Result(state=State.OK, summary="HA mode: active-active"),
                 Result(state=State.CRIT, summary="HA local state: suspended"),
                 Result(state=State.UNKNOWN, notice="HA peer state: unknown"),
             ],
             id="local state suspended",
+        ),
+        pytest.param(
+            _Section2,
+            [
+                Result(state=State.OK, notice="Firmware Version: 5.0.6"),
+                Result(state=State.OK, summary="HA mode: active-passive"),
+                Result(state=State.CRIT, summary="HA local state: non_functional"),
+                Result(state=State.OK, notice="HA peer state: active"),
+            ],
+            id="local state non_functional",
+        ),
+        pytest.param(
+            _Section3,
+            [
+                Result(state=State.OK, notice="Firmware Version: 5.0.6"),
+                Result(state=State.OK, summary="HA mode: disabled"),
+                Result(state=State.OK, summary="HA local state: disabled"),
+                Result(state=State.OK, notice="HA peer state: unknown"),
+            ],
+            id="mode disabled",
         ),
     ],
 )

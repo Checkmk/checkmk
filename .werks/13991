@@ -8,5 +8,10 @@ Knowledge: undoc
 Level: 1
 Version: 2.2.0i1
 
-The check plugin palo_alto used to be purely informative, i.e. the status of the service was always ok. Ha mode, ha local state and ha peer state are now checked to produce regular monitoring states with user-configurable values.
+The check plugin palo_alto used to be purely informative, i.e. the status
+of the service was always ok. Ha mode, ha local state and ha peer state are
+now checked to produce regular monitoring states with user-configurable values.
+
+In case, the HA mode is disabled, the local and peer state are always OK
+and only the HA mode is checked.
 

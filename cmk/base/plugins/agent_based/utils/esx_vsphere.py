@@ -2,7 +2,7 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import enum
 from collections import OrderedDict
 from typing import Mapping, Sequence
 
@@ -63,8 +63,16 @@ class ESXDataStore(BaseModel):
     capacity: float
 
 
+class ESXStatus(enum.Enum):
+    guestToolsCurrent = "guestToolsCurrent"
+    guestToolsNeedUpgrade = "guestToolsNeedUpgrade"
+    guestToolsNotInstalled = "guestToolsNotInstalled"
+    guestToolsUnmanaged = "guestToolsUnmanaged"
+
+
 class ESXVm(BaseModel):
     snapshots: Sequence[str]
+    status: ESXStatus | None
     power_state: str | None
     memory: ESXMemory | None
     cpu: ESXCpu | None

@@ -67,52 +67,6 @@ check_info["esx_vsphere_vm.running_on"] = {
 
 
 # .
-#   .--GuestTools----------------------------------------------------------.
-#   |            ____                 _  _____           _                 |
-#   |           / ___|_   _  ___  ___| ||_   _|__   ___ | |___             |
-#   |          | |  _| | | |/ _ \/ __| __|| |/ _ \ / _ \| / __|            |
-#   |          | |_| | |_| |  __/\__ \ |_ | | (_) | (_) | \__ \            |
-#   |           \____|\__,_|\___||___/\__||_|\___/ \___/|_|___/            |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def inventory_esx_vsphere_vm_guest_tools(section):
-    if "guest.toolsVersionStatus" in section:
-        return [(None, {})]
-    return []
-
-
-def check_esx_vsphere_vm_guest_tools(_no_item, params, section):
-    try:
-        vm_status = section["guest.toolsVersionStatus"][0]
-    except KeyError:
-        return None
-
-    guest_tools_map = {
-        "guestToolsCurrent": (0, "VMware Tools are installed and the version is current"),
-        "guestToolsNeedUpgrade": (1, "VMware Tools are installed, but the version is not current"),
-        "guestToolsNotInstalled": (2, "VMware Tools are not installed"),
-        "guestToolsUnmanaged": (0, "VMware Tools are installed, but are not managed by VMware"),
-    }
-    state, info = guest_tools_map.get(vm_status, (3, "Unknown status for VMware Tools"))
-
-    if params:
-        state = params.get(vm_status, state)
-
-    return state, info
-
-
-check_info["esx_vsphere_vm.guest_tools"] = {
-    "inventory_function": inventory_esx_vsphere_vm_guest_tools,
-    "check_function": check_esx_vsphere_vm_guest_tools,
-    "service_description": "ESX Guest Tools",
-    "group": "vm_guest_tools",
-}
-
-# .
 #   .--Heartbeat-----------------------------------------------------------.
 #   |           _   _                 _   _                _               |
 #   |          | | | | ___  __ _ _ __| |_| |__   ___  __ _| |_             |

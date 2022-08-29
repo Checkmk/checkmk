@@ -1992,3 +1992,23 @@ perfometer_info.append(
         "exponent": 2,
     }
 )
+
+perfometer_info.append(
+    {
+        "type": "dual",
+        "perfometers": [
+            {
+                "type": "logarithmic",
+                "metric": "ingress",
+                "half_value": GB,
+                "exponent": 3,
+            },
+            {
+                "type": "logarithmic",
+                "metric": "egress",
+                "half_value": GB,
+                "exponent": 3,
+            },
+        ],
+    }
+)

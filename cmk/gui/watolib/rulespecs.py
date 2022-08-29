@@ -265,6 +265,7 @@ class Rulespec(abc.ABC):
 
     def __init__(
         self,
+        *,
         name: str,
         group: Type[RulespecBaseGroup],
         title: Optional[Callable[[], str]],
@@ -472,6 +473,7 @@ class ServiceRulespec(Rulespec):
     # Required because of Rulespec.NO_FACTORY_DEFAULT
     def __init__(  # pylint: disable=dangerous-default-value
         self,
+        *,
         name: str,
         group: Type[RulespecBaseGroup],
         valuespec: Callable[[], ValueSpec],
@@ -635,6 +637,7 @@ class CheckParameterRulespecWithItem(ServiceRulespec):
     # Required because of Rulespec.NO_FACTORY_DEFAULT
     def __init__(  # pylint: disable=dangerous-default-value
         self,
+        *,
         check_group_name: str,
         group: Type[RulespecBaseGroup],
         parameter_valuespec: Callable[[], ValueSpec],
@@ -709,6 +712,7 @@ class CheckParameterRulespecWithoutItem(HostRulespec):
     # Required because of Rulespec.NO_FACTORY_DEFAULT
     def __init__(  # pylint: disable=dangerous-default-value
         self,
+        *,
         check_group_name,
         group,
         parameter_valuespec,

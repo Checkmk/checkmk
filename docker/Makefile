@@ -16,6 +16,10 @@ SECRET_CONTAINER_ID_CMD  := docker run -d --rm \
 
 .PHONY: help setup setversion image image-daily clean test-lint-dockerfile test-lint-entrypoint
 
+ifndef VERSION_TAG
+$(error VERSION_TAG is not set, please pass this environment variable during make target call.)
+endif
+
 help:
 	@echo "make setup                - Prepare local (Ubuntu) system for building"
 	@echo "make image                - Build container image for current edition, branch, version"
@@ -40,7 +44,7 @@ needed-packages: ../omd/distros/DEBIAN_10.mk
 	    make -f - -f ../omd/distros/DEBIAN_10.mk --no-print-directory needed-packages
 
 check-mk-$(EDITION)-docker-$(VERSION).tar.gz: image
-	docker save $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION) | gzip > check-mk-$(EDITION)-docker-$(VERSION).tar.gz
+	docker save $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION_TAG) | gzip > check-mk-$(EDITION)-docker-$(VERSION).tar.gz
 
 image: needed-packages
 	SECRET_CONTAINER_ID=$$($(SECRET_CONTAINER_ID_CMD)) ; \

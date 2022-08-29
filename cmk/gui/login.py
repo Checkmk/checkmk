@@ -66,7 +66,7 @@ def authenticate(req: Request) -> Iterator[bool]:
     The user may have configured (basic) authentication by the web server. In
     case a user is provided, we trust that user and assume it as authenticated.
 
-    Otherwise we check / ask for the cookie authentication or eventually the
+    Otherwise, we check / ask for the cookie authentication or eventually the
     automation secret authentication."""
 
     user_id = _check_auth(req)

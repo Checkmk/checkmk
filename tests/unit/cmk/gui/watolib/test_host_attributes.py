@@ -6,7 +6,7 @@
 # pylint: disable=redefined-outer-name
 import pytest
 
-from cmk.utils.version import is_plus_edition
+from cmk.utils.version import is_plus_edition, is_raw_edition
 
 import cmk.gui.watolib.host_attributes as attrs
 
@@ -287,6 +287,24 @@ expected_attributes = {
         if is_plus_edition()
         else {}
     ),
+    **(
+        {
+            "bake_agent_package": {
+                "depends_on_roles": [],
+                "depends_on_tags": [],
+                "editable": True,
+                "from_config": False,
+                "show_in_folder": True,
+                "show_in_form": False,
+                "show_in_host_search": False,
+                "show_in_table": False,
+                "show_inherited_value": False,
+                "topic": "Monitoring agents",
+            },
+        }
+        if not is_raw_edition()
+        else {}
+    ),
     "tag_snmp_ds": {
         "depends_on_roles": [],
         "depends_on_tags": [],
@@ -530,6 +548,7 @@ def test_host_attributes(for_what, new) -> None:  # type:ignore[no-untyped-def]
         "monitoring_agents": [
             "tag_agent",
             *(("cmk_agent_connection",) if is_plus_edition() else ()),
+            *(("bake_agent_package",) if not is_raw_edition() else ()),
             "tag_snmp_ds",
             "snmp_community",
             "tag_piggyback",

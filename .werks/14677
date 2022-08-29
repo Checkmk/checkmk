@@ -1,0 +1,43 @@
+Title: Remove item_name and item_help keywords from CheckParameterRulespecWithItem
+Class: fix
+Compatible: incomp
+Component: wato
+Date: 1661760396
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+This change might break existing MKPs.
+
+The CheckParameterRulespecWithItem class does not accept the item_name and item_help keywords any longer.
+Instead item_spec should be used.
+
+Before this werk the following was valid to register a new rulespec.
+
+C+:
+    rulespec_registry.register(
+        CheckParameterRulespecWithItem(
+            check_group_name="a_check",
+            item_name="fitting item name",
+            item_help="inline help test",
+            group=RulespecGroupCheckParametersApplications,
+            parameter_valuespec=_parameter_valuespec_network,
+            title=lambda: "A good title",
+        )
+    )
+C-:
+
+This should be rewritten as:
+
+C+:
+    rulespec_registry.register(
+        CheckParameterRulespecWithItem(
+            check_group_name="a_check",
+            item_spec=lambda: TextInput(title="fitting item name", help="inline help text"),
+            group=RulespecGroupCheckParametersApplications,
+            parameter_valuespec=_parameter_valuespec_network,
+            title=lambda: "A good title",
+        )
+    )
+C-:

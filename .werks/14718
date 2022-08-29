@@ -1,0 +1,14 @@
+Title: SAP HANA bakery plugin: Handle user store key correctly
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1661764434
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p11
+
+The SAP HANA bakery plugin did not handle the option <i>User store key</i> under <i>Credentials</i>
+> <i>Default credentials</i> properly. Depending on the configured value, either the agent baking
+crashed or the baked agent plugin configuration was wrong, st. the plugin execution failed.

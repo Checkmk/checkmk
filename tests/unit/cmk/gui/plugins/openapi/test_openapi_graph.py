@@ -16,7 +16,7 @@ from cmk.utils.type_defs import UserId
 if not version.is_raw_edition():
     from cmk.gui.cee.plugins.metrics.customgraphs import (
         CustomGraphPage,
-    )  # pylint: disable=import-error
+    )  # pylint: disable=no-name-in-module
 
 from cmk.gui.pagetypes import OverridableInstances
 

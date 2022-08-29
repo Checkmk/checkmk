@@ -14,8 +14,9 @@ import io
 import pprint
 from collections import Counter
 from collections.abc import Callable, Iterable, Mapping, Sequence
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Literal, NamedTuple, TypedDict
+from typing import Any, Iterator, Literal, NamedTuple, TypedDict
 
 from cmk.utils import store
 from cmk.utils.type_defs import HostName
@@ -52,9 +53,6 @@ SDRow = dict[SDKey, SDValue]
 SDRows = dict[SDRowIdent, SDRow]
 LegacyRows = list[SDRow]
 
-SDEncodeAs = Callable
-SDDeltaCounter = Counter[Literal["new", "changed", "removed"]]
-
 # Used for de/serialization and retentions
 ATTRIBUTES_KEY = "Attributes"
 TABLE_KEY = "Table"
@@ -66,26 +64,23 @@ _NODES_KEY = "Nodes"
 _RETENTIONS_KEY = "Retentions"
 
 
-class SDDeltaResult(NamedTuple):
-    counter: SDDeltaCounter
-    delta: StructuredDataNode
+class RawDeltaAttributes(TypedDict, total=False):
+    Pairs: dict[SDKey, tuple[SDValue, SDValue]]
 
 
-class TDeltaResult(NamedTuple):
-    counter: SDDeltaCounter
-    delta: Table
+class RawDeltaTable(TypedDict, total=False):
+    KeyColumns: list[SDKey]
+    Rows: list[dict[SDKey, tuple[SDValue, SDValue]]]
 
 
-class ADeltaResult(NamedTuple):
-    counter: SDDeltaCounter
-    delta: Attributes
+class RawDeltaStructuredDataNode(TypedDict):
+    Attributes: RawDeltaAttributes
+    Table: RawDeltaTable
+    Nodes: dict[SDNodeName, RawDeltaStructuredDataNode]
 
 
-class DDeltaResult(NamedTuple):
-    counter: SDDeltaCounter
-    delta: SDPairs
-
-
+SDEncodeAs = Callable[[SDValue], tuple[SDValue | None, SDValue | None]]
+SDDeltaCounter = Counter[Literal["new", "changed", "removed"]]
 SDFilterFunc = Callable[[SDKey], bool]
 
 
@@ -284,18 +279,12 @@ def make_filter_from_choice(
 
 
 # .
-#   .--StructuredDataNode--------------------------------------------------.
-#   |         ____  _                   _                      _           |
-#   |        / ___|| |_ _ __ _   _  ___| |_ _   _ _ __ ___  __| |          |
-#   |        \___ \| __| '__| | | |/ __| __| | | | '__/ _ \/ _` |          |
-#   |         ___) | |_| |  | |_| | (__| |_| |_| | | |  __/ (_| |          |
-#   |        |____/ \__|_|   \__,_|\___|\__|\__,_|_|  \___|\__,_|          |
-#   |                                                                      |
-#   |             ____        _        _   _           _                   |
-#   |            |  _ \  __ _| |_ __ _| \ | | ___   __| | ___              |
-#   |            | | | |/ _` | __/ _` |  \| |/ _ \ / _` |/ _ \             |
-#   |            | |_| | (_| | || (_| | |\  | (_) | (_| |  __/             |
-#   |            |____/ \__,_|\__\__,_|_| \_|\___/ \__,_|\___|             |
+#   .--tree----------------------------------------------------------------.
+#   |                          _                                           |
+#   |                         | |_ _ __ ___  ___                           |
+#   |                         | __| '__/ _ \/ _ \                          |
+#   |                         | |_| | |  __/  __/                          |
+#   |                          \__|_|  \___|\___|                          |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
@@ -315,8 +304,8 @@ class StructuredDataNode:
         self.table.set_path(path)
 
     @property
-    def nodes(self) -> Iterable[StructuredDataNode]:
-        return self._nodes.values()
+    def nodes(self) -> Iterator[StructuredDataNode]:
+        yield from self._nodes.values()
 
     #   ---common methods-------------------------------------------------------
 
@@ -531,73 +520,55 @@ class StructuredDataNode:
 
     #   ---delta----------------------------------------------------------------
 
-    def compare_with(self, other: object, keep_identical: bool = False) -> SDDeltaResult:
+    def compare_with(self, other: object, keep_identical: bool = False) -> DeltaStructuredDataNode:
         if not isinstance(other, StructuredDataNode):
             raise TypeError(f"Cannot compare {type(self)} with {type(other)}")
 
-        counter: SDDeltaCounter = Counter()
-        delta_node = StructuredDataNode(name=self.name, path=self.path)
+        delta_nodes: dict[SDNodeName, DeltaStructuredDataNode] = {}
 
-        # Attributes
-        delta_attributes_result = self.attributes.compare_with(other.attributes)
-        counter.update(delta_attributes_result.counter)
-        delta_node.add_attributes(delta_attributes_result.delta)
-
-        # Table
-        delta_table_result = self.table.compare_with(other.table)
-        counter.update(delta_table_result.counter)
-        delta_node.add_table(delta_table_result.delta)
-
-        # Nodes
         compared_keys = _compare_dict_keys(old_dict=other._nodes, new_dict=self._nodes)
 
         for key in compared_keys.only_new:
             node = self._nodes[key]
-            new_entries = node.count_entries()
-            if new_entries:
-                counter.update(new=new_entries)
-                delta_node.add_node(node.get_encoded_node(encode_as=_new_delta_tree_node))
+            if node.count_entries():
+                delta_nodes[key] = DeltaStructuredDataNode.make_from_node(
+                    node=node,
+                    encode_as=_new_delta_tree_node,
+                )
 
         for key in compared_keys.both:
             node = self._nodes[key]
             other_node = other._nodes[key]
-
             if node.is_equal(other_node):
                 if keep_identical:
-                    delta_node.add_node(node.get_encoded_node(encode_as=_identical_delta_tree_node))
+                    delta_nodes[key] = DeltaStructuredDataNode.make_from_node(
+                        node=node,
+                        encode_as=_identical_delta_tree_node,
+                    )
                 continue
 
             delta_node_result = node.compare_with(
                 other_node,
                 keep_identical=keep_identical,
             )
-
-            if (
-                delta_node_result.counter["new"]
-                or delta_node_result.counter["changed"]
-                or delta_node_result.counter["removed"]
-            ):
-                counter.update(delta_node_result.counter)
-                delta_node.add_node(delta_node_result.delta)
+            if delta_node_result.count_entries():
+                delta_nodes[key] = delta_node_result
 
         for key in compared_keys.only_old:
             other_node = other._nodes[key]
-            removed_entries = other_node.count_entries()
-            if removed_entries:
-                counter.update(removed=removed_entries)
-                delta_node.add_node(other_node.get_encoded_node(encode_as=_removed_delta_tree_node))
+            if other_node.count_entries():
+                delta_nodes[key] = DeltaStructuredDataNode.make_from_node(
+                    node=other_node,
+                    encode_as=_removed_delta_tree_node,
+                )
 
-        return SDDeltaResult(counter=counter, delta=delta_node)
-
-    def get_encoded_node(self, encode_as: SDEncodeAs) -> StructuredDataNode:
-        delta_node = StructuredDataNode(name=self.name, path=self.path)
-
-        delta_node.add_attributes(self.attributes.get_encoded_attributes(encode_as))
-        delta_node.add_table(self.table.get_encoded_table(encode_as))
-
-        for node in self._nodes.values():
-            delta_node.add_node(node.get_encoded_node(encode_as))
-        return delta_node
+        return DeltaStructuredDataNode(
+            name=self.name,
+            path=self.path,
+            attributes=self.attributes.compare_with(other.attributes),
+            table=self.table.compare_with(other.table),
+            _nodes=delta_nodes,
+        )
 
     #   ---filtering------------------------------------------------------------
 
@@ -624,16 +595,6 @@ class StructuredDataNode:
 
         return filtered
 
-
-# .
-#   .--Table---------------------------------------------------------------.
-#   |                       _____     _     _                              |
-#   |                      |_   _|_ _| |__ | | ___                         |
-#   |                        | |/ _` | '_ \| |/ _ \                        |
-#   |                        | | (_| | |_) | |  __/                        |
-#   |                        |_|\__,_|_.__/|_|\___|                        |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
 
 # TODO Table: {IDENT: Attributes}?
 
@@ -739,16 +700,7 @@ class Table:
             self.add_row(self._make_row_ident(row), row)
 
     def _make_row_ident(self, row: SDRow) -> SDRowIdent:
-        return tuple(self._get_row_value(row[k]) for k in self.key_columns if k in row)
-
-    @staticmethod
-    def _get_row_value(value: SDValue | tuple[SDValue, SDValue]) -> SDValue:
-        if isinstance(value, tuple):
-            # Delta trees are also de/serialized: for these trees we have to
-            # extract the value from (old, new) tuple, see als '_*_delta_tree_node'.
-            old, new = value
-            return old if new is None else new
-        return value
+        return tuple(row[k] for k in self.key_columns if k in row)
 
     def add_row(self, ident: SDRowIdent, row: SDRow) -> None:
         if not self.key_columns:
@@ -925,41 +877,35 @@ class Table:
 
     #   ---delta----------------------------------------------------------------
 
-    def compare_with(self, other: object, keep_identical: bool = False) -> TDeltaResult:
+    def compare_with(self, other: object, keep_identical: bool = False) -> DeltaTable:
         if not isinstance(other, Table):
             raise TypeError(f"Cannot compare {type(self)} with {type(other)}")
 
-        counter: SDDeltaCounter = Counter()
         key_columns = sorted(set(self.key_columns).union(other.key_columns))
-        delta_table = Table(path=self.path, key_columns=key_columns, retentions=self.retentions)
-
         compared_keys = _compare_dict_keys(old_dict=other._rows, new_dict=self._rows)
+
+        delta_rows: list[dict[SDKey, tuple[SDValue | None, SDValue | None]]] = []
+
         for key in compared_keys.only_old:
-            removed_row = {k: _removed_delta_tree_node(v) for k, v in other._rows[key].items()}
-            counter.update(removed=len(removed_row))
-            delta_table.add_row(key, removed_row)
+            delta_rows.append({k: _removed_delta_tree_node(v) for k, v in other._rows[key].items()})
 
         for key in compared_keys.both:
-            delta_dict_result = _compare_dicts(
-                old_dict=other._rows[key],
-                new_dict=self._rows[key],
-                keep_identical=keep_identical,
+            delta_rows.append(
+                _compare_dicts(
+                    old_dict=other._rows[key],
+                    new_dict=self._rows[key],
+                    keep_identical=keep_identical,
+                )
             )
-            counter.update(delta_dict_result.counter)
-            delta_table.add_row(key, delta_dict_result.delta)
 
         for key in compared_keys.only_new:
-            new_row = {k: _new_delta_tree_node(v) for k, v in self._rows[key].items()}
-            counter.update(new=len(new_row))
-            delta_table.add_row(key, new_row)
+            delta_rows.append({k: _new_delta_tree_node(v) for k, v in self._rows[key].items()})
 
-        return TDeltaResult(counter=counter, delta=delta_table)
-
-    def get_encoded_table(self, encode_as: SDEncodeAs) -> Table:
-        table = Table(path=self.path, key_columns=self.key_columns, retentions=self.retentions)
-        for ident, row in self._rows.items():
-            table.add_row(ident, {k: encode_as(v) for k, v in row.items()})
-        return table
+        return DeltaTable(
+            path=self.path,
+            key_columns=key_columns,
+            rows=delta_rows,
+        )
 
     #   ---filtering------------------------------------------------------------
 
@@ -968,17 +914,6 @@ class Table:
         for ident, row in self._rows.items():
             table.add_row(ident, _get_filtered_dict(row, filter_func))
         return table
-
-
-# .
-#   .--Attributes----------------------------------------------------------.
-#   |              _   _   _        _ _           _                        |
-#   |             / \ | |_| |_ _ __(_) |__  _   _| |_ ___  ___             |
-#   |            / _ \| __| __| '__| | '_ \| | | | __/ _ \/ __|            |
-#   |           / ___ \ |_| |_| |  | | |_) | |_| | ||  __/\__ \            |
-#   |          /_/   \_\__|\__|_|  |_|_.__/ \__,_|\__\___||___/            |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
 
 
 class Attributes:
@@ -1113,28 +1048,18 @@ class Attributes:
 
     #   ---delta----------------------------------------------------------------
 
-    def compare_with(self, other: object, keep_identical: bool = False) -> ADeltaResult:
+    def compare_with(self, other: object, keep_identical: bool = False) -> DeltaAttributes:
         if not isinstance(other, Attributes):
             raise TypeError(f"Cannot compare {type(self)} with {type(other)}")
 
-        delta_dict_result = _compare_dicts(
-            old_dict=other.pairs,
-            new_dict=self.pairs,
-            keep_identical=keep_identical,
+        return DeltaAttributes(
+            path=self.path,
+            pairs=_compare_dicts(
+                old_dict=other.pairs,
+                new_dict=self.pairs,
+                keep_identical=keep_identical,
+            ),
         )
-
-        delta_attributes = Attributes(path=self.path, retentions=self.retentions)
-        delta_attributes.add_pairs(delta_dict_result.delta)
-
-        return ADeltaResult(
-            counter=delta_dict_result.counter,
-            delta=delta_attributes,
-        )
-
-    def get_encoded_attributes(self, encode_as: SDEncodeAs) -> Attributes:
-        attributes = Attributes(path=self.path, retentions=self.retentions)
-        attributes.add_pairs({k: encode_as(v) for k, v in self.pairs.items()})
-        return attributes
 
     #   ---filtering------------------------------------------------------------
 
@@ -1142,6 +1067,185 @@ class Attributes:
         attributes = Attributes(path=self.path, retentions=self.retentions)
         attributes.add_pairs(_get_filtered_dict(self.pairs, filter_func))
         return attributes
+
+
+# .
+#   .--delta tree----------------------------------------------------------.
+#   |                  _      _ _          _                               |
+#   |               __| | ___| | |_ __ _  | |_ _ __ ___  ___               |
+#   |              / _` |/ _ \ | __/ _` | | __| '__/ _ \/ _ \              |
+#   |             | (_| |  __/ | || (_| | | |_| | |  __/  __/              |
+#   |              \__,_|\___|_|\__\__,_|  \__|_|  \___|\___|              |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+@dataclass(frozen=True)
+class DeltaStructuredDataNode:
+    name: SDNodeName
+    path: SDPath
+    attributes: DeltaAttributes
+    table: DeltaTable
+    _nodes: dict[SDNodeName, DeltaStructuredDataNode]
+
+    @classmethod
+    def make_from_node(
+        cls, *, node: StructuredDataNode, encode_as: SDEncodeAs
+    ) -> DeltaStructuredDataNode:
+        return cls(
+            name=node.name,
+            path=node.path,
+            attributes=DeltaAttributes.make_from_attributes(
+                attributes=node.attributes,
+                encode_as=encode_as,
+            ),
+            table=DeltaTable.make_from_table(
+                table=node.table,
+                encode_as=encode_as,
+            ),
+            _nodes={
+                child.name: cls.make_from_node(
+                    node=child,
+                    encode_as=encode_as,
+                )
+                for child in node.nodes
+            },
+        )
+
+    def is_empty(self) -> bool:
+        if not (self.attributes.is_empty() and self.table.is_empty()):
+            return False
+
+        for node in self._nodes.values():
+            if not node.is_empty():
+                return False
+        return True
+
+    def get_node(self, path: SDPath) -> DeltaStructuredDataNode | None:
+        if not path:
+            return self
+        node = self._nodes.get(path[0])
+        return None if node is None else node.get_node(path[1:])
+
+    @property
+    def nodes(self) -> Iterator[DeltaStructuredDataNode]:
+        yield from self._nodes.values()
+
+    def serialize(self) -> RawDeltaStructuredDataNode:
+        return {
+            "Attributes": self.attributes.serialize(),
+            "Table": self.table.serialize(),
+            "Nodes": {node.name: node.serialize() for node in self._nodes.values()},
+        }
+
+    @classmethod
+    def deserialize(cls, raw_delta_tree: object) -> DeltaStructuredDataNode:
+        return cls._deserialize(name="", path=tuple(), raw_delta_tree=raw_delta_tree)
+
+    @classmethod
+    def _deserialize(
+        cls, *, name: SDNodeName, path: SDPath, raw_delta_tree: object
+    ) -> DeltaStructuredDataNode:
+        if not isinstance(raw_delta_tree, dict):
+            raise TypeError()
+        return cls(
+            name=name,
+            path=path,
+            attributes=DeltaAttributes.deserialize(
+                path=path,
+                raw_delta_attributes=raw_delta_tree.get("Attributes", {}),
+            ),
+            table=DeltaTable.deserialize(
+                path=path,
+                raw_delta_table=raw_delta_tree.get("Table", {}),
+            ),
+            _nodes={
+                raw_node_name: cls._deserialize(
+                    name=raw_node_name,
+                    path=path + (raw_node_name,),
+                    raw_delta_tree=raw_node,
+                )
+                for raw_node_name, raw_node in raw_delta_tree.get("Nodes", {}).items()
+            },
+        )
+
+    def count_entries(self) -> SDDeltaCounter:
+        counter: SDDeltaCounter = Counter()
+        counter.update(self.attributes.count_entries())
+        counter.update(self.table.count_entries())
+        for node in self._nodes.values():
+            counter.update(node.count_entries())
+        return counter
+
+
+@dataclass(frozen=True)
+class DeltaTable:
+    path: SDPath
+    key_columns: list[SDKey]
+    rows: list[dict[SDKey, tuple[SDValue, SDValue]]]
+
+    @classmethod
+    def make_from_table(cls, *, table: Table, encode_as: SDEncodeAs) -> DeltaTable:
+        return cls(
+            path=table.path,
+            key_columns=table.key_columns,
+            rows=[{key: encode_as(value) for key, value in row.items()} for row in table.rows],
+        )
+
+    def is_empty(self) -> bool:
+        return not self.rows
+
+    def serialize(self) -> RawDeltaTable:
+        return {"KeyColumns": self.key_columns, "Rows": self.rows} if self.rows else {}
+
+    @classmethod
+    def deserialize(cls, *, path: SDPath, raw_delta_table: object) -> DeltaTable:
+        if not isinstance(raw_delta_table, dict):
+            raise TypeError()
+        return cls(
+            path=path,
+            key_columns=raw_delta_table.get("KeyColumns", []),
+            rows=raw_delta_table.get("Rows", []),
+        )
+
+    def count_entries(self) -> SDDeltaCounter:
+        counter: SDDeltaCounter = Counter()
+        for row in self.rows:
+            counter.update(_count_dict_entries(row))
+        return counter
+
+
+@dataclass(frozen=True)
+class DeltaAttributes:
+    path: SDPath
+    pairs: dict[SDKey, tuple[SDValue, SDValue]]
+
+    @classmethod
+    def make_from_attributes(
+        cls, *, attributes: Attributes, encode_as: SDEncodeAs
+    ) -> DeltaAttributes:
+        return cls(
+            path=attributes.path,
+            pairs={key: encode_as(value) for key, value in attributes.pairs.items()},
+        )
+
+    def is_empty(self) -> bool:
+        return self.pairs == {}
+
+    def serialize(self) -> RawDeltaAttributes:
+        return {"Pairs": self.pairs} if self.pairs else {}
+
+    @classmethod
+    def deserialize(cls, *, path: SDPath, raw_delta_attributes: object) -> DeltaAttributes:
+        if not isinstance(raw_delta_attributes, dict):
+            raise TypeError()
+        return cls(
+            path=path,
+            pairs=raw_delta_attributes.get("Pairs", {}),
+        )
+
+    def count_entries(self) -> SDDeltaCounter:
+        return _count_dict_entries(self.pairs)
 
 
 # .
@@ -1155,7 +1259,9 @@ class Attributes:
 #   '----------------------------------------------------------------------'
 
 
-def _compare_dicts(*, old_dict: dict, new_dict: dict, keep_identical: bool) -> DDeltaResult:
+def _compare_dicts(
+    *, old_dict: dict, new_dict: dict, keep_identical: bool
+) -> dict[SDKey, tuple[SDValue | None, SDValue | None]]:
     """
     Format of compared entries:
       new:          {k: (None, new_value), ...}
@@ -1164,34 +1270,18 @@ def _compare_dicts(*, old_dict: dict, new_dict: dict, keep_identical: bool) -> D
       identical:    {k: (value, value), ...}
     """
     compared_keys = _compare_dict_keys(old_dict=old_dict, new_dict=new_dict)
+    compared_dict: dict[SDKey, tuple[SDValue | None, SDValue | None]] = {}
 
-    identical: dict = {}
-    changed: dict = {}
     for k in compared_keys.both:
-        new_value = new_dict[k]
-        old_value = old_dict[k]
-        if new_value == old_value:
-            identical.setdefault(k, _identical_delta_tree_node(old_value))
-        else:
-            changed.setdefault(k, _changed_delta_tree_node(old_value, new_value))
+        if (new_value := new_dict[k]) != (old_value := old_dict[k]):
+            compared_dict.setdefault(k, _changed_delta_tree_node(old_value, new_value))
+        elif keep_identical:
+            compared_dict.setdefault(k, _identical_delta_tree_node(old_value))
 
-    new = {k: _new_delta_tree_node(new_dict[k]) for k in compared_keys.only_new}
-    removed = {k: _removed_delta_tree_node(old_dict[k]) for k in compared_keys.only_old}
+    compared_dict.update({k: _new_delta_tree_node(new_dict[k]) for k in compared_keys.only_new})
+    compared_dict.update({k: _removed_delta_tree_node(old_dict[k]) for k in compared_keys.only_old})
 
-    delta_dict: dict = {}
-    delta_dict.update(new)
-    delta_dict.update(changed)
-    delta_dict.update(removed)
-    if keep_identical:
-        delta_dict.update(identical)
-
-    # We have to help mypy a little bit to figure out the Literal.
-    cnt: Mapping[Literal["new", "changed", "removed"], int] = {
-        "new": len(new),
-        "changed": len(changed),
-        "removed": len(removed),
-    }
-    return DDeltaResult(counter=Counter(cnt), delta=delta_dict)
+    return compared_dict
 
 
 class ComparedDictKeys(NamedTuple):
@@ -1217,6 +1307,19 @@ def _compare_dict_keys(*, old_dict: dict, new_dict: dict) -> ComparedDictKeys:
 
 def _get_filtered_dict(dict_: dict, filter_func: SDFilterFunc) -> dict:
     return {k: v for k, v in dict_.items() if filter_func(k)}
+
+
+def _count_dict_entries(dict_: dict[SDKey, tuple[SDValue, SDValue]]) -> SDDeltaCounter:
+    counter: SDDeltaCounter = Counter()
+    for value0, value1 in dict_.values():
+        match [value0 is None, value1 is None]:
+            case [True, False]:
+                counter["new"] += 1
+            case [False, True]:
+                counter["removed"] += 1
+            case [False, False] if value0 != value1:
+                counter["changed"] += 1
+    return counter
 
 
 def _new_delta_tree_node(value: SDValue) -> tuple[None, SDValue]:

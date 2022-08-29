@@ -7,7 +7,7 @@ from collections.abc import Iterator, Sequence
 
 from livestatus import SiteId
 
-from cmk.utils.structured_data import SDPath, StructuredDataNode
+from cmk.utils.structured_data import DeltaStructuredDataNode, SDPath, StructuredDataNode
 from cmk.utils.type_defs import HostName
 
 from cmk.gui.ctx_stack import g
@@ -145,12 +145,13 @@ def _has_inventory_tree(
 
 def _get_struct_tree(
     is_history: bool, hostname: HostName, site_id: SiteId
-) -> StructuredDataNode | None:
+) -> StructuredDataNode | DeltaStructuredDataNode | None:
     struct_tree_cache = g.setdefault("struct_tree_cache", {})
     cache_id = (is_history, hostname, site_id)
     if cache_id in struct_tree_cache:
         return struct_tree_cache[cache_id]
 
+    struct_tree: StructuredDataNode | DeltaStructuredDataNode | None
     if is_history:
         struct_tree = load_latest_delta_tree(hostname)
     else:

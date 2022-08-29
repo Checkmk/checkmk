@@ -19,6 +19,10 @@ import cmk.utils.defines as defines
 import cmk.utils.render
 from cmk.utils.structured_data import (
     Attributes,
+    DeltaAttributes,
+    DeltaStructuredDataNode,
+    DeltaTable,
+    RawDeltaStructuredDataNode,
     RetentionIntervals,
     SDKey,
     SDKeyColumns,
@@ -212,11 +216,11 @@ class PainterInventoryTree(Painter):
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
 
-    def export_for_json(self, row: Row, cell: Cell) -> dict:
+    def export_for_json(self, row: Row, cell: Cell) -> dict | None:
         return (
             tree.serialize()
             if isinstance(tree := self._compute_data(row, cell), StructuredDataNode)
-            else {}
+            else None
         )
 
 
@@ -2115,7 +2119,7 @@ class PainterInvhistDelta(Painter):
     def columns(self) -> Sequence[ColumnName]:
         return ["invhist_delta", "invhist_time"]
 
-    def _compute_data(self, row: Row, cell: Cell) -> StructuredDataNode | None:
+    def _compute_data(self, row: Row, cell: Cell) -> DeltaStructuredDataNode | None:
         try:
             _validate_inventory_tree_uniqueness(row)
         except MultipleInventoryTreesError:
@@ -2124,7 +2128,7 @@ class PainterInvhistDelta(Painter):
         return row.get("invhist_delta")
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        if not isinstance(tree := self._compute_data(row, cell), StructuredDataNode):
+        if not isinstance(tree := self._compute_data(row, cell), DeltaStructuredDataNode):
             return "", ""
 
         tree_renderer = DeltaNodeRenderer(
@@ -2142,11 +2146,11 @@ class PainterInvhistDelta(Painter):
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
 
-    def export_for_json(self, row: Row, cell: Cell) -> dict:
+    def export_for_json(self, row: Row, cell: Cell) -> RawDeltaStructuredDataNode | None:
         return (
             tree.serialize()
-            if isinstance(tree := self._compute_data(row, cell), StructuredDataNode)
-            else {}
+            if isinstance(tree := self._compute_data(row, cell), DeltaStructuredDataNode)
+            else None
         )
 
 
@@ -2295,19 +2299,21 @@ class ABCNodeRenderer(abc.ABC):
         self._tree_id = tree_id
         self._show_internal_tree_paths = show_internal_tree_paths
 
-    def show(self, node: StructuredDataNode, hints: DisplayHints) -> None:
+    def show(self, node: StructuredDataNode | DeltaStructuredDataNode, hints: DisplayHints) -> None:
         if not node.attributes.is_empty():
             self._show_attributes(node.attributes, hints)
 
         if not node.table.is_empty():
             self._show_table(node.table, hints)
 
-        for the_node in sorted(node.nodes, key=lambda n: n.name):
-            self._show_node(the_node)
+        for child in sorted(node.nodes, key=lambda n: n.name):
+            if isinstance(child, (StructuredDataNode, DeltaStructuredDataNode)):
+                # sorted tries to find the common base class, which is object :(
+                self._show_node(child)
 
     #   ---node-----------------------------------------------------------------
 
-    def _show_node(self, node: StructuredDataNode) -> None:
+    def _show_node(self, node: StructuredDataNode | DeltaStructuredDataNode) -> None:
         raw_path = f".{'.'.join(map(str, node.path))}." if node.path else "."
 
         hints = DISPLAY_HINTS.get_hints(node.path)
@@ -2339,7 +2345,7 @@ class ABCNodeRenderer(abc.ABC):
 
     #   ---table----------------------------------------------------------------
 
-    def _show_table(self, table: Table, hints: DisplayHints) -> None:
+    def _show_table(self, table: Table | DeltaTable, hints: DisplayHints) -> None:
         if hints.table_hint.view_spec:
             # Link to Multisite view with exactly this table
             html.div(
@@ -2388,7 +2394,11 @@ class ABCNodeRenderer(abc.ABC):
                 self._show_row_value(
                     value,
                     column.hint,
-                    retention_intervals=table.get_retention_intervals(column.key, row),
+                    retention_intervals=(
+                        None
+                        if isinstance(table, DeltaTable)
+                        else table.get_retention_intervals(column.key, row)
+                    ),
                 )
                 html.close_td()
             html.close_tr()
@@ -2405,7 +2415,9 @@ class ABCNodeRenderer(abc.ABC):
 
     #   ---attributes-----------------------------------------------------------
 
-    def _show_attributes(self, attributes: Attributes, hints: DisplayHints) -> None:
+    def _show_attributes(
+        self, attributes: Attributes | DeltaAttributes, hints: DisplayHints
+    ) -> None:
         html.open_table()
         for key, value in hints.sort_pairs(attributes.pairs):
             attr_hint = hints.get_attribute_hint(key)
@@ -2422,7 +2434,11 @@ class ABCNodeRenderer(abc.ABC):
             self.show_attribute(
                 value,
                 attr_hint,
-                retention_intervals=attributes.get_retention_intervals(key),
+                retention_intervals=(
+                    None
+                    if isinstance(attributes, DeltaAttributes)
+                    else attributes.get_retention_intervals(key)
+                ),
             )
             html.close_td()
             html.close_tr()
@@ -2560,6 +2576,7 @@ def ajax_inv_render_tree() -> None:
     tree_id = request.get_ascii_input("tree_id", "")
     show_internal_tree_paths = bool(request.var("show_internal_tree_paths"))
 
+    tree: StructuredDataNode | DeltaStructuredDataNode | None
     if tree_id:
         tree, corrupted_history_files = inventory.load_delta_tree(hostname, int(tree_id[1:]))
         if corrupted_history_files:

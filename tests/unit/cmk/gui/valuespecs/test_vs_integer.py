@@ -48,7 +48,7 @@ class TestValueSpecInteger:
 
     def test_value_to_html(self) -> None:
         assert vs.Integer().value_to_html(123) == "123"
-        assert vs.Integer(thousand_sep=".", unit="unit").value_to_html(1002003) == "1.002.003 unit"
+        assert vs.Integer(unit="unit").value_to_html(1002003) == "1002003 unit"
 
     def test_json(self) -> None:
         assert vs.Integer().value_from_json(vs.Integer().value_to_json(10)) == 10

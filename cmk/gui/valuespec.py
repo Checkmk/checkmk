@@ -476,7 +476,6 @@ class NumericRenderer:
         maxvalue: SupportsFloat | None,
         label: str | None,
         unit: str,
-        thousand_sep: str | None,
         align: Literal["left", "right"],
     ):
         super().__init__()
@@ -488,7 +487,6 @@ class NumericRenderer:
             self._size = 5
         self._label = label
         self._unit = unit
-        self._thousand_sep = thousand_sep
         self._align = align
 
     def text_input(self, varprefix: str, text: str) -> None:
@@ -508,11 +506,6 @@ class NumericRenderer:
             html.span(self._unit, class_="vs_floating_text")
 
     def format_text(self, text: str) -> str:
-        if self._thousand_sep:
-            sepped = text[: ((len(text) + 3 - 1) % 3) + 1]
-            for pos in range(len(sepped), len(text), 3):
-                sepped += self._thousand_sep + text[pos : pos + 3]
-            text = sepped
         if self._unit:
             text += " %s" % self._unit
         return text
@@ -528,7 +521,6 @@ class Integer(ValueSpec[int]):
         maxvalue: int | None = None,
         label: str | None = None,
         unit: str = "",
-        thousand_sep: str | None = None,
         display_format: str = "%d",
         align: Literal["left", "right"] = "left",
         # ValueSpec
@@ -544,7 +536,6 @@ class Integer(ValueSpec[int]):
             maxvalue=maxvalue,
             label=label,
             unit=unit,
-            thousand_sep=thousand_sep,
             align=align,
         )
         self._display_format = display_format
@@ -2433,7 +2424,6 @@ class Float(ValueSpec[float]):
         maxvalue: float | None = None,
         label: str | None = None,
         unit: str = "",
-        thousand_sep: str | None = None,
         display_format: str = "%.2f",
         align: Literal["left", "right"] = "left",
         # ValueSpec
@@ -2449,7 +2439,6 @@ class Float(ValueSpec[float]):
             maxvalue=maxvalue,
             label=label,
             unit=unit,
-            thousand_sep=thousand_sep,
             align=align,
         )
         self._display_format = display_format
@@ -2508,7 +2497,6 @@ class Percentage(Float):
         maxvalue: None | int | float = 101.0,
         label: str | None = None,
         unit: str = "%",
-        thousand_sep: str | None = None,
         display_format: str = "%.1f",
         align: Literal["left", "right"] = "left",
         # ValueSpec
@@ -2525,7 +2513,6 @@ class Percentage(Float):
             maxvalue=maxvalue,
             label=label,
             unit=unit,
-            thousand_sep=thousand_sep,
             display_format=display_format,
             align=align,
             title=title,
@@ -7279,7 +7266,6 @@ def Fontsize(  # pylint: disable=redefined-builtin
     minvalue: float | None = None,
     maxvalue: float | None = None,
     label: str | None = None,
-    thousand_sep: str | None = None,
     display_format: str = "%.2f",
     align: Literal["left", "right"] = "left",
     # ValueSpec
@@ -7296,7 +7282,6 @@ def Fontsize(  # pylint: disable=redefined-builtin
         maxvalue=maxvalue,
         label=label,
         unit=_("pt"),
-        thousand_sep=thousand_sep,
         display_format=display_format,
         align=align,
         title=_("Font size") if title is None else title,

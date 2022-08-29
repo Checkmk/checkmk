@@ -24,9 +24,9 @@ from cmk.base.plugins.agent_based.utils.azure import AzureMetric, Resource, Sect
                     group="BurningMan",
                     location="westeurope",
                     metrics={
-                        "total_seconds_behind_master": AzureMetric(
+                        "maximum_seconds_behind_master": AzureMetric(
                             name="seconds_behind_master",
-                            aggregation="total",
+                            aggregation="maximum",
                             value=2.0,
                             unit="seconds",
                         ),

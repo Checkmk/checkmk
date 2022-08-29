@@ -228,7 +228,7 @@ def check_connections() -> Callable[[str, Mapping[str, Any], Section], CheckResu
     return check_azure_metrics(
         [
             MetricData(
-                "total_active_connections",
+                "average_active_connections",
                 "active_connections",
                 "active_connections",
                 "Active connections",

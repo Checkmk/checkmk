@@ -51,7 +51,7 @@ def check_replication() -> Callable[[str, Mapping[str, Any], Section], CheckResu
     return check_azure_metrics(
         [
             MetricData(
-                "total_seconds_behind_master",
+                "maximum_seconds_behind_master",
                 "levels",
                 "replication_lag",
                 "Replication lag",
@@ -66,7 +66,7 @@ register.check_plugin(
     sections=["azure_servers"],
     service_name="Azure/DB for MySQL %s Replication",
     discovery_function=discover_azure_by_metrics(
-        "total_seconds_behind_master", resource_type=DB_MYSQL_RESOURCE_NAME
+        "maximum_seconds_behind_master", resource_type=DB_MYSQL_RESOURCE_NAME
     ),
     check_function=check_replication(),
     check_ruleset_name="replication_lag",
@@ -78,7 +78,7 @@ register.check_plugin(
     sections=["azure_servers"],
     service_name="Azure/DB for MySQL %s Connections",
     discovery_function=discover_azure_by_metrics(
-        "total_active_connections",
+        "average_active_connections",
         "total_connections_failed",
         resource_type=DB_MYSQL_RESOURCE_NAME,
     ),

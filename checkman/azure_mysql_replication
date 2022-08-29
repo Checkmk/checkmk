@@ -12,4 +12,4 @@ item:
 
 discovery:
  One service is created for each database if all required metrics
- (total_seconds_behind_master) are given.
+ (maximum_seconds_behind_master) are given.

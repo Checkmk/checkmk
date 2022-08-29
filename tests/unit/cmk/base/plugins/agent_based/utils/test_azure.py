@@ -52,7 +52,7 @@ RESOURCES = [
         '{"name": "io_consumption_percent", "aggregation": "average", "value": 88.5, "unit": "percent", "timestamp": "2022-07-19T07:53:00Z", "filter": null, "interval_id": "PT1M", "interval": "0:01:00"}'
     ],
     [
-        '{"name": "active_connections", "aggregation": "total", "value": 6.0, "unit": "count", "timestamp": "2022-07-19T07:53:00Z", "filter": null, "interval_id": "PT1M", "interval": "0:01:00"}'
+        '{"name": "active_connections", "aggregation": "average", "value": 6.0, "unit": "count", "timestamp": "2022-07-19T07:53:00Z", "filter": null, "interval_id": "PT1M", "interval": "0:01:00"}'
     ],
     [
         '{"name": "connections_failed", "aggregation": "total", "value": 2.0, "unit": "count", "timestamp": "2022-07-19T07:53:00Z", "filter": null, "interval_id": "PT1M", "interval": "0:01:00"}'
@@ -91,8 +91,8 @@ PARSED_RESOURCES = {
             "average_io_consumption_percent": AzureMetric(
                 name="io_consumption_percent", aggregation="average", value=88.5, unit="percent"
             ),
-            "total_active_connections": AzureMetric(
-                name="active_connections", aggregation="total", value=6.0, unit="count"
+            "average_active_connections": AzureMetric(
+                name="active_connections", aggregation="average", value=6.0, unit="count"
             ),
             "total_connections_failed": AzureMetric(
                 name="connections_failed", aggregation="total", value=2.0, unit="count"
@@ -217,7 +217,7 @@ def test_parse_resources() -> None:
 
 def test_discover_azure_by_metrics() -> None:
     discovery_func = discover_azure_by_metrics(
-        "average_storage_percent", "total_active_connections"
+        "average_storage_percent", "average_active_connections"
     )
     assert list(discovery_func(PARSED_RESOURCES)) == [Service(item="checkmk-mysql-server")]
 

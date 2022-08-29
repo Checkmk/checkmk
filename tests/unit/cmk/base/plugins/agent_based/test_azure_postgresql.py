@@ -24,9 +24,9 @@ from cmk.base.plugins.agent_based.utils.azure import AzureMetric, Resource, Sect
                     group="BurningMan",
                     location="westeurope",
                     metrics={
-                        "total_pg_replica_log_delay_in_seconds": AzureMetric(
+                        "maximum_pg_replica_log_delay_in_seconds": AzureMetric(
                             name="pg_replica_log_delay_in_seconds",
-                            aggregation="total",
+                            aggregation="maximum",
                             value=2.0,
                             unit="seconds",
                         ),

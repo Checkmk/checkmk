@@ -12,4 +12,4 @@ item:
 
 discovery:
  One service is created for each database if all required metrics
- (total_pg_replica_log_delay_in_seconds) are given.
+ (maximum_pg_replica_log_delay_in_seconds) are given.

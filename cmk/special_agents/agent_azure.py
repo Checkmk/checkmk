@@ -65,32 +65,42 @@ METRICS_SELECTED = {
     "Microsoft.DBforMySQL/servers": [
         (
             "cpu_percent,memory_percent,io_consumption_percent,serverlog_storage_percent,"
-            "storage_percent",
+            "storage_percent,active_connections",
             "PT1M",
             "average",
             None,
         ),
         (
-            "active_connections,connections_failed,seconds_behind_master,"
-            "network_bytes_ingress,network_bytes_egress",
+            "connections_failed,network_bytes_ingress,network_bytes_egress",
             "PT1M",
             "total",
+            None,
+        ),
+        (
+            "seconds_behind_master",
+            "PT1M",
+            "maximum",
             None,
         ),
     ],
     "Microsoft.DBforPostgreSQL/servers": [
         (
             "cpu_percent,memory_percent,io_consumption_percent,serverlog_storage_percent,"
-            "storage_percent",
+            "storage_percent,active_connections",
             "PT1M",
             "average",
             None,
         ),
         (
-            "active_connections,connections_failed,pg_replica_log_delay_in_seconds,"
-            "network_bytes_ingress,network_bytes_egress",
+            "connections_failed,network_bytes_ingress,network_bytes_egress",
             "PT1M",
             "total",
+            None,
+        ),
+        (
+            "pg_replica_log_delay_in_seconds",
+            "PT1M",
+            "maximum",
             None,
         ),
     ],

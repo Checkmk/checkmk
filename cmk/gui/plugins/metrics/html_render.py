@@ -55,6 +55,7 @@ from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.valuespec import Timerange, TimerangeValue
 
 RenderOutput = Union[HTML, str]
 
@@ -1105,14 +1106,20 @@ def host_service_graph_dashlet_cmk(
 
     graph_render_options["size"] = (width, height)
 
-    timerange = json.loads(request.get_str_input_mandatory("timerange"))
+    time_range: TimerangeValue = json.loads(request.get_str_input_mandatory("timerange"))
 
-    if isinstance(timerange, list):
-        time_range = (timerange[0], timerange[1])
+    end_time: float
+    start_time: float
+    # Age and Range like ["age", 300] and ['date', [1661896800, 1661896800]]
+    if isinstance(time_range, list):
+        # compute_range needs tuple for computation
+        timerange_tuple: tuple[str, Any] = (time_range[0], time_range[1])
+        start_time, end_time = Timerange.compute_range(timerange_tuple).range
+    ## Age like 14400 and y1, d1,...
     else:
-        time_range = ((end_time := int(time.time())) - float(timerange), end_time)
+        start_time, end_time = Timerange.compute_range(time_range).range
 
-    graph_data_range = make_graph_data_range(time_range, graph_render_options)
+    graph_data_range = make_graph_data_range((start_time, end_time), graph_render_options)
 
     graph_recipes = resolve_graph_recipe_with_error_handling(
         graph_identification,

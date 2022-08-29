@@ -1,0 +1,12 @@
+Title: Fix reload of graph dashlets in dashboards
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1661773759
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p12
+
+Graph dashlets used in dashboards were not refreshed correctly since 2.1 if the
+graph used a timerange option with "The last".

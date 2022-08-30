@@ -708,6 +708,9 @@ def render_cmk_graphs(context: dict[str, str], is_bulk: bool) -> list[bytes]:
         sys.stderr.write("ERROR: Failed to fetch graphs: %s\nURL: %s\n" % (e, url))
         return []
 
+    if not json_data:
+        return []
+
     try:
         base64_strings = json.loads(json_data)
     except Exception as e:

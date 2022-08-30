@@ -43,7 +43,7 @@ int pnpgraph_present(MonitoringCore *mc, const std::string &host,
     std::filesystem::path path =
         pnp_path / pnp_cleanup(host) / (pnp_cleanup(service) + ".xml");
     std::error_code ec;
-    std::filesystem::status(path, ec);
+    (void)std::filesystem::status(path, ec);
     return ec ? 0 : 1;
 }
 #endif

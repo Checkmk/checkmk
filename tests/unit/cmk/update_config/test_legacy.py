@@ -30,7 +30,7 @@ from cmk.gui.watolib.rulesets import Rule, Ruleset, RulesetCollection
 from cmk.gui.watolib.rulespec_groups import RulespecGroupMonitoringConfigurationVarious
 from cmk.gui.watolib.rulespecs import Rulespec
 
-import cmk.update_config as update_config
+import cmk.update_config.legacy as update_config
 
 
 @pytest.fixture(name="uc")

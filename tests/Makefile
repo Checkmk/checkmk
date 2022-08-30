@@ -16,7 +16,9 @@ PYTEST_UNIT_TEST_OPTS = \
     ../cmk/bi \
     ../cmk/fields \
     ../cmk/gui \
+    ../cmk/post_rename_site \
     ../cmk/special_agents \
+    ../cmk/update_config \
     ../cmk/utils \
     ../agent-receiver \
     ../omd/packages/omd \

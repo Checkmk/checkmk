@@ -102,10 +102,10 @@ timeout(time: 12, unit: 'HOURS') {
                         // Upload all built docker.tar.gz except builds from experimental branches to WEB_DEPLOY_DEST
                         if (!BRANCH.contains("sandbox")) {
                             upload.upload(
-                                    NAME: "check-mk-${EDITION}-docker-${CMK_VERS_RC_AWARE}.tar.gz",
+                                    NAME: filename,
                                     FILE_PATH: "${PACKAGE_DIR}/download/${CMK_VERS_RC_AWARE}",
-                                    FILE_NAME: "check-mk-${EDITION}-docker-${CMK_VERS_RC_AWARE}.tar.gz",
-                                    CMK_VERS: CMK_VERS,
+                                    FILE_NAME: filename,
+                                    CMK_VERS: CMK_VERS_RC_AWARE,
                                     UPLOAD_DEST: WEB_DEPLOY_DEST,
                                     PORT: "52022",
                             )

@@ -72,13 +72,17 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import page_registry
 from cmk.gui.permissions import declare_permission, permission_registry
-from cmk.gui.plugins.visuals.utils import (
+
+# Needed for legacy (pre 1.6) plugins
+from cmk.gui.plugins.visuals.utils import (  # noqa: F401 # pylint: disable=unused-import
     active_filter_flag,
     collect_filters,
     Filter,
     filter_registry,
+    FilterOption,
     filters_allowed_for_info,
     filters_allowed_for_infos,
+    FilterTime,
     get_livestatus_filter_headers,
     get_only_sites_from_context,
     visual_info_registry,

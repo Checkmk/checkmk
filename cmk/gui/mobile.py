@@ -11,7 +11,6 @@ import cmk.gui.utils.escaping as escaping
 import cmk.gui.view_utils
 import cmk.gui.views as views
 import cmk.gui.visuals as visuals
-from cmk.gui.command_utils import core_command
 from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.display_options import display_options
@@ -24,7 +23,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.page_menu import PageMenuEntry, PageMenuLink
 from cmk.gui.page_menu_utils import collect_context_links
 from cmk.gui.pagetypes import PagetypeTopics
-from cmk.gui.plugins.views.utils import command_registry, CommandSpec, PainterOptions, view_title
+from cmk.gui.plugins.views.utils import command_registry, CommandSpec, PainterOptions
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import Rows, VisualContext
 from cmk.gui.utils.confirm_with_preview import confirm_with_preview
@@ -278,7 +277,7 @@ def page_view() -> None:
     view.user_sorters = views.get_user_sorters()
     view.want_checkboxes = views.get_want_checkboxes()
 
-    title = view_title(view.spec, view.context)
+    title = views.view_title(view.spec, view.context)
     mobile_html_head(title)
 
     # Need to be loaded before processing the painter_options below.
@@ -319,7 +318,7 @@ class MobileViewRenderer(views.ABCViewRenderer):
             else:
                 page = "data"
 
-        title = view_title(self.view.spec, self.view.context)
+        title = views.view_title(self.view.spec, self.view.context)
         navbar = [
             ("data", _("Results"), "grid", "results_button"),
             ("filter", _("Filter"), "search", ""),
@@ -463,7 +462,7 @@ def _show_command_form(datasource: ABCDataSource, rows: Rows) -> None:
 
 # FIXME: Reduce duplicate code with views.py
 def do_commands(what: str, rows: Rows) -> bool:
-    confirm_options, title, executor = core_command(what, rows[0], 0, len(rows),)[
+    confirm_options, title, executor = views.core_command(what, rows[0], 0, len(rows),)[
         1:4
     ]  # just get confirm_options, title and executor
 
@@ -475,7 +474,7 @@ def do_commands(what: str, rows: Rows) -> bool:
     count = 0
     already_executed: Set[CommandSpec] = set()
     for nr, row in enumerate(rows):
-        nagios_commands, _confirm_options, title, executor = core_command(
+        nagios_commands, _confirm_options, title, executor = views.core_command(
             what,
             row,
             nr,

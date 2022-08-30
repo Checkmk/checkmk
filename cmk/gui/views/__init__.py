@@ -5,7 +5,9 @@
 
 import abc
 import ast
+import collections
 import functools
+import json
 import pprint
 import time
 from itertools import chain
@@ -24,7 +26,7 @@ from typing import (
     Set,
 )
 from typing import Tuple as _Tuple
-from typing import Union
+from typing import Type, Union
 
 import livestatus
 from livestatus import SiteId
@@ -39,18 +41,25 @@ from cmk.utils.type_defs import HostName, ServiceName, UserId
 
 import cmk.gui.log as log
 import cmk.gui.pages
+import cmk.gui.pagetypes as pagetypes
 import cmk.gui.sites as sites
 import cmk.gui.utils as utils
 import cmk.gui.view_utils
 import cmk.gui.views.datasource_selection as _datasource_selection
 import cmk.gui.visuals as visuals
+import cmk.gui.weblib as weblib
+from cmk.gui.alarm import play_alarm_sounds
+from cmk.gui.bi import is_part_of_aggregation
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
+from cmk.gui.command_utils import core_command
 from cmk.gui.config import active_config, builtin_role_ids, register_post_config_load_hook
 from cmk.gui.ctx_stack import g
 from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.display_options import display_options
-from cmk.gui.exceptions import MKGeneralException, MKInternalError, MKMissingDataError, MKUserError
-from cmk.gui.exporter import exporter_registry
+from cmk.gui.exceptions import MKGeneralException, MKInternalError, MKUserError
+from cmk.gui.exporter import exporter_registry  # noqa: F401 # pylint: disable=unused-import
 from cmk.gui.htmllib.html import html
+from cmk.gui.htmllib.top_heading import top_heading
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _u
 from cmk.gui.inventory import (
@@ -61,7 +70,21 @@ from cmk.gui.inventory import (
     LoadStructuredDataError,
 )
 from cmk.gui.logged_in import user
-from cmk.gui.page_menu import make_external_link, PageMenuEntry, PageMenuTopic
+from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.page_menu import (
+    make_checkbox_selection_topic,
+    make_display_options_dropdown,
+    make_external_link,
+    make_simple_link,
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuEntry,
+    PageMenuLink,
+    PageMenuPopup,
+    PageMenuSidePopup,
+    PageMenuTopic,
+)
+from cmk.gui.page_menu_entry import toggle_page_menu_entries
 from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.permissions import (
     declare_dynamic_permissions,
@@ -69,8 +92,11 @@ from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
 )
-from cmk.gui.plugins.views.icons.utils import (
+
+# Needed for legacy (pre 1.6) plugins
+from cmk.gui.plugins.views.icons.utils import (  # noqa: F401  # pylint: disable=unused-import
     get_icons,
+    get_multisite_icons,
     Icon,
     icon_and_action_registry,
     IconEntry,
@@ -79,53 +105,86 @@ from cmk.gui.plugins.views.icons.utils import (
     LegacyIconEntry,
     multisite_icons_and_actions,
 )
-from cmk.gui.plugins.views.utils import (
+from cmk.gui.plugins.views.perfometers.utils import (  # noqa: F401 # pylint: disable=unused-import
+    perfometers,
+)
+from cmk.gui.plugins.views.utils import (  # noqa: F401 # pylint: disable=unused-import
     Cell,
+    cmp_custom_variable,
+    cmp_insensitive_string,
+    cmp_ip_address,
+    cmp_num_split,
+    cmp_service_name_equiv,
+    cmp_simple_number,
+    cmp_simple_string,
+    cmp_string_list,
+    Command,
+    command_registry,
+    CommandExecutor,
+    CommandGroup,
+    CommandSpec,
+    compare_ips,
+    declare_1to1_sorter,
+    format_plugin_output,
+    get_custom_var,
+    get_linked_visual_request_vars,
+    get_perfdata_nth_value,
     get_tag_groups,
     get_view_infos,
+    group_value,
+    inventory_displayhints,
+    is_stale,
+    join_row,
     JoinCell,
+    Layout,
     layout_registry,
+    make_host_breadcrumb,
+    make_linked_visual_url,
+    make_service_breadcrumb,
+    paint_age,
+    paint_host_list,
+    paint_stalified,
     Painter,
+    painter_exists,
     painter_registry,
     PainterOptions,
     PainterRegistry,
+    register_command_group,
     register_legacy_command,
     register_painter,
     replace_action_url_macros,
+    row_id,
     transform_action_url,
+    view_hooks,
+    view_is_enabled,
+    view_title,
 )
 from cmk.gui.plugins.visuals.utils import (
     Filter,
     get_livestatus_filter_headers,
     visual_info_registry,
     visual_type_registry,
+    VisualInfo,
     VisualType,
 )
-from cmk.gui.sorter import (
+from cmk.gui.sorter import (  # noqa: F401 # pylint: disable=unused-import
     _parse_url_sorters,
+    declare_simple_sorter,
     DerivedColumnsSorter,
     register_sorter,
     Sorter,
     sorter_registry,
     SorterEntry,
+    SorterListEntry,
     SorterRegistry,
     SorterSpec,
 )
-from cmk.gui.type_defs import (
-    ColumnName,
-    HTTPVariables,
-    PainterSpec,
-    Perfdata,
-    PerfometerSpec,
-    Row,
-    Rows,
-    TranslatedMetrics,
-    ViewSpec,
-    VisualContext,
-)
 from cmk.gui.utils.csrf_token import check_csrf_token
+
+# Needed for legacy (pre 1.6) plugins
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
-from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import (
     Alternative,
@@ -148,10 +207,46 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.view import View
 from cmk.gui.view_renderer import ABCViewRenderer, GUIViewRenderer
-from cmk.gui.view_store import get_all_views, get_permitted_views, multisite_builtin_views
+from cmk.gui.view_store import (
+    get_all_views,
+    get_permitted_views,
+    get_view_by_name,
+    multisite_builtin_views,
+)
 from cmk.gui.view_utils import get_labels, render_labels, render_tag_groups
 from cmk.gui.views.builtin_views import builtin_views
 from cmk.gui.views.inventory import register_table_views_and_columns, update_paint_functions
+from cmk.gui.watolib.activate_changes import (
+    ActivateChanges,
+    get_pending_changes_tooltip,
+    has_pending_changes,
+)
+
+if not cmk_version.is_raw_edition():
+    from cmk.gui.cee.ntop.connector import get_cache  # pylint: disable=no-name-in-module
+
+from cmk.gui.exceptions import MKMissingDataError
+from cmk.gui.type_defs import (
+    ColumnName,
+    FilterName,
+    HTTPVariables,
+    InfoName,
+    PainterSpec,
+    Perfdata,
+    PerfometerSpec,
+    Row,
+    Rows,
+    SingleInfos,
+    TranslatedMetrics,
+    ViewName,
+    ViewProcessTracking,
+    ViewSpec,
+    Visual,
+    VisualContext,
+)
+from cmk.gui.utils.confirm_with_preview import confirm_with_preview
+from cmk.gui.utils.ntop import get_ntop_connection, is_ntop_configured
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 from . import availability
 
@@ -2172,7 +2267,7 @@ class PageRescheduleCheck(AjaxPage):
             # For TCP, we ensure updated caches by triggering the "Check_MK" service whenever the
             # user manually triggers "Check_MK Discovery".
             self._force_check(now, "SVC", f"{host};Check_MK", site)
-            self._wait_for(
+            _row = self._wait_for(
                 site,
                 host,
                 "service",

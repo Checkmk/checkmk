@@ -15,6 +15,7 @@ import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKGeneralException, MKMissingDataError, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
+from cmk.gui.metrics import graph_info, metric_info
 from cmk.gui.plugins.dashboard.utils import (
     DashboardConfig,
     DashboardName,
@@ -29,7 +30,6 @@ from cmk.gui.plugins.metrics.html_render import (
     default_dashlet_graph_render_options,
     resolve_graph_recipe,
 )
-from cmk.gui.plugins.metrics.utils import graph_info, metric_info
 from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
 from cmk.gui.plugins.visuals.utils import get_only_sites_from_context
 from cmk.gui.type_defs import (

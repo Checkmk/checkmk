@@ -6,7 +6,7 @@ Date: 1661429043
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0p12
+Version: 2.1.0p11
 
 If you used "tg:" for tag groups in combined searches, no results were shown,
 even if the search would match.

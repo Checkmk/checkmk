@@ -7,10 +7,9 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0p12
+Version: 2.1.0p11
 
 The usagedetails section was fetched using an api call that was no
 longer supported by microsoft.
 
 This werk fixes the issue and now the Cost services are working again.
-

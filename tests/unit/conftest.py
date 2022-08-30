@@ -80,10 +80,9 @@ def fixture_capsys(capsys: pytest.CaptureFixture[str]) -> Iterator[pytest.Captur
 
 
 @pytest.fixture(name="edition", params=["cre", "cee", "cme", "cpe"])
-def fixture_edition(  # type:ignore[no-untyped-def]
-    monkeypatch, request
-) -> Iterable[cmk_version.Edition]:
-    edition_short = request.param
+def fixture_edition(request: pytest.FixtureRequest) -> Iterable[cmk_version.Edition]:
+    # The param seems to be an optional attribute which mypy can not understand
+    edition_short = request.param  # type: ignore[attr-defined]
     if edition_short == "cpe" and not is_plus_repo():
         pytest.skip("Needed files are not available")
 
@@ -361,7 +360,7 @@ def prevent_livestatus_connect(monkeypatch):
 
 
 @pytest.fixture(name="mock_livestatus")
-def _mock_livestatus():
+def fixture_mock_livestatus():
     """Mock LiveStatus by patching MultiSiteConnection
 
     Use it like this:
@@ -379,7 +378,7 @@ def _mock_livestatus():
 
 
     """
-    with mock_livestatus(with_context=False) as live:
+    with mock_livestatus() as live:
         yield live
 
 

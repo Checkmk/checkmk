@@ -17,8 +17,6 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "//": "COMMENT: Process 'resolutions' key below",
     "watch": "webpack --mode development --watch",
-    "check-types-list": "tsc --listFiles",
-    "check-types": "tsc",
     "preinstall": "npx npm-force-resolutions",
     "lint": "eslint '{enterprise/web,web}/htdocs/js/**/*.{j,t}s'"
   },

@@ -7,8 +7,8 @@ import json
 from cmk.base.plugins.agent_based.utils.df import BlocksSubsection, DfBlock, InodesSubsection
 from cmk.base.plugins.agent_based.utils.mobileiron import Section, SourceHostSection
 
-from .agent_based_api.v1 import register
-from .agent_based_api.v1.type_defs import StringTable
+from .agent_based_api.v1 import HostLabel, register
+from .agent_based_api.v1.type_defs import HostLabelGenerator, StringTable
 
 
 def parse_mobileiron(string_table: StringTable) -> Section:
@@ -60,9 +60,27 @@ def parse_mobileiron_df(string_table: StringTable) -> tuple[BlocksSubsection, In
     )
 
 
+def host_label_mobileiron(section: Section) -> HostLabelGenerator:
+    """Host label function
+
+    Labels:
+
+        cmk/os_family:
+            This label is set to the operating system as reported by the agent
+            as "AgentOS" (such as "windows" or "linux").
+
+    """
+
+    if section.platform_type == "ANDROID":
+        yield HostLabel("cmk/os_family", "android")
+    elif section.platform_type == "IOS":
+        yield HostLabel("cmk/os_family", "ios")
+
+
 register.agent_section(
     name="mobileiron_section",
     parse_function=parse_mobileiron,
+    host_label_function=host_label_mobileiron,
 )
 
 register.agent_section(

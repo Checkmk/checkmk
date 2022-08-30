@@ -10,7 +10,10 @@ from tests.testlib import on_time
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.mobileiron_section import parse_mobileiron
-from cmk.base.plugins.agent_based.mobileiron_versions import check_mobileiron_versions, is_too_old
+from cmk.base.plugins.agent_based.mobileiron_versions import (
+    _try_calculation_age,
+    check_mobileiron_versions,
+)
 
 DEVICE_DATA_ANDROID = parse_mobileiron(
     [
@@ -62,24 +65,24 @@ DEVICE_DATA_OTHER = parse_mobileiron(
 
 
 @pytest.mark.parametrize(
-    "string, seconds, expected_results",
+    "string, expected_results",
     [
-        ("2021-01-01", 7776000, (True, 392)),
-        ("2021-04-23", 7776000, (True, 280)),
-        ("2129-04-23", 7776000, (False, -39166)),
-        ("210101", 7776000, (True, 392)),
-        ("290101", 7776000, (False, -2530)),
-        ("290101", 7776000, (False, -2530)),
+        ("2021-01-01", 392),
+        ("2021-04-23", 280),
+        ("2129-04-23", -39166),
+        ("210101.QD01.081", 392),
+        ("290101", -2530),
+        ("290101", -2530),
     ],
 )
-def test_is_too_old(string, seconds, expected_results) -> None:  # type:ignore[no-untyped-def]
+def test_try_calculation_age(string, expected_results) -> None:  # type:ignore[no-untyped-def]
     with on_time(1643360266, "UTC"):
-        assert is_too_old(string, seconds) == expected_results
+        assert _try_calculation_age(string).days == expected_results
 
 
-def test_is_too_old_raises() -> None:
+def test_try_calculation_age_raises() -> None:
     with pytest.raises(ValueError):
-        is_too_old("random-string", 7776000)
+        _try_calculation_age("random-string")
 
 
 @pytest.mark.parametrize(
@@ -99,11 +102,11 @@ def test_is_too_old_raises() -> None:
             (
                 Result(
                     state=State.CRIT,
-                    summary="OS build version is 207 days old: 210705.QD01.178",
+                    summary="OS build version: 210705.QD01.178 / 207: 207 (warn/crit at 90/90)",
                 ),
                 Result(
                     state=State.CRIT,
-                    summary="Security patch level date is 207 days old: 2021-07-05",
+                    summary="Security patch level: 2021-07-05 / 207: 207 (warn/crit at 90/90)",
                 ),
                 Result(
                     state=State.OK,

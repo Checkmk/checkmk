@@ -4,10 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
+import contextlib
 import datetime
 from typing import TypedDict
 
-from .agent_based_api.v1 import regex, register, Result, Service, State
+from .agent_based_api.v1 import check_levels, regex, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils.mobileiron import Section
 
@@ -22,66 +23,55 @@ class Params(TypedDict):
     os_version_other: int
 
 
-def is_too_old(date_string: str, seconds: float) -> tuple[bool, int]:
-    """Return True if the date is older than the number of seconds.
-    Plus the number of days old.
+def _try_calculation_age(date_string: str) -> datetime.timedelta:
+    """
+    Parse a date string. A date string can be in "%Y-%m-%d" or "%y%m%d" format.
+    Return a timedelta between now and the parsed string.
     """
 
-    threshold = datetime.timedelta(seconds=seconds)
     for fmt, fmt_len in (("%Y-%m-%d", 10), ("%y%m%d", 6)):
-        try:
-            dt = datetime.datetime.now() - datetime.datetime.strptime(date_string[:fmt_len], fmt)
-            return dt > threshold, dt.days
-        except ValueError:
-            continue
+        with contextlib.suppress(ValueError):
+            return datetime.datetime.now() - datetime.datetime.strptime(date_string[:fmt_len], fmt)
 
     raise ValueError("Cannot parse the date")
 
 
 def _check_android_patch_level(params: Params, patch_level: str) -> CheckResult:
 
+    level_days = datetime.timedelta(seconds=params["patchlevel_age"]).days
     try:
-        security_patch_is_too_old, days_old = is_too_old(patch_level, params["patchlevel_age"])
+        age = _try_calculation_age(patch_level)
     except ValueError:
         yield Result(
             state=State(params["patchlevel_unparsable"]),
             summary=f"Security patch level has an invalid date format: {patch_level}",
         )
     else:
-        if security_patch_is_too_old is True:
-            yield Result(
-                state=State.CRIT,
-                summary=f"Security patch level date is {days_old} days old: {patch_level}",
-            )
-        else:
-            yield Result(
-                state=State.OK,
-                summary=f"Security patch level: {patch_level}",
-            )
+        yield from check_levels(
+            label=f"Security patch level: {patch_level} / {age.days}",
+            value=age.days,
+            levels_upper=(level_days, level_days),
+            render_func=str,
+        )
 
 
 def _check_os_build_version(params: Params, section: Section) -> CheckResult:
+    level_days = datetime.timedelta(seconds=params["os_age"]).days
     try:
-        build_version_is_too_old, days_old = is_too_old(
-            str(section.os_build_version), params["os_age"]
-        )
+        age = _try_calculation_age(str(section.os_build_version))
     except ValueError:
         yield Result(
             state=State(params["os_build_unparsable"]),
             summary=f"OS build version has an invalid date format: {section.os_build_version}",
         )
     else:
-        if build_version_is_too_old is True:
-            yield Result(
-                state=State.CRIT,
-                summary=f"OS build version is {days_old} days old: {section.os_build_version}",
-            )
 
-        else:
-            yield Result(
-                state=State.OK,
-                summary=f"OS build version: {section.os_build_version}",
-            )
+        yield from check_levels(
+            label=f"OS build version: {section.os_build_version} / {age.days}",
+            value=age.days,
+            levels_upper=(level_days, level_days),
+            render_func=str,
+        )
 
 
 def _check_os_version(section: Section, user_regex: str) -> Result:

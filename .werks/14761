@@ -1,0 +1,22 @@
+Title: SAP Hana fileinfo: negative file age causes crash
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1661350764
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p29
+
+In the event that the SAP Hana host is in a timezone other than UTC, the
+"fileinfo" check could crash reading the error message "ValueError (Cannot
+render negative timespan)". This has been fixed. If you require this fix,
+please deploy the agent plugin "mk_sap_hana" to the affected hosts.
+
+The problem was that the timestamp that the timestamps of the files were
+incorrectly converted from local time to UTC. In addition, the reference
+timestamp (current time) used to calculate file age was determined before the
+modified times of the SAP Hana files were collected. This could lead to a
+scenario in which the reference timestamp was older than the modified time of
+the files.

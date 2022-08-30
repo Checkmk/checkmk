@@ -6,7 +6,7 @@ Date: 1661350764
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0p12
+Version: 2.1.0p11
 
 In the event that the SAP Hana host is in a timezone other than UTC, the
 "fileinfo" check could crash reading the error message "ValueError (Cannot

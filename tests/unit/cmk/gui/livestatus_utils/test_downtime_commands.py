@@ -7,14 +7,12 @@ import datetime as dt
 import pytest
 import pytz
 
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+
 import cmk.gui.livestatus_utils.commands.downtimes as downtimes
 from cmk.gui import sites
 from cmk.gui.config import load_config
 from cmk.gui.logged_in import SuperUserContext
-
-# HACK: This is needed to populate the PermissionRegistry
-from cmk.gui.plugins.views import commands  # pylint: disable=unused-import
-from cmk.gui.utils.script_helpers import application_and_request_context
 
 
 @pytest.fixture(name="dates")
@@ -25,14 +23,13 @@ def _dates():
     )
 
 
-def test_host_downtime(  # type:ignore[no-untyped-def]
-    mock_livestatus, with_request_context, dates
+@pytest.mark.usefixtures("request_context")
+def test_host_downtime(
+    mock_livestatus: MockLiveStatusConnection, dates: tuple[dt.datetime, dt.datetime]
 ) -> None:
     start_time, end_time = dates
 
-    with mock_livestatus(
-        expect_status_query=True
-    ) as live, application_and_request_context(), SuperUserContext():
+    with mock_livestatus(expect_status_query=True) as live, SuperUserContext():
         load_config()
         live.expect_query("GET hosts\nColumns: name\nFilter: name = example.com")
         live.expect_query(
@@ -50,14 +47,13 @@ def test_host_downtime(  # type:ignore[no-untyped-def]
         )
 
 
+@pytest.mark.usefixtures("request_context")
 def test_host_downtime_with_services(  # type:ignore[no-untyped-def]
-    mock_livestatus, with_request_context, dates
+    mock_livestatus, dates
 ) -> None:
     start_time, end_time = dates
 
-    with mock_livestatus(
-        expect_status_query=True
-    ) as live, application_and_request_context(), SuperUserContext():
+    with mock_livestatus(expect_status_query=True) as live, SuperUserContext():
         load_config()
         live.expect_query("GET hosts\nColumns: name\nFilter: name = example.com")
         live.expect_query(
@@ -87,14 +83,13 @@ def test_host_downtime_with_services(  # type:ignore[no-untyped-def]
         )
 
 
-def test_hostgroup_host_downtime(  # type:ignore[no-untyped-def]
-    mock_livestatus, with_request_context, dates
+@pytest.mark.usefixtures("request_context")
+def test_hostgroup_host_downtime(
+    mock_livestatus: MockLiveStatusConnection, dates: tuple[dt.datetime, dt.datetime]
 ) -> None:
     start_time, end_time = dates
 
-    with mock_livestatus(
-        expect_status_query=True
-    ) as live, application_and_request_context(), SuperUserContext():
+    with mock_livestatus(expect_status_query=True) as live, SuperUserContext():
         load_config()
         live.expect_query(
             [
@@ -126,14 +121,13 @@ def test_hostgroup_host_downtime(  # type:ignore[no-untyped-def]
         )
 
 
-def test_hostgroup_host_downtime_with_services(  # type:ignore[no-untyped-def]
-    mock_livestatus, with_request_context, dates
+@pytest.mark.usefixtures("request_context")
+def test_hostgroup_host_downtime_with_services(
+    mock_livestatus: MockLiveStatusConnection, dates: tuple[dt.datetime, dt.datetime]
 ) -> None:
     start_time, end_time = dates
 
-    with mock_livestatus(
-        expect_status_query=True
-    ) as live, application_and_request_context(), SuperUserContext():
+    with mock_livestatus(expect_status_query=True) as live, SuperUserContext():
         load_config()
         live.expect_query(
             [
@@ -181,14 +175,13 @@ def test_hostgroup_host_downtime_with_services(  # type:ignore[no-untyped-def]
         )
 
 
-def test_servicegroup_service_downtime(  # type:ignore[no-untyped-def]
-    mock_livestatus, with_request_context, dates
+@pytest.mark.usefixtures("request_context")
+def test_servicegroup_service_downtime(
+    mock_livestatus: MockLiveStatusConnection, dates: tuple[dt.datetime, dt.datetime]
 ) -> None:
     start_time, end_time = dates
 
-    with mock_livestatus(
-        expect_status_query=True
-    ) as live, application_and_request_context(), SuperUserContext():
+    with mock_livestatus(expect_status_query=True) as live, SuperUserContext():
         load_config()
         live.expect_query(
             [
@@ -220,14 +213,13 @@ def test_servicegroup_service_downtime(  # type:ignore[no-untyped-def]
         )
 
 
-def test_servicegroup_service_downtime_and_hosts(  # type:ignore[no-untyped-def]
-    mock_livestatus, with_request_context, dates
+@pytest.mark.usefixtures("request_context")
+def test_servicegroup_service_downtime_and_hosts(
+    mock_livestatus: MockLiveStatusConnection, dates: tuple[dt.datetime, dt.datetime]
 ) -> None:
     start_time, end_time = dates
 
-    with mock_livestatus(
-        expect_status_query=True
-    ) as live, application_and_request_context(), SuperUserContext():
+    with mock_livestatus(expect_status_query=True) as live, SuperUserContext():
         load_config()
         live.expect_query(
             [

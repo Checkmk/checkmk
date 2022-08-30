@@ -24,6 +24,10 @@ import cmk.utils.redis as redis
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils import tty
+from cmk.utils.livestatus_helpers.testing import (
+    mock_livestatus_communication,
+    MockLiveStatusConnection,
+)
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.site import omd_site
@@ -32,11 +36,9 @@ import cmk.gui.dashboard
 
 # The openapi import below pulls a huge part of our GUI code indirectly into the process.  We need
 # to have the default permissions loaded before that to fix some implicit dependencies.
-# TODO: Extract the livestatus mock to some other place to reduce the dependencies here.
 import cmk.gui.default_permissions
 import cmk.gui.permissions
 import cmk.gui.views
-from cmk.gui.livestatus_utils.testing import mock_livestatus
 from cmk.gui.plugins.views.icons.utils import icon_and_action_registry
 from cmk.gui.utils.script_helpers import application_and_request_context
 
@@ -360,14 +362,13 @@ def prevent_livestatus_connect(monkeypatch):
 
 
 @pytest.fixture(name="mock_livestatus")
-def fixture_mock_livestatus():
+def fixture_mock_livestatus() -> Iterator[MockLiveStatusConnection]:
     """Mock LiveStatus by patching MultiSiteConnection
 
     Use it like this:
 
         def test_function() -> None:
-           from cmk.gui import sites
-           sites.live().query("Foo")
+           livestatus.LocalConnection().query("Foo")
 
         def test_foo(mock_livestatus) -> None:
            live = mock_livestatus
@@ -375,11 +376,9 @@ def fixture_mock_livestatus():
            with live:
                # here call a function which does livestatus calls.
                test_function()
-
-
     """
-    with mock_livestatus() as live:
-        yield live
+    with mock_livestatus_communication() as mock_live:
+        yield mock_live
 
 
 @pytest.fixture(autouse=True)

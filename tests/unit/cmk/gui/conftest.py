@@ -22,6 +22,7 @@ from mock import MagicMock
 from tests.testlib.users import create_and_destroy_user
 
 import cmk.utils.log
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
 from cmk.utils.type_defs import UserId
 
@@ -33,6 +34,7 @@ import cmk.gui.watolib.activate_changes as activate_changes
 import cmk.gui.watolib.groups as groups
 from cmk.gui import main_modules
 from cmk.gui.config import active_config
+from cmk.gui.livestatus_utils.testing import mock_livestatus
 from cmk.gui.logged_in import SuperUserContext, UserContext
 from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.json import patch_json
@@ -76,6 +78,13 @@ def monkeypatch(monkeypatch: MonkeyPatch, request_context: None) -> Iterator[Mon
     """
     with monkeypatch.context() as m:
         yield m
+
+
+@pytest.fixture(name="mock_livestatus")
+def fixture_mock_livestatus() -> Iterator[MockLiveStatusConnection]:
+    """UI specific override of the global mock_livestatus fixture"""
+    with mock_livestatus() as mock_live:
+        yield mock_live
 
 
 @pytest.fixture()

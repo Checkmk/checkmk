@@ -5,10 +5,12 @@
 
 import livestatus
 
-from cmk.gui import sites
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 
-def test_local_table_assoc(mock_livestatus) -> None:  # type:ignore[no-untyped-def]
+def test_local_table_assoc(
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
     live = mock_livestatus
     live.set_sites(["local"])
     live.add_table(
@@ -42,17 +44,3 @@ def test_local_table_assoc(mock_livestatus) -> None:  # type:ignore[no-untyped-d
         livestatus.LocalConnection().query_table_assoc(
             "GET hosts\nColumns: name alias address custom_variables contacts contact_groups"
         )
-
-
-def test_intercept_queries(  # type:ignore[no-untyped-def]
-    mock_livestatus, with_request_context
-) -> None:
-    with mock_livestatus(expect_status_query=True):
-        live = sites.live()
-
-    mock_livestatus.expect_query("GET hosts\nColumns: name")
-    with mock_livestatus(expect_status_query=False), livestatus.intercept_queries() as queries:
-        live.query("GET hosts\nColumns: name")
-
-    # livestatus.py appends a lot of extra columns, so we only check for startswith
-    assert queries[0].startswith("GET hosts\nColumns: name\n")

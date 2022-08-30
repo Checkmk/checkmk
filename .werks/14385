@@ -1,0 +1,32 @@
+Title: Fix limited SSRF in agent-receiver API
+Class: security
+Compatible: compat
+Component: core
+Date: 1661868584
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p12
+
+Prior to this Werk attackers could use the host registration API for Server Side Request Forgery.
+
+An attacker would have been able to make the Checkmk server issue local requests to endpoints that should only be accessible from localhost.
+In order to exploit this vulnerability attackers would have needed the privileges to register hosts.
+This vulnerability was caused by insufficient sanitization of the hostname of the host to be registered.
+
+We thank Stefan Schiller (SonarSource) for reporting this issue.
+
+<b>Affected Versions</b>:
+2.1
+
+<b>Mitigations</b>:
+The affected API can be disabled using <tt>omd stop agent-receiver</tt>.
+Note however, that this makes it impossible to register new hosts.
+
+<b>Vulnerability Management</b>:
+We have rated the issue with a CVSS Score of 5.0 (Medium) with the following CVSS vector:
+<tt>CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:C/C:L/I:N/A:N</tt>.
+A CVE has been requested.
+
+<b>Changes</b>:
+This Werk adds validation for the hostname and ensures hostnames are escaped in requests to the REST API.

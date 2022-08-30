@@ -103,17 +103,6 @@ def _write_section_replica(
     secondary_passives=None,
     arbiters=None,
 ):
-    """
-    >>> _write_section_replica(None)
-    <<<mongodb_replica:sep(0)>>>
-    {"primary": null, "secondaries": {"active": [], "passive": []}, "arbiters": []}
-    >>> _write_section_replica("primary")
-    <<<mongodb_replica:sep(0)>>>
-    {"primary": "primary", "secondaries": {"active": [], "passive": []}, "arbiters": []}
-    >>> _write_section_replica("primary", secondary_actives=["1", "2"], secondary_passives=["3"], arbiters=["4"])
-    <<<mongodb_replica:sep(0)>>>
-    {"primary": "primary", "secondaries": {"active": ["1", "2"], "passive": ["3"]}, "arbiters": ["4"]}
-    """
     sys.stdout.write("<<<mongodb_replica:sep(0)>>>\n")
     sys.stdout.write(
         json.dumps({
@@ -127,13 +116,6 @@ def _write_section_replica(
 
 
 def sections_replica(server_status):
-    """
-    >>> sections_replica({})
-    >>> sections_replica({"repl": {}})
-    >>> sections_replica({"repl": {"primary": "abc"}})
-    <<<mongodb_replica:sep(0)>>>
-    {"primary": "abc", "secondaries": {"active": [], "passive": []}, "arbiters": []}
-    """
     repl_info = server_status.get("repl")
     if not repl_info:
         return

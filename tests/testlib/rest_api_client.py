@@ -17,6 +17,7 @@ from typing import Any, cast, Literal, NoReturn, Sequence, TypedDict
 
 from cmk.utils import version
 from cmk.utils.type_defs import HTTPMethod
+from cmk.utils.type_defs.rest_api_types.notifications_rule_types import APINotificationRule
 from cmk.utils.type_defs.rest_api_types.site_connection import SiteConfig
 
 JSON = int | str | bool | list[Any] | dict[str, Any] | None
@@ -42,6 +43,7 @@ API_DOMAIN = Literal[
     "service_group_config",
     "contact_group_config",
     "site_connection",
+    "notification_rule",
 ]
 
 
@@ -1359,6 +1361,50 @@ class HostClient(RestApiClient):
         )
 
 
+@register_client
+class RuleNotificationClient(RestApiClient):
+    domain: API_DOMAIN = "notification_rule"
+
+    def get(self, rule_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{rule_id}",
+            expect_ok=expect_ok,
+        )
+
+    def get_all(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+        )
+
+    def create(self, rule_config: APINotificationRule, expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/all",
+            body={"rule_config": rule_config},
+            expect_ok=expect_ok,
+        )
+
+    def edit(
+        self, rule_id: str, rule_config: APINotificationRule, expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "put",
+            url=f"/objects/{self.domain}/{rule_id}",
+            body={"rule_config": rule_config},
+            expect_ok=expect_ok,
+        )
+
+    def delete(self, rule_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/objects/{self.domain}/{rule_id}/actions/delete/invoke",
+            expect_ok=expect_ok,
+        )
+
+
 @dataclasses.dataclass
 class ClientRegistry:
     Licensing: LicensingClient
@@ -1379,6 +1425,7 @@ class ClientRegistry:
     ServiceGroup: ServiceGroupClient
     ContactGroup: ContactGroupClient
     SiteManagement: SiteManagementClient
+    RuleNotification: RuleNotificationClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:

@@ -42,7 +42,7 @@ from cmk.utils.type_defs.notify import (
     NotifyBulkType,
     NotifyPlugin,
 )
-from cmk.utils.type_defs.rule_notification_api_types import (
+from cmk.utils.type_defs.rest_api_types.notifications_rule_types import (
     APIConditions,
     APIContactSelection,
     APINotificationMethod,

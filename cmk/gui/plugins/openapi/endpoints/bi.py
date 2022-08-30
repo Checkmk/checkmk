@@ -395,9 +395,22 @@ def delete_bi_pack(params):
 
 
 class BIPackEndpointSchema(Schema):
-    title = ReqString(default="", example="BI Title")
-    contact_groups = ReqList(fields.String(), default=[], example=["contact", "contactgroup_b"])
-    public = ReqBoolean(default=False, example="false")
+    title = ReqString(
+        dump_default="",
+        example="BI Title",
+        description="The title of the BI pack.",
+    )
+    contact_groups = ReqList(
+        fields.GroupField(should_exist=True, group_type="contact", example="important_persons"),
+        dump_default=[],
+        example=["contact", "contactgroup_b"],
+        description="A list of contact group identifiers.",
+    )
+    public = ReqBoolean(
+        dump_default=False,
+        example="false",
+        description="Should the BI pack be public or not.",
+    )
 
 
 @Endpoint(constructors.object_href("bi_pack", "{pack_id}"),

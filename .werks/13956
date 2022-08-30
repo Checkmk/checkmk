@@ -1,0 +1,13 @@
+Title: The BI Pack endpoints will now check if the given contact groups actually exist
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1661514473
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p29
+
+The BI Pack endpoint will now check if the contact groups it is given actually exists.
+If that is not the case, it will respond with a validation error that has a 400 status code.

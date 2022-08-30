@@ -309,3 +309,50 @@ def test_get_non_existing_aggregation(wsgi_app, with_automation_user):
 
     with pytest.raises(MKGeneralException):
         _response = wsgi_app.get(url=url)
+
+
+@pytest.mark.parametrize("wato_enabled", [True, False])
+def test_post_bi_pack_creating_contact_groups_regression(
+    wsgi_app,
+    with_automation_user,
+    mock_livestatus,
+    wato_enabled: bool,
+) -> None:
+    base = "/NO_SITE/check_mk/api/1.0"
+    contact_group = "i_should_never_exists"
+    contact_group_url = f"{base}/objects/contact_group_config/{contact_group}"
+
+    wsgi_app.set_authorization(('Bearer', " ".join(with_automation_user)))
+
+    # Make sure the contact group does not exist
+    wsgi_app.get(
+        url=contact_group_url,
+        status=404,
+        headers={
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+        },
+    )
+    # try to create it indirectly through posting it in a BI Pack,  unsuccessfully
+    wsgi_app.post(
+        url=f"{base}/objects/bi_pack/testpack",
+        params=json.dumps({
+            "title": "my_cool_pack",
+            "contact_groups": [contact_group],
+            "public": False
+        }),
+        status=400,
+        headers={
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+        },
+    )
+    # Make sure it still does not exist
+    wsgi_app.get(
+        url=contact_group_url,
+        status=404,
+        headers={
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+        },
+    )

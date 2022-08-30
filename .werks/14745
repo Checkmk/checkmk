@@ -1,0 +1,22 @@
+Title: Fix "Data: b''" in notification result of event console bulk notifications
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1661842530
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p11
+
+The event console can send notifications with the option "Send monitoring
+notification" in an event console rule enabled.
+
+If such rule matched and a notification rule with bulk enabled matched that
+notification, the notification result could contain, in addition to successful
+processing, the entry "Data: b''". This happend if no graph could be found for
+the host or service of the notification.
+
+This problem exists at least since version 1.6.
+
+Also a traceback with multiple exceptions was shown in ~/var/log/web.log.

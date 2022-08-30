@@ -650,6 +650,9 @@ def render_cmk_graphs(context, is_bulk):
         sys.stderr.write("ERROR: Failed to fetch graphs: %s\nURL: %s\n" % (e, url))
         return []
 
+    if not json_data:
+        return []
+
     try:
         base64_strings = json.loads(json_data)
     except Exception as e:

@@ -68,7 +68,7 @@ def _answer_graph_image_request() -> None:
             raise Exception(
                 _("Cannot render graph: host %s, service %s not found.")
                 % (host_name, service_description)
-            )
+            ) from None
 
         site = row["site"]
 

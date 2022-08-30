@@ -41,10 +41,7 @@ from cmk.utils.user import UserId
 import cmk.gui.userdb as userdb
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
-from cmk.gui.watolib.user_scripts import load_notification_scripts
-from cmk.gui.watolib.utils import wato_root_dir
-
-from .notifications_rule_types import (
+from cmk.gui.rest_api_types.notifications_rule_types import (
     APIConditions,
     APIContactSelection,
     APINotificationMethod,
@@ -65,11 +62,13 @@ from .notifications_rule_types import (
     MatchServiceLevels,
     RestrictToNotificationNumbers,
 )
-from .notifications_types import (
+from cmk.gui.rest_api_types.notifications_types import (
     get_plugin_from_api_request,
     get_plugin_from_mk_file,
     NotificationPlugin,
 )
+from cmk.gui.watolib.user_scripts import load_notification_scripts
+from cmk.gui.watolib.utils import wato_root_dir
 
 logger = logging.getLogger(__name__)
 

@@ -60,8 +60,8 @@ def test_discover_apc_mod_pdu_modules_no_items(check: CheckPlugin) -> None:
 
 def test_check_apc_mod_pdu_modules(check: CheckPlugin, string_table: StringTable) -> None:
     assert list(check.check_function(item="Circuit 1a", params={}, section=string_table)) == [
-        Result(state=State.OK, summary="Status normal, current: 0.12kw"),
-        Metric("current_power", 0.12),
+        Result(state=State.OK, summary="Status normal, current: 1.20kw"),
+        Metric("current_power", 1.2),
     ]
 
 

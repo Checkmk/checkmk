@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Any, Dict, List, Mapping, Optional, Sequence
 
-from .agent_based_api.v1 import register, SNMPTree
+from .agent_based_api.v1 import IgnoreResultsError, register, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import domino, memory, ps
 
@@ -58,8 +58,12 @@ def check_domino_tasks(
     section_domino_tasks: Optional[ps.Section],
     section_mem: Optional[Dict[str, float]],
 ) -> CheckResult:
+
     if section_domino_tasks is None:
-        return
+        # The driving force of this check is the section 'domino_tasks'. If
+        # this data is not available, the check should go stale.
+        raise IgnoreResultsError
+
     cpu_cores, lines = section_domino_tasks
     process_lines = [(None, psi, cmd_line) for (psi, cmd_line) in lines]
 

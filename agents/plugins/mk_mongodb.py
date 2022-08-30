@@ -119,9 +119,18 @@ def sections_replica(server_status):
     repl_info = server_status.get("repl")
     if not repl_info:
         return
+
+    def _remove_primary(primary, hosts):
+        if hosts is None:
+            return None
+        if primary is None:
+            return hosts
+        return list(set(hosts) - {primary})
+
+    primary = repl_info.get("primary")
     _write_section_replica(
-        repl_info.get("primary"),
-        secondary_actives=repl_info.get("hosts"),
+        primary,
+        secondary_actives=_remove_primary(primary, repl_info.get("hosts")),
         secondary_passives=repl_info.get("passives"),
         arbiters=repl_info.get("arbiters"),
     )

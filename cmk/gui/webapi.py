@@ -26,15 +26,7 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.wato.utils import PermissionSectionWATO
-
-# TODO: Kept for compatibility reasons with legacy plugins
-from cmk.gui.plugins.webapi.utils import (  # noqa: F401 # pylint: disable=unused-import
-    add_configuration_hash,
-    api_call_collection_registry,
-    APICallDefinitionDict,
-    check_hostname,
-    validate_config_hash,
-)
+from cmk.gui.plugins.webapi.utils import api_call_collection_registry, APICallDefinitionDict
 from cmk.gui.watolib.activate_changes import update_config_generation
 
 

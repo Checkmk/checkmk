@@ -25,12 +25,6 @@ import cmk.gui.utils as utils
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKConfigError
 from cmk.gui.i18n import _
-
-# Kept for compatibility with pre 1.6 GUI plugins
-from cmk.gui.permissions import (  # noqa: F401 # pylint: disable=unused-import
-    declare_permission,
-    declare_permission_section,
-)
 from cmk.gui.plugins.config.base import CREConfig
 from cmk.gui.type_defs import Key
 

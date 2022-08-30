@@ -6,8 +6,6 @@
 import abc
 from typing import Callable, List, Type, Union
 
-from six import ensure_str
-
 import cmk.utils.plugin_registry
 
 from cmk.gui.utils.speaklater import LazyString
@@ -135,7 +133,6 @@ class PermissionRegistry(cmk.utils.plugin_registry.Registry[Permission]):
 permission_registry = PermissionRegistry()
 
 
-# Kept for compatibility with pre 1.6 GUI plugins
 def declare_permission_section(name, title, prio=50, do_sort=False):
     cls = type(
         "LegacyPermissionSection%s" % name.title(),
@@ -150,13 +147,7 @@ def declare_permission_section(name, title, prio=50, do_sort=False):
     permission_section_registry.register(cls)
 
 
-# Kept for compatibility with pre 1.6 GUI plugins
-# Some dynamically registered permissions still use this
 def declare_permission(name, title, description, defaults):
-    # ? declare_permission seems to be used with the type of name argument being str
-    if not isinstance(name, str):
-        name = ensure_str(name, encoding="ascii")  # pylint: disable= six-ensure-str-bin-call
-
     section_name, permission_name = name.split(".", 1)
 
     permission_registry.register(

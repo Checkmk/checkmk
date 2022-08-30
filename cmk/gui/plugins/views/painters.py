@@ -25,7 +25,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
-from cmk.gui.plugins.metrics.utils import render_color_icon, TranslatedMetrics
+from cmk.gui.plugins.metrics.utils import metric_info, render_color_icon, TranslatedMetrics
 from cmk.gui.plugins.views.graphs import cmk_time_graph_params, paint_time_graph_cmk
 from cmk.gui.plugins.views.icons.utils import (
     get_icons,
@@ -5289,7 +5289,7 @@ class AbstractPainterSpecificMetric(Painter):
             if not parameters:
                 # Used in Edit-View
                 return _("Show single metric")
-            return metrics.metric_info[parameters["metric"]]["title"]
+            return metric_info[parameters["metric"]]["title"]
         except KeyError:
             return _("Metric not found")
 
@@ -5318,7 +5318,7 @@ class AbstractPainterSpecificMetric(Painter):
     @request_memoize()
     def _metric_choices(cls) -> List[Tuple[str, str]]:
         return sorted(
-            [(k, str(v.get("title", k))) for k, v in metrics.metric_info.items()],
+            [(k, str(v.get("title", k))) for k, v in metric_info.items()],
             key=lambda x: x[1],
         )
 

@@ -1,0 +1,13 @@
+Title: apc_mod_pdu_modules: total power measurement displayed at wrong scale
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1661863172
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p29
+
+The check "apc_mod_pdu_modules" assumed power measurements to be in hundreths
+of kW, instead of tenths of kW as described in the device's MIB. The correct
+scale is now applied.

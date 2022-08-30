@@ -58,8 +58,8 @@ def test_discover_apc_mod_pdu_modules_no_items(check: Check) -> None:
 
 @pytest.mark.usefixtures("config_load_all_checks")
 def test_check_apc_mod_pdu_modules(check: Check, string_table: StringTable) -> None:
-    assert check.run_check("Circuit 1a", {}, string_table) == (0, "Status normal, current: 0.12kw ",
-                                                               [("current_power", 0.12)])
+    assert check.run_check("Circuit 1a", {}, string_table) == (0, "Status normal, current: 1.20kw ",
+                                                               [("current_power", 1.2)])
 
 
 @pytest.mark.usefixtures("config_load_all_checks")

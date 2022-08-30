@@ -22,7 +22,7 @@ BINUTILS_VERSION="2.39"
 BINUTILS_ARCHIVE_NAME="binutils-${BINUTILS_VERSION}.tar.gz"
 BINUTILS_URL="${MIRROR_URL}binutils/${BINUTILS_ARCHIVE_NAME}"
 
-GDB_VERSION="11.1"
+GDB_VERSION="12.1"
 GDB_ARCHIVE_NAME="gdb-${GDB_VERSION}.tar.gz"
 GDB_URL="${MIRROR_URL}gdb/${GDB_ARCHIVE_NAME}"
 
@@ -35,7 +35,7 @@ BUILD_DIR=/opt/src
 # NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE
 # Only the GCC_VERSION is part of the cache key, so be sure to bump this, too,
 # e.g. when changing the binutils or gdb version!
-BUILD_ID=4
+BUILD_ID=5
 
 download_sources() {
     # Get the sources from nexus or upstream

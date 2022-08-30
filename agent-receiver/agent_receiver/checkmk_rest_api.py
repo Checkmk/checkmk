@@ -7,6 +7,7 @@ import json
 from enum import Enum
 from http import HTTPStatus
 from typing import Any
+from urllib.parse import quote
 from uuid import UUID
 
 import requests
@@ -118,13 +119,35 @@ class HostConfiguration(BaseModel):
     is_cluster: bool
 
 
+def _url_encode_hostname(host_name: str) -> str:
+    """Escape special characters in the host name to make it URL safe
+
+    Allowed characters are letters, digits and '_.-~'.
+
+        >>> _url_encode_hostname("local_host.host-name.tld~")
+        'local_host.host-name.tld~'
+
+    Slashes are not allowed.
+
+        >>> _url_encode_hostname("heute/../../etc")
+        'heute%2F..%2F..%2Fetc'
+
+    Spaces, umlauts, emojis and the like are escaped.
+
+        >>> _url_encode_hostname("Bäm! 💥")
+        'B%C3%A4m%21%20%F0%9F%92%A5'
+
+    """
+    return quote(host_name, safe="")  # '/' is not "safe" here
+
+
 def host_configuration(
     credentials: HTTPBasicCredentials,
     host_name: str,
 ) -> HostConfiguration:
     if (
         response := _forward_get(
-            f"objects/host_config_internal/{host_name}",
+            f"objects/host_config_internal/{_url_encode_hostname(host_name)}",
             credentials,
         )
     ).status_code == HTTPStatus.OK:
@@ -148,7 +171,7 @@ def link_host_with_uuid(
 ) -> None:
     if (
         response := _forward_put(
-            f"objects/host_config_internal/{host_name}/actions/link_uuid/invoke",
+            f"objects/host_config_internal/{_url_encode_hostname(host_name)}/actions/link_uuid/invoke",
             credentials,
             {"uuid": str(uuid)},
         )

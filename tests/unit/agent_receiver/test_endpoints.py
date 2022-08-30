@@ -167,6 +167,25 @@ def test_register_register_with_hostname_ok(
     assert not response.text
 
 
+# this is a regression test for CMK-11202
+def test_register_register_with_hostname_invalid(
+    mocker: MockerFixture,
+    client: TestClient,
+    uuid: UUID,
+) -> None:
+    response = client.post(
+        "/register_with_hostname",
+        auth=("herbert", "joergl"),
+        json={
+            "uuid": str(uuid),
+            "host_name": "my/../host",
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Invalid hostname: 'my/../host'"}
+
+
 def test_register_with_labels_unauthenticated(
     mocker: MockerFixture,
     client: TestClient,

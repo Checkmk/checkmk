@@ -1,0 +1,16 @@
+Title: Fix exception on export of BI views as CSV or JSON
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1661869683
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p12
+
+If Business Intelligence views were exported via "Export" - "Export CSV" or
+"Export JSON" the exported files contained an exception like "Exception:
+Painter 'aggr_treestate' returned invalid result".
+
+This bug was introduced with werk #13879 in 2.1.0b6 that fixed the export of
+labels in views but set to tight restrictions for the painter format.

@@ -2310,13 +2310,7 @@ class Cell:
             ]
             if (
                 request.var("output_format") in output_formats
-                and isinstance(
-                    painter,
-                    (
-                        cmk.gui.plugins.views.painters.PainterHostLabels,
-                        cmk.gui.plugins.views.painters.PainterServiceLabels,
-                    ),
-                )
+                and isinstance(painter, Painter)
                 and isinstance(result[1], dict)
             ):
                 return result

@@ -60,11 +60,10 @@ def del_host_downtime(  # type:ignore[no-untyped-def]
 
         >>> from cmk.gui.livestatus_utils.testing import simple_expect
         >>> from cmk.gui.config import load_config
-        >>> from cmk.gui.utils.script_helpers import application_and_request_context
         >>> from cmk.gui.logged_in import SuperUserContext
 
         >>> expect = simple_expect("COMMAND [...] DEL_HOST_DOWNTIME;1", match_type="ellipsis")
-        >>> with expect as live, application_and_request_context(), SuperUserContext():
+        >>> with expect as live, SuperUserContext():
         ...     load_config()
         ...     del_host_downtime(live, 1, "")
 
@@ -95,11 +94,10 @@ def del_service_downtime(  # type:ignore[no-untyped-def]
 
         >>> from cmk.gui.livestatus_utils.testing import simple_expect
         >>> from cmk.gui.config import load_config
-        >>> from cmk.gui.utils.script_helpers import application_and_request_context
         >>> from cmk.gui.logged_in import SuperUserContext
 
         >>> expect = simple_expect("COMMAND [...] DEL_SVC_DOWNTIME;1", match_type="ellipsis")
-        >>> with expect as live, application_and_request_context(), SuperUserContext():
+        >>> with expect as live, SuperUserContext():
         ...     load_config()
         ...     del_service_downtime(live, 1, "")
 
@@ -251,11 +249,10 @@ def schedule_service_downtime(  # type:ignore[no-untyped-def]
 
         >>> from cmk.gui.livestatus_utils.testing import simple_expect
         >>> from cmk.gui.config import load_config
-        >>> from cmk.gui.utils.script_helpers import application_and_request_context
         >>> from cmk.gui.logged_in import SuperUserContext
 
         >>> cmd = "COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;0;86400;16;0;120;;Boom"
-        >>> with simple_expect() as live, application_and_request_context(), SuperUserContext():
+        >>> with simple_expect() as live, SuperUserContext():
         ...     load_config()
         ...     _ = live.expect_query(cmd, match_type="ellipsis")
         ...     schedule_service_downtime(live,
@@ -588,11 +585,10 @@ def schedule_host_downtime(  # type:ignore[no-untyped-def]
 
         >>> from cmk.gui.livestatus_utils.testing import simple_expect
         >>> from cmk.gui.config import load_config
-        >>> from cmk.gui.utils.script_helpers import application_and_request_context
         >>> from cmk.gui.logged_in import SuperUserContext
 
         >>> cmd = "COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;0;86400;16;0;120;;Boom"
-        >>> with simple_expect() as live, application_and_request_context(), SuperUserContext():
+        >>> with simple_expect() as live, SuperUserContext():
         ...     load_config()
         ...     _ = live.expect_query("GET hosts\\nColumns: name\\nFilter: name = example.com")
         ...     _ = live.expect_query(cmd, match_type="ellipsis")

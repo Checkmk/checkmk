@@ -21,9 +21,11 @@ import socket
 import statistics
 import time
 from collections.abc import Callable, Iterable, Mapping
-from typing import Any, Literal
+from contextlib import contextmanager
+from typing import Any, Iterator, Literal
+from unittest import mock
 
-from livestatus import LivestatusTestingError
+from livestatus import LivestatusTestingError, MultiSiteConnection, SiteConfigurations, SiteId
 
 # TODO: Make livestatus.py a well tested package on pypi
 # TODO: Move this code to the livestatus package
@@ -1372,3 +1374,64 @@ def _unpack_headers(query: str) -> dict[str, str]:
         key, value = header.split(": ", 1)
         unpacked[key] = value.lstrip(" ")
     return unpacked
+
+
+@contextmanager
+def mock_livestatus_communication() -> Iterator[MockLiveStatusConnection]:
+    live = MockLiveStatusConnection()
+    with mock.patch(
+        "livestatus.MultiSiteConnection.expect_query", new=live.expect_query, create=True
+    ), mock.patch("livestatus.SingleSiteConnection._create_socket", new=live.create_socket):
+        yield live
+
+
+# This function is used extensively in doctests. If we moved the tests to regular pytest tests, we
+# could make use of existing fixtures and simplify all this. When looking at the doctests in
+# cmk/utils/livestatus_helpers/queries.py it looks like many of then should better be unit tests.
+@contextmanager
+def expect_single_query(
+    query: str = "",
+    match_type: MatchType = "loose",
+    expect_status_query: bool = False,
+) -> Iterator[MultiSiteConnection]:
+    """A simplified testing context manager.
+
+    Args:
+        query:
+            A livestatus query.
+
+        match_type:
+            Either 'strict', 'loose' or 'ellipsis'. Default is 'loose'.
+
+        expect_status_query:
+            If the query of the status table (which Checkmk does when calling cmk.gui.sites.live())
+            should be expected. Defaults to False.
+
+    Returns:
+        A context manager.
+
+    Examples:
+
+        >>> with expect_single_query("GET hosts") as _live:
+        ...    _ = _live.query("GET hosts")
+
+    """
+    with mock_livestatus_communication() as mock_live:
+        if query:
+            mock_live.expect_query(query, match_type=match_type)
+        with mock_live(expect_status_query):
+            yield MultiSiteConnection(
+                sites=SiteConfigurations(
+                    {
+                        SiteId("NO_SITE"): {
+                            "socket": "unix:",
+                        },
+                        SiteId("remote"): {
+                            "socket": "unix:",
+                        },
+                        SiteId("local"): {
+                            "socket": "unix:",
+                        },
+                    }
+                )
+            )

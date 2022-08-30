@@ -273,8 +273,8 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
             ...      name = Column('name', 'string', 'The host name')
             ...      parents = Column('parents', 'list', 'The hosts parents')
 
-            >>> from cmk.gui.livestatus_utils.testing import simple_expect
-            >>> with simple_expect() as live:
+            >>> from cmk.utils.livestatus_helpers.testing import expect_single_query
+            >>> with expect_single_query() as live:
             ...    _ = live.expect_query("GET hosts\\nColumns: parents\\nFilter: name = heute")
             ...    Query([Hosts.parents], Hosts.name == "heute").first_value(live)
             ['example.com']
@@ -317,20 +317,20 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
             ...      name = Column('name', 'string', 'The host name')
             ...      parents = Column('parents', 'list', 'The hosts parents')
 
-            >>> from cmk.gui.livestatus_utils.testing import simple_expect
+            >>> from cmk.utils.livestatus_helpers.testing import expect_single_query
 
-            >>> with simple_expect() as live:
+            >>> with expect_single_query() as live:
             ...    _ = live.expect_query("GET hosts\\nColumns: name\\nFilter: name = heute")
             ...    Query([Hosts.name], Hosts.name == "heute").fetchone(live)
             {'name': 'heute'}
 
-            >>> with simple_expect() as live:
+            >>> with expect_single_query() as live:
             ...    _ = live.expect_query("GET hosts\\nColumns: name\\nFilter: name = heute")
             ...    live.set_prepend_site(True)
             ...    Query([Hosts.name], Hosts.name == "heute").fetchone(live)
             {'site': 'NO_SITE', 'name': 'heute'}
 
-            >>> with simple_expect() as live:
+            >>> with expect_single_query() as live:
             ...    _ = live.expect_query("GET hosts\\nColumns: name")
             ...    Query([Hosts.name]).fetchone(live)
             Traceback (most recent call last):
@@ -366,8 +366,8 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
             ...      name = Column('name', 'string', 'The host name')
             ...      parents = Column('parents', 'list', 'The hosts parents')
 
-            >>> from cmk.gui.livestatus_utils.testing import simple_expect
-            >>> with simple_expect() as live:
+            >>> from cmk.utils.livestatus_helpers.testing import expect_single_query
+            >>> with expect_single_query() as live:
             ...    _ = live.expect_query("GET hosts\\nColumns: parents\\nFilter: name = heute")
             ...    Query([Hosts.parents], Hosts.name == "heute").value(live)
             ['example.com']
@@ -413,13 +413,13 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
             ...      name = Column('name', 'string', 'The host name')
             ...      parents = Column('parents', 'list', 'The hosts parents')
 
-            >>> from cmk.gui.livestatus_utils.testing import simple_expect
-            >>> with simple_expect() as live:
+            >>> from cmk.utils.livestatus_helpers.testing import expect_single_query
+            >>> with expect_single_query() as live:
             ...    _ = live.expect_query("GET hosts\\nColumns: name parents")
             ...    list(Query([Hosts.name, Hosts.parents]).iterate(live))
             [{'name': 'heute', 'parents': ['example.com']}, {'name': 'example.com', 'parents': []}]
 
-            >>> with simple_expect() as live:
+            >>> with expect_single_query() as live:
             ...    _ = live.expect_query("GET hosts\\nColumns: name parents")
             ...    live.set_prepend_site(True)
             ...    list(Query([Hosts.name, Hosts.parents]).iterate(live))
@@ -460,8 +460,8 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
             ...      name = Column('name', 'string', 'The host name')
             ...      parents = Column('parents', 'list', 'The hosts parents')
 
-            >>> from cmk.gui.livestatus_utils.testing import simple_expect
-            >>> with simple_expect() as live:
+            >>> from cmk.utils.livestatus_helpers.testing import expect_single_query
+            >>> with expect_single_query() as live:
             ...    _ = live.expect_query("GET hosts\\nColumns: name parents")
             ...    Query([Hosts.name, Hosts.parents]).to_dict(live)
             {'heute': ['example.com'], 'example.com': []}
@@ -730,6 +730,7 @@ def _parse_line(
     return column.op(op, value)
 
 
+# TODO: Better rename to site_aware_connection or similar more meaningful
 @contextmanager
 def detailed_connection(connection):
     prev = connection.prepend_site

@@ -10,7 +10,11 @@ from unittest import mock
 
 from livestatus import MultiSiteConnection
 
-from cmk.utils.livestatus_helpers.testing import MatchType, MockLiveStatusConnection
+from cmk.utils.livestatus_helpers.testing import (
+    MatchType,
+    mock_livestatus_communication,
+    MockLiveStatusConnection,
+)
 from cmk.utils.site import omd_site
 
 from cmk.gui import sites
@@ -19,15 +23,10 @@ from cmk.gui.utils.script_helpers import application_and_request_context
 
 @contextlib.contextmanager
 def mock_livestatus() -> Iterator[MockLiveStatusConnection]:
-    live = MockLiveStatusConnection()
-    with mock.patch(
-        "cmk.gui.sites._get_enabled_and_disabled_sites", new=live.enabled_and_disabled_sites
-    ), mock.patch(
-        "livestatus.MultiSiteConnection.expect_query", new=live.expect_query, create=True
-    ), mock.patch(
-        "livestatus.SingleSiteConnection._create_socket", new=live.create_socket
+    with mock_livestatus_communication() as mock_live, mock.patch(
+        "cmk.gui.sites._get_enabled_and_disabled_sites", new=mock_live.enabled_and_disabled_sites
     ):
-        yield live
+        yield mock_live
 
 
 @contextlib.contextmanager
@@ -44,7 +43,7 @@ def mock_site() -> Iterator[None]:
 
 # This function is used extensively in doctests. If we moved the tests to regular pytest tests, we
 # could make use of existing fixtures and simplify all this. When looking at the doctests in
-# cmk/utils/livestatus_helpers/queries.py it looks like many of then should better be unit tests.
+# cmk/gui/livestatus_utils/commands/*.py it looks like many of then should better be unit tests.
 @contextlib.contextmanager
 def simple_expect(
     query: str = "",

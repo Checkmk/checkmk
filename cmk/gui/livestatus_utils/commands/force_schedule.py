@@ -73,12 +73,11 @@ def force_schedule_service_check(  # type:ignore[no-untyped-def]
 
         >>> from cmk.gui.livestatus_utils.testing import simple_expect
         >>> from cmk.gui.config import load_config
-        >>> from cmk.gui.utils.script_helpers import application_and_request_context
         >>> from cmk.gui.logged_in import SuperUserContext
 
         >>> cmd = "COMMAND [...] SCHEDULE_FORCED_SVC_CHECK;example.com;CPU Load;0"
         >>> expect = simple_expect(cmd, match_type="ellipsis")
-        >>> with expect as live, application_and_request_context(), SuperUserContext():
+        >>> with expect as live, SuperUserContext():
         ...     load_config()
         ...     force_schedule_service_check(live,'example.com', 'CPU Load', _check_time)
     """

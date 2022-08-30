@@ -62,7 +62,7 @@ def acknowledge_service_problem(  # type:ignore[no-untyped-def]
         >>> from cmk.gui.config import load_config
 
         >>> cmd = "COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;example.com;drain;1;0;0;;"
-        >>> with simple_expect() as live, application_and_request_context(), SuperUserContext():
+        >>> with simple_expect() as live, SuperUserContext():
         ...     load_config()
         ...     _ = live.expect_query("GET hosts\\nColumns: name\\nFilter: name = example.com")
         ...     _ = live.expect_query(cmd, match_type="ellipsis")
@@ -211,7 +211,7 @@ def acknowledge_host_problem(  # type:ignore[no-untyped-def]
         >>> from cmk.gui.config import load_config
 
         >>> cmd = "COMMAND [...] ACKNOWLEDGE_HOST_PROBLEM;example.com;1;0;0;;"
-        >>> with simple_expect() as live, application_and_request_context(), SuperUserContext():
+        >>> with simple_expect() as live, SuperUserContext():
         ...     load_config()
         ...     _ = live.expect_query("GET hosts\\nColumns: name\\nFilter: name = example.com")
         ...     _ = live.expect_query(cmd, match_type="ellipsis")

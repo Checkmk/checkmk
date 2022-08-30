@@ -157,11 +157,10 @@ def add_host_comment(
     Examples:
 
         >>> from cmk.gui.livestatus_utils.testing import simple_expect
-        >>> from cmk.gui.utils.script_helpers import application_and_request_context
         >>> from cmk.gui.logged_in import SuperUserContext
         >>> from cmk.gui.config import load_config
         >>> cmd = "COMMAND [...] ADD_HOST_COMMENT;example.com;0;;test"
-        >>> with simple_expect() as live, application_and_request_context(), SuperUserContext():
+        >>> with simple_expect() as live, SuperUserContext():
         ...     load_config()
         ...     _ = live.expect_query(cmd, match_type="ellipsis")
         ...     add_host_comment(live, 'example.com', 'test', "NO_SITE")
@@ -230,11 +229,10 @@ def add_service_comment(
     Examples:
 
         >>> from cmk.gui.livestatus_utils.testing import simple_expect
-        >>> from cmk.gui.utils.script_helpers import application_and_request_context
         >>> from cmk.gui.logged_in import SuperUserContext
         >>> from cmk.gui.config import load_config
         >>> cmd = "COMMAND [...] ADD_SVC_COMMENT;example.com;CPU Load;0;;test"
-        >>> with simple_expect() as live, application_and_request_context(), SuperUserContext():
+        >>> with simple_expect() as live, SuperUserContext():
         ...     load_config()
         ...     _ = live.expect_query(cmd, match_type="ellipsis")
         ...     add_service_comment(live, 'example.com', 'CPU Load', 'test', "NO_SITE")
@@ -276,13 +274,12 @@ def delete_host_comment(connection: MultiSiteConnection, comment_id: int, site_i
 
     Examples:
         >>> from cmk.gui.livestatus_utils.testing import simple_expect
-        >>> from cmk.gui.utils.script_helpers import application_and_request_context
         >>> from cmk.gui.logged_in import SuperUserContext
         >>> from cmk.gui.config import load_config
 
         >>> cmd = "COMMAND [...] DEL_HOST_COMMENT;1234"
         >>> expect = simple_expect(cmd, match_type="ellipsis")
-        >>> with expect as live, application_and_request_context(), SuperUserContext():
+        >>> with expect as live, SuperUserContext():
         ...     load_config()
         ...     delete_host_comment(live, 1234, "NO_SITE")
 
@@ -308,13 +305,12 @@ def delete_service_comment(
 
     Examples:
         >>> from cmk.gui.livestatus_utils.testing import simple_expect
-        >>> from cmk.gui.utils.script_helpers import application_and_request_context
         >>> from cmk.gui.logged_in import SuperUserContext
         >>> from cmk.gui.config import load_config
 
         >>> cmd = "COMMAND [...] DEL_SVC_COMMENT;1234"
         >>> expect = simple_expect(cmd, match_type="ellipsis")
-        >>> with expect as live, application_and_request_context(), SuperUserContext():
+        >>> with expect as live, SuperUserContext():
         ...     load_config()
         ...     delete_service_comment(live, 1234, "NO_SITE")
 

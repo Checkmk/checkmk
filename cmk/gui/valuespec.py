@@ -394,7 +394,7 @@ class Age(ValueSpec[Seconds]):
         label: str | None = None,
         minvalue: Seconds | None = None,
         maxvalue: Seconds | None = None,
-        display: Container[str] | None = None,
+        display: Container[Literal["days", "hours", "minutes", "seconds"]] | None = None,
         title: str | None = None,
         help: ValueSpecHelp | None = None,
         default_value: ValueSpecDefault[Seconds] = DEF_VALUE,

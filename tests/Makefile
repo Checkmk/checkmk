@@ -235,7 +235,7 @@ test-typescript-types:
 	cd ..; scripts/check-typescript-types.sh
 
 test-lint-js:
-	cd ..; npm run lint
+	cd ..; scripts/check-js-lint.sh
 
 test-lint-js-docker:
 	../scripts/run-in-docker.sh make --quiet test-lint-js

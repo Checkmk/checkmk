@@ -16,9 +16,7 @@
     "build": "webpack",
     "test": "echo \"Error: no test specified\" && exit 1",
     "//": "COMMENT: Process 'resolutions' key below",
-    "watch": "webpack --mode development --watch",
-    "preinstall": "npx npm-force-resolutions",
-    "lint": "eslint '{enterprise/web,web}/htdocs/js/**/*.{j,t}s'"
+    "preinstall": "npx npm-force-resolutions"
   },
   "repository": {
     "type": "git",

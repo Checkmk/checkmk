@@ -71,7 +71,7 @@ def ajax_graph_images_for_notifications():
                 raise
             raise Exception(
                 _("Cannot render graph: host %s, service %s not found.") %
-                (host_name, service_description))
+                (host_name, service_description)) from None  # pep-0409
 
         site = row["site"]
 

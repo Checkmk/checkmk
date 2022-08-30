@@ -35,6 +35,7 @@ DomainType = Literal[
     "licensing",
     "license_usage",
     "metric",
+    "notification_rule",
     "password",
     "rule",
     "ruleset",

@@ -519,7 +519,6 @@ class SingleSiteConnection(Helpers):
         # never filled, just to have the same API as MultiSiteConnection (TODO: Cleanup)
         self.deadsites: dict[SiteId, DeadSite] = {}
         self.limit: int | None = None
-        self.add_headers = ""
         self.auth_header = ""
         self.persist = persist
         self.allow_cache = allow_cache
@@ -544,9 +543,6 @@ class SingleSiteConnection(Helpers):
 
     def successfully_persisted(self) -> bool:
         return self.successful_persistence
-
-    def add_header(self, header: str) -> None:
-        self.add_headers += header + "\n"
 
     def set_timeout(self, timeout: int) -> None:
         self.timeout = timeout
@@ -699,7 +695,6 @@ class SingleSiteConnection(Helpers):
 
         headers = [
             self.auth_header,
-            self.add_headers,
             f"Localtime: {int(time.time()):d}",
             "OutputFormat: %s" % self._output_format.value,
             "KeepAlive: on",
@@ -1092,10 +1087,6 @@ class MultiSiteConnection(Helpers):
                 del self.connections[i]
                 return
             i += 1
-
-    def add_header(self, header: str) -> None:
-        for connected_site in self.connections:
-            connected_site.connection.add_header(header)
 
     def set_prepend_site(self, p: bool) -> None:
         self.prepend_site = p

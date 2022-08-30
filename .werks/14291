@@ -1,0 +1,33 @@
+Title: NagVis: Updated to 1.9.34 (Fix security issues)
+Class: security
+Compatible: compat
+Component: packages
+Date: 1661803461
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0p28
+
+This update of NagVis fixes the following security issues:
+
+1. Fix SSRF (triggerable by admin users)
+
+An administrative user with access to the global options, could perform a
+server-side request forgery.
+
+CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:C/C:H/I:L/A:L (8.2)
+
+2. Fix arbitrary file read
+
+An authenticated attacker can read arbitrary files with the permissions of the
+web server user.
+
+CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:L/A:L (9.1)
+
+3. Fix type juggling vulnerability in cookie hash processing
+
+An attacker could bypass the authentication and gain access to the NagVis
+component of checkmk.
+
+CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:N/A:N (3.7)

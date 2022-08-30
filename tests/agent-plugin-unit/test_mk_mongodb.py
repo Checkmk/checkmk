@@ -368,6 +368,8 @@ def test_sections_replica_primary(mk_mongodb, capsys):
 
 
 def test_sections_replica_active_secondaries(mk_mongodb, capsys):
+    """Make sure primaries are removed from hosts when secondaries are determined."""
+
     mk_mongodb.sections_replica({"repl": {"primary": "abc", "hosts": ["abc", "def"]}})
     captured_output_and_error = capsys.readouterr()
     stdout, stderr = _stdout_stderr(captured_output_and_error)
@@ -379,7 +381,7 @@ def test_sections_replica_active_secondaries(mk_mongodb, capsys):
 
     assert len(replicas) == 3
     assert replicas["primary"] == "abc"
-    assert sorted(replicas["secondaries"].items()) == [("active", ["abc", "def"]), ("passive", [])]
+    assert sorted(replicas["secondaries"].items()) == [("active", ["def"]), ("passive", [])]
     assert replicas["arbiters"] == []
 
     assert not noop

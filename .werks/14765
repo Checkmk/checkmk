@@ -1,0 +1,17 @@
+Title: mk_mongodb.py: primary host is listed under active secondaries
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1661877437
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p12
+
+The plugin "mk_mongodb.py" provides the section "mongodb_replica", which
+contains information on the MongoDB primary, secondaries, and arbiters. The
+primary host was listed as both primary and active secondary. This is also
+shown in the corresponding check, "mongodb_replica". This has been fixed.
+
+The fix requires that the agent plugin, "mk_mongodb.py", is updated on the
+relevant hosts.

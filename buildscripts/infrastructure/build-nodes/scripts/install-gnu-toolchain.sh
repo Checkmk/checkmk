@@ -10,7 +10,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 MIRROR_URL="https://ftp.gnu.org/gnu/"
 
-GCC_MAJOR="11"
+GCC_MAJOR="12"
 GCC_MINOR="2"
 GCC_PATCHLEVEL="0"
 GCC_VERSION="${GCC_MAJOR}.${GCC_MINOR}.${GCC_PATCHLEVEL}"
@@ -21,7 +21,7 @@ BINUTILS_VERSION="2.39"
 BINUTILS_ARCHIVE_NAME="binutils-${BINUTILS_VERSION}.tar.gz"
 BINUTILS_URL="${MIRROR_URL}binutils/${BINUTILS_ARCHIVE_NAME}"
 
-GDB_VERSION="11.1"
+GDB_VERSION="12.1"
 GDB_ARCHIVE_NAME="gdb-${GDB_VERSION}.tar.gz"
 GDB_URL="${MIRROR_URL}gdb/${GDB_ARCHIVE_NAME}"
 
@@ -31,7 +31,7 @@ PREFIX=${TARGET_DIR}/${DIR_NAME}
 BUILD_DIR=/opt/src
 
 # Increase this to enforce a recreation of the build cache
-BUILD_ID=2
+BUILD_ID=3
 
 download_sources() {
     # Get the sources from nexus or upstream

@@ -195,7 +195,7 @@ def delete_non_cre_files() {
 }
 
 def strip_rc_number_from_version(VERSION) {
-    return sh(script: "echo -n ${VERSION} | sed 's/-rc[0-9]*//g'", returnStdout: true)
+    return VERSION.split("-rc")[0]
 }
 
 return this

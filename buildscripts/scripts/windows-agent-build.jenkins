@@ -13,7 +13,8 @@ node ('win_210_agent_build') {
         checkout_git(scm, VERSION)
         windows = load 'buildscripts/scripts/lib/windows.groovy'
         versioning = load 'buildscripts/scripts/lib/versioning.groovy'
-        def CMK_VERS = versioning.get_cmk_version(scm, VERSION)
+        def CMK_VERS_RC_AWARE = versioning.get_cmk_version(scm, VERSION)
+        def CMK_VERS = versioning.strip_rc_number_from_version(CMK_VERS_RC_AWARE)
         bat("make -C agents\\wnx NEW_VERSION=\"${CMK_VERS}\" setversion")
     }
     stage('preparation') {

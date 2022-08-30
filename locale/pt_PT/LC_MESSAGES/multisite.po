@@ -16634,13 +16634,13 @@ msgstr "Tensão eléctrica"
 msgid "Element"
 msgstr "Elemento"
 
+#, fuzzy, python-format
+msgid "Element %r does not exist anymore"
+msgstr "O elemento '%r' já não existe"
+
 #, python-format
 msgid "Element %s is already enabled"
 msgstr "Elemento %s já está ativado"
-
-#, python-format
-msgid "Element '%r' does not exist anymore"
-msgstr "O elemento '%r' já não existe"
 
 msgid "Element type"
 msgstr "Tipo do elemento"
@@ -49244,9 +49244,9 @@ msgid ""
 "Provide details (ATM: We still need such a role)"
 msgstr ""
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"The selected element '%r' is not longer available. Please select something "
+"The selected element %r is not longer available. Please select something "
 "else."
 msgstr ""
 "O elemento selecionado '%r' não está mais disponível. Por favor, selecione "

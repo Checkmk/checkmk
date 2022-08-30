@@ -15878,13 +15878,13 @@ msgstr "電圧"
 msgid "Element"
 msgstr "要素"
 
+#, fuzzy, python-format
+msgid "Element %r does not exist anymore"
+msgstr "要素 '%r'はもう存在しません"
+
 #, python-format
 msgid "Element %s is already enabled"
 msgstr "要素 %s はすでに有効になっています"
-
-#, python-format
-msgid "Element '%r' does not exist anymore"
-msgstr "要素 '%r'はもう存在しません"
 
 msgid "Element type"
 msgstr "要素タイプ"
@@ -46671,9 +46671,9 @@ msgid ""
 "Provide details (ATM: We still need such a role)"
 msgstr ""
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"The selected element '%r' is not longer available. Please select something "
+"The selected element %r is not longer available. Please select something "
 "else."
 msgstr ""
 "選択された要素 '%r' は使用できなくなりました。他のものを選択してください。"

@@ -16040,12 +16040,12 @@ msgstr ""
 msgid "Element"
 msgstr "Adaugă element"
 
-#, python-format
-msgid "Element %s is already enabled"
-msgstr ""
+#, fuzzy, python-format
+msgid "Element %r does not exist anymore"
+msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 #, python-format
-msgid "Element '%r' does not exist anymore"
+msgid "Element %s is already enabled"
 msgstr ""
 
 #, fuzzy
@@ -46774,7 +46774,7 @@ msgstr ""
 
 #, python-format
 msgid ""
-"The selected element '%r' is not longer available. Please select something "
+"The selected element %r is not longer available. Please select something "
 "else."
 msgstr ""
 

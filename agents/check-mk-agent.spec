@@ -65,6 +65,16 @@ if [ -x /var/lib/cmk-agent/scripts/super-server/setup ]; then
     /var/lib/cmk-agent/scripts/super-server/setup cleanup
 fi
 
+%post
+
+# We build the .deb package by transforming the .rpm package with alien.
+# As this script has to go to the .deb "postinstall" step, we need to specify it here, and
+# detect the call from the dpkg system by the "configure" argument.
+if [ $1 = "configure" ]; then
+    /var/lib/cmk-agent/scripts/super-server/setup cleanup
+    /var/lib/cmk-agent/scripts/super-server/setup deploy
+fi
+
 %posttrans
 
 /var/lib/cmk-agent/scripts/super-server/setup cleanup

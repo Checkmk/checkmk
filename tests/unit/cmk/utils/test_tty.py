@@ -3,12 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
+
 import cmk.utils.tty as tty
 
 
-def test_print_table(capsys) -> None:  # type:ignore[no-untyped-def]
-    tty.reinit()
-    tty.print_table(["foo", "bar"], ["", ""], [["Guildo", "Horn"], ["Dieter Thomas", "Kuhn"]])  #
+def test_print_table(capsys: pytest.CaptureFixture[str]) -> None:
+    tty.print_table(["foo", "bar"], ["", ""], [["Guildo", "Horn"], ["Dieter Thomas", "Kuhn"]])
     captured = capsys.readouterr()
     assert captured.out == (
         "foo           bar \n" "------------- ----\n" "Guildo        Horn\n" "Dieter Thomas Kuhn\n"
@@ -16,9 +17,8 @@ def test_print_table(capsys) -> None:  # type:ignore[no-untyped-def]
     assert captured.err == ""
 
 
-def test_print_colored_table(capsys) -> None:  # type:ignore[no-untyped-def]
-    tty.reinit()
-    tty.print_table(["foo", "bar"], ["XX", "YY"], [["Angus", "Young"], ["Estas", "Tonne"]])  #
+def test_print_colored_table(capsys: pytest.CaptureFixture[str]) -> None:
+    tty.print_table(["foo", "bar"], ["XX", "YY"], [["Angus", "Young"], ["Estas", "Tonne"]])
     captured = capsys.readouterr()
     assert captured.out == (
         "XXfoo  YY bar  \n" "XX-----YY -----\n" "XXAngusYY Young\n" "XXEstasYY Tonne\n"
@@ -26,10 +26,9 @@ def test_print_colored_table(capsys) -> None:  # type:ignore[no-untyped-def]
     assert captured.err == ""
 
 
-def test_print_indented_colored_table(capsys) -> None:  # type:ignore[no-untyped-def]
-    tty.reinit()
+def test_print_indented_colored_table(capsys: pytest.CaptureFixture[str]) -> None:
     tty.print_table(
-        ["foo", "bar"], ["XX", "YY"], [["Dieter", "Bohlen"], ["Thomas", "Anders"]], indent="===="  #
+        ["foo", "bar"], ["XX", "YY"], [["Dieter", "Bohlen"], ["Thomas", "Anders"]], indent="===="
     )
     captured = capsys.readouterr()
     assert captured.out == (

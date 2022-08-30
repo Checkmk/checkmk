@@ -23,6 +23,7 @@ import cmk.utils.paths
 import cmk.utils.redis as redis
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils import tty
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.site import omd_site
@@ -66,6 +67,16 @@ def fixture_umask():
     """Ensure the unit tests always use the same umask"""
     with cmk.utils.misc.umask(0o0007):
         yield
+
+
+@pytest.fixture(name="capsys")
+def fixture_capsys(capsys: pytest.CaptureFixture[str]) -> Iterator[pytest.CaptureFixture[str]]:
+    """Ensure that the capsys handling is deterministic even if started via `pytest -s`"""
+    tty.reinit()
+    try:
+        yield capsys
+    finally:
+        tty.reinit()
 
 
 @pytest.fixture(name="edition", params=["cre", "cee", "cme", "cpe"])

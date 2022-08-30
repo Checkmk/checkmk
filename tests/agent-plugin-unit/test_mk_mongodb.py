@@ -6,6 +6,7 @@
 
 # pylint: disable=protected-access,redefined-outer-name
 
+import json
 import os
 import sys
 
@@ -320,3 +321,123 @@ def test_transform_config(pymongo_version, pymongo_config, mk_mongodb):
         mk_mongodb.PYMONGO_VERSION = original_pymongo_version
 
     assert result == pymongo_config
+
+
+def _stdout_stderr(captured_output_and_error):
+    if isinstance(captured_output_and_error, tuple):
+        # Python 3.3 for some reason
+        return captured_output_and_error
+    return captured_output_and_error.out, captured_output_and_error.err
+
+
+def test_sections_replica_empty_section(mk_mongodb, capsys):
+    mk_mongodb.sections_replica({})
+    captured_output_and_error = capsys.readouterr()
+    stdout, stderr = _stdout_stderr(captured_output_and_error)
+
+    assert not stdout
+    assert not stderr
+
+
+def test_sections_replica_no_replicas(mk_mongodb, capsys):
+    mk_mongodb.sections_replica({"repl": {}})
+    captured_output_and_error = capsys.readouterr()
+    stdout, stderr = _stdout_stderr(captured_output_and_error)
+
+    assert not stdout
+    assert not stderr
+
+
+def test_sections_replica_primary(mk_mongodb, capsys):
+    mk_mongodb.sections_replica({"repl": {"primary": "abc"}})
+    captured_output_and_error = capsys.readouterr()
+    stdout, stderr = _stdout_stderr(captured_output_and_error)
+
+    header, json_body, noop = stdout.split("\n")
+    replicas = json.loads(json_body)
+
+    assert header == "<<<mongodb_replica:sep(0)>>>"
+
+    assert len(replicas) == 3
+    assert replicas["primary"] == "abc"
+    assert sorted(replicas["secondaries"].items()) == [("active", []), ("passive", [])]
+    assert replicas["arbiters"] == []
+
+    assert not noop
+    assert not stderr
+
+
+def test_sections_replica_active_secondaries(mk_mongodb, capsys):
+    mk_mongodb.sections_replica({"repl": {"primary": "abc", "hosts": ["abc", "def"]}})
+    captured_output_and_error = capsys.readouterr()
+    stdout, stderr = _stdout_stderr(captured_output_and_error)
+
+    header, json_body, noop = stdout.split("\n")
+    replicas = json.loads(json_body)
+
+    assert header == "<<<mongodb_replica:sep(0)>>>"
+
+    assert len(replicas) == 3
+    assert replicas["primary"] == "abc"
+    assert sorted(replicas["secondaries"].items()) == [("active", ["abc", "def"]), ("passive", [])]
+    assert replicas["arbiters"] == []
+
+    assert not noop
+    assert not stderr
+
+
+def test_sections_replica_passive_secondaries(mk_mongodb, capsys):
+    mk_mongodb.sections_replica({"repl": {"primary": "abc", "passives": ["def"]}})
+    captured_output_and_error = capsys.readouterr()
+    stdout, stderr = _stdout_stderr(captured_output_and_error)
+
+    header, json_body, noop = stdout.split("\n")
+    replicas = json.loads(json_body)
+
+    assert header == "<<<mongodb_replica:sep(0)>>>"
+
+    assert len(replicas) == 3
+    assert replicas["primary"] == "abc"
+    assert sorted(replicas["secondaries"].items()) == [("active", []), ("passive", ["def"])]
+    assert replicas["arbiters"] == []
+
+    assert not noop
+    assert not stderr
+
+
+def test_sections_replica_arbiters(mk_mongodb, capsys):
+    mk_mongodb.sections_replica({"repl": {"primary": "abc", "arbiters": ["def"]}})
+    captured_output_and_error = capsys.readouterr()
+    stdout, stderr = _stdout_stderr(captured_output_and_error)
+
+    header, json_body, noop = stdout.split("\n")
+    replicas = json.loads(json_body)
+
+    assert header == "<<<mongodb_replica:sep(0)>>>"
+
+    assert len(replicas) == 3
+    assert replicas["primary"] == "abc"
+    assert sorted(replicas["secondaries"].items()) == [("active", []), ("passive", [])]
+    assert replicas["arbiters"] == ["def"]
+
+    assert not noop
+    assert not stderr
+
+
+def test__write_section_replica_none_primary(mk_mongodb, capsys):
+    mk_mongodb._write_section_replica(None)
+    captured_output_and_error = capsys.readouterr()
+    stdout, stderr = _stdout_stderr(captured_output_and_error)
+
+    header, json_body, noop = stdout.split("\n")
+    replicas = json.loads(json_body)
+
+    assert header == "<<<mongodb_replica:sep(0)>>>"
+
+    assert len(replicas) == 3
+    assert replicas["primary"] is None
+    assert sorted(replicas["secondaries"].items()) == [("active", []), ("passive", [])]
+    assert replicas["arbiters"] == []
+
+    assert not noop
+    assert not stderr

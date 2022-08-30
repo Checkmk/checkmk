@@ -144,6 +144,7 @@ ValueSpecValidateFunc = Callable[[T, str], None]
 ValueSpecDefault = Promise[Union[Sentinel, T]]
 ValueSpecText = Union[str, HTML]
 ValueSpecHelp = Promise[ValueSpecText]
+# TODO: redefine after https://github.com/python/mypy/pull/13516 is released
 JSONValue = Any
 
 C = TypeVar("C", bound="Comparable")
@@ -336,6 +337,7 @@ class ValueSpec(abc.ABC, Generic[T]):
         return False
 
 
+# TODO: T should be bound to JSONValue
 class FixedValue(ValueSpec[T]):
     """A fixed non-editable value, e.g. to be used in 'Alternative'"""
 

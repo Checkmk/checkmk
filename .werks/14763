@@ -1,0 +1,13 @@
+Title: domino_tasks: state becomes UNKNOWN instead of STALE when data is missing
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1661850955
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p29
+
+The check "domino_tasks" shows state UNKNOWN along with the message "Item not
+found in monitoring data", even though there is no data available for this
+check. The check now becomes STALE when no data is available.

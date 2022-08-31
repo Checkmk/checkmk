@@ -5,12 +5,17 @@
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.plugins.dashboard.utils import dashlet_registry, IFrameDashlet
+from cmk.gui.plugins.dashboard.utils import dashlet_registry, DashletConfig, IFrameDashlet
 from cmk.gui.valuespec import Checkbox, TextInput
 
 
+class URLDashletConfig(DashletConfig):
+    url: str
+    show_in_iframe: bool
+
+
 @dashlet_registry.register
-class URLDashlet(IFrameDashlet):
+class URLDashlet(IFrameDashlet[URLDashletConfig]):
     """Dashlet that displays a custom webpage"""
 
     @classmethod

@@ -11,7 +11,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.plugins.dashboard.utils import dashlet_registry, IFrameDashlet
+from cmk.gui.plugins.dashboard.utils import dashlet_registry, DashletConfig, IFrameDashlet, T
 from cmk.gui.plugins.views.utils import PainterOptions
 from cmk.gui.type_defs import SingleInfos, ViewSpec
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_name, urlencode
@@ -21,7 +21,7 @@ from cmk.gui.view_renderer import GUIViewRenderer
 from cmk.gui.view_store import get_permitted_views
 
 
-class ABCViewDashlet(IFrameDashlet):
+class ABCViewDashlet(IFrameDashlet[T]):
     @classmethod
     def sort_index(cls) -> int:
         return 10
@@ -91,8 +91,12 @@ class ABCViewDashlet(IFrameDashlet):
         return data_source_registry[ds_name]().infos
 
 
+class ViewDashletConfig(DashletConfig):
+    ...
+
+
 @dashlet_registry.register
-class ViewDashlet(ABCViewDashlet):
+class ViewDashlet(ABCViewDashlet[ViewDashletConfig]):
     """Dashlet that displays a Check_MK view"""
 
     @classmethod
@@ -142,8 +146,12 @@ class ViewDashlet(ABCViewDashlet):
         return self._get_infos_from_view_spec(self._dashlet_spec)
 
 
+class LinkedViewDashletConfig(DashletConfig):
+    ...
+
+
 @dashlet_registry.register
-class LinkedViewDashlet(ABCViewDashlet):
+class LinkedViewDashlet(ABCViewDashlet[LinkedViewDashletConfig]):
     """Dashlet that displays a Check_MK view without embedding it's definition into the dashboard"""
 
     @classmethod

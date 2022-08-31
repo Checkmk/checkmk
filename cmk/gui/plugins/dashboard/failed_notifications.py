@@ -7,12 +7,16 @@ import cmk.gui.notifications as notifications
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.plugins.dashboard.utils import Dashlet, dashlet_registry
+from cmk.gui.plugins.dashboard.utils import Dashlet, dashlet_registry, DashletConfig
 from cmk.gui.utils.urls import makeuri_contextless
 
 
+class FailedNotificationsDashletConfig(DashletConfig):
+    ...
+
+
 @dashlet_registry.register
-class FailedNotificationsDashlet(Dashlet):
+class FailedNotificationsDashlet(Dashlet[FailedNotificationsDashletConfig]):
     """Dashlet notifying users in case of failure to send notifications"""
 
     @classmethod

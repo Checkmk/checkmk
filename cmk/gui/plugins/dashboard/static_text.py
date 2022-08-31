@@ -5,12 +5,16 @@
 
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
-from cmk.gui.plugins.dashboard.utils import Dashlet, dashlet_registry
+from cmk.gui.plugins.dashboard.utils import Dashlet, dashlet_registry, DashletConfig
 from cmk.gui.valuespec import TextInput
 
 
+class StaticTextDashletConfig(DashletConfig):
+    text: str
+
+
 @dashlet_registry.register
-class StaticTextDashlet(Dashlet):
+class StaticTextDashlet(Dashlet[StaticTextDashletConfig]):
     """Dashlet that displays a static text"""
 
     @classmethod

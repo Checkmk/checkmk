@@ -4,12 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.dashboard.utils import Dashlet, dashlet_registry
+from cmk.gui.plugins.dashboard.utils import Dashlet, dashlet_registry, DashletConfig
 from cmk.gui.user_message import render_user_message_table
 
 
+class MessageUsersDashletConfig(DashletConfig):
+    ...
+
+
 @dashlet_registry.register
-class MessageUsersDashlet(Dashlet):
+class MessageUsersDashlet(Dashlet[MessageUsersDashletConfig]):
     """Dashlet that displays GUI messages for users"""
 
     @classmethod

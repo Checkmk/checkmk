@@ -124,8 +124,12 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
         )
 
 
+class GraphDashletConfig(DashletConfig):
+    ...
+
+
 @dashlet_registry.register
-class GraphDashlet(Dashlet):
+class GraphDashlet(Dashlet[GraphDashletConfig]):
     """Dashlet for rendering a single performance graph"""
 
     @classmethod
@@ -171,7 +175,7 @@ class GraphDashlet(Dashlet):
         dashboard_name: DashboardName,
         dashboard: DashboardConfig,
         dashlet_id: DashletId,
-        dashlet: DashletConfig,
+        dashlet: GraphDashletConfig,
     ) -> None:
         super().__init__(
             dashboard_name=dashboard_name,

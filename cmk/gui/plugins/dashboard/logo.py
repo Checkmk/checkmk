@@ -5,12 +5,16 @@
 
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
-from cmk.gui.plugins.dashboard.utils import Dashlet, dashlet_registry
+from cmk.gui.plugins.dashboard.utils import Dashlet, dashlet_registry, DashletConfig
 from cmk.gui.utils.theme import theme
 
 
+class MKLogoDashletConfig(DashletConfig):
+    ...
+
+
 @dashlet_registry.register
-class MKLogoDashlet(Dashlet):
+class MKLogoDashlet(Dashlet[MKLogoDashletConfig]):
     """Dashlet that displays the Check_MK logo"""
 
     @classmethod

@@ -17,6 +17,7 @@ from typing import (
     Callable,
     cast,
     Dict,
+    Generic,
     Iterable,
     List,
     Literal,
@@ -25,6 +26,7 @@ from typing import (
     Tuple,
     Type,
     TypedDict,
+    TypeVar,
     Union,
 )
 
@@ -142,7 +144,10 @@ def render_title_with_macros_string(  # type:ignore[no-untyped-def]
     )
 
 
-class Dashlet(abc.ABC):
+T = TypeVar("T", bound=DashletConfig)
+
+
+class Dashlet(abc.ABC, Generic[T]):
     """Base class for all dashboard dashlet implementations"""
 
     # Minimum width and height of dashlets in raster units
@@ -264,7 +269,7 @@ class Dashlet(abc.ABC):
         dashboard_name: DashboardName,
         dashboard: DashboardConfig,
         dashlet_id: DashletId,
-        dashlet: DashletConfig,
+        dashlet: T,
     ) -> None:
         super().__init__()
         self._dashboard_name = dashboard_name
@@ -297,7 +302,7 @@ class Dashlet(abc.ABC):
         return self._dashlet_id
 
     @property
-    def dashlet_spec(self) -> DashletConfig:
+    def dashlet_spec(self) -> T:
         return self._dashlet_spec
 
     @property
@@ -590,7 +595,7 @@ def dashlet_vs_general_settings(  # type:ignore[no-untyped-def]
     )
 
 
-class IFrameDashlet(Dashlet, abc.ABC):
+class IFrameDashlet(Dashlet[T], abc.ABC):
     """Base class for all dashlet using an iframe"""
 
     @classmethod

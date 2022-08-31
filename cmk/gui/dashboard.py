@@ -362,7 +362,7 @@ def _register_pre_21_plugin_api() -> None:
         api_module.__dict__[name] = plugin_utils.__dict__[name]
 
 
-class LegacyDashlet(IFrameDashlet):
+class LegacyDashlet(IFrameDashlet[DashletConfig]):
     """Helper to be able to handle pre 1.6 dashlet_type declared dashlets"""
 
     _type_name: DashletTypeName = ""

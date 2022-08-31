@@ -6,13 +6,17 @@
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
-from cmk.gui.plugins.dashboard.utils import dashlet_registry, IFrameDashlet
+from cmk.gui.plugins.dashboard.utils import dashlet_registry, DashletConfig, IFrameDashlet
 from cmk.gui.utils.theme import theme
 from cmk.gui.valuespec import DropdownChoice
 
 
+class SnapinDashletConfig(DashletConfig):
+    snapin: str
+
+
 @dashlet_registry.register
-class SnapinDashlet(IFrameDashlet):
+class SnapinDashlet(IFrameDashlet[SnapinDashletConfig]):
     """Dashlet that displays a sidebar snapin"""
 
     @classmethod

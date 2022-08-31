@@ -136,8 +136,6 @@ class SnapshotSettings(NamedTuple):
     snapshot_components: List[ReplicationPath]
     component_names: Set[str]
     site_config: SiteConfiguration
-    # TODO: Remove with 1.8
-    create_pre_17_snapshot: bool
 
 
 # Directories and files to synchronize during replication
@@ -935,10 +933,7 @@ class ActivateChangesManager(ActivateChanges):
             site_config = active_config.sites[site_id]
             work_dir = cmk.utils.paths.site_config_dir / activation_id / site_id
 
-            site_status = self._get_site_status(site_id, site_config)[0]
-            is_pre_17_site = cmk.gui.watolib.utils.is_pre_17_remote_site(site_status)
-
-            snapshot_components = _get_replication_components(site_config, is_pre_17_site)
+            snapshot_components = _get_replication_components(site_config)
 
             # Generate a quick reference_by_name for each component
             component_names = {c[1] for c in snapshot_components}
@@ -949,7 +944,6 @@ class ActivateChangesManager(ActivateChanges):
                 snapshot_components=snapshot_components,
                 component_names=component_names,
                 site_config=site_config,
-                create_pre_17_snapshot=is_pre_17_site,
             )
 
         return snapshot_settings
@@ -1104,18 +1098,7 @@ class SnapshotManager:
         # 1. Collect files to "var/check_mk/site_configs" directory
         self._data_collector.prepare_snapshot_files()
 
-        # 2. Create snapshot for synchronization (Only for pre 1.7 sites)
-        generic_components = self._data_collector.get_generic_components()
-        with SnapshotCreator(self._activation_work_dir, generic_components) as snapshot_creator:
-            for site_id, snapshot_settings in sorted(
-                self._site_snapshot_settings.items(), key=lambda x: x[0]
-            ):
-                if snapshot_settings.create_pre_17_snapshot:
-                    self._create_site_sync_snapshot(
-                        site_id, snapshot_settings, snapshot_creator, self._data_collector
-                    )
-
-        # 3. Allow hooks to further modify the reference data for the remote site
+        # 2. Allow hooks to further modify the reference data for the remote site
         hooks.call("post-snapshot-creation", self._site_snapshot_settings)
 
 
@@ -1179,16 +1162,9 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
 
             site_globals = get_site_globals(site_id, snapshot_settings.site_config)
 
-            # Generate site specific global settings file
-            if snapshot_settings.create_pre_17_snapshot:
-                create_site_globals_file(site_id, snapshot_settings.work_dir, site_globals)
-            else:
-                save_site_global_settings(site_globals, custom_site_path=snapshot_settings.work_dir)
+            save_site_global_settings(site_globals, custom_site_path=snapshot_settings.work_dir)
 
-            if not self._site_snapshot_settings[site_id].create_pre_17_snapshot:
-                create_distributed_wato_files(
-                    Path(snapshot_settings.work_dir), site_id, is_remote=True
-                )
+            create_distributed_wato_files(Path(snapshot_settings.work_dir), site_id, is_remote=True)
 
     def _prepare_site_config_directory(self, site_id: SiteId) -> None:
         """
@@ -1780,13 +1756,12 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         start = time.time()
 
         try:
-            assert not self._snapshot_settings.create_pre_17_snapshot
-            self._synchronize_17_or_newer_site()
+            self._incremental_config_sync()
         finally:
             duration = time.time() - start
             self.update_activation_time(self._site_id, ACTIVATION_TIME_SYNC, duration)
 
-    def _synchronize_17_or_newer_site(self) -> None:
+    def _incremental_config_sync(self) -> None:
         """Realizes the incremental config sync from the central to the remote site
 
         1. Gather the replication paths handled by the central site.
@@ -2313,9 +2288,7 @@ def get_site_globals(site_id: SiteId, site_config: SiteConfiguration) -> dict[st
     return site_globals
 
 
-def _get_replication_components(
-    site_config: SiteConfiguration, is_pre_17_site: bool
-) -> List[ReplicationPath]:
+def _get_replication_components(site_config: SiteConfiguration) -> List[ReplicationPath]:
     """Gives a list of ReplicationPath instances.
 
     These represent the folders which need to be sent to remote sites. Whether a specific subset
@@ -2330,10 +2303,6 @@ def _get_replication_components(
 
                  - `replicate_ec`:
                  - `replicate_mkps`
-
-        is_pre_17_site:
-            This is true if the site in question (as supplied in `site_config`) is of a version
-            1.6.x or less.
 
     Returns:
         A list of ReplicationPath instances, specifying which paths shall be packaged for this
@@ -2351,62 +2320,25 @@ def _get_replication_components(
     if not site_config.get("replicate_mkps"):
         paths = [e for e in paths if e.ident not in ["local", "mkps"]]
 
-    # Add site-specific global settings
-    if is_pre_17_site:
-        # When synchronizing with pre 1.7 sites, the sitespecific.mk from the config domain
-        # directories must not be used. Instead of this, they are transfered using the
-        # site_globals/sitespecific.mk (see below) and written on the remote site.
-        paths = _add_pre_17_sitespecific_excludes(paths)
-
-        paths.append(
-            ReplicationPath(
-                ty="file",
-                ident="sitespecific",
-                site_path="site_globals/sitespecific.mk",
-                excludes=[],
-            )
-        )
-
     # Add distributed_wato.mk
-    if not is_pre_17_site:
-        # OMD replication path needs sitepecific.mk and global.mk, so we have
-        # to deal with excludes here
-        paths += [
-            ReplicationPath(
-                ty="file",
-                ident="distributed_wato",
-                site_path="etc/check_mk/conf.d/distributed_wato.mk",
-                excludes=[],
-            ),
-            ReplicationPath(
-                ty="dir",
-                ident="omd",
-                site_path="etc/omd",
-                excludes=["allocated_ports", "site.conf"],
-            ),
-        ]
+    # OMD replication path needs sitepecific.mk and global.mk, so we have
+    # to deal with excludes here
+    paths += [
+        ReplicationPath(
+            ty="file",
+            ident="distributed_wato",
+            site_path="etc/check_mk/conf.d/distributed_wato.mk",
+            excludes=[],
+        ),
+        ReplicationPath(
+            ty="dir",
+            ident="omd",
+            site_path="etc/omd",
+            excludes=["allocated_ports", "site.conf"],
+        ),
+    ]
 
     return paths
-
-
-def _add_pre_17_sitespecific_excludes(paths: List[ReplicationPath]) -> List[ReplicationPath]:
-    add_domains = {"check_mk", "multisite", "liveproxyd", "mkeventd", "dcd", "mknotify"}
-    new_paths = []
-    for p in paths:
-        if p.ident in add_domains:
-            excludes = p.excludes[:] + ["sitespecific.mk"]
-            if p.ident == "dcd":
-                excludes.append("distributed.mk")
-
-            p = ReplicationPath(
-                ty=p.ty,
-                ident=p.ident,
-                site_path=p.site_path,
-                excludes=excludes,
-            )
-
-        new_paths.append(p)
-    return new_paths
 
 
 def get_file_names_to_sync(

@@ -119,10 +119,7 @@ def test_get_replication_paths_defaults(  # type:ignore[no-untyped-def]
 
 @pytest.mark.parametrize("replicate_ec", [None, True, False])
 @pytest.mark.parametrize("replicate_mkps", [None, True, False])
-@pytest.mark.parametrize("is_pre_17_remote_site", [True, False])
-def test_get_replication_components(
-    edition, monkeypatch, replicate_ec, replicate_mkps, is_pre_17_remote_site
-):
+def test_get_replication_components(edition, monkeypatch, replicate_ec, replicate_mkps):
     partial_site_config = SiteConfiguration({})
     # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
     # pylint: disable=unsupported-assignment-operation
@@ -139,68 +136,23 @@ def test_get_replication_components(
     if not replicate_mkps:
         expected = [e for e in expected if e.ident not in ["local", "mkps"]]
 
-    if is_pre_17_remote_site:
-        for repl_path in expected:
-            if repl_path.ident in {
-                "check_mk",
-                "multisite",
-                "liveproxyd",
-                "mkeventd",
-                "dcd",
-                "mknotify",
-            }:
-                if "sitespecific.mk" not in repl_path.excludes:
-                    repl_path.excludes.append("sitespecific.mk")
+    expected += [
+        ReplicationPath(
+            ty="file",
+            ident="distributed_wato",
+            site_path="etc/check_mk/conf.d/distributed_wato.mk",
+            excludes=[".*new*"],
+        ),
+        ReplicationPath(
+            ty="dir",
+            ident="omd",
+            site_path="etc/omd",
+            excludes=["allocated_ports", "site.conf", ".*new*"],
+        ),
+    ]
 
-            if repl_path.ident == "dcd" and "distributed.mk" not in repl_path.excludes:
-                repl_path.excludes.append("distributed.mk")
-
-        expected += [
-            ReplicationPath(
-                ty="file",
-                ident="sitespecific",
-                site_path="site_globals/sitespecific.mk",
-                excludes=[],
-            ),
-        ]
-
-    if not is_pre_17_remote_site:
-        expected += [
-            ReplicationPath(
-                ty="file",
-                ident="distributed_wato",
-                site_path="etc/check_mk/conf.d/distributed_wato.mk",
-                excludes=[".*new*"],
-            ),
-            ReplicationPath(
-                ty="dir",
-                ident="omd",
-                site_path="etc/omd",
-                excludes=["allocated_ports", "site.conf", ".*new*"],
-            ),
-        ]
-
-    assert sorted(
-        activate_changes._get_replication_components(partial_site_config, is_pre_17_remote_site)
-    ) == sorted(expected)
-
-
-def test_add_replication_paths_pre_17(monkeypatch) -> None:  # type:ignore[no-untyped-def]
-    monkeypatch.setattr(cmk.utils.paths, "omd_root", Path("/path"))
-    # dir/file, ident, path, optional list of excludes
-    activate_changes.add_replication_paths(
-        [
-            ("dir", "abc", "/path/to/abc"),
-            ("dir", "abc", "/path/to/abc", ["e1", "e2"]),
-        ]
-    )
-    monkeypatch.undo()
-
-    assert activate_changes.get_replication_paths()[-2] == ReplicationPath(
-        "dir", "abc", "to/abc", []
-    )
-    assert activate_changes.get_replication_paths()[-1] == ReplicationPath(
-        "dir", "abc", "to/abc", ["e1", "e2"]
+    assert sorted(activate_changes._get_replication_components(partial_site_config)) == sorted(
+        expected
     )
 
 
@@ -214,24 +166,6 @@ def test_add_replication_paths() -> None:
     assert activate_changes.get_replication_paths()[-1] == ReplicationPath(
         "dir", "abc", "path/to/abc", ["e1", "e2"]
     )
-
-
-@pytest.mark.parametrize(
-    "expected, site_status",
-    [
-        (False, {}),
-        (False, {"livestatus_version": "1.8.0"}),
-        (False, {"livestatus_version": "1.8.0"}),
-        (False, {"livestatus_version": "1.7.0p2"}),
-        (False, {"livestatus_version": "1.7.0"}),
-        (False, {"livestatus_version": "1.7.0i1"}),
-        (False, {"livestatus_version": "1.7.0-2020.04.20"}),
-        (True, {"livestatus_version": "1.6.0p2"}),
-        (True, {"livestatus_version": "1.5.0p23"}),
-    ],
-)
-def test_is_pre_17_remote_site(site_status, expected) -> None:  # type:ignore[no-untyped-def]
-    assert cmk.gui.watolib.utils.is_pre_17_remote_site(site_status) == expected
 
 
 def test_automation_get_config_sync_state() -> None:

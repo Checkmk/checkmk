@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import shutil
-import tarfile
 import time
 from pathlib import Path
 from typing import Dict, Iterable, List, Union
@@ -25,7 +23,6 @@ import cmk.gui.wato.mkeventd
 import cmk.gui.wato.mkeventdstore
 import cmk.gui.watolib.activate_changes as activate_changes
 import cmk.gui.watolib.config_sync as config_sync
-import cmk.gui.watolib.utils as utils
 from cmk.gui.config import active_config
 
 
@@ -79,7 +76,6 @@ def _create_sync_snapshot(
     snapshot_data_collector_class: str,
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
-    is_pre_17_site: bool,
     remote_site: SiteId,
     edition: cmk_version.Edition,
 ) -> activate_changes.SnapshotSettings:
@@ -88,7 +84,6 @@ def _create_sync_snapshot(
         activation_manager,
         snapshot_data_collector_class,
         tmp_path,
-        is_pre_17_site=is_pre_17_site,
         remote_site=remote_site,
         edition=edition,
     )
@@ -227,7 +222,6 @@ def _generate_sync_snapshot(
     activation_manager: activate_changes.ActivateChangesManager,
     snapshot_data_collector_class: str,
     tmp_path: Path,
-    is_pre_17_site: bool,
     remote_site: SiteId,
     *,
     edition: cmk_version.Edition,
@@ -250,13 +244,12 @@ def _generate_sync_snapshot(
 
     snapshot_manager.generate_snapshots()
 
-    assert Path(snapshot_settings.snapshot_path).exists() == is_pre_17_site
     assert Path(snapshot_settings.work_dir).exists()
 
     return snapshot_settings
 
 
-def _get_expected_paths(user_id: UserId, is_pre_17_site: bool, with_local: bool) -> list[str]:
+def _get_expected_paths(user_id: UserId, with_local: bool) -> list[str]:
     expected_paths = [
         "etc",
         "var",
@@ -332,7 +325,7 @@ def _get_expected_paths(user_id: UserId, is_pre_17_site: bool, with_local: bool)
     # cmk_version.edition().short value.
     # TODO: The second condition should not be needed. Seems to be a subtle difference between the
     # CME and CRE/CEE snapshot logic
-    if is_enterprise_repo() and (not is_pre_17_site or not cmk_version.is_managed_edition()):
+    if is_enterprise_repo():
         expected_paths += [
             "etc/check_mk/dcd.d",
             "etc/check_mk/dcd.d/wato",
@@ -388,178 +381,23 @@ def test_generate_snapshot(
         cmk_version, "is_managed_edition", lambda: edition is cmk_version.Edition.CME
     )
 
-    monkeypatch.setattr(utils, "is_pre_17_remote_site", lambda s: False)
-
     snapshot_settings = _create_sync_snapshot(
         activation_manager,
         snapshot_data_collector_class,
         monkeypatch,
         tmp_path,
-        is_pre_17_site=False,
         remote_site=remote_site,
         edition=edition,
     )
 
     expected_paths = _get_expected_paths(
         user_id=with_user_login,
-        is_pre_17_site=False,
         with_local=active_config.sites[remote_site].get("replicate_mkps", False),
     )
 
     work_dir = Path(snapshot_settings.work_dir)
     paths = [str(p.relative_to(work_dir)) for p in work_dir.glob("**/*")]
     assert sorted(paths) == sorted(expected_paths)
-
-
-@pytest.mark.usefixtures("request_context")
-@pytest.mark.parametrize("remote_site", [SiteId("unit_remote_1"), SiteId("unit_remote_2")])
-def test_generate_pre_17_site_snapshot(
-    edition: cmk_version.Edition,
-    monkeypatch: pytest.MonkeyPatch,
-    tmp_path: Path,
-    with_user_login: UserId,
-    remote_site: SiteId,
-) -> None:
-    snapshot_data_collector_class = (
-        "CMESnapshotDataCollector"
-        if edition is cmk_version.Edition.CME
-        else "CRESnapshotDataCollector"
-    )
-
-    is_pre_17_site = True
-    monkeypatch.setattr(cmk_version, "is_raw_edition", lambda: edition is cmk_version.Edition.CRE)
-    monkeypatch.setattr(
-        cmk_version, "is_managed_edition", lambda: edition is cmk_version.Edition.CME
-    )
-    monkeypatch.setattr(utils, "is_pre_17_remote_site", lambda s: is_pre_17_site)
-
-    activation_manager = _get_activation_manager(monkeypatch, remote_site)
-    snapshot_settings = _create_sync_snapshot(
-        activation_manager,
-        snapshot_data_collector_class,
-        monkeypatch,
-        tmp_path,
-        is_pre_17_site,
-        remote_site,
-        edition=edition,
-    )
-
-    # And now check the resulting snapshot contents
-    unpack_dir = tmp_path / "snapshot_unpack"
-    if unpack_dir.exists():
-        shutil.rmtree(str(unpack_dir))
-
-    with tarfile.open(snapshot_settings.snapshot_path, "r") as t:
-        t.extractall(str(unpack_dir))
-
-    expected_subtars = [
-        "auth.secret.tar",
-        "password_store.secret.tar",
-        "auth.serials.tar",
-        "check_mk.tar",
-        "diskspace.tar",
-        "htpasswd.tar",
-        "mkeventd_mkp.tar",
-        "mkeventd.tar",
-        "multisite.tar",
-        "sitespecific.tar",
-        "stored_passwords.tar",
-        "usersettings.tar",
-    ]
-
-    if is_enterprise_repo():
-        expected_subtars += [
-            "dcd.tar",
-            "mknotify.tar",
-        ]
-
-    if active_config.sites[remote_site].get("replicate_mkps", False):
-        expected_subtars += [
-            "local.tar",
-            "mkps.tar",
-        ]
-
-    if not cmk_version.is_raw_edition():
-        expected_subtars.append("liveproxyd.tar")
-
-    if cmk_version.is_managed_edition():
-        expected_subtars += [
-            "customer_check_mk.tar",
-            "customer_gui_design.tar",
-            "customer_multisite.tar",
-            "gui_logo.tar",
-            "gui_logo_dark.tar",
-            "gui_logo_facelift.tar",
-        ]
-
-    if not is_pre_17_site:
-        expected_subtars += [
-            "omd.tar",
-        ]
-
-    assert sorted(f.name for f in unpack_dir.iterdir()) == sorted(expected_subtars)
-
-    expected_files: Dict[str, List[str]] = {
-        "mkeventd_mkp.tar": [],
-        "multisite.tar": ["global.mk", "users.mk"],
-        "usersettings.tar": [with_user_login],
-        "mkeventd.tar": ["rules.mk"],
-        "check_mk.tar": ["hosts.mk", "contacts.mk"],
-        "htpasswd.tar": ["htpasswd"],
-        "liveproxyd.tar": [],
-        "sitespecific.tar": ["sitespecific.mk"],
-        "stored_passwords.tar": ["stored_passwords"],
-        "auth.secret.tar": [],
-        "password_store.secret.tar": [],
-        "dcd.tar": [],
-        "auth.serials.tar": ["auth.serials"],
-        "mknotify.tar": [],
-        "diskspace.tar": [],
-        "omd.tar": [] if is_pre_17_site else ["sitespecific.mk", "global.mk"],
-    }
-
-    if active_config.sites[remote_site].get("replicate_mkps", False):
-        expected_files.update({"local.tar": [], "mkps.tar": []})
-
-    if cmk_version.is_managed_edition():
-        expected_files.update(
-            {
-                "customer_check_mk.tar": ["customer.mk"],
-                "customer_gui_design.tar": [],
-                "customer_multisite.tar": ["customer.mk"],
-                "gui_logo.tar": [],
-                "gui_logo_dark.tar": [],
-                "gui_logo_facelift.tar": [],
-                # TODO: Shouldn't we clean up these subtle differences?
-                "mkeventd.tar": ["rules.mk"],
-                "check_mk.tar": ["groups.mk", "contacts.mk", "passwords.mk"],
-                "multisite.tar": [
-                    "bi_config.bi",
-                    "customers.mk",
-                    "global.mk",
-                    "groups.mk",
-                    "user_connections.mk",
-                    "users.mk",
-                ],
-            }
-        )
-
-    if not cmk_version.is_raw_edition():
-        expected_files["liveproxyd.tar"] = []
-
-    # And now check the subtar contents
-    for subtar in unpack_dir.iterdir():
-        subtar_unpack_dir = unpack_dir / subtar.stem
-        subtar_unpack_dir.mkdir(parents=True, exist_ok=True)
-
-        with tarfile.open(str(subtar), "r") as s:
-            s.extractall(str(subtar_unpack_dir))
-
-        files = sorted(str(f.relative_to(subtar_unpack_dir)) for f in subtar_unpack_dir.iterdir())
-
-        assert sorted(expected_files[subtar.name]) == files, (
-            "Subtar %s has wrong files" % subtar.name
-        )
 
 
 @pytest.mark.parametrize(
@@ -680,12 +518,10 @@ def test_synchronize_site(  # type:ignore[no-untyped-def]
         else "CRESnapshotDataCollector"
     )
 
-    is_pre_17_site = False
     monkeypatch.setattr(cmk_version, "is_raw_edition", lambda: edition is cmk_version.Edition.CRE)
     monkeypatch.setattr(
         cmk_version, "is_managed_edition", lambda: edition is cmk_version.Edition.CME
     )
-    monkeypatch.setattr(utils, "is_pre_17_remote_site", lambda s: is_pre_17_site)
 
     activation_manager = _get_activation_manager(monkeypatch)
     assert activation_manager._activation_id is not None
@@ -694,7 +530,6 @@ def test_synchronize_site(  # type:ignore[no-untyped-def]
         snapshot_data_collector_class,
         monkeypatch,
         tmp_path,
-        is_pre_17_site=is_pre_17_site,
         remote_site=SiteId("unit_remote_1"),
         edition=edition,
     )

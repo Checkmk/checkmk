@@ -13,13 +13,11 @@ from typing import Any, Callable, List, Tuple, TypedDict, Union
 import cmk.utils.paths
 import cmk.utils.rulesets.tuple_rulesets
 from cmk.utils.type_defs import ContactgroupName
-from cmk.utils.version import parse_check_mk_version
 
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.sites import SiteStatus
 from cmk.gui.utils.escaping import escape_to_html
 
 # TODO: Clean up all call sites in the GUI and only use them in WATO config file loading code
@@ -145,20 +143,6 @@ def may_edit_ruleset(varname: str) -> bool:
     if varname == "agent_config:custom_files":
         return user.may("wato.rulesets") and user.may("wato.agent_deploy_custom_files")
     return user.may("wato.rulesets")
-
-
-def is_pre_17_remote_site(site_status: SiteStatus) -> bool:
-    """Decide which snapshot format is pushed to the given site
-
-    The sync snapshot format was changed between 1.6 and 1.7. To support migrations with a
-    new central site and an old remote site, we detect that case here and create the 1.6
-    snapshots for the old sites.
-    """
-    version = site_status.get("livestatus_version")
-    if not version:
-        return False
-
-    return parse_check_mk_version(version) < parse_check_mk_version("1.7.0i1")
 
 
 def format_php(data: object, lvl: int = 1) -> str:

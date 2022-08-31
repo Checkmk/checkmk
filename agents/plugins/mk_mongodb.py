@@ -856,6 +856,10 @@ class Config:
         if self.port is not None:
             pymongo_config["port"] = self.port
 
+        # Requests are distributed to secondaries, ref.
+        # https://www.mongodb.com/docs/manual/core/read-preference/
+        pymongo_config["read_preference"] = pymongo.ReadPreference.SECONDARY
+
         return pymongo_config
 
 
@@ -945,9 +949,7 @@ def main(argv=None):
             message = message.replace(quote_plus(config.password), "****")
         LOGGER.info(message)
 
-    client = pymongo.MongoClient(
-        read_preference=pymongo.ReadPreference.SECONDARY, **pymongo_config
-    )  # type: pymongo.MongoClient
+    client = pymongo.MongoClient(**pymongo_config)  # type: pymongo.MongoClient
     try:
         # connecting is lazy, it might fail only now
         server_status = client.admin.command("serverStatus")  # type: Dict

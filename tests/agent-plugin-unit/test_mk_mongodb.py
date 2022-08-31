@@ -10,6 +10,7 @@ import json
 import os
 import sys
 
+import pymongo  # type: ignore[import] # pylint: disable=import-error
 import pytest
 
 if sys.version_info[0] == 2:
@@ -189,7 +190,12 @@ def test_router_instance_mongodb_3_4() -> None:
 @pytest.mark.parametrize(
     "config, expected_pymongo_config",
     [
-        ({}, {}),
+        (
+            {},
+            {
+                "read_preference": pymongo.ReadPreference.SECONDARY,
+            },
+        ),
         (
             {
                 "username": "t_user",
@@ -198,6 +204,7 @@ def test_router_instance_mongodb_3_4() -> None:
             {
                 "username": "t_user",
                 "password": "t_pwd",
+                "read_preference": pymongo.ReadPreference.SECONDARY,
             },
         ),
         (
@@ -210,6 +217,7 @@ def test_router_instance_mongodb_3_4() -> None:
                 "username": "t_user",
                 "password": "t_pwd",
                 "tls": True,
+                "read_preference": pymongo.ReadPreference.SECONDARY,
             },
         ),
         (
@@ -226,6 +234,7 @@ def test_router_instance_mongodb_3_4() -> None:
                 "tls": True,
                 "tlsInsecure": True,
                 "tlsCAFile": "/path/to/ca.pem",
+                "read_preference": pymongo.ReadPreference.SECONDARY,
             },
         ),
         (
@@ -246,6 +255,7 @@ def test_router_instance_mongodb_3_4() -> None:
                 "tlsCAFile": "/path/to/ca.pem",
                 "tlsInsecure": True,
                 "username": "t_user",
+                "read_preference": pymongo.ReadPreference.SECONDARY,
             },
         ),
     ],
@@ -271,6 +281,7 @@ def test_read_config(config, expected_pymongo_config) -> None:  # type:ignore[no
                 "password": "/?!/",
                 "tls": True,
                 "username": "username",
+                "read_preference": pymongo.ReadPreference.SECONDARY,
             },
         ),
         (
@@ -278,6 +289,7 @@ def test_read_config(config, expected_pymongo_config) -> None:  # type:ignore[no
             {
                 "host": "mongodb://username:%2F%3F%21%2F@example.com:27017",
                 "ssl": True,
+                "read_preference": pymongo.ReadPreference.SECONDARY,
             },
         ),
     ],

@@ -13,7 +13,6 @@ import copy
 import errno
 import logging
 import re
-from contextlib import contextmanager
 from datetime import datetime
 from datetime import time as dt_time
 from pathlib import Path
@@ -51,13 +50,11 @@ from cmk.gui import main_modules
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.logged_in import SuperUserContext
-from cmk.gui.plugins.dashboard.utils import get_all_dashboards
 from cmk.gui.plugins.userdb.utils import USER_SCHEME_SERIAL
 from cmk.gui.plugins.watolib.utils import config_variable_registry, filter_unknown_settings
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.userdb import load_users, save_users, Users
 from cmk.gui.utils.script_helpers import gui_context
-from cmk.gui.view_store import get_all_views
 from cmk.gui.watolib.changes import ActivateChangesWriter, add_change
 from cmk.gui.watolib.global_settings import (
     GlobalSettings,
@@ -147,19 +144,6 @@ REMOVED_WATO_RULESETS_MAP: Mapping[RulesetName, RulesetName] = {
 }
 
 
-@contextmanager
-def _save_user_instances(  # type:ignore[no-untyped-def]
-    visual_type: visuals.VisualType, all_visuals: Dict
-):
-    modified_user_instances: Set[UserId] = set()
-
-    yield modified_user_instances
-
-    # Now persist all modified instances
-    for user_id in modified_user_instances:
-        visuals.save(visual_type, all_visuals, user_id)
-
-
 class UpdateConfig:
     def __init__(self, logger: logging.Logger, arguments: argparse.Namespace) -> None:
         super().__init__()
@@ -220,7 +204,6 @@ class UpdateConfig:
 
     def _steps(self) -> List[Tuple[Callable[[], None], str]]:
         return [
-            (self._rewrite_visuals, "Migrate Visuals context"),
             (self._update_global_settings, "Update global settings"),
             (self._rewrite_wato_rulesets, "Rewriting rulesets"),
             (self._rewrite_autochecks, "Rewriting autochecks"),
@@ -667,32 +650,6 @@ class UpdateConfig:
         # visuals are represented by a dedicated type, which was not the case the before. The caches
         # from 2.1 will still contain the old data structures.
         visuals._CombinedVisualsCache.invalidate_all_caches()
-
-    def _rewrite_visuals(self):
-        """This function uses the updates in visuals.transform_old_visual which
-        takes place upon visuals load. However, load forces no save, thus save
-        the transformed visual in this update step. All user configs are rewriten.
-        The load and transform functions are specific to each visual, saving is generic."""
-
-        def updates(  # type:ignore[no-untyped-def]
-            visual_type: visuals.VisualType, all_visuals: Dict
-        ):
-            with _save_user_instances(visual_type, all_visuals) as affected_user:
-                # skip builtins, only users
-                affected_user.update(owner for owner, _name in all_visuals if owner)
-
-        updates(visuals.VisualType.views, get_all_views())
-        updates(visuals.VisualType.dashboards, get_all_dashboards())
-
-        # Reports
-        try:
-            import cmk.gui.cee.reporting as reporting
-        except ImportError:
-            reporting = None  # type: ignore[assignment]
-
-        if reporting:
-            reporting.load_reports()  # Loading does the transformation
-            updates(visuals.VisualType.reports, reporting.reports)
 
     def _adjust_user_attributes(self) -> None:
         """All users are loaded and attributes can be transformed or set."""

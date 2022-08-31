@@ -28,7 +28,7 @@ BANDIT := $(PIPENV) run bandit
 FIND_INVALID_TEST_FILES := $(SCRIPTS)/find-invalid-autogen-files
 ADDITIONAL_MYPY_ARGS := $(JUNIT_XML)
 # TODO: Remove version duplication, see buildscripts/infrastructure/build-nodes/scripts/install-gnu-toolchain.sh
-GCC_TOOLCHAIN := /opt/gcc-11.2.0
+GCC_TOOLCHAIN := /opt/gcc-12.2.0
 
 # Since the unit tests (that are written for Python 3) are executed with Python
 # 2.6 and 2.7, we need to convert them, just like it is done for the agent

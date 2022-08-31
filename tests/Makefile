@@ -2,8 +2,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-include ../defines.make
-
 SHELL := /bin/bash -e
 SCRIPTS := ../scripts
 FIND_PYTHON_FILES := $(SCRIPTS)/find-python-files
@@ -29,7 +27,10 @@ THREE_TO_TWO := $(PIPENV) run 3to2
 BANDIT := $(PIPENV) run bandit
 FIND_INVALID_TEST_FILES := $(SCRIPTS)/find-invalid-autogen-files
 ADDITIONAL_MYPY_ARGS := $(JUNIT_XML)
-GCC_TOOLCHAIN := /opt/gcc-${GCC_VERSION}
+# Please note: We can currently not include defines.make as it would override
+# the EDITIONS environment variable handed over by some jenkins test jobs.
+# Looks like we need to cleanup the EDITION handling here.
+GCC_TOOLCHAIN := /opt/gcc-$(shell make --no-print-directory --file=../defines.make print-GCC_VERSION)
 
 # Since the unit tests (that are written for Python 3) are executed with Python
 # 2.6 and 2.7, we need to convert them, just like it is done for the agent

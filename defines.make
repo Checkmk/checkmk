@@ -67,7 +67,7 @@ CLANG_VERSION      := 12
 GCC_VERSION_MAJOR      := 12
 GCC_VERSION_MINOR      := 2
 GCC_VERSION_PATCHLEVEL := 0
-GCC_VERSION	       := "${GCC_VERSION_MAJOR}.${GCC_VERSION_MINOR}.${GCC_VERSION_PATCHLEVEL}"
+GCC_VERSION	       := ${GCC_VERSION_MAJOR}.${GCC_VERSION_MINOR}.${GCC_VERSION_PATCHLEVEL}
 
 # NOTE: When you update the Python version, please take care of the following things:
 # * update test_03_pip_interpreter_version

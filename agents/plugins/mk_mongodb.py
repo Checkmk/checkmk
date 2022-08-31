@@ -647,7 +647,11 @@ def section_logwatch(client):
 
 
 def main():
-    client = pymongo.MongoClient(read_preference=pymongo.ReadPreference.SECONDARY)
+    client = pymongo.MongoClient(
+        # Requests are distributed to secondaries, ref.
+        # https://www.mongodb.com/docs/manual/core/read-preference/
+        read_preference=pymongo.ReadPreference.SECONDARY,  #
+    )
     try:
         # connecting is lazy, it might fail only now
         server_status = client.admin.command("serverStatus")

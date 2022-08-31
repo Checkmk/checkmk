@@ -9,7 +9,11 @@ from cmk.gui.plugins.wato.active_checks.common import (
     ip_address_family_element,
     RulespecGroupActiveChecks,
 )
-from cmk.gui.plugins.wato.utils import HostRulespec, IndividualOrStoredPassword, rulespec_registry
+from cmk.gui.plugins.wato.utils import (
+    HostRulespec,
+    rulespec_registry,
+    TransformToIndividualOrStoredPassword,
+)
 from cmk.gui.valuespec import (
     Dictionary,
     FixedValue,
@@ -154,7 +158,7 @@ def _valuespec_active_checks_smtp() -> Tuple:
                                     size=12,
                                     allow_empty=False,
                                 ),
-                                IndividualOrStoredPassword(
+                                TransformToIndividualOrStoredPassword(
                                     title=_("Password"),
                                     size=12,
                                     allow_empty=False,

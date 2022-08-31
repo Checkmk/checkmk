@@ -6,7 +6,11 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsOS
-from cmk.gui.plugins.wato.utils import HostRulespec, IndividualOrStoredPassword, rulespec_registry
+from cmk.gui.plugins.wato.utils import (
+    HostRulespec,
+    rulespec_registry,
+    TransformToIndividualOrStoredPassword,
+)
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Checkbox,
@@ -28,7 +32,7 @@ def _special_agents_ipmi_sensors_vs_ipmi_common_elements() -> DictionaryElements
         ),
         (
             "password",
-            IndividualOrStoredPassword(
+            TransformToIndividualOrStoredPassword(
                 title=_("Password"),
                 allow_empty=False,
             ),

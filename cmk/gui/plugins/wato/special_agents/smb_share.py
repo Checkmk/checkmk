@@ -5,7 +5,11 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsApps
-from cmk.gui.plugins.wato.utils import HostRulespec, IndividualOrStoredPassword, rulespec_registry
+from cmk.gui.plugins.wato.utils import (
+    HostRulespec,
+    rulespec_registry,
+    TransformToIndividualOrStoredPassword,
+)
 from cmk.gui.valuespec import Dictionary, HostAddress, ListOfStrings, TextInput, Tuple
 
 
@@ -41,7 +45,9 @@ def _valuespec_special_agents_smb_share():
                     title=_("Authentication"),
                     elements=[
                         TextInput(title=_("Username"), allow_empty=False),
-                        IndividualOrStoredPassword(title=_("Password"), allow_empty=False),
+                        TransformToIndividualOrStoredPassword(
+                            title=_("Password"), allow_empty=False
+                        ),
                     ],
                 ),
             ),

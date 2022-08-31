@@ -5,7 +5,11 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupVMCloudContainer
-from cmk.gui.plugins.wato.utils import HostRulespec, IndividualOrStoredPassword, rulespec_registry
+from cmk.gui.plugins.wato.utils import (
+    HostRulespec,
+    rulespec_registry,
+    TransformToIndividualOrStoredPassword,
+)
 from cmk.gui.valuespec import Checkbox, Dictionary, ListChoice, TextInput
 
 
@@ -16,7 +20,7 @@ def _valuespec_special_agents_gcp():
             ("project", TextInput(title=_("Project ID"), allow_empty=False, size=50)),
             (
                 "credentials",
-                IndividualOrStoredPassword(
+                TransformToIndividualOrStoredPassword(
                     title=_("JSON credentials for service account"), allow_empty=False
                 ),
             ),

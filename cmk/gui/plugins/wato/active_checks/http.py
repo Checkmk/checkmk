@@ -12,7 +12,11 @@ from cmk.gui.plugins.wato.active_checks.common import (
     ip_address_family_element,
     RulespecGroupActiveChecks,
 )
-from cmk.gui.plugins.wato.utils import HostRulespec, IndividualOrStoredPassword, rulespec_registry
+from cmk.gui.plugins.wato.utils import (
+    HostRulespec,
+    rulespec_registry,
+    TransformToIndividualOrStoredPassword,
+)
 from cmk.gui.valuespec import (
     Age,
     CascadingDropdown,
@@ -48,7 +52,7 @@ def _active_checks_http_proxyspec() -> Dictionary:
                     title=_("Basic authorization"),
                     elements=[
                         TextInput(title=_("Username"), size=12, allow_empty=False),
-                        IndividualOrStoredPassword(
+                        TransformToIndividualOrStoredPassword(
                             title=_("Password"),
                         ),
                     ],
@@ -265,7 +269,7 @@ def _valuespec_active_checks_http() -> Transform:
                                                         size=12,
                                                         allow_empty=False,
                                                     ),
-                                                    IndividualOrStoredPassword(
+                                                    TransformToIndividualOrStoredPassword(
                                                         title=_("Password"),
                                                     ),
                                                 ],

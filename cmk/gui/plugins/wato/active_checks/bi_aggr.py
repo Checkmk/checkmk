@@ -6,7 +6,11 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.active_checks.common import RulespecGroupIntegrateOtherServices
-from cmk.gui.plugins.wato.utils import HostRulespec, IndividualOrStoredPassword, rulespec_registry
+from cmk.gui.plugins.wato.utils import (
+    HostRulespec,
+    rulespec_registry,
+    TransformToIndividualOrStoredPassword,
+)
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Checkbox,
@@ -73,7 +77,7 @@ def _valuespec_active_checks_bi_aggr() -> Dictionary:
                                             "optional parameters."
                                         ),
                                     ),
-                                    IndividualOrStoredPassword(
+                                    TransformToIndividualOrStoredPassword(
                                         title=_("Automation Secret"),
                                         help=_("Valid automation secret for the automation user"),
                                         allow_empty=False,

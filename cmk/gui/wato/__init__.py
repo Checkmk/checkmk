@@ -325,7 +325,7 @@ def _register_pre_21_plugin_api() -> None:
         "HostTagCondition",
         "HTTPProxyInput",
         "HTTPProxyReference",
-        "IndividualOrStoredPassword",
+        "TransformToIndividualOrStoredPassword",
         "IPMIParameters",
         "is_wato_slave_site",
         "Levels",

@@ -6,7 +6,11 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsHardware
-from cmk.gui.plugins.wato.utils import HostRulespec, IndividualOrStoredPassword, rulespec_registry
+from cmk.gui.plugins.wato.utils import (
+    HostRulespec,
+    rulespec_registry,
+    TransformToIndividualOrStoredPassword,
+)
 from cmk.gui.valuespec import Dictionary, DropdownChoice, TextInput
 
 
@@ -20,7 +24,10 @@ def _valuespec_special_agents_storeonce():
         optional_keys=["cert"],
         elements=[
             ("user", TextInput(title=_("Username"), allow_empty=False)),
-            ("password", IndividualOrStoredPassword(title=_("Password"), allow_empty=False)),
+            (
+                "password",
+                TransformToIndividualOrStoredPassword(title=_("Password"), allow_empty=False),
+            ),
             (
                 "cert",
                 DropdownChoice(

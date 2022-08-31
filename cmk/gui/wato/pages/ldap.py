@@ -37,11 +37,11 @@ from cmk.gui.plugins.userdb.utils import (
     UserConnectionSpec,
 )
 from cmk.gui.plugins.wato.utils import (
-    IndividualOrStoredPassword,
     make_confirm_link,
     mode_registry,
     mode_url,
     redirect,
+    TransformToIndividualOrStoredPassword,
     WatoMode,
 )
 from cmk.gui.site_config import get_login_sites
@@ -225,7 +225,7 @@ class LDAPConnectionValuespec(Transform):
                             ),
                             size=63,
                         ),
-                        IndividualOrStoredPassword(
+                        TransformToIndividualOrStoredPassword(
                             title=_("Bind password"),
                             help=_(
                                 "Specify the password to be used to bind to the LDAP directory."

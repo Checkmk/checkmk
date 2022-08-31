@@ -6,7 +6,11 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsApps
-from cmk.gui.plugins.wato.utils import HostRulespec, IndividualOrStoredPassword, rulespec_registry
+from cmk.gui.plugins.wato.utils import (
+    HostRulespec,
+    rulespec_registry,
+    TransformToIndividualOrStoredPassword,
+)
 from cmk.gui.valuespec import Dictionary, Integer, TextInput
 from cmk.gui.watolib.rulespecs import Rulespec
 
@@ -33,7 +37,7 @@ def _valuespec_special_agents_appdynamics():
             ),
             (
                 "password",
-                IndividualOrStoredPassword(
+                TransformToIndividualOrStoredPassword(
                     title=_("AppDynamics login password"),
                     allow_empty=False,
                 ),

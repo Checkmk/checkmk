@@ -13,7 +13,11 @@ from cmk.gui.plugins.wato.special_agents.common import (
     filter_kubernetes_namespace_element,
     RulespecGroupVMCloudContainer,
 )
-from cmk.gui.plugins.wato.utils import HostRulespec, IndividualOrStoredPassword, rulespec_registry
+from cmk.gui.plugins.wato.utils import (
+    HostRulespec,
+    rulespec_registry,
+    TransformToIndividualOrStoredPassword,
+)
 from cmk.gui.valuespec import (
     Alternative,
     CascadingDropdown,
@@ -108,7 +112,7 @@ def _valuespec_special_agents_kubernetes() -> Dictionary:
             ),
             (
                 "token",
-                IndividualOrStoredPassword(
+                TransformToIndividualOrStoredPassword(
                     title=_("Token"),
                     allow_empty=False,
                 ),

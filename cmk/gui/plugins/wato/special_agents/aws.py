@@ -13,7 +13,11 @@ from cmk.gui.plugins.wato.special_agents.common import (
     RulespecGroupVMCloudContainer,
     validate_aws_tags,
 )
-from cmk.gui.plugins.wato.utils import HostRulespec, IndividualOrStoredPassword, rulespec_registry
+from cmk.gui.plugins.wato.utils import (
+    HostRulespec,
+    rulespec_registry,
+    TransformToIndividualOrStoredPassword,
+)
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
@@ -386,7 +390,7 @@ def _valuespec_special_agents_aws() -> Dictionary:
             ),
             (
                 "secret_access_key",
-                IndividualOrStoredPassword(
+                TransformToIndividualOrStoredPassword(
                     title=_("The secret access key for your AWS account"),
                     allow_empty=False,
                 ),
@@ -405,7 +409,10 @@ def _valuespec_special_agents_aws() -> Dictionary:
                                 size=32,
                             ),
                         ),
-                        ("proxy_password", IndividualOrStoredPassword(title=_("Password"))),
+                        (
+                            "proxy_password",
+                            TransformToIndividualOrStoredPassword(title=_("Password")),
+                        ),
                     ],
                     optional_keys=["proxy_port", "proxy_user", "proxy_password"],
                 ),

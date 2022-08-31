@@ -12,8 +12,8 @@ from cmk.gui.plugins.wato.special_agents.common import (
 from cmk.gui.plugins.wato.utils import (
     HostRulespec,
     HTTPProxyReference,
-    IndividualOrStoredPassword,
     rulespec_registry,
+    TransformToIndividualOrStoredPassword,
 )
 from cmk.gui.valuespec import (
     Alternative,
@@ -51,7 +51,10 @@ def _valuespec_special_agents_mobileiron() -> Dictionary:
         ),
         elements=[
             ("username", TextInput(title=_("Username"), allow_empty=False)),
-            ("password", IndividualOrStoredPassword(title=_("Password"), allow_empty=False)),
+            (
+                "password",
+                TransformToIndividualOrStoredPassword(title=_("Password"), allow_empty=False),
+            ),
             (
                 "protocol",
                 Alternative(

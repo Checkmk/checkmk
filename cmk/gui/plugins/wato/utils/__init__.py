@@ -728,12 +728,12 @@ def PasswordFromStore(  # type:ignore[no-untyped-def] # pylint: disable=redefine
     )
 
 
-def IndividualOrStoredPassword(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builtin
+def TransformToIndividualOrStoredPassword(  # pylint: disable=redefined-builtin
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
     allow_empty: bool = True,
     size: int = 25,
-):
+) -> Transform:
     return Transform(
         valuespec=PasswordFromStore(
             title=title,

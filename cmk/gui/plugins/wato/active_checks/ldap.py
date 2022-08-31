@@ -6,7 +6,11 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.active_checks.common import RulespecGroupActiveChecks
-from cmk.gui.plugins.wato.utils import HostRulespec, IndividualOrStoredPassword, rulespec_registry
+from cmk.gui.plugins.wato.utils import (
+    HostRulespec,
+    rulespec_registry,
+    TransformToIndividualOrStoredPassword,
+)
 from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
@@ -68,7 +72,7 @@ def _valuespec_active_checks_ldap():
                                     allow_empty=False,
                                     size=60,
                                 ),
-                                IndividualOrStoredPassword(
+                                TransformToIndividualOrStoredPassword(
                                     title=_("Password"),
                                     help=_(
                                         "Password for binding, if your server requires an authentication"

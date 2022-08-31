@@ -1,0 +1,19 @@
+Title: cmk-update-agent: Prevent the minutely timer from flooding the journalctl on Linux
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1661931083
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p12
+
+The agent updater comes with a systemd timer unit that invokes cmk-update-agent minutely
+in order to check for a pending installation.
+
+We now prevent the timer (or more precisely: the corresponding service unit) from writing
+status messages on every start and stop to journalctl.
+
+A detailed log can already be found at /var/lib/check_mk_agent/cmk-update-agent.log
+

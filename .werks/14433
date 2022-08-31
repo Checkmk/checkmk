@@ -15,3 +15,4 @@ The CronJob host supports:
  - Memory resources
  - CPU resources
  - Info
+ - Pod resources

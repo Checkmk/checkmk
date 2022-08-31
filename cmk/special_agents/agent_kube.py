@@ -1474,6 +1474,7 @@ def write_cronjobs_api_sections(
             "kube_cron_job_info_v1": lambda: cron_job_info(
                 cron_job, cluster_name, annotation_key_pattern
             ),
+            "kube_pod_resources_v1": lambda: _pod_resources_from_api_pods(api_cron_job_pods),
             "kube_memory_resources_v1": lambda: _collect_memory_resources_from_api_pods(
                 api_cron_job_pods
             ),

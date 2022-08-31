@@ -1,0 +1,17 @@
+Title: mk_mongodb.py: mongodb_instace section shows information from a different host
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1661932520
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p12
+
+The agent plugin "mk_mongodb.py" creates the section "mongodb_instance". In
+some cases, this section contains information from a different host (i.e.
+replica) from within the MongoDB cluster than the one on which the agent plugin
+is located. The problem was that the connection settings did not specify to
+connect to the host directly. Therefore, requests were distributed across the
+cluster by MongoDB. This has been fixed. If this fix is required, the agent
+plugin must be redeployed to the hosts.

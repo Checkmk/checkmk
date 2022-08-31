@@ -210,6 +210,7 @@ def test_router_instance_mongodb_3_4(mk_mongodb):
             {},
             {
                 "read_preference": pymongo.ReadPreference.SECONDARY,
+                "directConnection": True,
             },
         ),
         (
@@ -221,6 +222,7 @@ def test_router_instance_mongodb_3_4(mk_mongodb):
                 "username": "t_user",
                 "password": "t_pwd",
                 "read_preference": pymongo.ReadPreference.SECONDARY,
+                "directConnection": True,
             },
         ),
         (
@@ -234,6 +236,7 @@ def test_router_instance_mongodb_3_4(mk_mongodb):
                 "password": "t_pwd",
                 "tls": True,
                 "read_preference": pymongo.ReadPreference.SECONDARY,
+                "directConnection": True,
             },
         ),
         (
@@ -251,6 +254,7 @@ def test_router_instance_mongodb_3_4(mk_mongodb):
                 "tlsInsecure": True,
                 "tlsCAFile": "/path/to/ca.pem",
                 "read_preference": pymongo.ReadPreference.SECONDARY,
+                "directConnection": True,
             },
         ),
         (
@@ -272,6 +276,7 @@ def test_router_instance_mongodb_3_4(mk_mongodb):
                 "tlsInsecure": True,
                 "username": "t_user",
                 "read_preference": pymongo.ReadPreference.SECONDARY,
+                "directConnection": True,
             },
         ),
     ],
@@ -298,6 +303,7 @@ def test_read_config(config, expected_pymongo_config, mk_mongodb):
                 "tls": True,
                 "username": "username",
                 "read_preference": pymongo.ReadPreference.SECONDARY,
+                "directConnection": True,
             },
         ),
         (
@@ -306,6 +312,7 @@ def test_read_config(config, expected_pymongo_config, mk_mongodb):
                 "host": "mongodb://username:%2F%3F%21%2F@example.com:27017",
                 "ssl": True,
                 "read_preference": pymongo.ReadPreference.SECONDARY,
+                "directConnection": True,
             },
         ),
     ],

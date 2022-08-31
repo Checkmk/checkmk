@@ -2,7 +2,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import time
 from typing import Any, Mapping, MutableMapping, NamedTuple, Sequence
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
@@ -13,9 +13,11 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 
 from .agent_based_api.v1 import get_value_store, register, render, Result, Service, State
 from .utils.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
+from .utils.diskstat import check_diskstat_dict
 from .utils.scaleio import (
     convert_scaleio_space_into_mb,
-    convert_to_bytes,
+    convert_throughput_into_bytes,
+    KNOWN_CONVERSION_VALUES_INTO_BYTES,
     KNOWN_CONVERSION_VALUES_INTO_MB,
     parse_scaleio,
 )
@@ -40,13 +42,13 @@ class FilesystemStoragePool(NamedTuple):
     failed_capacity: float
 
 
-class FilesystemStorageConversionError(NamedTuple):
+class StorageConversionError(NamedTuple):
     unit: str
 
 
 class DiskReadWrite(NamedTuple):
-    read_throughput: float | None
-    write_throughput: float | None
+    read_throughput: float
+    write_throughput: float
     read_operations: float
     write_operations: float
 
@@ -54,18 +56,34 @@ class DiskReadWrite(NamedTuple):
 class StoragePool(NamedTuple):
     pool_id: str
     name: str
-    filesystem_storage_pool: FilesystemStoragePool | FilesystemStorageConversionError
-    total_io: DiskReadWrite
-    rebalance_io: DiskReadWrite
+    filesystem_storage_pool: FilesystemStoragePool | StorageConversionError
+    total_io: DiskReadWrite | StorageConversionError
+    rebalance_io: DiskReadWrite | StorageConversionError
 
 
 ScaleioStoragePoolSection = Mapping[str, StoragePool]
 
 
-def _create_disk_read_write(read_data: Sequence[str], write_data: Sequence[str]) -> DiskReadWrite:
+def _create_disk_read_write(
+    read_data: Sequence[str], write_data: Sequence[str]
+) -> DiskReadWrite | StorageConversionError:
+    read_data_unit, write_data_unit = read_data[3], write_data[3]
+
+    if read_data_unit not in KNOWN_CONVERSION_VALUES_INTO_BYTES:
+        return StorageConversionError(unit=read_data_unit)
+
+    if write_data_unit not in KNOWN_CONVERSION_VALUES_INTO_BYTES:
+        return StorageConversionError(unit=write_data_unit)
+
     return DiskReadWrite(
-        read_throughput=convert_to_bytes(float(read_data[2]), read_data[3]),
-        write_throughput=convert_to_bytes(float(write_data[2]), write_data[3]),
+        read_throughput=convert_throughput_into_bytes(
+            unit=read_data_unit,
+            throughput=float(read_data[2]),
+        ),
+        write_throughput=convert_throughput_into_bytes(
+            unit=write_data_unit,
+            throughput=float(write_data[2]),
+        ),
         read_operations=float(read_data[0]),
         write_operations=float(write_data[0]),
     )
@@ -76,10 +94,10 @@ def _create_filesystem_storage_pool(
     total_capacity: str,
     free_capacity: str,
     failed_capacity: str,
-) -> FilesystemStoragePool | FilesystemStorageConversionError:
+) -> FilesystemStoragePool | StorageConversionError:
 
     if unit not in KNOWN_CONVERSION_VALUES_INTO_MB:
-        return FilesystemStorageConversionError(unit=unit)
+        return StorageConversionError(unit=unit)
 
     return FilesystemStoragePool(
         total_capacity=convert_scaleio_space_into_mb(
@@ -141,7 +159,7 @@ def _check_scaleio_storage_pool(
     if not (storage_pool := section.get(item)):
         return
 
-    if isinstance(storage_pool.filesystem_storage_pool, FilesystemStorageConversionError):
+    if isinstance(storage_pool.filesystem_storage_pool, StorageConversionError):
         yield Result(
             state=State.UNKNOWN,
             summary=f"Unknown unit: {storage_pool.filesystem_storage_pool.unit}",
@@ -179,4 +197,87 @@ register.check_plugin(
     check_function=check_scaleio_storage_pool,
     check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
+)
+
+
+def _check_scaleio_storage_pool_disks(
+    params: Mapping[str, Any],
+    pool_name: str,
+    disk_stats: DiskReadWrite | StorageConversionError,
+    value_store: MutableMapping[str, Any],
+) -> CheckResult:
+
+    yield Result(state=State.OK, summary=f"Name: {pool_name}")
+
+    if isinstance(disk_stats, StorageConversionError):
+        yield Result(
+            state=State.UNKNOWN,
+            summary=f"Unknown unit: {disk_stats.unit}",
+        )
+        return
+
+    yield from check_diskstat_dict(
+        params=params,
+        disk={
+            "read_ios": disk_stats.read_operations,
+            "read_throughput": disk_stats.read_throughput,
+            "write_ios": disk_stats.write_operations,
+            "write_throughput": disk_stats.write_throughput,
+        },
+        value_store=value_store,
+        this_time=time.time(),
+    )
+
+
+def check_scaleio_storage_pool_totalrw(
+    item: str,
+    params: Mapping[str, Any],
+    section: ScaleioStoragePoolSection,
+) -> CheckResult:
+    if not (pool := section.get(item)):
+        return
+
+    yield from _check_scaleio_storage_pool_disks(
+        params=params,
+        pool_name=pool.name,
+        disk_stats=pool.total_io,
+        value_store=get_value_store(),
+    )
+
+
+register.check_plugin(
+    name="scaleio_storage_pool_totalrw",
+    service_name="ScaleIO SP total IO %s",
+    check_function=check_scaleio_storage_pool_totalrw,
+    sections=["scaleio_storage_pool"],
+    discovery_function=discover_scaleio_storage_pool,
+    check_ruleset_name="diskstat",
+    check_default_parameters={},
+)
+
+
+def check_scaleio_storage_pool_rebalancerw(
+    item: str,
+    params: Mapping[str, Any],
+    section: ScaleioStoragePoolSection,
+) -> CheckResult:
+    if not (pool := section.get(item)):
+        return
+
+    yield from _check_scaleio_storage_pool_disks(
+        params=params,
+        pool_name=pool.name,
+        disk_stats=pool.rebalance_io,
+        value_store=get_value_store(),
+    )
+
+
+register.check_plugin(
+    name="scaleio_storage_pool_rebalancerw",
+    service_name="ScaleIO SP rebalance IO %s",
+    sections=["scaleio_storage_pool"],
+    check_function=check_scaleio_storage_pool_rebalancerw,
+    discovery_function=discover_scaleio_storage_pool,
+    check_ruleset_name="diskstat",
+    check_default_parameters={},
 )

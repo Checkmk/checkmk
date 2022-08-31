@@ -16,6 +16,14 @@ KNOWN_CONVERSION_VALUES_INTO_MB = {
     "TB": 1024**2,
 }
 
+KNOWN_CONVERSION_VALUES_INTO_BYTES = {
+    "Bytes": 1.0,
+    "KB": 1024.0,
+    "MB": 1024.0**2,
+    "GB": 1024.0**3,
+    "TB": 1024.0**4,
+}
+
 
 def convert_scaleio_space_into_mb(unit: str, value: float) -> float:
     """Convert the space from the storage pool to MB
@@ -36,34 +44,23 @@ def convert_scaleio_space_into_mb(unit: str, value: float) -> float:
     return value * KNOWN_CONVERSION_VALUES_INTO_MB[unit]
 
 
-def convert_to_bytes(throughput: float, unit: str) -> float | None:
+def convert_throughput_into_bytes(unit: str, throughput: float) -> float:
     """Convert the throughput values from the storage pool to Bytes
 
-    >>> convert_to_bytes(1.0, "Bytes")
+    >>> convert_throughput_into_bytes("Bytes", 1.0)
     1.0
-    >>> convert_to_bytes(1.0, "KB")
+    >>> convert_throughput_into_bytes("KB", 1.0)
     1024.0
-    >>> convert_to_bytes(1.0, "MB")
+    >>> convert_throughput_into_bytes("MB", 1.0)
     1048576.0
-    >>> convert_to_bytes(1.0, "GB")
+    >>> convert_throughput_into_bytes("GB", 1.0)
     1073741824.0
-    >>> convert_to_bytes(1.0, "TB")
+    >>> convert_throughput_into_bytes("TB", 1.0)
     1099511627776.0
-    >>> convert_to_bytes(1.0, "Not_known")
 
     """
 
-    if unit == "Bytes":
-        return throughput
-    if unit == "KB":
-        return throughput * 1024
-    if unit == "MB":
-        return throughput * 1024 * 1024
-    if unit == "GB":
-        return throughput * 1024 * 1024 * 1024
-    if unit == "TB":
-        return throughput * 1024 * 1024 * 1024 * 1024
-    return None
+    return throughput * KNOWN_CONVERSION_VALUES_INTO_BYTES[unit]
 
 
 def parse_scaleio(string_table: StringTable, scaleio_section_name: str) -> ScaleioSection:

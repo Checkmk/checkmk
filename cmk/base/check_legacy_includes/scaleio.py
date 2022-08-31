@@ -15,7 +15,7 @@ from cmk.base.plugins.agent_based.scaleio_storage_pool import (  # pylint: disab
 )
 from cmk.base.plugins.agent_based.utils.scaleio import (  # pylint: disable=unused-import
     convert_scaleio_space_into_mb,
-    convert_to_bytes,
+    convert_throughput_into_bytes,
     parse_scaleio,
 )
 
@@ -29,6 +29,18 @@ def convert_scaleio_space(unit: str, value: float) -> float | None:
 
     with suppress(KeyError):
         return convert_scaleio_space_into_mb(unit, value)
+    return None
+
+
+def convert_to_bytes(throughput: float, unit: str) -> float | None:
+    """Convert the throughput values from the storage pool to Bytes
+
+    >>> convert_to_bytes(1.0, "not_known")
+
+    """
+
+    with suppress(KeyError):
+        return convert_throughput_into_bytes(unit, throughput)
     return None
 
 

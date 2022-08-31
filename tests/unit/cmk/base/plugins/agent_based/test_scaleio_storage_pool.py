@@ -12,12 +12,15 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, Sta
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.scaleio_storage_pool import (
     _check_scaleio_storage_pool,
+    _check_scaleio_storage_pool_disks,
+    check_scaleio_storage_pool_rebalancerw,
+    check_scaleio_storage_pool_totalrw,
     discover_scaleio_storage_pool,
     DiskReadWrite,
-    FilesystemStorageConversionError,
     FilesystemStoragePool,
     parse_scaleio_storage_pool,
     ScaleioStoragePoolSection,
+    StorageConversionError,
     StoragePool,
 )
 from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
@@ -46,6 +49,19 @@ SECTION = {
     )
 }
 
+SECTION_WITH_FAILED_CONVERSIONS = {
+    "4e9a44c700000000": StoragePool(
+        pool_id="4e9a44c700000000",
+        name="pool01",
+        filesystem_storage_pool=FilesystemStoragePool(
+            total_capacity=29255270.4,
+            free_capacity=16462643.2,
+            failed_capacity=2311212.0,
+        ),
+        total_io=StorageConversionError(unit="PB"),
+        rebalance_io=StorageConversionError(unit="PB"),
+    )
+}
 
 ITEM = "4e9a44c700000000"
 
@@ -62,17 +78,17 @@ STRING_TABLE: StringTable = [
     ["REBALANCE_WRITE_BWC", "0", "IOPS", "0", "Bytes", "per-second"],
 ]
 
-STRING_TABLE_WITH_UNKNOWN_FILESYSTEM_UNIT: StringTable = [
+STRING_TABLE_WITH_UNKNOWN_UNIT: StringTable = [
     ["STORAGE_POOL", "4e9a44c700000000:"],
     ["ID", "4e9a44c700000000"],
     ["NAME", "pool01"],
     ["MAX_CAPACITY_IN_KB", "27.9", "PB", "(28599", "GB)"],
     ["UNUSED_CAPACITY_IN_KB", "15.7", "PB", "(16105", "GB)"],
     ["FAILED_CAPACITY_IN_KB", "0", "Bytes"],
-    ["TOTAL_READ_BWC", "7", "IOPS", "33.2", "KB", "(33996", "Bytes)", "per-second"],
+    ["TOTAL_READ_BWC", "7", "IOPS", "33.2", "PB", "(33996", "Bytes)", "per-second"],
     ["TOTAL_WRITE_BWC", "63", "IOPS", "219.6", "KB", "(224870", "Bytes)", "per-second"],
     ["REBALANCE_READ_BWC", "0", "IOPS", "0", "Bytes", "per-second"],
-    ["REBALANCE_WRITE_BWC", "0", "IOPS", "0", "Bytes", "per-second"],
+    ["REBALANCE_WRITE_BWC", "0", "IOPS", "0", "PB", "per-second"],
 ]
 
 
@@ -90,17 +106,18 @@ def test_parse_scaleio_filesystem_data() -> None:
     )
 
 
-def test_parse_scaleio_unknown_filesystem_unit() -> None:
-    assert isinstance(
-        parse_scaleio_storage_pool(STRING_TABLE_WITH_UNKNOWN_FILESYSTEM_UNIT)[
-            "4e9a44c700000000"
-        ].filesystem_storage_pool,
-        FilesystemStorageConversionError,
-    )
+def test_parse_scaleio_unknown_conversion_units() -> None:
+    scaleio_parsed_section = parse_scaleio_storage_pool(STRING_TABLE_WITH_UNKNOWN_UNIT)[
+        "4e9a44c700000000"
+    ]
+    assert isinstance(scaleio_parsed_section.filesystem_storage_pool, StorageConversionError)
+    assert isinstance(scaleio_parsed_section.total_io, StorageConversionError)
+    assert isinstance(scaleio_parsed_section.rebalance_io, StorageConversionError)
 
 
 def test_parse_scaleio_total_io_data() -> None:
     storage_pool_total_io = parse_scaleio_storage_pool(STRING_TABLE)["4e9a44c700000000"].total_io
+    assert isinstance(storage_pool_total_io, DiskReadWrite)
     assert storage_pool_total_io.read_throughput == 33996.8
     assert storage_pool_total_io.read_operations == 7.0
     assert storage_pool_total_io.write_throughput == 224870.4
@@ -111,6 +128,7 @@ def test_parse_scaleio_rebalance_io_data() -> None:
     storage_pool_rebalance_io = parse_scaleio_storage_pool(STRING_TABLE)[
         "4e9a44c700000000"
     ].rebalance_io
+    assert isinstance(storage_pool_rebalance_io, DiskReadWrite)
     assert storage_pool_rebalance_io.read_throughput == 0.0
     assert storage_pool_rebalance_io.read_operations == 0.0
     assert storage_pool_rebalance_io.write_throughput == 0.0
@@ -192,3 +210,67 @@ def test_check_scaleio_storage_pool() -> None:
         )
     )
     assert check_result[3] == Result(state=State.OK, summary="Used: 43.73% - 12.2 TiB of 27.9 TiB")
+
+
+def test_check_scaleio_storage_pool_totalrw_rebalancerw_item_not_found() -> None:
+    assert (
+        list(
+            check_scaleio_storage_pool_totalrw(
+                item="item_not_found",
+                params=FILESYSTEM_DEFAULT_PARAMS,
+                section=SECTION,
+            )
+        )
+        == []
+    )
+    assert (
+        list(
+            check_scaleio_storage_pool_rebalancerw(
+                item="item_not_found",
+                params=FILESYSTEM_DEFAULT_PARAMS,
+                section=SECTION,
+            )
+        )
+        == []
+    )
+
+
+def test_check_sceleio_storage_pool_disks_first_result_is_ok() -> None:
+    assert list(
+        _check_scaleio_storage_pool_disks(
+            params=FILESYSTEM_DEFAULT_PARAMS,
+            pool_name="pool01",
+            disk_stats=SECTION["4e9a44c700000000"].total_io,
+            value_store={"4e9a44c700000000.delta": (1660684225.0453863, 12792627.2)},
+        )
+    )[0] == Result(
+        state=State.OK,
+        summary="Name: pool01",
+    )
+
+
+def test_check_scaleio_storage_pool_check_diskstat_is_run() -> None:
+    check_result = list(
+        _check_scaleio_storage_pool_disks(
+            params=FILESYSTEM_DEFAULT_PARAMS,
+            pool_name="pool01",
+            disk_stats=SECTION["4e9a44c700000000"].total_io,
+            value_store={"4e9a44c700000000.delta": (1660684225.0453863, 12792627.2)},
+        )
+    )
+    assert check_result
+    assert len(check_result) == 9
+
+
+def test_check_scaleio_storage_pool_totalrw_rebalancerw_with_failed_conversion() -> None:
+    assert list(
+        _check_scaleio_storage_pool_disks(
+            params=FILESYSTEM_DEFAULT_PARAMS,
+            pool_name="pool01",
+            disk_stats=SECTION_WITH_FAILED_CONVERSIONS["4e9a44c700000000"].total_io,
+            value_store={"4e9a44c700000000.delta": (1660684225.0453863, 12792627.2)},
+        )
+    )[1] == Result(
+        state=State.UNKNOWN,
+        summary="Unknown unit: PB",
+    )

@@ -8,6 +8,7 @@
   { include: ["<bits/align.h>", private, "<memory>", public ] },
   { include: ["<bits/atomic_timed_wait.h>", private, "<atomic>", public ] },
   { include: ["<bits/atomic_wait.h>", private, "<atomic>", public ] },
+  { include: ["<bits/chrono.h>", private, "<chrono>", public ] },
   { include: ["<bits/exception.h>", private, "<exception>", public ] },
   { include: ["<bits/getopt_core.h>", private, "<getopt.h>", public ] },
   { include: ["<bits/max_size_type.h>", private, "<iterator>", public ] },

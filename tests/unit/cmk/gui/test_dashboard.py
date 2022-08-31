@@ -106,6 +106,9 @@ def _expected_intervals() -> list[tuple[str, Literal[False] | int]]:
     if not cmk_version.is_raw_edition():
         expected += [
             ("custom_graph", 60),
+            ("combined_graph", 60),
+            ("problem_graph", 60),
+            ("single_timeseries", 60),
         ]
 
     return expected

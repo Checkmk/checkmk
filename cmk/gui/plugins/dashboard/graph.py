@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import abc
 import json
-from typing import Any, Iterable, Mapping
+from typing import Any, Generic, Iterable, Mapping, TypeVar
 
 import livestatus
 
@@ -29,13 +30,14 @@ from cmk.gui.plugins.metrics.html_render import (
     default_dashlet_graph_render_options,
     resolve_graph_recipe,
 )
-from cmk.gui.plugins.metrics.utils import graph_info, metric_info
+from cmk.gui.plugins.metrics.utils import graph_info, GraphRenderOptions, metric_info
 from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
 from cmk.gui.plugins.visuals.utils import get_only_sites_from_context
 from cmk.gui.type_defs import (
     Choices,
     GraphIdentifier,
     SingleInfos,
+    TemplateGraphIdentifier,
     TemplateGraphSpec,
     VisualContext,
 )
@@ -46,6 +48,7 @@ from cmk.gui.valuespec import (
     DictionaryEntry,
     DropdownChoiceWithHostAndServiceHints,
     Timerange,
+    TimerangeValue,
     ValueSpec,
 )
 from cmk.gui.visuals import get_singlecontext_vars
@@ -124,12 +127,221 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
         )
 
 
-class GraphDashletConfig(DashletConfig):
-    ...
+class ABCGraphDashletConfig(DashletConfig):
+    timerange: TimerangeValue
+    graph_render_options: GraphRenderOptions
+    # TODO: Will be separated from the config in the next step
+    _graph_identification: GraphIdentifier
+    _graph_title: str
+
+
+T = TypeVar("T", bound=ABCGraphDashletConfig)
+T_Ident = TypeVar("T_Ident", bound=GraphIdentifier)
+
+
+class ABCGraphDashlet(Dashlet[T], Generic[T, T_Ident]):
+    @classmethod
+    def initial_size(cls):
+        return (60, 21)
+
+    @classmethod
+    def initial_refresh_interval(cls):
+        return 60
+
+    @classmethod
+    def vs_parameters(cls) -> ValueSpec:
+        return Dictionary(
+            title=_("Properties"),
+            render="form",
+            optional_keys=[],
+            elements=cls._parameter_elements,
+        )
+
+    @classmethod
+    def _parameter_elements(cls) -> DictionaryElements:
+        yield cls._vs_timerange()
+        yield cls._vs_graph_render_options()
+
+    @staticmethod
+    def _vs_timerange() -> DictionaryEntry:
+        return (
+            "timerange",
+            Timerange(
+                title=_("Timerange"),
+                default_value="25h",
+            ),
+        )
+
+    @staticmethod
+    def _vs_graph_render_options() -> DictionaryEntry:
+        return (
+            "graph_render_options",
+            vs_graph_render_options(
+                default_values=default_dashlet_graph_render_options,
+                exclude=[
+                    "show_time_range_previews",
+                    "title_format",
+                    "show_title",
+                ],
+            ),
+        )
+
+    @staticmethod
+    def _resolve_site(host: str) -> None:
+        with sites.prepend_site():
+            query = "GET hosts\nFilter: name = %s\nColumns: name" % livestatus.lqencode(host)
+            try:
+                return sites.live().query_value(query)
+            except livestatus.MKLivestatusNotFoundError:
+                raise MKUserError("host", _("The host could not be found on any active site."))
+
+    @classmethod
+    def script(cls) -> str:
+        return """
+var dashlet_offsets = {};
+function dashboard_render_graph(nr, graph_identification, graph_render_options, timerange)
+{
+    // Get the target size for the graph from the inner dashlet container
+    var inner = document.getElementById('dashlet_inner_' + nr);
+    var c_w = inner.clientWidth;
+    var c_h = inner.clientHeight;
+
+    var post_data = "spec=" + encodeURIComponent(JSON.stringify(graph_identification))
+                  + "&render=" + encodeURIComponent(JSON.stringify(graph_render_options))
+                  + "&timerange=" + encodeURIComponent(JSON.stringify(timerange))
+                  + "&width=" + c_w
+                  + "&height=" + c_h
+                  + "&id=" + nr;
+
+    cmk.ajax.call_ajax("graph_dashlet.py", {
+        post_data        : post_data,
+        method           : "POST",
+        response_handler : handle_dashboard_render_graph_response,
+        handler_data     : nr,
+    });
+}
+
+function handle_dashboard_render_graph_response(handler_data, response_body)
+{
+    var nr = handler_data;
+    var container = document.getElementById('dashlet_graph_' + nr);
+    if (container) {
+        container.innerHTML = response_body;
+        cmk.utils.execute_javascript_by_object(container);
+    }
+}
+
+"""
+
+    @abc.abstractmethod
+    def graph_identification(self, context: VisualContext) -> T_Ident:
+        ...
+
+    def __init__(
+        self,
+        dashboard_name: DashboardName,
+        dashboard: DashboardConfig,
+        dashlet_id: DashletId,
+        dashlet: T,
+    ) -> None:
+        super().__init__(
+            dashboard_name=dashboard_name,
+            dashboard=dashboard,
+            dashlet_id=dashlet_id,
+            dashlet=dashlet,
+        )
+
+        # New graphs which have been added via "add to visual" option don't have a timerange
+        # configured. So we assume the default timerange here by default.
+        if "timerange" not in self._dashlet_spec:
+            self._dashlet_spec["timerange"] = "25h"
+
+        self._init_exception = None
+        try:
+            self._init_graph()
+        except Exception as exc:
+            # Passes error otherwise exception wont allow to enter dashlet editor
+            self._init_exception = exc
+
+    def _init_graph(self) -> None:
+        self._dashlet_spec["_graph_identification"] = self.graph_identification(
+            self.context if self.has_context() else {}
+        )
+
+        try:
+            graph_recipes = resolve_graph_recipe(self._dashlet_spec["_graph_identification"])
+        except MKMissingDataError:
+            raise
+        except livestatus.MKLivestatusNotFoundError:
+            raise make_mk_missing_data_error()
+        except MKUserError as e:
+            raise MKGeneralException(_("Failed to calculate a graph recipe. (%s)") % str(e))
+        except Exception:
+            raise MKGeneralException(_("Failed to calculate a graph recipe."))
+
+        if graph_recipes:
+            self._dashlet_spec["_graph_title"] = graph_recipes[0]["title"]
+
+    def default_display_title(self) -> str:
+        try:
+            return self._dashlet_spec["_graph_title"]
+        except KeyError:
+            return self.title()
+
+    def on_resize(self) -> str:
+        return self._reload_js()
+
+    def on_refresh(self) -> str:
+        return self._reload_js()
+
+    def _reload_js(self) -> str:
+        if any(
+            prop not in self._dashlet_spec
+            for prop in ["_graph_identification", "graph_render_options", "timerange"]
+        ):
+            return ""
+
+        return "dashboard_render_graph(%d, %s, %s, %s)" % (
+            self._dashlet_id,
+            json.dumps(self._dashlet_spec["_graph_identification"]),
+            json.dumps(self._dashlet_spec["graph_render_options"]),
+            json.dumps(self._dashlet_spec["timerange"]),
+        )
+
+    def show(self) -> None:
+        if self._init_exception:
+            raise self._init_exception
+
+        html.div("", id_="dashlet_graph_%d" % self._dashlet_id)
+
+    def _get_macro_mapping(self, title: str) -> MacroMapping:
+        macro_mapping = macro_mapping_from_context(
+            self.context if self.has_context() else {},
+            self.single_infos(),
+            self.display_title(),
+            self.default_display_title(),
+            **self._get_additional_macros(),
+        )
+        return macro_mapping
+
+    def _get_additional_macros(self) -> Mapping[str, str]:
+        try:
+            site = self.dashlet_spec["_graph_identification"][1].get("site")
+        except KeyError:
+            return {}
+        return {"$SITE$": site} if site else {}
+
+    @classmethod
+    def get_additional_title_macros(cls) -> Iterable[str]:
+        yield "$SITE$"
+
+
+class TemplateGraphDashletConfig(ABCGraphDashletConfig):
+    source: str
 
 
 @dashlet_registry.register
-class GraphDashlet(Dashlet[GraphDashletConfig]):
+class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateGraphIdentifier]):
     """Dashlet for rendering a single performance graph"""
 
     @classmethod
@@ -148,14 +360,6 @@ class GraphDashlet(Dashlet[GraphDashletConfig]):
     def sort_index(cls) -> int:
         return 20
 
-    @classmethod
-    def initial_refresh_interval(cls):
-        return 60
-
-    @classmethod
-    def initial_size(cls):
-        return (60, 21)
-
     def infos(self) -> SingleInfos:
         return ["host", "service"]
 
@@ -167,61 +371,7 @@ class GraphDashlet(Dashlet[GraphDashletConfig]):
     def has_context(cls) -> bool:
         return True
 
-    def default_display_title(self) -> str:
-        return self._dashlet_spec.get("_graph_title") or self.title()
-
-    def __init__(
-        self,
-        dashboard_name: DashboardName,
-        dashboard: DashboardConfig,
-        dashlet_id: DashletId,
-        dashlet: GraphDashletConfig,
-    ) -> None:
-        super().__init__(
-            dashboard_name=dashboard_name,
-            dashboard=dashboard,
-            dashlet_id=dashlet_id,
-            dashlet=dashlet,
-        )
-
-        # New graphs which have been added via "add to visual" option don't have a timerange
-        # configured. So we assume the default timerange here by default.
-        self._dashlet_spec.setdefault("timerange", "25h")
-
-        self._init_exception = None
-        try:
-            self._init_graph()
-        except Exception as exc:
-            # Passes error otherwise exception wont allow to enter dashlet editor
-            self._init_exception = exc
-
-    def _init_graph(self) -> None:
-        self._dashlet_spec["_graph_identification"] = self.graph_identification(self.context)
-
-        try:
-            graph_recipes = resolve_graph_recipe(self._dashlet_spec["_graph_identification"])
-        except MKMissingDataError:
-            raise
-        except livestatus.MKLivestatusNotFoundError:
-            raise make_mk_missing_data_error()
-        except MKUserError as e:
-            raise MKGeneralException(_("Failed to calculate a graph recipe. (%s)") % str(e))
-        except Exception:
-            raise MKGeneralException(_("Failed to calculate a graph recipe."))
-
-        if graph_recipes:
-            self._dashlet_spec["_graph_title"] = graph_recipes[0]["title"]
-
-    @staticmethod
-    def _resolve_site(host: str) -> None:
-        with sites.prepend_site():
-            query = "GET hosts\nFilter: name = %s\nColumns: name" % livestatus.lqencode(host)
-            try:
-                return sites.live().query_value(query)
-            except livestatus.MKLivestatusNotFoundError:
-                raise MKUserError("host", _("The host could not be found on any active site."))
-
-    def graph_identification(self, context: VisualContext) -> GraphIdentifier:
+    def graph_identification(self, context: VisualContext) -> TemplateGraphIdentifier:
         single_context = get_singlecontext_vars(context, self.single_infos())
         host = single_context.get("host")
         if not host:
@@ -262,128 +412,9 @@ class GraphDashlet(Dashlet[GraphDashletConfig]):
         return ("template", graph_spec)
 
     @classmethod
-    def vs_parameters(cls) -> ValueSpec:
-        return Dictionary(
-            title=_("Properties"),
-            render="form",
-            optional_keys=[],
-            elements=cls._parameter_elements,
-        )
-
-    @staticmethod
-    def _vs_timerange() -> DictionaryEntry:
-        return (
-            "timerange",
-            Timerange(
-                title=_("Timerange"),
-                default_value="25h",
-            ),
-        )
-
-    @staticmethod
-    def _vs_graph_render_options() -> DictionaryEntry:
-        return (
-            "graph_render_options",
-            vs_graph_render_options(
-                default_values=default_dashlet_graph_render_options,
-                exclude=[
-                    "show_time_range_previews",
-                    "title_format",
-                    "show_title",
-                ],
-            ),
-        )
-
-    @classmethod
     def _parameter_elements(cls) -> DictionaryElements:
-        yield cls._vs_timerange()
         yield (
             "source",
             AvailableGraphs(),
         )
-        yield cls._vs_graph_render_options()
-
-    @classmethod
-    def script(cls) -> str:
-        return """
-var dashlet_offsets = {};
-function dashboard_render_graph(nr, graph_identification, graph_render_options, timerange)
-{
-    // Get the target size for the graph from the inner dashlet container
-    var inner = document.getElementById('dashlet_inner_' + nr);
-    var c_w = inner.clientWidth;
-    var c_h = inner.clientHeight;
-
-    var post_data = "spec=" + encodeURIComponent(JSON.stringify(graph_identification))
-                  + "&render=" + encodeURIComponent(JSON.stringify(graph_render_options))
-                  + "&timerange=" + encodeURIComponent(JSON.stringify(timerange))
-                  + "&width=" + c_w
-                  + "&height=" + c_h
-                  + "&id=" + nr;
-
-    cmk.ajax.call_ajax("graph_dashlet.py", {
-        post_data        : post_data,
-        method           : "POST",
-        response_handler : handle_dashboard_render_graph_response,
-        handler_data     : nr,
-    });
-}
-
-function handle_dashboard_render_graph_response(handler_data, response_body)
-{
-    var nr = handler_data;
-    var container = document.getElementById('dashlet_graph_' + nr);
-    if (container) {
-        container.innerHTML = response_body;
-        cmk.utils.execute_javascript_by_object(container);
-    }
-}
-
-"""
-
-    def on_resize(self) -> str:
-        return self._reload_js()
-
-    def on_refresh(self) -> str:
-        return self._reload_js()
-
-    def _reload_js(self) -> str:
-        if any(
-            prop not in self._dashlet_spec
-            for prop in ["_graph_identification", "graph_render_options", "timerange"]
-        ):
-            return ""
-
-        return "dashboard_render_graph(%d, %s, %s, %s)" % (
-            self._dashlet_id,
-            json.dumps(self._dashlet_spec["_graph_identification"]),
-            json.dumps(self._dashlet_spec["graph_render_options"]),
-            json.dumps(self._dashlet_spec["timerange"]),
-        )
-
-    def show(self) -> None:
-        if self._init_exception:
-            raise self._init_exception
-
-        html.div("", id_="dashlet_graph_%d" % self._dashlet_id)
-
-    def _get_macro_mapping(self, title: str) -> MacroMapping:
-        macro_mapping = macro_mapping_from_context(
-            self.context,
-            self.single_infos(),
-            self.display_title(),
-            self.default_display_title(),
-            **self._get_additional_macros(),
-        )
-        return macro_mapping
-
-    def _get_additional_macros(self) -> Mapping[str, str]:
-        try:
-            site = self.dashlet_spec["_graph_identification"][1].get("site")
-        except KeyError:
-            return {}
-        return {"$SITE$": site} if site else {}
-
-    @classmethod
-    def get_additional_title_macros(cls) -> Iterable[str]:
-        yield "$SITE$"
+        yield from super()._parameter_elements()

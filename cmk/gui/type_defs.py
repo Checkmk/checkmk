@@ -484,13 +484,19 @@ class SingleTimeseriesGraphSpec(_SingleTimeseriesGraphSpecMandatory, total=False
     color: Optional[str]
 
 
+TemplateGraphIdentifier = Tuple[Literal["template"], TemplateGraphSpec]
+CombinedGraphIdentifier = Tuple[Literal["combined"], CombinedGraphSpec]
+CustomGraphIdentifier = Tuple[Literal["custom"], str]
+ExplicitGraphIdentifier = Tuple[Literal["explicit"], ExplicitGraphSpec]
+SingleTimeseriesGraphIdentifier = Tuple[Literal["single_timeseries"], SingleTimeseriesGraphSpec]
+
 GraphIdentifier = Union[
-    Tuple[Literal["custom"], str],
+    CustomGraphIdentifier,
     Tuple[Literal["forecast"], str],
-    Tuple[Literal["template"], TemplateGraphSpec],
-    Tuple[Literal["combined"], CombinedGraphSpec],
-    Tuple[Literal["explicit"], ExplicitGraphSpec],
-    Tuple[Literal["single_timeseries"], SingleTimeseriesGraphSpec],
+    TemplateGraphIdentifier,
+    CombinedGraphIdentifier,
+    ExplicitGraphIdentifier,
+    SingleTimeseriesGraphIdentifier,
 ]
 
 

@@ -19,11 +19,13 @@ import webtest  # type: ignore[import]
 from _pytest.monkeypatch import MonkeyPatch
 from mock import MagicMock
 
+from tests.testlib.plugin_registry import reset_registries
 from tests.testlib.users import create_and_destroy_user
 
 import cmk.utils.log
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
+from cmk.utils.plugin_registry import Registry
 from cmk.utils.type_defs import UserId
 
 from cmk.automations.results import DeleteHostsResult
@@ -34,8 +36,11 @@ import cmk.gui.watolib.activate_changes as activate_changes
 import cmk.gui.watolib.groups as groups
 from cmk.gui import main_modules
 from cmk.gui.config import active_config
+from cmk.gui.dashboard import dashlet_registry
 from cmk.gui.livestatus_utils.testing import mock_livestatus
 from cmk.gui.logged_in import SuperUserContext, UserContext
+from cmk.gui.permissions import permission_registry, permission_section_registry
+from cmk.gui.plugins.views.icons.utils import icon_and_action_registry
 from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.json import patch_json
 from cmk.gui.utils.script_helpers import session_wsgi_app
@@ -186,6 +191,22 @@ def inline_background_jobs(mocker: MagicMock) -> None:
     mocker.patch("cmk.gui.background_job.BackgroundJob._exit")
     mocker.patch("cmk.utils.daemon.daemonize")
     mocker.patch("cmk.utils.daemon.closefrom")
+
+
+# TODO: The list of registries is not complete. It would be better to selectively solve this
+# A good next step would be to prevent modifications of registries during test execution and
+# only allow them selectively with an automatic cleanup after the test finished.
+@pytest.fixture(autouse=True)
+def reset_gui_registries() -> Iterator[None]:
+    """Fixture to reset registries to its default entries."""
+    registries: list[Registry[Any]] = [
+        dashlet_registry,
+        icon_and_action_registry,
+        permission_registry,
+        permission_section_registry,
+    ]
+    with reset_registries(registries):
+        yield
 
 
 @pytest.fixture()

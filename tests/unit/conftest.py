@@ -29,21 +29,9 @@ from cmk.utils.livestatus_helpers.testing import (
     MockLiveStatusConnection,
 )
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
-from cmk.utils.plugin_registry import Registry
 from cmk.utils.site import omd_site
 
-import cmk.gui.dashboard
-
-# The openapi import below pulls a huge part of our GUI code indirectly into the process.  We need
-# to have the default permissions loaded before that to fix some implicit dependencies.
-import cmk.gui.default_permissions
-import cmk.gui.permissions
-import cmk.gui.views
-from cmk.gui.plugins.views.icons.utils import icon_and_action_registry
 from cmk.gui.utils.script_helpers import application_and_request_context
-
-if is_enterprise_repo():
-    import cmk.cee.dcd.plugins.connectors.connectors_api.v1  # pylint: disable=import-error,no-name-in-module
 
 logger = logging.getLogger(__name__)
 
@@ -403,31 +391,6 @@ def initialised_item_state():
         mock_vs,
     ):
         yield
-
-
-@pytest.fixture(autouse=True)
-def registry_reset() -> Iterator[None]:
-    """Fixture to reset registries to its default entries."""
-    registries: list[Registry[Any]] = [
-        cmk.gui.dashboard.dashlet_registry,
-        icon_and_action_registry,
-        cmk.gui.permissions.permission_registry,
-        cmk.gui.permissions.permission_section_registry,
-    ]
-    if is_enterprise_repo():
-        registries.append(
-            cmk.cee.dcd.plugins.connectors.connectors_api.v1.connector_config_registry
-        )
-        registries.append(cmk.cee.dcd.plugins.connectors.connectors_api.v1.connector_registry)
-
-    defaults_per_registry = [(registry, list(registry)) for registry in registries]
-    try:
-        yield
-    finally:
-        for registry, defaults in defaults_per_registry:
-            for entry in list(registry):
-                if entry not in defaults:
-                    registry.unregister(entry)  # type: ignore[attr-defined]
 
 
 @pytest.fixture()

@@ -1,0 +1,17 @@
+Title: Fix duplicate history log while processing spoolfiles
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1661935664
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0p12
+
+Werk #13114 fixed missing history log entries for direct local delivery of
+notifications.
+
+If notification spooling was used afterwards, there was a duplicate message
+logged.
+
+Now only one message will be logged also for spoolfiles.

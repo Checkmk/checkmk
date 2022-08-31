@@ -1,0 +1,32 @@
+Title: Local customizations might need adjustment due refactorings in GUI code (<tt>PasswordFromStore</tt>)
+Class: feature
+Compatible: incomp
+Component: wato
+Date: 1662118124
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+This werk only affects users of non-tribe29 local customizations (single files and MKPs from non-
+tribe29 sources such as the Checkmk exchange).
+
+Before this werk, the Checkmk codebase offered two convenience functions for creating
+<tt>ValueSpecs</tt> for passwords (either entered directly or selected from the password store):
+<tt>IndividualOrStoredPassword</tt> and <tt>PasswordFromStore</tt>. These two functions had
+misleading names and were therefore renamed:
+
+LI: <tt>IndividualOrStoredPassword</tt> was renamed to <tt>TransformToIndividualOrStoredPassword</tt>,
+because this actually reflects what the returned <tt>ValueSpec</tt> does: It allows users to either
+directly enter a password or select one from the store. Furthermore, it also handles legacy
+configurations which did not offer the option to use the password store.
+LI: <tt>PasswordFromStore</tt> was renamed to <tt>IndividualOrStoredPassword</tt>, which also
+reflects its purpose: either directly enter a password or to select one from the store, but without
+the handling of legacy configurations.
+
+To stay compatible, we recommend to simply use <tt>IndividualOrStoredPassword</tt> instead of
+<tt>PasswordFromStore</tt> in Checkmk 2.1 customizations, which will continue working when upgrading
+to 2.2.
+
+Note that this only affects non-tribe29 customizations because as of the writing of this werk, any
+customization produced by tribe29 will be obsolete with Checkmk 2.2.

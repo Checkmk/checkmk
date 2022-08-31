@@ -5,7 +5,7 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.active_checks.common import RulespecGroupIntegrateOtherServices
-from cmk.gui.plugins.wato.utils import HostRulespec, PasswordFromStore, rulespec_registry
+from cmk.gui.plugins.wato.utils import HostRulespec, IndividualOrStoredPassword, rulespec_registry
 from cmk.gui.valuespec import (
     Age,
     Dictionary,
@@ -50,7 +50,7 @@ def _valuespec_active_checks_elasticsearch_query():
             ("user", TextInput(title=_("Username"), size=32, allow_empty=True)),
             (
                 "password",
-                PasswordFromStore(
+                IndividualOrStoredPassword(
                     title=_("Password of the user"),
                     allow_empty=False,
                 ),

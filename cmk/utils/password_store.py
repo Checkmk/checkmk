@@ -159,7 +159,7 @@ def extract(password_id: PasswordId) -> str | None:
     if not isinstance(password_id, tuple):
         return load().get(password_id)
 
-    # In case we get a tuple, assume it was coming from a ValueSpec "PasswordFromStore"
+    # In case we get a tuple, assume it was coming from a ValueSpec "IndividualOrStoredPassword"
     pw_type, pw_id = password_id
     if pw_type == "password":
         return pw_id

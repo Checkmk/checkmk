@@ -9,7 +9,7 @@ from cmk.gui.plugins.wato.special_agents.common import (
     RulespecGroupDatasourceProgramsApps,
     validate_aws_tags,
 )
-from cmk.gui.plugins.wato.utils import HostRulespec, PasswordFromStore, rulespec_registry
+from cmk.gui.plugins.wato.utils import HostRulespec, IndividualOrStoredPassword, rulespec_registry
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
@@ -97,7 +97,7 @@ def _valuespec_special_agents_jira():
             ),
             (
                 "password",
-                PasswordFromStore(
+                IndividualOrStoredPassword(
                     title=_("Password of the user"),
                     allow_empty=False,
                 ),

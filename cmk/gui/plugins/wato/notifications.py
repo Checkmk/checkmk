@@ -15,9 +15,9 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     HTTPProxyReference,
+    IndividualOrStoredPassword,
     notification_parameter_registry,
     NotificationParameter,
-    PasswordFromStore,
     TransformToIndividualOrStoredPassword,
 )
 from cmk.gui.valuespec import (
@@ -967,7 +967,7 @@ class NotificationParameterServiceNow(NotificationParameter):
                 ),
                 (
                     "password",
-                    PasswordFromStore(
+                    IndividualOrStoredPassword(
                         title=_("Password of the user"),
                         allow_empty=False,
                     ),
@@ -1386,7 +1386,7 @@ class NotificationParameterOpsgenie(NotificationParameter):
             elements=[
                 (
                     "password",
-                    PasswordFromStore(
+                    IndividualOrStoredPassword(
                         title=_(
                             "API Key to use. Depending on your opsgenie "
                             "subscription you can use global or team integration api "

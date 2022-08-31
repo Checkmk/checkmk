@@ -350,7 +350,7 @@ def _register_pre_21_plugin_api() -> None:
         "multifolder_host_rule_match_conditions",
         "notification_parameter_registry",
         "NotificationParameter",
-        "PasswordFromStore",
+        "IndividualOrStoredPassword",
         "PermissionSectionWATO",
         "PluginCommandLine",
         "PredictiveLevels",

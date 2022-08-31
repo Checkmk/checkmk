@@ -6,7 +6,7 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsApps
-from cmk.gui.plugins.wato.utils import HostRulespec, PasswordFromStore, rulespec_registry
+from cmk.gui.plugins.wato.utils import HostRulespec, IndividualOrStoredPassword, rulespec_registry
 from cmk.gui.valuespec import Dictionary, DropdownChoice, Integer, ListChoice, TextInput
 from cmk.gui.watolib.rulespecs import Rulespec
 
@@ -37,7 +37,7 @@ def _valuespec_special_agents_splunk():
             ("user", TextInput(title=_("Username"), size=32, allow_empty=False)),
             (
                 "password",
-                PasswordFromStore(
+                IndividualOrStoredPassword(
                     title=_("Password of the user"),
                     allow_empty=False,
                 ),

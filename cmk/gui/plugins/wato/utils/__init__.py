@@ -690,12 +690,12 @@ def passwordstore_choices() -> Choices:
     ]
 
 
-def PasswordFromStore(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builtin
+def IndividualOrStoredPassword(  # pylint: disable=redefined-builtin
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
     allow_empty: bool = True,
     size: int = 25,
-):  # -> CascadingDropdown
+) -> CascadingDropdown:
     return CascadingDropdown(
         title=title,
         help=help,
@@ -735,7 +735,7 @@ def TransformToIndividualOrStoredPassword(  # pylint: disable=redefined-builtin
     size: int = 25,
 ) -> Transform:
     return Transform(
-        valuespec=PasswordFromStore(
+        valuespec=IndividualOrStoredPassword(
             title=title,
             help=help,
             allow_empty=allow_empty,

@@ -6,7 +6,7 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsApps
-from cmk.gui.plugins.wato.utils import HostRulespec, PasswordFromStore, rulespec_registry
+from cmk.gui.plugins.wato.utils import HostRulespec, IndividualOrStoredPassword, rulespec_registry
 from cmk.gui.valuespec import Age, Dictionary, DropdownChoice, Integer, ListChoice, TextInput
 from cmk.gui.watolib.rulespecs import Rulespec
 
@@ -49,7 +49,7 @@ def _valuespec_special_agents_graylog():
             ),
             (
                 "password",
-                PasswordFromStore(
+                IndividualOrStoredPassword(
                     title=_("Password of the user"),
                     allow_empty=False,
                 ),

@@ -6,7 +6,7 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsApps
-from cmk.gui.plugins.wato.utils import HostRulespec, PasswordFromStore, rulespec_registry
+from cmk.gui.plugins.wato.utils import HostRulespec, IndividualOrStoredPassword, rulespec_registry
 from cmk.gui.valuespec import Dictionary, Integer, ListOfStrings, TextInput, Tuple
 from cmk.gui.watolib.rulespecs import Rulespec
 
@@ -44,7 +44,9 @@ def _valuespec_special_agents_couchbase():
                     help=_("The credentials for api calls with authentication."),
                     elements=[
                         TextInput(title=_("Username"), allow_empty=False),
-                        PasswordFromStore(title=_("Password of the user"), allow_empty=False),
+                        IndividualOrStoredPassword(
+                            title=_("Password of the user"), allow_empty=False
+                        ),
                     ],
                 ),
             ),

@@ -2,6 +2,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+include ../defines.make
+
 SHELL := /bin/bash -e
 SCRIPTS := ../scripts
 FIND_PYTHON_FILES := $(SCRIPTS)/find-python-files
@@ -27,8 +29,7 @@ THREE_TO_TWO := $(PIPENV) run 3to2
 BANDIT := $(PIPENV) run bandit
 FIND_INVALID_TEST_FILES := $(SCRIPTS)/find-invalid-autogen-files
 ADDITIONAL_MYPY_ARGS := $(JUNIT_XML)
-# TODO: Remove version duplication, see buildscripts/infrastructure/build-nodes/scripts/install-gnu-toolchain.sh
-GCC_TOOLCHAIN := /opt/gcc-12.2.0
+GCC_TOOLCHAIN := /opt/gcc-${GCC_VERSION}
 
 # Since the unit tests (that are written for Python 3) are executed with Python
 # 2.6 and 2.7, we need to convert them, just like it is done for the agent

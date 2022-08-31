@@ -166,7 +166,7 @@ def test_check_heartbeat_crm_ok(section_1: Section) -> None:
     with on_time("2020-09-08 10:36:36", "UTC"):
         assert list(
             check_heartbeat_crm(
-                {"max_age": 60, "num_nodes": 2, "num_resources": 3, "dc": None},
+                {"max_age": 60, "num_nodes": 2, "num_resources": 3},
                 section_1,
             )
         ) == [

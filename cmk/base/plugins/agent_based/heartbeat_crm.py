@@ -341,7 +341,7 @@ def check_heartbeat_crm(params: Mapping[str, Any], section: Section) -> CheckRes
         return
 
     # Check for correct DC when enabled
-    if (p_dc := params["dc"]) is None or dc == p_dc:
+    if (p_dc := params.get("dc")) is None or dc == p_dc:
         yield Result(state=State.OK, summary=f"DC: {dc}")
     else:
         yield Result(state=State.CRIT, summary=f"DC: {dc} (Expected {p_dc})")

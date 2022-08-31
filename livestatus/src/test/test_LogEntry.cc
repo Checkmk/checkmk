@@ -3,12 +3,17 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
+// TODO(sp): IWYU claims to need this for "tuple_element<>::type", but the
+// headers <tuple>, <array>, <utility>, and <ranges> are *all* official ways to
+// get this. So we should have a symbol mapping for this in our IWYU mapping
+// files, but I simply can't figure out how to make that work with the template
+// symbol. IWYU bug?
+// IWYU pragma: no_include <utility>
 #include <chrono>
 #include <ctime>
 #include <stdexcept>
 #include <string>
 #include <tuple>
-#include <utility>
 #include <variant>
 #include <vector>
 

@@ -272,7 +272,6 @@ timeout(time: 12, unit: 'HOURS') {
                 BUILD_IMAGE.inside(DOCKER_ARGS) {
                     def VERSION_DIR = get_versions_dir(WORKSPACE, CMK_VERS_RC_AWARE);
                     upload_artifacts.download_version_dir(INTERNAL_UPLOAD_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS_RC_AWARE, VERSION_DIR)
-                    upload_artifacts.create_hashes(VERSION_DIR)
                     upload_artifacts.upload_version_dir(VERSION_DIR, WEB_DEPLOY_DEST, WEB_DEPLOY_PORT)
                     if(params.DEPLOY_TO_WEBSITE) {
                         upload_artifacts.deploy_to_website(WEB_DEPLOY_URL, WEB_DEPLOY_PORT, CMK_VERS_RC_AWARE)

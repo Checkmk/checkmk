@@ -7,6 +7,7 @@
 #include <initializer_list>
 #include <memory>
 #include <string>
+#include <variant>  // IWYU pragma: keep
 
 #include "IntColumn.h"
 #include "Row.h"

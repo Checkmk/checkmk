@@ -6,6 +6,7 @@
 #include "TableContactGroups.h"
 
 #include <memory>
+#include <variant>  // IWYU pragma: keep
 #include <vector>
 
 #include "Column.h"

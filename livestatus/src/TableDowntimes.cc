@@ -10,6 +10,7 @@
 #include <memory>
 #include <type_traits>
 #include <utility>
+#include <variant>  // IWYU pragma: keep
 
 #include "ChronoUtils.h"
 #include "Column.h"

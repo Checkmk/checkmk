@@ -10,6 +10,7 @@
 #include <set>
 #include <stdexcept>
 #include <utility>
+#include <variant>  // IWYU pragma: keep
 #include <vector>
 
 #include "ChronoUtils.h"

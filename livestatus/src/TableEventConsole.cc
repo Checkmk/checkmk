@@ -16,6 +16,7 @@
 #include <stdexcept>
 #include <unordered_set>
 #include <utility>
+#include <variant>  // IWYU pragma: keep
 
 #include "Column.h"
 #include "ColumnFilter.h"

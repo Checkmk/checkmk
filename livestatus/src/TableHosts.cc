@@ -17,6 +17,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
+#include <variant>  // IWYU pragma: keep
 #include <vector>
 
 #include "AttributeBitmaskColumn.h"

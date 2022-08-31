@@ -11,6 +11,7 @@
 #include <filesystem>
 #include <memory>
 #include <sstream>
+#include <variant>  // IWYU pragma: keep
 
 #include "Average.h"
 #include "BlobColumn.h"

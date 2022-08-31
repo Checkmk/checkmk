@@ -11,6 +11,8 @@
 #include "StringUtils.h"
 
 #ifdef CMC
+#include <unordered_map>  // IWYU pragma: keep
+
 #include "ContactGroup.h"
 #include "Host.h"         // IWYU pragma: keep
 #include "ObjectGroup.h"  // IWYU pragma: keep

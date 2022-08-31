@@ -1608,7 +1608,9 @@ def path_to_notification_script(plugin_name: NotificationPluginNameStr) -> Optio
 #
 # Note: this function is *not* being called for bulk notification.
 def call_notification_script(
-    plugin_name: NotificationPluginNameStr, plugin_context: PluginContext
+    plugin_name: NotificationPluginNameStr,
+    plugin_context: PluginContext,
+    is_spoolfile: bool = False,
 ) -> int:
     _log_to_history(
         notification_message(
@@ -1667,14 +1669,17 @@ def call_notification_script(
     if exitcode := 1 if timeout_guard.signaled else p.returncode:
         plugin_log("Plugin exited with code %d" % exitcode)
 
-    _log_to_history(
-        notification_result_message(
-            NotificationPluginName(plugin_name),
-            NotificationContext(plugin_context),
-            NotificationResultCode(exitcode),
-            output_lines,
+    # Result is already logged to history for spoolfiles by
+    # mknotifyd.spool_handler
+    if not is_spoolfile:
+        _log_to_history(
+            notification_result_message(
+                NotificationPluginName(plugin_name),
+                NotificationContext(plugin_context),
+                NotificationResultCode(exitcode),
+                output_lines,
+            )
         )
-    )
 
     return exitcode
 
@@ -1745,7 +1750,11 @@ def handle_spoolfile(spoolfile: str) -> int:
                 events.find_host_service_in_context(plugin_context),
                 (plugin_name or "plain mail"),
             )
-            return call_notification_script(plugin_name, plugin_context)
+            return call_notification_script(
+                plugin_name=plugin_name,
+                plugin_context=plugin_context,
+                is_spoolfile=True,
+            )
 
         # We received a forwarded raw notification. We need to process
         # this with our local notification rules in order to call one,

@@ -10,6 +10,7 @@ import json
 import os
 import sys
 
+import pymongo  # type: ignore[import] # pylint: disable=import-error
 import pytest
 from utils import import_module
 
@@ -205,7 +206,12 @@ def test_router_instance_mongodb_3_4(mk_mongodb):
 @pytest.mark.parametrize(
     "config, expected_pymongo_config",
     [
-        ({}, {}),
+        (
+            {},
+            {
+                "read_preference": pymongo.ReadPreference.SECONDARY,
+            },
+        ),
         (
             {
                 "username": "t_user",
@@ -214,6 +220,7 @@ def test_router_instance_mongodb_3_4(mk_mongodb):
             {
                 "username": "t_user",
                 "password": "t_pwd",
+                "read_preference": pymongo.ReadPreference.SECONDARY,
             },
         ),
         (
@@ -226,6 +233,7 @@ def test_router_instance_mongodb_3_4(mk_mongodb):
                 "username": "t_user",
                 "password": "t_pwd",
                 "tls": True,
+                "read_preference": pymongo.ReadPreference.SECONDARY,
             },
         ),
         (
@@ -242,6 +250,7 @@ def test_router_instance_mongodb_3_4(mk_mongodb):
                 "tls": True,
                 "tlsInsecure": True,
                 "tlsCAFile": "/path/to/ca.pem",
+                "read_preference": pymongo.ReadPreference.SECONDARY,
             },
         ),
         (
@@ -262,6 +271,7 @@ def test_router_instance_mongodb_3_4(mk_mongodb):
                 "tlsCAFile": "/path/to/ca.pem",
                 "tlsInsecure": True,
                 "username": "t_user",
+                "read_preference": pymongo.ReadPreference.SECONDARY,
             },
         ),
     ],
@@ -287,6 +297,7 @@ def test_read_config(config, expected_pymongo_config, mk_mongodb):
                 "password": "/?!/",
                 "tls": True,
                 "username": "username",
+                "read_preference": pymongo.ReadPreference.SECONDARY,
             },
         ),
         (
@@ -294,6 +305,7 @@ def test_read_config(config, expected_pymongo_config, mk_mongodb):
             {
                 "host": "mongodb://username:%2F%3F%21%2F@example.com:27017",
                 "ssl": True,
+                "read_preference": pymongo.ReadPreference.SECONDARY,
             },
         ),
     ],

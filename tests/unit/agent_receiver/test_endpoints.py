@@ -5,6 +5,7 @@
 
 import io
 import json
+import logging
 import stat
 from pathlib import Path
 from typing import Mapping
@@ -398,13 +399,14 @@ def test_agent_data_success(
 
 
 @pytest.mark.usefixtures("symlink_push_host")
-def test_agent_data_move_error(  # type:ignore[no-untyped-def]
-    caplog,
+def test_agent_data_move_error(
+    caplog: pytest.LogCaptureFixture,
     client: TestClient,
     uuid: UUID,
     agent_data_headers: Mapping[str, str],
     compressed_agent_data: io.BytesIO,
 ) -> None:
+    caplog.set_level(logging.INFO)
     with mock.patch("agent_receiver.endpoints.Path.rename") as move_mock:
         move_mock.side_effect = FileNotFoundError()
         response = client.post(

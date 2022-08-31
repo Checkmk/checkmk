@@ -390,50 +390,6 @@ def mock_audit_log_entry(action: str, diff_text: str) -> AuditLogStore.Entry:
     )
 
 
-def test_update_global_config(
-    mocker: MockerFixture,
-    uc: update_config.UpdateConfig,
-) -> None:
-    mocker.patch.object(
-        update_config,
-        "REMOVED_GLOBALS_MAP",
-        [
-            ("global_a", "new_global_a", {True: 1, False: 0}),
-            ("global_b", "new_global_b", {}),
-            ("missing", "new_missing", {}),
-        ],
-    )
-    mocker.patch.object(
-        update_config,
-        "filter_unknown_settings",
-        lambda global_config: {k: v for k, v in global_config.items() if k != "unknown"},
-    )
-    mocker.patch.object(
-        update_config.UpdateConfig,
-        "_transform_global_config_value",
-        lambda _self, config_var, config_val: {
-            "new_global_a": config_val,
-            "new_global_b": 15,
-            "global_c": ["x", "y", "z"],
-            "unchanged": config_val,
-        }[config_var],
-    )
-    assert uc._update_global_config(
-        {
-            "global_a": True,
-            "global_b": 14,
-            "global_c": None,
-            "unchanged": "please leave me alone",
-            "unknown": "How did this get here?",
-        }
-    ) == {
-        "global_c": ["x", "y", "z"],
-        "unchanged": "please leave me alone",
-        "new_global_a": 1,
-        "new_global_b": 15,
-    }
-
-
 def test__transform_time_range(uc: update_config.UpdateConfig) -> None:
     time_range = ((8, 0), (16, 0))
     assert uc._transform_time_range(time_range) == ("08:00", "16:00")

@@ -16,7 +16,7 @@ import re
 from datetime import datetime
 from datetime import time as dt_time
 from pathlib import Path
-from typing import Any, Callable, Container, Dict, List, Mapping, Sequence, Set, Tuple
+from typing import Any, Callable, Container, List, Mapping, Sequence, Set, Tuple
 
 import cmk.utils
 import cmk.utils.debug
@@ -51,20 +51,11 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.logged_in import SuperUserContext
 from cmk.gui.plugins.userdb.utils import USER_SCHEME_SERIAL
-from cmk.gui.plugins.watolib.utils import config_variable_registry, filter_unknown_settings
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.userdb import load_users, save_users, Users
 from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.changes import ActivateChangesWriter, add_change
-from cmk.gui.watolib.global_settings import (
-    GlobalSettings,
-    load_configuration_settings,
-    load_site_global_settings,
-    save_global_settings,
-    save_site_global_settings,
-)
 from cmk.gui.watolib.rulesets import RulesetCollection
-from cmk.gui.watolib.sites import site_globals_editable, SiteManagementFactory
 from cmk.gui.watolib.timeperiods import TimeperiodSpec
 
 TimeRange = Tuple[Tuple[int, int], Tuple[int, int]]
@@ -134,9 +125,6 @@ REMOVED_CHECK_PLUGIN_MAP = {
 }
 
 
-# List[(old_config_name, new_config_name, replacement_dict{old: new})]
-REMOVED_GLOBALS_MAP: List[Tuple[str, str, Dict]] = []
-
 REMOVED_WATO_RULESETS_MAP: Mapping[RulesetName, RulesetName] = {
     "discovery_systemd_units_services_rules": "discovery_systemd_units_services",
     "checkgroup_parameters:systemd_services": "checkgroup_parameters:systemd_units_services",
@@ -204,7 +192,6 @@ class UpdateConfig:
 
     def _steps(self) -> List[Tuple[Callable[[], None], str]]:
         return [
-            (self._update_global_settings, "Update global settings"),
             (self._rewrite_wato_rulesets, "Rewriting rulesets"),
             (self._rewrite_autochecks, "Rewriting autochecks"),
             (self._cleanup_version_specific_caches, "Cleanup version specific caches"),
@@ -218,86 +205,6 @@ class UpdateConfig:
         cmk.base.config.load_all_agent_based_plugins(
             cmk.base.check_api.get_check_api_context,
         )
-
-    def _update_global_settings(self) -> None:
-        self._update_installation_wide_global_settings()
-        self._update_site_specific_global_settings()
-        self._update_remote_site_specific_global_settings()
-
-    def _update_installation_wide_global_settings(self) -> None:
-        """Update the globals.mk of the local site"""
-        # Load full config (with undefined settings)
-        global_config = load_configuration_settings(full_config=True)
-        self._update_global_config(global_config)
-        save_global_settings(global_config)
-
-    def _update_site_specific_global_settings(self) -> None:
-        """Update the sitespecific.mk of the local site (which is a remote site)"""
-        if not is_wato_slave_site():
-            return
-
-        global_config = load_site_global_settings()
-        self._update_global_config(global_config)
-
-        save_site_global_settings(global_config)
-
-    def _update_remote_site_specific_global_settings(self) -> None:
-        """Update the site specific global settings in the central site configuration"""
-        site_mgmt = SiteManagementFactory().factory()
-        configured_sites = site_mgmt.load_sites()
-        for site_id, site_spec in configured_sites.items():
-            if site_globals_editable(site_id, site_spec):
-                self._update_global_config(site_spec.setdefault("globals", {}))
-        site_mgmt.save_sites(configured_sites, activate=False)
-
-    def _update_global_config(
-        self,
-        global_config: GlobalSettings,
-    ) -> GlobalSettings:
-        return self._transform_global_config_values(
-            self._update_removed_global_config_vars(global_config)
-        )
-
-    def _update_removed_global_config_vars(
-        self,
-        global_config: GlobalSettings,
-    ) -> GlobalSettings:
-        # Replace old settings with new ones
-        for old_config_name, new_config_name, replacement in REMOVED_GLOBALS_MAP:
-            if old_config_name in global_config:
-                self._logger.log(
-                    VERBOSE, "Replacing %s with %s" % (old_config_name, new_config_name)
-                )
-                old_value = global_config[old_config_name]
-                if replacement:
-                    global_config.setdefault(new_config_name, replacement[old_value])
-                else:
-                    global_config.setdefault(new_config_name, old_value)
-
-                del global_config[old_config_name]
-
-        # Delete unused settings
-        global_config = filter_unknown_settings(global_config)
-        return global_config
-
-    def _transform_global_config_value(
-        self,
-        config_var: str,
-        config_val: Any,
-    ) -> Any:
-        return config_variable_registry[config_var]().valuespec().transform_value(config_val)
-
-    def _transform_global_config_values(
-        self,
-        global_config: GlobalSettings,
-    ) -> GlobalSettings:
-        global_config.update(
-            {
-                config_var: self._transform_global_config_value(config_var, config_val)
-                for config_var, config_val in global_config.items()
-            }
-        )
-        return global_config
 
     def _rewrite_autochecks(self) -> None:
         failed_hosts = []

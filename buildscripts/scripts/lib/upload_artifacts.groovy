@@ -9,10 +9,12 @@ def upload(Map args) {
     // CMK_VERS: Version that should be uploaded
     // UPLOAD_DEST: Where should the packages be uploaded to
     // PORT: Port fo upload dest
-    stage(args.NAME + ' upload package') {
-        def FILE_BASE = get_file_base(args.FILE_PATH)
-        def ARCHIVE_BASE = get_archive_base(FILE_BASE)
+    def FILE_BASE = get_file_base(args.FILE_PATH)
+    def ARCHIVE_BASE = get_archive_base(FILE_BASE)
 
+    create_hashes(ARCHIVE_BASE)
+
+    stage(args.NAME + ' upload package') {
         via_rsync(ARCHIVE_BASE, args.CMK_VERS, args.FILE_NAME, args.UPLOAD_DEST, args.PORT)
     }
 }
@@ -46,6 +48,7 @@ def download_version_dir(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, PATT
 
 def upload_version_dir(SOURCE_PATH, UPLOAD_DEST, PORT)
 {
+    create_hashes(SOURCE_PATH)
     stage('Upload to download server') {
         withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
             sh """

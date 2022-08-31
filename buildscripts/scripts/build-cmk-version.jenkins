@@ -251,7 +251,6 @@ timeout(time: 12, unit: 'HOURS') {
                 def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull ${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
                 BUILD_IMAGE.inside(DOCKER_ARGS) {
                     upload_artifacts.download_version_dir(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS, get_versions_dir(WORKSPACE, CMK_VERS))
-                    upload_artifacts.create_hashes(get_versions_dir(WORKSPACE, CMK_VERS))
                     upload_artifacts.upload_version_dir(get_versions_dir(WORKSPACE, CMK_VERS), WEB_DEPLOY_DEST, WEB_DEPLOY_PORT)
                     if(params.DEPLOY_TO_WEBSITE) {
                         upload_artifacts.deploy_to_website(WEB_DEPLOY_URL, WEB_DEPLOY_PORT, CMK_VERS)

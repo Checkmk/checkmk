@@ -178,9 +178,11 @@ def format_php(data: object, lvl: int = 1) -> str:
         s += "'%s'" % re.sub(r"('|\\)", r"\\\1", data)
     elif isinstance(data, bool):
         s += data and "true" or "false"
+    elif isinstance(data, (int, float)):
+        s += str(data)
     elif data is None:
         s += "null"
     else:
-        s += str(data)
+        s += format_php(str(data))
 
     return s

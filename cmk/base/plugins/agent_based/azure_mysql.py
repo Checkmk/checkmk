@@ -52,10 +52,10 @@ def check_replication() -> Callable[[str, Mapping[str, Any], Section], CheckResu
         [
             MetricData(
                 "maximum_seconds_behind_master",
-                "levels",
                 "replication_lag",
                 "Replication lag",
                 render.timespan,
+                upper_levels_param="levels",
             )
         ]
     )

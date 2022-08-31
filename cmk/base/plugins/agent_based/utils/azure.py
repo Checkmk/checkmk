@@ -35,10 +35,11 @@ class Resource(NamedTuple):
 
 class MetricData(NamedTuple):
     azure_metric_name: str
-    param_name: str
     metric_name: str
     metric_label: str
     render_func: Callable[[float], str]
+    upper_levels_param: str = ""
+    lower_levels_param: str = ""
 
 
 Section = Mapping[str, Resource]
@@ -187,7 +188,8 @@ def check_azure_metrics(
 
             yield from check_levels(
                 metric.value,
-                levels_upper=params.get(metric_data.param_name),
+                levels_upper=params.get(metric_data.upper_levels_param),
+                levels_lower=params.get(metric_data.lower_levels_param),
                 metric_name=metric_data.metric_name,
                 label=metric_data.metric_label,
                 render_func=metric_data.render_func,
@@ -201,10 +203,10 @@ def check_memory() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
         [
             MetricData(
                 "average_memory_percent",
-                "levels",
                 "mem_used_percent",
                 "Memory utilization",
                 render.percent,
+                upper_levels_param="levels",
             )
         ]
     )
@@ -215,10 +217,10 @@ def check_cpu() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
         [
             MetricData(
                 "average_cpu_percent",
-                "levels",
                 "util",
                 "CPU utilization",
                 render.percent,
+                upper_levels_param="levels",
             )
         ]
     )
@@ -230,16 +232,16 @@ def check_connections() -> Callable[[str, Mapping[str, Any], Section], CheckResu
             MetricData(
                 "average_active_connections",
                 "active_connections",
-                "active_connections",
                 "Active connections",
                 lambda x: str(int(x)),
+                upper_levels_param="active_connections",
             ),
             MetricData(
                 "total_connections_failed",
                 "failed_connections",
-                "failed_connections",
                 "Failed connections",
                 lambda x: str(int(x)),
+                upper_levels_param="failed_connections",
             ),
         ]
     )
@@ -250,17 +252,17 @@ def check_network() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
         [
             MetricData(
                 "total_network_bytes_ingress",
-                "ingress_levels",
                 "ingress",
                 "Network in",
                 render.bytes,
+                upper_levels_param="ingress_levels",
             ),
             MetricData(
                 "total_network_bytes_egress",
-                "egress_levels",
                 "egress",
                 "Network out",
                 render.bytes,
+                upper_levels_param="egress_levels",
             ),
         ]
     )
@@ -271,24 +273,24 @@ def check_storage() -> Callable[[str, Mapping[str, Any], Section], CheckResult]:
         [
             MetricData(
                 "average_io_consumption_percent",
-                "io_consumption",
                 "io_consumption_percent",
                 "IO",
                 render.percent,
+                upper_levels_param="io_consumption",
             ),
             MetricData(
                 "average_storage_percent",
-                "storage",
                 "storage_percent",
                 "Storage",
                 render.percent,
+                upper_levels_param="storage",
             ),
             MetricData(
                 "average_serverlog_storage_percent",
-                "serverlog_storage",
                 "serverlog_storage_percent",
                 "Server log storage",
                 render.percent,
+                upper_levels_param="serverlog_storage",
             ),
         ]
     )

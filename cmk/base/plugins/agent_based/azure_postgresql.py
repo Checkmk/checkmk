@@ -53,10 +53,10 @@ def check_replication() -> Callable[[str, Mapping[str, Any], Section], CheckResu
         [
             MetricData(
                 "maximum_pg_replica_log_delay_in_seconds",
-                "levels",
                 "replication_lag",
                 "Replication lag",
                 render.timespan,
+                upper_levels_param="levels",
             )
         ]
     )

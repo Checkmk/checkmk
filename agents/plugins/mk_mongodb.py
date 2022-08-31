@@ -860,6 +860,12 @@ class Config:
         # https://www.mongodb.com/docs/manual/core/read-preference/
         pymongo_config["read_preference"] = pymongo.ReadPreference.SECONDARY
 
+        # The agent plugin is expected to run on each host, returing
+        # information from only that host.
+        # If directConnection is set to False (default), the plugin could also
+        # connect to a totally different host from where it is located.
+        pymongo_config["directConnection"] = True
+
         return pymongo_config
 
 

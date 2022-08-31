@@ -194,6 +194,7 @@ def test_router_instance_mongodb_3_4() -> None:
             {},
             {
                 "read_preference": pymongo.ReadPreference.SECONDARY,
+                "directConnection": True,
             },
         ),
         (
@@ -205,6 +206,7 @@ def test_router_instance_mongodb_3_4() -> None:
                 "username": "t_user",
                 "password": "t_pwd",
                 "read_preference": pymongo.ReadPreference.SECONDARY,
+                "directConnection": True,
             },
         ),
         (
@@ -218,6 +220,7 @@ def test_router_instance_mongodb_3_4() -> None:
                 "password": "t_pwd",
                 "tls": True,
                 "read_preference": pymongo.ReadPreference.SECONDARY,
+                "directConnection": True,
             },
         ),
         (
@@ -235,6 +238,7 @@ def test_router_instance_mongodb_3_4() -> None:
                 "tlsInsecure": True,
                 "tlsCAFile": "/path/to/ca.pem",
                 "read_preference": pymongo.ReadPreference.SECONDARY,
+                "directConnection": True,
             },
         ),
         (
@@ -256,6 +260,7 @@ def test_router_instance_mongodb_3_4() -> None:
                 "tlsInsecure": True,
                 "username": "t_user",
                 "read_preference": pymongo.ReadPreference.SECONDARY,
+                "directConnection": True,
             },
         ),
     ],
@@ -282,6 +287,7 @@ def test_read_config(config, expected_pymongo_config) -> None:  # type:ignore[no
                 "tls": True,
                 "username": "username",
                 "read_preference": pymongo.ReadPreference.SECONDARY,
+                "directConnection": True,
             },
         ),
         (
@@ -290,6 +296,7 @@ def test_read_config(config, expected_pymongo_config) -> None:  # type:ignore[no
                 "host": "mongodb://username:%2F%3F%21%2F@example.com:27017",
                 "ssl": True,
                 "read_preference": pymongo.ReadPreference.SECONDARY,
+                "directConnection": True,
             },
         ),
     ],

@@ -47,9 +47,9 @@ _logger = logging.getLogger(__name__)
 
 
 class LoggedInUser:
-    """Manage the currently logged in user
+    """Manage the currently logged-in user
 
-    This objects intention is currently only to handle the currently logged in user after
+    This objects intention is currently only to handle the currently logged-in user after
     authentication.
     """
 

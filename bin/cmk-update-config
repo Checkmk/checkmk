@@ -5,7 +5,8 @@
 
 import sys
 
-from cmk.update_config.legacy import main
+from cmk.update_config.legacy import main as main_legacy
+from cmk.update_config.main import main
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(max(main(sys.argv[1:]), main_legacy(sys.argv[1:])))

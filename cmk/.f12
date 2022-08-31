@@ -84,7 +84,9 @@ sudo rm -f \
     "$ROOT/lib/python3/cmk/gui/plugins/metrics/__init__.py" \
     "$ROOT/lib/python3/cmk/gui/plugins/wato/__init__.py" \
     "$ROOT/lib/python3/cmk/gui/plugins/wato/check_parameters/__init__.py" \
-    "$ROOT/lib/python3/cmk/update_config/__init__.py"
+    "$ROOT/lib/python3/cmk/update_config/__init__.py" \
+    "$ROOT/lib/python3/cmk/update_config/plugins/__init__.py" \
+    "$ROOT/lib/python3/cmk/update_config/plugins/actions/__init__.py"
 
 # Restore site version after .f12
 sudo sed -i "s|^__version__.*$|__version__ = \"$CMK_VERSION\"|g" "$ROOT"/lib/python3/cmk/utils/version.py

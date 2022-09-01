@@ -2545,6 +2545,7 @@ class Checkbox(ValueSpec[bool]):
         true_label: str | None = None,
         false_label: str | None = None,
         onclick: str | None = None,
+        # ValueSpec
         title: str | None = None,
         help: ValueSpecHelp | None = None,
         default_value: ValueSpecDefault[bool] = DEF_VALUE,

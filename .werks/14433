@@ -1,0 +1,17 @@
+Title: KUBE: New workload resource: CronJobs
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1662034028
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+This werk introduces CronJobs to the Kubernetes agent.
+Similar to other Kubernetes objects, Checkmk creates a piggyback host for each CronJob.
+The CronJob host supports:
+
+ - Memory resources
+ - CPU resources
+ - Info

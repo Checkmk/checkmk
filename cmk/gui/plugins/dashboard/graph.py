@@ -23,6 +23,7 @@ from cmk.gui.plugins.dashboard.utils import (
     dashlet_registry,
     DashletConfig,
     DashletId,
+    DashletSize,
     macro_mapping_from_context,
     make_mk_missing_data_error,
 )
@@ -130,9 +131,6 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
 class ABCGraphDashletConfig(DashletConfig):
     timerange: TimerangeValue
     graph_render_options: GraphRenderOptions
-    # TODO: Will be separated from the config in the next step
-    _graph_identification: GraphIdentifier
-    _graph_title: str
 
 
 T = TypeVar("T", bound=ABCGraphDashletConfig)
@@ -141,11 +139,11 @@ T_Ident = TypeVar("T_Ident", bound=GraphIdentifier)
 
 class ABCGraphDashlet(Dashlet[T], Generic[T, T_Ident]):
     @classmethod
-    def initial_size(cls):
+    def initial_size(cls) -> DashletSize:
         return (60, 21)
 
     @classmethod
-    def initial_refresh_interval(cls):
+    def initial_refresh_interval(cls) -> int:
         return 60
 
     @classmethod
@@ -256,20 +254,20 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
         if "timerange" not in self._dashlet_spec:
             self._dashlet_spec["timerange"] = "25h"
 
+        self._graph_identification: T_Ident | None = None
+        self._graph_title: str | None = None
         self._init_exception = None
         try:
-            self._init_graph()
+            self._graph_identification, self._graph_title = self._init_graph()
         except Exception as exc:
             # Passes error otherwise exception wont allow to enter dashlet editor
             self._init_exception = exc
 
-    def _init_graph(self) -> None:
-        self._dashlet_spec["_graph_identification"] = self.graph_identification(
-            self.context if self.has_context() else {}
-        )
+    def _init_graph(self) -> tuple[T_Ident, str | None]:
+        graph_identification = self.graph_identification(self.context if self.has_context() else {})
 
         try:
-            graph_recipes = resolve_graph_recipe(self._dashlet_spec["_graph_identification"])
+            graph_recipes = resolve_graph_recipe(graph_identification)
         except MKMissingDataError:
             raise
         except livestatus.MKLivestatusNotFoundError:
@@ -279,14 +277,12 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
         except Exception:
             raise MKGeneralException(_("Failed to calculate a graph recipe."))
 
-        if graph_recipes:
-            self._dashlet_spec["_graph_title"] = graph_recipes[0]["title"]
+        graph_title = graph_recipes[0]["title"] if graph_recipes else None
+
+        return graph_identification, graph_title
 
     def default_display_title(self) -> str:
-        try:
-            return self._dashlet_spec["_graph_title"]
-        except KeyError:
-            return self.title()
+        return self._graph_title if self._graph_title is not None else self.title()
 
     def on_resize(self) -> str:
         return self._reload_js()
@@ -295,15 +291,12 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
         return self._reload_js()
 
     def _reload_js(self) -> str:
-        if any(
-            prop not in self._dashlet_spec
-            for prop in ["_graph_identification", "graph_render_options", "timerange"]
-        ):
+        if self._graph_identification is None or self._graph_title is None:
             return ""
 
         return "dashboard_render_graph(%d, %s, %s, %s)" % (
             self._dashlet_id,
-            json.dumps(self._dashlet_spec["_graph_identification"]),
+            json.dumps(self._graph_identification),
             json.dumps(self._dashlet_spec["graph_render_options"]),
             json.dumps(self._dashlet_spec["timerange"]),
         )
@@ -325,15 +318,11 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
         return macro_mapping
 
     def _get_additional_macros(self) -> Mapping[str, str]:
-        try:
-            site = self.dashlet_spec["_graph_identification"][1].get("site")
-        except KeyError:
-            return {}
-        return {"$SITE$": site} if site else {}
+        return {}
 
     @classmethod
     def get_additional_title_macros(cls) -> Iterable[str]:
-        yield "$SITE$"
+        yield from []
 
 
 class TemplateGraphDashletConfig(ABCGraphDashletConfig):
@@ -418,3 +407,14 @@ class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateG
             AvailableGraphs(),
         )
         yield from super()._parameter_elements()
+
+    def _get_additional_macros(self) -> Mapping[str, str]:
+        if self._graph_identification is None:
+            return {}
+
+        site = self._graph_identification[1].get("site")
+        return {"$SITE$": site} if site else {}
+
+    @classmethod
+    def get_additional_title_macros(cls) -> Iterable[str]:
+        yield "$SITE$"

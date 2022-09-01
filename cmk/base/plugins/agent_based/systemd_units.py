@@ -446,6 +446,10 @@ def discovery_systemd_units_services_summary(section: Section) -> DiscoveryResul
     yield Service(item="Summary")
 
 
+def discovery_systemd_units_sockets_summary(section: Section) -> DiscoveryResult:
+    yield Service()
+
+
 def _services_split(
     services: Iterable[UnitEntry], blacklist: Sequence[str]
 ) -> Mapping[str, list[UnitEntry]]:
@@ -526,23 +530,36 @@ def _check_non_ok_services(
 def check_systemd_units_services_summary(
     item: str, params: Mapping[str, Any], section: Section
 ) -> CheckResult:
-    services = section.services.values()
+    yield from check_systemd_units_summary(
+        params, list(section.services.values()), unit_type=UnitTypes.service
+    )
+
+
+def check_systemd_units_sockets_summary(params: Mapping[str, Any], section: Section) -> CheckResult:
+    yield from check_systemd_units_summary(
+        params, list(section.sockets.values()), unit_type=UnitTypes.socket
+    )
+
+
+def check_systemd_units_summary(
+    params: Mapping[str, Any], units: Sequence[UnitEntry], unit_type: UnitTypes
+) -> CheckResult:
     blacklist = params["ignored"]
-    yield Result(state=State.OK, summary=f"Total: {len(services):d}")
-    services_organised = _services_split(services, blacklist)
+    yield Result(state=State.OK, summary=f"Total: {len(units):d}")
+    services_organised = _services_split(units, blacklist)
     yield Result(state=State.OK, summary=f"Disabled: {len(services_organised['disabled']):d}")
     # some of the failed ones might be ignored, so this is OK:
     yield Result(
-        state=State.OK, summary=f"Failed: {sum(s.active_status == 'failed' for s in services):d}"
+        state=State.OK, summary=f"Failed: {sum(s.active_status == 'failed' for s in units):d}"
     )
     included_template = "{count:d} {unit_type} {status} ({service_text})"
     yield from _check_non_ok_services(
-        services_organised["included"], params, included_template, UnitTypes.service
+        services_organised["included"], params, included_template, unit_type
     )
 
     static_template = "{count:d} static {unit_type} {status} ({service_text})"
     yield from _check_non_ok_services(
-        services_organised["static"], params, static_template, UnitTypes.service
+        services_organised["static"], params, static_template, unit_type
     )
 
     for temporary_type in ("activating", "reloading", "deactivating"):
@@ -553,6 +570,19 @@ def check_systemd_units_services_summary(
         yield Result(state=State.OK, notice=f"Ignored: {len(services_organised['excluded']):d}")
 
 
+CHECK_DEFAULT_PARAMETERS_SUMMARY = {
+    "states": {
+        "active": 0,
+        "inactive": 0,
+        "failed": 2,
+    },
+    "states_default": 2,
+    "activating_levels": None,
+    "deactivating_levels": (30, 60),
+    "reloading_levels": (30, 60),
+    "ignored": [],
+}
+
 register.check_plugin(
     name="systemd_units_services_summary",
     sections=["systemd_units"],
@@ -560,16 +590,15 @@ register.check_plugin(
     check_function=check_systemd_units_services_summary,
     check_ruleset_name="systemd_services_summary",
     service_name="Systemd Service %s",
-    check_default_parameters={
-        "states": {
-            "active": 0,
-            "inactive": 0,
-            "failed": 2,
-        },
-        "states_default": 2,
-        "activating_levels": None,
-        "deactivating_levels": (30, 60),
-        "reloading_levels": (30, 60),
-        "ignored": [],
-    },
+    check_default_parameters=CHECK_DEFAULT_PARAMETERS_SUMMARY,
+)
+
+register.check_plugin(
+    name="systemd_units_sockets_summary",
+    sections=["systemd_units"],
+    discovery_function=discovery_systemd_units_sockets_summary,
+    check_function=check_systemd_units_sockets_summary,
+    check_ruleset_name="systemd_sockets_summary",
+    service_name="Systemd Socket Summary",
+    check_default_parameters=CHECK_DEFAULT_PARAMETERS_SUMMARY,
 )

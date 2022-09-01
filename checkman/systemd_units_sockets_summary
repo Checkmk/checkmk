@@ -1,0 +1,18 @@
+title: Systemd Service Summary
+agents: linux
+catalog: os/ps
+license: GPLv2
+distribution: check_mk
+description:
+ This check gives a summary of the linux sockets provided by
+ the command 'systemctl --all'.
+ The check reports the number of all sockets and for each socket
+ type, i.e. 'active', 'inactive', 'failed' and other ones.
+ The state mapping is configurable, by default  active and inactive
+ states are OK, failed and all others are CRIT.
+
+item:
+ The fixed statement {{Summary}}
+
+discovery:
+ One summary service is created.

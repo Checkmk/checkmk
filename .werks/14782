@@ -1,0 +1,11 @@
+Title: Monitor systemd sockets as summary services
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1661955310
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+With this werk, a new summary check (corresponding to Systemd Service Summary) is available.

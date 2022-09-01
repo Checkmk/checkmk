@@ -12,8 +12,10 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
 from cmk.gui.valuespec import Age, Dictionary, ListOf, MonitoringState, RegExp
 
+from .systemd_services import SERVICE, SOCKET, UnitNames
 
-def _parameter_valuespec_systemd_services():
+
+def _parameter_valuespec_systemd_units_summary(unit: UnitNames) -> Dictionary:
     return Dictionary(
         elements=[
             (
@@ -24,21 +26,21 @@ def _parameter_valuespec_systemd_services():
                         (
                             "active",
                             MonitoringState(
-                                title=_("Monitoring state if service is active"),
+                                title=_("Monitoring state if %s is active") % unit.singular,
                                 default_value=0,
                             ),
                         ),
                         (
                             "inactive",
                             MonitoringState(
-                                title=_("Monitoring state if service is inactive"),
+                                title=_("Monitoring state if %s is inactive") % unit.singular,
                                 default_value=0,
                             ),
                         ),
                         (
                             "failed",
                             MonitoringState(
-                                title=_("Monitoring state if service is failed"),
+                                title=_("Monitoring state if %s is failed") % unit.singular,
                                 default_value=2,
                             ),
                         ),
@@ -48,7 +50,7 @@ def _parameter_valuespec_systemd_services():
             (
                 "states_default",
                 MonitoringState(
-                    title=_("Monitoring state for any other service state"),
+                    title=_("Monitoring state for any other %s state") % unit.singular,
                     default_value=2,
                 ),
             ),
@@ -60,12 +62,13 @@ def _parameter_valuespec_systemd_services():
                         size=40,
                         mode=RegExp.infix,
                     ),
-                    title=_("Exclude services matching provided regex patterns"),
+                    title=_("Exclude %s matching provided regex patterns") % unit.plural,
                     help=_(
                         "<p>You can optionally define one or multiple regular expressions "
-                        "where a matching case will result in the exclusion of the concerning service(s). "
+                        "where a matching case will result in the exclusion of the concerning %s(s). "
                         "This allows to ignore services which are known to fail beforehand. </p>"
-                    ),
+                    )
+                    % unit.singular,
                     add_label=_("Add pattern"),
                 ),
             ),
@@ -73,10 +76,11 @@ def _parameter_valuespec_systemd_services():
                 "activating_levels",
                 SimpleLevels(
                     Age,
-                    title=_("Define a tolerating time period for activating services"),
+                    title=_("Define a tolerating time period for activating %s") % unit.plural,
                     help=_(
-                        "Choose time levels for which a service is allowed to be in an 'activating' state"
-                    ),
+                        "Choose time levels for which a %s is allowed to be in an 'activating' state"
+                    )
+                    % unit.plural,
                     default_levels=(30, 60),
                 ),
             ),
@@ -84,10 +88,11 @@ def _parameter_valuespec_systemd_services():
                 "deactivating_levels",
                 SimpleLevels(
                     Age,
-                    title=_("Define a tolerating time period for deactivating services"),
+                    title=_("Define a tolerating time period for deactivating %s") % unit.plural,
                     help=_(
-                        "Choose time levels (in seconds) for which a service is allowed to be in an 'deactivating' state"
-                    ),
+                        "Choose time levels (in seconds) for which a %s is allowed to be in an 'deactivating' state"
+                    )
+                    % unit.singular,
                     default_value=(30, 60),
                 ),
             ),
@@ -95,18 +100,20 @@ def _parameter_valuespec_systemd_services():
                 "reloading_levels",
                 SimpleLevels(
                     Age,
-                    title=_("Define a tolerating time period for reloading services"),
+                    title=_("Define a tolerating time period for reloading %s") % unit.plural,
                     help=_(
-                        "Choose time levels (in seconds) for which a service is allowed to be in a 'reloading' state"
-                    ),
+                        "Choose time levels (in seconds) for which a %s is allowed to be in a 'reloading' state"
+                    )
+                    % unit.singular,
                     default_value=(30, 60),
                 ),
             ),
         ],
         help=_(
-            "This ruleset only applies to the Summary Systemd service and not the individual "
-            "Systemd services."
-        ),
+            "This ruleset only applies to the Summary Systemd %s and not the individual "
+            "Systemd %s."
+        )
+        % (unit.singular, unit.plural),
     )
 
 
@@ -115,7 +122,17 @@ rulespec_registry.register(
         check_group_name="systemd_services_summary",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
-        parameter_valuespec=_parameter_valuespec_systemd_services,
+        parameter_valuespec=lambda: _parameter_valuespec_systemd_units_summary(SERVICE),
         title=lambda: _("Systemd Services Summary"),
+    )
+)
+
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="systemd_sockets_summary",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=lambda: _parameter_valuespec_systemd_units_summary(SOCKET),
+        title=lambda: _("Systemd Sockets Summary"),
     )
 )

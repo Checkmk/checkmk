@@ -30,7 +30,11 @@ from typing import Iterator
 
 
 def is_dockerized() -> bool:
-    return os.path.exists("/.dockerenv") or os.path.exists("/run/.containerenv")
+    return (
+        os.path.exists("/.dockerenv")
+        or os.path.exists("/run/.containerenv")
+        or os.environ.get("CMK_CONTAINERIZED") == "yes"
+    )
 
 
 @contextlib.contextmanager

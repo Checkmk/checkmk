@@ -24,6 +24,10 @@ ENV CMK_PASSWORD=""
 ARG MAIL_RELAY_HOST
 ENV MAIL_RELAY_HOST=""
 
+# Add helper variable to better detect when running inside container.
+# Used e.g. for omd update
+ENV CMK_CONTAINERIZED="yes"
+
 # Make the list of required packages available to the following command
 COPY needed-packages /needed-packages
 

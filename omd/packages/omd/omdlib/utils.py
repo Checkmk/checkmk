@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
 #
 #       U  ___ u  __  __   ____
 #        \/"_ \/U|' \/ '|u|  _"\
@@ -30,7 +29,11 @@ from typing import Iterator
 
 
 def is_dockerized() -> bool:
-    return os.path.exists("/.dockerenv") or os.path.exists("/run/.containerenv")
+    return (
+        os.path.exists("/.dockerenv")
+        or os.path.exists("/run/.containerenv")
+        or os.environ.get("CMK_CONTAINERIZED") == "TRUE"
+    )
 
 
 @contextlib.contextmanager

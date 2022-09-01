@@ -210,3 +210,32 @@ def test_create_socket_no_cert(tmpdir):
     with pytest.raises(livestatus.MKLivestatusConfigError,
                        match="(unknown error|no certificate or crl found)"):
         live._create_socket(socket.AF_INET)
+
+
+# Regression test for Werk 14384
+@pytest.mark.parametrize(
+    "user_id,allowed",
+    [
+        ("", True),  # used to delete from auth_users
+        ("1234", True),
+        ("cmkadmin", True),
+        (u"ädmin", True),
+        ("12 34", False),
+        (u"🙈🙉🙊", False),
+        ("12\n34", False),
+        ("12\\n34", False),
+        ("a'dmin", False),
+    ],
+)
+def test_set_auth_user(sock_path, user_id, allowed):
+    sock = socket.socket(socket.AF_UNIX)
+    sock.bind("%s" % sock_path)
+    sock.listen(1)
+    live = livestatus.LocalConnection()
+
+    if not allowed:
+        with pytest.raises(ValueError, match="Invalid user ID"):
+            live.set_auth_user("mydomain", user_id)
+        return
+
+    live.set_auth_user("mydomain", user_id)

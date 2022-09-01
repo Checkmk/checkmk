@@ -113,7 +113,10 @@ _STATUS_SYMBOLS = {"●", "○", "↻", "×", "x", "*"}
 
 # See: https://www.freedesktop.org/software/systemd/man/systemd.unit.html
 class UnitTypes(Enum):
+    # When adding new systemd units, keep in mind to extend the gathering of the data via
+    # the linux agent. Currently, we're only querying service and socket.
     service = "service"
+    socket = "socket"
 
     @property
     def suffix(self):
@@ -195,6 +198,7 @@ Units = Mapping[str, UnitEntry]
 
 class Section(NamedTuple):
     services: Units
+    sockets: Units
 
 
 def _parse_list_unit_files(source: Iterator[Sequence[str]]) -> Mapping[str, str]:
@@ -238,6 +242,7 @@ def _parse_all(
     status_details: Mapping[str, UnitStatus],
 ) -> Section:
     services: dict[str, UnitEntry] = {}
+    sockets: dict[str, UnitEntry] = {}
     for row in source:
         if row[0] in _STATUS_SYMBOLS:
             row = row[1:]
@@ -245,7 +250,9 @@ def _parse_all(
             unit_type, unit = result
             if unit_type is UnitTypes.service:
                 services[unit.name] = unit
-    return Section(services=services)
+            if unit_type is UnitTypes.socket:
+                sockets[unit.name] = unit
+    return Section(services=services, sockets=sockets)
 
 
 def _is_service_entry(entry: Sequence[Sequence[str]]) -> bool:
@@ -305,12 +312,12 @@ def parse(string_table: StringTable) -> Optional[Section]:
 
 register.agent_section(name="systemd_units", parse_function=parse)
 
-#   .--services------------------------------------------------------------.
-#   |                                     _                                |
-#   |                 ___  ___ _ ____   _(_) ___ ___  ___                  |
-#   |                / __|/ _ \ '__\ \ / / |/ __/ _ \/ __|                 |
-#   |                \__ \  __/ |   \ V /| | (_|  __/\__ \                 |
-#   |                |___/\___|_|    \_/ |_|\___\___||___/                 |
+#   .--units---------------------------------------------------------------.
+#   |                                    _ _                               |
+#   |                        _   _ _ __ (_) |_ ___                         |
+#   |                       | | | | '_ \| | __/ __|                        |
+#   |                       | |_| | | | | | |_\__ \                        |
+#   |                        \__,_|_| |_|_|\__|___/                        |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
@@ -328,8 +335,14 @@ def discovery_systemd_units_services(
     yield from discovery_systemd_units(params, filtered_services)
 
 
+def discovery_systemd_units_sockets(
+    params: Sequence[Mapping[str, Any]], section: Section
+) -> DiscoveryResult:
+    yield from discovery_systemd_units(params, list(section.sockets.values()))
+
+
 def discovery_systemd_units(
-    params: Sequence[Mapping[str, Any]], services: Sequence[UnitEntry]
+    params: Sequence[Mapping[str, Any]], units: Sequence[UnitEntry]
 ) -> DiscoveryResult:
     def regex_match(what: Sequence[str], name: str) -> bool:
         if not what:
@@ -349,51 +362,75 @@ def discovery_systemd_units(
         return any(s in (None, state) for s in rule_states)
 
     # defaults are always last and empty to apeace the new api
-    for service in services:
+    for unit in units:
         for settings in params:
             descriptions = settings.get("descriptions", [])
             names = settings.get("names", [])
             states = settings.get("states", [])
             if (
-                regex_match(descriptions, service.description)
-                and regex_match(names, service.name)
-                and state_match(states, service.active_status)
+                regex_match(descriptions, unit.description)
+                and regex_match(names, unit.name)
+                and state_match(states, unit.active_status)
             ):
-                yield Service(item=service.name)
+                yield Service(item=unit.name)
                 continue
 
 
-def check_systemd_units(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+def check_systemd_services(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    yield from check_systemd_units(item, params, section.services)
+
+
+def check_systemd_sockets(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    yield from check_systemd_units(item, params, section.sockets)
+
+
+def check_systemd_units(item: str, params: Mapping[str, Any], units: Units) -> CheckResult:
     # A service found in the discovery phase can vanish in subsequent runs. I.e. the systemd service was deleted during an update
-    if item not in section.services:
+    if item not in units:
         yield Result(state=State(params["else"]), summary="Service not found")
         return
-    service = section.services[item]
+    unit = units[item]
     # TODO: this defaults unkown states to CRIT with the default params
-    state = params["states"].get(service.active_status, params["states_default"])
-    yield Result(state=State(state), summary=f"Status: {service.active_status}")
-    yield Result(state=State.OK, summary=service.description)
+    state = params["states"].get(unit.active_status, params["states_default"])
+    yield Result(state=State(state), summary=f"Status: {unit.active_status}")
+    yield Result(state=State.OK, summary=unit.description)
 
+
+CHECK_DEFAULT_PARAMETERS = {
+    "states": {
+        "active": 0,
+        "inactive": 0,
+        "failed": 2,
+    },
+    "states_default": 2,
+    "else": 2,  # missleading name, used if service vanishes
+}
+
+DISCOVERY_DEFAULT_PARAMETERS = {"names": ["(never discover)^"]}
 
 register.check_plugin(
     name="systemd_units_services",
     sections=["systemd_units"],
     service_name="Systemd Service %s",
-    check_ruleset_name="systemd_services",
+    check_ruleset_name="systemd_units_services",
     discovery_function=discovery_systemd_units_services,
-    discovery_default_parameters={"names": ["(never discover)^"]},
-    discovery_ruleset_name="discovery_systemd_units_services_rules",
+    discovery_default_parameters=DISCOVERY_DEFAULT_PARAMETERS,
+    discovery_ruleset_name="discovery_systemd_units_services",
     discovery_ruleset_type=register.RuleSetType.ALL,
-    check_function=check_systemd_units,
-    check_default_parameters={
-        "states": {
-            "active": 0,
-            "inactive": 0,
-            "failed": 2,
-        },
-        "states_default": 2,
-        "else": 2,  # missleading name, used if service vanishes
-    },
+    check_function=check_systemd_services,
+    check_default_parameters=CHECK_DEFAULT_PARAMETERS,
+)
+register.check_plugin(
+    name="systemd_units_sockets",
+    sections=["systemd_units"],
+    service_name="Systemd Socket %s",
+    check_ruleset_name="systemd_units_sockets",
+    discovery_function=discovery_systemd_units_sockets,
+    discovery_default_parameters=DISCOVERY_DEFAULT_PARAMETERS,
+    discovery_ruleset_name="discovery_systemd_units_sockets",
+    discovery_ruleset_type=register.RuleSetType.ALL,
+    check_function=check_systemd_sockets,
+    check_default_parameters=CHECK_DEFAULT_PARAMETERS,
 )
 
 

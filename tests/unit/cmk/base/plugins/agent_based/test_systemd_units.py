@@ -10,10 +10,12 @@ import pytest
 from cmk.base.api.agent_based.checking_classes import Result, Service, State
 from cmk.base.plugins.agent_based.systemd_units import (
     _services_split,
-    check_systemd_units,
+    check_systemd_services,
+    check_systemd_sockets,
     check_systemd_units_services_summary,
     discovery_systemd_units_services,
     discovery_systemd_units_services_summary,
+    discovery_systemd_units_sockets,
     parse,
     Section,
     UnitEntry,
@@ -168,7 +170,7 @@ def test_services_split(services, blacklist, expected) -> None:  # type:ignore[n
                 "UNIT LOAD ACTIVE SUB DESCRIPTION",
                 "0 unit files listed.",
             ],
-            Section(services={}),
+            Section(services={}, sockets={}),
             id="No systemd units returns empty parsed section",
         ),
         pytest.param(
@@ -182,7 +184,7 @@ def test_services_split(services, blacklist, expected) -> None:  # type:ignore[n
                 "virtualbox.service loaded active exited LSB: VirtualBox Linux kernel module",
                 "1 unit files listed.",
             ],
-            Section(services={}),
+            Section(services={}, sockets={}),
             id='Missing "[all]" header in agent section leads to empty parsed section',
         ),
         pytest.param(
@@ -193,6 +195,7 @@ def test_services_split(services, blacklist, expected) -> None:  # type:ignore[n
                 "1 unit files listed.",
             ],
             Section(
+                sockets={},
                 services={
                     "virtualbox": UnitEntry(
                         name="virtualbox",
@@ -202,7 +205,7 @@ def test_services_split(services, blacklist, expected) -> None:  # type:ignore[n
                         description="LSB: VirtualBox Linux kernel module",
                         enabled_status="unknown",
                     )
-                }
+                },
             ),
             id="Simple agent section parsed correctly",
         ),
@@ -214,6 +217,7 @@ def test_services_split(services, blacklist, expected) -> None:  # type:ignore[n
                 "1 unit files listed.",
             ],
             Section(
+                sockets={},
                 services={
                     "virtualbox": UnitEntry(
                         name="virtualbox",
@@ -223,7 +227,7 @@ def test_services_split(services, blacklist, expected) -> None:  # type:ignore[n
                         description="LSB: VirtualBox Linux kernel module",
                         enabled_status="unknown",
                     )
-                }
+                },
             ),
             id='Leading "*" in systemd status line is ignored',
         ),
@@ -234,7 +238,7 @@ def test_services_split(services, blacklist, expected) -> None:  # type:ignore[n
                 "active plugged ",
                 "1 unit files listed.",
             ],
-            Section(services={}),
+            Section(services={}, sockets={}),
             id="Invalid systemd status lines are skipped",
         ),
         pytest.param(
@@ -248,6 +252,7 @@ def test_services_split(services, blacklist, expected) -> None:  # type:ignore[n
                 "1 unit files listed.",
             ],
             Section(
+                sockets={},
                 services={
                     "virtualbox": UnitEntry(
                         name="virtualbox",
@@ -257,7 +262,7 @@ def test_services_split(services, blacklist, expected) -> None:  # type:ignore[n
                         description="LSB: VirtualBox Linux kernel module",
                         enabled_status="enabled",
                     )
-                }
+                },
             ),
             id="Systemd unit status found in list-unit-files mapping",
         ),
@@ -272,6 +277,7 @@ def test_services_split(services, blacklist, expected) -> None:  # type:ignore[n
                 "1 unit files listed.",
             ],
             Section(
+                sockets={},
                 services={
                     "virtualbox": UnitEntry(
                         name="virtualbox",
@@ -281,7 +287,7 @@ def test_services_split(services, blacklist, expected) -> None:  # type:ignore[n
                         description="LSB: VirtualBox Linux kernel module",
                         enabled_status="unknown",
                     )
-                }
+                },
             ),
             id='Systemd unit status not available in list-unit-files mapping, use "unknown" instead',
         ),
@@ -292,6 +298,7 @@ def test_services_split(services, blacklist, expected) -> None:  # type:ignore[n
                 "● kbd.service not-found inactive dead kbd.service",
             ],
             Section(
+                sockets={},
                 services={
                     "kbd": UnitEntry(
                         name="kbd",
@@ -301,7 +308,7 @@ def test_services_split(services, blacklist, expected) -> None:  # type:ignore[n
                         description="kbd.service",
                         enabled_status="unknown",
                     ),
-                }
+                },
             ),
             id="C.UTF-8 locale (● instead of * for broken units)",
         ),
@@ -325,6 +332,7 @@ def test_services_split(services, blacklist, expected) -> None:  # type:ignore[n
                 "cmktest.service loaded active running NOT FROM SYSTEMD",
             ],
             Section(
+                sockets={},
                 services={
                     "cmktest": UnitEntry(
                         name="cmktest",
@@ -335,7 +343,7 @@ def test_services_split(services, blacklist, expected) -> None:  # type:ignore[n
                         enabled_status="unknown",
                         time_since_change=timedelta(minutes=33),
                     ),
-                }
+                },
             ),
             id="parse status change",
         ),
@@ -354,6 +362,7 @@ def test_services_split(services, blacklist, expected) -> None:  # type:ignore[n
                 "sssd.service loaded active running SSSD NOT FROM SYSTEMD ONLY FOR TEST",
             ],
             Section(
+                sockets={},
                 services={
                     "sssd": UnitEntry(
                         name="sssd",
@@ -364,7 +373,7 @@ def test_services_split(services, blacklist, expected) -> None:  # type:ignore[n
                         enabled_status="unknown",
                         time_since_change=None,
                     ),
-                }
+                },
             ),
             id="parse status change works with status inactive (no time information included)",
         ),
@@ -387,7 +396,7 @@ def test_services_split(services, blacklist, expected) -> None:  # type:ignore[n
                 "[all]",
                 "UNIT LOAD ACTIVE SUB JOB DESCRIPTION",
             ],
-            Section(services={}),
+            Section(services={}, sockets={}),
             id="parse status works if '[' appears in output",
         ),
         pytest.param(
@@ -409,7 +418,7 @@ def test_services_split(services, blacklist, expected) -> None:  # type:ignore[n
                 "[all]",
                 "UNIT LOAD ACTIVE SUB JOB DESCRIPTION",
             ],
-            Section(services={}),
+            Section(services={}, sockets={}),
             id="parse status with misleading status symbol (x)",
         ),
         pytest.param(
@@ -422,8 +431,34 @@ def test_services_split(services, blacklist, expected) -> None:  # type:ignore[n
                 "[all]",
                 "UNIT LOAD ACTIVE SUB JOB DESCRIPTION",
             ],
-            Section(services={}),
+            Section(services={}, sockets={}),
             id="parse status works with incomplete data (SUP-10799)",
+        ),
+        pytest.param(
+            [
+                "[list-unit-files]",
+                "[status]",
+                "cockpit.socket",
+                "disabled",
+                "[all]",
+                "UNIT LOAD ACTIVE SUB JOB DESCRIPTION",
+                "cockpit.socket loaded active listening Cockpit Web Service Socket",
+            ],
+            Section(
+                sockets={
+                    "cockpit": UnitEntry(
+                        name="cockpit",
+                        loaded_status="loaded",
+                        active_status="active",
+                        current_state="listening",
+                        description="Cockpit Web Service Socket",
+                        enabled_status="unknown",
+                        time_since_change=None,
+                    )
+                },
+                services={},
+            ),
+            id="parse a socket instead of a service",
         ),
     ],
 )
@@ -478,6 +513,7 @@ def test_parse_time_since_state_change(time, expected) -> None:  # type:ignore[n
         "sssd.service loaded active running SSSD NOT FROM SYSTEMD ONLY FOR TEST",
     ]
     section = Section(
+        sockets={},
         services={
             "sssd": UnitEntry(
                 name="sssd",
@@ -488,7 +524,7 @@ def test_parse_time_since_state_change(time, expected) -> None:  # type:ignore[n
                 enabled_status="unknown",
                 time_since_change=expected,
             ),
-        }
+        },
     )
     string_table = [el.split() for el in pre_string_table]
     assert parse(string_table) == section
@@ -510,6 +546,7 @@ def test_all_possible_service_states_in_status_section(icon) -> None:  # type:ig
         "sssd.service loaded active running SSSD NOT FROM SYSTEMD ONLY FOR TEST",
     ]
     section = Section(
+        sockets={},
         services={
             "sssd": UnitEntry(
                 name="sssd",
@@ -520,7 +557,7 @@ def test_all_possible_service_states_in_status_section(icon) -> None:  # type:ig
                 enabled_status="unknown",
                 time_since_change=timedelta(seconds=3),
             ),
-        }
+        },
     )
     string_table = [el.split() for el in pre_string_table]
     assert parse(string_table) == section
@@ -542,6 +579,7 @@ def test_all_possible_service_states_in_all_section(icon) -> None:  # type:ignor
         f"{icon} sssd.service loaded active running SSSD NOT FROM SYSTEMD ONLY FOR TEST",
     ]
     section = Section(
+        sockets={},
         services={
             "sssd": UnitEntry(
                 name="sssd",
@@ -552,13 +590,14 @@ def test_all_possible_service_states_in_all_section(icon) -> None:  # type:ignor
                 enabled_status="unknown",
                 time_since_change=timedelta(seconds=3),
             ),
-        }
+        },
     )
     string_table = [el.split() for el in pre_string_table]
     assert parse(string_table) == section
 
 
 SECTION = Section(
+    sockets={},
     services={
         "virtualbox": UnitEntry(
             name="virtualbox",
@@ -601,7 +640,7 @@ SECTION = Section(
             description="LSB: OMD sites",
             enabled_status="generated",
         ),
-    }
+    },
 )
 
 
@@ -621,7 +660,7 @@ SECTION = Section(
             [],
         ),
         (
-            Section(services={}),
+            Section(services={}, sockets={}),
             [
                 {"names": ["~virtualbox.*"]},
             ],
@@ -652,7 +691,48 @@ def test_discover_systemd_units_services(  # type:ignore[no-untyped-def]
     section, discovery_params, discovered_services
 ) -> None:
     assert (
-        list(discovery_systemd_units_services(params=discovery_params, section=section))
+        list(
+            discovery_systemd_units_services(
+                params=discovery_params,
+                section=section,
+            )
+        )
+        == discovered_services
+    )
+
+
+@pytest.mark.parametrize(
+    "section, discovery_params, discovered_services",
+    [
+        (
+            Section(
+                sockets={
+                    "cockpit": UnitEntry(
+                        name="cockpit",
+                        loaded_status="loaded",
+                        active_status="active",
+                        current_state="listening",
+                        description="Cockpit Web Service Socket",
+                        enabled_status="unknown",
+                        time_since_change=None,
+                    )
+                },
+                services={},
+            ),
+            [
+                {"names": ["~cockpit"]},
+            ],
+            [
+                Service(item="cockpit"),
+            ],
+        ),
+    ],
+)
+def test_discover_systemd_units_sockets(  # type:ignore[no-untyped-def]
+    section, discovery_params, discovered_services
+) -> None:
+    assert (
+        list(discovery_systemd_units_sockets(params=discovery_params, section=section))
         == discovered_services
     )
 
@@ -721,7 +801,7 @@ def test_discover_systemd_units_services_summary(  # type:ignore[no-untyped-def]
                 "states": {"active": 0, "failed": 2, "inactive": 0},
                 "states_default": 2,
             },
-            Section(services={}),
+            Section(services={}, sockets={}),
             [Result(state=State.CRIT, summary="Service not found")],
         ),
     ],
@@ -729,7 +809,44 @@ def test_discover_systemd_units_services_summary(  # type:ignore[no-untyped-def]
 def test_check_systemd_units_services(  # type:ignore[no-untyped-def]
     item, params, section, check_results
 ) -> None:
-    assert list(check_systemd_units(item, params, section)) == check_results
+    assert list(check_systemd_services(item, params, section)) == check_results
+
+
+@pytest.mark.parametrize(
+    "item, params, section, check_results",
+    [
+        (
+            "cockpit",
+            {
+                "else": 2,
+                "states": {"active": 2, "failed": 1, "inactive": 0},
+                "states_default": 2,
+            },
+            Section(
+                sockets={
+                    "cockpit": UnitEntry(
+                        name="cockpit",
+                        loaded_status="loaded",
+                        active_status="active",
+                        current_state="listening",
+                        description="Cockpit Web Service Socket",
+                        enabled_status="unknown",
+                        time_since_change=None,
+                    )
+                },
+                services={},
+            ),
+            [
+                Result(state=State.CRIT, summary="Status: active"),
+                Result(state=State.OK, summary="Cockpit Web Service Socket"),
+            ],
+        ),
+    ],
+)
+def test_check_systemd_units_sockets(  # type:ignore[no-untyped-def]
+    item, params, section, check_results
+) -> None:
+    assert list(check_systemd_sockets(item, params, section)) == check_results
 
 
 @pytest.mark.parametrize(
@@ -763,6 +880,7 @@ def test_check_systemd_units_services(  # type:ignore[no-untyped-def]
                 "reloading_levels": (30, 60),
             },
             Section(
+                sockets={},
                 services={
                     "virtualbox": UnitEntry(
                         name="virtualbox",
@@ -772,7 +890,7 @@ def test_check_systemd_units_services(  # type:ignore[no-untyped-def]
                         description="LSB: VirtualBox Linux kernel module",
                         enabled_status="unknown",
                     ),
-                }
+                },
             ),
             [
                 Result(state=State.OK, summary="Total: 1"),
@@ -790,6 +908,7 @@ def test_check_systemd_units_services(  # type:ignore[no-untyped-def]
                 "reloading_levels": (30, 60),
             },
             Section(
+                sockets={},
                 services={
                     "virtualbox": UnitEntry(
                         name="virtualbox",
@@ -809,7 +928,7 @@ def test_check_systemd_units_services(  # type:ignore[no-untyped-def]
                         enabled_status="unknown",
                         time_since_change=timedelta(seconds=4),
                     ),
-                }
+                },
             ),
             [
                 Result(state=State.OK, summary="Total: 2"),
@@ -828,6 +947,7 @@ def test_check_systemd_units_services(  # type:ignore[no-untyped-def]
                 "reloading_levels": (30, 60),
             },
             Section(
+                sockets={},
                 services={
                     "virtualbox": UnitEntry(
                         name="virtualbox",
@@ -838,7 +958,7 @@ def test_check_systemd_units_services(  # type:ignore[no-untyped-def]
                         enabled_status="reloading",
                         time_since_change=timedelta(seconds=2),
                     ),
-                }
+                },
             ),
             [
                 Result(state=State.OK, summary="Total: 1"),
@@ -856,6 +976,7 @@ def test_check_systemd_units_services(  # type:ignore[no-untyped-def]
                 "reloading_levels": (30, 60),
             },
             Section(
+                sockets={},
                 services={
                     "virtualbox": UnitEntry(
                         name="virtualbox",
@@ -866,7 +987,7 @@ def test_check_systemd_units_services(  # type:ignore[no-untyped-def]
                         enabled_status="reloading",
                         time_since_change=timedelta(seconds=2),
                     ),
-                }
+                },
             ),
             [
                 Result(state=State.OK, summary="Total: 1"),
@@ -884,6 +1005,7 @@ def test_check_systemd_units_services(  # type:ignore[no-untyped-def]
                 "reloading_levels": (30, 60),
             },
             Section(
+                sockets={},
                 services={
                     "virtualbox": UnitEntry(
                         name="virtualbox",
@@ -893,7 +1015,7 @@ def test_check_systemd_units_services(  # type:ignore[no-untyped-def]
                         description="LSB: VirtualBox Linux kernel module",
                         enabled_status="indirect",
                     ),
-                }
+                },
             ),
             [
                 Result(state=State.OK, summary="Total: 1"),
@@ -913,6 +1035,7 @@ def test_check_systemd_units_services(  # type:ignore[no-untyped-def]
                 "reloading_levels": (30, 60),
             },
             Section(
+                sockets={},
                 services={
                     "virtualbox": UnitEntry(
                         name="virtualbox",
@@ -922,7 +1045,7 @@ def test_check_systemd_units_services(  # type:ignore[no-untyped-def]
                         description="LSB: VirtualBox Linux kernel module",
                         enabled_status="unknown",
                     ),
-                }
+                },
             ),
             [
                 Result(state=State.OK, summary="Total: 1"),

@@ -140,7 +140,11 @@ REMOVED_CHECK_PLUGIN_MAP = {
 # List[(old_config_name, new_config_name, replacement_dict{old: new})]
 REMOVED_GLOBALS_MAP: List[Tuple[str, str, Dict]] = []
 
-REMOVED_WATO_RULESETS_MAP: Mapping[RulesetName, RulesetName] = {}
+REMOVED_WATO_RULESETS_MAP: Mapping[RulesetName, RulesetName] = {
+    "discovery_systemd_units_services_rules": "discovery_systemd_units_services",
+    "checkgroup_parameters:systemd_services": "checkgroup_parameters:systemd_units_services",
+    "static_checks:systemd_services": "static_checks:systemd_units_services",
+}
 
 
 @contextmanager

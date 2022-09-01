@@ -1,0 +1,23 @@
+Title: Fix possible broken web access after updating to 2.1.0p10
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1662060143
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p12
+
+Checkmk 2.1.0p10 changed the handling of the apache configuration with werk
+#14290. This change introduced a new issue which could break the system apache
+configuration in case a sites apache configuration was not yet updated to the
+new system apache configuration.
+
+The problem appears because as of 2.1.0p10 the file
+<tt>etc/apache/apache-own.conf</tt> was removed from all sites. However, this
+file must only be removed for sites which already updated the apache config.
+
+In case you experience this issue, you can either update your apache
+configuration with <tt>omd update-apache-config [SITE_ID]</tt> or restore your
+old <tt>etc/apache/apache-own.conf</tt> in your site and restart the system
+apache again.

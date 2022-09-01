@@ -5,7 +5,31 @@
 
 from typing import List
 
+from tests.testlib import on_time
+
+import livestatus
+
 import cmk.utils.notify as notify
+
+
+class FakeLocalConnection:
+    sent_command = None
+    timeout = None
+
+    def command(self, command, site=None):
+        self.__class__.sent_command = command
+
+    def set_timeout(self, timeout):
+        self.__class__.timeout = timeout
+
+
+def test_log_to_history(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+    monkeypatch.setattr(livestatus, "LocalConnection", FakeLocalConnection)
+    with on_time("2018-04-15 16:50", "CET"):
+        notify.log_to_history("ä")
+
+    assert FakeLocalConnection.sent_command == "[1523811000] LOG;ä"
+    assert FakeLocalConnection.timeout == 2
 
 
 def test_notification_result_message() -> None:

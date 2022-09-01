@@ -3,18 +3,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
 import os
 import subprocess
+import time
 import uuid
 from logging import Logger
 from pathlib import Path
 from typing import Final, Literal, NewType, Optional, TypedDict, Union
+
+import livestatus
 
 import cmk.utils.defines
 from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 from cmk.utils.type_defs import EventContext, NotificationContext
+
+logger = logging.getLogger("cmk.utils.notify")
 
 # NOTE: Keep in sync with values in MonitoringLog.cc.
 MAX_COMMENT_LENGTH = 2000
@@ -144,7 +150,7 @@ def notification_result_message(
     )
 
 
-def ensure_utf8(logger: Optional[Logger] = None) -> None:
+def ensure_utf8(logger_: Optional[Logger] = None) -> None:
     # Make sure that mail(x) is using UTF-8. Otherwise we cannot send notifications
     # with non-ASCII characters. Unfortunately we do not know whether C.UTF-8 is
     # available. If e.g. mail detects a non-Ascii character in the mail body and
@@ -166,10 +172,10 @@ def ensure_utf8(logger: Optional[Logger] = None) -> None:
         "No UTF-8 encoding found in your locale -a! Please install appropriate locales."
     )
     if exit_code != 0:
-        if not logger:
+        if not logger_:
             raise MKGeneralException("%s: %r. %s" % (error_msg, exit_code, not_found_msg))
-        logger.info("%s: %r" % (error_msg, exit_code))
-        logger.info(not_found_msg)
+        logger_.info("%s: %r" % (error_msg, exit_code))
+        logger_.info(not_found_msg)
         return
 
     locales_list = std_out.decode("utf-8", "ignore").split("\n")
@@ -178,19 +184,19 @@ def ensure_utf8(logger: Optional[Logger] = None) -> None:
         if "utf8" in el or "utf-8" in el or "utf.8" in el:
             encoding = encoding.strip()
             os.putenv("LANG", encoding)
-            if logger:
-                logger.debug("Setting locale for mail to %s.", encoding)
+            if logger_:
+                logger_.debug("Setting locale for mail to %s.", encoding)
             break
     else:
-        if not logger:
+        if not logger_:
             raise MKGeneralException(not_found_msg)
-        logger.info(not_found_msg)
+        logger_.info(not_found_msg)
 
     return
 
 
 def create_spoolfile(
-    logger: Logger,
+    logger_: Logger,
     spool_dir: Path,
     data: Union[
         NotificationForward, NotificationResult, NotificationViaPlainMail, NotificationViaPlugin
@@ -198,5 +204,21 @@ def create_spoolfile(
 ) -> None:
     spool_dir.mkdir(parents=True, exist_ok=True)
     file_path = spool_dir / str(uuid.uuid4())
-    logger.info("Creating spoolfile: %s", file_path)
+    logger_.info("Creating spoolfile: %s", file_path)
     store.save_object_to_file(file_path, data, pretty=True)
+
+
+def log_to_history(message: str) -> None:
+    _livestatus_cmd("LOG;%s" % message)
+
+
+def _livestatus_cmd(command: str) -> None:
+    logger.info("sending command %s", command)
+    timeout = 2
+    try:
+        connection = livestatus.LocalConnection()
+        connection.set_timeout(timeout)
+        connection.command("[%d] %s" % (time.time(), command))
+    except Exception:
+        logger.exception("Cannot send livestatus command (Timeout: %d sec)", timeout)
+        logger.info("Command was: %s", command)

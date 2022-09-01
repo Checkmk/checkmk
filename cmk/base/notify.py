@@ -42,8 +42,6 @@ from typing import (
     Union,
 )
 
-import livestatus
-
 import cmk.utils.debug
 import cmk.utils.log as log
 import cmk.utils.paths
@@ -55,6 +53,7 @@ from cmk.utils.notify import (
     create_spoolfile,
     ensure_utf8,
     find_wato_folder,
+    log_to_history,
     notification_message,
     notification_result_message,
     NotificationForward,
@@ -677,7 +676,7 @@ def _process_notifications(  # pylint: disable=too-many-branches
                 if cmk.utils.debug.enabled():
                     raise
                 logger.exception("    ERROR:")
-                _log_to_history(
+                log_to_history(
                     notification_result_message(
                         NotificationPluginName(plugin_name),
                         NotificationContext(plugin_context),
@@ -1617,7 +1616,7 @@ def call_notification_script(
     plugin_context: NotificationContext,
     is_spoolfile: bool = False,
 ) -> int:
-    _log_to_history(
+    log_to_history(
         notification_message(
             NotificationPluginName(plugin_name or "plain email"),
             plugin_context,
@@ -1677,7 +1676,7 @@ def call_notification_script(
     # Result is already logged to history for spoolfiles by
     # mknotifyd.spool_handler
     if not is_spoolfile:
-        _log_to_history(
+        log_to_history(
             notification_result_message(
                 NotificationPluginName(plugin_name),
                 NotificationContext(plugin_context),
@@ -1775,7 +1774,7 @@ def handle_spoolfile(spoolfile: str) -> int:
         locally_deliver_raw_context(data["context"])
         # TODO: It is a bug that we don't transport result information and monitoring history
         # entries back to the origin site. The intermediate or final results should be sent back to
-        # the origin site. Also _log_to_history calls should not log the entries to the local
+        # the origin site. Also log_to_history calls should not log the entries to the local
         # monitoring core of the destination site, but forward the log entries as messages to the
         # remote site just like the mknotifyd is doing with MessageResult. We could create spool
         # files holding NotificationResult messages which would then be forwarded to the origin site
@@ -2142,7 +2141,7 @@ def notify_bulk(dirname: str, uuids: UUIDs) -> None:  # pylint: disable=too-many
             # Do not forget to add this to the monitoring log. We create
             # a single entry for each notification contained in the bulk.
             # It is important later to have this precise information.
-            _log_to_history(notification_message(plugin_text, context))
+            log_to_history(notification_message(plugin_text, context))
 
             context_lines.append("\n")
             for varname, value in context.items():
@@ -2152,7 +2151,7 @@ def notify_bulk(dirname: str, uuids: UUIDs) -> None:  # pylint: disable=too-many
         exitcode, output_lines = call_bulk_notification_script(plugin_name, context_lines)
 
         for context in bulk_context:
-            _log_to_history(
+            log_to_history(
                 notification_result_message(plugin_text, context, exitcode, output_lines)
             )
     else:
@@ -2328,22 +2327,3 @@ def dead_nagios_variable(value: str) -> bool:
         if not c.isupper() and c != "_":
             return False
     return True
-
-
-# TODO: Copy'n paste: enterprise/cmk/cee/mknotifyd/utils.py, cmk/base/notify.py
-def _log_to_history(message: str) -> None:
-    _livestatus_cmd("LOG;%s" % message)
-
-
-# TODO: Copy'n paste: enterprise/cmk/cee/mknotifyd/utils.py, cmk/base/notify.py
-def _livestatus_cmd(command: str) -> None:
-    timeout = 2
-    try:
-        connection = livestatus.LocalConnection()
-        connection.set_timeout(timeout)
-        connection.command("[%d] %s" % (time.time(), command))
-    except Exception as e:
-        if cmk.utils.debug.enabled():
-            raise
-        logger.info("WARNING: cannot send livestatus command (Timeout: %d sec): %s", timeout, e)
-        logger.info("Command was: %s", command)

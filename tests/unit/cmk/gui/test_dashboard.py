@@ -3,13 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Iterator, Literal
+
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
+from pytest_mock import MockerFixture
 
 import cmk.utils.version as cmk_version
 
 import cmk.gui.dashboard as dashboard  # pylint: disable=reimported
 from cmk.gui.config import builtin_role_ids
 from cmk.gui.htmllib.html import html
+from cmk.gui.plugins.dashboard.utils import DashletConfig
 
 
 class DummyDashlet(dashboard.Dashlet):
@@ -78,7 +83,7 @@ def test_dashlet_registry_plugins() -> None:
     assert sorted(dashboard.dashlet_registry.keys()) == sorted(expected_plugins)
 
 
-def _expected_intervals():
+def _expected_intervals() -> list[tuple[str, Literal[False] | int]]:
     expected = [
         ("hoststats", False),
         ("mk_logo", False),
@@ -103,13 +108,14 @@ def _expected_intervals():
 
 
 @pytest.mark.parametrize("type_name,expected_refresh_interval", _expected_intervals())
+@pytest.mark.usefixtures("request_context")
 def test_dashlet_refresh_intervals(
-    request_context, type_name, expected_refresh_interval, monkeypatch
-):
+    type_name: str, expected_refresh_interval: Literal[False] | int, monkeypatch: MonkeyPatch
+) -> None:
     dashlet_type = dashboard.dashlet_registry[type_name]
     assert dashlet_type.initial_refresh_interval() == expected_refresh_interval
 
-    dashlet_spec = {
+    dashlet_spec: DashletConfig = {
         "type": type_name,
     }
     if dashlet_type.has_context():
@@ -134,7 +140,7 @@ def test_dashlet_refresh_intervals(
 
 
 @pytest.fixture(name="reset_dashlet_types")
-def _reset_dashlet_types():
+def _reset_dashlet_types() -> Iterator[None]:
     default_entries = list(dashboard.dashlet_types)
     try:
         yield
@@ -157,9 +163,8 @@ def _legacy_dashlet_type(attrs=None):
     return dashboard.dashlet_registry["test123"]
 
 
-def test_registry_of_old_dashlet_plugins(  # type:ignore[no-untyped-def]
-    reset_dashlet_types,
-) -> None:
+@pytest.mark.usefixtures("reset_dashlet_types")
+def test_registry_of_old_dashlet_plugins() -> None:
     dashlet_type = _legacy_dashlet_type()
     assert dashlet_type.title() == "Test dashlet"
     assert dashlet_type.description() == "Descr"
@@ -184,14 +189,16 @@ _attr_map = [
 ]
 
 
-def test_old_dashlet_defaults(reset_dashlet_types) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("reset_dashlet_types")
+def test_old_dashlet_defaults() -> None:
     dashlet_type = _legacy_dashlet_type()
     dashlet = dashlet_type(dashboard_name="main", dashboard={}, dashlet_id=0, dashlet={})
     for _attr, new_method, deflt in _attr_map:
         assert getattr(dashlet, new_method)() == deflt
 
 
-def test_old_dashlet_title_func(reset_dashlet_types) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("reset_dashlet_types")
+def test_old_dashlet_title_func() -> None:
     dashlet_type = _legacy_dashlet_type(
         {
             "title_func": lambda d: "xyz",
@@ -203,7 +210,8 @@ def test_old_dashlet_title_func(reset_dashlet_types) -> None:  # type:ignore[no-
     assert dashlet.display_title() == "xyz"
 
 
-def test_old_dashlet_on_resize(reset_dashlet_types) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("reset_dashlet_types")
+def test_old_dashlet_on_resize() -> None:
     dashlet_type = _legacy_dashlet_type(
         {
             "on_resize": lambda x, y: "xyz",
@@ -214,7 +222,8 @@ def test_old_dashlet_on_resize(reset_dashlet_types) -> None:  # type:ignore[no-u
     assert dashlet.on_resize() == "xyz"
 
 
-def test_old_dashlet_on_refresh(reset_dashlet_types) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("reset_dashlet_types")
+def test_old_dashlet_on_refresh() -> None:
     dashlet_type = _legacy_dashlet_type(
         {
             "on_refresh": lambda nr, the_dashlet: "xyz",
@@ -225,9 +234,8 @@ def test_old_dashlet_on_refresh(reset_dashlet_types) -> None:  # type:ignore[no-
     assert dashlet.on_refresh() == "xyz"
 
 
-def test_old_dashlet_iframe_render(  # type:ignore[no-untyped-def]
-    mocker, request_context, reset_dashlet_types
-) -> None:
+@pytest.mark.usefixtures("reset_dashlet_types", "request_context")
+def test_old_dashlet_iframe_render(mocker: MockerFixture) -> None:
     iframe_render_mock = mocker.Mock()
 
     dashlet_type = _legacy_dashlet_type(
@@ -249,9 +257,8 @@ def test_old_dashlet_iframe_render(  # type:ignore[no-untyped-def]
     assert dashlet._get_iframe_url() == "dashboard_dashlet.py?id=1&mtime=123&name=main"
 
 
-def test_old_dashlet_iframe_urlfunc(  # type:ignore[no-untyped-def]
-    mocker, request_context, reset_dashlet_types
-) -> None:
+@pytest.mark.usefixtures("reset_dashlet_types", "request_context")
+def test_old_dashlet_iframe_urlfunc() -> None:
     dashlet_type = _legacy_dashlet_type(
         {
             "iframe_urlfunc": lambda x: "blaurl",
@@ -262,9 +269,8 @@ def test_old_dashlet_iframe_urlfunc(  # type:ignore[no-untyped-def]
     assert dashlet._get_iframe_url() == "blaurl"
 
 
-def test_old_dashlet_render(  # type:ignore[no-untyped-def]
-    mocker, request_context, reset_dashlet_types
-) -> None:
+@pytest.mark.usefixtures("reset_dashlet_types", "request_context")
+def test_old_dashlet_render(mocker: MockerFixture) -> None:
     render_mock = mocker.Mock()
 
     dashlet_type = _legacy_dashlet_type(
@@ -281,15 +287,15 @@ def test_old_dashlet_render(  # type:ignore[no-untyped-def]
     assert render_mock.called_once()
 
 
-def test_old_dashlet_add_urlfunc(  # type:ignore[no-untyped-def]
-    mocker, reset_dashlet_types
-) -> None:
+@pytest.mark.usefixtures("reset_dashlet_types")
+def test_old_dashlet_add_urlfunc() -> None:
     dashlet_type = _legacy_dashlet_type({"add_urlfunc": lambda: "xyz"})
     dashlet = dashlet_type(dashboard_name="main", dashboard={}, dashlet_id=0, dashlet={})
     assert dashlet.add_url() == "xyz"
 
 
-def test_old_dashlet_position(mocker, reset_dashlet_types) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("reset_dashlet_types")
+def test_old_dashlet_position() -> None:
     dashlet_type = _legacy_dashlet_type({})
     assert dashlet_type.initial_position() == (1, 1)
 
@@ -302,7 +308,8 @@ def test_old_dashlet_position(mocker, reset_dashlet_types) -> None:  # type:igno
     assert dashlet.position() == (10, 12)
 
 
-def test_old_dashlet_size(mocker, reset_dashlet_types) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("reset_dashlet_types")
+def test_old_dashlet_size() -> None:
     dashlet_type = _legacy_dashlet_type({})
     assert dashlet_type.initial_size() == (12, 12)
 
@@ -318,7 +325,8 @@ def test_old_dashlet_size(mocker, reset_dashlet_types) -> None:  # type:ignore[n
     assert dashlet.size() == (30, 20)
 
 
-def test_old_dashlet_settings(reset_dashlet_types) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("reset_dashlet_types")
+def test_old_dashlet_settings() -> None:
     dashlet_attrs = {}
     for attr, _new_method, _deflt in _attr_map:
         dashlet_attrs[attr] = attr
@@ -330,7 +338,8 @@ def test_old_dashlet_settings(reset_dashlet_types) -> None:  # type:ignore[no-un
         assert getattr(dashlet, new_method)() == attr
 
 
-def test_dashlet_type_defaults(request_context) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("request_context")
+def test_dashlet_type_defaults() -> None:
     assert dashboard.Dashlet.single_infos() == []
     assert dashboard.Dashlet.is_selectable() is True
     assert dashboard.Dashlet.is_resizable() is True

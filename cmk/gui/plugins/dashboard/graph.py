@@ -191,7 +191,7 @@ class GraphDashlet(Dashlet):
             # Passes error otherwise exception wont allow to enter dashlet editor
             self._init_exception = exc
 
-    def _init_graph(self):
+    def _init_graph(self) -> None:
         self._dashlet_spec["_graph_identification"] = self.graph_identification(self.context)
 
         try:
@@ -209,7 +209,7 @@ class GraphDashlet(Dashlet):
             self._dashlet_spec["_graph_title"] = graph_recipes[0]["title"]
 
     @staticmethod
-    def _resolve_site(host: str):  # type:ignore[no-untyped-def]
+    def _resolve_site(host: str) -> None:
         with sites.prepend_site():
             query = "GET hosts\nFilter: name = %s\nColumns: name" % livestatus.lqencode(host)
             try:
@@ -229,7 +229,9 @@ class GraphDashlet(Dashlet):
 
         site = get_only_sites_from_context(context) or self._resolve_site(host)
         if isinstance(site, list):
-            site = "".join(site)
+            site_id: str | None = "".join(site)
+        else:
+            site_id = site
 
         # source changed from int (n'th graph) to the graph id in 2.0.0b6, but we cannot transform this, so we have to
         # handle this here
@@ -237,7 +239,7 @@ class GraphDashlet(Dashlet):
         if isinstance(raw_source, int):
             graph_spec = TemplateGraphSpec(
                 {
-                    "site": site,
+                    "site": site_id,
                     "host_name": host,
                     "service_description": service,
                     "graph_index": raw_source - 1,
@@ -246,7 +248,7 @@ class GraphDashlet(Dashlet):
         else:
             graph_spec = TemplateGraphSpec(
                 {
-                    "site": site,
+                    "site": site_id,
                     "host_name": host,
                     "service_description": service,
                     "graph_id": raw_source,
@@ -298,7 +300,7 @@ class GraphDashlet(Dashlet):
         yield cls._vs_graph_render_options()
 
     @classmethod
-    def script(cls):
+    def script(cls) -> str:
         return """
 var dashlet_offsets = {};
 function dashboard_render_graph(nr, graph_identification, graph_render_options, timerange)
@@ -335,13 +337,13 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
 
 """
 
-    def on_resize(self):
+    def on_resize(self) -> str:
         return self._reload_js()
 
-    def on_refresh(self):
+    def on_refresh(self) -> str:
         return self._reload_js()
 
-    def _reload_js(self):
+    def _reload_js(self) -> str:
         if any(
             prop not in self._dashlet_spec
             for prop in ["_graph_identification", "graph_render_options", "timerange"]
@@ -355,7 +357,7 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
             json.dumps(self._dashlet_spec["timerange"]),
         )
 
-    def show(self):
+    def show(self) -> None:
         if self._init_exception:
             raise self._init_exception
 

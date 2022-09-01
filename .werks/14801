@@ -1,0 +1,15 @@
+Title: Improve detection when OMD runs in a container
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1662108244
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p12
+
+Only for docker and podman we could reliably detect if OMD is running in a container.
+The official docker image now sets a CMK_CONTAINERIZED=TRUE environment variable that
+is checked in omd. This works independent of the container runtime used.
+

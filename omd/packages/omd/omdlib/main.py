@@ -1663,8 +1663,10 @@ def getenv(key: str, default: Optional[str] = None) -> Optional[str]:
 
 
 def clear_environment() -> None:
-    # first remove *all* current environment variables
-    keep = ["TERM"]
+    # first remove *all* current environment variables, except:
+    # TERM
+    # CMK_CONTAINERIZED: To better detect when running inside container (e.g. used for omd update)
+    keep = ["TERM", "CMK_CONTAINERIZED"]
     for key in os.environ:
         if key not in keep:
             del os.environ[key]

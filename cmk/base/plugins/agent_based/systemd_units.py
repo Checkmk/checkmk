@@ -122,6 +122,14 @@ class UnitTypes(Enum):
     def suffix(self):
         return f".{self.value}"
 
+    @property
+    def singular(self):
+        return f"{self.value.capitalize()}"
+
+    @property
+    def plural(self):
+        return f"{self.value.capitalize()}s"
+
 
 @dataclass(frozen=True)
 class UnitStatus:
@@ -468,7 +476,10 @@ def _services_split(
 
 
 def _check_temporary_state(
-    services: Iterable[UnitEntry], params: Mapping[str, Any], service_state: str
+    services: Iterable[UnitEntry],
+    params: Mapping[str, Any],
+    service_state: str,
+    unit_type: UnitTypes,
 ) -> CheckResult:
     levels = params[f"{service_state}_levels"]
     for service in services:
@@ -479,13 +490,16 @@ def _check_temporary_state(
             elapsed_time.total_seconds(),
             levels_upper=levels,
             render_func=render.timespan,
-            label=f"Service '{service.name}' {service_state} for",
+            label=f"{unit_type.singular} '{service.name}' {service_state} for",
             notice_only=True,
         )
 
 
 def _check_non_ok_services(
-    systemd_services: Iterable[UnitEntry], params: Mapping[str, Any], output_string: str
+    systemd_services: Iterable[UnitEntry],
+    params: Mapping[str, Any],
+    output_string: str,
+    unit_type: UnitTypes,
 ) -> Iterable[Result]:
     servicenames_by_status: dict[Any, Any] = {}
     for service in systemd_services:
@@ -501,9 +515,9 @@ def _check_non_ok_services(
         services_text = ", ".join(sorted(service_names))
         info = output_string.format(
             count=count,
-            is_plural="" if count == 1 else "s",
             status=status,
             service_text=services_text,
+            unit_type=unit_type.singular.casefold() if count == 1 else unit_type.plural.casefold(),
         )
 
         yield Result(state=State(state), summary=info)
@@ -521,15 +535,19 @@ def check_systemd_units_services_summary(
     yield Result(
         state=State.OK, summary=f"Failed: {sum(s.active_status == 'failed' for s in services):d}"
     )
-    included_template = "{count:d} service{is_plural} {status} ({service_text})"
-    yield from _check_non_ok_services(services_organised["included"], params, included_template)
+    included_template = "{count:d} {unit_type} {status} ({service_text})"
+    yield from _check_non_ok_services(
+        services_organised["included"], params, included_template, UnitTypes.service
+    )
 
-    static_template = "{count:d} static service{is_plural} {status} ({service_text})"
-    yield from _check_non_ok_services(services_organised["static"], params, static_template)
+    static_template = "{count:d} static {unit_type} {status} ({service_text})"
+    yield from _check_non_ok_services(
+        services_organised["static"], params, static_template, UnitTypes.service
+    )
 
     for temporary_type in ("activating", "reloading", "deactivating"):
         yield from _check_temporary_state(
-            services_organised[temporary_type], params, temporary_type
+            services_organised[temporary_type], params, temporary_type, UnitTypes.service
         )
     if services_organised["excluded"]:
         yield Result(state=State.OK, notice=f"Ignored: {len(services_organised['excluded']):d}")

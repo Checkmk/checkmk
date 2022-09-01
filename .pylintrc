@@ -149,6 +149,9 @@ disable=
     # Tons of findings, we fix this incrementally, f-strings are much more
     # performant than old-skool string splicing/formatting.
     consider-using-f-string,
+    #---------------------------------------------------------------------------
+    # New in version 2.15.0 which causes a few findings
+    missing-timeout
 
 [IMPORTS]
 # This complies with PEP 8 and avoids code duplication in some cases.

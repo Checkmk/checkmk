@@ -671,7 +671,7 @@ def _ensure_string(value):
         raise ValidationError(f"Not a string, but a {type(value).__name__}")
 
 
-class CustomAttributes(ValueTypedDictSchema):
+class CustomHostAttributes(ValueTypedDictSchema):
     value_type = ValueTypedDictSchema.field(
         base.String(
             description="Each tag is a mapping of string to string",
@@ -792,7 +792,7 @@ class TagGroupAttributes(ValueTypedDictSchema):
         return rv
 
 
-def attributes_field(
+def host_attributes_field(
     object_type: ObjectType,
     object_context: ObjectContext,
     direction: typing.Literal["inbound", "outbound"],
@@ -842,7 +842,7 @@ def attributes_field(
         return MultiNested(
             [
                 attr_openapi_schema(object_type, object_context),
-                CustomAttributes,
+                CustomHostAttributes,
                 TagGroupAttributes,
             ],
             metadata={"context": {"object_context": object_context, "direction": direction}},
@@ -1196,7 +1196,7 @@ class X509ReqPEMFieldUUID(base.String):
 
 
 __all__ = [
-    "attributes_field",
+    "host_attributes_field",
     "column_field",
     "customer_field",
     "DateTime",

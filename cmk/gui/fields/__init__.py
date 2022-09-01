@@ -25,14 +25,14 @@ from cmk.gui.fields.attributes import (
     SNMPCredentials,
 )
 from cmk.gui.fields.definitions import (
-    attributes_field,
     column_field,
-    CustomAttributes,
     customer_field,
+    CustomHostAttributes,
     ExprSchema,
     FOLDER_PATTERN,
     FolderField,
     GroupField,
+    host_attributes_field,
     HostField,
     PasswordIdent,
     PasswordOwner,
@@ -45,10 +45,10 @@ from cmk.gui.fields.definitions import (
 )
 
 __all__ = [
-    "attributes_field",
+    "host_attributes_field",
     "column_field",
     "customer_field",
-    "CustomAttributes",
+    "CustomHostAttributes",
     "ExprSchema",
     "Field",
     "FolderField",

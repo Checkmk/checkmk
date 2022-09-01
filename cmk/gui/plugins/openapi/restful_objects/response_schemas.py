@@ -335,7 +335,7 @@ class HostExtensions(BaseSchema):
     folder = gui_fields.FolderField(
         description="The folder, in which this host resides.",
     )
-    attributes = gui_fields.attributes_field(
+    attributes = gui_fields.host_attributes_field(
         "host",
         "view",
         "outbound",
@@ -376,7 +376,7 @@ class FolderExtensions(BaseSchema):
     path = fields.String(
         description="The full path of this folder, slash delimited.",
     )
-    attributes = gui_fields.attributes_field(
+    attributes = gui_fields.host_attributes_field(
         "folder",
         "view",
         "outbound",

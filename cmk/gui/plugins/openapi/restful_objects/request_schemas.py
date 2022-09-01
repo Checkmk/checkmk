@@ -70,7 +70,7 @@ class CreateClusterHost(BaseSchema):
         should_exist=False,
     )
     folder = EXISTING_FOLDER
-    attributes = gui_fields.attributes_field(
+    attributes = gui_fields.host_attributes_field(
         "cluster",
         "create",
         "inbound",
@@ -101,7 +101,7 @@ class CreateHost(BaseSchema):
         should_exist=False,
     )
     folder = EXISTING_FOLDER
-    attributes = gui_fields.attributes_field(
+    attributes = gui_fields.host_attributes_field(
         "host",
         "create",
         "inbound",
@@ -141,7 +141,7 @@ class UpdateHost(BaseSchema):
       * `nodes`
     """
 
-    attributes = gui_fields.attributes_field(
+    attributes = gui_fields.host_attributes_field(
         "host",
         "update",
         "inbound",
@@ -152,7 +152,7 @@ class UpdateHost(BaseSchema):
         example={"ipaddress": "192.168.0.123"},
         required=False,
     )
-    update_attributes = gui_fields.attributes_field(
+    update_attributes = gui_fields.host_attributes_field(
         "host",
         "update",
         "inbound",
@@ -163,7 +163,7 @@ class UpdateHost(BaseSchema):
         example={"ipaddress": "192.168.0.123"},
         required=False,
     )
-    remove_attributes = gui_fields.attributes_field(
+    remove_attributes = gui_fields.host_attributes_field(
         "host",
         "update",
         "inbound",
@@ -464,7 +464,7 @@ class CreateFolder(BaseSchema):
         ),
         example="/",
     )
-    attributes = gui_fields.attributes_field(
+    attributes = gui_fields.host_attributes_field(
         "folder",
         "create",
         "inbound",
@@ -498,7 +498,7 @@ class UpdateFolder(BaseSchema):
         required=False,
         description="The title of the folder. Used in the GUI.",
     )
-    attributes = gui_fields.attributes_field(
+    attributes = gui_fields.host_attributes_field(
         "folder",
         "update",
         "inbound",
@@ -509,7 +509,7 @@ class UpdateFolder(BaseSchema):
         example={"networking": "wan"},
         required=False,
     )
-    update_attributes = gui_fields.attributes_field(
+    update_attributes = gui_fields.host_attributes_field(
         "folder",
         "update",
         "inbound",
@@ -520,7 +520,7 @@ class UpdateFolder(BaseSchema):
         example={"tag_criticality": "prod"},
         required=False,
     )
-    remove_attributes = gui_fields.attributes_field(
+    remove_attributes = gui_fields.host_attributes_field(
         "folder",
         "update",
         "inbound",

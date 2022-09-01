@@ -15,7 +15,9 @@ from omdlib.contexts import SiteContext
 from omdlib.system_apache import (
     apache_hook_version,
     create_apache_hook,
+    create_old_apache_hook,
     delete_apache_hook,
+    has_old_apache_hook_in_site,
     is_apache_hook_up_to_date,
     register_with_system_apache,
     unregister_from_system_apache,
@@ -112,6 +114,7 @@ def test_is_apache_hook_up_to_date(
     create_apache_hook(site_context, apache_hook_version())
     assert apache_config.exists()
 
+    assert has_old_apache_hook_in_site(site_context) is False
     assert is_apache_hook_up_to_date(site_context) is True
 
 
@@ -127,6 +130,9 @@ def test_is_apache_hook_up_to_date_not_readable(
     with pytest.raises(PermissionError):
         is_apache_hook_up_to_date(site_context)
 
+    with pytest.raises(PermissionError):
+        has_old_apache_hook_in_site(site_context)
+
 
 def test_is_apache_hook_up_to_date_outdated(
     apache_config: Path,
@@ -134,6 +140,31 @@ def test_is_apache_hook_up_to_date_outdated(
 ) -> None:
     apache_config.parent.mkdir(parents=True)
     create_apache_hook(site_context, 0)
+    assert apache_config.exists()
+
+    assert has_old_apache_hook_in_site(site_context) is False
+    assert is_apache_hook_up_to_date(site_context) is False
+
+
+def test_has_old_apache_hook_in_site(
+    apache_config: Path,
+    site_context: SiteContext,
+) -> None:
+    apache_config.parent.mkdir(parents=True)
+    with apache_config.open("w") as f:
+        f.write(f"Include /omd/sites/{site_context.name}/etc/apache/mode.conf")
+
+    assert is_apache_hook_up_to_date(site_context) is False
+    assert has_old_apache_hook_in_site(site_context) is True
+
+
+def test_has_apache_hook_in_site(
+    apache_config: Path,
+    site_context: SiteContext,
+) -> None:
+    apache_config.parent.mkdir(parents=True)
+    with apache_config.open("w") as f:
+        f.write(f"Include /omd/sites/{site_context.name}/etc/apache/mode.conf")
     assert apache_config.exists()
 
     assert is_apache_hook_up_to_date(site_context) is False
@@ -146,3 +177,13 @@ def test_create_apache_hook_world_readable(
     apache_config.parent.mkdir(parents=True)
     create_apache_hook(site_context, 0)
     assert bool(apache_config.stat().st_mode & stat.S_IROTH)
+
+
+def test_create_old_apache_hook(
+    site_context: SiteContext,
+) -> None:
+    apache_own_path = Path(site_context.dir).joinpath("etc/apache/apache-own.conf")
+    apache_own_path.parent.mkdir(parents=True)
+    create_old_apache_hook(site_context)
+    content = apache_own_path.read_text()
+    assert content.startswith("# This file is read in by the global Apache")

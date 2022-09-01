@@ -147,6 +147,10 @@ class ABCGraphDashlet(Dashlet[T], Generic[T, T_Ident]):
         return 60
 
     @classmethod
+    def has_context(cls) -> bool:
+        return True
+
+    @classmethod
     def vs_parameters(cls) -> ValueSpec:
         return Dictionary(
             title=_("Properties"),
@@ -355,10 +359,6 @@ class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateG
     @classmethod
     def single_infos(cls) -> SingleInfos:
         return ["host", "service"]
-
-    @classmethod
-    def has_context(cls) -> bool:
-        return True
 
     def graph_identification(self, context: VisualContext) -> TemplateGraphIdentifier:
         single_context = get_singlecontext_vars(context, self.single_infos())

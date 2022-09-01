@@ -103,9 +103,7 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PACKAGE_PYTHON3_MODULES_PYTHON_DEPS)
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/metrics/__init__.py \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/wato/__init__.py \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/gui/plugins/wato/check_parameters/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/update_config/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/update_config/plugins/__init__.py \
-	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/update_config/plugins/actions/__init__.py
+	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/update_config/__init__.py
 
 	# After installing all python modules, ensure they are compiled
 	$(PACKAGE_PYTHON3_MODULES_PYTHON) -m compileall $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk

@@ -51,7 +51,6 @@ get_candidates_fallback() {
         PRUNE+=" -path $(realpath enterprise/cmk/base/modes/cee.py) -prune -o"              # cmk/base/modes/cee.py symlink points here
         PRUNE+=" -path $(realpath enterprise/agents/plugins/cmk_update_agent.py) -prune -o" # cmk_update_agent.py checked directly
         PRUNE+=" -path $(realpath enterprise/cmk/post_rename_site/cee) -prune -o"           # cmk/post_rename_site/cee symlink points here
-        PRUNE+=" -path $(realpath enterprise/cmk/update_config/cee) -prune -o"              # cmk/update_config/cee symlink points here
     fi
     SEARCH+=" livestatus/api/python"
     SEARCH+=" locale"

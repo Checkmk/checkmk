@@ -1,0 +1,11 @@
+Title: Remove preliminary agent pairing ruleset
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1662018325
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0p12
+
+This was not ready for production.

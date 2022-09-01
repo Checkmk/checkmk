@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import abc
 import ast
+import contextlib
 import errno
 import json
 import os
@@ -553,11 +554,9 @@ class EventServer(ECServerThread):
 
     def create_pipe(self) -> None:
         path = self.settings.paths.event_pipe.value
-        try:
+        with contextlib.suppress(Exception):
             if not path.is_fifo():
                 path.unlink()
-        except Exception:
-            pass
         if not path.exists():
             os.mkfifo(str(path))
         # We want to be able to receive events from all users on the local system
@@ -847,11 +846,10 @@ class EventServer(ECServerThread):
                     )
 
     def do_housekeeping(self) -> None:
-        with self._event_status.lock:
-            with self._lock_configuration:
-                self.hk_handle_event_timeouts()
-                self.hk_check_expected_messages()
-                self.hk_cleanup_downtime_events()
+        with self._event_status.lock, self._lock_configuration:
+            self.hk_handle_event_timeouts()
+            self.hk_check_expected_messages()
+            self.hk_cleanup_downtime_events()
         self._history.housekeeping()
 
     # For all events that have been created in a host downtime check the host
@@ -989,17 +987,16 @@ class EventServer(ECServerThread):
                         )
 
             # Handle events with a limited lifetime
-            elif "live_until" in event:
-                if now >= event["live_until"]:
-                    allowed_phases = event.get("live_until_phases", ["open"])
-                    if event["phase"] in allowed_phases:
-                        event["phase"] = "closed"
-                        events_to_delete.append(nr)
-                        self._logger.info(
-                            "Livetime of event %d (rule %s) exceeded. Deleting event."
-                            % (event["id"], event["rule_id"])
-                        )
-                        self._history.add(event, "EXPIRED")
+            elif "live_until" in event and now >= event["live_until"]:
+                allowed_phases = event.get("live_until_phases", ["open"])
+                if event["phase"] in allowed_phases:
+                    event["phase"] = "closed"
+                    events_to_delete.append(nr)
+                    self._logger.info(
+                        "Livetime of event %d (rule %s) exceeded. Deleting event."
+                        % (event["id"], event["rule_id"])
+                    )
+                    self._history.add(event, "EXPIRED")
 
         # Do delayed deletion now (was delayed in order to keep list indices OK)
         for nr in events_to_delete[::-1]:
@@ -1480,23 +1477,22 @@ class EventServer(ECServerThread):
                     else:
                         event["phase"] = "open"
 
-                    if self.new_event_respecting_limits(event):
-                        if event["phase"] == "open":
-                            event_has_opened(
-                                self._history,
-                                self.settings,
-                                self._config,
-                                self._logger,
-                                self.host_config,
-                                self._event_columns,
-                                rule,
-                                event,
-                            )
-                            if rule.get("autodelete"):
-                                event["phase"] = "closed"
-                                self._history.add(event, "AUTODELETE")
-                                with self._event_status.lock:
-                                    self._event_status.remove_event(event)
+                    if self.new_event_respecting_limits(event) and event["phase"] == "open":
+                        event_has_opened(
+                            self._history,
+                            self.settings,
+                            self._config,
+                            self._logger,
+                            self.host_config,
+                            self._event_columns,
+                            rule,
+                            event,
+                        )
+                        if rule.get("autodelete"):
+                            event["phase"] = "closed"
+                            self._history.add(event, "AUTODELETE")
+                            with self._event_status.lock:
+                                self._event_status.remove_event(event)
                 return
 
         # End of loop over rules.
@@ -1969,21 +1965,20 @@ class RuleMatcher:
         has_canceling_condition = bool(
             [x for x in ["match_ok", "cancel_application", "cancel_priority"] if x in rule]
         )
-        if has_canceling_condition:
-            if (
-                (
-                    "match_ok" not in rule
-                    or match_groups.get("match_groups_message_ok", False) is not False
-                )
-                and (
-                    "cancel_application" not in rule
-                    or match_groups.get("match_groups_syslog_application_ok", False) is not False
-                )
-                and ("cancel_priority" not in rule or match_priority.has_canceling_match)
-            ):
-                if self._debug_rules:
-                    self._logger.info("  found canceling event")
-                return MatchSuccess(cancelling=True, match_groups=match_groups)
+        if has_canceling_condition and (
+            (
+                "match_ok" not in rule
+                or match_groups.get("match_groups_message_ok", False) is not False
+            )
+            and (
+                "cancel_application" not in rule
+                or match_groups.get("match_groups_syslog_application_ok", False) is not False
+            )
+            and ("cancel_priority" not in rule or match_priority.has_canceling_match)
+        ):
+            if self._debug_rules:
+                self._logger.info("  found canceling event")
+            return MatchSuccess(cancelling=True, match_groups=match_groups)
 
         # Check create-event
         if (
@@ -2035,10 +2030,7 @@ class RuleMatcher:
             self.event_rule_matches_timeperiod,
         ]
 
-        for match_function in generic_match_functions:
-            if not match_function(rule, event):
-                return False
-        return True
+        return all(match_function(rule, event) for match_function in generic_match_functions)
 
     def event_rule_determine_match_priority(self, rule: Rule, event: Event) -> MatchPriority | None:
         p = event["priority"]
@@ -2121,10 +2113,9 @@ class RuleMatcher:
             self.event_rule_matches_syslog_application,
             self.event_rule_matches_message,
         ]
-        for match_function in match_group_functions:
-            if not match_function(rule, event, match_groups):
-                return False
-        return True
+        return all(
+            match_function(rule, event, match_groups) for match_function in match_group_functions
+        )
 
     def event_rule_matches_syslog_application(
         self, rule: Rule, event: Event, match_groups: MatchGroups
@@ -2620,8 +2611,8 @@ class StatusServer(ECServerThread):
 
     # Only GET queries have customizable output formats. COMMAND is always
     # a dictionary and COMMAND is always None and always output as "python"
-    # TODO: We should probably nuke these silly cases. Currently the allowed
-    # type of the response depends on the value of query. :-/
+    # TODO: We should probably nuke these silly cases. Currently the allowed type
+    # of the response depends on the value of query. :-/
     def _answer_query(self, client_socket: socket.socket, query: Query, response: Any) -> None:
         if not isinstance(query, QueryGET):
             self._answer_query_python(client_socket, response)
@@ -3219,49 +3210,50 @@ class EventStatus:
         with self.lock:
             to_delete = []
             for nr, event in enumerate(self._events):
-                if event["rule_id"] == rule["id"]:
-                    if self.cancelling_match(match_groups, new_event, event, rule):
-                        # Fill a few fields of the cancelled event with data from
-                        # the cancelling event so that action scripts have useful
-                        # values and the logfile entry if more relevant.
-                        previous_phase = event["phase"]
-                        event["phase"] = "closed"
-                        # TODO: Why do we use OK below and not new_event["state"]???
-                        event["state"] = 0  # OK
-                        event["text"] = new_event["text"]
-                        # TODO: This is a hack and partial copy-n-paste from rewrite_events...
-                        if "set_text" in rule:
-                            event["text"] = replace_groups(
-                                rule["set_text"], event["text"], match_groups
+                if event["rule_id"] == rule["id"] and self.cancelling_match(
+                    match_groups, new_event, event, rule
+                ):
+                    # Fill a few fields of the cancelled event with data from
+                    # the cancelling event so that action scripts have useful
+                    # values and the logfile entry if more relevant.
+                    previous_phase = event["phase"]
+                    event["phase"] = "closed"
+                    # TODO: Why do we use OK below and not new_event["state"]???
+                    event["state"] = 0  # OK
+                    event["text"] = new_event["text"]
+                    # TODO: This is a hack and partial copy-n-paste from rewrite_events...
+                    if "set_text" in rule:
+                        event["text"] = replace_groups(
+                            rule["set_text"], event["text"], match_groups
+                        )
+                    event["time"] = new_event["time"]
+                    event["last"] = new_event["time"]
+                    event["priority"] = new_event["priority"]
+                    self._history.add(event, "CANCELLED")
+                    actions = rule.get("cancel_actions", [])
+                    if actions:
+                        if (
+                            previous_phase != "open"
+                            and rule.get("cancel_action_phases", "always") == "open"
+                        ):
+                            self._logger.info(
+                                "Do not execute cancelling actions, event %s's phase "
+                                "is not 'open' but '%s'" % (event["id"], previous_phase)
                             )
-                        event["time"] = new_event["time"]
-                        event["last"] = new_event["time"]
-                        event["priority"] = new_event["priority"]
-                        self._history.add(event, "CANCELLED")
-                        actions = rule.get("cancel_actions", [])
-                        if actions:
-                            if (
-                                previous_phase != "open"
-                                and rule.get("cancel_action_phases", "always") == "open"
-                            ):
-                                self._logger.info(
-                                    "Do not execute cancelling actions, event %s's phase "
-                                    "is not 'open' but '%s'" % (event["id"], previous_phase)
-                                )
-                            else:
-                                do_event_actions(
-                                    self._history,
-                                    self.settings,
-                                    self._config,
-                                    self._logger,
-                                    event_server.host_config,
-                                    event_columns,
-                                    actions,
-                                    event,
-                                    is_cancelling=True,
-                                )
+                        else:
+                            do_event_actions(
+                                self._history,
+                                self.settings,
+                                self._config,
+                                self._logger,
+                                event_server.host_config,
+                                event_columns,
+                                actions,
+                                event,
+                                is_cancelling=True,
+                            )
 
-                        to_delete.append(nr)
+                    to_delete.append(nr)
 
             for nr in to_delete[::-1]:
                 self._remove_event_by_nr(nr)
@@ -3307,12 +3299,11 @@ class EventStatus:
                     )
                 return False
 
-        if event["facility"] != new_event["facility"]:
-            if debug:
-                self._logger.info(
-                    "Do not cancel event %d: syslog facility is not the same (%d != %d)"
-                    % (event["id"], event["facility"], new_event["facility"])
-                )
+        if event["facility"] != new_event["facility"] and debug:
+            self._logger.info(
+                "Do not cancel event %d: syslog facility is not the same (%d != %d)"
+                % (event["id"], event["facility"], new_event["facility"])
+            )
 
         # Make sure, that the matching groups are the same. If the OK match
         # has less groups, we do not care. If it has more groups, then we
@@ -3532,69 +3523,63 @@ def replication_pull(  # pylint: disable=too-many-branches
     )
 
     if need_sync:
-        with event_status.lock:
-            with lock_configuration:
+        with event_status.lock, lock_configuration:
 
-                try:
-                    new_state = get_state_from_master(config, slave_status)
-                    replication_update_state(
-                        settings, config, event_status, event_server, new_state
-                    )
-                    if repl_settings.get("logging"):
-                        logger.info("Successfully synchronized with master")
-                    slave_status["last_sync"] = now
-                    slave_status["success"] = True
+            try:
+                new_state = get_state_from_master(config, slave_status)
+                replication_update_state(settings, config, event_status, event_server, new_state)
+                if repl_settings.get("logging"):
+                    logger.info("Successfully synchronized with master")
+                slave_status["last_sync"] = now
+                slave_status["success"] = True
 
-                    # Fall back to slave mode after successful sync
-                    # (time frame has already been checked)
-                    if mode == "takeover":
-                        if slave_status["last_master_down"] is None:
-                            logger.info(
-                                "Replication: master reachable for the first time, "
-                                "switching back to slave mode"
-                            )
-                            slave_status["mode"] = "sync"
-                        else:
-                            logger.info(
-                                "Replication: master reachable again after %d seconds, "
-                                "switching back to sync mode"
-                                % (now - slave_status["last_master_down"])
-                            )
-                            slave_status["mode"] = "sync"
-                    slave_status["last_master_down"] = None
-
-                except Exception as e:
-                    logger.warning("Replication: cannot sync with master: %s" % e)
-                    slave_status["success"] = False
+                # Fall back to slave mode after successful sync
+                # (time frame has already been checked)
+                if mode == "takeover":
                     if slave_status["last_master_down"] is None:
-                        slave_status["last_master_down"] = now
+                        logger.info(
+                            "Replication: master reachable for the first time, "
+                            "switching back to slave mode"
+                        )
+                        slave_status["mode"] = "sync"
+                    else:
+                        logger.info(
+                            "Replication: master reachable again after %d seconds, "
+                            "switching back to sync mode" % (now - slave_status["last_master_down"])
+                        )
+                        slave_status["mode"] = "sync"
+                slave_status["last_master_down"] = None
 
-                    # Takeover
-                    if "takeover" in repl_settings and mode != "takeover":
-                        if not slave_status["last_sync"]:
+            except Exception as e:
+                logger.warning("Replication: cannot sync with master: %s" % e)
+                slave_status["success"] = False
+                if slave_status["last_master_down"] is None:
+                    slave_status["last_master_down"] = now
+
+                # Takeover
+                if "takeover" in repl_settings and mode != "takeover":
+                    if not slave_status["last_sync"]:
+                        if repl_settings.get("logging"):
+                            logger.error("Replication: no takeover since master was never reached.")
+                    else:
+                        offline = now - slave_status["last_sync"]
+                        if offline < repl_settings["takeover"]:
                             if repl_settings.get("logging"):
-                                logger.error(
-                                    "Replication: no takeover since master was never reached."
+                                logger.warning(
+                                    "Replication: no takeover yet, still %d seconds to wait"
+                                    % (repl_settings["takeover"] - offline)
                                 )
                         else:
-                            offline = now - slave_status["last_sync"]
-                            if offline < repl_settings["takeover"]:
-                                if repl_settings.get("logging"):
-                                    logger.warning(
-                                        "Replication: no takeover yet, still %d seconds to wait"
-                                        % (repl_settings["takeover"] - offline)
-                                    )
-                            else:
-                                logger.info(
-                                    "Replication: master not reached for %d seconds, taking over!"
-                                    % offline
-                                )
-                                slave_status["mode"] = "takeover"
+                            logger.info(
+                                "Replication: master not reached for %d seconds, taking over!"
+                                % offline
+                            )
+                            slave_status["mode"] = "takeover"
 
-                save_slave_status(settings, slave_status)
+            save_slave_status(settings, slave_status)
 
-                # Compute statistics of the average time needed for a sync
-                perfcounters.count_time("sync", time.time() - now)
+            # Compute statistics of the average time needed for a sync
+            perfcounters.count_time("sync", time.time() - now)
 
 
 def replication_update_state(
@@ -3934,11 +3919,9 @@ def main() -> None:  # pylint: disable=too-many-branches
             settings.options.syslog_tcp,
             settings.options.snmptrap_udp,
         ]:
-            try:
+            with contextlib.suppress(Exception):
                 if isinstance(fd, FileDescriptor):
                     os.close(fd.value)
-            except Exception:
-                pass
 
         logger.info("Successfully shut down.")
         sys.exit(0)
@@ -3955,10 +3938,8 @@ def main() -> None:  # pylint: disable=too-many-branches
 
     finally:
         if pid_path and store.have_lock(str(pid_path)):
-            try:
+            with contextlib.suppress(OSError):
                 pid_path.unlink()
-            except OSError:
-                pass
 
 
 if __name__ == "__main__":

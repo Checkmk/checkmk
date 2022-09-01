@@ -318,14 +318,19 @@ register.agent_section(name="systemd_units", parse_function=parse)
 def discovery_systemd_units_services(
     params: Sequence[Mapping[str, Any]], section: Section
 ) -> DiscoveryResult:
-    # Filter out volatile systemd service units created by the Checkmk agent which appear and
+    # Filter out volatile systemd service created by the Checkmk agent which appear and
     # disappear frequently. No matter what the user configures, we do not want to discover them.
     filtered_services = [
         unit_entry
         for unit_entry in section.services.values()
         if not regex("^check-mk-agent@.+").match(unit_entry.name)
     ]
+    yield from discovery_systemd_units(params, filtered_services)
 
+
+def discovery_systemd_units(
+    params: Sequence[Mapping[str, Any]], services: Sequence[UnitEntry]
+) -> DiscoveryResult:
     def regex_match(what: Sequence[str], name: str) -> bool:
         if not what:
             return True
@@ -344,7 +349,7 @@ def discovery_systemd_units_services(
         return any(s in (None, state) for s in rule_states)
 
     # defaults are always last and empty to apeace the new api
-    for service in filtered_services:
+    for service in services:
         for settings in params:
             descriptions = settings.get("descriptions", [])
             names = settings.get("names", [])

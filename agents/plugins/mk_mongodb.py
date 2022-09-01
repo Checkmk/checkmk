@@ -650,7 +650,12 @@ def main():
     client = pymongo.MongoClient(
         # Requests are distributed to secondaries, ref.
         # https://www.mongodb.com/docs/manual/core/read-preference/
-        read_preference=pymongo.ReadPreference.SECONDARY,  #
+        read_preference=pymongo.ReadPreference.SECONDARY,
+        # The agent plugin is expected to run on each host, returing
+        # information from only that host.
+        # If directConnection is set to False (default), the plugin could also
+        # connect to a totally different host from where it is located.
+        directconnection=True,
     )
     try:
         # connecting is lazy, it might fail only now

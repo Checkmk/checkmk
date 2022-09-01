@@ -305,10 +305,17 @@ def convert_legacy_configuration() -> None:
         config.notification_logging = 10
 
 
-# This function processes one raw notification and decides wether it
-# should be spooled or not. In the latter cased a local delivery
-# is being done.
 def notify_notify(raw_context: EventContext, analyse: bool = False) -> Optional[NotifyAnalysisInfo]:
+    """
+    This function processes one raw notification and decides wether it should be spooled or not.
+    In the latter cased a local delivery is being done.
+
+    :param raw_context: This is the origin raw notification context as produced by the monitoring
+        core before it is being processed by the the rule based notfication logic which may create
+        multiple specific notification contexts out of the raw notification context and the matching
+        notification rule.
+    :param analyse:
+    """
     if not analyse:
         store_notification_backlog(raw_context)
 
@@ -338,8 +345,7 @@ def notify_notify(raw_context: EventContext, analyse: bool = False) -> Optional[
         create_spoolfile(
             logger,
             Path(notification_spooldir),
-            # TODO: cast will be cleaned up soon
-            NotificationForward({"context": cast(dict[str, str], raw_context), "forward": True}),
+            NotificationForward({"context": raw_context, "forward": True}),
         )
 
     if config.notification_spooling != "remote":

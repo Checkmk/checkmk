@@ -1225,7 +1225,6 @@ def notify_via_email(plugin_context):
     notify_log_debug("Executing command: %s" % " ".join(command))
 
     p = subprocess.Popen(command,
-                         shell=True,
                          stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE,
                          stdin=subprocess.PIPE,

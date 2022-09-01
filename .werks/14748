@@ -1,0 +1,11 @@
+Title: Fix flexible and plain email notifications
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.6.0p31
+Date: 1662020242
+Class: fix
+
+Since version 1.6.0p29 flexible and plain email notifications ended up with an
+error like: "ERROR: could not deliver mail. Exit code of command is 1".

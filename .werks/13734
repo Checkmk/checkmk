@@ -1,0 +1,12 @@
+Title: mk_oracle: Do not empty cache if the plugin is triggered from multiple sites
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1662369985
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+
+

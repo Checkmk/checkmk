@@ -9,13 +9,12 @@ all sites and on remote sites after receiving a snapshot and does not need to
 be called manually.
 """
 import argparse
-import copy
 import errno
 import logging
 import re
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, List, Tuple
+from typing import Callable, List, Tuple
 
 import cmk.utils
 import cmk.utils.debug
@@ -23,9 +22,8 @@ import cmk.utils.log as log
 import cmk.utils.paths
 import cmk.utils.site
 import cmk.utils.tty as tty
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import CheckPluginName, HostName, UserId
+from cmk.utils.type_defs import UserId
 
 # This special script needs persistence and conversion code from different
 # places of Checkmk. We may centralize the conversion and move the persistance
@@ -34,7 +32,6 @@ from cmk.utils.type_defs import CheckPluginName, HostName, UserId
 import cmk.base.autochecks
 import cmk.base.check_api
 import cmk.base.config
-from cmk.base.api.agent_based import register
 
 import cmk.gui.config
 import cmk.gui.groups
@@ -52,11 +49,6 @@ from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.userdb import load_users, save_users, Users
 from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.changes import ActivateChangesWriter, add_change
-from cmk.gui.watolib.rulesets import RulesetCollection
-
-from cmk.update_config.plugins.actions.removed_check_plugins import (
-    REMOVED_CHECK_PLUGINS as REMOVED_CHECK_PLUGIN_MAP,
-)
 
 
 class UpdateConfig:
@@ -119,7 +111,6 @@ class UpdateConfig:
 
     def _steps(self) -> List[Tuple[Callable[[], None], str]]:
         return [
-            (self._rewrite_autochecks, "Rewriting autochecks"),
             (self._cleanup_version_specific_caches, "Cleanup version specific caches"),
             (self._adjust_user_attributes, "Set version specific user attributes"),
         ]
@@ -130,121 +121,6 @@ class UpdateConfig:
         cmk.base.config.load()
         cmk.base.config.load_all_agent_based_plugins(
             cmk.base.check_api.get_check_api_context,
-        )
-
-    def _rewrite_autochecks(self) -> None:
-        failed_hosts = []
-
-        all_rulesets = cmk.gui.watolib.rulesets.AllRulesets()
-        all_rulesets.load()
-
-        for autocheck_file in Path(cmk.utils.paths.autochecks_dir).glob("*.mk"):
-            hostname = HostName(autocheck_file.stem)
-            store = cmk.base.autochecks.AutochecksStore(hostname)
-
-            try:
-                autochecks = store.read()
-            except MKGeneralException as exc:
-                if self._arguments.debug:
-                    raise
-                self._logger.error(str(exc))
-                failed_hosts.append(hostname)
-                continue
-
-            store.write([self._fix_entry(s, all_rulesets, hostname) for s in autochecks])
-
-        if failed_hosts:
-            msg = f"Failed to rewrite autochecks file for hosts: {', '.join(failed_hosts)}"
-            self._logger.error(msg)
-            raise MKGeneralException(msg)
-
-    def _transformed_params(
-        self,
-        plugin_name: CheckPluginName,
-        params: Any,
-        all_rulesets: RulesetCollection,
-        hostname: str,
-    ) -> Any:
-        check_plugin = register.get_check_plugin(plugin_name)
-        if check_plugin is None:
-            return None
-
-        ruleset_name = "checkgroup_parameters:%s" % check_plugin.check_ruleset_name
-        if ruleset_name not in all_rulesets.get_rulesets():
-            return None
-
-        debug_info = "host=%r, plugin=%r, ruleset=%r, params=%r" % (
-            hostname,
-            str(plugin_name),
-            str(check_plugin.check_ruleset_name),
-            params,
-        )
-
-        try:
-            ruleset = all_rulesets.get_rulesets()[ruleset_name]
-
-            # TODO: in order to keep the original input parameters and to identify misbehaving
-            #       transform_values() implementations we check the passed values for modifications
-            #       In that case we have to fix that transform_values() before using it
-            #       This hack chould vanish as soon as we know transform_values() works as expected
-            param_copy = copy.deepcopy(params)
-            new_params = ruleset.valuespec().transform_value(param_copy) if params else {}
-            if not param_copy == params:
-                self._logger.warning(
-                    "transform_value() for ruleset '%s' altered input"
-                    % check_plugin.check_ruleset_name
-                )
-
-            assert new_params or not params, "non-empty params vanished"
-            assert not isinstance(params, dict) or isinstance(new_params, dict), (
-                "transformed params down-graded from dict: %r" % new_params
-            )
-
-            # TODO: in case of known exceptions we don't want the transformed values be combined
-            #       with old keys. As soon as we can remove the workaround below we should not
-            #       handle any ruleset differently
-            if str(check_plugin.check_ruleset_name) in {"if", "filesystem"}:
-                return new_params
-
-            # TODO: some transform_value() implementations (e.g. 'ps') return parameter with
-            #       missing keys - so for safety-reasons we keep keys that don't exist in the
-            #       transformed values
-            #       On the flipside this can lead to problems with the check itself and should
-            #       be vanished as soon as we can be sure no keys are deleted accidentally
-            return {**params, **new_params} if isinstance(params, dict) else new_params
-
-        except Exception as exc:
-            msg = "Transform failed: %s, error=%r" % (debug_info, exc)
-            if self._arguments.debug:
-                raise RuntimeError(msg) from exc
-            self._logger.error(msg)
-
-        return None
-
-    def _fix_entry(
-        self,
-        entry: cmk.base.autochecks.AutocheckEntry,
-        all_rulesets: RulesetCollection,
-        hostname: str,
-    ) -> cmk.base.autochecks.AutocheckEntry:
-        """Change names of removed plugins to the new ones and transform parameters"""
-        new_plugin_name = REMOVED_CHECK_PLUGIN_MAP.get(entry.check_plugin_name)
-        new_params = self._transformed_params(
-            new_plugin_name or entry.check_plugin_name,
-            entry.parameters,
-            all_rulesets,
-            hostname,
-        )
-
-        if new_plugin_name is None and new_params is None:
-            # don't create a new entry if nothing has changed
-            return entry
-
-        return cmk.base.autochecks.AutocheckEntry(
-            check_plugin_name=new_plugin_name or entry.check_plugin_name,
-            item=entry.item,
-            parameters=new_params or entry.parameters,
-            service_labels=entry.service_labels,
         )
 
     def _check_failed_gui_plugins(self) -> None:

@@ -12,6 +12,7 @@ from _pytest.monkeypatch import MonkeyPatch
 from tests.testlib.base import Scenario
 
 from cmk.utils.type_defs import ContactgroupName, ContactName
+from cmk.utils.type_defs.notify import NotificationContext
 
 from cmk.base import notify
 
@@ -19,7 +20,8 @@ from cmk.base import notify
 def test_os_environment_does_not_override_notification_script_env(monkeypatch: MonkeyPatch) -> None:
     """Regression test for Werk #7339"""
     monkeypatch.setattr(os, "environ", {"NOTIFY_CONTACTEMAIL": ""})
-    script_env = notify.notification_script_env({"CONTACTEMAIL": "ab@test.de"})
+    notification_context = NotificationContext({"CONTACTEMAIL": "ab@test.de"})
+    script_env = notify.notification_script_env(notification_context)
     assert script_env == {"NOTIFY_CONTACTEMAIL": "ab@test.de"}
 
 

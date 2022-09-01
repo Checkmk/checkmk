@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Literal, Optional, Tuple, TypedDict, Union
+from typing import Any, Dict, List, Literal, NewType, Optional, Tuple, TypedDict, Union
 
 from ._misc import TimeperiodName
 
@@ -27,6 +27,7 @@ NotificationType = Literal[
     "PROBLEM",
     "RECOVERY",
 ]
+NotificationContext = NewType("NotificationContext", dict[str, str])
 
 
 class EventRule(TypedDict, total=False):

@@ -57,7 +57,6 @@ from cmk.utils.notify import (
     find_wato_folder,
     notification_message,
     notification_result_message,
-    NotificationContext,
     NotificationForward,
     NotificationPluginName,
     NotificationResultCode,
@@ -72,6 +71,7 @@ from cmk.utils.type_defs import (
     ContactName,
     EventContext,
     EventRule,
+    NotificationContext,
     NotifyAnalysisInfo,
     NotifyBulkParameters,
     NotifyBulks,
@@ -102,7 +102,6 @@ _log_to_stdout = False
 notify_mode = "notify"
 
 NotificationPluginNameStr = str
-PluginContext = Dict[str, str]
 
 NotificationTableEntry = Dict[str, Union[NotificationPluginNameStr, List]]
 NotificationTable = List[NotificationTableEntry]
@@ -780,7 +779,7 @@ def rbn_fake_email_contact(email: str) -> Contact:
 
 
 def rbn_add_contact_information(
-    plugin_context: PluginContext, contacts: Union[Contacts, ContactNames]
+    plugin_context: NotificationContext, contacts: Union[Contacts, ContactNames]
 ) -> None:
     # TODO tb: Make contacts a reliable type. Righ now contacts can be
     # a list of dicts or a frozenset of strings.
@@ -810,7 +809,7 @@ def rbn_add_contact_information(
         plugin_context[context_key] = ",".join(items)
 
 
-def rbn_split_plugin_context(plugin_context: PluginContext) -> List[PluginContext]:
+def rbn_split_plugin_context(plugin_context: NotificationContext) -> List[NotificationContext]:
     """Takes a plugin_context containing multiple contacts and returns
     a list of plugin_contexts with a context for each contact"""
     num_contacts = len(plugin_context["CONTACTNAME"].split(","))
@@ -826,7 +825,7 @@ def rbn_split_plugin_context(plugin_context: PluginContext) -> List[PluginContex
         context = plugin_context.copy()
         for key in keys_to_split:
             context[key] = context[key].split(",")[i]
-        contexts.append(context)
+        contexts.append(NotificationContext(context))
 
     return contexts
 
@@ -1496,7 +1495,7 @@ def notify_plain_email(raw_context: EventContext) -> None:
         notify_via_email(plugin_context)
 
 
-def notify_via_email(plugin_context: PluginContext) -> int:
+def notify_via_email(plugin_context: NotificationContext) -> int:
     logger.info(substitute_context(notification_log_template, plugin_context))
 
     if plugin_context["WHAT"] == "SERVICE":
@@ -1563,8 +1562,8 @@ def notify_via_email(plugin_context: PluginContext) -> int:
 #         PARAMETER_FOO_BAR for a dict key named "foo_bar".
 def create_plugin_context(
     raw_context: EventContext, params: Union[List, NotifyPluginParams]
-) -> PluginContext:
-    plugin_context: dict[str, str] = {}
+) -> NotificationContext:
+    plugin_context = NotificationContext({})
     plugin_context.update(cast(Mapping[str, str], raw_context))  # Make a real copy
     events.add_to_event_context(plugin_context, "PARAMETER", params)
     return plugin_context
@@ -1609,13 +1608,13 @@ def path_to_notification_script(plugin_name: NotificationPluginNameStr) -> Optio
 # Note: this function is *not* being called for bulk notification.
 def call_notification_script(
     plugin_name: NotificationPluginNameStr,
-    plugin_context: PluginContext,
+    plugin_context: NotificationContext,
     is_spoolfile: bool = False,
 ) -> int:
     _log_to_history(
         notification_message(
             NotificationPluginName(plugin_name or "plain email"),
-            NotificationContext(plugin_context),
+            plugin_context,
         )
     )
 
@@ -1685,7 +1684,7 @@ def call_notification_script(
 
 
 # Construct the environment for the notification script
-def notification_script_env(plugin_context: PluginContext) -> PluginContext:
+def notification_script_env(plugin_context: NotificationContext) -> dict[str, str]:
     # Use half of the maximum allowed string length MAX_ARG_STRLEN
     # which is usually 32 pages on Linux (see "man execve").
     #
@@ -1800,7 +1799,7 @@ def handle_spoolfile(spoolfile: str) -> int:
 def do_bulk_notify(  # pylint: disable=too-many-branches
     plugin_name: NotificationPluginNameStr,
     params: NotifyPluginParams,
-    plugin_context: PluginContext,
+    plugin_context: NotificationContext,
     bulk: NotifyBulkParameters,
 ) -> None:
     # First identify the bulk. The following elements identify it:
@@ -2273,7 +2272,7 @@ def raw_context_from_env(environ: Mapping[str, str]) -> EventContext:
     return context
 
 
-def substitute_context(template: str, context: PluginContext) -> str:
+def substitute_context(template: str, context: NotificationContext) -> str:
     """
     Replace all known variables with values and all unknown variables with empty strings
     Example:

@@ -14,6 +14,7 @@ import cmk.utils.defines
 from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
+from cmk.utils.type_defs import NotificationContext
 
 # NOTE: Keep in sync with values in MonitoringLog.cc.
 MAX_COMMENT_LENGTH = 2000
@@ -32,8 +33,6 @@ NotificationPluginName = NewType("NotificationPluginName", str)
 # contexts out of the raw notification context and the matching notification rule.
 # TODO: Consolidate with cmk.base.events.EventContext
 RawNotificationContext = NewType("RawNotificationContext", dict[str, str])
-# TODO: Consolidate with cmk.base.notify.PluginContext
-NotificationContext = NewType("NotificationContext", dict[str, str])
 
 
 class NotificationResult(TypedDict, total=False):
@@ -53,16 +52,12 @@ class NotificationForward(TypedDict):
 
 class NotificationViaPlainMail(TypedDict):
     plugin: None
-    # TODO: Enable once NotificationContext has been consolidated with cmk.base.notify.PluginContext
-    # context: NotificationContext
-    context: dict[str, str]
+    context: NotificationContext
 
 
 class NotificationViaPlugin(TypedDict):
     plugin: str
-    # TODO: Enable once NotificationContext has been consolidated with cmk.base.notify.PluginContext
-    # context: NotificationContext
-    context: dict[str, str]
+    context: NotificationContext
 
 
 def _state_for(exit_code: NotificationResultCode) -> str:

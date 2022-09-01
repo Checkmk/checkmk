@@ -3557,7 +3557,7 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
                         )
                     vs.validate_datatype(value[1], varprefix + "_%d" % nr)
                 return
-        raise MKUserError(varprefix + "_sel", _("Value %r is not allowed here.") % value)
+        raise MKUserError(varprefix + "_sel", _("Value %r is not allowed here.") % (value,))
 
     def _validate_value(self, value: CascadingDropdownChoiceValue, varprefix: str) -> None:
         if self._no_preselect_title is not None and value is None:

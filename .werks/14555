@@ -1,0 +1,16 @@
+Title: KUBE: kube_pod_containers replaces \n in check summary
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1662101437
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Previously, the check kube_pod_containers would crash with
+C+:
+raise ValueError("'\\n' not allowed in 'summary'")
+C-:
+This was because any linebreak in the detailed description of the container state was written to the
+checks summary. With this werk, linebreaks are replaced with '; '.

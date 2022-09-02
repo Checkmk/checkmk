@@ -77,7 +77,8 @@ def check_running(
 
 
 def check_waiting(params: Mapping[str, int], state: ContainerWaitingState) -> CheckResult:
-    summary = f"Status: Waiting ({state.reason}: {state.detail})"
+    detail_for_summary = (state.detail or "None").replace("\n", "; ")
+    summary = f"Status: Waiting ({state.reason}: {detail_for_summary})"
     yield Result(state=State.OK, summary=summary)
 
 
@@ -87,7 +88,8 @@ def check_terminated(params: Mapping[str, int], state: ContainerTerminatedState)
     if state.exit_code != 0:
         result_state = State(params["failed_state"])
         status = "Failed"
-    summary = f"Status: {status} ({state.reason}: {state.detail})"
+    detail_for_summary = (state.detail or "None").replace("\n", "; ")
+    summary = f"Status: {status} ({state.reason}: {detail_for_summary})"
     yield Result(state=result_state, summary=summary)
 
     if state.start_time is not None and state.end_time is not None:

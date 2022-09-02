@@ -4243,9 +4243,9 @@ class CEEConfigCache(ConfigCache):
             for varname, ruleset in self._agent_config_rulesets()
         }
 
-    def matched_generic_agent_config_entries(self) -> Dict[str, Any]:
+    def matched_generic_agent_config_entries(self, folder: str) -> Dict[str, Any]:
         return {
-            varname: self.ruleset_matcher.get_values_for_generic_agent_host(ruleset)
+            varname: self.ruleset_matcher.get_values_for_generic_agent(ruleset, folder)
             for varname, ruleset in self._agent_config_rulesets()
         }
 

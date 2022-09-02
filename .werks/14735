@@ -1,0 +1,21 @@
+Title: Agent Bakery: Cleanup orphaned packages
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1662127924
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p12
+
+
+When narrowing down packages using the "Agent bakery packages" agent ruleset,
+it may happen that a host is assigned to two different agent packages after baking.
+
+This may happen when you start using the abovementioned rule. On baking, this will result
+in a new agent package for the matched hosts. If nothing else happens to the package
+that the hosts were assigned to previously, the now-unselected platforms will remain
+for the previous package.
+
+As they are explicitly unwanted by setting the rule, these orphaned packages are now cleaned up. 

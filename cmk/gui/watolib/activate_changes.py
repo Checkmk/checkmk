@@ -140,8 +140,6 @@ class SnapshotSettings(NamedTuple):
 # Directories and files to synchronize during replication
 _replication_paths: List[ReplicationPath] = []
 
-ReplicationPathPre16 = Union[Tuple[str, str, str, List[str]], Tuple[str, str, str]]
-ReplicationPathCompat = Union[ReplicationPathPre16, ReplicationPath]
 ConfigWarnings = Dict[ConfigDomainName, List[str]]
 ActivationId = str
 SiteActivationState = Dict[str, Any]
@@ -157,33 +155,8 @@ def get_trial_expired_message() -> str:
     )
 
 
-def add_replication_paths(paths: List[ReplicationPathCompat]) -> None:
-
-    clean_paths: List[ReplicationPath] = []
-
-    for path in paths:
-        # Be compatible to pre 1.7 tuple syntax and convert it to the
-        # new internal strucure
-        # TODO: Remove with 1.8
-        if isinstance(path, tuple) and not isinstance(path, ReplicationPath):
-            if len(path) not in [3, 4]:
-                raise Exception("invalid replication path %r" % (path,))
-
-            # add_replication_paths with tuples used absolute paths, make them relative to our
-            # OMD_ROOT directory now
-            site_path = os.path.relpath(path[2], cmk.utils.paths.omd_root)
-
-            excludes: List[str] = []
-            # mypy does not understand this
-            if len(path) == 4:
-                excludes = path[3]  # type: ignore[misc]
-
-            clean_paths.append(ReplicationPath(path[0], path[1], site_path, excludes))
-            continue
-
-        clean_paths.append(path)
-
-    _replication_paths.extend(clean_paths)
+def add_replication_paths(paths: List[ReplicationPath]) -> None:
+    _replication_paths.extend(paths)
 
 
 def get_replication_paths() -> List[ReplicationPath]:

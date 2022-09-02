@@ -132,7 +132,9 @@ def test_agent_output_regexes(capsys: pytest.CaptureFixture[str]) -> None:
     [
         pytest.param(requests.exceptions.HTTPError),
         pytest.param(requests.exceptions.SSLError),
-        pytest.param(requests.exceptions.JSONDecodeError),
+        # some incompatibility with the latest request 2.28.1 or
+        # responses. JSONDecodeError became a TypeError: https://github.com/psf/requests/pull/6097
+        # pytest.param(requests.exceptions.JSONDecodeError),
     ],
 )
 @responses.activate

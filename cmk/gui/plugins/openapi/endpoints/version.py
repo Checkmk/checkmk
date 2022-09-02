@@ -18,7 +18,13 @@ from cmk.gui.plugins.openapi.restful_objects import Endpoint, response_schemas
 from cmk.gui.plugins.openapi.utils import serve_json
 
 
-@Endpoint("/version", "cmk/show", method="get", response_schema=response_schemas.InstalledVersions)
+@Endpoint(
+    "/version",
+    "cmk/show",
+    tag_group="Monitoring",
+    method="get",
+    response_schema=response_schemas.InstalledVersions,
+)
 def search(param):
     """Display some version information"""
     if request.args.get("fail"):

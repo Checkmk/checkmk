@@ -74,7 +74,6 @@ get_candidates_fallback() {
     SEARCH+=" tests"
     SEARCH+=" web/app"
     SEARCH+=" werk"
-    PRUNE+=" -path $(realpath agents/wnx/test_files/config_files/mk_logwatch.py) -prune -o"
 
     # Resolve search paths to real paths before the search for performance reasons
     # shellcheck disable=SC2086

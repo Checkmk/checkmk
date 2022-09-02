@@ -270,38 +270,39 @@ class RulesetMatcher:
             return not negate
         return negate
 
-    # TODO: Find a way to use the generic get_host_ruleset_values
     def get_values_for_generic_agent_host(self, ruleset: Ruleset) -> list[RuleValue]:
         """Compute ruleset for "generic" host
 
-        This fictious host has no name and no tags. It matches all rules that
-        do not require specific hosts or tags. But it matches rules that e.g.
-        except specific hosts or tags (is not, has not set)
+        This fictious host has no name and no tags.
+        It matches all rules that do not require specific hosts or tags.
+        It matches rules that e.g. except specific hosts or tags (is not, has not set).
         """
         self.tuple_transformer.transform_in_place(ruleset, is_service=False, is_binary=False)
+
+        main_folder = "/"
+
         entries = []
         for rule in ruleset:
             if _is_disabled(rule):
                 continue
 
-            hostlist = rule["condition"].get("host_name")
-            tags = rule["condition"].get("host_tags", {})
-            labels = rule["condition"].get("host_labels", {})
-            rule_path = rule["condition"].get("host_folder", "/")
-
-            if rule_path != "/":
+            rule_path = (cond := rule["condition"]).get("host_folder", main_folder)
+            if rule_path != main_folder:
                 continue
 
-            if tags and not self.ruleset_optimizer.matches_host_tags(set(), tags):
+            if (tags := cond.get("host_tags", {})) and not self.ruleset_optimizer.matches_host_tags(
+                set(), tags
+            ):
                 continue
 
-            if labels and not matches_labels({}, labels):
+            if (labels := cond.get("host_labels", {})) and not matches_labels({}, labels):
                 continue
 
-            if not self.ruleset_optimizer.matches_host_name(hostlist, ""):
+            if not self.ruleset_optimizer.matches_host_name(cond.get("host_name"), ""):
                 continue
 
             entries.append(rule["value"])
+
         return entries
 
 

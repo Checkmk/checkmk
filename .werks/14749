@@ -1,0 +1,11 @@
+Title: Fix TypeError on export of graph collections as PDF
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1662102029
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0p12
+
+If you exported a graph collection via "Export" - "This collection as PDF", the error "TypeError: string indices must be integers" occurred.

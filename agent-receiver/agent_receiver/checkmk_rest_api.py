@@ -192,7 +192,7 @@ def cmk_edition(credentials: HTTPBasicCredentials) -> CMKEdition:
         return CMKEdition[response.json()["edition"]]
     raise HTTPException(
         status_code=response.status_code,
-        detail="User authentication failed",
+        detail=f"Could not determine Checkmk edition ({response.reason})",
     )
 
 

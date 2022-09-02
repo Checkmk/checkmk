@@ -155,11 +155,23 @@ def get_trial_expired_message() -> str:
     )
 
 
+# TODO: find a way to make this more obvious/transparent in code
 def add_replication_paths(paths: List[ReplicationPath]) -> None:
+    """Addition of any edition-specific replication paths (i.e. config files) that need
+    to be synchronised in a distributed set-up.
+
+    This addition is done dynamically by the various edition plugins.
+    {enterprise,managed}/cmk/gui/{cee,cme}/plugins/wato
+    """
     _replication_paths.extend(paths)
 
 
 def get_replication_paths() -> List[ReplicationPath]:
+    """A list of replication paths common to all editions.
+
+    NOTE: This list is enriched further by edition plugins. See
+    'add_replication_paths'.
+    """
     paths: List[ReplicationPath] = [
         ReplicationPath(
             "dir",

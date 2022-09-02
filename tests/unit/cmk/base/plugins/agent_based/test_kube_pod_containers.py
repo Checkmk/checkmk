@@ -267,3 +267,22 @@ def test_container_terminated_state_with_only_start_time():
         "Status: Succeeded (reason: detail)",
         f"Start time: {render.datetime(TIMESTAMP)}",
     ]
+
+
+def test_container_terminated_state_linebreak_in_detail() -> None:
+    terminated_container_state = ContainerTerminatedStateFactory.build(
+        exit_code=0,
+        start_time=TIMESTAMP,
+        end_time=TIMESTAMP + 1,
+        reason="Completed",
+        detail="Installing helm_v3 chart\n",
+    )
+
+    result = list(kube_pod_containers.check_terminated({}, terminated_container_state))
+
+    assert all(r.state == State.OK for r in result if isinstance(r, Result))
+    assert any(
+        r.summary.startswith(r"Status: Succeeded (Completed: Installing helm_v3 chart; )")
+        for r in result
+        if isinstance(r, Result)
+    )

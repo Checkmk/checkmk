@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
 #
 #       U  ___ u  __  __   ____
 #        \/"_ \/U|' \/ '|u|  _"\
@@ -37,7 +36,7 @@ from typing import Optional
 
 from omdlib.console import ok
 from omdlib.contexts import SiteContext
-from omdlib.utils import delete_directory_contents, is_dockerized
+from omdlib.utils import delete_directory_contents, is_containerized
 from omdlib.version_info import VersionInfo
 
 import cmk.utils.tty as tty
@@ -99,7 +98,7 @@ def prepare_tmpfs(version_info: VersionInfo, site: SiteContext) -> None:
         return  # Fine: Mounted
 
     sys.stdout.write(completed_process.stdout)
-    if is_dockerized():
+    if is_containerized():
         sys.stdout.write(
             tty.warn + ": "
             "Could not mount tmpfs. You may either start the container in "
@@ -197,7 +196,7 @@ def _tmpfs_is_managed_by_node(site: SiteContext) -> bool:
     mount is visible, but can not be unmounted. umount exits with 32 in this
     case. Treat this case like there is no tmpfs and only the directory needs
     to be cleaned."""
-    if not is_dockerized():
+    if not is_containerized():
         return False
 
     if not tmpfs_mounted(site.name):

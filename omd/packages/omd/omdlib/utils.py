@@ -28,7 +28,7 @@ import shutil
 from typing import Iterator
 
 
-def is_dockerized() -> bool:
+def is_containerized() -> bool:
     return (
         os.path.exists("/.dockerenv")
         or os.path.exists("/run/.containerenv")

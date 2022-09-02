@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
 #
 #       U  ___ u  __  __   ____
 #        \/"_ \/U|' \/ '|u|  _"\
@@ -35,7 +34,7 @@ from omdlib.config_hooks import call_hook, sort_hooks
 from omdlib.init_scripts import check_status
 from omdlib.skel_permissions import load_skel_permissions, load_skel_permissions_from, Permissions
 from omdlib.type_defs import Config, Replacements
-from omdlib.utils import is_dockerized
+from omdlib.utils import is_containerized
 
 from cmk.utils.exceptions import MKTerminate
 
@@ -193,12 +192,12 @@ class SiteContext(AbstractSiteContext):
         return config
 
     def exists(self) -> bool:
-        # In dockerized environments the tmpfs may be managed by docker (when
+        # In container environments the tmpfs may be managed by the container runtime (when
         # using the --tmpfs option).  In this case the site directory is
         # created as parent of the tmp directory to mount the tmpfs during
         # container initialization. Detect this situation and don't treat the
         # site as existing in that case.
-        if is_dockerized():
+        if is_containerized():
             if not os.path.exists(self.dir):
                 return False
             if os.listdir(self.dir) == ["tmp"]:

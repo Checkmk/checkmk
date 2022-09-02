@@ -25,6 +25,9 @@ from .transform_any import convert_to_timestamp, parse_annotations, parse_labels
 class JSONOwnerReference(TypedDict):
     uid: str
     controller: NotRequired[bool]
+    kind: str
+    name: str
+    namespace: NotRequired[str]
 
 
 JSONOwnerReferences = Sequence[JSONOwnerReference]
@@ -182,6 +185,9 @@ def dependent_object_owner_refererences_from_json(
         api.OwnerReference(
             uid=ref["uid"],
             controller=ref.get("controller"),
+            kind=ref["kind"],
+            name=ref["name"],
+            namespace=dependent["metadata"].get("namespace"),
         )
         for ref in dependent["metadata"].get("ownerReferences", [])
     ]

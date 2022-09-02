@@ -280,6 +280,14 @@ def version_from_json(
     return decompose_git_version(version_json["gitVersion"])
 
 
+def _create_api_controller(name: str, namespace: str | None, kind: str) -> api.Controller:
+    return api.Controller(
+        name=name,
+        namespace=namespace,
+        type_=api.ControllerType.from_str(kind.lower()),
+    )
+
+
 # TODO Needs an integration test
 def _match_controllers(
     pods: Iterable[client.V1Pod], object_to_owners: Mapping[str, api.OwnerReferences]
@@ -322,10 +330,10 @@ def _match_controllers(
         ):
             controller_to_pods.setdefault(owner.uid, []).append(pod_uid)
             pod_to_controllers.setdefault(pod_uid, []).append(
-                api.Controller(
-                    name=owner.name,
-                    namespace=owner.namespace,
-                    type_=api.ControllerType.from_str(owner.kind.lower()),
+                _create_api_controller(
+                    owner.name,
+                    owner.namespace,
+                    owner.kind,
                 )
             )
 

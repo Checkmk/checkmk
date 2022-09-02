@@ -568,6 +568,7 @@ class ControllerType(enum.Enum):
     daemonset = "daemonset"
     statefulset = "statefulset"
     cronjob = "cronjob"
+    job = "job"
 
     @staticmethod
     def from_str(label):
@@ -579,6 +580,8 @@ class ControllerType(enum.Enum):
             return ControllerType.statefulset
         if label == "cronjob":
             return ControllerType.cronjob
+        if label == "job":
+            return ControllerType.job
         raise ValueError(f"Unknown controller type {label} specified")
 
 

@@ -15,6 +15,7 @@ from mocket import Mocketizer  # type: ignore[import]
 from mocket.mockhttp import Entry  # type: ignore[import]
 
 from cmk.special_agents.utils_kubernetes.api_server import (
+    _create_api_controller,
     _verify_version_support,
     decompose_git_version,
     RawAPI,
@@ -338,3 +339,89 @@ def test__verify_version_support_abort_processing(
     with pytest.raises(UnsupportedEndpointData) as excinfo:
         _verify_version_support(kubernetes_version)
     assert str(excinfo.value) == message
+
+
+@pytest.mark.parametrize(
+    "owner_reference, controller_name, controller_namespace, controller_type",
+    [
+        pytest.param(
+            api.OwnerReference(
+                uid="deployment-uid",
+                controller=True,
+                kind="Deployment",
+                name="deployment-name",
+                namespace="default",
+            ),
+            "deployment-name",
+            "default",
+            api.ControllerType.deployment,
+            id="Testing creation of Controller with type Deployment",
+        ),
+        pytest.param(
+            api.OwnerReference(
+                uid="daemonset-uid",
+                controller=True,
+                kind="DaemonSet",
+                name="daemonset-name",
+                namespace="default",
+            ),
+            "daemonset-name",
+            "default",
+            api.ControllerType.daemonset,
+            id="Testing creation of Controller with type DaemonSet",
+        ),
+        pytest.param(
+            api.OwnerReference(
+                uid="statefulset-uid",
+                controller=True,
+                kind="StatefulSet",
+                name="statefulset-name",
+                namespace=None,
+            ),
+            "statefulset-name",
+            None,
+            api.ControllerType.statefulset,
+            id="Testing creation of Controller with type StatefulSet",
+        ),
+        pytest.param(
+            api.OwnerReference(
+                uid="cronjob-uid",
+                controller=True,
+                kind="CronJob",
+                name="cronjob-name",
+                namespace="default",
+            ),
+            "cronjob-name",
+            "default",
+            api.ControllerType.cronjob,
+            id="Testing creation of Controller with type CronJob",
+        ),
+        pytest.param(
+            api.OwnerReference(
+                uid="job-uid",
+                controller=True,
+                kind="Job",
+                name="job-name",
+                namespace="default",
+            ),
+            "job-name",
+            "default",
+            api.ControllerType.job,
+            id="Testing creation of Controller with type Job",
+        ),
+    ],
+)
+def test__create_api_controller(
+    owner_reference: api.OwnerReference,
+    controller_name: str,
+    controller_namespace: str | None,
+    controller_type: api.ControllerType,
+) -> None:
+    controller = _create_api_controller(
+        owner_reference.name,
+        owner_reference.namespace,
+        owner_reference.kind,
+    )
+    assert controller.name == controller_name
+    assert controller.namespace == controller_namespace
+    assert controller.type_ == controller_type

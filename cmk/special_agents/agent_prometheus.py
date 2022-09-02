@@ -74,9 +74,7 @@ def setup_logging(verbosity):
     logging.basicConfig(level=lvl, format="%(asctime)s %(levelname)s %(message)s")
 
 
-def parse_pod_name(  # type:ignore[no-untyped-def]
-    labels: Dict[str, str], prepend_namespace: bool = False
-):
+def parse_pod_name(labels: Dict[str, str], prepend_namespace: bool = False) -> str:
     pod = labels["pod"]
     namespace = labels["namespace"]
     if prepend_namespace:

@@ -72,5 +72,5 @@ class PiggybackSource(AgentSource):
         )
 
     @staticmethod
-    def _make_description(hostname: HostName):  # type:ignore[no-untyped-def]
+    def _make_description(hostname: HostName) -> str:
         return "Process piggyback data from %s" % (Path(tmp_dir) / "piggyback" / hostname)

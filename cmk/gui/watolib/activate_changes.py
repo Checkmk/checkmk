@@ -33,7 +33,6 @@ from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, List, NamedTuple, Optional, Set, Tuple, Union
 
 import psutil  # type: ignore[import]
-import werkzeug.urls
 from setproctitle import setthreadtitle  # type: ignore[import] # pylint: disable=no-name-in-module
 
 from livestatus import SiteConfiguration, SiteId
@@ -85,13 +84,13 @@ from cmk.gui.site_config import allsites, get_site_config, is_single_local_site,
 from cmk.gui.sites import disconnect as sites_disconnect
 from cmk.gui.sites import SiteStatus
 from cmk.gui.sites import states as sites_states
-from cmk.gui.type_defs import ConfigDomainName, HTTPVariables
+from cmk.gui.type_defs import ConfigDomainName
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
-from cmk.gui.watolib.config_sync import ReplicationPath, SnapshotCreator
+from cmk.gui.watolib.config_sync import ReplicationPath
 from cmk.gui.watolib.global_settings import save_site_global_settings
 from cmk.gui.watolib.hosts_and_folders import (
     collect_all_hosts,
@@ -1062,34 +1061,6 @@ class SnapshotManager:
         # Stores site and folder specific information to speed-up the snapshot generation
         self._logger = logger.getChild(self.__class__.__name__)
 
-    def _create_site_sync_snapshot(
-        self,
-        site_id: SiteId,
-        snapshot_settings: SnapshotSettings,
-        snapshot_creator: SnapshotCreator,
-        data_collector: "ABCSnapshotDataCollector",
-    ) -> None:
-        generic_site_components, custom_site_components = data_collector.get_site_components(
-            snapshot_settings
-        )
-
-        # The CME produces individual snapshots in parallel subprocesses, the CEE mainly equal
-        # snapshots for all sites (with some minor differences, like site specific global settings).
-        # It creates a single snapshot and clones the result multiple times. Parallel creation of
-        # the snapshots would not work for the CEE.
-        if self._generate_in_subproces:
-            generate_function = snapshot_creator.generate_snapshot_in_subprocess
-        else:
-            generate_function = snapshot_creator.generate_snapshot
-
-        generate_function(
-            snapshot_work_dir=snapshot_settings.work_dir,
-            target_filepath=snapshot_settings.snapshot_path,
-            generic_components=generic_site_components,
-            custom_components=custom_site_components,
-            reuse_identical_snapshots=self._reuse_identical_snapshots,
-        )
-
     def generate_snapshots(self) -> None:
         if not self._site_snapshot_settings:
             # Nothing to do
@@ -1863,10 +1834,6 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         if response is not True:
             raise MKGeneralException(_("Failed to synchronize with site: %s") % response)
 
-    def _upload_file(self, url, insecure):
-        with open(self._snapshot_settings.snapshot_path, "rb") as f:
-            return cmk.gui.watolib.automations.get_url(url, insecure, files={"snapshot": f})
-
     def _do_activate(self) -> ConfigWarnings:
         self._set_result(PHASE_ACTIVATE, _("Activating"))
 
@@ -2266,12 +2233,6 @@ def _create_distributed_wato_file_for_dcd(base_dir: Path, is_remote: bool) -> No
     output += "dcd_is_wato_remote_site = %r\n" % is_remote
 
     store.save_text_to_file(base_dir.joinpath("etc/check_mk/dcd.d/wato/distributed.mk"), output)
-
-
-def create_site_globals_file(site_id: SiteId, tmp_dir: str, site_globals: dict[str, Any]) -> None:
-    site_globals_dir = os.path.join(tmp_dir, "site_globals")
-    store.makedirs(site_globals_dir)
-    store.save_object_to_file(os.path.join(site_globals_dir, "sitespecific.mk"), site_globals)
 
 
 def get_site_globals(site_id: SiteId, site_config: SiteConfiguration) -> dict[str, Any]:
@@ -2734,43 +2695,3 @@ def activate_changes_wait(
     if manager.wait_for_completion(timeout=timeout):
         return manager.get_state()
     return None
-
-
-def append_query_string(url: str, variables: HTTPVariables) -> str:
-    """Append a query string to an URL.
-
-    Non-str values are converted to str, None values are omitted in the result.
-
-    Examples:
-
-        None values are filtered out:
-
-            >>> append_query_string("foo", [('b', 2), ('c', None), ('a', '1'),])
-            'foo?a=1&b=2'
-
-        Empty values are kept:
-
-            >>> append_query_string("foo", [('c', ''), ('a', 1), ('b', '2'),])
-            'foo?a=1&b=2&c='
-
-            >>> append_query_string("foo", [('c', None), ('a', None), ('b', None),])
-            'foo'
-
-    Args:
-        url:
-            The url to append the query string to.
-        variables:
-            The query string variables as a list of tuples.
-
-    Returns:
-        The url with the query string appended.
-
-    """
-    if variables:
-        _vars: List[Tuple[str, str]] = [
-            (key, str(value)) for key, value in variables if value is not None
-        ]
-        if _vars:
-            url += "?" + werkzeug.urls.url_encode(_vars, sort=True)
-
-    return url

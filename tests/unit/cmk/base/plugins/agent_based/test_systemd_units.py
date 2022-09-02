@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from datetime import timedelta
-from typing import Sequence
+from typing import Mapping, Sequence
 
 import pytest
+
+from cmk.utils.type_defs import ParametersTypeAlias
 
 from cmk.base.api.agent_based.checking_classes import Result, Service, State
 from cmk.base.plugins.agent_based.systemd_units import (
@@ -156,7 +158,11 @@ from cmk.base.plugins.agent_based.systemd_units import (
         ),
     ],
 )
-def test_services_split(services, blacklist, expected) -> None:  # type:ignore[no-untyped-def]
+def test_services_split(
+    services: Sequence[UnitEntry],
+    blacklist: Sequence[str],
+    expected: dict[str, Sequence[UnitEntry]],
+) -> None:
     actual = _services_split(services, blacklist)
     assert actual == expected
 
@@ -500,7 +506,7 @@ SEC_PER_YEAR = 31557600
         ("0 years 12 months ago", timedelta(seconds=SEC_PER_MONTH * 12)),
     ],
 )
-def test_parse_time_since_state_change(time, expected) -> None:  # type:ignore[no-untyped-def]
+def test_parse_time_since_state_change(time: str, expected: timedelta) -> None:
     condition = f" Condition: start condition failed at Tue 2022-04-12 12:53:54 CEST; {time}"
     pre_string_table = [
         "[list-unit-files]",
@@ -534,7 +540,7 @@ def test_parse_time_since_state_change(time, expected) -> None:  # type:ignore[n
     "icon",
     ["●", "○", "↻", "×", "x", "*"],
 )
-def test_all_possible_service_states_in_status_section(icon) -> None:  # type:ignore[no-untyped-def]
+def test_all_possible_service_states_in_status_section(icon: str) -> None:
     pre_string_table = [
         "[list-unit-files]",
         "[status]",
@@ -567,7 +573,7 @@ def test_all_possible_service_states_in_status_section(icon) -> None:  # type:ig
     "icon",
     ["●", "○", "↻", "×", "x", "*"],
 )
-def test_all_possible_service_states_in_all_section(icon) -> None:  # type:ignore[no-untyped-def]
+def test_all_possible_service_states_in_all_section(icon: str) -> None:
     pre_string_table = [
         "[list-unit-files]",
         "[status]",
@@ -687,8 +693,10 @@ SECTION = Section(
         ),
     ],
 )
-def test_discover_systemd_units_services(  # type:ignore[no-untyped-def]
-    section, discovery_params, discovered_services
+def test_discover_systemd_units_services(
+    section: Section,
+    discovery_params: Sequence[Mapping[str, Sequence[str]]],
+    discovered_services: Sequence[Service],
 ) -> None:
     assert (
         list(
@@ -728,8 +736,10 @@ def test_discover_systemd_units_services(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_discover_systemd_units_sockets(  # type:ignore[no-untyped-def]
-    section, discovery_params, discovered_services
+def test_discover_systemd_units_sockets(
+    section: Section,
+    discovery_params: Sequence[Mapping[str, Sequence[str]]],
+    discovered_services: Sequence[Service],
 ) -> None:
     assert (
         list(discovery_systemd_units_sockets(params=discovery_params, section=section))
@@ -746,8 +756,8 @@ def test_discover_systemd_units_sockets(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_discover_systemd_units_services_summary(  # type:ignore[no-untyped-def]
-    section, discovered_services
+def test_discover_systemd_units_services_summary(
+    section: Section, discovered_services: Sequence[Service]
 ) -> None:
     assert list(discovery_systemd_units_services_summary(section)) == discovered_services
 
@@ -806,8 +816,8 @@ def test_discover_systemd_units_services_summary(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_systemd_units_services(  # type:ignore[no-untyped-def]
-    item, params, section, check_results
+def test_check_systemd_units_services(
+    item: str, params: ParametersTypeAlias, section: Section, check_results: Sequence[Result]
 ) -> None:
     assert list(check_systemd_services(item, params, section)) == check_results
 
@@ -843,8 +853,8 @@ def test_check_systemd_units_services(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_systemd_units_sockets(  # type:ignore[no-untyped-def]
-    item, params, section, check_results
+def test_check_systemd_units_sockets(
+    item: str, params: ParametersTypeAlias, section: Section, check_results: Sequence[Result]
 ) -> None:
     assert list(check_systemd_sockets(item, params, section)) == check_results
 
@@ -1056,8 +1066,8 @@ def test_check_systemd_units_sockets(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_systemd_units_services_summary(  # type:ignore[no-untyped-def]
-    params, section, check_results
+def test_check_systemd_units_services_summary(
+    params: ParametersTypeAlias, section: Section, check_results: Sequence[Result]
 ) -> None:
     assert (
         list(

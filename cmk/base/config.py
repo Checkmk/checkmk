@@ -74,7 +74,6 @@ from cmk.utils.type_defs import RulesetName  # alias for str
 from cmk.utils.type_defs import (
     ActiveCheckPluginName,
     AgentTargetVersion,
-    BuiltinBakeryHostName,
     CheckPluginName,
     CheckPluginNameStr,
     CheckVariables,
@@ -4238,22 +4237,24 @@ class CEEConfigCache(ConfigCache):
             return default
         return value
 
-    def matched_agent_config_entries(
-        self, hostname: Union[HostName, Literal[BuiltinBakeryHostName.GENERIC]]
-    ) -> Dict[str, Any]:
-        matched = {}
-        for varname, ruleset in list(agent_config.items()) + [
+    def matched_agent_config_entries(self, hostname: HostName) -> Dict[str, Any]:
+        return {
+            varname: self.host_extra_conf(hostname, ruleset)
+            for varname, ruleset in self._agent_config_rulesets()
+        }
+
+    def matched_generic_agent_config_entries(self) -> Dict[str, Any]:
+        return {
+            varname: self.ruleset_matcher.get_values_for_generic_agent_host(ruleset)
+            for varname, ruleset in self._agent_config_rulesets()
+        }
+
+    def _agent_config_rulesets(self) -> Iterable[tuple[str, Any]]:
+        return list(agent_config.items()) + [
             ("agent_port", agent_ports),
             ("agent_encryption", agent_encryption),
             ("agent_exclude_sections", agent_exclude_sections),
-        ]:
-
-            if hostname is BuiltinBakeryHostName.GENERIC:
-                matched[varname] = self.ruleset_matcher.get_values_for_generic_agent_host(ruleset)
-            else:
-                matched[varname] = self.host_extra_conf(hostname, ruleset)
-
-        return matched
+        ]
 
 
 # TODO: Find a clean way to move this to cmk.base.cee. This will be possible once the

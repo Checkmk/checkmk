@@ -48,6 +48,15 @@ def _expected_replication_paths():
         ),
         ReplicationPath("dir", "mkps", "var/check_mk/packages", []),
         ReplicationPath("dir", "local", "local", []),
+        ReplicationPath(
+            ty="file",
+            ident="distributed_wato",
+            site_path="etc/check_mk/conf.d/distributed_wato.mk",
+            excludes=[],
+        ),
+        ReplicationPath(
+            ty="dir", ident="omd", site_path="etc/omd", excludes=["allocated_ports", "site.conf"]
+        ),
     ]
 
     if not cmk_version.is_raw_edition():
@@ -135,21 +144,6 @@ def test_get_replication_components(edition, monkeypatch, replicate_ec, replicat
 
     if not replicate_mkps:
         expected = [e for e in expected if e.ident not in ["local", "mkps"]]
-
-    expected += [
-        ReplicationPath(
-            ty="file",
-            ident="distributed_wato",
-            site_path="etc/check_mk/conf.d/distributed_wato.mk",
-            excludes=[".*new*"],
-        ),
-        ReplicationPath(
-            ty="dir",
-            ident="omd",
-            site_path="etc/omd",
-            excludes=["allocated_ports", "site.conf", ".*new*"],
-        ),
-    ]
 
     assert sorted(activate_changes._get_replication_components(partial_site_config)) == sorted(
         expected

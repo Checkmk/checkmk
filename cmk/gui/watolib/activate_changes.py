@@ -262,6 +262,18 @@ def get_replication_paths() -> List[ReplicationPath]:
             "local",
             [],
         ),
+        ReplicationPath(
+            ty="file",
+            ident="distributed_wato",
+            site_path="etc/check_mk/conf.d/distributed_wato.mk",
+            excludes=[],
+        ),
+        ReplicationPath(
+            ty="dir",
+            ident="omd",
+            site_path="etc/omd",
+            excludes=["allocated_ports", "site.conf"],
+        ),
     ]
 
     # TODO: Move this to CEE specific code again
@@ -2267,24 +2279,6 @@ def _get_replication_components(site_config: SiteConfiguration) -> List[Replicat
     # Remove extensions if site does not want them
     if not site_config.get("replicate_mkps"):
         paths = [e for e in paths if e.ident not in ["local", "mkps"]]
-
-    # Add distributed_wato.mk
-    # OMD replication path needs sitepecific.mk and global.mk, so we have
-    # to deal with excludes here
-    paths += [
-        ReplicationPath(
-            ty="file",
-            ident="distributed_wato",
-            site_path="etc/check_mk/conf.d/distributed_wato.mk",
-            excludes=[],
-        ),
-        ReplicationPath(
-            ty="dir",
-            ident="omd",
-            site_path="etc/omd",
-            excludes=["allocated_ports", "site.conf"],
-        ),
-    ]
 
     return paths
 

@@ -7,8 +7,9 @@ import shutil
 from pathlib import Path
 
 import pytest
-from conftest import YieldFixture
-from utils import (
+
+from .conftest import YieldFixture
+from .utils import (
     CMK_UPDATER_CHECKMK_PY,
     CMK_UPDATER_PY,
     patch_venv_config,

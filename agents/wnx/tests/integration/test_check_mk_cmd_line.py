@@ -8,7 +8,8 @@ from pathlib import Path
 from typing import Dict, Final
 
 import pytest
-from utils import run_agent, YamlDict
+
+from .utils import run_agent, YamlDict
 
 
 def test_check_mk_agent_cmd_line_help(

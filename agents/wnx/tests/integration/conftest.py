@@ -11,7 +11,8 @@ from typing import Final, Generator, TypeVar
 
 import pytest
 import yaml
-from utils import (
+
+from .utils import (
     AGENT_EXE_NAME,
     check_os,
     create_legacy_pull_file,

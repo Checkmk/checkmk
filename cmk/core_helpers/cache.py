@@ -417,7 +417,7 @@ class FileCache(Generic[TRawData], abc.ABC):
         try:
             cachefile_age = cmk.utils.cachefile_age(path)
         except FileNotFoundError:
-            self._logger.debug("Not using cache (Does not exists)")
+            self._logger.debug("Not using cache (does not exist)")
             return None
 
         if not self.use_outdated and cachefile_age > self.max_age.get(mode):

@@ -24,7 +24,7 @@ files that may be leftover from old installations before activating the
 new super server coming from the new package.
 
 Please be aware that, starting with this Werk, agent packages from the agent
-bakery will discard settings that have been made to xinetd/systemd files from
+bakery will discard changes made to xinetd/systemd files from
 a previously installed prepackaged/raw edition agent package. While this
 is expected behavior for bakery packages, it may still change some agent
 installations in an unexpected way, because this was done inconsequently

@@ -343,7 +343,6 @@ def _load_site_replication_status(site_id, lock=False):
 
 def _save_site_replication_status(site_id, repl_status):
     store.save_object_to_file(_site_replication_status_path(site_id), repl_status, pretty=False)
-    _cleanup_legacy_replication_status()
 
 
 def _update_replication_status(site_id, vars_):
@@ -356,18 +355,6 @@ def _update_replication_status(site_id, vars_):
         repl_status.update(vars_)
     finally:
         _save_site_replication_status(site_id, repl_status)
-
-
-# This can be removed one day. It is only meant for cleaning up the pre 1.4.0
-# global replication status file.
-def _cleanup_legacy_replication_status():
-    try:
-        os.unlink(var_dir + "replication_status.mk")
-    except OSError as e:
-        if e.errno == errno.ENOENT:
-            pass  # Not existant -> OK
-        else:
-            raise
 
 
 def clear_site_replication_status(site_id):

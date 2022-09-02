@@ -270,8 +270,8 @@ class RulesetMatcher:
             return not negate
         return negate
 
-    def get_values_for_generic_agent_host(self, ruleset: Ruleset) -> list[RuleValue]:
-        """Compute ruleset for "generic" host
+    def get_values_for_generic_agent(self, ruleset: Ruleset, folder: str) -> list[RuleValue]:
+        """Compute rulesets for "generic" hosts
 
         This fictious host has no name and no tags.
         It matches all rules that do not require specific hosts or tags.
@@ -287,7 +287,7 @@ class RulesetMatcher:
                 continue
 
             rule_path = (cond := rule["condition"]).get("host_folder", main_folder)
-            if rule_path != main_folder:
+            if not folder.startswith(rule_path):
                 continue
 
             if (tags := cond.get("host_tags", {})) and not self.ruleset_optimizer.matches_host_tags(

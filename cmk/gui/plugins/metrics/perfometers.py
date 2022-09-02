@@ -1186,6 +1186,14 @@ perfometer_info.append(
 perfometer_info.append(
     {
         "type": "linear",
+        "segments": ["availability"],
+        "total": 100.0,
+    }
+)
+
+perfometer_info.append(
+    {
+        "type": "linear",
         "segments": ["health_perc"],
         "total": 100,
     }
@@ -2010,6 +2018,14 @@ perfometer_info.append(
                 "exponent": 3,
             },
         ],
+    }
+)
+
+perfometer_info.append(
+    {
+        "type": "linear",
+        "segments": ["snat_usage"],
+        "total": 100.0,
     }
 )
 

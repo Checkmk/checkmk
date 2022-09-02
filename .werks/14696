@@ -1,0 +1,21 @@
+Title: azure_load_balancer: Monitor Azure Load Balancer
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1662128440
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+It's now possible to monitor Azure Load Balancer in Checkmk.
+Three new checks have been added:
+<ul>
+<li>Microsoft Azure Load Balancer: Byte Count</li>
+<li>Microsoft Azure Load Balancer: Health</li>
+<li>Microsoft Azure Load Balancer: SNAT Consumption</li>
+</ul>
+The new services will be automatically discovered if you have
+an Azure Load Balancer in the resource group already monitored
+in Checkmk.
+

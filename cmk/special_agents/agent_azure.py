@@ -118,6 +118,20 @@ METRICS_SELECTED = {
             None,
         ),
     ],
+    "Microsoft.Network/loadBalancers": [
+        (
+            "ByteCount",
+            "PT1M",
+            "total",
+            None,
+        ),
+        (
+            "AllocatedSnatPorts,UsedSnatPorts,VipAvailability,DipAvailability",
+            "PT1M",
+            "average",
+            None,
+        ),
+    ],
 }
 
 AZURE_CACHE_FILE_PATH = Path(tmp_dir) / "agents" / "agent_azure"

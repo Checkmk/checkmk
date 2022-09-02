@@ -1575,6 +1575,30 @@ metric_info["queries_per_sec"] = {
     "color": "41/b",
 }
 
+metric_info["byte_count"] = {
+    "title": _("Byte count"),
+    "unit": "bytes/s",
+    "color": "11/a",
+}
+
+metric_info["snat_usage"] = {
+    "title": _("SNAT usage"),
+    "unit": "%",
+    "color": "21/a",
+}
+
+metric_info["allocated_snat_ports"] = {
+    "title": _("Allocated SNAT ports"),
+    "unit": "count",
+    "color": "41/a",
+}
+
+metric_info["used_snat_ports"] = {
+    "title": _("Used SNAT ports"),
+    "unit": "count",
+    "color": "42/b",
+}
+
 # .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |

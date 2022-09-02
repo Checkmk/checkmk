@@ -673,3 +673,30 @@ rulespec_registry.register(
         title=lambda: _("Azure Traffic Manager Probe State"),
     )
 )
+
+
+def _parameter_valuespec_health():
+    return Dictionary(
+        title=_("Levels health"),
+        elements=[
+            (
+                "vip_availability",
+                SimpleLevels(Percentage, title=_("Data path availability lower levels")),
+            ),
+            (
+                "health_probe",
+                SimpleLevels(Percentage, title=_("Health probe status lower levels")),
+            ),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="azure_load_balancer_health",
+        item_spec=lambda: TextInput(title=_("Load Balancer Health")),
+        group=RulespecGroupCheckParametersApplications,
+        parameter_valuespec=_parameter_valuespec_health,
+        title=lambda: _("Azure Load Balancer Health"),
+    )
+)

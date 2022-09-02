@@ -1,0 +1,16 @@
+title: Microsoft Azure Load Balancer: Health
+agents: azure
+catalog: cloud/azure
+license: GPLv2
+distribution: check_mk
+description:
+ This check reports the data path availability and the health probe
+ status of a Load Balancer as percentages.
+ You can configure levels using the rule "Azure Load Balancer Health".
+
+item:
+ The name of the resource.
+
+discovery:
+ One service is created for each load balancer if any of required
+ metrics (average_DipAvailability, average_VipAvailability) are given.

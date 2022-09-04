@@ -180,6 +180,7 @@ def _build(request, client, version, prepare_package=True):
         "CMK_LIVESTATUS_TCP=",
         "CMK_PASSWORD=",
         "MAIL_RELAY_HOST=",
+        "CMK_CONTAINERIZED=TRUE",
     ]
 
     assert "Healthcheck" in config

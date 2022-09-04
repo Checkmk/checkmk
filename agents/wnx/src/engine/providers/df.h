@@ -34,7 +34,7 @@ std::string ProduceFileSystemOutput(std::string_view volume_id);
 std::vector<std::string> GetMountPointVector(std::string_view volume_id);
 std::string ProduceMountPointsOutput(std::string_view volume_id);
 std::vector<std::string> GetDriveVector();
-uint64_t CalcUsage(uint64_t avail, uint64_t total);
+uint64_t CalcUsage(uint64_t avail, uint64_t total) noexcept;
 }  // namespace df
 
 };  // namespace cma::provider

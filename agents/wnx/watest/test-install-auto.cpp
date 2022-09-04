@@ -55,7 +55,7 @@ TEST(InstallAuto, FileControlIntegration) {
     EXPECT_TRUE(fs::exists(path, ec));
 
     EXPECT_FALSE(NeedInstall(path, out));
-    tools::sleep(100ms);  // guarante that file will be new
+    tools::sleep(100ms);  // guarantee that file will be new
     tst::CreateTextFile(path, "-----\n");
     // Typical windows code below: wait for file, because on heavy load file may
     // not be created quick enough. WTF Microsoft?

@@ -74,8 +74,6 @@ from cmk.utils.type_defs import RulesetName  # alias for str
 from cmk.utils.type_defs import (
     ActiveCheckPluginName,
     AgentTargetVersion,
-    BakeryHostName,
-    BuiltinBakeryHostName,
     CheckPluginName,
     CheckPluginNameStr,
     CheckVariables,
@@ -4245,14 +4243,24 @@ class CEEConfigCache(ConfigCache):
             for varname, ruleset in self._agent_config_rulesets()
         }
 
-    def generic_agent_config_entries(self) -> Iterable[tuple[BakeryHostName, Mapping[str, Any]]]:
-        yield BuiltinBakeryHostName.GENERIC, {
+    def generic_agent_config_entries(self) -> Iterable[tuple[str, Mapping[str, Any]]]:
+        paths_for_rule_matching_to_bake_for = [
             # Watch out: this is a layering violation in disguise!
-            # The "/wato/" is `CREFolder.root_folder().path_for_rule_maching()`.
-            # We want to bake for the root folder. Clean this up!
-            varname: self.ruleset_matcher.get_values_for_generic_agent(ruleset, "/wato/")
-            for varname, ruleset in self._agent_config_rulesets()
-        }
+            # The "/wato/" is `CREFolder.root_folder().path_for_rule_matching()`.
+            # We want to bake for the root folder (for now). Clean this up!
+            "/wato/",
+        ]
+
+        yield from (
+            (
+                match_path,
+                {
+                    varname: self.ruleset_matcher.get_values_for_generic_agent(ruleset, match_path)
+                    for varname, ruleset in self._agent_config_rulesets()
+                },
+            )
+            for match_path in paths_for_rule_matching_to_bake_for
+        )
 
     def _agent_config_rulesets(self) -> Iterable[tuple[str, Any]]:
         return list(agent_config.items()) + [

@@ -59,6 +59,7 @@ from cmk.utils.log import VERBOSE
 from cmk.utils.regex import unescape
 from cmk.utils.store import load_from_mk_file, ObjectStore, save_mk_file
 from cmk.utils.type_defs import (
+    BakeryTargetFolder,
     CheckPluginName,
     ContactgroupName,
     HostName,
@@ -345,6 +346,7 @@ class UpdateConfig:
             (self._update_mknotifyd, "Rewrite mknotifyd config for central site"),
             (self._transform_influxdb_connnections, "Rewriting InfluxDB connections"),
             (self._check_ec_rules, "Disabling unsafe EC rules"),
+            (self._update_bakery, "Update bakery links and settings"),
         ]
 
     def _initialize_base_environment(self) -> None:
@@ -1792,6 +1794,26 @@ class UpdateConfig:
             if f"${macro_name}$" in script_text:
                 return True
         return False
+
+    def _update_bakery(self) -> None:
+        try:
+            from cmk.base.cee.bakery.agent_bakery import baked_agents_dir
+        except ImportError:
+            return
+
+        self._rewrite_generic_agent_link(baked_agents_dir)
+
+    def _rewrite_generic_agent_link(self, agents_dir: Path) -> None:
+        try:
+            platform_dirs = list(agents_dir.iterdir())
+        except FileNotFoundError:
+            return
+
+        for d in platform_dirs:
+            if not d.is_dir():
+                continue
+            with suppress(FileNotFoundError):
+                (d / "_GENERIC").rename(d / BakeryTargetFolder("/wato/").serialize())
 
 
 class PasswordSanitizer:

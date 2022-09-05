@@ -58,27 +58,6 @@ def test_main(monkeypatch: pytest.MonkeyPatch) -> None:
     assert "XYZ" in buf.getvalue()
 
 
-def test_cleanup_version_specific_caches_missing_directory(uc: update_config.UpdateConfig) -> None:
-    uc._cleanup_version_specific_caches()
-
-
-def test_cleanup_version_specific_caches(uc: update_config.UpdateConfig) -> None:
-    paths = [
-        Path(cmk.utils.paths.include_cache_dir, "builtin"),
-        Path(cmk.utils.paths.include_cache_dir, "local"),
-        Path(cmk.utils.paths.precompiled_checks_dir, "builtin"),
-        Path(cmk.utils.paths.precompiled_checks_dir, "local"),
-    ]
-    for base_dir in paths:
-        base_dir.mkdir(parents=True, exist_ok=True)
-        cached_file = base_dir / "if"
-        with cached_file.open("w", encoding="utf-8") as f:
-            f.write("\n")
-        uc._cleanup_version_specific_caches()
-        assert not cached_file.exists()
-        assert base_dir.exists()
-
-
 @pytest.fixture(name="old_path")
 def fixture_old_path() -> Path:
     return Path(cmk.utils.paths.var_dir, "wato", "log", "audit.log")

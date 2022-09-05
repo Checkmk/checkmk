@@ -9,11 +9,9 @@ all sites and on remote sites after receiving a snapshot and does not need to
 be called manually.
 """
 import argparse
-import errno
 import logging
 import re
 from datetime import datetime
-from pathlib import Path
 from typing import Callable, List, Tuple
 
 import cmk.utils
@@ -36,7 +34,6 @@ import cmk.base.config
 import cmk.gui.config
 import cmk.gui.groups
 import cmk.gui.utils
-import cmk.gui.visuals as visuals
 import cmk.gui.watolib.groups
 import cmk.gui.watolib.hosts_and_folders
 import cmk.gui.watolib.rulesets
@@ -111,7 +108,6 @@ class UpdateConfig:
 
     def _steps(self) -> List[Tuple[Callable[[], None], str]]:
         return [
-            (self._cleanup_version_specific_caches, "Cleanup version specific caches"),
             (self._adjust_user_attributes, "Set version specific user attributes"),
         ]
 
@@ -133,31 +129,6 @@ class UpdateConfig:
                 "       Checkmk version."
             )
             self._logger.error("")
-
-    def _cleanup_version_specific_caches(self) -> None:
-        paths = [
-            Path(cmk.utils.paths.include_cache_dir, "builtin"),
-            Path(cmk.utils.paths.include_cache_dir, "local"),
-            Path(cmk.utils.paths.precompiled_checks_dir, "builtin"),
-            Path(cmk.utils.paths.precompiled_checks_dir, "local"),
-        ]
-
-        walk_cache_dir = Path(cmk.utils.paths.var_dir, "snmp_cache")
-        if walk_cache_dir.exists():
-            paths.extend(walk_cache_dir.iterdir())
-
-        for base_dir in paths:
-            try:
-                for f in base_dir.iterdir():
-                    f.unlink()
-            except OSError as e:
-                if e.errno != errno.ENOENT:
-                    raise  # Do not fail on missing directories / files
-
-        # The caches might contain visuals in a deprecated format. For example, in 2.2, painters in
-        # visuals are represented by a dedicated type, which was not the case the before. The caches
-        # from 2.1 will still contain the old data structures.
-        visuals._CombinedVisualsCache.invalidate_all_caches()
 
     def _adjust_user_attributes(self) -> None:
         """All users are loaded and attributes can be transformed or set."""

@@ -513,32 +513,11 @@ def iter_active_check_services(
     description = config.active_check_service_description(
         host_config.hostname, host_config.alias, check_name, params
     )
-    arguments = active_check_arguments(
+    arguments = commandline_arguments(
         host_config.hostname, description, active_info["argument_function"](params)
     )
 
     yield description, arguments
-
-
-def active_check_arguments(
-    hostname: HostName,
-    description: Optional[ServiceName],
-    commandline_arguments: config.SpecialAgentInfoFunctionResult,
-) -> str:
-    if isinstance(commandline_arguments, str):
-        return commandline_arguments
-
-    # Some special agents also have stdin configured
-    args = getattr(commandline_arguments, "args", commandline_arguments)
-
-    if not isinstance(args, list):
-        raise MKGeneralException(
-            "The check argument function needs to return either a list of arguments or a "
-            "string of the concatenated arguments (Host: %s, Service: %s)."
-            % (hostname, description)
-        )
-
-    return _prepare_check_command(args, hostname, description)
 
 
 def _prepare_check_command(
@@ -606,6 +585,47 @@ def get_active_check_descriptions(
         return
 
     yield config.active_check_service_description(hostname, hostalias, check_name, params)
+
+
+# .
+#   .--Argument Thingies---------------------------------------------------.
+#   |    _                                         _                       |
+#   |   / \   _ __ __ _ _   _ _ __ ___   ___ _ __ | |_                     |
+#   |  / _ \ | '__/ _` | | | | '_ ` _ \ / _ \ '_ \| __|                    |
+#   | / ___ \| | | (_| | |_| | | | | | |  __/ | | | |_                     |
+#   |/_/   \_\_|  \__, |\__,_|_| |_| |_|\___|_| |_|\__|                    |
+#   |             |___/                                                    |
+#   | _____ _     _             _                                          |
+#   ||_   _| |__ (_)_ __   __ _(_) ___  ___                                |
+#   |  | | | '_ \| | '_ \ / _` | |/ _ \/ __|                               |
+#   |  | | | | | | | | | | (_| | |  __/\__ \                               |
+#   |  |_| |_| |_|_|_| |_|\__, |_|\___||___/                               |
+#   |                     |___/                                            |
+#   +----------------------------------------------------------------------+
+#   | Command line arguments for special agents or active checks           |
+#   '----------------------------------------------------------------------'
+
+
+def commandline_arguments(
+    hostname: HostName,
+    description: Optional[ServiceName],
+    commandline_args: config.SpecialAgentInfoFunctionResult,
+) -> str:
+    """Commandline arguments for special agents or active checks."""
+    if isinstance(commandline_args, str):
+        return commandline_args
+
+    # Some special agents also have stdin configured
+    args = getattr(commandline_args, "args", commandline_args)
+
+    if not isinstance(args, list):
+        raise MKGeneralException(
+            "The check argument function needs to return either a list of arguments or a "
+            "string of the concatenated arguments (Host: %s, Service: %s)."
+            % (hostname, description)
+        )
+
+    return _prepare_check_command(args, hostname, description)
 
 
 # .

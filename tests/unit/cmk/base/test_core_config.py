@@ -43,43 +43,43 @@ def test_do_create_config_nagios(core_scenario, config_path) -> None:  # type:ig
     assert config.PackedConfigStore.from_serial(LATEST_CONFIG).path.exists()
 
 
-def test_active_check_arguments_basics() -> None:
+def test_commandline_arguments_basics() -> None:
     assert (
-        core_config.active_check_arguments(HostName("bla"), "blub", "args 123 -x 1 -y 2")
+        core_config.commandline_arguments(HostName("bla"), "blub", "args 123 -x 1 -y 2")
         == "args 123 -x 1 -y 2"
     )
 
     assert (
-        core_config.active_check_arguments(
+        core_config.commandline_arguments(
             HostName("bla"), "blub", ["args", "123", "-x", "1", "-y", "2"]
         )
         == "'args' '123' '-x' '1' '-y' '2'"
     )
 
     assert (
-        core_config.active_check_arguments(
+        core_config.commandline_arguments(
             HostName("bla"), "blub", ["args", "1 2 3", "-d=2", "--hallo=eins", 9]
         )
         == "'args' '1 2 3' '-d=2' '--hallo=eins' 9"
     )
 
     with pytest.raises(MKGeneralException):
-        core_config.active_check_arguments("bla", "blub", (1, 2))  # type: ignore[arg-type]
+        core_config.commandline_arguments("bla", "blub", (1, 2))  # type: ignore[arg-type]
 
 
 @pytest.mark.parametrize("pw", ["abc", "123", "x'äd!?", "aädg"])
-def test_active_check_arguments_password_store(pw) -> None:  # type:ignore[no-untyped-def]
+def test_commandline_arguments_password_store(pw) -> None:  # type:ignore[no-untyped-def]
     password_store.save({"pw-id": pw})
-    assert core_config.active_check_arguments(
+    assert core_config.commandline_arguments(
         HostName("bla"), "blub", ["arg1", ("store", "pw-id", "--password=%s"), "arg3"]
     ) == "--pwstore=2@11@pw-id 'arg1' '--password=%s' 'arg3'" % ("*" * len(pw))
 
 
-def test_active_check_arguments_not_existing_password(  # type:ignore[no-untyped-def]
+def test_commandline_arguments_not_existing_password(  # type:ignore[no-untyped-def]
     capsys,
 ) -> None:
     assert (
-        core_config.active_check_arguments(
+        core_config.commandline_arguments(
             HostName("bla"), "blub", ["arg1", ("store", "pw-id", "--password=%s"), "arg3"]
         )
         == "--pwstore=2@11@pw-id 'arg1' '--password=***' 'arg3'"
@@ -88,43 +88,41 @@ def test_active_check_arguments_not_existing_password(  # type:ignore[no-untyped
     assert 'The stored password "pw-id" used by service "blub" on host "bla"' in stderr
 
 
-def test_active_check_arguments_wrong_types() -> None:
+def test_commandline_arguments_wrong_types() -> None:
     with pytest.raises(MKGeneralException):
-        core_config.active_check_arguments(HostName("bla"), "blub", 1)  # type: ignore[arg-type]
+        core_config.commandline_arguments(HostName("bla"), "blub", 1)  # type: ignore[arg-type]
 
     with pytest.raises(MKGeneralException):
-        core_config.active_check_arguments(
-            HostName("bla"), "blub", (1, 2)  # type: ignore[arg-type]
-        )
+        core_config.commandline_arguments(HostName("bla"), "blub", (1, 2))  # type: ignore[arg-type]
 
 
-def test_active_check_arguments_str() -> None:
+def test_commandline_arguments_str() -> None:
     assert (
-        core_config.active_check_arguments(HostName("bla"), "blub", "args 123 -x 1 -y 2")
+        core_config.commandline_arguments(HostName("bla"), "blub", "args 123 -x 1 -y 2")
         == "args 123 -x 1 -y 2"
     )
 
 
-def test_active_check_arguments_list() -> None:
-    assert core_config.active_check_arguments(HostName("bla"), "blub", ["a", "123"]) == "'a' '123'"
+def test_commandline_arguments_list() -> None:
+    assert core_config.commandline_arguments(HostName("bla"), "blub", ["a", "123"]) == "'a' '123'"
 
 
-def test_active_check_arguments_list_with_numbers() -> None:
-    assert core_config.active_check_arguments(HostName("bla"), "blub", [1, 1.2]) == "1 1.2"
+def test_commandline_arguments_list_with_numbers() -> None:
+    assert core_config.commandline_arguments(HostName("bla"), "blub", [1, 1.2]) == "1 1.2"
 
 
-def test_active_check_arguments_list_with_pwstore_reference() -> None:
+def test_commandline_arguments_list_with_pwstore_reference() -> None:
     assert (
-        core_config.active_check_arguments(
+        core_config.commandline_arguments(
             HostName("bla"), "blub", ["a", ("store", "pw1", "--password=%s")]
         )
         == "--pwstore=2@11@pw1 'a' '--password=***'"
     )
 
 
-def test_active_check_arguments_list_with_invalid_type() -> None:
+def test_commandline_arguments_list_with_invalid_type() -> None:
     with pytest.raises(MKGeneralException):
-        core_config.active_check_arguments(
+        core_config.commandline_arguments(
             HostName("bla"), "blub", [None]  # type: ignore[list-item]
         )
 

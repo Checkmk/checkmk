@@ -295,4 +295,4 @@ class SpecialAgentSource(ProgramSource):
         info_func = config.special_agent_info[special_agent_id]
         # TODO: CMK-3812 (see above)
         agent_configuration = info_func(params, hostname, ipaddress)
-        return core_config.active_check_arguments(hostname, None, agent_configuration)
+        return core_config.commandline_arguments(hostname, None, agent_configuration)

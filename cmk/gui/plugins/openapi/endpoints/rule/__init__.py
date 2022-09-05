@@ -5,7 +5,6 @@
 """Rules"""
 from __future__ import annotations
 
-import contextlib
 import dataclasses
 import typing
 
@@ -47,6 +46,7 @@ RW_PERMISSIONS = permissions.AllPerm(
     ]
 )
 
+
 # NOTE: This is a dataclass and no namedtuple because it needs to be mutable. See `move_rule_to`
 @dataclasses.dataclass
 class RuleEntry:
@@ -79,81 +79,48 @@ def move_rule_to(param: typing.Mapping[str, typing.Any]) -> http.Response:
 
     source_entry = _get_rule_by_id(rule_id)
 
-    @contextlib.contextmanager
-    def _log_rule_change(  # type:ignore[no-untyped-def]
-        _rule: Rule,
-        _old_folder: CREFolder,
-        _message: str,
-        _dest_folder: typing.Optional[CREFolder] = None,
-    ):
-        yield
-        affected_sites = _old_folder.all_site_ids()
-        if _dest_folder is not None:
-            affected_sites.extend(_dest_folder.all_site_ids())
-        add_change(
-            "edit-rule",
-            _message,
-            sites=list(set(affected_sites)),
-            object_ref=_rule.object_ref(),
-        )
-
-    ruleset = source_entry.ruleset
     all_rulesets = source_entry.all_rulesets
+
+    index: int
     dest_folder: CREFolder
-    if position == "top_of_folder":
-        dest_folder = param["body"]["folder"]
-        with _log_rule_change(
-            source_entry.rule,
-            source_entry.folder,
-            _('Changed properties of rule "%s", moved from folder "%s" to top of folder "%s"')
-            % (source_entry.rule.id, source_entry.folder.title, dest_folder.title),
-            _dest_folder=dest_folder,
-        ):
-            ruleset.move_to_folder(source_entry.rule, dest_folder, index=Ruleset.TOP)
-            source_entry.folder = dest_folder
-            all_rulesets.save()
-    elif position == "bottom_of_folder":
-        dest_folder = param["body"]["folder"]
-        with _log_rule_change(
-            source_entry.rule,
-            source_entry.folder,
-            _('Changed properties of rule "%s", moved from folder "%s" to bottom of folder "%s"')
-            % (source_entry.rule.id, source_entry.folder.title, dest_folder.title),
-            _dest_folder=dest_folder,
-        ):
-            ruleset.move_to_folder(source_entry.rule, dest_folder, index=Ruleset.BOTTOM)
-            source_entry.folder = dest_folder
-            all_rulesets.save()
-    elif position == "before_specific_rule":
-        dest_rule_id = param["body"]["rule_id"]
-        dest_entry = _get_rule_by_id(dest_rule_id, all_rulesets=all_rulesets)
-        with _log_rule_change(
-            source_entry.rule,
-            source_entry.folder,
-            _('Changed properties of rule "%s", moved to before rule "%s" in folder "%s"')
-            % (source_entry.rule.id, dest_entry.rule.id, source_entry.folder.title),
-        ):
-            ruleset.move_to_folder(source_entry.rule, dest_entry.folder, index=dest_entry.index_nr)
-            source_entry.folder = dest_entry.folder
-            source_entry.all_rulesets.save()
-    elif position == "after_specific_rule":
-        dest_rule_id = param["body"]["rule_id"]
-        dest_entry = _get_rule_by_id(dest_rule_id, all_rulesets=all_rulesets)
-        with _log_rule_change(
-            source_entry.rule,
-            source_entry.folder,
-            _('Changed properties of rule "%s", moved to after rule "%s" in folder "%s"')
-            % (source_entry.rule.id, dest_entry.rule.id, source_entry.folder.title),
-        ):
-            ruleset.move_to_folder(source_entry.rule, dest_entry.folder, dest_entry.index_nr + 1)
-            source_entry.folder = dest_entry.folder
-            source_entry.all_rulesets.save()
-    else:
-        return problem(
-            status=400,
-            title="Invalid position",
-            detail=f"Position {position!r} is not a valid position.",
-        )
+    match position:
+        case "top_of_folder":
+            dest_folder = body["folder"]
+            index = Ruleset.TOP
+        case "bottom_of_folder":
+            dest_folder = body["folder"]
+            index = Ruleset.BOTTOM
+        case "before_specific_rule":
+            dest_entry = _get_rule_by_id(body["rule_id"], all_rulesets=all_rulesets)
+            index = dest_entry.index_nr
+            dest_folder = dest_entry.folder
+        case "after_specific_rule":
+            dest_entry = _get_rule_by_id(body["rule_id"], all_rulesets=all_rulesets)
+            dest_folder = dest_entry.folder
+            index = dest_entry.index_nr + 1
+        case _:
+            return problem(
+                status=400,
+                title="Invalid position",
+                detail=f"Position {position!r} is not a valid position.",
+            )
+
+    dest_folder.need_permission("write")
+    source_entry.ruleset.move_to_folder(source_entry.rule, dest_folder, index)
+    source_entry.folder = dest_folder
+    all_rulesets.save()
+    affected_sites = source_entry.folder.all_site_ids()
+
+    if dest_folder != source_entry.folder:
+        affected_sites.extend(dest_folder.all_site_ids())
+
+    add_change(
+        "edit-rule",
+        _('Changed properties of rule "%s", moved from folder "%s" to top of folder "%s"')
+        % (source_entry.rule.id, source_entry.folder.title(), dest_folder.title()),
+        sites=list(set(affected_sites)),
+        object_ref=source_entry.rule.object_ref(),
+    )
 
     return serve_json(_serialize_rule(source_entry))
 

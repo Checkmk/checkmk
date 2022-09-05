@@ -358,20 +358,14 @@ TEST(FileInfoTest, CheckOutput) {
 
         ASSERT_TRUE(!out.empty());
         auto table = cma::tools::SplitString(out, "\n");
-        ASSERT_EQ(table.size(), 6);
+        ASSERT_EQ(table.size(), 5);
         EXPECT_TRUE(std::atoll(table[0].c_str()) > 0LL);
         table.erase(table.begin());
 
         auto missing = table.back();
         auto values = cma::tools::SplitString(missing, "|");
-        CheckTableMissing(values, name_with_glob, fi.mode_);
-        std::error_code ec;
-        EXPECT_FALSE(fs::exists(values[0], ec));
-        table.pop_back();
-
-        missing = table.back();
-        values = cma::tools::SplitString(missing, "|");
         CheckTableMissing(values, name_without_glob, fi.mode_);
+        std::error_code ec;
         EXPECT_FALSE(fs::exists(values[0], ec));
         table.pop_back();
 
@@ -401,7 +395,7 @@ TEST(FileInfoTest, CheckOutput) {
 
         ASSERT_TRUE(!out.empty());
         auto table = cma::tools::SplitString(out, "\n");
-        ASSERT_EQ(table.size(), 9);
+        ASSERT_EQ(table.size(), 8);
         EXPECT_TRUE(std::atoll(table[0].c_str()) > 0);
         table.erase(table.begin());
         EXPECT_EQ(table[0], "[[[header]]]");
@@ -413,14 +407,8 @@ TEST(FileInfoTest, CheckOutput) {
 
         auto missing = table.back();
         auto values = cma::tools::SplitString(missing, "|");
-        CheckTableMissing(values, name_with_glob, fi.mode_);
-        std::error_code ec;
-        EXPECT_FALSE(fs::exists(values[0], ec));
-        table.pop_back();
-
-        missing = table.back();
-        values = cma::tools::SplitString(missing, "|");
         CheckTableMissing(values, name_without_glob, fi.mode_);
+        std::error_code ec;
         EXPECT_FALSE(fs::exists(values[0], ec));
         table.pop_back();
 

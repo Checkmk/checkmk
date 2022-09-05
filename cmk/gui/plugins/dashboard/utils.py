@@ -384,7 +384,7 @@ class Dashlet(abc.ABC, Generic[T]):
         new_qs = urllib.parse.urlencode(url_vars)
         return urllib.parse.urlunparse(tuple(parts[:4] + (new_qs,) + parts[5:]))
 
-    def _dashlet_context_vars(self) -> HTTPVariables:
+    def _dashlet_context_vars(self) -> list[tuple[str, str]]:
         return visuals.context_to_uri_vars(self.context)
 
     def unconfigured_single_infos(self) -> Set[str]:

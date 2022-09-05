@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, NamedTuple, Optional, Sequence, Tuple
 
 import pytest
 
@@ -14,22 +14,30 @@ import cmk.utils.paths
 from cmk.utils.type_defs import HostName
 
 import cmk.base.config as config
-from cmk.base.config import HostConfig, SpecialAgentConfiguration, SpecialAgentInfoFunctionResult
 from cmk.base.sources.programs import DSProgramSource, SpecialAgentSource
 
-fun_args_stdin: Tuple[Tuple[SpecialAgentInfoFunctionResult, Tuple[str, Optional[str]]]] = (
+
+# The types between core config and the argument thingies is not shared due to
+# a layering violation. Test whether a different type is still handled as valid
+# SpecialAgentConfiguration.
+class TestSpecialAgentConfiguration(NamedTuple):
+    args: Sequence[str]
+    stdin: Optional[str]
+
+
+fun_args_stdin: Tuple[Tuple[config.SpecialAgentInfoFunctionResult, Tuple[str, Optional[str]]]] = (
     ("arg0 arg1", "arg0 arg1", None),
     (["arg0", "arg1"], "'arg0' 'arg1'", None),
-    (SpecialAgentConfiguration(["arg0"], None), "'arg0'", None),
-    (SpecialAgentConfiguration(["arg0", "arg1"], None), "'arg0' 'arg1'", None),
-    (SpecialAgentConfiguration(["list0", "list1"], None), "'list0' 'list1'", None),
+    (TestSpecialAgentConfiguration(["arg0"], None), "'arg0'", None),
+    (TestSpecialAgentConfiguration(["arg0", "arg1"], None), "'arg0' 'arg1'", None),
+    (TestSpecialAgentConfiguration(["list0", "list1"], None), "'list0' 'list1'", None),
     (
-        SpecialAgentConfiguration(["arg0", "arg1"], "stdin_blob"),
+        TestSpecialAgentConfiguration(["arg0", "arg1"], "stdin_blob"),
         "'arg0' 'arg1'",
         "stdin_blob",
     ),
     (
-        SpecialAgentConfiguration(["list0", "list1"], "stdin_blob"),
+        TestSpecialAgentConfiguration(["list0", "list1"], "stdin_blob"),
         "'list0' 'list1'",
         "stdin_blob",
     ),
@@ -48,7 +56,7 @@ class TestDSProgramChecker:
         ts.apply(monkeypatch)
 
         source = DSProgramSource(
-            HostConfig.make_host_config(hostname),
+            config.HostConfig.make_host_config(hostname),
             ipaddress,
             template=template,
             simulation_mode=True,
@@ -73,7 +81,7 @@ class TestDSProgramChecker:
         ts.add_host(hostname)
         ts.apply(monkeypatch)
         source = DSProgramSource(
-            HostConfig.make_host_config(hostname),
+            config.HostConfig.make_host_config(hostname),
             ipaddress,
             template=template,
             simulation_mode=True,
@@ -137,7 +145,7 @@ class TestSpecialAgentChecker:
         # end of setup
 
         source = SpecialAgentSource(
-            HostConfig.make_host_config(hostname),
+            config.HostConfig.make_host_config(hostname),
             ipaddress,
             special_agent_id=special_agent_id,
             params=params,

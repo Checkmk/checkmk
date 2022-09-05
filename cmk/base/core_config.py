@@ -523,25 +523,22 @@ def iter_active_check_services(
 def active_check_arguments(
     hostname: HostName,
     description: Optional[ServiceName],
-    args: config.SpecialAgentInfoFunctionResult,
+    commandline_arguments: config.SpecialAgentInfoFunctionResult,
 ) -> str:
-    if isinstance(args, str):
-        return args
+    if isinstance(commandline_arguments, str):
+        return commandline_arguments
 
-    cmd_args: CheckCommandArguments = []
-    if isinstance(args, config.SpecialAgentConfiguration):
-        cmd_args = args.args
-    else:
-        cmd_args = args
+    # Some special agents also have stdin configured
+    args = getattr(commandline_arguments, "args", commandline_arguments)
 
-    if not isinstance(cmd_args, list):
+    if not isinstance(args, list):
         raise MKGeneralException(
             "The check argument function needs to return either a list of arguments or a "
             "string of the concatenated arguments (Host: %s, Service: %s)."
             % (hostname, description)
         )
 
-    return _prepare_check_command(cmd_args, hostname, description)
+    return _prepare_check_command(args, hostname, description)
 
 
 def _prepare_check_command(

@@ -22,10 +22,14 @@ def test_agent_elasticsearch_arguments_cert_check(agent: SpecialAgent) -> None:
         "protocol": "https",
         "infos": ["cluster_health", "nodestats", "stats"],
     }
-    assert "--no-cert-check" not in agent.argument_func(params, "testhost", "1.2.3.4")
+    arguments = agent.argument_func(params, "testhost", "1.2.3.4")
+    assert isinstance(arguments, list)
+    assert "--no-cert-check" not in arguments
 
     params["no-cert-check"] = True
-    assert "--no-cert-check" in agent.argument_func(params, "testhost", "1.2.3.4")
+    arguments = agent.argument_func(params, "testhost", "1.2.3.4")
+    assert isinstance(arguments, list)
+    assert "--no-cert-check" in arguments
 
 
 def test_agent_elasticsearch_arguments_password_store(agent: SpecialAgent) -> None:

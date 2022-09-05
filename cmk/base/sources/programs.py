@@ -16,7 +16,7 @@ from cmk.core_helpers.agent import AgentFileCache, AgentFileCacheFactory, AgentS
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config
-from cmk.base.config import HostConfig, SpecialAgentConfiguration
+from cmk.base.config import HostConfig
 
 from .agent import AgentSource
 
@@ -275,9 +275,7 @@ class SpecialAgentSource(ProgramSource):
         # We should really wrap this and implement proper sanitation and exception handling.
         # Deal with this when modernizing the API (CMK-3812).
         agent_configuration = info_func(params, hostname, ipaddress)
-        if isinstance(agent_configuration, SpecialAgentConfiguration):
-            return agent_configuration.stdin
-        return None
+        return getattr(agent_configuration, "stdin", None)
 
     @staticmethod
     def _make_source_path(special_agent_id: str) -> Path:

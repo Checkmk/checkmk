@@ -34,6 +34,7 @@ from typing import (
     MutableMapping,
     NamedTuple,
     Optional,
+    Protocol,
     Sequence,
     Set,
     Tuple,
@@ -202,14 +203,14 @@ class DiscoveryCheckParameters(NamedTuple):
         )
 
 
-class SpecialAgentConfiguration(NamedTuple):
-    args: List[str]
+class SpecialAgentConfiguration(Protocol):
+    args: Sequence[str]
     # None makes the stdin of subprocess /dev/null
     stdin: Optional[str]
 
 
 SpecialAgentInfoFunctionResult = Union[
-    str, List[Union[str, int, float, Tuple[str, str, str]]], SpecialAgentConfiguration
+    str, Sequence[Union[str, int, float, Tuple[str, str, str]]], SpecialAgentConfiguration
 ]
 SpecialAgentInfoFunction = Callable[
     [Mapping[str, Any], str, Optional[str]], SpecialAgentInfoFunctionResult

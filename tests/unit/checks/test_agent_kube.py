@@ -580,6 +580,7 @@ def test_client_configuration_host(  # type:ignore[no-untyped-def]
 def test_proxy_arguments(params, expected_proxy_arg) -> None:  # type:ignore[no-untyped-def]
     agent = SpecialAgent("agent_kube")
     arguments = agent.argument_func(params, "host", "11.211.3.32")
+    assert isinstance(arguments, list)
     for argument, argument_after in zip(arguments[:-1], arguments[1:]):
         if argument == "--api-server-proxy":
             assert expected_proxy_arg == argument_after

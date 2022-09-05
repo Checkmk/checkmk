@@ -1245,7 +1245,7 @@ def page_view():
 
         painter_options = PainterOptions.get_instance()
         painter_options.load(view.name)
-        painter_options.update_from_url(view)
+        painter_options.update_from_url(view.name, view.spec, view.group_cells + view.row_cells)
         process_view(GUIViewRenderer(view, show_buttons=True))
 
     _may_create_slow_view_log_entry(page_view_tracker, view)

@@ -22,6 +22,7 @@ from typing import (
     Callable,
     Dict,
     Hashable,
+    Iterable,
     List,
     Mapping,
     Optional,
@@ -29,7 +30,6 @@ from typing import (
     Set,
     Tuple,
     Type,
-    TYPE_CHECKING,
     Union,
 )
 
@@ -102,10 +102,6 @@ from cmk.gui.valuespec import DropdownChoice, ValueSpec
 from cmk.gui.view_store import get_permitted_views
 from cmk.gui.view_utils import CellContent, CellSpec, CSSClass
 
-if TYPE_CHECKING:
-    from cmk.gui.view import View
-
-
 ExportCellContent = Union[str, Dict[str, Any]]
 PDFCellContent = Union[str, HTML, Tuple[str, str]]
 PDFCellSpec = Union[CellSpec, Tuple[CSSClass, PDFCellContent]]
@@ -145,14 +141,14 @@ class PainterOptions:
         self._load_from_config(view_name)
 
     # Load the options to be used for this view
-    def _load_used_options(self, view: "View") -> None:
+    def _load_used_options(self, view_spec: ViewSpec, cells: Iterable[Cell]) -> None:
         options: Set[str] = set()
 
-        for cell in view.group_cells + view.row_cells:
+        for cell in cells:
             options.update(cell.painter_options())
 
         # Also layouts can register painter options
-        layout_name = view.spec.get("layout")
+        layout_name = view_spec.get("layout")
         if layout_name is not None:
             layout_class = layout_registry.get(layout_name)
             if layout_class:
@@ -190,18 +186,18 @@ class PainterOptions:
         vo[view_name] = self._options
         user.save_file("viewoptions", vo)
 
-    def update_from_url(self, view: "View") -> None:
-        self._load_used_options(view)
+    def update_from_url(self, view_name: str, view_spec: ViewSpec, cells: Iterable[Cell]) -> None:
+        self._load_used_options(view_spec, cells)
 
         if not self.painter_option_form_enabled():
             return
 
         if request.has_var("_reset_painter_options"):
-            self._clear_painter_options(view.name)
+            self._clear_painter_options(view_name)
             return
 
         if request.has_var("_update_painter_options"):
-            self._set_from_submitted_form(view.name)
+            self._set_from_submitted_form(view_name)
 
     def _set_from_submitted_form(self, view_name: str) -> None:
         # TODO: Remove all keys that are in painter_option_registry
@@ -279,8 +275,8 @@ class PainterOptions:
     def painter_option_form_enabled(self) -> bool:
         return bool(self._used_option_names) and self.painter_options_permitted()
 
-    def show_form(self, view: "View") -> None:
-        self._load_used_options(view)
+    def show_form(self, view_spec: ViewSpec, cells: Iterable[Cell]) -> None:
+        self._load_used_options(view_spec, cells)
 
         if not display_options.enabled(display_options.D) or not self.painter_option_form_enabled():
             return
@@ -291,9 +287,9 @@ class PainterOptions:
             vs = self.get_valuespec_of(name)
             forms.section(vs.title())
             if name == "refresh":
-                vs.render_input("po_%s" % name, view.spec.get("browser_reload", self.get(name)))
+                vs.render_input("po_%s" % name, view_spec.get("browser_reload", self.get(name)))
                 continue
-            vs.render_input("po_%s" % name, view.spec.get(name, self.get(name)))
+            vs.render_input("po_%s" % name, view_spec.get(name, self.get(name)))
         forms.end()
 
         html.button("_update_painter_options", _("Submit"), "submit")

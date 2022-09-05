@@ -581,7 +581,7 @@ class GUIViewRenderer(ABCViewRenderer):
     def _render_painter_options_form(self) -> HTML:
         with output_funnel.plugged():
             painter_options = PainterOptions.get_instance()
-            painter_options.show_form(self.view)
+            painter_options.show_form(self.view.spec, self.view.group_cells + self.view.row_cells)
             return HTML(output_funnel.drain())
 
     def _render_command_form(self, info_name: InfoName, command: Command) -> HTML:

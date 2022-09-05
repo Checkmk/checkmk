@@ -149,7 +149,14 @@ def test_default_config_from_plugins() -> None:
         "enable_login_via_get",
     ]
 
+    # The below lines are confusing and incorrect. The reason we need them is
+    # because our test environments do not reflect our Checkmk editions properly.
+    # We cannot fix that in the short (or even mid) term because the
+    # precondition is a more cleanly separated structure.
+
     if is_enterprise_repo():
+        # CEE plugins are added when the CEE plugins for WATO are available, i.e.
+        # when the "enterprise/" path is present.
         expected += [
             "agent_deployment_enabled",
             "agent_deployment_host_selection",
@@ -177,6 +184,8 @@ def test_default_config_from_plugins() -> None:
         ]
 
     if is_managed_repo():
+        # CME plugins are added when the CEE plugins for WATO are available, i.e.
+        # when the "managed/" path is present.
         expected += [
             "customers",
             "current_customer",

@@ -39,6 +39,14 @@ def scenario_fixture(monkeypatch):
     ts = Scenario()
 
     if is_enterprise_repo():
+        # The below line is confusing and incorrect. The reason we need it is
+        # because our test environments do not reflect our Checkmk editions properly.
+        # We cannot fix that in the short (or even mid) term because the
+        # precondition is a more cleanly separated structure.
+
+        # CMC is determined as the monitoring core when the CEE plugins are
+        # available, i.e. when the "enterprise/" path is present. This is
+        # regardless of the Checkmk Edition that has been specified.
         ts.set_option("monitoring_core", "cmc")
     else:
         ts.set_option("monitoring_core", "nagios")

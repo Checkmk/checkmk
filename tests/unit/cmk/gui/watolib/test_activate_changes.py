@@ -64,12 +64,6 @@ def _expected_replication_paths():
             ReplicationPath("dir", "liveproxyd", "etc/check_mk/liveproxyd.d/wato/", []),
         ]
 
-    if testlib.is_enterprise_repo():
-        expected += [
-            ReplicationPath("dir", "dcd", "etc/check_mk/dcd.d/wato/", []),
-            ReplicationPath("dir", "mknotify", "etc/check_mk/mknotifyd.d/wato", []),
-        ]
-
     expected += [
         ReplicationPath("dir", "mkeventd", "etc/check_mk/mkeventd.d/wato", []),
         ReplicationPath("dir", "mkeventd_mkp", "etc/check_mk/mkeventd.d/mkp/rule_packs", []),
@@ -114,6 +108,19 @@ def _expected_replication_paths():
                 site_path="local/share/check_mk/web/htdocs/themes/facelift/images/mk-logo.png",
                 excludes=[],
             ),
+        ]
+
+    # The below lines are confusing and incorrect. The reason we need them is
+    # because our test environments do not reflect our Checkmk editions properly.
+    # We cannot fix that in the short (or even mid) term because the
+    # precondition is a more cleanly separated structure.
+
+    if testlib.is_enterprise_repo():
+        # CEE paths are added when the CEE plugins for WATO are available, i.e.
+        # when the "enterprise/" path is present.
+        expected += [
+            ReplicationPath("dir", "dcd", "etc/check_mk/dcd.d/wato/", []),
+            ReplicationPath("dir", "mknotify", "etc/check_mk/mknotifyd.d/wato", []),
         ]
 
     return expected

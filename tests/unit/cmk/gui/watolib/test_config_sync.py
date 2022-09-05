@@ -300,12 +300,6 @@ def _get_expected_paths(user_id: UserId, with_local: bool) -> list[str]:
         "etc/omd/sitespecific.mk",
     ]
 
-    if is_enterprise_repo():
-        expected_paths += [
-            "etc/check_mk/dcd.d/wato/sitespecific.mk",
-            "etc/check_mk/mknotifyd.d/wato/sitespecific.mk",
-        ]
-
     if not cmk_version.is_raw_edition():
         expected_paths += ["etc/check_mk/dcd.d/wato/distributed.mk"]
 
@@ -319,18 +313,6 @@ def _get_expected_paths(user_id: UserId, with_local: bool) -> list[str]:
             "etc/check_mk/mkeventd.d/mkp",
             "etc/check_mk/mkeventd.d/mkp/rule_packs",
             "etc/check_mk/mkeventd.d/wato/rules.mk",
-        ]
-
-    # The paths are registered once the enterprise plugins are available, independent of the
-    # cmk_version.edition().short value.
-    # TODO: The second condition should not be needed. Seems to be a subtle difference between the
-    # CME and CRE/CEE snapshot logic
-    if is_enterprise_repo():
-        expected_paths += [
-            "etc/check_mk/dcd.d",
-            "etc/check_mk/dcd.d/wato",
-            "etc/check_mk/mknotifyd.d",
-            "etc/check_mk/mknotifyd.d/wato",
         ]
 
     # TODO: Shouldn't we clean up these subtle differences?
@@ -355,6 +337,23 @@ def _get_expected_paths(user_id: UserId, with_local: bool) -> list[str]:
         expected_paths += [
             "etc/check_mk/liveproxyd.d",
             "etc/check_mk/liveproxyd.d/wato",
+        ]
+
+    # The below lines are confusing and incorrect. The reason we need them is
+    # because our test environments do not reflect our Checkmk editions properly.
+    # We cannot fix that in the short (or even mid) term because the
+    # precondition is a more cleanly separated structure.
+
+    if is_enterprise_repo():
+        # CEE paths are added when the CEE plugins for WATO are available, i.e.
+        # when the "enterprise/" path is present.
+        expected_paths += [
+            "etc/check_mk/dcd.d",
+            "etc/check_mk/dcd.d/wato",
+            "etc/check_mk/dcd.d/wato/sitespecific.mk",
+            "etc/check_mk/mknotifyd.d",
+            "etc/check_mk/mknotifyd.d/wato",
+            "etc/check_mk/mknotifyd.d/wato/sitespecific.mk",
         ]
 
     return expected_paths

@@ -94,6 +94,13 @@ def test_load_plugins() -> None:
     ]
 
     if is_enterprise_repo():
+        # The below line is confusing and incorrect. The reason we need it is
+        # because our test environments do not reflect our Checkmk editions properly.
+        # We cannot fix that in the short (or even mid) term because the
+        # precondition is a more cleanly separated structure.
+
+        # The CEE plugins are loaded when the CEE plugins are available, i.e.
+        # when the "enterprise/" path is present.
         expected.append("dcd_connections")
 
     assert sorted(rename_action_registry.keys()) == sorted(expected)

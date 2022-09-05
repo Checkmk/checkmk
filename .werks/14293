@@ -1,0 +1,20 @@
+Title: Enforce use of new apache hooks before updating to 2.2
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1662367211
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+With #14281 a new system apache configuration hook for managing the system
+apache reverse proxy config has been introduced.
+
+In all previous versions the transition was highly recommended for security
+reasons, but not enforced to stay compatible. As of Checkmk 2.2 the new
+mechanism will be enforced.
+
+If you try to update an existing site to 2.2 which has not been switched to the
+new mechanism with <tt>omd update-apache-config [SITE]</tt>, then the update
+will be aborted.

@@ -89,7 +89,6 @@ from omdlib.dialog import (
 from omdlib.init_scripts import call_init_scripts, check_status
 from omdlib.skel_permissions import Permissions, read_skel_permissions, skel_permissions_file_path
 from omdlib.system_apache import (
-    create_old_apache_hook,
     delete_apache_hook,
     has_old_apache_hook_in_site,
     is_apache_hook_up_to_date,
@@ -2724,6 +2723,19 @@ def main_update(  # pylint: disable=too-many-branches
     ):
         bail_out("Aborted.")
 
+    # - 2.1 and before were compatible with the old and new hook configuration
+    # - Checkmk 2.2 enforces the new hook with this condition
+    # TODO: Remove with 2.3
+    if has_old_apache_hook_in_site(site):
+        bail_out(
+            "ERROR: You have to update the system apache configuration in order to proceed "
+            "with this update.\n\n"
+            "Previous Checkmk versions were compatible with the old configuration, but this "
+            "version requires\n"
+            f"you to execute 'omd update-apache-config {site.name}' as root user.\n\n"
+            "Have a look at #14281 for further information."
+        )
+
     try:
         hook_up_to_date = is_apache_hook_up_to_date(site)
     except PermissionError:
@@ -2787,13 +2799,6 @@ def main_update(  # pylint: disable=too-many-branches
         from_skelroot, conflict_mode=conflict_mode, depth_first=True, exclude_if_in=to_skelroot
     ):
         _execute_update_file(relpath, site, conflict_mode, from_version, to_version, old_perms)
-
-    if has_old_apache_hook_in_site(site):
-        # The site was not yet updated from the insecure site owned apache hook. In this situation
-        # we still need to have the referenced apache-own.conf in the site. This file must not be
-        # deployed with the skel mechanism anymore. It is removed from the site later once the site
-        # is updated to the secure hook.
-        create_old_apache_hook(site)
 
     # Change symbolic link pointing to new version
     create_version_symlink(site, to_version)

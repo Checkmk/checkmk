@@ -35,6 +35,13 @@ class AgentPackagePlatform(enum.Enum):
     def __str__(self) -> str:
         return str(self.value)
 
+    def is_tgz_based(self) -> bool:
+        return self in (
+            AgentPackagePlatform.LINUX_TGZ,
+            AgentPackagePlatform.SOLARIS_TGZ,
+            AgentPackagePlatform.AIX_TGZ,
+        )
+
 
 # TODO(au): Replace usage with AgentPackagePlatform
 # But we need complete typing in cmk.gui.cee.agent_bakery first before we can safely do this.

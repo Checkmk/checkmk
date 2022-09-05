@@ -119,6 +119,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     DictionaryEntry,
     DropdownChoice,
+    TextInput,
     Transform,
     ValueSpec,
     ValueSpecValidateFunc,
@@ -848,6 +849,59 @@ def _fallback_dashlet(
 
     dashlet_type = get_dashlet_type(dashlet_spec)
     return dashlet_type(name, board, dashlet_id, dashlet_spec)
+
+
+class StaticTextDashletConfig(DashletConfig):
+    text: str
+
+
+@dashlet_registry.register
+class StaticTextDashlet(Dashlet[StaticTextDashletConfig]):
+    """Dashlet that displays a static text"""
+
+    @classmethod
+    def type_name(cls):
+        return "nodata"
+
+    @classmethod
+    def title(cls):
+        return _("Static text")
+
+    @classmethod
+    def description(cls):
+        return _("Displays a static text to the user.")
+
+    @classmethod
+    def sort_index(cls) -> int:
+        return 100
+
+    @classmethod
+    def initial_size(cls):
+        return (30, 18)
+
+    @classmethod
+    def vs_parameters(cls):
+        return [
+            (
+                "text",
+                TextInput(
+                    title=_("Text"),
+                    size=50,
+                    help=_(
+                        "You can enter a text here that will be displayed in the element when "
+                        "viewing the dashboard. It is also possible to insert a limited set of HTML "
+                        "tags, some of them are: h2, b, tt, i, br, pre, a, sup, p, li, ul and ol."
+                    ),
+                ),
+            ),
+        ]
+
+    def show(self):
+        html.open_div(class_="nodata")
+        html.open_div(class_="msg")
+        html.write_text(self._dashlet_spec.get("text", ""))
+        html.close_div()
+        html.close_div()
 
 
 def _get_mandatory_filters(

@@ -9,7 +9,6 @@
 from __future__ import annotations
 
 import abc
-import functools
 import hashlib
 import os
 import re
@@ -21,7 +20,6 @@ from pathlib import Path
 from typing import (
     Any,
     Callable,
-    cast,
     Dict,
     Hashable,
     List,
@@ -36,12 +34,11 @@ from typing import (
 )
 
 import livestatus
-from livestatus import LivestatusColumn, LivestatusRow, OnlySites, Query, QuerySpecification, SiteId
+from livestatus import SiteId
 
 import cmk.utils.plugin_registry
 import cmk.utils.regex
 import cmk.utils.render
-from cmk.utils.check_utils import worst_service_state
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.type_defs import (
     HostName,
@@ -61,7 +58,7 @@ import cmk.gui.view_utils
 import cmk.gui.visuals as visuals
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.config import active_config
-from cmk.gui.data_source import ABCDataSource, data_source_registry, RowTable
+from cmk.gui.data_source import data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.hooks import request_memoize
@@ -106,7 +103,6 @@ from cmk.gui.view_store import get_permitted_views
 from cmk.gui.view_utils import CellContent, CellSpec, CSSClass
 
 if TYPE_CHECKING:
-    from cmk.gui.plugins.visuals.utils import Filter
     from cmk.gui.view import View
 
 
@@ -629,134 +625,6 @@ def register_legacy_command(spec: Dict[str, Any]) -> None:
         },
     )
     command_registry.register(cls)
-
-
-class DataSourceLivestatus(ABCDataSource):
-    """Base class for all simple data sources which 1:1 base on a livestatus table"""
-
-    @property
-    def table(self) -> "RowTableLivestatus":
-        return RowTableLivestatus(self.ident)
-
-
-class RowTableLivestatus(RowTable):
-    def __init__(self, table_name: str) -> None:
-        super().__init__()
-        self._table_name = table_name
-
-    @property
-    def table_name(self) -> str:
-        return self._table_name
-
-    @staticmethod
-    def _prepare_columns(
-        columns: List[ColumnName], view: "View"
-    ) -> Tuple[List[ColumnName], Dict[int, List[ColumnName]]]:
-        dynamic_columns = {}
-        for index, cell in enumerate(view.row_cells):
-            dyn_col = cell.painter().dynamic_columns(cell)
-            dynamic_columns[index] = dyn_col
-            columns += dyn_col
-
-        columns = list(set(columns))
-
-        datasource = view.datasource
-        merge_column = datasource.merge_by
-        if merge_column:
-            # Prevent merge column from being duplicated in the query. It needs
-            # to be at first position, see _merge_data()
-            columns = [merge_column] + [c for c in columns if c != merge_column]
-
-        # Most layouts need current state of object in order to
-        # choose background color - even if no painter for state
-        # is selected. Make sure those columns are fetched. This
-        # must not be done for the table 'log' as it cannot correctly
-        # distinguish between service_state and host_state
-        if "log" not in datasource.infos:
-            state_columns: List[ColumnName] = []
-            if "service" in datasource.infos:
-                state_columns += ["service_has_been_checked", "service_state"]
-            if "host" in datasource.infos:
-                state_columns += ["host_has_been_checked", "host_state"]
-            for c in state_columns:
-                if c not in columns:
-                    columns.append(c)
-
-        # Remove columns which are implicitly added by the datasource. We sort the remaining
-        # columns to allow for repeatable tests.
-        return [c for c in sorted(columns) if c not in datasource.add_columns], dynamic_columns
-
-    def create_livestatus_query(  # type:ignore[no-untyped-def]
-        self, columns: Sequence[LivestatusColumn], headers
-    ) -> Query:
-        return Query(QuerySpecification(table=self.table_name, columns=columns, headers=headers))
-
-    def query(
-        self,
-        view: "View",
-        columns: List[ColumnName],
-        headers: str,
-        only_sites: OnlySites,
-        limit: Optional[int],
-        all_active_filters: "List[Filter]",
-    ) -> Union[Rows, Tuple[Rows, int]]:
-        """Retrieve data via livestatus, convert into list of dicts,
-
-        view: view object
-        columns: the list of livestatus columns to query
-        headers: query headers
-        only_sites: list of sites the query is limited to
-        limit: maximum number of data rows to query
-        all_active_filters: Momentarily unused
-        """
-
-        datasource = view.datasource
-
-        columns, dynamic_columns = self._prepare_columns(columns, view)
-        data = query_livestatus(
-            self.create_livestatus_query(columns, headers + datasource.add_headers),
-            only_sites,
-            limit,
-            datasource.auth_domain,
-        )
-
-        if datasource.merge_by:
-            data = _merge_data(data, columns)
-
-        # convert lists-rows into dictionaries.
-        # performance, but makes live much easier later.
-        columns = ["site"] + columns + datasource.add_columns
-        rows: Rows = datasource.post_process([dict(zip(columns, row)) for row in data])
-
-        for index, cell in enumerate(view.row_cells):
-            painter = cell.painter()
-            painter.derive(rows, cell, dynamic_columns.get(index))
-
-        return rows, len(data)
-
-
-def query_livestatus(
-    query: Query, only_sites: OnlySites, limit: Optional[int], auth_domain: str
-) -> List[LivestatusRow]:
-
-    if all(
-        (
-            active_config.debug_livestatus_queries,
-            request.accept_mimetypes.accept_html,
-            display_options.enabled(display_options.W),
-        )
-    ):
-        html.open_div(class_=["livestatus", "message"])
-        html.tt(str(query).replace("\n", "<br>\n"))
-        html.close_div()
-
-    sites.live().set_auth_domain(auth_domain)
-    with sites.only_sites(only_sites), sites.prepend_site(), sites.set_limit(limit):
-        data = sites.live().query(query)
-
-    sites.live().set_auth_domain("read")
-
-    return data
 
 
 class CSVExportError(Exception):
@@ -1413,50 +1281,6 @@ def get_perfdata_nth_value(row: Row, n: int, remove_unit: bool = False) -> str:
         return number
     except Exception as e:
         return str(e)
-
-
-def _merge_data(data: List[LivestatusRow], columns: List[ColumnName]) -> List[LivestatusRow]:
-    """Merge all data rows with different sites but the same value in merge_column
-
-    We require that all column names are prefixed with the tablename. The column with the merge key
-    is required to be the *second* column (right after the site column)"""
-    merged: Dict[ColumnName, LivestatusRow] = {}
-
-    mergefuncs: List[Callable[[LivestatusColumn, LivestatusColumn], LivestatusColumn]] = [
-        # site column is not merged
-        lambda a, b: ""
-    ]
-
-    def worst_host_state(a, b):
-        if a == 1 or b == 1:
-            return 1
-        return max(a, b)
-
-    for c in columns:
-        _tablename, col = c.split("_", 1)
-        if col.startswith("num_") or col.startswith("members"):
-            mergefunc = lambda a, b: a + b  # pylint: disable=unnecessary-lambda-assignment
-        elif col.startswith("worst_service"):
-            mergefunc = functools.partial(worst_service_state, default=3)
-        elif col.startswith("worst_host"):
-            mergefunc = worst_host_state
-        else:
-            mergefunc = lambda a, b: a  # pylint: disable=unnecessary-lambda-assignment
-
-        mergefuncs.append(mergefunc)
-
-    for row in data:
-        mergekey = row[1]
-        if mergekey in merged:
-            merged[mergekey] = cast(
-                LivestatusRow, [f(a, b) for f, a, b in zip(mergefuncs, merged[mergekey], row)]
-            )
-        else:
-            merged[mergekey] = row
-
-    # return all rows sorted according to merge key
-    mergekeys = sorted(merged.keys())
-    return [merged[k] for k in mergekeys]
 
 
 def join_row(row: Row, cell: "Cell") -> Row:

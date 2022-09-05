@@ -15,6 +15,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, ungettext
+from cmk.gui.livestatus_data_source import DataSourceLivestatus
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.views.commands import PermissionSectionAction
 from cmk.gui.plugins.views.utils import (
@@ -23,7 +24,6 @@ from cmk.gui.plugins.views.utils import (
     Command,
     command_registry,
     CommandActionResult,
-    DataSourceLivestatus,
     paint_age,
     Painter,
     painter_registry,

@@ -19,6 +19,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, ungettext
+from cmk.gui.livestatus_data_source import RowTableLivestatus
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.dashboard.utils import DashletConfig
@@ -37,7 +38,6 @@ from cmk.gui.plugins.views.utils import (
     Painter,
     painter_registry,
     row_id,
-    RowTableLivestatus,
 )
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import (

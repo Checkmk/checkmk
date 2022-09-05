@@ -388,6 +388,7 @@ def _register_pre_21_plugin_api() -> None:
     # Needs to be a local import to not influence the regular plugin loading order
     import cmk.gui.data_source as data_source
     import cmk.gui.exporter as exporter
+    import cmk.gui.livestatus_data_source as livestatus_data_source
     import cmk.gui.plugins.views as api_module
     import cmk.gui.plugins.views.utils as plugin_utils
     import cmk.gui.sorter as sorter
@@ -405,6 +406,13 @@ def _register_pre_21_plugin_api() -> None:
         "exporter_registry",
     ):
         api_module.__dict__[name] = exporter.__dict__[name]
+
+    for name in (
+        "DataSourceLivestatus",
+        "RowTableLivestatus",
+        "query_livestatus",
+    ):
+        api_module.__dict__[name] = livestatus_data_source.__dict__[name]
 
     for name in (
         "declare_simple_sorter",
@@ -438,7 +446,6 @@ def _register_pre_21_plugin_api() -> None:
         "CommandGroup",
         "CommandSpec",
         "compare_ips",
-        "DataSourceLivestatus",
         "declare_1to1_sorter",
         "display_options",
         "EmptyCell",
@@ -465,14 +472,12 @@ def _register_pre_21_plugin_api() -> None:
         "painter_registry",
         "PainterOption",
         "PainterOptions",
-        "query_livestatus",
         "register_painter",
         "render_cache_info",
         "render_link_to_view",
         "replace_action_url_macros",
         "Row",
         "row_id",
-        "RowTableLivestatus",
         "transform_action_url",
         "url_to_visual",
         "view_is_enabled",

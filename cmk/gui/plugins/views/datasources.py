@@ -8,7 +8,11 @@ from livestatus import LivestatusColumn, Query, QuerySpecification
 
 from cmk.gui.data_source import ABCDataSource, data_source_registry, RowTable
 from cmk.gui.i18n import _
-from cmk.gui.plugins.views.utils import DataSourceLivestatus, query_livestatus, RowTableLivestatus
+from cmk.gui.livestatus_data_source import (
+    DataSourceLivestatus,
+    query_livestatus,
+    RowTableLivestatus,
+)
 from cmk.gui.type_defs import SingleInfos
 
 

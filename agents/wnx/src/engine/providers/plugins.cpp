@@ -26,7 +26,7 @@ bool PluginsProvider::isAllowedByCurrentConfig() const {
     return cfg::groups::global.allowedSection(cfg_name_);
 }
 
-static bool IsPluginRequiredType(const PluginEntry& plugin,
+static bool IsPluginRequiredType(const PluginEntry &plugin,
                                  PluginMode need_type) {
     switch (need_type) {
         case PluginMode::async:
@@ -39,14 +39,14 @@ static bool IsPluginRequiredType(const PluginEntry& plugin,
             return true;
     }
 
-    XLOG::l(XLOG_FUNC + " input is unknown [{}], return true by default");
+    // unreachable
     return true;
 }
 
 // returns 0 on lack plugin entries
-int FindMaxTimeout(const cma::PluginMap& pm, PluginMode need_type) {
+int FindMaxTimeout(const cma::PluginMap &pm, PluginMode need_type) {
     int timeout = 0;
-    for (const auto& [path, plugin] : pm) {
+    for (const auto &[path, plugin] : pm) {
         if (IsPluginRequiredType(plugin, need_type)) {
             timeout = std::max(timeout, plugin.timeout());
         }
@@ -57,39 +57,24 @@ int FindMaxTimeout(const cma::PluginMap& pm, PluginMode need_type) {
 
 // Scans for sync plugins max timeout and set this max
 // if timeout is too big, than set default from the max_wait
-void PluginsProvider::updateTimeout() {
-    timeout_ = FindMaxTimeout(pm_, PluginMode::sync);
-
-    auto config_max_wait = cfg::GetVal(cfg_name_, cfg::vars::kPluginMaxWait,
-                                       cfg::kDefaultPluginTimeout);
-
-    if (timeout_ > config_max_wait) {
-        // too high timeout and bad plugin in config may break agent fully
-        XLOG::d("Timeout is corrected from [{}] to [{}]", timeout_,
-                config_max_wait);
-        timeout_ = config_max_wait;
-        return;
-    }
-
-    if (timeout_ != 0) {
-        XLOG::t("Timeout for '{}' is updated to [{}]", cfg_name_, timeout_);
-    }
+void PluginsProvider::updateSyncTimeout() {
+    const auto max_plugin_timeout = FindMaxTimeout(pm_, PluginMode::sync);
+    const auto section_max_wait = cfg::GetVal(
+        cfg_name_, cfg::vars::kPluginMaxWait, cfg::kDefaultPluginTimeout);
+    setTimeout(std::min(max_plugin_timeout, section_max_wait));
 }
 
 static void LogExecuteExtensions(std::string_view title,
-                                 const std::vector<std::string>& arr) {
-    std::string formatted_string{"["};
-    for (const auto& s : arr) {
-        formatted_string += s;
-        formatted_string += ",";
+                                 const std::vector<std::string> &arr) {
+    std::string formatted_string;
+    for (const auto &s : arr) {
+        formatted_string += s + ",";
     }
     if (!arr.empty()) {
         formatted_string.pop_back();
     }
 
-    formatted_string += "]";
-
-    XLOG::d.i("{} {}", title, formatted_string);
+    XLOG::d.i("{} [{}]", title, formatted_string);
 }
 
 void PluginsProvider::updateCommandLine() {
@@ -99,26 +84,32 @@ void PluginsProvider::updateCommandLine() {
         }
 
         UpdatePluginMapCmdLine(pm_, getHostSp());
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         XLOG::l(XLOG_FUNC + " unexpected exception '{}'", e.what());
     }
 }
 
-void PluginsProvider::UpdatePluginMapCmdLine(PluginMap& pm,
-                                             cma::srv::ServiceProcessor* sp) {
-    for (auto& [name, entry] : pm) {
+void PluginsProvider::UpdatePluginMapCmdLine(PluginMap &pm,
+                                             cma::srv::ServiceProcessor *sp) {
+    for (auto &[name, entry] : pm) {
         XLOG::t.i("checking entry");
         entry.setCmdLine(L""sv);
-        if (entry.path().empty()) continue;
+        if (entry.path().empty()) {
+            continue;
+        }
         XLOG::t.i("checking host");
 
-        if (sp == nullptr) continue;
+        if (sp == nullptr) {
+            continue;
+        }
 
-        auto& mc = sp->getModuleCommander();
+        auto &mc = sp->getModuleCommander();
         auto fname = entry.path().u8string();
         XLOG::t.i("checking our script");
 
-        if (!mc.isModuleScript(fname)) continue;
+        if (!mc.isModuleScript(fname)) {
+            continue;
+        }
 
         XLOG::t.i("building command line");
 
@@ -132,7 +123,7 @@ void PluginsProvider::UpdatePluginMapCmdLine(PluginMap& pm,
 }
 
 std::vector<std::string> PluginsProvider::gatherAllowedExtensions() const {
-    auto* sp = getHostSp();
+    auto *sp = getHostSp();
     auto global_exts =
         cfg::GetInternalArray(cfg::groups::kGlobal, cfg::vars::kExecute);
 
@@ -144,13 +135,17 @@ std::vector<std::string> PluginsProvider::gatherAllowedExtensions() const {
     auto mc = sp->getModuleCommander();
 
     auto exts = mc.getExtensions();
-    for (auto& e : exts) {
-        if (e.empty()) continue;
+    for (auto &e : exts) {
+        if (e.empty()) {
+            continue;
+        }
 
-        if (e[0] == '.') e.erase(e.begin(), e.begin() + 1);
+        if (e[0] == '.') {
+            e.erase(e.begin(), e.begin() + 1);
+        }
     }
 
-    for (auto& ge : global_exts) {
+    for (auto &ge : global_exts) {
         exts.emplace_back(ge);
     }
 
@@ -162,7 +157,7 @@ void PluginsProvider::loadConfig() {
                                 : cfg::groups::plugins.folders();
 
     PathVector pv;
-    for (auto& folder : folder_vector) {
+    for (auto &folder : folder_vector) {
         pv.emplace_back(folder);
     }
 
@@ -191,7 +186,7 @@ void PluginsProvider::loadConfig() {
     XLOG::d.t("Left [{}] files to execute in '{}'", pm_.size(), uniq_name_);
 
     updateCommandLine();
-    updateTimeout();
+    updateSyncTimeout();
 }
 
 namespace {
@@ -200,9 +195,9 @@ std::string ToString(const std::vector<char> &v) {
 }
 }  // namespace
 
-void PluginsProvider::gatherAllData(std::string& out) {
+void PluginsProvider::gatherAllData(std::string &out) {
     int last_count = 0;
-    auto data_sync = RunSyncPlugins(pm_, last_count, timeout_);
+    auto data_sync = RunSyncPlugins(pm_, last_count, timeout());
     last_count_ += last_count;
 
     auto data_async = RunAsyncPlugins(pm_, last_count, true);

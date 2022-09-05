@@ -29,7 +29,6 @@ class PluginsProvider : public Asynchronous {
 public:
     PluginsProvider() : Asynchronous(section::kPlugins) {
         setHeaderless();
-        timeout_ = 0;
         local_ = false;
         cfg_name_ = cfg::groups::kPlugins;
     }
@@ -37,7 +36,6 @@ public:
     PluginsProvider(std::string_view name, char separator)
         : Asynchronous(name, separator) {
         setHeaderless();
-        timeout_ = 0;
         local_ = false;
         cfg_name_ = cfg::groups::kPlugins;
     }
@@ -48,10 +46,10 @@ public:
     void preStart() override;
     void detachedStart();
     void updateCommandLine();
-    void updateTimeout();
     std::vector<std::string> gatherAllowedExtensions() const;
 
 protected:
+    void updateSyncTimeout();
     static void UpdatePluginMapCmdLine(PluginMap &pm,
                                        srv::ServiceProcessor *sp);
     void gatherAllData(std::string &out);

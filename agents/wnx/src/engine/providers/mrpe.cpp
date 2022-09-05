@@ -1,5 +1,4 @@
 
-// provides basic api to start and stop service
 #include "stdafx.h"
 
 #include "providers/mrpe.h"
@@ -17,7 +16,6 @@
 #include "glob_match.h"
 #include "logger.h"
 #include "tools/_raii.h"
-#include "tools/_xlog.h"
 
 namespace fs = std::filesystem;
 namespace rs = std::ranges;
@@ -279,10 +277,6 @@ void MrpeProvider::parseConfig() {
     checks_.clear();
     includes_.clear();
 
-    timeout_ = cfg::GetVal(cfg::groups::kMrpe, cfg::vars::kTimeout,
-                           cfg::defaults::kMrpeTimeout);
-    if (timeout_ < 1) timeout_ = 1;
-
     auto strings =
         cfg::GetArray<std::string>(cfg::groups::kMrpe, cfg::vars::kMrpeConfig);
 
@@ -296,7 +290,14 @@ void MrpeProvider::parseConfig() {
     }
 }
 
+void MrpeProvider::loadTimeout() {
+    auto mrpe_timeout = cfg::GetVal(cfg::groups::kMrpe, cfg::vars::kTimeout,
+                                    cfg::defaults::kMrpeTimeout);
+    setTimeout(std::min(1U, mrpe_timeout));
+}
+
 void MrpeProvider::loadConfig() {
+    loadTimeout();
     parseConfig();
     addParsedConfig();
 }
@@ -364,13 +365,13 @@ std::string MrpeProvider::makeBody() {
         std::for_each(std::execution::par_unseq, entries_.begin(),
                       entries_.end(), [&out, &lock, this](auto &&entry) {
                           auto ret = ExecMrpeEntry(
-                              entry, std::chrono::seconds(timeout_));
+                              entry, std::chrono::seconds(timeout()));
                           std::lock_guard lk(lock);
                           out += ret;
                       });
     } else
         for (const auto &entry : entries_) {
-            out += ExecMrpeEntry(entry, std::chrono::seconds(timeout_));
+            out += ExecMrpeEntry(entry, std::chrono::seconds(timeout()));
         }
 
     return out;

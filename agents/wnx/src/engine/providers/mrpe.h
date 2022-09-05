@@ -110,6 +110,7 @@ protected:
     bool parseAndLoadEntry(const std::string &entry);
 
 private:
+    void loadTimeout();
     std::vector<MrpeEntry> entries_;
 
     std::vector<std::string> checks_;    // "check = ...."

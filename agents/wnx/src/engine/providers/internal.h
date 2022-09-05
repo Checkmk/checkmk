@@ -56,22 +56,19 @@ public:
     explicit Basic(std::string_view name) noexcept : Basic(name, '\0') {}
     virtual ~Basic() = default;
 
-    virtual bool startExecution(
-        const std::string &internal_port,  // format "type:value", where type:
-        // mail - for mail slot
-        // asio - for TCP
-        // grpc - for GRPC
-        // rest - for Rest
-        const std::string &command_line  // anything here
-        ) = 0;
+    /// internal_port format "type:value", where type:
+    /// mail - for mail slot
+    /// asio - for TCP
+    virtual bool startExecution(const std::string &internal_port,
+                                const std::string &command_line) = 0;
 
     virtual bool stop(bool wait) = 0;
 
     std::string getUniqName() const noexcept { return uniq_name_; }
     std::string ip() const noexcept { return ip_; }
 
-    // implemented only for very special providers which has to change
-    // itself during generation of output(like plugins)
+    /// maybe re-implemented for some special providers which
+    /// has persistent data like cache. Example - Plugin providers
     virtual void updateSectionStatus() {}
     std::string generateContent(std::string_view section_name,
                                 bool force_generation);
@@ -85,16 +82,21 @@ public:
 
     virtual bool isAllowedByCurrentConfig() const;
     bool isAllowedByTime() const noexcept;
-    auto isAllowedFromTime() const noexcept { return allowed_from_time_; }
+    auto allowedFromTime() const noexcept { return allowed_from_time_; }
 
     // called in kick. NO AUTOMATION HERE.
     void loadStandardConfig() noexcept;
+
+    /// maybe re-implemented for some special providers which
+    /// has persistent data like cache. Example - Mrpe providers
     virtual void loadConfig() {}
     int timeout() const noexcept { return timeout_; }
     virtual void registerCommandLine(const std::string &command_line);
 
     void registerOwner(cma::srv::ServiceProcessor *sp) noexcept;
 
+    /// maybe re-implemented for some special providers which
+    /// has persistent data like cache. Example - Plugin providers
     virtual void preStart() {}
     uint64_t errorCount() const noexcept { return error_count_; }
     uint64_t resetError() noexcept { return error_count_.exchange(0); }
@@ -114,39 +116,38 @@ protected:
 
     void setHeaderless() noexcept { headerless_ = true; }
 
-    // to stop section from rerunning during time defined in setupDelayOnFail
-    // usually related to the openhardware monitor
+    /// stop section from rerunning during time defined in setupDelayOnFail
+    /// usually related to the openhardware or maybe WMI monitor
     void disableSectionTemporary();
 
     bool sendGatheredData(const std::string &command_line);
     virtual std::string makeHeader(
         std::string_view section_name) const noexcept {
-        return section::MakeHeader(
-            section_name == cma::section::kUseEmbeddedName
-                ? std::string_view(uniq_name_)
-                : section_name,
-            separator_);
+        return section::MakeHeader(section_name == section::kUseEmbeddedName
+                                       ? std::string_view(uniq_name_)
+                                       : section_name,
+                                   separator_);
     }
     virtual std::string makeBody() = 0;
 
-    const std::string uniq_name_;  // unique identification of section provider
+    const std::string uniq_name_;
+    carrier::CoreCarrier carrier_;
+    void setTimeout(int seconds) noexcept { timeout_ = seconds; }
 
-    carrier::CoreCarrier carrier_;  // transport
     std::chrono::time_point<std::chrono::steady_clock> allowed_from_time_;
-    std::chrono::seconds delay_on_fail_{
-        0};  // this value may be set when we have problems with
-             // obtaining data. Next try will be set from
-             // now + delay_on_fail_ if delay_on_fail_ is not 0
-             // check ToggleIf in legacy Agent
 
-    int timeout_{0};
-    bool enabled_{true};
-    // optional API to store info about errors used, for example by OHM
+    /// this value may be set when we have problems with
+    /// obtaining data. Next try will be set from
+    /// now + delay_on_fail_ if delay_on_fail_ is not 0
+    /// check ToggleIf in legacy Agent
+    std::chrono::seconds delay_on_fail_{0};
+
     uint64_t registerError() noexcept { return error_count_.fetch_add(1); }
-
     srv::ServiceProcessor *getHostSp() const noexcept { return host_sp_; }
 
 private:
+    int timeout_{0};
+    bool enabled_{true};
     bool headerless_{false};  // if true no makeHeader call
     std::string ip_;
     char separator_;
@@ -154,11 +155,9 @@ private:
     srv::ServiceProcessor *host_sp_{nullptr};
 };
 
-// Reference *SYNC* Class for internal Sections
-// use as a parent
 class Synchronous : public Basic {
 public:
-    explicit Synchronous(std::string_view name) noexcept : Basic(name, 0) {}
+    explicit Synchronous(std::string_view name) noexcept : Basic(name) {}
     Synchronous(std::string_view name, char separator) noexcept
         : Basic(name, separator) {}
     ~Synchronous() override = default;
@@ -167,15 +166,12 @@ public:
         const std::string &internal_port,  // format "type:value
         const std::string &command_line    // format "id name whatever"
         ) override;
-    bool stop(bool /*wait*/) override { return true; }
+    bool stop(bool /*wait*/) noexcept override { return true; }
 };
 
-// Reference *ASYNC* Class for internal Sections
-// This class may work in Sync mode TOO.
-// When you need choice, then  use this class
 class Asynchronous : public Basic {
 public:
-    explicit Asynchronous(std::string_view name) noexcept : Basic(name, 0) {}
+    explicit Asynchronous(std::string_view name) noexcept : Basic(name) {}
     Asynchronous(std::string_view name, char separator) noexcept
         : Basic(name, separator) {}
     ~Asynchronous() override = default;
@@ -195,7 +191,6 @@ protected:
 private:
     std::thread thread_;
 
-    // stopping code(standard)
     std::condition_variable stop_thread_;
     mutable std::mutex lock_stopper_;
     bool stop_requested_{false};

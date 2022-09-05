@@ -379,8 +379,8 @@ TEST(WmiProviderTest, SimulationIntegration) {
             std::chrono::steady_clock::now() + cma::cfg::G_DefaultDelayOnFail;
         EXPECT_FALSE(bad_wmi.isAllowedByTime())
             << "bad wmi must failed and wait";
-        auto tp_low = bad_wmi.isAllowedFromTime() - 50s;
-        auto tp_high = bad_wmi.isAllowedFromTime() + 50s;
+        auto tp_low = bad_wmi.allowedFromTime() - 50s;
+        auto tp_high = bad_wmi.allowedFromTime() + 50s;
         EXPECT_TRUE(tp_expected > tp_low && tp_expected < tp_high);
     }
 
@@ -510,9 +510,9 @@ TEST(WmiProviderTest, WmiDotnet_Integration) {
 
 namespace {
 auto MeasureTimeOnGenerate(Wmi &wmi) {
-    const auto old_time = wmi.isAllowedFromTime();
+    const auto old_time = wmi.allowedFromTime();
     wmi.generateContent();
-    return wmi.isAllowedFromTime() - old_time;
+    return wmi.allowedFromTime() - old_time;
 }
 }  // namespace
 

@@ -5,13 +5,22 @@
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.plugins.dashboard.utils import dashlet_registry, DashletConfig, IFrameDashlet
-from cmk.gui.valuespec import Checkbox, TextInput
+from cmk.gui.plugins.dashboard.utils import (
+    dashlet_registry,
+    DashletConfig,
+    DashletSize,
+    IFrameDashlet,
+)
+from cmk.gui.valuespec import Checkbox, DictionaryEntry, TextInput
 
 
-class URLDashletConfig(DashletConfig):
+class _URLDashletConfigMandatory(DashletConfig):
     url: str
     show_in_iframe: bool
+
+
+class URLDashletConfig(_URLDashletConfigMandatory, total=False):
+    urlfunc: str
 
 
 @dashlet_registry.register
@@ -19,15 +28,15 @@ class URLDashlet(IFrameDashlet[URLDashletConfig]):
     """Dashlet that displays a custom webpage"""
 
     @classmethod
-    def type_name(cls):
+    def type_name(cls) -> str:
         return "url"
 
     @classmethod
-    def title(cls):
+    def title(cls) -> str:
         return _("Custom URL")
 
     @classmethod
-    def description(cls):
+    def description(cls) -> str:
         return _("Displays the content of a custom website.")
 
     @classmethod
@@ -35,11 +44,11 @@ class URLDashlet(IFrameDashlet[URLDashletConfig]):
         return 80
 
     @classmethod
-    def initial_size(cls):
+    def initial_size(cls) -> DashletSize:
         return (30, 10)
 
     @classmethod
-    def vs_parameters(cls):
+    def vs_parameters(cls) -> list[DictionaryEntry]:
         return [
             (
                 "url",
@@ -59,7 +68,7 @@ class URLDashlet(IFrameDashlet[URLDashletConfig]):
             ),
         ]
 
-    def update(self):
+    def update(self) -> None:
         pass  # Not called at all. This dashlet always opens configured pages (see below)
 
     def _get_refresh_url(self) -> str:
@@ -93,7 +102,7 @@ class URLDashlet(IFrameDashlet[URLDashletConfig]):
             return None
 
         urlfunc = self._dashlet_spec["urlfunc"]
-        if hasattr(urlfunc, "__call__"):
+        if callable(urlfunc):
             return urlfunc()
 
         if "." in urlfunc:
@@ -103,7 +112,7 @@ class URLDashlet(IFrameDashlet[URLDashletConfig]):
 
         return globals()[urlfunc]()
 
-    def _get_iframe_url(self):
+    def _get_iframe_url(self) -> str | None:
         if not self._dashlet_spec.get("show_in_iframe", True):
             return None
 

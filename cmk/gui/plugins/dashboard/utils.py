@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for module internals and the plugins"""
 
+from __future__ import annotations
+
 import abc
 import copy
 import json
@@ -51,6 +53,7 @@ from cmk.gui.metrics import translate_perf_data
 from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.plugins.metrics.rrd_fetch import merge_multicol
+from cmk.gui.plugins.metrics.utils import GraphRenderOptions
 from cmk.gui.plugins.views.painters import host_state_short, service_state_short
 from cmk.gui.sites import get_alias_of_host
 from cmk.gui.type_defs import HTTPVariables, Row, SingleInfos, TranslatedMetric, VisualContext
@@ -66,6 +69,7 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     FixedValue,
     TextInput,
+    TimerangeValue,
     Transform,
     ValueSpec,
     ValueSpecValidateFunc,
@@ -74,21 +78,57 @@ from cmk.gui.view_store import get_all_views, get_permitted_views, painter_specs
 
 DashboardName = str
 DashboardConfig = Dict[str, Any]
-DashletConfig = Dict[str, Any]
+
+
+class _DashletConfigMandatory(TypedDict):
+    type: str
+
+
+class DashletConfig(_DashletConfigMandatory, total=False):
+    single_infos: SingleInfos
+    title: str
+    title_url: str
+    context: VisualContext
+    # TODO: Could not a place which sets this flag. Can we remove it?
+    reload_on_resize: bool
+    position: DashletPosition
+    size: DashletSize
+    background: bool
+    show_title: bool | Literal["transparent"]
+
+
+class ABCViewDashletConfig(DashletConfig):
+    name: str
+
+
+class LinkedViewDashletConfig(ABCViewDashletConfig):
+    ...
+
+
+# TODO: Inherit ViewSpec attributes once it's a TypedDict. Until then fall back to total=False
+# and define the attribute mypy complains about.
+class ViewDashletConfig(ABCViewDashletConfig, total=False):  # , ViewSpec):
+    datasource: str
+    mustsearch: bool
+
+
+class ABCGraphDashletConfig(DashletConfig):
+    timerange: TimerangeValue
+    graph_render_options: GraphRenderOptions
+
 
 DashletTypeName = str
-DashletType = Dict[DashletTypeName, Any]
 DashletId = int
 DashletRefreshInterval = Union[bool, int]
 DashletRefreshAction = Optional[str]
 DashletSize = Tuple[int, int]
 DashletPosition = Tuple[int, int]
-DashletInputFunc = Callable[[DashletType], None]
-DashletHandleInputFunc = Callable[[DashletId, DashletConfig], DashletType]
+DashletInputFunc = Callable[[DashletConfig], None]
+DashletHandleInputFunc = Callable[[DashletId, DashletConfig], DashletConfig]
 
 builtin_dashboards: Dict[DashboardName, DashboardConfig] = {}
 # Keep this for legacy reasons until we drop the legacy plugin mechanic
-dashlet_types: Dict[str, DashletType] = {}
+dashlet_types: Dict[DashletTypeName, dict[str, Any]] = {}
 
 # Declare constants to be used in the definitions of the dashboards
 GROW = 0
@@ -215,8 +255,8 @@ class Dashlet(abc.ABC, Generic[T]):
     @classmethod
     def vs_parameters(
         cls,
-    ) -> Union[
-        None, List[DictionaryEntry], ValueSpec, Tuple[DashletInputFunc, DashletHandleInputFunc]
+    ) -> None | list[DictionaryEntry] | ValueSpec | tuple[
+        Callable[[T], None], Callable[[DashletId, T], T]
     ]:
         """Returns a valuespec instance in case the dashlet has parameters, otherwise None"""
         # For legacy reasons this may also return a list of Dashboard() elements. (TODO: Clean this up)
@@ -313,7 +353,10 @@ class Dashlet(abc.ABC, Generic[T]):
         return self.title()
 
     def display_title(self) -> str:
-        return self._dashlet_spec.get("title", self.default_display_title())
+        try:
+            return self._dashlet_spec["title"]
+        except KeyError:
+            return self.default_display_title()
 
     def _get_macro_mapping(self, title: str) -> MacroMapping:
         return macro_mapping_from_context(
@@ -337,14 +380,23 @@ class Dashlet(abc.ABC, Generic[T]):
             ],
         )
 
-    def show_title(self) -> bool:
-        return self._dashlet_spec.get("show_title", True)
+    def show_title(self) -> bool | Literal["transparent"]:
+        try:
+            return self._dashlet_spec["show_title"]
+        except KeyError:
+            return True
 
     def title_url(self) -> Optional[str]:
-        return self._dashlet_spec.get("title_url")
+        try:
+            return self._dashlet_spec["title_url"]
+        except KeyError:
+            return None
 
     def show_background(self) -> bool:
-        return self._dashlet_spec.get("background", True)
+        try:
+            return self._dashlet_spec["background"]
+        except KeyError:
+            return True
 
     def on_resize(self) -> Optional[str]:
         """Returns either Javascript code to execute when a resize event occurs or None"""
@@ -401,14 +453,20 @@ class Dashlet(abc.ABC, Generic[T]):
 
     def size(self) -> DashletSize:
         if self.is_resizable():
-            return self._dashlet_spec.get("size", self.initial_size())
+            try:
+                return self._dashlet_spec["size"]
+            except KeyError:
+                return self.initial_size()
         return self.initial_size()
 
     def position(self) -> DashletPosition:
-        return self._dashlet_spec.get("position", self.initial_position())
+        try:
+            return self._dashlet_spec["position"]
+        except KeyError:
+            return self.initial_position()
 
     def refresh_interval(self) -> DashletRefreshInterval:
-        return self._dashlet_spec.get("refresh", self.initial_refresh_interval())
+        return self.initial_refresh_interval()
 
     def get_refresh_action(self) -> DashletRefreshAction:
         if not self.refresh_interval():
@@ -483,9 +541,9 @@ class VsResultGeneralSettings(TypedDict):
     single_infos: List[str]
 
 
-def dashlet_vs_general_settings(  # type:ignore[no-untyped-def]
+def dashlet_vs_general_settings(
     dashlet_type: Type[Dashlet], single_infos: SingleInfos
-):
+) -> Dictionary:
     return Dictionary(
         title=_("General Settings"),
         render="form",
@@ -569,7 +627,10 @@ class IFrameDashlet(Dashlet[T], abc.ABC):
 
     def reload_on_resize(self) -> bool:
         """Whether or not the page should be reloaded when the dashlet is resized"""
-        return self._dashlet_spec.get("reload_on_resize", False)
+        try:
+            return self._dashlet_spec["reload_on_resize"]
+        except KeyError:
+            return False
 
     def _show_initial_iframe_container(self) -> None:
         iframe_url = self._get_iframe_url()
@@ -819,7 +880,7 @@ def get_permitted_dashboards() -> Dict[DashboardName, DashboardConfig]:
 
 
 def copy_view_into_dashlet(
-    dashlet: DashletConfig,
+    dashlet: ViewDashletConfig,
     nr: DashletId,
     view_name: str,
     add_context: Optional[VisualContext] = None,
@@ -835,7 +896,6 @@ def copy_view_into_dashlet(
         # This is not really 100% correct according to the logic of visuals.available(),
         # but we do this for the rare edge case during legacy dashboard conversion, so
         # this should be sufficient
-        view = None
         for (_unused, n), this_view in get_all_views().items():
             # take the first view with a matching name
             if view_name == n:
@@ -861,9 +921,10 @@ def copy_view_into_dashlet(
     for key, value in view.items():
         if isinstance(value, LazyString):
             view[key] = str(value)
-    dashlet.update(view)
+    # TODO: Can hopefully be claned up once view is also a TypedDict
+    dashlet.update(view)  # type: ignore[typeddict-item]
     if add_context:
-        dashlet["context"].update(add_context)
+        dashlet["context"] = {**dashlet["context"], **add_context}
 
     # Overwrite the views default title with the context specific title
     dashlet["title"] = visuals.visual_title("view", view, dashlet["context"])

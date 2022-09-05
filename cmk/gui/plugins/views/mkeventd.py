@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import urllib.parse
-from typing import Callable, List, Optional, Sequence, Tuple, TypeVar, Union
+from typing import Callable, cast, List, Optional, Sequence, Tuple, TypeVar, Union
 
 from livestatus import OnlySites, SiteId
 
@@ -22,7 +22,7 @@ from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.livestatus_data_source import RowTableLivestatus
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import Permission, permission_registry
-from cmk.gui.plugins.dashboard.utils import DashletConfig
+from cmk.gui.plugins.dashboard.utils import ABCViewDashletConfig
 from cmk.gui.plugins.views.utils import (
     Cell,
     cmp_num_split,
@@ -768,11 +768,14 @@ def render_delete_event_icons(row) -> str | HTML:  # type:ignore[no-untyped-def]
 
         import cmk.gui.dashboard as dashboard
 
-        dashlet_config: DashletConfig = dashboard.get_dashlet(
-            request.get_str_input_mandatory("name"), ident
+        # With the typed dicts we currently don't have an easy way of determining the type
+        dashlet_config = cast(
+            ABCViewDashletConfig,
+            dashboard.get_dashlet(request.get_str_input_mandatory("name"), ident),
         )
+        view: ABCViewDashletConfig | ViewSpec
         if dashlet_config.get("type") == "linked_view":
-            view: Union[DashletConfig, ViewSpec] = get_permitted_views()[dashlet_config["name"]]
+            view = get_permitted_views()[dashlet_config["name"]]
         else:
             view = dashlet_config
 
@@ -791,7 +794,7 @@ def render_delete_event_icons(row) -> str | HTML:  # type:ignore[no-untyped-def]
         ("filled_in", "actions"),
         ("actions", "yes"),
         ("_do_actions", "yes"),
-        ("_row_id", row_id(view, row)),
+        ("_row_id", row_id(ViewSpec(view), row)),
         ("_delete_event", _("Archive Event")),
         ("_show_result", "0"),
     ]

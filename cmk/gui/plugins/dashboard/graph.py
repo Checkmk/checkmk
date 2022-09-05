@@ -17,11 +17,11 @@ from cmk.gui.exceptions import MKGeneralException, MKMissingDataError, MKUserErr
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.plugins.dashboard.utils import (
+    ABCGraphDashletConfig,
     DashboardConfig,
     DashboardName,
     Dashlet,
     dashlet_registry,
-    DashletConfig,
     DashletId,
     DashletSize,
     macro_mapping_from_context,
@@ -31,7 +31,7 @@ from cmk.gui.plugins.metrics.html_render import (
     default_dashlet_graph_render_options,
     resolve_graph_recipe,
 )
-from cmk.gui.plugins.metrics.utils import graph_info, GraphRenderOptions, metric_info
+from cmk.gui.plugins.metrics.utils import graph_info, metric_info
 from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
 from cmk.gui.plugins.visuals.utils import get_only_sites_from_context
 from cmk.gui.type_defs import (
@@ -49,7 +49,6 @@ from cmk.gui.valuespec import (
     DictionaryEntry,
     DropdownChoiceWithHostAndServiceHints,
     Timerange,
-    TimerangeValue,
     ValueSpec,
 )
 from cmk.gui.visuals import get_singlecontext_vars
@@ -126,11 +125,6 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
             varprefix,
             self._MARKER_DEPRECATED_CHOICE if isinstance(value, int) else value,
         )
-
-
-class ABCGraphDashletConfig(DashletConfig):
-    timerange: TimerangeValue
-    graph_render_options: GraphRenderOptions
 
 
 T = TypeVar("T", bound=ABCGraphDashletConfig)

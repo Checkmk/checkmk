@@ -42,6 +42,15 @@ class DummyDashlet(dashboard.Dashlet[DummyDashletConfig]):
         html.write_text("dummy")
 
 
+@pytest.fixture(name="dummy_config")
+def fixture_dummy_config() -> DummyDashletConfig:
+    return DummyDashletConfig(
+        {
+            "type": "dummy",
+        }
+    )
+
+
 def test_dashlet_registry_plugins() -> None:
     expected_plugins = [
         "hoststats",
@@ -364,105 +373,66 @@ def test_dashlet_type_defaults() -> None:
     assert DummyDashlet.add_url() == "edit_dashlet.py?back=index.py%3Fedit%3D1&type=dummy"
 
 
-def test_dashlet_defaults() -> None:
-    dashlet = DummyDashlet(
-        dashboard_name="main",
-        dashboard={},
-        dashlet_id=1,
-        dashlet=DummyDashletConfig({"xyz": "abc"}),
-    )
+def test_dashlet_defaults(dummy_config: DummyDashletConfig) -> None:
+    dashlet = DummyDashlet(dashboard_name="main", dashboard={}, dashlet_id=1, dashlet=dummy_config)
     assert dashlet.infos() == []
     assert dashlet.dashlet_id == 1
-    assert dashlet.dashlet_spec == {"xyz": "abc"}
+    assert dashlet.dashlet_spec == {"type": "dummy"}
     assert dashlet.dashboard_name == "main"
 
 
-def test_dashlet_title() -> None:
-    dashlet = DummyDashlet(
-        dashboard_name="main",
-        dashboard={},
-        dashlet_id=1,
-        dashlet=DummyDashletConfig({"title": "abc"}),
-    )
-    assert dashlet.display_title() == "abc"
-
-    dashlet = DummyDashlet(
-        dashboard_name="main", dashboard={}, dashlet_id=1, dashlet=DummyDashletConfig({})
-    )
+def test_dashlet_title(dummy_config: DummyDashletConfig) -> None:
+    dashlet = DummyDashlet(dashboard_name="main", dashboard={}, dashlet_id=1, dashlet=dummy_config)
     assert dashlet.display_title() == "DUMMy"
 
+    dummy_config["title"] = "abc"
+    dashlet = DummyDashlet(dashboard_name="main", dashboard={}, dashlet_id=1, dashlet=dummy_config)
+    assert dashlet.display_title() == "abc"
 
-def test_show_title() -> None:
-    dashlet = DummyDashlet(
-        dashboard_name="main", dashboard={}, dashlet_id=1, dashlet=DummyDashletConfig({})
-    )
+
+def test_show_title(dummy_config: DummyDashletConfig) -> None:
+    dashlet = DummyDashlet(dashboard_name="main", dashboard={}, dashlet_id=1, dashlet=dummy_config)
     assert dashlet.show_title() is True
 
-    dashlet = DummyDashlet(
-        dashboard_name="main",
-        dashboard={},
-        dashlet_id=1,
-        dashlet=DummyDashletConfig({"show_title": False}),
-    )
+    dummy_config["show_title"] = False
+    dashlet = DummyDashlet(dashboard_name="main", dashboard={}, dashlet_id=1, dashlet=dummy_config)
     assert dashlet.show_title() is False
 
 
-def test_title_url() -> None:
-    dashlet = DummyDashlet(
-        dashboard_name="main", dashboard={}, dashlet_id=1, dashlet=DummyDashletConfig({})
-    )
+def test_title_url(dummy_config: DummyDashletConfig) -> None:
+    dashlet = DummyDashlet(dashboard_name="main", dashboard={}, dashlet_id=1, dashlet=dummy_config)
     assert dashlet.title_url() is None
 
-    dashlet = DummyDashlet(
-        dashboard_name="main",
-        dashboard={},
-        dashlet_id=1,
-        dashlet=DummyDashletConfig({"title_url": "index.py?bla=blub"}),
-    )
+    dummy_config["title_url"] = "index.py?bla=blub"
+    dashlet = DummyDashlet(dashboard_name="main", dashboard={}, dashlet_id=1, dashlet=dummy_config)
     assert dashlet.title_url() == "index.py?bla=blub"
 
 
-def test_show_background() -> None:
-    dashlet = DummyDashlet(
-        dashboard_name="main", dashboard={}, dashlet_id=1, dashlet=DummyDashletConfig({})
-    )
+def test_show_background(dummy_config: DummyDashletConfig) -> None:
+    dashlet = DummyDashlet(dashboard_name="main", dashboard={}, dashlet_id=1, dashlet=dummy_config)
     assert dashlet.show_background() is True
 
-    dashlet = DummyDashlet(
-        dashboard_name="main",
-        dashboard={},
-        dashlet_id=1,
-        dashlet=DummyDashletConfig({"background": False}),
-    )
+    dummy_config["background"] = False
+    dashlet = DummyDashlet(dashboard_name="main", dashboard={}, dashlet_id=1, dashlet=dummy_config)
     assert dashlet.show_background() is False
 
 
-def test_on_resize() -> None:
-    dashlet = DummyDashlet(
-        dashboard_name="main", dashboard={}, dashlet_id=1, dashlet=DummyDashletConfig({})
-    )
+def test_on_resize(dummy_config: DummyDashletConfig) -> None:
+    dashlet = DummyDashlet(dashboard_name="main", dashboard={}, dashlet_id=1, dashlet=dummy_config)
     assert dashlet.on_resize() is None
 
 
-def test_on_refresh() -> None:
-    dashlet = DummyDashlet(
-        dashboard_name="main", dashboard={}, dashlet_id=1, dashlet=DummyDashletConfig({})
-    )
+def test_on_refresh(dummy_config: DummyDashletConfig) -> None:
+    dashlet = DummyDashlet(dashboard_name="main", dashboard={}, dashlet_id=1, dashlet=dummy_config)
     assert dashlet.on_refresh() is None
 
 
-def test_size() -> None:
-    dashlet = DummyDashlet(
-        dashboard_name="main", dashboard={}, dashlet_id=1, dashlet=DummyDashletConfig({})
-    )
+def test_size(dummy_config: DummyDashletConfig) -> None:
+    dashlet = DummyDashlet(dashboard_name="main", dashboard={}, dashlet_id=1, dashlet=dummy_config)
     assert dashlet.size() == DummyDashlet.initial_size()
 
-    dashlet = DummyDashlet(
-        dashboard_name="main",
-        dashboard={},
-        dashlet_id=1,
-        dashlet=DummyDashletConfig({"size": (22, 33)}),
-    )
+    dummy_config["size"] = (22, 33)
+    dashlet = DummyDashlet(dashboard_name="main", dashboard={}, dashlet_id=1, dashlet=dummy_config)
     assert dashlet.size() == (22, 33)
 
     class NotResizable(DummyDashlet):
@@ -470,43 +440,23 @@ def test_size() -> None:
         def is_resizable(cls) -> bool:
             return False
 
-    dashlet = NotResizable(
-        dashboard_name="main",
-        dashboard={},
-        dashlet_id=1,
-        dashlet=DummyDashletConfig({"size": (22, 33)}),
-    )
+    dummy_config["size"] = (22, 33)
+    dashlet = NotResizable(dashboard_name="main", dashboard={}, dashlet_id=1, dashlet=dummy_config)
     assert dashlet.size() == NotResizable.initial_size()
 
 
-def test_position() -> None:
-    dashlet = DummyDashlet(
-        dashboard_name="main", dashboard={}, dashlet_id=1, dashlet=DummyDashletConfig({})
-    )
+def test_position(dummy_config: DummyDashletConfig) -> None:
+    dashlet = DummyDashlet(dashboard_name="main", dashboard={}, dashlet_id=1, dashlet=dummy_config)
     assert dashlet.position() == DummyDashlet.initial_position()
 
-    dashlet = DummyDashlet(
-        dashboard_name="main",
-        dashboard={},
-        dashlet_id=1,
-        dashlet=DummyDashletConfig({"position": (4, 4)}),
-    )
+    dummy_config["position"] = (4, 4)
+    dashlet = DummyDashlet(dashboard_name="main", dashboard={}, dashlet_id=1, dashlet=dummy_config)
     assert dashlet.position() == (4, 4)
 
 
-def test_refresh_interval() -> None:
-    dashlet = DummyDashlet(
-        dashboard_name="main", dashboard={}, dashlet_id=1, dashlet=DummyDashletConfig({})
-    )
+def test_refresh_interval(dummy_config: DummyDashletConfig) -> None:
+    dashlet = DummyDashlet(dashboard_name="main", dashboard={}, dashlet_id=1, dashlet=dummy_config)
     assert dashlet.refresh_interval() == DummyDashlet.initial_refresh_interval()
-
-    dashlet = DummyDashlet(
-        dashboard_name="main",
-        dashboard={},
-        dashlet_id=1,
-        dashlet=DummyDashletConfig({"refresh": 22}),
-    )
-    assert dashlet.refresh_interval() == 22
 
 
 def test_dashlet_context_inheritance() -> None:
@@ -525,7 +475,6 @@ def test_dashlet_context_inheritance() -> None:
         "single_infos": [],
         "show_title": True,
         "title": "Host Statistics",
-        "refresh": 60,
         "add_context_to_title": True,
         "link_from": {},
         "position": (61, 1),

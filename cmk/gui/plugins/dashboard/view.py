@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Callable, TypeVar
+
 import cmk.gui.views as views
 import cmk.gui.visuals as visuals
 from cmk.gui.data_source import data_source_registry
@@ -11,30 +13,40 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.plugins.dashboard.utils import dashlet_registry, DashletConfig, IFrameDashlet, T
+from cmk.gui.plugins.dashboard.utils import (
+    ABCViewDashletConfig,
+    dashlet_registry,
+    DashletId,
+    DashletSize,
+    IFrameDashlet,
+    LinkedViewDashletConfig,
+    ViewDashletConfig,
+)
 from cmk.gui.plugins.views.utils import PainterOptions
-from cmk.gui.type_defs import SingleInfos, ViewSpec
+from cmk.gui.type_defs import HTTPVariables, SingleInfos, ViewSpec
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_name, urlencode
-from cmk.gui.valuespec import DropdownChoice
+from cmk.gui.valuespec import DictionaryEntry, DropdownChoice
 from cmk.gui.view import View
 from cmk.gui.view_renderer import GUIViewRenderer
 from cmk.gui.view_store import get_permitted_views
 
+VT = TypeVar("VT", bound=ABCViewDashletConfig)
 
-class ABCViewDashlet(IFrameDashlet[T]):
+
+class ABCViewDashlet(IFrameDashlet[VT]):
     @classmethod
     def sort_index(cls) -> int:
         return 10
 
     @classmethod
-    def initial_size(cls):
+    def initial_size(cls) -> DashletSize:
         return (40, 20)
 
     @classmethod
     def has_context(cls) -> bool:
         return True
 
-    def _show_view_as_dashlet(self, view_spec: ViewSpec):  # type:ignore[no-untyped-def]
+    def _show_view_as_dashlet(self, view_spec: ViewSpec | ViewDashletConfig) -> None:
         html.add_body_css_class("view")
         html.open_div(id_="dashlet_content_wrapper")
 
@@ -77,7 +89,7 @@ class ABCViewDashlet(IFrameDashlet[T]):
         }
         context = visuals.get_merged_context(self.context, view_context)
 
-        view = View(self._dashlet_spec["name"], view_spec, context)
+        view = View(self._dashlet_spec["name"], dict(view_spec), context)
         view.row_limit = views.get_limit()
         view.only_sites = visuals.get_only_sites_from_context(context)
         view.user_sorters = views.get_user_sorters()
@@ -86,13 +98,9 @@ class ABCViewDashlet(IFrameDashlet[T]):
 
         html.close_div()
 
-    def _get_infos_from_view_spec(self, view_spec: ViewSpec):  # type:ignore[no-untyped-def]
+    def _get_infos_from_view_spec(self, view_spec: ViewSpec | ViewDashletConfig) -> SingleInfos:
         ds_name = view_spec["datasource"]
         return data_source_registry[ds_name]().infos
-
-
-class ViewDashletConfig(DashletConfig):
-    ...
 
 
 @dashlet_registry.register
@@ -100,25 +108,30 @@ class ViewDashlet(ABCViewDashlet[ViewDashletConfig]):
     """Dashlet that displays a Check_MK view"""
 
     @classmethod
-    def type_name(cls):
+    def type_name(cls) -> str:
         return "view"
 
     @classmethod
-    def title(cls):
+    def title(cls) -> str:
         return _("View")
 
     @classmethod
-    def description(cls):
+    def description(cls) -> str:
         return _("Copies a view to a dashboard element")
 
     @classmethod
-    def vs_parameters(cls):
-        def _render_input(dashlet) -> None:  # type:ignore[no-untyped-def]
+    def vs_parameters(
+        cls,
+    ) -> tuple[
+        Callable[[ViewDashletConfig], None],
+        Callable[[DashletId, ViewDashletConfig], ViewDashletConfig],
+    ]:
+        def _render_input(dashlet: ViewDashletConfig) -> None:
             # TODO: Don't modify the self._dashlet data structure here!
             views.transform_view_to_valuespec_value(dashlet)
-            return views.render_view_config(dashlet)
+            views.render_view_config(dict(dashlet))
 
-        def _handle_input(ident, dashlet):
+        def _handle_input(ident: DashletId, dashlet: ViewDashletConfig) -> ViewDashletConfig:
             dashlet["name"] = "dashlet_%d" % ident
             dashlet.setdefault("title", _("View"))
             return views.create_view_from_valuespec(dashlet, dashlet)
@@ -146,28 +159,24 @@ class ViewDashlet(ABCViewDashlet[ViewDashletConfig]):
         return self._get_infos_from_view_spec(self._dashlet_spec)
 
 
-class LinkedViewDashletConfig(DashletConfig):
-    ...
-
-
 @dashlet_registry.register
 class LinkedViewDashlet(ABCViewDashlet[LinkedViewDashletConfig]):
     """Dashlet that displays a Check_MK view without embedding it's definition into the dashboard"""
 
     @classmethod
-    def type_name(cls):
+    def type_name(cls) -> str:
         return "linked_view"
 
     @classmethod
-    def title(cls):
+    def title(cls) -> str:
         return _("Link existing view")
 
     @classmethod
-    def description(cls):
+    def description(cls) -> str:
         return _("Displays the content of a view")
 
     @classmethod
-    def vs_parameters(cls):
+    def vs_parameters(cls) -> list[DictionaryEntry]:
         return [
             (
                 "name",
@@ -187,7 +196,7 @@ class LinkedViewDashlet(ABCViewDashlet[LinkedViewDashletConfig]):
         ]
 
     @classmethod
-    def add_url(cls):
+    def add_url(cls) -> str:
         return "create_link_view_dashlet.py?name=%s&mode=create&back=%s" % (
             urlencode(request.var("name")),
             urlencode(makeuri(request, [("edit", "1")])),
@@ -206,18 +215,15 @@ class LinkedViewDashlet(ABCViewDashlet[LinkedViewDashletConfig]):
         return view_spec
 
     def default_display_title(self) -> str:
-        # TODO: Visual and ViewSpec are both Dict[str, Any]. How are these related?
-        return visuals.visual_title("view", self._get_view_spec(), self.context)
+        return visuals.visual_title("view", dict(self._get_view_spec()), self.context)
 
-    def title_url(self):
+    def title_url(self) -> str:
         view_name = self._dashlet_spec["name"]
-        return makeuri_contextless(
-            request,
-            [("view_name", view_name)] + self._dashlet_context_vars(),
-            filename="view.py",
-        )
+        request_vars: HTTPVariables = [("view_name", view_name)]
+        request_vars += self._dashlet_context_vars()
+        return makeuri_contextless(request, request_vars, filename="view.py")
 
-    def update(self):
+    def update(self) -> None:
         self._show_view_as_dashlet(self._get_view_spec())
         html.javascript('cmk.utils.add_simplebar_scrollbar("dashlet_content_wrapper");')
 

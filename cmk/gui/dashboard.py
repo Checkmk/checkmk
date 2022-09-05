@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import copy
 import json
 import time
@@ -11,6 +13,7 @@ from dataclasses import dataclass
 from typing import (
     Any,
     Callable,
+    cast,
     Dict,
     Iterable,
     Iterator,
@@ -81,6 +84,7 @@ from cmk.gui.permissions import (
 # Can be used by plugins
 from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=unused-import
     ABCFigureDashlet,
+    ABCGraphDashletConfig,
     builtin_dashboards,
     copy_view_into_dashlet,
     dashboard_breadcrumb,
@@ -97,18 +101,19 @@ from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=un
     DashletRefreshAction,
     DashletRefreshInterval,
     DashletSize,
-    DashletType,
     DashletTypeName,
     get_all_dashboards,
     get_permitted_dashboards,
     GROW,
     IFrameDashlet,
+    LinkedViewDashletConfig,
     MAX,
     save_all_dashboards,
+    ViewDashletConfig,
 )
 from cmk.gui.plugins.metrics.html_render import default_dashlet_graph_render_options
 from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry, VisualType
-from cmk.gui.type_defs import InfoName, SingleInfos, VisualContext
+from cmk.gui.type_defs import InfoName, SingleInfos, ViewName, VisualContext
 from cmk.gui.utils.html import HTML, HTMLInput
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.utils.output_funnel import output_funnel
@@ -245,7 +250,14 @@ class VisualTypeDashboards(VisualType):
         permitted_dashboards = get_permitted_dashboards()
         dashboard = _load_dashboard_with_cloning(permitted_dashboards, target_visual_name)
 
-        dashlet_spec = default_dashlet_definition(add_type)
+        dashlet_spec = DashletConfig(
+            {
+                "type": add_type,
+                "position": dashlet_registry[add_type].initial_position(),
+                "size": dashlet_registry[add_type].initial_size(),
+                "show_title": True,
+            }
+        )
 
         dashlet_spec["context"] = context
         if add_type == "view":
@@ -254,8 +266,9 @@ class VisualTypeDashboards(VisualType):
             dashlet_spec.update(parameters)
 
         # When a view shal be added to the dashboard, load the view and put it into the dashlet
-        # FIXME: Mave this to the dashlet plugins
+        # FIXME: Move this to the dashlet plugins
         if add_type == "view":
+            dashlet_spec = cast(ViewDashletConfig, dashlet_spec)
             # save the original context and override the context provided by the view
             context = dashlet_spec["context"]
             copy_view_into_dashlet(
@@ -263,6 +276,8 @@ class VisualTypeDashboards(VisualType):
             )
 
         elif add_type in ["pnpgraph", "custom_graph"]:
+            dashlet_spec = cast(ABCGraphDashletConfig, dashlet_spec)
+
             # The "add to visual" popup does not provide a timerange information,
             # but this is not an optional value. Set it to 25h initially.
             dashlet_spec.setdefault("timerange", "25h")
@@ -367,7 +382,7 @@ class LegacyDashlet(IFrameDashlet[DashletConfig]):
     """Helper to be able to handle pre 1.6 dashlet_type declared dashlets"""
 
     _type_name: DashletTypeName = ""
-    _spec: DashletConfig = {}
+    _spec: dict[str, Any] = {}
 
     @classmethod
     def type_name(cls) -> str:
@@ -841,14 +856,22 @@ def _fallback_dashlet(
     dashlet_spec: DashletConfig,
     dashlet_id: int,
     info_text: str = "",
-) -> Dashlet:
-    """Create some place holder dashlet instance in case the dashlet could not be
+) -> StaticTextDashlet:
+    """Create some place holder dashlet to show in case the original dashlet could not be
     initialized"""
-    dashlet_spec = dashlet_spec.copy()
-    dashlet_spec.update({"type": "nodata", "text": info_text})
-
-    dashlet_type = get_dashlet_type(dashlet_spec)
-    return dashlet_type(name, board, dashlet_id, dashlet_spec)
+    return StaticTextDashlet(
+        name,
+        board,
+        dashlet_id,
+        StaticTextDashletConfig(
+            {
+                "type": "nodata",
+                "text": info_text,
+                "position": dashlet_spec["position"],
+                "size": dashlet_spec["size"],
+            }
+        ),
+    )
 
 
 class StaticTextDashletConfig(DashletConfig):
@@ -1858,10 +1881,16 @@ def page_create_link_view_dashlet() -> None:
     choose_view(name, _("Embed existing view"), _create_linked_view_dashlet_spec)
 
 
-def _create_linked_view_dashlet_spec(dashlet_id: int, view_name: str) -> Dict:
-    dashlet_spec = default_dashlet_definition("linked_view")
-    dashlet_spec["name"] = view_name
-    return dashlet_spec
+def _create_linked_view_dashlet_spec(dashlet_id: int, view_name: str) -> LinkedViewDashletConfig:
+    return LinkedViewDashletConfig(
+        {
+            "type": "linked_view",
+            "position": dashlet_registry["linked_view"].initial_position(),
+            "size": dashlet_registry["linked_view"].initial_size(),
+            "show_title": True,
+            "name": view_name,
+        }
+    )
 
 
 @cmk.gui.pages.register("create_view_dashlet")
@@ -1882,8 +1911,16 @@ def page_create_view_dashlet() -> None:
         choose_view(name, _("Copy existing view"), _create_cloned_view_dashlet_spec)
 
 
-def _create_cloned_view_dashlet_spec(dashlet_id: int, view_name: str) -> Dict:
-    dashlet_spec = default_dashlet_definition("view")
+def _create_cloned_view_dashlet_spec(dashlet_id: int, view_name: str) -> ViewDashletConfig:
+    dashlet_spec = ViewDashletConfig(
+        {
+            "type": "view",
+            "position": dashlet_registry["linked_view"].initial_position(),
+            "size": dashlet_registry["linked_view"].initial_size(),
+            "show_title": True,
+            "name": "",
+        }
+    )
 
     # save the original context and override the context provided by the view
     copy_view_into_dashlet(dashlet_spec, dashlet_id, view_name)
@@ -1921,7 +1958,11 @@ def page_create_view_dashlet_infos() -> None:
     )
 
 
-def choose_view(name: DashboardName, title: str, create_dashlet_spec_func: Callable) -> None:
+def choose_view(
+    name: DashboardName,
+    title: str,
+    create_dashlet_spec_func: Callable[[DashletId, ViewName], DashletConfig],
+) -> None:
     vs_view = DropdownChoice[str](
         title=_("View name"),
         choices=lambda: view_choices(allow_empty=False),
@@ -1946,6 +1987,7 @@ def choose_view(name: DashboardName, title: str, create_dashlet_spec_func: Calla
         try:
             view_name = vs_view.from_html_vars("view")
             vs_view.validate_value(view_name, "view")
+            assert view_name is not None
 
             dashlet_id = len(dashboard["dashlets"])
             dashlet_spec = create_dashlet_spec_func(dashlet_id, view_name)
@@ -2071,10 +2113,10 @@ class EditDashletPage(Page):
 
         context_specs = visuals.get_context_specs(dashlet_spec, info_handler=dashlet_info_handler)
 
-        vs_type: Optional[ValueSpec] = None
+        vs_type: ValueSpec | None = None
         params = dashlet_type.vs_parameters()
-        render_input_func = None
-        handle_input_func = None
+        render_input_func: DashletInputFunc | None = None
+        handle_input_func: DashletHandleInputFunc | None = None
         if isinstance(params, list):
             # TODO: Refactor all params to be a Dictionary() and remove this special case
             vs_type = Dictionary(
@@ -2102,33 +2144,39 @@ class EditDashletPage(Page):
 
         if request.var("_save") and transactions.transaction_valid():
             try:
+                # Take over keys not managed by the edit dialog
+                new_dashlet_spec = DashletConfig(
+                    {
+                        "type": dashlet_spec["type"],
+                        "size": dashlet_spec["size"],
+                        "position": dashlet_spec["position"],
+                    }
+                )
+
                 general_properties = vs_general.from_html_vars("general")
                 vs_general.validate_value(general_properties, "general")
-                dashlet_spec.update(general_properties)
-
-                # Remove unset optional attributes
-                optional_properties = set(e[0] for e in vs_general._get_elements()) - set(
-                    vs_general._required_keys
-                )
-                for option in optional_properties:
-                    if option not in general_properties and option in dashlet_spec:
-                        del dashlet_spec[option]
+                # We have to trust from_html_vars and validate_value for now
+                new_dashlet_spec.update(general_properties)  # type: ignore[typeddict-item]
 
                 if context_specs:
-                    dashlet_spec["context"] = visuals.process_context_specs(context_specs)
+                    new_dashlet_spec["context"] = visuals.process_context_specs(context_specs)
 
                 if vs_type:
                     type_properties = vs_type.from_html_vars("type")
                     vs_type.validate_value(type_properties, "type")
-                    dashlet_spec.update(type_properties)
+                    # We have to trust from_html_vars and validate_value for now
+                    new_dashlet_spec.update(type_properties)  # type: ignore[typeddict-item]
 
                 elif handle_input_func:
                     # The returned dashlet must be equal to the parameter! It is not replaced/re-added
                     # to the dashboard object. FIXME TODO: Clean this up!
-                    dashlet_spec = handle_input_func(self._ident, dashlet_spec)
+                    # We have to trust from_html_vars and validate_value for now
+                    new_dashlet_spec = handle_input_func(self._ident, new_dashlet_spec)
 
                 if mode == "add":
-                    self._dashboard["dashlets"].append(dashlet_spec)
+                    self._dashboard["dashlets"].append(new_dashlet_spec)
+                else:
+                    self._dashboard["dashlets"][self._ident] = new_dashlet_spec
 
                 save_all_dashboards()
                 html.footer()
@@ -2138,11 +2186,11 @@ class EditDashletPage(Page):
                 html.user_error(e)
 
         html.begin_form("dashlet", method="POST")
-        vs_general.render_input("general", dashlet_spec)
+        vs_general.render_input("general", dict(dashlet_spec))
         visuals.render_context_specs(dashlet_spec, context_specs)
 
         if vs_type:
-            vs_type.render_input("type", dashlet_spec)
+            vs_type.render_input("type", dict(dashlet_spec))
         elif render_input_func:
             render_input_func(dashlet_spec)
 
@@ -2300,16 +2348,6 @@ def ajax_dashlet_pos() -> None:
 #   +----------------------------------------------------------------------+
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
-
-# TODO: Move this to the Dashlet class
-def default_dashlet_definition(ty: DashletTypeName) -> DashletConfig:
-    return {
-        "type": ty,
-        "position": dashlet_registry[ty].initial_position(),
-        "size": dashlet_registry[ty].initial_size(),
-        "show_title": True,
-    }
 
 
 def add_dashlet(dashlet_spec: DashletConfig, dashboard: DashboardConfig) -> None:

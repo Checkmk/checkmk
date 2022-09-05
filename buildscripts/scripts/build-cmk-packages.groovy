@@ -1,8 +1,16 @@
 #!groovy
+
+/// build-cmk-packages.groovy
+
 /// Build the distribution packages (.rpm, .dep, etc.) for a given edition of
 /// Checkmk and a given set of distributions.
 /// Optionally publish those packages to the Checkmk download page.
 /// Used in two contexts: in build chain and in Testbuild
+
+/// Important note:
+/// This script is also used for the "Testbuild" job which uses a slightly
+/// different scenario: packages are built for a subset of distros only and
+/// OMD package and Python optimizations are disabled.
 
 def main() {
     check_job_parameters([
@@ -13,7 +21,6 @@ def main() {
         "DEPLOY_TO_WEBSITE_ONLY",
         "DOCKER_TAG_BUILD",
         "FAKE_WINDOWS_ARTIFACTS",
-        "USE_OMD_PACKAGE_CACHE",
     ]);
 
     check_environment_variables([
@@ -36,9 +43,23 @@ def main() {
     /// don't add $WORKSPACE based values here, since $docker_args is being
     /// used on different nodes
     def docker_args = "${mount_reference_repo_dir} --ulimit nofile=1024:1024";
-    def jenkins_base_folder = new File(new File(currentBuild.fullProjectName).parent).parent;
+    
+    def (jenkins_base_folder, distro_key, omd_env_vars, upload_path_suffix) = (
+        env.JOB_BASE_NAME == "testbuild" ? [
+            new File(currentBuild.fullProjectName).parent,
+            "DISTROS_TESTBUILD",
+            /// Testbuilds: Do not use our build cache to ensure we catch build related
+            /// issues. And disable python optimizations to execute the build faster
+            ["NEXUS_BUILD_CACHE_URL=", "PYTHON_ENABLE_OPTIMIZATIONS="],
+            "testbuild/",
+        ] : [
+            new File(new File(currentBuild.fullProjectName).parent).parent,
+            "DISTROS",
+            [],
+            "",
+        ]);
 
-    def distros = versioning.configured_or_overridden_distros(EDITION, OVERRIDE_DISTROS);
+    def distros = versioning.configured_or_overridden_distros(EDITION, OVERRIDE_DISTROS, distro_key);
 
     def deploy_to_website = (
         !params.SKIP_DEPLOY_TO_WEBSITE &&
@@ -51,24 +72,17 @@ def main() {
     def cmk_version = versioning.get_cmk_version(branch_name, VERSION);
     def docker_tag = versioning.select_docker_tag(branch_name, DOCKER_TAG_BUILD, DOCKER_TAG_FOLDER);
     def branch_version = versioning.get_branch_version(checkout_dir);
-    
-    /// Testbuilds: Do not use our build cache to ensure we catch build related
-    /// issues. And disable python optimizations to execute the build faster
-    def omd_env_vars = USE_OMD_PACKAGE_CACHE ? [] : ["NEXUS_BUILD_CACHE_URL=", "PYTHON_ENABLE_OPTIMIZATIONS="];
 
     /// Get the ID of the docker group from the node(!). This must not be
     /// executed inside the container (as long as the IDs are different)
     def docker_group_id = get_docker_group_id();
 
-    def test_build = JOB_BASE_NAME != "build-cmk-packages";
-    def upload_path_suffix = test_build ? 'testbuild/' : '';
     def upload_path = "${INTERNAL_DEPLOY_DEST}${upload_path_suffix}";
 
     print(
         """
         |===== CONFIGURATION ===============================
         |distros:.................. │${distros}│
-        |test_build:............... │${test_build}│
         |deploy_to_website:........ │${deploy_to_website}│
         |branch_name:.............. │${branch_name}│
         |cmk_version:.............. │${cmk_version}│
@@ -90,7 +104,6 @@ def main() {
         |${distros}<br>
         |Edition: ${EDITION}<br>
         |Fake artifacts: ${FAKE_WINDOWS_ARTIFACTS}<br>
-        |Use package cache: ${USE_OMD_PACKAGE_CACHE}<br>
         |""".stripMargin());
 
     // TODO This has to go into a dedicated job, soon!

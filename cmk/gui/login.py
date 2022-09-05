@@ -246,7 +246,7 @@ def _check_auth_cookie(cookie_name: str) -> Optional[UserId]:
 
 
 def check_cookie_restapi() -> Optional[UserId]:
-    """check cookie for sugnature and valid session
+    """check cookie for signature and valid session
 
     more or less duplicate code from _check_auth_cookie"""
 

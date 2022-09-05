@@ -110,7 +110,7 @@ class TestLinux:
         attrs = {
             "communicate.side_effect": [
                 ("/usr/lib/postgres/psql", None),
-                ("postgres\ndb1", None),
+                ("postgres\x00db1".encode("utf-8"), None),
                 ("12.3", None),
             ]
         }
@@ -150,7 +150,7 @@ class TestLinux:
         attrs = {
             "communicate.side_effect": [
                 ("/usr/lib/postgres/psql", None),
-                ("postgres\ndb1", None),
+                ("postgres\x00db1".encode("utf-8"), None),
                 ("12.3.6", None),
             ]
         }
@@ -186,7 +186,7 @@ class TestLinux:
         attrs = {
             "communicate.side_effect": [
                 ("/usr/lib/postgres/psql", None),
-                ("postgres\ndb1", None),
+                ("postgres\x00db1".encode("utf-8"), None),
                 ("12.3.6", None),
             ]
         }
@@ -262,7 +262,12 @@ class TestWindows:
         self, mock_Popen, mock_isfile
     ) -> None:
         process_mock = Mock()
-        attrs = {"communicate.side_effect": [(b"postgres\ndb1", b"ok"), (b"12.1", b"ok")]}
+        attrs = {
+            "communicate.side_effect": [
+                ("postgres\x00db1\x00".encode("utf-8"), b"ok"),
+                (b"12.1", b"ok"),
+            ]
+        }
         process_mock.configure_mock(**attrs)
         mock_Popen.return_value = process_mock
         instance = {
@@ -298,7 +303,12 @@ class TestWindows:
             "pg_passfile": "c:\\User\\.pgpass",
         }
         process_mock = Mock()
-        attrs = {"communicate.side_effect": [(b"postgres\ndb1", b"ok"), (b"12.1.5", b"ok")]}
+        attrs = {
+            "communicate.side_effect": [
+                (b"postgres\x00db1\x00", b"ok"),
+                (b"12.1.5\x00", b"ok"),
+            ]
+        }
         process_mock.configure_mock(**attrs)
         mock_Popen.return_value = process_mock
 

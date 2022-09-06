@@ -11,7 +11,7 @@ from werkzeug.local import LocalProxy, LocalStack
 #####################################################################
 # application context
 
-_app_ctx_stack = LocalStack()
+_app_ctx_stack: LocalStack = LocalStack()
 
 
 def app_stack() -> LocalStack:
@@ -28,7 +28,7 @@ def _lookup_app_object(name):
 current_app = LocalProxy(partial(_lookup_app_object, "app"))
 g: Any = LocalProxy(partial(_lookup_app_object, "g"))
 
-_request_ctx_stack = LocalStack()
+_request_ctx_stack: LocalStack = LocalStack()
 
 
 def request_stack() -> LocalStack:

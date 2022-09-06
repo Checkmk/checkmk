@@ -35,12 +35,16 @@ def get_flashed_messages() -> List[HTML]:
     Move the flashes from the session object to the current request once and
     cache them for the current request.
     """
-    flashes = request_stack().top.flashes
+    top = request_stack().top
+    if top is None:
+        return []
+
+    flashes = top.flashes
     if flashes is None:
         if not hasattr(session, "session_info") or not session.session_info.flashes:
-            request_stack().top.flashes = []
+            top.flashes = []
         else:
-            request_stack().top.flashes = session.session_info.flashes
+            top.flashes = session.session_info.flashes
             session.session_info.flashes = []
 
-    return [HTML(s) for s in request_stack().top.flashes]
+    return [HTML(s) for s in top.flashes]

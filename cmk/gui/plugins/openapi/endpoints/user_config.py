@@ -6,7 +6,7 @@
 """Users"""
 import datetime as dt
 import time
-from typing import Any, Dict, Literal, Mapping, Optional, Sequence, Tuple, TypedDict, Union
+from typing import Any, Dict, Literal, Optional, Tuple, TypedDict, Union
 
 from cmk.utils.type_defs import UserId
 
@@ -26,7 +26,10 @@ from cmk.gui.plugins.openapi.restful_objects import (
 from cmk.gui.plugins.openapi.restful_objects.parameters import USERNAME
 from cmk.gui.plugins.openapi.utils import problem, ProblemException, serve_json
 from cmk.gui.type_defs import UserSpec
+from cmk.gui.watolib.custom_attributes import load_custom_attrs_from_mk_file
 from cmk.gui.watolib.users import delete_users, edit_users
+
+from .host_config import _except_keys
 
 TIMESTAMP_RANGE = Tuple[float, float]
 
@@ -203,7 +206,7 @@ def serialize_user(user_id, attributes):
         domain_type="user_config",
         identifier=user_id,
         title=attributes["fullname"],
-        extensions=_filter_keys(attributes, response_schemas.UserAttributes._declared_fields),
+        extensions=_except_keys(attributes, ["auth_option"]),
     )
 
 
@@ -294,6 +297,11 @@ def _internal_to_api_format(internal_attrs: UserSpec) -> dict[str, Any]:
             )
         }
     )
+    custom_attrs = load_custom_attrs_from_mk_file(lock=False)["user"]
+    for attr in custom_attrs:
+        if (name := attr["name"]) in internal_attrs:
+            # monkeypatch a typed dict, what can go wrong
+            api_attrs[name] = internal_attrs[name]  # type:ignore[misc]
     return api_attrs
 
 
@@ -626,9 +634,3 @@ def _time_stamp_range(datetime_range: TimeRange) -> TIMESTAMP_RANGE:
         return dt.datetime.timestamp(date_time.replace(tzinfo=dt.timezone.utc))
 
     return timestamp(datetime_range["start_time"]), timestamp(datetime_range["end_time"])
-
-
-def _filter_keys(
-    dict_: Dict[str, Any], included_keys: Union[Sequence[str], Mapping[str, Any]]
-) -> Dict[str, Any]:
-    return {key: value for key, value in dict_.items() if key in included_keys}

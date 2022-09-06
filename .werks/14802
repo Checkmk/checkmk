@@ -1,0 +1,13 @@
+Title: REST API user endpoints returns custom attributes
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1662465284
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p12
+
+The endpoints to show a user like /objects/user_config/{userid} can now return set
+custom attributes.

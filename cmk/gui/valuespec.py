@@ -609,13 +609,10 @@ class Filesize(Integer):
         html.dropdown(varprefix + "_unit", choices, deflt=str(exp))
 
     def from_html_vars(self, varprefix: str) -> int:
-        try:
-            return int(
-                request.get_float_input_mandatory(varprefix + "_size")
-                * (1024 ** request.get_integer_input_mandatory(varprefix + "_unit"))
-            )
-        except Exception:
-            raise MKUserError(varprefix + "_size", _("Please enter a valid integer number"))
+        return int(
+            request.get_float_input_mandatory(varprefix + "_size")
+            * (1024 ** request.get_integer_input_mandatory(varprefix + "_unit"))
+        )
 
     def value_to_html(self, value: int) -> ValueSpecText:
         exp, count = self.get_exponent(value)

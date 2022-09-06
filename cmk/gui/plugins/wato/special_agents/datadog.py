@@ -10,8 +10,8 @@ from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourcePr
 from cmk.gui.plugins.wato.utils import (
     HostRulespec,
     HTTPProxyReference,
+    MigrateToIndividualOrStoredPassword,
     rulespec_registry,
-    TransformToIndividualOrStoredPassword,
 )
 from cmk.gui.valuespec import Age, Dictionary, DropdownChoice, HTTPUrl, ListOfStrings, RegExp
 from cmk.gui.watolib.rulespecs import Rulespec
@@ -30,14 +30,14 @@ def _valuespec_special_agents_datadog() -> Dictionary:
                     elements=[
                         (
                             "api_key",
-                            TransformToIndividualOrStoredPassword(
+                            MigrateToIndividualOrStoredPassword(
                                 title=_("API Key"),
                                 allow_empty=False,
                             ),
                         ),
                         (
                             "app_key",
-                            TransformToIndividualOrStoredPassword(
+                            MigrateToIndividualOrStoredPassword(
                                 title=_("Application Key"),
                                 allow_empty=False,
                             ),

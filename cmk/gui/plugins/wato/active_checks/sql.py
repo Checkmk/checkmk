@@ -7,8 +7,8 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.active_checks.common import RulespecGroupActiveChecks
 from cmk.gui.plugins.wato.utils import (
     HostRulespec,
+    MigrateToIndividualOrStoredPassword,
     rulespec_registry,
-    TransformToIndividualOrStoredPassword,
 )
 from cmk.gui.valuespec import (
     Dictionary,
@@ -84,7 +84,7 @@ def _valuespec_active_checks_sql() -> Dictionary:
             ),
             (
                 "password",
-                TransformToIndividualOrStoredPassword(
+                MigrateToIndividualOrStoredPassword(
                     title=_("Database Password"),
                     help=_("The password used to connect to the database"),
                     allow_empty=False,

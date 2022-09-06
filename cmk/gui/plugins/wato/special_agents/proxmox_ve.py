@@ -8,8 +8,8 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupVMCloudContainer
 from cmk.gui.plugins.wato.utils import (
     HostRulespec,
+    MigrateToIndividualOrStoredPassword,
     rulespec_registry,
-    TransformToIndividualOrStoredPassword,
 )
 from cmk.gui.valuespec import Dictionary, FixedValue, Integer, TextInput
 
@@ -20,7 +20,7 @@ def _valuespec_special_agents_proxmox_ve():
             ("username", TextInput(title=_("Username"), allow_empty=False)),
             (
                 "password",
-                TransformToIndividualOrStoredPassword(title=_("Password"), allow_empty=False),
+                MigrateToIndividualOrStoredPassword(title=_("Password"), allow_empty=False),
             ),
             ("port", Integer(title=_("Port"), default_value=8006)),
             (

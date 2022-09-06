@@ -9,8 +9,8 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.active_checks.common import RulespecGroupActiveChecks
 from cmk.gui.plugins.wato.utils import (
     HostRulespec,
+    MigrateToIndividualOrStoredPassword,
     rulespec_registry,
-    TransformToIndividualOrStoredPassword,
 )
 from cmk.gui.valuespec import (
     Age,
@@ -83,7 +83,7 @@ def _common_email_parameters(protocol, port_defaults):
                     title=_("Authentication"),
                     elements=[
                         TextInput(title=_("Username"), allow_empty=False),
-                        TransformToIndividualOrStoredPassword(
+                        MigrateToIndividualOrStoredPassword(
                             title=_("Password"), allow_empty=False, size=12
                         ),
                     ],
@@ -226,7 +226,7 @@ def _valuespec_active_checks_mail_loop() -> Dictionary:
                     title=_("SMTP Authentication"),
                     elements=[
                         TextInput(title=_("Username"), allow_empty=False, size=24),
-                        TransformToIndividualOrStoredPassword(
+                        MigrateToIndividualOrStoredPassword(
                             title=_("Password"), allow_empty=False, size=12
                         ),
                     ],

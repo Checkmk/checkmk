@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.gui.plugins.wato.check_parameters.mysql_db_size import _transform
+from cmk.gui.plugins.wato.check_parameters.mysql_db_size import _migrate
 
 
 @pytest.mark.parametrize(
@@ -36,5 +36,5 @@ from cmk.gui.plugins.wato.check_parameters.mysql_db_size import _transform
         ),
     ],
 )
-def test_transform(entry, result) -> None:  # type:ignore[no-untyped-def]
-    assert _transform(entry) == result
+def test_migrate(entry, result) -> None:  # type:ignore[no-untyped-def]
+    assert _migrate(entry) == result

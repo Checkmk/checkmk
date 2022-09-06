@@ -15,7 +15,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Age, Dictionary, Migrate
 
 
-def _transform(
+def _migrate(
     params: Union[tuple[int, int], dict[str, Optional[tuple[int, int]]]]
 ) -> dict[str, Optional[tuple[int, int]]]:
     if isinstance(params, dict):
@@ -37,7 +37,7 @@ def _parameter_valuespec_ups_test():
                 ),
             ],
         ),
-        migrate=_transform,
+        migrate=_migrate,
     )
 
 

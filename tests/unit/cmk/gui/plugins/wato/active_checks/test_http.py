@@ -184,8 +184,8 @@ from cmk.gui.plugins.wato.active_checks import http
         ),
     ],
 )
-def test_transform_forth(
+def test_migrate(
     params: Mapping[str, Any],
     transformed_params: Mapping[str, Any],
 ) -> None:
-    assert http._transform_forth(params) == transformed_params
+    assert http._migrate(params) == transformed_params

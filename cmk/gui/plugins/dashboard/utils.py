@@ -748,7 +748,7 @@ class ABCFigureDashlet(Dashlet[T], abc.ABC):
                 optional_keys=cls._vs_optional_keys(),
                 elements=cls._vs_elements(),
             ),
-            migrate=cls._transform_vs_forth,
+            migrate=cls._migrate_vs,
         )
 
     @staticmethod
@@ -756,7 +756,7 @@ class ABCFigureDashlet(Dashlet[T], abc.ABC):
         return False
 
     @staticmethod
-    def _transform_vs_forth(valuespec_result):
+    def _migrate_vs(valuespec_result):
         if "svc_status_display" in valuespec_result:
             # now as code is shared between host and service (svc) dashlet,
             # the `svc_` prefix is removed.

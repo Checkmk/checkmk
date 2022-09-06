@@ -8,8 +8,8 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupVMCloudContainer
 from cmk.gui.plugins.wato.utils import (
     HostRulespec,
+    MigrateToIndividualOrStoredPassword,
     rulespec_registry,
-    TransformToIndividualOrStoredPassword,
 )
 from cmk.gui.valuespec import (
     Alternative,
@@ -46,7 +46,7 @@ def _valuespec_special_agents_vsphere() -> Dictionary:
             ),
             (
                 "secret",
-                TransformToIndividualOrStoredPassword(
+                MigrateToIndividualOrStoredPassword(
                     title=_("vSphere secret"),
                     allow_empty=False,
                 ),

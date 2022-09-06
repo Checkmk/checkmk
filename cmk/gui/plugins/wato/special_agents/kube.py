@@ -12,8 +12,8 @@ from cmk.gui.plugins.wato.special_agents.common import (
 from cmk.gui.plugins.wato.utils import (
     HostRulespec,
     HTTPProxyReference,
+    MigrateToIndividualOrStoredPassword,
     rulespec_registry,
-    TransformToIndividualOrStoredPassword,
 )
 from cmk.gui.valuespec import (
     CascadingDropdown,
@@ -74,7 +74,7 @@ def _valuespec_special_agents_kube():
             ),
             (
                 "token",
-                TransformToIndividualOrStoredPassword(
+                MigrateToIndividualOrStoredPassword(
                     title=_("Token"),
                     allow_empty=False,
                 ),

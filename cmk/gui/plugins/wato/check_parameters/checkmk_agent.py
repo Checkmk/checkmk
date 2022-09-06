@@ -33,19 +33,19 @@ def _validate_version(value: str, varprefix: str) -> None:
         raise MKUserError(varprefix, _("Can't parse version %r") % value)
 
 
-def _transform_version_spec(
+def _migrate_version_spec(
     param: Union[str, tuple[str, str], tuple[str, dict[str, str]]]
 ) -> tuple[str, dict[str, str]]:
     """
-    >>> _transform_version_spec(('at_least', {'build': '1.1.1'}))
+    >>> _migrate_version_spec(('at_least', {'build': '1.1.1'}))
     ('at_least', {'build': '1.1.1'})
-    >>> _transform_version_spec(("specific", "2.1.0b2"))
+    >>> _migrate_version_spec(("specific", "2.1.0b2"))
     ('specific', {'literal': '2.1.0b2'})
-    >>> _transform_version_spec("1.2.3")
+    >>> _migrate_version_spec("1.2.3")
     ('specific', {'literal': '1.2.3'})
-    >>> _transform_version_spec("site")
+    >>> _migrate_version_spec("site")
     ('site', {})
-    >>> _transform_version_spec("ignore")
+    >>> _migrate_version_spec("ignore")
     ('ignore', {})
 
     """
@@ -124,7 +124,7 @@ def _parameter_valuespec_checkmk_agent():
                     ),
                     # In the past, this was a OptionalDropdownChoice() which values could be strings:
                     # ignore, site or a custom string representing a version number.
-                    migrate=_transform_version_spec,
+                    migrate=_migrate_version_spec,
                 ),
             ),
             (

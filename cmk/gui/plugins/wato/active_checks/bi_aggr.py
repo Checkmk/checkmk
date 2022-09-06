@@ -8,8 +8,8 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.active_checks.common import RulespecGroupIntegrateOtherServices
 from cmk.gui.plugins.wato.utils import (
     HostRulespec,
+    MigrateToIndividualOrStoredPassword,
     rulespec_registry,
-    TransformToIndividualOrStoredPassword,
 )
 from cmk.gui.valuespec import (
     CascadingDropdown,
@@ -77,7 +77,7 @@ def _valuespec_active_checks_bi_aggr() -> Dictionary:
                                             "optional parameters."
                                         ),
                                     ),
-                                    TransformToIndividualOrStoredPassword(
+                                    MigrateToIndividualOrStoredPassword(
                                         title=_("Automation Secret"),
                                         help=_("Valid automation secret for the automation user"),
                                         allow_empty=False,

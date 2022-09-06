@@ -29,10 +29,10 @@ from cmk.gui.plugins.metrics import valuespecs
         ),
     ],
 )
-def test_transform_graph_render_options_title_format(  # type:ignore[no-untyped-def]
+def test_migrate_graph_render_options_title_format(  # type:ignore[no-untyped-def]
     entry, result
 ) -> None:
-    assert valuespecs.transform_graph_render_options_title_format(entry) == result
+    assert valuespecs.migrate_graph_render_options_title_format(entry) == result
 
 
 @pytest.mark.parametrize(
@@ -54,5 +54,5 @@ def test_transform_graph_render_options_title_format(  # type:ignore[no-untyped-
         ),
     ],
 )
-def test_transform_graph_render_options(entry, result) -> None:  # type:ignore[no-untyped-def]
-    assert valuespecs.transform_graph_render_options(entry) == result
+def test_migrate_graph_render_options(entry, result) -> None:  # type:ignore[no-untyped-def]
+    assert valuespecs.migrate_graph_render_options(entry) == result

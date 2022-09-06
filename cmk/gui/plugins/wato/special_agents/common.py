@@ -9,10 +9,10 @@ from typing import Any, List, Optional, Type
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
+    MigrateToIndividualOrStoredPassword,
     rulespec_group_registry,
     RulespecGroup,
     RulespecSubGroup,
-    TransformToIndividualOrStoredPassword,
 )
 from cmk.gui.valuespec import (
     Alternative,
@@ -183,7 +183,7 @@ def api_request_authentication() -> DictionaryEntry:
                             ),
                             (
                                 "password",
-                                TransformToIndividualOrStoredPassword(
+                                MigrateToIndividualOrStoredPassword(
                                     title=_("Password"),
                                     allow_empty=False,
                                 ),
@@ -199,7 +199,7 @@ def api_request_authentication() -> DictionaryEntry:
                         elements=[
                             (
                                 "token",
-                                TransformToIndividualOrStoredPassword(
+                                MigrateToIndividualOrStoredPassword(
                                     title=_("Login token"),
                                     allow_empty=False,
                                 ),
@@ -418,7 +418,7 @@ def _auth_option(option: str) -> List[Any]:
                         ),
                         (
                             "password",
-                            TransformToIndividualOrStoredPassword(
+                            MigrateToIndividualOrStoredPassword(
                                 title=_("Password"),
                                 allow_empty=False,
                             ),

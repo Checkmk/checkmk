@@ -8,8 +8,8 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsApps
 from cmk.gui.plugins.wato.utils import (
     HostRulespec,
+    MigrateToIndividualOrStoredPassword,
     rulespec_registry,
-    TransformToIndividualOrStoredPassword,
 )
 from cmk.gui.valuespec import Checkbox, Dictionary, DropdownChoice, Integer, TextInput, Tuple
 from cmk.gui.watolib.rulespecs import Rulespec
@@ -49,7 +49,7 @@ def _valuespec_special_agents_activemq() -> Dictionary:
                     title=_("BasicAuth settings (optional)"),
                     elements=[
                         TextInput(title=_("Username")),
-                        TransformToIndividualOrStoredPassword(title=_("Password")),
+                        MigrateToIndividualOrStoredPassword(title=_("Password")),
                     ],
                 ),
             ),

@@ -146,7 +146,7 @@ def paint_time_graph_cmk(  # type:ignore[no-untyped-def]
     # b) the painter options set per user and view
 
     painter_params = cell.painter_parameters()
-    painter_params = _transform_old_graph_render_options(painter_params)
+    painter_params = _migrate_old_graph_render_options(painter_params)
 
     graph_render_options = painter_params["graph_render_options"]
 
@@ -241,11 +241,11 @@ def cmk_time_graph_params():
             elements=elements,
             optional_keys=[],
         ),
-        migrate=_transform_old_graph_render_options,
+        migrate=_migrate_old_graph_render_options,
     )
 
 
-def _transform_old_graph_render_options(value):
+def _migrate_old_graph_render_options(value):
     if value is None:
         value = {}
 

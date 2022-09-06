@@ -27,7 +27,7 @@ from cmk.gui.valuespec import (
 )
 
 
-def transform_graph_render_options_title_format(p) -> List[str]:  # type:ignore[no-untyped-def]
+def migrate_graph_render_options_title_format(p) -> List[str]:  # type:ignore[no-untyped-def]
     # ->1.5.0i2 pnp_graph reportlet
     if p in ("add_host_name", "add_host_alias"):
         p = ("add_title_infos", [p])
@@ -47,14 +47,14 @@ def transform_graph_render_options_title_format(p) -> List[str]:  # type:ignore[
     return p
 
 
-def transform_graph_render_options(value):
+def migrate_graph_render_options(value):
     # Graphs in painters and dashlets had the show_service option before 1.5.0i2.
     # This has been consolidated with the option title_format from the reportlet.
     if value.pop("show_service", False):
         value["title_format"] = ["plain", "add_host_name", "add_service_description"]
     #   1.5.0i2->2.0.0i1 title format DropdownChoice to ListChoice
     if isinstance(value.get("title_format"), (str, tuple)):
-        value["title_format"] = transform_graph_render_options_title_format(value["title_format"])
+        value["title_format"] = migrate_graph_render_options_title_format(value["title_format"])
     return value
 
 
@@ -65,7 +65,7 @@ def vs_graph_render_options(default_values=None, exclude=None):
             optional_keys=[],
             title=_("Graph rendering options"),
         ),
-        migrate=transform_graph_render_options,
+        migrate=migrate_graph_render_options,
     )
 
 
@@ -114,7 +114,7 @@ def vs_graph_render_option_elements(default_values=None, exclude=None):
             "title_format",
             Migrate(
                 valuespec=vs_title_infos(),
-                migrate=transform_graph_render_options_title_format,
+                migrate=migrate_graph_render_options_title_format,
             ),
         ),
         (

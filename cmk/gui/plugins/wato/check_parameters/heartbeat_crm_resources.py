@@ -14,15 +14,15 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Alternative, Dictionary, FixedValue, Migrate, TextInput
 
 
-def _transform_opt_string(
+def _migrate_opt_string(
     parameters: Union[Mapping[str, Optional[str]], str, None]
 ) -> Mapping[str, Optional[str]]:
     """
-    >>> _transform_opt_string(None)
+    >>> _migrate_opt_string(None)
     {'expected_node': None}
-    >>> _transform_opt_string("foobar")
+    >>> _migrate_opt_string("foobar")
     {'expected_node': 'foobar'}
-    >>> _transform_opt_string({'expected_node': 'mooo'})
+    >>> _migrate_opt_string({'expected_node': 'mooo'})
     {'expected_node': 'mooo'}
     """
     if parameters is None or isinstance(parameters, str):
@@ -55,7 +55,7 @@ def _parameter_valuespec_heartbeat_crm_resources():
                 ),
             ],
         ),
-        migrate=_transform_opt_string,
+        migrate=_migrate_opt_string,
     )
 
 

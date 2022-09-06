@@ -469,7 +469,7 @@ class CEESiteManagement(SiteManagement):
                             ),
                         ],
                     ),
-                    migrate=cls.transform_old_connection_params,
+                    migrate=cls.migrate_old_connection_params,
                 ),
             ],
         )
@@ -574,7 +574,7 @@ class CEESiteManagement(SiteManagement):
     # "use default connection params". In case the values are not similar to the current
     # defaults just change the data structure to the new one.
     @classmethod
-    def transform_old_connection_params(cls, value):
+    def migrate_old_connection_params(cls, value):
         if "params" in value:
             return value
 

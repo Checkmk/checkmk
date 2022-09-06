@@ -8,8 +8,8 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsApps
 from cmk.gui.plugins.wato.utils import (
     HostRulespec,
+    MigrateToIndividualOrStoredPassword,
     rulespec_registry,
-    TransformToIndividualOrStoredPassword,
 )
 from cmk.gui.valuespec import Alternative, Dictionary, FixedValue, Integer, TextInput
 
@@ -51,7 +51,7 @@ def _valuespec_special_agents_ruckus_spot():
             ),
             (
                 "api_key",
-                TransformToIndividualOrStoredPassword(
+                MigrateToIndividualOrStoredPassword(
                     title=_("API key"),
                     allow_empty=False,
                     size=70,

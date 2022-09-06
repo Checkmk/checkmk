@@ -729,7 +729,7 @@ def IndividualOrStoredPassword(  # pylint: disable=redefined-builtin
     )
 
 
-def TransformToIndividualOrStoredPassword(  # pylint: disable=redefined-builtin
+def MigrateToIndividualOrStoredPassword(  # pylint: disable=redefined-builtin
     title: _Optional[str] = None,
     help: _Optional[ValueSpecHelp] = None,
     allow_empty: bool = True,

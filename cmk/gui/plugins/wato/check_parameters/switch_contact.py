@@ -13,7 +13,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, DropdownChoice, Migrate, TextInput
 
 
-def _transform(p: str | dict) -> dict[str, Any]:
+def _migrate(p: str | dict) -> dict[str, Any]:
     if isinstance(p, dict):
         return p
     return {"state": p}
@@ -21,7 +21,7 @@ def _transform(p: str | dict) -> dict[str, Any]:
 
 def _parameter_valuespec_switch_contact():
     return Migrate(
-        migrate=_transform,
+        migrate=_migrate,
         valuespec=Dictionary(
             title=_("Required switch contact state"),
             help=_("This rule sets the required state of a switch contact"),

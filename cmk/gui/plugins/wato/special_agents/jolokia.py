@@ -8,8 +8,8 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsApps
 from cmk.gui.plugins.wato.utils import (
     HostRulespec,
+    MigrateToIndividualOrStoredPassword,
     rulespec_registry,
-    TransformToIndividualOrStoredPassword,
 )
 from cmk.gui.valuespec import Dictionary, DropdownChoice, Integer, TextInput, Tuple
 from cmk.gui.watolib.rulespecs import Rulespec
@@ -35,7 +35,7 @@ def _special_agents_jolokia_mk_jolokia_elements():
                         title=_("User ID for web login (if login required)"),
                         default_value="monitoring",
                     ),
-                    TransformToIndividualOrStoredPassword(title=_("Password for this user")),
+                    MigrateToIndividualOrStoredPassword(title=_("Password for this user")),
                     DropdownChoice(
                         title=_("Login mode"),
                         choices=[

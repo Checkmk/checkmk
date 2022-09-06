@@ -46,7 +46,7 @@ from cmk.gui.plugins.metrics.utils import (
     Scalar,
     SizeEx,
 )
-from cmk.gui.plugins.metrics.valuespecs import transform_graph_render_options_title_format
+from cmk.gui.plugins.metrics.valuespecs import migrate_graph_render_options_title_format
 from cmk.gui.sites import get_alias_of_host
 from cmk.gui.type_defs import CombinedGraphSpec, GraphIdentifier, TemplateGraphSpec
 from cmk.gui.utils.html import HTML
@@ -227,7 +227,7 @@ def _render_graph_title_elements(
 
     title_elements: List[Tuple[str, Optional[str]]] = []
 
-    title_format = transform_graph_render_options_title_format(graph_render_options["title_format"])
+    title_format = migrate_graph_render_options_title_format(graph_render_options["title_format"])
 
     if "plain" in title_format and graph_artwork["title"]:
         title_elements.append((graph_artwork["title"], None))

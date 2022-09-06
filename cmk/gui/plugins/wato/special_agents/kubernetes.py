@@ -15,8 +15,8 @@ from cmk.gui.plugins.wato.special_agents.common import (
 )
 from cmk.gui.plugins.wato.utils import (
     HostRulespec,
+    MigrateToIndividualOrStoredPassword,
     rulespec_registry,
-    TransformToIndividualOrStoredPassword,
 )
 from cmk.gui.valuespec import (
     Alternative,
@@ -112,7 +112,7 @@ def _valuespec_special_agents_kubernetes() -> Dictionary:
             ),
             (
                 "token",
-                TransformToIndividualOrStoredPassword(
+                MigrateToIndividualOrStoredPassword(
                     title=_("Token"),
                     allow_empty=False,
                 ),

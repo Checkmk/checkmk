@@ -24,7 +24,7 @@ from cmk.gui.valuespec import (
 )
 
 
-def _transform_check_dns_settings(
+def _migrate(
     params: Union[Mapping[str, Any], TypeTuple[str, Mapping[str, Any]]]
 ) -> Mapping[str, Any]:
     if isinstance(params, Mapping):
@@ -36,18 +36,18 @@ def _transform_check_dns_settings(
     return {
         "hostname": hostname,
         **(
-            __transform_legacy_optional_params(optional_params)
+            _migrate_legacy_optional_params(optional_params)
             if "expected_address" in optional_params
             else optional_params
         ),
     }
 
 
-def __transform_legacy_optional_params(optional_params: Mapping[str, Any]) -> Mapping[str, Any]:
+def _migrate_legacy_optional_params(optional_params: Mapping[str, Any]) -> Mapping[str, Any]:
     """
-    >>> __transform_legacy_optional_params({'expected_address': '1.2.3.4,C0FE::FE11'})
+    >>> _migrate_legacy_optional_params({'expected_address': '1.2.3.4,C0FE::FE11'})
     {'expect_all_addresses': True, 'expected_addresses_list': ['1.2.3.4', 'C0FE::FE11']}
-    >>> __transform_legacy_optional_params({'expected_address': ['A,B', 'C']})
+    >>> _migrate_legacy_optional_params({'expected_address': ['A,B', 'C']})
     {'expect_all_addresses': True, 'expected_addresses_list': ['A', 'B', 'C']}
 
     """
@@ -169,7 +169,7 @@ def _valuespec_active_checks_dns():
             ],
             required_keys=["hostname", "server"],
         ),
-        migrate=_transform_check_dns_settings,
+        migrate=_migrate,
     )
 
 

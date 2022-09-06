@@ -13,8 +13,8 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Migrate, TextInput
 
 
-def _transform_valuespec_sansymphony_pool(params):
-    """Transform to Checkmk version 2.2"""
+def _migrate_valuespec_sansymphony_pool(params):
+    """Migrate to Checkmk version 2.2"""
     if isinstance(params, tuple):
         return {
             "levels": (float(params[0]), float(params[1])),
@@ -30,7 +30,7 @@ def _parameter_valuespec_sansymphony_pool():
                 FilesystemElements.magic_factor,
             ]
         ),
-        migrate=_transform_valuespec_sansymphony_pool,
+        migrate=_migrate_valuespec_sansymphony_pool,
     )
 
 

@@ -168,7 +168,7 @@ class LDAPUserConnector(UserConnector):
     connection_suffixes: Dict[str, str] = {}
 
     @classmethod
-    def transform_config(cls, cfg):
+    def migrate_config(cls, cfg):
         if not cfg:
             return cfg
 
@@ -215,7 +215,7 @@ class LDAPUserConnector(UserConnector):
         return cfg
 
     def __init__(self, cfg) -> None:  # type:ignore[no-untyped-def]
-        super().__init__(self.transform_config(cfg))
+        super().__init__(self.migrate_config(cfg))
 
         self._ldap_obj: Optional[ldap.ldapobject.ReconnectLDAPObject] = None
         self._ldap_obj_config = None

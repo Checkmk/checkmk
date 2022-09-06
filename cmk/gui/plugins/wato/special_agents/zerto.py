@@ -8,8 +8,8 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsApps
 from cmk.gui.plugins.wato.utils import (
     HostRulespec,
+    MigrateToIndividualOrStoredPassword,
     rulespec_registry,
-    TransformToIndividualOrStoredPassword,
 )
 from cmk.gui.valuespec import Dictionary, DropdownChoice, TextInput
 from cmk.gui.watolib.rulespecs import Rulespec
@@ -37,7 +37,7 @@ def _valuespec_special_agents_zerto():
             ("username", TextInput(title=_("Username"), allow_empty=False)),
             (
                 "password",
-                TransformToIndividualOrStoredPassword(
+                MigrateToIndividualOrStoredPassword(
                     title=_("Password"),
                     allow_empty=False,
                 ),

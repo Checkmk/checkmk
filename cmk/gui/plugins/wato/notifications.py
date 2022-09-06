@@ -16,9 +16,9 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     HTTPProxyReference,
     IndividualOrStoredPassword,
+    MigrateToIndividualOrStoredPassword,
     notification_parameter_registry,
     NotificationParameter,
-    TransformToIndividualOrStoredPassword,
 )
 from cmk.gui.valuespec import (
     Age,
@@ -578,7 +578,7 @@ class NotificationParameterSIGNL4(NotificationParameter):
             elements=[
                 (
                     "password",
-                    TransformToIndividualOrStoredPassword(
+                    MigrateToIndividualOrStoredPassword(
                         title=_("Team Secret"),
                         help=_(
                             "The team secret of your SIGNL4 team. That is the last part of "
@@ -1855,7 +1855,7 @@ class NotificationParameterSMSviaIP(NotificationParameter):
                 ),
                 (
                     "password",
-                    TransformToIndividualOrStoredPassword(
+                    MigrateToIndividualOrStoredPassword(
                         title=_("Password of the user"),
                         allow_empty=False,
                     ),

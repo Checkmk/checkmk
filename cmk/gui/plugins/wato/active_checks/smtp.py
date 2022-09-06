@@ -11,8 +11,8 @@ from cmk.gui.plugins.wato.active_checks.common import (
 )
 from cmk.gui.plugins.wato.utils import (
     HostRulespec,
+    MigrateToIndividualOrStoredPassword,
     rulespec_registry,
-    TransformToIndividualOrStoredPassword,
 )
 from cmk.gui.valuespec import (
     Dictionary,
@@ -158,7 +158,7 @@ def _valuespec_active_checks_smtp() -> Tuple:
                                     size=12,
                                     allow_empty=False,
                                 ),
-                                TransformToIndividualOrStoredPassword(
+                                MigrateToIndividualOrStoredPassword(
                                     title=_("Password"),
                                     size=12,
                                     allow_empty=False,

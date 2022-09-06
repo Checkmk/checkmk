@@ -38,10 +38,10 @@ from cmk.gui.plugins.userdb.utils import (
 )
 from cmk.gui.plugins.wato.utils import (
     make_confirm_link,
+    MigrateToIndividualOrStoredPassword,
     mode_registry,
     mode_url,
     redirect,
-    TransformToIndividualOrStoredPassword,
     WatoMode,
 )
 from cmk.gui.site_config import get_login_sites
@@ -144,7 +144,7 @@ class LDAPConnectionValuespec(Migrate):
             validate=self._validate_ldap_connection,
         )
 
-        super().__init__(valuespec=valuespec, migrate=LDAPUserConnector.transform_config)
+        super().__init__(valuespec=valuespec, migrate=LDAPUserConnector.migrate_config)
 
     def _general_elements(self) -> List[DictionaryEntry]:
         general_elements: List[DictionaryEntry] = []
@@ -225,7 +225,7 @@ class LDAPConnectionValuespec(Migrate):
                             ),
                             size=63,
                         ),
-                        TransformToIndividualOrStoredPassword(
+                        MigrateToIndividualOrStoredPassword(
                             title=_("Bind password"),
                             help=_(
                                 "Specify the password to be used to bind to the LDAP directory."

@@ -14,8 +14,8 @@ from cmk.gui.plugins.wato.active_checks.common import (
 )
 from cmk.gui.plugins.wato.utils import (
     HostRulespec,
+    MigrateToIndividualOrStoredPassword,
     rulespec_registry,
-    TransformToIndividualOrStoredPassword,
 )
 from cmk.gui.valuespec import (
     Age,
@@ -52,7 +52,7 @@ def _active_checks_http_proxyspec() -> Dictionary:
                     title=_("Basic authorization"),
                     elements=[
                         TextInput(title=_("Username"), size=12, allow_empty=False),
-                        TransformToIndividualOrStoredPassword(
+                        MigrateToIndividualOrStoredPassword(
                             title=_("Password"),
                         ),
                     ],
@@ -269,7 +269,7 @@ def _valuespec_active_checks_http() -> Migrate:
                                                         size=12,
                                                         allow_empty=False,
                                                     ),
-                                                    TransformToIndividualOrStoredPassword(
+                                                    MigrateToIndividualOrStoredPassword(
                                                         title=_("Password"),
                                                     ),
                                                 ],
@@ -498,11 +498,11 @@ def _valuespec_active_checks_http() -> Migrate:
             required_keys=["name", "host", "mode"],
             validate=_active_checks_http_validate_all,
         ),
-        migrate=_transform_forth,
+        migrate=_migrate,
     )
 
 
-def _transform_forth(params: Mapping[str, Any]) -> Mapping[str, Any]:
+def _migrate(params: Mapping[str, Any]) -> Mapping[str, Any]:
     # 2.2.0i1: Host and proxy params were reworked
     transformed_params = dict(copy.deepcopy(params))
     proxy_params = transformed_params.pop("proxy", None)

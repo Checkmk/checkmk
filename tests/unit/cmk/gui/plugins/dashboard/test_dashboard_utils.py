@@ -18,8 +18,8 @@ from cmk.gui.plugins.dashboard import utils
         ),
     ],
 )
-def test_transform_dashlet_status_display(entry, result) -> None:  # type:ignore[no-untyped-def]
-    assert utils.ABCFigureDashlet._transform_vs_forth(entry) == result
+def test_migrate_dashlet_status_display(entry, result) -> None:  # type:ignore[no-untyped-def]
+    assert utils.ABCFigureDashlet._migrate_vs(entry) == result
 
 
 @pytest.mark.parametrize(

@@ -8,8 +8,8 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.active_checks.common import RulespecGroupActiveChecks
 from cmk.gui.plugins.wato.utils import (
     HostRulespec,
+    MigrateToIndividualOrStoredPassword,
     rulespec_registry,
-    TransformToIndividualOrStoredPassword,
 )
 from cmk.gui.valuespec import Checkbox, Dictionary, Integer, TextInput, Tuple
 
@@ -25,7 +25,7 @@ def _valuespec_active_checks_sftp():
         elements=[
             TextInput(title=_("Hostname"), allow_empty=False),
             TextInput(title=_("Username"), allow_empty=False),
-            TransformToIndividualOrStoredPassword(title=_("Password"), allow_empty=False),
+            MigrateToIndividualOrStoredPassword(title=_("Password"), allow_empty=False),
             Dictionary(
                 default_keys=["look_for_keys"],
                 elements=[

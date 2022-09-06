@@ -16,7 +16,7 @@ Before this werk, the Checkmk codebase offered two convenience functions for cre
 <tt>IndividualOrStoredPassword</tt> and <tt>PasswordFromStore</tt>. These two functions had
 misleading names and were therefore renamed:
 
-LI: <tt>IndividualOrStoredPassword</tt> was renamed to <tt>TransformToIndividualOrStoredPassword</tt>,
+LI: <tt>IndividualOrStoredPassword</tt> was renamed to <tt>MigrateToIndividualOrStoredPassword</tt>,
 because this actually reflects what the returned <tt>ValueSpec</tt> does: It allows users to either
 directly enter a password or select one from the store. Furthermore, it also handles legacy
 configurations which did not offer the option to use the password store.

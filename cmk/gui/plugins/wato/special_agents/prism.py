@@ -8,8 +8,8 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsOS
 from cmk.gui.plugins.wato.utils import (
     HostRulespec,
+    MigrateToIndividualOrStoredPassword,
     rulespec_registry,
-    TransformToIndividualOrStoredPassword,
 )
 from cmk.gui.valuespec import Dictionary, Integer, TextInput
 
@@ -33,7 +33,7 @@ def _valuespec_special_agents_prism():
                     title=_("User ID for web login"),
                 ),
             ),
-            ("password", TransformToIndividualOrStoredPassword(title=_("Password for this user"))),
+            ("password", MigrateToIndividualOrStoredPassword(title=_("Password for this user"))),
         ],
         optional_keys=["port"],
     )

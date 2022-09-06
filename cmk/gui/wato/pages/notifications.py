@@ -111,7 +111,7 @@ class ABCNotificationsMode(ABCEventsMode):
 
     @classmethod
     def _notification_rule_match_conditions(cls):
-        def transform_ec_rule_id_match(val):
+        def migrate_ec_rule_id_match(val):
             if isinstance(val, list):
                 return val
             return [val]
@@ -214,7 +214,7 @@ class ABCNotificationsMode(ABCEventsMode):
                                             add_label=_("Add Rule ID"),
                                             title=_("Rule IDs"),
                                         ),
-                                        migrate=transform_ec_rule_id_match,
+                                        migrate=migrate_ec_rule_id_match,
                                     ),
                                 ),
                                 (

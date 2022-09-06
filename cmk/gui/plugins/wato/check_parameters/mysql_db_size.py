@@ -21,7 +21,7 @@ def _item_spec_mysql_db_size():
     )
 
 
-def _transform(params: Union[dict, tuple[float, float]]) -> dict[str, tuple[float, float]]:
+def _migrate(params: Union[dict, tuple[float, float]]) -> dict[str, tuple[float, float]]:
     if isinstance(params, dict):
         if "levels" not in params:
             params["levels"] = None
@@ -47,7 +47,7 @@ def _parameter_valuespec_mysql_db_size():
             ],
             optional_keys=False,
         ),
-        migrate=_transform,
+        migrate=_migrate,
     )
 
 

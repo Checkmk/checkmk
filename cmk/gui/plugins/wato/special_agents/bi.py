@@ -9,8 +9,8 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsApps
 from cmk.gui.plugins.wato.utils import (
     HostRulespec,
+    MigrateToIndividualOrStoredPassword,
     rulespec_registry,
-    TransformToIndividualOrStoredPassword,
 )
 from cmk.gui.valuespec import (
     CascadingDropdown,
@@ -69,7 +69,7 @@ class MultisiteBiDatasource:
                                         title=_("Automation Username"),
                                         allow_empty=True,
                                     ),
-                                    TransformToIndividualOrStoredPassword(
+                                    MigrateToIndividualOrStoredPassword(
                                         title=_("Automation Secret"),
                                         allow_empty=True,
                                     ),

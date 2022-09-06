@@ -15,8 +15,8 @@ from cmk.gui.plugins.wato.special_agents.common import (
 )
 from cmk.gui.plugins.wato.utils import (
     HostRulespec,
+    MigrateToIndividualOrStoredPassword,
     rulespec_registry,
-    TransformToIndividualOrStoredPassword,
 )
 from cmk.gui.valuespec import (
     CascadingDropdown,
@@ -390,7 +390,7 @@ def _valuespec_special_agents_aws() -> Dictionary:
             ),
             (
                 "secret_access_key",
-                TransformToIndividualOrStoredPassword(
+                MigrateToIndividualOrStoredPassword(
                     title=_("The secret access key for your AWS account"),
                     allow_empty=False,
                 ),
@@ -411,7 +411,7 @@ def _valuespec_special_agents_aws() -> Dictionary:
                         ),
                         (
                             "proxy_password",
-                            TransformToIndividualOrStoredPassword(title=_("Password")),
+                            MigrateToIndividualOrStoredPassword(title=_("Password")),
                         ),
                     ],
                     optional_keys=["proxy_port", "proxy_user", "proxy_password"],

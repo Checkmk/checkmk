@@ -46,7 +46,7 @@ from cmk.gui.page_menu_utils import (
     get_context_page_menu_dropdowns,
     get_ntop_page_menu_dropdown,
 )
-from cmk.gui.plugins.views.utils import Command, PainterOptions, view_title
+from cmk.gui.plugins.views.utils import Command, PainterOptions
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import HTTPVariables, InfoName, Rows, ViewSpec
 from cmk.gui.utils.html import HTML
@@ -55,6 +55,7 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.view import View
+from cmk.gui.visuals import view_title
 from cmk.gui.watolib.activate_changes import get_pending_changes_tooltip, has_pending_changes
 
 if not cmk_version.is_raw_edition():

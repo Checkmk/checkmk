@@ -84,7 +84,6 @@ from cmk.gui.type_defs import (
     SorterFunction,
     SorterName,
     ViewSpec,
-    VisualContext,
     VisualLinkSpec,
 )
 from cmk.gui.utils.html import HTML
@@ -94,6 +93,7 @@ from cmk.gui.valuespec import DropdownChoice, ValueSpec
 from cmk.gui.view_store import get_permitted_views
 from cmk.gui.view_utils import CellContent, CellSpec, CSSClass
 from cmk.gui.visual_link import render_link_to_view
+from cmk.gui.visuals import view_title
 
 ExportCellContent = Union[str, Dict[str, Any]]
 PDFCellContent = Union[str, HTML, Tuple[str, str]]
@@ -850,10 +850,6 @@ inventory_displayhints: Dict[str, InventoryHintSpec] = {}
 # For each view a function can be registered that has to return either True
 # or False to show a view as context link
 view_is_enabled: Dict = {}
-
-
-def view_title(view_spec: ViewSpec, context: VisualContext) -> str:
-    return visuals.visual_title("view", view_spec, context)
 
 
 def transform_action_url(url_spec: Union[Tuple[str, str], str]) -> Tuple[str, Optional[str]]:

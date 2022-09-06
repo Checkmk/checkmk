@@ -24,7 +24,6 @@ from cmk.gui.page_menu import (
     PageMenuLink,
     PageMenuTopic,
 )
-from cmk.gui.plugins.views.utils import view_title
 from cmk.gui.plugins.visuals.utils import (
     visual_info_registry,
     visual_type_registry,
@@ -35,6 +34,7 @@ from cmk.gui.type_defs import HTTPVariables, InfoName, Rows, SingleInfos, Visual
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.view import View
 from cmk.gui.visual_link import get_linked_visual_request_vars, make_linked_visual_url
+from cmk.gui.visuals import view_title
 
 
 def get_context_page_menu_dropdowns(view: View, rows: Rows, mobile: bool) -> List[PageMenuDropdown]:

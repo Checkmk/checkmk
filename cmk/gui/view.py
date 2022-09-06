@@ -27,7 +27,6 @@ from cmk.gui.plugins.views.utils import (
     make_host_breadcrumb,
     make_service_breadcrumb,
     painter_exists,
-    view_title,
 )
 from cmk.gui.sorter import (
     DerivedColumnsSorter,
@@ -44,6 +43,7 @@ from cmk.gui.type_defs import (
     VisualContext,
 )
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.visuals import view_title
 
 
 class View:

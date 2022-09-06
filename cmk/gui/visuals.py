@@ -91,6 +91,7 @@ from cmk.gui.type_defs import (
     HTTPVariables,
     InfoName,
     SingleInfos,
+    ViewSpec,
     Visual,
     VisualContext,
     VisualName,
@@ -2179,6 +2180,10 @@ def visual_title(
             return result
 
     return title
+
+
+def view_title(view_spec: ViewSpec, context: VisualContext) -> str:
+    return visual_title("view", view_spec, context)
 
 
 def _add_context_title(context: VisualContext, single_infos: List[str], title: str) -> str:

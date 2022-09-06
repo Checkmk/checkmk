@@ -49,7 +49,7 @@ from cmk.gui.page_menu import (
     PageMenuSidePopup,
     PageMenuTopic,
 )
-from cmk.gui.plugins.views.utils import display_options, format_plugin_output, view_title
+from cmk.gui.plugins.views.utils import display_options, format_plugin_output
 from cmk.gui.table import Table, table_element
 from cmk.gui.utils.escaping import escape_to_html_permissive
 from cmk.gui.utils.html import HTML
@@ -69,7 +69,7 @@ from cmk.gui.valuespec import (
     TextAreaUnicode,
     TextInput,
 )
-from cmk.gui.visuals import page_menu_dropdown_add_to_visual
+from cmk.gui.visuals import page_menu_dropdown_add_to_visual, view_title
 
 if TYPE_CHECKING:
     from cmk.gui.type_defs import FilterHeader, HTTPVariables, Rows

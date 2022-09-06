@@ -6,6 +6,7 @@
 # pylint: disable=redefined-outer-name
 
 import os
+import re
 import subprocess
 from collections import defaultdict
 from pathlib import Path
@@ -17,6 +18,10 @@ import tests.testlib as testlib
 import cmk.utils.memoize
 import cmk.utils.version as cmk_version
 import cmk.utils.werks
+
+CVSS_REGEX = re.compile(
+    r"CVSS:3.1/AV:[NALP]/AC:[LH]/PR:[NLH]/UI:[NR]/S:[UC]/C:[NLH]/I:[NLH]/A:[NLH]"
+)
 
 
 @pytest.mark.parametrize(
@@ -120,6 +125,19 @@ def test_werk_versions(precompiled_werks: None) -> None:
         assert (
             parsed_werk_version <= parsed_version
         ), "Version %s of werk #%d is not allowed in this branch" % (werk["version"], werk_id)
+
+
+def test_secwerk_has_cvss(precompiled_werks: None) -> None:
+    # The CVSS in Sec Werks is only mandatory for new Werks, so we start with 14485
+    skip_lower = 14485
+    for werk_id, werk in cmk.utils.werks.load().items():
+        if werk_id < skip_lower:
+            continue
+        if werk["class"] != "security":
+            continue
+        assert (
+            CVSS_REGEX.search("\n".join(werk["body"])) is not None
+        ), f"Werk {werk_id} is missing a CVSS"
 
 
 def test_werk_versions_after_tagged(precompiled_werks: None) -> None:

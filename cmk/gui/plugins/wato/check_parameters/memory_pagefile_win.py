@@ -46,8 +46,8 @@ def _parameter_valuespec_memory_pagefile_win():
                             ),
                             # Note: Filesize values lesser 1MB will not work
                             # -> need hide option in filesize valuespec
-                            back=lambda x: (x[0] // 1024 // 1024, x[1] // 1024 // 1024),
-                            forth=lambda x: (x[0] * 1024 * 1024, x[1] * 1024 * 1024),
+                            from_valuespec=lambda x: (x[0] // 1024 // 1024, x[1] // 1024 // 1024),
+                            to_valuespec=lambda x: (x[0] * 1024 * 1024, x[1] * 1024 * 1024),
                         ),
                         PredictiveLevels(unit=_("GiB"), default_difference=(0.5, 1.0)),
                     ],
@@ -76,8 +76,8 @@ def _parameter_valuespec_memory_pagefile_win():
                             ),
                             # Note: Filesize values lesser 1MB will not work
                             # -> need hide option in filesize valuespec
-                            back=lambda x: (x[0] // 1024 // 1024, x[1] // 1024 // 1024),
-                            forth=lambda x: (x[0] * 1024 * 1024, x[1] * 1024 * 1024),
+                            from_valuespec=lambda x: (x[0] // 1024 // 1024, x[1] // 1024 // 1024),
+                            to_valuespec=lambda x: (x[0] * 1024 * 1024, x[1] * 1024 * 1024),
                         ),
                         PredictiveLevels(unit=_("GB"), default_difference=(0.5, 1.0)),
                     ],

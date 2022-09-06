@@ -866,8 +866,8 @@ class ModeEditTagGroup(ABCEditTagMode):
                                 ),
                                 allow_empty=True,
                             ),
-                            forth=lambda x: "" if x is None else x,
-                            back=lambda x: None if not x else x,
+                            to_valuespec=lambda x: "" if x is None else x,
+                            from_valuespec=lambda x: None if not x else x,
                         ),
                         TextInput(
                             title=_("Title") + "*",
@@ -900,8 +900,8 @@ class ModeEditTagGroup(ABCEditTagMode):
                     "in all folders, hosts and rules accordingly."
                 ),
             ),
-            forth=lambda x: [(c["id"], c["title"], c["aux_tags"]) for c in x],
-            back=lambda x: [dict(zip(["id", "title", "aux_tags"], c)) for c in x],
+            to_valuespec=lambda x: [(c["id"], c["title"], c["aux_tags"]) for c in x],
+            from_valuespec=lambda x: [dict(zip(["id", "title", "aux_tags"], c)) for c in x],
         )
 
 

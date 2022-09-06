@@ -88,7 +88,7 @@ class UserProfile(ABCUserProfilePage):
         # user profile replication now which will redirect the user to the destination
         # page after completion. Otherwise directly open up the destination page.
         if user.authorized_login_sites():
-            back_url = "user_profile_replicate.py?back=user_profile.py"
+            back_url = "user_profile_replicate.py?from_valuespec=user_profile.py"
         else:
             back_url = "user_profile.py"
 

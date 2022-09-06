@@ -934,8 +934,8 @@ class ABCHostAttributeHostTagList(ABCHostAttributeTag, abc.ABC):
                 on_change="cmk.wato.fix_visibility();",
                 encode_value=False,
             ),
-            forth=lambda s: "" if s is None else s,
-            back=lambda s: None if s == "" else s,
+            to_valuespec=lambda s: "" if s is None else s,
+            from_valuespec=lambda s: None if s == "" else s,
         )
 
     @property
@@ -960,8 +960,8 @@ class ABCHostAttributeHostTagCheckbox(ABCHostAttributeTag, abc.ABC):
                 false_label="%s %s" % (_("Not"), self._tag_group.title),
                 onclick="cmk.wato.fix_visibility();",
             ),
-            forth=lambda s: s == self._tag_value(),
-            back=lambda s: self._tag_value() if s is True else None,
+            to_valuespec=lambda s: s == self._tag_value(),
+            from_valuespec=lambda s: self._tag_value() if s is True else None,
         )
 
     @property

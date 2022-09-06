@@ -282,9 +282,9 @@ def _parameter_valuespec_logwatch_ec() -> Alternative:
                                     title=_(
                                         "Local: Spooling - Send events to local Event Console into given spool directory"
                                     ),
-                                    forth=lambda x: x[6:],
+                                    to_valuespec=lambda x: x[6:],
                                     # remove prefix
-                                    back=lambda x: "spool:" + x,  # add prefix
+                                    from_valuespec=lambda x: "spool:" + x,  # add prefix
                                 ),
                                 CascadingDropdown(
                                     title=_("Remote: Send events to remote syslog host"),

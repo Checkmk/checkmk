@@ -64,8 +64,8 @@ def dummy_rulespec() -> ServiceRulespec:
 def vs_conditions() -> Transform:
     return Transform(
         valuespec=VSExplicitConditions(rulespec=dummy_rulespec(), render="form_part"),
-        forth=lambda c: RuleConditions("").from_config(c),
-        back=lambda c: c.to_config(UseHostFolder.HOST),
+        to_valuespec=lambda c: RuleConditions("").from_config(c),
+        from_valuespec=lambda c: c.to_config(UseHostFolder.HOST),
     )
 
 

@@ -1018,7 +1018,7 @@ def visual_spec_single(info_key):
     # In both cases unused keys need to be removed otherwise empty values proliferate
     # either they are saved or they corrupt the VisualContext during merges.
 
-    def back(
+    def from_valuespec(
         values: Dict[str, Union[str, int]], single_spec: List[Tuple[FilterName, ValueSpec]]
     ) -> VisualContext:
         return {
@@ -1028,7 +1028,7 @@ def visual_spec_single(info_key):
             if value
         }
 
-    def forth(
+    def to_valuespec(
         context: VisualContext, single_spec: List[Tuple[FilterName, ValueSpec]]
     ) -> Dict[str, Union[str, int]]:
         return {
@@ -1047,8 +1047,8 @@ def visual_spec_single(info_key):
             optional_keys=True,
             elements=info.single_spec,
         ),
-        back=lambda values: back(values, info.single_spec),
-        forth=lambda context: forth(context, info.single_spec),
+        from_valuespec=lambda values: from_valuespec(values, info.single_spec),
+        to_valuespec=lambda context: to_valuespec(context, info.single_spec),
     )
 
 
@@ -2009,7 +2009,7 @@ class VisualFilter(ValueSpec[FilterHTTPVariables]):
         raise NotImplementedError()  # FIXME! Violates LSP!
 
 
-def _single_info_selection_forth(restrictions: Sequence[str]) -> Tuple[str, Sequence[str]]:
+def _single_info_selection_to_valuespec(restrictions: Sequence[str]) -> Tuple[str, Sequence[str]]:
     if not restrictions:
         choice_name = "no_restriction"
     elif restrictions == ["host"]:
@@ -2019,7 +2019,9 @@ def _single_info_selection_forth(restrictions: Sequence[str]) -> Tuple[str, Sequ
     return choice_name, restrictions
 
 
-def _single_info_selection_back(name_and_restrictions: Tuple[str, Sequence[str]]) -> Sequence[str]:
+def _single_info_selection_from_valuespec(
+    name_and_restrictions: Tuple[str, Sequence[str]]
+) -> Sequence[str]:
     return name_and_restrictions[1]
 
 
@@ -2075,8 +2077,8 @@ def SingleInfoSelection(info_keys: SingleInfos) -> Transform:
             title=_("Specific objects"),
             sorted=False,
         ),
-        back=_single_info_selection_back,
-        forth=_single_info_selection_forth,
+        from_valuespec=_single_info_selection_from_valuespec,
+        to_valuespec=_single_info_selection_to_valuespec,
     )
 
 

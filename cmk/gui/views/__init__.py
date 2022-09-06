@@ -924,8 +924,8 @@ def _view_editor_spec(
 ) -> Dictionary:
     vs_column = Transform(
         valuespec=vs_column,
-        back=lambda value: (value[0], value[3], value[4], value[1], value[2]),
-        forth=lambda value: (
+        from_valuespec=lambda value: (value[0], value[3], value[4], value[1], value[2]),
+        to_valuespec=lambda value: (
             None if value is None else (value[0], value[3], value[4], value[1], value[2])
         ),
     )

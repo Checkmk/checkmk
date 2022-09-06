@@ -18,8 +18,8 @@ from .utils import (
 def fixture_transformed_age() -> vs.Transform[vs.Seconds]:
     return vs.Transform(
         vs.Age(minvalue=1, default_value=60),
-        forth=lambda v: int(v * 60),
-        back=lambda v: float(v) / 60.0,
+        to_valuespec=lambda v: int(v * 60),
+        from_valuespec=lambda v: float(v) / 60.0,
         title="Normal check interval for service checks",
     )
 
@@ -29,16 +29,16 @@ class TestTransform:
         assert (
             vs.Transform(
                 vs.TextInput(allow_empty=False),
-                forth=lambda v: v,
-                back=lambda v: v,
+                to_valuespec=lambda v: v,
+                from_valuespec=lambda v: v,
             ).allow_empty()
             is False
         )
         assert (
             vs.Transform(
                 vs.TextInput(allow_empty=True),
-                forth=lambda v: v,
-                back=lambda v: v,
+                to_valuespec=lambda v: v,
+                from_valuespec=lambda v: v,
             ).allow_empty()
             is True
         )
@@ -47,16 +47,16 @@ class TestTransform:
         assert (
             vs.Transform(
                 vs.TextInput(title="text_input_title"),
-                forth=lambda v: v,
-                back=lambda v: v,
+                to_valuespec=lambda v: v,
+                from_valuespec=lambda v: v,
             ).title()
             == "text_input_title"
         )
         assert (
             vs.Transform(
                 vs.TextInput(title="text_input_title"),
-                forth=lambda v: v,
-                back=lambda v: v,
+                to_valuespec=lambda v: v,
+                from_valuespec=lambda v: v,
                 title="transform_title",
             ).title()
             == "transform_title"
@@ -66,16 +66,16 @@ class TestTransform:
         assert (
             vs.Transform(
                 vs.TextInput(help="text_input_help"),
-                forth=lambda v: v,
-                back=lambda v: v,
+                to_valuespec=lambda v: v,
+                from_valuespec=lambda v: v,
             ).help()
             == "text_input_help"
         )
         assert (
             vs.Transform(
                 vs.TextInput(help="text_input_help"),
-                forth=lambda v: v,
-                back=lambda v: v,
+                to_valuespec=lambda v: v,
+                from_valuespec=lambda v: v,
                 help="transform_help",
             ).help()
             == "transform_help"
@@ -110,8 +110,8 @@ class TestTransform:
 def test_transform_value_with_transform_vs() -> None:
     valuespec = vs.Transform(
         vs.TextInput(),
-        forth=lambda x: x if x == "lala" else x.upper(),
-        back=lambda x: x + "aaa",
+        to_valuespec=lambda x: x if x == "lala" else x.upper(),
+        from_valuespec=lambda x: x + "aaa",
     )
 
     assert valuespec.transform_value("lala") == "lalaaaa"
@@ -125,8 +125,8 @@ def test_transform_value_in_dict() -> None:
                 "a",
                 vs.Transform(
                     vs.TextInput(),
-                    forth=lambda x: x if x == "lala" else x.upper(),
-                    back=lambda x: x + "aaa",
+                    to_valuespec=lambda x: x if x == "lala" else x.upper(),
+                    from_valuespec=lambda x: x + "aaa",
                 ),
             ),
         ]
@@ -141,13 +141,13 @@ def test_transform_value_in_tuple() -> None:
         elements=[
             vs.Transform(
                 vs.TextInput(),
-                forth=lambda x: x if x == "lala" else x.upper(),
-                back=lambda x: x + "aaa",
+                to_valuespec=lambda x: x if x == "lala" else x.upper(),
+                from_valuespec=lambda x: x + "aaa",
             ),
             vs.Transform(
                 vs.TextInput(),
-                forth=lambda x: x if x == "lala" else x.upper(),
-                back=lambda x: x + "aaa",
+                to_valuespec=lambda x: x if x == "lala" else x.upper(),
+                from_valuespec=lambda x: x + "aaa",
             ),
         ]
     ).transform_value(("lala", "AAA")) == ("lalaaaa", "AAAaaa")
@@ -162,8 +162,8 @@ def test_transform_value_in_cascading_dropdown() -> None:
                 "Title b",
                 vs.Transform(
                     vs.TextInput(),
-                    forth=lambda x: x if x == "lala" else x.upper(),
-                    back=lambda x: x + "aaa",
+                    to_valuespec=lambda x: x if x == "lala" else x.upper(),
+                    from_valuespec=lambda x: x + "aaa",
                 ),
             ),
         ]
@@ -183,8 +183,8 @@ def test_transform_value_and_json() -> None:
                 ("key1", vs.TextInput()),
             ]
         ),
-        forth=lambda x: {k.lower(): v for k, v in x.items()},
-        back=lambda x: x,
+        to_valuespec=lambda x: {k.lower(): v for k, v in x.items()},
+        from_valuespec=lambda x: x,
     )
     assert valuespec.transform_value({"KEY1": "value1"}) == {"key1": "value1"}
 

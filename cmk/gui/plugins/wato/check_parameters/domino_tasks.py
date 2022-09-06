@@ -99,8 +99,8 @@ def _valuespec_inv_domino_tasks_rules() -> Dictionary:
                             ),
                             title=_("Regular expression matching command line"),
                             help=_("This regex must match the <i>beginning</i> of the task"),
-                            forth=lambda x: x[1:],  # remove ~
-                            back=lambda x: "~" + x,  # prefix ~
+                            to_valuespec=lambda x: x[1:],  # remove ~
+                            from_valuespec=lambda x: "~" + x,  # prefix ~
                         ),
                         FixedValue(
                             value=None,
@@ -182,8 +182,8 @@ def _parameter_valuespec_domino_tasks() -> Dictionary:
                                 "This regex must match the <i>beginning</i> of the complete "
                                 "command line of the task including arguments"
                             ),
-                            forth=lambda x: x[1:],  # remove ~
-                            back=lambda x: "~" + x,  # prefix ~
+                            to_valuespec=lambda x: x[1:],  # remove ~
+                            from_valuespec=lambda x: "~" + x,  # prefix ~
                         ),
                         FixedValue(
                             value=None,

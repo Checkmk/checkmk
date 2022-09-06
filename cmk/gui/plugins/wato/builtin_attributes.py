@@ -544,8 +544,8 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
                         movable=False,
                         default_value=[((0, 0), (24, 0))],
                     ),
-                    forth=self._time_allowed_forth,
-                    back=sorted,
+                    to_valuespec=self._time_allowed_to_valuespec,
+                    from_valuespec=sorted,
                 ),
             ),
             (
@@ -599,7 +599,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
         return elements
 
     @staticmethod
-    def _time_allowed_forth(
+    def _time_allowed_to_valuespec(
         v: TimeofdayRangeValue
         |
         # we need list as input type here because Sequence[TimeofdayRangeValue] is hard to
@@ -1067,8 +1067,8 @@ class HostAttributeLockedBy(ABCHostAttributeValueSpec):
     def valuespec(self) -> ValueSpec:
         return Transform(
             valuespec=LockedByValuespec(),
-            forth=tuple,
-            back=list,
+            to_valuespec=tuple,
+            from_valuespec=list,
         )
 
     def openapi_field(self) -> fields.Field:

@@ -1225,8 +1225,8 @@ class ConfigVariableUserLocalizations(ConfigVariable):
                 movable=False,
                 totext=_("%d translations"),
             ),
-            forth=lambda d: sorted(d.items()),
-            back=dict,
+            to_valuespec=lambda d: sorted(d.items()),
+            from_valuespec=dict,
         )
 
 
@@ -1346,8 +1346,8 @@ class ConfigVariableUserIconsAndActions(ConfigVariable):
                 movable=False,
                 totext=_("%d icons and actions"),
             ),
-            forth=lambda d: sorted(d.items()),
-            back=dict,
+            to_valuespec=lambda d: sorted(d.items()),
+            from_valuespec=dict,
         )
 
 
@@ -1426,8 +1426,8 @@ class ConfigVariableCustomServiceAttributes(ConfigVariable):
                 # custom error message.
                 validate=self._validate_unique_entries,
             ),
-            forth=lambda v: v.values(),
-            back=lambda v: {p["ident"]: p for p in v},
+            to_valuespec=lambda v: v.values(),
+            from_valuespec=lambda v: {p["ident"]: p for p in v},
         )
 
     def _validate_id(self, value, varprefix):
@@ -1611,8 +1611,8 @@ class ConfigVariableBuiltinIconVisibility(ConfigVariable):
                     "change the sorting of the icons."
                 ),
             ),
-            forth=lambda d: sorted(d.items()),
-            back=dict,
+            to_valuespec=lambda d: sorted(d.items()),
+            from_valuespec=dict,
         )
 
     def _get_builtin_icons(self):
@@ -2795,14 +2795,16 @@ class ConfigVariableUseDNSCache(ConfigVariable):
         )
 
 
-def transform_snmp_backend_default_forth(backend: Literal["classic", "inline"]) -> SNMPBackendEnum:
+def transform_snmp_backend_default_to_valuespec(
+    backend: Literal["classic", "inline"]
+) -> SNMPBackendEnum:
     return {
         "classic": SNMPBackendEnum.CLASSIC,
         "inline": SNMPBackendEnum.INLINE,
     }[backend]
 
 
-def transform_snmp_backend_back(backend: SNMPBackendEnum) -> Literal["classic", "inline"]:
+def transform_snmp_backend_from_valuespec(backend: SNMPBackendEnum) -> Literal["classic", "inline"]:
     match backend:
         case SNMPBackendEnum.CLASSIC:
             return "classic"
@@ -2841,8 +2843,8 @@ class ConfigVariableChooseSNMPBackend(ConfigVariable):
                     "only available via our subscription."
                 ),
             ),
-            forth=transform_snmp_backend_default_forth,
-            back=transform_snmp_backend_back,
+            to_valuespec=transform_snmp_backend_hosts_to_valuespec,
+            from_valuespec=transform_snmp_backend_from_valuespec,
         )
 
 
@@ -2929,8 +2931,8 @@ class ConfigVariableHTTPProxies(ConfigVariable):
                 ),
                 validate=self._validate_proxies,
             ),
-            forth=lambda v: v.values(),
-            back=lambda v: {p["ident"]: p for p in v},
+            to_valuespec=lambda v: v.values(),
+            from_valuespec=lambda v: {p["ident"]: p for p in v},
         )
 
     def _validate_proxies(self, value, varprefix):
@@ -3153,8 +3155,8 @@ rulespec_registry.register(
 def _valuespec_extra_service_conf_check_interval():
     return Transform(
         valuespec=Age(minvalue=1, default_value=60),
-        forth=lambda v: int(v * 60),
-        back=lambda v: float(v) / 60.0,
+        to_valuespec=lambda v: int(v * 60),
+        from_valuespec=lambda v: float(v) / 60.0,
         title=_("Normal check interval for service checks"),
         help=_(
             "Check_MK usually uses an interval of one minute for the active Check_MK "
@@ -3180,8 +3182,8 @@ rulespec_registry.register(
 def _valuespec_extra_service_conf_retry_interval():
     return Transform(
         valuespec=Age(minvalue=1, default_value=60),
-        forth=lambda v: int(v * 60),
-        back=lambda v: float(v) / 60.0,
+        to_valuespec=lambda v: int(v * 60),
+        from_valuespec=lambda v: float(v) / 60.0,
         title=_("Retry check interval for service checks"),
         help=_(
             "This setting is relevant if you have set the maximum number of check "
@@ -3339,8 +3341,8 @@ def _default_check_interval():
 def _valuespec_extra_host_conf_check_interval():
     return Transform(
         valuespec=Age(minvalue=1, default_value=_default_check_interval()),
-        forth=lambda v: int(v * 60),
-        back=lambda v: float(v) / 60.0,
+        to_valuespec=lambda v: int(v * 60),
+        from_valuespec=lambda v: float(v) / 60.0,
         title=_("Normal check interval for host checks"),
         help=_(
             "The default interval is set to 6 seconds for smart ping and one minute for all other. Here you can specify a larger "
@@ -3363,8 +3365,8 @@ rulespec_registry.register(
 def _valuespec_extra_host_conf_retry_interval():
     return Transform(
         valuespec=Age(minvalue=1, default_value=_default_check_interval()),
-        forth=lambda v: int(v * 60),
-        back=lambda v: float(v) / 60.0,
+        to_valuespec=lambda v: int(v * 60),
+        from_valuespec=lambda v: float(v) / 60.0,
         title=_("Retry check interval for host checks"),
         help=_(
             "This setting is relevant if you have set the maximum number of check "
@@ -3540,8 +3542,8 @@ def _valuespec_extra_host_conf_notification_options():
             "UNREACHABLE notifications. To align this behaviour, create a rule matching "
             "all your hosts and configure it to either send UNREACHABLE notifications or not."
         ),
-        forth=lambda x: x != "n" and x.split(",") or [],
-        back=lambda x: ",".join(x) or "n",
+        to_valuespec=lambda x: x != "n" and x.split(",") or [],
+        from_valuespec=lambda x: ",".join(x) or "n",
     )
 
 
@@ -3574,8 +3576,8 @@ def _valuespec_extra_service_conf_notification_options():
             "of events that should initiate notifications. Please note that several other "
             "filters must also be passed in order for notifications to finally being sent out."
         ),
-        forth=lambda x: x != "n" and x.split(",") or [],
-        back=lambda x: ",".join(x) or "n",
+        to_valuespec=lambda x: x != "n" and x.split(",") or [],
+        from_valuespec=lambda x: ",".join(x) or "n",
     )
 
 
@@ -3657,8 +3659,8 @@ def _valuespec_extra_host_conf_first_notification_delay():
                 "time, no notification will be sent out."
             ),
         ),
-        forth=transform_float_minutes_to_age,
-        back=transform_age_to_float_minutes,
+        to_valuespec=transform_float_minutes_to_age,
+        from_valuespec=transform_age_to_float_minutes,
     )
 
 
@@ -3685,8 +3687,8 @@ def _valuespec_extra_service_conf_first_notification_delay():
                 "time, no notification will be sent out."
             ),
         ),
-        forth=transform_float_minutes_to_age,
-        back=transform_age_to_float_minutes,
+        to_valuespec=transform_float_minutes_to_age,
+        from_valuespec=transform_age_to_float_minutes,
     )
 
 
@@ -3918,8 +3920,8 @@ def _vs_periodic_discovery() -> Dictionary:
                         minvalue=1,
                         display=["days", "hours", "minutes"],
                     ),
-                    forth=lambda v: int(v * 60),
-                    back=lambda v: float(v) / 60.0,
+                    to_valuespec=lambda v: int(v * 60),
+                    from_valuespec=lambda v: float(v) / 60.0,
                     title=_("Perform service discovery every"),
                 ),
             ),
@@ -4983,7 +4985,7 @@ def _help_snmp_backend():
     )
 
 
-def transform_snmp_backend_hosts_forth(backend):
+def transform_snmp_backend_hosts_to_valuespec(backend):
     # During 2.0.0 Beta you could configure inline_legacy backend thats why
     # we need to accept this as value aswell.
     if backend in [False, "inline", "inline_legacy"]:
@@ -5004,8 +5006,8 @@ def _valuespec_snmp_backend():
                 (SNMPBackendEnum.CLASSIC, _("Use Classic Backend")),
             ],
         ),
-        forth=transform_snmp_backend_hosts_forth,
-        back=transform_snmp_backend_back,
+        to_valuespec=transform_snmp_backend_hosts_to_valuespec,
+        from_valuespec=transform_snmp_backend_from_valuespec,
     )
 
 

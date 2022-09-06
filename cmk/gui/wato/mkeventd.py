@@ -4679,8 +4679,8 @@ class RulespecGroupEventConsole(RulespecGroup):
 def _valuespec_extra_host_conf__ec_event_limit():
     return Transform(
         valuespec=vs_ec_host_limit(title=_("Host event limit")),
-        forth=lambda x: dict([("limit", int(x.split(":")[0])), ("action", x.split(":")[1])]),
-        back=lambda x: "%d:%s" % (x["limit"], x["action"]),
+        to_valuespec=lambda x: dict([("limit", int(x.split(":")[0])), ("action", x.split(":")[1])]),
+        from_valuespec=lambda x: "%d:%s" % (x["limit"], x["action"]),
     )
 
 

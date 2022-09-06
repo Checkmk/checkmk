@@ -6127,14 +6127,14 @@ class Transform(ValueSpec[T]):
     """Transforms the value from one representation to another while being
     completely transparent to the user
 
-    The transformation is implemented by two functions: forth and back:
+    The transformation is implemented by two functions: to_valuespec and from_valuespec:
 
-    forth: Converts a value from any "outer world" representation (e.g. as
-           it was read from a .mk file) to the form that is processable by
-           the encapsulated ValueSpec (e.g. for rendering).
+    to_valuespec: Converts a value from any "outer world" representation (e.g. as
+                  it was read from a .mk file) to the form that is processable by
+                  the encapsulated ValueSpec (e.g. for rendering).
 
-    back:  Converts a value created by the encapsulated ValueSpec back to
-           the outer representation.
+    from_valuespec: Converts a value created by the encapsulated ValueSpec back to
+                    the outer representation.
 
     Use cases:
     * When the value of the valuespec is used by some external tool, and that
@@ -6154,8 +6154,8 @@ class Transform(ValueSpec[T]):
         self,
         valuespec: ValueSpec[T],
         *,
-        back: Callable[[T], Any],
-        forth: Callable[[Any], T],
+        to_valuespec: Callable[[Any], T],
+        from_valuespec: Callable[[T], Any],
         title: str | None = None,
         help: ValueSpecHelp | None = None,
         default_value: ValueSpecDefault[Any] = DEF_VALUE,
@@ -6163,8 +6163,8 @@ class Transform(ValueSpec[T]):
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._valuespec: Final = valuespec
-        self.back: Final = back
-        self.forth: Final = forth
+        self.to_valuespec: Final = to_valuespec
+        self.from_valuespec: Final = from_valuespec
 
     def allow_empty(self) -> bool:
         return self._valuespec.allow_empty()
@@ -6181,43 +6181,43 @@ class Transform(ValueSpec[T]):
         return self._valuespec.help()
 
     def render_input(self, varprefix: str, value: Any) -> None:
-        self._valuespec.render_input(varprefix, self.forth(value))
+        self._valuespec.render_input(varprefix, self.to_valuespec(value))
 
     def set_focus(self, varprefix: str) -> None:
         self._valuespec.set_focus(varprefix)
 
     def canonical_value(self) -> Any:
-        return self.back(self._valuespec.canonical_value())
+        return self.from_valuespec(self._valuespec.canonical_value())
 
     def default_value(self) -> Any:
-        return self.back(self._valuespec.default_value())
+        return self.from_valuespec(self._valuespec.default_value())
 
     def mask(self, value: Any) -> Any:
-        return self.back(self._valuespec.mask(self.forth(value)))
+        return self.from_valuespec(self._valuespec.mask(self.to_valuespec(value)))
 
     def value_to_html(self, value: Any) -> ValueSpecText:
-        return self._valuespec.value_to_html(self.forth(value))
+        return self._valuespec.value_to_html(self.to_valuespec(value))
 
     def from_html_vars(self, varprefix: str) -> Any:
-        return self.back(self._valuespec.from_html_vars(varprefix))
+        return self.from_valuespec(self._valuespec.from_html_vars(varprefix))
 
     def validate_datatype(self, value: Any, varprefix: str) -> None:
-        self._valuespec.validate_datatype(self.forth(value), varprefix)
+        self._valuespec.validate_datatype(self.to_valuespec(value), varprefix)
 
     def _validate_value(self, value: Any, varprefix: str) -> None:
-        self._valuespec.validate_value(self.forth(value), varprefix)
+        self._valuespec.validate_value(self.to_valuespec(value), varprefix)
 
     def transform_value(self, value: Any) -> Any:
-        return self.back(self._valuespec.transform_value(self.forth(value)))
+        return self.from_valuespec(self._valuespec.transform_value(self.to_valuespec(value)))
 
     def has_show_more(self) -> bool:
         return self._valuespec.has_show_more()
 
     def value_to_json(self, value: Any) -> JSONValue:
-        return self._valuespec.value_to_json(self.forth(value))
+        return self._valuespec.value_to_json(self.to_valuespec(value))
 
     def value_from_json(self, json_value: JSONValue) -> Any:
-        return self.back(self._valuespec.value_from_json(json_value))
+        return self.from_valuespec(self._valuespec.value_from_json(json_value))
 
 
 class Migrate(Transform[T]):
@@ -6241,8 +6241,8 @@ class Migrate(Transform[T]):
     ):
         super().__init__(
             valuespec=valuespec,
-            forth=migrate,
-            back=lambda v: v,
+            to_valuespec=migrate,
+            from_valuespec=lambda v: v,
             title=title,
             help=help,
             default_value=default_value,
@@ -6264,8 +6264,8 @@ class Transparent(Transform[T]):
     ):
         super().__init__(
             valuespec=valuespec,
-            forth=lambda v: v,
-            back=lambda v: v,
+            to_valuespec=lambda v: v,
+            from_valuespec=lambda v: v,
             title=title,
             help=help,
             default_value=default_value,
@@ -6781,8 +6781,8 @@ class TextOrRegExp(Alternative):
                 vs_text,
                 Transform(
                     valuespec=vs_regex,
-                    forth=lambda v: v[1:],  # strip off "~"
-                    back=lambda v: "~" + v,  # add "~"
+                    to_valuespec=lambda v: v[1:],  # strip off "~"
+                    from_valuespec=lambda v: "~" + v,  # add "~"
                 ),
             ],
             # Use RegExp field when value is prefixed with "~"

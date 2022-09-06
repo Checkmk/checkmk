@@ -2093,8 +2093,8 @@ class VSExplicitConditions(Transform):
                 optional_keys=["explicit_hosts", "explicit_services"],
                 **kwargs,
             ),
-            forth=self._to_valuespec,
-            back=self._from_valuespec,
+            to_valuespec=self._to_valuespec,
+            from_valuespec=self._from_valuespec,
         )
 
     def _condition_elements(self) -> Iterable[_Tuple[str, ValueSpec]]:
@@ -2320,8 +2320,8 @@ class VSExplicitConditions(Transform):
                     choices=itemenum,
                     columns=3,
                 ),
-                forth=lambda item_list: [(x[:-1] if x[-1] == "$" else x) for x in item_list],
-                back=lambda item_list: [f"{x}$" for x in item_list],
+                to_valuespec=lambda item_list: [(x[:-1] if x[-1] == "$" else x) for x in item_list],
+                from_valuespec=lambda item_list: [f"{x}$" for x in item_list],
             )
 
         return ListOfStrings(

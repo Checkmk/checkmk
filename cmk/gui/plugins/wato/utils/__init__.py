@@ -1300,7 +1300,7 @@ def valuespec_check_plugin_selection(
             optional_keys=["mgmt"],
         ),
         # omit empty mgmt key
-        forth=lambda list_: {
+        to_valuespec=lambda list_: {
             k: v
             for k, v in (
                 ("host", [name for name in list_ if not name.startswith("mgmt_")]),
@@ -1308,7 +1308,7 @@ def valuespec_check_plugin_selection(
             )
             if v or k == "host"
         },
-        back=lambda dict_: dict_["host"] + [f"mgmt_{n}" for n in dict_.get("mgmt", ())],
+        from_valuespec=lambda dict_: dict_["host"] + [f"mgmt_{n}" for n in dict_.get("mgmt", ())],
     )
 
 
@@ -2122,8 +2122,8 @@ class DictHostTagCondition(Transform):
                 add_label=_("Add tag condition"),
                 del_label=_("Remove tag condition"),
             ),
-            forth=self._to_valuespec,
-            back=self._from_valuespec,
+            to_valuespec=self._to_valuespec,
+            from_valuespec=self._from_valuespec,
         )
 
     @request_memoize()
@@ -2497,8 +2497,8 @@ class LabelCondition(Transform):
                 style=ListOf.Style.FLOATING,
                 movable=False,
             ),
-            forth=self._to_valuespec,
-            back=self._from_valuespec,
+            to_valuespec=self._to_valuespec,
+            from_valuespec=self._from_valuespec,
             title=title,
             help=help_txt,
         )

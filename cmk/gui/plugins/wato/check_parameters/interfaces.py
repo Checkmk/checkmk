@@ -398,8 +398,8 @@ vs_elements_if_groups_matches: List[DictionaryEntry] = [
                     "For example 53 (propVirtual)."
                 ),
             ),
-            forth=str,
-            back=int,
+            to_valuespec=str,
+            from_valuespec=int,
         ),
     ),
     (

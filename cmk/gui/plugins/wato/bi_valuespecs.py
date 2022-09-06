@@ -105,8 +105,8 @@ def _convert_bi_aggr_from_vs(value):
 def get_bi_aggregation_node_choices():
     return Transform(
         valuespec=CascadingDropdown(choices=_get_aggregation_choices()),
-        forth=_convert_bi_aggr_to_vs,
-        back=_convert_bi_aggr_from_vs,
+        to_valuespec=_convert_bi_aggr_to_vs,
+        from_valuespec=_convert_bi_aggr_from_vs,
     )
 
 
@@ -183,8 +183,8 @@ def _convert_bi_rule_from_vs(value):
 def get_bi_rule_node_choices_vs():
     return Transform(
         valuespec=CascadingDropdown(choices=_get_rule_choices(), sorted=False),
-        forth=_convert_bi_rule_to_vs,
-        back=_convert_bi_rule_from_vs,
+        to_valuespec=_convert_bi_rule_to_vs,
+        from_valuespec=_convert_bi_rule_from_vs,
     )
 
 
@@ -281,8 +281,8 @@ def _bi_host_choice_vs(title):
             ),
             default_value="all_hosts",
         ),
-        forth=convert_to_vs,
-        back=convert_from_vs,
+        to_valuespec=convert_to_vs,
+        from_valuespec=convert_from_vs,
     )
 
 
@@ -295,8 +295,8 @@ class BIConfigEmptySearch(BIEmptySearch, ABCBIConfigSearch):
             _("No search"),
             Transform(
                 valuespec=FixedValue(value=""),
-                forth=lambda x: "",
-                back=lambda x: {"type": cls.type()},
+                to_valuespec=lambda x: "",
+                from_valuespec=lambda x: {"type": cls.type()},
             ),
         )
 
@@ -442,8 +442,8 @@ class BIConfigFixedArgumentsSearch(BIFixedArgumentsSearch, ABCBIConfigSearch):
                                     ),
                                 ]
                             ),
-                            forth=cls._convert_to_vs,
-                            back=cls._convert_from_vs,
+                            to_valuespec=cls._convert_to_vs,
+                            from_valuespec=cls._convert_from_vs,
                         ),
                         magic="#keys#",
                     ),
@@ -537,8 +537,8 @@ class BIConfigCallARuleAction(actions.BICallARuleAction, ABCBIConfigAction):
                 validate=cls._validate_rule_call,
             ),
             title=_("Call a rule"),
-            forth=convert_to_vs,
-            back=convert_from_vs,
+            to_valuespec=convert_to_vs,
+            from_valuespec=convert_from_vs,
         )
 
     @classmethod
@@ -715,8 +715,8 @@ def get_aggregation_function_choices():
             orientation="horizontal",
             choices=choices,
         ),
-        forth=convert_to_cascading_vs_choice,
-        back=convert_from_cascading_vs_choice,
+        to_valuespec=convert_to_cascading_vs_choice,
+        from_valuespec=convert_from_cascading_vs_choice,
     )
 
 
@@ -789,8 +789,8 @@ class BIConfigAggregationFunctionBest(BIAggregationFunctionBest, ABCBIConfigAggr
                     ),
                 ]
             ),
-            forth=convert_to_vs,
-            back=convert_from_vs,
+            to_valuespec=convert_to_vs,
+            from_valuespec=convert_from_vs,
         )
 
 
@@ -844,8 +844,8 @@ class BIConfigAggregationFunctionWorst(BIAggregationFunctionWorst, ABCBIConfigAg
                     ),
                 ]
             ),
-            forth=convert_to_vs,
-            back=convert_from_vs,
+            to_valuespec=convert_to_vs,
+            from_valuespec=convert_from_vs,
         )
 
 
@@ -906,8 +906,8 @@ class BIConfigAggregationFunctionCountOK(
                     ),
                 ]
             ),
-            forth=convert_to_vs,
-            back=convert_from_vs,
+            to_valuespec=convert_to_vs,
+            from_valuespec=convert_from_vs,
         )
 
     @classmethod
@@ -929,8 +929,8 @@ class BIConfigAggregationFunctionCountOK(
                         default_value=defvalperc,
                     ),
                     title=_("Percentage"),
-                    forth=lambda x: float(x[:-1]),
-                    back=lambda x: "%d%%" % x,
+                    to_valuespec=lambda x: float(x[:-1]),
+                    from_valuespec=lambda x: "%d%%" % x,
                 ),
             ],
         )

@@ -45,7 +45,7 @@ from cmk.gui.watolib.password_store import passwordstore_choices
 
 # We have to transform because 'add_to_event_context'
 # in modules/events.py can't handle complex data structures
-def transform_back_html_mail_url_prefix(p):
+def transform_from_valuespec_html_mail_url_prefix(p):
     if isinstance(p, tuple):
         return {p[0]: p[1]}
     if p == "automatic_http":
@@ -55,7 +55,7 @@ def transform_back_html_mail_url_prefix(p):
     return {"manual": p}
 
 
-def transform_forth_html_mail_url_prefix(p):
+def transform_to_valuespec_html_mail_url_prefix(p):
     if not isinstance(p, dict):
         return ("manual", p)
 
@@ -229,8 +229,8 @@ def _get_url_prefix_specs(default_choice, default_value=DEF_VALUE):
             ],
             default_value=default_value,
         ),
-        forth=transform_forth_html_mail_url_prefix,
-        back=transform_back_html_mail_url_prefix,
+        to_valuespec=transform_to_valuespec_html_mail_url_prefix,
+        from_valuespec=transform_from_valuespec_html_mail_url_prefix,
     )
 
 
@@ -1738,8 +1738,8 @@ class NotificationParameterPushover(NotificationParameter):
                             ],
                             default_value="0",
                         ),
-                        forth=self._transform_forth_pushover_priority,
-                        back=self._transform_back_pushover_priority,
+                        to_valuespec=self._transform_to_pushover_priority,
+                        from_valuespec=self._transform_from_pushover_priority,
                     ),
                 ),
                 (
@@ -1783,7 +1783,7 @@ class NotificationParameterPushover(NotificationParameter):
 
     # We have to transform because 'add_to_event_context'
     # in modules/events.py can't handle complex data structures
-    def _transform_back_pushover_priority(self, params):
+    def _transform_from_pushover_priority(self, params):
         if isinstance(params, tuple):
             return {
                 "priority": "2",
@@ -1793,7 +1793,7 @@ class NotificationParameterPushover(NotificationParameter):
             }
         return params
 
-    def _transform_forth_pushover_priority(self, params):
+    def _transform_to_pushover_priority(self, params):
         if isinstance(params, dict):
             return (params["priority"], (params["retry"], params["expire"], params["receipts"]))
         return params

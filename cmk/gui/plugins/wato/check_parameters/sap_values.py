@@ -46,8 +46,8 @@ def _valuespec_inventory_sap_values():
                                 "This regex must match the <i>beginning</i> of the complete "
                                 "path of the node as reported by the agent"
                             ),
-                            forth=lambda x: x[1:],  # remove ~
-                            back=lambda x: "~" + x,  # prefix ~
+                            to_valuespec=lambda x: x[1:],  # remove ~
+                            from_valuespec=lambda x: "~" + x,  # prefix ~
                         ),
                         FixedValue(
                             value=None,

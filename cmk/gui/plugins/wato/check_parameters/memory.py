@@ -98,8 +98,8 @@ def _parameter_valuespec_memory() -> Dictionary:
                                 "The free memory levels do not work with the fortigate check, because it does "
                                 "not provide total memory data."
                             ),
-                            forth=lambda val: tuple(-x for x in val),
-                            back=lambda val: tuple(-x for x in val),
+                            to_valuespec=lambda val: tuple(-x for x in val),
+                            from_valuespec=lambda val: tuple(-x for x in val),
                         ),
                     ],
                 ),

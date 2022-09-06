@@ -385,8 +385,8 @@ def process_match_options():
                     "please use a delimiter like '$' or '\\b' around the group, e.g. (py.*)$<br>"
                     "In manual check groups are aggregated"
                 ),
-                forth=lambda x: x[1:],  # remove ~
-                back=lambda x: "~" + x,  # prefix ~
+                to_valuespec=lambda x: x[1:],  # remove ~
+                from_valuespec=lambda x: "~" + x,  # prefix ~
             ),
             FixedValue(
                 value=None,
@@ -416,8 +416,8 @@ def user_match_options(extra_elements=None):
                 ),
                 title=_("Regular expression matching username"),
                 help=_("This regex must match the <i>beginning</i> of the complete username"),
-                forth=lambda x: x[1:],  # remove ~
-                back=lambda x: "~" + x,  # prefix ~
+                to_valuespec=lambda x: x[1:],  # remove ~
+                from_valuespec=lambda x: "~" + x,  # prefix ~
             ),
             FixedValue(
                 value=None,
@@ -461,8 +461,8 @@ def cgroup_match_options():
                             "This regex must match the <i>beginning</i> of the complete "
                             "control group information"
                         ),
-                        forth=lambda x: x[1:],  # remove ~
-                        back=lambda x: "~" + x,  # prefix ~
+                        to_valuespec=lambda x: x[1:],  # remove ~
+                        from_valuespec=lambda x: "~" + x,  # prefix ~
                     ),
                     FixedValue(
                         value=None,
@@ -675,8 +675,8 @@ def hr_process_match_name_option():
                     "please use a delimiter like '$' or '\\b' around the group, e.g. (py.*)$<br>"
                     "In manual check groups are aggregated"
                 ),
-                forth=lambda x: x[1:],  # remove ~
-                back=lambda x: "~" + x,  # prefix ~
+                to_valuespec=lambda x: x[1:],  # remove ~
+                from_valuespec=lambda x: "~" + x,  # prefix ~
             ),
         ],
         match=match_hr_alternative,
@@ -712,8 +712,8 @@ def hr_process_match_path_option():
                     "please use a delimiter like '$' or '\\b' around the group, e.g. (py.*)$<br>"
                     "In manual check groups are aggregated"
                 ),
-                forth=lambda x: x[1:],  # remove ~
-                back=lambda x: "~" + x,  # prefix ~
+                to_valuespec=lambda x: x[1:],  # remove ~
+                from_valuespec=lambda x: "~" + x,  # prefix ~
             ),
         ],
         match=match_hr_alternative,

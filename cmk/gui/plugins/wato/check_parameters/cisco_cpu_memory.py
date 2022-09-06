@@ -83,8 +83,8 @@ def _parameter_valuespec_memory():
                                 "Specify the threshold levels for the free memory space. The free memory "
                                 "excludes the reserved kernel memory."
                             ),
-                            forth=lambda val: tuple(-x for x in val),
-                            back=lambda val: tuple(-x for x in val),
+                            to_valuespec=lambda val: tuple(-x for x in val),
+                            from_valuespec=lambda val: tuple(-x for x in val),
                         ),
                     ],
                 ),

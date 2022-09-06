@@ -1303,8 +1303,8 @@ class ModeBIEditRule(ABCBIMode):
                             ),
                         ),
                     ),
-                    forth=lambda x: x["arguments"],
-                    back=lambda x: {
+                    to_valuespec=lambda x: x["arguments"],
+                    from_valuespec=lambda x: {
                         "arguments": x,
                     },
                 ),
@@ -1420,8 +1420,8 @@ class ModeBIEditRule(ABCBIMode):
                     (_("Aggregation Function"), ["aggregation_function"]),
                 ],
             ),
-            forth=convert_to_vs,
-            back=convert_from_vs,
+            to_valuespec=convert_to_vs,
+            from_valuespec=convert_from_vs,
         )
 
 
@@ -1784,8 +1784,8 @@ class BIModeEditAggregation(ABCBIMode):
                 allow_empty=False,
                 empty_text=_("Please define at least one aggregation group"),
             ),
-            forth=convert_to_vs,
-            back=convert_from_vs,
+            to_valuespec=convert_to_vs,
+            from_valuespec=convert_from_vs,
         )
 
     @classmethod

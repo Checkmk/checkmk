@@ -138,8 +138,8 @@ class BookmarkList(pagetypes.Overridable[BookmarkListSpec, "BookmarkList"]):
                                     orientation="horizontal",
                                     title=_("Bookmarks"),
                                 ),
-                                forth=bookmark_config_to_vs,
-                                back=bookmark_vs_to_config,
+                                to_valuespec=bookmark_config_to_vs,
+                                from_valuespec=bookmark_vs_to_config,
                             )
                         ),
                     ),

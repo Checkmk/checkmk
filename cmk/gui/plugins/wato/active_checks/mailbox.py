@@ -365,8 +365,8 @@ def _valuespec_active_checks_mail() -> Dictionary:
                                                     "Spooling: Send events to local event console into given spool directory"
                                                 ),
                                                 # remove prefix
-                                                forth=lambda x: x[6:],
-                                                back=lambda x: "spool:" + x,  # add prefix
+                                                to_valuespec=lambda x: x[6:],
+                                                from_valuespec=lambda x: "spool:" + x,  # add prefix
                                             ),
                                         ],
                                         match=lambda x: x

@@ -1,0 +1,14 @@
+Title: Agent Bakery: Show correct signed status if not baking for all platforms
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1662450215
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0p12
+
+When narrowing down target platforms with the "Agent bakery packages" rule,
+the signed status (key icon) at the agent bakery GUI previously showed a
+"partially signed" state even if all selected packages have been signed correctly.
+

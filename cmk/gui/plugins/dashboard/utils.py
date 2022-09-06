@@ -677,27 +677,32 @@ dashlet_registry = DashletRegistry()
 @page_registry.register_page("ajax_figure_dashlet_data")
 class FigureDashletPage(AjaxPage):
     def page(self) -> PageResult:
-        settings = json.loads(request.get_str_input_mandatory("settings"))
+        dashboard_name = request.get_ascii_input_mandatory("name")
+        try:
+            dashboard = get_permitted_dashboards()[dashboard_name]
+        except KeyError:
+            raise MKUserError("name", _("The requested dashboard does not exist."))
+
+        dashlet_id = request.get_integer_input_mandatory("id")
+        try:
+            dashlet_spec = dashboard["dashlets"][dashlet_id]
+        except IndexError:
+            raise MKUserError("id", _("The element does not exist."))
 
         try:
-            dashlet_type = cast(Type[ABCFigureDashlet], dashlet_registry[settings.get("type")])
+            dashlet_type = cast(Type[ABCFigureDashlet], dashlet_registry[dashlet_spec["type"]])
         except KeyError:
             raise MKUserError("type", _("The requested element type does not exist."))
 
-        settings = dashlet_vs_general_settings(
-            dashlet_type, dashlet_type.single_infos()
-        ).value_from_json(settings)
+        dashlet = dashlet_type(dashboard_name, dashboard, dashlet_id, dashlet_spec)
 
-        raw_properties = request.get_str_input_mandatory("properties")
-        properties = dashlet_type.vs_parameters().value_from_json(json.loads(raw_properties))
-        context = json.loads(request.get_str_input_mandatory("context", "{}"))
-        # Inject the infos because the datagenerator is a separate instance to dashlet
-        # TODO: Can we do better than using fake arguments below? We *really* need an instance,
-        # because in general, infos() is an *instance* method, not a class method.
-        settings["infos"] = dashlet_type(
-            dashboard_name="", dashboard={"context": {}}, dashlet_id=0, dashlet={"context": {}}
-        ).infos()
-        response_data = dashlet_type.generate_response_data(properties, context, settings)
+        # TODO: This is a violation of the data structure. Will be cleaned up soon
+        dashlet_spec["infos"] = dashlet.infos()
+        # TODO: The synthentical separation of properties and settings is not really helping. Since
+        # we now have typed the config for each dashlet, we can now consolidate that again.
+        response_data = dashlet_type.generate_response_data(
+            dashlet_spec, dashlet.context, dashlet_spec
+        )
         return create_figures_response(response_data)
 
 
@@ -797,6 +802,7 @@ class ABCFigureDashlet(Dashlet[T], abc.ABC):
             let figure_%(dashlet_id)d = cmk.figures.figure_registry.get_figure(%(type_name)s);
             let %(instance_name)s = new figure_%(dashlet_id)d(%(div_selector)s);
             %(instance_name)s.set_post_url_and_body(%(url)s, %(body)s);
+            %(instance_name)s.set_dashlet_spec(%(dashlet_spec)s);
             %(instance_name)s.initialize();
             %(instance_name)s.scheduler.set_update_interval(%(update)d);
             %(instance_name)s.scheduler.enable();
@@ -804,6 +810,7 @@ class ABCFigureDashlet(Dashlet[T], abc.ABC):
             % {
                 "type_name": json.dumps(figure_type_name),
                 "dashlet_id": self._dashlet_id,
+                "dashlet_spec": json.dumps(self.dashlet_spec),
                 "instance_name": self.instance_name,
                 "div_selector": json.dumps("#%s" % div_id),
                 "url": json.dumps(fetch_url),
@@ -813,15 +820,9 @@ class ABCFigureDashlet(Dashlet[T], abc.ABC):
         )
 
     def _dashlet_http_variables(self) -> HTTPVariables:
-        vs_general_settings = dashlet_vs_general_settings(self.__class__, self.single_infos())
-        dashlet_settings = vs_general_settings.value_to_json(dict(self._dashlet_spec))
-        dashlet_properties = self.vs_parameters().value_to_json(self._dashlet_spec)
-
         args: HTTPVariables = []
-        args.append(("settings", json.dumps(dashlet_settings)))
-        args.append(("context", json.dumps(self.context)))
-        args.append(("properties", json.dumps(dashlet_properties)))
-
+        args.append(("name", self.dashboard_name))
+        args.append(("id", self.dashlet_id))
         return args
 
 

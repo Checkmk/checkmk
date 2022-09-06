@@ -254,6 +254,7 @@ export class FigureBase {
     _post_render_hooks: Function[];
     _post_url: string;
     _post_body: string;
+    _dashlet_spec;
     _data;
     _crossfilter;
     scheduler: Scheduler;
@@ -299,6 +300,7 @@ export class FigureBase {
         // Post url and body for fetching the graph data
         this._post_url = "";
         this._post_body = "";
+        this._dashlet_spec = {};
 
         // Current data of this figure
         this._data = {data: [], plot_definitions: []};
@@ -392,6 +394,10 @@ export class FigureBase {
 
     get_update_interval() {
         return 10;
+    }
+
+    set_dashlet_spec(dashlet_spec) {
+        this._dashlet_spec = dashlet_spec;
     }
 
     set_post_url_and_body(url, body = "") {
@@ -533,11 +539,7 @@ export class FigureBase {
             .join("g")
             .classed("title", true);
 
-        let config = new URLSearchParams(this._post_body);
-        let settings = config.get("settings");
-        let highlight_container = false;
-        if (settings != undefined)
-            highlight_container = JSON.parse(settings).show_title == true;
+        let highlight_container = this._dashlet_spec.show_title == true;
 
         title_component
             .selectAll("rect")

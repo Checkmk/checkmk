@@ -1,0 +1,27 @@
+Title: Custom extensions might need adjustment due refactorings in GUI code (<tt>Transform</tt>)
+Class: feature
+Compatible: incomp
+Component: wato
+Date: 1662455455
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+This werk only affects users of non-tribe29 custom extensions (single files and MKPs from non-
+tribe29 sources such as the Checkmk exchange).
+
+Before this werk, the Checkmk codebase offered the <tt>ValueSpec</tt> subclass <tt>Transform</tt>,
+which was used for two things:
+
+LI: Changing the format in which configured values are stored (<tt>back</tt> and <tt>forth</tt>
+specified).
+LI: Updating legacy configurations to the current format (<tt>forth</tt> only specified).
+
+As of this werk, the <tt>Transform</tt> class can only be used for the first point above (changing
+the storage format). It now expects two mandatory arguments <tt>into_vs</tt> (previously
+<tt>forth</tt>) and <tt>out_of_vs</tt> (previously <tt>back</tt>).
+
+For updating legacy configurations, use the new <tt>Migrate</tt> class, which requires a mandatory
+<tt>migrate</tt> argument. This is the equivalent of specifying <tt>forth</tt> only in the old
+<tt>Transform</tt> class.

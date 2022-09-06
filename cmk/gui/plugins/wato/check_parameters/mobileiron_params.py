@@ -28,10 +28,10 @@ def _parameter_valuespec_mobileiron_statistics() -> Dictionary:
             (
                 "non_compliant_summary_levels",
                 Tuple(
-                    title=_("Configure non compliant devices summary percent levels"),
+                    title=_("Levels for non-compliant devices"),
                     elements=[
-                        Percentage(title=_("Warning at"), default_value=10),
-                        Percentage(title=_("Critical at"), default_value=20),
+                        Percentage(title=_("Warning at"), default_value=10.0),
+                        Percentage(title=_("Critical at"), default_value=20.0),
                     ],
                 ),
             )
@@ -99,9 +99,7 @@ def _parameter_valuespec_mobileiron_versions() -> Dictionary:
             ),
             (
                 "patchlevel_unparsable",
-                MonitoringState(
-                    default_value=0, title=_("State in case of unparsable patch level")
-                ),
+                MonitoringState(default_value=0, title=_("State in case of unknown patch level")),
             ),
             (
                 "patchlevel_age",
@@ -115,7 +113,7 @@ def _parameter_valuespec_mobileiron_versions() -> Dictionary:
             ),
             (
                 "os_build_unparsable",
-                MonitoringState(default_value=0, title=_("State in case of unparsable OS build")),
+                MonitoringState(default_value=0, title=_("State in case of unknown OS build")),
             ),
             (
                 "os_age",

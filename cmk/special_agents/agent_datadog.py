@@ -5,22 +5,27 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """
 Special agent for monitoring "Monitors" and "Events" of a datadog instance with Checkmk. The data
-is fetched from the Datadog API, https://docs.datadoghq.com/api/, version 1. Endpoints:
-* Monitors: monitor
-* Events: events
+is fetched from the Datadog API, https://docs.datadoghq.com/api/. Endpoints:
+* Monitors: monitor (v1)
+* Events: events (v1)
+* Logs: logs (v2)
 """
 from __future__ import annotations
 
+import datetime
 import json
 import logging
 import re
 import time
 from collections.abc import Iterable, Iterator, Mapping, Sequence
+from dataclasses import dataclass
+from http import HTTPStatus
 from pathlib import Path
-from typing import Final, Generic, Optional, Protocol, TypeVar
+from typing import Any, Final, Generic, Optional, Protocol, TypeVar
 
 import pydantic
 import requests
+from dateutil import parser as dateutil_parser
 
 from cmk.utils import paths, store
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
@@ -36,6 +41,17 @@ from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation # isor
 Tags = Sequence[str]
 
 LOGGER = logging.getLogger("agent_datadog")
+
+
+@dataclass(frozen=True)
+class LogMessageElement:
+    name: str
+    key: str
+
+    @classmethod
+    def from_arg(cls, arg: str) -> "LogMessageElement":
+        name, key = arg.split(":", maxsplit=1)
+        return cls(name, key)
 
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:
@@ -83,10 +99,7 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
         nargs="*",
         metavar="SECTION1 SECTION2 ...",
         help="Sections to be produced",
-        choices=[
-            "monitors",
-            "events",
-        ],
+        choices=["monitors", "events", "logs"],
         default=[],
     )
     parser.add_argument(
@@ -157,6 +170,44 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
         action="store_true",
         help="Add text of events to data forwarded to the EC. Newline characters are replaced by '~'.",
     )
+    parser.add_argument(
+        "--log_max_age",
+        type=int,
+        metavar="AGE",
+        help="Restrict maximum age of fetched logs (in seconds)",
+        default=600,
+    )
+    parser.add_argument("--log_query", type=str, help="filter logs by this query.", default="")
+    parser.add_argument(
+        "--log_indexes",
+        type=str,
+        nargs="*",
+        metavar="IDX1 IDX2 ...",
+        help="Indexes to search",
+        default="*",
+    )
+    parser.add_argument(
+        "--log_text",
+        type=LogMessageElement.from_arg,
+        nargs="*",
+        metavar="name:key other:nested.key ...",
+        help="Value from message to use for event text",
+        default="message:message",
+    )
+    parser.add_argument(
+        "--log_syslog_facility",
+        type=int,
+        metavar="FACILITY",
+        help="Syslog facility set when forwarding logs to the EC",
+        default=1,
+    )
+    parser.add_argument(
+        "--log_service_level",
+        type=int,
+        metavar="SL",
+        help="Service level set when forwarding logs to the EC",
+        default=0,
+    )
     return parser.parse_args(argv)
 
 
@@ -165,8 +216,17 @@ class DatadogAPI(Protocol):
         self,
         api_endpoint: str,
         params: Mapping[str, str | int],
+        version: str = "v1",
     ) -> requests.Response:
-        pass
+        ...
+
+    def post_request(
+        self,
+        api_endpoint: str,
+        body: Mapping[str, str | int],
+        version: str = "v1",
+    ) -> requests.Response:
+        ...
 
 
 class ImplDatadogAPI:
@@ -181,18 +241,32 @@ class ImplDatadogAPI:
             "DD-API-KEY": api_key,
             "DD-APPLICATION-KEY": app_key,
         }
-        self._api_url = api_host.rstrip("/") + "/api/v1"
+        self._api_url = api_host.rstrip("/") + "/api"
         self._proxy = deserialize_http_proxy_config(proxy)
 
     def get_request(
         self,
         api_endpoint: str,
         params: Mapping[str, str | int],
+        version: str = "v1",
     ) -> requests.Response:
         return requests.get(
-            f"{self._api_url}/{api_endpoint}",
+            f"{self._api_url}/{version}/{api_endpoint}",
             headers=self._query_heads,
             params=params,
+            proxies=self._proxy.to_requests_proxies(),
+        )
+
+    def post_request(
+        self,
+        api_endpoint: str,
+        body: Mapping[str, Any],
+        version: str = "v1",
+    ) -> requests.Response:
+        return requests.post(
+            f"{self._api_url}/{version}/{api_endpoint}",
+            headers=self._query_heads,
+            json=body,
             proxies=self._proxy.to_requests_proxies(),
         )
 
@@ -420,6 +494,183 @@ def _forward_events_to_ec(
     )
 
 
+class LogAttributes(pydantic.BaseModel, frozen=True):
+    # This field is apparently optional, even though the API documentation does not say that.
+    # It was observed to be missing when setting log_query to the empty string.
+    attributes: Mapping[str, Any] = pydantic.Field(default={})
+    host: str
+    message: str
+    service: str
+    status: str
+    tags: Sequence[str]
+    timestamp: str
+
+
+class Log(pydantic.BaseModel, frozen=True):
+    attributes: LogAttributes
+    id: str
+
+
+class LogsQuerier:
+    def __init__(
+        self,
+        datadog_api: DatadogAPI,
+        max_age: int,
+        indexes: Sequence[str],
+        query: str,
+        hostname: str,
+        cooldown_too_many_requests: int = 5,
+    ) -> None:
+        self.datadog_api: Final = datadog_api
+        self.id_store: Final = IDStore[str](
+            Path(paths.tmp_dir) / "agents" / "agent_datadog" / f"{hostname}_logs.json"
+        )
+        self.max_age: Final = max_age
+        self.indexes: Final = indexes
+        self.query: Final = query
+        self.cooldown_too_many_requests: Final = cooldown_too_many_requests
+
+    def query_logs(
+        self,
+    ) -> Iterable[Log]:
+        last_ids = self.id_store.read()
+        queried_logs = list(self._execute_query())
+        self.id_store.write(log.id for log in queried_logs)
+        yield from (log for log in queried_logs if log.id not in last_ids)
+
+    def _execute_query(
+        self,
+    ) -> Iterable[Log]:
+        """
+        Query logs from the endpoint events
+        https://docs.datadoghq.com/api/latest/logs/#search-logs
+        """
+        start, end = self._query_time_range()
+        cursor: str | None = None
+
+        while True:
+            response = self._query_logs_page_in_time_window(
+                start,
+                end,
+                self.query,
+                self.indexes,
+                cursor,
+            )
+            yield from (Log.parse_obj(raw_log) for raw_log in response["data"])
+            if (meta := response.get("meta")) is None:
+                break
+            cursor = meta["page"].get("after")
+
+    def _query_time_range(self) -> tuple[datetime.datetime, datetime.datetime]:
+        now = datetime.datetime.fromtimestamp(time.time())
+        return now - datetime.timedelta(seconds=self.max_age), now
+
+    def _query_logs_page_in_time_window(
+        self,
+        start: datetime.datetime,
+        end: datetime.datetime,
+        query: str,
+        indexes: Sequence[str],
+        cursor: str | None,
+    ) -> Mapping[str, Any]:
+        body: dict[str, Any] = {
+            "filter": {
+                "from": start.strftime("%Y-%m-%dT%H:%M:%S+00:00"),
+                "to": end.strftime("%Y-%m-%dT%H:%M:%S+00:00"),
+                "query": query,
+                "indexes": indexes,
+            },
+            "page": {"limit": 200},
+            "sort": "timestamp",
+        }
+        if cursor is not None:
+            body["page"]["cursor"] = cursor
+
+        resp = self.datadog_api.post_request("logs/events/search", body, version="v2")
+        while HTTPStatus(resp.status_code) is HTTPStatus.TOO_MANY_REQUESTS:
+            LOGGER.debug(
+                "Encountered %s, sleeping %s seconds",
+                int(HTTPStatus.TOO_MANY_REQUESTS),
+                self.cooldown_too_many_requests,
+            )
+            time.sleep(self.cooldown_too_many_requests)
+            resp = self.datadog_api.post_request("logs/events/search", body, version="v2")
+        resp.raise_for_status()
+        return resp.json()
+
+
+_SEVERITY_MAPPER: Mapping[str, int] = {
+    "emergency": 0,
+    "alert": 1,
+    "critical": 2,
+    "crit": 2,
+    "error": 3,
+    "warning": 4,
+    "warn": 4,
+    "notice": 5,
+    "informational": 6,
+    "info": 6,
+    "debug": 7,
+}
+
+
+def _get_nested(attributes: Mapping[str, Any], nested_keys: str) -> str | None:
+    if "." in nested_keys:
+        next_key, remainder = nested_keys.split(".", maxsplit=1)
+        return _get_nested(attributes.get(next_key, {}), remainder)
+    return attributes.get(nested_keys)
+
+
+def _sanitize_log_text(text: str) -> str:
+    return text.replace("'", "").replace("{", "").replace("}", "").replace("\n", " ~ ")
+
+
+def _log_to_syslog_message(
+    log: Log,
+    facility: int,
+    service_level: int,
+    translator: Sequence[LogMessageElement],
+) -> SyslogMessage:
+    LOGGER.debug(log)
+    attributes = dict(log.attributes)
+    text_elements = {el.name: _get_nested(attributes, el.key) for el in translator}
+    for name, value in text_elements.items():
+        if value is None:
+            LOGGER.debug("Did not find value for message element: %s", name)
+    return SyslogMessage(
+        facility=facility,
+        service_level=service_level,
+        severity=_SEVERITY_MAPPER[log.attributes.status],
+        timestamp=dateutil_parser.isoparse(log.attributes.timestamp).timestamp(),
+        host_name=log.attributes.host,
+        application=log.attributes.service,
+        text=_sanitize_event_text(
+            ", ".join(
+                f"{name}={_sanitize_log_text(repr(value))}"
+                for name, value in text_elements.items()
+                if value is not None
+            )
+        ),
+    )
+
+
+def _forward_logs_to_ec(
+    logs: Iterable[Log],
+    facility: int,
+    service_level: int,
+    translator: Sequence[LogMessageElement],
+) -> None:
+    SyslogForwarderUnixSocket().forward(
+        _log_to_syslog_message(
+            log,
+            facility,
+            service_level,
+            translator,
+        )
+        for log in logs
+    )
+
+
 def _monitors_section(
     datadog_api: DatadogAPI,
     args: Args,
@@ -454,6 +705,27 @@ def _events_section(datadog_api: DatadogAPI, args: Args) -> None:
         writer.append(len(events))
 
 
+def _logs_section(datadog_api: DatadogAPI, args: Args) -> None:
+    LOGGER.debug("Querying logs")
+    logs = list(
+        LogsQuerier(
+            datadog_api,
+            args.log_max_age,
+            query=args.log_query,
+            indexes=args.log_indexes,
+            hostname=args.hostname,
+        ).query_logs()
+    )
+    _forward_logs_to_ec(
+        logs,
+        facility=args.log_syslog_facility,
+        service_level=args.log_service_level,
+        translator=args.log_text,
+    )
+    with SectionWriter("datadog_logs") as writer:
+        writer.append(len(logs))
+
+
 def agent_datadog_main(args: Args) -> None:
     datadog_api = ImplDatadogAPI(
         args.api_host,
@@ -462,7 +734,7 @@ def agent_datadog_main(args: Args) -> None:
         proxy=args.proxy,
     )
     for section in args.sections:
-        {"monitors": _monitors_section, "events": _events_section,}[section](
+        {"monitors": _monitors_section, "events": _events_section, "logs": _logs_section}[section](
             datadog_api,
             args,
         )

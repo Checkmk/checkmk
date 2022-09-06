@@ -1,0 +1,13 @@
+Title: Datadog special agent: Add log forwarding to Event Console
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1662651964
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p13
+
+The Datadog special agent can now be configured to fetch logs from the Datadog API and forward them
+to the Event Console, similar to the events fetched from the Datadog API.

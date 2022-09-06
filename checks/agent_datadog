@@ -4,11 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping, Optional, Sequence, Union
+from collections.abc import Mapping, Sequence
+from typing import Any, Union
+
+
+def _to_text_args(pairs: Sequence[tuple[str, str]]) -> list[str]:
+    return [f"{name}:{key}" for name, key in pairs]
 
 
 def agent_datadog_arguments(
-    params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
+    params: Mapping[str, Any], hostname: str, ipaddress: Union[str, None]
 ) -> Sequence[Union[str, tuple[str, str, str]]]:
     args = [
         hostname,
@@ -62,6 +67,23 @@ def agent_datadog_arguments(
             "--event_service_level",
             str(events_config["service_level"]),
             *(["--event_add_text"] if events_config["add_text"] else []),
+        ]
+
+    if (logs_config := params.get("logs")) is not None:
+        sections.append("logs")
+        args += [
+            "--log_max_age",
+            str(logs_config["max_age"]),
+            "--log_query",
+            logs_config["query"],
+            "--log_indexes",
+            *logs_config["indexes"],
+            "--log_text",
+            *_to_text_args(logs_config["text"]),
+            "--log_syslog_facility",
+            str(logs_config["syslog_facility"]),
+            "--log_service_level",
+            str(logs_config["service_level"]),
         ]
 
     args += ["--sections"] + sections

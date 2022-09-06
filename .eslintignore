@@ -12,7 +12,6 @@ enterprise/web/htdocs/js/modules/figures/cmk_timeseries.*s
 enterprise/web/htdocs/js/modules/figures/cmk_alert_statistics.*s
 enterprise/web/htdocs/js/modules/figures/cmk_gauge.*s
 enterprise/web/htdocs/js/modules/figures/cmk_barplot.*s
-enterprise/web/htdocs/js/modules/figures/cmk_inventory.*s
 enterprise/web/htdocs/js/modules/figures/cmk_state.*s
 web/htdocs/js/modules/node_visualization/node_visualization_layout.*s
 web/htdocs/js/modules/node_visualization/node_visualization_infobox.*s

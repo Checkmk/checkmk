@@ -5,7 +5,6 @@
 
 from logging import Logger
 
-from cmk.gui import visuals
 from cmk.gui.plugins.dashboard.utils import get_all_dashboards
 from cmk.gui.view_store import get_all_views
 
@@ -15,12 +14,12 @@ from cmk.update_config.registry import update_action_registry, UpdateAction
 
 class UpdateViews(UpdateAction):
     def __call__(self, logger: Logger) -> None:
-        update_visuals(visuals.VisualType.views, get_all_views())
+        update_visuals("views", get_all_views())
 
 
 class UpdateDashboards(UpdateAction):
     def __call__(self, logger: Logger) -> None:
-        update_visuals(visuals.VisualType.dashboards, get_all_dashboards())
+        update_visuals("dashboards", get_all_dashboards())
 
 
 update_action_registry.register(

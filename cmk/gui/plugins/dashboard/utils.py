@@ -855,7 +855,7 @@ class DashboardStore:
     def _load_all(self) -> Dict[Tuple[UserId, DashboardName], DashboardConfig]:
         """Loads all definitions from disk and returns them"""
         return visuals.load(
-            visuals.VisualType.dashboards,
+            "dashboards",
             builtin_dashboards,
             _internal_dashboard_to_runtime_dashboard,
         )
@@ -868,7 +868,7 @@ class DashboardStore:
 
 
 def save_all_dashboards() -> None:
-    visuals.save(visuals.VisualType.dashboards, get_all_dashboards())
+    visuals.save("dashboards", get_all_dashboards())
 
 
 def get_all_dashboards() -> Dict[Tuple[UserId, DashboardName], DashboardConfig]:

@@ -13,7 +13,6 @@ import re
 import sys
 import traceback
 from collections.abc import Mapping
-from enum import Enum
 from itertools import chain, starmap
 from pathlib import Path
 from typing import (
@@ -21,10 +20,10 @@ from typing import (
     Callable,
     Dict,
     Final,
+    get_args,
     Iterable,
     Iterator,
     List,
-    Literal,
     Optional,
     Sequence,
     Set,
@@ -137,12 +136,6 @@ from cmk.gui.valuespec import (
 )
 
 CustomUserVisuals = Dict[Tuple[UserId, VisualName], Dict]
-
-
-class VisualType(Enum):
-    views: VisualTypeName = "views"
-    dashboards: VisualTypeName = "dashboards"
-    reports: VisualTypeName = "reports"
 
 
 T = TypeVar("T")
@@ -277,7 +270,7 @@ def declare_visual_permissions(what, what_plural):
 
 
 def save(  # type:ignore[no-untyped-def]
-    what: VisualType, visuals, user_id=None
+    what: VisualTypeName, visuals, user_id=None
 ):
     if user_id is None:
         user_id = user.id
@@ -287,12 +280,12 @@ def save(  # type:ignore[no-untyped-def]
     for (owner_id, name), visual in visuals.items():
         if user_id == owner_id:
             uservisuals[name] = visual
-    save_user_file("user_" + what.value, uservisuals, user_id=user_id)
+    save_user_file("user_" + what, uservisuals, user_id=user_id)
     _CombinedVisualsCache(what).invalidate_cache()
 
 
 def load(
-    what: VisualType,
+    what: VisualTypeName,
     builtin_visuals: Dict[Any, Any],
     internal_to_runtime_transformer: Callable[[dict[str, Any]], Visual],
     skip_func: Callable[[Visual], bool] = lambda _v: False,
@@ -400,12 +393,12 @@ def cleanup_context_filters(  # type:ignore[no-untyped-def]
 class _CombinedVisualsCache:
     _visuals_cache_dir: Final[Path] = Path(cmk.utils.paths.tmp_dir) / "visuals_cache"
 
-    def __init__(self, visual_type: VisualType) -> None:
-        self._visual_type: Final[VisualType] = visual_type
+    def __init__(self, visual_type: VisualTypeName) -> None:
+        self._visual_type: Final = visual_type
 
     @classmethod
     def invalidate_all_caches(cls) -> None:
-        for visual_type in VisualType:
+        for visual_type in get_args(VisualTypeName):
             _CombinedVisualsCache(visual_type).invalidate_cache()
 
     def invalidate_cache(self) -> None:
@@ -418,11 +411,11 @@ class _CombinedVisualsCache:
 
     @property
     def _info_filename(self) -> Path:
-        return self._visuals_cache_dir / f"last_update_{self._visual_type.value}"
+        return self._visuals_cache_dir / f"last_update_{self._visual_type}"
 
     @property
     def _content_filename(self) -> Path:
-        return self._visuals_cache_dir / f"cached_{self._visual_type.value}"
+        return self._visuals_cache_dir / f"cached_{self._visual_type}"
 
     def load(
         self,
@@ -455,7 +448,7 @@ class _CombinedVisualsCache:
         skip_func: Callable[[Visual], bool],
     ) -> CustomUserVisuals:
         visuals = _load_custom_user_visuals(
-            self._visual_type.value, internal_to_runtime_transformer, skip_func
+            self._visual_type, internal_to_runtime_transformer, skip_func
         )
         self._write_to_cache(visuals)
         return visuals
@@ -676,7 +669,7 @@ def get_permissioned_visual(
 # We need to convert all existing page types (views, dashboards, reports)
 # to pagetypes.py and then remove this function!
 def page_list(  # pylint: disable=too-many-branches
-    what: Literal["dashboards", "views", "reports"],
+    what: VisualTypeName,
     title: str,
     visuals: dict[Tuple[UserId, VisualName], Visual],
     custom_columns: Iterable[tuple[HTMLContent, Callable[[Visual], HTMLContent]]] | None = None,
@@ -743,7 +736,7 @@ def page_list(  # pylint: disable=too-many-branches
                 check_deletable_handler(visuals, user_id, delname)
 
             del visuals[(user_id, delname)]
-            save(VisualType(what), visuals, user_id)
+            save(what, visuals, user_id)
             flash(_("Your %s has been deleted.") % visual_type.title)
             html.reload_whole_page()
         except MKUserError as e:
@@ -1228,7 +1221,7 @@ def _vs_general(  # type:ignore[no-untyped-def]
 
 
 def page_edit_visual(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branches
-    what: Literal["dashboards", "views", "reports"],
+    what: VisualTypeName,
     all_visuals: Dict[Tuple[UserId, VisualName], Visual],
     custom_field_handler=None,
     create_handler=None,
@@ -1465,7 +1458,7 @@ def page_edit_visual(  # type:ignore[no-untyped-def] # pylint: disable=too-many-
                             back_url = back_url.replace(
                                 varstring + oldname, varstring + visual["name"]
                             )
-                    save(VisualType(what), all_visuals, owner_user_id)
+                    save(what, all_visuals, owner_user_id)
 
                 if not request.var("save_and_view"):
                     flash(_("Your %s has been saved.") % visual_type.title)
@@ -2158,7 +2151,7 @@ def missing_context_filters(
 
 
 def visual_title(
-    what: VisualTypeName, visual: Visual, context: VisualContext, skip_title_context: bool = False
+    what: str, visual: Visual, context: VisualContext, skip_title_context: bool = False
 ) -> str:
     title = _u(visual["title"])
 

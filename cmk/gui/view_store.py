@@ -44,7 +44,7 @@ class ViewStore:
         """Loads all view definitions from disk and returns them"""
         # Skip views which do not belong to known datasources
         return visuals.load(
-            visuals.VisualType.views,
+            "views",
             multisite_builtin_views,
             _internal_view_to_runtime_view,
             skip_func=lambda v: v["datasource"] not in data_source_registry,

@@ -1,0 +1,13 @@
+Title: check_mk_agent.solaris: Use "/usr/xpg4/bin/grep" if available
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1662450291
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+
+

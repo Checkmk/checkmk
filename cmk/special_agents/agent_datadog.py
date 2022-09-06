@@ -14,7 +14,18 @@ import logging
 import re
 import time
 from pathlib import Path
-from typing import Any, Dict, FrozenSet, Iterable, Mapping, Optional, Sequence, Tuple, Union
+from typing import (
+    Any,
+    Dict,
+    FrozenSet,
+    Iterable,
+    Mapping,
+    Optional,
+    Protocol,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 import requests
 
@@ -158,7 +169,16 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
     return parser.parse_args(argv)
 
 
-class DatadogAPI:
+class DatadogAPI(Protocol):
+    def get_request_json_decoded(
+        self,
+        api_endpoint: str,
+        params: Mapping[str, Any],
+    ) -> Any:
+        pass
+
+
+class ImplDatadogAPI:
     def __init__(
         self,
         api_host: str,
@@ -423,7 +443,7 @@ def _events_section(datadog_api: DatadogAPI, args: Args) -> None:
 
 
 def agent_datadog_main(args: Args) -> None:
-    datadog_api = DatadogAPI(
+    datadog_api = ImplDatadogAPI(
         args.api_host,
         args.api_key,
         args.app_key,

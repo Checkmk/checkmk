@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Sequence
+from typing import Any, Mapping, Sequence
 
 import pytest
 from pytest import MonkeyPatch
@@ -11,7 +11,6 @@ from pytest import MonkeyPatch
 from cmk.special_agents import agent_datadog
 from cmk.special_agents.agent_datadog import (
     _event_to_syslog_message,
-    DatadogAPI,
     DatadogAPIResponse,
     EventsQuerier,
     MonitorsQuerier,
@@ -53,20 +52,23 @@ def test_parse_arguments() -> None:
     )
 
 
-@pytest.fixture(name="datadog_api")
-def fixture_datadog_api() -> DatadogAPI:
-    return DatadogAPI(
-        "api_host",
-        "api_key",
-        "app_key",
-    )
+class MockDatadogAPI:
+    def __init__(self, page_to_data: Mapping[int, list | Mapping]) -> None:
+        self.page_to_data = page_to_data
+
+    def get_request_json_decoded(
+        self,
+        api_endpoint: str,
+        params: Mapping[str, Any],
+    ) -> Any:
+        if (resp := self.page_to_data.get(params["page"])) is not None:
+            return resp
+        raise RuntimeError
 
 
 class TestMonitorsQuerier:
     def test_query_monitors(
         self,
-        monkeypatch: MonkeyPatch,
-        datadog_api: DatadogAPI,
     ) -> None:
         # note: this data is of course incomplete, but sufficient for this test
         monitors_data = [
@@ -81,18 +83,7 @@ class TestMonitorsQuerier:
             },
         ]
 
-        def patch_get_request_json_decoded(_api_endpoint, params):
-            if params["page"] == 0:
-                return monitors_data
-            if params["page"] == 1:
-                return []
-            raise RuntimeError
-
-        monkeypatch.setattr(
-            datadog_api,
-            "get_request_json_decoded",
-            patch_get_request_json_decoded,
-        )
+        datadog_api = MockDatadogAPI(page_to_data={0: monitors_data, 1: []})
 
         assert (
             list(
@@ -106,11 +97,14 @@ class TestMonitorsQuerier:
 
 
 class TestEventsQuerier:
-    @pytest.fixture(name="events_querier")
-    def fixture_events_querier(
+    @pytest.fixture(name="datadog_api")
+    def fixture_datadog_api(
         self,
-        datadog_api: DatadogAPI,
-    ) -> EventsQuerier:
+    ) -> MockDatadogAPI:
+        return MockDatadogAPI(page_to_data={})
+
+    @pytest.fixture(name="events_querier")
+    def fixture_events_querier(self, datadog_api: MockDatadogAPI) -> EventsQuerier:
         return EventsQuerier(
             datadog_api,
             "host_name",
@@ -154,22 +148,10 @@ class TestEventsQuerier:
     @pytest.fixture(name="patch_get_request")
     def fixture_patch_get_request(
         self,
-        monkeypatch: MonkeyPatch,
-        events_querier: EventsQuerier,
+        datadog_api: MockDatadogAPI,
         events: Sequence[DatadogAPIResponse],
     ) -> None:
-        def patch_get_request_json_decoded(_api_endpoint, params):
-            if params["page"] == 0:
-                return {"events": events}
-            if params["page"] == 1:
-                return {"events": []}
-            raise RuntimeError
-
-        monkeypatch.setattr(
-            events_querier._datadog_api,
-            "get_request_json_decoded",
-            patch_get_request_json_decoded,
-        )
+        datadog_api.page_to_data = {0: {"events": events}, 1: {"events": []}}
 
     @pytest.mark.usefixtures("patch_get_request")
     def test_query_events_no_previous_ids(

@@ -131,7 +131,7 @@ mega_menu_registry.register(
         icon="main_user",
         sort_index=20,
         topics=_user_menu_topics,
-        info_line=lambda: f"{user.id} ({user.baserole_id})",
+        info_line=lambda: f"{user.id} ({'+'.join(user.role_ids)})",
     )
 )
 

@@ -1,0 +1,13 @@
+Title: Fix role ID in user menu
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1662457836
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p12
+
+If a role was copied, the name of the source role was shown in the user menu
+for the logged in user.

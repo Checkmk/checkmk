@@ -269,14 +269,14 @@ def test_email_validation_raises(address: str) -> None:
 class TestOptional:
     def test_transform_value(self) -> None:
         opt_vs = vs.Optional(
-            valuespec=vs.Transform(
+            valuespec=vs.Migrate(
                 valuespec=vs.Dictionary(
                     elements=[
                         ("a", vs.TextInput()),
                         ("b", vs.Age()),
                     ]
                 ),
-                forth=lambda p: {k: v + 10 if k == "b" else v for k, v in p.items()},
+                migrate=lambda p: {k: v + 10 if k == "b" else v for k, v in p.items()},
             )
         )
         assert opt_vs.transform_value(None) is None

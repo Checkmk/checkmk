@@ -6135,14 +6135,27 @@ class Transform(ValueSpec[T]):
 
     back:  Converts a value created by the encapsulated ValueSpec back to
            the outer representation.
+
+    Use cases:
+    * When the value of the valuespec is used by some external tool, and that
+      tool expects a different value format: You already know that a vs.Age will
+      be consumed by a tool that expects minutes instead of Seconds. Then you
+      can use a Transform to transparently transform this value so it can be
+      consumed without additional calculations.
+    * When you can not decide if you already transformed the value or not:
+      Imagine a vs.Integer that contained minutes, but was then replaced by a
+      vs.Age (for better UI) which stores the duration in seconds:
+      We only got an integer value and can not know if it's seconds or minutes.
+      So we make sure it is saved as minutes on the disc, and transform it back
+      and forth each time we load or save the value.
     """
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
         valuespec: ValueSpec[T],
         *,
-        back: Callable[[T], Any] = lambda v: v,
-        forth: Callable[[Any], T] = lambda v: v,
+        back: Callable[[T], Any],
+        forth: Callable[[Any], T],
         title: str | None = None,
         help: ValueSpecHelp | None = None,
         default_value: ValueSpecDefault[Any] = DEF_VALUE,
@@ -6205,6 +6218,59 @@ class Transform(ValueSpec[T]):
 
     def value_from_json(self, json_value: JSONValue) -> Any:
         return self.back(self._valuespec.value_from_json(json_value))
+
+
+class Migrate(Transform[T]):
+    """Migrates a value from a legacy format to the current format while
+    being completely transparent to the user
+
+    migrate: Converts a value from a legacy format (e.g. as it was read from a
+             .mk file) to the format that is processable by the encapsulated
+             ValueSpec (e.g. for rendering).
+    """
+
+    def __init__(  # pylint: disable=redefined-builtin
+        self,
+        valuespec: ValueSpec[T],
+        *,
+        migrate: Callable[[Any], T],
+        title: str | None = None,
+        help: ValueSpecHelp | None = None,
+        default_value: ValueSpecDefault[T] = DEF_VALUE,
+        validate: ValueSpecValidateFunc[T] | None = None,
+    ):
+        super().__init__(
+            valuespec=valuespec,
+            forth=migrate,
+            back=lambda v: v,
+            title=title,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
+
+
+class Transparent(Transform[T]):
+    """Transparenly changes the title or the help of a wrapped ValueSpec"""
+
+    def __init__(  # pylint: disable=redefined-builtin
+        self,
+        valuespec: ValueSpec[T],
+        *,
+        title: str | None = None,
+        help: ValueSpecHelp | None = None,
+        default_value: ValueSpecDefault[T] = DEF_VALUE,
+        validate: ValueSpecValidateFunc[T] | None = None,
+    ):
+        super().__init__(
+            valuespec=valuespec,
+            forth=lambda v: v,
+            back=lambda v: v,
+            title=title,
+            help=help,
+            default_value=default_value,
+            validate=validate,
+        )
 
 
 class LDAPDistinguishedName(TextInput):

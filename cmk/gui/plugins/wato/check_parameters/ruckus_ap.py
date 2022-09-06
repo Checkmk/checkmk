@@ -15,8 +15,8 @@ from cmk.gui.valuespec import (
     Dictionary,
     FixedValue,
     Integer,
+    Migrate,
     TextInput,
-    Transform,
     Tuple,
 )
 
@@ -39,7 +39,7 @@ def _transform_forth(params: Union[tuple, dict]) -> dict:
 
 
 def _parameter_valuespec_ruckus_ap():
-    return Transform(
+    return Migrate(
         valuespec=Dictionary(
             elements=[
                 (
@@ -100,7 +100,7 @@ def _parameter_valuespec_ruckus_ap():
                 ),
             ]
         ),
-        forth=_transform_forth,
+        migrate=_transform_forth,
     )
 
 

@@ -15,6 +15,7 @@ from cmk.gui.valuespec import (
     FixedValue,
     Integer,
     ListOf,
+    Migrate,
     RegExp,
     TextInput,
     Transform,
@@ -87,7 +88,7 @@ rulespec_registry.register(
 
 
 def _valuespec_sap_value_groups():
-    return Transform(
+    return Migrate(
         valuespec=Dictionary(
             title=_("SAP R/3 grouped values discovery"),
             elements=[
@@ -129,7 +130,7 @@ def _valuespec_sap_value_groups():
                 "That check monitors a list of SAP values at once."
             ),
         ),
-        forth=lambda p: p if isinstance(p, dict) else {"grouping_patterns": p},
+        migrate=lambda p: p if isinstance(p, dict) else {"grouping_patterns": p},
     )
 
 

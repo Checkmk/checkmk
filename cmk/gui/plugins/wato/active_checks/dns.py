@@ -18,8 +18,8 @@ from cmk.gui.valuespec import (
     Float,
     Integer,
     ListOfStrings,
+    Migrate,
     TextInput,
-    Transform,
     Tuple,
 )
 
@@ -64,7 +64,7 @@ def __transform_legacy_optional_params(optional_params: Mapping[str, Any]) -> Ma
 
 
 def _valuespec_active_checks_dns():
-    return Transform(
+    return Migrate(
         valuespec=Dictionary(
             title=_("Check DNS service"),
             help=_(
@@ -169,7 +169,7 @@ def _valuespec_active_checks_dns():
             ],
             required_keys=["hostname", "server"],
         ),
-        forth=_transform_check_dns_settings,
+        migrate=_transform_check_dns_settings,
     )
 
 

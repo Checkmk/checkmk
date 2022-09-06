@@ -13,8 +13,8 @@ from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
     FixedValue,
+    Migrate,
     TextInput,
-    Transform,
     Tuple,
     ValueSpec,
 )
@@ -52,7 +52,7 @@ class DisableNotificationsUserAttribute(UserAttribute):
         return "personal"
 
     def valuespec(self) -> ValueSpec:
-        return Transform(
+        return Migrate(
             valuespec=Dictionary(
                 title=_("Disable notifications"),
                 help=_(
@@ -83,7 +83,7 @@ class DisableNotificationsUserAttribute(UserAttribute):
                     ),
                 ],
             ),
-            forth=lambda x: {} if x is None else x,
+            migrate=lambda x: {} if x is None else x,
         )
 
     def permission(self) -> None | str:
@@ -102,7 +102,7 @@ class StartURLUserAttribute(UserAttribute):
         return "personal"
 
     def valuespec(self) -> ValueSpec:
-        return Transform(
+        return Migrate(
             valuespec=Alternative(
                 title=_("Start URL to display in main frame"),
                 orientation="horizontal",
@@ -126,7 +126,7 @@ class StartURLUserAttribute(UserAttribute):
                     ),
                 ],
             ),
-            forth=lambda v: None if v == "" else v,
+            migrate=lambda v: None if v == "" else v,
         )
 
     def domain(self) -> str:

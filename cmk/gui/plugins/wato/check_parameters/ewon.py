@@ -11,11 +11,11 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersEnvironment,
 )
-from cmk.gui.valuespec import Dictionary, DropdownChoice, Percentage, TextInput, Transform, Tuple
+from cmk.gui.valuespec import Dictionary, DropdownChoice, Migrate, Percentage, TextInput, Tuple
 
 
 def _valuespec_ewon_discovery_rules():
-    return Transform(
+    return Migrate(
         Dictionary(
             title=_("eWON discovery"),
             elements=[
@@ -38,7 +38,7 @@ def _valuespec_ewon_discovery_rules():
             ],
             optional_keys=[],
         ),
-        forth=lambda x: x if isinstance(x, dict) else {"device": x},
+        migrate=lambda x: x if isinstance(x, dict) else {"device": x},
     )
 
 

@@ -16,9 +16,9 @@ from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,
     Integer,
+    Migrate,
     Percentage,
     TextInput,
-    Transform,
     Tuple,
 )
 
@@ -85,7 +85,7 @@ def _multipath_lower_levels():
 
 
 def _parameter_valuespec_multipath():
-    return Transform(
+    return Migrate(
         valuespec=Dictionary(
             help=_(
                 "This rules sets the expected number of active paths for a multipath LUN "
@@ -95,7 +95,7 @@ def _parameter_valuespec_multipath():
                 ("levels", _multipath_lower_levels()),
             ],
         ),
-        forth=lambda p: p if isinstance(p, dict) else {"levels": p},
+        migrate=lambda p: p if isinstance(p, dict) else {"levels": p},
     )
 
 

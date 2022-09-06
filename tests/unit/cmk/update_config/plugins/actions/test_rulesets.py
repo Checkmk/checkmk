@@ -13,7 +13,7 @@ from cmk.utils.type_defs import CheckPluginName, RulesetName, RuleValue
 from cmk.utils.version import is_raw_edition
 
 import cmk.gui.watolib.timeperiods as timeperiods
-from cmk.gui.valuespec import Dictionary, Float, Transform
+from cmk.gui.valuespec import Dictionary, Float, Migrate
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.rulesets import Rule, Ruleset, RulesetCollection
 from cmk.gui.watolib.rulespec_groups import RulespecGroupMonitoringConfigurationVarious
@@ -27,14 +27,14 @@ def fixture_ui_context(ui_context: None) -> Iterator[None]:
     yield
 
 
-@pytest.fixture(name="rulespec_with_transform")
-def fixture_rulespec_with_transform() -> Rulespec:
+@pytest.fixture(name="rulespec_with_migration")
+def fixture_rulespec_with_migration() -> Rulespec:
     return Rulespec(
-        name="rulespec_with_transform",
+        name="rulespec_with_migration",
         group=RulespecGroupMonitoringConfigurationVarious,
         title=None,
-        valuespec=lambda: Transform(
-            Dictionary(
+        valuespec=lambda: Migrate(
+            valuespec=Dictionary(
                 elements=[
                     (
                         "key",
@@ -43,7 +43,7 @@ def fixture_rulespec_with_transform() -> Rulespec:
                 ],
                 optional_keys=False,
             ),
-            forth=lambda p: {"key": p["key"] + 1},
+            migrate=lambda p: {"key": p["key"] + 1},
         ),
         match_type="dict",
         item_type=None,
@@ -112,17 +112,17 @@ def _instantiate_ruleset(
 )
 @pytest.mark.usefixtures("request_context")
 def test_transform_wato_rulesets_params(
-    rulespec_with_transform: Rulespec,
+    rulespec_with_migration: Rulespec,
     param_value: RuleValue,
     transformed_param_value: RuleValue,
 ) -> None:
     ruleset = _instantiate_ruleset(
-        rulespec_with_transform.name,
+        rulespec_with_migration.name,
         param_value,
-        rulespec=rulespec_with_transform,
+        rulespec=rulespec_with_migration,
     )
     rulesets = RulesetCollection()
-    rulesets.set_rulesets({rulespec_with_transform.name: ruleset})
+    rulesets.set_rulesets({rulespec_with_migration.name: ruleset})
 
     rulesets_updater._transform_wato_rulesets_params(getLogger(), rulesets)
 
@@ -141,7 +141,7 @@ def test_transform_wato_rulesets_params(
 )
 @pytest.mark.usefixtures("request_context")
 def test_transform_replaced_wato_rulesets_and_params(
-    rulespec_with_transform: Rulespec,
+    rulespec_with_migration: Rulespec,
     replaced_rulespec: Rulespec,
     param_value: RuleValue,
     transformed_param_value: RuleValue,
@@ -154,10 +154,10 @@ def test_transform_replaced_wato_rulesets_and_params(
                 param_value,
                 rulespec=replaced_rulespec,
             ),
-            rulespec_with_transform.name: Ruleset(
-                rulespec_with_transform.name,
+            rulespec_with_migration.name: Ruleset(
+                rulespec_with_migration.name,
                 {},
-                rulespec=rulespec_with_transform,
+                rulespec=rulespec_with_migration,
             ),
         }
     )
@@ -165,7 +165,7 @@ def test_transform_replaced_wato_rulesets_and_params(
     rulesets_updater._transform_replaced_wato_rulesets(
         getLogger(),
         all_rulesets,
-        {replaced_rulespec.name: rulespec_with_transform.name},
+        {replaced_rulespec.name: rulespec_with_migration.name},
     )
     rulesets_updater._transform_wato_rulesets_params(
         getLogger(),
@@ -174,7 +174,7 @@ def test_transform_replaced_wato_rulesets_and_params(
 
     assert not all_rulesets.exists(replaced_rulespec.name)
 
-    rules = all_rulesets.get(rulespec_with_transform.name).get_rules()
+    rules = all_rulesets.get(rulespec_with_migration.name).get_rules()
     assert len(rules) == 1
 
     rule = rules[0]

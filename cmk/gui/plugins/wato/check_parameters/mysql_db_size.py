@@ -11,7 +11,7 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersApplications,
 )
 from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
-from cmk.gui.valuespec import Dictionary, Filesize, TextInput, Transform
+from cmk.gui.valuespec import Dictionary, Filesize, Migrate, TextInput
 
 
 def _item_spec_mysql_db_size():
@@ -30,7 +30,7 @@ def _transform(params: Union[dict, tuple[float, float]]) -> dict[str, tuple[floa
 
 
 def _parameter_valuespec_mysql_db_size():
-    return Transform(
+    return Migrate(
         valuespec=Dictionary(
             elements=[
                 (
@@ -47,7 +47,7 @@ def _parameter_valuespec_mysql_db_size():
             ],
             optional_keys=False,
         ),
-        forth=_transform,
+        migrate=_transform,
     )
 
 

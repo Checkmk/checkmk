@@ -18,10 +18,10 @@ from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
     FixedValue,
+    Migrate,
     MonitoringState,
     RegExp,
     TextInput,
-    Transform,
     Tuple,
 )
 
@@ -65,7 +65,7 @@ def _parameter_valuespec_checkmk_agent():
         elements=[
             (
                 "agent_version",
-                Transform(
+                Migrate(
                     valuespec=CascadingDropdown(
                         title=_("Check version of Checkmk agent"),
                         help=_(
@@ -124,7 +124,7 @@ def _parameter_valuespec_checkmk_agent():
                     ),
                     # In the past, this was a OptionalDropdownChoice() which values could be strings:
                     # ignore, site or a custom string representing a version number.
-                    forth=_transform_version_spec,
+                    migrate=_transform_version_spec,
                 ),
             ),
             (

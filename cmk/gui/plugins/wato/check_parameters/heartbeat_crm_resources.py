@@ -11,7 +11,7 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import Alternative, Dictionary, FixedValue, TextInput, Transform
+from cmk.gui.valuespec import Alternative, Dictionary, FixedValue, Migrate, TextInput
 
 
 def _transform_opt_string(
@@ -39,7 +39,7 @@ def _item_spec_heartbeat_crm_resources():
 
 
 def _parameter_valuespec_heartbeat_crm_resources():
-    return Transform(
+    return Migrate(
         Dictionary(
             elements=[
                 (
@@ -55,7 +55,7 @@ def _parameter_valuespec_heartbeat_crm_resources():
                 ),
             ],
         ),
-        forth=_transform_opt_string,
+        migrate=_transform_opt_string,
     )
 
 

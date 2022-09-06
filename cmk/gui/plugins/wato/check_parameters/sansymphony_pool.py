@@ -10,7 +10,7 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import TextInput, Transform
+from cmk.gui.valuespec import Migrate, TextInput
 
 
 def _transform_valuespec_sansymphony_pool(params):
@@ -23,14 +23,14 @@ def _transform_valuespec_sansymphony_pool(params):
 
 
 def _parameter_valuespec_sansymphony_pool():
-    return Transform(
+    return Migrate(
         valuespec=vs_filesystem(
             elements=[
                 FilesystemElements.levels_percent,
                 FilesystemElements.magic_factor,
             ]
         ),
-        forth=_transform_valuespec_sansymphony_pool,
+        migrate=_transform_valuespec_sansymphony_pool,
     )
 
 

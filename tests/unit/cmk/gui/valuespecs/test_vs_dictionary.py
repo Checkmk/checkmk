@@ -156,3 +156,8 @@ class TestValueSpecDictionary:
         assert vs.Dictionary(elements=[("the answer", vs.Password())]).mask(
             {"the answer": "42"}
         ) == {"the answer": "******"}
+
+    def test_transform_value(self) -> None:
+        assert vs.Dictionary(elements=[("a", vs.TextInput()),]).transform_value(
+            {"a": "lala"}
+        ) == {"a": "lala"}

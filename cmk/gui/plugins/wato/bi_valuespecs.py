@@ -522,13 +522,11 @@ class BIConfigCallARuleAction(actions.BICallARuleAction, ABCBIConfigAction):
         return Transform(
             valuespec=Tuple(
                 elements=[
-                    Transform(
-                        valuespec=CascadingDropdown(
-                            title=_("Rule:"),
-                            orientation="horizontal",
-                            choices=cls._allowed_rule_choices(),
-                            sorted=True,
-                        ),
+                    CascadingDropdown(
+                        title=_("Rule:"),
+                        orientation="horizontal",
+                        choices=cls._allowed_rule_choices(),
+                        sorted=True,
                     ),
                     ListOfStrings(
                         orientation="horizontal",

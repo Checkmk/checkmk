@@ -20,7 +20,7 @@ from cmk.gui.valuespec import (
     Float,
     Fontsize,
     ListChoice,
-    Transform,
+    Migrate,
     Tuple,
     ValueSpecHelp,
     ValueSpecValidateFunc,
@@ -59,13 +59,13 @@ def transform_graph_render_options(value):
 
 
 def vs_graph_render_options(default_values=None, exclude=None):
-    return Transform(
+    return Migrate(
         valuespec=Dictionary(
             elements=vs_graph_render_option_elements(default_values, exclude),
             optional_keys=[],
             title=_("Graph rendering options"),
         ),
-        forth=transform_graph_render_options,
+        migrate=transform_graph_render_options,
     )
 
 
@@ -112,9 +112,9 @@ def vs_graph_render_option_elements(default_values=None, exclude=None):
         ),
         (
             "title_format",
-            Transform(
+            Migrate(
                 valuespec=vs_title_infos(),
-                forth=transform_graph_render_options_title_format,
+                migrate=transform_graph_render_options_title_format,
             ),
         ),
         (

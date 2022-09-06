@@ -12,7 +12,7 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersEnvironment,
     simple_levels,
 )
-from cmk.gui.valuespec import Age, Dictionary, Transform
+from cmk.gui.valuespec import Age, Dictionary, Migrate
 
 
 def _transform(
@@ -25,7 +25,7 @@ def _transform(
 
 
 def _parameter_valuespec_ups_test():
-    return Transform(
+    return Migrate(
         Dictionary(
             elements=[
                 (
@@ -37,7 +37,7 @@ def _parameter_valuespec_ups_test():
                 ),
             ],
         ),
-        forth=_transform,
+        migrate=_transform,
     )
 
 

@@ -7,7 +7,7 @@
 import abc
 import time
 from datetime import datetime
-from typing import Any, Collection, Iterator, List, NamedTuple, Optional, overload
+from typing import Any, Collection, Iterator, List, Mapping, NamedTuple, Optional, overload
 from typing import Tuple as _Tuple
 from typing import Type, Union
 
@@ -71,11 +71,10 @@ from cmk.gui.valuespec import (
     ListChoice,
     ListOf,
     ListOfStrings,
-    Mapping,
+    Migrate,
     RegExp,
     rule_option_elements,
     TextInput,
-    Transform,
     Tuple,
 )
 from cmk.gui.wato.pages.user_profile.async_replication import user_profile_async_replication_dialog
@@ -204,7 +203,7 @@ class ABCNotificationsMode(ABCEventsMode):
                             elements=[
                                 (
                                     "match_rule_id",
-                                    Transform(
+                                    Migrate(
                                         valuespec=ListOf(
                                             valuespec=ID(
                                                 title=_("Match event rule"),
@@ -215,7 +214,7 @@ class ABCNotificationsMode(ABCEventsMode):
                                             add_label=_("Add Rule ID"),
                                             title=_("Rule IDs"),
                                         ),
-                                        forth=transform_ec_rule_id_match,
+                                        migrate=transform_ec_rule_id_match,
                                     ),
                                 ),
                                 (
@@ -1483,7 +1482,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 ),
                 (
                     "bulk",
-                    Transform(
+                    Migrate(
                         valuespec=CascadingDropdown(
                             title="Notification Bulking",
                             orientation="vertical",
@@ -1524,7 +1523,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                                 ),
                             ],
                         ),
-                        forth=self._transform_bulk,
+                        migrate=self._migrate_bulk,
                     ),
                 ),
             ],
@@ -1624,7 +1623,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 )
 
     @staticmethod
-    def _transform_bulk(
+    def _migrate_bulk(
         v: CascadingDropdownChoiceValue | Mapping[str, Any]
     ) -> CascadingDropdownChoiceValue:
         return v if isinstance(v, tuple) else ("always", v)

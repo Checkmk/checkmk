@@ -113,6 +113,7 @@ from cmk.gui.valuespec import (
     ListOf,
     ListOfMultiple,
     ListOfStrings,
+    Migrate,
     MonitoredHostname,
     Password,
     Percentage,
@@ -355,7 +356,7 @@ def _snmpv1_v2_credentials_element() -> ValueSpec:
 
 
 def _snmpv3_no_auth_no_priv_credentials_element() -> ValueSpec:
-    return Transform(
+    return Migrate(
         valuespec=Tuple(
             title=_("Credentials for SNMPv3 without authentication and privacy (noAuthNoPriv)"),
             elements=[
@@ -367,7 +368,7 @@ def _snmpv3_no_auth_no_priv_credentials_element() -> ValueSpec:
                 TextInput(title=_("Security name"), allow_empty=False),
             ],
         ),
-        forth=lambda x: x if (x and len(x) == 2) else ("noAuthNoPriv", ""),
+        migrate=lambda x: x if (x and len(x) == 2) else ("noAuthNoPriv", ""),
     )
 
 
@@ -529,7 +530,7 @@ def translation_elements(what: str) -> List[_Tuple[str, ValueSpec]]:
         ),
         (
             "regex",
-            Transform(
+            Migrate(
                 valuespec=ListOf(
                     valuespec=Tuple(
                         orientation="horizontal",
@@ -567,7 +568,7 @@ def translation_elements(what: str) -> List[_Tuple[str, ValueSpec]]:
                     add_label=_("Add expression"),
                     movable=False,
                 ),
-                forth=lambda x: isinstance(x, tuple) and [x] or x,
+                migrate=lambda x: isinstance(x, tuple) and [x] or x,
             ),
         ),
         (
@@ -733,15 +734,15 @@ def TransformToIndividualOrStoredPassword(  # pylint: disable=redefined-builtin
     help: _Optional[ValueSpecHelp] = None,
     allow_empty: bool = True,
     size: int = 25,
-) -> Transform:
-    return Transform(
+) -> Migrate:
+    return Migrate(
         valuespec=IndividualOrStoredPassword(
             title=title,
             help=help,
             allow_empty=allow_empty,
             size=size,
         ),
-        forth=lambda v: ("password", v) if not isinstance(v, tuple) else v,
+        migrate=lambda v: ("password", v) if not isinstance(v, tuple) else v,
     )
 
 

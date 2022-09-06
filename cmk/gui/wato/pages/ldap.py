@@ -69,9 +69,9 @@ from cmk.gui.valuespec import (
     Integer,
     LDAPDistinguishedName,
     ListOfStrings,
+    Migrate,
     rule_option_elements,
     TextInput,
-    Transform,
     Tuple,
 )
 from cmk.gui.watolib.audit_log import LogMessage
@@ -94,7 +94,7 @@ else:
 #   '----------------------------------------------------------------------'
 
 
-class LDAPConnectionValuespec(Transform):
+class LDAPConnectionValuespec(Migrate):
     def __init__(self, new, connection_id) -> None:  # type:ignore[no-untyped-def]
         self._new = new
         self._connection_id = connection_id
@@ -144,7 +144,7 @@ class LDAPConnectionValuespec(Transform):
             validate=self._validate_ldap_connection,
         )
 
-        super().__init__(valuespec=valuespec, forth=LDAPUserConnector.transform_config)
+        super().__init__(valuespec=valuespec, migrate=LDAPUserConnector.transform_config)
 
     def _general_elements(self) -> List[DictionaryEntry]:
         general_elements: List[DictionaryEntry] = []
@@ -506,7 +506,7 @@ class LDAPConnectionValuespec(Transform):
             ),
             (
                 "user_id_umlauts",
-                Transform(
+                Migrate(
                     valuespec=DropdownChoice(
                         title=_("Umlauts in User-IDs (deprecated)"),
                         help=_(
@@ -522,7 +522,7 @@ class LDAPConnectionValuespec(Transform):
                         ],
                         default_value="keep",
                     ),
-                    forth=lambda x: "keep" if (x == "skip") else x,
+                    migrate=lambda x: "keep" if (x == "skip") else x,
                 ),
             ),
             (

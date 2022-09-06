@@ -30,7 +30,7 @@ from cmk.gui.valuespec import (
     JSONValue,
     ListOf,
     OptionalDropdownChoice,
-    Transform,
+    Transparent,
     Tuple,
     ValueSpec,
     ValueSpecDefault,
@@ -1120,7 +1120,7 @@ class TimeperiodValuespec(ValueSpec[dict[str, Any]]):
             elements=[
                 (
                     self.tp_default_value_key,
-                    Transform(
+                    Transparent(
                         valuespec=self._enclosed_valuespec,
                         title=_("Default parameters when no timeperiod matches"),
                     ),

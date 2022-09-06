@@ -90,6 +90,7 @@ from cmk.gui.valuespec import (
     ListOfStrings,
     ListOfTimeRanges,
     LogLevelChoice,
+    Migrate,
     MonitoringState,
     Optional,
     PasswordSpec,
@@ -1045,7 +1046,7 @@ class ConfigVariableAuthByHTTPHeader(ConfigVariable):
         return "auth_by_http_header"
 
     def valuespec(self) -> ValueSpec:
-        return Transform(
+        return Migrate(
             Optional(
                 valuespec=TextInput(
                     label=_("HTTP request header variable"),
@@ -1078,7 +1079,7 @@ class ConfigVariableAuthByHTTPHeader(ConfigVariable):
                 indent=False,
             ),
             # We accidentally used False instead of None in the past.
-            forth=lambda x: None if x is False else x,
+            migrate=lambda x: None if x is False else x,
         )
 
 
@@ -2196,7 +2197,7 @@ class ConfigVariableLockOnLogonFailures(ConfigVariable):
         return "lock_on_logon_failures"
 
     def valuespec(self) -> ValueSpec:
-        return Transform(
+        return Migrate(
             Optional(
                 valuespec=Integer(
                     label=_("Number of logon failures to lock the account"),
@@ -2215,7 +2216,7 @@ class ConfigVariableLockOnLogonFailures(ConfigVariable):
                 ),
             ),
             # We accidentally used False instead of None in the past.
-            forth=lambda x: None if x is False else x,
+            migrate=lambda x: None if x is False else x,
         )
 
 
@@ -3701,7 +3702,7 @@ rulespec_registry.register(
 
 
 def _valuespec_extra_host_conf_notification_interval():
-    return Transform(
+    return Migrate(
         Optional(
             valuespec=Float(
                 minvalue=0.05,
@@ -3719,7 +3720,7 @@ def _valuespec_extra_host_conf_notification_interval():
             none_label=_("disabled"),
         ),
         # We used 0.0 instead of None in the past to signal "no periodic host notifications".
-        forth=lambda x: x if x else None,
+        migrate=lambda x: x if x else None,
     )
 
 
@@ -3733,7 +3734,7 @@ rulespec_registry.register(
 
 
 def _valuespec_extra_service_conf_notification_interval():
-    return Transform(
+    return Migrate(
         Optional(
             valuespec=Float(
                 minvalue=0.05, default_value=120.0, label=_("Interval:"), unit=_("minutes")
@@ -3748,7 +3749,7 @@ def _valuespec_extra_service_conf_notification_interval():
             none_label=_("disabled"),
         ),
         # We used 0.0 instead of None in the past to signal "no periodic service notifications".
-        forth=lambda x: x if x else None,
+        migrate=lambda x: x if x else None,
     )
 
 

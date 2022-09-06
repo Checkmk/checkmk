@@ -90,8 +90,8 @@ from cmk.gui.valuespec import (
     LDAPDistinguishedName,
     ListChoice,
     ListOf,
+    Migrate,
     TextInput,
-    Transform,
     Tuple,
 )
 
@@ -2431,9 +2431,9 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
             elements.append(
                 (
                     role_id,
-                    Transform(
+                    Migrate(
                         valuespec=ListOf(
-                            valuespec=Transform(
+                            valuespec=Migrate(
                                 valuespec=Tuple(
                                     elements=[
                                         LDAPDistinguishedName(
@@ -2449,7 +2449,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
                                     ],
                                 ),
                                 # convert old distinguished names to tuples
-                                forth=lambda v: (v,) if not isinstance(v, tuple) else v,
+                                migrate=lambda v: (v,) if not isinstance(v, tuple) else v,
                             ),
                             title=role["alias"],
                             help=_(
@@ -2461,7 +2461,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
                             movable=False,
                         ),
                         # convert old single distinguished names to list of :Ns
-                        forth=lambda v: [v] if not isinstance(v, list) else v,
+                        migrate=lambda v: [v] if not isinstance(v, list) else v,
                     ),
                 )
             )

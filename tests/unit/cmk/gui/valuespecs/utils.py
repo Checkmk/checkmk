@@ -40,3 +40,21 @@ def expect_validate_failure(
 
 def expect_validate_success(valuespec: vs.ValueSpec[T], value: T) -> None:
     validate(valuespec, value)
+
+
+def _validate_migrate_or_transform(valuespec: vs.Migrate | vs.Transform, value: object) -> None:
+    valuespec.validate_datatype(value, "varprefix")
+    valuespec.validate_value(value, "varprefix")
+
+
+def expect_validate_failure_migrate_or_transform(
+    valuespec: vs.Migrate | vs.Transform, value: object, *, match: str | None = None
+) -> None:
+    with pytest.raises(MKUserError, match=match):
+        _validate_migrate_or_transform(valuespec, value)
+
+
+def expect_validate_success_migrate_or_transform(
+    valuespec: vs.Migrate | vs.Transform, value: object
+) -> None:
+    _validate_migrate_or_transform(valuespec, value)

@@ -27,10 +27,10 @@ from cmk.gui.valuespec import (
     Float,
     Integer,
     ListOfStrings,
+    Migrate,
     NetworkPort,
     RegExp,
     TextInput,
-    Transform,
     Tuple,
 )
 
@@ -142,8 +142,8 @@ def _validate_active_check_http_name(value: str, varprefix: str) -> None:
         raise MKUserError(varprefix, _("Please provide a valid name"))
 
 
-def _valuespec_active_checks_http() -> Transform:
-    return Transform(
+def _valuespec_active_checks_http() -> Migrate:
+    return Migrate(
         Dictionary(
             title=_("Check HTTP service"),
             help=_(
@@ -498,7 +498,7 @@ def _valuespec_active_checks_http() -> Transform:
             required_keys=["name", "host", "mode"],
             validate=_active_checks_http_validate_all,
         ),
-        forth=_transform_forth,
+        migrate=_transform_forth,
     )
 
 

@@ -45,8 +45,8 @@ from cmk.gui.valuespec import (
     IPNetwork,
     ListChoice,
     ListOfStrings,
+    Migrate,
     TextInput,
-    Transform,
     Tuple,
 )
 from cmk.gui.watolib.config_domains import (
@@ -426,7 +426,7 @@ class CEESiteManagement(SiteManagement):
                     title=_("Connect directly, without Livestatus Proxy"),
                     totext="",
                 ),
-                Transform(
+                Migrate(
                     valuespec=Dictionary(
                         title=_("Use Livestatus Proxy Daemon"),
                         optional_keys=["tcp"],
@@ -469,7 +469,7 @@ class CEESiteManagement(SiteManagement):
                             ),
                         ],
                     ),
-                    forth=cls.transform_old_connection_params,
+                    migrate=cls.transform_old_connection_params,
                 ),
             ],
         )

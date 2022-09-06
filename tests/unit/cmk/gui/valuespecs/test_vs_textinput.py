@@ -61,3 +61,8 @@ class TestValueSpecTextInput:
         assert vs.TextInput().value_from_json(vs.TextInput().value_to_json("b")) == "b"
         assert vs.TextInput().value_from_json("c") == "c"
         assert vs.TextInput().value_to_json("d") == "d"
+
+    def test_transform_value(self) -> None:
+        valuespec = vs.TextInput()
+        assert valuespec.transform_value("lala") == "lala"
+        assert valuespec.transform_value("AAA") == "AAA"

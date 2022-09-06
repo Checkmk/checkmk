@@ -140,6 +140,7 @@ from cmk.gui.valuespec import (
     ListOf,
     ListOfStrings,
     LogLevelChoice,
+    Migrate,
     Optional,
     RegExp,
     rule_option_elements,
@@ -847,7 +848,7 @@ def vs_mkeventd_rule(customer=None):
                     ),
                     (
                         "merge",
-                        Transform(
+                        Migrate(
                             valuespec=CascadingDropdown(
                                 title=_("Merge with open event"),
                                 help=_(
@@ -886,7 +887,7 @@ def vs_mkeventd_rule(customer=None):
                                 default_value="open",
                             ),
                             # The "ackend" sub option was introduced with 1.6.0p20
-                            forth=lambda v: ("acked", True) if v == "acked" else v,
+                            migrate=lambda v: ("acked", True) if v == "acked" else v,
                         ),
                     ),
                 ],

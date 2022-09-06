@@ -18,12 +18,7 @@ import cmk.gui.visuals as visuals
 import cmk.gui.weblib as weblib
 from cmk.gui.alarm import play_alarm_sounds
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.command_utils import (
-    do_actions,
-    filter_selected_rows,
-    get_command_groups,
-    should_show_command_form,
-)
+from cmk.gui.command_utils import do_actions, get_command_groups, should_show_command_form
 from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
@@ -50,9 +45,9 @@ from cmk.gui.page_menu_utils import (
     get_context_page_menu_dropdowns,
     get_ntop_page_menu_dropdown,
 )
-from cmk.gui.plugins.views.utils import Command, PainterOptions, view_title
+from cmk.gui.plugins.views.utils import Command, PainterOptions, row_id, view_title
 from cmk.gui.plugins.visuals.utils import Filter
-from cmk.gui.type_defs import HTTPVariables, InfoName, Rows
+from cmk.gui.type_defs import HTTPVariables, InfoName, Rows, ViewSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import get_ntop_connection, is_ntop_configured
 from cmk.gui.utils.output_funnel import output_funnel
@@ -63,6 +58,14 @@ from cmk.gui.watolib.activate_changes import get_pending_changes_tooltip, has_pe
 
 if not cmk_version.is_raw_edition():
     from cmk.gui.cee.ntop.connector import get_cache  # pylint: disable=no-name-in-module
+
+
+def _filter_selected_rows(view_spec: ViewSpec, rows: Rows, selected_ids: List[str]) -> Rows:
+    action_rows: Rows = []
+    for row in rows:
+        if row_id(view_spec, row) in selected_ids:
+            action_rows.append(row)
+    return action_rows
 
 
 def show_filter_form(view: View, show_filters: List[Filter]) -> None:
@@ -157,14 +160,14 @@ class GUIViewRenderer(ABCViewRenderer):
             # There are one shot actions which only want to affect one row, filter the rows
             # by this id during actions
             if request.has_var("_row_id") and html.do_actions():
-                rows = filter_selected_rows(
+                rows = _filter_selected_rows(
                     view_spec, rows, [request.get_str_input_mandatory("_row_id")]
                 )
 
             # If we are currently within an action (confirming or executing), then
             # we display only the selected rows (if checkbox mode is active)
             elif show_checkboxes and html.do_actions():
-                rows = filter_selected_rows(
+                rows = _filter_selected_rows(
                     view_spec,
                     rows,
                     user.get_rowselection(weblib.selection_id(), "view-" + view_spec["name"]),
@@ -194,7 +197,7 @@ class GUIViewRenderer(ABCViewRenderer):
             # There are one shot actions which only want to affect one row, filter the rows
             # by this id during actions
             if request.has_var("_row_id") and html.do_actions():
-                rows = filter_selected_rows(
+                rows = _filter_selected_rows(
                     view_spec, rows, [request.get_str_input_mandatory("_row_id")]
                 )
 
@@ -246,7 +249,7 @@ class GUIViewRenderer(ABCViewRenderer):
             )
             row_info = "%d %s" % (row_count, _("row") if row_count == 1 else _("rows"))
             if show_checkboxes:
-                selected = filter_selected_rows(
+                selected = _filter_selected_rows(
                     view_spec,
                     rows,
                     user.get_rowselection(weblib.selection_id(), "view-" + view_spec["name"]),

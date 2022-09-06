@@ -22,7 +22,6 @@ from cmk.gui.plugins.views.utils import (
     CommandExecutor,
     CommandGroup,
     CommandSpec,
-    row_id,
 )
 from cmk.gui.type_defs import InfoName, Row, Rows, ViewSpec
 from cmk.gui.utils.confirm_with_preview import confirm_with_preview
@@ -226,11 +225,3 @@ def do_actions(  # pylint: disable=too-many-branches
         html.show_message(message)
 
     return True
-
-
-def filter_selected_rows(view_spec: ViewSpec, rows: Rows, selected_ids: List[str]) -> Rows:
-    action_rows: Rows = []
-    for row in rows:
-        if row_id(view_spec, row) in selected_ids:
-            action_rows.append(row)
-    return action_rows

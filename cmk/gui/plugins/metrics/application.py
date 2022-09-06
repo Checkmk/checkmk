@@ -606,6 +606,36 @@ metric_info["mobileiron_policyviolationcount"] = {
     "color": "42/a",
 }
 
+metric_info["mobileiron_last_build"] = {
+    "title": _l("Age of OS build version"),
+    "unit": "s",
+    "color": "#94b65a",
+}
+
+metric_info["mobileiron_last_patched"] = {
+    "title": _l("Age of security patch"),
+    "unit": "s",
+    "color": "#54b65a",
+}
+
+metric_info["mobileiron_devices_total"] = {
+    "title": _l("Total devices"),
+    "unit": "count",
+    "color": "#000000",
+}
+
+metric_info["mobileiron_non_compliant"] = {
+    "title": _l("Non-compliant devices"),
+    "unit": "count",
+    "color": "41/a",
+}
+
+metric_info["mobileiron_non_compliant_summary"] = {
+    "title": _l("Non-compliant devices"),
+    "unit": "%",
+    "color": "41/b",
+}
+
 # .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
@@ -663,4 +693,9 @@ graph_info["current_users"] = {
         "current_users:warn",
         "current_users:crit",
     ],
+}
+
+graph_info["mobileiron_compliances"] = {
+    "title": _l("Total non-compliant devices"),
+    "metrics": [("mobileiron_non_compliant", "stack"), ("mobileiron_devices_total", "line")],
 }

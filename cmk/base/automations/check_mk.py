@@ -10,6 +10,7 @@ import glob
 import io
 import operator
 import os
+import shlex
 import shutil
 import subprocess
 import sys
@@ -412,11 +413,17 @@ class AutomationRenameHosts(Automation):
 
     def _core_is_running(self) -> bool:
         if config.monitoring_core == "nagios":
-            command = nagios_startscript + " status >/dev/null 2>&1"
+            command = nagios_startscript + " status"
         else:
-            command = "omd status cmc >/dev/null 2>&1"
-        code = os.system(command)  # nosec
-        return not code
+            command = "omd status cmc"
+        return (
+            subprocess.call(
+                shlex.split(command),
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            == 0
+        )
 
     def _rename_host_files(  # pylint: disable=too-many-branches
         self,
@@ -1559,8 +1566,7 @@ class AutomationActiveCheck(Automation):
 
     def execute(self, args: List[str]) -> automation_results.ActiveCheckResult:
         hostname = HostName(args[0])
-        plugin, raw_item = args[1:]
-        item = raw_item
+        plugin, item = args[1:]
 
         config_cache = config.get_config_cache()
         host_config = config_cache.get_host_config(hostname)
@@ -1639,19 +1645,16 @@ class AutomationActiveCheck(Automation):
 
     def _execute_check_plugin(self, commandline: str) -> Tuple[ServiceState, ServiceDetails]:
         try:
-            p = os.popen(commandline + " 2>&1")  # nosec
-            output = p.read().strip()
-            ret = p.close()
-            if not ret:
-                status = 0
-            else:
-                if ret & 0xFF == 0:
-                    status = ret >> 8
-                else:
-                    status = 3
-            if status < 0 or status > 3:
-                status = 3
-            output = output.split("|", 1)[0]  # Drop performance data
+            result = subprocess.run(
+                shlex.split(commandline),
+                check=False,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+            )
+
+            status = result.returncode if result.returncode in [0, 1, 2] else 3
+            output = result.stdout.strip().decode().split("|", 1)[0]  # Drop performance data
+
             return status, output
 
         except Exception as e:

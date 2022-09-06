@@ -650,7 +650,7 @@ def _console_stream() -> TextIO:
     if os.path.exists("/usr/bin/less") and sys.stdout.isatty():
         # NOTE: We actually want to use subprocess.Popen here, but the tty is in
         # a horrible state after rendering the man page if we do that. Why???
-        return os.popen(str("/usr/bin/less -S -R -Q -u -L"), "w")  # nosec
+        return os.popen("/usr/bin/less -S -R -Q -u -L", "w")  # nosec B605 # BNS:f6c1b9
     return sys.stdout
 
 

@@ -11,5 +11,5 @@ Note that Bandit is picky about the exact format.
 | `BNS:28af27` | `B310` | The URL or the scheme is hardcoded, so the scheme cannot change. |
 | `BNS:6b61d9` | `B310` | The URL is explicitly validated. |
 | `BNS:97f639` | `B321`, `B402` | The checked service requires FTP. |
-| `BNS:67522a` | `B602` | External inputs to the command have been quoted for shell-safety. |
+| `BNS:67522a` | `B602`, `B605` | External inputs to the command have been quoted for shell-safety. |
 | `BNS:f6c1b9` | `B605` | Shell command has been reviewed. |

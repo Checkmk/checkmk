@@ -20,10 +20,12 @@
 
 import cProfile
 import getopt
-import os
+import shlex
+import shutil
+import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from cmk.utils.password_store import replace_passwords
 
@@ -67,6 +69,19 @@ OPTIONS:
 #############################################################################
 # command line options
 #############################################################################
+
+
+def _run_cmd(debug: bool, cmd: str) -> List[str]:
+    if debug:
+        sys.stderr.write("executing external command: %s\n" % cmd)
+
+    return subprocess.run(
+        shlex.split(cmd),
+        stderr=subprocess.STDOUT,
+        stdout=subprocess.PIPE,
+        check=False,
+        encoding="utf-8",
+    ).stdout.splitlines(keepends=True)
 
 
 def main(sys_argv=None):  # pylint: disable=too-many-branches
@@ -160,6 +175,10 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
     except ValueError:
         pass
 
+    if not shutil.which("naviseccli"):
+        sys.stderr.write('The command "naviseccli" could not be found. Terminating.\n')
+        sys.exit(1)
+
     #############################################################################
     # fetch information by calling naviseccli
     #############################################################################
@@ -178,38 +197,28 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
     # check_mk section of agent output
     #
 
-    cmd = basecmd + "getall -sp"
-    if opt_debug:
-        sys.stderr.write("executing external command: %s\n" % cmd)
+    def run(cmd):
+        return _run_cmd(opt_debug, basecmd + cmd)
 
     # Now read the whole output of the command
-    cmdout = [l.strip() for l in os.popen(cmd + " 2>&1").readlines()]  # nosec
+    cmdout = run("getall -sp")
 
-    if cmdout:
-        if "naviseccli: not found" in cmdout[0]:
-            sys.stderr.write('The command "naviseccli" could not be found. Terminating.\n')
-            sys.exit(1)
-
-        elif cmdout[0].startswith("Security file not found"):
-            sys.stderr.write(
-                "Could not find security file. Please provide valid user "
-                "credentials if you don't have a security file.\n"
-            )
-            sys.exit(1)
+    if cmdout and cmdout[0].startswith("Security file not found"):
+        sys.stderr.write(
+            "Could not find security file. Please provide valid user "
+            "credentials if you don't have a security file.\n"
+        )
+        sys.exit(1)
 
     print("<<<emcvnx_info:sep(58)>>>")
     for line in cmdout:
-        print(line)
+        print(line.strip())
 
     # if module "agent" was requested, fetch additional information about the
     # agent, e. g. Model and Revision
     if fetch_agent_info:
         print("<<<emcvnx_agent:sep(58)>>>")
-        cmd = basecmd + "getagent"
-        if opt_debug:
-            sys.stderr.write("executing external command: %s\n" % cmd)
-
-        for line in os.popen(cmd).readlines():  # nosec
+        for line in run("getagent"):
             print(line, end=" ")
 
     #
@@ -226,10 +235,7 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
             for header, cmd_option in module_options["cmd_options"]:
                 if header is not None:
                     print("[[[%s]]]" % header)
-                cmd = basecmd + cmd_option
-                if opt_debug:
-                    sys.stderr.write("executing external command: %s\n" % cmd)
-                for line in os.popen(cmd).readlines():  # nosec
+                for line in run(cmd_option):
                     print(line, end=" ")
 
     if g_profile:

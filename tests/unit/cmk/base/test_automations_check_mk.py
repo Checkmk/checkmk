@@ -124,6 +124,7 @@ def mock_service_description(params: Mapping[str, str]) -> str:
                 "my_active_check": {
                     "command_line": "echo $ARG1$",
                     "argument_function": lambda _: [
+                        "-n",  # relevant for quoting -- echo should eat this
                         "--arg1",
                         "arument1",
                         "--host_alias",

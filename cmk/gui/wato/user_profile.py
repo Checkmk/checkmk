@@ -150,7 +150,7 @@ mega_menu_registry.register(
              icon="main_user",
              sort_index=20,
              topics=_user_menu_topics,
-             info_line=lambda: f"{config.user.id} ({config.user.baserole_id})"))
+             info_line=lambda: f"{config.user.id} ({'+'.join(config.user.role_ids)})"))
 
 
 @page_registry.register_page("ajax_ui_theme")

@@ -668,7 +668,7 @@ def validate_custom_host_attributes(
     return host_attributes
 
 
-def _ensure_string(value):
+def ensure_string(value):
     if not isinstance(value, str):
         raise ValidationError(f"Not a string, but a {type(value).__name__}")
 
@@ -806,7 +806,7 @@ class CustomHostAttributes(ValueTypedDictSchema):
     value_type = ValueTypedDictSchema.field(
         base.String(
             description="Each tag is a mapping of string to string",
-            validate=_ensure_string,
+            validate=ensure_string,
         )
     )
 

@@ -4,20 +4,30 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime as dt
+import logging
+from typing import Any, Optional
 
-from marshmallow import Schema
+from marshmallow import fields as _fields
+from marshmallow import post_load, Schema
 from marshmallow_oneofschema import OneOfSchema
 
 from cmk.utils.defines import weekday_ids
 
+import cmk.gui.userdb as userdb
 from cmk.gui import fields as gui_fields
 from cmk.gui.config import builtin_role_ids
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.fields.base import MultiNested, ValueTypedDictSchema
+from cmk.gui.fields.definitions import ensure_string
 from cmk.gui.fields.utils import BaseSchema
 
 from cmk import fields
+from cmk.fields import base
 
 # TODO: Add Enum Field for http methods, action result types and similar fields which can only hold
 #       distinct values
+
+_logger = logging.getLogger(__name__)
 
 
 class ApiError(BaseSchema):
@@ -671,7 +681,7 @@ class DiscoveryBackgroundJobStatusObject(DomainObject):
     )
 
 
-class UserAttributes(BaseSchema):
+class BaseUserAttributes(BaseSchema):
     fullname = fields.String(required=True, description="The alias or full name of the user.")
     customer = gui_fields.customer_field(
         required=True,
@@ -729,12 +739,72 @@ class UserAttributes(BaseSchema):
     )
 
 
+class CustomUserAttributes(ValueTypedDictSchema):
+    value_type = ValueTypedDictSchema.field(
+        base.String(description="Each tag is a mapping of string to string", validate=ensure_string)
+    )
+
+    @post_load
+    def _valid(self, user_attributes: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
+        # NOTE
+        # If an attribute gets deleted AFTER it has already been set,
+        # this would break here. We therefore can't validate outbound data as thoroughly
+        # because our own data can be inherently inconsistent.
+
+        # use the user_attribute_registry directly?
+        db_user_attributes = dict(userdb.get_user_attributes())
+        for name, value in user_attributes.items():
+            try:
+                attribute = db_user_attributes[name].valuespec()
+            except KeyError:
+                _logger.error("No such attribute: %s", name)
+                return user_attributes
+
+            try:
+                attribute.validate_value(value, f"ua_{name}")
+            except MKUserError as exc:
+                _logger.error("Error validating %s: %s", name, str(exc))
+
+        return user_attributes
+
+
+def user_attributes_field(
+    description: Optional[str] = None, example: Optional[Any] = None
+) -> _fields.Field:
+    """Build an Attribute Field
+
+    Args:
+        direction:
+            If the data is *coming from* the user (inbound) or *going to* the user (outbound).
+
+        description:
+            A descriptive text of this field. Required.
+
+        example:
+            An example for the OpenAPI documentation. Required.
+    """
+    if description is None:
+        # SPEC won't validate without description, though the error message is very obscure, so we
+        # clarify this here by force.
+        raise ValueError("description is necessary.")
+
+    return MultiNested(
+        [BaseUserAttributes, CustomUserAttributes],
+        merged=True,  # to unify both models
+        description=description,
+        example=example,
+        many=False,
+        load_default=dict,
+        required=False,
+    )
+
+
 class UserObject(DomainObject):
     domainType = fields.Constant(
         "user_config",
         description="The domain type of the object.",
     )
-    extensions = fields.Nested(UserAttributes, description="The attributes of the user")
+    extensions = user_attributes_field(description="The attributes of the user")
 
 
 class UserCollection(DomainObjectCollection):

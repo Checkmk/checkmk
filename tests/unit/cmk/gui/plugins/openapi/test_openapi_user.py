@@ -2,10 +2,12 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import datetime
 import json
 import random
 import string
-from typing import Mapping
+from contextlib import contextmanager
+from typing import Iterator, Mapping
 
 import pytest
 from freezegun import freeze_time
@@ -16,6 +18,7 @@ from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 from cmk.utils import version
 from cmk.utils.type_defs import UserId
 
+from cmk.gui import userdb
 from cmk.gui.plugins.openapi.endpoints.user_config import (
     _api_to_internal_format,
     _internal_to_api_format,
@@ -23,6 +26,7 @@ from cmk.gui.plugins.openapi.endpoints.user_config import (
 )
 from cmk.gui.plugins.openapi.endpoints.utils import complement_customer
 from cmk.gui.type_defs import UserRole
+from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file, update_user_custom_attrs
 from cmk.gui.watolib.userroles import clone_role, RoleID
 from cmk.gui.watolib.users import edit_users
 
@@ -1110,3 +1114,53 @@ def test_openapi_new_user_with_non_existing_role(  # type:ignore[no-untyped-def]
         status=400,
         content_type="application/json",
     )
+
+
+@contextmanager
+def custom_user_attributes_ctx(attrs: list[Mapping[str, str | bool]]) -> Iterator:
+    try:
+        save_custom_attrs_to_mk_file({"user": attrs})
+        update_user_custom_attrs(datetime.datetime.today())
+        yield
+    finally:
+        save_custom_attrs_to_mk_file({})
+
+
+def test_openapi_custom_attributes_of_user(  # type:ignore[no-untyped-def]
+    base: str,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    with_user: tuple[UserId, str],
+    run_as_superuser,
+):
+
+    attr: Mapping[str, str | bool] = {
+        "name": "judas",
+        "title": "judas",
+        "help": "help",
+        "topic": "basic",
+        "type": "TextAscii",
+        "user_editable": True,
+    }
+
+    user, _password = with_user
+    changed_users = {
+        user: {
+            "attributes": {"alias": "Ian Hill", "notification_method": "email", "judas": "priest"},
+            "is_new_user": False,
+        }
+    }
+    # context managers are order dependent
+    with custom_user_attributes_ctx([attr]), run_as_superuser():
+        print("edit user", user)
+        edit_users(changed_users)
+        user_from_db = userdb.load_user(user)
+        # well of course we monkeypatch a typed dict ;-)
+        assert user_from_db["judas"] == "priest"  # type:ignore[typeddict-item]
+
+        resp = aut_user_auth_wsgi_app.call_method(
+            "get",
+            f"{base}/objects/user_config/{user}",
+            status=200,
+            headers={"Accept": "application/json"},
+        )
+    assert resp.json["extensions"]["judas"] == "priest"

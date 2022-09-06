@@ -12,9 +12,9 @@ import responses
 
 from cmk.special_agents.agent_mobileiron import agent_mobileiron_main
 
-URL1 = "https://example.com:443/api/v1/device?rows=200&start=0&dmPartitionId=103881"
-URL2 = "https://example.com:443/api/v1/device?rows=200&start=0&dmPartitionId=103882"
-URL3 = "https://example.com:443/api/v1/device?rows=200&start=200&dmPartitionId=103881"
+URL1 = "https://example.com/api/v1/device?rows=200&start=0&dmPartitionId=103881"
+URL2 = "https://example.com/api/v1/device?rows=200&start=0&dmPartitionId=103882"
+URL3 = "https://example.com/api/v1/device?rows=200&start=200&dmPartitionId=103881"
 
 test_device1 = Path(
     Path(__file__).parent / "agent_mobileiron_files" / "example_output.json"
@@ -49,8 +49,6 @@ def test_agent_output_2_partitions(capsys: pytest.CaptureFixture[str]) -> None:
 
     args = argparse.Namespace(
         hostname="example.com",
-        protocol=True,
-        port="443",
         key_fields=("entityName",),
         android_regex=[".*"],
         ios_regex=["foo"],
@@ -58,7 +56,6 @@ def test_agent_output_2_partitions(capsys: pytest.CaptureFixture[str]) -> None:
         username="",
         password="",
         partition=[103881, 103882],
-        no_cert_check=False,
         proxy=None,
         debug=False,
     )
@@ -100,8 +97,6 @@ def test_agent_output_regexes(capsys: pytest.CaptureFixture[str]) -> None:
 
     args = argparse.Namespace(
         hostname="example.com",
-        protocol=True,
-        port="443",
         key_fields=("entityName",),
         android_regex=[r"device[0-9]{1}"],
         ios_regex=["foo"],
@@ -109,7 +104,6 @@ def test_agent_output_regexes(capsys: pytest.CaptureFixture[str]) -> None:
         username="",
         password="",
         partition=[103881, 103882],
-        no_cert_check=False,
         proxy=None,
         debug=False,
     )
@@ -141,8 +135,6 @@ def test_agent_output_regexes(capsys: pytest.CaptureFixture[str]) -> None:
 def test_agent_raises_exceptions(exception) -> None:  # type:ignore[no-untyped-def]
     args = argparse.Namespace(
         hostname="does_not_exist",
-        protocol=True,
-        port="443",
         key_fields=("entityName",),
         android_regex=["foo"],
         ios_regex=["foo"],
@@ -150,12 +142,11 @@ def test_agent_raises_exceptions(exception) -> None:  # type:ignore[no-untyped-d
         username="",
         password="",
         partition=[103881],
-        no_cert_check=False,
         proxy=None,
         debug=False,
     )
     responses.get(
-        f"https://{args.hostname}:{args.port}/api/v1/device?rows=200&start=0&dmPartitionId={args.partition[0]}",
+        f"https://{args.hostname}:/api/v1/device?rows=200&start=0&dmPartitionId={args.partition[0]}",
         body=exception(),
     )
 

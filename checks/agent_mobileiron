@@ -6,21 +6,6 @@
 from typing import Any, Mapping, Optional, Sequence, Tuple, Union
 
 
-def _get_proxy_args_and_secrets(details):
-    proxy_args = ["--proxy-host", details["proxy_host"]]
-
-    if proxy_port := details.get("proxy_port"):
-        proxy_args += ["--proxy-port", str(proxy_port)]
-
-    if proxy_user := details.get("proxy_user"):
-        proxy_args += ["--proxy-user", str(proxy_user)]
-
-    if proxy_password := details.get("proxy_password"):
-        proxy_args += ["--proxy-password", passwordstore_get_cmdline("%s", proxy_password)]
-
-    return proxy_args
-
-
 def agent_mobileiron_arguments(
     params: Mapping[str, Any], hostname: str, ipaddress: Optional[str]
 ) -> Sequence[Union[str, Tuple[str, str, str]]]:
@@ -32,9 +17,6 @@ def agent_mobileiron_arguments(
             ("-p", passwordstore_get_cmdline("%s", params["password"]))
             if "password" in params
             else (),
-            ("--protocol", params["protocol"]) if "protocol" in params else (),
-            ("--port", params["port"]) if "port" in params else (),
-            ("--no-cert-check",) if params.get("no-cert-check") else (),
             ("--partition", ",".join(params["partition"])) if "partition" in params else (),
             ("--hostname", hostname),
         )

@@ -15,17 +15,7 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     TransformToIndividualOrStoredPassword,
 )
-from cmk.gui.valuespec import (
-    Alternative,
-    Dictionary,
-    DropdownChoice,
-    FixedValue,
-    ListOf,
-    ListOfStrings,
-    NetworkPort,
-    RegExp,
-    TextInput,
-)
+from cmk.gui.valuespec import Dictionary, DropdownChoice, ListOf, ListOfStrings, RegExp, TextInput
 
 
 def _validate_regex_choices(
@@ -54,37 +44,6 @@ def _valuespec_special_agents_mobileiron() -> Dictionary:
             (
                 "password",
                 TransformToIndividualOrStoredPassword(title=_("Password"), allow_empty=False),
-            ),
-            (
-                "protocol",
-                Alternative(
-                    title=_("Protocol"),
-                    elements=[
-                        FixedValue(value=True, title=_("HTTPS"), totext=""),
-                        FixedValue(value=False, title=_("HTTP"), totext=""),
-                    ],
-                    default_value=True,
-                ),
-            ),
-            (
-                "port",
-                NetworkPort(
-                    title=_("Port"),
-                    default_value=443,
-                ),
-            ),
-            (
-                "no-cert-check",
-                Alternative(
-                    title=_("SSL certificate validation"),
-                    elements=[
-                        FixedValue(value=False, title=_("Verify the certificate"), totext=""),
-                        FixedValue(
-                            value=True, title=_("Ignore certificate errors (unsecure)"), totext=""
-                        ),
-                    ],
-                    default_value=False,
-                ),
             ),
             ("proxy", HTTPProxyReference()),
             (

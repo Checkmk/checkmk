@@ -32,7 +32,6 @@ from typing import (
 from urllib.parse import urljoin
 
 import requests
-import urllib3
 
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 from cmk.utils.misc import typeshed_issue_7724
@@ -105,9 +104,6 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
     parser.add_argument("--username", "-u", type=str, help="username for connection")
     parser.add_argument("--password", "-p", type=str, help="password for connection")
     parser.add_argument("--key-fields", action="append", help="field for hostname generation")
-    parser.add_argument("--protocol", type=int, default=True, help="protocol for connection")
-    parser.add_argument("--port", type=int, default=433, help="port for connection")
-    parser.add_argument("--no-cert-check", action="store_true", default=False)
     parser.add_argument(
         "--partition",
         nargs="+",
@@ -140,24 +136,18 @@ class MobileironAPI:
     def __init__(
         self,
         api_host: str,
-        https_enabled: bool,
-        port: int,
         key_fields: Sequence[str],
         auth: Tuple[str, str],
-        verify: bool,
         regex_patterns: Regexes,
         proxy: Optional[str] = None,
     ) -> None:
         self.api_host = api_host
         self._key_fields = key_fields
-        self._protocol = "https" if https_enabled else "http"
-        self._api_url = urljoin(f"{self._protocol}://{api_host}:{port}", "/api/v1/device")
+        self._api_url = urljoin(f"https://{api_host}", "/api/v1/device")
         self._session = requests.Session()
         self._session.auth = auth
-        self._session.verify = verify
+        self._session.verify = True
         self._session.headers["Accept"] = "application/json"
-        if self._session.verify is False:
-            urllib3.disable_warnings(category=urllib3.exceptions.InsecureRequestWarning)
         self._all_devices: HostnameDict = HostnameDict()
         self._devices_per_request = 200
         self.regex_patterns = regex_patterns
@@ -293,12 +283,9 @@ def agent_mobileiron_main(args: Args) -> None:
 
     with MobileironAPI(
         api_host=args.hostname,
-        https_enabled=args.protocol,
-        port=args.port,
         key_fields=args.key_fields,
         regex_patterns=Regexes(args.android_regex, args.ios_regex, args.others_regex),
         auth=(args.username, args.password),
-        verify=not args.no_cert_check,
         proxy=args.proxy,
     ) as mobileiron_api:
 

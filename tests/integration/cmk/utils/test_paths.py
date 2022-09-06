@@ -15,6 +15,7 @@ pathlib_paths = [
     "piggyback_source_dir",
     "optional_packages_dir",
     "local_optional_packages_dir",
+    "local_enabled_packages_dir",
 ]
 
 

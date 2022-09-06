@@ -260,7 +260,7 @@ class Version:
         if all(x is None for x in (major, minor, sub)):
             return _MasterDailyVersion(datetime.date(int(year), int(month), int(day)))
 
-        return _StableDailyVersion(
+        return _StableDailyVersion(  # pylint: disable=too-many-function-args
             int(major), int(minor), int(sub), datetime.date(int(year), int(month), int(day))
         )
 

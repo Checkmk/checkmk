@@ -1711,7 +1711,7 @@ class ListOfStrings(ValueSpec[Sequence[str]]):
         # ListOfStrings
         valuespec: ValueSpec[str] | None = None,
         size: int | Literal["max"] = 25,
-        orientation: str = "vertical",
+        orientation: Literal["vertical", "horizontal"] = "vertical",
         allow_empty: bool = True,
         empty_text: str = "",
         max_entries: int | None = None,
@@ -1858,7 +1858,7 @@ class ListOfStrings(ValueSpec[Sequence[str]]):
         return self._valuespec.has_show_more()
 
     def mask(self, value: Sequence[str]) -> Sequence[str]:
-        return value
+        return [self._valuespec.mask(e) for e in value]
 
     def value_to_json(self, value: Sequence[str]) -> JSONValue:
         return [self._valuespec.value_to_json(e) for e in value]

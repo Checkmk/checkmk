@@ -74,17 +74,6 @@ pub fn testing_pull_config(
     }
 }
 
-pub fn init_logging(
-    path: &Path,
-) -> Result<flexi_logger::LoggerHandle, flexi_logger::FlexiLoggerError> {
-    flexi_logger::Logger::try_with_env_or_str("debug")?
-        .log_to_file(flexi_logger::FileSpec::try_from(path)?) // critically important for daemon mode
-        .append()
-        .format(flexi_logger::detailed_format)
-        .duplicate_to_stderr(flexi_logger::Duplicate::All)
-        .start()
-}
-
 pub fn testing_tls_client_connection(certs: X509Certs, address: &str) -> rustls::ClientConnection {
     let root_cert =
         lib_certs::rustls_certificate(&String::from_utf8(certs.ca_cert).unwrap()).unwrap();

@@ -36,9 +36,9 @@ def python_container(request, docker_client):
 
 def _get_python_plugins():
     return [
-        "agents/plugins/%s" % p.name
+        f"agents/plugins/{p.name}"
         for p in Path(testlib.cmk_path(), "agents", "plugins").iterdir()
-        if is_python_file(str(p), "python") or is_python_file(str(p), "python3")
+        if is_python_file(p, "python") or is_python_file(p, "python3")
     ]
 
 

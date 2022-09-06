@@ -3,52 +3,43 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
-
 import contextlib
-import shutil
+import multiprocessing
+import os
 import subprocess
 import tempfile
+from collections.abc import Sequence
 from io import TextIOWrapper
 from pathlib import Path
 from typing import Iterator
 
 import pytest
 
-import tests.testlib.pylint_cmk as pylint_cmk
-from tests.testlib import repo_path
+from tests.testlib import cmk_path, repo_path
 
 
-@pytest.fixture(scope="function")
-def pylint_test_dir():
-    test_dir = tempfile.mkdtemp(prefix="cmk_pylint_")
-    print("Prepare check in %s ..." % test_dir)
-    yield test_dir
-    print("Cleanup pylint test dir %s ..." % test_dir)
-    shutil.rmtree(test_dir)
-
-
-def test_pylint(pylint_test_dir, capsys) -> None:  # type:ignore[no-untyped-def]
+def test_pylint(capsys: pytest.CaptureFixture[str]) -> None:
     with capsys.disabled():
         print("\n")
         retcode = subprocess.call("python -m pylint --version".split(), shell=False)
         print()
         assert not retcode
 
-    exit_code = pylint_cmk.run_pylint(repo_path(), _get_files_to_check(pylint_test_dir))
+    with tempfile.TemporaryDirectory(prefix="cmk_pylint_") as pylint_test_dir:
+        exit_code = run_pylint(Path(repo_path()), _get_files_to_check(Path(pylint_test_dir)))
     assert exit_code == 0, "PyLint found an error"
 
 
-def _get_files_to_check(pylint_test_dir):
+def _get_files_to_check(pylint_test_dir: Path) -> Sequence[Path]:
     # Add the compiled files for things that are no modules yet
-    Path(pylint_test_dir + "/__init__.py").touch()
+    (pylint_test_dir / "__init__.py").touch()
     _compile_check_plugins(pylint_test_dir)
 
     # Not checking compiled check, inventory, bakery plugins with Python 3
     files = [pylint_test_dir]
 
     completed_process = subprocess.run(
-        ["%s/scripts/find-python-files" % repo_path()],
+        [f"{repo_path()}/scripts/find-python-files"],
         stdout=subprocess.PIPE,
         encoding="utf-8",
         shell=False,
@@ -82,16 +73,14 @@ def _get_files_to_check(pylint_test_dir):
         ):
             continue
 
-        files.append(fname)
+        files.append(Path(fname))
 
     return files
 
 
 @contextlib.contextmanager
-def stand_alone_template(file_name: str) -> Iterator[TextIOWrapper]:
-
-    with open(file_name, "w") as file_handle:
-
+def stand_alone_template(file_name: Path) -> Iterator[TextIOWrapper]:
+    with file_name.open(mode="w") as file_handle:
         # Fake data structures where checks register (See cmk/base/checks.py)
         file_handle.write(
             """
@@ -113,7 +102,7 @@ special_agent_info                 = {}
 
 """
         )
-
+        # These pylint warnings are incompatible with our "concatenation technology".
         disable_pylint = [
             "function-redefined",
             "pointless-string-statement",
@@ -124,15 +113,60 @@ special_agent_info                 = {}
             "wrong-import-order",
             "wrong-import-position",
         ]
-
-        # These pylint warnings are incompatible with our "concatenation technology".
-        file_handle.write("# pylint: disable=%s\n" % ",".join(disable_pylint))
-
+        file_handle.write(f"# pylint: disable={','.join(disable_pylint)}\n")
         yield file_handle
 
 
-def _compile_check_plugins(pylint_test_dir: str) -> None:
+def _compile_check_plugins(pylint_test_dir: Path) -> None:
+    for idx, f_name in enumerate(check_files(Path(repo_path()) / "checks")):
+        with stand_alone_template(pylint_test_dir / f"cmk_checks_{idx}.py") as file_handle:
+            add_file(file_handle, f_name)
 
-    for idx, f_name in enumerate(pylint_cmk.check_files(repo_path() + "/checks")):
-        with stand_alone_template(pylint_test_dir + "/cmk_checks_%s.py" % idx) as file_handle:
-            pylint_cmk.add_file(file_handle, f_name)
+
+def check_files(base_dir: Path) -> Sequence[Path]:
+    return sorted(Path(base_dir) / f for f in os.listdir(base_dir) if not f.startswith("."))
+
+
+def add_file(f: TextIOWrapper, path: Path) -> None:
+    relpath = os.path.relpath(os.path.realpath(path), cmk_path())
+    f.write("# -*- encoding: utf-8 -*-")
+    f.write("#\n")
+    f.write("# ORIG-FILE: " + relpath + "\n")
+    f.write("#\n")
+    f.write("\n")
+    f.write(path.read_text())
+
+
+def run_pylint(base_path: Path, files_to_check: Sequence[Path]) -> int:
+    cmd = [
+        "python",
+        "-m",
+        "pylint",
+        f"--rcfile={Path(repo_path()) / '.pylintrc'}",
+        f"--jobs={num_jobs_to_use()}",
+    ]
+    pylint_args = args.split(" ") if (args := os.environ.get("PYLINT_ARGS")) else []
+    files = pylint_args + [str(f) for f in files_to_check]
+    print(
+        f"Running pylint in '{base_path}' with: {subprocess.list2cmdline(cmd)}"
+        f" [{len(files)} files omitted]"
+    )
+    exit_code = subprocess.run(cmd + files, shell=False, cwd=base_path, check=False).returncode
+    print(f"Finished with exit code: {exit_code}")
+    return exit_code
+
+
+def num_jobs_to_use() -> int:
+    # Naive heuristic, but looks OK for our use cases:\ Normal quad core CPUs
+    # with HT report 8 CPUs (=> 6 jobs), our server 24-core CPU reports 48 CPUs
+    # (=> 11 jobs). Just using 0 (meaning: use all reported CPUs) might just
+    # work, too, but it's probably a bit too much.
+    #
+    # On our CI server there are currently up to 5 parallel Gerrit jobs allowed
+    # which trigger pylint + 1 explicit pylint job per Checkmk branch. This
+    # means that there may be up to 8 pylint running in parallel. Currently
+    # these processes consume about 400 MB of rss memory.  To prevent swapping
+    # we need to reduce the parallelization of pylint for the moment.
+    if os.environ.get("USER") == "jenkins":
+        return int(multiprocessing.cpu_count() / 8.0) + 3
+    return int(multiprocessing.cpu_count() / 8.0) + 5

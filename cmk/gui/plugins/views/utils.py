@@ -134,7 +134,8 @@ class PainterOptions:
         self._load_from_config(view_name)
 
     # Load the options to be used for this view
-    def _load_used_options(self, view_spec: ViewSpec, cells: Iterable[Cell]) -> None:
+    @staticmethod
+    def _load_used_options(view_spec: ViewSpec, cells: Iterable[Cell]) -> List[str]:
         options: Set[str] = set()
 
         for cell in cells:
@@ -158,7 +159,7 @@ class PainterOptions:
                 options.add("num_columns")
 
         # TODO: Improve sorting. Add a sort index?
-        self._used_option_names = sorted(options)
+        return sorted(options)
 
     def _load_from_config(self, view_name: Optional[str]) -> None:
         if self._is_anonymous_view(view_name):
@@ -180,7 +181,7 @@ class PainterOptions:
         user.save_file("viewoptions", vo)
 
     def update_from_url(self, view_name: str, view_spec: ViewSpec, cells: Iterable[Cell]) -> None:
-        self._load_used_options(view_spec, cells)
+        self._used_option_names = PainterOptions._load_used_options(view_spec, cells)
 
         if not self.painter_option_form_enabled():
             return
@@ -269,7 +270,7 @@ class PainterOptions:
         return bool(self._used_option_names) and self.painter_options_permitted()
 
     def show_form(self, view_spec: ViewSpec, cells: Iterable[Cell]) -> None:
-        self._load_used_options(view_spec, cells)
+        self._used_option_names = PainterOptions._load_used_options(view_spec, cells)
 
         if not display_options.enabled(display_options.D) or not self.painter_option_form_enabled():
             return

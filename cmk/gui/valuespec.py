@@ -3222,7 +3222,7 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         label: str | None = None,
         separator: str = ", ",
         sorted: bool = True,
-        orientation: str = "vertical",
+        orientation: Literal["vertical", "horizontal"] = "vertical",
         # https://github.com/python/cpython/issues/90015
         render: "CascadingDropdown.Render | None" = None,
         no_elements_text: str | None = None,
@@ -3299,19 +3299,9 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         if not choices:
             return None
 
-        first_choice: CascadingDropdownCleanChoice = choices[0]
-        value: CascadingDropdownChoiceValue = first_choice[0]
-        vs: ValueSpec | None = first_choice[2]
+        value, _, vs = choices[0]
         if vs is None:
             return value
-
-        # TODO: What should we do when we have a complex value *and* a ValueSpec?
-        # We can't nest things arbitrarily deep, so we just return the first part.
-        #
-        # Investigate if we can drop this case after we have finished adding the type hints
-        # here
-        if isinstance(value, tuple):
-            return value[0]
 
         return value, vs
 
@@ -3390,10 +3380,6 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
                 self.show_sub_valuespec(vp, vs, def_val_2)
                 html.close_span()
             else:
-                # TODO: What should we do when we have a complex value? We can't
-                # nest things arbitrarily deep, so we just use the first part.
-                if isinstance(val, tuple):
-                    val = val[0]
                 self._show_sub_valuespec_container(vp, val, def_val_2)
 
     def show_sub_valuespec(self, varprefix: str, vs: ValueSpec, value: Any) -> None:
@@ -3538,15 +3524,9 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
             return self.default_value()
 
         sel = request.get_integer_input_mandatory(varprefix + "_sel", 0)
-        choice: CascadingDropdownCleanChoice = choices[sel]
-        value: CascadingDropdownChoiceValue = choice[0]
-        vs: ValueSpec | None = choice[2]
+        value, _, vs = choices[sel]
         if vs is None:
             return value
-        # TODO: What should we do when we have a complex value *and* a ValueSpec?
-        # We can't nest things arbitrarily deep, so we just return the first part.
-        if isinstance(value, tuple):
-            return value[0]
         return value, vs.from_html_vars(varprefix + "_%d" % sel)
 
     def validate_datatype(self, value: CascadingDropdownChoiceValue, varprefix: str) -> None:
@@ -4753,7 +4733,7 @@ class Timerange(CascadingDropdown):
         label: str | None = None,
         separator: str = ", ",
         sorted: bool = False,
-        orientation: str = "vertical",
+        orientation: Literal["vertical", "horizontal"] = "vertical",
         render: CascadingDropdown.Render | None = None,
         no_elements_text: str | None = None,
         no_preselect_title: str | None = None,

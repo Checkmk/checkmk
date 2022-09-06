@@ -43,7 +43,7 @@ from cmk.gui.permissions import permission_registry, permission_section_registry
 from cmk.gui.plugins.views.icons.utils import icon_and_action_registry
 from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.json import patch_json
-from cmk.gui.utils.script_helpers import session_wsgi_app
+from cmk.gui.utils.script_helpers import application_and_request_context, session_wsgi_app
 from cmk.gui.watolib import hosts_and_folders, search
 
 SPEC_LOCK = threading.Lock()
@@ -64,6 +64,13 @@ HTTPMethod = Literal[
     "POST",
     "DELETE",
 ]  # fmt: off
+
+
+@pytest.fixture()
+def request_context() -> Iterator[None]:
+    """This fixture registers a global htmllib.html() instance just like the regular GUI"""
+    with application_and_request_context():
+        yield
 
 
 @pytest.fixture()
@@ -115,6 +122,12 @@ def load_plugins() -> None:
     else:
         for _plugin, exception in load_plugins:
             raise exception
+
+
+@pytest.fixture()
+def ui_context(load_plugins: None, load_config: None) -> Iterator[None]:
+    """Some helper fixture to provide a initialized UI context to tests outside of tests/unit/cmk/gui"""
+    yield
 
 
 @pytest.fixture(name="patch_json", autouse=True)

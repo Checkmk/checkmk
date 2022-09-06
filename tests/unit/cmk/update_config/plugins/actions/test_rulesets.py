@@ -3,14 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterator, Mapping
 from logging import getLogger
-from typing import Mapping
 
 import pytest
 from pytest_mock import MockerFixture
-
-# This GUI specific fixture is also needed in this context
-from tests.unit.cmk.gui import conftest
 
 from cmk.utils.type_defs import CheckPluginName, RulesetName, RuleValue
 from cmk.utils.version import is_raw_edition
@@ -24,8 +21,10 @@ from cmk.gui.watolib.rulespecs import Rulespec
 
 from cmk.update_config.plugins.actions import rulesets as rulesets_updater
 
-# Needed to load all rulesets st. eg. ignored_checks is available
-_LP = conftest.load_plugins
+
+@pytest.fixture(name="ui_context", autouse=True)
+def fixture_ui_context(ui_context: None) -> Iterator[None]:
+    yield
 
 
 @pytest.fixture(name="rulespec_with_transform")

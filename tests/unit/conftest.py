@@ -31,8 +31,6 @@ from cmk.utils.livestatus_helpers.testing import (
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
 from cmk.utils.site import omd_site
 
-from cmk.gui.utils.script_helpers import application_and_request_context
-
 logger = logging.getLogger(__name__)
 
 
@@ -390,11 +388,4 @@ def initialised_item_state():
         "cmk.base.api.agent_based.value_store._global_state._active_host_value_store",
         mock_vs,
     ):
-        yield
-
-
-@pytest.fixture()
-def request_context() -> Iterator[None]:
-    """This fixture registers a global htmllib.html() instance just like the regular GUI"""
-    with application_and_request_context():
         yield

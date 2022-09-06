@@ -6,7 +6,16 @@ from typing import Dict, List, Mapping, Sequence
 
 from .agent_based_api.v1 import HostLabel, register
 from .agent_based_api.v1.type_defs import StringTable
-from .utils.esx_vsphere import ESXCpu, ESXDataStore, ESXMemory, ESXStatus, ESXVm, SectionVM
+from .utils.esx_vsphere import (
+    ESXCpu,
+    ESXDataStore,
+    ESXMemory,
+    ESXStatus,
+    ESXVm,
+    HeartBeat,
+    HeartBeatStatus,
+    SectionVM,
+)
 
 
 def parse_esx_vsphere_vm(string_table: StringTable) -> SectionVM:
@@ -20,6 +29,7 @@ def parse_esx_vsphere_vm(string_table: StringTable) -> SectionVM:
     return ESXVm(
         snapshots=grouped_values.get("snapshot.rootSnapshotList", []),
         status=_parse_vm_status(grouped_values),
+        heartbeat=_parse_esx_vm_heartbeat_status(grouped_values),
         power_state=_parse_esx_power_state(grouped_values),
         memory=_parse_esx_memory_section(grouped_values),
         cpu=_parse_esx_cpu_section(grouped_values),
@@ -31,6 +41,19 @@ def _parse_vm_status(vm_values: Mapping[str, Sequence[str]]) -> ESXStatus | None
     if "guest.toolsVersionStatus" not in vm_values:
         return None
     return ESXStatus(vm_values["guest.toolsVersionStatus"][0])
+
+
+def _parse_esx_vm_heartbeat_status(vm_values: Mapping[str, Sequence[str]]) -> HeartBeat | None:
+    if "guestHeartbeatStatus" not in vm_values:
+        return None
+
+    value = vm_values["guestHeartbeatStatus"][0]
+    try:
+        vm_status = HeartBeatStatus(value.upper())
+    except ValueError:
+        vm_status = HeartBeatStatus.UNKNOWN
+
+    return HeartBeat(status=vm_status, value=value)
 
 
 def _parse_esx_power_state(vm_values: Mapping[str, Sequence[str]]) -> str | None:

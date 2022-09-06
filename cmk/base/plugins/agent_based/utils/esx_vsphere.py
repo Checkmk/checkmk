@@ -70,6 +70,19 @@ class ESXStatus(enum.Enum):
     guestToolsUnmanaged = "guestToolsUnmanaged"
 
 
+class HeartBeatStatus(enum.Enum):
+    GRAY = "GRAY"
+    GREEN = "GREEN"
+    RED = "RED"
+    YELLOW = "YELLOW"
+    UNKNOWN = "UNKNOWN"
+
+
+class HeartBeat(BaseModel):
+    status: HeartBeatStatus
+    value: str
+
+
 class ESXVm(BaseModel):
     snapshots: Sequence[str]
     status: ESXStatus | None
@@ -77,6 +90,7 @@ class ESXVm(BaseModel):
     memory: ESXMemory | None
     cpu: ESXCpu | None
     datastores: Sequence[ESXDataStore] | None
+    heartbeat: HeartBeat | None
 
     class Config:
         allow_mutation = False

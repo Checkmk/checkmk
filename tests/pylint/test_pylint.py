@@ -6,10 +6,8 @@
 # pylint: disable=redefined-outer-name
 
 import contextlib
-import os
 import shutil
 import subprocess
-import sys
 import tempfile
 from io import TextIOWrapper
 from pathlib import Path
@@ -23,23 +21,9 @@ from tests.testlib import repo_path
 
 @pytest.fixture(scope="function")
 def pylint_test_dir():
-    base_path = os.environ.get("WORKDIR")
-    if base_path:
-        base_path += "/" + os.path.basename(sys.argv[0])
-        if not os.path.exists(base_path):
-            os.makedirs(base_path)
-    else:
-        base_path = None
-
-    test_dir = tempfile.mkdtemp(prefix="cmk_pylint_", dir=base_path)
-
+    test_dir = tempfile.mkdtemp(prefix="cmk_pylint_")
     print("Prepare check in %s ..." % test_dir)
     yield test_dir
-
-    #
-    # Cleanup code
-    #
-
     print("Cleanup pylint test dir %s ..." % test_dir)
     shutil.rmtree(test_dir)
 

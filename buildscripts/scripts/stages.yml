@@ -189,9 +189,6 @@ STAGES:
       ONLY_WHEN_NOT_EMPTY: CHANGED_PYLINT_RC_FILE,CHANGED_PYTHON_FILES,CHANGED_PIPFILE_LOCK,CHANGED_PYTEST_INI_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT
       DIR: 'tests'
       ENV_VARS:
-        # this variable is needed as long as we have base plugins that are
-        # concantenated for pylint (See tests/pylint/test_pylint.py)
-        WORKDIR: "${WORKSPACE}/tmp"
         PYLINT_ARGS: "--output-format=cmk_parseable"
       COMMAND: "make test-pylint-docker &> ${RESULTS}/pylint.txt"
       TEXT_ON_SKIP: 'Neither .pylintrc nor Python files changed'

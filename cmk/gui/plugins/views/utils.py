@@ -106,6 +106,32 @@ CommandExecutor = Callable[[CommandSpec, Optional[SiteId]], None]
 InventoryHintSpec = Dict[str, Any]
 
 
+# Load the options to be used for this view
+def load_used_options(view_spec: ViewSpec, cells: Iterable[Cell]) -> Sequence[str]:
+    options: Set[str] = set()
+
+    for cell in cells:
+        options.update(cell.painter_options())
+
+    # Also layouts can register painter options
+    layout_name = view_spec.get("layout")
+    if layout_name is not None:
+        layout_class = layout_registry.get(layout_name)
+        if layout_class:
+            options.update(layout_class().painter_options)
+
+    # Mandatory options for all views (if permitted)
+    if display_options.enabled(display_options.O):
+        if display_options.enabled(display_options.R) and user.may("general.view_option_refresh"):
+            options.add("refresh")
+
+        if user.may("general.view_option_columns"):
+            options.add("num_columns")
+
+    # TODO: Improve sorting. Add a sort index?
+    return sorted(options)
+
+
 # TODO: Better name it PainterOptions or DisplayOptions? There are options which only affect
 # painters, but some which affect generic behaviour of the views, so DisplayOptions might
 # be better.
@@ -126,40 +152,12 @@ class PainterOptions:
     def __init__(self) -> None:
         super().__init__()
         # The names of the painter options used by the current view
-        self._used_option_names: List[str] = []
+        self._used_option_names: Sequence[str] = []
         # The effective options for this view
         self._options: Dict[str, Any] = {}
 
     def load(self, view_name: Optional[str] = None) -> None:
         self._load_from_config(view_name)
-
-    # Load the options to be used for this view
-    @staticmethod
-    def _load_used_options(view_spec: ViewSpec, cells: Iterable[Cell]) -> List[str]:
-        options: Set[str] = set()
-
-        for cell in cells:
-            options.update(cell.painter_options())
-
-        # Also layouts can register painter options
-        layout_name = view_spec.get("layout")
-        if layout_name is not None:
-            layout_class = layout_registry.get(layout_name)
-            if layout_class:
-                options.update(layout_class().painter_options)
-
-        # Mandatory options for all views (if permitted)
-        if display_options.enabled(display_options.O):
-            if display_options.enabled(display_options.R) and user.may(
-                "general.view_option_refresh"
-            ):
-                options.add("refresh")
-
-            if user.may("general.view_option_columns"):
-                options.add("num_columns")
-
-        # TODO: Improve sorting. Add a sort index?
-        return sorted(options)
 
     def _load_from_config(self, view_name: Optional[str]) -> None:
         if self._is_anonymous_view(view_name):
@@ -180,8 +178,8 @@ class PainterOptions:
         vo[view_name] = self._options
         user.save_file("viewoptions", vo)
 
-    def update_from_url(self, view_name: str, view_spec: ViewSpec, cells: Iterable[Cell]) -> None:
-        self._used_option_names = PainterOptions._load_used_options(view_spec, cells)
+    def update_from_url(self, view_name: str, used_option_names: Sequence[str]) -> None:
+        self._used_option_names = used_option_names
 
         if not self.painter_option_form_enabled():
             return
@@ -269,8 +267,8 @@ class PainterOptions:
     def painter_option_form_enabled(self) -> bool:
         return bool(self._used_option_names) and self.painter_options_permitted()
 
-    def show_form(self, view_spec: ViewSpec, cells: Iterable[Cell]) -> None:
-        self._used_option_names = PainterOptions._load_used_options(view_spec, cells)
+    def show_form(self, view_spec: ViewSpec, used_option_names: Sequence[str]) -> None:
+        self._used_option_names = used_option_names
 
         if not display_options.enabled(display_options.D) or not self.painter_option_form_enabled():
             return

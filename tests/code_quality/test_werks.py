@@ -32,8 +32,8 @@ import cmk.utils.werks
         "2020.05.26",
     ],
 )
-def test_old_parse_check_mk_version_equals_new_version_class(  # type:ignore[no-untyped-def]
-    version_str,
+def test_old_parse_check_mk_version_equals_new_version_class(
+    version_str: str,
 ) -> None:
     assert (
         cmk_version.parse_check_mk_version(version_str)
@@ -69,7 +69,7 @@ def test_old_parse_check_mk_version_equals_new_version_class(  # type:ignore[no-
         ("2.1.0-2022.06.02-sandbox-lm-2.2-thing", "2.1.0-2022.06.01"),
     ],
 )
-def test_version_comparison(version_str_a, version_str_b) -> None:  # type:ignore[no-untyped-def]
+def test_version_comparison(version_str_a: str, version_str_b: str) -> None:
     a = cmk_version.Version(version_str_a)
     b = cmk_version.Version(version_str_b)
 
@@ -77,13 +77,13 @@ def test_version_comparison(version_str_a, version_str_b) -> None:  # type:ignor
 
 
 @pytest.fixture(scope="function")
-def precompiled_werks(tmp_path, monkeypatch):
+def precompiled_werks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     all_werks = cmk.utils.werks.load_raw_files(Path(testlib.cmk_path()) / ".werks")
     cmk.utils.werks.write_precompiled_werks(tmp_path / "werks", all_werks)
     monkeypatch.setattr(cmk.utils.werks, "_compiled_werks_dir", lambda: tmp_path)
 
 
-def test_write_precompiled_werks(tmp_path, monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_write_precompiled_werks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     tmp_dir = str(tmp_path)
 
     all_werks = cmk.utils.werks.load_raw_files(Path(testlib.cmk_path()) / ".werks")
@@ -111,7 +111,7 @@ def test_write_precompiled_werks(tmp_path, monkeypatch) -> None:  # type:ignore[
     assert merged_werks == werks_loaded
 
 
-def test_werk_versions(precompiled_werks) -> None:  # type:ignore[no-untyped-def]
+def test_werk_versions(precompiled_werks: None) -> None:
     parsed_version = cmk_version.Version(cmk_version.__version__)
 
     for werk_id, werk in cmk.utils.werks.load().items():
@@ -122,7 +122,7 @@ def test_werk_versions(precompiled_werks) -> None:  # type:ignore[no-untyped-def
         ), "Version %s of werk #%d is not allowed in this branch" % (werk["version"], werk_id)
 
 
-def test_werk_versions_after_tagged(precompiled_werks) -> None:  # type:ignore[no-untyped-def]
+def test_werk_versions_after_tagged(precompiled_werks: None) -> None:
     list_of_offenders = []
     for werk_id, werk in cmk.utils.werks.load().items():
         if werk_id < 8800:
@@ -158,7 +158,7 @@ def test_werk_versions_after_tagged(precompiled_werks) -> None:  # type:ignore[n
 
 
 @cmk.utils.memoize.MemoizeCache
-def _git_tag_exists(tag):
+def _git_tag_exists(tag: str) -> bool:
     return (
         subprocess.Popen(
             ["git", "rev-list", tag],
@@ -170,11 +170,11 @@ def _git_tag_exists(tag):
     )
 
 
-def _werk_exists_in_git_tag(tag: str, rel_path):  # type:ignore[no-untyped-def]
+def _werk_exists_in_git_tag(tag: str, rel_path: str) -> bool:
     return rel_path in _werks_in_git_tag(tag)
 
 
-def _tags_containing_werk(werk_id):
+def _tags_containing_werk(werk_id: int) -> list[str]:
     return _werk_to_git_tag[werk_id]
 
 
@@ -182,7 +182,7 @@ _werk_to_git_tag = defaultdict(list)
 
 
 @cmk.utils.memoize.MemoizeCache
-def _werks_in_git_tag(tag: str):  # type:ignore[no-untyped-def]
+def _werks_in_git_tag(tag: str) -> list[str]:
     werks_in_tag = (
         subprocess.check_output(
             [b"git", b"ls-tree", b"-r", b"--name-only", tag.encode(), b".werks"],

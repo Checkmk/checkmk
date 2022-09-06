@@ -14,7 +14,6 @@ import os
 import re
 import time
 import traceback
-from contextlib import suppress
 from html import unescape
 from pathlib import Path
 from typing import (
@@ -73,7 +72,6 @@ from cmk.gui.num_split import cmp_num_split as _cmp_num_split
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.metrics.utils import CombinedGraphMetricSpec
-from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry, VisualType
 from cmk.gui.sorter import _encode_sorter_url, register_sorter, sorter_registry, SorterSpec
 from cmk.gui.type_defs import (
     ColumnName,
@@ -89,18 +87,16 @@ from cmk.gui.type_defs import (
     SorterFunction,
     SorterName,
     ViewSpec,
-    Visual,
     VisualContext,
     VisualLinkSpec,
-    VisualName,
 )
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 from cmk.gui.valuespec import DropdownChoice, ValueSpec
 from cmk.gui.view_store import get_permitted_views
 from cmk.gui.view_utils import CellContent, CellSpec, CSSClass
+from cmk.gui.visual_link import render_link_to_view
 
 ExportCellContent = Union[str, Dict[str, Any]]
 PDFCellContent = Union[str, HTML, Tuple[str, str]]
@@ -904,188 +900,6 @@ def format_plugin_output(output: str, row: Row) -> HTML:
     return cmk.gui.view_utils.format_plugin_output(
         output, row, shall_escape=active_config.escape_plugin_output
     )
-
-
-def render_link_to_view(content: str | HTML, row: Row, link_spec: VisualLinkSpec) -> str | HTML:
-    if display_options.disabled(display_options.I):
-        return content
-
-    url = url_to_visual(row, link_spec)
-    if url:
-        return HTMLWriter.render_a(content, href=url)
-    return content
-
-
-def url_to_visual(row: Row, link_spec: VisualLinkSpec) -> Optional[str]:
-    if display_options.disabled(display_options.I):
-        return None
-
-    visual = _get_visual_by_link_spec(link_spec)
-    if not visual:
-        return None
-
-    visual_type = visual_type_registry[link_spec.type_name]()
-
-    if visual_type.ident == "views":
-        datasource = data_source_registry[visual["datasource"]]()
-        infos = datasource.infos
-        link_filters = datasource.link_filters
-    elif visual_type.ident == "dashboards":
-        # TODO: Is this "infos" correct?
-        infos = []
-        link_filters = {}
-    else:
-        raise NotImplementedError(f"Unsupported visual type: {visual_type}")
-
-    singlecontext_request_vars = _get_singlecontext_html_vars_from_row(
-        visual["name"], row, infos, visual["single_infos"], link_filters
-    )
-
-    return make_linked_visual_url(
-        visual_type, visual, singlecontext_request_vars, is_mobile(request, response)
-    )
-
-
-def _get_visual_by_link_spec(link_spec: Optional[VisualLinkSpec]) -> Optional[Visual]:
-    if link_spec is None:
-        return None
-
-    visual_type = visual_type_registry[link_spec.type_name]()
-    visual_type.load_handler()
-    available_visuals = visual_type.permitted_visuals
-
-    with suppress(KeyError):
-        return available_visuals[link_spec.name]
-
-    return None
-
-
-def _get_singlecontext_html_vars_from_row(
-    visual_name: VisualName,
-    row: Row,
-    infos: SingleInfos,
-    single_infos: SingleInfos,
-    link_filters: Dict[str, str],
-) -> Dict[str, str]:
-    # Get the context type of the view to link to, then get the parameters of this context type
-    # and try to construct the context from the data of the row
-    url_vars: Dict[str, str] = {}
-    for info_key in single_infos:
-        # Determine which filters (their names) need to be set for specifying in order to select
-        # correct context for the target view.
-        for filter_name in visuals.info_params(info_key):
-            filter_object = visuals.get_filter(filter_name)
-            # Get the list of URI vars to be set for that filter
-            try:
-                url_vars.update(filter_object.request_vars_from_row(row))
-            except KeyError:
-                # The information needed for a mandatory filter (single context) is not available.
-                # Continue without failing: The target site will show up a warning and ask for the
-                # missing information.
-                pass
-
-    # See get_link_filter_names() comment for details
-    for src_key, dst_key in visuals.get_link_filter_names(single_infos, infos, link_filters):
-        try:
-            url_vars.update(visuals.get_filter(src_key).request_vars_from_row(row))
-        except KeyError:
-            pass
-
-        try:
-            url_vars.update(visuals.get_filter(dst_key).request_vars_from_row(row))
-        except KeyError:
-            pass
-
-    add_site_hint = visuals.may_add_site_hint(
-        visual_name,
-        info_keys=tuple(visual_info_registry.keys()),
-        single_info_keys=tuple(single_infos),
-        filter_names=tuple(url_vars.keys()),
-    )
-    if add_site_hint and row.get("site"):
-        url_vars["site"] = row["site"]
-
-    return url_vars
-
-
-def make_linked_visual_url(
-    visual_type: VisualType,
-    visual: Visual,
-    singlecontext_request_vars: Dict[str, str],
-    mobile: bool,
-) -> str:
-    """Compute URLs to link from a view to other dashboards and views"""
-    name = visual["name"]
-
-    filename = visual_type.show_url
-    if mobile and visual_type.show_url == "view.py":
-        filename = "mobile_" + visual_type.show_url
-
-    # Include visual default context. This comes from the hard_filters. Linked
-    # view would have no _active flag. Thus prepend the default context
-    required_vars = [(visual_type.ident_attr, name)] + visuals.context_to_uri_vars(
-        visual.get("context", {})
-    )
-
-    # add context link to this visual. For reports we put in
-    # the *complete* context, even the non-single one.
-    if visual_type.multicontext_links:
-        # Keeping the _active flag is a long distance hack to be able to rebuild the
-        # filters on the linked view using the visuals.VisualFilterListWithAddPopup.from_html_vars
-        return makeuri(
-            request, required_vars, filename=filename, delvars=["show_checkboxes", "selection"]
-        )
-
-    vars_values = get_linked_visual_request_vars(visual, singlecontext_request_vars)
-    # For views and dashboards currently the current filter settings
-    return makeuri_contextless(
-        request,
-        vars_values + required_vars,
-        filename=filename,
-    )
-
-
-def translate_filters(visual):
-    if datasource_name := visual.get("datasource"):
-        datasource = data_source_registry[datasource_name]()
-        link_filters = datasource.link_filters
-        return lambda x: link_filters.get(x, x)
-    return lambda x: x
-
-
-def get_linked_visual_request_vars(
-    visual: Visual, singlecontext_request_vars: Dict[str, str]
-) -> HTTPVariables:
-    vars_values: HTTPVariables = []
-
-    filters = visuals.get_single_info_keys(visual["single_infos"])
-
-    for src_filter, dst_filter in zip(filters, map(translate_filters(visual), filters)):
-        try:
-            src_var = visuals.get_filter(src_filter).htmlvars[0]
-            dst_var = visuals.get_filter(dst_filter).htmlvars[0]
-            vars_values.append((dst_var, singlecontext_request_vars[src_var]))
-        except KeyError:
-            # The information needed for a mandatory filter (single context) is not available.
-            # Continue without failing: The target site will show up a warning and ask for the
-            # missing information.
-            pass
-
-    if "site" in singlecontext_request_vars:
-        vars_values.append(("site", singlecontext_request_vars["site"]))
-    else:
-        # site may already be added earlier from the livestatus row
-        add_site_hint = visuals.may_add_site_hint(
-            visual["name"],
-            info_keys=tuple(visual_info_registry.keys()),
-            single_info_keys=tuple(visual["single_infos"]),
-            filter_names=tuple(list(dict(vars_values).keys())),
-        )
-
-        if add_site_hint and request.var("site"):
-            vars_values.append(("site", request.get_ascii_input_mandatory("site")))
-
-    return vars_values
 
 
 def get_tag_groups(row: Row, what: str) -> TaggroupIDToTagID:

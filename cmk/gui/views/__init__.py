@@ -393,6 +393,7 @@ def _register_pre_21_plugin_api() -> None:
     import cmk.gui.plugins.views.utils as plugin_utils
     import cmk.gui.sorter as sorter
     import cmk.gui.view_store as view_store
+    import cmk.gui.visual_link as visual_link
 
     for name in (
         "ABCDataSource",
@@ -474,17 +475,21 @@ def _register_pre_21_plugin_api() -> None:
         "PainterOptions",
         "register_painter",
         "render_cache_info",
-        "render_link_to_view",
         "replace_action_url_macros",
         "Row",
         "row_id",
         "transform_action_url",
-        "url_to_visual",
         "view_is_enabled",
         "view_title",
         "VisualLinkSpec",
     ):
         api_module.__dict__[name] = plugin_utils.__dict__[name]
+
+    for name in (
+        "render_link_to_view",
+        "url_to_visual",
+    ):
+        api_module.__dict__[name] = visual_link.__dict__[name]
 
     api_module.__dict__.update(
         {

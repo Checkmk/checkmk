@@ -53,7 +53,6 @@ from cmk.gui.plugins.views.utils import (
     painter_registry,
     PainterOption,
     render_cache_info,
-    render_link_to_view,
     replace_action_url_macros,
     transform_action_url,
     VisualLinkSpec,
@@ -79,6 +78,7 @@ from cmk.gui.valuespec import (
     Transform,
 )
 from cmk.gui.view_utils import CellSpec, CSSClass, get_labels, render_labels, render_tag_groups
+from cmk.gui.visual_link import render_link_to_view
 
 #   .--Painter Options-----------------------------------------------------.
 #   |                   ____       _       _                               |

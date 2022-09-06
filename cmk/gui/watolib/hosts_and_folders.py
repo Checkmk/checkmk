@@ -1805,6 +1805,12 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         path = self.path()
         return "/wato/%s/" % path if path else "/wato/"
 
+    @staticmethod
+    def from_path_for_rule_matching(path_for_rule_matching: str) -> CREFolder:
+        if not path_for_rule_matching.startswith("/wato/"):
+            raise ValueError(path_for_rule_matching)
+        return Folder.folder(path_for_rule_matching[len("/wato/") :].rstrip("/"))
+
     def object_ref(self) -> ObjectRef:
         return ObjectRef(ObjectRefType.Folder, self.path())
 

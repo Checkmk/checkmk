@@ -331,6 +331,9 @@ def check_oracle_asm_diskgroup(  # pylint: disable=too-many-branches
             else:
                 dg_sizefactor = 3
 
+        elif dgtype == "FLEX":
+            dg_sizefactor = 1
+
         dg_votecount = 0
         dg_disks = 0
 

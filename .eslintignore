@@ -7,7 +7,6 @@ enterprise/web/htdocs/js/modules/ntop/ntop_flows.*s
 enterprise/web/htdocs/js/modules/ntop/ntop_top_talkers.*s
 enterprise/web/htdocs/js/modules/figures/cmk_tabs.*s
 enterprise/web/htdocs/js/modules/figures/cmk_site_overview.*s
-enterprise/web/htdocs/js/modules/figures/cmk_dc_table.*s
 enterprise/web/htdocs/js/modules/figures/cmk_timeseries.*s
 enterprise/web/htdocs/js/modules/figures/cmk_alert_statistics.*s
 enterprise/web/htdocs/js/modules/figures/cmk_gauge.*s

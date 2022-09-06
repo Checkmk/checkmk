@@ -103,6 +103,32 @@ SECTION_WITH_FG = asm.Section(
 )
 
 
+SECTION_WITH_FG_FLEX = asm.Section(
+    diskgroups={
+        ITEM: asm.Diskgroup(
+            dgstate="MOUNTED",
+            dgtype="FLEX",
+            fail_groups=[
+                asm.Failgroup(
+                    fg_disks=1,
+                    fg_free_mb=489148,
+                    fg_min_repair_time=8640000,
+                    fg_name="DATA_0000",
+                    fg_total_mb=614400,
+                    fg_type="REGULAR",
+                    fg_voting_files="N",
+                )
+            ],
+            free_mb=489148,
+            offline_disks=0,
+            req_mir_free_mb=0,
+            total_mb=614400,
+            voting_files="N",
+        )
+    }
+)
+
+
 @pytest.fixture(name="value_store_patch")
 def value_store_fixture(monkeypatch):
     value_store_patched = {
@@ -376,11 +402,51 @@ def test_discovery(section, expected):
                 ),
             ],
         ),
+        (
+            SECTION_WITH_FG_FLEX,
+            {
+                **asm.ASM_DISKGROUP_DEFAULT_LEVELS,
+                **{
+                    "req_mir_free": True,
+                },  # Ignore Requirre mirror free space in DG
+            },
+            [
+                Metric(
+                    "fs_used",
+                    125252.0,
+                    levels=(491520.0, 552960.0),
+                    boundaries=(0.0, 614400.0),
+                ),
+                Metric(
+                    "fs_size",
+                    614400.0,
+                    boundaries=(0.0, None),
+                ),
+                Metric(
+                    "fs_used_percent",
+                    20.386067708333332,
+                    levels=(80.0, 90.0),
+                    boundaries=(0, 100.0),
+                ),
+                Result(state=state.OK, summary="20.39% used (122 of 600 GiB)"),
+                Metric("growth", -4451.90076172092),
+                Result(state=state.OK, summary="trend per 1 day 0 hours: -4.35 GiB"),
+                Result(state=state.OK, summary="trend per 1 day 0 hours: -0.72%"),
+                Metric(
+                    "trend",
+                    -4451.90076172092,
+                    boundaries=(0.0, 25600.0),
+                ),
+                Result(
+                    state=state.OK,
+                    summary="flex redundancy, 1 disks in 1 failgroups, required mirror free space used",
+                ),
+            ],
+        ),
     ],
 )
 def test_check(value_store_patch, section, params, expected):
     with on_time(*NOW_SIMULATED):
-
         assert expected == list(asm.check_oracle_asm_diskgroup(ITEM, params, section))
 
 

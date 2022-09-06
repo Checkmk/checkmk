@@ -1,0 +1,13 @@
+Title: oracle_asm_diskgroup: Fix calculation of total and free space if disk group type is "FLEX"
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1662469792
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p12
+
+
+

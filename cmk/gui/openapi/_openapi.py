@@ -4,22 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
-import json
-import sys
 from typing import Any, Dict, List, Tuple
 
-from apispec.yaml_utils import dict_to_yaml  # type: ignore[import]
 from openapi_spec_validator import validate_spec  # type: ignore[import]
 
 from cmk.utils.site import omd_site
 
-from cmk.gui import main_modules
 from cmk.gui.plugins.openapi.restful_objects import SPEC
 from cmk.gui.plugins.openapi.restful_objects.decorators import Endpoint
 from cmk.gui.plugins.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
 from cmk.gui.plugins.openapi.restful_objects.type_defs import EndpointTarget
-from cmk.gui.utils import get_failed_plugins
-from cmk.gui.utils.script_helpers import application_and_request_context
 
 # TODO
 #   Eventually move all of SPEC stuff in here, so we have nothing statically defined.
@@ -126,26 +120,4 @@ def _add_cookie_auth(check_dict):
     }
 
 
-def generate(args=None):
-    if args is None:
-        args = [None]
-
-    with application_and_request_context():
-        data = generate_data(target="debug")
-
-    if args[-1] == "--json":
-        output = json.dumps(data, indent=2).rstrip()
-    else:
-        output = dict_to_yaml(data).rstrip()
-
-    return output
-
-
 __all__ = ["ENDPOINT_REGISTRY", "generate_data", "add_once"]
-
-if __name__ == "__main__":
-    # FIXME: how to load plugins? Spec is empty.
-    main_modules.load_plugins()
-    if errors := get_failed_plugins():
-        raise Exception(f"The following errors occurred during plugin loading: {errors}")
-    print(generate(sys.argv))

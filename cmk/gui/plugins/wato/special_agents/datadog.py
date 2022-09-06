@@ -13,7 +13,17 @@ from cmk.gui.plugins.wato.utils import (
     MigrateToIndividualOrStoredPassword,
     rulespec_registry,
 )
-from cmk.gui.valuespec import Age, Dictionary, DropdownChoice, HTTPUrl, ListOfStrings, RegExp
+from cmk.gui.valuespec import (
+    Age,
+    Dictionary,
+    DropdownChoice,
+    HTTPUrl,
+    ListOf,
+    ListOfStrings,
+    RegExp,
+    TextInput,
+    Tuple,
+)
 from cmk.gui.watolib.rulespecs import Rulespec
 
 
@@ -101,7 +111,7 @@ def _valuespec_special_agents_datadog() -> Dictionary:
                     title=_("Fetch events"),
                     help=_(
                         "Fetch events from the event stream of your datadog instance. Fetched "
-                        "events will be forwared to the event console of the site where the "
+                        "events will be forwared to the Event Console of the site where the "
                         "special agent is executed."
                     ),
                     elements=[
@@ -212,8 +222,98 @@ def _valuespec_special_agents_datadog() -> Dictionary:
                     optional_keys=["tags", "tags_to_show"],
                 ),
             ),
+            (
+                "logs",
+                Dictionary(
+                    title=_("Fetch logs"),
+                    help=_(
+                        "Fetch logs of your datadog instance. Fetched logs will be forwared to the "
+                        "Event Console of the site where the special agent is executed."
+                    ),
+                    elements=[
+                        (
+                            "max_age",
+                            Age(
+                                title=_("Maximum age of fetched logs (10 hours max.)"),
+                                help=_(
+                                    "During each run, the agent will fetch logs which are at "
+                                    "maximum this old. The agent memorizes logs already fetched "
+                                    "during the last run, s.t. no logs will be sent to the event "
+                                    "console multiple times. Setting this value lower than the "
+                                    "check interval of the host will result in missing logs. "
+                                ),
+                                minvalue=10,
+                                maxvalue=10 * 3600,
+                                default_value=600,
+                                display=["hours", "minutes", "seconds"],
+                            ),
+                        ),
+                        (
+                            "query",
+                            TextInput(
+                                title=_("Log search query"),
+                                help=_(
+                                    "Query to speficy which logs should be forwarded to the event "
+                                    "console. Use the Datadog "
+                                    "<a href='https://docs.datadoghq.com/logs/explorer/search_syntax'>log search syntax</a>."
+                                ),
+                            ),
+                        ),
+                        (
+                            "indexes",
+                            ListOfStrings(
+                                title=_("Indexes to search"),
+                                default_value=["*"],
+                                help=_(
+                                    "Indexes to search, defaults to '*', which means all indexes."
+                                ),
+                            ),
+                        ),
+                        (
+                            "syslog_facility",
+                            DropdownChoice(
+                                choices=syslog_facilities,
+                                title=_("Syslog facility"),
+                                help=_("Syslog facility of forwarded logs shown in Event Console."),
+                                default_value=1,
+                            ),
+                        ),
+                        (
+                            "service_level",
+                            DropdownChoice(
+                                choices=service_levels(),
+                                title=_("Service level"),
+                                help=_("Service level of forwarded logs shown in Event Console."),
+                                prefix_values=True,
+                            ),
+                        ),
+                        (
+                            "text",
+                            ListOf(
+                                title=_("Text of forwarded events"),
+                                help=_(
+                                    "The text of the event can be constructed from the "
+                                    "<a href='https://docs.datadoghq.com/api/latest/logs/#search-logs'>attributes section of a log entry</a>. "
+                                    "The text elements are rendered as 'Name:str(attributes[Key])', separated by a comma. "
+                                    "To access nested fields, use 'key.subkey'. Defaults to the message of the log."
+                                ),
+                                add_label=_("new element"),
+                                default_value=[("message", "message")],
+                                valuespec=Tuple(
+                                    orientation="horizontal",
+                                    elements=[
+                                        TextInput(title=_("Name")),
+                                        TextInput(title=_("Key")),
+                                    ],
+                                ),
+                            ),
+                        ),
+                    ],
+                    optional_keys=[],
+                ),
+            ),
         ],
-        optional_keys=["proxy", "monitors", "events"],
+        optional_keys=["proxy", "monitors", "events", "logs"],
     )
 
 

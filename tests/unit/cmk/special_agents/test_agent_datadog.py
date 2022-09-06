@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 import json
 from collections.abc import Mapping, Sequence
 from http import HTTPStatus
+from typing import Any
 
 import pytest
 import requests
@@ -14,8 +16,14 @@ from pytest import MonkeyPatch
 from cmk.special_agents import agent_datadog
 from cmk.special_agents.agent_datadog import (
     _event_to_syslog_message,
+    _log_to_syslog_message,
+    DatadogAPI,
     Event,
     EventsQuerier,
+    Log,
+    LogAttributes,
+    LogMessageElement,
+    LogsQuerier,
     MonitorsQuerier,
     parse_arguments,
 )
@@ -48,9 +56,25 @@ def test_parse_arguments() -> None:
             "--event_service_level",
             "0",
             "--event_add_text",
+            "--log_max_age",
+            "90",
+            "--log_indexes",
+            "check",
+            "MK",
+            "--log_query",
+            "test",
+            "--log_text",
+            "name:key",
+            "foo:bar",
+            "other:foo.bar",
+            "--log_syslog_facility",
+            "1",
+            "--log_service_level",
+            "0",
             "--sections",
             "monitors",
             "events",
+            "logs",
         ]
     )
 
@@ -58,6 +82,7 @@ def test_parse_arguments() -> None:
 class MockDatadogAPI:
     def __init__(self, page_to_data: Mapping[object, object]) -> None:
         self.page_to_data = page_to_data
+        self._returned_too_many_requests = False
 
     def get_request(
         self,
@@ -68,6 +93,19 @@ class MockDatadogAPI:
         if (resp := self.page_to_data.get(params["page"])) is None:
             raise RuntimeError
         return self._response(HTTPStatus.OK, json_data=resp)
+
+    def post_request(
+        self,
+        api_endpoint: str,
+        body: Mapping[str, Any],
+        version: str = "v1",
+    ) -> requests.Response:
+        if (resp := self.page_to_data.get(body["page"].get("cursor"))) is None:
+            raise RuntimeError
+        if self._returned_too_many_requests:
+            return self._response(HTTPStatus.OK, json_data=resp)
+        self._returned_too_many_requests = True
+        return self._response(HTTPStatus.TOO_MANY_REQUESTS)
 
     @staticmethod
     def _response(status_code: HTTPStatus, json_data: object = None) -> requests.Response:
@@ -223,4 +261,170 @@ def test_event_to_syslog_message() -> None:
             )
         )
         == '<9>1 2021-04-12T08:28:42+00:00 - - - - [Checkmk@18662 host="starbase 3" application="main bridge"] something bad happened, Tags: ship:enterprise, priority_one, Text: Abandon ship ~ , abandon ship!'
+    )
+
+
+class TestLogsQuerier:
+    @pytest.fixture(name="logs")
+    def fixture_logs(self) -> Sequence[Log]:
+        return [
+            Log(
+                attributes=LogAttributes(
+                    attributes={},
+                    host="host",
+                    message="msg",
+                    service="app",
+                    status="emergency",
+                    tags=[],
+                    timestamp="2022-09-07T11:01:54.812Z",
+                ),
+                id="1",
+            ),
+            Log(
+                attributes=LogAttributes(
+                    attributes={},
+                    host="host",
+                    message="msg",
+                    service="app",
+                    status="emergency",
+                    tags=[],
+                    timestamp="2022-09-07T11:01:54.812Z",
+                ),
+                id="2",
+            ),
+            Log(
+                attributes=LogAttributes(
+                    attributes={},
+                    host="host",
+                    message="msg",
+                    service="app",
+                    status="emergency",
+                    tags=[],
+                    timestamp="2022-09-07T11:01:54.812Z",
+                ),
+                id="3",
+            ),
+            Log(
+                attributes=LogAttributes(
+                    attributes={},
+                    host="host",
+                    message="msg",
+                    service="app",
+                    status="emergency",
+                    tags=[],
+                    timestamp="2022-09-07T11:01:54.812Z",
+                ),
+                id="4",
+            ),
+        ]
+
+    @pytest.fixture(name="datadog_api")
+    def fixture_datadog_api(
+        self,
+        logs: Sequence[Log],
+    ) -> MockDatadogAPI:
+        return MockDatadogAPI(
+            page_to_data={
+                None: {
+                    "data": [log.dict() for log in logs[:3]],
+                    "meta": {"page": {"after": "next"}},
+                },
+                "next": {
+                    "data": [log.dict() for log in logs[3:]],
+                },
+            }
+        )
+
+    @pytest.fixture(name="logs_querier")
+    def fixture_logs_querier(
+        self,
+        datadog_api: DatadogAPI,
+    ) -> LogsQuerier:
+        return LogsQuerier(
+            datadog_api,
+            500,
+            query="test",
+            indexes=["test"],
+            hostname="pytest",
+            cooldown_too_many_requests=0,
+        )
+
+    def test_logs_query_time_range(
+        self,
+        monkeypatch: MonkeyPatch,
+        logs_querier: LogsQuerier,
+    ) -> None:
+        timestamp = 1601310544
+        now = datetime.datetime.fromtimestamp(timestamp)
+        monkeypatch.setattr(
+            agent_datadog.time,
+            "time",
+            lambda: timestamp,
+        )
+        assert logs_querier._query_time_range() == (
+            now - datetime.timedelta(seconds=logs_querier.max_age),
+            now,
+        )
+
+    def test_query_logs_no_previous_ids(
+        self,
+        logs_querier: LogsQuerier,
+        logs: Sequence[Log],
+    ) -> None:
+        assert list(logs_querier.query_logs()) == logs
+        assert logs_querier.id_store.read() == frozenset({"1", "2", "3", "4"})
+
+    def test_query_logs_with_previous_ids(
+        self,
+        logs_querier: LogsQuerier,
+        logs: Sequence[Log],
+    ) -> None:
+        logs_querier.id_store.write(["1", "2", "5"])
+        assert list(logs_querier.query_logs()) == logs[-2:]
+        assert logs_querier.id_store.read() == frozenset({"1", "2", "3", "4"})
+
+
+@pytest.mark.parametrize(
+    ["raw_translator", "message_text"],
+    [
+        pytest.param([], "", id="default"),
+        pytest.param(["S:service", "H:host"], " S=app, H=cmk", id="multiple keys"),
+        pytest.param(["KEY:foobar"], "", id="none existing key"),
+        pytest.param(["N:attributes.test.baz"], " N=fun", id="nested key"),
+        pytest.param(["Number:attributes.number"], " Number=42", id="numerical"),
+        pytest.param(
+            ["object:attributes.object"],
+            " object=[1, 2, 3, cmk: [4, 5, 6], tribe29]",
+            id="composite object",
+        ),
+    ],
+)
+def test_log_to_syslog_message(raw_translator: Sequence[str], message_text: str) -> None:
+    translator = list(LogMessageElement.from_arg(el) for el in raw_translator)
+    message = repr(
+        _log_to_syslog_message(
+            Log(
+                id="hello",
+                attributes=LogAttributes(
+                    attributes={
+                        "test": {"baz": "fun"},
+                        "number": 42,
+                        "object": [1, 2, 3, {"cmk": [4, 5, 6]}, "tribe29"],
+                    },
+                    host="cmk",
+                    service="app",
+                    status="error",
+                    tags=["hello"],
+                    timestamp="2022-09-07T11:01:54.812Z",
+                    message="msg",
+                ),
+            ),
+            facility=0,
+            service_level=0,
+            translator=translator,
+        )
+    )
+    assert (
+        message
+        == f"<3>1 2022-09-07T11:01:54.812000+00:00 cmk app - - [Checkmk@18662]{message_text}"
     )

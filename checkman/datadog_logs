@@ -1,0 +1,12 @@
+title: Datadog: logs
+agents: datadog
+catalog: cloud/datadog
+license: GPLv2
+distribution: check_mk
+description:
+ This check reports the number of logs forwarded to the Event Console by
+ the Datadog special agent. Its monitoring state is always OK and it is
+ not configurable.
+
+discovery:
+ One service is created.

@@ -63,14 +63,14 @@ def get_cmk_version(branch, version) {
       "${version}");
 }
 
-def configured_or_overridden_distros(edition, distro_list) {
+def configured_or_overridden_distros(edition, distro_list, distro_key="DISTROS") {
     if(distro_list) {
         return distro_list.trim().split(' ');
     }
     try {
-        return load_json("${checkout_dir}/editions.json")[edition]["DISTROS"];
+        return load_json("${checkout_dir}/editions.json")[edition][distro_key];
     } catch (Exception exc) {
-        raise("Could not find editions.json:'${edition}':'DISTROS'");
+        raise("Could not find editions.json:'${edition}':'{distro_key}'");
     }
 }
 

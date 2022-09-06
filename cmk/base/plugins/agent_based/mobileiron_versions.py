@@ -8,7 +8,7 @@ import contextlib
 import datetime
 from typing import TypedDict
 
-from .agent_based_api.v1 import check_levels, regex, register, Result, Service, State
+from .agent_based_api.v1 import check_levels, regex, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils.mobileiron import Section
 
@@ -23,7 +23,7 @@ class Params(TypedDict):
     os_version_other: int
 
 
-def _try_calculation_age(date_string: str) -> datetime.timedelta:
+def _try_calculation_age(date_string: str) -> int:
     """
     Parse a date string. A date string can be in "%Y-%m-%d" or "%y%m%d" format.
     Return a timedelta between now and the parsed string.
@@ -31,46 +31,49 @@ def _try_calculation_age(date_string: str) -> datetime.timedelta:
 
     for fmt, fmt_len in (("%Y-%m-%d", 10), ("%y%m%d", 6)):
         with contextlib.suppress(ValueError):
-            return datetime.datetime.now() - datetime.datetime.strptime(date_string[:fmt_len], fmt)
+            delta = datetime.datetime.now() - datetime.datetime.strptime(date_string[:fmt_len], fmt)
+            return int(delta.total_seconds())
 
     raise ValueError("Cannot parse the date")
 
 
 def _check_android_patch_level(params: Params, patch_level: str) -> CheckResult:
 
-    level_days = datetime.timedelta(seconds=params["patchlevel_age"]).days
+    level_days = int(datetime.timedelta(seconds=params["patchlevel_age"]).total_seconds())
     try:
         age = _try_calculation_age(patch_level)
     except ValueError:
         yield Result(
             state=State(params["patchlevel_unparsable"]),
-            summary=f"Security patch level has an invalid date format: {patch_level}",
+            summary=f"Security patch level has an invalid date format: '{patch_level}'",
         )
     else:
         yield from check_levels(
-            label=f"Security patch level: {patch_level} / {age.days}",
-            value=age.days,
+            label=f"Security patch level is '{patch_level}'",
+            metric_name="mobileiron_last_patched",
+            value=age,
             levels_upper=(level_days, level_days),
-            render_func=str,
+            render_func=render.timespan,
         )
 
 
 def _check_os_build_version(params: Params, section: Section) -> CheckResult:
-    level_days = datetime.timedelta(seconds=params["os_age"]).days
+    level_days = int(datetime.timedelta(seconds=params["os_age"]).total_seconds())
     try:
         age = _try_calculation_age(str(section.os_build_version))
     except ValueError:
         yield Result(
             state=State(params["os_build_unparsable"]),
-            summary=f"OS build version has an invalid date format: {section.os_build_version}",
+            notice=f"OS build version has an invalid date format: '{section.os_build_version}'",
         )
     else:
-
         yield from check_levels(
-            label=f"OS build version: {section.os_build_version} / {age.days}",
-            value=age.days,
+            label=f"OS build version is '{section.os_build_version}'",
+            metric_name="mobileiron_last_build",
+            value=age,
             levels_upper=(level_days, level_days),
-            render_func=str,
+            render_func=render.timespan,
+            notice_only=True,
         )
 
 
@@ -78,7 +81,7 @@ def _check_os_version(section: Section, user_regex: str) -> Result:
     if not user_regex:
         return Result(
             state=State.OK,
-            summary=f"OS version: {section.platform_version}",
+            notice=f"OS version: {section.platform_version}",
         )
     try:
         match = regex(user_regex).search(str(section.platform_version))
@@ -87,20 +90,25 @@ def _check_os_version(section: Section, user_regex: str) -> Result:
     if match:
         return Result(
             state=State.OK,
-            summary=f"OS version: {section.platform_version}",
+            notice=f"OS version: {section.platform_version}",
         )
     return Result(
         state=State.CRIT,
-        summary=f"OS version mismatch: {section.platform_version}",
+        notice=f"OS version mismatch: {section.platform_version}",
     )
 
 
 def check_mobileiron_versions(params: Params, section: Section) -> CheckResult:
 
-    yield from _check_os_build_version(params, section)
+    yield Result(
+        state=State.OK,
+        summary=f"Client version: {section.client_version}",
+    )
 
     if section.android_security_patch_level:
         yield from _check_android_patch_level(params, section.android_security_patch_level)
+
+    yield from _check_os_build_version(params, section)
 
     if section.platform_type == "ANDROID":
         yield _check_os_version(section, params["android_version_regexp"])
@@ -111,11 +119,6 @@ def check_mobileiron_versions(params: Params, section: Section) -> CheckResult:
             state=State(params["os_version_other"]),
             summary=f"OS version: {section.platform_version}",
         )
-
-    yield Result(
-        state=State.OK,
-        summary=f"Client version: {section.client_version}",
-    )
 
 
 def discover_single(section: Section) -> DiscoveryResult:

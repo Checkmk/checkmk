@@ -8,7 +8,7 @@ import pytest
 
 from tests.testlib import on_time
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.mobileiron_section import parse_mobileiron
 from cmk.base.plugins.agent_based.mobileiron_versions import (
     _try_calculation_age,
@@ -67,17 +67,17 @@ DEVICE_DATA_OTHER = parse_mobileiron(
 @pytest.mark.parametrize(
     "string, expected_results",
     [
-        ("2021-01-01", 392),
-        ("2021-04-23", 280),
-        ("2129-04-23", -39166),
-        ("210101.QD01.081", 392),
-        ("290101", -2530),
-        ("290101", -2530),
+        ("2021-01-01", 33901066),
+        ("2021-04-23", 24224266),
+        ("2129-04-23", -3383910134),
+        ("210101.QD01.081", 33901066),
+        ("290101", -218559734),
+        ("290101", -218559734),
     ],
 )
 def test_try_calculation_age(string, expected_results) -> None:  # type:ignore[no-untyped-def]
     with on_time(1643360266, "UTC"):
-        assert _try_calculation_age(string).days == expected_results
+        assert _try_calculation_age(string) == expected_results
 
 
 def test_try_calculation_age_raises() -> None:
@@ -101,20 +101,22 @@ def test_try_calculation_age_raises() -> None:
             DEVICE_DATA_ANDROID,
             (
                 Result(
-                    state=State.CRIT,
-                    summary="OS build version: 210705.QD01.178 / 207: 207 (warn/crit at 90/90)",
-                ),
-                Result(
-                    state=State.CRIT,
-                    summary="Security patch level: 2021-07-05 / 207: 207 (warn/crit at 90/90)",
-                ),
-                Result(
-                    state=State.OK,
-                    summary="OS version: 10",
-                ),
-                Result(
                     state=State.OK,
                     summary="Client version: 80.0.0.14",
+                ),
+                Result(
+                    state=State.CRIT,
+                    summary="Security patch level is '2021-07-05': 207 days 8 hours (warn/crit at 90 days 0 hours/90 days 0 hours)",
+                ),
+                Metric("mobileiron_last_patched", 17917066.0, levels=(7776000.0, 7776000.0)),
+                Result(
+                    state=State.CRIT,
+                    summary="OS build version is '210705.QD01.178': 207 days 8 hours (warn/crit at 90 days 0 hours/90 days 0 hours)",
+                ),
+                Metric("mobileiron_last_build", 17917066.0, levels=(7776000.0, 7776000.0)),
+                Result(
+                    state=State.OK,
+                    notice="OS version: 10",
                 ),
             ),
         ),
@@ -132,15 +134,15 @@ def test_try_calculation_age_raises() -> None:
             (
                 Result(
                     state=State.OK,
-                    summary="OS build version has an invalid date format: 18G82",
-                ),
-                Result(
-                    state=State.OK,
-                    summary="OS version: 14.7.1",
-                ),
-                Result(
-                    state=State.OK,
                     summary="Client version: 80.0.0.14",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="OS build version has an invalid date format: '18G82'",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="OS version: 14.7.1",
                 ),
             ),
         ),
@@ -157,16 +159,16 @@ def test_try_calculation_age_raises() -> None:
             DEVICE_DATA_IOS,
             (
                 Result(
-                    state=State.WARN,
-                    summary="OS build version has an invalid date format: 18G82",
-                ),
-                Result(
-                    state=State.OK,
-                    summary="OS version: 14.7.1",
-                ),
-                Result(
                     state=State.OK,
                     summary="Client version: 80.0.0.14",
+                ),
+                Result(
+                    state=State.WARN,
+                    summary="OS build version has an invalid date format: '18G82'",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="OS version: 14.7.1",
                 ),
             ),
         ),
@@ -184,15 +186,15 @@ def test_try_calculation_age_raises() -> None:
             (
                 Result(
                     state=State.OK,
-                    summary="OS build version has an invalid date format: 18G82",
+                    summary="Client version: 80.0.0.14",
+                ),
+                Result(
+                    state=State.OK,
+                    notice="OS build version has an invalid date format: '18G82'",
                 ),
                 Result(
                     state=State.UNKNOWN,
                     summary="OS version: 14.7.1",
-                ),
-                Result(
-                    state=State.OK,
-                    summary="Client version: 80.0.0.14",
                 ),
             ),
         ),

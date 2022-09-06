@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import abc
+import hashlib
 from typing import Dict, List, Optional, Tuple, Type, TYPE_CHECKING, Union
 
 from livestatus import OnlySites
@@ -13,7 +14,7 @@ from livestatus import OnlySites
 from cmk.utils.plugin_registry import Registry
 
 from cmk.gui.plugins.visuals.utils import Filter
-from cmk.gui.type_defs import ColumnName, Rows, SingleInfos
+from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, ViewSpec
 
 if TYPE_CHECKING:
     from cmk.gui.view import View
@@ -172,3 +173,12 @@ class DataSourceRegistry(Registry[Type[ABCDataSource]]):
 
 
 data_source_registry = DataSourceRegistry()
+
+
+def row_id(view_spec: ViewSpec, row: Row) -> str:
+    """Calculates a uniq id for each data row which identifies the current
+    row accross different page loadings."""
+    key = ""
+    for col in data_source_registry[view_spec["datasource"]]().id_keys:
+        key += "~%s" % row[col]
+    return hashlib.sha256(key.encode("utf-8")).hexdigest()

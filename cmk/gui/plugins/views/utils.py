@@ -9,7 +9,6 @@
 from __future__ import annotations
 
 import abc
-import hashlib
 import os
 import re
 import time
@@ -57,7 +56,6 @@ import cmk.gui.view_utils
 import cmk.gui.visuals as visuals
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.config import active_config
-from cmk.gui.data_source import data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.hooks import request_memoize
@@ -83,7 +81,6 @@ from cmk.gui.type_defs import (
     PainterSpec,
     Row,
     Rows,
-    SingleInfos,
     SorterFunction,
     SorterName,
     ViewSpec,
@@ -293,15 +290,6 @@ class PainterOptions:
 
         html.hidden_fields()
         html.end_form()
-
-
-def row_id(view_spec: ViewSpec, row: Row) -> str:
-    """Calculates a uniq id for each data row which identifies the current
-    row accross different page loadings."""
-    key = ""
-    for col in data_source_registry[view_spec["datasource"]]().id_keys:
-        key += "~%s" % row[col]
-    return hashlib.sha256(key.encode("utf-8")).hexdigest()
 
 
 def group_value(row: Row, group_cells: Sequence[Cell]) -> Hashable:
@@ -1097,12 +1085,6 @@ def join_row(row: Row, cell: "Cell") -> Row:
     if isinstance(cell, JoinCell):
         return row.get("JOIN", {}).get(cell.join_service())
     return row
-
-
-def get_view_infos(view: ViewSpec) -> SingleInfos:
-    """Return list of available datasources (used to render filters)"""
-    ds_name = view.get("datasource", request.var("datasource"))
-    return data_source_registry[ds_name]().infos
 
 
 def replace_action_url_macros(url: str, what: str, row: Row) -> str:

@@ -20,6 +20,7 @@ from cmk.gui.alarm import play_alarm_sounds
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.command_utils import do_actions, get_command_groups, should_show_command_form
 from cmk.gui.config import active_config
+from cmk.gui.data_source import row_id
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
@@ -45,7 +46,7 @@ from cmk.gui.page_menu_utils import (
     get_context_page_menu_dropdowns,
     get_ntop_page_menu_dropdown,
 )
-from cmk.gui.plugins.views.utils import Command, PainterOptions, row_id, view_title
+from cmk.gui.plugins.views.utils import Command, PainterOptions, view_title
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import HTTPVariables, InfoName, Rows, ViewSpec
 from cmk.gui.utils.html import HTML

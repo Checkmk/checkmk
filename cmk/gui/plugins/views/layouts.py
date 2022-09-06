@@ -9,6 +9,7 @@ from typing import Any, Dict, Hashable, Iterator, List, Sequence, Tuple
 
 import cmk.gui.utils as utils
 from cmk.gui.config import active_config
+from cmk.gui.data_source import row_id
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
@@ -22,7 +23,6 @@ from cmk.gui.plugins.views.utils import (
     layout_registry,
     output_csv_headers,
     PainterOptions,
-    row_id,
 )
 from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.type_defs import GroupSpec, Row, Rows, ViewSpec

@@ -14,7 +14,7 @@ import cmk.gui.mkeventd as mkeventd
 import cmk.gui.sites as sites
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config, builtin_role_ids
-from cmk.gui.data_source import ABCDataSource, data_source_registry
+from cmk.gui.data_source import ABCDataSource, data_source_registry, row_id
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -37,7 +37,6 @@ from cmk.gui.plugins.views.utils import (
     paint_nagiosflag,
     Painter,
     painter_registry,
-    row_id,
 )
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import (

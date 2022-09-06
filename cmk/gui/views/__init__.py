@@ -82,7 +82,6 @@ from cmk.gui.plugins.views.icons.utils import (
 from cmk.gui.plugins.views.utils import (
     Cell,
     get_tag_groups,
-    get_view_infos,
     JoinCell,
     layout_registry,
     Painter,
@@ -119,6 +118,7 @@ from cmk.gui.type_defs import (
     PerfometerSpec,
     Row,
     Rows,
+    SingleInfos,
     TranslatedMetrics,
     ViewSpec,
     VisualContext,
@@ -398,6 +398,7 @@ def _register_pre_21_plugin_api() -> None:
     for name in (
         "ABCDataSource",
         "data_source_registry",
+        "row_id",
         "RowTable",
     ):
         api_module.__dict__[name] = data_source.__dict__[name]
@@ -477,7 +478,6 @@ def _register_pre_21_plugin_api() -> None:
         "render_cache_info",
         "replace_action_url_macros",
         "Row",
-        "row_id",
         "transform_action_url",
         "view_is_enabled",
         "view_title",
@@ -673,6 +673,11 @@ def page_create_view_infos():
 
 @cmk.gui.pages.register("edit_view")
 def page_edit_view():
+    def get_view_infos(view: ViewSpec) -> SingleInfos:
+        """Return list of available datasources (used to render filters)"""
+        ds_name = view.get("datasource", request.var("datasource"))
+        return data_source_registry[ds_name]().infos
+
     visuals.page_edit_visual(
         "views",
         get_all_views(),

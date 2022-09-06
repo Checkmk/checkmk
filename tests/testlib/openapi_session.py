@@ -64,7 +64,7 @@ class CMKOpenApiSession(requests.Session):
         self.headers["Accept"] = "application/json"
         self.set_authentication_header(user, password)
 
-    def set_authentication_header(self, user: str, password: str):  # type:ignore[no-untyped-def]
+    def set_authentication_header(self, user: str, password: str) -> None:
         self.headers["Authorization"] = f"Bearer {user} {password}"
 
     def request(  # type:ignore[no-untyped-def]

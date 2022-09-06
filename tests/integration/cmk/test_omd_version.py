@@ -3,13 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from pathlib import Path
+
+from pytest import MonkeyPatch
+
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 
 
 # Would move this to unit tests, but it would not work, because the
 # unit tests monkeypatch the cmk_version.omd_version() function
-def test_omd_version(tmp_path, monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_omd_version(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
     link_path = tmp_path / "version"
 
     monkeypatch.setattr(cmk.utils.paths, "omd_root", link_path.parent)

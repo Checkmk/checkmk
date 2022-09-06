@@ -5,7 +5,8 @@
 
 import abc
 import random
-from typing import Any, Iterable, Mapping, Optional, Sequence, TypedDict
+from collections.abc import Callable, Iterable, Mapping, Sequence
+from typing import Any, Container, Optional, TypedDict
 
 from cmk.utils.aws_constants import AWSEC2InstTypes
 
@@ -22,19 +23,24 @@ from cmk.utils.aws_constants import AWSEC2InstTypes
 
 
 class Entity(abc.ABC):
-    def __init__(self, key) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, key: str) -> None:
         self.key = key
 
     @abc.abstractmethod
-    def create(self, idx, amount):
-        return
+    def create(self, idx, amount: int) -> "Entity":  # type:ignore[no-untyped-def]
+        ...
 
 
 #   ---structural-----------------------------------------------------------
 
 
 class List(Entity):
-    def __init__(self, key, elements, from_choice=None) -> None:  # type:ignore[no-untyped-def]
+    def __init__(
+        self,
+        key: str,
+        elements: Iterable[Entity],
+        from_choice: Optional["Choice"] = None,
+    ) -> None:
         super().__init__(key)
         self._elements = elements
         self._from_choice = from_choice
@@ -51,8 +57,8 @@ class List(Entity):
 
 
 class Dict(Entity):
-    def __init__(  # type:ignore[no-untyped-def]
-        self, key, values, enumerate_keys: Optional[Entity] = None
+    def __init__(
+        self, key: str, values: Iterable[Entity], enumerate_keys: Entity | None = None
     ) -> None:
         super().__init__(key)
         self._values = values
@@ -72,7 +78,7 @@ class Dict(Entity):
 
 
 class Str(Entity):
-    def __init__(self, key, value=None) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, key: str, value: str | None = None) -> None:
         super().__init__(key)
         self.value = value
 
@@ -104,7 +110,7 @@ class Enum(Entity):
 
 
 class Choice(Entity):
-    def __init__(self, key, choices) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, key: str, choices: Sequence[str | bool | int | Entity]) -> None:
         super().__init__(key)
         self.choices = choices
 
@@ -113,7 +119,7 @@ class Choice(Entity):
 
 
 class BoolChoice(Choice):
-    def __init__(self, key) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, key: str) -> None:
         super().__init__(key, [True, False])
 
 
@@ -136,7 +142,7 @@ class Bytes(Str):
 
 
 class InstanceBuilder(abc.ABC):
-    def __init__(self, idx, amount, skip_entities=None) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, idx: int, amount: int, skip_entities: Container[str] = ()) -> None:
         self._idx = idx
         self._amount = amount
         self._skip_entities = [] if not skip_entities else skip_entities
@@ -188,7 +194,7 @@ class DictInstanceBuilder(abc.ABC):
     #   }
     # }
 
-    def __init__(self, idx, amount) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, idx: int, amount: int) -> None:
         self._idx = idx
         self._amount = amount
 
@@ -199,7 +205,9 @@ class DictInstanceBuilder(abc.ABC):
         return None
 
     @classmethod
-    def create_instances(cls, amount) -> Mapping[str, Any]:  # type:ignore[no-untyped-def]
+    def create_instances(
+        cls: Callable[[int, int], "DictInstanceBuilder"], amount: int
+    ) -> Mapping[Entity, Entity]:
         return {
             # static analysis does not recognize that None can not happen because of if clause -> disable warning
             key.create(idx, amount): value.create(idx, amount)
@@ -3073,7 +3081,7 @@ class FakeCloudwatchClientLogsClient:
     def get_query_results(self, queryId: str) -> QueryResults:
         return FAKE_CLOUDWATCH_CLIENT_LOGS_CLIENT_DEFAULT_RESPONSE
 
-    def stop_query(self, queryId: str):  # type:ignore[no-untyped-def]
+    def stop_query(self, queryId: str) -> None:
         pass
 
     def get_paginator(self, api_call):

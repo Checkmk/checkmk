@@ -23,6 +23,7 @@ from cmk.special_agents.agent_aws import (
 )
 
 from .agent_aws_fake_clients import (
+    Entity,
     FAKE_CLOUDWATCH_CLIENT_LOGS_CLIENT_DEFAULT_RESPONSE,
     FakeCloudwatchClient,
     FakeCloudwatchClientLogsClient,
@@ -58,8 +59,8 @@ class FakeLambdaClient:
             return PaginatorProvisionedConcurrencyConfigs()
         return None
 
-    def list_tags(self, Resource: str) -> Mapping[str, Any]:
-        tags: Mapping[str, Any] = {}
+    def list_tags(self, Resource: str) -> Mapping[str, Mapping[Entity, Entity]]:
+        tags: Mapping[Entity, Entity] = {}
         if Resource == "arn:aws:lambda:eu-central-1:123456789:function:FunctionName-0":
             tags = LambdaListTagsInstancesIB.create_instances(amount=1)
         return {"Tags": tags}

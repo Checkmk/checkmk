@@ -9,10 +9,13 @@ import logging
 import os
 import re
 import urllib.parse
-from typing import Any
+from collections.abc import Container, Iterable, Mapping
+from typing import Any, Collection
 
 import requests
 from bs4 import BeautifulSoup  # type: ignore[import]
+
+from cmk.utils.type_defs import RulesetName
 
 
 class APIError(Exception):
@@ -31,7 +34,7 @@ class CMKWebSession:
         self.site = site
         self.session = requests.Session()
 
-    def check_redirect(self, path, expected_target=None) -> None:  # type:ignore[no-untyped-def]
+    def check_redirect(self, path: str, expected_target: str | None = None) -> None:
         response = self.get(path, expected_code=302, allow_redirects=False)
         if expected_target:
             if response.headers["Location"] != expected_target:
@@ -49,11 +52,11 @@ class CMKWebSession:
 
     def request(  # type:ignore[no-untyped-def]
         self,
-        method,
-        path,
-        expected_code=200,
-        add_transid=False,
-        allow_redirect_to_login=False,
+        method: str | bytes,
+        path: str,
+        expected_code: int = 200,
+        add_transid: bool = False,
+        allow_redirect_to_login: bool = False,
         **kwargs,
     ) -> requests.Response:
         url = self.site.url_for_path(path)
@@ -77,13 +80,13 @@ class CMKWebSession:
         self._handle_http_response(response, expected_code, allow_redirect_to_login)
         return response
 
-    def _add_transid(self, url) -> str:  # type:ignore[no-untyped-def]
+    def _add_transid(self, url: str) -> str:
         if not self.transids:
             raise Exception("Tried to add a transid, but none available at the moment")
         return url + ("&" if "?" in url else "?") + "_transid=" + self.transids.pop()
 
-    def _handle_http_response(  # type:ignore[no-untyped-def]
-        self, response, expected_code, allow_redirect_to_login
+    def _handle_http_response(
+        self, response: requests.Response, expected_code: int, allow_redirect_to_login: bool
     ) -> None:
         assert (
             response.status_code == expected_code
@@ -108,11 +111,11 @@ class CMKWebSession:
             self._find_errors(response.text)
             self._check_html_page_resources(response.url, soup)
 
-    def _get_mime_type(self, response) -> str:  # type:ignore[no-untyped-def]
+    def _get_mime_type(self, response: requests.Response) -> str:
         assert "Content-Type" in response.headers
         return response.headers["Content-Type"].split(";", 1)[0]
 
-    def _extract_transids(self, body, soup) -> list:  # type:ignore[no-untyped-def]
+    def _extract_transids(self, body: str, soup: BeautifulSoup) -> list:
         """Extract transids from pages used in later actions issued by tests."""
 
         transids = set()
@@ -130,7 +133,7 @@ class CMKWebSession:
         matches = re.search("<div class=error>(.*?)</div>", body, re.M | re.DOTALL)
         assert not matches, "Found error message: %s" % matches.groups()
 
-    def _check_html_page_resources(self, url, soup) -> None:  # type:ignore[no-untyped-def]
+    def _check_html_page_resources(self, url: str | bytes | None, soup: BeautifulSoup) -> None:
         base_url = urllib.parse.urlparse(url).path
         if ".py" in base_url:
             base_url = os.path.dirname(base_url)
@@ -152,8 +155,14 @@ class CMKWebSession:
             filters=[("rel", "shortcut icon")],
         )
 
-    def _check_resources(  # type:ignore[no-untyped-def]
-        self, soup, base_url, tag, attr, allowed_mime_types, filters=None
+    def _check_resources(
+        self,
+        soup: BeautifulSoup,
+        base_url: str | bytes,
+        tag: str,
+        attr: str,
+        allowed_mime_types: Container,
+        filters: Collection | None = None,
     ) -> None:
         for url in self._find_resource_urls(tag, attr, soup, filters):
             # Only check resources once per session
@@ -162,13 +171,14 @@ class CMKWebSession:
             self.verified_resources.add(url)
 
             assert not url.startswith("/")
+            assert isinstance(base_url, str)
             req = self.get(base_url + "/" + url, verify=False)
 
             mime_type = self._get_mime_type(req)
             assert mime_type in allowed_mime_types
 
     def _find_resource_urls(  # type:ignore[no-untyped-def]
-        self, tag, attribute, soup, filters=None
+        self, tag: str, attribute, soup: BeautifulSoup, filters: Collection | None = None
     ) -> list:
         urls = []
 
@@ -232,9 +242,13 @@ class CMKWebSession:
             "_secret": self.site.get_automation_secret(),
         }
 
-    def _api_request(  # type:ignore[no-untyped-def]
-        self, url, data, expect_error: bool = False, output_format: str = "json"
-    ):
+    def _api_request(
+        self,
+        url: object,
+        data: dict[str, object],
+        expect_error: bool = False,
+        output_format: str = "json",
+    ) -> Mapping[str, object]:
         data.update(self._automation_credentials())
 
         req = self.post(url, data=data)
@@ -258,7 +272,11 @@ class CMKWebSession:
 
         return response["result"]
 
-    def set_ruleset(self, ruleset_name, ruleset_spec) -> None:  # type:ignore[no-untyped-def]
+    def set_ruleset(
+        self,
+        ruleset_name: RulesetName,
+        ruleset_spec: Iterable[tuple[str, RulesetName]] | Mapping[str, RulesetName],
+    ) -> None:
         request = {
             "ruleset_name": ruleset_name,
         }
@@ -284,9 +302,7 @@ class CMKWebSession:
         assert result is None
 
     # TODO: Cleanup remaining API call
-    def login_site(  # type:ignore[no-untyped-def]
-        self, site_id, user: str = "cmkadmin", password: str = "cmk"
-    ) -> None:
+    def login_site(self, site_id: object, user: str = "cmkadmin", password: str = "cmk") -> None:
         result = self._api_request(
             "webapi.py?action=login_site",
             {"request": json.dumps({"site_id": site_id, "username": user, "password": password})},
@@ -298,7 +314,7 @@ class CMKWebSession:
         return self._api_request("webapi.py?action=get_all_users", {})
 
     # TODO: Cleanup remaining API call
-    def edit_htpasswd_users(self, users) -> None:  # type:ignore[no-untyped-def]
+    def edit_htpasswd_users(self, users: object) -> None:
         result = self._api_request(
             "webapi.py?action=edit_users", {"request": json.dumps({"users": users})}
         )

@@ -18,15 +18,13 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.painter_options import painter_option_registry, PainterOption, PainterOptions
 from cmk.gui.plugins.views.utils import (
     Cell,
     CellSpec,
     CSVExportError,
     Painter,
-    painter_option_registry,
     painter_registry,
-    PainterOption,
-    PainterOptions,
     Row,
 )
 from cmk.gui.type_defs import ColumnName, Rows, SingleInfos

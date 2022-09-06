@@ -21,6 +21,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.livestatus_data_source import RowTableLivestatus
 from cmk.gui.logged_in import user
+from cmk.gui.painter_options import paint_age
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.dashboard.utils import ABCViewDashletConfig
 from cmk.gui.plugins.views.utils import (
@@ -33,7 +34,6 @@ from cmk.gui.plugins.views.utils import (
     CommandActionResult,
     CommandSpec,
     declare_1to1_sorter,
-    paint_age,
     paint_nagiosflag,
     Painter,
     painter_registry,

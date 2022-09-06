@@ -10,19 +10,16 @@ from typing import Callable, Literal, Sequence
 from cmk.gui.config import active_config
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l
-from cmk.gui.plugins.metrics import html_render
-from cmk.gui.plugins.metrics.utils import CombinedGraphMetricSpec
-from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
-from cmk.gui.plugins.views.utils import (
-    Cell,
-    CSVExportError,
+from cmk.gui.painter_options import (
     get_graph_timerange_from_painter_options,
-    JSONExportError,
-    Painter2,
     painter_option_registry,
     PainterOption,
     PainterOptions,
 )
+from cmk.gui.plugins.metrics import html_render
+from cmk.gui.plugins.metrics.utils import CombinedGraphMetricSpec
+from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
+from cmk.gui.plugins.views.utils import Cell, CSVExportError, JSONExportError, Painter2
 from cmk.gui.type_defs import (
     ColumnName,
     CombinedGraphSpec,

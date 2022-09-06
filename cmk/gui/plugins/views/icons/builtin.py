@@ -52,9 +52,10 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.painter_options import paint_age
 from cmk.gui.plugins.views.graphs import cmk_graph_url
 from cmk.gui.plugins.views.icons.utils import Icon, icon_and_action_registry
-from cmk.gui.plugins.views.utils import display_options, is_stale, paint_age, render_cache_info
+from cmk.gui.plugins.views.utils import display_options, is_stale, render_cache_info
 from cmk.gui.type_defs import ColumnName, Row, VisualLinkSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile

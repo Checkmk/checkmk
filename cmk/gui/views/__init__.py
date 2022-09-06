@@ -63,6 +63,7 @@ from cmk.gui.inventory import (
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_external_link, PageMenuEntry, PageMenuTopic
 from cmk.gui.pages import AjaxPage, page_registry, PageResult
+from cmk.gui.painter_options import PainterOptions
 from cmk.gui.permissions import (
     declare_dynamic_permissions,
     declare_permission,
@@ -87,7 +88,6 @@ from cmk.gui.plugins.views.utils import (
     load_used_options,
     Painter,
     painter_registry,
-    PainterOptions,
     PainterRegistry,
     register_legacy_command,
     register_painter,
@@ -390,6 +390,7 @@ def _register_pre_21_plugin_api() -> None:
     import cmk.gui.data_source as data_source
     import cmk.gui.exporter as exporter
     import cmk.gui.livestatus_data_source as livestatus_data_source
+    import cmk.gui.painter_options as painter_options
     import cmk.gui.plugins.views as api_module
     import cmk.gui.plugins.views.utils as plugin_utils
     import cmk.gui.sorter as sorter
@@ -416,6 +417,15 @@ def _register_pre_21_plugin_api() -> None:
         "query_livestatus",
     ):
         api_module.__dict__[name] = livestatus_data_source.__dict__[name]
+
+    for name in (
+        "get_graph_timerange_from_painter_options",
+        "paint_age",
+        "painter_option_registry",
+        "PainterOption",
+        "PainterOptions",
+    ):
+        api_module.__dict__[name] = painter_options.__dict__[name]
 
     for name in (
         "declare_simple_sorter",
@@ -454,7 +464,6 @@ def _register_pre_21_plugin_api() -> None:
         "EmptyCell",
         "ExportCellContent",
         "format_plugin_output",
-        "get_graph_timerange_from_painter_options",
         "get_label_sources",
         "get_perfdata_nth_value",
         "get_tag_groups",
@@ -466,15 +475,11 @@ def _register_pre_21_plugin_api() -> None:
         "Layout",
         "layout_registry",
         "output_csv_headers",
-        "paint_age",
         "paint_host_list",
         "paint_nagiosflag",
         "paint_stalified",
         "Painter",
-        "painter_option_registry",
         "painter_registry",
-        "PainterOption",
-        "PainterOptions",
         "register_painter",
         "render_cache_info",
         "replace_action_url_macros",

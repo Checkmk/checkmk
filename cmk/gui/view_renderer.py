@@ -46,7 +46,8 @@ from cmk.gui.page_menu_utils import (
     get_context_page_menu_dropdowns,
     get_ntop_page_menu_dropdown,
 )
-from cmk.gui.plugins.views.utils import Command, load_used_options, PainterOptions
+from cmk.gui.painter_options import PainterOptions
+from cmk.gui.plugins.views.utils import Command, load_used_options
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import HTTPVariables, InfoName, Rows, ViewSpec
 from cmk.gui.utils.html import HTML

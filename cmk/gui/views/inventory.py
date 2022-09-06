@@ -53,6 +53,12 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
+from cmk.gui.painter_options import (
+    paint_age,
+    painter_option_registry,
+    PainterOption,
+    PainterOptions,
+)
 from cmk.gui.plugins.views.utils import (
     Cell,
     cmp_simple_number,
@@ -61,12 +67,8 @@ from cmk.gui.plugins.views.utils import (
     display_options,
     inventory_displayhints,
     InventoryHintSpec,
-    paint_age,
     Painter,
-    painter_option_registry,
     painter_registry,
-    PainterOption,
-    PainterOptions,
     register_painter,
     register_sorter,
 )

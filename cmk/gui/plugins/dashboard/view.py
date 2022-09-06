@@ -13,6 +13,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.painter_options import PainterOptions
 from cmk.gui.plugins.dashboard.utils import (
     ABCViewDashletConfig,
     dashlet_registry,
@@ -22,7 +23,6 @@ from cmk.gui.plugins.dashboard.utils import (
     LinkedViewDashletConfig,
     ViewDashletConfig,
 )
-from cmk.gui.plugins.views.utils import PainterOptions
 from cmk.gui.type_defs import HTTPVariables, SingleInfos, ViewSpec
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_name, urlencode
 from cmk.gui.valuespec import DictionaryEntry, DropdownChoice

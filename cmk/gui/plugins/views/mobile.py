@@ -8,7 +8,8 @@ from typing import Any, Sequence
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l
-from cmk.gui.plugins.views.utils import Cell, Layout, layout_registry, PainterOptions
+from cmk.gui.painter_options import PainterOptions
+from cmk.gui.plugins.views.utils import Cell, Layout, layout_registry
 from cmk.gui.type_defs import PainterSpec, Rows, ViewSpec, VisualLinkSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile

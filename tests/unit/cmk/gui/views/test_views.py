@@ -19,6 +19,7 @@ from cmk.gui.data_source import ABCDataSource, data_source_registry, RowTable
 from cmk.gui.exporter import exporter_registry
 from cmk.gui.htmllib.html import html
 from cmk.gui.logged_in import user
+from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.plugins.views.utils import Cell, Painter
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.sorter import sorter_registry
@@ -51,10 +52,10 @@ def test_registered_painter_options() -> None:
         "num_columns",
     ]
 
-    names = cmk.gui.plugins.views.utils.painter_option_registry.keys()
+    names = painter_option_registry.keys()
     assert sorted(expected) == sorted(names)
 
-    for cls in cmk.gui.plugins.views.utils.painter_option_registry.values():
+    for cls in painter_option_registry.values():
         vs = cls().valuespec
         assert isinstance(vs, ValueSpec)
 

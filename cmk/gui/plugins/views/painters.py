@@ -25,6 +25,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
+from cmk.gui.painter_options import paint_age, painter_option_registry, PainterOption
 from cmk.gui.plugins.metrics.utils import metric_info, render_color_icon, TranslatedMetrics
 from cmk.gui.plugins.views.graphs import cmk_time_graph_params, paint_time_graph_cmk
 from cmk.gui.plugins.views.icons.utils import (
@@ -43,15 +44,12 @@ from cmk.gui.plugins.views.utils import (
     get_tag_groups,
     is_stale,
     JSONExportError,
-    paint_age,
     paint_host_list,
     paint_nagiosflag,
     paint_stalified,
     Painter,
     Painter2,
-    painter_option_registry,
     painter_registry,
-    PainterOption,
     render_cache_info,
     replace_action_url_macros,
     transform_action_url,

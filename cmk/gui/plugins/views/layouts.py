@@ -14,6 +14,7 @@ from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.painter_options import PainterOptions
 from cmk.gui.plugins.views.utils import (
     Cell,
     EmptyCell,
@@ -22,7 +23,6 @@ from cmk.gui.plugins.views.utils import (
     Layout,
     layout_registry,
     output_csv_headers,
-    PainterOptions,
 )
 from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.type_defs import GroupSpec, Row, Rows, ViewSpec

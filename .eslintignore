@@ -32,7 +32,6 @@ web/htdocs/js/modules/node_visualization/node_visualization_utils.*s
 web/htdocs/js/modules/node_visualization/node_visualization_layouting_utils.*s
 web/htdocs/js/modules/prediction.*s
 web/htdocs/js/modules/wato.*s
-web/htdocs/js/modules/availability.*s
 web/htdocs/js/modules/views.*s
 web/htdocs/js/modules/sla.*s
 web/htdocs/js/modules/page_menu.*s

@@ -2726,7 +2726,7 @@ def main_update(  # pylint: disable=too-many-branches
     # - 2.1 and before were compatible with the old and new hook configuration
     # - Checkmk 2.2 enforces the new hook with this condition
     # TODO: Remove with 2.3
-    if has_old_apache_hook_in_site(site):
+    if not global_opts.force and has_old_apache_hook_in_site(site):
         bail_out(
             "ERROR: You have to update the system apache configuration in order to proceed "
             "with this update.\n\n"

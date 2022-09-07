@@ -98,9 +98,6 @@ fi
 if ! getent passwd "$CMK_SITE_ID" >/dev/null; then
     useradd -u 1000 -d "/omd/sites/$CMK_SITE_ID" -c "OMD site $CMK_SITE_ID" -g "$CMK_SITE_ID" -G omd -s /bin/bash "$CMK_SITE_ID"
 fi
-if [ ! -f "/omd/apache/$CMK_SITE_ID.conf" ]; then
-    omd update-apache-config "$CMK_SITE_ID"
-fi
 
 # In case the version symlink is dangling we are in an update situation: The
 # volume was previously attached to a container with another Checkmk version.
@@ -111,6 +108,9 @@ if [ ! -e "/omd/sites/$CMK_SITE_ID/version" ]; then
     exec_hook pre-update
     create_system_apache_config
     omd -f update --conflict=install "$CMK_SITE_ID"
+    # Even if the system apache hook is not needed in containerized Checkmk, we
+    # still create it for consistency
+    omd update-apache-config "$CMK_SITE_ID"
     exec_hook post-update
 fi
 

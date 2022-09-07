@@ -2080,3 +2080,11 @@ perfometer_info.append(
         ],
     }
 )
+
+perfometer_info.append(
+    {
+        "type": "linear",
+        "segments": ["power_usage"],
+        "total": "power_usage:max",
+    }
+)

@@ -11,7 +11,7 @@ from cmk.gui.plugins.wato.utils import (
     TextInput,
 )
 from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
-from cmk.gui.valuespec import Dictionary, Percentage
+from cmk.gui.valuespec import Dictionary, Float, Percentage
 
 
 def _parameter_valuespec_nvidia_smi_gpu_util() -> Dictionary:
@@ -66,5 +66,31 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersOperatingSystem,
         parameter_valuespec=_parameter_valuespec_nvidia_smi_en_de_coder_util,
         title=lambda: _("Nvidia GPU En-/Decoder utilization"),
+    )
+)
+
+
+def _parameter_valuespec_nvidia_smi_power() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "levels",
+                SimpleLevels(
+                    Float, title=_("Power consumption draw"), default_levels=(50.0, 60.0), unit="W"
+                ),
+            ),
+        ],
+        optional_keys=[],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="nvidia_smi_power",
+        match_type="dict",
+        item_spec=lambda: TextInput(title=_("Nvidia GPU Power")),
+        group=RulespecGroupCheckParametersOperatingSystem,
+        parameter_valuespec=_parameter_valuespec_nvidia_smi_power,
+        title=lambda: _("Nvidia GPU Power"),
     )
 )

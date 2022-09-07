@@ -422,3 +422,59 @@ def test_check_nvidia_smi_en_de_coder_util(
     assert (
         list(nvidia_smi.check_nvidia_smi_en_de_coder_util(item, params, section)) == expected_result
     )
+
+
+@pytest.mark.parametrize(
+    "section, expected_result",
+    [
+        (
+            SECTION,
+            [Service(item="0B:00.0")],
+        ),
+    ],
+)
+def test_discover_nvidia_smi_power(
+    section: nvidia_smi.Section,
+    expected_result: type_defs.DiscoveryResult,
+) -> None:
+    assert list(nvidia_smi.discover_nvidia_smi_power(section)) == expected_result
+
+
+@pytest.mark.parametrize(
+    "item, params, section, expected_result",
+    [
+        (
+            "0B:00.0",
+            {},
+            SECTION,
+            [
+                Result(state=State.OK, summary="Power Draw: 49.44 W"),
+                Metric("power_usage", 49.44, levels=(255.0, 255.0), boundaries=(0.0, 255.0)),
+                Result(state=State.OK, notice="Power limit: 255.0 W"),
+                Result(state=State.OK, notice="Min power limit: 105.0 W"),
+                Result(state=State.OK, notice="Max power limit: 314.0 W"),
+            ],
+        ),
+        (
+            "0B:00.0",
+            nvidia_smi.GenericLevelsParam(levels=(30.0, 40.0)),
+            SECTION,
+            [
+                Result(
+                    state=State.CRIT, summary="Power Draw: 49.44 W (warn/crit at 30.00 W/40.00 W)"
+                ),
+                Metric("power_usage", 49.44, levels=(30.0, 40.0), boundaries=(0.0, 255.0)),
+                Result(state=State.OK, notice="Power limit: 255.0 W"),
+                Result(state=State.OK, notice="Min power limit: 105.0 W"),
+                Result(state=State.OK, notice="Max power limit: 314.0 W"),
+            ],
+        ),
+    ],
+)
+def test_check_nvidia_smi_power(
+    item: str,
+    params: nvidia_smi.GenericLevelsParam,
+    section: nvidia_smi.Section,
+    expected_result: type_defs.CheckResult,
+) -> None:
+    assert list(nvidia_smi.check_nvidia_smi_power(item, params, section)) == expected_result

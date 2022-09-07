@@ -10,7 +10,15 @@ from xml.etree import ElementTree
 
 from pydantic import BaseModel
 
-from .agent_based_api.v1 import check_levels, get_value_store, register, render, Service
+from .agent_based_api.v1 import (
+    check_levels,
+    get_value_store,
+    register,
+    render,
+    Result,
+    Service,
+    State,
+)
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.temperature import check_temperature, TempParamType
 
@@ -322,4 +330,55 @@ register.check_plugin(
     check_ruleset_name="nvidia_smi_en_de_coder_util",
     check_default_parameters=DeEnCoderParams(encoder_levels=None, decoder_levels=None),
     check_function=check_nvidia_smi_en_de_coder_util,
+)
+
+
+def discover_nvidia_smi_power(section: Section) -> DiscoveryResult:
+    for gpu_id, gpu in section.gpus.items():
+        if gpu.power_readings.power_management == PowerManagement.SUPPORTED:
+            yield Service(item=gpu_id)
+
+
+def check_nvidia_smi_power(
+    item: str,
+    params: GenericLevelsParam,
+    section: Section,
+) -> CheckResult:
+    if (gpu := section.gpus.get(item)) is None or gpu.power_readings is None:
+        return
+
+    if gpu.power_readings.power_draw is not None:
+        power_limit = gpu.power_readings.power_limit
+        yield from check_levels(
+            gpu.power_readings.power_draw,
+            levels_upper=params.get(
+                "levels", None if power_limit is None else (power_limit, power_limit)
+            ),
+            render_func=lambda x: "%.2f W" % x,
+            metric_name="power_usage",
+            boundaries=(0.0, power_limit),
+            label="Power Draw",
+        )
+    yield Result(
+        state=State.OK,
+        notice=f"Power limit: {gpu.power_readings.power_limit} W",
+    )
+    yield Result(
+        state=State.OK,
+        notice=f"Min power limit: {gpu.power_readings.min_power_limit} W",
+    )
+    yield Result(
+        state=State.OK,
+        notice=f"Max power limit: {gpu.power_readings.max_power_limit} W",
+    )
+
+
+register.check_plugin(
+    name="nvidia_smi_power",
+    service_name="Nvidia GPU Power %s",
+    sections=["nvidia_smi"],
+    discovery_function=discover_nvidia_smi_power,
+    check_ruleset_name="nvidia_smi_power",
+    check_default_parameters=GenericLevelsParam(levels=None),
+    check_function=check_nvidia_smi_power,
 )

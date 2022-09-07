@@ -98,6 +98,9 @@ fi
 if ! getent passwd "$CMK_SITE_ID" >/dev/null; then
     useradd -u 1000 -d "/omd/sites/$CMK_SITE_ID" -c "OMD site $CMK_SITE_ID" -g "$CMK_SITE_ID" -G omd -s /bin/bash "$CMK_SITE_ID"
 fi
+if [ ! -f "/omd/apache/$CMK_SITE_ID.conf" ]; then
+    echo "Include /omd/sites/$CMK_SITE_ID/etc/apache/mode.conf" >"/omd/apache/$CMK_SITE_ID.conf"
+fi
 
 # In case the version symlink is dangling we are in an update situation: The
 # volume was previously attached to a container with another Checkmk version.

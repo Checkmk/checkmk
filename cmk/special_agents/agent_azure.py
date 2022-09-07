@@ -16,7 +16,7 @@ import time
 from multiprocessing import Lock, Process, Queue
 from pathlib import Path
 from queue import Empty as QueueEmpty
-from typing import Any, List, Mapping, Sequence, Tuple
+from typing import Any, List, Mapping, Sequence, Tuple, Type
 
 import adal  # type: ignore[import] # pylint: disable=import-error
 import requests
@@ -256,6 +256,27 @@ class ApiErrorMissingData(ApiError):
     pass
 
 
+class ApiErrorAuthorizationRequestDenied(ApiError):
+    pass
+
+
+class ApiErrorFactory:
+    _ERROR_CLASS_BY_CODE: dict[str, Type[ApiError]] = {
+        "Authorization_RequestDenied": ApiErrorAuthorizationRequestDenied
+    }
+
+    # Setting the type of `error_data` to Any because it is data fetched remotely and we want to
+    # handle any type of data in this method
+    @staticmethod
+    def error_from_data(error_data: Any) -> ApiError:
+        try:
+            error_code = error_data["code"]
+            error_cls = ApiErrorFactory._ERROR_CLASS_BY_CODE[error_code]
+            return error_cls(error_data.get("message", error_data))
+        except Exception:
+            return ApiError(error_data)
+
+
 class BaseApiClient(abc.ABC):
     AUTHORITY = "https://login.microsoftonline.com"
 
@@ -362,7 +383,7 @@ class BaseApiClient(abc.ABC):
             return json_data[key]
         except KeyError:
             error = json_data.get("error", json_data)
-            raise ApiError(error.get("message", json_data))
+            raise ApiErrorFactory.error_from_data(error)
 
 
 class GraphApiClient(BaseApiClient):
@@ -1067,6 +1088,10 @@ def main_graph_client(args):
     try:
         graph_client.login(args.tenant, args.client, args.secret)
         write_section_ad(graph_client)
+    except ApiErrorAuthorizationRequestDenied as exc:
+        # We are not raising the exception in debug mode.
+        # Having no permissions for the graph API is a legit configuration
+        write_exception_to_agent_info_section(exc, "Graph client")
     except Exception as exc:
         if args.debug:
             raise

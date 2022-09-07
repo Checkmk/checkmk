@@ -1,0 +1,24 @@
+Title: azure agent: handle graph client errors gracefully
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1662558239
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+The graph client API calls require some optional permissions so we are
+handling these permissions errors by notifying the user of the issue but
+by keeping the state to OK since it is a legit state.
+The section that is impacted is the "azure_ad" one.
+
+The message currently displayed is
+"Graph client: Insufficient privileges to complete the operation." and
+the permission that is currently needed is the Graph permission
+"Directory.Read.All" that requires admin consent.
+
+That permission needs to be granted to the check mk app created in Azure
+during the setup of checkmk Azure monitoring.
+
+

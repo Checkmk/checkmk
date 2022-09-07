@@ -77,6 +77,7 @@ def get_submitter(
     monitoring_core: Literal["nagios", "cmc"],
     dry_run: bool,
     host_name: HostName,
+    *,
     keepalive: KeepaliveAPI,
 ) -> Submitter:
     if dry_run:

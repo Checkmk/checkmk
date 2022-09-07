@@ -1819,6 +1819,7 @@ _CheckingOptions = TypedDict(
 def mode_check(options: _CheckingOptions, args: List[str]) -> None:
     import cmk.base.agent_based.checking as checking  # pylint: disable=import-outside-toplevel
     import cmk.base.item_state as item_state  # pylint: disable=import-outside-toplevel
+    from cmk.base.keepalive import get_keepalive
 
     _handle_fetcher_options(options)
 
@@ -1841,6 +1842,7 @@ def mode_check(options: _CheckingOptions, args: List[str]) -> None:
         run_plugin_names=run_plugin_names,
         dry_run=options.get("no-submit", False),
         show_perfdata=options.get("perfdata", False),
+        keepalive=get_keepalive(cmk_version.edition()),
     )
 
 

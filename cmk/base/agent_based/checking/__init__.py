@@ -34,6 +34,7 @@ from cmk.utils.type_defs import (
     ExitSpec,
     HostAddress,
     HostName,
+    KeepaliveAPI,
     MetricTuple,
     ParsedSectionName,
     ServiceName,
@@ -66,7 +67,6 @@ from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_paramete
 from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.check_utils import ConfiguredService, LegacyCheckParameters
 from cmk.base.config import ConfigCache, HostConfig
-from cmk.base.keepalive import get_keepalive
 from cmk.base.sources import fetch_all, make_sources, Source
 
 from . import _cluster_modes, _submit_to_core
@@ -101,6 +101,7 @@ def active_check_checking(
     selected_sections: SectionNameCollection = NO_SELECTION,
     dry_run: bool = False,
     show_perfdata: bool = False,
+    keepalive: KeepaliveAPI,
 ) -> ServiceState:
     """
     See Also:
@@ -118,6 +119,7 @@ def active_check_checking(
             selected_sections=selected_sections,
             dry_run=dry_run,
             show_perfdata=show_perfdata,
+            keepalive=keepalive,
         ),
         host_config=host_config,
         service_name="Check_MK",
@@ -129,6 +131,7 @@ def commandline_checking(
     host_name: HostName,
     ipaddress: Optional[HostAddress],
     *,
+    keepalive: KeepaliveAPI,
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
     selected_sections: SectionNameCollection = NO_SELECTION,
     dry_run: bool = False,
@@ -145,6 +148,7 @@ def commandline_checking(
             selected_sections=selected_sections,
             dry_run=dry_run,
             show_perfdata=show_perfdata,
+            keepalive=keepalive,
         ),
         host_config=host_config,
         service_name="Check_MK",
@@ -160,6 +164,7 @@ def _commandline_checking(
     selected_sections: SectionNameCollection = NO_SELECTION,
     dry_run: bool = False,
     show_perfdata: bool = False,
+    keepalive: KeepaliveAPI,
 ) -> ActiveCheckResult:
     console.vverbose("Checkmk version %s\n", cmk_version.__version__)
     config_cache = config.get_config_cache()
@@ -197,6 +202,7 @@ def _commandline_checking(
         selected_sections=selected_sections,
         dry_run=dry_run,
         show_perfdata=show_perfdata,
+        keepalive=keepalive,
     )
 
 
@@ -208,6 +214,7 @@ def _execute_checkmk_checks(
     selected_sections: SectionNameCollection,
     dry_run: bool,
     show_perfdata: bool,
+    keepalive: KeepaliveAPI,
 ) -> ActiveCheckResult:
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
@@ -234,6 +241,7 @@ def _execute_checkmk_checks(
             run_plugin_names=run_plugin_names,
             dry_run=dry_run,
             show_perfdata=show_perfdata,
+            keepalive=keepalive,
         )
         if run_plugin_names is EVERYTHING:
             inventory.do_inventory_actions_during_checking_for(
@@ -345,6 +353,7 @@ def check_host_services(
     run_plugin_names: Container[CheckPluginName],
     dry_run: bool,
     show_perfdata: bool,
+    keepalive: KeepaliveAPI,
 ) -> Sequence[_AggregatedResult]:
     """Compute service state results for all given services on node or cluster
 
@@ -373,7 +382,13 @@ def check_host_services(
             ]
 
     if submittables:
-        _submit_aggregated_results(submittables, host_config.hostname, dry_run, show_perfdata)
+        _submit_aggregated_results(
+            submittables,
+            host_config.hostname,
+            dry_run,
+            show_perfdata,
+            keepalive=keepalive,
+        )
 
     return submittables
 
@@ -415,13 +430,15 @@ def _submit_aggregated_results(
     host_name: HostName,
     dry_run: bool,
     show_perfdata: bool,
+    *,
+    keepalive: KeepaliveAPI,
 ) -> None:
     _submit_to_core.get_submitter(
         check_submission=config.check_submission,
         monitoring_core=config.monitoring_core,
         dry_run=dry_run,
         host_name=host_name,
-        keepalive=get_keepalive(cmk_version.edition()),
+        keepalive=keepalive,
     ).submit(
         submittees=[
             _submit_to_core.Submittee(

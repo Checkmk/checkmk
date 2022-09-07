@@ -8,6 +8,8 @@ from typing import Any, Dict
 
 FigureResponse = Dict[str, Any]
 
+FigureResponseData = Dict[str, Any]
+
 
 def create_figures_response(data, context=None) -> FigureResponse:  # type:ignore[no-untyped-def]
     """Any data for a figure is always wrapped into a dictionary

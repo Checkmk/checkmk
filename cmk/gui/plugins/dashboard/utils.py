@@ -42,7 +42,7 @@ import cmk.gui.visuals as visuals
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.config import active_config, builtin_role_ids
 from cmk.gui.exceptions import MKGeneralException, MKMissingDataError, MKTimeout, MKUserError
-from cmk.gui.figures import create_figures_response
+from cmk.gui.figures import create_figures_response, FigureResponseData
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -529,15 +529,6 @@ def _title_help_text_for_macros(dashlet_type: Type[Dashlet]) -> str:
     )
 
 
-class VsResultGeneralSettings(TypedDict):
-    type: str
-    background: bool
-    show_title: Union[bool, Literal["transparent"]]
-    title: str
-    title_url: str
-    single_infos: List[str]
-
-
 def dashlet_vs_general_settings(
     dashlet_type: Type[Dashlet], single_infos: SingleInfos
 ) -> Dictionary:
@@ -695,15 +686,7 @@ class FigureDashletPage(AjaxPage):
             raise MKUserError("type", _("The requested element type does not exist."))
 
         dashlet = dashlet_type(dashboard_name, dashboard, dashlet_id, dashlet_spec)
-
-        # TODO: This is a violation of the data structure. Will be cleaned up soon
-        dashlet_spec["infos"] = dashlet.infos()
-        # TODO: The synthentical separation of properties and settings is not really helping. Since
-        # we now have typed the config for each dashlet, we can now consolidate that again.
-        response_data = dashlet_type.generate_response_data(
-            dashlet_spec, dashlet.context, dashlet_spec
-        )
-        return create_figures_response(response_data)
+        return create_figures_response(dashlet.generate_response_data())
 
 
 class ABCFigureDashlet(Dashlet[T], abc.ABC):
@@ -772,9 +755,9 @@ class ABCFigureDashlet(Dashlet[T], abc.ABC):
     def _vs_elements() -> DictionaryElements:
         return []
 
-    @staticmethod
-    def generate_response_data(properties, context, settings):
-        raise NotImplementedError()
+    @abc.abstractmethod
+    def generate_response_data(self) -> FigureResponseData:
+        ...
 
     @property
     def update_interval(self) -> int:

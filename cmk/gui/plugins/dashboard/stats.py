@@ -3,18 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import abc
+from collections.abc import Sequence
 from dataclasses import asdict, dataclass
-from typing import Dict, List, NamedTuple, Tuple
+from typing import Generic, List, NamedTuple, Tuple, TypeVar
 
 from livestatus import MKLivestatusNotFoundError
 
 import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
+from cmk.gui.figures import FigureResponseData
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.dashboard.utils import ABCFigureDashlet, dashlet_registry, DashletConfig
-from cmk.gui.type_defs import HTTPVariables, SingleInfos
+from cmk.gui.type_defs import HTTPVariables, SingleInfos, VisualContext
 from cmk.gui.utils.urls import makeuri_contextless
 
 
@@ -190,9 +193,10 @@ class StatsDashletConfig(DashletConfig):
 
 @dashlet_registry.register
 class HostStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
-    @classmethod
-    def generate_response_data(cls, properties, context, settings):
-        return HostStatsDashletDataGenerator.generate_response_data(properties, context, settings)
+    def generate_response_data(self) -> FigureResponseData:
+        return HostStatsDashletDataGenerator.generate_response_data(
+            self.dashlet_spec, self.context, self.infos()
+        )
 
     @classmethod
     def type_name(cls):
@@ -224,10 +228,9 @@ class HostStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
 
 @dashlet_registry.register
 class ServiceStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
-    @classmethod
-    def generate_response_data(cls, properties, context, settings):
+    def generate_response_data(self) -> FigureResponseData:
         return ServiceStatsDashletDataGenerator.generate_response_data(
-            properties, context, settings
+            self.dashlet_spec, self.context, self.infos()
         )
 
     @classmethod
@@ -260,9 +263,10 @@ class ServiceStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
 
 @dashlet_registry.register
 class EventStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
-    @classmethod
-    def generate_response_data(cls, properties, context, settings):
-        return EventStatsDashletDataGenerator.generate_response_data(properties, context, settings)
+    def generate_response_data(self) -> FigureResponseData:
+        return EventStatsDashletDataGenerator.generate_response_data(
+            self.dashlet_spec, self.context, self.infos()
+        )
 
     @classmethod
     def type_name(cls):
@@ -289,42 +293,55 @@ class EventStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
         return (30, 18)
 
 
-class StatsDashletDataGenerator:
+S = TypeVar("S", bound=HostStats | ServiceStats | EventStats)
+
+
+class StatsDashletDataGenerator(Generic[S], abc.ABC):
     @classmethod
-    def generate_response_data(cls, properties, context, settings):
+    def generate_response_data(
+        cls, dashlet_spec: StatsDashletConfig, context: VisualContext, infos: SingleInfos
+    ) -> FigureResponseData:
         return {
-            "title": settings.get("title", cls._title()),
-            "title_url": settings.get("title_url"),
-            "data": cls._collect_data(context, settings).serialize(),
+            "title": dashlet_spec.get("title", cls._title()),
+            "title_url": dashlet_spec.get("title_url"),
+            "data": cls._collect_data(dashlet_spec, context, infos).serialize(),
         }
 
     @classmethod
-    def _title(cls):
+    @abc.abstractmethod
+    def _title(cls) -> str:
         raise NotImplementedError()
 
     @classmethod
-    def _livestatus_table(cls):
+    @abc.abstractmethod
+    def _livestatus_table(cls) -> str:
         raise NotImplementedError()
 
     @classmethod
-    def _view_name(cls):
+    @abc.abstractmethod
+    def _view_name(cls) -> str:
         raise NotImplementedError()
 
     @classmethod
-    def _named_stats(cls, stats):
+    @abc.abstractmethod
+    def _named_stats(cls, stats: Sequence[int]) -> S:
         raise NotImplementedError()
 
     @classmethod
-    def _collect_data(cls, context, settings) -> StatsElement:  # type:ignore[no-untyped-def]
-        stats = cls._get_stats(context, settings)
-        general_url_vars = cls._general_url_vars(context, settings["single_infos"])
+    def _collect_data(
+        cls, dashlet_spec: StatsDashletConfig, context: VisualContext, infos: SingleInfos
+    ) -> StatsElement:
+        stats = cls._get_stats(dashlet_spec, context, infos)
+        general_url_vars = cls._general_url_vars(context)
         parts_data = stats.get_parts_data(general_url_vars)
         return cls._get_stats_element(parts_data, general_url_vars)
 
     @classmethod
-    def _get_stats(cls, context, settings):
+    def _get_stats(
+        cls, dashlet_spec: StatsDashletConfig, context: VisualContext, infos: SingleInfos
+    ) -> S:
         filter_headers, only_sites = visuals.get_filter_headers(
-            table=cls._livestatus_table(), infos=settings["infos"], context=context
+            table=cls._livestatus_table(), infos=infos, context=context
         )
         query = cls._stats_query() + "\n" + filter_headers
         try:
@@ -358,11 +375,12 @@ class StatsDashletDataGenerator:
         return StatsElement(parts=parts, total=total_part)
 
     @classmethod
+    @abc.abstractmethod
     def _stats_query(cls) -> str:
         raise NotImplementedError()
 
     @classmethod
-    def _general_url_vars(cls, context: Dict, single_infos: List[str]) -> HTTPVariables:
+    def _general_url_vars(cls, context: VisualContext) -> HTTPVariables:
         return [
             ("view_name", cls._view_name()),
             ("filled_in", "filter"),
@@ -371,21 +389,21 @@ class StatsDashletDataGenerator:
         ]
 
 
-class HostStatsDashletDataGenerator(StatsDashletDataGenerator):
+class HostStatsDashletDataGenerator(StatsDashletDataGenerator[HostStats]):
     @classmethod
-    def _title(cls):
+    def _title(cls) -> str:
         return HostStatsDashlet.title()
 
     @classmethod
-    def _livestatus_table(cls):
+    def _livestatus_table(cls) -> str:
         return "hosts"
 
     @classmethod
-    def _view_name(cls):
+    def _view_name(cls) -> str:
         return "searchhost"
 
     @classmethod
-    def _named_stats(cls, stats: List[int]) -> HostStats:
+    def _named_stats(cls, stats: Sequence[int]) -> HostStats:
         if not stats:
             return HostStats(0, 0, 0, 0)
         return HostStats(*stats)
@@ -415,21 +433,21 @@ class HostStatsDashletDataGenerator(StatsDashletDataGenerator):
         )
 
 
-class ServiceStatsDashletDataGenerator(StatsDashletDataGenerator):
+class ServiceStatsDashletDataGenerator(StatsDashletDataGenerator[ServiceStats]):
     @classmethod
-    def _title(cls):
+    def _title(cls) -> str:
         return ServiceStatsDashlet.title()
 
     @classmethod
-    def _livestatus_table(cls):
+    def _livestatus_table(cls) -> str:
         return "services"
 
     @classmethod
-    def _view_name(cls):
+    def _view_name(cls) -> str:
         return "searchsvc"
 
     @classmethod
-    def _named_stats(cls, stats: List[int]) -> ServiceStats:
+    def _named_stats(cls, stats: Sequence[int]) -> ServiceStats:
         if not stats:
             return ServiceStats(0, 0, 0, 0, 0, 0)
         return ServiceStats(*stats)
@@ -482,21 +500,21 @@ class ServiceStatsDashletDataGenerator(StatsDashletDataGenerator):
         )
 
 
-class EventStatsDashletDataGenerator(StatsDashletDataGenerator):
+class EventStatsDashletDataGenerator(StatsDashletDataGenerator[EventStats]):
     @classmethod
-    def _title(cls):
+    def _title(cls) -> str:
         return EventStatsDashlet.title()
 
     @classmethod
-    def _livestatus_table(cls):
+    def _livestatus_table(cls) -> str:
         return "eventconsoleevents"
 
     @classmethod
-    def _view_name(cls):
+    def _view_name(cls) -> str:
         return "ec_events"
 
     @classmethod
-    def _general_url_vars(cls, context: Dict, single_infos: List[str]) -> HTTPVariables:
+    def _general_url_vars(cls, context: VisualContext) -> HTTPVariables:
         return [
             ("view_name", cls._view_name()),
             ("filled_in", "filter"),
@@ -504,7 +522,7 @@ class EventStatsDashletDataGenerator(StatsDashletDataGenerator):
         ]
 
     @classmethod
-    def _named_stats(cls, stats: List[int]) -> EventStats:
+    def _named_stats(cls, stats: Sequence[int]) -> EventStats:
         if not stats:
             return EventStats(0, 0, 0, 0)
         return EventStats(*stats)

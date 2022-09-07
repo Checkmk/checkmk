@@ -9,7 +9,6 @@ from __future__ import annotations
 import abc
 import copy
 import json
-import time
 import urllib.parse
 from dataclasses import dataclass
 from functools import partial
@@ -32,7 +31,7 @@ from typing import (
     Union,
 )
 
-from livestatus import LivestatusColumn, LivestatusResponse, SiteId
+from livestatus import LivestatusResponse, SiteId
 
 import cmk.utils.plugin_registry
 from cmk.utils.macros import MacroMapping, replace_macros_in_str
@@ -49,14 +48,12 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.metrics import translate_perf_data
 from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
-from cmk.gui.plugins.metrics.rrd_fetch import merge_multicol
 from cmk.gui.plugins.metrics.utils import GraphRenderOptions
 from cmk.gui.plugins.views.painters import host_state_short, service_state_short
 from cmk.gui.sites import get_alias_of_host
-from cmk.gui.type_defs import HTTPVariables, Row, SingleInfos, TranslatedMetric, VisualContext
+from cmk.gui.type_defs import HTTPVariables, Row, SingleInfos, VisualContext
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
 from cmk.gui.utils.speaklater import LazyString
@@ -1009,60 +1006,6 @@ def create_service_view_url(context):
         ],
         filename="view.py",
     )
-
-
-def create_data_for_single_metric(  # type:ignore[no-untyped-def]
-    properties,
-    context: VisualContext,
-    column_generator: Callable[[Any, VisualContext], List[str]],
-) -> Tuple[List[Dict[str, Any]], List[Tuple[str, TranslatedMetric, Dict[str, LivestatusColumn]]]]:
-    # TODO: should return live value and historic values as two different elements, for better typing support.
-    columns, data_rows = service_table_query(properties, context, column_generator)
-
-    data = []
-    used_metrics = []
-
-    for idx, row in enumerate(data_rows):
-        d_row = dict(zip(columns, row))
-        translated_metrics = translate_perf_data(
-            d_row["service_perf_data"], d_row["service_check_command"]
-        )
-        metric = translated_metrics.get(properties["metric"])
-
-        if metric is None:
-            continue
-
-        series = merge_multicol(d_row, columns, properties)
-        host = d_row["host_name"]
-        row_id = "row_%d" % idx
-
-        # Historic values
-        for ts, elem in series.time_data_pairs():
-            if elem:
-                data.append(
-                    {
-                        "tag": row_id,
-                        "timestamp": ts,
-                        "value": elem,
-                        "label": host,
-                    }
-                )
-
-        # Live value
-        data.append(
-            {
-                "tag": row_id,
-                "last_value": True,
-                "timestamp": int(time.time()),
-                "value": metric["value"],
-                "label": host,
-                "url": create_service_view_url(d_row),
-            }
-        )
-
-        used_metrics.append((row_id, metric, d_row))
-
-    return data, used_metrics
 
 
 def dashboard_breadcrumb(name: str, board: DashboardConfig, title: str) -> Breadcrumb:

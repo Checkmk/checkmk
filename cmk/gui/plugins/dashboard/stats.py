@@ -184,6 +184,111 @@ class StatsElement:
         return serialized
 
 
+class StatsDashletConfig(DashletConfig):
+    ...
+
+
+@dashlet_registry.register
+class HostStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
+    @classmethod
+    def generate_response_data(cls, properties, context, settings):
+        return HostStatsDashletDataGenerator.generate_response_data(properties, context, settings)
+
+    @classmethod
+    def type_name(cls):
+        return "hoststats"
+
+    @classmethod
+    def title(cls):
+        return _("Host statistics")
+
+    @classmethod
+    def description(cls):
+        return _("Displays statistics about host states as a hexagon and a table.")
+
+    @classmethod
+    def sort_index(cls) -> int:
+        return 45
+
+    @classmethod
+    def is_resizable(cls) -> bool:
+        return False
+
+    @classmethod
+    def initial_size(cls):
+        return (30, 18)
+
+    def infos(self) -> SingleInfos:
+        return ["host"]
+
+
+@dashlet_registry.register
+class ServiceStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
+    @classmethod
+    def generate_response_data(cls, properties, context, settings):
+        return ServiceStatsDashletDataGenerator.generate_response_data(
+            properties, context, settings
+        )
+
+    @classmethod
+    def type_name(cls):
+        return "servicestats"
+
+    @classmethod
+    def title(cls):
+        return _("Service statistics")
+
+    @classmethod
+    def description(cls):
+        return _("Displays statistics about service states as a hexagon and a table.")
+
+    @classmethod
+    def sort_index(cls) -> int:
+        return 50
+
+    @classmethod
+    def is_resizable(cls) -> bool:
+        return False
+
+    def infos(self) -> SingleInfos:
+        return ["host"]
+
+    @classmethod
+    def initial_size(cls):
+        return (30, 18)
+
+
+@dashlet_registry.register
+class EventStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
+    @classmethod
+    def generate_response_data(cls, properties, context, settings):
+        return EventStatsDashletDataGenerator.generate_response_data(properties, context, settings)
+
+    @classmethod
+    def type_name(cls):
+        return "eventstats"
+
+    @classmethod
+    def title(cls):
+        return _("Event statistics")
+
+    @classmethod
+    def description(cls):
+        return _("Displays statistics about events as a hexagon and a table.")
+
+    @classmethod
+    def sort_index(cls) -> int:
+        return 55
+
+    @classmethod
+    def is_resizable(cls) -> bool:
+        return False
+
+    @classmethod
+    def initial_size(cls):
+        return (30, 18)
+
+
 class StatsDashletDataGenerator:
     @classmethod
     def generate_response_data(cls, properties, context, settings):
@@ -429,108 +534,3 @@ class EventStatsDashletDataGenerator(StatsDashletDataGenerator):
             )
             + ec_filters
         )
-
-
-class StatsDashletConfig(DashletConfig):
-    ...
-
-
-@dashlet_registry.register
-class HostStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
-    @classmethod
-    def generate_response_data(cls, properties, context, settings):
-        return HostStatsDashletDataGenerator.generate_response_data(properties, context, settings)
-
-    @classmethod
-    def type_name(cls):
-        return "hoststats"
-
-    @classmethod
-    def title(cls):
-        return _("Host statistics")
-
-    @classmethod
-    def description(cls):
-        return _("Displays statistics about host states as a hexagon and a table.")
-
-    @classmethod
-    def sort_index(cls) -> int:
-        return 45
-
-    @classmethod
-    def is_resizable(cls) -> bool:
-        return False
-
-    @classmethod
-    def initial_size(cls):
-        return (30, 18)
-
-    def infos(self) -> SingleInfos:
-        return ["host"]
-
-
-@dashlet_registry.register
-class ServiceStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
-    @classmethod
-    def generate_response_data(cls, properties, context, settings):
-        return ServiceStatsDashletDataGenerator.generate_response_data(
-            properties, context, settings
-        )
-
-    @classmethod
-    def type_name(cls):
-        return "servicestats"
-
-    @classmethod
-    def title(cls):
-        return _("Service statistics")
-
-    @classmethod
-    def description(cls):
-        return _("Displays statistics about service states as a hexagon and a table.")
-
-    @classmethod
-    def sort_index(cls) -> int:
-        return 50
-
-    @classmethod
-    def is_resizable(cls) -> bool:
-        return False
-
-    def infos(self) -> SingleInfos:
-        return ["host"]
-
-    @classmethod
-    def initial_size(cls):
-        return (30, 18)
-
-
-@dashlet_registry.register
-class EventStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
-    @classmethod
-    def generate_response_data(cls, properties, context, settings):
-        return EventStatsDashletDataGenerator.generate_response_data(properties, context, settings)
-
-    @classmethod
-    def type_name(cls):
-        return "eventstats"
-
-    @classmethod
-    def title(cls):
-        return _("Event statistics")
-
-    @classmethod
-    def description(cls):
-        return _("Displays statistics about events as a hexagon and a table.")
-
-    @classmethod
-    def sort_index(cls) -> int:
-        return 55
-
-    @classmethod
-    def is_resizable(cls) -> bool:
-        return False
-
-    @classmethod
-    def initial_size(cls):
-        return (30, 18)

@@ -22,20 +22,22 @@ oneTimeSetUp() {
     mkdir -p "$MK_CONFDIR/mk_oracle.d"
 
     # shellcheck disable=SC1090
-    . "$MK_ORACLE_PLUGIN_PATH" >/dev/null 2>&1
+    MK_SOURCE_ONLY=true . "$MK_ORACLE_PLUGIN_PATH"
+
+    set_os_env
 
     # Overwrite functions from mk_oracle which cannot/won't be unit tested for now
     mk_ora_sqlplus() { true; }
     run_cached() { true; }
-
     do_sync_checks() { true; }
     do_async_checks() { true; }
     do_testmode() { true; }
-
     do_async_custom_sqls() { true; }
     do_testmode_custom_sql() { true; }
 
+    sql_iostats() { echo "mocked-sql_iostats"; }
     sql_performance() { echo "mocked-sql_performance"; }
+    sql_systemparameter() { echo "mocked-sql_systemparameter"; }
     sql_tablespaces() { echo "mocked-sql_tablespaces"; }
     sql_dataguard_stats() { echo "mocked-sql_dataguard_stats"; }
     sql_recovery_status() { echo "mocked-sql_recovery_status"; }
@@ -73,7 +75,7 @@ tearDown() {
     unset custom_sqls_sections custom_sqls_sids
 }
 
-#.
+# .
 
 #   ---load_config----------------------------------------------------------
 

@@ -61,6 +61,42 @@ megaraid_info() {
         done
 }
 
+storcli_info() {
+    PDINFO=$($1 /cAll show nolog J)
+
+    echo "$PDINFO" | \
+    while read -r line ; do
+        case "$line" in
+        '"Controller"'*) #                 "Controller" : 0,
+           CONTROLLER=$( echo $line |  awk -F ': |,' '{print $2}')
+        ;;
+        '"EID:Slt"'*) #                                 "EID:Slt" : "32:0",
+           unset SLOT LOG_DEV_ID VEND MODEL
+            ENC=$( echo "$line" | cut -d '"' -f4 | cut -d ':' -f1 )
+            SLOT=$( echo "$line" | cut -d '"' -f4 | cut -d ':' -f2 )
+        ;;
+        # Identify the logical device ID. smartctl needs it to access the disk.
+        '"DID"'*)    #Device Id: 19
+            LOG_DEV_ID=$( echo $line |  awk -F ': |,' '{print $2}')
+        ;;
+        '                                "Intf" : '*) #                                 "Intf" : "SATA",
+            VEND=$( echo "$line" | cut -d '"' -f4 )
+        ;;
+        # This is the last value, generate output here
+        '"Model" : '*) #                                 "Model" : "INTEL SSDSC2BX200G4R",
+         #Inquiry Data: WD-WCC1T1035197WDC WD20EZRX-00DC0B0 80.00A80
+            # $4 seems to be better for some vendors... wont be possible to get this perfect.
+            MODEL=$( echo "$line" | cut -d '"' -f4 )
+
+            # /dev/sdc ATA SAMSUNG_SSD_830   5 Reallocated_Sector_Ct   0x0033   100   100   010    Pre-fail  Always       -
+            smartctl -d megaraid,"${LOG_DEV_ID}" -v 9,raw48 -A /dev/sg${CONTROLLER} | \
+              grep Always  | grep -E -v '^190(.*)Temperature(.*)'       | \
+              sed "s|^|Ctrl${CONTROLLER}/Enc${ENC}/Slot${SLOT} $VEND $MODEL |"
+            ;;
+            esac
+       done
+}
+
 # Only handle always updated values, add device path and vendor/model
 if inpath smartctl >/dev/null 2>&1; then
     #
@@ -168,8 +204,15 @@ if inpath smartctl >/dev/null 2>&1; then
         fi
     done 2>/dev/null
 
-    # Call MegaRaid submodule if conditions are met
-    if type MegaCli >/dev/null 2>&1; then
+    # storcli is the (newer) replacement of MegaCli
+    # perccli is a fork of storcli used for Dell-Hardware
+    # keep using MegaCli if non of them are present
+    storcli_bin=""
+    if [ -e /opt/MegaRAID/storcli/storcli64 ] ; then
+        storcli_bin="/opt/MegaRAID/storcli/storcli64"
+    elif [ -e /opt/MegaRAID/perccli/perccli64 ] ; then
+        storcli_bin="/opt/MegaRAID/perccli/perccli64"  # dell branded version of storcli
+    elif type MegaCli >/dev/null 2>&1; then
         MegaCli_bin="MegaCli"
     elif type MegaCli64 >/dev/null 2>&1; then
         MegaCli_bin="MegaCli64"
@@ -179,7 +222,9 @@ if inpath smartctl >/dev/null 2>&1; then
         MegaCli_bin="unknown"
     fi
 
-    if [ "$MegaCli_bin" != "unknown" ]; then
+    if [ -n "${storcli_bin}" ] ; then
+        storcli_info "${storcli_bin}"
+    elif [ "$MegaCli_bin" != "unknown" ]; then
         megaraid_info "$MegaCli_bin"
     fi
 else

@@ -7,23 +7,9 @@ from __future__ import annotations
 
 import uuid
 from abc import ABC, abstractmethod
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass, field
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Literal,
-    Mapping,
-    NamedTuple,
-    Optional,
-    Sequence,
-    Text,
-    Tuple,
-    TypedDict,
-    Union,
-)
+from typing import Any, Literal, NamedTuple, Text, TypedDict, Union
 
 from pydantic import BaseModel
 
@@ -43,15 +29,15 @@ from cmk.utils.type_defs import (
 from cmk.gui.exceptions import FinalizeRequest
 from cmk.gui.utils.speaklater import LazyString
 
-HTTPVariables = List[Tuple[str, Optional[Union[int, str]]]]
+HTTPVariables = list[tuple[str, int | str | None]]
 LivestatusQuery = str
 PermissionName = str
 RoleName = str
 CSSSpec = list[str]
 ChoiceText = str
-ChoiceId = Optional[str]
-Choice = Tuple[ChoiceId, ChoiceText]
-Choices = List[Choice]  # TODO: Change to Sequence, perhaps DropdownChoiceEntries[str]
+ChoiceId = str | None
+Choice = tuple[ChoiceId, ChoiceText]
+Choices = list[Choice]  # TODO: Change to Sequence, perhaps DropdownChoiceEntries[str]
 
 
 @dataclass
@@ -59,7 +45,7 @@ class UserRole:
     name: str
     alias: str
     builtin: bool = False
-    permissions: Dict[str, bool] = field(default_factory=dict)
+    permissions: dict[str, bool] = field(default_factory=dict)
     basedon: str | None = None
 
     def to_dict(self) -> dict:
@@ -80,7 +66,7 @@ class ChoiceGroup(NamedTuple):
     choices: Choices
 
 
-GroupedChoices = List[ChoiceGroup]
+GroupedChoices = list[ChoiceGroup]
 
 
 class WebAuthnCredential(TypedDict):
@@ -91,8 +77,8 @@ class WebAuthnCredential(TypedDict):
 
 
 class TwoFactorCredentials(TypedDict):
-    webauthn_credentials: Dict[str, WebAuthnCredential]
-    backup_codes: List[str]
+    webauthn_credentials: dict[str, WebAuthnCredential]
+    backup_codes: list[str]
 
 
 SessionId = str
@@ -105,7 +91,7 @@ class SessionInfo:
     started_at: int
     last_activity: int
     csrf_token: str = field(default_factory=lambda: str(uuid.uuid4()))
-    flashes: List[str] = field(default_factory=list)
+    flashes: list[str] = field(default_factory=list)
     # In case it is enabled: Was it already authenticated?
     two_factor_completed: bool = False
     # We don't care about the specific object, because it's internal to the fido2 library
@@ -128,24 +114,24 @@ class UserSpec(TypedDict, total=False):
     alias: str
     authorized_sites: Any  # TODO: Improve this
     automation_secret: str
-    connector: Optional[str]
+    connector: str | None
     contactgroups: list[ContactgroupName]
-    customer: Optional[str]
+    customer: str | None
     disable_notifications: DisabledNotificationsOptions
     email: str  # TODO: Why do we have "email" *and* "mail"?
-    enforce_pw_change: Optional[bool]
-    fallback_contact: Optional[bool]
+    enforce_pw_change: bool | None
+    fallback_contact: bool | None
     force_authuser: bool
     host_notification_options: str
     idle_timeout: Any  # TODO: Improve this
     language: str
     last_pw_change: int
-    locked: Optional[bool]
+    locked: bool | None
     mail: str  # TODO: Why do we have "email" *and* "mail"?
     notification_method: Any  # TODO: Improve this
     notification_period: str
     notification_rules: list[EventRule]  # yes, we actually modify this! :-/
-    notifications_enabled: Optional[bool]
+    notifications_enabled: bool | None
     num_failed_logins: int
     pager: str
     password: str
@@ -162,7 +148,7 @@ class UserSpec(TypedDict, total=False):
     user_scheme_serial: int
 
 
-Users = Dict[UserId, UserSpec]  # TODO: Improve this type
+Users = dict[UserId, UserSpec]  # TODO: Improve this type
 
 # Visual specific
 FilterName = str
@@ -203,7 +189,7 @@ class TypedVisual(_VisualMandatory):
 
 
 # TODO: Will be replaced by TypedVisual once all visual types have been moved over to TypedDict
-Visual = Dict[str, Any]
+Visual = dict[str, Any]
 
 
 class VisualLinkSpec(NamedTuple):
@@ -225,13 +211,13 @@ class VisualLinkSpec(NamedTuple):
 
 
 # View specific
-Row = Dict[str, Any]  # TODO: Improve this type
-Rows = List[Row]
+Row = dict[str, Any]  # TODO: Improve this type
+Rows = list[Row]
 PainterName = str
 SorterName = str
 ViewName = str
 ColumnName = str
-PainterParameters = Dict  # TODO: Improve this type
+PainterParameters = dict  # TODO: Improve this type
 
 
 @dataclass(frozen=True)
@@ -288,9 +274,9 @@ class PainterSpec:
         return str(self.to_raw())
 
 
-ViewSpec = Dict[str, Any]
-AllViewSpecs = Dict[Tuple[UserId, ViewName], ViewSpec]
-PermittedViewSpecs = Dict[ViewName, ViewSpec]
+ViewSpec = dict[str, Any]
+AllViewSpecs = dict[tuple[UserId, ViewName], ViewSpec]
+PermittedViewSpecs = dict[ViewName, ViewSpec]
 SorterFunction = Callable[[ColumnName, Row, Row], int]
 FilterHeader = str
 
@@ -352,10 +338,10 @@ class ABCMegaMenuSearch(ABC):
 
 class _Icon(TypedDict):
     icon: str
-    emblem: Optional[str]
+    emblem: str | None
 
 
-Icon = Union[str, _Icon]
+Icon = str | _Icon
 
 
 class TopicMenuItem(NamedTuple):
@@ -365,27 +351,27 @@ class TopicMenuItem(NamedTuple):
     url: str
     target: str = "main"
     is_show_more: bool = False
-    icon: Optional[Icon] = None
-    button_title: Optional[str] = None
+    icon: Icon | None = None
+    button_title: str | None = None
 
 
 class TopicMenuTopic(NamedTuple):
     name: "str"
     title: "str"
-    items: List[TopicMenuItem]
+    items: list[TopicMenuItem]
     max_entries: int = 10
-    icon: Optional[Icon] = None
+    icon: Icon | None = None
     hide: bool = False
 
 
 class MegaMenu(NamedTuple):
     name: str
-    title: Union[str, LazyString]
+    title: str | LazyString
     icon: Icon
     sort_index: int
-    topics: Callable[[], List[TopicMenuTopic]]
-    search: Optional[ABCMegaMenuSearch] = None
-    info_line: Optional[Callable[[], str]] = None
+    topics: Callable[[], list[TopicMenuTopic]]
+    search: ABCMegaMenuSearch | None = None
+    info_line: Callable[[], str] | None = None
     hide: Callable[[], bool] = lambda: False
 
 
@@ -401,7 +387,7 @@ class SearchResult:
     context: str = ""
 
 
-SearchResultsByTopic = Iterable[Tuple[str, Iterable[SearchResult]]]
+SearchResultsByTopic = Iterable[tuple[str, Iterable[SearchResult]]]
 
 # Metric & graph specific
 
@@ -415,7 +401,7 @@ class _UnitInfoRequired(TypedDict):
     js_render: str
 
 
-GraphUnitRenderFunc = Callable[[List[Union[int, float]]], Tuple[str, List[str]]]
+GraphUnitRenderFunc = Callable[[list[float]], tuple[str, list[str]]]
 
 
 class UnitInfo(_UnitInfoRequired, TypedDict, total=False):
@@ -428,16 +414,16 @@ class UnitInfo(_UnitInfoRequired, TypedDict, total=False):
 
 
 class _TranslatedMetricRequired(TypedDict):
-    scale: List[float]
+    scale: list[float]
 
 
 class TranslatedMetric(_TranslatedMetricRequired, total=False):
     # All keys seem to be optional. At least in one situation there is a translation object
     # constructed which only has the scale member (see
     # CustomGraphPage._show_metric_type_combined_summary)
-    orig_name: List[str]
+    orig_name: list[str]
     value: float
-    scalar: Dict[str, float]
+    scalar: dict[str, float]
     auto_graph: bool
     title: str
     unit: UnitInfo
@@ -447,18 +433,16 @@ class TranslatedMetric(_TranslatedMetricRequired, total=False):
 GraphPresentation = str  # TODO: Improve Literal["lines", "stacked", "sum", "average", "min", "max"]
 GraphConsoldiationFunction = Literal["max", "min", "average"]
 
-RenderingExpression = Tuple[Any, ...]
-TranslatedMetrics = Dict[str, TranslatedMetric]
+RenderingExpression = tuple[Any, ...]
+TranslatedMetrics = dict[str, TranslatedMetric]
 MetricExpression = str
 LineType = str  # TODO: Literal["line", "area", "stack", "-line", "-area", "-stack"]
-MetricDefinition = Union[
-    Tuple[MetricExpression, LineType], Tuple[MetricExpression, LineType, Union[str, LazyString]]
+MetricDefinition = Union[  # https://github.com/python/mypy/issues/11098
+    tuple[MetricExpression, LineType], tuple[MetricExpression, LineType, str | LazyString]
 ]
-PerfometerSpec = Dict[str, Any]
-PerfdataTuple = Tuple[
-    str, float, str, Optional[float], Optional[float], Optional[float], Optional[float]
-]
-Perfdata = List[PerfdataTuple]
+PerfometerSpec = dict[str, Any]
+PerfdataTuple = tuple[str, float, str, float | None, float | None, float | None, float | None]
+Perfdata = list[PerfdataTuple]
 
 
 class GraphSpec(TypedDict):
@@ -466,14 +450,14 @@ class GraphSpec(TypedDict):
 
 
 class _TemplateGraphSpecMandatory(GraphSpec):
-    site: Optional[str]
+    site: str | None
     host_name: HostName
     service_description: ServiceName
 
 
 class TemplateGraphSpec(_TemplateGraphSpecMandatory, total=False):
-    graph_index: Optional[int]
-    graph_id: Optional[str]
+    graph_index: int | None
+    graph_id: str | None
 
 
 class ExplicitGraphSpec(GraphSpec, total=False):
@@ -483,8 +467,8 @@ class ExplicitGraphSpec(GraphSpec, total=False):
     # I'd bet they are not mandatory. Needs to be figured out
     title: str
     unit: str
-    consolidation_function: Optional[GraphConsoldiationFunction]
-    explicit_vertical_range: tuple[Optional[float], Optional[float]]
+    consolidation_function: GraphConsoldiationFunction | None
+    explicit_vertical_range: tuple[float | None, float | None]
     omit_zero_metrics: bool
     horizontal_rules: list  # TODO: Be more specific
     context: VisualContext
@@ -514,18 +498,18 @@ class SingleTimeseriesGraphSpec(_SingleTimeseriesGraphSpecMandatory, total=False
     host: HostName
     service: ServiceName
     service_description: ServiceName
-    color: Optional[str]
+    color: str | None
 
 
-TemplateGraphIdentifier = Tuple[Literal["template"], TemplateGraphSpec]
-CombinedGraphIdentifier = Tuple[Literal["combined"], CombinedGraphSpec]
-CustomGraphIdentifier = Tuple[Literal["custom"], str]
-ExplicitGraphIdentifier = Tuple[Literal["explicit"], ExplicitGraphSpec]
-SingleTimeseriesGraphIdentifier = Tuple[Literal["single_timeseries"], SingleTimeseriesGraphSpec]
+TemplateGraphIdentifier = tuple[Literal["template"], TemplateGraphSpec]
+CombinedGraphIdentifier = tuple[Literal["combined"], CombinedGraphSpec]
+CustomGraphIdentifier = tuple[Literal["custom"], str]
+ExplicitGraphIdentifier = tuple[Literal["explicit"], ExplicitGraphSpec]
+SingleTimeseriesGraphIdentifier = tuple[Literal["single_timeseries"], SingleTimeseriesGraphSpec]
 
-GraphIdentifier = Union[
+GraphIdentifier = Union[  # https://github.com/python/mypy/issues/11098
     CustomGraphIdentifier,
-    Tuple[Literal["forecast"], str],
+    tuple[Literal["forecast"], str],
     TemplateGraphIdentifier,
     CombinedGraphIdentifier,
     ExplicitGraphIdentifier,
@@ -541,7 +525,7 @@ class RenderableRecipe(NamedTuple):
     visible: bool
 
 
-ActionResult = Optional[FinalizeRequest]
+ActionResult = FinalizeRequest | None
 
 
 @dataclass

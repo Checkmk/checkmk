@@ -320,3 +320,51 @@ def test_check_nvidia_smi_temperature(
     expected_result: type_defs.CheckResult,
 ) -> None:
     assert list(nvidia_smi.check_nvidia_smi_temperature(item, params, section)) == expected_result
+
+
+@pytest.mark.parametrize(
+    "section, expected_result",
+    [
+        (
+            SECTION,
+            [Service(item="0B:00.0")],
+        ),
+    ],
+)
+def test_discover_nvidia_smi_gpu_util(
+    section: nvidia_smi.Section,
+    expected_result: type_defs.DiscoveryResult,
+) -> None:
+    assert list(nvidia_smi.discover_nvidia_smi_gpu_util(section)) == expected_result
+
+
+@pytest.mark.parametrize(
+    "item, params, section, expected_result",
+    [
+        (
+            "0B:00.0",
+            {},
+            SECTION,
+            [
+                Result(state=State.OK, summary="Utilization: 5.00%"),
+                Metric("gpu_utilization", 5.0),
+            ],
+        ),
+        (
+            "0B:00.0",
+            nvidia_smi.GenericLevelsParam(levels=(2.0, 4.0)),
+            SECTION,
+            [
+                Result(state=State.CRIT, summary="Utilization: 5.00% (warn/crit at 2.00%/4.00%)"),
+                Metric("gpu_utilization", 5.0, levels=(2.0, 4.0)),
+            ],
+        ),
+    ],
+)
+def test_check_nvidia_smi_gpu_util(
+    item: str,
+    params: nvidia_smi.GenericLevelsParam,
+    section: nvidia_smi.Section,
+    expected_result: type_defs.CheckResult,
+) -> None:
+    assert list(nvidia_smi.check_nvidia_smi_gpu_util(item, params, section)) == expected_result

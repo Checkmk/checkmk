@@ -2054,3 +2054,11 @@ perfometer_info.append(
 perfometer_info.append(
     {"type": "logarithmic", "metric": "mobileiron_last_patched", "half_value": 45.0, "exponent": 2}
 )
+
+perfometer_info.append(
+    {
+        "type": "linear",
+        "segments": ["gpu_utilization"],
+        "total": 100.0,
+    }
+)

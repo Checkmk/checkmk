@@ -5,12 +5,12 @@
 
 from datetime import datetime
 from enum import Enum
-from typing import Literal, Mapping
+from typing import Literal, Mapping, TypedDict
 from xml.etree import ElementTree
 
 from pydantic import BaseModel
 
-from .agent_based_api.v1 import get_value_store, register, Service
+from .agent_based_api.v1 import check_levels, get_value_store, register, render, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.temperature import check_temperature, TempParamType
 
@@ -236,4 +236,43 @@ register.check_plugin(
     check_ruleset_name="temperature",
     check_default_parameters={},
     check_function=check_nvidia_smi_temperature,
+)
+
+
+def discover_nvidia_smi_gpu_util(section: Section) -> DiscoveryResult:
+    for gpu_id, gpu in section.gpus.items():
+        if gpu.utilization.gpu_util is not None:
+            yield Service(item=gpu_id)
+
+
+class GenericLevelsParam(TypedDict):
+    levels: tuple[float, float] | None
+
+
+def check_nvidia_smi_gpu_util(
+    item: str,
+    params: GenericLevelsParam,
+    section: Section,
+) -> CheckResult:
+    if not (gpu := section.gpus.get(item)):
+        return
+    if gpu.utilization.gpu_util is None:
+        return
+    yield from check_levels(
+        gpu.utilization.gpu_util,
+        levels_upper=params.get("levels"),
+        render_func=render.percent,
+        metric_name="gpu_utilization",
+        label="Utilization",
+    )
+
+
+register.check_plugin(
+    name="nvidia_smi_gpu_util",
+    service_name="Nvidia GPU utilization %s",
+    sections=["nvidia_smi"],
+    discovery_function=discover_nvidia_smi_gpu_util,
+    check_ruleset_name="nvidia_smi_gpu_util",
+    check_default_parameters=GenericLevelsParam(levels=None),
+    check_function=check_nvidia_smi_gpu_util,
 )

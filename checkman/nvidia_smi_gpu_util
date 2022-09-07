@@ -1,0 +1,18 @@
+title: NVIDIA Graphics Card: GPU utilization
+agents: windows
+catalog: os/hardware
+license: GPLv2
+distribution: check_mk
+description:
+ This checks monitors the GPU utilization of an NVIDIA graphics card
+ using the command line tool {nvidia-smi}.
+ The check only works if that tool is installed.
+
+ You can configure upper levels for gpu utilization.
+
+item:
+ PCI bus ID of the graphics card without the leading zeroes
+
+discovery:
+ One service is created for each available graphics card if gpu
+ utilization is available.

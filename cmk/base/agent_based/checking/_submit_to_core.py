@@ -10,7 +10,7 @@ import os
 import time
 from contextlib import contextmanager
 from random import Random
-from typing import IO, Iterable, Iterator, Literal, NamedTuple, Optional
+from typing import Final, IO, Iterable, Iterator, Literal, NamedTuple, Optional
 
 import cmk.utils.paths
 import cmk.utils.tty as tty
@@ -75,22 +75,45 @@ def _extract_check_command(infotext: str) -> Optional[str]:
 def get_submitter(
     check_submission: Literal["pipe", "file"],
     monitoring_core: Literal["nagios", "cmc"],
-    dry_run: bool,
     host_name: HostName,
     *,
+    dry_run: bool,
+    perfdata_format: Literal["pnp", "standard"],
+    show_perfdata: bool,
     keepalive: KeepaliveAPI,
 ) -> Submitter:
     if dry_run:
-        return _NoOpSubmitter()
+        return _NoOpSubmitter(
+            host_name,
+            dry_run=dry_run,
+            perfdata_format=perfdata_format,
+            show_perfdata=show_perfdata,
+        )
 
     if keepalive.enabled():
-        return _KeepaliveSubmitter(host_name, keepalive)
+        return _KeepaliveSubmitter(
+            host_name,
+            keepalive,
+            dry_run=dry_run,
+            perfdata_format=perfdata_format,
+            show_perfdata=show_perfdata,
+        )
 
     if check_submission == "pipe" or monitoring_core == "cmc":
-        return _PipeSubmitter(host_name)
+        return _PipeSubmitter(
+            host_name,
+            dry_run=dry_run,
+            perfdata_format=perfdata_format,
+            show_perfdata=show_perfdata,
+        )
 
     if check_submission == "file":
-        return _FileSubmitter(host_name)
+        return _FileSubmitter(
+            host_name,
+            dry_run=dry_run,
+            perfdata_format=perfdata_format,
+            show_perfdata=show_perfdata,
+        )
 
     raise MKGeneralException(f"Invalid setting {check_submission=} (expected 'pipe' or 'file')")
 
@@ -110,12 +133,20 @@ class _FormattedSubmittee(NamedTuple):
 
 
 class Submitter(abc.ABC):
-    def submit(
+    def __init__(
         self,
-        submittees: Iterable[Submittee],
+        host_name: HostName,
+        *,
+        dry_run: bool,
         perfdata_format: Literal["pnp", "standard"],
         show_perfdata: bool,
-    ) -> None:
+    ):
+        self.host_name: Final = host_name
+        self.dry_run: Final = dry_run
+        self.perfdata_format: Final = perfdata_format
+        self.show_perfdata: Final = show_perfdata
+
+    def submit(self, submittees: Iterable[Submittee]) -> None:
         formatted_submittees = [
             (
                 _FormattedSubmittee(
@@ -126,7 +157,7 @@ class Submitter(abc.ABC):
                         # The vertical bar indicates end of service output and start of metrics.
                         # Replace the ones in the output by a Uniocode "Light vertical bar"
                         s.result.output.replace("|", "\u2758"),
-                        _sanitize_perftext(s.result, perfdata_format),
+                        _sanitize_perftext(s.result, self.perfdata_format),
                     ),
                     cache_info=s.cache_info,
                 ),
@@ -136,7 +167,7 @@ class Submitter(abc.ABC):
         ]
 
         for submittee, pending in formatted_submittees:
-            _output_check_result(submittee, show_perfdata=show_perfdata, pending=pending)
+            _output_check_result(submittee, show_perfdata=self.show_perfdata, pending=pending)
 
         self._submit((submittee for submittee, pending in formatted_submittees if not pending))
 
@@ -151,23 +182,30 @@ class _NoOpSubmitter(Submitter):
 
 
 class _KeepaliveSubmitter(Submitter):
-    def __init__(self, host_name: HostName, keepalive: KeepaliveAPI) -> None:
+    def __init__(
+        self,
+        host_name: HostName,
+        keepalive: KeepaliveAPI,
+        *,
+        dry_run: bool,
+        perfdata_format: Literal["pnp", "standard"],
+        show_perfdata: bool,
+    ) -> None:
+        super().__init__(
+            host_name, dry_run=dry_run, perfdata_format=perfdata_format, show_perfdata=show_perfdata
+        )
         self._keepalive = keepalive
-        self._host_name = host_name
 
     def _submit(self, formatted_submittees: Iterable[_FormattedSubmittee]) -> None:
         """Regular case for the CMC - check helpers are running in keepalive mode"""
         for s in formatted_submittees:
-            self._keepalive.add_check_result(self._host_name, *s)
+            self._keepalive.add_check_result(self.host_name, *s)
 
 
 class _PipeSubmitter(Submitter):
 
     # Filedescriptor to open nagios command pipe.
     _nagios_command_pipe: Literal[False] | IO[bytes] | None = None
-
-    def __init__(self, host_name: HostName) -> None:
-        self._host_name = host_name
 
     @classmethod
     def _open_command_pipe(cls) -> Literal[False] | IO[bytes]:
@@ -199,7 +237,7 @@ class _PipeSubmitter(Submitter):
 
             msg = "[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" % (
                 time.time(),
-                self._host_name,
+                self.host_name,
                 service,
                 state,
                 output.replace("\n", "\\n"),
@@ -242,9 +280,6 @@ class _FileSubmitter(Submitter):
 
     _names = _RandomNameSequence()
 
-    def __init__(self, host_name: HostName) -> None:
-        self._host_name = host_name
-
     def _submit(self, formatted_submittees: Iterable[_FormattedSubmittee]) -> None:
 
         now = time.time()
@@ -255,7 +290,7 @@ class _FileSubmitter(Submitter):
                 os.write(
                     fd,
                     (
-                        f"host_name={self._host_name}\n"
+                        f"host_name={self.host_name}\n"
                         f"service_description={service}\n"
                         "check_type=1\n"
                         "check_options=0\n"

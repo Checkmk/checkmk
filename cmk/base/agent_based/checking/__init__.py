@@ -439,6 +439,8 @@ def _submit_aggregated_results(
         dry_run=dry_run,
         host_name=host_name,
         keepalive=keepalive,
+        perfdata_format="pnp" if config.perfdata_format == "pnp" else "standard",
+        show_perfdata=show_perfdata,
     ).submit(
         submittees=[
             _submit_to_core.Submittee(
@@ -446,8 +448,6 @@ def _submit_aggregated_results(
             )
             for s in submittables
         ],
-        perfdata_format="pnp" if config.perfdata_format == "pnp" else "standard",
-        show_perfdata=show_perfdata,
     )
 
 

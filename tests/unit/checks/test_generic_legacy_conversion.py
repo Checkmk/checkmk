@@ -1405,7 +1405,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
         "esx_vsphere_objects",
         "esx_vsphere_objects.count",
         "esx_vsphere_sensors",
-        "esx_vsphere_vm.name",
         "esx_vsphere_vm.mounted_devices",
         "etherbox2_temp",
         "f5_bigip_apm",

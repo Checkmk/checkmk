@@ -35,6 +35,7 @@ def parse_esx_vsphere_vm(string_table: StringTable) -> SectionVM:
         cpu=_parse_esx_cpu_section(grouped_values),
         datastores=_parse_esx_datastore_section(grouped_values),
         host=_parse_esx_vm_running_on_host(grouped_values),
+        name=_parse_esx_vm_name(grouped_values),
     )
 
 
@@ -42,6 +43,13 @@ def _parse_vm_status(vm_values: Mapping[str, Sequence[str]]) -> ESXStatus | None
     if "guest.toolsVersionStatus" not in vm_values:
         return None
     return ESXStatus(vm_values["guest.toolsVersionStatus"][0])
+
+
+def _parse_esx_vm_name(vm_values: Mapping[str, Sequence]) -> str | None:
+    if "name" not in vm_values:
+        return None
+
+    return " ".join(vm_values["name"])
 
 
 def _parse_esx_vm_heartbeat_status(vm_values: Mapping[str, Sequence[str]]) -> HeartBeat | None:

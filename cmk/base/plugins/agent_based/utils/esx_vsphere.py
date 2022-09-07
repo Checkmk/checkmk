@@ -92,6 +92,7 @@ class ESXVm(BaseModel):
     datastores: Sequence[ESXDataStore] | None
     heartbeat: HeartBeat | None
     host: str | None
+    name: str | None
 
     class Config:
         allow_mutation = False

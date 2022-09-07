@@ -3,19 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import contextlib
 import multiprocessing
 import os
 import subprocess
 import tempfile
-from collections.abc import Iterable, Sequence
-from io import TextIOWrapper
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterator
 
 import pytest
 
-from tests.testlib import cmk_path, repo_path
+from tests.testlib import repo_path
 
 
 def test_pylint(capsys: pytest.CaptureFixture[str]) -> None:
@@ -28,7 +25,7 @@ def test_pylint(capsys: pytest.CaptureFixture[str]) -> None:
 
 def run_pylint(args: Iterable[str]) -> int:
     cmd = ["python3", "-m", "pylint"] + list(args)
-    return subprocess.run(cmd, cwd=repo_path(), check=False).returncode
+    return subprocess.run(cmd, cwd=Path(repo_path()), check=False).returncode
 
 
 def construct_args(tmpdir: Path) -> list[str]:
@@ -38,7 +35,7 @@ def construct_args(tmpdir: Path) -> list[str]:
     ]
     if pylint_args := os.environ.get("PYLINT_ARGS"):
         args += pylint_args.split(" ")
-    args.extend(str(f) for f in _get_files_to_check(tmpdir))
+    args.extend(str(f) for f in get_files_to_check(tmpdir))
     return args
 
 
@@ -58,106 +55,89 @@ def num_jobs_to_use() -> int:
     return int(multiprocessing.cpu_count() / 8.0) + 5
 
 
-def _get_files_to_check(tmpdir: Path) -> Sequence[Path]:
-    # Add the compiled files for things that are no modules yet
-    (tmpdir / "__init__.py").touch()
-    _compile_check_plugins(tmpdir)
+def get_files_to_check(tmpdir: Path) -> Iterable[Path]:
+    return [compile_check_plugins(tmpdir)] + [f for f in find_python_files() if not blacklisted(f)]
 
-    # Not checking compiled check, inventory, bakery plugins with Python 3
-    files = [tmpdir]
 
-    completed_process = subprocess.run(
-        [f"{repo_path()}/scripts/find-python-files"],
-        stdout=subprocess.PIPE,
-        encoding="utf-8",
-        check=False,
+def find_python_files() -> Iterable[Path]:
+    return (
+        make_relative(Path(f))
+        for f in subprocess.run(
+            [f"{Path(repo_path())}/scripts/find-python-files"],
+            stdout=subprocess.PIPE,
+            encoding="utf-8",
+            check=False,
+        ).stdout.splitlines()
     )
 
-    for fname in completed_process.stdout.splitlines():
-        # Thin out these excludes some day...
-        rel_path = fname[len(repo_path()) + 1 :]
 
+def make_relative(name: Path) -> Path:
+    return name.relative_to(Path(repo_path()))
+
+
+def blacklisted(name: Path) -> bool:
+    return (
         # Can currently not be checked alone. Are compiled together below
-        if rel_path.startswith("checks/"):
-            continue
-
+        name.is_relative_to("checks")
         # TODO: We should also test them...
-        if (
-            rel_path == "werk"
-            or rel_path.startswith("scripts/")
-            or rel_path.startswith("agents/wnx/tests/regression/")
-        ):
-            continue
-
+        or name == Path("werk")
+        or name.is_relative_to("scripts")
+        or name.is_relative_to("agents/wnx/tests/regression")
         # TODO: disable random, not that important stuff
-        if (
-            rel_path.startswith("agents/windows/it/")
-            or rel_path.startswith("agents/windows/msibuild/")
-            or rel_path.startswith("doc/")
-            or rel_path.startswith("livestatus/api/python/example")
-            or rel_path.startswith("livestatus/api/python/make_")
-        ):
-            continue
-
-        files.append(Path(fname))
-
-    return files
+        or name.is_relative_to("agents/windows/it")
+        or name.is_relative_to("agents/windows/msibuild")
+        or name.is_relative_to("doc")
+        or name == Path("livestatus/api/python/example.py")
+        or name == Path("livestatus/api/python/example_multisite.py")
+        or name == Path("livestatus/api/python/make_nagvis_map.py")
+    )
 
 
-def _compile_check_plugins(pylint_test_dir: Path) -> None:
-    for idx, f_name in enumerate(check_files(Path(repo_path()) / "checks")):
-        with stand_alone_template(pylint_test_dir / f"cmk_checks_{idx}.py") as file_handle:
-            add_file(file_handle, f_name)
+def compile_check_plugins(tmpdir: Path) -> Path:
+    tmpdir /= LEGACY_PACKAGE_NAME
+    tmpdir.mkdir()
+    (tmpdir / "__init__.py").touch()
+    for idx, name in enumerate(check_files()):
+        with (tmpdir / f"cmk_checks_{idx}.py").open(mode="w") as f:
+            f.write(HEADER)
+            f.write(f"# ORIG-FILE: {make_relative(name)}\n")
+            f.write(name.read_text())
+    return tmpdir
 
 
-def check_files(base_dir: Path) -> Sequence[Path]:
-    return sorted(Path(base_dir) / f for f in os.listdir(base_dir) if not f.startswith("."))
+def check_files() -> Iterable[Path]:
+    return sorted(f for f in (Path(repo_path()) / "checks").glob("[!.]*"))
 
 
-@contextlib.contextmanager
-def stand_alone_template(file_name: Path) -> Iterator[TextIOWrapper]:
-    with file_name.open(mode="w") as file_handle:
-        # Fake data structures where checks register (See cmk/base/checks.py)
-        file_handle.write(
-            """
-# -*- encoding: utf-8 -*-
+LEGACY_PACKAGE_NAME = "cmk_legacy_checks"
 
+# These pylint warnings are incompatible with our "concatenation technology".
+PYLINT_SUPPRESSIONS = [
+    "function-redefined",
+    "pointless-string-statement",
+    "redefined-outer-name",
+    "reimported",
+    "ungrouped-imports",
+    "unused-variable",
+    "wrong-import-order",
+    "wrong-import-position",
+]
+
+# Fake data structures where checks register (See cmk/base/checks.py)
+HEADER = f"""
 from cmk.base.check_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 
-check_info                         = {}
-check_includes                     = {}
-precompile_params                  = {}
-check_default_levels               = {}
-factory_settings                   = {}
+check_info                         = {{}}
+check_includes                     = {{}}
+precompile_params                  = {{}}
+check_default_levels               = {{}}
+factory_settings                   = {{}}
 check_config_variables             = []
-snmp_info                          = {}
-snmp_scan_functions                = {}
-active_check_info                  = {}
-special_agent_info                 = {}
+snmp_info                          = {{}}
+snmp_scan_functions                = {{}}
+active_check_info                  = {{}}
+special_agent_info                 = {{}}
 
+# pylint: disable={','.join(PYLINT_SUPPRESSIONS)}
 """
-        )
-        # These pylint warnings are incompatible with our "concatenation technology".
-        disable_pylint = [
-            "function-redefined",
-            "pointless-string-statement",
-            "redefined-outer-name",
-            "reimported",
-            "ungrouped-imports",
-            "unused-variable",
-            "wrong-import-order",
-            "wrong-import-position",
-        ]
-        file_handle.write(f"# pylint: disable={','.join(disable_pylint)}\n")
-        yield file_handle
-
-
-def add_file(f: TextIOWrapper, path: Path) -> None:
-    relpath = os.path.relpath(os.path.realpath(path), cmk_path())
-    f.write("# -*- encoding: utf-8 -*-")
-    f.write("#\n")
-    f.write("# ORIG-FILE: " + relpath + "\n")
-    f.write("#\n")
-    f.write("\n")
-    f.write(path.read_text())

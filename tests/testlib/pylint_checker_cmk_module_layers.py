@@ -253,7 +253,7 @@ class CMKModuleLayerChecker(BaseChecker):
         if parts[:2] in (["enterprise", "cmk"], ["managed", "cmk"], ["plus", "cmk"]):
             parts = parts[1:]
         # Pretend that the combined checks and inventory/bakery plugins live below cmk.base.
-        if len(parts) >= 2 and parts[-2].startswith("cmk_pylint_"):
+        if len(parts) >= 2 and parts[-2] == "cmk_legacy_checks":
             parts = ["cmk", "base", parts[-1]]
         # For all modules which don't live below cmk after mangling, just assume a toplevel module.
         if parts[0] != "cmk":

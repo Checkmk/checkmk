@@ -1,0 +1,23 @@
+Title: Linux agent installation on systems with no-exec /var path
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1662552116
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p13
+
+During agent package installation on Linux (.rpm or .deb package),
+some shell scripts get executed that are located under the directory
+<tt>/var/lib/cmk-agent</tt>.
+
+This lead to problems, because on some environments, the /var directory
+is mounted with noexec-flag and hence the scripts failed to execute.
+
+To fix this situation, the installation scripts now get executed by
+passing them to <tt>/bin/sh</tt>.
+
+
+
+

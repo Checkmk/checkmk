@@ -1,0 +1,27 @@
+Title: Linux agent: agent controller not in path when installing to non-default location
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1662554565
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p12
+
+With the ruleset "Installation paths for agent files", you can choose non-default installation
+directories for the Checkmk agent, including the path for executables.
+
+While the chosen executable path should be in the <tt>PATH</tt> environment variable of target
+systems, this is not guaranteed.
+Previously, if it failed to be in the <tt>PATH</tt> within the context of the agent installation/update
+with dpkg or rpm, the installation scripts failed to find the command <tt>cmk-agent-ctl</tt>, which
+resulted in an inconsistent agent setup.
+
+This situation is now fixed by executing the agent controller by its full (custom) path on agent
+installation/update.
+
+Please note that the affected script <tt>/var/lib/cmk-agent/super-server/setup deploy</tt> won't
+be able to find the custom executable directory when called manually, so it will fall back to
+<tt>/usr/bin/cmk-agent-ctl</tt> or just <tt>cmk-agent-ctl</tt>.
+

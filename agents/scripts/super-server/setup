@@ -72,13 +72,13 @@ _configured_modules() {
 
 cleanup() {
     _module_subfolders | while read -r module; do
-        "${module:?}/setup" cleanup
+        /bin/sh "${module:?}/setup" cleanup
     done
 }
 
 purge() {
     _module_subfolders | while read -r module; do
-        "${module:?}/setup" purge
+        /bin/sh "${module:?}/setup" purge
     done
 
     cleanup
@@ -87,7 +87,7 @@ purge() {
 deploy() {
     _configured_modules | while read -r module; do
         module_path="$(find "${MODULES_DIR}" -type d -name "*${module}" | head -n1)" || continue
-        "${module_path:?}/setup" deploy && {
+        /bin/sh "${module_path:?}/setup" deploy && {
             echo "Deployed ${module}"
             return 0
         }
@@ -97,11 +97,11 @@ deploy() {
 trigger() {
     # first trigger not deployed ones, to free resources (e.g. port)
     _module_subfolders | while read -r module; do
-        "${module:?}/setup" isdeployed || "${module}/setup" trigger
+        /bin/sh "${module:?}/setup" isdeployed || /bin/sh "${module}/setup" trigger
     done
     # then trigger deployed ones
     _module_subfolders | while read -r module; do
-        "${module:?}/setup" isdeployed && "${module}/setup" trigger
+        /bin/sh "${module:?}/setup" isdeployed && /bin/sh "${module}/setup" trigger
     done
 
     return 0
@@ -109,7 +109,7 @@ trigger() {
 
 getdeployed() {
     _module_subfolders | while read -r module; do
-        "${module:?}/setup" isdeployed || continue
+        /bin/sh "${module:?}/setup" isdeployed || continue
         bname="$(basename "${module}")"
         printf "%s\n" "${bname#*_}"
     done

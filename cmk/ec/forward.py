@@ -12,6 +12,8 @@ from typing import Iterable, Literal, Optional, Union
 
 from cmk.utils.paths import default_config_dir, omd_root
 
+from cmk.ec.main import SyslogFacility
+
 from .settings import Paths, settings
 
 _NILVALUE: Literal["-"] = "-"  # NILVALUE from RFC 5424
@@ -177,15 +179,16 @@ class SyslogMessage:
         ip_address: Optional[str] = None,
         service_level: Optional[int] = None,
     ):
-        if not 0 <= facility <= 23:
-            raise ValueError("Facility must be in the range 0..23 (inclusive).")
+
+        syslog_facility = SyslogFacility(facility)
+
         if not 0 <= severity <= 7:
             raise ValueError("Severity must be in the range 0..7 (inclusive).")
 
         if self._CHECKMK_SD_ID in structured_data:
             raise ValueError("Structured data must not contain element with Checkmk SD-ID")
 
-        self._priority = (facility << 3) + severity
+        self._priority = (syslog_facility.value << 3) + severity
         self._timestamp = (
             _NILVALUE if isinstance(timestamp, str) else self._unix_timestamp_to_rfc_5424(timestamp)
         )

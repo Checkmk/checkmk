@@ -156,6 +156,10 @@ class SyslogFacility:
 
     def __init__(self, value: int) -> None:
         super().__init__()
+        if value not in self.NAMES:
+            raise ValueError(
+                f"Value must be one of the following {', '.join(str(key) for key in self.NAMES)}"
+            )
         self.value = int(value)
 
     def __repr__(self):

@@ -1183,6 +1183,7 @@ if os.path.islink(%(dst)r):
     output.write("import cmk.base.agent_based.checking as checking\n")
     output.write("import cmk.base.check_api as check_api\n")
     output.write("from cmk.base.no_keepalive import NO_KEEPALIVE\n")
+    output.write("from cmk.base.agent_based.checking._submit_to_core import get_submitter\n")
     output.write("import cmk.base.ip_lookup as ip_lookup\n")  # is this still needed?
     output.write("\n")
     for module in _get_needed_agent_based_modules(
@@ -1280,7 +1281,21 @@ if '-d' in sys.argv:
     # perform actual check with a general exception handler
     output.write("try:\n")
     output.write(
-        "    sys.exit(checking.commandline_checking(%r, None, keepalive=NO_KEEPALIVE))\n" % hostname
+        "    sys.exit(\n"
+        "        checking.commandline_checking(\n"
+        "            %r,\n"
+        "            None,\n"
+        "            submitter=get_submitter(\n"
+        "                check_submission=config.check_submission,\n"
+        '                monitoring_core="nagios",\n'
+        "                host_name=%r,\n"
+        "                dry_run=False,\n"
+        "                show_perfdata=False,\n"
+        '                perfdata_format="standard",\n'
+        "                keepalive=NO_KEEPALIVE,\n"
+        "            )\n"
+        "        )\n"
+        "    )\n" % (hostname, hostname)
     )
     output.write("except MKTerminate:\n")
     output.write("    out.output('<Interrupted>\\n', stream=sys.stderr)\n")

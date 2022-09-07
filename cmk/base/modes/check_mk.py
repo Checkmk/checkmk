@@ -78,6 +78,7 @@ import cmk.base.packaging
 import cmk.base.parent_scan
 import cmk.base.profiling as profiling
 import cmk.base.sources as sources
+from cmk.base.agent_based.checking._submit_to_core import get_submitter
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 from cmk.base.config import HostConfig
 from cmk.base.core_factory import create_core
@@ -1840,9 +1841,15 @@ def mode_check(options: _CheckingOptions, args: List[str]) -> None:
         ipaddress,
         selected_sections=selected_sections,
         run_plugin_names=run_plugin_names,
-        dry_run=options.get("no-submit", False),
-        show_perfdata=options.get("perfdata", False),
-        keepalive=get_keepalive(cmk_version.edition()),
+        submitter=get_submitter(
+            check_submission=config.check_submission,
+            monitoring_core=config.monitoring_core,
+            dry_run=options.get("no-submit", False),
+            host_name=hostname,
+            keepalive=get_keepalive(cmk_version.edition()),
+            perfdata_format="pnp" if config.perfdata_format == "pnp" else "standard",
+            show_perfdata=options.get("perfdata", False),
+        ),
     )
 
 

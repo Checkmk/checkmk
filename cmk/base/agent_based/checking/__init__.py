@@ -70,6 +70,7 @@ from cmk.base.config import ConfigCache, HostConfig
 from cmk.base.sources import fetch_all, make_sources, Source
 
 from . import _cluster_modes, _submit_to_core
+from ._submit_to_core import Submitter
 
 
 class _AggregatedResult(NamedTuple):
@@ -96,12 +97,10 @@ class _AggregatedResult(NamedTuple):
 def active_check_checking(
     hostname: HostName,
     *,
+    submitter: Submitter,
     fetched: Sequence[Tuple[Source, FetcherMessage]],
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
     selected_sections: SectionNameCollection = NO_SELECTION,
-    dry_run: bool = False,
-    show_perfdata: bool = False,
-    keepalive: KeepaliveAPI,
 ) -> ServiceState:
     """
     See Also:
@@ -117,9 +116,7 @@ def active_check_checking(
             fetched=fetched,
             run_plugin_names=run_plugin_names,
             selected_sections=selected_sections,
-            dry_run=dry_run,
-            show_perfdata=show_perfdata,
-            keepalive=keepalive,
+            submitter=submitter,
         ),
         host_config=host_config,
         service_name="Check_MK",
@@ -131,11 +128,9 @@ def commandline_checking(
     host_name: HostName,
     ipaddress: Optional[HostAddress],
     *,
-    keepalive: KeepaliveAPI,
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
     selected_sections: SectionNameCollection = NO_SELECTION,
-    dry_run: bool = False,
-    show_perfdata: bool = False,
+    submitter: Submitter,
 ) -> ServiceState:
     # The error handling is required for the Nagios core.
     host_config = HostConfig.make_host_config(host_name)
@@ -146,9 +141,7 @@ def commandline_checking(
             ipaddress,
             run_plugin_names=run_plugin_names,
             selected_sections=selected_sections,
-            dry_run=dry_run,
-            show_perfdata=show_perfdata,
-            keepalive=keepalive,
+            submitter=submitter,
         ),
         host_config=host_config,
         service_name="Check_MK",
@@ -162,9 +155,7 @@ def _commandline_checking(
     *,
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
     selected_sections: SectionNameCollection = NO_SELECTION,
-    dry_run: bool = False,
-    show_perfdata: bool = False,
-    keepalive: KeepaliveAPI,
+    submitter: Submitter,
 ) -> ActiveCheckResult:
     console.vverbose("Checkmk version %s\n", cmk_version.__version__)
     config_cache = config.get_config_cache()
@@ -200,9 +191,7 @@ def _commandline_checking(
         fetched=fetched,
         run_plugin_names=run_plugin_names,
         selected_sections=selected_sections,
-        dry_run=dry_run,
-        show_perfdata=show_perfdata,
-        keepalive=keepalive,
+        submitter=submitter,
     )
 
 
@@ -212,9 +201,7 @@ def _execute_checkmk_checks(
     fetched: Sequence[Tuple[Source, FetcherMessage]],
     run_plugin_names: Container[CheckPluginName],
     selected_sections: SectionNameCollection,
-    dry_run: bool,
-    show_perfdata: bool,
-    keepalive: KeepaliveAPI,
+    submitter: Submitter,
 ) -> ActiveCheckResult:
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
@@ -239,9 +226,7 @@ def _execute_checkmk_checks(
             parsed_sections_broker=broker,
             services=services,
             run_plugin_names=run_plugin_names,
-            dry_run=dry_run,
-            show_perfdata=show_perfdata,
-            keepalive=keepalive,
+            submitter=submitter,
         )
         if run_plugin_names is EVERYTHING:
             inventory.do_inventory_actions_during_checking_for(
@@ -351,9 +336,7 @@ def check_host_services(
     parsed_sections_broker: ParsedSectionsBroker,
     services: Sequence[ConfiguredService],
     run_plugin_names: Container[CheckPluginName],
-    dry_run: bool,
-    show_perfdata: bool,
-    keepalive: KeepaliveAPI,
+    submitter: Submitter,
 ) -> Sequence[_AggregatedResult]:
     """Compute service state results for all given services on node or cluster
 
@@ -363,7 +346,7 @@ def check_host_services(
     """
     with plugin_contexts.current_host(host_config.hostname):
         with value_store.load_host_value_store(
-            host_config.hostname, store_changes=not dry_run
+            host_config.hostname, store_changes=not submitter.dry_run
         ) as value_store_manager:
             submittables = [
                 get_aggregated_result(
@@ -382,12 +365,13 @@ def check_host_services(
             ]
 
     if submittables:
-        _submit_aggregated_results(
-            submittables,
-            host_config.hostname,
-            dry_run,
-            show_perfdata,
-            keepalive=keepalive,
+        submitter.submit(
+            submittees=[
+                _submit_to_core.Submittee(
+                    s.service.description, s.result, s.cache_info, pending=not s.submit
+                )
+                for s in submittables
+            ],
         )
 
     return submittables
@@ -423,32 +407,6 @@ def service_outside_check_period(
         return False
     console.verbose("Skipping service %s: currently not in timeperiod %s.\n", description, period)
     return True
-
-
-def _submit_aggregated_results(
-    submittables: Iterable[_AggregatedResult],
-    host_name: HostName,
-    dry_run: bool,
-    show_perfdata: bool,
-    *,
-    keepalive: KeepaliveAPI,
-) -> None:
-    _submit_to_core.get_submitter(
-        check_submission=config.check_submission,
-        monitoring_core=config.monitoring_core,
-        dry_run=dry_run,
-        host_name=host_name,
-        keepalive=keepalive,
-        perfdata_format="pnp" if config.perfdata_format == "pnp" else "standard",
-        show_perfdata=show_perfdata,
-    ).submit(
-        submittees=[
-            _submit_to_core.Submittee(
-                s.service.description, s.result, s.cache_info, pending=not s.submit
-            )
-            for s in submittables
-        ],
-    )
 
 
 def get_aggregated_result(

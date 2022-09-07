@@ -116,7 +116,7 @@ class TestValueSpecTransform:
             == "transform_help"
         )
 
-    # TODO: render_input and render_input_as_form
+    # TODO: render_input
 
     def test_canonical_value(self) -> None:
         assert vs.Transform(vs.TextInput()).canonical_value() == ""

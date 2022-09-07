@@ -6179,11 +6179,6 @@ class Transform(ValueSpec):
     def render_input(self, varprefix: str, value: Any) -> None:
         self._valuespec.render_input(varprefix, self.forth(value))
 
-    def render_input_as_form(self, varprefix: str, value: Mapping[str, Any]) -> None:
-        if not isinstance(self._valuespec, Dictionary):
-            raise NotImplementedError()
-        self._valuespec.render_input_as_form(varprefix, self.forth(value))
-
     def set_focus(self, varprefix: str) -> None:
         self._valuespec.set_focus(varprefix)
 

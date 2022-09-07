@@ -32,7 +32,7 @@ import cmk.base.config as config
 import cmk.base.section as section
 from cmk.base.agent_based.data_provider import make_broker, ParsedSectionsBroker
 from cmk.base.agent_based.utils import check_parsing_errors, check_sources, get_section_kwargs
-from cmk.base.config import ConfigCache, HostConfig
+from cmk.base.config import HostConfig
 from cmk.base.sources import fetch_all, make_sources, Source
 
 from ._retentions import Retentions, RetentionsTracker
@@ -312,7 +312,6 @@ def _sources_failed(
 
 
 def do_inventory_actions_during_checking_for(
-    config_cache: ConfigCache,
     host_config: HostConfig,
     *,
     parsed_sections_broker: ParsedSectionsBroker,

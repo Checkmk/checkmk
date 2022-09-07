@@ -52,7 +52,6 @@ import cmk.base.check_table as check_table
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.crash_reporting
-import cmk.base.item_state as item_state
 import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.utils
 from cmk.base.agent_based.data_provider import make_broker, ParsedSectionsBroker
@@ -238,7 +237,6 @@ def _execute_checkmk_checks(
         )
         if run_plugin_names is EVERYTHING:
             inventory.do_inventory_actions_during_checking_for(
-                config_cache,
                 host_config,
                 parsed_sections_broker=broker,
             )

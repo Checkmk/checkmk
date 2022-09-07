@@ -111,9 +111,13 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
         help="Partition id for connection parameters (dmPartitionId)",
     )
     parser.add_argument("--hostname", help="Name of the Mobileiron instance to query.")
-    parser.add_argument("--android-regex", action="append", help="Regex for Android hosts.")
-    parser.add_argument("--ios-regex", action="append", help="Regex for iOS hosts.")
-    parser.add_argument("--other-regex", action="append", help="Regex for other platform hosts.")
+    parser.add_argument(
+        "--android-regex", action="append", default=[], help="Regex for Android hosts."
+    )
+    parser.add_argument("--ios-regex", action="append", default=[], help="Regex for iOS hosts.")
+    parser.add_argument(
+        "--other-regex", action="append", default=[], help="Regex for other platform hosts."
+    )
     parser.add_argument(
         "--proxy",
         type=str,
@@ -284,7 +288,7 @@ def agent_mobileiron_main(args: Args) -> None:
     with MobileironAPI(
         api_host=args.hostname,
         key_fields=args.key_fields,
-        regex_patterns=Regexes(args.android_regex, args.ios_regex, args.others_regex),
+        regex_patterns=Regexes(args.android_regex, args.ios_regex, args.other_regex),
         auth=(args.username, args.password),
         proxy=args.proxy,
     ) as mobileiron_api:

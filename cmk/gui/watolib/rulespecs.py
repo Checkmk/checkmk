@@ -208,7 +208,7 @@ class RulespecGroupEnforcedServices(RulespecGroup):
     @property
     def help(self):
         return _(
-            "Rules to set up [wato_services#manual_checks|manual services]. Services set "
+            "Rules to set up [wato_services#enforced_services|enforced services]. Services set "
             "up in this way do not depend on the service discovery. This is useful if you want "
             "to enforce compliance with a specific guideline. You can for example ensure that "
             "a certain Windows service is always present on a host."

@@ -201,7 +201,7 @@ class DocReference(Enum):
     REST_API = "rest_api"
     WATO_HOSTS = "wato_hosts"
     WATO_SERVICES = "wato_services"
-    WATO_SERVICES_MANUAL_CHECKS = "wato_services#manual_checks"
+    WATO_SERVICES_ENFORCED_SERVICES = "wato_services#enforced_services"
     WATO_USER_2FA = "wato_user#2fa"
 
 

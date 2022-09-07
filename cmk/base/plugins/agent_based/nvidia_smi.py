@@ -276,3 +276,50 @@ register.check_plugin(
     check_default_parameters=GenericLevelsParam(levels=None),
     check_function=check_nvidia_smi_gpu_util,
 )
+
+
+def discover_nvidia_smi_en_de_coder_util(section: Section) -> DiscoveryResult:
+    for gpu_id, gpu in section.gpus.items():
+        if gpu.utilization.encoder_util is not None or gpu.utilization.decoder_util is not None:
+            yield Service(item=gpu_id)
+
+
+class DeEnCoderParams(TypedDict):
+    encoder_levels: tuple[float, float] | None
+    decoder_levels: tuple[float, float] | None
+
+
+def check_nvidia_smi_en_de_coder_util(
+    item: str,
+    params: DeEnCoderParams,
+    section: Section,
+) -> CheckResult:
+    if not (gpu := section.gpus.get(item)):
+        return
+    if gpu.utilization.encoder_util is not None:
+        yield from check_levels(
+            gpu.utilization.encoder_util,
+            levels_upper=params.get("encoder_levels"),
+            render_func=render.percent,
+            metric_name="encoder_utilization",
+            label="Encoder",
+        )
+    if gpu.utilization.decoder_util is not None:
+        yield from check_levels(
+            gpu.utilization.decoder_util,
+            levels_upper=params.get("decoder_levels"),
+            render_func=render.percent,
+            metric_name="decoder_utilization",
+            label="Decoder",
+        )
+
+
+register.check_plugin(
+    name="nvidia_smi_en_de_coder_util",
+    service_name="Nvidia GPU En-/Decoder utilization %s",
+    sections=["nvidia_smi"],
+    discovery_function=discover_nvidia_smi_en_de_coder_util,
+    check_ruleset_name="nvidia_smi_en_de_coder_util",
+    check_default_parameters=DeEnCoderParams(encoder_levels=None, decoder_levels=None),
+    check_function=check_nvidia_smi_en_de_coder_util,
+)

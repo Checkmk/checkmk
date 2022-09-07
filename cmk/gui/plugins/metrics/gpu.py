@@ -24,3 +24,15 @@ metric_info["gpu_utilization"] = {
     "color": "34/a",
     "unit": "%",
 }
+
+metric_info["decoder_utilization"] = {
+    "title": _("Decoder utilization"),
+    "color": "12/a",
+    "unit": "%",
+}
+
+metric_info["encoder_utilization"] = {
+    "title": _("Encoder utilization"),
+    "color": "13/a",
+    "unit": "%",
+}

@@ -1,0 +1,18 @@
+title: NVIDIA Graphics Card: En-/Decoder utilization
+agents: windows
+catalog: os/hardware
+license: GPLv2
+distribution: check_mk
+description:
+ This checks monitors the en- and decoder utilization of an NVIDIA graphics
+ card using the command line tool {nvidia-smi}.
+ The check only works if that tool is installed.
+
+ You can configure upper levels for both en- and decoder utilization.
+
+item:
+ PCI bus ID of the graphics card without the leading zeroes
+
+discovery:
+ One service is created for each available graphics card if en- or decoder
+ utilization or both are available.

@@ -368,3 +368,57 @@ def test_check_nvidia_smi_gpu_util(
     expected_result: type_defs.CheckResult,
 ) -> None:
     assert list(nvidia_smi.check_nvidia_smi_gpu_util(item, params, section)) == expected_result
+
+
+@pytest.mark.parametrize(
+    "section, expected_result",
+    [
+        (
+            SECTION,
+            [Service(item="0B:00.0")],
+        ),
+    ],
+)
+def test_discover_nvidia_smi_en_de_coder_util(
+    section: nvidia_smi.Section,
+    expected_result: type_defs.DiscoveryResult,
+) -> None:
+    assert list(nvidia_smi.discover_nvidia_smi_en_de_coder_util(section)) == expected_result
+
+
+@pytest.mark.parametrize(
+    "item, params, section, expected_result",
+    [
+        (
+            "0B:00.0",
+            {},
+            SECTION,
+            [
+                Result(state=State.OK, summary="Encoder: 3.00%"),
+                Metric("encoder_utilization", 3.0),
+                Result(state=State.OK, summary="Decoder: 8.00%"),
+                Metric("decoder_utilization", 8.0),
+            ],
+        ),
+        (
+            "0B:00.0",
+            nvidia_smi.DeEnCoderParams(encoder_levels=(2.5, 3.5), decoder_levels=(5.0, 10.0)),
+            SECTION,
+            [
+                Result(state=State.WARN, summary="Encoder: 3.00% (warn/crit at 2.50%/3.50%)"),
+                Metric("encoder_utilization", 3.0, levels=(2.5, 3.5)),
+                Result(state=State.WARN, summary="Decoder: 8.00% (warn/crit at 5.00%/10.00%)"),
+                Metric("decoder_utilization", 8.0, levels=(5.0, 10.0)),
+            ],
+        ),
+    ],
+)
+def test_check_nvidia_smi_en_de_coder_util(
+    item: str,
+    params: nvidia_smi.DeEnCoderParams,
+    section: nvidia_smi.Section,
+    expected_result: type_defs.CheckResult,
+) -> None:
+    assert (
+        list(nvidia_smi.check_nvidia_smi_en_de_coder_util(item, params, section)) == expected_result
+    )

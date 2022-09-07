@@ -36,3 +36,35 @@ rulespec_registry.register(
         title=lambda: _("Nvidia GPU utilization"),
     )
 )
+
+
+def _parameter_valuespec_nvidia_smi_en_de_coder_util() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "encoder_levels",
+                SimpleLevels(
+                    Percentage, title=_("Encoder utilization"), default_levels=(80.0, 90.0)
+                ),
+            ),
+            (
+                "decoder_levels",
+                SimpleLevels(
+                    Percentage, title=_("Decoder utilization"), default_levels=(80.0, 90.0)
+                ),
+            ),
+        ],
+        optional_keys=[],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="nvidia_smi_en_de_coder_util",
+        match_type="dict",
+        item_spec=lambda: TextInput(title=_("Nvidia GPU En-/Decoder utilization")),
+        group=RulespecGroupCheckParametersOperatingSystem,
+        parameter_valuespec=_parameter_valuespec_nvidia_smi_en_de_coder_util,
+        title=lambda: _("Nvidia GPU En-/Decoder utilization"),
+    )
+)

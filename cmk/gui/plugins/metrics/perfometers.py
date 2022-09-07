@@ -2062,3 +2062,21 @@ perfometer_info.append(
         "total": 100.0,
     }
 )
+
+perfometer_info.append(
+    {
+        "type": "dual",
+        "perfometers": [
+            {
+                "type": "linear",
+                "segments": ["encoder_utilization"],
+                "total": 100.0,
+            },
+            {
+                "type": "linear",
+                "segments": ["decoder_utilization"],
+                "total": 100.0,
+            },
+        ],
+    }
+)

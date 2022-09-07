@@ -82,6 +82,11 @@ def agent_bailouts(bailouts):
             first_seen = get_item_state(text, default=now)
             set_item_state(text, first_seen)
             status = 0 if (now - first_seen < 3600) else status
+        elif text.startswith("Graph client"):
+            # The default permissions described in the CheckMK Azure monitoring setup guide will not
+            # allow the graph API calls that the agent is doing and we don't want to show a CRIT
+            # state for users that don't need the graph client result
+            status = 0
         yield status, text
 
 

@@ -7,8 +7,9 @@ so it's best place is in the central library."""
 
 import itertools
 import json
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any
+from typing import Any, IO
 
 from six import ensure_str
 
@@ -111,7 +112,7 @@ def load() -> dict[int, dict[str, Any]]:
     return werks
 
 
-def load_precompiled_werks_file(path):
+def load_precompiled_werks_file(path: Path) -> dict[int, dict[str, Any]]:
     # ? what is the content of these files, to which the path shows
     with path.open() as fp:
         return {int(werk_id): werk for werk_id, werk in json.load(fp).items()}
@@ -185,12 +186,12 @@ def _load_werk(path: Path) -> dict[str, Any]:
     return werk
 
 
-def write_precompiled_werks(path, werks):
+def write_precompiled_werks(path: Path, werks: dict[int, dict[str, Any]]) -> None:
     with path.open("w", encoding="utf-8") as fp:
         fp.write(json.dumps(werks, check_circular=False))
 
 
-def write_as_text(werks, f, write_version=True):
+def write_as_text(werks: dict[int, dict[str, Any]], f: IO[str], write_version: bool = True) -> None:
     """Write the given werks to a file object
 
     This is used for creating a textual hange log for the released versions and the announcement mails.
@@ -211,7 +212,7 @@ def write_as_text(werks, f, write_version=True):
         f.write("\n")
 
 
-def write_werk_as_text(f, werk):
+def write_werk_as_text(f: IO[str], werk: dict[str, Any]) -> None:
     prefix = ""
     if werk["class"] == "fix":
         prefix = " FIX:"
@@ -251,7 +252,7 @@ _COMPATIBLE_SORTING_VALUE = {
 
 
 # sort by version and within one version by component
-def sort_by_version_and_component(werks):
+def sort_by_version_and_component(werks: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
     translator = WerkTranslator()
     return sorted(
         werks,
@@ -266,5 +267,5 @@ def sort_by_version_and_component(werks):
     )
 
 
-def sort_by_date(werks):
+def sort_by_date(werks: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
     return sorted(werks, key=lambda w: w["date"], reverse=True)

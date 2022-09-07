@@ -3608,7 +3608,7 @@ class ListChoice(ValueSpec[ListChoiceModel]):
             if no_elements_text is not None
             else _("There are no elements defined for this selection")
         )
-        self._elements: Sequence[tuple[ListChoiceChoiceIdent, str]] = []
+        self._elements: Sequence[ListChoiceChoice] = []
 
     def allow_empty(self) -> bool:
         return self._allow_empty
@@ -3628,7 +3628,7 @@ class ListChoice(ValueSpec[ListChoiceModel]):
         else:
             raise ValueError("illegal type for choices")
 
-    def get_elements(self) -> Sequence[tuple[ListChoiceChoiceIdent, str]]:
+    def get_elements(self) -> Sequence[ListChoiceChoice]:
         raise NotImplementedError()
 
     def canonical_value(self) -> ListChoiceModel:

@@ -28,11 +28,13 @@ from typing import (
 from pydantic import BaseModel
 
 from cmk.utils.cpu_tracking import Snapshot
+from cmk.utils.structured_data import SDPath
 from cmk.utils.type_defs import (
     ContactgroupName,
     DisabledNotificationsOptions,
     EventRule,
     HostName,
+    Labels,
     MetricName,
     ServiceName,
     UserId,
@@ -165,12 +167,43 @@ Users = Dict[UserId, UserSpec]  # TODO: Improve this type
 # Visual specific
 FilterName = str
 FilterHTTPVariables = Mapping[str, str]
-Visual = Dict[str, Any]
 VisualName = str
 VisualTypeName = Literal["dashboards", "views", "reports"]
 VisualContext = Mapping[FilterName, FilterHTTPVariables]
 InfoName = str
 SingleInfos = Sequence[InfoName]
+
+
+class _VisualMandatory(TypedDict):
+    owner: str
+    name: str
+    context: VisualContext
+    single_infos: SingleInfos
+    add_context_to_title: bool
+    title: str | LazyString
+    description: str | LazyString
+    topic: str
+    sort_index: int
+    is_show_more: bool
+    icon: Icon | None
+    hidden: bool
+    hidebutton: bool
+    public: bool | tuple[Literal["contact_groups"], Sequence[str]]
+
+
+class LinkFromSpec(TypedDict, total=False):
+    single_infos: SingleInfos
+    host_labels: Labels
+    has_inventory_tree: Sequence[SDPath]
+    has_inventory_tree_history: Sequence[SDPath]
+
+
+class TypedVisual(_VisualMandatory):
+    link_from: LinkFromSpec
+
+
+# TODO: Will be replaced by TypedVisual once all visual types have been moved over to TypedDict
+Visual = Dict[str, Any]
 
 
 class VisualLinkSpec(NamedTuple):

@@ -20,6 +20,7 @@ from typing import (
     Callable,
     Dict,
     Final,
+    Generic,
     get_args,
     Iterable,
     Iterator,
@@ -82,6 +83,7 @@ from cmk.gui.plugins.visuals.utils import (
     get_only_sites_from_context,
     visual_info_registry,
     visual_type_registry,
+    VisualType,
 )
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import (
@@ -90,6 +92,7 @@ from cmk.gui.type_defs import (
     HTTPVariables,
     InfoName,
     SingleInfos,
+    TypedVisual,
     ViewSpec,
     Visual,
     VisualContext,
@@ -135,10 +138,10 @@ from cmk.gui.valuespec import (
     ValueSpecValidateFunc,
 )
 
-CustomUserVisuals = Dict[Tuple[UserId, VisualName], Dict]
+# Remove Visual once all visual types have been moved over To TypedVisual
+T = TypeVar("T", bound=Visual | TypedVisual)
+CustomUserVisuals = Dict[Tuple[UserId, VisualName], T]
 
-
-T = TypeVar("T")
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
 #   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |
@@ -269,9 +272,9 @@ def declare_visual_permissions(what, what_plural):
 #   '----------------------------------------------------------------------'
 
 
-def save(  # type:ignore[no-untyped-def]
-    what: VisualTypeName, visuals, user_id=None
-):
+def save(
+    what: VisualTypeName, visuals: dict[tuple[UserId, VisualName], T], user_id: UserId | None = None
+) -> None:
     if user_id is None:
         user_id = user.id
     assert user_id is not None
@@ -286,24 +289,29 @@ def save(  # type:ignore[no-untyped-def]
 
 def load(
     what: VisualTypeName,
-    builtin_visuals: Dict[Any, Any],
-    internal_to_runtime_transformer: Callable[[dict[str, Any]], Visual],
-    skip_func: Callable[[Visual], bool] = lambda _v: False,
-) -> Dict[Tuple[UserId, str], Dict[str, Any]]:
-    visuals: Dict[Tuple[UserId, str], Dict[str, Any]] = {}
+    builtin_visuals: dict[VisualName, T],
+    internal_to_runtime_transformer: Callable[[dict[str, Any]], T],
+    skip_func: Callable[[T], bool] = lambda _v: False,
+) -> dict[tuple[UserId, VisualName], T]:
+    visuals: dict[tuple[UserId, VisualName], T] = {}
 
     for name, visual in builtin_visuals.items():
-        # Ensure converting _l to str
+        # Ensure converting _l to str. During "import time" the may not be localized since the
+        # user language is not known. Here we are in a request context and may resolve the
+        # localization. It might be better to keep the LazyString objects unresolved during run
+        # time, but we had some call sites which were not correctly handling the LazyStrings. So
+        # we took the approach to resolve them in a central early stage instead.
         for key, value in visual.items():
             if not isinstance(value, utils.speaklater.LazyString):
                 continue
-            visual[key] = str(value)
+            # TODO: Figure out later which elements can contain these types and change them explicitly
+            visual[key] = str(value)  # type: ignore[literal-required]
 
         visuals[(UserId(""), name)] = visual
 
     # Add custom "user_*.mk" visuals
     visuals.update(
-        _CombinedVisualsCache(what).load(
+        _CombinedVisualsCache[T](what).load(
             internal_to_runtime_transformer,
             skip_func,
         )
@@ -390,7 +398,7 @@ def cleanup_context_filters(  # type:ignore[no-untyped-def]
     return dict(new_context_vars)
 
 
-class _CombinedVisualsCache:
+class _CombinedVisualsCache(Generic[T]):
     _visuals_cache_dir: Final[Path] = Path(cmk.utils.paths.tmp_dir) / "visuals_cache"
 
     def __init__(self, visual_type: VisualTypeName) -> None:
@@ -419,8 +427,8 @@ class _CombinedVisualsCache:
 
     def load(
         self,
-        internal_to_runtime_transformer: Callable[[dict[str, Any]], Visual],
-        skip_func: Callable[[Visual], bool],
+        internal_to_runtime_transformer: Callable[[dict[str, Any]], T],
+        skip_func: Callable[[T], bool],
     ) -> CustomUserVisuals:
 
         if self._may_use_cache():
@@ -444,8 +452,8 @@ class _CombinedVisualsCache:
 
     def _compute_and_write_cache(
         self,
-        internal_to_runtime_transformer: Callable[[dict[str, Any]], Visual],
-        skip_func: Callable[[Visual], bool],
+        internal_to_runtime_transformer: Callable[[dict[str, Any]], T],
+        skip_func: Callable[[T], bool],
     ) -> CustomUserVisuals:
         visuals = _load_custom_user_visuals(
             self._visual_type, internal_to_runtime_transformer, skip_func
@@ -470,9 +478,9 @@ hooks.register_builtin("users-saved", lambda x: _CombinedVisualsCache.invalidate
 
 
 def _load_custom_user_visuals(
-    what: str,
-    internal_to_runtime_transformer: Callable[[dict[str, Any]], Visual],
-    skip_func: Callable[[Visual], bool],
+    what: VisualTypeName,
+    internal_to_runtime_transformer: Callable[[dict[str, Any]], T],
+    skip_func: Callable[[T], bool],
 ) -> CustomUserVisuals:
     """Note: Try NOT to use pathlib.Path functionality in this function, as pathlib is
     measurably slower (7 times), due to path object creation and concatenation. This function
@@ -515,14 +523,14 @@ def _load_custom_user_visuals(
     return visuals
 
 
-def load_visuals_of_a_user(  # type:ignore[no-untyped-def]
-    what,
-    internal_to_runtime_transformer: Callable[[dict[str, Any]], Visual],
-    skip_func: Callable[[Visual], bool],
+def load_visuals_of_a_user(
+    what: VisualTypeName,
+    internal_to_runtime_transformer: Callable[[dict[str, Any]], T],
+    skip_func: Callable[[T], bool],
     path: Path,
     user_id: UserId,
-) -> CustomUserVisuals:
-    user_visuals: CustomUserVisuals = {}
+) -> CustomUserVisuals[T]:
+    user_visuals: CustomUserVisuals[T] = {}
     for name, raw_visual in store.try_load_file_from_pickle_cache(path, default={}).items():
         visual = internal_to_runtime_transformer(raw_visual)
         if skip_func(visual):
@@ -566,12 +574,13 @@ def declare_custom_permissions(what):
 # Get the list of visuals which are available to the user
 # (which could be retrieved with get_visual)
 def available(
-    what: str, all_visuals: Dict[Tuple[UserId, VisualName], Visual]
-) -> Dict[VisualName, Visual]:
+    what: VisualTypeName,
+    all_visuals: dict[tuple[UserId, VisualName], T],
+) -> Dict[VisualName, T]:
     visuals = {}
     permprefix = what[:-1]
 
-    def published_to_user(visual: Visual) -> bool:
+    def published_to_user(visual: T) -> bool:
         if visual["public"] is True:
             return True
 
@@ -1092,15 +1101,15 @@ def render_context_specs(  # type:ignore[no-untyped-def]
         spec.render_input(ident, value)
 
 
-def _vs_general(  # type:ignore[no-untyped-def]
-    single_infos,
-    default_id,
-    visual_type,
-    visibility_elements,
-    all_visuals: Dict[Tuple[UserId, VisualName], Visual],
+def _vs_general(
+    single_infos: SingleInfos,
+    default_id: str,
+    visual_type: VisualType,
+    visibility_elements: list[tuple[str, ValueSpec]],
+    all_visuals: dict[tuple[UserId, VisualName], T],
     mode: str,
-    what: str,
-):
+    what: VisualTypeName,
+) -> Dictionary:
     return Dictionary(
         title=_("General Properties"),
         render="form",
@@ -2151,9 +2160,12 @@ def missing_context_filters(
 
 
 def visual_title(
-    what: str, visual: Visual, context: VisualContext, skip_title_context: bool = False
+    what: str,
+    visual: Visual | TypedVisual,
+    context: VisualContext,
+    skip_title_context: bool = False,
 ) -> str:
-    title = _u(visual["title"])
+    title = _u(str(visual["title"]))
 
     # In case we have a site context given replace the $SITE$ macro in the titles.
     site_filter_vars = context.get("site", {})
@@ -2179,7 +2191,7 @@ def view_title(view_spec: ViewSpec, context: VisualContext) -> str:
     return visual_title("view", view_spec, context)
 
 
-def _add_context_title(context: VisualContext, single_infos: List[str], title: str) -> str:
+def _add_context_title(context: VisualContext, single_infos: Sequence[str], title: str) -> str:
     def filter_heading(
         filter_name: FilterName,
         filter_vars: FilterHTTPVariables,

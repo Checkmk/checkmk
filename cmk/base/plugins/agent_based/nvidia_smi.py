@@ -13,6 +13,7 @@ from pydantic import BaseModel
 from .agent_based_api.v1 import (
     check_levels,
     get_value_store,
+    Metric,
     register,
     render,
     Result,
@@ -20,6 +21,7 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.memory import check_element
 from .utils.temperature import check_temperature, TempParamType
 
 PowerState = Literal[
@@ -381,4 +383,98 @@ register.check_plugin(
     check_ruleset_name="nvidia_smi_power",
     check_default_parameters=GenericLevelsParam(levels=None),
     check_function=check_nvidia_smi_power,
+)
+
+
+class MemoryParams(TypedDict):
+    levels_total: tuple[float, float] | None
+    levels_bar1: tuple[float, float] | None
+    levels_fb: tuple[float, float] | None
+
+
+def discover_nvidia_smi_memory_util(section: Section) -> DiscoveryResult:
+    for gpu_id, gpu in section.gpus.items():
+        if gpu.utilization.memory_util is not None:
+            yield Service(item=gpu_id)
+
+
+def check_nvidia_smi_memory_util(
+    item: str,
+    params: MemoryParams,
+    section: Section,
+) -> CheckResult:
+    if not (gpu := section.gpus.get(item)):
+        return
+
+    fb_mem_usage_total = gpu.utilization.memory_util.fb_memory_usage.total
+    fb_mem_usage_free = gpu.utilization.memory_util.fb_memory_usage.free
+    fb_mem_usage_used = gpu.utilization.memory_util.fb_memory_usage.used
+
+    bar1_mem_usage_total = gpu.utilization.memory_util.bar1_memory_usage.total
+    bar1_mem_usage_free = gpu.utilization.memory_util.bar1_memory_usage.free
+    bar1_mem_usage_used = gpu.utilization.memory_util.bar1_memory_usage.used
+
+    if (
+        fb_mem_usage_total is not None
+        and fb_mem_usage_used is not None
+        and bar1_mem_usage_total is not None
+        and bar1_mem_usage_used is not None
+    ):
+        sum_total = fb_mem_usage_total + bar1_mem_usage_total
+        sum_used = fb_mem_usage_used + bar1_mem_usage_used
+        levels_total = params.get("levels_total")
+        yield from check_element(
+            label="Total memory",
+            used=sum_used,
+            total=sum_total,
+            levels=(
+                "perc_used",
+                (levels_total[0], levels_total[1]) if levels_total is not None else (None, None),
+            ),
+            create_percent_metric=True,
+        )
+
+    if fb_mem_usage_used is not None and fb_mem_usage_total is not None and fb_mem_usage_free:
+        levels_fb = params.get("levels_fb")
+        yield from check_element(
+            label="FB memory",
+            used=fb_mem_usage_used,
+            total=fb_mem_usage_total,
+            levels=(
+                "perc_used",
+                (levels_fb[0], levels_fb[1]) if levels_fb is not None else (None, None),
+            ),
+            metric_name="fb_mem_usage_used",
+        )
+        yield Metric("fb_mem_usage_free", fb_mem_usage_free, boundaries=(0, fb_mem_usage_total))
+        yield Metric("fb_mem_usage_total", fb_mem_usage_total)
+
+    if bar1_mem_usage_used is not None and bar1_mem_usage_total is not None and bar1_mem_usage_free:
+        levels_bar1 = params.get("levels_bar1")
+        yield from check_element(
+            label="BAR1 memory",
+            used=bar1_mem_usage_used,
+            total=bar1_mem_usage_total,
+            levels=(
+                "perc_used",
+                (levels_bar1[0], levels_bar1[1]) if levels_bar1 is not None else (None, None),
+            ),
+            metric_name="bar1_mem_usage_used",
+        )
+        yield Metric(
+            "bar1_mem_usage_free",
+            bar1_mem_usage_free,
+            boundaries=(0, bar1_mem_usage_total),
+        )
+        yield Metric("bar1_mem_usage_total", bar1_mem_usage_total)
+
+
+register.check_plugin(
+    name="nvidia_smi_memory_util",
+    service_name="Nvidia GPU Memory utilization %s",
+    sections=["nvidia_smi"],
+    discovery_function=discover_nvidia_smi_memory_util,
+    check_ruleset_name="nvidia_smi_memory_util",
+    check_default_parameters=MemoryParams(levels_total=None, levels_bar1=None, levels_fb=None),
+    check_function=check_nvidia_smi_memory_util,
 )

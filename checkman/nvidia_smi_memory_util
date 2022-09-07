@@ -1,0 +1,23 @@
+title: NVIDIA Graphics Card: Memory utilization
+agents: windows
+catalog: os/hardware
+license: GPLv2
+distribution: check_mk
+description:
+ This checks monitors the memory utilization of an NVIDIA graphics card
+ using the command line tool {nvidia-smi}.
+ The check only works if that tool is installed.
+
+ The total memory utilization is calculated by adding up FB and BAR1 memory utilization.
+ FB memory is the on-board frame buffer memory.
+ BAR1 memory is used to map the FB memory so it can be directly accessed by the CPU or by 3rd party devices.
+ Both of these values are also individually monitored.
+
+ You can configure upper levels for all three types of memory utilization (Total, FB, BAR1).
+
+item:
+ PCI bus ID of the graphics card without the leading zeroes
+
+discovery:
+ One service is created for each available graphics card if the necessary
+ values to calculate gpu utilization are available.

@@ -94,3 +94,41 @@ rulespec_registry.register(
         title=lambda: _("Nvidia GPU Power"),
     )
 )
+
+
+def _parameter_valuespec_nvidia_smi_memory_util() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "levels_total",
+                SimpleLevels(
+                    Percentage, title=_("Total memory utilization"), default_levels=(80.0, 90.0)
+                ),
+            ),
+            (
+                "levels_bar1",
+                SimpleLevels(
+                    Percentage, title=_("BAR1 memory utilization"), default_levels=(80.0, 90.0)
+                ),
+            ),
+            (
+                "levels_fb",
+                SimpleLevels(
+                    Percentage, title=_("FB memory utilization"), default_levels=(80.0, 90.0)
+                ),
+            ),
+        ],
+        optional_keys=[],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="nvidia_smi_memory_util",
+        match_type="dict",
+        item_spec=lambda: TextInput(title=_("Nvidia GPU Memory utilization")),
+        group=RulespecGroupCheckParametersOperatingSystem,
+        parameter_valuespec=_parameter_valuespec_nvidia_smi_memory_util,
+        title=lambda: _("Nvidia GPU Memory utilization"),
+    )
+)

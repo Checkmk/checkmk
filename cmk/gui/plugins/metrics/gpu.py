@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.metrics.utils import metric_info
+from cmk.gui.plugins.metrics.utils import graph_info, metric_info
 
 # .
 #   .--Metrics-------------------------------------------------------------.
@@ -35,4 +35,57 @@ metric_info["encoder_utilization"] = {
     "title": _("Encoder utilization"),
     "color": "13/a",
     "unit": "%",
+}
+
+metric_info["bar1_mem_usage_free"] = {
+    "title": _("BAR1 memory usage (free)"),
+    "color": "11/a",
+    "unit": "bytes",
+}
+
+metric_info["bar1_mem_usage_used"] = {
+    "title": _("BAR1 memory usage (used)"),
+    "color": "14/a",
+    "unit": "bytes",
+}
+
+metric_info["bar1_mem_usage_total"] = {
+    "title": _("BAR1 memory usage (total)"),
+    "color": "22/a",
+    "unit": "bytes",
+}
+
+graph_info["bar1_mem_usage"] = {
+    "title": _("BAR1 memory usage"),
+    "metrics": [
+        ("bar1_mem_usage_used", "stack"),
+        ("bar1_mem_usage_free", "stack"),
+        ("bar1_mem_usage_total", "line"),
+    ],
+}
+metric_info["fb_mem_usage_free"] = {
+    "title": _("FB memory usage (free)"),
+    "color": "11/a",
+    "unit": "bytes",
+}
+
+metric_info["fb_mem_usage_used"] = {
+    "title": _("FB memory usage (used)"),
+    "color": "14/a",
+    "unit": "bytes",
+}
+
+metric_info["fb_mem_usage_total"] = {
+    "title": _("FB memory usage (total)"),
+    "color": "26/a",
+    "unit": "bytes",
+}
+
+graph_info["fb_mem_usage"] = {
+    "title": _("FB memory usage"),
+    "metrics": [
+        ("fb_mem_usage_used", "stack"),
+        ("fb_mem_usage_free", "stack"),
+        ("fb_mem_usage_total", "line"),
+    ],
 }

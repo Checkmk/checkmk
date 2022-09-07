@@ -478,3 +478,95 @@ def test_check_nvidia_smi_power(
     expected_result: type_defs.CheckResult,
 ) -> None:
     assert list(nvidia_smi.check_nvidia_smi_power(item, params, section)) == expected_result
+
+
+@pytest.mark.parametrize(
+    "section, expected_result",
+    [
+        (
+            SECTION,
+            [Service(item="0B:00.0")],
+        ),
+    ],
+)
+def test_discover_nvidia_smi_memory_util(
+    section: nvidia_smi.Section,
+    expected_result: type_defs.DiscoveryResult,
+) -> None:
+    assert list(nvidia_smi.discover_nvidia_smi_memory_util(section)) == expected_result
+
+
+@pytest.mark.parametrize(
+    "item, params, section, expected_result",
+    [
+        (
+            "0B:00.0",
+            {},
+            SECTION,
+            [
+                Result(state=State.OK, summary="Total memory: 12.70% - 1.05 GiB of 8.25 GiB"),
+                Metric("mem_used_percent", 12.70123106060606, boundaries=(0.0, None)),
+                Result(state=State.OK, summary="FB memory: 13.07% - 1.05 GiB of 8.00 GiB"),
+                Metric("fb_mem_usage_used", 1123024896.0, boundaries=(0.0, 8589934592.0)),
+                Metric("fb_mem_usage_free", 7276068864.0, boundaries=(0.0, 8589934592.0)),
+                Metric("fb_mem_usage_total", 8589934592.0),
+                Result(state=State.OK, summary="BAR1 memory: 0.78% - 2.00 MiB of 256 MiB"),
+                Metric("bar1_mem_usage_used", 2097152.0, boundaries=(0.0, 268435456.0)),
+                Metric("bar1_mem_usage_free", 266338304.0, boundaries=(0.0, 268435456.0)),
+                Metric("bar1_mem_usage_total", 268435456.0),
+            ],
+        ),
+        (
+            "0B:00.0",
+            nvidia_smi.MemoryParams(
+                levels_total=(10.0, 20.0),
+                levels_bar1=(0.5, 1.0),
+                levels_fb=(5.0, 10.0),
+            ),
+            SECTION,
+            [
+                Result(
+                    state=State.WARN,
+                    summary="Total memory: 12.70% - 1.05 GiB of 8.25 GiB (warn/crit at 10.00%/20.00% used)",
+                ),
+                Metric(
+                    "mem_used_percent",
+                    12.70123106060606,
+                    levels=(10.0, 20.0),
+                    boundaries=(0.0, None),
+                ),
+                Result(
+                    state=State.CRIT,
+                    summary="FB memory: 13.07% - 1.05 GiB of 8.00 GiB (warn/crit at 5.00%/10.00% used)",
+                ),
+                Metric(
+                    "fb_mem_usage_used",
+                    1123024896.0,
+                    levels=(429496729.6, 858993459.2),
+                    boundaries=(0.0, 8589934592.0),
+                ),
+                Metric("fb_mem_usage_free", 7276068864.0, boundaries=(0.0, 8589934592.0)),
+                Metric("fb_mem_usage_total", 8589934592.0),
+                Result(
+                    state=State.WARN,
+                    summary="BAR1 memory: 0.78% - 2.00 MiB of 256 MiB (warn/crit at 0.50%/1.00% used)",
+                ),
+                Metric(
+                    "bar1_mem_usage_used",
+                    2097152.0,
+                    levels=(1342177.28, 2684354.56),
+                    boundaries=(0.0, 268435456.0),
+                ),
+                Metric("bar1_mem_usage_free", 266338304.0, boundaries=(0.0, 268435456.0)),
+                Metric("bar1_mem_usage_total", 268435456.0),
+            ],
+        ),
+    ],
+)
+def test_check_nvidia_smi_memory_util(
+    item: str,
+    params: nvidia_smi.MemoryParams,
+    section: nvidia_smi.Section,
+    expected_result: type_defs.CheckResult,
+) -> None:
+    assert list(nvidia_smi.check_nvidia_smi_memory_util(item, params, section)) == expected_result

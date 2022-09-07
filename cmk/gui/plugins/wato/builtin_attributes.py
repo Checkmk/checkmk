@@ -56,6 +56,7 @@ from cmk.gui.valuespec import (
     SetupSiteChoice,
     TextInput,
     TimeofdayRange,
+    TimeofdayRangeValue,
     Transform,
     Tuple,
     ValueSpec,
@@ -543,7 +544,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
                         movable=False,
                         default_value=[((0, 0), (24, 0))],
                     ),
-                    forth=lambda x: [x] if isinstance(x, tuple) else x,
+                    forth=self._time_allowed_forth,
                     back=sorted,
                 ),
             ),
@@ -596,6 +597,16 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
         ]
 
         return elements
+
+    @staticmethod
+    def _time_allowed_forth(
+        v: TimeofdayRangeValue
+        |
+        # we need list as input type here because Sequence[TimeofdayRangeValue] is hard to
+        # distinguish from TimeofdayRangeValue
+        list[TimeofdayRangeValue],
+    ) -> list[TimeofdayRangeValue]:
+        return v if isinstance(v, list) else [v]
 
     def _get_all_user_ids(self) -> Sequence[tuple[UserId, str]]:
         return [

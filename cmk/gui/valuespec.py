@@ -6123,7 +6123,7 @@ class Foldable(ValueSpec[T]):
         return self._valuespec.has_show_more()
 
 
-class Transform(ValueSpec):
+class Transform(ValueSpec[T]):
     """Transforms the value from one representation to another while being
     completely transparent to the user
 
@@ -6139,31 +6139,22 @@ class Transform(ValueSpec):
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
-        valuespec: ValueSpec,
-        back: Callable[[Any], Any] | None = None,
-        forth: Callable[[Any], Any] | None = None,
+        valuespec: ValueSpec[T],
+        *,
+        back: Callable[[T], Any] = lambda v: v,
+        forth: Callable[[Any], T] = lambda v: v,
         title: str | None = None,
         help: ValueSpecHelp | None = None,
         default_value: ValueSpecDefault[Any] = DEF_VALUE,
         validate: ValueSpecValidateFunc[Any] | None = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
-        self._valuespec = valuespec
-        self._back = back
-        self._forth = forth
+        self._valuespec: Final = valuespec
+        self.back: Final = back
+        self.forth: Final = forth
 
     def allow_empty(self) -> bool:
         return self._valuespec.allow_empty()
-
-    def forth(self, value: Any) -> Any:
-        if self._forth:
-            return self._forth(value)
-        return value
-
-    def back(self, value: Any) -> Any:
-        if self._back:
-            return self._back(value)
-        return value
 
     def title(self) -> str | None:
         if self._title:

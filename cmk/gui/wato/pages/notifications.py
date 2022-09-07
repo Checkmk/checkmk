@@ -7,7 +7,7 @@
 import abc
 import time
 from datetime import datetime
-from typing import Collection, Iterator, List, NamedTuple, Optional, overload
+from typing import Any, Collection, Iterator, List, NamedTuple, Optional, overload
 from typing import Tuple as _Tuple
 from typing import Type, Union
 
@@ -59,6 +59,7 @@ from cmk.gui.valuespec import (
     Age,
     Alternative,
     CascadingDropdown,
+    CascadingDropdownChoiceValue,
     Checkbox,
     Dictionary,
     DictionaryEntry,
@@ -70,6 +71,7 @@ from cmk.gui.valuespec import (
     ListChoice,
     ListOf,
     ListOfStrings,
+    Mapping,
     RegExp,
     rule_option_elements,
     TextInput,
@@ -1522,7 +1524,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                                 ),
                             ],
                         ),
-                        forth=lambda x: x if isinstance(x, tuple) else ("always", x),
+                        forth=self._transform_bulk,
                     ),
                 ),
             ],
@@ -1620,6 +1622,12 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                         "bulking or choose another notification plugin which allows bulking."
                     ),
                 )
+
+    @staticmethod
+    def _transform_bulk(
+        v: CascadingDropdownChoiceValue | Mapping[str, Any]
+    ) -> CascadingDropdownChoiceValue:
+        return v if isinstance(v, tuple) else ("always", v)
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         return make_simple_form_page_menu(

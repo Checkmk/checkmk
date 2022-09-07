@@ -65,7 +65,7 @@ _need_ip_access_list() {
 }
 
 _is_controller_setup() {
-    cmk-agent-ctl --version >/dev/null 2>&1
+    "${BIN_DIR:-/usr/bin}"/cmk-agent-ctl --version >/dev/null 2>&1 || cmk-agent-ctl --version >/dev/null 2>&1
 }
 
 _systemd_sufficient() {

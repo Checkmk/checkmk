@@ -61,28 +61,28 @@ define __spec_install_pre %{___build_pre} &&\
 # In case of an upgrade, we must cleanup here.
 # 'preun' runs after the new scripts have been deployed
 # (too late cleanup files only deployed by the old package).
-if [ -x /var/lib/cmk-agent/scripts/super-server/setup ]; then
-    /var/lib/cmk-agent/scripts/super-server/setup cleanup
+if [ -r /var/lib/cmk-agent/scripts/super-server/setup ]; then
+    /bin/sh /var/lib/cmk-agent/scripts/super-server/setup cleanup
 fi
 
 %posttrans
 
-/var/lib/cmk-agent/scripts/super-server/setup cleanup
-/var/lib/cmk-agent/scripts/super-server/setup deploy
+/bin/sh /var/lib/cmk-agent/scripts/super-server/setup cleanup
+BIN_DIR="/usr/bin" /bin/sh /var/lib/cmk-agent/scripts/super-server/setup deploy
 
 # Only create our dedicated user, if the controller is in place (and working)
 # Otherwise we can do without the user.
-if cmk-agent-ctl --version >/dev/null 2>&1; then
-    /var/lib/cmk-agent/scripts/cmk-agent-useradd.sh
+if "/usr/bin"/cmk-agent-ctl --version >/dev/null 2>&1; then
+    BIN_DIR="/usr/bin" /bin/sh /var/lib/cmk-agent/scripts/cmk-agent-useradd.sh
 fi
 
-/var/lib/cmk-agent/scripts/super-server/setup trigger
+/bin/sh /var/lib/cmk-agent/scripts/super-server/setup trigger
 
 %preun
 
 case "$1" in
     0 | remove | purge)
-        /var/lib/cmk-agent/scripts/super-server/setup cleanup
-        /var/lib/cmk-agent/scripts/super-server/setup trigger
+        /bin/sh /var/lib/cmk-agent/scripts/super-server/setup cleanup
+        /bin/sh /var/lib/cmk-agent/scripts/super-server/setup trigger
         ;;
 esac

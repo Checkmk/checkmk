@@ -14,7 +14,11 @@ HERE
 }
 
 _allow_legacy_pull() {
-    cmk-agent-ctl delete-all --enable-insecure-connections
+    if [ -x "${BIN_DIR:-/usr/bin}"/cmk-agent-ctl ]; then
+        "${BIN_DIR:-/usr/bin}"/cmk-agent-ctl delete-all --enable-insecure-connections
+    else
+        cmk-agent-ctl delete-all --enable-insecure-connections
+    fi
 }
 
 _issue_legacy_pull_warning() {

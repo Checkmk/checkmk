@@ -9,6 +9,7 @@
 from .config import ConfigFromWATO
 from .defaults import default_config, default_rule_pack
 from .forward import SyslogForwarderUnixSocket, SyslogMessage
+from .main import SyslogFacility
 from .rule_packs import (
     add_rule_pack_proxies,
     ECRulePack,

@@ -1,0 +1,14 @@
+Title: Fix EventConsole “Generate Event” "Internal Server Error"
+Class: fix
+Compatible: compat
+Component: ec
+Date: 1662724000
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+This fixes “Internal Server Error”
+when trying to create a event (snmptrap)
+from the Event Console with “Generate Event” button
+

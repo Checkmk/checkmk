@@ -3,7 +3,7 @@
 Checkmk is available in several editions.
 The Checkmk Raw Edition is free and 100% open-source.
 The Checkmk Enterprise Edition includes several additional features and professional support from the authors, billed annually.
-A demo version is freely available for testing the Enterprise Edition in a non-production environment.
+A demo version is freely available for testing the Enterprise Edition.
 
 Checkmk can be installed on Linux servers via DEB and RPM packages found on our [downloads page](https://checkmk.com/download.php).
 The Enterprise Edition is also available as a virtual or physical appliance.
@@ -17,13 +17,7 @@ Please have a look at the [beginners guide](https://docs.checkmk.com/master/en/i
 
 ## Want to contribute?
 
-**Thank you for your interest in contributing to Checkmk!
-Unfortunately, due to our current work load, we can at the moment only consider pure bugfixes, sorry for that.
-Thus, any new pull request which is not a pure bugfix will be closed.
-Instead of creating a PR, please consider sharing new check plugins, agent plugins, special agents or notification plugins via the [Checkmk Exchange](https://exchange.checkmk.com/).**
-
-For pure bugfixes, have a look at our [contribution guidelines](CONTRIBUTING.md).
-<!-- Nice! Have a look at our [contribution guidelines](CONTRIBUTING.md). -->
+Nice! Before contributing please check out our [contribution guidelines](CONTRIBUTING.md).
 
 ## Building on your own packages
 

@@ -4,9 +4,9 @@ Thanks for your interest to contribute to [Checkmk on Github](https://github.com
 
 Here are some ways you can help out:
 
-* Bug fixes
-* Feature enhancements
-* New plugins
+* Bug fixes (as pull requests)
+* Feature enhancements (as pull requests)
+* New plugins (via Checkmk Exchange)
 
 Here are the links to major sections of this document:
 
@@ -19,16 +19,10 @@ Here are the links to major sections of this document:
 If you have questions, please create a post at the [Checkmk Forum](https://forum.checkmk.com).
 For bug reports, please send an e-mail to feedback@checkmk.com.
 
-If you would like to make a major change to Checkmk, please create a new topic under the [Product Ideas category](https://forum.checkmk.com/c/product-ideas/19) in the Checkmk Forum so we can talk about what you want to do.
-Somebody else may already be working on it, or there are certain topics you should know before implementing the change.
-
-We love to work with community contributors and want to make sure contributions and time investments are as effective as possible.
-That's why it is important to us to discuss major changes you might be planning in order to jointly agree on the best solution approach to the problem at hand.
-This preempts potential issues during the code reviews of pull requests.
-Code reviews can take time and we're trying our best to address your PRs as soon as we can.
-
-Unfortunately, it can also happen that we cannot accommodate what you want to work on due to the set priorities.
-For example, currently we might be unable to review changes and suggestions that will affect the core functionalities of Checkmk due to other major changes in the codebase.
+We are interested in all feature extensions, which fit to the product and extend it reasonably.
+Occasionally, we have to decline a change, if e.g. it breaks other functionality, collides with our product roadmap or affects non-functional requirements of the product.
+Any contribution must also comply with the coding requirements detailed out below.
+For feature requests, please share your idea via the [Checkmk feature portal](https://features.checkmk.com).
 
 ## Contributing code
 
@@ -41,7 +35,7 @@ In general, we follow the standard GitHub workflow which roughly works like this
  5. Submit a **Pull request** (PR) so that we can review your changes
 
  ⚠ Please reply when asked for more information or to update your PR in case in didn't meet the requirements (e.g. failed checks).
-If there's no response from the author for at least 14 days, the PR will be closed.
+If there's no response from the author for a longer period of time, we will close the PR (after giving you a heads up).
 
 If it’s your first time to contribute to an open source project, we recommend reading [this guide](https://opensource.guide/how-to-contribute/).
 You may also want to try the [GitHub Hello World tutorial](https://guides.github.com/activities/hello-world/).
@@ -77,7 +71,7 @@ To set up the development environment do the following:
 
 3. Install pre-commit checks
 
-    In order to keep your commits to our standard we provide a [pre-commit](https://pre-commit.com/) configuration and some custom made checking scripts.
+    In order to keep your commits to our standard we provide a [pre-commit](https://pre-commit.com/) configuration and some custom-made checking scripts.
     You can install it like this:
 
     > Warning: Python3 is required for pre-commit!
@@ -96,7 +90,7 @@ To set up the development environment do the following:
     The `--allow-missing-config` parameter is needed so that branches of older versions of Checkmk which don't support this feature and are missing the configuration file won't throw errors.
 
     Afterwards your commits will automatically be checked for conformity by `pre-commit`.
-    If you know a check (like mypy for example) got something wrong and you don't want to fix it right away you can skip execution of the checkers with `git commit -n`.
+    If you know a check (like mypy for example) would find an issue, but you don't want to fix it right away you can skip execution of the checkers with `git commit -n`.
     Please don't push unchecked changes as this will introduce delays and additional work.
 
     Additional helpers can be found in `scripts/`.
@@ -119,7 +113,7 @@ Once done, you are ready for the next chapter.
 
     The number one rule is to *put each piece of work on its own branch*.
     Please note that in general, we only accept changes which are based on the *master* branch.
-    There is one (rare) exception, namely bugfixes which *only* affect older branches.
+    There is one (rare) exception, namely bug fixes which *only* affect older branches.
     So lets start like this:
 
     ```console
@@ -217,10 +211,10 @@ Some of these commands take several minutes, for example the command `test-forma
 Normally you only change a small set of files in your commits.
 If you execute `black [filename]` to format the changed code, this should be enough and you don't need to execute the formatting test at all.
 
-> We highly recommend to integrate black, isort, pylint and mypy into the editor you work with.
-> Most editors will notify you about issues in the moment you edit the code.
+> We highly recommend integrating black, isort, pylint and mypy into the editor you work with.
+> Most editors will notify you about issues the moment you edit the code.
 
-You could also push your changed to your forked repository and wait for Travis to execute the tests for you, but that takes several minutes for each try.
+You could also push your changes to your forked repository and wait for Travis to execute the tests for you, but that takes several minutes for each try.
 
 ## Style guide
 
@@ -238,17 +232,17 @@ Respect the [Guidelines for coding check plug-ins](https://docs.checkmk.com/mast
 
 ## Python
 
-The guidelines listed here are binding for the development at Checkmk in Python.
+The guidelines listed here are binding for the development of Checkmk in Python.
 
 This list is intended to grow in practice and does not claim to be exhaustive.
 
-First orientate yourself on the existing code.
-If it doesn't fit these guidelines at all, it might be better to first orientate yourself on the existing code and adapt the code to these guidelines separately from any content changes.
+If the area of code you are working with deviates from the coding guidelines it might be justifyable to disregard them for the sake of consistency.
+It would be preferable to modernize the existing code in a separate commit in those cases.
 
 [Zen of Python](https://www.python.org/dev/peps/pep-0020/).
 
 Checkmk is mostly written in Python.
-At the moment the most of the code base is using Python 3.9.
+Most code in this repository is run under a fairly recent version of Python3.
 
 Only rely on non-standard modules that are mentioned in the `Pipfile`.
 <!--- TODO: How to add new modules? -->
@@ -657,7 +651,7 @@ If you need a variable to be of a specific type, the best advice right now (that
 
 #### Pseudoscoping
 
-We practice psuedoscoping to minimise the chances of variables within scripts or functions from clobbering variables within the environment and vice versa.
+We practice pseudoscoping to minimize the chances of variables within scripts or functions from clobbering variables within the environment and vice versa.
 
 Variables must be in the appropriate format for its "scope" as defined below:
 
@@ -670,14 +664,14 @@ We generally shouldn't need to put any variables into the environment, so you sh
 If you *do* need a variable in the environment "scope" for whatever reason, use the form `MK_VARNAME` e.g. `MK_VERSION`
 
 You might often see this "scope" referred to as the *global* scope, or *shell* scope.
-This scope also contains shell builtin variables.
+This scope also contains shell built-in variables.
 
 ##### Script
 
-Variables in the *script* "scope" tend often to be mistakenly written in UPPERCASE, which gives rise to the possibility of clobbering a legitimate variable in the *environment* "scope".
+Variables in the *script* "scope" often tend to be mistakenly written in UPPERCASE, which gives rise to the possibility of clobbering a legitimate variable in the *environment* "scope".
 This can have results that are [potentially hilarious, or potentially bad](https://stackoverflow.com/q/28310594) depending on your point of view.
 
-For that reason, UPPERCASE variable names are strongly discouraged outside of the *environment* scope.
+For that reason, UPPERCASE variable names are strongly discouraged outside the *environment* scope.
 
 Instead, use lowercase, with underscores to separate words i.e. `snake_case`.
 
@@ -704,7 +698,7 @@ This also reduces/eliminates unexpected in-scope collisions.
 
 *Exception:*
 *C-Style `for (( i=0; i<max_count; i++ )); do` style loops,*
-*as the var `i` is usually self-contained and is short-hand for 'integer'*
+*as the var `i` is usually self-contained and is shorthand for 'integer'*
 
 You should consider `unset`ting your variables once you're done with them, though this isn't strictly necessary.
 
@@ -738,7 +732,7 @@ get_api_user() {
 Curly braces are used on `${arrays[@]}` and `${variable/modif/ications}`.
 To maintain consistency, you should use curly braces on normal variables too.
 
-Curly braces around variables improves readability when syntax colouring is not available.
+Curly braces around variables improves readability when syntax coloring is not available.
 ${this_variable} stands out within this block of text.
 
 They also allow us to more robustly format outputs e.g.
@@ -772,7 +766,7 @@ MK_CONSTANT="Polaris"
 readonly MK_CONSTANT
 ```
 
-#### Variable pseudoscopes re-cap
+#### Variable pseudoscopes recap
 
 * **Environment**:       `${MK_UPPERCASE}`
 * **Script**:            `${meaningful_snake_case}`
@@ -847,7 +841,7 @@ It is usually in a form similar to:
 set -euo pipefail
 ```
 
-This is well meaning, but flawed advice.
+This is well-meaning, but flawed advice.
 Firstly, it's not portable, so it's disqualified by default for our purposes.
 Secondly, it comes with its own flaws.
 Some of these options have reasonable uses, but it's dangerous to think that this one-line incantation is somehow perfect.
@@ -904,11 +898,11 @@ Often we see blocks of `if...elif...elif...elif`'s that can and should be replac
 
 The style guides linked to earlier both state:
 
->Given the choice between invoking a shell builtin and invoking a separate process, choose the builtin.
+>Given the choice between invoking a shell built-in and invoking a separate process, choose the built-in.
 >
->We prefer the use of builtins such as the Parameter Expansion functions in bash(1) as it’s more robust and portable (especially when compared to things like sed).
+>We prefer the use of built-ins such as the Parameter Expansion functions in bash(1) as it’s more robust and portable (especially when compared to things like sed).
 
-Often (but not always) there are massive performance gains to be had through the use of builtins, usually at the expense of some readability.
+Often (but not always) there are massive performance gains to be had through the use of built-ins, usually at the expense of some readability.
 This can be counter-balanced via explanatory comments.
 
 ## Localization
@@ -923,7 +917,7 @@ Please note that any PRs which directly edit the PO-files will be disregarded, s
 
 ### Translation of technical terms
 
-Technical terms outside of Checkmk like "container" may be translated according to the common usage for that technology.
+Technical terms outside Checkmk like "container" may be translated according to the common usage for that technology.
 
 There are several terms in Checkmk that may be kept for a better understanding.
 Some of them are:
@@ -949,7 +943,7 @@ To ensure that, please always add our current licensing information to any new f
 The licensing information can be found at the beginning of already existing files and looks something like
 
 ```python
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 ```

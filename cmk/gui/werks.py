@@ -10,12 +10,14 @@ import itertools
 import os
 import re
 import time
-from typing import Any, Dict, Iterator, List, Union
+from collections.abc import Iterator
+from typing import Any
 
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.werks
 from cmk.utils.version import __version__, Edition, Version
+from cmk.utils.werks import Werk
 
 import cmk.gui.pages
 from cmk.gui.breadcrumb import (
@@ -56,7 +58,7 @@ from cmk.gui.valuespec import DropdownChoice, Integer, ListChoice, TextInput, Ti
 acknowledgement_path = cmk.utils.paths.var_dir + "/acknowledged_werks.mk"
 
 # Keep global variable for caching werks between requests. The never change.
-g_werks: Dict[int, Dict[str, Any]] = {}
+g_werks: dict[int, Werk] = {}
 
 
 @cmk.gui.pages.page_registry.register_page("info")
@@ -156,7 +158,7 @@ class ModeChangeLogPage(cmk.gui.pages.Page):
         html.footer()
         return None
 
-    def _page_menu(self, breadcrumb: Breadcrumb, werk_table_options: Dict[str, Any]) -> PageMenu:
+    def _page_menu(self, breadcrumb: Breadcrumb, werk_table_options: dict[str, Any]) -> PageMenu:
         menu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -223,7 +225,7 @@ def _page_menu_entries_ack_all_werks() -> Iterator[PageMenuEntry]:
 
 
 def _extend_display_dropdown(  # type:ignore[no-untyped-def]
-    menu, werk_table_options: Dict[str, Any]
+    menu, werk_table_options: dict[str, Any]
 ) -> None:
     display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
     display_dropdown.topics.insert(
@@ -243,7 +245,7 @@ def _extend_display_dropdown(  # type:ignore[no-untyped-def]
     )
 
 
-def _render_werk_options_form(werk_table_options: Dict[str, Any]) -> HTML:
+def _render_werk_options_form(werk_table_options: dict[str, Any]) -> HTML:
     with output_funnel.plugged():
         html.begin_form("werks")
         html.hidden_field("wo_set", "set")
@@ -330,7 +332,7 @@ def page_werk():
     html.footer()
 
 
-def _page_menu_werk(breadcrumb: Breadcrumb, werk: Dict[str, Any]):  # type:ignore[no-untyped-def]
+def _page_menu_werk(breadcrumb: Breadcrumb, werk: Werk) -> PageMenu:
     return PageMenu(
         dropdowns=[
             PageMenuDropdown(
@@ -348,7 +350,7 @@ def _page_menu_werk(breadcrumb: Breadcrumb, werk: Dict[str, Any]):  # type:ignor
     )
 
 
-def _page_menu_entries_ack_werk(werk: Dict[str, Any]) -> Iterator[PageMenuEntry]:
+def _page_menu_entries_ack_werk(werk: Werk) -> Iterator[PageMenuEntry]:
     if not may_acknowledge():
         return
 
@@ -428,6 +430,8 @@ def num_unacknowledged_incompatible_werks():
 
 def _werk_table_option_entries():
     translator = cmk.utils.werks.WerkTranslator()
+    component_choices: list[tuple[None | str, str]] = [(None, _("All components"))]
+    component_choices += sorted(translator.components())
     return [
         (
             "classes",
@@ -482,10 +486,7 @@ def _werk_table_option_entries():
             "single",
             DropdownChoice(
                 title=_("Component"),
-                choices=[
-                    (None, _("All components")),
-                ]
-                + sorted(translator.components()),
+                choices=component_choices,
             ),
             None,
         ),
@@ -584,7 +585,7 @@ _SORT_AND_GROUP = {
 }
 
 
-def render_werks_table(werk_table_options: Dict[str, Any]) -> None:
+def render_werks_table(werk_table_options: dict[str, Any]) -> None:
     translator = cmk.utils.werks.WerkTranslator()
     number_of_werks = 0
     sorter, grouper = _SORT_AND_GROUP[werk_table_options["grouping"]]
@@ -624,7 +625,7 @@ def werk_matches_options(werk, werk_table_options):
     # check if werk id is int because valuespec is TextInput
     # else, set empty id to return all results beside input warning
     try:
-        werk_to_match: Union[int, str] = int(werk_table_options["id"])
+        werk_to_match: int | str = int(werk_table_options["id"])
     except ValueError:
         werk_to_match = ""
 
@@ -671,11 +672,11 @@ def _default_werk_table_options():
     return werk_table_options
 
 
-def _werk_table_options_from_request() -> Dict[str, Any]:
+def _werk_table_options_from_request() -> dict[str, Any]:
     if request.var("show_unack") and not request.has_var("wo_set"):
         return _default_werk_table_options()
 
-    werk_table_options: Dict[str, Any] = {}
+    werk_table_options: dict[str, Any] = {}
     for name, _height, vs, default_value in _werk_table_option_entries():
         value = default_value
         try:
@@ -693,14 +694,14 @@ def _werk_table_options_from_request() -> Dict[str, Any]:
     return werk_table_options
 
 
-def render_werk_id(werk, with_link) -> Union[HTML, str]:  # type:ignore[no-untyped-def]
+def render_werk_id(werk: Werk, with_link: bool) -> HTML | str:
     if with_link:
         url = makeuri_contextless(request, [("werk", werk["id"])], filename="werk.py")
         return HTMLWriter.render_a("#%04d" % werk["id"], href=url)
     return "#%04d" % werk["id"]
 
 
-def render_werk_date(werk) -> str:  # type:ignore[no-untyped-def]
+def render_werk_date(werk: Werk) -> str:
     return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(werk["date"]))
 
 
@@ -766,7 +767,7 @@ def render_werk_description(  # type:ignore[no-untyped-def] # pylint: disable=to
 
 def insert_manpage_links(text: str) -> HTML:
     parts = text.replace(",", " ").split()
-    new_parts: List[HTML] = []
+    new_parts: list[HTML] = []
     check_regex = re.compile(r"[-_\.a-z0-9]")
     for part in parts:
         if check_regex.match(part) and os.path.exists(

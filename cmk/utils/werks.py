@@ -9,14 +9,39 @@ import itertools
 import json
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, IO
+from typing import Any, cast, IO
 
-from six import ensure_str
+# We need the typing_extensions TypedDict in order to have NotRequired to fill
+# the __optional_keys__ instead of __required_keys__. IMHO this can be imported
+# from typing directly as soon as we are on 3.11
+from typing_extensions import NotRequired, TypedDict
 
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 from cmk.utils.version import parse_check_mk_version
+
+# The class attribute cannot be set with the class-style definition
+Werk = TypedDict(
+    "Werk",
+    {
+        "class": str,
+        "component": str,
+        "date": int,
+        "level": int,
+        "title": str,
+        "version": str,
+        "compatible": str,
+        "edition": str,
+        "knowledge": NotRequired[
+            str
+        ],  # TODO: What's this? Can we simply nuke the fields below from all werks?
+        "state": NotRequired[str],
+        "id": NotRequired[int],
+        "targetversion": NotRequired[str],
+        "body": list[str],
+    },
+)
 
 
 # This class is used to avoid repeated construction of dictionaries, including
@@ -72,29 +97,29 @@ class WerkTranslator:
             "incomp_unack": _("Incompatible - TODO"),
         }
 
-    def classes(self):
+    def classes(self) -> list[tuple[str, str]]:
         return list(self._classes.items())
 
-    def class_of(self, werk):
+    def class_of(self, werk: Werk) -> str:
         return self._classes[werk["class"]]
 
-    def components(self):
+    def components(self) -> list[tuple[str, str]]:
         return list(self._components.items())
 
-    def component_of(self, werk):
+    def component_of(self, werk: Werk) -> str:
         c = werk["component"]
         return self._components.get(c, c)
 
-    def levels(self):
+    def levels(self) -> list[tuple[int, str]]:
         return list(self._levels.items())
 
-    def level_of(self, werk):
+    def level_of(self, werk: Werk) -> str:
         return self._levels[werk["level"]]
 
-    def compatibilities(self):
+    def compatibilities(self) -> list[tuple[str, str]]:
         return list(self._compatibilities.items())
 
-    def compatibility_of(self, werk):
+    def compatibility_of(self, werk: Werk) -> str:
         return self._compatibilities[werk["compatible"]]
 
 
@@ -102,8 +127,8 @@ def _compiled_werks_dir() -> Path:
     return Path(cmk.utils.paths.share_dir, "werks")
 
 
-def load() -> dict[int, dict[str, Any]]:
-    werks: dict[int, dict[str, Any]] = {}
+def load() -> dict[int, Werk]:
+    werks: dict[int, Werk] = {}
     # The suppressions are needed because of https://github.com/PyCQA/pylint/issues/1660
     for file_name in itertools.chain(
         _compiled_werks_dir().glob("werks"), _compiled_werks_dir().glob("werks-*")
@@ -112,13 +137,13 @@ def load() -> dict[int, dict[str, Any]]:
     return werks
 
 
-def load_precompiled_werks_file(path: Path) -> dict[int, dict[str, Any]]:
+def load_precompiled_werks_file(path: Path) -> dict[int, Werk]:
     # ? what is the content of these files, to which the path shows
     with path.open() as fp:
         return {int(werk_id): werk for werk_id, werk in json.load(fp).items()}
 
 
-def load_raw_files(werks_dir: Path) -> dict[int, dict[str, Any]]:
+def load_raw_files(werks_dir: Path) -> dict[int, Werk]:
     if werks_dir is None:
         werks_dir = _compiled_werks_dir()
     werks = {}
@@ -133,28 +158,7 @@ def load_raw_files(werks_dir: Path) -> dict[int, dict[str, Any]]:
     return werks
 
 
-_REQUIRED_WERK_FIELDS = {
-    "class",
-    "component",
-    "date",
-    "level",
-    "title",
-    "version",
-}
-
-_OPTIONAL_WERK_FIELDS = {
-    "compatible",
-    "edition",
-    "knowledge",
-    # TODO: What's this? Can we simply nuke the fields below from all werks?
-    "state",
-    "targetversion",
-}
-
-_ALLOWED_WERK_FIELDS = _REQUIRED_WERK_FIELDS | _OPTIONAL_WERK_FIELDS
-
-
-def _load_werk(path: Path) -> dict[str, Any]:
+def _load_werk(path: Path) -> Werk:
     werk: dict[str, Any] = {
         "body": [],
         "compatible": "compat",
@@ -173,25 +177,32 @@ def _load_werk(path: Path) -> dict[str, Any]:
                 except ValueError:
                     value = text.strip()
                 field = key.lower()
-                if field not in _ALLOWED_WERK_FIELDS:
+                # typeshed is missing these class attributes
+                # https://github.com/python/typeshed/pull/8512 merged in 08/2022, wait for release...
+                if field not in (Werk.__optional_keys__ | Werk.__required_keys__):  # type: ignore[attr-defined]
                     raise MKGeneralException("unknown werk field %s" % key)
                 werk[field] = value
             else:
                 werk["body"].append(line)
 
-    missing_fields = _REQUIRED_WERK_FIELDS - set(werk.keys())
+    # typeshed is missing these class attributes
+    # https://github.com/python/typeshed/pull/8512 merged in 08/2022, wait for release...
+    missing_fields = Werk.__required_keys__ - set(werk.keys())  # type: ignore[attr-defined]
     if missing_fields:
         raise MKGeneralException("missing fields: %s" % ",".join(missing_fields))
     # TODO: Check if all fields have an allowed value, see .werks/config.
-    return werk
+    # We incrementally fill the werk-dict. We make sure only allowed fields get
+    # in, and that all mandatory fields are set. The conversion from regular
+    # dict to TypedDict are a mess, so casting...
+    return cast(Werk, werk)
 
 
-def write_precompiled_werks(path: Path, werks: dict[int, dict[str, Any]]) -> None:
+def write_precompiled_werks(path: Path, werks: dict[int, Werk]) -> None:
     with path.open("w", encoding="utf-8") as fp:
         fp.write(json.dumps(werks, check_circular=False))
 
 
-def write_as_text(werks: dict[int, dict[str, Any]], f: IO[str], write_version: bool = True) -> None:
+def write_as_text(werks: dict[int, Werk], f: IO[str], write_version: bool = True) -> None:
     """Write the given werks to a file object
 
     This is used for creating a textual hange log for the released versions and the announcement mails.
@@ -201,25 +212,26 @@ def write_as_text(werks: dict[int, dict[str, Any]], f: IO[str], write_version: b
     for version, version_group in itertools.groupby(werklist, key=lambda w: w["version"]):
         # write_version=False is used by the announcement mails
         if write_version:
-            f.write("%s:\n" % ensure_str(version))  # pylint: disable= six-ensure-str-bin-call
+            f.write("%s:\n" % version)
         for component, component_group in itertools.groupby(
             version_group, key=translator.component_of
         ):
-            f.write("    %s:\n" % ensure_str(component))  # pylint: disable= six-ensure-str-bin-call
+            f.write("    %s:\n" % component)
             for werk in component_group:
                 write_werk_as_text(f, werk)
             f.write("\n")
         f.write("\n")
 
 
-def write_werk_as_text(f: IO[str], werk: dict[str, Any]) -> None:
+def write_werk_as_text(f: IO[str], werk: Werk) -> None:
     prefix = ""
     if werk["class"] == "fix":
         prefix = " FIX:"
     elif werk["class"] == "security":
         prefix = " SEC:"
 
-    if werk.get("description") and len(werk["description"]) > 3:
+    # See following commits...
+    if werk.get("description") and len(werk["description"]) > 3:  # type: ignore
         omit = "..."
     else:
         omit = ""
@@ -229,7 +241,7 @@ def write_werk_as_text(f: IO[str], werk: dict[str, Any]) -> None:
         % (
             werk["id"],
             prefix,
-            ensure_str(werk["title"]),  # pylint: disable= six-ensure-str-bin-call
+            werk["title"],
             omit,
         )
     )
@@ -252,7 +264,7 @@ _COMPATIBLE_SORTING_VALUE = {
 
 
 # sort by version and within one version by component
-def sort_by_version_and_component(werks: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
+def sort_by_version_and_component(werks: Iterable[Werk]) -> list[Werk]:
     translator = WerkTranslator()
     return sorted(
         werks,
@@ -267,5 +279,5 @@ def sort_by_version_and_component(werks: Iterable[dict[str, Any]]) -> list[dict[
     )
 
 
-def sort_by_date(werks: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
+def sort_by_date(werks: Iterable[Werk]) -> list[Werk]:
     return sorted(werks, key=lambda w: w["date"], reverse=True)

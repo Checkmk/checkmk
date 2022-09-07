@@ -160,48 +160,6 @@ def has_old_apache_hook_in_site(site: SiteContext) -> bool:
         return f.readline().startswith("Include ")
 
 
-def create_old_apache_hook(site: SiteContext) -> None:
-    apache_own_path = os.path.join(site.dir, "etc/apache/apache-own.conf")
-    with open(apache_own_path, "w") as f:
-        f.write(
-            f"""# This file is read in by the global Apache. It is
-# owned by OMD. Do not add anything here. Rather
-# create your own files in conf.d/
-
-# Make sure that symlink /omd does not make problems
-<Directory />
-  Options +FollowSymlinks
-</Directory>
-
-<IfModule mod_proxy_http.c>
-  ProxyRequests Off
-  ProxyPreserveHost On
-
-  # Include file created by 'omd config', which
-  # sets the TCP port of the site local webserver
-  Include /omd/sites/{site.name}/etc/apache/proxy-port.conf
-</IfModule>
-
-<IfModule !mod_proxy_http.c>
-  Alias /{site.name} /omd/sites/{site.name}
-  <Directory /omd/sites/{site.name}>
-    Deny from all
-    ErrorDocument 403 "<h1>OMD: Incomplete Apache2 Installation</h1>You need mod_proxy and mod_proxy_http in order to run the web interface of OMD."
-  </Directory>
-</IfModule>
-
-<Location /{site.name}>
-  ErrorDocument 503 "<meta http-equiv='refresh' content='60'><h1>OMD: Site Not Started</h1>You need to start this site in order to access the web interface.<!-- IE shows its own short useless error message otherwise: placeholder -->"
-</Location>
-
-# Set site specific environment
-SetEnv OMD_SITE {site.name}
-SetEnv OMD_ROOT /omd/sites/{site.name}
-SetEnv OMD_MODE own
-"""
-        )
-
-
 def init_cmd(version_info: VersionInfo, name: str, action: str) -> str:
     return version_info.INIT_CMD % {
         "name": name,

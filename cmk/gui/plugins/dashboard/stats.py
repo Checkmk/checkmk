@@ -13,7 +13,7 @@ import cmk.gui.visuals as visuals
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.dashboard.utils import ABCFigureDashlet, dashlet_registry
+from cmk.gui.plugins.dashboard.utils import ABCFigureDashlet, dashlet_registry, DashletConfig
 from cmk.gui.type_defs import HTTPVariables, SingleInfos
 from cmk.gui.utils.urls import makeuri_contextless
 
@@ -431,8 +431,12 @@ class EventStatsDashletDataGenerator(StatsDashletDataGenerator):
         )
 
 
+class StatsDashletConfig(DashletConfig):
+    ...
+
+
 @dashlet_registry.register
-class HostStatsDashlet(ABCFigureDashlet):
+class HostStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
     @classmethod
     def generate_response_data(cls, properties, context, settings):
         return HostStatsDashletDataGenerator.generate_response_data(properties, context, settings)
@@ -466,7 +470,7 @@ class HostStatsDashlet(ABCFigureDashlet):
 
 
 @dashlet_registry.register
-class ServiceStatsDashlet(ABCFigureDashlet):
+class ServiceStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
     @classmethod
     def generate_response_data(cls, properties, context, settings):
         return ServiceStatsDashletDataGenerator.generate_response_data(
@@ -502,7 +506,7 @@ class ServiceStatsDashlet(ABCFigureDashlet):
 
 
 @dashlet_registry.register
-class EventStatsDashlet(ABCFigureDashlet):
+class EventStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
     @classmethod
     def generate_response_data(cls, properties, context, settings):
         return EventStatsDashletDataGenerator.generate_response_data(properties, context, settings)

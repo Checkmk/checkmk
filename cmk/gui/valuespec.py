@@ -3063,6 +3063,9 @@ class DropdownChoiceWithHostAndServiceHints(AjaxDropdownChoice):
         vs_service.render_input(varprefix + "_service_hint", "")
 
 
+MonitoringStateValue = Literal[0, 1, 2, 3]
+
+
 # TODO: Rename to ServiceState() or something like this
 def MonitoringState(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builtin
     # DropdownChoice
@@ -3113,6 +3116,9 @@ def MonitoringState(  # type:ignore[no-untyped-def] # pylint: disable=redefined-
         validate=validate,
         deprecated_choices=deprecated_choices,
     )
+
+
+HostStateValue = Literal[0, 1, 2]
 
 
 def HostState(  # type:ignore[no-untyped-def] # pylint: disable=redefined-builtin

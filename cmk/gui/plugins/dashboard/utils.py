@@ -704,14 +704,14 @@ class FigureDashletPage(AjaxPage):
         return create_figures_response(response_data)
 
 
-class ABCFigureDashlet(Dashlet, abc.ABC):
+class ABCFigureDashlet(Dashlet[T], abc.ABC):
     """Base class for cmk_figures based graphs
     Only contains the dashlet spec, the data generation is handled in the
     DataGenerator classes, to split visualization and data
     """
 
     @classmethod
-    def type_name(cls):
+    def type_name(cls) -> str:
         return "figure_dashlet"
 
     @classmethod
@@ -719,11 +719,11 @@ class ABCFigureDashlet(Dashlet, abc.ABC):
         return 95
 
     @classmethod
-    def initial_refresh_interval(cls):
+    def initial_refresh_interval(cls) -> bool:
         return False
 
     @classmethod
-    def initial_size(cls):
+    def initial_size(cls) -> DashletSize:
         return (56, 40)
 
     def infos(self) -> SingleInfos:
@@ -738,7 +738,7 @@ class ABCFigureDashlet(Dashlet, abc.ABC):
         return True
 
     @property
-    def instance_name(self):
+    def instance_name(self) -> str:
         # Note: This introduces the restriction one graph type per dashlet
         return "%s_%s" % (self.type_name(), self._dashlet_id)
 
@@ -817,7 +817,7 @@ class ABCFigureDashlet(Dashlet, abc.ABC):
 
     def _dashlet_http_variables(self) -> HTTPVariables:
         vs_general_settings = dashlet_vs_general_settings(self.__class__, self.single_infos())
-        dashlet_settings = vs_general_settings.value_to_json(self._dashlet_spec)
+        dashlet_settings = vs_general_settings.value_to_json(dict(self._dashlet_spec))
         dashlet_properties = self.vs_parameters().value_to_json(self._dashlet_spec)
 
         args: HTTPVariables = []

@@ -5359,7 +5359,7 @@ class Alternative(ValueSpec[AlternativeModel]):
     def mask(self, value: AlternativeModel) -> AlternativeModel:
         vs, match_value = self.matching_alternative(value)
         if vs is None:
-            raise ValueError(_("Invalid value: %s") % vs)
+            raise ValueError(_("Invalid value: %s") % (match_value,))
         return vs.mask(match_value)
 
     def value_to_html(self, value: AlternativeModel) -> ValueSpecText:
@@ -5374,7 +5374,7 @@ class Alternative(ValueSpec[AlternativeModel]):
     def value_to_json(self, value: AlternativeModel) -> JSONValue:
         vs, match_value = self.matching_alternative(value)
         if vs is None:
-            raise ValueError(_("Invalid value: %s") % vs)
+            raise ValueError(_("Invalid value: %s") % (match_value,))
         return vs.value_to_json(match_value)
 
     def value_from_json(self, json_value: JSONValue) -> AlternativeModel:

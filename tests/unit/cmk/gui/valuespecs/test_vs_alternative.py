@@ -72,7 +72,7 @@ class TestValuespecAlternative:
     def test_mask(self) -> None:
         assert get_alternative().mask(1) == 1
         assert get_alternative().mask("eins") == "eins"
-        with pytest.raises(ValueError, match="^Invalid value:"):
+        with pytest.raises(ValueError, match=r"^Invalid value: \('zwei', 'drei'\)"):
             get_alternative().mask(("zwei", "drei"))
 
     def test_value_to_html(self) -> None:
@@ -89,7 +89,7 @@ class TestValuespecAlternative:
     def test_value_to_json(self) -> None:
         assert get_alternative().value_to_json((2, 3)) == [2, 3]
         assert get_alternative().value_to_json("eins") == "eins"
-        with pytest.raises(ValueError, match="^Invalid value:"):
+        with pytest.raises(ValueError, match=r"^Invalid value: \('a', 'b'\)"):
             assert get_alternative().value_to_json(("a", "b"))
 
     def test_value_from_json(self) -> None:

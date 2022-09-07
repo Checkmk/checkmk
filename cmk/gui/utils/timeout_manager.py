@@ -17,8 +17,8 @@ class TimeoutManager:
 
     The system apache process will end the communication with the client after
     the timeout configured for the proxy connection from system apache to site
-    apache. This is done in /omd/apache/[site].conf file in the "timeout=x"
-    parameter of the ProxyPass statement.
+    apache. This is done in /omd/sites/[site]/etc/apache/proxy-port.conf file
+    in the "timeout=x" parameter of the ProxyPass statement.
 
     The regular request timeout configured here should always be lower to make
     it possible to abort the page processing and send a helpful answer to the

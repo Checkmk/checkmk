@@ -36,10 +36,35 @@ ServerName $APACHE_HOST:$CONFIG_APACHE_TCP_PORT
 Listen $APACHE_HOST:$CONFIG_APACHE_TCP_PORT
 EOF
 
-    # Since werk #14281 these files are not used anymore. Better remove them to
-    # not confuse users. Can be removed with 2.3.
-    if [ -f "$OMD_ROOT/etc/apache/proxy-port.conf" ]; then
-        rm "$OMD_ROOT/etc/apache/proxy-port.conf"
+    if grep ^Include "/omd/apache/$OMD_SITE.conf" >/dev/null 2>&1; then
+        # This site hasn't been updated to the new apache configuration yet.
+        # Use the old system apache configuration for compatibility reasons.
+        # See #14281 for further information.
+        cat <<EOF >"$OMD_ROOT/etc/apache/proxy-port.conf"
+# This file is managed by 'omd config set APACHE_TCP_PORT' and 'omd config set APACHE_TCP_ADDR'.
+# Better do not edit manually
+<IfModule mod_proxy_http.c>
+  <Proxy http://$APACHE_HOST:$CONFIG_APACHE_TCP_PORT/$OMD_SITE>
+    Order allow,deny
+    allow from all
+  </Proxy>
+
+  <Location /$OMD_SITE>
+    # Setting "retry=0" to prevent 60 second caching of problem states e.g. when
+    # the site apache is down and someone tries to access the page.
+    # "disablereuse=On" prevents the apache from keeping the connection which leads to
+    # wrong devlivered pages sometimes
+    ProxyPass http://$APACHE_HOST:$CONFIG_APACHE_TCP_PORT/$OMD_SITE retry=0 disablereuse=On timeout=120
+    ProxyPassReverse http://$APACHE_HOST:$CONFIG_APACHE_TCP_PORT/$OMD_SITE
+  </Location>
+</IfModule>
+EOF
+    else
+        # Since werk #14281 these files are not used anymore. Better remove them to
+        # not confuse users.
+        if [ -f "$OMD_ROOT/etc/apache/proxy-port.conf" ]; then
+            rm "$OMD_ROOT/etc/apache/proxy-port.conf"
+        fi
     fi
     ;;
 depends)

@@ -15,6 +15,7 @@ from omdlib.contexts import SiteContext
 from omdlib.system_apache import (
     apache_hook_version,
     create_apache_hook,
+    create_old_apache_hook,
     delete_apache_hook,
     has_old_apache_hook_in_site,
     is_apache_hook_up_to_date,
@@ -176,3 +177,13 @@ def test_create_apache_hook_world_readable(
     apache_config.parent.mkdir(parents=True)
     create_apache_hook(site_context, 0)
     assert bool(apache_config.stat().st_mode & stat.S_IROTH)
+
+
+def test_create_old_apache_hook(
+    site_context: SiteContext,
+) -> None:
+    apache_own_path = Path(site_context.dir).joinpath("etc/apache/apache-own.conf")
+    apache_own_path.parent.mkdir(parents=True)
+    create_old_apache_hook(site_context)
+    content = apache_own_path.read_text()
+    assert content.startswith("# This file is read in by the global Apache")

@@ -34,6 +34,7 @@ def parse_esx_vsphere_vm(string_table: StringTable) -> SectionVM:
         memory=_parse_esx_memory_section(grouped_values),
         cpu=_parse_esx_cpu_section(grouped_values),
         datastores=_parse_esx_datastore_section(grouped_values),
+        host=_parse_esx_vm_running_on_host(grouped_values),
     )
 
 
@@ -54,6 +55,13 @@ def _parse_esx_vm_heartbeat_status(vm_values: Mapping[str, Sequence[str]]) -> He
         vm_status = HeartBeatStatus.UNKNOWN
 
     return HeartBeat(status=vm_status, value=value)
+
+
+def _parse_esx_vm_running_on_host(vm_values: Mapping[str, Sequence[str]]) -> str | None:
+    if (running_on := vm_values.get("runtime.host")) is None:
+        return None
+
+    return running_on[0]
 
 
 def _parse_esx_power_state(vm_values: Mapping[str, Sequence[str]]) -> str | None:

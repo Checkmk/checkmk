@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-from enum import IntEnum, unique
+from dataclasses import dataclass
+from enum import Enum, IntEnum, unique
 from typing import Any, Final, Mapping, MutableMapping, Optional, Sequence, Union
 
 from .agent_based_api.v1 import get_rate, get_value_store, IgnoreResultsError, register, type_defs
@@ -44,9 +45,37 @@ from .utils import diskstat
 # 1248 769129229 769129229 type(20570500)
 # 1248 2664021277 2664021277 type(40030500)
 # 1250 1330 1330 counter
+#
+# Explanation for two-lines values counters:
+#
+# `average_base` means PERF_COUNT_BASE
+# https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc783087(v=ws.10)
+# this a DENOMINATOR and usually represents raw data
+# `average_timer` means PERF_COUNT_TIMER
+# https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc783087(v=ws.10)
+# this a NUMERATOR and usually represents TIME data
+#
+# To calculate real average you have to get TWO samples and use Formula
+# ((N1 - N0) / F) / (D1 - D0), where the numerator (N) represents the number of ticks counted
+# during the last sample interval, the variable F represents the frequency of the ticks, and the
+# denominator (D) represents the number of operations completed during the last sample interval.
+# Example with F = 2
+# Sample 0
+# ...
+# -26 3 average_timer <- N0
+# -26 1 average_base  <- D0
+# ...
+# Sample 1
+# ...
+# -26 7 average_timer <- N1
+# -26 2 average_base  <- D1
+# ...
+#
+# Result is (7 - 3) / 2 /(2 - 1) = 2
+#            N1  N0   F   D1  D0
 
 
-_LINE_TO_METRIC = {
+_LINE_TO_METRIC: Final = {
     "-14": "read_throughput",
     "-12": "write_throughput",
     "-20": "read_ios",
@@ -60,6 +89,8 @@ _LINE_TO_METRIC = {
 DiskType = dict[str, Union[int, float]]
 SectionsType = dict[str, DiskType]
 
+_METRIC_DENOM_SUFFIX: Final = "_base"
+
 
 @unique
 class TableRows(IntEnum):
@@ -70,7 +101,7 @@ class TableRows(IntEnum):
 
 @unique
 class DataRowIndex(IntEnum):
-    METRIC = 0
+    METRIC_ID = 0
     METRIC_TYPE = -1
 
 
@@ -159,14 +190,25 @@ def _update_sections(sections: SectionsType, row: Sequence[str]) -> None:
         disk[metric_name] = value
 
 
+def _is_metric_denom(metric_name: str, *, data_row: Sequence[str]) -> bool:
+    return (
+        metric_name.startswith("average") and data_row[DataRowIndex.METRIC_TYPE] == "average_base"
+    )
+
+
 def _get_metric_name(data_row: Sequence[str]) -> Optional[str]:
-    if metric_name := _LINE_TO_METRIC.get(data_row[DataRowIndex.METRIC]):
-        if (
-            metric_name.startswith("average")
-            and data_row[DataRowIndex.METRIC_TYPE] == "average_base"
-        ):
-            metric_name += "_base"
-        return metric_name
+    """Converts numeric value at METRIC_ID offset into check_mk metric name with two exceptions:
+    - If index is not known returns None
+    - If index is known but name is starting from average and type at METRIC_ID is average_base,
+    then returns name + "_base", thus having one metric with two name, for example
+    average_time_wait and average_time_wait_base. This case valid for two rows metrics
+    """
+    if metric_name := _LINE_TO_METRIC.get(data_row[DataRowIndex.METRIC_ID]):
+        return (
+            _as_denom_metric(metric_name)
+            if _is_metric_denom(metric_name, data_row=data_row)
+            else metric_name
+        )
 
     return None
 
@@ -187,6 +229,17 @@ def discover_winperf_phydisk(
     )
 
 
+@dataclass(frozen=True)
+class _Params:
+    value_store: MutableMapping[str, Any]
+    value_store_suffix: str
+    timestamp: float
+    frequency: Optional[float]
+
+
+_DenomType = tuple[Optional[float], bool]
+
+
 def _compute_rates_single_disk(
     disk: diskstat.Disk,
     value_store: MutableMapping[str, Any],
@@ -194,68 +247,83 @@ def _compute_rates_single_disk(
 ) -> diskstat.Disk:
 
     disk_with_rates = {}
-    timestamp = disk["timestamp"]
-    frequency = disk.get("frequency")
-    raised_ignore_res_excpt = False
-
-    for metric, value in disk.items():
-
-        if metric in ("timestamp", "frequency") or metric.endswith("base"):
+    params: Final = _Params(
+        value_store=value_store,
+        value_store_suffix=value_store_suffix,
+        timestamp=disk["timestamp"],
+        frequency=disk.get("frequency"),
+    )
+    raise_ignore_results = False
+    metric_values = [(metric, value) for metric, value in disk.items() if _is_work_metric(metric)]
+    for metric, value in metric_values:
+        denom, exception_raised = _calc_denom(metric, disk, params)
+        if denom is None:
             continue
-
-        # Queue Lengths (currently only Windows). Windows uses counters here.
-        # I have not understood, why..
-        if metric.endswith("ql"):
-            denom = 10000000.0
-
-        elif metric.endswith("wait"):
-            key_base = metric + "_base"
-            base = disk.get(key_base)
-            if base is None or frequency is None:
-                continue
-
-            # using 1 for the base if the counter didn't increase. This makes little to no sense
-            try:
-                base = (
-                    get_rate(
-                        value_store,
-                        key_base + value_store_suffix,
-                        timestamp,
-                        base,
-                        raise_overflow=True,
-                    )
-                    or 1
-                )
-            except IgnoreResultsError:
-                raised_ignore_res_excpt = True
-
-            denom = base * frequency
-
-        else:
-            denom = 1.0
+        if exception_raised:
+            raise_ignore_results = True
 
         try:
-            disk_with_rates[metric] = (
-                get_rate(
-                    value_store,
-                    metric + value_store_suffix,
-                    timestamp,
-                    value,
-                    raise_overflow=True,
-                )
-                / denom
-            )
-
+            disk_with_rates[metric] = _get_rate(metric, params, value) / denom
         except IgnoreResultsError:
-            raised_ignore_res_excpt = True
+            raise_ignore_results = True
 
-    if raised_ignore_res_excpt:
+    if raise_ignore_results:
         raise IgnoreResultsError("Initializing counters")
 
     return disk_with_rates
 
 
-def _averaging_to_seconds(params: Mapping[str, Any]) -> Mapping[str, Any]:
+def _is_work_metric(metric: str) -> bool:
+    return metric not in ("timestamp", "frequency") and not metric.endswith("base")
+
+
+class MetricSuffix(str, Enum):
+    QUEUE_LENGTH = "ql"  # Queue Lengths (currently only Windows). Windows uses counters here.
+    WAIT = "wait"
+
+
+def _as_denom_metric(metric: str) -> str:
+    return metric + _METRIC_DENOM_SUFFIX
+
+
+def _calc_denom(metric: str, disk: diskstat.Disk, params: _Params) -> _DenomType:
+    if metric.endswith(MetricSuffix.QUEUE_LENGTH):
+        return 10_000_000.0, False
+    if not metric.endswith(MetricSuffix.WAIT):
+        return 1.0, False
+
+    return _calc_denom_for_wait(metric, disk, params)
+
+
+def _calc_denom_for_wait(metric: str, disk: diskstat.Disk, params: _Params) -> _DenomType:
+    if params.frequency is None:
+        return None, False
+    denom_value = disk.get(_as_denom_metric(metric))
+    if denom_value is None:
+        return None, False
+
+    exception_raised = False
+    # using 1 for the base if the counter didn't increase. This makes little to no sense
+    try:
+        # TODO(jh): get_rate returns Rate for new_metric_value. Fix or explain, please
+        denom_value = _get_rate(_as_denom_metric(metric), params, denom_value) or 1
+    except IgnoreResultsError:
+        exception_raised = True
+
+    return denom_value * params.frequency, exception_raised
+
+
+def _get_rate(metric: str, params: _Params, value: float) -> float:
+    return get_rate(
+        params.value_store,
+        metric + params.value_store_suffix,
+        params.timestamp,
+        value,
+        raise_overflow=True,
+    )
+
+
+def _with_average_in_seconds(params: Mapping[str, Any]) -> Mapping[str, Any]:
     key_avg = "average"
     if key_avg in params:
         params = {
@@ -274,7 +342,6 @@ def check_winperf_phydisk(
     # Therefore, we have to compute the rates first.
 
     value_store = get_value_store()
-
     if item == "SUMMARY":
         names_and_disks_with_rates = diskstat.compute_rates_multiple_disks(
             section,
@@ -282,7 +349,6 @@ def check_winperf_phydisk(
             _compute_rates_single_disk,
         )
         disk_with_rates = diskstat.summarize_disks(iter(names_and_disks_with_rates.items()))
-
     else:
         try:
             disk_with_rates = _compute_rates_single_disk(
@@ -293,7 +359,7 @@ def check_winperf_phydisk(
             return
 
     yield from diskstat.check_diskstat_dict(
-        params=_averaging_to_seconds(params),
+        params=_with_average_in_seconds(params),
         disk=disk_with_rates,
         value_store=value_store,
         this_time=time.time(),

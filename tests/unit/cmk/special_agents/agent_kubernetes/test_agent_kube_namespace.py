@@ -5,6 +5,7 @@
 
 import json
 
+from kubernetes import client  # type: ignore[import]
 from mocket import Mocketizer  # type: ignore[import]
 from mocket.mockhttp import Entry  # type: ignore[import]
 
@@ -13,7 +14,7 @@ from cmk.special_agents.utils_kubernetes.transform import parse_metadata_no_name
 
 
 class TestAPINamespace:
-    def test_parse_metadata(self, core_client, dummy_host) -> None:  # type:ignore[no-untyped-def]
+    def test_parse_metadata(self, core_client: client.CoreV1Api, dummy_host: str) -> None:
         namespace_metadata = {
             "items": [
                 {
@@ -50,8 +51,8 @@ class TestAPINamespace:
         }
         assert metadata.annotations == {}
 
-    def test_parse_metadata_missing_annotations_and_labels(  # type:ignore[no-untyped-def]
-        self, core_client, dummy_host
+    def test_parse_metadata_missing_annotations_and_labels(
+        self, core_client: client.CoreV1Api, dummy_host: str
     ) -> None:
         namespace_metadata = {
             "items": [

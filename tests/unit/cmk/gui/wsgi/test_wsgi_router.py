@@ -5,15 +5,18 @@
 import os
 import typing
 
+from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.site import omd_site
+from cmk.utils.type_defs import UserId
 
 if typing.TYPE_CHECKING:
     import webtest  # type: ignore[import] # pylint: disable=unused-import
 
 
-def test_profiling(wsgi_app) -> None:  # type:ignore[no-untyped-def]
+def test_profiling(wsgi_app: WebTestAppForCMK) -> None:
     var_dir = cmk.utils.paths.var_dir
     assert not os.path.exists(var_dir + "/multisite.py")
     assert not os.path.exists(var_dir + "/multisite.profile")
@@ -30,7 +33,7 @@ def test_profiling(wsgi_app) -> None:  # type:ignore[no-untyped-def]
     assert os.path.exists(var_dir + "/multisite.cachegrind")
 
 
-def test_webserver_auth(wsgi_app, with_user) -> None:  # type:ignore[no-untyped-def]
+def test_webserver_auth(wsgi_app: WebTestAppForCMK, with_user: tuple[UserId, str]) -> None:
     username, _ = with_user
     wsgi_app.get(
         "/NO_SITE/check_mk/api/1.0/version", headers={"Accept": "application/json"}, status=401
@@ -59,7 +62,7 @@ def test_webserver_auth(wsgi_app, with_user) -> None:  # type:ignore[no-untyped-
     )
 
 
-def test_normal_auth(wsgi_app, with_user) -> None:  # type:ignore[no-untyped-def]
+def test_normal_auth(wsgi_app: WebTestAppForCMK, with_user: tuple[UserId, str]) -> None:
     username, password = with_user
     wsgi_app.get(
         "/NO_SITE/check_mk/api/1.0/version", headers={"Accept": "application/json"}, status=401
@@ -80,7 +83,9 @@ def test_normal_auth(wsgi_app, with_user) -> None:  # type:ignore[no-untyped-def
     )
 
 
-def test_openapi_version(wsgi_app, with_automation_user) -> None:  # type:ignore[no-untyped-def]
+def test_openapi_version(
+    wsgi_app: WebTestAppForCMK, with_automation_user: tuple[UserId, str]
+) -> None:
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
     resp = wsgi_app.get(
@@ -89,8 +94,8 @@ def test_openapi_version(wsgi_app, with_automation_user) -> None:  # type:ignore
     assert resp.json["site"] == omd_site()
 
 
-def test_openapi_app_exception(  # type:ignore[no-untyped-def]
-    wsgi_app_debug_off, with_automation_user
+def test_openapi_app_exception(
+    wsgi_app_debug_off: WebTestAppForCMK, with_automation_user: tuple[UserId, str]
 ) -> None:
     wsgi_app = wsgi_app_debug_off
     username, secret = with_automation_user
@@ -107,16 +112,16 @@ def test_openapi_app_exception(  # type:ignore[no-untyped-def]
     assert "crash_id" in resp.json["ext"]
 
 
-def test_cmk_run_cron(wsgi_app) -> None:  # type:ignore[no-untyped-def]
+def test_cmk_run_cron(wsgi_app: WebTestAppForCMK) -> None:
     wsgi_app.get("/NO_SITE/check_mk/run_cron.py", status=200)
 
 
-def test_cmk_automation(wsgi_app) -> None:  # type:ignore[no-untyped-def]
+def test_cmk_automation(wsgi_app: WebTestAppForCMK) -> None:
     response = wsgi_app.get("/NO_SITE/check_mk/automation.py", status=200)
     assert response.text == "Missing secret for automation command."
 
 
-def test_cmk_ajax_graph_images(wsgi_app) -> None:  # type:ignore[no-untyped-def]
+def test_cmk_ajax_graph_images(wsgi_app: WebTestAppForCMK) -> None:
     resp = wsgi_app.get("/NO_SITE/check_mk/ajax_graph_images.py", status=200)
     assert resp.text.startswith("You are not allowed")
 
@@ -128,6 +133,6 @@ def test_cmk_ajax_graph_images(wsgi_app) -> None:  # type:ignore[no-untyped-def]
     assert resp.text == ""
 
 
-def test_options_disabled(wsgi_app) -> None:  # type:ignore[no-untyped-def]
+def test_options_disabled(wsgi_app: WebTestAppForCMK) -> None:
     # Should be 403 in integration test.
     wsgi_app.options("/", status=404)

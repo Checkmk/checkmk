@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
+from collections.abc import Iterable
 from datetime import datetime
 from pathlib import Path
 
@@ -147,9 +148,8 @@ def _get_only_raw_data_element(
         ],
     ],
 )
-def test_get_piggyback_raw_data_successful(  # type:ignore[no-untyped-def]
-    setup_files, time_settings: piggyback.PiggybackTimeSettings
-) -> None:
+@pytest.mark.usefixtures("setup_files")
+def test_get_piggyback_raw_data_successful(time_settings: piggyback.PiggybackTimeSettings) -> None:
     raw_data = _get_only_raw_data_element(_TEST_HOST_NAME, time_settings)
 
     assert raw_data.info.source_hostname == "source1"
@@ -160,7 +160,8 @@ def test_get_piggyback_raw_data_successful(  # type:ignore[no-untyped-def]
     assert raw_data.raw_data == _PAYLOAD
 
 
-def test_get_piggyback_raw_data_not_updated(setup_files) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("setup_files")
+def test_get_piggyback_raw_data_not_updated() -> None:
     time_settings: piggyback.PiggybackTimeSettings = [
         (None, "max_cache_age", _PIGGYBACK_MAX_CACHEFILE_AGE)
     ]
@@ -181,7 +182,8 @@ def test_get_piggyback_raw_data_not_updated(setup_files) -> None:  # type:ignore
     assert raw_data.raw_data == _PAYLOAD
 
 
-def test_get_piggyback_raw_data_not_sending(setup_files) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("setup_files")
+def test_get_piggyback_raw_data_not_sending() -> None:
     time_settings: piggyback.PiggybackTimeSettings = [
         (None, "max_cache_age", _PIGGYBACK_MAX_CACHEFILE_AGE)
     ]
@@ -200,7 +202,8 @@ def test_get_piggyback_raw_data_not_sending(setup_files) -> None:  # type:ignore
     assert raw_data.raw_data == _PAYLOAD
 
 
-def test_get_piggyback_raw_data_too_old_global(setup_files) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("setup_files")
+def test_get_piggyback_raw_data_too_old_global() -> None:
     time_settings: piggyback.PiggybackTimeSettings = [(None, "max_cache_age", -1)]
 
     raw_data = _get_only_raw_data_element(_TEST_HOST_NAME, time_settings)
@@ -213,7 +216,8 @@ def test_get_piggyback_raw_data_too_old_global(setup_files) -> None:  # type:ign
     assert raw_data.raw_data == _PAYLOAD
 
 
-def test_get_piggyback_raw_data_too_old_source(setup_files) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("setup_files")
+def test_get_piggyback_raw_data_too_old_source() -> None:
     time_settings: piggyback.PiggybackTimeSettings = [
         (None, "max_cache_age", _PIGGYBACK_MAX_CACHEFILE_AGE),
         ("source1", "max_cache_age", -1),
@@ -229,9 +233,8 @@ def test_get_piggyback_raw_data_too_old_source(setup_files) -> None:  # type:ign
     assert raw_data.raw_data == _PAYLOAD
 
 
-def test_get_piggyback_raw_data_too_old_piggybacked_host(  # type:ignore[no-untyped-def]
-    setup_files,
-) -> None:
+@pytest.mark.usefixtures("setup_files")
+def test_get_piggyback_raw_data_too_old_piggybacked_host() -> None:
     time_settings = [
         (None, "max_cache_age", _PIGGYBACK_MAX_CACHEFILE_AGE),
         ("source1", "max_cache_age", _PIGGYBACK_MAX_CACHEFILE_AGE),
@@ -255,7 +258,8 @@ def test_has_piggyback_raw_data_no_data() -> None:
     assert piggyback.has_piggyback_raw_data(HostName("no-host"), time_settings) is False
 
 
-def test_has_piggyback_raw_data(setup_files) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("setup_files")
+def test_has_piggyback_raw_data() -> None:
     time_settings: piggyback.PiggybackTimeSettings = [
         (None, "max_cache_age", _PIGGYBACK_MAX_CACHEFILE_AGE)
     ]
@@ -267,7 +271,8 @@ def test_remove_source_status_file_not_existing() -> None:
     assert piggyback.remove_source_status_file(HostName("nosource")) is False
 
 
-def test_remove_source_status_file(setup_files) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("setup_files")
+def test_remove_source_status_file() -> None:
     assert piggyback.remove_source_status_file(HostName("source1")) is True
 
 
@@ -296,7 +301,8 @@ def test_store_piggyback_raw_data_new_host() -> None:
     assert raw_data.raw_data == b"<<<check_mk>>>\nlulu\n"
 
 
-def test_store_piggyback_raw_data_second_source(setup_files) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("setup_files")
+def test_store_piggyback_raw_data_second_source() -> None:
     time_settings: piggyback.PiggybackTimeSettings = [
         (None, "max_cache_age", _PIGGYBACK_MAX_CACHEFILE_AGE),
     ]
@@ -415,8 +421,12 @@ def test_get_source_and_piggyback_hosts() -> None:
         ),
     ],
 )
-def test_get_piggyback_raw_data_source_validity(  # type:ignore[no-untyped-def]
-    setup_files, time_settings, successfully_processed, reason, reason_status
+@pytest.mark.usefixtures("setup_files")
+def test_get_piggyback_raw_data_source_validity(
+    time_settings: piggyback.PiggybackTimeSettings,
+    successfully_processed: bool,
+    reason: str,
+    reason_status: int,
 ) -> None:
     source_status_file = cmk.utils.paths.piggyback_source_dir / "source1"
     if source_status_file.exists():
@@ -446,8 +456,12 @@ def test_get_piggyback_raw_data_source_validity(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_get_piggyback_raw_data_source_validity2(  # type:ignore[no-untyped-def]
-    setup_files, time_settings, successfully_processed, reason, reason_status
+@pytest.mark.usefixtures("setup_files")
+def test_get_piggyback_raw_data_source_validity2(
+    time_settings: piggyback.PiggybackTimeSettings,
+    successfully_processed: bool,
+    reason: str,
+    reason_status: int,
 ) -> None:
     source_status_file = cmk.utils.paths.piggyback_source_dir / "source1"
     if source_status_file.exists():
@@ -490,8 +504,12 @@ def test_get_piggyback_raw_data_source_validity2(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_get_piggyback_raw_data_piggybacked_host_validity(  # type:ignore[no-untyped-def]
-    setup_files, time_settings, successfully_processed, reason, reason_status
+@pytest.mark.usefixtures("setup_files")
+def test_get_piggyback_raw_data_piggybacked_host_validity(
+    time_settings: piggyback.PiggybackTimeSettings,
+    successfully_processed: bool,
+    reason: str,
+    reason_status: int,
 ) -> None:
     # Fake age the test-host piggyback file
     os.utime(
@@ -526,8 +544,12 @@ def test_get_piggyback_raw_data_piggybacked_host_validity(  # type:ignore[no-unt
         ),
     ],
 )
-def test_get_piggyback_raw_data_piggybacked_host_validity2(  # type:ignore[no-untyped-def]
-    setup_files, time_settings, successfully_processed, reason, reason_status
+@pytest.mark.usefixtures("setup_files")
+def test_get_piggyback_raw_data_piggybacked_host_validity2(
+    time_settings: piggyback.PiggybackTimeSettings,
+    successfully_processed: bool,
+    reason: str,
+    reason_status: int,
 ) -> None:
     # Fake age the test-host piggyback file
     os.utime(
@@ -558,8 +580,9 @@ def test_get_piggyback_raw_data_piggybacked_host_validity2(  # type:ignore[no-un
         ([("~PIGGYBACKED-[hH]ost", "key", "value")], []),
     ],
 )
-def test_get_piggyback_matching_time_settings(  # type:ignore[no-untyped-def]
-    time_settings, expected_time_setting_keys
+def test_get_piggyback_matching_time_settings(
+    time_settings: piggyback.PiggybackTimeSettings,
+    expected_time_setting_keys: Iterable[tuple[str | None, str]],
 ) -> None:
     assert sorted(
         piggyback._TimeSettingsMap(

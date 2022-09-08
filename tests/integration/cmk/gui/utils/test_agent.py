@@ -4,10 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from pytest_mock import MockerFixture
+
+from tests.testlib.site import Site
+
 from cmk.gui.utils import agent
 
 
-def test_vanilla_agents_filenames(site, mocker) -> None:  # type:ignore[no-untyped-def]
+def test_vanilla_agents_filenames(site: Site, mocker: MockerFixture) -> None:
     # we have functions to receive the path to the vanilla agent packages.
     # this test makes sure that those functions always point to existing files.
 

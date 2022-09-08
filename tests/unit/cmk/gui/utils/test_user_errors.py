@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
+
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.utils.user_errors import user_errors, UserErrors
 
 
-def test_user_errors_request_context_integration(  # type:ignore[no-untyped-def]
-    request_context,
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_user_errors_request_context_integration() -> None:
     assert not user_errors
     user_errors.add(MKUserError(None, "abc"))
     assert user_errors[None] == "abc"

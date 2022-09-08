@@ -3180,6 +3180,20 @@ CascadingDropdownChoice = Union[CascadingDropdownShortChoice, CascadingDropdownC
 CascadingDropdownChoices = Promise[Sequence[CascadingDropdownChoice]]
 
 
+class CascadingDropdownChoiceWithoutValue(NamedTuple):
+    ident: CascadingDropdownChoiceIdent
+    title: str
+    index_: int
+
+
+class CascadingDropdownChoiceWithValue(NamedTuple):
+    ident: CascadingDropdownChoiceIdent
+    title: str
+    vs: ValueSpec
+    value: CascadingDropdownChoiceValue  # this is bound to vs
+    index_: int
+
+
 def _normalize_choices(
     choices: Sequence[CascadingDropdownChoice],
 ) -> Sequence[CascadingDropdownCleanChoice]:
@@ -3411,108 +3425,86 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
             )
         )
 
-    def _ident(self, value: CascadingDropdownChoiceValue) -> CascadingDropdownChoiceIdent:
-        return value[0] if isinstance(value, tuple) else value
-
-    def _choice_from_ident(
-        self, ident: CascadingDropdownChoiceIdent
-    ) -> CascadingDropdownCleanChoice | None:
-        try:
-            return next(elem for elem in self.choices() if elem[0] == ident)
-        except StopIteration:
-            return None
+    def _choice_from_value_raise(self, message: str, varprefix: str | None) -> Exception:
+        if varprefix is not None:
+            return MKUserError(varprefix, message)
+        return ValueError(message)
 
     def _choice_from_value(
-        self, value: CascadingDropdownChoiceValue
-    ) -> CascadingDropdownCleanChoice | None:
-        return self._choice_from_ident(self._ident(value))
+        self,
+        value: CascadingDropdownChoiceValue,
+        varprefix: str | None = None,
+    ) -> CascadingDropdownChoiceWithoutValue | CascadingDropdownChoiceWithValue:
+        if isinstance(value, tuple):
+            if len(value) != 2:
+                raise self._choice_from_value_raise(
+                    _("If value is a tuple it has to have length of two."), varprefix
+                )
+            ident, value = value
+        else:
+            ident, value = (value, None)
+
+        try:
+            index, result = next(
+                (index, elem) for index, elem in enumerate(self.choices()) if elem[0] == ident
+            )
+        except StopIteration:
+            raise self._choice_from_value_raise(
+                _("Could not find an entry matching %r in choices") % (ident,), varprefix
+            )
+        ident, title, vs = result
+        if vs is not None:
+            return CascadingDropdownChoiceWithValue(ident, title, vs, value, index)
+        return CascadingDropdownChoiceWithoutValue(ident, title, index)
 
     def value_to_html(self, value: CascadingDropdownChoiceValue) -> ValueSpecText:
         choice = self._choice_from_value(value)
-        if not choice:
-            return _("Could not render: %r") % (value,)
-        ident, title, vs = choice
+        if isinstance(choice, CascadingDropdownChoiceWithoutValue):
+            return choice.title
 
-        if vs is None and ident == value:
-            return title
-
-        assert isinstance(value, tuple) and vs is not None
-
-        rendered_value = vs.value_to_html(value[1])
+        rendered_value = choice.vs.value_to_html(choice.value)
         if not rendered_value:
-            return title
+            return choice.title
 
         if self._render == CascadingDropdown.Render.foldable:
             with output_funnel.plugged(), foldable_container(
                 treename="foldable_cascading_dropdown",
                 id_=hashlib.sha256(repr(value).encode()).hexdigest(),
                 isopen=False,
-                title=title,
+                title=choice.title,
                 indent=False,
             ):
                 html.write_text(rendered_value)
             return HTML(output_funnel.drain())
 
         return (
-            HTML(escaping.escape_text(title))
+            HTML(escaping.escape_text(choice.title))
             + HTML(escaping.escape_text(self._separator))
             + rendered_value
         )
 
     def value_to_json(self, value: CascadingDropdownChoiceValue) -> JSONValue:
         choice = self._choice_from_value(value)
-        if not choice:
-            return None  # just by passes should be considered a bug, value_to_json is not guarantied to return a value
-        ident, _title, vs = choice
-
-        if vs is None and ident == value:
-            return value
-
-        assert isinstance(value, tuple) and vs is not None
-
-        try:
-            vs.validate_datatype(value[1], "")
-            return [ident, vs.value_to_json(value[1])]
-        except Exception:  # TODO: fix exc
-            return None
+        if isinstance(choice, CascadingDropdownChoiceWithoutValue):
+            return choice.ident
+        return [choice.ident, choice.vs.value_to_json(choice.value)]
 
     def value_from_json(self, json_value: JSONValue) -> CascadingDropdownChoiceValue:
-        value_ident = json_value[0] if isinstance(json_value, list) else json_value
-        choice = self._choice_from_ident(value_ident)
-        if not choice:
-            return None  # just by passes should be considered a bug, value_to_json is not guarantied to return a value
-        ident, _title, vs = choice
-
-        if vs is None and ident == json_value:
-            return json_value
-
-        assert isinstance(json_value, list) and vs is not None
-
-        try:
-            value = vs.value_from_json(json_value[1])
-            vs.validate_datatype(value, "")
-            return (ident, value)
-        except Exception:  # TODO: fix exc
-            return None
+        if isinstance(json_value, list):
+            value: CascadingDropdownChoiceValue = (json_value[0], json_value[1])
+            choice = self._choice_from_value(value)
+            # we already know this will be with value, because we explicitly passed a value one line above
+            assert isinstance(choice, CascadingDropdownChoiceWithValue)
+            value = choice.vs.value_from_json(choice.value)
+            return (choice.ident, value)
+        # no value, just a ident:
+        return json_value
 
     def mask(self, value: CascadingDropdownChoiceValue) -> CascadingDropdownChoiceValue:
         choice = self._choice_from_value(value)
-        if not choice:
-            return value  # TODO: this should not be allowed; see above
-        ident, _title, vs = choice
-
-        if vs is None and ident == value:
-            # Presumably, value was just the plain CascadingDropdownChoiceIdent,
-            # nothing to do here.
-            return value
-
-        assert isinstance(value, tuple) and vs is not None
-
-        try:
-            vs.validate_datatype(value[1], "")
-            return ident, vs.mask(value[1])
-        except Exception:
-            return value  # TODO: this should not be allowed; see above
+        if isinstance(choice, CascadingDropdownChoiceWithoutValue):
+            return choice.ident
+        return choice.ident, choice.vs.mask(choice.value)
 
     def from_html_vars(self, varprefix: str) -> CascadingDropdownChoiceValue:
         choices = self.choices()
@@ -3530,17 +3522,10 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
         return value, vs.from_html_vars(varprefix + "_%d" % sel)
 
     def validate_datatype(self, value: CascadingDropdownChoiceValue, varprefix: str) -> None:
-        choices = self.choices()
-        for nr, (val, _title, vs) in enumerate(choices):
-            if value == val or (isinstance(value, tuple) and value[0] == val):
-                if vs:
-                    if not isinstance(value, tuple) or len(value) != 2:
-                        raise MKUserError(
-                            varprefix + "_sel", _("Value must be a tuple with two elements.")
-                        )
-                    vs.validate_datatype(value[1], varprefix + "_%d" % nr)
-                return
-        raise MKUserError(varprefix + "_sel", _("Value %r is not allowed here.") % (value,))
+        choice = self._choice_from_value(value, varprefix)
+        if isinstance(choice, CascadingDropdownChoiceWithoutValue):
+            return
+        choice.vs.validate_datatype(choice.value, varprefix + "_%d" % choice.index_)
 
     def _validate_value(self, value: CascadingDropdownChoiceValue, varprefix: str) -> None:
         if self._no_preselect_title is not None and value is None:
@@ -3557,16 +3542,9 @@ class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
 
     def transform_value(self, value: CascadingDropdownChoiceValue) -> CascadingDropdownChoiceValue:
         choice = self._choice_from_value(value)
-        if not choice:
-            raise ValueError(_("%s is not an allowed value") % value)
-        ident, _title, vs = choice
-
-        if vs is None and ident == value:
-            return value
-
-        assert isinstance(value, tuple) and vs is not None
-
-        return (value[0], vs.transform_value(value[1]))
+        if isinstance(choice, CascadingDropdownChoiceWithoutValue):
+            return choice.ident
+        return (choice.ident, choice.vs.transform_value(choice.value))
 
     def has_show_more(self) -> bool:
         return any(vs.has_show_more() for _name, _title, vs in self.choices() if vs is not None)

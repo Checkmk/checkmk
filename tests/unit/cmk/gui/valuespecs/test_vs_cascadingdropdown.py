@@ -42,12 +42,12 @@ class TestCascadingDropDown:
     def test_mask(self) -> None:
         assert get_cascading_dropdown().mask((20, "pwd")) == (20, "******")
         assert get_cascading_dropdown().mask("none2") == "none2"
-        # TODO: vs.Alternative throws an ValueError in that case (that we use
-        # an ident that is not defined), and i think we should, too.
-        assert get_cascading_dropdown().mask((True, "pwd")) == (True, "pwd")
-        # TODO: why do we call validate_datatype here and return the value
-        # unaltered if it fails? is this of our concern?
-        assert get_cascading_dropdown().mask((20, 2222)) == (20, 2222)
+        with pytest.raises(ValueError, match=r"Could not find an entry matching True in choices"):
+            get_cascading_dropdown().mask((True, "pwd"))
+        # although we pass an invalid value (would expect an string instead of
+        # int (2222)) to cascading dropdown, it's simply passed to the embedded
+        # valuespec. this was not the case in the previous implementation.
+        assert get_cascading_dropdown().mask((20, 2222)) == (20, "******")
 
     def test_from_html_vars(self) -> None:
         with request_var(c_sel="0", c_0="smth"):
@@ -62,21 +62,26 @@ class TestCascadingDropDown:
         expect_validate_failure(  # type: ignore
             get_cascading_dropdown(),
             ("long", "2", None),
-            match="Value must be a tuple with two elements.",
+            match="If value is a tuple it has to have length of two.",
         )
-        # TODO: if the above fails because there is an surpluse element, this one should also fail?
-        expect_validate_success(get_cascading_dropdown(), ("none1", "2", None))  # type: ignore
+        expect_validate_failure(  # type: ignore
+            get_cascading_dropdown(),
+            ("none1", "2", None),
+            match="If value is a tuple it has to have length of two.",
+        )
         expect_validate_success(get_cascading_dropdown(), None)
         expect_validate_failure(
             get_cascading_dropdown(no_preselect_title="no preselect title"), None
         )
         expect_validate_failure(
-            get_cascading_dropdown(), "none9", match="Value 'none9' is not allowed here."
+            get_cascading_dropdown(),
+            "none9",
+            match="Could not find an entry matching 'none9' in choices",
         )
         expect_validate_failure(
             get_cascading_dropdown(),
             ("none9", "smth"),
-            match=r"Value \('none9', 'smth'\) is not allowed here.",
+            match=r"Could not find an entry matching 'none9' in choices",
         )
         with pytest.raises(MKUserError, match=r"Value \('none9', 'smth'\) is not allowed here."):
             get_cascading_dropdown().validate_value(("none9", "smth"), "c")
@@ -93,22 +98,31 @@ class TestCascadingDropDown:
         )
         expect_validate_success(valuespec, ("direct", "smth"))
         expect_validate_failure(
-            valuespec, ("zzzzzz", "smth"), match=r"Value \('zzzzzz', 'smth'\) is not allowed here."
+            valuespec,
+            ("zzzzzz", "smth"),
+            match=r"Could not find an entry matching 'zzzzzz' in choices",
         )
 
     def test_value_to_json(self) -> None:
-        # i don't understand the "just by passes should be considered a bug,..." comment
-        # https://review.lan.tribe29.com/c/check_mk/+/18735
-        assert vs.CascadingDropdown([]).value_to_json(("some", "ignored value")) is None
+        with pytest.raises(ValueError, match="Could not find an entry matching 'some' in choices"):
+            vs.CascadingDropdown([]).value_to_json(("some", "ignored value"))
 
         assert get_cascading_dropdown().value_to_json("none1") == "none1"
         assert get_cascading_dropdown().value_to_json(("long", "smth")) == ["long", "smth"]
-        # TODO: why do we validate the datatype here and fail with None?
-        assert get_cascading_dropdown().value_to_json(("long", 2222)) is None
+        # in a previous implementation this would return None, as it was
+        # calling validate_datatype to make sure the choice exists. as there
+        # are many examples of Valuepsecs that do not validate the data in
+        # value_to_json (Integer does not check min/max, ListOfStrings does not
+        # check max_entries or allow_empty) we do not validate, but pass the
+        # "illegal" value.
+        assert get_cascading_dropdown().value_to_json(("long", 2222)) == ["long", 2222]
 
     def test_value_from_json(self) -> None:
-        assert vs.CascadingDropdown([]).value_from_json(("some", "ignored value")) is None
+        assert vs.CascadingDropdown([]).value_from_json(("some", "ignored value")) == (
+            "some",
+            "ignored value",
+        )
         assert get_cascading_dropdown().value_from_json("none1") == "none1"
         assert get_cascading_dropdown().value_from_json(["long", "smth"]) == ("long", "smth")
-        # TODO: why do we validate the datatype here and fail with None?
-        assert get_cascading_dropdown().value_from_json(["long", 2222]) is None
+        # see long comment on (long, 2222) test case in test_value_to_json
+        assert get_cascading_dropdown().value_from_json(["long", 2222]) == ("long", 2222)

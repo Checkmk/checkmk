@@ -5,6 +5,7 @@
 
 import os
 import sys
+from functools import partial
 from pathlib import Path
 from typing import (
     Container,
@@ -15,6 +16,7 @@ from typing import (
     Mapping,
     Optional,
     overload,
+    Protocol,
     Sequence,
     Set,
     Tuple,
@@ -82,6 +84,7 @@ from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 from cmk.base.config import HostConfig
 from cmk.base.core_factory import create_core
 from cmk.base.modes import keepalive_option, Mode, modes, Option
+from cmk.base.submitters import get_submitter, Submitter
 
 # TODO: Investigate all modes and try to find out whether or not we can
 # set needs_checks=False for them. This would save a lot of IO/time for
@@ -1816,14 +1819,27 @@ _CheckingOptions = TypedDict(
 )
 
 
-def mode_check(options: _CheckingOptions, args: List[str]) -> None:
+class GetSubmitter(Protocol):
+    def __call__(
+        self,
+        check_submission: Literal["pipe", "file"],
+        monitoring_core: Literal["nagios", "cmc"],
+        host_name: HostName,
+        *,
+        dry_run: bool,
+        perfdata_format: Literal["pnp", "standard"],
+        show_perfdata: bool,
+    ) -> Submitter:
+        ...
+
+
+def mode_check(
+    get_submitter_: GetSubmitter,
+    options: _CheckingOptions,
+    args: List[str],
+) -> None:
     import cmk.base.agent_based.checking as checking  # pylint: disable=import-outside-toplevel
     import cmk.base.item_state as item_state  # pylint: disable=import-outside-toplevel
-
-    try:
-        from cmk.base.cee.keepalive.submitters import get_submitter
-    except ImportError:
-        from cmk.base.submitters import get_submitter  # type: ignore[no-redef]
 
     _handle_fetcher_options(options)
 
@@ -1844,7 +1860,7 @@ def mode_check(options: _CheckingOptions, args: List[str]) -> None:
         ipaddress,
         selected_sections=selected_sections,
         run_plugin_names=run_plugin_names,
-        submitter=get_submitter(
+        submitter=get_submitter_(
             check_submission=config.check_submission,
             monitoring_core=config.monitoring_core,
             dry_run=options.get("no-submit", False),
@@ -1855,46 +1871,51 @@ def mode_check(options: _CheckingOptions, args: List[str]) -> None:
     )
 
 
-modes.register(
-    Mode(
-        long_option="check",
-        handler_function=mode_check,
-        argument=True,
-        argument_descr="HOST [IPADDRESS]",
-        argument_optional=True,
-        short_help="Check all services on the given HOST",
-        long_help=[
-            "Execute all checks on the given HOST. Optionally you can specify "
-            "a second argument, the IPADDRESS. If you don't set this, the "
-            "configured IP address of the HOST is used.",
-            "By default the check results are sent to the core. If you provide "
-            "the option '-n', the results will not be sent to the core and the "
-            "counters of the check will not be stored.",
-            "You can use '-v' to see the results of the checks. Add '-p' to "
-            "also see the performance data of the checks."
-            "Can be restricted to certain check types. Write '--checks df -I' if "
-            "you just want to look for new filesystems. Use 'check_mk -L' for a "
-            "list of all check types. Use 'tcp' for all TCP based checks and "
-            "'snmp' for all SNMP based checks.",
-        ],
-        sub_options=[
-            *_FETCHER_OPTIONS,
-            Option(
-                long_option="no-submit",
-                short_option="n",
-                short_help="Do not submit results to core, do not save counters",
-            ),
-            Option(
-                long_option="perfdata",
-                short_option="p",
-                short_help="Also show performance data (use with -v)",
-            ),
-            _option_sections,
-            _get_plugins_option(CheckPluginName),
-            _option_detect_plugins,
-        ],
+def register_mode_check(get_submitter_: GetSubmitter) -> None:
+    modes.register(
+        Mode(
+            long_option="check",
+            handler_function=partial(mode_check, get_submitter_),
+            argument=True,
+            argument_descr="HOST [IPADDRESS]",
+            argument_optional=True,
+            short_help="Check all services on the given HOST",
+            long_help=[
+                "Execute all checks on the given HOST. Optionally you can specify "
+                "a second argument, the IPADDRESS. If you don't set this, the "
+                "configured IP address of the HOST is used.",
+                "By default the check results are sent to the core. If you provide "
+                "the option '-n', the results will not be sent to the core and the "
+                "counters of the check will not be stored.",
+                "You can use '-v' to see the results of the checks. Add '-p' to "
+                "also see the performance data of the checks."
+                "Can be restricted to certain check types. Write '--checks df -I' if "
+                "you just want to look for new filesystems. Use 'check_mk -L' for a "
+                "list of all check types. Use 'tcp' for all TCP based checks and "
+                "'snmp' for all SNMP based checks.",
+            ],
+            sub_options=[
+                *_FETCHER_OPTIONS,
+                Option(
+                    long_option="no-submit",
+                    short_option="n",
+                    short_help="Do not submit results to core, do not save counters",
+                ),
+                Option(
+                    long_option="perfdata",
+                    short_option="p",
+                    short_help="Also show performance data (use with -v)",
+                ),
+                _option_sections,
+                _get_plugins_option(CheckPluginName),
+                _option_detect_plugins,
+            ],
+        )
     )
-)
+
+
+if cmk_version.edition() is cmk_version.Edition.CRE:
+    register_mode_check(get_submitter)
 
 # .
 #   .--inventory-----------------------------------------------------------.

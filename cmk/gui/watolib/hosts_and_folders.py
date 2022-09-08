@@ -2479,7 +2479,9 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             diff_text=make_diff_text(
                 {}, make_host_audit_log_object(host.attributes(), host.cluster_nodes())
             ),
-            domain_settings=ConfigDomainCore.generate_domain_settings([host_name]),
+            domain_settings=ConfigDomainCore.generate_domain_settings(
+                ConfigDomainCore.ident(), [host_name]
+            ),
         )
 
     def delete_hosts(  # type:ignore[no-untyped-def]
@@ -3276,7 +3278,9 @@ class CREHost(WithPermissions, WithAttributes):
             object_ref=self.object_ref(),
             sites=affected_sites,
             diff_text=make_diff_text(old_object, new_object),
-            domain_settings=ConfigDomainCore.generate_domain_settings([self.name()]),
+            domain_settings=ConfigDomainCore.generate_domain_settings(
+                ConfigDomainCore.ident(), [self.name()]
+            ),
         )
 
     def update_attributes(self, changed_attributes):

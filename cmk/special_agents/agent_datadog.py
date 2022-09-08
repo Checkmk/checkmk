@@ -13,20 +13,11 @@ import json
 import logging
 import re
 import time
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from pathlib import Path
-from typing import (
-    Any,
-    Dict,
-    FrozenSet,
-    Iterable,
-    Mapping,
-    Optional,
-    Protocol,
-    Sequence,
-    Tuple,
-    Union,
-)
+from typing import Protocol
 
+import pydantic
 import requests
 
 from cmk.utils import paths, store
@@ -42,12 +33,11 @@ from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_m
 from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
 
 Tags = Sequence[str]
-DatadogAPIResponse = Mapping[str, Any]
 
 LOGGER = logging.getLogger("agent_datadog")
 
 
-def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
+def parse_arguments(argv: Sequence[str] | None) -> Args:
     parser = create_default_argument_parser(description=__doc__)
     parser.add_argument(
         "hostname",
@@ -170,11 +160,11 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
 
 
 class DatadogAPI(Protocol):
-    def get_request_json_decoded(
+    def get_request(
         self,
         api_endpoint: str,
-        params: Mapping[str, Any],
-    ) -> Any:
+        params: Mapping[str, str | int],
+    ) -> requests.Response:
         pass
 
 
@@ -184,7 +174,7 @@ class ImplDatadogAPI:
         api_host: str,
         api_key: str,
         app_key: str,
-        proxy: Optional[str] = None,
+        proxy: str | None = None,
     ) -> None:
         self._query_heads = {
             "DD-API-KEY": api_key,
@@ -193,17 +183,17 @@ class ImplDatadogAPI:
         self._api_url = api_host.rstrip("/") + "/api/v1"
         self._proxy = deserialize_http_proxy_config(proxy)
 
-    def get_request_json_decoded(
+    def get_request(
         self,
         api_endpoint: str,
-        params: Mapping[str, Any],
-    ) -> Any:
+        params: Mapping[str, str | int],
+    ) -> requests.Response:
         return requests.get(
             f"{self._api_url}/{api_endpoint}",
             headers=self._query_heads,
             params=params,
             proxies=typeshed_issue_7724(self._proxy.to_requests_proxies()),
-        ).json()
+        )
 
 
 class MonitorsQuerier:
@@ -218,7 +208,7 @@ class MonitorsQuerier:
         tags: Tags,
         monitor_tags: Tags,
         page_size: int = 100,
-    ) -> Iterable[DatadogAPIResponse]:
+    ) -> Iterator[object]:
         """
         Query monitors from the endpoint monitor
         https://docs.datadoghq.com/api/latest/monitors/#get-all-monitor-details
@@ -243,13 +233,13 @@ class MonitorsQuerier:
         monitor_tags: Tags,
         page_size: int,
         current_page: int,
-    ) -> Sequence[DatadogAPIResponse]:
+    ) -> list[object]:
         """
         Query paginated monitors (endpoint monitor)
         https://docs.datadoghq.com/api/latest/monitors/#get-all-monitor-details
         """
         # we use pagination to avoid running into any limits
-        params: Dict[str, Union[int, str]] = {
+        params: dict[str, int | str] = {
             "page_size": page_size,
             "page": current_page,
         }
@@ -258,10 +248,23 @@ class MonitorsQuerier:
         if monitor_tags:
             params["monitor_tags"] = ",".join(monitor_tags)
 
-        return self._datadog_api.get_request_json_decoded(
+        resp = self._datadog_api.get_request(
             "monitor",
             params,
         )
+        resp.raise_for_status()
+        return resp.json()
+
+
+class Event(pydantic.BaseModel):
+    id: int
+    tags: Sequence[str]
+    text: str
+    date_happened: int
+    # None should not happen according to docs, but reality says something different ...
+    host: str | None
+    title: str
+    source: str
 
 
 class EventsQuerier:
@@ -280,16 +283,16 @@ class EventsQuerier:
     def query_events(
         self,
         tags: Tags,
-    ) -> Iterable[DatadogAPIResponse]:
+    ) -> Iterator[Event]:
         last_event_ids = self._read_last_event_ids()
         queried_events = list(self._execute_query(tags))
-        self._store_last_event_ids(event["id"] for event in queried_events)
-        yield from (event for event in queried_events if event["id"] not in last_event_ids)
+        self._store_last_event_ids(event.id for event in queried_events)
+        yield from (event for event in queried_events if event.id not in last_event_ids)
 
     def _execute_query(
         self,
         tags: Tags,
-    ) -> Iterable[DatadogAPIResponse]:
+    ) -> Iterator[Event]:
         """
         Query events from the endpoint events
         https://docs.datadoghq.com/api/latest/events/#query-the-event-stream
@@ -298,19 +301,19 @@ class EventsQuerier:
         current_page = 0
 
         while True:
-            if events_in_page := self._query_events_page_in_time_window(
+            if raw_events_in_page := self._query_events_page_in_time_window(
                 start,
                 end,
                 current_page,
                 tags,
             ):
-                yield from events_in_page
+                yield from (Event.parse_obj(raw_event) for raw_event in raw_events_in_page)
                 current_page += 1
                 continue
 
             break
 
-    def _events_query_time_range(self) -> Tuple[int, int]:
+    def _events_query_time_range(self) -> tuple[int, int]:
         now = int(time.time())
         return now - self._max_age, now
 
@@ -320,12 +323,12 @@ class EventsQuerier:
         end: int,
         page: int,
         tags: Tags,
-    ) -> Sequence[DatadogAPIResponse]:
+    ) -> list[object]:
         """
         Query paginated events (endpoint events)
         https://docs.datadoghq.com/api/latest/events/#query-the-event-stream
         """
-        params: Dict[str, Union[int, str]] = {
+        params: dict[str, int | str] = {
             "start": start,
             "end": end,
             "page": page,
@@ -334,10 +337,12 @@ class EventsQuerier:
         if tags:
             params["tags"] = ",".join(tags)
 
-        return self._datadog_api.get_request_json_decoded(
+        resp = self._datadog_api.get_request(
             "events",
             params,
-        )["events"]
+        )
+        resp.raise_for_status()
+        return resp.json()["events"]
 
     def _store_last_event_ids(
         self,
@@ -348,7 +353,7 @@ class EventsQuerier:
             json.dumps(list(ids)),
         )
 
-    def _read_last_event_ids(self) -> FrozenSet[int]:
+    def _read_last_event_ids(self) -> frozenset[int]:
         return frozenset(
             json.loads(
                 store.load_text_from_file(
@@ -359,36 +364,37 @@ class EventsQuerier:
         )
 
 
+def _sanitize_event_text(text: str) -> str:
+    return text.replace("\n", " ~ ")
+
+
 def _event_to_syslog_message(
-    raw_event: DatadogAPIResponse,
+    event: Event,
     tag_regexes: Iterable[str],
     facility: int,
     severity: int,
     service_level: int,
     add_text: bool,
 ) -> SyslogMessage:
-    LOGGER.debug(raw_event)
+    LOGGER.debug(event)
     matching_tags = ", ".join(
-        tag
-        for tag in raw_event["tags"]
-        if any(re.match(tag_regex, tag) for tag_regex in tag_regexes)
+        tag for tag in event.tags if any(re.match(tag_regex, tag) for tag_regex in tag_regexes)
     )
     tags_text = f", Tags: {matching_tags}" if matching_tags else ""
-    details = str(raw_event["text"]).replace("\n", " ~ ")
-    details_text = f", Text: {details}" if add_text else ""
+    details_text = f", Text: {event.text}" if add_text else ""
     return SyslogMessage(
         facility=facility,
         severity=severity,
-        timestamp=raw_event["date_happened"],
-        host_name=str(raw_event["host"]),
-        application=str(raw_event["source"]),
+        timestamp=event.date_happened,
+        host_name=str(event.host),
+        application=event.source,
         service_level=service_level,
-        text=str(raw_event["title"]) + tags_text + details_text,
+        text=_sanitize_event_text(event.title + tags_text + details_text),
     )
 
 
 def _forward_events_to_ec(
-    raw_events: Iterable[DatadogAPIResponse],
+    events: Iterable[Event],
     tag_regexes: Iterable[str],
     facility: int,
     severity: int,
@@ -397,14 +403,14 @@ def _forward_events_to_ec(
 ) -> None:
     SyslogForwarderUnixSocket().forward(
         _event_to_syslog_message(
-            raw_event,
+            event,
             tag_regexes,
             facility,
             severity,
             service_level,
             add_text,
         )
-        for raw_event in raw_events
+        for event in events
     )
 
 

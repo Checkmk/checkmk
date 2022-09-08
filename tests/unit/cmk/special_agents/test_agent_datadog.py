@@ -3,15 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping, Sequence
+import json
+from collections.abc import Mapping, Sequence
+from http import HTTPStatus
 
 import pytest
+import requests
 from pytest import MonkeyPatch
 
 from cmk.special_agents import agent_datadog
 from cmk.special_agents.agent_datadog import (
     _event_to_syslog_message,
-    DatadogAPIResponse,
+    Event,
     EventsQuerier,
     MonitorsQuerier,
     parse_arguments,
@@ -53,17 +56,26 @@ def test_parse_arguments() -> None:
 
 
 class MockDatadogAPI:
-    def __init__(self, page_to_data: Mapping[int, list | Mapping]) -> None:
+    def __init__(self, page_to_data: Mapping[object, object]) -> None:
         self.page_to_data = page_to_data
 
-    def get_request_json_decoded(
+    def get_request(
         self,
         api_endpoint: str,
-        params: Mapping[str, Any],
-    ) -> Any:
-        if (resp := self.page_to_data.get(params["page"])) is not None:
-            return resp
-        raise RuntimeError
+        params: Mapping[str, str | int],
+        version: str = "v1",
+    ) -> requests.Response:
+        if (resp := self.page_to_data.get(params["page"])) is None:
+            raise RuntimeError
+        return self._response(HTTPStatus.OK, json_data=resp)
+
+    @staticmethod
+    def _response(status_code: HTTPStatus, json_data: object = None) -> requests.Response:
+        response = requests.Response()
+        response.status_code = int(status_code)
+        if json_data is not None:
+            response._content = json.dumps(json_data).encode()
+        return response
 
 
 class TestMonitorsQuerier:
@@ -97,11 +109,49 @@ class TestMonitorsQuerier:
 
 
 class TestEventsQuerier:
+    @pytest.fixture(name="events")
+    def fixture_events(self) -> list[Event]:
+        return [
+            Event(
+                id=1,
+                tags=[],
+                text="text",
+                date_happened=123456,
+                host="host",
+                title="event1",
+                source="source",
+            ),
+            Event(
+                id=2,
+                tags=[],
+                text="text",
+                date_happened=123456,
+                host="host",
+                title="event2",
+                source="source",
+            ),
+            Event(
+                id=3,
+                tags=[],
+                text="text",
+                date_happened=123456,
+                host="host",
+                title="event3",
+                source="source",
+            ),
+        ]
+
     @pytest.fixture(name="datadog_api")
     def fixture_datadog_api(
         self,
+        events: Sequence[Event],
     ) -> MockDatadogAPI:
-        return MockDatadogAPI(page_to_data={})
+        return MockDatadogAPI(
+            page_to_data={
+                0: {"events": [event.dict() for event in events]},
+                1: {"events": []},
+            }
+        )
 
     @pytest.fixture(name="events_querier")
     def fixture_events_querier(self, datadog_api: MockDatadogAPI) -> EventsQuerier:
@@ -127,46 +177,18 @@ class TestEventsQuerier:
             now,
         )
 
-    @pytest.fixture(name="events")
-    def fixture_events(self) -> Sequence[DatadogAPIResponse]:
-        # note: this data is of course incomplete, but sufficient for this test
-        return [
-            {
-                "title": "event1",
-                "id": 1,
-            },
-            {
-                "title": "event2",
-                "id": 2,
-            },
-            {
-                "title": "event3",
-                "id": 3,
-            },
-        ]
-
-    @pytest.fixture(name="patch_get_request")
-    def fixture_patch_get_request(
-        self,
-        datadog_api: MockDatadogAPI,
-        events: Sequence[DatadogAPIResponse],
-    ) -> None:
-        datadog_api.page_to_data = {0: {"events": events}, 1: {"events": []}}
-
-    @pytest.mark.usefixtures("patch_get_request")
     def test_query_events_no_previous_ids(
         self,
         events_querier: EventsQuerier,
-        events: Sequence[DatadogAPIResponse],
+        events: Sequence[Event],
     ) -> None:
         assert list(events_querier.query_events([])) == events
         assert events_querier._read_last_event_ids() == frozenset({1, 2, 3})
 
-    @pytest.mark.usefixtures("patch_get_request")
     def test_query_events_with_previous_ids(
         self,
         events_querier: EventsQuerier,
-        events: Sequence[DatadogAPIResponse],
+        events: Sequence[Event],
     ) -> None:
         events_querier._store_last_event_ids([1, 2, 5])
         assert list(events_querier.query_events([])) == events[-1:]
@@ -177,26 +199,19 @@ def test_event_to_syslog_message() -> None:
     assert (
         repr(
             _event_to_syslog_message(
-                {
-                    "date_happened": 1618216122,
-                    "alert_type": "info",
-                    "is_aggregate": False,
-                    "title": "something bad happened",
-                    "url": "/event/event?id=5938350476538858876",
-                    "text": "Abandon ship\n, abandon ship!",
-                    "tags": [
+                Event(
+                    id=5938350476538858876,
+                    tags=[
                         "ship:enterprise",
                         "location:alpha_quadrant",
                         "priority_one",
                     ],
-                    "comments": [],
-                    "device_name": None,
-                    "priority": "normal",
-                    "source": "main bridge",
-                    "host": "starbase 3",
-                    "resource": "/api/v1/events/5938350476538858876",
-                    "id": 5938350476538858876,
-                },
+                    text="Abandon ship\n, abandon ship!",
+                    date_happened=1618216122,
+                    host="starbase 3",
+                    title="something bad happened",
+                    source="main bridge",
+                ),
                 [
                     "ship:.*",
                     "^priority_one$",

@@ -8,7 +8,7 @@
 from typing import List, Optional
 
 import cmk.gui.userdb as userdb
-from cmk.gui.exceptions import MKInternalError, MKUserError
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
@@ -22,15 +22,8 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 
 
-def _get_current_theme_title() -> str:
-    if not theme.is_in_theme_choices():
-        raise MKInternalError(
-            _(
-                f'The given theme id "{theme.get()}" is not given among the theme choices: '
-                f"{dict(theme.theme_choices)}"
-            )
-        )
-    return [title for theme_id, title in theme.theme_choices if theme_id == theme.get()][0]
+def _get_current_theme_titel() -> str:
+    return [titel for theme_id, titel in theme.theme_choices if theme_id == theme.get()][0]
 
 
 def _get_sidebar_position() -> str:
@@ -59,7 +52,7 @@ def _user_menu_topics() -> List[TopicMenuTopic]:
             target="",
             sort_index=10,
             icon="color_mode",
-            button_title=_get_current_theme_title(),
+            button_title=_get_current_theme_titel(),
         ),
         TopicMenuItem(
             name="sidebar_position",

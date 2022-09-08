@@ -82,7 +82,6 @@ from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 from cmk.base.config import HostConfig
 from cmk.base.core_factory import create_core
 from cmk.base.modes import keepalive_option, Mode, modes, Option
-from cmk.base.submitters import get_submitter
 
 # TODO: Investigate all modes and try to find out whether or not we can
 # set needs_checks=False for them. This would save a lot of IO/time for
@@ -1820,7 +1819,11 @@ _CheckingOptions = TypedDict(
 def mode_check(options: _CheckingOptions, args: List[str]) -> None:
     import cmk.base.agent_based.checking as checking  # pylint: disable=import-outside-toplevel
     import cmk.base.item_state as item_state  # pylint: disable=import-outside-toplevel
-    from cmk.base.keepalive import get_keepalive
+
+    try:
+        from cmk.base.cee.keepalive.submitters import get_submitter
+    except ImportError:
+        from cmk.base.submitters import get_submitter  # type: ignore[no-redef]
 
     _handle_fetcher_options(options)
 
@@ -1846,7 +1849,6 @@ def mode_check(options: _CheckingOptions, args: List[str]) -> None:
             monitoring_core=config.monitoring_core,
             dry_run=options.get("no-submit", False),
             host_name=hostname,
-            keepalive=get_keepalive(cmk_version.edition()),
             perfdata_format="pnp" if config.perfdata_format == "pnp" else "standard",
             show_perfdata=options.get("perfdata", False),
         ),

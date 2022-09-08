@@ -34,7 +34,6 @@ from cmk.utils.type_defs import (
     ExitSpec,
     HostAddress,
     HostName,
-    KeepaliveAPI,
     MetricTuple,
     ParsedSectionName,
     ServiceName,

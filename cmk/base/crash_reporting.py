@@ -152,12 +152,6 @@ class SectionCrashReport(CrashReportWithAgentOutput):
         rtc_package: Optional[AgentRawData],
     ) -> crash_reporting.ABCCrashReport:
         snmp_info = _read_snmp_info(host_name)
-        agent_output: Optional[AgentRawData]
-        if rtc_package is not None:
-            agent_output = rtc_package
-        else:
-            agent_output = _read_agent_output(host_name)
-
         return cls.from_exception(
             details={
                 "section_name": str(section_name),
@@ -166,7 +160,9 @@ class SectionCrashReport(CrashReportWithAgentOutput):
             },
             type_specific_attributes={
                 "snmp_info": snmp_info,
-                "agent_output": agent_output,
+                "agent_output": _read_agent_output(host_name)
+                if rtc_package is None
+                else rtc_package,
             },
         )
 
@@ -190,12 +186,6 @@ class CheckCrashReport(CrashReportWithAgentOutput):
         rtc_package: Optional[AgentRawData],
     ) -> crash_reporting.ABCCrashReport:
         snmp_info = _read_snmp_info(host_config.hostname)
-        agent_output: Optional[AgentRawData]
-        if rtc_package is not None:
-            agent_output = rtc_package
-        else:
-            agent_output = _read_agent_output(host_config.hostname)
-
         return cls.from_exception(
             details={
                 "check_output": text,
@@ -210,7 +200,9 @@ class CheckCrashReport(CrashReportWithAgentOutput):
             },
             type_specific_attributes={
                 "snmp_info": snmp_info,
-                "agent_output": agent_output,
+                "agent_output": _read_agent_output(host_config.hostname)
+                if rtc_package is None
+                else rtc_package,
             },
         )
 

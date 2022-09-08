@@ -26,6 +26,7 @@
 import os
 import subprocess
 import sys
+from typing import List
 
 import omdlib.utils
 from omdlib.console import show_success
@@ -160,11 +161,14 @@ def has_old_apache_hook_in_site(site: SiteContext) -> bool:
         return f.readline().startswith("Include ")
 
 
-def init_cmd(version_info: VersionInfo, name: str, action: str) -> str:
-    return version_info.INIT_CMD % {
-        "name": name,
-        "action": action,
-    }
+def init_cmd(version_info: VersionInfo, name: str, action: str) -> List[str]:
+    return (
+        version_info.INIT_CMD
+        % {
+            "name": name,
+            "action": action,
+        }
+    ).split()
 
 
 def reload_apache(version_info: VersionInfo) -> None:
@@ -175,17 +179,18 @@ def reload_apache(version_info: VersionInfo) -> None:
 
 def restart_apache(version_info: VersionInfo) -> None:
     if (
-        os.system(  # nosec
-            init_cmd(version_info, version_info.APACHE_INIT_NAME, "status") + " >/dev/null 2>&1"
+        subprocess.call(
+            init_cmd(version_info, version_info.APACHE_INIT_NAME, "status"),
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
         )
-        >> 8
         == 0
     ):
         sys.stdout.write("Restarting Apache...")
         sys.stdout.flush()
         show_success(
-            os.system(  # nosec
-                init_cmd(version_info, version_info.APACHE_INIT_NAME, "restart") + " >/dev/null"
+            subprocess.call(
+                init_cmd(version_info, version_info.APACHE_INIT_NAME, "restart"),
+                stdout=subprocess.DEVNULL,
             )
-            >> 8
         )

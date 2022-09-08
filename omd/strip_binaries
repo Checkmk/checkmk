@@ -21,7 +21,7 @@ option to exclude some files from stripping.
 import argparse
 import stat
 import struct
-import subprocess  # nosec
+import subprocess
 import sys
 from pathlib import Path
 from typing import Iterator, Sequence
@@ -151,7 +151,7 @@ DONT_STRIP = {
 
 def strip(args: list[str], file: Path) -> None:
     if file.name not in DONT_STRIP:
-        subprocess.run(["/usr/bin/strip"] + args + [str(file)], check=True)  # nosec
+        subprocess.run(["/usr/bin/strip"] + args + [str(file)], check=True)
 
 
 def main(args: Sequence[str]) -> int:

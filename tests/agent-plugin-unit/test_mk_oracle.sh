@@ -24,6 +24,8 @@ oneTimeSetUp () {
     # shellcheck disable=SC1090
     MK_SOURCE_ONLY=true . "$MK_ORACLE_PLUGIN_PATH"
 
+    pwd() { echo "check_mk_agent/plugins"; }
+
     set_os_env
 
     # Overwrite functions from mk_oracle which cannot/won't be unit tested for now

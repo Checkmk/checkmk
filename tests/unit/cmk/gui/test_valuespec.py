@@ -3,17 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import base64
-import hashlib
 from contextlib import nullcontext
 from enum import Enum
 
 import pytest
 
 from tests.testlib import on_time
-
-import cmk.utils.paths
-from cmk.utils.encryption import Encrypter
 
 import cmk.gui.valuespec as vs
 from cmk.gui.config import active_config
@@ -283,14 +278,6 @@ class TestOptional:
         assert opt_vs.transform_value({"a": "text", "b": 10}) == {"a": "text", "b": 20}
 
 
-@pytest.fixture()
-def fixture_auth_secret():
-    secret_path = cmk.utils.paths.omd_root / "etc" / "auth.secret"
-    secret_path.parent.mkdir(parents=True, exist_ok=True)
-    with secret_path.open("wb") as f:
-        f.write(b"auth-secret")
-
-
 def test_password_from_html_vars_empty(request_context) -> None:  # type:ignore[no-untyped-def]
     html.request.set_var("pw_orig", "")
     html.request.set_var("pw", "")
@@ -302,38 +289,6 @@ def test_password_from_html_vars_empty(request_context) -> None:  # type:ignore[
 def test_password_from_html_vars_not_set(request_context) -> None:  # type:ignore[no-untyped-def]
     pw = vs.Password()
     assert pw.from_html_vars("pw") == ""
-
-
-@pytest.mark.usefixtures("fixture_auth_secret")
-def test_password_from_html_vars_initial_pw(request_context) -> None:  # type:ignore[no-untyped-def]
-    html.request.set_var("pw_orig", "")
-    html.request.set_var("pw", "abc")
-    pw = vs.Password()
-    assert pw.from_html_vars("pw") == "abc"
-
-
-@pytest.mark.skipif(
-    not hasattr(hashlib, "scrypt"), reason="OpenSSL version too old, must be >= 1.1"
-)
-@pytest.mark.usefixtures("fixture_auth_secret")
-def test_password_from_html_vars_unchanged_pw(  # type:ignore[no-untyped-def]
-    request_context,
-) -> None:
-    html.request.set_var("pw_orig", base64.b64encode(Encrypter.encrypt("abc")).decode("ascii"))
-    html.request.set_var("pw", "")
-    pw = vs.Password()
-    assert pw.from_html_vars("pw") == "abc"
-
-
-@pytest.mark.skipif(
-    not hasattr(hashlib, "scrypt"), reason="OpenSSL version too old, must be >= 1.1"
-)
-@pytest.mark.usefixtures("fixture_auth_secret")
-def test_password_from_html_vars_change_pw(request_context) -> None:  # type:ignore[no-untyped-def]
-    html.request.set_var("pw_orig", base64.b64encode(Encrypter.encrypt("abc")).decode("ascii"))
-    html.request.set_var("pw", "xyz")
-    pw = vs.Password()
-    assert pw.from_html_vars("pw") == "xyz"
 
 
 class ValueType(Enum):

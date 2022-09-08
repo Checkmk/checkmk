@@ -52,6 +52,7 @@ from cmk.utils.site import omd_site
 from cmk.utils.store.host_storage import (
     ABCHostsStorage,
     apply_hosts_file_to_object,
+    FolderAttributes,
     get_all_storage_readers,
     get_host_storage_loaders,
     get_hosts_file_variables,
@@ -1375,9 +1376,10 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
         call_hook_hosts_changed(self)
 
-    def _save_hosts_file(self):  # pylint: disable=too-many-branches
+    def _save_hosts_file(self) -> None:  # pylint: disable=too-many-branches
         store.makedirs(self.filesystem_path())
-        if not self.has_hosts():
+        exposed_folder_attributes_for_base = self._folder_attributes_for_base_config()
+        if not self.has_hosts() and not exposed_folder_attributes_for_base:
             for storage in get_all_storage_readers():
                 storage.remove(Path(self.hosts_file_path_without_extension()))
             return
@@ -1492,6 +1494,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             ),
             explicit_host_conf=explicit_host_conf,
             host_attributes=cleaned_hosts,
+            folder_attributes=exposed_folder_attributes_for_base,
         )
 
         storage_list: List[ABCHostsStorage] = [StandardHostsStorage()]
@@ -1506,6 +1509,18 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                 data,
                 get_value_formatter(),
             )
+
+    def _folder_attributes_for_base_config(self) -> dict[str, FolderAttributes]:
+        # TODO:
+        # At this time, this is the only attribute there is, at it only exists in the CEE.
+        # This functionality should be moved to CEE specific code!
+        if "bake_agent_package" in self._attributes:
+            return {
+                self.path_for_rule_matching(): {
+                    "bake_agent_package": bool(self._attributes["bake_agent_package"]),
+                },
+            }
+        return {}
 
     def _get_alias_from_extra_conf(self, host_name, variables):
         aliases = self._host_extra_conf(host_name, variables["extra_host_conf"]["alias"])
@@ -2278,6 +2293,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         new_subfolder = Folder(name, parent_folder=self, title=title, attributes=attributes)
         self._subfolders[name] = new_subfolder
         new_subfolder.save()
+        new_subfolder.save_hosts()
         add_change(
             "new-folder",
             _("Created new folder %s") % new_subfolder.alias_path(),

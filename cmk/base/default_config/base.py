@@ -11,6 +11,7 @@ from typing import Literal as _Literal
 from typing import Optional as _Optional
 
 from cmk.utils.password_store import Password
+from cmk.utils.store.host_storage import FolderAttributes
 from cmk.utils.type_defs import (
     CheckPluginNameStr,
     Contact,
@@ -280,6 +281,7 @@ service_tag_rules: Ruleset = []
 # Rulesets for agent bakery
 agent_config: dict[str, Ruleset] = {}
 bake_agents_on_restart = False
+folder_attributes: dict[str, FolderAttributes] = {}
 
 # BEGIN Kept for compatibility, but are deprecated and not used anymore
 extra_summary_host_conf: _Dict = {}

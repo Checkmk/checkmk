@@ -2,6 +2,12 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import time
+from enum import IntEnum, unique
+from typing import Any, Final, Mapping, MutableMapping, Optional, Sequence, Union
+
+from .agent_based_api.v1 import get_rate, get_value_store, IgnoreResultsError, register, type_defs
+from .utils import diskstat
 
 # Example output from agent
 # <<<winperf_phydisk>>>
@@ -39,11 +45,6 @@
 # 1248 2664021277 2664021277 type(40030500)
 # 1250 1330 1330 counter
 
-import time
-from typing import Any, Dict, Mapping, MutableMapping, Optional, Sequence
-
-from .agent_based_api.v1 import get_rate, get_value_store, IgnoreResultsError, register, type_defs
-from .utils import diskstat
 
 _LINE_TO_METRIC = {
     "-14": "read_throughput",
@@ -56,53 +57,118 @@ _LINE_TO_METRIC = {
     "-26": "average_write_wait",
 }
 
+DiskType = dict[str, Union[int, float]]
+SectionsType = dict[str, DiskType]
+
+
+@unique
+class TableRows(IntEnum):
+    HEADER = 0
+    INSTANCES = 1
+    DATA = 2
+
+
+@unique
+class DataRowIndex(IntEnum):
+    METRIC = 0
+    METRIC_TYPE = -1
+
+
+@unique
+class HeaderRowIndex(IntEnum):
+    TIMESTAMP = 0
+    FREQUENCY = 2
+
+
+# index row
+@unique
+class InstancesRowIndex(IntEnum):
+    ID = 1
+    FIRST_DISK = 2
+
 
 def parse_winperf_phydisk(string_table: type_defs.StringTable) -> Optional[diskstat.Section]:
+    if _is_data_absent(string_table):
+        return None
+    instances = string_table[TableRows.INSTANCES]
+    if instances[InstancesRowIndex.ID] != "instances:":
+        return {}
 
-    section: Dict[str, Dict[str, float]] = {}
+    disk_template: Final = _create_disk_template(string_table[TableRows.HEADER])
+    sections: Final = _create_sections(instances, disk_template)
+    for data_row in string_table[TableRows.DATA :]:
+        _update_sections(sections, data_row)
+    return sections
 
+
+def _is_data_absent(data_table: type_defs.StringTable) -> bool:
     # In case disk performance counters are not enabled, the agent sends
     # an almost empty section, where the second line is missing completely
-    if len(string_table) == 1:
-        return None
+    return len(data_table) <= 1
 
-    first_line = string_table[0]
-    disk_template = {
-        "timestamp": float(first_line[0]),
-    }
+
+def _create_disk_template(header_row: Sequence[str]) -> DiskType:
+    timestamp, frequency = _parse_header(header_row)
+    disk_template = {"timestamp": timestamp}
+    if frequency is not None:
+        disk_template["frequency"] = frequency
+    return disk_template
+
+
+def _parse_header(header_row: Sequence[str]) -> tuple[float, Optional[int]]:
+    timestamp = float(header_row[HeaderRowIndex.TIMESTAMP])
     try:
-        disk_template["frequency"] = int(first_line[2])
+        return timestamp, int(header_row[HeaderRowIndex.FREQUENCY])
     except IndexError:
-        pass
+        return timestamp, None
 
-    instances_line = string_table[1]
-    if instances_line[1] == "instances:":
-        for disk_id_str in instances_line[2:-1]:
-            disk_id = disk_id_str.split("_")
-            new_disk = disk_template.copy()
-            if disk_id[-1] in section:
-                section["%s_%s" % (disk_id[-1], disk_id[0])] = new_disk
-            else:
-                section[disk_id[-1]] = new_disk
-    else:
-        return section
 
-    for line in string_table[2:]:
+def _create_sections(instances: Sequence[str], disk_template: DiskType) -> SectionsType:
+    sections: SectionsType = {}
+    # Example of instances
+    # From Agent we get:  "3 instances: 0_C: 1_F: _Total\n"
+    # Parser does this:  ['3','instances:','0_C','1_F','_Total']
+    disk_labels = [disk_str.split("_") for disk_str in instances[InstancesRowIndex.FIRST_DISK : -1]]
+    for disk_num, disk_name in disk_labels:
+        new_disk = disk_template.copy()
+        if disk_name in sections:
+            # Disk exists(strange!): write full disk id but reversed: not "C", but "C_1" or "C_0"
+            sections[f"{disk_num}_{disk_name}"] = new_disk  # TODO(jh): Reversed? Explain, pls
+        else:
+            sections[disk_name] = new_disk
+    return sections
 
-        metric = _LINE_TO_METRIC.get(line[0])
-        if not metric:
-            continue
 
-        if metric.startswith("average") and line[-1] == "average_base":
-            metric += "_base"
+def _update_sections(sections: SectionsType, row: Sequence[str]) -> None:
+    metric_name = _get_metric_name(row)
+    if metric_name is None:
+        return
 
-        for disk, val in zip(
-            iter(section.values()),
-            iter(map(int, line[1:-2])),
+    # TABLE format:
+    # metric disk1 ... diskN total type            <-- from header(approximately)
+    # 1170   14    ... 11    334   type(550500)    <-- row 1
+    # ...
+    # -26    334   ... 999   1001  average_timer   <-- row N
+    # -26    3     ... 9     14    average_base    <-- row N
+    # ...
+    # The data are located in row[1:-2] on per-disk base
+    for disk, value in zip(
+        iter(sections.values()),
+        iter(map(int, row[1:-2])),
+    ):
+        disk[metric_name] = value
+
+
+def _get_metric_name(data_row: Sequence[str]) -> Optional[str]:
+    if metric_name := _LINE_TO_METRIC.get(data_row[DataRowIndex.METRIC]):
+        if (
+            metric_name.startswith("average")
+            and data_row[DataRowIndex.METRIC_TYPE] == "average_base"
         ):
-            disk[metric] = val
+            metric_name += "_base"
+        return metric_name
 
-    return section
+    return None
 
 
 register.agent_section(
@@ -241,7 +307,7 @@ def cluster_check_winperf_phydisk(
 ) -> type_defs.CheckResult:
     # We potentially overwrite a disk from an earlier section with a disk with the same name from a
     # later section
-    disks_merged: Dict[str, diskstat.Disk] = {}
+    disks_merged: dict[str, diskstat.Disk] = {}
     for node_section in section.values():
         disks_merged.update(node_section or {})
 

@@ -1397,7 +1397,6 @@ def _check_preview_table_row(
         service,
         plugin,
         value_store_manager=value_store_manager,
-        rtc_package=None,
     ).result
 
     return _make_check_preview_entry(

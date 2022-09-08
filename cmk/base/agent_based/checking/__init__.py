@@ -30,7 +30,6 @@ from cmk.utils.log import console
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import (
-    AgentRawData,
     CheckPluginName,
     EVERYTHING,
     ExitSpec,
@@ -236,7 +235,6 @@ def _execute_checkmk_checks(
             services=services,
             run_plugin_names=run_plugin_names,
             submitter=submitter,
-            rtc_package=None,
         )
         if run_plugin_names is EVERYTHING:
             inventory.do_inventory_actions_during_checking_for(
@@ -347,7 +345,6 @@ def check_host_services(
     services: Sequence[ConfiguredService],
     run_plugin_names: Container[CheckPluginName],
     submitter: Submitter,
-    rtc_package: Optional[AgentRawData],
 ) -> Sequence[_AggregatedResult]:
     """Compute service state results for all given services on node or cluster
 
@@ -366,7 +363,6 @@ def check_host_services(
                     service,
                     agent_based_register.get_check_plugin(service.check_plugin_name),
                     value_store_manager=value_store_manager,
-                    rtc_package=rtc_package,
                 )
                 for service in _filter_services_to_check(
                     services=services,
@@ -425,7 +421,6 @@ def get_aggregated_result(
     service: ConfiguredService,
     plugin: Optional[checking_classes.CheckPlugin],
     *,
-    rtc_package: Optional[AgentRawData],
     value_store_manager: value_store.ValueStoreManager,
 ) -> _AggregatedResult:
     """Run the check function and aggregate the subresults
@@ -514,7 +509,6 @@ def get_aggregated_result(
                 plugin_name=service.check_plugin_name,
                 plugin_kwargs={**item_kw, **params_kw, **section_kws},
                 is_enforced=service.id() in table,
-                rtc_package=rtc_package,
             ),
         )
 

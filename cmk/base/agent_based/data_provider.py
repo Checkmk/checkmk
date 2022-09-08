@@ -124,7 +124,6 @@ class SectionsParser:
                     section_name=section.name,
                     section_content=raw_data,
                     host_name=self._host_name,
-                    rtc_package=None,
                 )
             )
             return None

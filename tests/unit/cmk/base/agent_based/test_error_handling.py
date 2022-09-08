@@ -55,7 +55,6 @@ def test_MKTimeout_exception_returns_2(  # type:ignore[no-untyped-def]
         host_config=host_config,
         service_name="service_name",
         plugin_name="pluging_name",
-        rtc_package=None,
         keepalive=False,
     )
     error_handling._handle_output(
@@ -76,7 +75,6 @@ def test_MKAgentError_exception_returns_2(  # type:ignore[no-untyped-def]
         host_config=host_config,
         service_name="service_name",
         plugin_name="pluging_name",
-        rtc_package=None,
         keepalive=False,
     )
     error_handling._handle_output(
@@ -97,7 +95,6 @@ def test_MKGeneralException_returns_3(  # type:ignore[no-untyped-def]
         host_config=host_config,
         service_name="service_name",
         plugin_name="pluging_name",
-        rtc_package=None,
         keepalive=False,
     )
     error_handling._handle_output(
@@ -119,7 +116,6 @@ def test_unhandled_exception_returns_3(  # type:ignore[no-untyped-def]
         host_config=host_config,
         service_name="service_name",
         plugin_name="pluging_name",
-        rtc_package=None,
         keepalive=False,
     )
     error_handling._handle_output(

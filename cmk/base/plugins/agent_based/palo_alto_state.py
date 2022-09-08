@@ -7,8 +7,9 @@
 from dataclasses import dataclass
 from typing import Mapping
 
-from .agent_based_api.v1 import contains, register, Result, Service, SNMPTree, State
+from .agent_based_api.v1 import register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.palo_alto import DETECT_PALO_ALTO
 
 
 @dataclass(frozen=True)
@@ -26,7 +27,7 @@ def parse(string_table: StringTable) -> SectionPaloAlto | None:
 register.snmp_section(
     name="palo_alto",
     parse_function=parse,
-    detect=contains(".1.3.6.1.2.1.1.2.0", "25461"),
+    detect=DETECT_PALO_ALTO,
     fetch=SNMPTree(
         ".1.3.6.1.4.1.25461.2.1.2.1",
         [

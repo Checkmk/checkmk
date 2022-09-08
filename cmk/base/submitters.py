@@ -116,7 +116,7 @@ class Submittee(NamedTuple):
     pending: bool
 
 
-class _FormattedSubmittee(NamedTuple):
+class FormattedSubmittee(NamedTuple):
     name: ServiceName
     state: ServiceState
     details: ServiceDetails
@@ -140,7 +140,7 @@ class Submitter(abc.ABC):
     def submit(self, submittees: Iterable[Submittee]) -> None:
         formatted_submittees = [
             (
-                _FormattedSubmittee(
+                FormattedSubmittee(
                     name=s.name,
                     state=s.result.state,
                     details="%s|%s"
@@ -163,12 +163,12 @@ class Submitter(abc.ABC):
         self._submit((submittee for submittee, pending in formatted_submittees if not pending))
 
     @abc.abstractmethod
-    def _submit(self, formatted_submittees: Iterable[_FormattedSubmittee]) -> None:
+    def _submit(self, formatted_submittees: Iterable[FormattedSubmittee]) -> None:
         ...
 
 
 class NoOpSubmitter(Submitter):
-    def _submit(self, formatted_submittees: Iterable[_FormattedSubmittee]) -> None:
+    def _submit(self, formatted_submittees: Iterable[FormattedSubmittee]) -> None:
         pass
 
 
@@ -199,7 +199,7 @@ class PipeSubmitter(Submitter):
 
         return cls._nagios_command_pipe
 
-    def _submit(self, formatted_submittees: Iterable[_FormattedSubmittee]) -> None:
+    def _submit(self, formatted_submittees: Iterable[FormattedSubmittee]) -> None:
         if not (pipe := PipeSubmitter._open_command_pipe()):
             return
 
@@ -250,7 +250,7 @@ class FileSubmitter(Submitter):
 
     _names = _RandomNameSequence()
 
-    def _submit(self, formatted_submittees: Iterable[_FormattedSubmittee]) -> None:
+    def _submit(self, formatted_submittees: Iterable[FormattedSubmittee]) -> None:
 
         now = time.time()
 
@@ -310,7 +310,7 @@ class FileSubmitter(Submitter):
 
 
 def _output_check_result(
-    submittee: _FormattedSubmittee,
+    submittee: FormattedSubmittee,
     *,
     show_perfdata: bool,
     pending: bool,

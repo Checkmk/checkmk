@@ -1291,6 +1291,7 @@ if '-d' in sys.argv:
         "                dry_run=False,\n"
         "                show_perfdata=False,\n"
         '                perfdata_format="standard",\n'
+        "                active_check_handler=lambda *args: None,\n"
         "                keepalive=False,\n"
         "            )\n"
         "        )\n"

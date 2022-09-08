@@ -8,6 +8,7 @@ from collections import defaultdict
 from contextlib import suppress
 from functools import partial
 from typing import (
+    Callable,
     Container,
     DefaultDict,
     Iterable,
@@ -100,6 +101,7 @@ def active_check_checking(
     fetched: Sequence[Tuple[Source, FetcherMessage]],
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
     selected_sections: SectionNameCollection = NO_SELECTION,
+    active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,
 ) -> ServiceState:
     """
@@ -121,6 +123,7 @@ def active_check_checking(
         host_config=host_config,
         service_name="Check_MK",
         plugin_name="mk",
+        active_check_handler=active_check_handler,
         keepalive=keepalive,
     )
 
@@ -132,6 +135,7 @@ def commandline_checking(
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
     selected_sections: SectionNameCollection = NO_SELECTION,
     submitter: Submitter,
+    active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,
 ) -> ServiceState:
     # The error handling is required for the Nagios core.
@@ -148,6 +152,7 @@ def commandline_checking(
         host_config=host_config,
         service_name="Check_MK",
         plugin_name="mk",
+        active_check_handler=active_check_handler,
         keepalive=keepalive,
     )
 

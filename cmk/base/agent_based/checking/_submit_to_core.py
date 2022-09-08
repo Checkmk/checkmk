@@ -83,7 +83,7 @@ def get_submitter(
     keepalive: KeepaliveAPI,
 ) -> Submitter:
     if dry_run:
-        return NoOpSubmitter(
+        return _NoOpSubmitter(
             host_name,
             dry_run=dry_run,
             perfdata_format=perfdata_format,
@@ -91,7 +91,7 @@ def get_submitter(
         )
 
     if keepalive.enabled():
-        return KeepaliveSubmitter(
+        return _KeepaliveSubmitter(
             host_name,
             keepalive,
             dry_run=dry_run,
@@ -100,7 +100,7 @@ def get_submitter(
         )
 
     if check_submission == "pipe" or monitoring_core == "cmc":
-        return PipeSubmitter(
+        return _PipeSubmitter(
             host_name,
             dry_run=dry_run,
             perfdata_format=perfdata_format,
@@ -108,7 +108,7 @@ def get_submitter(
         )
 
     if check_submission == "file":
-        return FileSubmitter(
+        return _FileSubmitter(
             host_name,
             dry_run=dry_run,
             perfdata_format=perfdata_format,
@@ -176,12 +176,12 @@ class Submitter(abc.ABC):
         ...
 
 
-class NoOpSubmitter(Submitter):
+class _NoOpSubmitter(Submitter):
     def _submit(self, formatted_submittees: Iterable[_FormattedSubmittee]) -> None:
         pass
 
 
-class KeepaliveSubmitter(Submitter):
+class _KeepaliveSubmitter(Submitter):
     def __init__(
         self,
         host_name: HostName,
@@ -202,7 +202,7 @@ class KeepaliveSubmitter(Submitter):
             self._keepalive.add_check_result(self.host_name, *s)
 
 
-class PipeSubmitter(Submitter):
+class _PipeSubmitter(Submitter):
 
     # Filedescriptor to open nagios command pipe.
     _nagios_command_pipe: Literal[False] | IO[bytes] | None = None
@@ -230,7 +230,7 @@ class PipeSubmitter(Submitter):
         return cls._nagios_command_pipe
 
     def _submit(self, formatted_submittees: Iterable[_FormattedSubmittee]) -> None:
-        if not (pipe := PipeSubmitter._open_command_pipe()):
+        if not (pipe := _PipeSubmitter._open_command_pipe()):
             return
 
         for service, state, output, _cache_info in formatted_submittees:
@@ -276,7 +276,7 @@ class _RandomNameSequence:
         return "".join(letters)
 
 
-class FileSubmitter(Submitter):
+class _FileSubmitter(Submitter):
 
     _names = _RandomNameSequence()
 

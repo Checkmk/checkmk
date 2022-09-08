@@ -68,9 +68,9 @@ from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.check_utils import ConfiguredService, LegacyCheckParameters
 from cmk.base.config import ConfigCache, HostConfig
 from cmk.base.sources import fetch_all, make_sources, Source
-from cmk.base.submitters import Submittee, Submitter
 
-from . import _cluster_modes
+from . import _cluster_modes, _submit_to_core
+from ._submit_to_core import Submitter
 
 
 class _AggregatedResult(NamedTuple):
@@ -367,7 +367,9 @@ def check_host_services(
     if submittables:
         submitter.submit(
             submittees=[
-                Submittee(s.service.description, s.result, s.cache_info, pending=not s.submit)
+                _submit_to_core.Submittee(
+                    s.service.description, s.result, s.cache_info, pending=not s.submit
+                )
                 for s in submittables
             ],
         )

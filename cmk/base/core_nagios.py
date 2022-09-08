@@ -1183,7 +1183,7 @@ if os.path.islink(%(dst)r):
     output.write("import cmk.base.agent_based.checking as checking\n")
     output.write("import cmk.base.check_api as check_api\n")
     output.write("from cmk.base.no_keepalive import NO_KEEPALIVE\n")
-    output.write("from cmk.base.submitters import get_submitter\n")
+    output.write("from cmk.base.agent_based.checking._submit_to_core import get_submitter\n")
     output.write("import cmk.base.ip_lookup as ip_lookup\n")  # is this still needed?
     output.write("\n")
     for module in _get_needed_agent_based_modules(

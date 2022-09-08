@@ -372,7 +372,20 @@ def test_perform_discovery_single_update(
                     },
                     description="Check_MK Agent",
                     state=1,
-                    output='Version: 2022.05.23, OS: linux, TLS is not activated on monitored host (see details)(!), Agent plugins: 0, Local checks: 0\nVersion: 2022.05.23\nOS: linux\nThe hosts agent supports TLS, but it is not being used.\nWe strongly recommend to enable TLS by registering the host to the site (using the `cmk-agent-ctl register` command on the monitored host).\nNOTE: A registered host will refuse all unencrypted connections. If the host is monitored by multiple sites, you must register to all of them. This can be problematic if you are monitoring the same host from a site running Checkmk version 2.0 or earlier.\nIf you can not register the host, you can configure missing TLS to be OK in the setting "State in case of available but not enabled TLS" of the ruleset "Checkmk Agent installation auditing".(!)\nAgent plugins: 0\nLocal checks: 0',
+                    output=(
+                        "Version: 2022.05.23, OS: linux, TLS is not activated on monitored host"
+                        " (see details)(!), Agent plugins: 0, Local checks: 0\nVersion:"
+                        " 2022.05.23\nOS: linux\nThe hosts agent supports TLS, but it is not"
+                        " being used.\nWe strongly recommend to enable TLS by registering the host"
+                        " to the site (using the `cmk-agent-ctl register` command on the monitored"
+                        " host).\nNOTE: A registered host will refuse all unencrypted connections."
+                        " If the host is monitored by multiple sites, you must register to all of"
+                        " them. This can be problematic if you are monitoring the same host from a"
+                        " site running Checkmk version 2.0 or earlier.\nIf you can not register"
+                        ' the host, you can configure missing TLS to be OK in the setting "State'
+                        ' in case of available but not enabled TLS" of the ruleset "Checkmk Agent'
+                        ' installation auditing".(!)\nAgent plugins: 0\nLocal checks: 0'
+                    ),
                     metrics=[],
                     labels={},
                     found_on_nodes=["TODAY"],
@@ -395,7 +408,19 @@ def test_perform_discovery_single_update(
                     },
                     description="Memory",
                     state=0,
-                    output="Total virtual memory: 23.14% - 7.41 GB of 32.04 GB\nTotal virtual memory: 23.14% - 7.41 GB of 32.04 GB\nRAM: 23.72% - 7.37 GB of 31.08 GB\nSwap: 4.07% - 39.75 MB of 976.00 MB\nCommitted: 65.38% - 20.95 GB of 32.04 GB virtual memory\nCommit Limit: 48.51% - 15.54 GB of 32.04 GB virtual memory\nShared memory: 6.66% - 2.07 GB of 31.08 GB RAM\nPage tables: 0.22% - 71.04 MB of 31.08 GB RAM\nDisk Writeback: 0.008% - 2.50 MB of 31.08 GB RAM\nRAM available: 67.55% free - 21.00 GB of 31.08 GB\nHardware Corrupted: 0% - 0.00 B of 31.08 GB RAM",
+                    output=(
+                        "Total virtual memory: 23.14% - 7.41 GB of 32.04 GB\n"
+                        "Total virtual memory: 23.14% - 7.41 GB of 32.04 GB\n"
+                        "RAM: 23.72% - 7.37 GB of 31.08 GB\n"
+                        "Swap: 4.07% - 39.75 MB of 976.00 MB\n"
+                        "Committed: 65.38% - 20.95 GB of 32.04 GB virtual memory\n"
+                        "Commit Limit: 48.51% - 15.54 GB of 32.04 GB virtual memory\n"
+                        "Shared memory: 6.66% - 2.07 GB of 31.08 GB RAM\n"
+                        "Page tables: 0.22% - 71.04 MB of 31.08 GB RAM\n"
+                        "Disk Writeback: 0.008% - 2.50 MB of 31.08 GB RAM\n"
+                        "RAM available: 67.55% free - 21.00 GB of 31.08 GB\n"
+                        "Hardware Corrupted: 0% - 0.00 B of 31.08 GB RAM"
+                    ),
                     metrics=[],
                     labels={},
                     found_on_nodes=["TODAY"],
@@ -447,7 +472,20 @@ def test_perform_discovery_single_update(
                 },
                 description="Check_MK Agent",
                 state=1,
-                output='Version: 2022.05.23, OS: linux, TLS is not activated on monitored host (see details)(!), Agent plugins: 0, Local checks: 0\nVersion: 2022.05.23\nOS: linux\nThe hosts agent supports TLS, but it is not being used.\nWe strongly recommend to enable TLS by registering the host to the site (using the `cmk-agent-ctl register` command on the monitored host).\nNOTE: A registered host will refuse all unencrypted connections. If the host is monitored by multiple sites, you must register to all of them. This can be problematic if you are monitoring the same host from a site running Checkmk version 2.0 or earlier.\nIf you can not register the host, you can configure missing TLS to be OK in the setting "State in case of available but not enabled TLS" of the ruleset "Checkmk Agent installation auditing".(!)\nAgent plugins: 0\nLocal checks: 0',
+                output=(
+                    "Version: 2022.05.23, OS: linux, TLS is not activated on monitored host"
+                    " (see details)(!), Agent plugins: 0, Local checks: 0\nVersion: 2022.05.23\n"
+                    "OS: linux\nThe hosts agent supports TLS, but it is not being used.\n"
+                    "We strongly recommend to enable TLS by registering the host to the site"
+                    " (using the `cmk-agent-ctl register` command on the monitored host).\n"
+                    "NOTE: A registered host will refuse all unencrypted connections. If the"
+                    " host is monitored by multiple sites, you must register to all of them."
+                    " This can be problematic if you are monitoring the same host from a site"
+                    " running Checkmk version 2.0 or earlier.\nIf you can not register the host,"
+                    ' you can configure missing TLS to be OK in the setting "State in case of'
+                    ' available but not enabled TLS" of the ruleset "Checkmk Agent installation'
+                    ' auditing".(!)\nAgent plugins: 0\nLocal checks: 0'
+                ),
                 metrics=[],
                 labels={},
                 found_on_nodes=["TODAY"],
@@ -470,7 +508,19 @@ def test_perform_discovery_single_update(
                 },
                 description="Memory",
                 state=0,
-                output="Total virtual memory: 23.14% - 7.41 GB of 32.04 GB\nTotal virtual memory: 23.14% - 7.41 GB of 32.04 GB\nRAM: 23.72% - 7.37 GB of 31.08 GB\nSwap: 4.07% - 39.75 MB of 976.00 MB\nCommitted: 65.38% - 20.95 GB of 32.04 GB virtual memory\nCommit Limit: 48.51% - 15.54 GB of 32.04 GB virtual memory\nShared memory: 6.66% - 2.07 GB of 31.08 GB RAM\nPage tables: 0.22% - 71.04 MB of 31.08 GB RAM\nDisk Writeback: 0.008% - 2.50 MB of 31.08 GB RAM\nRAM available: 67.55% free - 21.00 GB of 31.08 GB\nHardware Corrupted: 0% - 0.00 B of 31.08 GB RAM",
+                output=(
+                    "Total virtual memory: 23.14% - 7.41 GB of 32.04 GB\n"
+                    "Total virtual memory: 23.14% - 7.41 GB of 32.04 GB\n"
+                    "RAM: 23.72% - 7.37 GB of 31.08 GB\n"
+                    "Swap: 4.07% - 39.75 MB of 976.00 MB\n"
+                    "Committed: 65.38% - 20.95 GB of 32.04 GB virtual memory\n"
+                    "Commit Limit: 48.51% - 15.54 GB of 32.04 GB virtual memory\n"
+                    "Shared memory: 6.66% - 2.07 GB of 31.08 GB RAM\n"
+                    "Page tables: 0.22% - 71.04 MB of 31.08 GB RAM\n"
+                    "Disk Writeback: 0.008% - 2.50 MB of 31.08 GB RAM\n"
+                    "RAM available: 67.55% free - 21.00 GB of 31.08 GB\n"
+                    "Hardware Corrupted: 0% - 0.00 B of 31.08 GB RAM"
+                ),
                 metrics=[],
                 labels={},
                 found_on_nodes=["TODAY"],

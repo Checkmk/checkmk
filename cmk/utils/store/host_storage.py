@@ -67,11 +67,16 @@ def get_hosts_file_variables():
         "explicit_host_conf": {},
         "extra_host_conf": {"alias": []},
         "extra_service_conf": {"_WATO": []},
+        "folder_attributes": {},
         "host_attributes": {},
         "host_contactgroups": [],
         "service_contactgroups": [],
         "_lock": False,
     }
+
+
+class FolderAttributes(TypedDict):
+    bake_agent_package: bool
 
 
 class ContactGroupsField(TypedDict):
@@ -93,6 +98,7 @@ class HostsStorageData:
     contact_groups: ContactGroupsField
     explicit_host_conf: Dict[str, Dict[HostName, Any]]
     host_attributes: Dict[HostName, Any]
+    folder_attributes: Dict[str, FolderAttributes]
 
 
 class HostsStorageFieldsGenerator:
@@ -240,6 +246,7 @@ class StandardHostsStorage(ABCHostsStorage[str]):
         # TODO: discuss. cmk.base also parses host_attributes. ipaddresses, mgmtboard, etc.
         out.write("\n# Host attributes (needed for WATO)")
         out.write("\nhost_attributes.update(%s)\n" % value_formatter(data.host_attributes))
+        out.write("\nfolder_attributes.update(%s)\n" % value_formatter(data.folder_attributes))
 
         # final
         store.save_text_to_file(file_path, host_storage_fileheader() + out.getvalue())
@@ -401,6 +408,7 @@ class ExperimentalStorageLoader(ABCHostsStorageLoader[HostsData]):
             "management_snmp_credentials",
             "management_protocol",
             "host_attributes",
+            "folder_attributes",
         ]:
             global_dict[key].update(data.get(key, {}))
 

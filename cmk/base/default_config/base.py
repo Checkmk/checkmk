@@ -10,6 +10,7 @@ from typing import Literal as _Literal
 from typing import Optional as _Optional
 
 from cmk.utils.password_store import Password
+from cmk.utils.store.host_storage import FolderAttributes
 from cmk.utils.type_defs import Ruleset, TagConfigSpec, TagsOfHosts, TimeperiodSpecs
 
 # This file contains the defaults settings for almost all configuration
@@ -264,6 +265,7 @@ service_tag_rules: _List = []
 # Rulesets for agent bakery
 agent_config: _Dict = {}
 bake_agents_on_restart = False
+folder_attributes: dict[str, FolderAttributes] = {}
 
 # Kept for compatibility, but are deprecated and not used anymore
 extra_summary_host_conf: _Dict = {}

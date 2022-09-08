@@ -6,12 +6,20 @@
 from collections import OrderedDict
 from typing import Mapping, Sequence
 
+from pydantic import BaseModel
+
 Section = OrderedDict
-SectionVM = dict[str, list[str]]
 
 CounterValues = Sequence[str]
 SubSectionCounter = Mapping[str, list[tuple[CounterValues, str]]]
 SectionCounter = Mapping[str, SubSectionCounter]
+
+
+class ESXVm(BaseModel):
+    snapshots: Sequence[str]
+
+
+SectionVM = ESXVm | None
 
 
 def average_parsed_data(values: CounterValues) -> float:

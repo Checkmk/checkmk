@@ -2,19 +2,24 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import Dict, List
+
 from .agent_based_api.v1 import HostLabel, register
 from .agent_based_api.v1.type_defs import StringTable
-from .utils.esx_vsphere import SectionVM
+from .utils.esx_vsphere import ESXVm, SectionVM
 
 
 def parse_esx_vsphere_vm(string_table: StringTable) -> SectionVM:
-    section: SectionVM = {}
+    grouped_values: Dict[str, List[str]] = {}
     for line in string_table:
         # Do not monitor VM templates
         if line[0] == "config.template" and line[1] == "true":
-            return {}
-        section[line[0]] = line[1:]
-    return section
+            return None
+        grouped_values[line[0]] = line[1:]
+
+    return ESXVm(
+        snapshots=grouped_values.get("snapshot.rootSnapshotList", []),
+    )
 
 
 def host_label_esx_vshpere_vm(section):

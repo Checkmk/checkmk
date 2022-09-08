@@ -24,14 +24,14 @@ it is enabled and the option {{Visibility of Hosts/Services}} was not enabled,
 the admin could see all hosts/services in the GUI but when executing a CSV
 export he was only getting the hosts/services he is a contact for.
 
-To fix this situation we decided to deprecate the {{Visibility of
-Hosts/Services (Webservice)}} and replace it with a URL variable which
-can be used to filter each page individually. The new URL variable
+To fix this situation we decided to deprecate the
+{{Visibility of Hosts/Services (Webservice)}} and replace it with a URL variable
+which can be used to filter each page individually. The new URL variable
 <tt>force_authuser</tt> can be used on any view and set to:
 
-LI:L<tt>1<tt> to show only the hosts/services the user is a contact for
-LI:L<tt>0<tt> to show all hosts/services
-LI:L<tt>[username]<tt> to show all hosts/services the given user is a contact for
+LI:<tt>1</tt> to show only the hosts/services the user is a contact for
+LI:<tt>0</tt> to show all hosts/services
+LI:{{username}} to show all hosts/services the given user is a contact for
 
 The now deprecated option will still be working as before but you are
 recommended to uncheck the option and use the new mechanism. If you are

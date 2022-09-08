@@ -9,7 +9,7 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.palo_alto import (
+from cmk.base.plugins.agent_based.palo_alto_state import (
     _STATE_MAPPING_DEFAULT,
     check,
     discover,

@@ -139,7 +139,7 @@ def _build(request, client, version, prepare_package=True):
         logger.error("= Build log ==================")
         for entry in e.build_log:
             if "stream" in entry:
-                logger.error(entry["stream"])
+                logger.error(entry["stream"].rstrip())
             elif "errorDetail" in entry:
                 continue  # Is already part of the exception message
             else:

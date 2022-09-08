@@ -82,14 +82,14 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
+from cmk.gui.plugins.watolib.utils import generate_hosts_to_update_settings, SerializedSettings
 from cmk.gui.site_config import allsites, is_wato_slave_site
-from cmk.gui.type_defs import HTTPVariables, SetOnceDict
+from cmk.gui.type_defs import ConfigDomainName, HTTPVariables, SetOnceDict
 from cmk.gui.utils import urls
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import Choices
 from cmk.gui.watolib.changes import add_change
-from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.host_attributes import collect_attributes, host_attribute_registry
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.search import (
@@ -1123,6 +1123,12 @@ def _wato_folders_factory() -> Mapping[PathWithoutSlash, Optional[CREFolder]]:
 
     # Provide a dict where the values are generated on demand
     return WATOFoldersOnDemand({x.rstrip("/"): None for x in wato_redis_client.folder_paths})
+
+
+def _generate_domain_settings(
+    ident: ConfigDomainName, hostnames: Iterable[HostName]
+) -> SerializedSettings:
+    return {ident: generate_hosts_to_update_settings(hostnames)}
 
 
 class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolder):
@@ -2479,9 +2485,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             diff_text=make_diff_text(
                 {}, make_host_audit_log_object(host.attributes(), host.cluster_nodes())
             ),
-            domain_settings=ConfigDomainCore.generate_domain_settings(
-                ConfigDomainCore.ident(), [host_name]
-            ),
+            domain_settings=_generate_domain_settings("check_mk", [host_name]),
         )
 
     def delete_hosts(  # type:ignore[no-untyped-def]
@@ -3278,9 +3282,7 @@ class CREHost(WithPermissions, WithAttributes):
             object_ref=self.object_ref(),
             sites=affected_sites,
             diff_text=make_diff_text(old_object, new_object),
-            domain_settings=ConfigDomainCore.generate_domain_settings(
-                ConfigDomainCore.ident(), [self.name()]
-            ),
+            domain_settings=_generate_domain_settings("check_mk", [self.name()]),
         )
 
     def update_attributes(self, changed_attributes):

@@ -8,11 +8,11 @@ import os
 import pprint
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Type
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Type
 
 import cmk.utils.plugin_registry
 import cmk.utils.store as store
-from cmk.utils.type_defs import ConfigurationWarnings
+from cmk.utils.type_defs import ConfigurationWarnings, HostName
 
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.hooks import request_memoize
@@ -167,6 +167,10 @@ class ConfigDomainRegistry(cmk.utils.plugin_registry.Registry[Type[ABCConfigDoma
 
 
 config_domain_registry = ConfigDomainRegistry()
+
+
+def generate_hosts_to_update_settings(hostnames: Iterable[HostName]) -> SerializedSettings:
+    return {"hosts_to_update": hostnames}
 
 
 class SampleConfigGenerator(abc.ABC):

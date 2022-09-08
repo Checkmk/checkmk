@@ -11,7 +11,7 @@ import subprocess
 import traceback
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -29,7 +29,12 @@ from cmk.gui.config import active_config, get_default_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.plugins.watolib.utils import ABCConfigDomain, DomainRequest, SerializedSettings
+from cmk.gui.plugins.watolib.utils import (
+    ABCConfigDomain,
+    DomainRequest,
+    generate_hosts_to_update_settings,
+    SerializedSettings,
+)
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.type_defs import ConfigDomainName
 from cmk.gui.watolib.audit_log import log_audit
@@ -59,7 +64,7 @@ class ConfigDomainCore(ABCConfigDomain):
         return wato_root_dir()
 
     def activate(self, settings: Optional[SerializedSettings] = None) -> ConfigurationWarnings:
-        # TODO: Cleanup
+        # Import cycle
         from cmk.gui.watolib.check_mk_automations import reload, restart
 
         return {"restart": restart, "reload": reload,}[
@@ -75,20 +80,10 @@ class ConfigDomainCore(ABCConfigDomain):
         return ConfigDomainCoreSettings(**activate_settings)
 
     def default_globals(self):
-        # TODO: Cleanup
+        # Import cycle
         from cmk.gui.watolib.check_mk_automations import get_configuration
 
         return get_configuration(*self._get_global_config_var_names()).result
-
-    @staticmethod
-    def generate_hosts_to_update_settings(hostnames: Iterable[HostName]) -> SerializedSettings:
-        return {"hosts_to_update": hostnames}
-
-    @staticmethod
-    def generate_domain_settings(
-        ident: ConfigDomainName, hostnames: Iterable[HostName]
-    ) -> SerializedSettings:
-        return {ident: ConfigDomainCore.generate_hosts_to_update_settings(hostnames)}
 
     @classmethod
     def get_domain_request(cls, settings: List[SerializedSettings]) -> DomainRequest:
@@ -96,14 +91,10 @@ class ConfigDomainCore(ABCConfigDomain):
         hosts_to_update: Set[HostName] = set()
         for setting in settings:
             if len(setting.get("hosts_to_update", [])) == 0:
-                return DomainRequest(
-                    cls.ident(), ConfigDomainCore.generate_hosts_to_update_settings([])
-                )
+                return DomainRequest(cls.ident(), generate_hosts_to_update_settings([]))
             hosts_to_update.update(setting["hosts_to_update"])
 
-        return DomainRequest(
-            cls.ident(), ConfigDomainCore.generate_hosts_to_update_settings(hosts_to_update)
-        )
+        return DomainRequest(cls.ident(), generate_hosts_to_update_settings(hosts_to_update))
 
 
 class ConfigDomainGUI(ABCConfigDomain):

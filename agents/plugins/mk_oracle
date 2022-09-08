@@ -42,7 +42,7 @@ load_default_config () {
     OLRLOC=/etc/oracle/olr.loc
 }
 
-#.
+# .
 #   .--usage---------------------------------------------------------------.
 #   |                                                                      |
 #   |                     _   _ ___  __ _  __ _  ___                       |
@@ -202,7 +202,7 @@ CONFIGURATION CUSTOM SQLS:
 MK-ORA-USAGE
 }
 
-#.
+# .
 #   .--args----------------------------------------------------------------.
 #   |                                                                      |
 #   |                          __ _ _ __ __ _ ___                          |
@@ -257,7 +257,7 @@ while test -n "$1"; do
     esac
 done
 
-#.
+# .
 #   .--config--------------------------------------------------------------.
 #   |                                      __ _                            |
 #   |                      ___ ___  _ __  / _(_) __ _                      |
@@ -352,7 +352,7 @@ load_config () {
     fi
 }
 
-#.
+# .
 #   .--OS env--------------------------------------------------------------.
 #   |                     ___  ____                                        |
 #   |                    / _ \/ ___|    ___ _ ____   __                    |
@@ -428,7 +428,7 @@ get_file_mtime() {
         perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print $mtime."\n";' "${1}"
 }
 
-#.
+# .
 #   .--logging-------------------------------------------------------------.
 #   |                  _                   _                               |
 #   |                 | | ___   __ _  __ _(_)_ __   __ _                   |
@@ -556,7 +556,7 @@ logging () {
 }
 
 
-#.
+# .
 #   .--ORA env-------------------------------------------------------------.
 #   |                ___  ____      _                                      |
 #   |               / _ \|  _ \    / \      ___ _ ____   __                |
@@ -642,7 +642,7 @@ set_ora_version () {
 
 }
 
-#.
+# .
 #   .--SQL Queries---------------------------------------------------------.
 #   |        ____   ___  _        ___                  _                   |
 #   |       / ___| / _ \| |      / _ \ _   _  ___ _ __(_) ___  ___         |
@@ -2092,7 +2092,7 @@ sql_asm_diskgroup () {
     fi
 }
 
-#.
+# .
 #   .--custom SQL----------------------------------------------------------.
 #   |                       _                    ____   ___  _             |
 #   |         ___ _   _ ___| |_ ___  _ __ ___   / ___| / _ \| |            |
@@ -2291,7 +2291,7 @@ handle_custom_sql_errors () {
     fi
 }
 
-#.
+# .
 #   .--helper--------------------------------------------------------------.
 #   |                    _          _                                      |
 #   |                   | |__   ___| |_ __   ___ _ __                      |
@@ -2390,7 +2390,7 @@ ora_session_environment () {
     echo ' '
 }
 
-#.
+# .
 #   .--run cached----------------------------------------------------------.
 #   |                                           _              _           |
 #   |         _ __ _   _ _ __     ___ __ _  ___| |__   ___  __| |          |
@@ -2472,7 +2472,7 @@ HERE
     unset NAME MAXAGE TIMEOUT REFRESH_INTERVAL CACHEFILE MTIME CACHE_INFO NOW
 }
 
-#.
+# .
 #   .--DB connect----------------------------------------------------------.
 #   |          ____  ____                                    _             |
 #   |         |  _ \| __ )    ___ ___  _ __  _ __   ___  ___| |_           |
@@ -2660,7 +2660,7 @@ mk_ora_db_connect () {
 
 }
 
-#.
+# .
 #   .--mk ora sqlplus------------------------------------------------------.
 #   |            _                                  _       _              |
 #   |  _ __ ___ | | __   ___  _ __ __ _   ___  __ _| |_ __ | |_   _ ___    |
@@ -2725,7 +2725,7 @@ mk_ora_sqlplus () {
     fi
 }
 
-#.
+# .
 #   .--do checks-----------------------------------------------------------.
 #   |                 _              _               _                     |
 #   |              __| | ___     ___| |__   ___  ___| | _____              |
@@ -2891,7 +2891,7 @@ do_checks () {
     fi
 }
 
-#.
+# .
 #   .--main----------------------------------------------------------------.
 #   |                                       _                              |
 #   |                       _ __ ___   __ _(_)_ __                         |
@@ -2915,127 +2915,132 @@ export -f custom_sql_section
 export -f do_async_custom_sqls
 export -f handle_custom_sql_errors
 
-if $MK_ORA_LOGGING; then
-    echo "Start logging to file: $MK_VARDIR/log/mk_oracle.log" >&2
-fi
-
-logging "--------------------------------------------------------------------"
-
-#   ---preliminaries--------------------------------------------------------
-set_os_env
-
-set_up_get_epoch
-
-# Get list of all running databases. Do not work on ASM in this plugin.
-# => Ignore a running ASM-Instance!
-# shellcheck disable=SC2016
-SIDS=$(UNIX95=true ps -ef | "${AWK}" '{print $NF}' |\
-       "${GREP}" -E '^asm_pmon_|^ora_pmon_|^xe_pmon_' |\
-       cut -d"_" -f3- | sort)
-
-# Load config AFTER we got the SIDS since we allow users to use this variable in their config
-load_config
-
-# Are there any remote configurations?
-for remote_instance in $(compgen -A variable | "${GREP}" -E "^REMOTE_INSTANCE_.*"); do
-    REMOTE_INSTANCES="${REMOTE_INSTANCES} ${remote_instance}"
-    # shellcheck disable=SC2005
-    PIGGYBACK_HOSTS="$(echo "$(eval "echo \${$remote_instance}")" | cut -d":" -f6) ${PIGGYBACK_HOSTS}"
-done
-
-PIGGYBACK_HOSTS="$(echo "$PIGGYBACK_HOSTS" | tr ' ' '\n' | sort | uniq)"
-
-logging "[preliminaries]"\
-        "SIDs               : ${SIDS//$'\n'/ }"\
-        "Remote instances   : ${REMOTE_INSTANCES}"\
-        "Piggyback hosts    : ${PIGGYBACK_HOSTS//$'\n'/ }"\
-        "OS                 : ${OS_TYPE}"\
-        "SYNC_SECTIONS      : ${SYNC_SECTIONS}"\
-        "ASYNC_SECTIONS     : ${ASYNC_SECTIONS}"\
-        "SYNC_ASM_SECTIONS  : ${SYNC_ASM_SECTIONS}"\
-        "ASYNC_ASM_SECTIONS : ${ASYNC_ASM_SECTIONS}"\
-        "CACHE_MAXAGE       : ${CACHE_MAXAGE}"\
-        "ONLY_SIDS          : ${ONLY_SIDS}"\
-        "SKIP_SIDS          : ${SKIP_SIDS}"
-
-if [ "$PIGGYBACK_HOSTS" ]; then
-    if [ ! -e "$MK_VARDIR/mk_oracle.found" ]; then
-        touch "$MK_VARDIR/mk_oracle.found"
-    fi
-fi
-
-# If we do not have found any running database instance, then either
-# no ORACLE is present on this system or it's just currently not running.
-# In the later case we ouput empty agent sections so that Checkmk will be
-# happy and execute the actual check functions.
-if [ -z "$SIDS" ] && [ ! -e "$MK_VARDIR/mk_oracle.found" ]; then
-    logging -c -e "[preliminaries]" "No SIDs and \$MK_VARDIR/mk_oracle.found not found"
-    exit 1
-fi
-
-# From now on we expect databases on this system (for ever)
-touch "$MK_VARDIR/mk_oracle.found"
-
-# Make sure that always all sections are present, even
-# in case of an error. Note: the section <<<oracle_instance>>>
-# section shows the general state of a database instance. If
-# that section fails for an instance then all other sections
-# do not contain valid data anyway.
-do_dummy_sections
-
-#   ---local----------------------------------------------------------------
-
-for sid in $SIDS; do
-    skip=$(skip_sid "$sid")
-    if [ "$skip" == "yes" ]; then
-        logging "[${sid}] [local]" "Skipping this SID"
-        continue
+main() {
+    if $MK_ORA_LOGGING; then
+        echo "Start logging to file: $MK_VARDIR/log/mk_oracle.log" >&2
     fi
 
-    set_ora_env "$sid"
-    if [ $? -eq 2 ] ; then
-        # we have to skip this SID due to missing/unknown ORACLE_HOME
-        continue
+    logging "--------------------------------------------------------------------"
+
+    #   ---preliminaries--------------------------------------------------------
+
+    set_os_env
+
+    set_up_get_epoch
+
+    # Get list of all running databases. Do not work on ASM in this plugin.
+    # => Ignore a running ASM-Instance!
+    # shellcheck disable=SC2016
+    SIDS=$(UNIX95=true ps -ef | "${AWK}" '{print $NF}' |\
+           "${GREP}" -E '^asm_pmon_|^ora_pmon_|^xe_pmon_' |\
+           cut -d"_" -f3- | sort)
+
+    # Load config AFTER we got the SIDS since we allow users to use this variable in their config
+    load_config
+
+    # Are there any remote configurations?
+    for remote_instance in $(compgen -A variable | "${GREP}" -E "^REMOTE_INSTANCE_.*"); do
+        REMOTE_INSTANCES="${REMOTE_INSTANCES} ${remote_instance}"
+        # shellcheck disable=SC2005
+        PIGGYBACK_HOSTS="$(echo "$(eval "echo \${$remote_instance}")" | cut -d":" -f6) ${PIGGYBACK_HOSTS}"
+    done
+
+    PIGGYBACK_HOSTS="$(echo "$PIGGYBACK_HOSTS" | tr ' ' '\n' | sort | uniq)"
+
+    logging "[preliminaries]"\
+            "SIDs               : ${SIDS//$'\n'/ }"\
+            "Remote instances   : ${REMOTE_INSTANCES}"\
+            "Piggyback hosts    : ${PIGGYBACK_HOSTS//$'\n'/ }"\
+            "OS                 : ${OS_TYPE}"\
+            "SYNC_SECTIONS      : ${SYNC_SECTIONS}"\
+            "ASYNC_SECTIONS     : ${ASYNC_SECTIONS}"\
+            "SYNC_ASM_SECTIONS  : ${SYNC_ASM_SECTIONS}"\
+            "ASYNC_ASM_SECTIONS : ${ASYNC_ASM_SECTIONS}"\
+            "CACHE_MAXAGE       : ${CACHE_MAXAGE}"\
+            "ONLY_SIDS          : ${ONLY_SIDS}"\
+            "SKIP_SIDS          : ${SKIP_SIDS}"
+
+    if [ "$PIGGYBACK_HOSTS" ]; then
+        if [ ! -e "$MK_VARDIR/mk_oracle.found" ]; then
+            touch "$MK_VARDIR/mk_oracle.found"
+        fi
     fi
-    set_ora_version "$("${ORACLE_HOME}"/bin/sqlplus -V | "${GREP}" ^SQL | cut -d" " -f3 | cut -d"." -f-2)"
-    logging "[${sid}] [local]"\
-            "ORACLE_SID      : ${ORACLE_SID}"\
-            "ORACLE_HOME     : ${ORACLE_HOME}"\
-            "TNS_ADMIN       : ${TNS_ADMIN}"\
-            "LD_LIBRARY_PATH : ${LD_LIBRARY_PATH}"\
-            "ORACLE_VERSION  : ${ORACLE_VERSION} (${NUMERIC_ORACLE_VERSION})"
 
-    # MK_SID is feauture replacement for sid
-    export MK_SID=$sid
-    db_connect=$(mk_ora_db_connect "$MK_SID")
-    export MK_DB_CONNECT=$db_connect
+    # If we do not have found any running database instance, then either
+    # no ORACLE is present on this system or it's just currently not running.
+    # In the later case we ouput empty agent sections so that Checkmk will be
+    # happy and execute the actual check functions.
+    if [ -z "$SIDS" ] && [ ! -e "$MK_VARDIR/mk_oracle.found" ]; then
+        logging -c -e "[preliminaries]" "No SIDs and \$MK_VARDIR/mk_oracle.found not found"
+        exit 1
+    fi
 
-    do_checks
+    # From now on we expect databases on this system (for ever)
+    touch "$MK_VARDIR/mk_oracle.found"
 
-    # MK_DB_CONNECT could be changed by do_custom_sqls!
-    do_custom_sqls
-done
+    # Make sure that always all sections are present, even
+    # in case of an error. Note: the section <<<oracle_instance>>>
+    # section shows the general state of a database instance. If
+    # that section fails for an instance then all other sections
+    # do not contain valid data anyway.
+    do_dummy_sections
 
-#   ---remote---------------------------------------------------------------
+    #   ---local----------------------------------------------------------------
 
-for remote_instance in $REMOTE_INSTANCES; do
-    remote_instance_line=$(eval "echo \${$remote_instance}")
+    for sid in $SIDS; do
+        skip=$(skip_sid "$sid")
+        if [ "$skip" == "yes" ]; then
+            logging "[${sid}] [local]" "Skipping this SID"
+            continue
+        fi
 
-    set_ora_env "$remote_instance"
-    set_ora_version "$(echo "$remote_instance_line" | cut -d":" -f8)"
-    logging "[${remote_instance}] [remote]"\
-            "ORACLE_SID      : ${ORACLE_SID}"\
-            "ORACLE_HOME     : ${ORACLE_HOME}"\
-            "TNS_ADMIN       : ${TNS_ADMIN}"\
-            "LD_LIBRARY_PATH : ${LD_LIBRARY_PATH}"\
-            "ORACLE_VERSION  : ${ORACLE_VERSION} (${NUMERIC_ORACLE_VERSION})"
+        set_ora_env "$sid"
+        if [ $? -eq 2 ] ; then
+            # we have to skip this SID due to missing/unknown ORACLE_HOME
+            continue
+        fi
+        set_ora_version "$("${ORACLE_HOME}"/bin/sqlplus -V | "${GREP}" ^SQL | cut -d" " -f3 | cut -d"." -f-2)"
+        logging "[${sid}] [local]"\
+                "ORACLE_SID      : ${ORACLE_SID}"\
+                "ORACLE_HOME     : ${ORACLE_HOME}"\
+                "TNS_ADMIN       : ${TNS_ADMIN}"\
+                "LD_LIBRARY_PATH : ${LD_LIBRARY_PATH}"\
+                "ORACLE_VERSION  : ${ORACLE_VERSION} (${NUMERIC_ORACLE_VERSION})"
 
-    db_connect=$(mk_ora_db_connect "$remote_instance")
-    piggyback_host=$(echo "${remote_instance_line}" | cut -d":" -f6)
-    export MK_SID=$remote_instance
-    export MK_DB_CONNECT=$db_connect
-    export MK_PIGGYBACK_HOST=$piggyback_host
+        # MK_SID is feauture replacement for sid
+        export MK_SID=$sid
+        db_connect=$(mk_ora_db_connect "$MK_SID")
+        export MK_DB_CONNECT=$db_connect
 
-    do_checks
-    do_custom_sqls
-done
+        do_checks
+
+        # MK_DB_CONNECT could be changed by do_custom_sqls!
+        do_custom_sqls
+    done
+
+    #   ---remote---------------------------------------------------------------
+
+    for remote_instance in $REMOTE_INSTANCES; do
+        remote_instance_line=$(eval "echo \${$remote_instance}")
+
+        set_ora_env "$remote_instance"
+        set_ora_version "$(echo "$remote_instance_line" | cut -d":" -f8)"
+        logging "[${remote_instance}] [remote]"\
+                "ORACLE_SID      : ${ORACLE_SID}"\
+                "ORACLE_HOME     : ${ORACLE_HOME}"\
+                "TNS_ADMIN       : ${TNS_ADMIN}"\
+                "LD_LIBRARY_PATH : ${LD_LIBRARY_PATH}"\
+                "ORACLE_VERSION  : ${ORACLE_VERSION} (${NUMERIC_ORACLE_VERSION})"
+
+        db_connect=$(mk_ora_db_connect "$remote_instance")
+        piggyback_host=$(echo "${remote_instance_line}" | cut -d":" -f6)
+        export MK_SID=$remote_instance
+        export MK_DB_CONNECT=$db_connect
+        export MK_PIGGYBACK_HOST=$piggyback_host
+
+        do_checks
+        do_custom_sqls
+    done
+}
+
+[ -z "${MK_SOURCE_ONLY}" ] && main

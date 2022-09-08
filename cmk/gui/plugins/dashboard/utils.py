@@ -53,7 +53,7 @@ from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.plugins.metrics.utils import GraphRenderOptions
 from cmk.gui.plugins.views.painters import host_state_short, service_state_short
 from cmk.gui.sites import get_alias_of_host
-from cmk.gui.type_defs import HTTPVariables, Row, SingleInfos, VisualContext
+from cmk.gui.type_defs import ColumnName, HTTPVariables, Row, SingleInfos, VisualContext
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
 from cmk.gui.utils.speaklater import LazyString
@@ -932,19 +932,22 @@ def copy_view_into_dashlet(
     dashlet["mustsearch"] = False
 
 
-def host_table_query(properties, context, column_generator):
-    return _table_query(properties, context, column_generator, "hosts", ["host"])
+def host_table_query(
+    context: VisualContext, columns: Iterable[ColumnName]
+) -> tuple[list[ColumnName], LivestatusResponse]:
+    return _table_query(context, "hosts", columns, ["host"])
 
 
-def service_table_query(properties, context, column_generator):
-    return _table_query(properties, context, column_generator, "services", ["host", "service"])
+def service_table_query(
+    context: VisualContext, columns: Iterable[ColumnName]
+) -> tuple[list[ColumnName], LivestatusResponse]:
+    return _table_query(context, "services", columns, ["host", "service"])
 
 
-def _table_query(  # type:ignore[no-untyped-def]
-    properties, context, column_generator, table: str, infos: List[str]
-) -> Tuple[List[str], LivestatusResponse]:
+def _table_query(
+    context: VisualContext, table: str, columns: Iterable[ColumnName], infos: List[str]
+) -> tuple[list[ColumnName], LivestatusResponse]:
     filter_headers, only_sites = visuals.get_filter_headers(table, infos, context)
-    columns = column_generator(properties, context)
 
     query = (
         f"GET {table}\n"
@@ -964,7 +967,7 @@ def _table_query(  # type:ignore[no-untyped-def]
         except Exception:
             raise MKGeneralException(_("The query returned no data."))
 
-    return ["site"] + columns, rows
+    return ["site"] + list(columns), rows
 
 
 def create_host_view_url(context):

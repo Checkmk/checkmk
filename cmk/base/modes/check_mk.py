@@ -78,11 +78,11 @@ import cmk.base.packaging
 import cmk.base.parent_scan
 import cmk.base.profiling as profiling
 import cmk.base.sources as sources
-from cmk.base.agent_based.checking._submit_to_core import get_submitter
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 from cmk.base.config import HostConfig
 from cmk.base.core_factory import create_core
 from cmk.base.modes import keepalive_option, Mode, modes, Option
+from cmk.base.submitters import get_submitter
 
 # TODO: Investigate all modes and try to find out whether or not we can
 # set needs_checks=False for them. This would save a lot of IO/time for

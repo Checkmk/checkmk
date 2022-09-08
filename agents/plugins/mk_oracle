@@ -212,6 +212,12 @@ MK-ORA-USAGE
 #   |                                   |___/                              |
 #   '----------------------------------------------------------------------'
 
+if [ $# -eq 0 ]; then
+    MK_ORA_ON_CL=false
+else
+    MK_ORA_ON_CL=true
+fi
+
 MK_ORA_DEBUG=false
 MK_ORA_DEBUG_CONNECT=false
 MK_ORA_LOGGING=false
@@ -2915,7 +2921,12 @@ export -f custom_sql_section
 export -f do_async_custom_sqls
 export -f handle_custom_sql_errors
 
-main() {
+set_up_tmpdirs() {
+    ORA_TMPDIR="${MK_VARDIR}/tmp/mk_oracle"
+    mkdir -p "$ORA_TMPDIR"
+}
+
+main_queries() {
     if $MK_ORA_LOGGING; then
         echo "Start logging to file: $MK_VARDIR/log/mk_oracle.log" >&2
     fi
@@ -3041,6 +3052,36 @@ main() {
         do_checks
         do_custom_sqls
     done
+}
+
+main() {
+    # See werk 13732 for more details about this main function
+
+    parent_dir=$(basename "$(pwd)")
+
+    if $MK_ORA_ON_CL || [ "$parent_dir" = plugins ]; then
+        # Does not work properly (async sections) on distros
+        # where check_mk_agent.sync.service is a systemd service
+        main_mode() { main_queries; }
+
+    elif [[ "$parent_dir" =~ ^[1-9][0-9]* ]]; then
+        main_mode() {
+            if [ -n "$REMOTE" ]; then
+                TMPFILE="$ORA_TMPDIR/mk_oracle.out.${REMOTE}"
+            else
+                TMPFILE="$ORA_TMPDIR/mk_oracle.out"
+            fi
+            limit=$((parent_dir * 3))
+            main_queries >"$TMPFILE" && mv "$TMPFILE" "${MK_VARDIR}/spool/${limit}_mk_oracle.spool"
+        }
+
+    else
+        echo "Unhandled location" >&2
+        exit 1
+    fi
+
+    set_up_tmpdirs
+    main_mode
 }
 
 [ -z "${MK_SOURCE_ONLY}" ] && main

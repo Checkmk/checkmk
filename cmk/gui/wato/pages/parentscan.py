@@ -14,7 +14,7 @@ from cmk.utils.type_defs import HostName
 import cmk.gui.forms as forms
 import cmk.gui.gui_background_job as gui_background_job
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import HTTPRedirect, MKUserError
+from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -178,7 +178,11 @@ class ParentScanBackgroundJob(WatoBackgroundJob):
 
         parents = self._configure_gateway(task, settings, gateway, folder)
 
-        host = folder.host(task.host_name)
+        if (host := folder.host(task.host_name)) is None:
+            # This seems to never happen.
+            # `host` being optional was revealed when `folder` was no longer `Any`.
+            raise MKGeneralException("No host named '{task.host_name}'")
+
         if host.effective_attribute("parents") == parents:
             self._logger.info(
                 "Parents unchanged at %s", (",".join(parents) if parents else _("none"))

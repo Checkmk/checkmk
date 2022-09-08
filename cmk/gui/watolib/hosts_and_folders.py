@@ -44,7 +44,6 @@ import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils import store
 from cmk.utils.datastructures import deep_update
-from cmk.utils.iterables import first
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.redis import get_redis_client, Pipeline
 from cmk.utils.regex import regex, WATO_FOLDER_PATH_NAME_CHARS, WATO_FOLDER_PATH_NAME_REGEX
@@ -1159,7 +1158,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return g.folder_choices_full_title
 
     @staticmethod
-    def folder(folder_path: PathWithoutSlash):  # type:ignore[no-untyped-def]
+    def folder(folder_path: PathWithoutSlash) -> CREFolder:
         if folder_path in Folder.all_folders():
             return Folder.all_folders()[folder_path]
         raise MKGeneralException("No WATO folder %s." % folder_path)
@@ -1168,10 +1167,10 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     def create_missing_folders(folder_path):
         folder = Folder.folder("")
         for subfolder_name in Folder._split_folder_path(folder_path):
-            if folder.has_subfolder(subfolder_name):
-                folder = folder.subfolder(subfolder_name)
-            else:
+            if (existing_folder := folder.subfolder(subfolder_name)) is None:
                 folder = folder.create_subfolder(subfolder_name, subfolder_name, {})
+            else:
+                folder = existing_folder
 
     @staticmethod
     def _split_folder_path(folder_path):
@@ -1187,7 +1186,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return os.path.exists(wato_root_dir() + folder_path)
 
     @staticmethod
-    def root_folder() -> "CREFolder":
+    def root_folder() -> CREFolder:
         return Folder.folder("")
 
     # Need this for specifying the correct type
@@ -1210,7 +1209,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     # the later case we call .current() of SearchFolder() to let it decide whether
     # this is a host search. This method has to return a folder in all cases.
     @staticmethod
-    def current() -> "CREFolder":
+    def current() -> CREFolder:
         if "wato_current_folder" in g:
             return g.wato_current_folder
 
@@ -1299,7 +1298,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     def set_root_dir(self, root_dir):
         self._root_dir = _ensure_trailing_slash(root_dir)
 
-    def parent(self) -> "CREFolder":
+    def parent(self) -> CREFolder:
         """Give the parent instance.
 
         Returns:
@@ -1677,7 +1676,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             hosts.update(subfolder.all_hosts_recursively())
         return hosts
 
-    def subfolders_recursively(self, only_visible: bool = False) -> List["CREFolder"]:
+    def subfolders_recursively(self, only_visible: bool = False) -> list[CREFolder]:
         def _add_folders(folder: CREFolder, collection: List[CREFolder]) -> None:
             collection.append(folder)
             for sub_folder in folder.subfolders(only_visible=only_visible):
@@ -1687,7 +1686,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         _add_folders(self, folders)
         return folders
 
-    def subfolders(self, only_visible: bool = False) -> "List[CREFolder]":
+    def subfolders(self, only_visible: bool = False) -> list[CREFolder]:
         """Filter subfolder collection by various means.
 
         Args:
@@ -1705,18 +1704,20 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
         return subfolders
 
-    def subfolder(self, name: str) -> "CREFolder":
+    def subfolder(self, name: str) -> CREFolder | None:
         """Find a Folder by its name-part.
 
         Args:
             name (str): The basename of this Folder, not its path.
 
         Returns:
-            The found Folder-instance or raises a KeyError.
+            The found Folder-instance or None.
         """
-        return self._subfolders[name]
+        with suppress(KeyError):
+            return self._subfolders[name]
+        return None
 
-    def subfolder_by_title(self, title: str) -> "Optional[CREFolder]":
+    def subfolder_by_title(self, title: str) -> CREFolder | None:
         """Find a Folder by its title.
 
         Args:
@@ -1726,7 +1727,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             The found Folder-instance or None.
 
         """
-        return first([f for f in self.subfolders() if f.title() == title])
+        return next((f for f in self.subfolders() if f.title() == title), None)
 
     def has_subfolder(self, name: str) -> bool:
         return name in self._subfolders
@@ -1856,27 +1857,23 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         self._add_all_sites_to_set(site_ids)
         return list(site_ids)
 
-    # TODO: Horrible typing depending on optional parameter, which poisons all
-    # call sites. Split this method!
-    def title_path(self, withlinks: bool = False) -> List[Union[HTML, str]]:
-        if withlinks:
-            # In this case, we return a List[HTML]
-            return [
-                HTMLWriter.render_a(
-                    folder.title(),
-                    href=urls.makeuri_contextless(
-                        request,
-                        [("mode", "folder"), ("folder", folder.path())],
-                        filename="wato.py",
-                    ),
-                )
-                for folder in self.parent_folder_chain() + [self]
-            ]
-        # In this case, we return a List[str]
+    def title_path_with_links(self) -> list[HTML]:
+        return [
+            HTMLWriter.render_a(
+                folder.title(),
+                href=urls.makeuri_contextless(
+                    request,
+                    [("mode", "folder"), ("folder", folder.path())],
+                    filename="wato.py",
+                ),
+            )
+            for folder in self.parent_folder_chain() + [self]
+        ]
+
+    def title_path(self) -> list[str]:
         return [folder.title() for folder in self.parent_folder_chain() + [self]]
 
-    # TODO: Actually, we return a List[str], but title_path()'s typing is broken.
-    def title_path_without_root(self) -> List[Union[HTML, str]]:
+    def title_path_without_root(self) -> List[str]:
         if self.is_root():
             return [self.title()]
         return self.title_path()[1:]
@@ -2125,7 +2122,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         url_vars += add_vars
         return urls.makeuri_contextless(request, url_vars, filename="wato.py")
 
-    def edit_url(self, backfolder: "Optional[CREFolder]" = None) -> str:
+    def edit_url(self, backfolder: CREFolder | None = None) -> str:
         if backfolder is None:
             if self.has_parent():
                 backfolder = self.parent()
@@ -2291,6 +2288,9 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
         # 2. check if hosts have parents
         subfolder = self.subfolder(name)
+        if subfolder is None:
+            return
+
         hosts_with_children = self._get_parents_of_hosts(subfolder.all_hosts_recursively().keys())
         if hosts_with_children:
             raise MKUserError(
@@ -3766,15 +3766,16 @@ def make_action_link(vars_: HTTPVariables) -> str:
     return folder_preserving_link(vars_ + [("_transid", transactions.get())])
 
 
-def get_folder_title_path(path, with_links=False):
+@request_memoize()
+def get_folder_title_path(path: PathWithoutSlash) -> list[str]:
     """Return a list with all the titles of the paths'
     components, e.g. "muc/north" -> [ "Main", "Munich", "North" ]"""
-    # In order to speed this up, we work with a per HTML-request cache
-    cache_name = "wato_folder_titles" + (with_links and "_linked" or "")
-    cache = g.setdefault(cache_name, {})
-    if path not in cache:
-        cache[path] = Folder.folder(path).title_path(with_links)
-    return cache[path]
+    return Folder.folder(path).title_path()
+
+
+@request_memoize()
+def get_folder_title_path_with_links(path: PathWithoutSlash) -> list[HTML]:
+    return Folder.folder(path).title_path_with_links()
 
 
 def get_folder_title(path: str) -> str:

@@ -572,10 +572,10 @@ class ModeFolder(WatoMode):
             return redirect(folder_url)
 
         # Move single hosts to other folders
-        if (target_folder := request.var("_move_host_to")) is not None:
+        if (target_folder_str := request.var("_move_host_to")) is not None:
             hostname = request.var("_ident")
             if hostname and Folder.current().has_host(hostname):
-                Folder.current().move_hosts([hostname], Folder.folder(target_folder))
+                Folder.current().move_hosts([hostname], Folder.folder(target_folder_str))
                 return redirect(folder_url)
 
         # bulk operation on hosts

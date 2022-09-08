@@ -13,7 +13,10 @@ from cmk.gui.sorter import Sorter, sorter_registry
 from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.utils.html import HTML
 from cmk.gui.view_utils import CellSpec
-from cmk.gui.watolib.hosts_and_folders import get_folder_title_path
+from cmk.gui.watolib.hosts_and_folders import (
+    get_folder_title_path,
+    get_folder_title_path_with_links,
+)
 
 
 @painter_registry.register
@@ -44,7 +47,11 @@ def get_wato_folder(row: Dict, how: str, with_links: bool = True) -> Union[str, 
         return ""
     wato_path = filename[6:-9]
     try:
-        title_path = get_folder_title_path(wato_path, with_links)
+        title_path: Union[list[str], list[HTML]] = (
+            get_folder_title_path_with_links(wato_path)
+            if with_links
+            else get_folder_title_path(wato_path)
+        )
     except MKGeneralException:
         # happens when a path can not be resolved using the local WATO.
         # e.g. when having an independent site with different folder

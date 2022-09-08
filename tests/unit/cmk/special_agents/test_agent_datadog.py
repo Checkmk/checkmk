@@ -175,7 +175,7 @@ class TestEventsQuerier:
             lambda: now,
         )
         assert events_querier._events_query_time_range() == (
-            now - events_querier._max_age,
+            now - events_querier.max_age,
             now,
         )
 
@@ -185,16 +185,16 @@ class TestEventsQuerier:
         events: Sequence[Event],
     ) -> None:
         assert list(events_querier.query_events([])) == events
-        assert events_querier._read_last_event_ids() == frozenset({1, 2, 3})
+        assert events_querier.id_store.read() == frozenset({1, 2, 3})
 
     def test_query_events_with_previous_ids(
         self,
         events_querier: EventsQuerier,
         events: Sequence[Event],
     ) -> None:
-        events_querier._store_last_event_ids([1, 2, 5])
+        events_querier.id_store.write([1, 2, 5])
         assert list(events_querier.query_events([])) == events[-1:]
-        assert events_querier._read_last_event_ids() == frozenset({1, 2, 3})
+        assert events_querier.id_store.read() == frozenset({1, 2, 3})
 
 
 def test_event_to_syslog_message() -> None:

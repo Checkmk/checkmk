@@ -15,28 +15,28 @@ Be aware that the prefix c## is only usable in a CDB and
 it is not possible to use this user in non CDB (old setups!)
 
 For Databases with CDB:
-create user c##check_mk identified by "secret";
-alter  user c##check_mk set container_data=all container = current;
-grant create session, select_catalog_role to c##check_mk container=all;
+* <tt>create user c##check_mk identified by "secret";</tt>
+* <tt>alter  user c##check_mk set container_data=all container = current;</tt>
+* <tt>grant create session, select_catalog_role to c##check_mk container=all;</tt>
 
 For Databases without CDB:
-create user check_mk identified by "geheim";
-grant create session, select_catalog_role to check_mk:
+* <tt>create user check_mk identified by "geheim";</tt>
+* <tt>grant create session, select_catalog_role to check_mk:</tt>
 
 Incompatible Change:
 The plugin is compatible against non CDB environments.
 There was a work arround for monitoring 1 PDB inside a
 CDB with the old version of mk_oracle. This will not
-work anymore,, because the plugin creates new output and
+work anymore, because the plugin creates new output and
 the checks creates new services.
 Plese do a services Discovery in environments with the
 work arround. Don't forget to change rules for changed
 services.
 
 Affected Services:
-- oracle_instance
-- oracle_jobs
-- oracle_performance
-- oracle_recovery_status
-- oracle_sessions
-- oracle_tablespaces
+* oracle_instance
+* oracle_jobs
+* oracle_performance
+* oracle_recovery_status
+* oracle_sessions
+* oracle_tablespaces

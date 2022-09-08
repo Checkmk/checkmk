@@ -254,8 +254,13 @@ def _start(request, client, version=None, is_update=False, **kwargs):
 
         exit_code, status_output = _exec_run(c, ["omd", "status"], user=site_id)
         assert exit_code == 0, f"Status is {exit_code}. Output: {status_output}"
-    finally:
-        logger.debug("Log so far: %s", c.logs().decode("utf-8"))
+
+    except:
+        logger.error(c.logs().decode("utf-8"))
+        raise
+
+    else:
+        logger.debug(c.logs().decode("utf-8"))
 
     return c
 

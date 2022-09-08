@@ -1168,7 +1168,7 @@ class EditPage(Page, Generic[_T_OverridableSpec, _Self]):
 
         make_header(html, title, breadcrumb, page_menu)
 
-        parameters, keys_by_topic = self._collect_parameters()
+        parameters, keys_by_topic = self._collect_parameters(mode)
 
         vs = Dictionary(
             title=_("General Properties"),
@@ -1242,10 +1242,10 @@ class EditPage(Page, Generic[_T_OverridableSpec, _Self]):
         html.footer()
 
     def _collect_parameters(
-        self,
+        self, mode: PageMode
     ) -> tuple[list[tuple[str, ValueSpec]], list[tuple[str, list[str]]]]:
         topics: dict[str, list[tuple[float, str, ValueSpec]]] = {}
-        for topic, elements in self._type.parameters("edit"):
+        for topic, elements in self._type.parameters(mode):
             el = topics.setdefault(topic, [])
             el += elements
 

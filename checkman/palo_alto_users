@@ -1,0 +1,14 @@
+title: Palo Alto Firewall: Users
+agents: snmp
+catalog: hw/network/palo_alto
+license: GPLv2
+distribution: check_mk
+description:
+ Displays the number of logged in users. This check is purely
+ informative and always OK.
+
+discovery:
+ One service is created for each Palo Alto firewall.
+
+cluster:
+ On a cluster the number of logged in users will be summed across the nodes.

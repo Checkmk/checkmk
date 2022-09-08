@@ -6,6 +6,7 @@
 from typing import Callable, Tuple
 
 import cmk.utils.debug
+import cmk.utils.version as cmk_version
 from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import (
     MKAgentError,
@@ -29,7 +30,6 @@ def check_result(
     host_config: HostConfig,
     service_name: ServiceName,
     plugin_name: CheckPluginNameStr,
-    keepalive: bool,
 ) -> ServiceState:
     try:
         state, text = _handle_success(callback())
@@ -40,9 +40,8 @@ def check_result(
             host_config=host_config,
             service_name=service_name,
             plugin_name=plugin_name,
-            keepalive=keepalive,
         )
-    _handle_output(text, host_config.hostname, keepalive=keepalive)
+    _handle_output(text, host_config.hostname)
     return state
 
 
@@ -62,10 +61,9 @@ def _handle_failure(
     host_config: HostConfig,
     service_name: ServiceName,
     plugin_name: CheckPluginNameStr,
-    keepalive: bool,
 ) -> Tuple[ServiceState, str]:
     if isinstance(exc, MKTimeout):
-        if keepalive:
+        if _in_keepalive_mode():
             raise exc
         return exit_spec.get("timeout", 2), "Timed out\n"
 
@@ -89,11 +87,19 @@ def _handle_failure(
     )
 
 
-def _handle_output(output_text: str, hostname: HostName, *, keepalive: bool) -> None:
-    if keepalive:
-        import cmk.base.cee.keepalive as keepalive_  # pylint: disable=no-name-in-module
+def _handle_output(output_text: str, hostname: HostName) -> None:
+    if _in_keepalive_mode():
+        import cmk.base.cee.keepalive as keepalive  # pylint: disable=no-name-in-module
 
-        keepalive_.add_active_check_result(hostname, output_text)
+        keepalive.add_active_check_result(hostname, output_text)
         console.verbose(output_text)
     else:
         out.output(output_text)
+
+
+def _in_keepalive_mode() -> bool:
+    if cmk_version.is_raw_edition():
+        return False
+    import cmk.base.cee.keepalive as keepalive  # pylint: disable=no-name-in-module
+
+    return keepalive.enabled()

@@ -1291,7 +1291,6 @@ if '-d' in sys.argv:
         "                dry_run=False,\n"
         "                show_perfdata=False,\n"
         '                perfdata_format="standard",\n'
-        "                keepalive=False,\n"
         "            )\n"
         "        )\n"
         "    )\n" % (hostname, hostname)

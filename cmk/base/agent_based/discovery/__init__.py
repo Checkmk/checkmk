@@ -550,7 +550,6 @@ def active_check_discovery(
     host_name: HostName,
     *,
     fetched: Sequence[Tuple[Source, FetcherMessage]],
-    keepalive: bool,
 ) -> ServiceState:
     host_config = HostConfig.make_host_config(host_name)
     return error_handling.check_result(
@@ -558,15 +557,12 @@ def active_check_discovery(
         host_config=host_config,
         service_name="Check_MK Discovery",
         plugin_name="discover",
-        keepalive=keepalive,
     )
 
 
 def commandline_check_discovery(
     host_name: HostName,
     ipaddress: Optional[HostAddress],
-    *,
-    keepalive: bool,
 ) -> ServiceState:
     host_config = HostConfig.make_host_config(host_name)
     return error_handling.check_result(
@@ -574,7 +570,6 @@ def commandline_check_discovery(
         host_config=host_config,
         service_name="Check_MK Discovery",
         plugin_name="discover",
-        keepalive=keepalive,
     )
 
 

@@ -100,7 +100,6 @@ def active_check_checking(
     fetched: Sequence[Tuple[Source, FetcherMessage]],
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
     selected_sections: SectionNameCollection = NO_SELECTION,
-    keepalive: bool,
 ) -> ServiceState:
     """
     See Also:
@@ -121,7 +120,6 @@ def active_check_checking(
         host_config=host_config,
         service_name="Check_MK",
         plugin_name="mk",
-        keepalive=keepalive,
     )
 
 
@@ -132,7 +130,6 @@ def commandline_checking(
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
     selected_sections: SectionNameCollection = NO_SELECTION,
     submitter: Submitter,
-    keepalive: bool,
 ) -> ServiceState:
     # The error handling is required for the Nagios core.
     host_config = HostConfig.make_host_config(host_name)
@@ -148,7 +145,6 @@ def commandline_checking(
         host_config=host_config,
         service_name="Check_MK",
         plugin_name="mk",
-        keepalive=keepalive,
     )
 
 

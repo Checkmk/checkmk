@@ -203,14 +203,7 @@ def test_mode_inventory_caching(hosts, cache, force, mocker) -> None:  # type:ig
 @pytest.mark.usefixtures("patch_data_source")
 @pytest.mark.usefixtures("without_inventory_plugins")
 def test_mode_inventory_as_check() -> None:
-    assert (
-        cmk.base.modes.check_mk.mode_inventory_as_check(
-            {},
-            HostName("ds-test-host1"),
-            keepalive=False,
-        )
-        == 0
-    )
+    assert cmk.base.modes.check_mk.mode_inventory_as_check({}, HostName("ds-test-host1")) == 0
     assert Source.parse.call_count == 2  # type: ignore[attr-defined]
 
 
@@ -229,14 +222,7 @@ def test_mode_discover_marked_hosts(mocker) -> None:  # type:ignore[no-untyped-d
 @pytest.mark.usefixtures("scenario")
 def test_mode_check_discovery_default(mocker) -> None:  # type:ignore[no-untyped-def]
     _patch_data_source(mocker, max_age=MaxAge(checking=0, discovery=0, inventory=120))
-    assert (
-        cmk.base.modes.check_mk.mode_check_discovery(
-            {},
-            HostName("ds-test-host1"),
-            keepalive=False,
-        )
-        == 1
-    )
+    assert cmk.base.modes.check_mk.mode_check_discovery({}, HostName("ds-test-host1")) == 1
     assert Source.parse.call_count == 2  # type: ignore[attr-defined]
 
 
@@ -256,7 +242,6 @@ def test_mode_check_discovery_cached(mocker) -> None:  # type:ignore[no-untyped-
                 "cache": True,
             },
             HostName("ds-test-host1"),
-            keepalive=False,
         )
         == 1
     )
@@ -318,12 +303,7 @@ def test_mode_discover_explicit_hosts_no_cache(mocker) -> None:  # type:ignore[n
 @pytest.mark.usefixtures("scenario")
 @pytest.mark.usefixtures("patch_data_source")
 def test_mode_check_explicit_host() -> None:
-    cmk.base.modes.check_mk.mode_check(
-        get_submitter,
-        {},
-        ["ds-test-host1"],
-        keepalive=False,
-    )
+    cmk.base.modes.check_mk.mode_check(get_submitter, {}, ["ds-test-host1"])
     assert Source.parse.call_count == 2  # type: ignore[attr-defined]
 
 
@@ -336,7 +316,6 @@ def test_mode_check_explicit_host_cache(mocker) -> None:  # type:ignore[no-untyp
             "cache": True,  # --cache
         },
         ["ds-test-host1"],
-        keepalive=False,
     )
     assert Source.parse.call_count == 2  # type: ignore[attr-defined]
 
@@ -354,7 +333,6 @@ def test_mode_check_explicit_host_no_cache(mocker) -> None:  # type:ignore[no-un
             "no-cache": True,  # --no-cache
         },
         ["ds-test-host1"],
-        keepalive=False,
     )
     assert Source.parse.call_count == 2  # type: ignore[attr-defined]
 

@@ -37,7 +37,7 @@ def test_no_error_keeps_returns_status_from_callee(  # type:ignore[no-untyped-de
             ("metrics", "x"),
         )
     )
-    error_handling._handle_output(text, hostname, keepalive=False)
+    error_handling._handle_output(text, hostname)
 
     assert state == 0
     assert capsys.readouterr().out == "summary | metrics x\ndetails\nlots of\n"
@@ -53,9 +53,8 @@ def test_MKTimeout_exception_returns_2(  # type:ignore[no-untyped-def]
         host_config=host_config,
         service_name="service_name",
         plugin_name="pluging_name",
-        keepalive=False,
     )
-    error_handling._handle_output(text, hostname, keepalive=False)
+    error_handling._handle_output(text, hostname)
 
     assert state == 2
     assert capsys.readouterr().out == "Timed out\n"
@@ -71,9 +70,8 @@ def test_MKAgentError_exception_returns_2(  # type:ignore[no-untyped-def]
         host_config=host_config,
         service_name="service_name",
         plugin_name="pluging_name",
-        keepalive=False,
     )
-    error_handling._handle_output(text, hostname, keepalive=False)
+    error_handling._handle_output(text, hostname)
 
     assert state == 2
     assert capsys.readouterr().out == "oops!\n"
@@ -89,9 +87,8 @@ def test_MKGeneralException_returns_3(  # type:ignore[no-untyped-def]
         host_config=host_config,
         service_name="service_name",
         plugin_name="pluging_name",
-        keepalive=False,
     )
-    error_handling._handle_output(text, hostname, keepalive=False)
+    error_handling._handle_output(text, hostname)
 
     assert state == 3
     assert capsys.readouterr().out == "kaputt!\n"
@@ -108,9 +105,8 @@ def test_unhandled_exception_returns_3(  # type:ignore[no-untyped-def]
         host_config=host_config,
         service_name="service_name",
         plugin_name="pluging_name",
-        keepalive=False,
     )
-    error_handling._handle_output(text, hostname, keepalive=False)
+    error_handling._handle_output(text, hostname)
 
     assert state == 3
     assert capsys.readouterr().out.startswith("check failed - please submit a crash report!")

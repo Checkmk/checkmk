@@ -1556,34 +1556,27 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_check_discovery(
-    options: Mapping[str, Literal[True]], hostname: HostName, *, keepalive: bool
-) -> int:
+def mode_check_discovery(options: Mapping[str, Literal[True]], hostname: HostName) -> int:
     _handle_fetcher_options(options)
-    return discovery.commandline_check_discovery(hostname, ipaddress=None, keepalive=keepalive)
+    return discovery.commandline_check_discovery(hostname, ipaddress=None)
 
 
-def register_mode_check_discovery(*, keepalive: bool) -> None:
-    modes.register(
-        Mode(
-            long_option="check-discovery",
-            handler_function=partial(mode_check_discovery, keepalive=keepalive),
-            argument=True,
-            argument_descr="HOSTNAME",
-            short_help="Check for not yet monitored services",
-            long_help=[
-                "Make Check_MK behave as monitoring plugins that checks if an "
-                "inventory would find new or vanished services for the host. "
-                "If configured to do so, this will queue those hosts for automatic "
-                "discover-marked-hosts"
-            ],
-            sub_options=_FETCHER_OPTIONS,
-        )
+modes.register(
+    Mode(
+        long_option="check-discovery",
+        handler_function=mode_check_discovery,
+        argument=True,
+        argument_descr="HOSTNAME",
+        short_help="Check for not yet monitored services",
+        long_help=[
+            "Make Check_MK behave as monitoring plugins that checks if an "
+            "inventory would find new or vanished services for the host. "
+            "If configured to do so, this will queue those hosts for automatic "
+            "discover-marked-hosts"
+        ],
+        sub_options=_FETCHER_OPTIONS,
     )
-
-
-if cmk_version.edition() is cmk_version.Edition.CRE:
-    register_mode_check_discovery(keepalive=False)
+)
 
 # .
 #   .--discover------------------------------------------------------------.
@@ -1844,8 +1837,6 @@ def mode_check(
     get_submitter_: GetSubmitter,
     options: _CheckingOptions,
     args: List[str],
-    *,
-    keepalive: bool,
 ) -> None:
     import cmk.base.agent_based.checking as checking  # pylint: disable=import-outside-toplevel
     import cmk.base.item_state as item_state  # pylint: disable=import-outside-toplevel
@@ -1877,15 +1868,14 @@ def mode_check(
             perfdata_format="pnp" if config.perfdata_format == "pnp" else "standard",
             show_perfdata=options.get("perfdata", False),
         ),
-        keepalive=keepalive,
     )
 
 
-def register_mode_check(get_submitter_: GetSubmitter, *, keepalive: bool) -> None:
+def register_mode_check(get_submitter_: GetSubmitter) -> None:
     modes.register(
         Mode(
             long_option="check",
-            handler_function=partial(mode_check, get_submitter_, keepalive=keepalive),
+            handler_function=partial(mode_check, get_submitter_),
             argument=True,
             argument_descr="HOST [IPADDRESS]",
             argument_optional=True,
@@ -1925,7 +1915,7 @@ def register_mode_check(get_submitter_: GetSubmitter, *, keepalive: bool) -> Non
 
 
 if cmk_version.edition() is cmk_version.Edition.CRE:
-    register_mode_check(get_submitter, keepalive=False)
+    register_mode_check(get_submitter)
 
 # .
 #   .--inventory-----------------------------------------------------------.
@@ -2019,56 +2009,51 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_inventory_as_check(options: Dict, hostname: HostName, *, keepalive: bool) -> int:
+def mode_inventory_as_check(options: Dict, hostname: HostName) -> int:
     _handle_fetcher_options(options)
-    return inventory.active_check_inventory(hostname, options, keepalive=keepalive)
+    return inventory.active_check_inventory(hostname, options)
 
 
-def register_mode_inventory_as_check(*, keepalive: bool) -> None:
-    modes.register(
-        Mode(
-            long_option="inventory-as-check",
-            handler_function=partial(mode_inventory_as_check, keepalive=keepalive),
-            argument=True,
-            argument_descr="HOST",
-            short_help="Do HW/SW-Inventory, behave like check plugin",
-            sub_options=[
-                *_FETCHER_OPTIONS,
-                Option(
-                    long_option="hw-changes",
-                    argument=True,
-                    argument_descr="S",
-                    argument_conv=int,
-                    short_help="Use monitoring state S for HW changes",
-                ),
-                Option(
-                    long_option="sw-changes",
-                    argument=True,
-                    argument_descr="S",
-                    argument_conv=int,
-                    short_help="Use monitoring state S for SW changes",
-                ),
-                Option(
-                    long_option="sw-missing",
-                    argument=True,
-                    argument_descr="S",
-                    argument_conv=int,
-                    short_help="Use monitoring state S for missing SW packages info",
-                ),
-                Option(
-                    long_option="inv-fail-status",
-                    argument=True,
-                    argument_descr="S",
-                    argument_conv=int,
-                    short_help="Use monitoring state S in case of error",
-                ),
-            ],
-        )
+modes.register(
+    Mode(
+        long_option="inventory-as-check",
+        handler_function=mode_inventory_as_check,
+        argument=True,
+        argument_descr="HOST",
+        short_help="Do HW/SW-Inventory, behave like check plugin",
+        sub_options=[
+            *_FETCHER_OPTIONS,
+            Option(
+                long_option="hw-changes",
+                argument=True,
+                argument_descr="S",
+                argument_conv=int,
+                short_help="Use monitoring state S for HW changes",
+            ),
+            Option(
+                long_option="sw-changes",
+                argument=True,
+                argument_descr="S",
+                argument_conv=int,
+                short_help="Use monitoring state S for SW changes",
+            ),
+            Option(
+                long_option="sw-missing",
+                argument=True,
+                argument_descr="S",
+                argument_conv=int,
+                short_help="Use monitoring state S for missing SW packages info",
+            ),
+            Option(
+                long_option="inv-fail-status",
+                argument=True,
+                argument_descr="S",
+                argument_conv=int,
+                short_help="Use monitoring state S in case of error",
+            ),
+        ],
     )
-
-
-if cmk_version.edition() is cmk_version.Edition.CRE:
-    register_mode_inventory_as_check(keepalive=False)
+)
 
 # .
 #   .--version-------------------------------------------------------------.

@@ -128,16 +128,13 @@ def _commandline_inventory_on_host(
 #   '----------------------------------------------------------------------'
 
 
-def active_check_inventory(
-    hostname: HostName, options: Dict[str, int], *, keepalive: bool
-) -> ServiceState:
+def active_check_inventory(hostname: HostName, options: Dict[str, int]) -> ServiceState:
     host_config = HostConfig.make_host_config(hostname)
     return error_handling.check_result(
         partial(_execute_active_check_inventory, hostname, options),
         host_config=host_config,
         plugin_name="check_mk_active-cmk_inv",
         service_name="Check_MK HW/SW Inventory",
-        keepalive=keepalive,
     )
 
 

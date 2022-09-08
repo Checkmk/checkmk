@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Callable, Tuple
+from typing import Callable, Optional, Tuple
 
 import cmk.utils.debug
 from cmk.utils.check_utils import ActiveCheckResult
@@ -16,7 +16,14 @@ from cmk.utils.exceptions import (
     MKTimeout,
 )
 from cmk.utils.log import console
-from cmk.utils.type_defs import CheckPluginNameStr, ExitSpec, HostName, ServiceName, ServiceState
+from cmk.utils.type_defs import (
+    AgentRawData,
+    CheckPluginNameStr,
+    ExitSpec,
+    HostName,
+    ServiceName,
+    ServiceState,
+)
 
 import cmk.base.crash_reporting
 import cmk.base.obsolete_output as out
@@ -42,6 +49,7 @@ def check_result(
             service_name=service_name,
             plugin_name=plugin_name,
             keepalive=keepalive,
+            rtc_package=None,
         )
     _handle_output(
         text,
@@ -68,6 +76,7 @@ def _handle_failure(
     host_config: HostConfig,
     service_name: ServiceName,
     plugin_name: CheckPluginNameStr,
+    rtc_package: Optional[AgentRawData],
     keepalive: bool,
 ) -> Tuple[ServiceState, str]:
     if isinstance(exc, MKTimeout):
@@ -91,6 +100,7 @@ def _handle_failure(
             plugin_name=plugin_name,
             plugin_kwargs={},
             is_enforced=False,
+            rtc_package=rtc_package,
         ).replace("Crash dump:\n", "Crash dump:\\n"),
     )
 

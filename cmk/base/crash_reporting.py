@@ -56,6 +56,7 @@ def create_section_crash_dump(
     section_name: SectionName,
     section_content: object,
     host_name: HostName,
+    rtc_package: Optional[AgentRawData],
 ) -> str:
     """Create a crash dump from an exception raised in a parse or host label function"""
 
@@ -65,6 +66,7 @@ def create_section_crash_dump(
             section_name=section_name,
             section_content=section_content,
             host_name=host_name,
+            rtc_package=rtc_package,
         )
         CrashReportStore().save(crash)
         return f"{text} - please submit a crash report! (Crash-ID: {crash.ident_to_text()})"
@@ -81,6 +83,7 @@ def create_check_crash_dump(
     plugin_name: Union[CheckPluginNameStr, CheckPluginName],
     plugin_kwargs: Mapping[str, Any],
     is_enforced: bool,
+    rtc_package: Optional[AgentRawData],
 ) -> str:
     """Create a crash dump from an exception occured during check execution
 
@@ -97,6 +100,7 @@ def create_check_crash_dump(
             is_enforced_service=is_enforced,
             description=service_name,
             text=text,
+            rtc_package=rtc_package,
         )
         CrashReportStore().save(crash)
         text += " (Crash-ID: %s)" % crash.ident_to_text()
@@ -145,9 +149,14 @@ class SectionCrashReport(CrashReportWithAgentOutput):
         section_name: SectionName,
         section_content: object,
         host_name: HostName,
+        rtc_package: Optional[AgentRawData],
     ) -> crash_reporting.ABCCrashReport:
         snmp_info = _read_snmp_info(host_name)
-        agent_output = _read_agent_output(host_name)
+        agent_output: Optional[AgentRawData]
+        if rtc_package is not None:
+            agent_output = rtc_package
+        else:
+            agent_output = _read_agent_output(host_name)
 
         return cls.from_exception(
             details={
@@ -178,9 +187,14 @@ class CheckCrashReport(CrashReportWithAgentOutput):
         is_enforced_service: bool,
         description: ServiceName,
         text: str,
+        rtc_package: Optional[AgentRawData],
     ) -> crash_reporting.ABCCrashReport:
         snmp_info = _read_snmp_info(host_config.hostname)
-        agent_output = _read_agent_output(host_config.hostname)
+        agent_output: Optional[AgentRawData]
+        if rtc_package is not None:
+            agent_output = rtc_package
+        else:
+            agent_output = _read_agent_output(host_config.hostname)
 
         return cls.from_exception(
             details={
@@ -212,14 +226,6 @@ def _read_snmp_info(hostname: str) -> Optional[bytes]:
 
 
 def _read_agent_output(hostname: str) -> Optional[AgentRawData]:
-    try:
-        from cmk.base.cee.keepalive import rtc  # pylint: disable=import-outside-toplevel
-    except ImportError:
-        rtc = None  # type: ignore[assignment]
-
-    if rtc and rtc.is_real_time_check_helper():
-        return rtc.get_rtc_package()
-
     cache_path = Path(cmk.utils.paths.tcp_cache_dir, hostname)
     try:
         with cache_path.open(mode="rb") as f:

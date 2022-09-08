@@ -87,6 +87,7 @@ def test_check_crash_report_from_exception(monkeypatch) -> None:  # type:ignore[
             is_enforced_service=False,
             description="Uptime",
             text="Output",
+            rtc_package=None,
         )
 
     _check_generic_crash_info(crash)
@@ -132,6 +133,7 @@ def test_check_crash_report_save(monkeypatch) -> None:  # type:ignore[no-untyped
             is_enforced_service=False,
             description="Uptime",
             text="Output",
+            rtc_package=None,
         )
         store.save(crash)
 
@@ -158,6 +160,7 @@ def test_check_crash_report_read_agent_output(monkeypatch) -> None:  # type:igno
             is_enforced_service=False,
             description="Uptime",
             text="Output",
+            rtc_package=None,
         )
 
     assert isinstance(crash, crash_reporting.CheckCrashReport)
@@ -184,6 +187,7 @@ def test_check_crash_report_read_snmp_info(monkeypatch) -> None:  # type:ignore[
             is_enforced_service=False,
             description="Uptime",
             text="Output",
+            rtc_package=None,
         )
 
     assert isinstance(crash, crash_reporting.CheckCrashReport)

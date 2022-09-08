@@ -77,7 +77,7 @@ def check(
     section: SectionPaloAlto,
 ) -> CheckResult:
 
-    yield Result(state=State.OK, notice=f"Firmware Version: {section.firmware_version}")
+    yield Result(state=State.OK, summary=f"Firmware Version: {section.firmware_version}")
     yield Result(
         state=State(params[f"mode_{_uniform_format(section.ha_mode)}"]),
         summary=f"HA mode: {section.ha_mode}",

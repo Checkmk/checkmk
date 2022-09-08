@@ -52,7 +52,7 @@ def test_discover() -> None:
         pytest.param(
             _Section,
             [
-                Result(state=State.OK, notice="Firmware Version: 5.0.6"),
+                Result(state=State.OK, summary="Firmware Version: 5.0.6"),
                 Result(state=State.OK, summary="HA mode: active-active"),
                 Result(state=State.CRIT, summary="HA local state: suspended"),
                 Result(state=State.UNKNOWN, notice="HA peer state: unknown"),
@@ -62,7 +62,7 @@ def test_discover() -> None:
         pytest.param(
             _Section2,
             [
-                Result(state=State.OK, notice="Firmware Version: 5.0.6"),
+                Result(state=State.OK, summary="Firmware Version: 5.0.6"),
                 Result(state=State.OK, summary="HA mode: active-passive"),
                 Result(state=State.CRIT, summary="HA local state: non_functional"),
                 Result(state=State.OK, notice="HA peer state: active"),
@@ -72,7 +72,7 @@ def test_discover() -> None:
         pytest.param(
             _Section3,
             [
-                Result(state=State.OK, notice="Firmware Version: 5.0.6"),
+                Result(state=State.OK, summary="Firmware Version: 5.0.6"),
                 Result(state=State.OK, summary="HA mode: disabled"),
                 Result(state=State.OK, summary="HA local state: disabled"),
                 Result(state=State.OK, notice="HA peer state: unknown"),

@@ -18,7 +18,7 @@ from cmk.utils.check_utils import ServiceCheckResult
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.timeout import Timeout
-from cmk.utils.type_defs import HostName, ServiceDetails, ServiceName, ServiceState
+from cmk.utils.type_defs import HostName, KeepaliveAPI, ServiceDetails, ServiceName, ServiceState
 
 _CacheInfo = Optional[tuple[int, int]]
 
@@ -80,11 +80,20 @@ def get_submitter(
     dry_run: bool,
     perfdata_format: Literal["pnp", "standard"],
     show_perfdata: bool,
+    keepalive: KeepaliveAPI,
 ) -> Submitter:
-    """Enterprise should use `cmk.base.cee.keepalive.submitters`."""
     if dry_run:
         return NoOpSubmitter(
             host_name,
+            dry_run=dry_run,
+            perfdata_format=perfdata_format,
+            show_perfdata=show_perfdata,
+        )
+
+    if keepalive.enabled():
+        return KeepaliveSubmitter(
+            host_name,
+            keepalive,
             dry_run=dry_run,
             perfdata_format=perfdata_format,
             show_perfdata=show_perfdata,
@@ -170,6 +179,27 @@ class Submitter(abc.ABC):
 class NoOpSubmitter(Submitter):
     def _submit(self, formatted_submittees: Iterable[_FormattedSubmittee]) -> None:
         pass
+
+
+class KeepaliveSubmitter(Submitter):
+    def __init__(
+        self,
+        host_name: HostName,
+        keepalive: KeepaliveAPI,
+        *,
+        dry_run: bool,
+        perfdata_format: Literal["pnp", "standard"],
+        show_perfdata: bool,
+    ) -> None:
+        super().__init__(
+            host_name, dry_run=dry_run, perfdata_format=perfdata_format, show_perfdata=show_perfdata
+        )
+        self._keepalive = keepalive
+
+    def _submit(self, formatted_submittees: Iterable[_FormattedSubmittee]) -> None:
+        """Regular case for the CMC - check helpers are running in keepalive mode"""
+        for s in formatted_submittees:
+            self._keepalive.add_check_result(self.host_name, *s)
 
 
 class PipeSubmitter(Submitter):

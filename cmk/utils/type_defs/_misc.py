@@ -11,7 +11,7 @@ import re
 import sys
 from collections.abc import Container, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Literal, NamedTuple, NewType, Optional, TypedDict, Union
+from typing import Any, Literal, NamedTuple, NewType, Optional, Protocol, TypedDict, Union
 
 HostName = str
 HostAddress = str
@@ -345,6 +345,23 @@ class HostLabelValueDict(TypedDict):
 
 
 DiscoveredHostLabelsDict = dict[str, HostLabelValueDict]
+
+
+class KeepaliveAPI(Protocol):
+    # NOTE: This is not the full API. It's what I need now.
+
+    def enabled(self) -> bool:
+        ...
+
+    def add_check_result(
+        self,
+        host: HostName,
+        service: ServiceName,
+        state: ServiceState,
+        output: ServiceDetails,
+        cache_info: Optional[tuple[int, int]],
+    ) -> None:
+        ...
 
 
 InfluxDBConnectionSpec = dict[str, Any]

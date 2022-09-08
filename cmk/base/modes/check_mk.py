@@ -8,7 +8,6 @@ import sys
 from functools import partial
 from pathlib import Path
 from typing import (
-    Callable,
     Container,
     Dict,
     Final,
@@ -1558,30 +1557,17 @@ modes.register(
 
 
 def mode_check_discovery(
-    options: Mapping[str, Literal[True]],
-    hostname: HostName,
-    *,
-    active_check_handler: Callable[[HostName, str], object],
-    keepalive: bool,
+    options: Mapping[str, Literal[True]], hostname: HostName, *, keepalive: bool
 ) -> int:
     _handle_fetcher_options(options)
-    return discovery.commandline_check_discovery(
-        hostname,
-        ipaddress=None,
-        active_check_handler=active_check_handler,
-        keepalive=keepalive,
-    )
+    return discovery.commandline_check_discovery(hostname, ipaddress=None, keepalive=keepalive)
 
 
-def register_mode_check_discovery(
-    *, active_check_handler: Callable[[HostName, str], object], keepalive: bool
-) -> None:
+def register_mode_check_discovery(*, keepalive: bool) -> None:
     modes.register(
         Mode(
             long_option="check-discovery",
-            handler_function=partial(
-                mode_check_discovery, active_check_handler=active_check_handler, keepalive=keepalive
-            ),
+            handler_function=partial(mode_check_discovery, keepalive=keepalive),
             argument=True,
             argument_descr="HOSTNAME",
             short_help="Check for not yet monitored services",
@@ -1597,7 +1583,7 @@ def register_mode_check_discovery(
 
 
 if cmk_version.edition() is cmk_version.Edition.CRE:
-    register_mode_check_discovery(active_check_handler=lambda *args: None, keepalive=False)
+    register_mode_check_discovery(keepalive=False)
 
 # .
 #   .--discover------------------------------------------------------------.
@@ -1859,7 +1845,6 @@ def mode_check(
     options: _CheckingOptions,
     args: List[str],
     *,
-    active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,
 ) -> None:
     import cmk.base.agent_based.checking as checking  # pylint: disable=import-outside-toplevel
@@ -1892,26 +1877,15 @@ def mode_check(
             perfdata_format="pnp" if config.perfdata_format == "pnp" else "standard",
             show_perfdata=options.get("perfdata", False),
         ),
-        active_check_handler=active_check_handler,
         keepalive=keepalive,
     )
 
 
-def register_mode_check(
-    get_submitter_: GetSubmitter,
-    *,
-    active_check_handler: Callable[[HostName, str], object],
-    keepalive: bool,
-) -> None:
+def register_mode_check(get_submitter_: GetSubmitter, *, keepalive: bool) -> None:
     modes.register(
         Mode(
             long_option="check",
-            handler_function=partial(
-                mode_check,
-                get_submitter_,
-                active_check_handler=active_check_handler,
-                keepalive=keepalive,
-            ),
+            handler_function=partial(mode_check, get_submitter_, keepalive=keepalive),
             argument=True,
             argument_descr="HOST [IPADDRESS]",
             argument_optional=True,
@@ -1951,7 +1925,7 @@ def register_mode_check(
 
 
 if cmk_version.edition() is cmk_version.Edition.CRE:
-    register_mode_check(get_submitter, active_check_handler=lambda *args: None, keepalive=False)
+    register_mode_check(get_submitter, keepalive=False)
 
 # .
 #   .--inventory-----------------------------------------------------------.
@@ -2045,35 +2019,16 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_inventory_as_check(
-    options: Dict,
-    hostname: HostName,
-    *,
-    active_check_handler: Callable[[HostName, str], object],
-    keepalive: bool,
-) -> int:
+def mode_inventory_as_check(options: Dict, hostname: HostName, *, keepalive: bool) -> int:
     _handle_fetcher_options(options)
-    return inventory.active_check_inventory(
-        hostname,
-        options,
-        active_check_handler=active_check_handler,
-        keepalive=keepalive,
-    )
+    return inventory.active_check_inventory(hostname, options, keepalive=keepalive)
 
 
-def register_mode_inventory_as_check(
-    *,
-    active_check_handler: Callable[[HostName, str], object],
-    keepalive: bool,
-) -> None:
+def register_mode_inventory_as_check(*, keepalive: bool) -> None:
     modes.register(
         Mode(
             long_option="inventory-as-check",
-            handler_function=partial(
-                mode_inventory_as_check,
-                active_check_handler=active_check_handler,
-                keepalive=keepalive,
-            ),
+            handler_function=partial(mode_inventory_as_check, keepalive=keepalive),
             argument=True,
             argument_descr="HOST",
             short_help="Do HW/SW-Inventory, behave like check plugin",
@@ -2113,10 +2068,7 @@ def register_mode_inventory_as_check(
 
 
 if cmk_version.edition() is cmk_version.Edition.CRE:
-    register_mode_inventory_as_check(
-        active_check_handler=lambda *args: None,
-        keepalive=False,
-    )
+    register_mode_inventory_as_check(keepalive=False)
 
 # .
 #   .--version-------------------------------------------------------------.

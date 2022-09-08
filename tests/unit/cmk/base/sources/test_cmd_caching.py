@@ -207,7 +207,6 @@ def test_mode_inventory_as_check() -> None:
         cmk.base.modes.check_mk.mode_inventory_as_check(
             {},
             HostName("ds-test-host1"),
-            active_check_handler=lambda *args: None,
             keepalive=False,
         )
         == 0
@@ -234,7 +233,6 @@ def test_mode_check_discovery_default(mocker) -> None:  # type:ignore[no-untyped
         cmk.base.modes.check_mk.mode_check_discovery(
             {},
             HostName("ds-test-host1"),
-            active_check_handler=lambda *args: None,
             keepalive=False,
         )
         == 1
@@ -258,7 +256,6 @@ def test_mode_check_discovery_cached(mocker) -> None:  # type:ignore[no-untyped-
                 "cache": True,
             },
             HostName("ds-test-host1"),
-            active_check_handler=lambda *args: None,
             keepalive=False,
         )
         == 1
@@ -325,7 +322,6 @@ def test_mode_check_explicit_host() -> None:
         get_submitter,
         {},
         ["ds-test-host1"],
-        active_check_handler=lambda *args: None,
         keepalive=False,
     )
     assert Source.parse.call_count == 2  # type: ignore[attr-defined]
@@ -340,7 +336,6 @@ def test_mode_check_explicit_host_cache(mocker) -> None:  # type:ignore[no-untyp
             "cache": True,  # --cache
         },
         ["ds-test-host1"],
-        active_check_handler=lambda *args: None,
         keepalive=False,
     )
     assert Source.parse.call_count == 2  # type: ignore[attr-defined]
@@ -359,7 +354,6 @@ def test_mode_check_explicit_host_no_cache(mocker) -> None:  # type:ignore[no-un
             "no-cache": True,  # --no-cache
         },
         ["ds-test-host1"],
-        active_check_handler=lambda *args: None,
         keepalive=False,
     )
     assert Source.parse.call_count == 2  # type: ignore[attr-defined]

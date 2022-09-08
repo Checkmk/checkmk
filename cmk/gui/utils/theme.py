@@ -25,17 +25,22 @@ class Theme:
         self._default_theme = default_theme
         self._theme = default_theme
 
-    def set(self, theme_id: Optional[str]) -> None:
+    def set(self, theme_id: str | None) -> None:
         if not theme_id:
             theme_id = self._default_theme
 
-        if theme_id not in dict(self.theme_choices):
+        if not self.is_in_theme_choices(theme_id):
             theme_id = self._default_theme
 
         self._theme = theme_id
 
     def get(self) -> str:
         return self._theme
+
+    def is_in_theme_choices(self, theme_id: str | None = None) -> bool:
+        if not theme_id:
+            theme_id = self._theme
+        return theme_id in dict(self.theme_choices)
 
     def icon_themes(self) -> List[str]:
         """Returns the themes where icons of a theme can be found in decreasing order of importance.

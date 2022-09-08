@@ -29,6 +29,7 @@ def check_result(
     host_config: HostConfig,
     service_name: ServiceName,
     plugin_name: CheckPluginNameStr,
+    active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,
 ) -> ServiceState:
     try:
@@ -42,7 +43,12 @@ def check_result(
             plugin_name=plugin_name,
             keepalive=keepalive,
         )
-    _handle_output(text, host_config.hostname, keepalive=keepalive)
+    _handle_output(
+        text,
+        host_config.hostname,
+        active_check_handler=active_check_handler,
+        keepalive=keepalive,
+    )
     return state
 
 
@@ -89,11 +95,15 @@ def _handle_failure(
     )
 
 
-def _handle_output(output_text: str, hostname: HostName, *, keepalive: bool) -> None:
+def _handle_output(
+    output_text: str,
+    hostname: HostName,
+    *,
+    active_check_handler: Callable[[HostName, str], object],
+    keepalive: bool,
+) -> None:
+    active_check_handler(hostname, output_text)
     if keepalive:
-        import cmk.base.cee.keepalive as keepalive_  # pylint: disable=no-name-in-module
-
-        keepalive_.add_active_check_result(hostname, output_text)
         console.verbose(output_text)
     else:
         out.output(output_text)

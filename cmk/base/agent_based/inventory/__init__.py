@@ -10,7 +10,7 @@ In the future all inventory code should be moved to this module."""
 import time
 from functools import partial
 from pathlib import Path
-from typing import Container, Dict, List, NamedTuple, Optional, Sequence, Tuple
+from typing import Callable, Container, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
 import cmk.utils.cleanup
 import cmk.utils.debug
@@ -129,7 +129,11 @@ def _commandline_inventory_on_host(
 
 
 def active_check_inventory(
-    hostname: HostName, options: Dict[str, int], *, keepalive: bool
+    hostname: HostName,
+    options: Dict[str, int],
+    *,
+    active_check_handler: Callable[[HostName, str], object],
+    keepalive: bool,
 ) -> ServiceState:
     host_config = HostConfig.make_host_config(hostname)
     return error_handling.check_result(
@@ -137,6 +141,7 @@ def active_check_inventory(
         host_config=host_config,
         plugin_name="check_mk_active-cmk_inv",
         service_name="Check_MK HW/SW Inventory",
+        active_check_handler=active_check_handler,
         keepalive=keepalive,
     )
 

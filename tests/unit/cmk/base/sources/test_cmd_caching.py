@@ -30,7 +30,6 @@ from cmk.base.sources import Source
 from cmk.base.sources.agent import AgentSource
 from cmk.base.sources.snmp import SNMPSource
 from cmk.base.sources.tcp import TCPSource
-from cmk.base.submitters import get_submitter
 
 
 @pytest.fixture(name="scenario")
@@ -303,7 +302,7 @@ def test_mode_discover_explicit_hosts_no_cache(mocker) -> None:  # type:ignore[n
 @pytest.mark.usefixtures("scenario")
 @pytest.mark.usefixtures("patch_data_source")
 def test_mode_check_explicit_host() -> None:
-    cmk.base.modes.check_mk.mode_check(get_submitter, {}, ["ds-test-host1"])
+    cmk.base.modes.check_mk.mode_check({}, ["ds-test-host1"])
     assert Source.parse.call_count == 2  # type: ignore[attr-defined]
 
 
@@ -311,7 +310,6 @@ def test_mode_check_explicit_host() -> None:
 def test_mode_check_explicit_host_cache(mocker) -> None:  # type:ignore[no-untyped-def]
     _patch_data_source(mocker, maybe=True, use_outdated=True)
     cmk.base.modes.check_mk.mode_check(
-        get_submitter,
         {
             "cache": True,  # --cache
         },
@@ -328,7 +326,6 @@ def test_mode_check_explicit_host_no_cache(mocker) -> None:  # type:ignore[no-un
         max_age=config.max_cachefile_age(),
     )
     cmk.base.modes.check_mk.mode_check(
-        get_submitter,
         {
             "no-cache": True,  # --no-cache
         },

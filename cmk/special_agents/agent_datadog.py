@@ -15,7 +15,7 @@ import re
 import time
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from pathlib import Path
-from typing import Protocol
+from typing import Final, Generic, Protocol, TypeVar
 
 import pydantic
 import requests
@@ -196,6 +196,30 @@ class ImplDatadogAPI:
         )
 
 
+_TID = TypeVar("_TID", str, int)
+
+
+class IDStore(Generic[_TID]):
+    def __init__(self, path: Path):
+        self.path: Final = path
+
+    def write(self, ids: Iterable[_TID]) -> None:
+        store.save_text_to_file(
+            self.path,
+            json.dumps(list(ids)),
+        )
+
+    def read(self) -> frozenset[_TID]:
+        return frozenset(
+            json.loads(
+                store.load_text_from_file(
+                    self.path,
+                    default="[]",
+                )
+            )
+        )
+
+
 class MonitorsQuerier:
     def __init__(
         self,
@@ -274,19 +298,19 @@ class EventsQuerier:
         host_name: str,
         max_age: int,
     ) -> None:
-        self._datadog_api = datadog_api
-        self._path_last_event_ids = (
+        self.datadog_api: Final = datadog_api
+        self.id_store: Final = IDStore[int](
             Path(paths.tmp_dir) / "agents" / "agent_datadog" / (host_name + ".json")
         )
-        self._max_age = max_age
+        self.max_age: Final = max_age
 
     def query_events(
         self,
         tags: Tags,
     ) -> Iterator[Event]:
-        last_event_ids = self._read_last_event_ids()
+        last_event_ids = self.id_store.read()
         queried_events = list(self._execute_query(tags))
-        self._store_last_event_ids(event.id for event in queried_events)
+        self.id_store.write(event.id for event in queried_events)
         yield from (event for event in queried_events if event.id not in last_event_ids)
 
     def _execute_query(
@@ -315,7 +339,7 @@ class EventsQuerier:
 
     def _events_query_time_range(self) -> tuple[int, int]:
         now = int(time.time())
-        return now - self._max_age, now
+        return now - self.max_age, now
 
     def _query_events_page_in_time_window(
         self,
@@ -337,31 +361,12 @@ class EventsQuerier:
         if tags:
             params["tags"] = ",".join(tags)
 
-        resp = self._datadog_api.get_request(
+        resp = self.datadog_api.get_request(
             "events",
             params,
         )
         resp.raise_for_status()
         return resp.json()["events"]
-
-    def _store_last_event_ids(
-        self,
-        ids: Iterable[int],
-    ) -> None:
-        store.save_text_to_file(
-            self._path_last_event_ids,
-            json.dumps(list(ids)),
-        )
-
-    def _read_last_event_ids(self) -> frozenset[int]:
-        return frozenset(
-            json.loads(
-                store.load_text_from_file(
-                    self._path_last_event_ids,
-                    default="[]",
-                )
-            )
-        )
 
 
 def _sanitize_event_text(text: str) -> str:

@@ -61,7 +61,7 @@ def _remove_cab(path_to_msibuild: Path, *, msi: Path) -> None:
     _verbose("Removing product.cab from %s" % msi)
     cmd: Final = f"{path_to_msibuild/'msibuild'} {msi} -q \"DELETE FROM _Streams where Name = 'product.cab'\""
 
-    if (result := os.system(cmd)) != 0:  # nosec B605 # BNS:f6c1b9
+    if (result := os.system(cmd)) != 0:  # nosec
         bail_out(f"msibuild is failed on remove cab, {result=}")
 
 
@@ -69,14 +69,14 @@ def _create_new_cab(work_dir: Path) -> None:
     _verbose("Generating new product.cab")
     files = " ".join(map(lambda f: f"{work_dir/f}", msi_file_table()))
     cmd: Final = f"lcab -n {files} {work_dir}/product.cab > nul"
-    if (result := os.system(cmd)) != 0:  # nosec B605 # BNS:f6c1b9
+    if (result := os.system(cmd)) != 0:  # nosec
         bail_out(f"lcab is failed in create new cab, {result=}")
 
 
 def _add_cab(path_to_msibuild: Path, *, msi: Path, working_dir: Path) -> None:
     _verbose("Add modified product.cab")
     cmd: Final = f"{path_to_msibuild/'msibuild'} {msi} -a product.cab {working_dir}/product.cab"
-    if (result := os.system(cmd)) != 0:  # nosec B605 # BNS:f6c1b9
+    if (result := os.system(cmd)) != 0:  # nosec
         bail_out(f"msi build is failed, {result=}")
 
 
@@ -220,7 +220,7 @@ def _export_msi_file_table(exe_dir: Path, *, name: str, msi_in: Path, out_dir: P
         bail_out(f"{exe} is absent")
 
     command = f"{exe} export {msi_in} {name} > {out_dir}/{name}.idt"
-    result = os.system(command)  # nosec B605 # BNS:f6c1b9
+    result = os.system(command)  # nosec
     if result != 0:
         bail_out(f"Failed unpack msi table {name} from {msi_in}, code is {result}.Cmd: {command}")
 
@@ -272,7 +272,7 @@ def _rename_modified_tables(work_dir: Path) -> None:
 def _insert_modified_tables_in_msi(bin_dir: Path, *, msi: Path, work_dir: Path) -> None:
     for entry in _TABLE_NAMES:
         cmd = f"{bin_dir / 'msibuild'} {msi} -i {work_dir}/{entry}.idt"
-        if (result := os.system(cmd)) != 0:  # nosec B605 # BNS:f6c1b9
+        if (result := os.system(cmd)) != 0:  # nosec
             bail_out(f"failed main msibuild, {result=}")
 
 

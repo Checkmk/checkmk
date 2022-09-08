@@ -100,16 +100,13 @@ def useradd(
     useradd_options = version_info.USERADD_OPTIONS
     if uid is not None:
         useradd_options += " -u %d" % int(uid)
-
-    cmd = (
-        ["useradd", useradd_options, "-r"]
-        + ["-d", site.dir]
-        + ["-c", f"OMD site {site.name}"]
-        + ["-g", site.name, "-G", "omd"]
-        + ["-s", "/bin/bash"]
-        + [site.name]
-    )
-    if subprocess.run(cmd, check=False).returncode:
+    if (
+        os.system(  # nosec
+            "useradd %s -r -d '%s' -c 'OMD site %s' -g %s -G omd %s -s /bin/bash"
+            % (useradd_options, site.dir, site.name, site.name, site.name)
+        )
+        != 0
+    ):
         groupdel(site.name)
         raise MKTerminate("Error creating site user.")
 
@@ -135,7 +132,7 @@ def _groupadd(groupname: str, gid: Optional[str] = None) -> None:
 
 def _add_user_to_group(version_info: "VersionInfo", user: str, group: str) -> bool:
     cmd = version_info.ADD_USER_TO_GROUP % {"user": user, "group": group}
-    return subprocess.run(cmd.split(), capture_output=True, check=False).returncode == 0
+    return os.system(cmd + " >/dev/null") == 0  # nosec
 
 
 def userdel(name: str) -> None:

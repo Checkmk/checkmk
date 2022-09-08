@@ -8,7 +8,6 @@
 
 import cProfile
 import getopt
-import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -208,12 +207,7 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
     # fetch information by ssh
     #############################################################################
 
-    cmd = "ssh -o ConnectTimeout=%s %s %s@%s '" % (
-        opt_timeout,
-        opt_any_hostkey,
-        shlex.quote(user),
-        shlex.quote(host_address),
-    )
+    cmd = "ssh -o ConnectTimeout=%s %s %s@%s '" % (opt_timeout, opt_any_hostkey, user, host_address)
 
     for module in command_options:
         if command_options[module]["active"]:
@@ -224,7 +218,7 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
     if opt_debug:
         sys.stderr.write("executing external command: %s\n" % cmd)
 
-    result = subprocess.run(  # nosec B602 # BNS:67522a
+    result = subprocess.run(  # nosec
         cmd,
         shell=True,
         stdout=subprocess.PIPE,

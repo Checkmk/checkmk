@@ -989,6 +989,41 @@ def _check_not_empty_exporter_dict(value, _varprefix):
         raise MKUserError("dict_selection", _("Please select at least one element"))
 
 
+def _valuespec_connection_elements() -> Dictionary:
+    return Dictionary(
+        elements=[
+            ("port", Integer(title=_("Port"), default_value=6443)),
+            (
+                "path_prefix",
+                TextInput(
+                    title=_("Custom path prefix"),
+                    help=_(
+                        "Specifies a URL path prefix, which is prepended to API calls "
+                        "to the Prometheus API. If this option is not relevant for "
+                        "your installation, please leave it unchecked."
+                    ),
+                    allow_empty=False,
+                ),
+            ),
+            (
+                "base_prefix",
+                TextInput(
+                    title=_("Custom URL base prefix"),
+                    help=_(
+                        "Specifies a prefix, which is prepended to the hostname "
+                        "or base address. This is an exotic option, which is "
+                        "kept for legacy reasons. Consider using a custom URL instead. "
+                        "If this option is not relevant for your installation, "
+                        "please leave it unchecked."
+                    ),
+                    allow_empty=False,
+                ),
+            ),
+        ],
+        show_more_keys=["base_prefix"],
+    )
+
+
 def _valuespec_generic_metrics_prometheus():
     namespace_element = (
         "prepend_namespaces",
@@ -1015,34 +1050,8 @@ def _valuespec_generic_metrics_prometheus():
                     "connection",
                     CascadingDropdown(
                         choices=[
-                            (
-                                "ip_address",
-                                _("IP Address"),
-                                Dictionary(
-                                    elements=api_request_connection_elements(
-                                        help_text=_(
-                                            "Specifies a URL path prefix, which is prepended to API calls "
-                                            "to the Prometheus API. If this option is not relevant for "
-                                            "your installation, please leave it unchecked."
-                                        ),
-                                        default_port=6443,
-                                    ),
-                                ),
-                            ),
-                            (
-                                "host_name",
-                                _("Host name"),
-                                Dictionary(
-                                    elements=api_request_connection_elements(
-                                        help_text=_(
-                                            "Specifies a URL path prefix, which is prepended to API calls "
-                                            "to the Prometheus API. If this option is not relevant for "
-                                            "your installation, please leave it unchecked."
-                                        ),
-                                        default_port=6443,
-                                    ),
-                                ),
-                            ),
+                            ("ip_address", _("IP Address"), _valuespec_connection_elements()),
+                            ("host_name", _("Host name"), _valuespec_connection_elements()),
                             (
                                 "url_custom",
                                 _("Custom URL"),
@@ -1508,6 +1517,8 @@ def _transform_agent_prometheus(params):
     if "port" in params:
         if params["connection"][0] in ("ip_address", "host_name"):
             params["connection"][1]["port"] = params["port"]
+            if (prefix := params["connection"][1].pop("path-prefix", None)) is not None:
+                params["connection"][1]["base_prefix"] = prefix
         params.pop("port", None)
 
     if isinstance(params.get("auth_basic"), dict):

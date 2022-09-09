@@ -36,10 +36,8 @@ from cmk.special_agents.utils.prometheus import extract_connection_args
                 "host_name": "prometheus",
             },
             {
-                "address": "1.2.3.4",
+                "api_url": "http://1.2.3.4/api/v1/",
                 "auth": ("user", "secret"),
-                "port": None,
-                "protocol": "http",
                 "verify-cert": False,
             },
             id="explicit_login",
@@ -66,8 +64,7 @@ from cmk.special_agents.utils.prometheus import extract_connection_args
             },
             {
                 "auth": ("user", "very_secret"),
-                "protocol": "https",
-                "url_custom": "my-host.com",
+                "api_url": "https://my-host.com/api/v1/",
                 "verify-cert": False,
             },
             id="pwstore_login",
@@ -93,9 +90,8 @@ from cmk.special_agents.utils.prometheus import extract_connection_args
                 "host_name": "prometheus",
             },
             {
-                "protocol": "https",
+                "api_url": "https://my-host.com/api/v1/",
                 "token": "token",
-                "url_custom": "my-host.com",
                 "verify-cert": True,
             },
             id="explicit_token",
@@ -106,7 +102,8 @@ from cmk.special_agents.utils.prometheus import extract_connection_args
                     "ip_address",
                     {
                         "port": 9876,
-                        "path-prefix": "somewhere.",
+                        "path_prefix": "somewhere.",
+                        "base_prefix": "later",
                     },
                 ),
                 "auth_basic": (
@@ -124,9 +121,7 @@ from cmk.special_agents.utils.prometheus import extract_connection_args
                 "host_name": "prometheus",
             },
             {
-                "address": "somewhere.1.2.3.4",
-                "port": 9876,
-                "protocol": "https",
+                "api_url": "https://later1.2.3.4:9876/somewhere./api/v1/",
                 "token": "very_secret",
                 "verify-cert": True,
             },

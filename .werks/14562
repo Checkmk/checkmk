@@ -1,0 +1,24 @@
+Title: Prometheus: allow specifying a path prefix
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1664959900
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p15
+
+Previously, the Prometheus special agent would use the path prefix as a URL base prefix.
+For example, specifying the use of the host IP address, e.g. <tt>1.2.3.4</tt>, together with a
+prefix, e.g., <tt>my_prefix</tt> would result in an API call to
+C+:
+https://my_prefix1.2.3.4/api/v1/status/buildinfo
+C-:
+In particular, this behaviour deviated from the description in the Prometheus rule. With this werk,
+the path prefix is prepended to the API calls instead, e.g.,
+C+:
+https://1.2.3.4/my_prefix/api/v1/status/buildinfo
+C-:
+Users, which have specified a path prefix, are migrated to the new option
+<tt>Custom URL base prefix</tt>, which has the same behaviour as the old path prefix option.

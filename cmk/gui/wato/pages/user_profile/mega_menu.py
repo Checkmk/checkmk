@@ -22,8 +22,8 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 
 
-def _get_current_theme_titel() -> str:
-    return [titel for theme_id, titel in theme.theme_choices if theme_id == theme.get()][0]
+def _get_current_theme_title() -> str:
+    return [title for theme_id, title in theme.theme_choices if theme_id == theme.get()][0]
 
 
 def _get_sidebar_position() -> str:
@@ -52,7 +52,7 @@ def _user_menu_topics() -> List[TopicMenuTopic]:
             target="",
             sort_index=10,
             icon="color_mode",
-            button_title=_get_current_theme_titel(),
+            button_title=_get_current_theme_title(),
         ),
         TopicMenuItem(
             name="sidebar_position",

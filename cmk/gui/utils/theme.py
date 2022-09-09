@@ -12,7 +12,15 @@ from typing import List, Optional, Tuple
 import cmk.utils.paths
 from cmk.utils.version import is_managed_edition
 
+from cmk.gui.exceptions import MKInternalError
 from cmk.gui.hooks import request_memoize
+
+
+# Avoid circular import of _()
+def _(message: str, /) -> str:
+    from cmk.gui.i18n import _ as _orig
+
+    return _orig(message)
 
 
 class Theme:
@@ -21,11 +29,22 @@ class Theme:
         self._theme = "facelift"
         self.theme_choices: List[Tuple[str, str]] = theme_choices()
 
-    def from_config(self, default_theme: str) -> None:
-        self._default_theme = default_theme
-        self._theme = default_theme
+        if not self.theme_choices:
+            raise MKInternalError(_("No valid theme directories found."))
 
-    def set(self, theme_id: str) -> None:
+        if self._default_theme not in dict(self.theme_choices):
+            raise MKInternalError(
+                _('The default theme "%s" is not given among the found theme choices: %s.')
+                % (self._default_theme, self.theme_choices)
+            )
+
+    def from_config(self, default_theme: str) -> None:
+        # Only set the config default theme if it's part of the theme choices
+        if default_theme in dict(self.theme_choices):
+            self._default_theme = default_theme
+            self._theme = default_theme
+
+    def set(self, theme_id: Optional[str]) -> None:
         if not theme_id:
             theme_id = self._default_theme
 

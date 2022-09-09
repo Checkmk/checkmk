@@ -148,6 +148,7 @@ from .utils_inventory import sort_inventory_result
                 ),
             ],
         ),
+        ({"Labels": None}, []),
     ],
 )
 def test_inv_docker_node_info(  # type:ignore[no-untyped-def]

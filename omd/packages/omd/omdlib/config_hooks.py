@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
 #
 #       U  ___ u  __  __   ____
 #        \/"_ \/U|' \/ '|u|  _"\
@@ -130,12 +129,18 @@ def _config_load_hook(  # pylint: disable=too-many-branches
     def get_hook_info(info: str) -> str:
         return call_hook(site, hook_name, [info])[1]
 
+    hook["choices"] = _parse_hook_choices(get_hook_info("choices"))
+    return hook
+
+
+def _parse_hook_choices(hook_info: str) -> ConfigHookChoices:
     # The choices can either be a list of possible keys. Then
     # the hook outputs one live for each choice where the key and a
     # description are separated by a colon. Or it outputs one line
     # where that line is an extended regular expression matching the
     # possible values.
-    choicestxt = get_hook_info("choices").split("\n")
+
+    choicestxt = hook_info.split("\n")
     choices: ConfigHookChoices = None
     if len(choicestxt) == 1:
         regextext = choicestxt[0].strip()
@@ -153,9 +158,7 @@ def _config_load_hook(  # pylint: disable=too-many-branches
                 choices.append((val, descr))
         except Exception as e:
             raise MKTerminate("Invalid output of hook: %s: %s" % (choicestxt, e))
-
-    hook["choices"] = choices
-    return hook
+    return choices
 
 
 def load_hook_dependencies(site: "SiteContext", config_hooks: ConfigHooks) -> ConfigHooks:

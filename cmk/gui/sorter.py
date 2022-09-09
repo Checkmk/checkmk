@@ -23,28 +23,11 @@ from typing import (
 from cmk.utils.plugin_registry import Registry
 
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.type_defs import ColumnName, SorterFunction, SorterName
+from cmk.gui.type_defs import ColumnName, SorterFunction, SorterName, SorterSpec
 from cmk.gui.valuespec import ValueSpec
 
 if TYPE_CHECKING:
     from cmk.gui.plugins.views.utils import Cell
-
-
-class SorterSpec(NamedTuple):
-    # some Sorter need an additional parameter e.g. svc_metrics_hist, svc_metrics_forecast
-    # The parameter is then encoded in the sorter name. "[sorter]:[param]"
-    # other Sorter (custom host metric) do the same when the information is
-    # coming from the url, but use a CascadingDropdown to let the user
-    # input the information. This results in a Tuple as a result variable.
-    # TODO: perhaps it could be possible to use the ValueSpec to
-    #       transparently transform the tuple into a single string?!
-    sorter: Union[SorterName, Tuple[SorterName, Dict[str, str]]]
-    negate: bool
-    join_key: Optional[str]
-
-
-# Is used to add default arguments to the named tuple. Would be nice to have a cleaner solution
-SorterSpec.__new__.__defaults__ = (None,) * len(SorterSpec._fields)  # type: ignore[attr-defined]
 
 
 class SorterEntry(NamedTuple):

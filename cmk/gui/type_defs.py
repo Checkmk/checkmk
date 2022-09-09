@@ -274,6 +274,23 @@ class PainterSpec:
         return str(self.to_raw())
 
 
+class SorterSpec(NamedTuple):
+    # some Sorter need an additional parameter e.g. svc_metrics_hist, svc_metrics_forecast
+    # The parameter is then encoded in the sorter name. "[sorter]:[param]"
+    # other Sorter (custom host metric) do the same when the information is
+    # coming from the url, but use a CascadingDropdown to let the user
+    # input the information. This results in a Tuple as a result variable.
+    # TODO: perhaps it could be possible to use the ValueSpec to
+    #       transparently transform the tuple into a single string?!
+    sorter: SorterName | tuple[SorterName, Mapping[str, str]]
+    negate: bool
+    join_key: str | None
+
+
+# Is used to add default arguments to the named tuple. Would be nice to have a cleaner solution
+SorterSpec.__new__.__defaults__ = (None,) * len(SorterSpec._fields)  # type: ignore[attr-defined]
+
+
 ViewSpec = dict[str, Any]
 AllViewSpecs = dict[tuple[UserId, ViewName], ViewSpec]
 PermittedViewSpecs = dict[ViewName, ViewSpec]

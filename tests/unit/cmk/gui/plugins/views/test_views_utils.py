@@ -14,8 +14,8 @@ from cmk.gui.plugins.views.utils import (
     PainterRegistry,
     replace_action_url_macros,
 )
-from cmk.gui.sorter import _encode_sorter_url, _parse_url_sorters, SorterSpec
-from cmk.gui.type_defs import PainterSpec
+from cmk.gui.sorter import _encode_sorter_url, _parse_url_sorters
+from cmk.gui.type_defs import PainterSpec, SorterSpec
 
 
 @pytest.mark.parametrize(

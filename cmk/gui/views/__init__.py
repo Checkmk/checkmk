@@ -109,7 +109,6 @@ from cmk.gui.sorter import (
     sorter_registry,
     SorterEntry,
     SorterRegistry,
-    SorterSpec,
 )
 from cmk.gui.type_defs import (
     ColumnName,
@@ -120,6 +119,7 @@ from cmk.gui.type_defs import (
     Row,
     Rows,
     SingleInfos,
+    SorterSpec,
     TranslatedMetrics,
     ViewSpec,
     VisualContext,

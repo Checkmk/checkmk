@@ -60,7 +60,7 @@ from cmk.gui.num_split import cmp_num_split as _cmp_num_split
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.metrics.utils import CombinedGraphMetricSpec
-from cmk.gui.sorter import _encode_sorter_url, register_sorter, sorter_registry, SorterSpec
+from cmk.gui.sorter import _encode_sorter_url, register_sorter, sorter_registry
 from cmk.gui.type_defs import (
     ColumnName,
     CombinedGraphSpec,
@@ -73,6 +73,7 @@ from cmk.gui.type_defs import (
     Rows,
     SorterFunction,
     SorterName,
+    SorterSpec,
     ViewSpec,
     VisualLinkSpec,
 )

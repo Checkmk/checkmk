@@ -28,16 +28,11 @@ from cmk.gui.plugins.views.utils import (
     make_service_breadcrumb,
     painter_exists,
 )
-from cmk.gui.sorter import (
-    DerivedColumnsSorter,
-    sorter_registry,
-    SorterEntry,
-    SorterListEntry,
-    SorterSpec,
-)
+from cmk.gui.sorter import DerivedColumnsSorter, sorter_registry, SorterEntry, SorterListEntry
 from cmk.gui.type_defs import (
     FilterName,
     HTTPVariables,
+    SorterSpec,
     ViewProcessTracking,
     ViewSpec,
     VisualContext,

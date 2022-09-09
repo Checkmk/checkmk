@@ -65,7 +65,7 @@ def test_section_detection_uses_sysdescr_or_sysobjid(  # type:ignore[no-untyped-
         ".1.3.6.1.2.1.47.1.1.1.1.*": {"snmp_extended_info"},
         ".1.3.6.1.2.1.105.1.3.1.1.*": {"pse_poe"},
         ".1.3.6.1.4.1.14848.2.1.1.1.0": {"etherbox"},
-        ".1.3.6.1.4.1.2036.2.1.1.4.0": {"snmp_quantum_storage_info", "aruba_wlc_aps"},
+        ".1.3.6.1.4.1.2036.2.1.1.4.0": {"snmp_quantum_storage_info"},
         ".1.3.6.1.4.1.232.2.2.4.2.0": {
             "hp_proliant_cpu",
             "hp_proliant_da_cntlr",

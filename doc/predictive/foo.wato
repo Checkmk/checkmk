@@ -12,7 +12,9 @@ register_check_parameters(
     "foobar",  # name of WATO group, was declared in check (not always name of check)
     "Levels for foo",  # title of the WATO ruleset
     Levels(
-        help=_("The foo check does check the foo of a bar. Here you can define parameters..."),
+        help=_(  # pylint: disable=not-callable
+            "The foo check does check the foo of a bar. Here you can define parameters..."
+        ),
         unit="processes",
         default_difference=(10.0, 20.0),  # Default settings when using absolute differences
         default_levels=(100.0, 200.0),  # Default levels when using non-predictive static levels

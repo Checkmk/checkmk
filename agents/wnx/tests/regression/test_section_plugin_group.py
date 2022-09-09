@@ -134,7 +134,7 @@ def expected_output_engine():
             r"^$",
             r"Node,MACAddress,Name,NetConnectionID,NetConnectionStatus,Speed",
         ]
-        re_variadic = r"[^,]+,([0-9A-Fa-f]{2}(:[0-9A-Fa-f]{2}){5})?,[^,]+,[^,]*,\d*,\d*" r"|^$"
+        re_variadic = r"[^,]+,([0-9A-Fa-f]{2}(:[0-9A-Fa-f]{2}){5})?,[^,]+,[^,]*,\d*,\d*|^$"
         if Globals.plugintype == "plugins":
             re_variadic += r"|%s" % re.escape(r"<<<>>>")
         if not Globals.alone:

@@ -14,6 +14,7 @@
 def inventory_foo(info):
     if len(info) > 0:
         return [(None, None)]
+    return None
 
 
 def check_foo(_no_item, params, info):

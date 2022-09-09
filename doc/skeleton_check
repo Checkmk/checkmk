@@ -5,7 +5,7 @@
 
 # REMOVE THIS:
 # type: ignore[import]
-# pylint: disable
+# pylint: disable=import-error
 
 from typing import Any, Mapping
 

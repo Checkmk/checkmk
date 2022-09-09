@@ -47,13 +47,10 @@ def remove_files(target_dir, binaries):
         safe_binary_remove(os.path.join(target_dir, f))
 
 
-def make_dir(dir):
-    if not os.path.exists(dir):
-        os.mkdir(dir)
+def make_dir(directory):
+    if not os.path.exists(directory):
+        os.mkdir(directory)
 
 
 def check_os():
-    if platform.system() != "Windows":
-        return False
-
-    return True
+    return platform.system() == "Windows"

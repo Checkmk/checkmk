@@ -13,7 +13,7 @@ import pytest
 from .local import local_test
 
 
-class Globals(object):
+class Globals:
     section = "winperf"
     alone = True
 
@@ -23,8 +23,8 @@ def testfile_engine():
     return os.path.basename(__file__)
 
 
-@pytest.fixture(params=["alone", "with_systemtime"])
-def testconfig_sections(request, make_yaml_config):
+@pytest.fixture(name="testconfig_sections", params=["alone", "with_systemtime"])
+def fixture_testconfig_sections(request, make_yaml_config):
     Globals.alone = request.param == "alone"
     if Globals.alone:
         make_yaml_config["global"]["sections"] = Globals.section
@@ -33,8 +33,8 @@ def testconfig_sections(request, make_yaml_config):
     return make_yaml_config
 
 
-@pytest.fixture(params=["System", "2"], ids=["counter:System", "counter:2"])
-def testconfig(request, testconfig_sections):
+@pytest.fixture(name="testconfig", params=["System", "2"], ids=["counter:System", "counter:2"])
+def fixture_testconfig(request, testconfig_sections):
     testconfig_sections[Globals.section] = {"counters": ["%s:test" % request.param]}
     return testconfig_sections
 

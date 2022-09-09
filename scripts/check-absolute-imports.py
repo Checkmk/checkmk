@@ -5,23 +5,21 @@
 
 # This file is for execution by the pre-commit framework.
 
-import os
 import re
 import sys
-from pathlib import PurePosixPath
-from typing import List
+from pathlib import Path
 
-WHITELIST = ("cmk/gui",)
+WHITELIST = (Path("cmk/gui"),)
 
 if __name__ == "__main__":
-    fails: List[str] = []
+    fails: list[str] = []
     for filename in sys.argv[1:]:
-        if str(PurePosixPath(filename).parent) not in WHITELIST:
-            continue
-        fails.extend([filename for line in open(filename) if re.match("^(from|import) \\.", line)])
+        if Path(filename).parent in WHITELIST:
+            with open(filename, encoding="utf-8") as f:
+                fails.extend(filename for line in f if re.match("^(from|import) \\.", line))
     if fails:
-        sys.stderr.write(f"error: These files are using relative imports: {fails}" + os.linesep)
-        sys.stderr.write("We currently mandate absolute imports. Please use them." + os.linesep)
+        sys.stderr.write(f"error: These files are using relative imports: {fails}\n")
+        sys.stderr.write("We currently mandate absolute imports. Please use them.\n")
         sys.stderr.flush()
         sys.exit(1)
     sys.stderr.flush()

@@ -56,7 +56,9 @@ def num_jobs_to_use() -> int:
 
 
 def get_files_to_check(tmpdir: Path) -> Iterable[Path]:
-    return [compile_check_plugins(tmpdir)] + [f for f in find_python_files() if not blacklisted(f)]
+    return [compile_check_plugins(tmpdir)] + [
+        f for f in find_python_files() if not f.is_relative_to("checks")
+    ]
 
 
 def find_python_files() -> Iterable[Path]:
@@ -73,24 +75,6 @@ def find_python_files() -> Iterable[Path]:
 
 def make_relative(name: Path) -> Path:
     return name.relative_to(Path(repo_path()))
-
-
-def blacklisted(name: Path) -> bool:
-    return (
-        # Can currently not be checked alone. Are compiled together below
-        name.is_relative_to("checks")
-        # TODO: We should also test them...
-        or name == Path("werk")
-        or name.is_relative_to("scripts")
-        or name.is_relative_to("agents/wnx/tests/regression")
-        # TODO: disable random, not that important stuff
-        or name.is_relative_to("agents/windows/it")
-        or name.is_relative_to("agents/windows/msibuild")
-        or name.is_relative_to("doc")
-        or name == Path("livestatus/api/python/example.py")
-        or name == Path("livestatus/api/python/example_multisite.py")
-        or name == Path("livestatus/api/python/make_nagvis_map.py")
-    )
 
 
 def compile_check_plugins(tmpdir: Path) -> Path:

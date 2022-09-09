@@ -9,11 +9,11 @@ import math
 import os
 import platform
 import re
-import winreg  # type: ignore
+import winreg  # type: ignore[import]  # pylint: disable=import-error
 from itertools import chain, repeat
 
 import pytest
-import win32evtlog  # type: ignore
+import win32evtlog  # type: ignore[import]  # pylint: disable=import-error
 
 from .local import assert_subprocess, host, local_test, user_dir
 
@@ -140,7 +140,7 @@ def testconfig_engine(request, testconfig_sections):
 @pytest.fixture(name="expected_output_no_events")
 def expected_output_no_events_engine():
     if platform.system() != "Windows":
-        return
+        return None
 
     expected = [re.escape(r"<<<%s>>>" % Globals.section), re.escape(r"[[[Application]]]")]
     if not Globals.alone:
@@ -151,7 +151,7 @@ def expected_output_no_events_engine():
 @pytest.fixture(name="expected_output_application_events")
 def expected_output_application_events_engine():
     if platform.system() != "Windows":
-        return
+        return None
 
     split_index = logs.index("Application") + 1
     re_str = r"|".join(
@@ -173,8 +173,9 @@ def expected_output_application_events_engine():
 
 
 def last_records():
-    if platform.system() == "Windows":
-        return {logtype: get_last_record(logtype) for logtype in ["Application"]}
+    if platform.system() != "Windows":
+        return None
+    return {logtype: get_last_record(logtype) for logtype in ["Application"]}
 
 
 @pytest.fixture

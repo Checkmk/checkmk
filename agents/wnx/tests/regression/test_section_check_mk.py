@@ -56,7 +56,7 @@ def testconfig_only_from_engine(request, testconfig_host):
 
 
 # live example of valid output
-"""
+_EXAMPLE = """
 <<<check_mk>>>
 Version: 2.0.0i1
 BuildDate: Jun  7 2019
@@ -95,9 +95,7 @@ def make_only_from_array(ipv4):
 
 @pytest.fixture(name="expected_output")
 def expected_output_engine():
-    drive_letter = r"[A-Z]:"
     ipv4 = Globals.only_from.split() if Globals.only_from is not None else None
-    ___pip = make_only_from_array(ipv4)
     expected = [
         # Note: The first two lines are output with crash_debug = yes in 1.2.8
         # but no longer in 1.4.0:
@@ -133,7 +131,7 @@ def expected_output_engine():
         # (drive_letter,
         #  re.escape(os.path.join(exec_dir, 'log', 'success.log'))),
         (
-            r"OnlyFrom: %s %s" % tuple([i4 for i4 in make_only_from_array(ipv4)])
+            r"OnlyFrom: %s %s" % tuple(make_only_from_array(ipv4))
             if Globals.only_from
             else r"OnlyFrom: "
         ),

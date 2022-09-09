@@ -5,6 +5,7 @@
 """Checkmk development script to manage werks
 """
 import argparse
+import ast
 import fcntl
 import os
 import shutil
@@ -14,6 +15,7 @@ import sys
 import termios
 import time
 import tty
+from pathlib import Path
 from typing import Dict, List, NoReturn, Optional, Sequence, Set, Tuple, Union
 
 Werk = Dict[str, str]
@@ -231,7 +233,7 @@ def try_migrate_werk_ids():
     if not os.path.isfile(RESERVED_IDS_FILE_PATH) and os.path.isfile(".my_ids"):
         try:
             # migration step to move '.my_ids' to RESERVED_IDS_FILE_PATH
-            dest = shutil.move(".my_ids", RESERVED_IDS_FILE_PATH)
+            shutil.move(".my_ids", RESERVED_IDS_FILE_PATH)
             sys.stdout.write(f'Moved ".my_ids" to {RESERVED_IDS_FILE_PATH}\n')
         except Exception:
             sys.stderr.write(f'Error: could not move ".my_ids" to {RESERVED_IDS_FILE_PATH}\n')
@@ -452,8 +454,8 @@ def git_commit(werk: Werk, custom_files: List[str]) -> None:
 
 
 def git_top_level() -> str:
-    info = subprocess.Popen(["git", "rev-parse", "--show-toplevel"], stdout=subprocess.PIPE)
-    return str(info.communicate()[0].split()[0])
+    with subprocess.Popen(["git", "rev-parse", "--show-toplevel"], stdout=subprocess.PIPE) as info:
+        return str(info.communicate()[0].split()[0])
 
 
 def something_in_git_index() -> bool:
@@ -549,7 +551,7 @@ def show_werk(werk: Werk) -> None:
     sys.stdout.write("\n%s\n" % werk["description"])
 
 
-def main_list(args: argparse.Namespace, fmt: str) -> None:
+def main_list(args: argparse.Namespace, fmt: str) -> None:  # pylint: disable=too-many-branches
     # arguments are tags from state, component and class. Multiple values
     # in one class are orred. Multiple types are anded.
     filters: Dict[str, List] = {}
@@ -985,8 +987,7 @@ def werk_cherry_pick(commit_id: str, no_commit: bool) -> None:
 
 def get_werk_ids() -> List[int]:
     try:
-        with open(RESERVED_IDS_FILE_PATH, "r") as f:
-            return eval(f.read())
+        return ast.literal_eval(Path(RESERVED_IDS_FILE_PATH).read_text())
     except Exception:
         return []
 

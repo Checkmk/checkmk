@@ -77,56 +77,58 @@ def testconfig_drive_engine(request, make_yaml_config):
     ids=["recursive_glob", "simple_glob_alone", "simple_glob_with_systemtime"],
 )
 def testconfig_engine(request, testconfig_drive):
-    if platform.system() == "Windows":
-        Globals.alone = request.param[2]
-        Globals.alone = request.param == "alone"
-        if Globals.alone:
-            testconfig_drive["global"]["sections"] = Globals.section
-        else:
-            testconfig_drive["global"]["sections"] = [Globals.section, "systemtime"]
+    if platform.system() != "Windows":
+        return None
+    Globals.alone = request.param[2]
+    Globals.alone = request.param == "alone"
+    if Globals.alone:
+        testconfig_drive["global"]["sections"] = Globals.section
+    else:
+        testconfig_drive["global"]["sections"] = [Globals.section, "systemtime"]
 
-        path_array = []
-        if request.param[0] != Globals.paths.tempdir1:  # pylint: disable=comparison-with-callable
-            path_array.append(Globals.paths.tempfile1())
-            path_array.append(
-                os.path.join(
-                    Globals.paths.tempdir1(), "?" + os.path.basename(Globals.paths.tempfile2())[1:]
-                )
+    path_array = []
+    if request.param[0] != Globals.paths.tempdir1:  # pylint: disable=comparison-with-callable
+        path_array.append(Globals.paths.tempfile1())
+        path_array.append(
+            os.path.join(
+                Globals.paths.tempdir1(), "?" + os.path.basename(Globals.paths.tempfile2())[1:]
             )
+        )
 
-        path_array.append(os.path.join(request.param[0](), request.param[1]))
-        path_array.append(Globals.paths.missingfile())
-        testconfig_drive[Globals.section] = {"path": path_array}
+    path_array.append(os.path.join(request.param[0](), request.param[1]))
+    path_array.append(Globals.paths.missingfile())
+    testconfig_drive[Globals.section] = {"path": path_array}
 
-        return testconfig_drive
+    return testconfig_drive
 
 
 @pytest.fixture(name="expected_output")
 def expected_output_engine():
-    if platform.system() == "Windows":
-        # this variable is for a future release
-        _ = [
-            re.escape(r"<<<%s:sep(124)>>>" % Globals.section),
-            r"\d+",
-            re.escape(r"[[[header]]]"),
-            re.escape(r"name|status|size|time"),
-            re.escape(r"[[[content]]]"),
-            re.escape(r"%s|" % Globals.paths.tempfile1()) + r"ok\|" + r"\d+\|\d+",
-            re.escape(r"%s|" % Globals.paths.tempfile2()) + r"ok\|" + r"\d+\|\d+",
-            re.escape(r"%s|" % Globals.paths.tempfile3()) + r"ok\|" + r"\d+\|\d+",
-            re.escape(r"%s|" % Globals.paths.missingfile()) + r"missing",
-        ]
-        expected_legacy = [
-            re.escape(r"<<<%s:sep(124)>>>" % Globals.section),
-            r"\d+",
-            re.escape(r"%s|" % Globals.paths.tempfile1()) + r"\d+\|\d+",
-            re.escape(r"%s|" % Globals.paths.tempfile2()) + r"\d+\|\d+",
-            re.escape(r"%s|" % Globals.paths.tempfile3()) + r"\d+\|\d+",
-            re.escape(r"%s|missing|" % Globals.paths.missingfile()) + r"\d+",
-        ]
-        if not Globals.alone:
-            expected_legacy += [re.escape(r"<<<systemtime>>>"), r"\d+"]
-        return expected_legacy
+    if platform.system() != "Windows":
+        return None
+    # this variable is for a future release
+    _ = [
+        re.escape(r"<<<%s:sep(124)>>>" % Globals.section),
+        r"\d+",
+        re.escape(r"[[[header]]]"),
+        re.escape(r"name|status|size|time"),
+        re.escape(r"[[[content]]]"),
+        re.escape(r"%s|" % Globals.paths.tempfile1()) + r"ok\|" + r"\d+\|\d+",
+        re.escape(r"%s|" % Globals.paths.tempfile2()) + r"ok\|" + r"\d+\|\d+",
+        re.escape(r"%s|" % Globals.paths.tempfile3()) + r"ok\|" + r"\d+\|\d+",
+        re.escape(r"%s|" % Globals.paths.missingfile()) + r"missing",
+    ]
+    expected_legacy = [
+        re.escape(r"<<<%s:sep(124)>>>" % Globals.section),
+        r"\d+",
+        re.escape(r"%s|" % Globals.paths.tempfile1()) + r"\d+\|\d+",
+        re.escape(r"%s|" % Globals.paths.tempfile2()) + r"\d+\|\d+",
+        re.escape(r"%s|" % Globals.paths.tempfile3()) + r"\d+\|\d+",
+        re.escape(r"%s|missing|" % Globals.paths.missingfile()) + r"\d+",
+    ]
+    if not Globals.alone:
+        expected_legacy += [re.escape(r"<<<systemtime>>>"), r"\d+"]
+    return expected_legacy
 
 
 @pytest.fixture

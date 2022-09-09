@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
 import sys
 from pathlib import Path
 
@@ -17,9 +16,10 @@ def create_changelog(dest_file_path, precompiled_werk_files):
         cmk.utils.werks.write_as_text(werks, f)
 
         # Append previous werk changes
-        if os.path.exists(dest_file_path + ".in"):
+        p = Path(dest_file_path + ".in")
+        if p.exists():
             f.write("\n\n")
-            f.write(open(dest_file_path + ".in").read())
+            f.write(p.read_text())
 
 
 def load_werks(precompiled_werk_files):

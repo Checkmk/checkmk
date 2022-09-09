@@ -5,6 +5,7 @@
 
 # Example program for accessing status of event console
 
+import ast
 import os
 import socket
 
@@ -15,6 +16,7 @@ sock.connect(path)
 
 # Send query
 sock.sendall(b"GET events\nFilter: event_phase = open")
+sock.shutdown(socket.SHUT_WR)
 
 # Read response and convert Python source to Python object
 response_text = b""
@@ -23,7 +25,7 @@ while True:
     response_text += chunk
     if not chunk:
         break
-response = eval(response_text)
+response = ast.literal_eval(response_text.decode("utf-8"))
 
 # The name of the column headers are the first item of the result list
 headers = response[0]

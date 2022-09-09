@@ -26,7 +26,7 @@ def testfile_engine():
 
 
 @pytest.fixture(name="testconfig", params=["alone", "with_systemtime"])
-def testconfig(request, make_yaml_config):
+def fixture_testconfig(request, make_yaml_config):
     Globals.alone = request.param == "alone"
     if Globals.alone:
         make_yaml_config["global"]["sections"] = Globals.section

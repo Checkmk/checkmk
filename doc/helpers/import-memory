@@ -10,7 +10,6 @@ be emitted in various formats for futher processing.
 
 import argparse
 import contextlib
-import distutils.sysconfig as sysconfig
 import gc
 import importlib
 import inspect
@@ -18,6 +17,7 @@ import json
 import os
 import subprocess
 import sys
+from distutils import sysconfig  # pylint: disable=deprecated-module
 from types import FrameType
 from typing import Any, Dict, Iterator, List, NamedTuple, Optional, Union
 
@@ -286,7 +286,7 @@ def _get_mem(pid: int) -> Memory:
             val *= MiB
         else:
             raise RuntimeError(
-                "Unsupported memory unit for Private_* memory info " "from /proc/%d/smaps", pid
+                "Unsupported memory unit for Private_* memory info from /proc/%d/smaps", pid
             )
         # pylint: enable=raising-format-tuple
         return val
@@ -334,7 +334,6 @@ class MeasureMemory:
 @contextlib.contextmanager
 def track_growth(parent, module, fromlist):
     # This is a separate contextmanager so we can actually gracefully recover from any errors.
-    global _FORMATTER
     if _FORMATTER is None:
         raise Exception("no formatter")
 
@@ -342,9 +341,9 @@ def track_growth(parent, module, fromlist):
     try:
         with MeasureMemory() as mem:
             yield
+            size = mem.diff().private
+            _FORMATTER.setsize(size)
     finally:
-        size = mem.diff().private
-        _FORMATTER.setsize(size)
         _FORMATTER.pop()
 
 
@@ -396,7 +395,7 @@ def _importer(
 
     def looks_like_import(lines):
         # WARNING: `line` actually may be None
-        return lines and any([part in lines[0] for part in ("import", "from")])
+        return lines and any(part in lines[0] for part in ("import", "from"))
 
     def hunt_for_module_name(frames):
         # Some crappy^H^H^H^H^H^H external packages do some weird stuff with exec and import.
@@ -478,8 +477,11 @@ def _spawn(*args):
     # Give the process it's own process group so it
     # won't be killed when the script exits.
     # Close stdout and stderr so we won't have an ugly terminal.
-    subprocess.Popen(
-        args, stdout=open("/dev/null", "w"), stderr=open("/dev/null", "w"), start_new_session=True
+    subprocess.Popen(  # pylint: disable=consider-using-with
+        args,
+        stdout=open("/dev/null", "w"),  # pylint: disable=consider-using-with
+        stderr=open("/dev/null", "w"),  # pylint: disable=consider-using-with
+        start_new_session=True,
     )
 
 

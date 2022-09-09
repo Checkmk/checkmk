@@ -16,9 +16,8 @@ def testfile_engine():
     return os.path.basename(__file__)
 
 
-@pytest.fixture
-def testconfig(make_yaml_config):
-    section = "systemtime"
+@pytest.fixture(name="testconfig")
+def fixture_testconfig(make_yaml_config):
     make_yaml_config["global"]["sections"] = "systemtime"
     return make_yaml_config
 

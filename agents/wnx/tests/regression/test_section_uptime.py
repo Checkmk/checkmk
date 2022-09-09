@@ -12,7 +12,7 @@ import pytest
 from .local import local_test
 
 
-class Globals(object):
+class Globals:
     section = "uptime"
     alone = True
 
@@ -22,8 +22,8 @@ def testfile_engine():
     return os.path.basename(__file__)
 
 
-@pytest.fixture(params=["alone", "with_systemtime"])
-def testconfig(request, make_yaml_config):
+@pytest.fixture(name="testconfig", params=["alone", "with_systemtime"])
+def fixture_testconfig(request, make_yaml_config):
     Globals.alone = request.param == "alone"
     if Globals.alone:
         make_yaml_config["global"]["sections"] = Globals.section

@@ -149,8 +149,8 @@ def _parse_hook_choices(hook_info: str) -> ConfigHookChoices:
                 for line in choices_list:
                     val, descr = line.split(":", 1)
                     choices.append((val.strip(), descr.strip()))
-            except Exception as e:
-                raise MKTerminate("Invalid output of hook: %s: %s" % (choices_list, e))
+            except ValueError as excep:
+                raise MKTerminate(f"Invalid output of hook: {choices_list}: {excep}") from excep
             return choices
     return None
 

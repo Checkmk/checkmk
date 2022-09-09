@@ -7,7 +7,7 @@ import cmk.utils.version as cmk_version
 
 from cmk.gui.i18n import _, _l
 from cmk.gui.plugins.dashboard.utils import builtin_dashboards, GROW, MAX
-from cmk.gui.type_defs import PainterSpec, VisualLinkSpec
+from cmk.gui.type_defs import PainterSpec, SorterSpec, VisualLinkSpec
 
 builtin_dashboards["problems"] = {
     "single_infos": [],
@@ -98,7 +98,7 @@ builtin_dashboards["problems"] = {
                 PainterSpec(name="host_plugin_output"),
             ],
             "public": True,
-            "sorters": [("hoststate", True)],
+            "sorters": [SorterSpec(sorter="hoststate", negate=True)],
             "topic": None,
             "link_from": {},
             "icon": None,
@@ -153,7 +153,11 @@ builtin_dashboards["problems"] = {
             ],
             "play_sounds": True,
             "public": True,
-            "sorters": [("svcstate", True), ("stateage", False), ("svcdescr", False)],
+            "sorters": [
+                SorterSpec(sorter="svcstate", negate=True),
+                SorterSpec(sorter="stateage", negate=False),
+                SorterSpec(sorter="svcdescr", negate=False),
+            ],
             "link_from": {},
             "topic": "",
             "icon": None,
@@ -200,7 +204,7 @@ builtin_dashboards["problems"] = {
             ],
             "play_sounds": False,
             "public": True,
-            "sorters": [("log_time", True)],
+            "sorters": [SorterSpec(sorter="log_time", negate=True)],
             "link_from": {},
             "topic": "",
             "icon": None,
@@ -279,7 +283,7 @@ builtin_dashboards["simple_problems"] = {
                 PainterSpec(name="host_plugin_output"),
             ],
             "public": True,
-            "sorters": [("hoststate", True)],
+            "sorters": [SorterSpec(sorter="hoststate", negate=True)],
             "topic": None,
             "link_from": {},
             "icon": None,
@@ -334,7 +338,11 @@ builtin_dashboards["simple_problems"] = {
             ],
             "play_sounds": True,
             "public": True,
-            "sorters": [("svcstate", True), ("stateage", False), ("svcdescr", False)],
+            "sorters": [
+                SorterSpec(sorter="svcstate", negate=True),
+                SorterSpec(sorter="stateage", negate=False),
+                SorterSpec(sorter="svcdescr", negate=False),
+            ],
             "link_from": {},
             "topic": "",
             "icon": None,

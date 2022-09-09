@@ -7,7 +7,7 @@
 # to have the view definitions right inside the dashboards
 
 from cmk.gui.i18n import _l
-from cmk.gui.type_defs import PainterSpec, VisualLinkSpec
+from cmk.gui.type_defs import PainterSpec, SorterSpec, VisualLinkSpec
 from cmk.gui.view_store import multisite_builtin_views
 
 multisite_builtin_views.update(
@@ -39,7 +39,7 @@ multisite_builtin_views.update(
                 PainterSpec(name="host_plugin_output"),
             ],
             "public": True,
-            "sorters": [("hoststate", True)],
+            "sorters": [SorterSpec(sorter="hoststate", negate=True)],
             "title": _l("Host problems"),
             "topic": None,
             "user_sortable": True,
@@ -88,9 +88,9 @@ multisite_builtin_views.update(
             "play_sounds": True,
             "public": True,
             "sorters": [
-                ("svcstate", True),
-                ("stateage", False),
-                ("svcdescr", False),
+                SorterSpec(sorter="svcstate", negate=True),
+                SorterSpec(sorter="stateage", negate=False),
+                SorterSpec(sorter="svcdescr", negate=False),
             ],
             "title": _l("Service problems"),
             "topic": None,

@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import cast, Dict, List, Optional, Set
-from typing import Tuple as _Tuple
-from typing import Union
+from collections.abc import Iterable
+from typing import List, Optional, Set
 
 from livestatus import SiteId
 
@@ -28,7 +27,7 @@ from cmk.gui.plugins.views.utils import (
     make_service_breadcrumb,
     painter_exists,
 )
-from cmk.gui.sorter import DerivedColumnsSorter, sorter_registry, SorterEntry, SorterListEntry
+from cmk.gui.sorter import DerivedColumnsSorter, sorter_registry, SorterEntry
 from cmk.gui.type_defs import (
     FilterName,
     HTTPVariables,
@@ -115,20 +114,10 @@ class View:
             self.user_sorters if self.user_sorters else self.spec["sorters"]
         )
 
-    # TODO: make sure sorter_list type is correct
-    def _get_sorter_entries(self, sorter_list: List[SorterListEntry]) -> List[SorterEntry]:
+    def _get_sorter_entries(self, sorter_list: Iterable[SorterSpec]) -> List[SorterEntry]:
         sorters: List[SorterEntry] = []
         for entry in sorter_list:
-            sorter_name: Union[str, _Tuple[str, Dict[str, str]]] = entry[0]
-            negate: bool = entry[1]
-            join_key: Optional[str] = None
-            if len(entry) == 3:
-                # mypy can not understand the if statement:
-                # https://github.com/python/mypy/issues/1178
-                # https://github.com/python/mypy/issues/7509
-                # so we use an ugly cast,..
-                join_key = cast(List[Optional[str]], entry)[2]
-
+            sorter_name = entry.sorter
             uuid = None
             if isinstance(sorter_name, tuple):
                 sorter_name, parameters = sorter_name
@@ -149,7 +138,13 @@ class View:
             if isinstance(sorter_instance, DerivedColumnsSorter):
                 sorter_instance.derived_columns(self.row_cells, uuid)
 
-            sorters.append(SorterEntry(sorter=sorter_instance, negate=negate, join_key=join_key))
+            sorters.append(
+                SorterEntry(
+                    sorter=sorter_instance,
+                    negate=entry.negate,
+                    join_key=entry.join_key,
+                )
+            )
         return sorters
 
     @property

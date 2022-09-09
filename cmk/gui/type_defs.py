@@ -274,7 +274,8 @@ class PainterSpec:
         return str(self.to_raw())
 
 
-class SorterSpec(NamedTuple):
+@dataclass(frozen=True)
+class SorterSpec:
     # some Sorter need an additional parameter e.g. svc_metrics_hist, svc_metrics_forecast
     # The parameter is then encoded in the sorter name. "[sorter]:[param]"
     # other Sorter (custom host metric) do the same when the information is
@@ -284,11 +285,22 @@ class SorterSpec(NamedTuple):
     #       transparently transform the tuple into a single string?!
     sorter: SorterName | tuple[SorterName, Mapping[str, str]]
     negate: bool
-    join_key: str | None
+    join_key: str | None = None
 
+    def to_raw(
+        self,
+    ) -> tuple[SorterName | tuple[SorterName, Mapping[str, str]], bool, str | None]:
+        return (
+            self.sorter,
+            self.negate,
+            self.join_key,
+        )
 
-# Is used to add default arguments to the named tuple. Would be nice to have a cleaner solution
-SorterSpec.__new__.__defaults__ = (None,) * len(SorterSpec._fields)  # type: ignore[attr-defined]
+    def __repr__(self) -> str:
+        """
+        Used to serialize user-defined visuals
+        """
+        return str(self.to_raw())
 
 
 ViewSpec = dict[str, Any]

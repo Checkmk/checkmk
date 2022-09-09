@@ -17,7 +17,6 @@ from typing import (
     Tuple,
     Type,
     TYPE_CHECKING,
-    Union,
 )
 
 from cmk.utils.plugin_registry import Registry
@@ -39,11 +38,6 @@ class SorterEntry(NamedTuple):
 # Is used to add default arguments to the named tuple. Would be nice to have a cleaner solution
 SorterEntry.__new__.__defaults__ = (None,) * len(SorterEntry._fields)  # type: ignore[attr-defined]
 
-SorterListEntry = Union[
-    Tuple[Union[str, Tuple[str, Dict[str, str]]], bool],
-    Tuple[Union[str, Tuple[str, Dict[str, str]]], bool, Optional[str]],
-]
-
 
 def _parse_url_sorters(sort: Optional[str]) -> List[SorterSpec]:
     sorters: List[SorterSpec] = []
@@ -64,7 +58,7 @@ def _parse_url_sorters(sort: Optional[str]) -> List[SorterSpec]:
     return sorters
 
 
-def _encode_sorter_url(sorters: List[SorterSpec]) -> str:
+def _encode_sorter_url(sorters: Iterable[SorterSpec]) -> str:
     p: List[str] = []
     for s in sorters:
         sorter_name = s.sorter

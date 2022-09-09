@@ -1119,7 +1119,7 @@ def transform_view_to_valuespec_value(view):
         "grouping": [painter_spec.to_raw() for painter_spec in view.get("group_painters", [])]
     }
 
-    view["sorting"] = {"sorters": view.get("sorters", {})}
+    view["sorting"] = {"sorters": [sorter_spec.to_raw() for sorter_spec in view.get("sorters", {})]}
 
     view["columns"] = {
         "columns": [painter_spec.to_raw() for painter_spec in view.get("painters", [])]
@@ -1139,7 +1139,7 @@ def transform_valuespec_value_to_view(ident, attrs):
         return attrs
 
     if ident == "sorting":
-        return attrs
+        return {"sorters": [SorterSpec(*s) for s in attrs["sorters"]]}
 
     if ident == "grouping":
         return {"group_painters": [PainterSpec.from_raw(v) for v in attrs["grouping"]]}

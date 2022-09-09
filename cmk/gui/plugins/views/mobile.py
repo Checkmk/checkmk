@@ -10,7 +10,7 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.plugins.views.utils import Cell, Layout, layout_registry
-from cmk.gui.type_defs import PainterSpec, Rows, ViewSpec, VisualLinkSpec
+from cmk.gui.type_defs import PainterSpec, Rows, SorterSpec, ViewSpec, VisualLinkSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.view_store import multisite_builtin_views
@@ -82,9 +82,9 @@ multisite_builtin_views.update(
                     PainterSpec(name="svc_state_age"),
                 ],
                 "sorters": [
-                    ("site", False),
-                    ("site_host", False),
-                    ("svcdescr", False),
+                    SorterSpec(sorter="site", negate=False),
+                    SorterSpec(sorter="site_host", negate=False),
+                    SorterSpec(sorter="svcdescr", negate=False),
                 ],
                 "title": _l("Service search"),
                 "single_infos": [],
@@ -134,9 +134,9 @@ multisite_builtin_views.update(
                     PainterSpec(name="svc_state_age"),
                 ],
                 "sorters": [
-                    ("svcstate", True),
-                    ("stateage", False),
-                    ("svcdescr", False),
+                    SorterSpec(sorter="svcstate", negate=True),
+                    SorterSpec(sorter="stateage", negate=False),
+                    SorterSpec(sorter="svcdescr", negate=False),
                 ],
                 "title": _l("Service problems (all)"),
                 "owner": "",
@@ -178,9 +178,9 @@ multisite_builtin_views.update(
                     PainterSpec(name="svc_state_age"),
                 ],
                 "sorters": [
-                    ("svcstate", True),
-                    ("stateage", False),
-                    ("svcdescr", False),
+                    SorterSpec(sorter="svcstate", negate=True),
+                    SorterSpec(sorter="stateage", negate=False),
+                    SorterSpec(sorter="svcdescr", negate=False),
                 ],
                 "title": _l("Service problems (unhandled)"),
                 "owner": "",
@@ -273,7 +273,11 @@ multisite_builtin_views.update(
                     PainterSpec(name="svc_plugin_output"),
                     PainterSpec(name="svc_state_age"),
                 ],
-                "sorters": [("svcstate", True), ("stateage", False), ("svcdescr", False)],
+                "sorters": [
+                    SorterSpec(sorter="svcstate", negate=True),
+                    SorterSpec(sorter="stateage", negate=False),
+                    SorterSpec(sorter="svcdescr", negate=False),
+                ],
                 "title": _l("Services of host"),
                 "owner": "",
                 "single_infos": ["host"],
@@ -465,7 +469,10 @@ multisite_builtin_views.update(
                     ),
                     PainterSpec(name="log_plugin_output"),
                 ],
-                "sorters": [("log_time", False), ("log_lineno", False)],
+                "sorters": [
+                    SorterSpec(sorter="log_time", negate=False),
+                    SorterSpec(sorter="log_lineno", negate=False),
+                ],
                 "title": _l("Events"),
                 "owner": "",
                 "single_infos": [],
@@ -503,7 +510,10 @@ multisite_builtin_views.update(
                     PainterSpec(name="log_type"),
                     PainterSpec(name="log_plugin_output"),
                 ],
-                "sorters": [("log_time", True), ("log_lineno", True)],
+                "sorters": [
+                    SorterSpec(sorter="log_time", negate=True),
+                    SorterSpec(sorter="log_lineno", negate=True),
+                ],
                 "title": _l("History"),
                 "owner": "",
                 "single_infos": [],
@@ -550,7 +560,10 @@ multisite_builtin_views.update(
                     PainterSpec(name="log_state_type"),
                     PainterSpec(name="log_plugin_output"),
                 ],
-                "sorters": [("log_time", False), ("log_lineno", False)],
+                "sorters": [
+                    SorterSpec(sorter="log_time", negate=False),
+                    SorterSpec(sorter="log_lineno", negate=False),
+                ],
                 "title": _l("Events of host & services"),
                 "owner": "",
                 "single_infos": ["host"],
@@ -582,7 +595,10 @@ multisite_builtin_views.update(
                     PainterSpec(name="log_state_type"),
                     PainterSpec(name="log_plugin_output"),
                 ],
-                "sorters": [("log_time", False), ("log_lineno", False)],
+                "sorters": [
+                    SorterSpec(sorter="log_time", negate=False),
+                    SorterSpec(sorter="log_lineno", negate=False),
+                ],
                 "title": _l("Events of service"),
                 "owner": "",
                 "single_infos": ["service", "host"],
@@ -623,7 +639,10 @@ multisite_builtin_views.update(
                     PainterSpec(name="log_state"),
                     PainterSpec(name="log_plugin_output"),
                 ],
-                "sorters": [("log_time", False), ("log_lineno", False)],
+                "sorters": [
+                    SorterSpec(sorter="log_time", negate=False),
+                    SorterSpec(sorter="log_lineno", negate=False),
+                ],
                 "title": _l("Notifications of contact"),
                 "owner": "",
                 "single_infos": ["contact"],
@@ -676,7 +695,10 @@ multisite_builtin_views.update(
                     PainterSpec(name="log_state"),
                     PainterSpec(name="log_plugin_output"),
                 ],
-                "sorters": [("log_time", False), ("log_lineno", False)],
+                "sorters": [
+                    SorterSpec(sorter="log_time", negate=False),
+                    SorterSpec(sorter="log_lineno", negate=False),
+                ],
                 "title": _l("Notifications of host & services"),
                 "owner": "",
                 "single_infos": ["host"],
@@ -719,7 +741,10 @@ multisite_builtin_views.update(
                     PainterSpec(name="log_state"),
                     PainterSpec(name="log_plugin_output"),
                 ],
-                "sorters": [("log_time", False), ("log_lineno", False)],
+                "sorters": [
+                    SorterSpec(sorter="log_time", negate=False),
+                    SorterSpec(sorter="log_lineno", negate=False),
+                ],
                 "title": _l("Service Notifications"),
                 "owner": "",
                 "single_infos": ["service", "host"],

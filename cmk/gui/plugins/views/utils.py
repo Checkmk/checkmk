@@ -1043,8 +1043,7 @@ class Cell:
         sorter_name = _get_sorter_name_of_painter(painter_name)
         if sorter_name is None:
             # Do not change anything in case there is no sorter for the current column
-            sorters = [SorterSpec(*s) for s in sorter]
-            return _encode_sorter_url(sorters)
+            return _encode_sorter_url(sorter)
 
         if painter_name in ["svc_metrics_hist", "svc_metrics_forecast"]:
             uuid = ":%s" % self.painter_parameters()["uuid"]
@@ -1053,8 +1052,8 @@ class Cell:
         elif painter_name in {"host_custom_variable"}:
             sorter_name = f'{sorter_name}:{self.painter_parameters()["ident"]}'
 
-        this_asc_sorter = SorterSpec(sorter_name, False, self.join_service())
-        this_desc_sorter = SorterSpec(sorter_name, True, self.join_service())
+        this_asc_sorter = SorterSpec(sorter=sorter_name, negate=False, join_key=self.join_service())
+        this_desc_sorter = SorterSpec(sorter=sorter_name, negate=True, join_key=self.join_service())
 
         if user_sort and this_asc_sorter == user_sort[0]:
             # Second click: Change from asc to desc order
@@ -1075,8 +1074,7 @@ class Cell:
             # Now add the sorter as primary user sorter
             sorter = group_sort + [this_asc_sorter] + user_sort + view_sort
 
-        sorters = [SorterSpec(*s) for s in sorter]
-        return _encode_sorter_url(sorters)
+        return _encode_sorter_url(sorter)
 
     def render(self, row: Row) -> tuple[str, str | HTML]:
         row = join_row(row, self)
@@ -1302,7 +1300,7 @@ def _get_sorter_name_of_painter(
 
 def _substract_sorters(base: List[SorterSpec], remove: List[SorterSpec]) -> None:
     for s in remove:
-        negated_sorter = SorterSpec(s[0], not s[1], None)
+        negated_sorter = SorterSpec(sorter=s.sorter, negate=not s.negate, join_key=None)
 
         if s in base:
             base.remove(s)
@@ -1319,7 +1317,7 @@ def _get_group_sorters(view_spec: ViewSpec) -> List[SorterSpec]:
         if sorter_name is None:
             continue
 
-        group_sort.append(SorterSpec(sorter_name, False, None))
+        group_sort.append(SorterSpec(sorter_name, negate=False, join_key=None))
     return group_sort
 
 
@@ -1329,9 +1327,7 @@ def _get_separated_sorters(
 ) -> Tuple[List[SorterSpec], List[SorterSpec], List[SorterSpec]]:
     group_sort = _get_group_sorters(view_spec)
     view_sort = [
-        SorterSpec(*s)
-        for s in view_spec["sorters"]
-        if not any(s[0] == gs.sorter for gs in group_sort)
+        s for s in view_spec["sorters"] if not any(s.sorter == gs.sorter for gs in group_sort)
     ]
     user_sort = view_user_sorters or []
 

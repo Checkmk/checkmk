@@ -10,14 +10,21 @@ from typing import Any, Dict, Final
 import cmk.gui.visuals as visuals
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.hooks import request_memoize
-from cmk.gui.type_defs import AllViewSpecs, PainterSpec, PermittedViewSpecs, ViewName, ViewSpec
+from cmk.gui.type_defs import (
+    AllViewSpecs,
+    PainterSpec,
+    PermittedViewSpecs,
+    SorterSpec,
+    ViewName,
+    ViewSpec,
+)
 
 # TODO: Refactor to plugin_registries
 multisite_builtin_views: Dict = {}
 
 
 def internal_view_to_runtime_view(raw_view: dict[str, Any]) -> ViewSpec:
-    return _painter_specs_to_runtime_format(raw_view)
+    return _sorter_specs_to_runtime_format(_painter_specs_to_runtime_format(raw_view))
 
 
 def _painter_specs_to_runtime_format(view: ViewSpec) -> ViewSpec:
@@ -25,6 +32,12 @@ def _painter_specs_to_runtime_format(view: ViewSpec) -> ViewSpec:
         view["painters"] = [PainterSpec.from_raw(v) for v in view["painters"]]
     if "group_painters" in view:
         view["group_painters"] = [PainterSpec.from_raw(v) for v in view["group_painters"]]
+    return view
+
+
+def _sorter_specs_to_runtime_format(view: ViewSpec) -> ViewSpec:
+    if "sorters" in view:
+        view["sorters"] = [SorterSpec(*s) for s in view["sorters"]]
     return view
 
 

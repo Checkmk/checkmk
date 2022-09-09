@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Iterable
+
 import pytest
 
 import cmk.gui.plugins.views.utils as utils
@@ -23,16 +25,23 @@ from cmk.gui.type_defs import PainterSpec, SorterSpec
     [
         (
             "-svcoutput,svc_perf_val01,svc_metrics_hist",
-            [("svcoutput", True), ("svc_perf_val01", False), ("svc_metrics_hist", False)],
+            [
+                SorterSpec(sorter="svcoutput", negate=True),
+                SorterSpec(sorter="svc_perf_val01", negate=False),
+                SorterSpec(sorter="svc_metrics_hist", negate=False),
+            ],
         ),
         (
             "sitealias,perfometer~CPU utilization,site",
-            [("sitealias", False), ("perfometer", False, "CPU utilization"), ("site", False)],
+            [
+                SorterSpec(sorter="sitealias", negate=False),
+                SorterSpec(sorter="perfometer", negate=False, join_key="CPU utilization"),
+                SorterSpec(sorter="site", negate=False),
+            ],
         ),
     ],
 )
-def test_url_sorters_parse_encode(url, sorters) -> None:  # type:ignore[no-untyped-def]
-    sorters = [SorterSpec(*s) for s in sorters]
+def test_url_sorters_parse_encode(url: str, sorters: Iterable[SorterSpec]) -> None:
     assert _parse_url_sorters(url) == sorters
     assert _encode_sorter_url(sorters) == url
 

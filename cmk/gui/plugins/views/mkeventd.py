@@ -46,6 +46,7 @@ from cmk.gui.type_defs import (
     Row,
     Rows,
     SingleInfos,
+    SorterSpec,
     ViewSpec,
     VisualLinkSpec,
 )
@@ -1458,7 +1459,7 @@ def mkeventd_view(d):
 multisite_builtin_views["ec_events"] = mkeventd_view(
     {
         "group_painters": [],
-        "sorters": [("event_last", False)],
+        "sorters": [SorterSpec(sorter="event_last", negate=False)],
         "sort_index": 10,
         "title": _l("Events"),
         "description": _l("Table of all currently open events (handled and unhandled)"),
@@ -1521,7 +1522,7 @@ multisite_builtin_views["ec_events_of_monhost"] = mkeventd_view(
     {
         "hidden": True,
         "group_painters": [],
-        "sorters": [("event_last", False)],
+        "sorters": [SorterSpec(sorter="event_last", negate=False)],
         "title": _l("Events of monitored host"),
         "description": _l("Currently open events of a host that is monitored"),
         "datasource": "mkeventd_events",
@@ -1571,7 +1572,7 @@ multisite_builtin_views["ec_events_of_host"] = mkeventd_view(
     {
         "hidden": True,
         "group_painters": [],
-        "sorters": [("event_last", False)],
+        "sorters": [SorterSpec(sorter="event_last", negate=False)],
         "title": _l("Events of host"),
         "description": _l("Currently open events of one specific host"),
         "datasource": "mkeventd_events",
@@ -1673,8 +1674,8 @@ multisite_builtin_views["ec_history_recent"] = mkeventd_view(
         "icon": {"icon": "event_console", "emblem": "time"},
         "group_painters": [],
         "sorters": [
-            ("history_time", True),
-            ("history_line", True),
+            SorterSpec(sorter="history_time", negate=True),
+            SorterSpec(sorter="history_line", negate=True),
         ],
         "sort_index": 20,
         "title": _l("Recent event history"),
@@ -1798,8 +1799,8 @@ multisite_builtin_views["ec_history_of_event"] = mkeventd_view(
         "hidden": True,
         "group_painters": [],
         "sorters": [
-            ("history_time", True),
-            ("history_line", True),
+            SorterSpec(sorter="history_time", negate=True),
+            SorterSpec(sorter="history_line", negate=True),
         ],
         "title": _l("History of Event"),
         "description": _l("History entries of one specific event"),
@@ -1840,8 +1841,8 @@ multisite_builtin_views["ec_history_of_host"] = mkeventd_view(
         "hidden": True,
         "group_painters": [],
         "sorters": [
-            ("history_time", True),
-            ("history_line", True),
+            SorterSpec(sorter="history_time", negate=True),
+            SorterSpec(sorter="history_line", negate=True),
         ],
         "title": _l("Event history of host"),
         "description": _l("History entries of one specific host"),
@@ -2036,7 +2037,7 @@ multisite_builtin_views["ec_events_mobile"] = {
     ],
     "public": True,
     "single_infos": [],
-    "sorters": [("event_last", False)],
+    "sorters": [SorterSpec(sorter="event_last", negate=False)],
     "title": _l("Events"),
     "topic": "events",
     "user_sortable": True,

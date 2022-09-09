@@ -10,14 +10,14 @@ import itertools
 import os
 import re
 import time
-from collections.abc import Iterator
-from typing import Any
+from collections.abc import Iterable, Iterator
+from typing import Any, cast, Literal, TypedDict
 
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.werks
 from cmk.utils.version import __version__, Edition, Version
-from cmk.utils.werks import Werk
+from cmk.utils.werks import Werk, WerkTranslator
 
 import cmk.gui.pages
 from cmk.gui.breadcrumb import (
@@ -30,7 +30,7 @@ from cmk.gui.breadcrumb import (
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
-from cmk.gui.htmllib.html import html
+from cmk.gui.htmllib.html import html, HTMLContent
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -45,7 +45,7 @@ from cmk.gui.page_menu import (
     PageMenuSidePopup,
     PageMenuTopic,
 )
-from cmk.gui.table import table_element
+from cmk.gui.table import Table, table_element
 from cmk.gui.utils.escaping import escape_to_html, escape_to_html_permissive
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
@@ -53,12 +53,51 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri, makeuri_contextless
-from cmk.gui.valuespec import DropdownChoice, Integer, ListChoice, TextInput, Timerange, Tuple
+from cmk.gui.valuespec import (
+    DropdownChoice,
+    Integer,
+    ListChoice,
+    TextInput,
+    Timerange,
+    Tuple,
+    ValueSpec,
+)
 
 acknowledgement_path = cmk.utils.paths.var_dir + "/acknowledged_werks.mk"
 
 # Keep global variable for caching werks between requests. The never change.
 g_werks: dict[int, Werk] = {}
+
+
+class WerkTableOptions(TypedDict):
+    date_range: tuple[int, int]
+    compatibility: Literal["incomp_unack"]
+    classes: list[Literal["feature", "fix", "security"]]
+    levels: list[Literal[1, 2, 3]]
+    date: tuple[int, int]
+    id: str
+    compaibility: list[Literal["compat", "incomp_ack", "incomp_unack"]]
+    component: str | None
+    edition: str | None
+    werk_content: str
+    version: tuple[str, str]
+    grouping: None | Literal["version", "day", "week"]
+    group_limit: int
+
+
+_WerkTableOptionColumns = Literal[
+    "classes",
+    "levels",
+    "date",
+    "id",
+    "compatibility",
+    "component",
+    "edition",
+    "werk_content",
+    "version",
+    "grouping",
+    "group_limit",
+]
 
 
 @cmk.gui.pages.page_registry.register_page("info")
@@ -158,7 +197,7 @@ class ModeChangeLogPage(cmk.gui.pages.Page):
         html.footer()
         return None
 
-    def _page_menu(self, breadcrumb: Breadcrumb, werk_table_options: dict[str, Any]) -> PageMenu:
+    def _page_menu(self, breadcrumb: Breadcrumb, werk_table_options: WerkTableOptions) -> PageMenu:
         menu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -225,7 +264,7 @@ def _page_menu_entries_ack_all_werks() -> Iterator[PageMenuEntry]:
 
 
 def _extend_display_dropdown(  # type:ignore[no-untyped-def]
-    menu, werk_table_options: dict[str, Any]
+    menu, werk_table_options: WerkTableOptions
 ) -> None:
     display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
     display_dropdown.topics.insert(
@@ -245,7 +284,7 @@ def _extend_display_dropdown(  # type:ignore[no-untyped-def]
     )
 
 
-def _render_werk_options_form(werk_table_options: dict[str, Any]) -> HTML:
+def _render_werk_options_form(werk_table_options: WerkTableOptions) -> HTML:
     with output_funnel.plugged():
         html.begin_form("werks")
         html.hidden_field("wo_set", "set")
@@ -255,8 +294,10 @@ def _render_werk_options_form(werk_table_options: dict[str, Any]) -> HTML:
         html.open_div(class_="side_popup_content")
         for name, height, vs, _default_value in _werk_table_option_entries():
 
-            def renderer(  # type:ignore[no-untyped-def]
-                name=name, vs=vs, werk_table_options=werk_table_options
+            def renderer(
+                name: _WerkTableOptionColumns = name,
+                vs: ValueSpec = vs,
+                werk_table_options: WerkTableOptions = werk_table_options,
             ) -> None:
                 vs.render_input("wo_" + name, werk_table_options[name])
 
@@ -281,7 +322,7 @@ def _show_werk_options_controls() -> None:
 
 
 @cmk.gui.pages.register("werk")
-def page_werk():
+def page_werk() -> None:
     load_werks()
     werk_id = request.get_integer_input_mandatory("werk")
     if werk_id not in g_werks:
@@ -302,13 +343,13 @@ def page_werk():
 
     html.open_table(class_=["data", "headerleft", "werks"])
 
-    def werk_table_row(caption, content, css=None):
+    def werk_table_row(caption: HTMLContent, content: HTMLContent, css: None | str = None) -> None:
         html.open_tr()
         html.th(caption)
         html.td(content, class_=css)
         html.close_tr()
 
-    translator = cmk.utils.werks.WerkTranslator()
+    translator = WerkTranslator()
     werk_table_row(_("ID"), render_werk_id(werk, with_link=False))
     werk_table_row(_("Title"), HTMLWriter.render_b(render_werk_title(werk)))
     werk_table_row(_("Component"), translator.component_of(werk))
@@ -367,7 +408,7 @@ def _page_menu_entries_ack_werk(werk: Werk) -> Iterator[PageMenuEntry]:
     )
 
 
-def load_werks():
+def load_werks() -> None:
     global g_werks
     if not g_werks:
         g_werks = cmk.utils.werks.load()
@@ -381,15 +422,15 @@ def load_werks():
                 werk["compatible"] = "incomp_unack"
 
 
-def may_acknowledge():
+def may_acknowledge() -> bool:
     return user.may("general.acknowledge_werks")
 
 
-def acknowledge_werk(werk):
+def acknowledge_werk(werk: Werk) -> None:
     acknowledge_werks([werk])
 
 
-def acknowledge_werks(werks, check_permission=True):
+def acknowledge_werks(werks: Iterable[Werk], check_permission: bool = True) -> None:
     if check_permission:
         user.need_permission("general.acknowledge_werks")
 
@@ -400,36 +441,36 @@ def acknowledge_werks(werks, check_permission=True):
     save_acknowledgements(ack_ids)
 
 
-def save_acknowledgements(acknowledged_werks):
+def save_acknowledgements(acknowledged_werks: list[int]) -> None:
     store.save_object_to_file(acknowledgement_path, acknowledged_werks)
 
 
-def acknowledge_all_werks(check_permission=True):
+def acknowledge_all_werks(check_permission: bool = True) -> None:
     load_werks()
     acknowledge_werks(unacknowledged_incompatible_werks(), check_permission)
 
 
-def werk_is_pre_127(werk):
+def werk_is_pre_127(werk: Werk) -> bool:
     return werk["version"].startswith("1.2.5") or werk["version"].startswith("1.2.6")
 
 
-def load_acknowledgements():
+def load_acknowledgements() -> list[int]:
     return store.load_object_from_file(acknowledgement_path, default=[])
 
 
-def unacknowledged_incompatible_werks():
+def unacknowledged_incompatible_werks() -> list[Werk]:
     return cmk.utils.werks.sort_by_date(
         werk for werk in g_werks.values() if werk["compatible"] == "incomp_unack"  #
     )
 
 
-def num_unacknowledged_incompatible_werks():
+def num_unacknowledged_incompatible_werks() -> int:
     load_werks()
     return len(unacknowledged_incompatible_werks())
 
 
-def _werk_table_option_entries():
-    translator = cmk.utils.werks.WerkTranslator()
+def _werk_table_option_entries() -> list[tuple[_WerkTableOptionColumns, str, ValueSpec, Any]]:
+    translator = WerkTranslator()
     component_choices: list[tuple[None | str, str]] = [(None, _("All components"))]
     component_choices += sorted(translator.components())
     return [
@@ -585,8 +626,8 @@ _SORT_AND_GROUP = {
 }
 
 
-def render_werks_table(werk_table_options: dict[str, Any]) -> None:
-    translator = cmk.utils.werks.WerkTranslator()
+def render_werks_table(werk_table_options: WerkTableOptions) -> None:
+    translator = WerkTranslator()
     number_of_werks = 0
     sorter, grouper = _SORT_AND_GROUP[werk_table_options["grouping"]]
     werklist = sorter(
@@ -604,23 +645,23 @@ def render_werks_table(werk_table_options: dict[str, Any]) -> None:
         html.h3(_("No matching Werks found."))
 
 
-def render_werks_table_row(table, translator, werk) -> None:  # type:ignore[no-untyped-def]
+def render_werks_table_row(table: Table, translator: WerkTranslator, werk: Werk) -> None:
     table.row()
-    table.cell(_("ID"), render_werk_id(werk, with_link=True), css="number narrow")
-    table.cell(_("Version"), werk["version"], css="number narrow")
-    table.cell(_("Date"), render_werk_date(werk), css="number narrow")
-    table.cell(_("Class"), translator.class_of(werk), css="werkclass werkclass%s" % werk["class"])
-    table.cell(_("Level"), translator.level_of(werk), css="werklevel werklevel%d" % werk["level"])
+    table.cell(_("ID"), render_werk_id(werk, with_link=True), css=["number narrow"])
+    table.cell(_("Version"), werk["version"], css=["number narrow"])
+    table.cell(_("Date"), render_werk_date(werk), css=["number narrow"])
+    table.cell(_("Class"), translator.class_of(werk), css=["werkclass werkclass%s" % werk["class"]])
+    table.cell(_("Level"), translator.level_of(werk), css=["werklevel werklevel%d" % werk["level"]])
     table.cell(
         _("Compatibility"),
         translator.compatibility_of(werk),
-        css="werkcomp werkcomp%s" % werk["compatible"],
+        css=["werkcomp werkcomp%s" % werk["compatible"]],
     )
-    table.cell(_("Component"), translator.component_of(werk), css="nowrap")
+    table.cell(_("Component"), translator.component_of(werk), css=["nowrap"])
     table.cell(_("Title"), render_werk_title(werk))
 
 
-def werk_matches_options(werk, werk_table_options):
+def werk_matches_options(werk: Werk, werk_table_options: WerkTableOptions) -> bool:
     # TODO: Fix this silly typing chaos below!
     # check if werk id is int because valuespec is TextInput
     # else, set empty id to return all results beside input warning
@@ -663,16 +704,16 @@ def werk_matches_options(werk, werk_table_options):
     return True
 
 
-def _default_werk_table_options():
-    werk_table_options = {
-        name: default_value for name, _height, _vs, default_value in _werk_table_option_entries()  #
+def _default_werk_table_options() -> WerkTableOptions:
+    werk_table_options: dict[str, Any] = {
+        name: default_value for name, _height, _vs, default_value in _werk_table_option_entries()
     }
     werk_table_options["date_range"] = (1, int(time.time()))
     werk_table_options["compatibility"] = ["incomp_unack"]
-    return werk_table_options
+    return cast(WerkTableOptions, werk_table_options)
 
 
-def _werk_table_options_from_request() -> dict[str, Any]:
+def _werk_table_options_from_request() -> WerkTableOptions:
     if request.var("show_unack") and not request.has_var("wo_set"):
         return _default_werk_table_options()
 
@@ -691,7 +732,7 @@ def _werk_table_options_from_request() -> dict[str, Any]:
     from_date, until_date = Timerange.compute_range(werk_table_options["date"]).range
     werk_table_options["date_range"] = from_date, until_date
 
-    return werk_table_options
+    return cast(WerkTableOptions, werk_table_options)
 
 
 def render_werk_id(werk: Werk, with_link: bool) -> HTML | str:
@@ -705,7 +746,7 @@ def render_werk_date(werk: Werk) -> str:
     return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(werk["date"]))
 
 
-def render_werk_title(werk) -> HTML:  # type:ignore[no-untyped-def]
+def render_werk_title(werk: Werk) -> HTML:
     title = werk["title"]
     # if the title begins with the name or names of check plugins, then
     # we link to the man pages of those checks
@@ -715,8 +756,8 @@ def render_werk_title(werk) -> HTML:  # type:ignore[no-untyped-def]
     return escape_to_html_permissive(title)
 
 
-def render_werk_description(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branches
-    werk,
+def render_werk_description(  # pylint: disable=too-many-branches
+    werk: Werk,
 ) -> HTML:
     with output_funnel.plugged():
         html.open_p()

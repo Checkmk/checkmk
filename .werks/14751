@@ -1,0 +1,13 @@
+Title: Fix general display options on service discovery page
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1662706804
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p12
+
+If the options "This page without navigation" or "This page with navigation"
+within the "Display" menu were used on the service discovery page, an error
+like "Internal error: folder_path" occurred.

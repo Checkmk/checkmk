@@ -171,6 +171,8 @@ class PageMenuTopic:
 
     title: str
     entries: List[PageMenuEntry] = field(default_factory=list)
+    # Added to skip topics from update on service discovery page
+    id_: Optional[str] = None
 
 
 @dataclass
@@ -327,6 +329,7 @@ def make_display_options_dropdown() -> PageMenuDropdown:
                         ),
                     ),
                 ],
+                id_="general_display_options",
             ),
         ],
     )
@@ -566,7 +569,7 @@ class PageMenuRenderer:
         html.close_div()
 
     def _show_topic(self, topic: PageMenuTopic) -> None:
-        html.open_div(class_="topic")
+        html.open_div(class_="topic", id_=topic.id_)
         html.div(
             topic.title,
             class_=[

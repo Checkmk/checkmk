@@ -108,10 +108,16 @@ function update(handler_data, response) {
         handler_data.transid
     );
 
+    // Save values not meant for update
+    var menu_display = document.getElementById("general_display_options");
+
     // Update the page menu
     var page_menu_bar = document.getElementById("page_menu_bar");
     page_menu_bar.outerHTML = response.page_menu;
     utils.execute_javascript_by_object(page_menu_bar);
+
+    // Set saved values to old value
+    document.getElementById("general_display_options").replaceWith(menu_display);
 
     // Update fix all button
     var fixall_container = document.getElementById("fixall_container");

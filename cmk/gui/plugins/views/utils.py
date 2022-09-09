@@ -1327,7 +1327,11 @@ def _get_separated_sorters(
     view_user_sorters: Optional[List[SorterSpec]],
 ) -> Tuple[List[SorterSpec], List[SorterSpec], List[SorterSpec]]:
     group_sort = _get_group_sorters(view_spec)
-    view_sort = [SorterSpec(*s) for s in view_spec["sorters"] if not s[0] in group_sort]
+    view_sort = [
+        SorterSpec(*s)
+        for s in view_spec["sorters"]
+        if not any(s[0] == gs.sorter for gs in group_sort)
+    ]
     user_sort = view_user_sorters or []
 
     _substract_sorters(user_sort, group_sort)

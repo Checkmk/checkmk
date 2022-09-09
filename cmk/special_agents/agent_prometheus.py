@@ -1530,7 +1530,10 @@ class PrometheusAPI:
 
     def __init__(self, session) -> None:
         self.session = session
-        self.scrape_targets_dict = self._connected_scrape_targets()
+
+    @property
+    def scrape_targets_dict(self) -> Dict[str, Any]:
+        return self._connected_scrape_targets()
 
     def scrape_targets_attributes(self) -> Iterator[Tuple[str, Dict[str, Any]]]:
         """Format the scrape_targets_dict for information processing

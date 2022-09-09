@@ -1,0 +1,15 @@
+Title: Prometheus: allow operation of special agent without querying targets endpoint
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1664791347
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p15
+
+Previously, the Prometheus special agent would query the endpoint `/api/v1/targets` regardless of
+what was configured in the Prometheus rule. This was an additional burden on users, which did not
+specify any scrape targets and therefore do not need this endpoint. E.g., it can lead to additional
+timeouts. With this werk, the endpoint `/api/v1/targets` is only queried if necessary.

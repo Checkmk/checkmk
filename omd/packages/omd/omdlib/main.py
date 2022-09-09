@@ -67,6 +67,7 @@ import omdlib.utils
 from omdlib.config_hooks import (
     call_hook,
     ConfigHook,
+    ConfigHookChoices,
     ConfigHooks,
     create_config_environment,
     hook_exists,
@@ -128,6 +129,7 @@ from cmk.utils.crypto.password_hashing import sha256_crypt
 from cmk.utils.exceptions import MKTerminate
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import mkbackup_lock_dir
+from cmk.utils.type_defs.result import Error, OK, Result
 from cmk.utils.version import Version, versions_compatible, VersionsIncompatible
 
 Arguments = List[str]
@@ -1351,21 +1353,9 @@ def validate_config_change_commands(
         if not hook:
             bail_out("Invalid config option: %r" % key)
 
-        # Check if value is valid. Choices are either a list of allowed
-        # keys or a regular expression
-        if isinstance(hook["choices"], list):
-            choices = [var for (var, _descr) in hook["choices"]]
-            if value not in choices:
-                bail_out(
-                    "Invalid value %r for %r. Allowed are: %s\n" % (value, key, ", ".join(choices))
-                )
-        elif isinstance(hook["choices"], re.Pattern):
-            if not hook["choices"].match(value):
-                bail_out(
-                    "Invalid value %r for %r. Does not match allowed pattern.\n" % (value, key)
-                )
-        else:
-            raise NotImplementedError()
+        error_from_config_choice = _error_from_config_choice(hook["choices"], value)
+        if error_from_config_choice.is_error():
+            bail_out(f"Invalid value for '{value} for {key}'. {error_from_config_choice.error}\n")
 
 
 def config_set(site: SiteContext, config_hooks: ConfigHooks, args: Arguments) -> list[str]:
@@ -1385,24 +1375,29 @@ def config_set(site: SiteContext, config_hooks: ConfigHooks, args: Arguments) ->
         sys.stderr.write("No such variable '%s'\n" % hook_name)
         return []
 
-    # Check if value is valid. Choices are either a list of allowed
-    # keys or a regular expression
-    if isinstance(hook["choices"], list):
-        choices = [var for (var, _descr) in hook["choices"]]
-        if value not in choices:
-            sys.stderr.write(
-                "Invalid value for '%s'. Allowed are: %s\n" % (value, ", ".join(choices))
-            )
-            return []
-    elif isinstance(hook["choices"], re.Pattern):
-        if not hook["choices"].match(value):
-            sys.stderr.write("Invalid value for '%s'. Does not match allowed pattern.\n" % value)
-            return []
-    else:
-        raise NotImplementedError()
+    error_from_config_choice = _error_from_config_choice(hook["choices"], value)
+    if error_from_config_choice.is_error():
+        sys.stderr.write(f"Invalid value for '{value}'. {error_from_config_choice.error}\n")
+        return []
 
     config_set_value(site, config_hooks, hook_name, value)
     return [hook_name]
+
+
+def _error_from_config_choice(
+    choices: str | bool | ConfigHookChoices, value: str
+) -> Result[None, str]:
+    # Check if value is valid. Choices are either a list of allowed keys or a
+    # regular expression
+    if isinstance(choices, list):
+        if all(value != var for var, _descr in choices):
+            return Error("Allowed are: " + ", ".join(var for var, _ in choices))
+    elif isinstance(choices, re.Pattern):
+        if not choices.match(value):
+            return Error("Does not match allowed pattern.")
+    else:
+        raise NotImplementedError()
+    return OK(None)
 
 
 def config_set_all(site: SiteContext, ignored_hooks: Optional[list] = None) -> None:

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# This file initializes the py.test environment
+# This file initializes the pytest environment
 # pylint: disable=redefined-outer-name,wrong-import-order
 
 import collections
@@ -48,7 +48,7 @@ if not Path(testlib.utils.cmc_path()).exists():
 # The tests are marked using the marker pytest.marker.type("TYPE")
 # which is added to the test automatically according to their location.
 #
-# With each call to py.test one type of tests needs to be selected using
+# With each call to pytest one type of tests needs to be selected using
 # the "-T TYPE" option. Only these tests will then be executed. Tests of
 # the other type will be skipped.
 #

@@ -1,5 +1,5 @@
 # This is a simple entry point to execute the basic and most important Python
-# tests for Checkmk. We run tools like pylint, yapf and our py.test based unit
+# tests for Checkmk. We run tools like pylint, yapf and our pytest based unit
 # tests here. Some tests, like integration tests or tests of very specific
 # components are not executed.
 #

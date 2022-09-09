@@ -457,6 +457,7 @@ def create_source_package(workspace, source_dir, cmk_version) {
                 sh "cp ${agents_dir}/cmk-update-agent-32 enterprise/agents/plugins/"
             }
             sh "cp ${agents_dir}/{check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk_agent_unsigned.msi,check_mk.user.yml,python-3.cab,python-3.4.cab} agents/windows"
+            sh "${agents_dir}/scripts/create_unsign_msi_patch.sh ${agents_dir}/windows/check_mk_agent.msi ${agents_dir}/windows/check_mk_agent_unsigned.msi ${agents_dir}/windows/unsing-msi.patch"
             sh 'make dist || cat /root/.npm/_logs/*-debug.log'
         }
     }

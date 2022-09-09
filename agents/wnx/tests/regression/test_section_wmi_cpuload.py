@@ -92,7 +92,7 @@ def change_config_cpuload_method(  # type:ignore[no-untyped-def]
     return make_yaml_config
 
 
-@pytest.fixture(name="", params=["alone", "with_systemtime"])
+@pytest.fixture(name="testconfig", params=["alone", "with_systemtime"])
 def fixture_testconfig(  # type:ignore[no-untyped-def]
     request, config_with_cpuload_method
 ) -> Dict[str, Any]:

@@ -1,0 +1,13 @@
+Title: docker_node_info: Fix inventorizing labels (which might be empty)
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1662710991
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p12
+
+
+

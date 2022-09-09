@@ -102,7 +102,9 @@ def inventory_docker_node_info(section: Section) -> InventoryResult:
                 )
 
     labels_path = ["software", "applications", "docker", "node_labels"]
-    for label in section.get("Labels", []):
+
+    # Some outputs may look like: {"Labels": null}
+    for label in section.get("Labels", []) or []:
         yield TableRow(
             path=labels_path,
             key_columns={

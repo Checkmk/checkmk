@@ -1,0 +1,12 @@
+Title: ServiceNow: Fix usage of custom description
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1662718932
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0p12
+
+The ServiceNow notification plugin always used the default for the host or
+service description and the host or service short description.

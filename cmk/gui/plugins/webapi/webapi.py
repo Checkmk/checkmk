@@ -8,7 +8,7 @@
 import copy
 import os
 from functools import partial
-from typing import Any, Dict, List, Mapping, Optional, Set, Tuple
+from typing import Any, Callable, Dict, List, Mapping, Optional, Set, Tuple
 
 from six import ensure_str
 
@@ -18,7 +18,7 @@ import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.utils.tags
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKException, MKGeneralException
-from cmk.utils.type_defs import DiscoveryResult, TagConfigSpec, TagID
+from cmk.utils.type_defs import DiscoveryResult, HostName, TagConfigSpec, TagID
 
 import cmk.gui.bi as bi
 import cmk.gui.userdb as userdb
@@ -251,7 +251,9 @@ class APICallHosts(APICallCollection):
             },
         }
 
-    def _add(self, request, bake_hosts=True):
+    def _add(  # type: ignore[no-untyped-def]
+        self, request, *, bake: Callable[[List[HostName]], object]
+    ) -> None:
         create_parent_folders_var = request.get(
             "create_parent_folders", request.get("create_folders", "1")
         )
@@ -289,9 +291,7 @@ class APICallHosts(APICallCollection):
         # Add host
         if cluster_nodes:
             cluster_nodes = list(map(str, cluster_nodes))
-        Folder.folder(folder_path).create_hosts(
-            [(hostname, attributes, cluster_nodes)], bake_hosts=bake_hosts
-        )
+        Folder.folder(folder_path).create_hosts([(hostname, attributes, cluster_nodes)], bake=bake)
 
     def _add_hosts(self, request):
         return self._bulk_action(request, "add")
@@ -304,7 +304,9 @@ class APICallHosts(APICallCollection):
         for host_request in request["hosts"]:
             try:
                 if action_name == "add":
-                    self._add(host_request, bake_hosts=False)
+                    # No need to bake here.  `try_bake_agents_for_hosts()` is
+                    # called explicitly upon exiting this function.
+                    self._add(host_request, bake=lambda *args: None)
                 elif action_name == "edit":
                     self._edit(host_request)
                 else:

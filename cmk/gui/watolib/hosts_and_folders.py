@@ -1007,7 +1007,12 @@ class BaseFolder:
     def locked(self):
         raise NotImplementedError()
 
-    def create_hosts(self, entries, bake_hosts=True):
+    def create_hosts(
+        self,
+        entries: Iterable[Tuple[HostName, object, object]],
+        *,
+        bake: Callable[[List[HostName]], object],
+    ) -> None:
         raise NotImplementedError()
 
     def site_id(self):
@@ -2433,21 +2438,31 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             diff_text=make_diff_text(old_object, make_folder_audit_log_object(self._attributes)),
         )
 
-    def prepare_create_hosts(self):
+    def prepare_create_hosts(self) -> None:
         user.need_permission("wato.manage_hosts")
         self.need_unlocked_hosts()
         self.need_permission("write")
 
-    def create_hosts(self, entries, bake_hosts=True):
+    def create_hosts(
+        self,
+        entries: Iterable[Tuple[HostName, object, object]],
+        *,
+        bake: Callable[[List[HostName]], object],
+    ) -> None:
         # 1. Check preconditions
         self.prepare_create_hosts()
 
         for host_name, attributes, _cluster_nodes in entries:
             self.verify_host_details(host_name, attributes)
 
-        self.create_validated_hosts(entries, bake_hosts)
+        self.create_validated_hosts(entries, bake=bake)
 
-    def create_validated_hosts(self, entries, bake_hosts):
+    def create_validated_hosts(
+        self,
+        entries: Iterable[Tuple[HostName, object, object]],
+        *,
+        bake: Callable[[List[HostName]], object],
+    ) -> None:
         # 2. Actual modification
         self._load_hosts_on_demand()
         for host_name, attributes, cluster_nodes in entries:
@@ -2457,11 +2472,12 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         self.save_hosts()
 
         # 3. Prepare agents for the new hosts
-        if bake_hosts:
-            # TODO(ml): Import cycle
-            import cmk.gui.watolib.bakery as bakery
-
-            bakery.try_bake_agents_for_hosts([e[0] for e in entries])
+        #
+        # Note:  CREFolder should not know *anything* about the bakery.
+        #        Instead, the enterprise edition should explicitly try
+        #        to bake *after* the call to `create_hosts()` or
+        #        `create_validated_hosts()`.
+        bake([e[0] for e in entries])
 
         folder_path = self.path()
         Folder.add_hosts_to_lookup_cache([(x[0], folder_path) for x in entries])
@@ -3592,13 +3608,18 @@ class CMEFolder(CREFolder):
         # The site attribute is not explicitely set. The new inheritance might brake something..
         super().move_subfolder_to(subfolder, target_folder)
 
-    def create_hosts(self, entries, bake_hosts=True):
+    def create_hosts(
+        self,
+        entries: Iterable[Tuple[HostName, object, object]],
+        *,
+        bake: Callable[[List[HostName]], object],
+    ) -> None:
         customer_id = self._get_customer_id()
         if customer_id != managed.default_customer_id():
             for hostname, attributes, _cluster_nodes in entries:
                 self.check_modify_host(hostname, attributes)
 
-        super().create_hosts(entries, bake_hosts=bake_hosts)
+        super().create_hosts(entries, bake=bake)
 
     def check_modify_host(self, hostname, attributes):
         if "site" not in attributes:

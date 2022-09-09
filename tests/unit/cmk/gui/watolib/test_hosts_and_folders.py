@@ -172,7 +172,10 @@ def test_write_and_read_host_attributes(
 
     # Write data
     # Note: The create_hosts function modifies the attributes dict, adding a meta_data key inplace
-    write_data_folder.create_hosts([("testhost", attributes, [])])
+    write_data_folder.create_hosts(
+        [("testhost", attributes, [])],
+        bake=lambda *args: None,
+    )
     write_folder_hosts = write_data_folder.hosts()
     assert len(write_folder_hosts) == 1
 
@@ -264,7 +267,8 @@ def test_mgmt_inherit_credentials_explicit_host(
                 },
                 [],
             )
-        ]
+        ],
+        bake=lambda *args: None,
     )
 
     data = folder._load_hosts_file()
@@ -307,7 +311,8 @@ def test_mgmt_inherit_credentials(
                 },
                 [],
             )
-        ]
+        ],
+        bake=lambda *args: None,
     )
 
     data = folder._load_hosts_file()
@@ -357,7 +362,8 @@ def test_mgmt_inherit_protocol_explicit_host(
                 },
                 [],
             )
-        ]
+        ],
+        bake=lambda *args: None,
     )
 
     data = folder._load_hosts_file()
@@ -400,7 +406,8 @@ def test_mgmt_inherit_protocol(
                 },
                 [],
             )
-        ]
+        ],
+        bake=lambda *args: None,
     )
 
     data = folder._load_hosts_file()

@@ -142,7 +142,10 @@ def create_host(params: Mapping[str, Any]) -> Response:
 
     # is_cluster is defined as "cluster_hosts is not None"
     folder.create_hosts(
-        [(host_name, body["attributes"], None)], bake_hosts=params[BAKE_AGENT_PARAM_NAME]
+        [(host_name, body["attributes"], None)],
+        bake=bakery.try_bake_agents_for_hosts
+        if params[BAKE_AGENT_PARAM_NAME]
+        else lambda *args: None,
     )
 
     host = Host.load_host(host_name)
@@ -170,7 +173,10 @@ def create_cluster_host(params: Mapping[str, Any]) -> Response:
     folder: CREFolder = body["folder"]
 
     folder.create_hosts(
-        [(host_name, body["attributes"], body["nodes"])], bake_hosts=params[BAKE_AGENT_PARAM_NAME]
+        [(host_name, body["attributes"], body["nodes"])],
+        bake=bakery.try_bake_agents_for_hosts
+        if params[BAKE_AGENT_PARAM_NAME]
+        else lambda *args: None,
     )
 
     host = Host.load_host(host_name)
@@ -229,7 +235,9 @@ def bulk_create_hosts(params: Mapping[str, Any]) -> Response:
             except (MKUserError, MKAuthException) as e:
                 failed_hosts[host_name] = f"Validation failed: {e}"
 
-        folder.create_validated_hosts(validated_entries, bake_hosts=False)
+        # No need to bake on `create_validated_hosts()` as we explicitly call
+        # the bakery under the following `if` branch.
+        folder.create_validated_hosts(validated_entries, bake=lambda *args: None)
         succeeded_hosts.extend(entry[0] for entry in validated_entries)
 
     if params[BAKE_AGENT_PARAM_NAME]:

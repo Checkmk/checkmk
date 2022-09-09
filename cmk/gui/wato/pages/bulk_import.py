@@ -230,9 +230,11 @@ class ModeBulkImport(WatoMode):
 
             host_name, attributes = self._get_host_info_from_row(row, row_num)
             try:
+                # No need to bake here, `try_bake_agents_for_hosts()` is called
+                # explicitly after exiting the loop.
                 Folder.current().create_hosts(
                     [(host_name, attributes, None)],
-                    bake_hosts=False,
+                    bake=lambda *args: None,
                 )
                 imported_hosts.append(host_name)
                 selected.append("_c_%s" % host_name)

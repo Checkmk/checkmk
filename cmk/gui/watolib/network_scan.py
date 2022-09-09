@@ -16,6 +16,7 @@ from cmk.utils import store
 from cmk.utils.translations import translate_hostname
 from cmk.utils.type_defs import HostAddress, HostName
 
+import cmk.gui.watolib.bakery as bakery
 from cmk.gui import userdb
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.http import request
@@ -137,7 +138,10 @@ def _add_scanned_hosts_to_folder(folder: "CREFolder", found: NetworkScanFoundHos
             entries.append((host_name, attrs, None))
 
     with store.lock_checkmk_configuration():
-        folder.create_hosts(entries)
+        # Note:  `folder` is a CREFolder but it will still try to bake,
+        # although the bakery is a CEE feature.  The code under
+        # `hosts_and_folders` is very convoluted.
+        folder.create_hosts(entries, bake=bakery.try_bake_agents_for_hosts)
         folder.save()
 
 

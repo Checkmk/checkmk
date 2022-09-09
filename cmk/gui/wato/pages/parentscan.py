@@ -13,6 +13,7 @@ from cmk.utils.type_defs import HostName
 
 import cmk.gui.forms as forms
 import cmk.gui.gui_background_job as gui_background_job
+import cmk.gui.watolib.bakery as bakery
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKUserError
 from cmk.gui.htmllib.html import html
@@ -228,7 +229,13 @@ class ParentScanBackgroundJob(WatoBackgroundJob):
         gw_host_name = self._determine_gateway_host_name(task, gateway)
         gw_host_attributes = self._determine_gateway_attributes(task, settings, gateway, gw_folder)
 
-        gw_folder.create_hosts([(gw_host_name, gw_host_attributes, None)])
+        # Note:  `gw_folder` is a CREFolder but it will still try to bake,
+        # although the bakery is a CEE feature.  The code under
+        # `hosts_and_folders` is very convoluted.
+        gw_folder.create_hosts(
+            [(gw_host_name, gw_host_attributes, None)],
+            bake=bakery.try_bake_agents_for_hosts,
+        )
         self._num_gateway_hosts_created += 1
 
         return [gw_host_name]

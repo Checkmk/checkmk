@@ -136,7 +136,7 @@ def test_secwerk_has_cvss(precompiled_werks: None) -> None:
         if werk["class"] != "security":
             continue
         assert (
-            CVSS_REGEX.search("\n".join(werk["body"])) is not None
+            CVSS_REGEX.search("\n".join(werk["description"])) is not None
         ), f"Werk {werk_id} is missing a CVSS"
 
 

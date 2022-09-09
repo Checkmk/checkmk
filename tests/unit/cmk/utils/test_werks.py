@@ -23,7 +23,7 @@ WERK = Werk(
         "version": "v42.0.0p7",
         "compatible": "comp",
         "edition": "cre",
-        "body": [],
+        "description": [],
     }
 )
 
@@ -31,11 +31,11 @@ WERK = Werk(
 def write_werk(path: Path, werk_dict: Mapping[str, Any]) -> None:
     with path.open("w") as outfile:
         for key, value in werk_dict.items():
-            if key == "body":
+            if key == "description":
                 continue
             outfile.write(f"{key}: {value}\n")
-        assert isinstance(werk_dict["body"], list)
-        outfile.writelines(f"{line}\n" for line in werk_dict["body"])
+        assert isinstance(werk_dict["description"], list)
+        outfile.writelines(f"{line}\n" for line in werk_dict["description"])
 
 
 def test_werk_loading(tmp_path: Path) -> None:

@@ -39,7 +39,7 @@ Werk = TypedDict(
         "state": NotRequired[str],
         "id": NotRequired[int],
         "targetversion": NotRequired[str],
-        "body": list[str],
+        "description": list[str],
     },
 )
 
@@ -160,7 +160,7 @@ def load_raw_files(werks_dir: Path) -> dict[int, Werk]:
 
 def _load_werk(path: Path) -> Werk:
     werk: dict[str, Any] = {
-        "body": [],
+        "description": [],
         "compatible": "compat",
         "edition": "cre",
     }
@@ -183,7 +183,7 @@ def _load_werk(path: Path) -> Werk:
                     raise MKGeneralException("unknown werk field %s" % key)
                 werk[field] = value
             else:
-                werk["body"].append(line)
+                werk["description"].append(line)
 
     # typeshed is missing these class attributes
     # https://github.com/python/typeshed/pull/8512 merged in 08/2022, wait for release...

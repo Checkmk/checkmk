@@ -156,7 +156,7 @@ _ALLOWED_WERK_FIELDS = _REQUIRED_WERK_FIELDS | _OPTIONAL_WERK_FIELDS
 
 def _load_werk(path):
     werk: Dict[str, Any] = {
-        "body": [],
+        "description": [],
         "compatible": "compat",
         "edition": "cre",
     }
@@ -177,7 +177,7 @@ def _load_werk(path):
                     raise MKGeneralException("unknown werk field %s" % key)
                 werk[field] = value
             else:
-                werk["body"].append(line)
+                werk["description"].append(line)
 
     missing_fields = _REQUIRED_WERK_FIELDS - set(werk.keys())
     if missing_fields:

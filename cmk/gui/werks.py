@@ -638,7 +638,7 @@ def werk_matches_options(werk, werk_table_options):
     if werk_table_options["werk_content"]:
         have_match = False
         search_text = werk_table_options["werk_content"].lower()
-        for line in [werk["title"]] + werk["body"]:
+        for line in [werk["title"]] + werk["description"]:
             if search_text in line.lower():
                 have_match = True
                 break
@@ -705,7 +705,7 @@ def render_werk_description(werk) -> HTML:
         html.open_p()
         in_list = False
         in_code = False
-        for line in werk["body"]:
+        for line in werk["description"]:
             if line.startswith("LI:"):
                 if not in_list:
                     html.open_ul()

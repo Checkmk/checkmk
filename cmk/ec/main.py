@@ -27,10 +27,9 @@ import sys
 import threading
 import time
 import traceback
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from logging import getLogger, Logger
 from pathlib import Path
-from re import Pattern
 from types import FrameType
 from typing import Any, Literal, NamedTuple, Protocol, TypedDict
 
@@ -53,7 +52,7 @@ from cmk.utils.site import omd_site
 from cmk.utils.type_defs import HostName, TimeperiodName, Timestamp
 
 from .actions import do_event_action, do_event_actions, do_notify, event_has_opened
-from .config import Config, ConfigFromWATO, Rule
+from .config import Config, ConfigFromWATO, MatchGroups, Rule, TextMatchResult, TextPattern
 from .core_queries import HostInfo, query_hosts_scheduled_downtime_depth, query_timeperiods_in
 from .crash_reporting import CrashReportStore, ECCrashReport
 from .event import create_event_from_line, Event
@@ -267,11 +266,6 @@ def drain_pipe(pipe: FileDescr) -> None:
                 break  # Error while reading
         else:
             break  # No data available
-
-
-TextPattern = str | Pattern[str] | None
-TextMatchResult = bool | Sequence[str]
-MatchGroups = dict[str, TextMatchResult]
 
 
 def match(pattern: TextPattern, text: str, complete: bool) -> TextMatchResult:

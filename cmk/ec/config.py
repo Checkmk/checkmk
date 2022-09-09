@@ -3,9 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from re import Pattern
 from typing import Any, Iterable, Literal, Mapping, Optional, Sequence, TypedDict, Union
 
 from cmk.utils.type_defs import Seconds
+
+TextPattern = str | Pattern[str] | None
+TextMatchResult = bool | Sequence[str]
+MatchGroups = dict[str, TextMatchResult]
 
 ################################################################################
 
@@ -146,12 +151,12 @@ class Rule(TypedDict, total=False):
     id: str
     invert_matching: bool
     livetime: tuple[Seconds, Iterable[Literal["open", "ack"]]]
-    match: str
+    match: TextPattern
     match_application: str
     match_facility: int
     match_host: str
     match_ipaddress: str
-    match_ok: str
+    match_ok: TextPattern
     match_priority: tuple[int, int]
     match_site: Iterable[str]
     match_sl: tuple[int, int]

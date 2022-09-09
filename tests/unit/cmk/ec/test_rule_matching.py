@@ -18,6 +18,7 @@ from cmk.ec.main import (
     MatchSuccess,
     Rule,
     RuleMatcher,
+    TextMatchResult,
 )
 
 
@@ -61,19 +62,19 @@ def test_match_message(
     result: bool,
     match_message: str,
     cancel_message: str | None,
-    match_groups: MatchGroups,
+    match_groups: TextMatchResult,
     cancel_groups: bool | None,
 ) -> None:
     rule: Rule = {
-        "match": EventServer._compile_matching_value("match", match_message),  # type: ignore[typeddict-item]
+        "match": EventServer._compile_matching_value("match", match_message),
     }
 
     if cancel_message is not None:
-        rule["match_ok"] = EventServer._compile_matching_value("match_ok", cancel_message)  # type: ignore[typeddict-item]
+        rule["match_ok"] = EventServer._compile_matching_value("match_ok", cancel_message)
 
     event: Event = {"text": message}
 
-    matched_groups: dict = {}
+    matched_groups: MatchGroups = {}
     assert m.event_rule_matches_message(rule, event, matched_groups) == result
     assert matched_groups["match_groups_message"] == match_groups
 
@@ -217,7 +218,7 @@ def test_match_host(m: RuleMatcher, result: bool, rule: Rule, event: Event) -> N
 
     if "match_host" in rule:
         rule = {
-            **rule,  # type: ignore[misc]
+            **rule,  # type: ignore[misc] # mypy bug https://github.com/python/mypy/issues/4122
             "match_host": EventServer._compile_matching_value("match_host", rule["match_host"]),
         }
 

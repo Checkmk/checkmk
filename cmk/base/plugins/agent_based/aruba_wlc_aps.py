@@ -6,8 +6,9 @@
 
 from typing import Dict, NamedTuple
 
-from .agent_based_api.v1 import exists, register, Result, Service, SNMPTree, State, TableRow
+from .agent_based_api.v1 import register, Result, Service, SNMPTree, State, TableRow
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
+from .utils.aruba import DETECT_WLC
 
 
 class WLCAp(NamedTuple):
@@ -129,7 +130,7 @@ def parse_aruba_wlc_aps(string_table: StringTable) -> Section:
 register.snmp_section(
     name="aruba_wlc_aps",
     parse_function=parse_aruba_wlc_aps,
-    detect=exists(".1.3.6.1.4.1.2036.2.1.1.4.0"),
+    detect=DETECT_WLC,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.14823.2.2.1.5.2.1.4.1",
         oids=[

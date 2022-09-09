@@ -1,0 +1,16 @@
+Title: aruba_wlc_aps: Fix detection of devices
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1662713292
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p12
+
+During the check plugin migration the detection of Aruba devices changed which
+was not correct.
+
+If the related hosts in Checkmk were discovered via {{Full Scan}} and maybe
+vanished then you have to rediscover these hosts.

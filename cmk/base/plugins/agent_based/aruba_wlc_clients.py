@@ -6,8 +6,9 @@
 
 from typing import List
 
-from .agent_based_api.v1 import OIDEnd, register, SNMPTree, startswith
+from .agent_based_api.v1 import OIDEnd, register, SNMPTree
 from .agent_based_api.v1.type_defs import StringTable
+from .utils.aruba import DETECT_WLC
 from .utils.wlc_clients import ClientsTotal, WlcClientsSection
 
 
@@ -26,7 +27,7 @@ def parse_aruba_wlc_clients(string_table: List[StringTable]) -> WlcClientsSectio
 register.snmp_section(
     name="aruba_wlc_clients",
     parsed_section_name="wlc_clients",
-    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.14823.1.1"),
+    detect=DETECT_WLC,
     parse_function=parse_aruba_wlc_clients,
     fetch=[
         SNMPTree(

@@ -7,9 +7,10 @@
 
 usage() {
     cat >&2 <<-HERE
-usage: $(basename "${0}") [ --filter]
+usage: $(basename "${0}") [--omit-legacy-checks|--filter]
 
-   --filter:   read file candidates from lines of stdin (one file per line)
+   --omit-legacy-checks: omit files below checks/
+   --filter:             read file candidates from lines of stdin (one file per line)
 HERE
     exit 1
 }
@@ -21,8 +22,8 @@ get_candidates_from_stdin() {
     done
 }
 
-get_candidates_fallback() {
-
+get_candidates_from_filesystem() {
+    LEGACY_CHECK_HANDLING=$1
     cd "$(dirname "$(dirname "$(realpath "$0")")")" || exit $?
 
     SEARCH=
@@ -33,7 +34,9 @@ get_candidates_fallback() {
     SEARCH+=" agents"
     SEARCH+=" bin"
     PRUNE+=" -path $(realpath bin)/cmk -prune -o" # symlink to bin/check_mk + confusion with cmk/ directory
-    SEARCH+=" checks"
+    if [ "${LEGACY_CHECK_HANDLING}" = "keep" ]; then
+        SEARCH+=" checks"
+    fi
     SEARCH+=" cmk"
     SEARCH+=" doc"
     PRUNE+=" -path $(realpath doc/treasures) -prune -o" # our "treasures" need much more love before they can be linted
@@ -105,18 +108,24 @@ filter_for_python_files() {
 }
 
 main() {
-    case "${1}" in
-        "")
-            get_candidates_fallback | filter_for_python_files
-            ;;
-        "--filter")
-            get_candidates_from_stdin | filter_for_python_files
-            true # in the filtering case, no match by grep is OK!
-            ;;
-        *)
-            usage
-            ;;
-    esac
+    if [ $# -eq 0 ]; then
+        get_candidates_from_filesystem keep | filter_for_python_files
+    elif [ $# -eq 1 ]; then
+        case $1 in
+            --omit-legacy-checks)
+                get_candidates_from_filesystem omit | filter_for_python_files
+                ;;
+            --filter)
+                # in the filtering case, no match by grep is OK!
+                get_candidates_from_stdin | filter_for_python_files || true
+                ;;
+            *)
+                usage
+                ;;
+        esac
+    else
+        usage
+    fi
 }
 
 [ -z "${MK_SOURCE_ONLY}" ] && main "$@"

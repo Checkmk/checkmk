@@ -35,7 +35,8 @@ def construct_args(tmpdir: Path) -> list[str]:
     ]
     if pylint_args := os.environ.get("PYLINT_ARGS"):
         args += pylint_args.split(" ")
-    args.extend(str(f) for f in get_files_to_check(tmpdir))
+    args.extend(str(f) for f in compile_check_plugins(tmpdir))
+    args.extend(str(f) for f in find_python_files())
     return args
 
 
@@ -55,17 +56,11 @@ def num_jobs_to_use() -> int:
     return int(multiprocessing.cpu_count() / 8.0) + 5
 
 
-def get_files_to_check(tmpdir: Path) -> Iterable[Path]:
-    return [compile_check_plugins(tmpdir)] + [
-        f for f in find_python_files() if not f.is_relative_to("checks")
-    ]
-
-
 def find_python_files() -> Iterable[Path]:
     return (
         make_relative(Path(f))
         for f in subprocess.run(
-            [f"{Path(repo_path())}/scripts/find-python-files"],
+            [f"{Path(repo_path())}/scripts/find-python-files", "--omit-legacy-checks"],
             stdout=subprocess.PIPE,
             encoding="utf-8",
             check=False,
@@ -77,7 +72,7 @@ def make_relative(name: Path) -> Path:
     return name.relative_to(Path(repo_path()))
 
 
-def compile_check_plugins(tmpdir: Path) -> Path:
+def compile_check_plugins(tmpdir: Path) -> Iterable[Path]:
     tmpdir /= LEGACY_PACKAGE_NAME
     tmpdir.mkdir()
     (tmpdir / "__init__.py").touch()
@@ -86,7 +81,7 @@ def compile_check_plugins(tmpdir: Path) -> Path:
             f.write(HEADER)
             f.write(f"# ORIG-FILE: {make_relative(name)}\n")
             f.write(name.read_text())
-    return tmpdir
+    return (tmpdir,)
 
 
 def check_files() -> Iterable[Path]:

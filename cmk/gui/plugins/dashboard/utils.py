@@ -71,7 +71,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
     ValueSpecValidateFunc,
 )
-from cmk.gui.view_store import get_all_views, get_permitted_views, painter_specs_to_runtime_format
+from cmk.gui.view_store import get_all_views, get_permitted_views, internal_view_to_runtime_view
 
 DashboardName = str
 DashboardConfig = Dict[str, Any]
@@ -829,7 +829,7 @@ def _internal_dashboard_to_runtime_dashboard(raw_dashboard: dict[str, Any]) -> D
     return {
         **raw_dashboard,
         "dashlets": [
-            painter_specs_to_runtime_format(dashlet_spec)
+            internal_view_to_runtime_view(dashlet_spec)
             if dashlet_spec["type"] == "view"
             else dashlet_spec
             for dashlet_spec in raw_dashboard["dashlets"]

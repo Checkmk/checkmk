@@ -16,11 +16,11 @@ from cmk.gui.type_defs import AllViewSpecs, PainterSpec, PermittedViewSpecs, Vie
 multisite_builtin_views: Dict = {}
 
 
-def _internal_view_to_runtime_view(raw_view: dict[str, Any]) -> ViewSpec:
-    return painter_specs_to_runtime_format(raw_view)
+def internal_view_to_runtime_view(raw_view: dict[str, Any]) -> ViewSpec:
+    return _painter_specs_to_runtime_format(raw_view)
 
 
-def painter_specs_to_runtime_format(view: ViewSpec) -> ViewSpec:
+def _painter_specs_to_runtime_format(view: ViewSpec) -> ViewSpec:
     if "painters" in view:
         view["painters"] = [PainterSpec.from_raw(v) for v in view["painters"]]
     if "group_painters" in view:
@@ -46,7 +46,7 @@ class ViewStore:
         return visuals.load(
             "views",
             multisite_builtin_views,
-            _internal_view_to_runtime_view,
+            internal_view_to_runtime_view,
             skip_func=lambda v: v["datasource"] not in data_source_registry,
         )
 

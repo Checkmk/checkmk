@@ -79,14 +79,14 @@ storcli_info() {
         '"DID"'*)    #Device Id: 19
             LOG_DEV_ID=$( echo $line |  awk -F ': |,' '{print $2}')
         ;;
-        '                                "Intf" : '*) #                                 "Intf" : "SATA",
+        '"Intf" : '*) #                                 "Intf" : "SATA",
             VEND=$( echo "$line" | cut -d '"' -f4 )
         ;;
         # This is the last value, generate output here
         '"Model" : '*) #                                 "Model" : "INTEL SSDSC2BX200G4R",
          #Inquiry Data: WD-WCC1T1035197WDC WD20EZRX-00DC0B0 80.00A80
             # $4 seems to be better for some vendors... wont be possible to get this perfect.
-            MODEL=$( echo "$line" | cut -d '"' -f4 )
+            MODEL=$( echo "$line" | cut -d '"' -f4 | tr ' ' '-' )
 
             # /dev/sdc ATA SAMSUNG_SSD_830   5 Reallocated_Sector_Ct   0x0033   100   100   010    Pre-fail  Always       -
             smartctl -d megaraid,"${LOG_DEV_ID}" -v 9,raw48 -A /dev/sg${CONTROLLER} | \

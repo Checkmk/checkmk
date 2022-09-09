@@ -43,10 +43,13 @@ def extract_connection_args(config):
 
     address = config["host_address"] if connect_type == "ip_address" else config["host_name"]
 
-    if "path-prefix" in connect_settings:
-        address = f"{connect_settings['path-prefix']}{address}"
+    path_prefix = connect_settings.get("path-prefix", "")
+    if path_prefix:
+        path_prefix = path_prefix + "/"
 
-    connection_args.update({"address": address, "port": connect_settings.get("port")})
+    connection_args.update(
+        {"address": address, "path-prefix": path_prefix, "port": connect_settings.get("port")}
+    )
     return connection_args
 
 
@@ -60,7 +63,7 @@ def generate_api_session(connection_options):
     else:
         api_url = parse_api_url(
             server_address=connection_options["address"],
-            api_path="api/v1/",
+            api_path=connection_options["path-prefix"] + "api/v1/",
             protocol=connection_options["protocol"],
             port=connection_options["port"],
         )

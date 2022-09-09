@@ -1529,7 +1529,10 @@ class PrometheusAPI:
 
     def __init__(self, session) -> None:  # type:ignore[no-untyped-def]
         self.session = session
-        self.scrape_targets_dict = self._connected_scrape_targets()
+
+    @property
+    def scrape_targets_dict(self) -> Dict[str, Any]:
+        return self._connected_scrape_targets()
 
     def scrape_targets_attributes(self) -> Iterator[Tuple[str, Dict[str, Any]]]:
         """Format the scrape_targets_dict for information processing
@@ -1622,7 +1625,7 @@ class PrometheusAPI:
             return []
 
     def _perform_promql_query(self, promql: str) -> List[Dict[str, Any]]:
-        api_query_expression = "query?query=%s" % quote(promql)
+        api_query_expression = "query?query=%s" % promql
         result = self._process_json_request(api_query_expression)["data"]["result"]
         return result
 

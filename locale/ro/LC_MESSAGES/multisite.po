@@ -1605,10 +1605,11 @@ msgid ""
 "them.</p>"
 msgstr ""
 
+#, python-format
 msgid ""
 "<p>You can optionally define one or multiple regular expressions where a "
-"matching case will result in the exclusion of the concerning service(s). "
-"This allows to ignore services which are known to fail beforehand. </p>"
+"matching case will result in the exclusion of the concerning %s(s). This "
+"allows to ignore services which are known to fail beforehand. </p>"
 msgstr ""
 
 msgid ""
@@ -2666,9 +2667,6 @@ msgstr " Activează această opțiune"
 msgid "Activated changes by %s."
 msgstr ""
 
-msgid "Activated changes of event console configuration"
-msgstr ""
-
 #, fuzzy
 msgid "Activated the changes"
 msgstr "Activare Schimbări!"
@@ -2676,9 +2674,6 @@ msgstr "Activare Schimbări!"
 #, fuzzy
 msgid "Activating"
 msgstr " Activează această opțiune"
-
-msgid "Activating changes of Livestatus Proxy configuration"
-msgstr ""
 
 #, fuzzy
 msgid "Activation"
@@ -2952,10 +2947,6 @@ msgid "Add all metrics of this graph to"
 msgstr "Adaugă acesta vedere la..."
 
 #, fuzzy
-msgid "Add android hostnames matching"
-msgstr "Numele Elementului"
-
-#, fuzzy
 msgid "Add attribute"
 msgstr "Adaugă model/tipar"
 
@@ -3084,10 +3075,6 @@ msgstr "Grup nou"
 #, fuzzy
 msgid "Add host to the monitoring"
 msgstr "Adaugă instanțe pentru monitorizare"
-
-#, fuzzy
-msgid "Add iOS hostnames matching"
-msgstr "Numele Elementului"
 
 msgid "Add instance to be monitored"
 msgstr "Adaugă instanțe pentru monitorizare"
@@ -3267,9 +3254,6 @@ msgid "Add notification rule for user %s"
 msgstr ""
 
 msgid "Add one or multiple MIBs"
-msgstr ""
-
-msgid "Add other (not android and not iOS) hostnames matching"
 msgstr ""
 
 #, fuzzy
@@ -4476,6 +4460,10 @@ msgstr "spatiu utilizat"
 
 msgid "Allocate Requests Exceeding Port Limit"
 msgstr ""
+
+#, fuzzy
+msgid "Allocated SNAT ports"
+msgstr "spatiu utilizat"
 
 #, fuzzy
 msgid "Allocated for document storage"
@@ -5957,7 +5945,18 @@ msgstr "Conexiuni Active"
 msgid "Azure Databases"
 msgstr ""
 
+#, fuzzy
+msgid "Azure Load Balancer Health"
+msgstr "Perioada de timp Noua"
+
 msgid "Azure Storage"
+msgstr ""
+
+#, fuzzy
+msgid "Azure Traffic Manager Probe State"
+msgstr "Nume nou"
+
+msgid "Azure Traffic Manager Qps"
 msgstr ""
 
 msgid "Azure Usage Details (Costs)"
@@ -6177,6 +6176,13 @@ msgstr "foloseste numele portului"
 #, fuzzy
 msgid "Bad Requests Received"
 msgstr "cereri/sec"
+
+#, fuzzy
+msgid "Bake agent packages"
+msgstr "Acces la Agenți"
+
+msgid "Bake agent packages for this folder even if it is empty."
+msgstr ""
 
 #, fuzzy
 msgid "Bake agents"
@@ -7100,6 +7106,22 @@ msgid ""
 "documentation</a> for details."
 msgstr ""
 
+#, fuzzy
+msgid "Byte Count"
+msgstr "Sterge Elementul"
+
+#, fuzzy
+msgid "Byte count"
+msgstr "Sterge Elementul"
+
+#, fuzzy
+msgid "Byte count lower levels"
+msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
+msgid "Byte count upper levels"
+msgstr "Numarul maxim de mesaje"
+
 msgid "Bytes"
 msgstr ""
 
@@ -7924,9 +7946,6 @@ msgstr[2] "Numarul maxim de conexiuni"
 msgid "Changed host selection has been saved."
 msgstr ""
 
-msgid "Changed host selection of agent updates"
-msgstr ""
-
 #, python-format
 msgid "Changed notification rule %d"
 msgstr ""
@@ -8705,6 +8724,11 @@ msgid "Choose table columns"
 msgstr "Tagul Aplicatiei in syslog"
 
 msgid ""
+"Choose the Checkmk state in case of probe state not OK (probe state metric "
+"is 0)."
+msgstr ""
+
+msgid ""
 "Choose the action the Event Console should trigger once the limit is reached."
 msgstr ""
 
@@ -8751,19 +8775,21 @@ msgid ""
 "a user is not permitted to see a view, an error message will be displayed."
 msgstr ""
 
+#, python-format
 msgid ""
-"Choose time levels (in seconds) for which a service is allowed to be in a "
+"Choose time levels (in seconds) for which a %s is allowed to be in a "
 "'reloading' state"
 msgstr ""
 
+#, python-format
 msgid ""
-"Choose time levels (in seconds) for which a service is allowed to be in an "
+"Choose time levels (in seconds) for which a %s is allowed to be in an "
 "'deactivating' state"
 msgstr ""
 
+#, python-format
 msgid ""
-"Choose time levels for which a service is allowed to be in an 'activating' "
-"state"
+"Choose time levels for which a %s is allowed to be in an 'activating' state"
 msgstr ""
 
 msgid ""
@@ -9803,6 +9829,17 @@ msgid ""
 "would have no effect."
 msgstr ""
 
+#, python-format
+msgid ""
+"Configure the discovery of single systemd %(singular)s. To be discovered, a "
+"%(singular)s must match at least one description condition, one name "
+"condition and one state condition, if configured. To simply discover all "
+"systemd %(plural)s, do not configure any restrictions. Note that "
+"independently of this ruleset, some systemd %(plural)s which are used by the "
+"Checkmk agent ('check-mk-agent@...') will never be discovered because they "
+"appear and disappear frequently."
+msgstr ""
+
 msgid ""
 "Configure the discovery of single systemd services. To be discovered, a "
 "service must match at least one description condition, one name condition "
@@ -10240,6 +10277,10 @@ msgstr ""
 #, fuzzy
 msgid "Contact person"
 msgstr "Adaugă informații despre contact"
+
+#, fuzzy
+msgid "Contact sensor type"
+msgstr "Conexiune Noua"
 
 msgid "Contactgroup Membership"
 msgstr ""
@@ -11043,15 +11084,7 @@ msgid "Created new time period %s"
 msgstr ""
 
 #, python-format
-msgid "Created new user: %s"
-msgstr ""
-
-#, python-format
 msgid "Created new users: %s"
-msgstr ""
-
-#, python-format
-msgid "Created snapshot %s"
 msgstr ""
 
 msgid ""
@@ -11552,6 +11585,10 @@ msgstr ""
 #, fuzzy
 msgid "Custom path prefix"
 msgstr "Atribute personalizate"
+
+#, fuzzy
+msgid "Custom probe state"
+msgstr "Proprietatile Folderului"
 
 #, fuzzy
 msgid "Custom search query"
@@ -12055,6 +12092,10 @@ msgid "Data not found"
 msgstr ""
 
 #, fuzzy
+msgid "Data path availability lower levels"
+msgstr "Tabel cu macro-uri disponibile"
+
+#, fuzzy
 msgid "Data range"
 msgstr "% / gamă"
 
@@ -12196,6 +12237,10 @@ msgstr ""
 
 msgid "Database reclaimable size"
 msgstr ""
+
+#, fuzzy
+msgid "Database server"
+msgstr "Nume tablespace"
 
 msgid "Database size"
 msgstr ""
@@ -12539,13 +12584,16 @@ msgstr ""
 msgid "Define a range of syslog priorities this rule matches"
 msgstr ""
 
-msgid "Define a tolerating time period for activating services"
+#, python-format
+msgid "Define a tolerating time period for activating %s"
 msgstr ""
 
-msgid "Define a tolerating time period for deactivating services"
+#, python-format
+msgid "Define a tolerating time period for deactivating %s"
 msgstr ""
 
-msgid "Define a tolerating time period for reloading services"
+#, python-format
+msgid "Define a tolerating time period for reloading %s"
 msgstr ""
 
 msgid ""
@@ -12958,10 +13006,6 @@ msgid "Deleted MIB %s"
 msgstr ""
 
 #, python-format
-msgid "Deleted agent signature key '%s'"
-msgstr ""
-
-#, python-format
 msgid "Deleted attribute %s"
 msgstr ""
 
@@ -13289,6 +13333,9 @@ msgid "Deploy the docker plugin"
 msgstr ""
 
 msgid "Deploy the netstat plugin"
+msgstr ""
+
+msgid "Deploy the nvidia_smi agent plugin"
 msgstr ""
 
 msgid "Deploy the plesk plugins"
@@ -13786,9 +13833,6 @@ msgstr "foloseste configuratia locala"
 #, fuzzy
 msgid "Disabled active checks"
 msgstr "<b>dezactivează verificările active</b> pentru"
-
-msgid "Disabled agent updates"
-msgstr ""
 
 msgid "Disabled checks"
 msgstr ""
@@ -14378,6 +14422,9 @@ msgid ""
 "Do not backup metric data (RRD files), the monitoring history and log files"
 msgstr ""
 
+msgid "Do not bake agent packages for this folder if it is empty."
+msgstr ""
+
 msgid "Do not check"
 msgstr ""
 
@@ -14621,6 +14668,10 @@ msgstr ""
 
 msgid "Do not deploy the netstat plugin"
 msgstr ""
+
+#, fuzzy
+msgid "Do not deploy the nvidia_smi agent plugin"
+msgstr "Numele elementului pentru eveniment"
 
 msgid "Do not deploy the plesk plugins"
 msgstr ""
@@ -15052,7 +15103,7 @@ msgid "Does not ends with \"%s\"."
 msgstr ""
 
 #, fuzzy
-msgid "Does not exists"
+msgid "Does not exist"
 msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 #, fuzzy
@@ -16304,9 +16355,6 @@ msgstr ""
 msgid "Enabled"
 msgstr "Tabel"
 
-msgid "Enabled agent updates"
-msgstr ""
-
 #, python-format
 msgid "Enabled extension package %s"
 msgstr ""
@@ -17047,6 +17095,10 @@ msgstr ""
 msgid "Exclude \"Activate changes\" for time ranges"
 msgstr " Activează această opțiune"
 
+#, python-format
+msgid "Exclude %s matching provided regex patterns"
+msgstr ""
+
 #, fuzzy
 msgid "Exclude Nodes based on their role"
 msgstr "Linii de header adiționale"
@@ -17098,9 +17150,6 @@ msgstr "Grup nou"
 #, fuzzy
 msgid "Exclude services"
 msgstr "Grup nou"
-
-msgid "Exclude services matching provided regex patterns"
-msgstr ""
 
 msgid "Exclude some sections on certain instances"
 msgstr ""
@@ -19170,6 +19219,13 @@ msgstr ""
 msgid "GCP/GCS Requests"
 msgstr "cereri"
 
+msgid "GCP/HTTP(S) load balancer Latencies"
+msgstr ""
+
+#, fuzzy
+msgid "GCP/HTTP(S) load balancer requests"
+msgstr "cereri"
+
 msgid "GET/POST variables of this page"
 msgstr ""
 
@@ -19780,6 +19836,9 @@ msgstr "cereri/sec"
 msgid "HTTP requests per second"
 msgstr "cereri/sec"
 
+msgid "HTTP(S) load balancer"
+msgstr ""
+
 msgid "HTTP, TCP, Email, ..."
 msgstr ""
 
@@ -19975,6 +20034,10 @@ msgstr ""
 
 msgid "Health"
 msgstr ""
+
+#, fuzzy
+msgid "Health probe status lower levels"
+msgstr "Numarul maxim de mesaje"
 
 msgid "Heap and non-heap memory"
 msgstr ""
@@ -25385,8 +25448,16 @@ msgid "Levels Livestatus Usage"
 msgstr "Conexiuni Active"
 
 #, fuzzy
+msgid "Levels SNAT usage"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
 msgid "Levels Services"
 msgstr "servicii"
+
+#, fuzzy
+msgid "Levels byte count"
+msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
 msgid "Levels connections"
@@ -25582,6 +25653,10 @@ msgid "Levels for minimum wait time for a lock"
 msgstr ""
 
 #, fuzzy
+msgid "Levels for non-compliant devices"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
 msgid "Levels for non-resident items"
 msgstr "Nivel-urile absolute de licențe neutilizate"
 
@@ -25758,6 +25833,10 @@ msgid "Levels for wait"
 msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
+msgid "Levels health"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
+#, fuzzy
 msgid "Levels memory"
 msgstr "Nivelurile maxime pentru voltaj"
 
@@ -25920,6 +25999,10 @@ msgstr ""
 
 msgid "Levels over an extended time period on total CPU utilization"
 msgstr ""
+
+#, fuzzy
+msgid "Levels qps"
+msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
 msgid "Levels replication"
@@ -26340,6 +26423,9 @@ msgid "Livestatus-connections"
 msgstr "Conexiuni Active"
 
 msgid "Load"
+msgstr ""
+
+msgid "Load Balancer Health"
 msgstr ""
 
 msgid "Load Call Failure Index"
@@ -29085,20 +29171,28 @@ msgid "MobileIron API"
 msgstr ""
 
 #, fuzzy
+msgid "Mobileiron compliance"
+msgstr "(fără parametri)"
+
+#, fuzzy
 msgid "Mobileiron compliance parameters"
 msgstr "(fără parametri)"
 
 #, fuzzy
+msgid "Mobileiron statistics"
+msgstr "Statusul Serverului"
+
+#, fuzzy
+msgid "Mobileiron statistics parameters"
+msgstr "(fără parametri)"
+
+#, fuzzy
+msgid "Mobileiron versions"
+msgstr "sesiuni"
+
+#, fuzzy
 msgid "Mobileiron versions parameters"
 msgstr "(fără parametri)"
-
-#, fuzzy
-msgid "Mobileiron/Compliance"
-msgstr "(fără parametri)"
-
-#, fuzzy
-msgid "Mobileiron/Versions"
-msgstr "sesiuni"
 
 msgid "Mode"
 msgstr ""
@@ -29191,10 +29285,6 @@ msgid "Modified user role '%s'"
 msgstr ""
 
 #, python-format
-msgid "Modified user: %s"
-msgstr ""
-
-#, python-format
 msgid "Modified users: %s"
 msgstr ""
 
@@ -29273,6 +29363,10 @@ msgid "Monitor & Graph Lanes"
 msgstr ""
 
 #, fuzzy
+msgid "Monitor Android devices"
+msgstr "Afectat de serviciu"
+
+#, fuzzy
 msgid "Monitor CloudFront WAFs"
 msgstr " pe siteul de monitorizare: "
 
@@ -29308,6 +29402,10 @@ msgid "Monitor hosts for unchecked services (Checkmk Discovery)"
 msgstr ""
 
 #, fuzzy
+msgid "Monitor iOS devices"
+msgstr "Afectat de serviciu"
+
+#, fuzzy
 msgid "Monitor menu entries"
 msgstr " pe siteul de monitorizare: "
 
@@ -29324,6 +29422,9 @@ msgstr "Nume nou"
 #, fuzzy
 msgid "Monitor namespaces matching"
 msgstr "Nume nou"
+
+msgid "Monitor other than Android or iOS devices"
+msgstr ""
 
 #, fuzzy
 msgid "Monitor request metrics"
@@ -29431,8 +29532,24 @@ msgstr ""
 msgid "Monitoring state"
 msgstr " pe siteul de monitorizare: "
 
+#, fuzzy, python-format
+msgid "Monitoring state for any other %s state"
+msgstr " pe siteul de monitorizare: "
+
 msgid "Monitoring state for any other service state"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "Monitoring state if %s is active"
+msgstr " pe siteul de monitorizare: "
+
+#, fuzzy, python-format
+msgid "Monitoring state if %s is failed"
+msgstr " pe siteul de monitorizare: "
+
+#, fuzzy, python-format
+msgid "Monitoring state if %s is inactive"
+msgstr " pe siteul de monitorizare: "
 
 #, python-format
 msgid "Monitoring state if HAProxy frontend is %s"
@@ -29453,6 +29570,10 @@ msgstr ""
 #, python-format
 msgid "Monitoring state if VM state is %s"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "Monitoring state if a monitored %s is not found at all."
+msgstr " pe siteul de monitorizare: "
 
 msgid "Monitoring state if a monitored service is not found at all."
 msgstr ""
@@ -29655,7 +29776,7 @@ msgid "Moved from"
 msgstr ""
 
 #, python-format
-msgid "Moved host from \"%s\" to \"%s\""
+msgid "Moved host from \"%s\" (ID: %s) to \"%s\" (ID: %s)"
 msgstr ""
 
 #, python-format
@@ -30065,6 +30186,10 @@ msgid "Name of the service"
 msgstr ""
 
 #, fuzzy
+msgid "Name of the socket"
+msgstr "Numele elementului pentru eveniment"
+
+#, fuzzy
 msgid "Name of the tape job"
 msgstr "Numele elementului pentru eveniment"
 
@@ -30376,10 +30501,6 @@ msgid ""
 "without TLS. However, if you upgrade an existing installation, the old "
 "transport mode (with optional encryption) will continue to work, to ease "
 "migration."
-msgstr ""
-
-#, python-format
-msgid "New agent signature key '%s' created"
 msgstr ""
 
 msgid "New backup job"
@@ -30779,6 +30900,10 @@ msgstr ""
 
 msgid "No response from update thread"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "No restrictions (discover all systemd %s)"
+msgstr "(fără Nivel de serviciu)"
 
 #, fuzzy
 msgid "No restrictions (discover all systemd service units)"
@@ -32071,6 +32196,10 @@ msgstr ""
 msgid "Nvidia"
 msgstr ""
 
+#, fuzzy
+msgid "Nvidia GPU monitoring (Windows)"
+msgstr " pe siteul de monitorizare: "
+
 msgid "O"
 msgstr ""
 
@@ -33210,6 +33339,9 @@ msgstr ""
 msgid "PROXY"
 msgstr ""
 
+msgid "PSU"
+msgstr ""
+
 msgid "PSU (Chassis/Bay)"
 msgstr ""
 
@@ -33481,6 +33613,14 @@ msgstr ""
 msgid "Parameters for switch port inventory"
 msgstr ""
 
+#, fuzzy
+msgid "Parameters for the  latencies"
+msgstr " pe siteul de monitorizare: "
+
+#, fuzzy
+msgid "Parameters for the  requests"
+msgstr "trei nivele"
+
 msgid "Parameters for the Windows Update Check with WSUS"
 msgstr ""
 
@@ -33493,6 +33633,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Parameters for the bucket requests"
+msgstr "trei nivele"
+
+#, fuzzy
+msgid "Parameters for the latencies"
 msgstr "trei nivele"
 
 msgid "Parameters for this host"
@@ -33643,6 +33787,9 @@ msgstr "Adaugă notificare"
 #, fuzzy
 msgid "Path to categories"
 msgstr "cu context"
+
+msgid "Path to nvidia-smi.exe"
+msgstr ""
 
 msgid "Path to sapgenpse"
 msgstr ""
@@ -34332,6 +34479,11 @@ msgid ""
 "The latter one is just being displayed as a further information."
 msgstr ""
 
+msgid ""
+"Please activate the monitoring of at least one device type: Android, iOS or "
+"other devices"
+msgstr ""
+
 msgid "Please add at least one child node."
 msgstr ""
 
@@ -34429,9 +34581,6 @@ msgstr ""
 msgid ""
 "Please enter a valid hostname or IPv4 address. Only letters, digits, dash, "
 "underscore and dot are allowed."
-msgstr ""
-
-msgid "Please enter a valid integer number"
 msgstr ""
 
 msgid "Please enter a valid number"
@@ -35244,6 +35393,10 @@ msgstr ""
 msgid "Prob."
 msgstr "Probleme"
 
+#, fuzzy
+msgid "Probe State"
+msgstr "(element fără element)"
+
 #, python-format
 msgid "Problem %s"
 msgstr ""
@@ -35600,6 +35753,11 @@ msgstr ""
 msgid "Put the name of the database here, e.g. SATURN\\ARCSERVE_DB"
 msgstr ""
 
+msgid ""
+"Put the path to the nvidia-smi.exe executable here, e.g. C:\\Program Files"
+"\\NVIDIA Corporation\\NVSMI\\nvidia-smi.exe"
+msgstr ""
+
 msgid "Put this element on"
 msgstr ""
 
@@ -35631,6 +35789,9 @@ msgstr ""
 msgid "QoS outbound bits"
 msgstr ""
 
+msgid "Qps"
+msgstr ""
+
 msgid "Quantum Storage Status"
 msgstr ""
 
@@ -35642,6 +35803,10 @@ msgstr ""
 
 msgid "Queried host is the vCenter"
 msgstr ""
+
+#, fuzzy
+msgid "Queries per second"
+msgstr " secunde "
 
 msgid "Query"
 msgstr ""
@@ -36815,10 +36980,6 @@ msgid "Renamed host %s"
 msgstr ""
 
 #, python-format
-msgid "Renamed host condition from \"%s\" to \"%s\""
-msgstr ""
-
-#, python-format
 msgid "Renamed host from %s into %s."
 msgstr ""
 
@@ -37355,6 +37516,10 @@ msgstr ""
 msgid "Restrict all"
 msgstr "Eticheta de grup nou"
 
+#, fuzzy, python-format
+msgid "Restrict by %s name"
+msgstr "Eticheta de grup nou"
+
 #, fuzzy
 msgid "Restrict by contact groups"
 msgstr "Eticheta de grup nou"
@@ -37436,6 +37601,14 @@ msgstr "Adaugă instanță NGINX"
 
 msgid "Restrict the length of the lines"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "Restrict the systemd %s by description."
+msgstr "foloseste descrierea"
+
+#, fuzzy, python-format
+msgid "Restrict the systemd %s by its name."
+msgstr "foloseste descrierea"
 
 #, fuzzy
 msgid "Restrict the systemd services by description."
@@ -37849,10 +38022,11 @@ msgid "Rules to configure the behaviour of monitored hosts."
 msgstr ""
 
 msgid ""
-"Rules to set up [wato_services#manual_checks|manual services]. Services set "
-"up in this way do not depend on the service discovery. This is useful if you "
-"want to enforce compliance with a specific guideline. You can for example "
-"ensure that a certain Windows service is always present on a host."
+"Rules to set up [wato_services#enforced_services|enforced services]. "
+"Services set up in this way do not depend on the service discovery. This is "
+"useful if you want to enforce compliance with a specific guideline. You can "
+"for example ensure that a certain Windows service is always present on a "
+"host."
 msgstr ""
 
 msgid "Ruleset"
@@ -38197,6 +38371,26 @@ msgstr ""
 
 msgid "SMTP commands to execute."
 msgstr ""
+
+#, fuzzy
+msgid "SNAT Consumption"
+msgstr "APC consum de Curent"
+
+#, fuzzy
+msgid "SNAT Usage"
+msgstr "% utilizare"
+
+#, fuzzy
+msgid "SNAT usage"
+msgstr "% utilizare"
+
+#, fuzzy
+msgid "SNAT usage lower levels"
+msgstr "doua nivele"
+
+#, fuzzy
+msgid "SNAT usage upper levels"
+msgstr "trei nivele"
 
 msgid "SNMP"
 msgstr ""
@@ -40595,7 +40789,7 @@ msgid "Shows the Checkmk logo."
 msgstr ""
 
 msgid ""
-"Shows the percantage of services that are not OK in relation to the total "
+"Shows the percentage of services that are not OK in relation to the total "
 "number of services. This dashlet is not respecting the full fillter context "
 "of the dashboard, only the 'site' filter."
 msgstr ""
@@ -40698,10 +40892,6 @@ msgstr ""
 #, fuzzy
 msgid "Signed agents"
 msgstr "Acces la Agenți"
-
-#, python-format
-msgid "Signed all agents with the key '%s'"
-msgstr ""
 
 #, fuzzy
 msgid "Signing Agents..."
@@ -41988,10 +42178,6 @@ msgid "Started activate changes: %s"
 msgstr "Activare schimbări"
 
 #, python-format
-msgid "Started activation of site %s"
-msgstr ""
-
-#, python-format
 msgid "Started at %s"
 msgstr ""
 
@@ -42228,6 +42414,9 @@ msgstr ""
 msgid "State if node is not in state running"
 msgstr "Acces la Consola de Evenimente"
 
+msgid "State if probe state not OK"
+msgstr ""
+
 msgid "State if remaining API reads are unknown"
 msgstr ""
 
@@ -42312,13 +42501,13 @@ msgstr ""
 msgid "State in case of unhandled exception"
 msgstr ""
 
+msgid "State in case of unknown OS build"
+msgstr ""
+
+msgid "State in case of unknown patch level"
+msgstr ""
+
 msgid "State in case of unknown status from replication script"
-msgstr ""
-
-msgid "State in case of unparsable OS build"
-msgstr ""
-
-msgid "State in case of unparsable patch level"
 msgstr ""
 
 msgid "State in case of wrong agent version"
@@ -43381,10 +43570,6 @@ msgid "Switch to Takeover mode!"
 msgstr ""
 
 #, python-format
-msgid "Switched replication slave mode to %s"
-msgstr ""
-
-#, python-format
 msgid "Switched to %s mode"
 msgstr ""
 
@@ -43442,10 +43627,6 @@ msgstr "utilizatori"
 
 #, python-format
 msgid "Synchronized MKP with the modified rule pack %s"
-msgstr ""
-
-#, python-format
-msgid "Synchronized configuration from central site (local site ID is %s.)"
 msgstr ""
 
 #, fuzzy
@@ -43559,6 +43740,10 @@ msgstr ""
 msgid "Systemd Services Summary"
 msgstr "servicii"
 
+#, fuzzy
+msgid "Systemd Sockets Summary"
+msgstr "servicii"
+
 msgid "Systemd Timesyncd time synchronisation"
 msgstr ""
 
@@ -43566,12 +43751,24 @@ msgstr ""
 msgid "Systemd services"
 msgstr "servicii"
 
+#, fuzzy, python-format
+msgid "Systemd single %s discovery"
+msgstr "Afectat de serviciu"
+
+#, fuzzy
+msgid "Systemd single service"
+msgstr "Afectat de serviciu"
+
 #, fuzzy
 msgid "Systemd single services"
 msgstr "Afectat de serviciu"
 
 #, fuzzy
 msgid "Systemd single services discovery"
+msgstr "Afectat de serviciu"
+
+#, fuzzy
+msgid "Systemd single socket"
 msgstr "Afectat de serviciu"
 
 #, fuzzy
@@ -45632,6 +45829,10 @@ msgstr ""
 msgid "The hostname template does not contain any label."
 msgstr ""
 
+#, python-format
+msgid "The hostname template must not contain the label '%s'."
+msgstr ""
+
 msgid ""
 "The hosts listed here have contacted the update server in that past and thus "
 "had been correctly registered then. But they do not ask for updates anymore. "
@@ -45729,6 +45930,12 @@ msgid ""
 "OxyReduct: Name of the room/protection zone"
 msgstr ""
 
+msgid ""
+"The item of etherbox checks is build as 'contact.sensor_type'. For example, "
+"you want the rule to only apply to a temperature sensor (type 1) on contact "
+"3 then set the item to 3.1 ."
+msgstr ""
+
 #, python-format
 msgid "The job \"%s\" is encrypted"
 msgstr ""
@@ -45761,10 +45968,6 @@ msgstr ""
 #, python-format
 msgid "The label value %r is of type %s, but should be %s"
 msgstr ""
-
-#, fuzzy, python-format
-msgid "The labels %s are not required."
-msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 msgid "The last "
 msgstr ""
@@ -45918,10 +46121,6 @@ msgstr ""
 
 #, python-format
 msgid "The matching criteria must contain the label '%s'."
-msgstr ""
-
-#, python-format
-msgid "The matching criteria must not contain the label '%s'."
 msgstr ""
 
 msgid ""
@@ -46497,10 +46696,6 @@ msgstr ""
 #, fuzzy
 msgid "The port on which the ntopng instance is reachable."
 msgstr "Numele elementului pentru eveniment"
-
-#, fuzzy
-msgid "The port that is used for the API call."
-msgstr "rapoarte"
 
 msgid "The port that is used for the api call."
 msgstr ""
@@ -47322,12 +47517,12 @@ msgstr ""
 msgid "The value of this rule is not valid. "
 msgstr ""
 
-#, python-format
-msgid "The values of the label '%s' are not equal: '%s' != '%s'"
-msgstr ""
+#, fuzzy, python-format
+msgid "The values of the label '%s' are not equal: %r != %r"
+msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 #, python-format
-msgid "The values of the label '%s' do not match: '%s' !~ '%s'."
+msgid "The values of the label '%s' do not match: %r !~ %r."
 msgstr ""
 
 #, fuzzy
@@ -48242,6 +48437,13 @@ msgid "This is not a valid Nagios timeperiod day specification."
 msgstr ""
 
 msgid "This is only be used in case of percentual levels"
+msgstr ""
+
+#, python-format
+msgid ""
+"This is option is useful in combination with the %s feature of the %s. It "
+"allows for baking agent packages for hosts which will be created in this "
+"folder in the future, usually via the auto registration."
 msgstr ""
 
 msgid ""
@@ -49649,9 +49851,16 @@ msgid ""
 "the Checkmk agent installed."
 msgstr ""
 
+#, python-format
 msgid ""
-"This ruleset only applies to the Summary Systemd service and not the "
-"individual Systemd services."
+"This ruleset only applies to the Summary Systemd %s and not the individual "
+"Systemd %s."
+msgstr ""
+
+#, python-format
+msgid ""
+"This ruleset only applies when individual Systemd %s are discovered. The "
+"user needs to configure this option in the discovery section."
 msgstr ""
 
 msgid ""
@@ -50160,6 +50369,11 @@ msgid ""
 "This will deploy the agent plugin <tt>mk_zypper</tt>. This will activate the "
 "check <tt>zypper</tt> on SUSE Linux hosts and monitor normal and security "
 "updates."
+msgstr ""
+
+msgid ""
+"This will deploy the agent plugin <tt>nvidia_smi</tt> used for monitoring "
+"Nvidia GPUs."
 msgstr ""
 
 msgid ""
@@ -52308,14 +52522,6 @@ msgstr ""
 msgid "Uploaded a custom GUI logo"
 msgstr ""
 
-#, python-format
-msgid "Uploaded agent signature key '%s' created"
-msgstr ""
-
-#, python-format
-msgid "Uploaded backup key '%s'"
-msgstr ""
-
 msgid "Upper"
 msgstr ""
 
@@ -53241,10 +53447,6 @@ msgstr ""
 msgid "Use procedure call instead of SQL statement"
 msgstr ""
 
-#, fuzzy
-msgid "Use proxy for MobileIron API connection"
-msgstr "Conexiune Noua"
-
 msgid "Use proxy settings from the process environment. This is the default."
 msgstr ""
 
@@ -53597,6 +53799,9 @@ msgstr ""
 #, fuzzy
 msgid "Used RAM"
 msgstr "licente nefolosite"
+
+msgid "Used SNAT ports"
+msgstr ""
 
 msgid "Used bandwidth (minimum or maximum traffic)"
 msgstr ""
@@ -56721,27 +56926,21 @@ msgid ""
 msgstr ""
 
 msgid ""
-"You can specify a list of regex patterns for android hostnames. Several "
-"patterns can be provided. If hostname contains '@' it will be removed with "
-"all following characters. And only then the regex matching will happen. Only "
-"those that match any of the patterns will be monitored. By default all "
-"hostnames are accepted"
+"You can specify a list of regex patterns for android host names. Several "
+"patterns can be provided. Only those that match any of the patterns will be "
+"monitored. By default all hostnames are accepted"
 msgstr ""
 
 msgid ""
-"You can specify a list of regex patterns for iOS hostnames. Several patterns "
-"can be provided. If hostname contains '@' it will be removed with all "
-"following characters. And only then the regex matching will happen. Only "
-"those that match any of the patterns will be monitored. By default all "
-"hostnames are accepted"
+"You can specify a list of regex patterns for iOS host names. Several "
+"patterns can be provided. Only those that match any of the patterns will be "
+"monitored. By default all host names are accepted"
 msgstr ""
 
 msgid ""
-"You can specify a list of regex patterns for other hostnames which are not "
-"android and not iOS. Several patterns can be provided. If hostname contains "
-"'@' it will be removed with all following characters. And only then the "
-"regex matching will happen. Only those that match any of the patterns will "
-"be monitored. By default all hostnames are accepted"
+"You can specify a list of regex patterns for other host names which are not "
+"android and not iOS. Several patterns can be provided. Only those that match "
+"any of the patterns will be monitored. By default all host names are accepted"
 msgstr ""
 
 msgid ""
@@ -59649,6 +59848,26 @@ msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~ msgid "Configure non compliant devices summary percent levels"
+#~ msgstr "Portul TCP pentru conexiune"
+
+#, fuzzy
+#~ msgid "Add android hostnames matching"
+#~ msgstr "Numele Elementului"
+
+#, fuzzy
+#~ msgid "Add iOS hostnames matching"
+#~ msgstr "Numele Elementului"
+
+#, fuzzy
+#~ msgid "The port that is used for the API call."
+#~ msgstr "rapoarte"
+
+#, fuzzy
+#~ msgid "Use proxy for MobileIron API connection"
+#~ msgstr "Conexiune Noua"
+
+#, fuzzy
 #~ msgid "Agent update status"
 #~ msgstr "Stare adiministrativă"
 
@@ -59755,10 +59974,6 @@ msgstr ""
 #~ msgstr "Nivelurile maxime pentru voltaj"
 
 #, fuzzy
-#~ msgid "Parameters for the key hit ratio"
-#~ msgstr " pe siteul de monitorizare: "
-
-#, fuzzy
 #~ msgid "System Memory utilitzation"
 #~ msgstr "Dezactiveaza Notificarile"
 
@@ -59793,10 +60008,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "GCP/Cloud Run Network"
 #~ msgstr "Adresă"
-
-#, fuzzy
-#~ msgid "GCP/Cloud Run Requests"
-#~ msgstr "cereri"
 
 #, fuzzy
 #~ msgid "GCP/Function execution"
@@ -59949,10 +60160,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Service State"
 #~ msgstr "Statusul Serverului"
-
-#, fuzzy
-#~ msgid "Allocated pools"
-#~ msgstr "spatiu utilizat"
 
 #, fuzzy
 #~ msgid "Filesystem size and usage"
@@ -60698,10 +60905,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Connections in use"
 #~ msgstr "Conexiune Noua"
-
-#, fuzzy
-#~ msgid "Consumed Load Balancer Capacity Units"
-#~ msgstr "Perioada de timp Noua"
 
 #, fuzzy
 #~ msgid "Consumers"

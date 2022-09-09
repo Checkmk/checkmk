@@ -1873,10 +1873,11 @@ msgstr ""
 "blijven de logboekvermeldingen behouden, maar wordt de status ervan "
 "gewijzigd.</p>"
 
+#, fuzzy, python-format
 msgid ""
 "<p>You can optionally define one or multiple regular expressions where a "
-"matching case will result in the exclusion of the concerning service(s). "
-"This allows to ignore services which are known to fail beforehand. </p>"
+"matching case will result in the exclusion of the concerning %s(s). This "
+"allows to ignore services which are known to fail beforehand. </p>"
 msgstr ""
 "<p>U kunt optioneel een of meer reguliere expressies definiëren waarbij een "
 "overeenkomend geval zal resulteren in de uitsluiting van de betreffende "
@@ -3009,17 +3010,11 @@ msgstr "Geactiveerd"
 msgid "Activated changes by %s."
 msgstr "Geactiveerde veranderingen door %s."
 
-msgid "Activated changes of event console configuration"
-msgstr "Geactiveerde wijzigingen van de configuratie van de gebeurtenisconsole"
-
 msgid "Activated the changes"
 msgstr "Activeerde de veranderingen"
 
 msgid "Activating"
 msgstr "Activeren"
-
-msgid "Activating changes of Livestatus Proxy configuration"
-msgstr "Activeren van wijzigingen van Livestatus Proxy configuratie"
 
 msgid "Activation"
 msgstr "Activering"
@@ -3245,10 +3240,6 @@ msgstr ""
 msgid "Add all metrics of this graph to"
 msgstr "Voeg alle metriek van deze grafiek toe aan"
 
-#, fuzzy
-msgid "Add android hostnames matching"
-msgstr "Hostnaam matching"
-
 msgid "Add attribute"
 msgstr "Attribuut toevoegen"
 
@@ -3354,10 +3345,6 @@ msgstr "Hostgroep toevoegen"
 
 msgid "Add host to the monitoring"
 msgstr "Host toevoegen aan de bewaking"
-
-#, fuzzy
-msgid "Add iOS hostnames matching"
-msgstr "Hostnaam matching"
 
 msgid "Add instance to be monitored"
 msgstr "Instantie toevoegen die moet worden bewaakt"
@@ -3504,9 +3491,6 @@ msgstr "Meldingsregel toevoegen voor gebruiker %s"
 
 msgid "Add one or multiple MIBs"
 msgstr "Voeg één of meerdere MIB's toe"
-
-msgid "Add other (not android and not iOS) hostnames matching"
-msgstr ""
 
 msgid "Add page element"
 msgstr "Pagina-element toevoegen"
@@ -4730,6 +4714,10 @@ msgstr "Toewijsbaar"
 
 msgid "Allocate Requests Exceeding Port Limit"
 msgstr "Verzoeken toewijzen die de poortlimiet overschrijden"
+
+#, fuzzy
+msgid "Allocated SNAT ports"
+msgstr "Toegestane protocollen"
 
 msgid "Allocated for document storage"
 msgstr "Toegewezen voor documentenopslag"
@@ -6267,8 +6255,19 @@ msgstr "Azure Opslag"
 msgid "Azure Databases"
 msgstr "Azure Databases"
 
+#, fuzzy
+msgid "Azure Load Balancer Health"
+msgstr "Load Balancer IP"
+
 msgid "Azure Storage"
 msgstr "Azure Opslag"
+
+#, fuzzy
+msgid "Azure Traffic Manager Probe State"
+msgstr "Waarschuwing mangager regel staat"
+
+msgid "Azure Traffic Manager Qps"
+msgstr ""
 
 msgid "Azure Usage Details (Costs)"
 msgstr "Details Azure-gebruik (kosten)"
@@ -6471,6 +6470,13 @@ msgstr "Back-ups"
 
 msgid "Bad Requests Received"
 msgstr "Slechte verzoeken ontvangen"
+
+#, fuzzy
+msgid "Bake agent packages"
+msgstr "Bakmiddelen"
+
+msgid "Bake agent packages for this folder even if it is empty."
+msgstr ""
 
 msgid "Bake agents"
 msgstr "Bakmiddelen"
@@ -7583,6 +7589,22 @@ msgstr ""
 "bereikbaarheidsstatus van de remote site. Raadpleeg de <a target=_blank "
 "href='%s'>online documentatie</a> voor meer informatie."
 
+#, fuzzy
+msgid "Byte Count"
+msgstr "Verstuurde bytes"
+
+#, fuzzy
+msgid "Byte count"
+msgstr "Verstuurde bytes"
+
+#, fuzzy
+msgid "Byte count lower levels"
+msgstr "Totaal aantal berichten lagere niveaus"
+
+#, fuzzy
+msgid "Byte count upper levels"
+msgstr "Totaal aantal berichten bovenste niveaus"
+
 msgid "Bytes"
 msgstr "Bytes"
 
@@ -8415,9 +8437,6 @@ msgstr[1] ""
 
 msgid "Changed host selection has been saved."
 msgstr "De gewijzigde hostselectie is opgeslagen."
-
-msgid "Changed host selection of agent updates"
-msgstr "Gewijzigde host selectie van agent updates"
 
 #, python-format
 msgid "Changed notification rule %d"
@@ -9273,6 +9292,11 @@ msgid "Choose table columns"
 msgstr "Tabel kolommen kiezen"
 
 msgid ""
+"Choose the Checkmk state in case of probe state not OK (probe state metric "
+"is 0)."
+msgstr ""
+
+msgid ""
 "Choose the action the Event Console should trigger once the limit is reached."
 msgstr ""
 "Kies de actie die de Event Console moet activeren zodra de limiet is bereikt."
@@ -9338,23 +9362,25 @@ msgstr ""
 "naam heeft gemaakt. In het geval dat een gebruiker een view niet mag zien, "
 "zal er een foutmelding verschijnen."
 
+#, fuzzy, python-format
 msgid ""
-"Choose time levels (in seconds) for which a service is allowed to be in a "
+"Choose time levels (in seconds) for which a %s is allowed to be in a "
 "'reloading' state"
 msgstr ""
 "Kies de tijd (in seconden) gedurende welke een dienst in een \"herladen\" "
 "toestand mag zijn"
 
+#, fuzzy, python-format
 msgid ""
-"Choose time levels (in seconds) for which a service is allowed to be in an "
+"Choose time levels (in seconds) for which a %s is allowed to be in an "
 "'deactivating' state"
 msgstr ""
 "Kies tijdniveaus (in seconden) gedurende welke een dienst in een "
 "'deactiverende' toestand mag zijn"
 
+#, fuzzy, python-format
 msgid ""
-"Choose time levels for which a service is allowed to be in an 'activating' "
-"state"
+"Choose time levels for which a %s is allowed to be in an 'activating' state"
 msgstr ""
 "Kies tijdniveaus gedurende welke een dienst in een 'activerende' staat mag "
 "zijn"
@@ -10421,6 +10447,24 @@ msgstr ""
 "heeft gespecificeerd niet is toegestaan en zal resulteren in een fout. De "
 "reden hiervoor is dat zo'n regel geen effect zou hebben."
 
+#, fuzzy, python-format
+msgid ""
+"Configure the discovery of single systemd %(singular)s. To be discovered, a "
+"%(singular)s must match at least one description condition, one name "
+"condition and one state condition, if configured. To simply discover all "
+"systemd %(plural)s, do not configure any restrictions. Note that "
+"independently of this ruleset, some systemd %(plural)s which are used by the "
+"Checkmk agent ('check-mk-agent@...') will never be discovered because they "
+"appear and disappear frequently."
+msgstr ""
+"Configureer de ontdekking van enkele systemd diensten. Om ontdekt te worden, "
+"moet een dienst overeenkomen met ten minste één beschrijvingvoorwaarde, één "
+"naamvoorwaarde en één toestandvoorwaarde, indien geconfigureerd. Om gewoon "
+"alle systemd diensten te ontdekken, configureer geen beperkingen. Merk op "
+"dat onafhankelijk van deze regelset, sommige systemd service units die "
+"gebruikt worden door de Checkmk agent ('check-mk-agent@...') nooit ontdekt "
+"zullen worden omdat ze vaak verschijnen en verdwijnen."
+
 msgid ""
 "Configure the discovery of single systemd services. To be discovered, a "
 "service must match at least one description condition, one name condition "
@@ -10888,6 +10932,10 @@ msgstr "Contactgroepen in regel hebben voorrang"
 
 msgid "Contact person"
 msgstr "Contactpersoon"
+
+#, fuzzy
+msgid "Contact sensor type"
+msgstr "Type aansluiting"
 
 msgid "Contactgroup Membership"
 msgstr "Contactgroep Lidmaatschap"
@@ -11644,16 +11692,8 @@ msgid "Created new time period %s"
 msgstr "Nieuwe tijdsperiode aangemaakt %s"
 
 #, python-format
-msgid "Created new user: %s"
-msgstr "Nieuwe gebruiker aangemaakt: %s"
-
-#, python-format
 msgid "Created new users: %s"
 msgstr "Nieuwe gebruikers aangemaakt: %s"
-
-#, python-format
-msgid "Created snapshot %s"
-msgstr "Aangemaakt snapshot %s"
 
 msgid ""
 "Creates a new service that displays information about disk I/O of database "
@@ -12118,6 +12158,10 @@ msgstr "Aangepaste meldingentabel van deze gebruiker"
 
 msgid "Custom path prefix"
 msgstr "Aangepast pad voorvoegsel"
+
+#, fuzzy
+msgid "Custom probe state"
+msgstr "Aangepaste staten"
 
 msgid "Custom search query"
 msgstr "Aangepaste zoekopdracht"
@@ -12592,6 +12636,10 @@ msgstr "Gegevens knooppunten"
 msgid "Data not found"
 msgstr "Gegevens niet gevonden"
 
+#, fuzzy
+msgid "Data path availability lower levels"
+msgstr "Beschikbaarheidsniveaus"
+
 msgid "Data range"
 msgstr "Gegevensbereik"
 
@@ -12727,6 +12775,10 @@ msgstr "Naam databank"
 
 msgid "Database reclaimable size"
 msgstr "Database terugvorderbare grootte"
+
+#, fuzzy
+msgid "Database server"
+msgstr "Database Gebruiker"
 
 msgid "Database size"
 msgstr "Databasegrootte"
@@ -13061,13 +13113,16 @@ msgstr ""
 msgid "Define a range of syslog priorities this rule matches"
 msgstr "Definieer een bereik van syslog prioriteiten waar deze regel op past"
 
-msgid "Define a tolerating time period for activating services"
+#, fuzzy, python-format
+msgid "Define a tolerating time period for activating %s"
 msgstr "Definieer een tolerante periode voor het activeren van diensten"
 
-msgid "Define a tolerating time period for deactivating services"
+#, fuzzy, python-format
+msgid "Define a tolerating time period for deactivating %s"
 msgstr "Definieer een tolerante periode voor het deactiveren van diensten"
 
-msgid "Define a tolerating time period for reloading services"
+#, fuzzy, python-format
+msgid "Define a tolerating time period for reloading %s"
 msgstr "Bepaal een tolerante periode voor herlaaddiensten"
 
 msgid ""
@@ -13471,10 +13526,6 @@ msgid "Deleted MIB %s"
 msgstr "Verwijderde MIB %s"
 
 #, python-format
-msgid "Deleted agent signature key '%s'"
-msgstr "Gewiste agent handtekening sleutel '%s'"
-
-#, python-format
 msgid "Deleted attribute %s"
 msgstr "Attribuut %s verwijderd"
 
@@ -13816,6 +13867,10 @@ msgid "Deploy the docker plugin"
 msgstr "De docker plugin implementeren"
 
 msgid "Deploy the netstat plugin"
+msgstr "Implementeer de netstat plugin"
+
+#, fuzzy
+msgid "Deploy the nvidia_smi agent plugin"
 msgstr "Implementeer de netstat plugin"
 
 msgid "Deploy the plesk plugins"
@@ -14298,9 +14353,6 @@ msgstr "Uitgeschakeld (weg geconfigureerd door admin)"
 
 msgid "Disabled active checks"
 msgstr "Uitgeschakelde actieve controles"
-
-msgid "Disabled agent updates"
-msgstr "Uitgeschakelde agent updates"
 
 msgid "Disabled checks"
 msgstr "Uitgeschakelde controles"
@@ -14853,6 +14905,9 @@ msgstr ""
 "Maak geen back-up van metrische gegevens (RRD-bestanden), de "
 "monitoringgeschiedenis en logbestanden"
 
+msgid "Do not bake agent packages for this folder if it is empty."
+msgstr ""
+
 msgid "Do not check"
 msgstr "Niet controleren"
 
@@ -15090,6 +15145,10 @@ msgid "Do not deploy the docker plugin"
 msgstr "Zet de docker plugin niet in"
 
 msgid "Do not deploy the netstat plugin"
+msgstr "Gebruik de netstat plugin niet"
+
+#, fuzzy
+msgid "Do not deploy the nvidia_smi agent plugin"
 msgstr "Gebruik de netstat plugin niet"
 
 msgid "Do not deploy the plesk plugins"
@@ -15521,7 +15580,8 @@ msgstr "Documentatiebestanden"
 msgid "Does not ends with \"%s\"."
 msgstr "Eindigt niet op \"%s\"."
 
-msgid "Does not exists"
+#, fuzzy
+msgid "Does not exist"
 msgstr "Bestaat niet"
 
 msgid "Does not match any service"
@@ -16771,9 +16831,6 @@ msgstr "Inschakelen/uitschakelen verwerking van perfdata voor diensten"
 msgid "Enabled"
 msgstr "Ingeschakeld"
 
-msgid "Enabled agent updates"
-msgstr "Ingeschakelde agent updates"
-
 #, python-format
 msgid "Enabled extension package %s"
 msgstr "Uitbreidingspakket %s ingeschakeld"
@@ -17502,6 +17559,10 @@ msgstr "Exclusief"
 msgid "Exclude \"Activate changes\" for time ranges"
 msgstr "Sluit \"Wijzigingen activeren\" uit voor tijdbereiken"
 
+#, fuzzy, python-format
+msgid "Exclude %s matching provided regex patterns"
+msgstr "Uitsluiten van diensten die overeenkomen met opgegeven regexpatronen"
+
 msgid "Exclude Nodes based on their role"
 msgstr "Knooppunten uitsluiten op basis van hun rol"
 
@@ -17540,9 +17601,6 @@ msgstr "Dienstgroepen uitsluiten (regex)"
 
 msgid "Exclude services"
 msgstr "Diensten uitsluiten"
-
-msgid "Exclude services matching provided regex patterns"
-msgstr "Uitsluiten van diensten die overeenkomen met opgegeven regexpatronen"
 
 msgid "Exclude some sections on certain instances"
 msgstr "Sommige secties in bepaalde gevallen uitsluiten"
@@ -19660,6 +19718,14 @@ msgstr "GCP/GCS-objecten"
 msgid "GCP/GCS Requests"
 msgstr "GCP/GCS Verzoeken"
 
+#, fuzzy
+msgid "GCP/HTTP(S) load balancer Latencies"
+msgstr "Load balancer latentie"
+
+#, fuzzy
+msgid "GCP/HTTP(S) load balancer requests"
+msgstr "GCP/Cloud Run Verzoeken"
+
 msgid "GET/POST variables of this page"
 msgstr "GET/POST variabelen van deze pagina"
 
@@ -20251,6 +20317,10 @@ msgstr "HTTP verzoek header variabele"
 msgid "HTTP requests per second"
 msgstr "HTTP verzoeken per seconde"
 
+#, fuzzy
+msgid "HTTP(S) load balancer"
+msgstr "Load balancers"
+
 msgid "HTTP, TCP, Email, ..."
 msgstr "HTTP, TCP, E-mail, ..."
 
@@ -20457,6 +20527,10 @@ msgstr "Rubrieken"
 
 msgid "Health"
 msgstr "Gezondheid"
+
+#, fuzzy
+msgid "Health probe status lower levels"
+msgstr "Totaal aantal stromen lager niveau"
 
 msgid "Heap and non-heap memory"
 msgstr "Heap en non-heap geheugen"
@@ -26772,8 +26846,16 @@ msgstr "Niveaus Livestatus Overflows"
 msgid "Levels Livestatus Usage"
 msgstr "Niveaus Livestatus Gebruik"
 
+#, fuzzy
+msgid "Levels SNAT usage"
+msgstr "Niveaus voor RAM-gebruik"
+
 msgid "Levels Services"
 msgstr "Niveaus Diensten"
+
+#, fuzzy
+msgid "Levels byte count"
+msgstr "Niveaus op taak tellen"
 
 #, fuzzy
 msgid "Levels connections"
@@ -26933,6 +27015,10 @@ msgstr "Niveaus voor geheugengebruik"
 
 msgid "Levels for minimum wait time for a lock"
 msgstr "Niveaus voor minimum wachttijd voor een slot"
+
+#, fuzzy
+msgid "Levels for non-compliant devices"
+msgstr "Niveaus voor niet-ingezetenen"
 
 msgid "Levels for non-resident items"
 msgstr "Niveaus voor niet-ingezetenen"
@@ -27097,6 +27183,10 @@ msgstr "Niveaus voor door de gebruiker beheerde back-upbestanden"
 msgid "Levels for wait"
 msgstr "Niveaus voor wachten"
 
+#, fuzzy
+msgid "Levels health"
+msgstr "Cluster gezondheid"
+
 msgid "Levels memory"
 msgstr "Niveaus geheugen"
 
@@ -27243,6 +27333,10 @@ msgstr "Niveaus over een langere periode op replicatievertraging"
 
 msgid "Levels over an extended time period on total CPU utilization"
 msgstr "Niveaus over een langere periode op het totale CPU-gebruik"
+
+#, fuzzy
+msgid "Levels qps"
+msgstr "Niveauschijf"
 
 #, fuzzy
 msgid "Levels replication"
@@ -27655,6 +27749,10 @@ msgstr "Livestatus-connecties"
 
 msgid "Load"
 msgstr "Laden"
+
+#, fuzzy
+msgid "Load Balancer Health"
+msgstr "Load Balancer IP"
 
 msgid "Load Call Failure Index"
 msgstr "Belasting oproep mislukking index"
@@ -30244,17 +30342,27 @@ msgstr "Mobiel: Tabel"
 msgid "MobileIron API"
 msgstr "MobileIron API"
 
+#, fuzzy
+msgid "Mobileiron compliance"
+msgstr "Mobileiron/Compliance"
+
 msgid "Mobileiron compliance parameters"
 msgstr "Mobileiron conformiteitsparameters"
 
-msgid "Mobileiron versions parameters"
+#, fuzzy
+msgid "Mobileiron statistics"
+msgstr "Kernstatistieken"
+
+#, fuzzy
+msgid "Mobileiron statistics parameters"
 msgstr "Mobileiron versies parameters"
 
-msgid "Mobileiron/Compliance"
-msgstr "Mobileiron/Compliance"
-
-msgid "Mobileiron/Versions"
+#, fuzzy
+msgid "Mobileiron versions"
 msgstr "Mobileiron/Versies"
+
+msgid "Mobileiron versions parameters"
+msgstr "Mobileiron versies parameters"
 
 msgid "Mode"
 msgstr "Modus"
@@ -30344,10 +30452,6 @@ msgid "Modified user role '%s'"
 msgstr "Gewijzigde gebruikersrol '%s'"
 
 #, python-format
-msgid "Modified user: %s"
-msgstr "Gewijzigde gebruiker: %s"
-
-#, python-format
 msgid "Modified users: %s"
 msgstr "Gewijzigde gebruikers: %s"
 
@@ -30421,6 +30525,10 @@ msgstr "Monitor"
 msgid "Monitor & Graph Lanes"
 msgstr "Monitor & Grafiek Lanen"
 
+#, fuzzy
+msgid "Monitor Android devices"
+msgstr "Toezicht op onbesliste diensten"
+
 msgid "Monitor CloudFront WAFs"
 msgstr "CloudFront WAF's monitoren"
 
@@ -30451,6 +30559,10 @@ msgstr "Groepsquota bewaken"
 msgid "Monitor hosts for unchecked services (Checkmk Discovery)"
 msgstr "Hosts controleren op niet-aangevinkte diensten (Checkmk Discovery)"
 
+#, fuzzy
+msgid "Monitor iOS devices"
+msgstr "Bewaakte diensten"
+
 msgid "Monitor menu entries"
 msgstr "Menu-items bewaken"
 
@@ -30465,6 +30577,9 @@ msgstr "Monitor namespaces"
 
 msgid "Monitor namespaces matching"
 msgstr "Monitor namespaces matching"
+
+msgid "Monitor other than Android or iOS devices"
+msgstr ""
 
 msgid "Monitor request metrics"
 msgstr "Bewaak verzoek metriek"
@@ -30561,8 +30676,24 @@ msgstr "Bewaking van doorgestuurde logfiles"
 msgid "Monitoring state"
 msgstr "Controle staat"
 
+#, fuzzy, python-format
+msgid "Monitoring state for any other %s state"
+msgstr "Bewakingstoestand voor elke andere diensttoestand"
+
 msgid "Monitoring state for any other service state"
 msgstr "Bewakingstoestand voor elke andere diensttoestand"
+
+#, fuzzy, python-format
+msgid "Monitoring state if %s is active"
+msgstr "Bewakingstoestand als de dienst actief is"
+
+#, fuzzy, python-format
+msgid "Monitoring state if %s is failed"
+msgstr "Bewakingstoestand als de dienst mislukt"
+
+#, fuzzy, python-format
+msgid "Monitoring state if %s is inactive"
+msgstr "Bewakingstoestand als de dienst inactief is"
 
 #, python-format
 msgid "Monitoring state if HAProxy frontend is %s"
@@ -30583,6 +30714,11 @@ msgstr "Bewaking status als MTree status '%s' is"
 #, python-format
 msgid "Monitoring state if VM state is %s"
 msgstr "Bewakingstoestand als VM-toestand %s is"
+
+#, fuzzy, python-format
+msgid "Monitoring state if a monitored %s is not found at all."
+msgstr ""
+"Bewakingstoestand indien een bewaakte dienst helemaal niet gevonden wordt."
 
 msgid "Monitoring state if a monitored service is not found at all."
 msgstr ""
@@ -30784,8 +30920,8 @@ msgstr "Verplaatst map %s naar %s"
 msgid "Moved from"
 msgstr "Verplaatst van"
 
-#, python-format
-msgid "Moved host from \"%s\" to \"%s\""
+#, fuzzy, python-format
+msgid "Moved host from \"%s\" (ID: %s) to \"%s\" (ID: %s)"
 msgstr "Verplaatst host van \"%s\" naar \"%s\""
 
 #, python-format
@@ -31159,6 +31295,10 @@ msgstr "Naam van de resource groep"
 msgid "Name of the service"
 msgstr "Naam van de dienst"
 
+#, fuzzy
+msgid "Name of the socket"
+msgstr "Naam van het knooppunt"
+
 msgid "Name of the tape job"
 msgstr "Naam van de tapeopdracht"
 
@@ -31465,10 +31605,6 @@ msgstr ""
 "te versturen zonder TLS. Als u echter een bestaande installatie upgrade, zal "
 "de oude transportmodus (met optionele encryptie) blijven werken, om de "
 "migratie te vergemakkelijken."
-
-#, python-format
-msgid "New agent signature key '%s' created"
-msgstr "Nieuwe agent handtekening sleutel '%s' gemaakt"
 
 msgid "New backup job"
 msgstr "Nieuwe back-uptaak"
@@ -31849,6 +31985,10 @@ msgstr "Geen rapport gedefinieerd met de naam '%s'."
 
 msgid "No response from update thread"
 msgstr "Geen reactie op update draad"
+
+#, fuzzy, python-format
+msgid "No restrictions (discover all systemd %s)"
+msgstr "Geen beperkingen (ontdek alle systemd service units)"
 
 msgid "No restrictions (discover all systemd service units)"
 msgstr "Geen beperkingen (ontdek alle systemd service units)"
@@ -33124,6 +33264,10 @@ msgstr "Nutanix Prism Waarschuwingen"
 msgid "Nvidia"
 msgstr "Nvidia"
 
+#, fuzzy
+msgid "Nvidia GPU monitoring (Windows)"
+msgstr "MegaRAID bewaking (Windows)"
+
 msgid "O"
 msgstr "O"
 
@@ -34290,6 +34434,10 @@ msgstr "POST / GET-variabelen"
 msgid "PROXY"
 msgstr "PROXIE"
 
+#, fuzzy
+msgid "PSU"
+msgstr "CPU"
+
 msgid "PSU (Chassis/Bay)"
 msgstr "PSU (Chassis/Bay)"
 
@@ -34550,6 +34698,14 @@ msgstr "Parameters voor uitgangsfasen van UPS-systemen en PDU's"
 msgid "Parameters for switch port inventory"
 msgstr "Parameters voor switch port inventaris"
 
+#, fuzzy
+msgid "Parameters for the  latencies"
+msgstr "Parameters voor de toetsaanslagverhouding"
+
+#, fuzzy
+msgid "Parameters for the  requests"
+msgstr "Parameters voor de emmeraanvragen"
+
 msgid "Parameters for the Windows Update Check with WSUS"
 msgstr "Parameters voor de Windows Update Check met WSUS"
 
@@ -34561,6 +34717,10 @@ msgstr "Parameters voor de emmerobjecten io"
 
 msgid "Parameters for the bucket requests"
 msgstr "Parameters voor de emmeraanvragen"
+
+#, fuzzy
+msgid "Parameters for the latencies"
+msgstr "Parameters voor deze dienst"
 
 msgid "Parameters for this host"
 msgstr "Parameters voor deze host"
@@ -34708,6 +34868,10 @@ msgstr "Pad naar een CA-certificaat"
 
 msgid "Path to categories"
 msgstr "Pad naar categorieën"
+
+#, fuzzy
+msgid "Path to nvidia-smi.exe"
+msgstr "Pad naar .env bestand"
 
 msgid "Path to sapgenpse"
 msgstr "Pad naar sapgenpse"
@@ -35409,6 +35573,11 @@ msgstr ""
 "service naam niet met de display naam van de service. De laatste wordt "
 "alleen getoond als extra informatie."
 
+msgid ""
+"Please activate the monitoring of at least one device type: Android, iOS or "
+"other devices"
+msgstr ""
+
 msgid "Please add at least one child node."
 msgstr "Voeg ten minste één kindknooppunt toe."
 
@@ -35526,9 +35695,6 @@ msgid ""
 msgstr ""
 "Voer een geldige hostnaam of IPv4-adres in. Alleen letters, cijfers, "
 "streepje, underscore en punt zijn toegestaan."
-
-msgid "Please enter a valid integer number"
-msgstr "Voer een geldig geheel getal in"
 
 msgid "Please enter a valid number"
 msgstr "Voer een geldig nummer in"
@@ -36399,6 +36565,10 @@ msgstr "Bevoegdheidsniveau"
 msgid "Prob."
 msgstr "Prob."
 
+#, fuzzy
+msgid "Probe State"
+msgstr "Job Staat"
+
 #, python-format
 msgid "Problem %s"
 msgstr "Probleem %s"
@@ -36729,6 +36899,11 @@ msgstr ""
 msgid "Put the name of the database here, e.g. SATURN\\ARCSERVE_DB"
 msgstr "Zet hier de naam van de database, bijv. SATURN\\ARCSERVE_DB"
 
+msgid ""
+"Put the path to the nvidia-smi.exe executable here, e.g. C:\\Program Files"
+"\\NVIDIA Corporation\\NVSMI\\nvidia-smi.exe"
+msgstr ""
+
 msgid "Put this element on"
 msgstr "Zet dit element op"
 
@@ -36759,6 +36934,9 @@ msgstr "QoS dropped bits"
 msgid "QoS outbound bits"
 msgstr "QoS uitgaande bits"
 
+msgid "Qps"
+msgstr ""
+
 msgid "Quantum Storage Status"
 msgstr "Quantum Opslag Status"
 
@@ -36770,6 +36948,10 @@ msgstr "De opgevraagde host is een hostsysteem"
 
 msgid "Queried host is the vCenter"
 msgstr "De opgevraagde host is het vCenter"
+
+#, fuzzy
+msgid "Queries per second"
+msgstr "Liters per seconde"
 
 msgid "Query"
 msgstr "Vraag"
@@ -37895,10 +38077,6 @@ msgid "Renamed host %s"
 msgstr "Hernoemde host %s"
 
 #, python-format
-msgid "Renamed host condition from \"%s\" to \"%s\""
-msgstr "Hernoemde hostvoorwaarde van \"%s\" naar \"%s\""
-
-#, python-format
 msgid "Renamed host from %s into %s."
 msgstr "Hernoemde host van %s in %s."
 
@@ -38407,6 +38585,10 @@ msgstr "Beperk de toegang tot de volgende bron-IP-adressen"
 msgid "Restrict all"
 msgstr "Beperk alle"
 
+#, fuzzy, python-format
+msgid "Restrict by %s name"
+msgstr "Beperken per staat"
+
 msgid "Restrict by contact groups"
 msgstr "Beperken door contactgroepen"
 
@@ -38484,6 +38666,14 @@ msgstr "Beperk de volgende toetsen"
 
 msgid "Restrict the length of the lines"
 msgstr "Beperk de lengte van de lijnen"
+
+#, fuzzy, python-format
+msgid "Restrict the systemd %s by description."
+msgstr "Beperk de systemd diensten op beschrijving."
+
+#, fuzzy, python-format
+msgid "Restrict the systemd %s by its name."
+msgstr "Beperk de systemd diensten op unit naam."
 
 msgid "Restrict the systemd services by description."
 msgstr "Beperk de systemd diensten op beschrijving."
@@ -38888,11 +39078,13 @@ msgstr ""
 msgid "Rules to configure the behaviour of monitored hosts."
 msgstr "Regels om het gedrag van gemonitorde hosts te configureren."
 
+#, fuzzy
 msgid ""
-"Rules to set up [wato_services#manual_checks|manual services]. Services set "
-"up in this way do not depend on the service discovery. This is useful if you "
-"want to enforce compliance with a specific guideline. You can for example "
-"ensure that a certain Windows service is always present on a host."
+"Rules to set up [wato_services#enforced_services|enforced services]. "
+"Services set up in this way do not depend on the service discovery. This is "
+"useful if you want to enforce compliance with a specific guideline. You can "
+"for example ensure that a certain Windows service is always present on a "
+"host."
 msgstr ""
 "Regels voor het instellen van [wato_services#manual_checks|manual services]. "
 "Services die op deze manier worden ingesteld zijn niet afhankelijk van de "
@@ -39228,6 +39420,26 @@ msgstr "SMTP TCP-poort om verbinding mee te maken"
 
 msgid "SMTP commands to execute."
 msgstr "SMTP commando's uit te voeren."
+
+#, fuzzy
+msgid "SNAT Consumption"
+msgstr "APC Stroomverbruik"
+
+#, fuzzy
+msgid "SNAT Usage"
+msgstr "Gebruik"
+
+#, fuzzy
+msgid "SNAT usage"
+msgstr "Tag gebruik"
+
+#, fuzzy
+msgid "SNAT usage lower levels"
+msgstr "Stel lagere niveaus in"
+
+#, fuzzy
+msgid "SNAT usage upper levels"
+msgstr "Bovenste niveaus instellen"
 
 msgid "SNMP"
 msgstr "SNMP"
@@ -41590,8 +41802,9 @@ msgstr "Toont het aantal waarschuwingen gegroepeerd voor elke dienst."
 msgid "Shows the Checkmk logo."
 msgstr "Toont het Checkmk-logo."
 
+#, fuzzy
 msgid ""
-"Shows the percantage of services that are not OK in relation to the total "
+"Shows the percentage of services that are not OK in relation to the total "
 "number of services. This dashlet is not respecting the full fillter context "
 "of the dashboard, only the 'site' filter."
 msgstr ""
@@ -41693,10 +41906,6 @@ msgstr "Ondertekend"
 
 msgid "Signed agents"
 msgstr "Ondertekende agenten"
-
-#, python-format
-msgid "Signed all agents with the key '%s'"
-msgstr "Ondertekend alle agenten met de sleutel '%s'"
 
 msgid "Signing Agents..."
 msgstr "Ondertekenende agenten..."
@@ -43215,10 +43424,6 @@ msgid "Started activate changes: %s"
 msgstr "Begonnen met het activeren van veranderingen: %s"
 
 #, python-format
-msgid "Started activation of site %s"
-msgstr "Activering van site %s gestart"
-
-#, python-format
 msgid "Started at %s"
 msgstr "Begonnen op %s"
 
@@ -43472,6 +43677,10 @@ msgstr "Geeft aan of het knooppunt een mem-alarm heeft"
 msgid "State if node is not in state running"
 msgstr "Staat indien knooppunt niet in staat is te draaien"
 
+#, fuzzy
+msgid "State if probe state not OK"
+msgstr "Toestand wanneer actieve toestand niet OK is"
+
 msgid "State if remaining API reads are unknown"
 msgstr "Staat als resterende API-lezingen onbekend zijn"
 
@@ -43561,14 +43770,16 @@ msgstr ""
 msgid "State in case of unhandled exception"
 msgstr "Staat in geval van een onbehandelde uitzondering"
 
-msgid "State in case of unknown status from replication script"
-msgstr "Toestand in geval van onbekende status van replicatiescript"
-
-msgid "State in case of unparsable OS build"
+#, fuzzy
+msgid "State in case of unknown OS build"
 msgstr "Toestand in geval van een niet-parsable OS build"
 
-msgid "State in case of unparsable patch level"
+#, fuzzy
+msgid "State in case of unknown patch level"
 msgstr "Toestand in geval van een niet-parsable patch-niveau"
+
+msgid "State in case of unknown status from replication script"
+msgstr "Toestand in geval van onbekende status van replicatiescript"
 
 msgid "State in case of wrong agent version"
 msgstr "Staat in geval van verkeerde agent versie"
@@ -44581,10 +44792,6 @@ msgid "Switch to Takeover mode!"
 msgstr "Schakel over naar overnamemodus!"
 
 #, python-format
-msgid "Switched replication slave mode to %s"
-msgstr "Veranderde replicatie slaaf modus naar %s"
-
-#, python-format
 msgid "Switched to %s mode"
 msgstr "Overgeschakeld naar %s mode"
 
@@ -44640,11 +44847,6 @@ msgstr "Synchroniseer gebruikers"
 #, python-format
 msgid "Synchronized MKP with the modified rule pack %s"
 msgstr "Gesynchroniseerde MKP met het gewijzigde regelpakket %s"
-
-#, python-format
-msgid "Synchronized configuration from central site (local site ID is %s.)"
-msgstr ""
-"Gesynchroniseerde configuratie van centrale site (lokale site ID is %s.)"
 
 msgid "Synchronized users"
 msgstr "Gesynchroniseerde gebruikers"
@@ -44747,17 +44949,33 @@ msgstr "Systeem uptime"
 msgid "Systemd Services Summary"
 msgstr "Systemd Services Samenvatting"
 
+#, fuzzy
+msgid "Systemd Sockets Summary"
+msgstr "Systemd Services Samenvatting"
+
 msgid "Systemd Timesyncd time synchronisation"
 msgstr "Systemd Timesyncd tijdsynchronisatie"
 
 msgid "Systemd services"
 msgstr "Systemd diensten"
 
+#, fuzzy, python-format
+msgid "Systemd single %s discovery"
+msgstr "Systemd single services ontdekking"
+
+#, fuzzy
+msgid "Systemd single service"
+msgstr "Systemd enkele diensten"
+
 msgid "Systemd single services"
 msgstr "Systemd enkele diensten"
 
 msgid "Systemd single services discovery"
 msgstr "Systemd single services ontdekking"
+
+#, fuzzy
+msgid "Systemd single socket"
+msgstr "Systemd enkele diensten"
 
 msgid "Systems larger than"
 msgstr "Systemen groter dan"
@@ -47369,6 +47587,10 @@ msgstr "De hostnaam van het verwachte knooppunt dat deze bron bevat."
 msgid "The hostname template does not contain any label."
 msgstr "Het hostnaamsjabloon bevat geen label."
 
+#, fuzzy, python-format
+msgid "The hostname template must not contain the label '%s'."
+msgstr "Het hostnaamsjabloon bevat geen label."
+
 msgid ""
 "The hosts listed here have contacted the update server in that past and thus "
 "had been correctly registered then. But they do not ask for updates anymore. "
@@ -47486,6 +47708,12 @@ msgstr ""
 "De naam van het item. De betekenis hiervan hangt af van het proxied "
 "apparaat: - Wagner OxyReduct: Naam van de kamer/beschermingszone"
 
+msgid ""
+"The item of etherbox checks is build as 'contact.sensor_type'. For example, "
+"you want the rule to only apply to a temperature sensor (type 1) on contact "
+"3 then set the item to 3.1 ."
+msgstr ""
+
 #, python-format
 msgid "The job \"%s\" is encrypted"
 msgstr "De opdracht \"%s\" is gecodeerd"
@@ -47521,10 +47749,6 @@ msgstr "Het label ID %r is van het type %s, maar moet %s zijn"
 #, python-format
 msgid "The label value %r is of type %s, but should be %s"
 msgstr "De labelwaarde %r is van het type %s, maar moet %s zijn"
-
-#, python-format
-msgid "The labels %s are not required."
-msgstr "De labels %s zijn niet verplicht."
 
 msgid "The last "
 msgstr "De laatste "
@@ -47709,10 +47933,6 @@ msgstr "De overeenkomst wordt hoofdlettergevoelig uitgevoerd."
 #, python-format
 msgid "The matching criteria must contain the label '%s'."
 msgstr "De overeenkomende criteria moeten het label '%s' bevatten."
-
-#, python-format
-msgid "The matching criteria must not contain the label '%s'."
-msgstr "De overeenkomende criteria mogen niet het label '%s' bevatten."
 
 msgid ""
 "The maximum age for piggy back data from another host to be valid for "
@@ -48480,9 +48700,6 @@ msgstr ""
 
 msgid "The port on which the ntopng instance is reachable."
 msgstr "De poort waarop de ntopng instantie bereikbaar is."
-
-msgid "The port that is used for the API call."
-msgstr "De poort die wordt gebruikt voor de api call."
 
 msgid "The port that is used for the api call."
 msgstr "De poort die wordt gebruikt voor de api call."
@@ -49520,12 +49737,12 @@ msgstr ""
 msgid "The value of this rule is not valid. "
 msgstr "De waarde van deze regel is niet geldig. "
 
-#, python-format
-msgid "The values of the label '%s' are not equal: '%s' != '%s'"
+#, fuzzy, python-format
+msgid "The values of the label '%s' are not equal: %r != %r"
 msgstr "De waarden van het label '%s' zijn niet gelijk: '%s' != '%s'"
 
-#, python-format
-msgid "The values of the label '%s' do not match: '%s' !~ '%s'."
+#, fuzzy, python-format
+msgid "The values of the label '%s' do not match: %r !~ %r."
 msgstr "De waarden van het label '%s' komen niet overeen: '%s' !~ '%s'."
 
 msgid "The vault name"
@@ -50793,6 +51010,13 @@ msgstr "Dit is geen geldige Nagios tijdsperiode dag specificatie."
 
 msgid "This is only be used in case of percentual levels"
 msgstr "Dit wordt alleen gebruikt in het geval van percentuele niveaus"
+
+#, python-format
+msgid ""
+"This is option is useful in combination with the %s feature of the %s. It "
+"allows for baking agent packages for hosts which will be created in this "
+"folder in the future, usually via the auto registration."
+msgstr ""
 
 msgid ""
 "This is relevant during periods where the according check cannot be executed "
@@ -52877,12 +53101,22 @@ msgstr ""
 "bepaalde technische implementaties zoals bestandssysteem controles via SNMP "
 "uit te schakelen op hosts waarop ook de Checkmk agent geïnstalleerd is."
 
+#, fuzzy, python-format
 msgid ""
-"This ruleset only applies to the Summary Systemd service and not the "
-"individual Systemd services."
+"This ruleset only applies to the Summary Systemd %s and not the individual "
+"Systemd %s."
 msgstr ""
 "Deze regelset is alleen van toepassing op de samengevatte Systemd service en "
 "niet op de afzonderlijke Systemd services."
+
+#, fuzzy, python-format
+msgid ""
+"This ruleset only applies when individual Systemd %s are discovered. The "
+"user needs to configure this option in the discovery section."
+msgstr ""
+"Deze regelset is alleen van toepassing wanneer individuele Systemd diensten "
+"worden ontdekt. De gebruiker moet deze optie configureren in de sectie "
+"ontdekking."
 
 msgid ""
 "This ruleset only applies when individual Systemd services are discovered. "
@@ -53612,6 +53846,14 @@ msgstr ""
 "Dit zal de agent plugin <tt>mk_zypper</tt> implementeren. Deze activeert de "
 "controle <tt>zypper</tt> op SUSE Linux hosts en controleert normale en "
 "beveiligingsupdates."
+
+#, fuzzy
+msgid ""
+"This will deploy the agent plugin <tt>nvidia_smi</tt> used for monitoring "
+"Nvidia GPUs."
+msgstr ""
+"Dit zal de twee agent plugins <tt>plesk_backup</tt> en <tt>plesk_domain</tt> "
+"implementeren, die gebruikt worden voor het monitoren van Plesk."
 
 msgid ""
 "This will deploy the two agent plugins <tt>plesk_backup</tt> and "
@@ -55771,14 +56013,6 @@ msgstr "Pakket uploaden"
 msgid "Uploaded a custom GUI logo"
 msgstr "Een aangepast GUI logo geupload"
 
-#, python-format
-msgid "Uploaded agent signature key '%s' created"
-msgstr "Geuploade agent handtekening sleutel '%s' aangemaakt"
-
-#, python-format
-msgid "Uploaded backup key '%s'"
-msgstr "Geuploade backup sleutel '%s'"
-
 msgid "Upper"
 msgstr "Boven"
 
@@ -56613,9 +56847,6 @@ msgstr ""
 msgid "Use procedure call instead of SQL statement"
 msgstr "Gebruik procedure-aanroep in plaats van SQL-instructie"
 
-msgid "Use proxy for MobileIron API connection"
-msgstr "Gebruik proxy voor MobileIron API-verbinding"
-
 msgid "Use proxy settings from the process environment. This is the default."
 msgstr ""
 "Gebruik proxy-instellingen van de procesomgeving. Dit is de "
@@ -57058,6 +57289,9 @@ msgstr "Gebruikte DHCP leases"
 
 msgid "Used RAM"
 msgstr "Gebruikt RAM"
+
+msgid "Used SNAT ports"
+msgstr ""
 
 msgid "Used bandwidth (minimum or maximum traffic)"
 msgstr "Gebruikte bandbreedte (minimum of maximum verkeer)"
@@ -60921,29 +61155,35 @@ msgstr ""
 "U kunt een hostnaam of IP-adres opgeven dat verschilt van het IP-adres van "
 "de host waaraan deze controle zal worden toegewezen."
 
+#, fuzzy
 msgid ""
-"You can specify a list of regex patterns for android hostnames. Several "
-"patterns can be provided. If hostname contains '@' it will be removed with "
-"all following characters. And only then the regex matching will happen. Only "
-"those that match any of the patterns will be monitored. By default all "
-"hostnames are accepted"
+"You can specify a list of regex patterns for android host names. Several "
+"patterns can be provided. Only those that match any of the patterns will be "
+"monitored. By default all hostnames are accepted"
 msgstr ""
+"U kunt een lijst van regexpatronen specificeren om specifieke namespaces te "
+"monitoren. Enkel diegene die overeenkomen met de voorgedefinieerde patronen "
+"zullen gemonitord worden."
 
+#, fuzzy
 msgid ""
-"You can specify a list of regex patterns for iOS hostnames. Several patterns "
-"can be provided. If hostname contains '@' it will be removed with all "
-"following characters. And only then the regex matching will happen. Only "
-"those that match any of the patterns will be monitored. By default all "
-"hostnames are accepted"
+"You can specify a list of regex patterns for iOS host names. Several "
+"patterns can be provided. Only those that match any of the patterns will be "
+"monitored. By default all host names are accepted"
 msgstr ""
+"U kunt een lijst van regexpatronen specificeren om specifieke namespaces te "
+"monitoren. Enkel diegene die overeenkomen met de voorgedefinieerde patronen "
+"zullen gemonitord worden."
 
+#, fuzzy
 msgid ""
-"You can specify a list of regex patterns for other hostnames which are not "
-"android and not iOS. Several patterns can be provided. If hostname contains "
-"'@' it will be removed with all following characters. And only then the "
-"regex matching will happen. Only those that match any of the patterns will "
-"be monitored. By default all hostnames are accepted"
+"You can specify a list of regex patterns for other host names which are not "
+"android and not iOS. Several patterns can be provided. Only those that match "
+"any of the patterns will be monitored. By default all host names are accepted"
 msgstr ""
+"U kunt een lijst van regexpatronen specificeren om specifieke namespaces te "
+"monitoren. Enkel diegene die overeenkomen met de voorgedefinieerde patronen "
+"zullen gemonitord worden."
 
 msgid ""
 "You can specify a list of regex patterns to exclude namespaces. Only those "
@@ -64031,6 +64271,103 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 
+#~ msgid "Activated changes of event console configuration"
+#~ msgstr ""
+#~ "Geactiveerde wijzigingen van de configuratie van de gebeurtenisconsole"
+
+#~ msgid "Activating changes of Livestatus Proxy configuration"
+#~ msgstr "Activeren van wijzigingen van Livestatus Proxy configuratie"
+
+#~ msgid "Changed host selection of agent updates"
+#~ msgstr "Gewijzigde host selectie van agent updates"
+
+#, python-format
+#~ msgid "Created new user: %s"
+#~ msgstr "Nieuwe gebruiker aangemaakt: %s"
+
+#, python-format
+#~ msgid "Created snapshot %s"
+#~ msgstr "Aangemaakt snapshot %s"
+
+#, python-format
+#~ msgid "Deleted agent signature key '%s'"
+#~ msgstr "Gewiste agent handtekening sleutel '%s'"
+
+#~ msgid "Disabled agent updates"
+#~ msgstr "Uitgeschakelde agent updates"
+
+#~ msgid "Enabled agent updates"
+#~ msgstr "Ingeschakelde agent updates"
+
+#, python-format
+#~ msgid "Modified user: %s"
+#~ msgstr "Gewijzigde gebruiker: %s"
+
+#, python-format
+#~ msgid "New agent signature key '%s' created"
+#~ msgstr "Nieuwe agent handtekening sleutel '%s' gemaakt"
+
+#, python-format
+#~ msgid "Renamed host condition from \"%s\" to \"%s\""
+#~ msgstr "Hernoemde hostvoorwaarde van \"%s\" naar \"%s\""
+
+#, python-format
+#~ msgid "Signed all agents with the key '%s'"
+#~ msgstr "Ondertekend alle agenten met de sleutel '%s'"
+
+#, python-format
+#~ msgid "Started activation of site %s"
+#~ msgstr "Activering van site %s gestart"
+
+#, python-format
+#~ msgid "Switched replication slave mode to %s"
+#~ msgstr "Veranderde replicatie slaaf modus naar %s"
+
+#, python-format
+#~ msgid "Synchronized configuration from central site (local site ID is %s.)"
+#~ msgstr ""
+#~ "Gesynchroniseerde configuratie van centrale site (lokale site ID is %s.)"
+
+#, python-format
+#~ msgid "Uploaded agent signature key '%s' created"
+#~ msgstr "Geuploade agent handtekening sleutel '%s' aangemaakt"
+
+#, python-format
+#~ msgid "Uploaded backup key '%s'"
+#~ msgstr "Geuploade backup sleutel '%s'"
+
+#~ msgid "Please enter a valid integer number"
+#~ msgstr "Voer een geldig geheel getal in"
+
+#, fuzzy
+#~| msgid "Configure a logfile section"
+#~ msgid "Configure non compliant devices summary percent levels"
+#~ msgstr "Een logbestand sectie configureren"
+
+#, fuzzy
+#~| msgid "Hostname matching"
+#~ msgid "Add android hostnames matching"
+#~ msgstr "Hostnaam matching"
+
+#, fuzzy
+#~| msgid "Hostname matching"
+#~ msgid "Add iOS hostnames matching"
+#~ msgstr "Hostnaam matching"
+
+#, python-format
+#~ msgid "The labels %s are not required."
+#~ msgstr "De labels %s zijn niet verplicht."
+
+#, python-format
+#~ msgid "The matching criteria must not contain the label '%s'."
+#~ msgstr "De overeenkomende criteria mogen niet het label '%s' bevatten."
+
+#~ msgid "The port that is used for the API call."
+#~ msgstr "De poort die wordt gebruikt voor de api call."
+
+#~ msgid "Use proxy for MobileIron API connection"
+#~ msgstr "Gebruik proxy voor MobileIron API-verbinding"
+
 #~ msgid "Hardware & Software Tree"
 #~ msgstr "Hardware & Software Boom"
 
@@ -64360,9 +64697,6 @@ msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 #~ msgid "Lower levels for hit ratio"
 #~ msgstr "Lagere niveaus voor hit ratio"
 
-#~ msgid "Parameters for the key hit ratio"
-#~ msgstr "Parameters voor de toetsaanslagverhouding"
-
 #~ msgid "Redis/Hitratio"
 #~ msgstr "Redis/Hitratio"
 
@@ -64416,9 +64750,6 @@ msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 
 #~ msgid "GCP/Cloud Run Network"
 #~ msgstr "GCP/Cloud Run Netwerk"
-
-#~ msgid "GCP/Cloud Run Requests"
-#~ msgstr "GCP/Cloud Run Verzoeken"
 
 #~ msgid "GCP/Function execution"
 #~ msgstr "GCP/Functie-uitvoering"
@@ -64598,11 +64929,6 @@ msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 
 #~ msgid "Service State"
 #~ msgstr "Dienststaat"
-
-#, fuzzy
-#~| msgid "Allowed protocols"
-#~ msgid "Allocated pools"
-#~ msgstr "Toegestane protocollen"
 
 #~ msgid "Filesystem growth"
 #~ msgstr "Bestandssysteem groei"
@@ -67348,12 +67674,6 @@ msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 
 #~ msgid "Livestatus overflows"
 #~ msgstr "Livestatus overflows"
-
-#~ msgid "Load Balancer IP"
-#~ msgstr "Load Balancer IP"
-
-#~ msgid "Load balancer latency"
-#~ msgstr "Load balancer latentie"
 
 #~ msgid "Load balancer listeners"
 #~ msgstr "Load balancer luisteraars"

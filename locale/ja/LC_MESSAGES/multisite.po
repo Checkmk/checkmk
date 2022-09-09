@@ -1761,10 +1761,11 @@ msgid ""
 "them.</p>"
 msgstr ""
 
+#, python-format
 msgid ""
 "<p>You can optionally define one or multiple regular expressions where a "
-"matching case will result in the exclusion of the concerning service(s). "
-"This allows to ignore services which are known to fail beforehand. </p>"
+"matching case will result in the exclusion of the concerning %s(s). This "
+"allows to ignore services which are known to fail beforehand. </p>"
 msgstr ""
 
 msgid ""
@@ -2850,17 +2851,11 @@ msgstr "有効化"
 msgid "Activated changes by %s."
 msgstr "%s によるアクティブ化された変更。"
 
-msgid "Activated changes of event console configuration"
-msgstr "イベントコンソール構成のアクティブ化された変更"
-
 msgid "Activated the changes"
 msgstr "変更を有効にしました"
 
 msgid "Activating"
 msgstr "アクティベート"
-
-msgid "Activating changes of Livestatus Proxy configuration"
-msgstr ""
 
 msgid "Activation"
 msgstr "アクティベーション"
@@ -3085,10 +3080,6 @@ msgstr "検出されたがまだ監視されていないすべてのサービス
 msgid "Add all metrics of this graph to"
 msgstr "このグラフのすべてのメトリックをに追加します"
 
-#, fuzzy
-msgid "Add android hostnames matching"
-msgstr "ホスト名の一致"
-
 msgid "Add attribute"
 msgstr "属性を追加"
 
@@ -3194,10 +3185,6 @@ msgstr ""
 
 msgid "Add host to the monitoring"
 msgstr ""
-
-#, fuzzy
-msgid "Add iOS hostnames matching"
-msgstr "ホスト名の一致"
 
 msgid "Add instance to be monitored"
 msgstr "監視するインスタンスを追加します"
@@ -3344,9 +3331,6 @@ msgstr "ユーザー %s の通知ルールを追加します"
 
 msgid "Add one or multiple MIBs"
 msgstr "1つまたは複数のMIBを追加します"
-
-msgid "Add other (not android and not iOS) hostnames matching"
-msgstr ""
 
 msgid "Add page element"
 msgstr "ページ要素を追加"
@@ -4520,6 +4504,10 @@ msgstr "割り当て可能"
 
 msgid "Allocate Requests Exceeding Port Limit"
 msgstr "ポート制限を超えるリクエストを割り当てる"
+
+#, fuzzy
+msgid "Allocated SNAT ports"
+msgstr "割り当てられたプール"
 
 msgid "Allocated for document storage"
 msgstr "ドキュメントストレージに割り当てられます"
@@ -6000,8 +5988,19 @@ msgstr "Azureストレージ"
 msgid "Azure Databases"
 msgstr "Azureデータベース"
 
+#, fuzzy
+msgid "Azure Load Balancer Health"
+msgstr "ロードバランサーIP"
+
 msgid "Azure Storage"
 msgstr "Azureストレージ"
+
+#, fuzzy
+msgid "Azure Traffic Manager Probe State"
+msgstr "アラートマネージャのルール状況"
+
+msgid "Azure Traffic Manager Qps"
+msgstr ""
 
 msgid "Azure Usage Details (Costs)"
 msgstr "Azureの使用状況の詳細(コスト)"
@@ -6204,6 +6203,13 @@ msgstr "バックアップ"
 
 msgid "Bad Requests Received"
 msgstr "不正なリクエストを受信しました"
+
+#, fuzzy
+msgid "Bake agent packages"
+msgstr "ベーキングエージェント"
+
+msgid "Bake agent packages for this folder even if it is empty."
+msgstr ""
 
 msgid "Bake agents"
 msgstr "ベーキングエージェント"
@@ -7218,6 +7224,22 @@ msgstr ""
 "イトの到達可能性状態として使用する必要があります。詳細については、<a "
 "target=_blank href='%s'>オンラインドキュメント</a>を参照してください。"
 
+#, fuzzy
+msgid "Byte Count"
+msgstr "送信されたバイト数"
+
+#, fuzzy
+msgid "Byte count"
+msgstr "送信されたバイト数"
+
+#, fuzzy
+msgid "Byte count lower levels"
+msgstr "合計メッセージ数の下位レベル"
+
+#, fuzzy
+msgid "Byte count upper levels"
+msgstr "合計メッセージ数の上位レベル"
+
 msgid "Bytes"
 msgstr "バイト"
 
@@ -8029,9 +8051,6 @@ msgstr[0] ""
 
 msgid "Changed host selection has been saved."
 msgstr "変更されたホストの選択が保存されました。"
-
-msgid "Changed host selection of agent updates"
-msgstr "エージェント更新のホスト選択を変更しました"
 
 #, python-format
 msgid "Changed notification rule %d"
@@ -8851,6 +8870,11 @@ msgid "Choose table columns"
 msgstr "テーブルカラムを選択する"
 
 msgid ""
+"Choose the Checkmk state in case of probe state not OK (probe state metric "
+"is 0)."
+msgstr ""
+
+msgid ""
 "Choose the action the Event Console should trigger once the limit is reached."
 msgstr ""
 
@@ -8909,21 +8933,23 @@ msgstr ""
 "ば、別のユーザーが同じ名前のビューを作成した場合です。ユーザーがビューを表示"
 "することを許可されていない場合、エラーメッセージが表示されます。"
 
+#, fuzzy, python-format
 msgid ""
-"Choose time levels (in seconds) for which a service is allowed to be in a "
+"Choose time levels (in seconds) for which a %s is allowed to be in a "
 "'reloading' state"
 msgstr ""
 "サービスが[リロード]状態になることを許可されるタイムレベル(秒単位)を選択しま"
 "す"
 
+#, fuzzy, python-format
 msgid ""
-"Choose time levels (in seconds) for which a service is allowed to be in an "
+"Choose time levels (in seconds) for which a %s is allowed to be in an "
 "'deactivating' state"
 msgstr "サービスが「停止」状態になるまでの時間(秒単位)を選択します"
 
+#, fuzzy, python-format
 msgid ""
-"Choose time levels for which a service is allowed to be in an 'activating' "
-"state"
+"Choose time levels for which a %s is allowed to be in an 'activating' state"
 msgstr "サービスが'activating'状態になることを許可される時間レベルを選択します"
 
 msgid ""
@@ -9949,6 +9975,17 @@ msgstr ""
 "許可されておらず、エラーが発生することに注意してください。その理由は、そのよ"
 "うなルールは効果がないからです。"
 
+#, python-format
+msgid ""
+"Configure the discovery of single systemd %(singular)s. To be discovered, a "
+"%(singular)s must match at least one description condition, one name "
+"condition and one state condition, if configured. To simply discover all "
+"systemd %(plural)s, do not configure any restrictions. Note that "
+"independently of this ruleset, some systemd %(plural)s which are used by the "
+"Checkmk agent ('check-mk-agent@...') will never be discovered because they "
+"appear and disappear frequently."
+msgstr ""
+
 msgid ""
 "Configure the discovery of single systemd services. To be discovered, a "
 "service must match at least one description condition, one name condition "
@@ -10368,6 +10405,10 @@ msgstr "ルール内の連絡先グループが優先されます"
 
 msgid "Contact person"
 msgstr "コンタクトパーソン"
+
+#, fuzzy
+msgid "Contact sensor type"
+msgstr "コネクタタイプ"
 
 msgid "Contactgroup Membership"
 msgstr "コンタクトグループメンバーシップ"
@@ -11111,16 +11152,8 @@ msgid "Created new time period %s"
 msgstr "新しい期 %sを作成しました"
 
 #, python-format
-msgid "Created new user: %s"
-msgstr "作成された新しいユーザー:%s"
-
-#, python-format
 msgid "Created new users: %s"
 msgstr "作成された新しいユーザー: %s"
-
-#, python-format
-msgid "Created snapshot %s"
-msgstr "作成されたスナップショット%s"
 
 msgid ""
 "Creates a new service that displays information about disk I/O of database "
@@ -11578,6 +11611,10 @@ msgstr "このユーザーのカスタム通知テーブル"
 
 msgid "Custom path prefix"
 msgstr "カスタムパスプレフィックス"
+
+#, fuzzy
+msgid "Custom probe state"
+msgstr "カスタム状態"
 
 msgid "Custom search query"
 msgstr "カスタム検索クエリ"
@@ -12049,6 +12086,10 @@ msgstr "データノード"
 msgid "Data not found"
 msgstr "データが見つかりません"
 
+#, fuzzy
+msgid "Data path availability lower levels"
+msgstr "可用性レベル"
+
 msgid "Data range"
 msgstr "データ範囲"
 
@@ -12184,6 +12225,10 @@ msgstr "データベース名"
 
 msgid "Database reclaimable size"
 msgstr "データベースの再利用可能なサイズ"
+
+#, fuzzy
+msgid "Database server"
+msgstr "データベースユーザー"
 
 msgid "Database size"
 msgstr "データベースサイズ"
@@ -12508,13 +12553,16 @@ msgstr ""
 msgid "Define a range of syslog priorities this rule matches"
 msgstr "このルールが一致するsyslog優先度の範囲を定義します"
 
-msgid "Define a tolerating time period for activating services"
+#, fuzzy, python-format
+msgid "Define a tolerating time period for activating %s"
 msgstr "サービスをアクティブ化するための許容期間を定義します"
 
-msgid "Define a tolerating time period for deactivating services"
+#, fuzzy, python-format
+msgid "Define a tolerating time period for deactivating %s"
 msgstr "サービスを停止させるための許容期間を定義します"
 
-msgid "Define a tolerating time period for reloading services"
+#, fuzzy, python-format
+msgid "Define a tolerating time period for reloading %s"
 msgstr "サービスをリロードするための許容期間を定義します"
 
 msgid ""
@@ -12902,10 +12950,6 @@ msgid "Deleted MIB %s"
 msgstr "削除されたMIB%s"
 
 #, python-format
-msgid "Deleted agent signature key '%s'"
-msgstr "削除されたエージェント署名キー '%s'"
-
-#, python-format
 msgid "Deleted attribute %s"
 msgstr "属性 %sを削除しました"
 
@@ -13242,6 +13286,10 @@ msgid "Deploy the docker plugin"
 msgstr "Dockerプラグインをデプロイします"
 
 msgid "Deploy the netstat plugin"
+msgstr "netstatプラグインをデプロイします"
+
+#, fuzzy
+msgid "Deploy the nvidia_smi agent plugin"
 msgstr "netstatプラグインをデプロイします"
 
 msgid "Deploy the plesk plugins"
@@ -13706,9 +13754,6 @@ msgstr "無効にする（管理者が設定しない）"
 
 msgid "Disabled active checks"
 msgstr "アクティブチェックを無効にしました"
-
-msgid "Disabled agent updates"
-msgstr "無効化されたエージェントの更新"
 
 msgid "Disabled checks"
 msgstr "無効なチェック"
@@ -14247,6 +14292,9 @@ msgstr ""
 "メトリックデータ(RRDファイル)、監視履歴、およびログファイルをバックアップしな"
 "いでください"
 
+msgid "Do not bake agent packages for this folder if it is empty."
+msgstr ""
+
 msgid "Do not check"
 msgstr "チェックしないでください"
 
@@ -14484,6 +14532,10 @@ msgid "Do not deploy the docker plugin"
 msgstr "Dockerプラグインをデプロイしないでください"
 
 msgid "Do not deploy the netstat plugin"
+msgstr "netstatプラグインをデプロイしないでください"
+
+#, fuzzy
+msgid "Do not deploy the nvidia_smi agent plugin"
 msgstr "netstatプラグインをデプロイしないでください"
 
 msgid "Do not deploy the plesk plugins"
@@ -14907,7 +14959,8 @@ msgstr "ドキュメントファイル"
 msgid "Does not ends with \"%s\"."
 msgstr ""
 
-msgid "Does not exists"
+#, fuzzy
+msgid "Does not exist"
 msgstr "存在しません"
 
 msgid "Does not match any service"
@@ -16137,9 +16190,6 @@ msgstr "サービスのperfdataの処理を有効/無効にする"
 msgid "Enabled"
 msgstr "有効"
 
-msgid "Enabled agent updates"
-msgstr "有効なエージェントのアップデート"
-
 #, python-format
 msgid "Enabled extension package %s"
 msgstr "有効な拡張パッケージ%s"
@@ -16849,6 +16899,10 @@ msgstr "除外する"
 msgid "Exclude \"Activate changes\" for time ranges"
 msgstr "時間範囲の\"変更のアクティブ化\"を除外する"
 
+#, fuzzy, python-format
+msgid "Exclude %s matching provided regex patterns"
+msgstr "状態一致の正規表現パターンを再分類します"
+
 msgid "Exclude Nodes based on their role"
 msgstr "役割に応じたノードの除外"
 
@@ -16887,9 +16941,6 @@ msgstr "サービスグループを除外する(正規表現)"
 
 msgid "Exclude services"
 msgstr "サービスを除外する"
-
-msgid "Exclude services matching provided regex patterns"
-msgstr ""
 
 msgid "Exclude some sections on certain instances"
 msgstr "特定のインスタンスの一部のセクションを除外する"
@@ -18937,6 +18988,14 @@ msgstr "GCP/GCS オブジェクト"
 msgid "GCP/GCS Requests"
 msgstr "GCP/GCS リクエスト"
 
+#, fuzzy
+msgid "GCP/HTTP(S) load balancer Latencies"
+msgstr "ロードバランサーのレイテンシー"
+
+#, fuzzy
+msgid "GCP/HTTP(S) load balancer requests"
+msgstr "GCP/Cloud Runリクエスト"
+
 msgid "GET/POST variables of this page"
 msgstr ""
 
@@ -19519,6 +19578,10 @@ msgstr "HTTPリクエストヘッダー変数"
 msgid "HTTP requests per second"
 msgstr "1秒あたりのHTTPリクエスト"
 
+#, fuzzy
+msgid "HTTP(S) load balancer"
+msgstr "ロードバランサー"
+
 msgid "HTTP, TCP, Email, ..."
 msgstr "HTTP、TCP、Eメール、..。"
 
@@ -19718,6 +19781,10 @@ msgstr "見出し"
 
 msgid "Health"
 msgstr "健康"
+
+#, fuzzy
+msgid "Health probe status lower levels"
+msgstr "下位レベルのストリームの総数"
 
 msgid "Heap and non-heap memory"
 msgstr "ヒープおよび非ヒープメモリ"
@@ -25608,8 +25675,16 @@ msgstr "Livestatus オーバーフローレベル"
 msgid "Levels Livestatus Usage"
 msgstr "ライブステータスの使用レベル"
 
+#, fuzzy
+msgid "Levels SNAT usage"
+msgstr "RAM使用量のレベル"
+
 msgid "Levels Services"
 msgstr "レベルサービス"
+
+#, fuzzy
+msgid "Levels byte count"
+msgstr "タスク数のレベル"
 
 #, fuzzy
 msgid "Levels connections"
@@ -25770,6 +25845,10 @@ msgstr "メモリ使用量のレベル"
 msgid "Levels for minimum wait time for a lock"
 msgstr "ロックの最小待機時間のレベル"
 
+#, fuzzy
+msgid "Levels for non-compliant devices"
+msgstr "非居住者アイテムのレベル"
+
 msgid "Levels for non-resident items"
 msgstr "非居住者アイテムのレベル"
 
@@ -25929,6 +26008,10 @@ msgstr "ユーザー管理のバックアップファイルのレベル"
 msgid "Levels for wait"
 msgstr "待機レベル"
 
+#, fuzzy
+msgid "Levels health"
+msgstr "クラスターの状態"
+
 msgid "Levels memory"
 msgstr "メモリーレベル"
 
@@ -26071,6 +26154,10 @@ msgstr "レプリケーションラグに関する長期間のレベル"
 
 msgid "Levels over an extended time period on total CPU utilization"
 msgstr "総CPU使用率の長期間にわたるレベル"
+
+#, fuzzy
+msgid "Levels qps"
+msgstr "diskレベル"
 
 #, fuzzy
 msgid "Levels replication"
@@ -26472,6 +26559,10 @@ msgstr "Livestatus 接続"
 
 msgid "Load"
 msgstr "負荷"
+
+#, fuzzy
+msgid "Load Balancer Health"
+msgstr "ロードバランサーIP"
 
 msgid "Load Call Failure Index"
 msgstr "ロードコール失敗インデックス"
@@ -28999,17 +29090,27 @@ msgstr "モバイル:テーブル"
 msgid "MobileIron API"
 msgstr "MobileIron API"
 
+#, fuzzy
+msgid "Mobileiron compliance"
+msgstr "Mobileiron/コンプライアンス"
+
 msgid "Mobileiron compliance parameters"
 msgstr "Mobileiron コンプライアンスパラメータ"
 
-msgid "Mobileiron versions parameters"
+#, fuzzy
+msgid "Mobileiron statistics"
+msgstr "コア統計"
+
+#, fuzzy
+msgid "Mobileiron statistics parameters"
 msgstr "Mobileironバージョンパラメーター"
 
-msgid "Mobileiron/Compliance"
-msgstr "Mobileiron/コンプライアンス"
-
-msgid "Mobileiron/Versions"
+#, fuzzy
+msgid "Mobileiron versions"
 msgstr "Mobileiron/バージョン"
+
+msgid "Mobileiron versions parameters"
+msgstr "Mobileironバージョンパラメーター"
 
 msgid "Mode"
 msgstr "モード"
@@ -29100,10 +29201,6 @@ msgid "Modified user role '%s'"
 msgstr "変更されたユーザーロール '%s'"
 
 #, python-format
-msgid "Modified user: %s"
-msgstr "変更されたユーザー:%s"
-
-#, python-format
 msgid "Modified users: %s"
 msgstr "変更されたユーザー: %s"
 
@@ -29177,6 +29274,10 @@ msgstr "モニター"
 msgid "Monitor & Graph Lanes"
 msgstr "レーンの監視とグラフ化"
 
+#, fuzzy
+msgid "Monitor Android devices"
+msgstr "未決定のサービスを監視する"
+
 msgid "Monitor CloudFront WAFs"
 msgstr "CloudFront WAFを監視する"
 
@@ -29207,6 +29308,10 @@ msgstr "グループクォータを監視"
 msgid "Monitor hosts for unchecked services (Checkmk Discovery)"
 msgstr ""
 
+#, fuzzy
+msgid "Monitor iOS devices"
+msgstr "監視対象サービス"
+
 msgid "Monitor menu entries"
 msgstr "メニューエントリを監視する"
 
@@ -29221,6 +29326,9 @@ msgstr "名前空間を監視する"
 
 msgid "Monitor namespaces matching"
 msgstr "一致するネームスペースを監視する"
+
+msgid "Monitor other than Android or iOS devices"
+msgstr ""
 
 msgid "Monitor request metrics"
 msgstr "リクエストのメトリックを監視する"
@@ -29316,8 +29424,24 @@ msgstr "転送されたログファイルの監視"
 msgid "Monitoring state"
 msgstr "モニター状態"
 
+#, fuzzy, python-format
+msgid "Monitoring state for any other %s state"
+msgstr "その他のサービス状態の監視状態"
+
 msgid "Monitoring state for any other service state"
 msgstr "その他のサービス状態の監視状態"
+
+#, fuzzy, python-format
+msgid "Monitoring state if %s is active"
+msgstr "サービスがアクティブかどうかの状態の監視"
+
+#, fuzzy, python-format
+msgid "Monitoring state if %s is failed"
+msgstr "サービスが失敗した場合の状態の監視"
+
+#, fuzzy, python-format
+msgid "Monitoring state if %s is inactive"
+msgstr "サービスが非アクティブ場合、状態を監視する"
 
 #, python-format
 msgid "Monitoring state if HAProxy frontend is %s"
@@ -29338,6 +29462,10 @@ msgstr "MTreeの状態が '%s'の場合の状態の監視"
 #, python-format
 msgid "Monitoring state if VM state is %s"
 msgstr "VMの状態が %s の場合の監視状態"
+
+#, fuzzy, python-format
+msgid "Monitoring state if a monitored %s is not found at all."
+msgstr "監視対象サービスがまったく見つからない場合の監視状態。"
 
 msgid "Monitoring state if a monitored service is not found at all."
 msgstr "監視対象サービスがまったく見つからない場合の監視状態。"
@@ -29528,8 +29656,8 @@ msgstr "フォルダ %s を %s に移動しました"
 msgid "Moved from"
 msgstr "から移動しました"
 
-#, python-format
-msgid "Moved host from \"%s\" to \"%s\""
+#, fuzzy, python-format
+msgid "Moved host from \"%s\" (ID: %s) to \"%s\" (ID: %s)"
 msgstr "ホストを \"%s\" から \"%s\"に移動しました"
 
 #, python-format
@@ -29903,6 +30031,10 @@ msgstr "リソースグループの名前"
 msgid "Name of the service"
 msgstr "サービスの名前"
 
+#, fuzzy
+msgid "Name of the socket"
+msgstr "ノードの名前"
+
 msgid "Name of the tape job"
 msgstr "テープジョブの名前"
 
@@ -30200,10 +30332,6 @@ msgid ""
 "transport mode (with optional encryption) will continue to work, to ease "
 "migration."
 msgstr ""
-
-#, python-format
-msgid "New agent signature key '%s' created"
-msgstr "新しいエージェント署名キー '%s'が作成されました"
 
 msgid "New backup job"
 msgstr "新しいバックアップジョブ"
@@ -30578,6 +30706,10 @@ msgstr "%s' という名前で定義されたレポートはありません。"
 
 msgid "No response from update thread"
 msgstr "更新スレッドからの応答がありません"
+
+#, python-format
+msgid "No restrictions (discover all systemd %s)"
+msgstr ""
 
 msgid "No restrictions (discover all systemd service units)"
 msgstr ""
@@ -31806,6 +31938,10 @@ msgstr "Nutanixプリズムアラート"
 msgid "Nvidia"
 msgstr "Nvidia"
 
+#, fuzzy
+msgid "Nvidia GPU monitoring (Windows)"
+msgstr "MegaRAIDモニタリング(Windows)"
+
 msgid "O"
 msgstr "O"
 
@@ -32930,6 +33066,10 @@ msgstr "POST/GET 変数"
 msgid "PROXY"
 msgstr "プロキシ"
 
+#, fuzzy
+msgid "PSU"
+msgstr "CPU"
+
 msgid "PSU (Chassis/Bay)"
 msgstr "PSU(シャーシ/ベイ)"
 
@@ -33190,6 +33330,14 @@ msgstr "UPSsおよびPDUsの出力フェーズのパラメーター"
 msgid "Parameters for switch port inventory"
 msgstr "スイッチポートインベントリのパラメータ"
 
+#, fuzzy
+msgid "Parameters for the  latencies"
+msgstr "キーヒット率に関するパラメータ"
+
+#, fuzzy
+msgid "Parameters for the  requests"
+msgstr "バケットリクエストのパラメーター"
+
 msgid "Parameters for the Windows Update Check with WSUS"
 msgstr "WSUSを使用したWindows Updateチェックのパラメーター"
 
@@ -33201,6 +33349,10 @@ msgstr "バケットオブジェクトのパラメータio"
 
 msgid "Parameters for the bucket requests"
 msgstr "バケットリクエストのパラメーター"
+
+#, fuzzy
+msgid "Parameters for the latencies"
+msgstr "このサービスのパラメーター"
 
 msgid "Parameters for this host"
 msgstr "このホストのパラメーター"
@@ -33347,6 +33499,10 @@ msgstr "CA証明書へのパス"
 
 msgid "Path to categories"
 msgstr "カテゴリのパス"
+
+#, fuzzy
+msgid "Path to nvidia-smi.exe"
+msgstr ".envファイルへのパス"
 
 msgid "Path to sapgenpse"
 msgstr "sapgenpseへの道"
@@ -34015,6 +34171,11 @@ msgstr ""
 "services&gt;&gt;&gt;の最初の列にあります。サービス名とサービスの表示名を混同"
 "しないでください。後者は詳細情報として表示されているだけです。"
 
+msgid ""
+"Please activate the monitoring of at least one device type: Android, iOS or "
+"other devices"
+msgstr ""
+
 msgid "Please add at least one child node."
 msgstr "少なくとも1つの子ノードを追加してください。"
 
@@ -34129,9 +34290,6 @@ msgid ""
 msgstr ""
 "有効なホスト名またはIPv4アドレスを入力してください。文字、数字、ダッシュ、ア"
 "ンダースコア、ドットのみが許可されます。"
-
-msgid "Please enter a valid integer number"
-msgstr "有効な整数を入力してください"
 
 msgid "Please enter a valid number"
 msgstr "有効な数値を入力してください"
@@ -34953,6 +35111,10 @@ msgstr "特権レベル"
 msgid "Prob."
 msgstr "確率."
 
+#, fuzzy
+msgid "Probe State"
+msgstr "ジョブの状態"
+
 #, python-format
 msgid "Problem %s"
 msgstr "問題 %s"
@@ -35281,6 +35443,11 @@ msgstr ""
 msgid "Put the name of the database here, e.g. SATURN\\ARCSERVE_DB"
 msgstr "ここにデータベースの名前を入力します(例: SATURN\\ARCSERVE_DB)"
 
+msgid ""
+"Put the path to the nvidia-smi.exe executable here, e.g. C:\\Program Files"
+"\\NVIDIA Corporation\\NVSMI\\nvidia-smi.exe"
+msgstr ""
+
 msgid "Put this element on"
 msgstr "この要素を置く"
 
@@ -35311,6 +35478,9 @@ msgstr "QoSがビットをドロップした"
 msgid "QoS outbound bits"
 msgstr "QoSアウトバウンドビット"
 
+msgid "Qps"
+msgstr ""
+
 msgid "Quantum Storage Status"
 msgstr "クアンタムストレージステータス"
 
@@ -35322,6 +35492,10 @@ msgstr "クエリされたホストはホストシステムです"
 
 msgid "Queried host is the vCenter"
 msgstr "クエリされたホストはvCenterです"
+
+#, fuzzy
+msgid "Queries per second"
+msgstr "1秒あたりのリットル"
 
 msgid "Query"
 msgstr "クエリ"
@@ -36427,10 +36601,6 @@ msgid "Renamed host %s"
 msgstr "ホスト%sの名前が変更されました"
 
 #, python-format
-msgid "Renamed host condition from \"%s\" to \"%s\""
-msgstr "ホスト条件の名前を \"%s\" から \"%s\" に変更"
-
-#, python-format
 msgid "Renamed host from %s into %s."
 msgstr "ホストの名前を%sから%sに変更しました。"
 
@@ -36926,6 +37096,10 @@ msgstr "次の送信元IPアドレスへのアクセスを制限します"
 msgid "Restrict all"
 msgstr "全てを制限"
 
+#, fuzzy, python-format
+msgid "Restrict by %s name"
+msgstr "状態による制限"
+
 msgid "Restrict by contact groups"
 msgstr "連絡先グループによる制限"
 
@@ -36995,6 +37169,14 @@ msgstr "次のキーを制限"
 
 msgid "Restrict the length of the lines"
 msgstr "行の長さを制限する"
+
+#, fuzzy, python-format
+msgid "Restrict the systemd %s by description."
+msgstr "説明によるsystemdサービスを制限。"
+
+#, fuzzy, python-format
+msgid "Restrict the systemd %s by its name."
+msgstr "説明によるsystemdサービスを制限。"
 
 msgid "Restrict the systemd services by description."
 msgstr "説明によるsystemdサービスを制限。"
@@ -37392,10 +37574,11 @@ msgid "Rules to configure the behaviour of monitored hosts."
 msgstr "監視対象ホストの動作を構成するためのルール。"
 
 msgid ""
-"Rules to set up [wato_services#manual_checks|manual services]. Services set "
-"up in this way do not depend on the service discovery. This is useful if you "
-"want to enforce compliance with a specific guideline. You can for example "
-"ensure that a certain Windows service is always present on a host."
+"Rules to set up [wato_services#enforced_services|enforced services]. "
+"Services set up in this way do not depend on the service discovery. This is "
+"useful if you want to enforce compliance with a specific guideline. You can "
+"for example ensure that a certain Windows service is always present on a "
+"host."
 msgstr ""
 
 msgid "Ruleset"
@@ -37728,6 +37911,26 @@ msgstr "接続するSMTP TCPポート"
 
 msgid "SMTP commands to execute."
 msgstr "実行するSMTPコマンド。"
+
+#, fuzzy
+msgid "SNAT Consumption"
+msgstr "APCの消費電力"
+
+#, fuzzy
+msgid "SNAT Usage"
+msgstr "使用法"
+
+#, fuzzy
+msgid "SNAT usage"
+msgstr "タグの使用法"
+
+#, fuzzy
+msgid "SNAT usage lower levels"
+msgstr "より低いレベルを設定する"
+
+#, fuzzy
+msgid "SNAT usage upper levels"
+msgstr "上位レベルを設定する"
 
 msgid "SNMP"
 msgstr "SNMP"
@@ -40001,7 +40204,7 @@ msgid "Shows the Checkmk logo."
 msgstr ""
 
 msgid ""
-"Shows the percantage of services that are not OK in relation to the total "
+"Shows the percentage of services that are not OK in relation to the total "
 "number of services. This dashlet is not respecting the full fillter context "
 "of the dashboard, only the 'site' filter."
 msgstr ""
@@ -40099,10 +40302,6 @@ msgstr "署名済み"
 
 msgid "Signed agents"
 msgstr "署名されたエージェント"
-
-#, python-format
-msgid "Signed all agents with the key '%s'"
-msgstr "キー '%s'ですべてのエージェントに署名しました"
 
 msgid "Signing Agents..."
 msgstr "公証人..."
@@ -41513,10 +41712,6 @@ msgid "Started activate changes: %s"
 msgstr "変更の有効化を開始しました: %s"
 
 #, python-format
-msgid "Started activation of site %s"
-msgstr "サイト %sのアクティベーションを開始しました"
-
-#, python-format
 msgid "Started at %s"
 msgstr "%s で開始"
 
@@ -41768,6 +41963,10 @@ msgstr "ノードにmemアラームが有効になっているかどうかの状
 msgid "State if node is not in state running"
 msgstr "ノードが実行中の状態にない場合の状態"
 
+#, fuzzy
+msgid "State if probe state not OK"
+msgstr "アクティブ状態がOKでないときの状態"
+
 msgid "State if remaining API reads are unknown"
 msgstr "残りのAPI読み取りが不明であるかどうかの状態"
 
@@ -41852,14 +42051,16 @@ msgstr ""
 msgid "State in case of unhandled exception"
 msgstr "未処理の例外の場合の状態"
 
-msgid "State in case of unknown status from replication script"
-msgstr "レプリケーションスクリプトからステータスが不明な場合の状態"
-
-msgid "State in case of unparsable OS build"
+#, fuzzy
+msgid "State in case of unknown OS build"
 msgstr "OSのビルドが解析不能な場合の状態"
 
-msgid "State in case of unparsable patch level"
+#, fuzzy
+msgid "State in case of unknown patch level"
 msgstr "解析不能なパッチレベルの場合の状態"
+
+msgid "State in case of unknown status from replication script"
+msgstr "レプリケーションスクリプトからステータスが不明な場合の状態"
 
 msgid "State in case of wrong agent version"
 msgstr "エージェントのバージョンが間違っている場合の状態"
@@ -42855,10 +43056,6 @@ msgid "Switch to Takeover mode!"
 msgstr "テイクオーバーモードに切り替えてください!"
 
 #, python-format
-msgid "Switched replication slave mode to %s"
-msgstr "レプリケーションスレーブモードを %sに切り替えました"
-
-#, python-format
 msgid "Switched to %s mode"
 msgstr "%s モードに切り替えました"
 
@@ -42914,10 +43111,6 @@ msgstr "ユーザーを同期する"
 #, python-format
 msgid "Synchronized MKP with the modified rule pack %s"
 msgstr "変更されたルールパック %s と同期されたMKP"
-
-#, python-format
-msgid "Synchronized configuration from central site (local site ID is %s.)"
-msgstr "中央サイトから同期された構成(ローカルサイトIDは %s)"
 
 msgid "Synchronized users"
 msgstr "同期されたユーザー"
@@ -43018,17 +43211,33 @@ msgstr "システムの稼働時間"
 msgid "Systemd Services Summary"
 msgstr "Systemdサービスの概要"
 
+#, fuzzy
+msgid "Systemd Sockets Summary"
+msgstr "Systemdサービスの概要"
+
 msgid "Systemd Timesyncd time synchronisation"
 msgstr "Systemd Timesyncd時間同期"
 
 msgid "Systemd services"
 msgstr "Systemdサービス"
 
+#, fuzzy, python-format
+msgid "Systemd single %s discovery"
+msgstr "Systemdシングルサービスディスカバリー"
+
+#, fuzzy
+msgid "Systemd single service"
+msgstr "Systemdシングルサービス"
+
 msgid "Systemd single services"
 msgstr "Systemdシングルサービス"
 
 msgid "Systemd single services discovery"
 msgstr "Systemdシングルサービスディスカバリー"
+
+#, fuzzy
+msgid "Systemd single socket"
+msgstr "Systemdシングルサービス"
 
 msgid "Systems larger than"
 msgstr "より大きいシステム"
@@ -45383,6 +45592,10 @@ msgstr "このリソースを保持することが期待されるノードのホ
 msgid "The hostname template does not contain any label."
 msgstr "ホスト名テンプレートにラベルが含まれていません。"
 
+#, fuzzy, python-format
+msgid "The hostname template must not contain the label '%s'."
+msgstr "ホスト名テンプレートにラベルが含まれていません。"
+
 msgid ""
 "The hosts listed here have contacted the update server in that past and thus "
 "had been correctly registered then. But they do not ask for updates anymore. "
@@ -45489,6 +45702,12 @@ msgstr ""
 "アイテム名。これの意味は、プロキシされたデバイスによって異なります。: - "
 "Wagner OxyReduct: Name of the room/protection zone"
 
+msgid ""
+"The item of etherbox checks is build as 'contact.sensor_type'. For example, "
+"you want the rule to only apply to a temperature sensor (type 1) on contact "
+"3 then set the item to 3.1 ."
+msgstr ""
+
 #, python-format
 msgid "The job \"%s\" is encrypted"
 msgstr "ジョブ \"%s\" は暗号化されています"
@@ -45523,10 +45742,6 @@ msgstr "ラベルID %r のタイプは %s ですが、%s である必要があ�
 #, python-format
 msgid "The label value %r is of type %s, but should be %s"
 msgstr "ラベル値%rはタイプ%sですが、%sである必要があります"
-
-#, python-format
-msgid "The labels %s are not required."
-msgstr "ラベル \"%s\" は必須ではありません。"
 
 msgid "The last "
 msgstr "最後 "
@@ -45690,10 +45905,6 @@ msgstr "一致は大文字と小文字を区別して実行されます。"
 #, python-format
 msgid "The matching criteria must contain the label '%s'."
 msgstr ""
-
-#, python-format
-msgid "The matching criteria must not contain the label '%s'."
-msgstr "マッチング条件にラベル '%s' は含まれていません。"
 
 msgid ""
 "The maximum age for piggy back data from another host to be valid for "
@@ -46376,9 +46587,6 @@ msgstr ""
 
 msgid "The port on which the ntopng instance is reachable."
 msgstr "ntopngインスタンスが到達可能なポート。"
-
-msgid "The port that is used for the API call."
-msgstr "API呼び出しに使用されるポート。"
 
 msgid "The port that is used for the api call."
 msgstr "API呼び出しに使用されるポート。"
@@ -47306,13 +47514,13 @@ msgstr ""
 msgid "The value of this rule is not valid. "
 msgstr "このルールの値は無効です。 "
 
-#, python-format
-msgid "The values of the label '%s' are not equal: '%s' != '%s'"
-msgstr ""
+#, fuzzy, python-format
+msgid "The values of the label '%s' are not equal: %r != %r"
+msgstr "このルールの値は無効です。 "
 
-#, python-format
-msgid "The values of the label '%s' do not match: '%s' !~ '%s'."
-msgstr ""
+#, fuzzy, python-format
+msgid "The values of the label '%s' do not match: %r !~ %r."
+msgstr "このルールの値は無効です。 "
 
 msgid "The vault name"
 msgstr "ボールト名"
@@ -48431,6 +48639,13 @@ msgstr "これは有効なNagios期間の日の指定ではありません。"
 
 msgid "This is only be used in case of percentual levels"
 msgstr "これは、パーセントレベルの場合にのみ使用されます"
+
+#, python-format
+msgid ""
+"This is option is useful in combination with the %s feature of the %s. It "
+"allows for baking agent packages for hosts which will be created in this "
+"folder in the future, usually via the auto registration."
+msgstr ""
 
 msgid ""
 "This is relevant during periods where the according check cannot be executed "
@@ -50261,12 +50476,21 @@ msgstr ""
 "いるホストでSNMPを介したファイルシステムチェックなどの特定の技術的実装を無効"
 "にできます。"
 
+#, fuzzy, python-format
 msgid ""
-"This ruleset only applies to the Summary Systemd service and not the "
-"individual Systemd services."
+"This ruleset only applies to the Summary Systemd %s and not the individual "
+"Systemd %s."
 msgstr ""
 "このルールセットは、Summary Systemdサービスにのみ適用され、個々のSystemdサー"
 "ビスには適用されません。"
+
+#, fuzzy, python-format
+msgid ""
+"This ruleset only applies when individual Systemd %s are discovered. The "
+"user needs to configure this option in the discovery section."
+msgstr ""
+"このルールセットは、個々のSystemdサービスが検出された場合にのみ適用されます。"
+"ユーザーは、検出セクションでこのオプションを構成する必要があります。"
 
 msgid ""
 "This ruleset only applies when individual Systemd services are discovered. "
@@ -50919,6 +51143,14 @@ msgid ""
 "check <tt>zypper</tt> on SUSE Linux hosts and monitor normal and security "
 "updates."
 msgstr ""
+
+#, fuzzy
+msgid ""
+"This will deploy the agent plugin <tt>nvidia_smi</tt> used for monitoring "
+"Nvidia GPUs."
+msgstr ""
+"これにより、エージェントプラグイン<tt> mk_nfsiostat </tt>がデプロイされ、さま"
+"ざまなクライアント側のNFSIO統計がチェックされます。"
 
 msgid ""
 "This will deploy the two agent plugins <tt>plesk_backup</tt> and "
@@ -53004,14 +53236,6 @@ msgstr "パッケージをアップロード"
 msgid "Uploaded a custom GUI logo"
 msgstr "カスタムGUIロゴをアップロードしました"
 
-#, python-format
-msgid "Uploaded agent signature key '%s' created"
-msgstr "アップロードされたエージェント署名キー '%s'が作成されました"
-
-#, python-format
-msgid "Uploaded backup key '%s'"
-msgstr "アップロードされたバックアップキー '%s'"
-
 msgid "Upper"
 msgstr "アッパー"
 
@@ -53828,9 +54052,6 @@ msgstr "事前定義された条件を使用して、ルールセットの条件
 msgid "Use procedure call instead of SQL statement"
 msgstr "SQLステートメントの代わりにプロシージャコールを使用する"
 
-msgid "Use proxy for MobileIron API connection"
-msgstr "MobilelronのAPI接続にプロキシを使用する"
-
 msgid "Use proxy settings from the process environment. This is the default."
 msgstr "プロセス環境からのプロキシ設定を使用する。デフォルト設定です。"
 
@@ -54231,6 +54452,9 @@ msgstr ""
 
 msgid "Used RAM"
 msgstr "使用済みRAM"
+
+msgid "Used SNAT ports"
+msgstr ""
 
 msgid "Used bandwidth (minimum or maximum traffic)"
 msgstr "使用帯域幅(最小または最大トラフィック)"
@@ -57758,27 +57982,21 @@ msgstr ""
 "レスを指定できます。"
 
 msgid ""
-"You can specify a list of regex patterns for android hostnames. Several "
-"patterns can be provided. If hostname contains '@' it will be removed with "
-"all following characters. And only then the regex matching will happen. Only "
-"those that match any of the patterns will be monitored. By default all "
-"hostnames are accepted"
+"You can specify a list of regex patterns for android host names. Several "
+"patterns can be provided. Only those that match any of the patterns will be "
+"monitored. By default all hostnames are accepted"
 msgstr ""
 
 msgid ""
-"You can specify a list of regex patterns for iOS hostnames. Several patterns "
-"can be provided. If hostname contains '@' it will be removed with all "
-"following characters. And only then the regex matching will happen. Only "
-"those that match any of the patterns will be monitored. By default all "
-"hostnames are accepted"
+"You can specify a list of regex patterns for iOS host names. Several "
+"patterns can be provided. Only those that match any of the patterns will be "
+"monitored. By default all host names are accepted"
 msgstr ""
 
 msgid ""
-"You can specify a list of regex patterns for other hostnames which are not "
-"android and not iOS. Several patterns can be provided. If hostname contains "
-"'@' it will be removed with all following characters. And only then the "
-"regex matching will happen. Only those that match any of the patterns will "
-"be monitored. By default all hostnames are accepted"
+"You can specify a list of regex patterns for other host names which are not "
+"android and not iOS. Several patterns can be provided. Only those that match "
+"any of the patterns will be monitored. By default all host names are accepted"
 msgstr ""
 
 msgid ""
@@ -60716,6 +60934,98 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
+#~ msgid "Activated changes of event console configuration"
+#~ msgstr "イベントコンソール構成のアクティブ化された変更"
+
+#~ msgid "Changed host selection of agent updates"
+#~ msgstr "エージェント更新のホスト選択を変更しました"
+
+#, python-format
+#~ msgid "Created new user: %s"
+#~ msgstr "作成された新しいユーザー:%s"
+
+#, python-format
+#~ msgid "Created snapshot %s"
+#~ msgstr "作成されたスナップショット%s"
+
+#, python-format
+#~ msgid "Deleted agent signature key '%s'"
+#~ msgstr "削除されたエージェント署名キー '%s'"
+
+#~ msgid "Disabled agent updates"
+#~ msgstr "無効化されたエージェントの更新"
+
+#~ msgid "Enabled agent updates"
+#~ msgstr "有効なエージェントのアップデート"
+
+#, python-format
+#~ msgid "Modified user: %s"
+#~ msgstr "変更されたユーザー:%s"
+
+#, python-format
+#~ msgid "New agent signature key '%s' created"
+#~ msgstr "新しいエージェント署名キー '%s'が作成されました"
+
+#, python-format
+#~ msgid "Renamed host condition from \"%s\" to \"%s\""
+#~ msgstr "ホスト条件の名前を \"%s\" から \"%s\" に変更"
+
+#, python-format
+#~ msgid "Signed all agents with the key '%s'"
+#~ msgstr "キー '%s'ですべてのエージェントに署名しました"
+
+#, python-format
+#~ msgid "Started activation of site %s"
+#~ msgstr "サイト %sのアクティベーションを開始しました"
+
+#, python-format
+#~ msgid "Switched replication slave mode to %s"
+#~ msgstr "レプリケーションスレーブモードを %sに切り替えました"
+
+#, python-format
+#~ msgid "Synchronized configuration from central site (local site ID is %s.)"
+#~ msgstr "中央サイトから同期された構成(ローカルサイトIDは %s)"
+
+#, python-format
+#~ msgid "Uploaded agent signature key '%s' created"
+#~ msgstr "アップロードされたエージェント署名キー '%s'が作成されました"
+
+#, python-format
+#~ msgid "Uploaded backup key '%s'"
+#~ msgstr "アップロードされたバックアップキー '%s'"
+
+#~ msgid "Please enter a valid integer number"
+#~ msgstr "有効な整数を入力してください"
+
+#, fuzzy
+#~| msgid "Configure a logfile section"
+#~ msgid "Configure non compliant devices summary percent levels"
+#~ msgstr "ログファイルセクションを構成する"
+
+#, fuzzy
+#~| msgid "Hostname matching"
+#~ msgid "Add android hostnames matching"
+#~ msgstr "ホスト名の一致"
+
+#, fuzzy
+#~| msgid "Hostname matching"
+#~ msgid "Add iOS hostnames matching"
+#~ msgstr "ホスト名の一致"
+
+#, python-format
+#~ msgid "The labels %s are not required."
+#~ msgstr "ラベル \"%s\" は必須ではありません。"
+
+#, python-format
+#~ msgid "The matching criteria must not contain the label '%s'."
+#~ msgstr "マッチング条件にラベル '%s' は含まれていません。"
+
+#~ msgid "The port that is used for the API call."
+#~ msgstr "API呼び出しに使用されるポート。"
+
+#~ msgid "Use proxy for MobileIron API connection"
+#~ msgstr "MobilelronのAPI接続にプロキシを使用する"
+
 #~ msgid "Hardware & Software Tree"
 #~ msgstr "ハードウェアとソフトウェアツリー"
 
@@ -60984,9 +61294,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 #~ msgid "Lower levels for hit ratio"
 #~ msgstr "ヒット比率の下位レベル"
 
-#~ msgid "Parameters for the key hit ratio"
-#~ msgstr "キーヒット率に関するパラメータ"
-
 #~ msgid "Redis/Hitratio"
 #~ msgstr "Redis/Hitratio"
 
@@ -61034,9 +61341,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "GCP/Cloud Run Network"
 #~ msgstr "GCP/Cloud Runネットワーク"
-
-#~ msgid "GCP/Cloud Run Requests"
-#~ msgstr "GCP/Cloud Runリクエスト"
 
 #~ msgid "GCP/Function execution"
 #~ msgstr "GCP/機能実行"
@@ -61203,9 +61507,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Service State"
 #~ msgstr "サービス状態"
-
-#~ msgid "Allocated pools"
-#~ msgstr "割り当てられたプール"
 
 #~ msgid "Filesystem growth"
 #~ msgstr "ファイルシステムの成長"
@@ -63761,12 +64062,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Livestatus overflows"
 #~ msgstr "ライブステータスがオーバーフローします"
-
-#~ msgid "Load Balancer IP"
-#~ msgstr "ロードバランサーIP"
-
-#~ msgid "Load balancer latency"
-#~ msgstr "ロードバランサーのレイテンシー"
 
 #~ msgid "Load balancer listeners"
 #~ msgstr "ロードバランサーリスナー"

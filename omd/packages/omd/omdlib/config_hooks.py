@@ -126,10 +126,8 @@ def _config_load_hook(  # pylint: disable=too-many-branches
                 description_active = False
     hook["description"] = description
 
-    def get_hook_info(info: str) -> str:
-        return call_hook(site, hook_name, [info])[1]
-
-    hook["choices"] = _parse_hook_choices(get_hook_info("choices"))
+    hook_info = call_hook(site, hook_name, ["choices"])[1]
+    hook["choices"] = _parse_hook_choices(hook_info)
     return hook
 
 
@@ -140,25 +138,21 @@ def _parse_hook_choices(hook_info: str) -> ConfigHookChoices:
     # where that line is an extended regular expression matching the
     # possible values.
 
-    choicestxt = hook_info.split("\n")
-    choices: ConfigHookChoices = None
-    if len(choicestxt) == 1:
-        regextext = choicestxt[0].strip()
-        if regextext != "":
-            choices = re.compile(regextext + "$")
-        else:
-            choices = None
-    else:
-        choices = []
-        try:
-            for line in choicestxt:
-                val, descr = line.split(":", 1)
-                val = val.strip()
-                descr = descr.strip()
-                choices.append((val, descr))
-        except Exception as e:
-            raise MKTerminate("Invalid output of hook: %s: %s" % (choicestxt, e))
-    return choices
+    match [choice.strip() for choice in hook_info.split("\n")]:
+        case [""]:
+            return None
+        case [regextext]:
+            return re.compile(regextext + "$")
+        case choices_list:
+            try:
+                choices: list[ConfigHookChoiceItem] = []
+                for line in choices_list:
+                    val, descr = line.split(":", 1)
+                    choices.append((val.strip(), descr.strip()))
+            except Exception as e:
+                raise MKTerminate("Invalid output of hook: %s: %s" % (choices_list, e))
+            return choices
+    return None
 
 
 def load_hook_dependencies(site: "SiteContext", config_hooks: ConfigHooks) -> ConfigHooks:

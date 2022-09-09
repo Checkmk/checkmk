@@ -6,23 +6,11 @@
 from __future__ import annotations
 
 import abc
-from typing import (
-    Any,
-    Dict,
-    Iterable,
-    List,
-    NamedTuple,
-    Optional,
-    Sequence,
-    Tuple,
-    Type,
-    TYPE_CHECKING,
-)
+from typing import Any, Dict, Iterable, List, NamedTuple, Optional, Sequence, Type, TYPE_CHECKING
 
 from cmk.utils.plugin_registry import Registry
 
-from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.type_defs import ColumnName, SorterFunction, SorterName, SorterSpec
+from cmk.gui.type_defs import ColumnName, SorterFunction
 from cmk.gui.valuespec import ValueSpec
 
 if TYPE_CHECKING:
@@ -37,44 +25,6 @@ class SorterEntry(NamedTuple):
 
 # Is used to add default arguments to the named tuple. Would be nice to have a cleaner solution
 SorterEntry.__new__.__defaults__ = (None,) * len(SorterEntry._fields)  # type: ignore[attr-defined]
-
-
-def _parse_url_sorters(sort: Optional[str]) -> List[SorterSpec]:
-    sorters: List[SorterSpec] = []
-    if not sort:
-        return sorters
-    for s in sort.split(","):
-        if "~" in s:
-            sorter, join_index = s.split("~", 1)  # type: Tuple[SorterName, Optional[str]]
-        else:
-            sorter, join_index = s, None
-
-        negate = False
-        if sorter.startswith("-"):
-            negate = True
-            sorter = sorter[1:]
-
-        sorters.append(SorterSpec(sorter, negate, join_index))
-    return sorters
-
-
-def _encode_sorter_url(sorters: Iterable[SorterSpec]) -> str:
-    p: List[str] = []
-    for s in sorters:
-        sorter_name = s.sorter
-        if not isinstance(sorter_name, str):
-            # sorter_name is a tuple
-            if sorter_name[0] in {"host_custom_variable"}:
-                sorter_name, params = sorter_name
-                sorter_name = "{}:{}".format(sorter_name, params["ident"])
-            else:
-                raise MKGeneralException(f"Can not handle sorter {sorter_name}")
-        url = ("-" if s.negate else "") + sorter_name
-        if s.join_key:
-            url += "~" + s.join_key
-        p.append(url)
-
-    return ",".join(p)
 
 
 class Sorter(abc.ABC):

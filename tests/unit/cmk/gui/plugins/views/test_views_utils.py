@@ -10,14 +10,15 @@ import pytest
 import cmk.gui.plugins.views.utils as utils
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.views.utils import (
+    _encode_sorter_url,
     Cell,
     group_value,
     Painter,
     PainterRegistry,
     replace_action_url_macros,
 )
-from cmk.gui.sorter import _encode_sorter_url, _parse_url_sorters
 from cmk.gui.type_defs import PainterSpec, SorterSpec
+from cmk.gui.views import _parse_url_sorters
 
 
 @pytest.mark.parametrize(

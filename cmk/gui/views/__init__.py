@@ -102,7 +102,6 @@ from cmk.gui.plugins.visuals.utils import (
     VisualType,
 )
 from cmk.gui.sorter import (
-    _parse_url_sorters,
     DerivedColumnsSorter,
     register_sorter,
     Sorter,
@@ -1820,6 +1819,25 @@ def save_state_for_playing_alarm_sounds(row: "Row") -> None:
             continue
 
         g.setdefault("alarm_sound_states", set()).add(state_name)
+
+
+def _parse_url_sorters(sort: Optional[str]) -> list[SorterSpec]:
+    sorters: list[SorterSpec] = []
+    if not sort:
+        return sorters
+    for s in sort.split(","):
+        if "~" in s:
+            sorter, join_index = s.split("~", 1)
+        else:
+            sorter, join_index = s, None
+
+        negate = False
+        if sorter.startswith("-"):
+            negate = True
+            sorter = sorter[1:]
+
+        sorters.append(SorterSpec(sorter, negate, join_index))
+    return sorters
 
 
 def get_user_sorters() -> List[SorterSpec]:

@@ -60,7 +60,7 @@ from cmk.gui.num_split import cmp_num_split as _cmp_num_split
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.metrics.utils import CombinedGraphMetricSpec
-from cmk.gui.sorter import _encode_sorter_url, register_sorter, sorter_registry
+from cmk.gui.sorter import register_sorter, sorter_registry
 from cmk.gui.type_defs import (
     ColumnName,
     CombinedGraphSpec,
@@ -1223,6 +1223,25 @@ class Cell:
         assert isinstance(content, (str, HTML))
         html.td(content, class_=tdclass, colspan=colspan)
         return content != ""
+
+
+def _encode_sorter_url(sorters: Iterable[SorterSpec]) -> str:
+    p: List[str] = []
+    for s in sorters:
+        sorter_name = s.sorter
+        if not isinstance(sorter_name, str):
+            # sorter_name is a tuple
+            if sorter_name[0] in {"host_custom_variable"}:
+                sorter_name, params = sorter_name
+                sorter_name = "{}:{}".format(sorter_name, params["ident"])
+            else:
+                raise MKGeneralException(f"Can not handle sorter {sorter_name}")
+        url = ("-" if s.negate else "") + sorter_name
+        if s.join_key:
+            url += "~" + s.join_key
+        p.append(url)
+
+    return ",".join(p)
 
 
 class JoinCell(Cell):

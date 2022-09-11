@@ -32,6 +32,8 @@ struct LogWatchLimits {
     evl::SkipDuplicatedRecords skip;
 };
 
+enum class LogWatchContext { with, hide };
+
 // simple data structure to keep states internally
 // name, value and new or not
 struct State {
@@ -67,23 +69,24 @@ public:
     bool loadFromMapNode(const YAML::Node &node);
     bool loadFrom(std::string_view line);
     void init(std::string_view name, std::string_view level_value,
-              bool context);
+              LogWatchContext context);
     LogWatchEntry &withDefault() {
-        init("*", ConvertLogWatchLevelToString(cfg::EventLevels::kWarn), true);
+        init("*", ConvertLogWatchLevelToString(cfg::EventLevels::kWarn),
+             LogWatchContext::with);
         return *this;
     }
 
     [[nodiscard]] std::string name() const noexcept {
         return loaded_ ? name_ : std::string{};
     }
-    [[nodiscard]] bool context() const noexcept { return context_; }
+    [[nodiscard]] LogWatchContext context() const noexcept { return context_; }
     [[nodiscard]] bool loaded() const noexcept { return loaded_; }
     [[nodiscard]] cfg::EventLevels level() const noexcept { return level_; }
 
 private:
     std::string name_;
     cfg::EventLevels level_{cfg::EventLevels::kOff};
-    bool context_{false};
+    LogWatchContext context_{LogWatchContext::hide};
     bool loaded_{false};
 };
 
@@ -151,15 +154,14 @@ int UpdateEventLogStates(StateVector &states,
 LogWatchEntry GenerateDefaultValue();
 
 std::optional<uint64_t> GetLastPos(EvlType type, std::string_view name);
-bool LoadFromConfig(State &state, const LogWatchEntryVector &entries) noexcept;
+bool UpdateState(State &state, const LogWatchEntryVector &entries) noexcept;
 
 std::pair<uint64_t, std::string> DumpEventLog(cma::evl::EventLogBase &log,
                                               const State &state,
                                               LogWatchLimits lwl);
 // Fix Values in states according to the config
-void UpdateStatesByConfig(StateVector &states,
-                          const LogWatchEntryVector &entries,
-                          const LogWatchEntry *dflt);
+void UpdateStates(StateVector &states, const LogWatchEntryVector &entries,
+                  const LogWatchEntry *dflt);
 // manual adding: two things possible
 // 1. added brand new
 // 2. existing marked as presented_
@@ -190,7 +192,7 @@ struct RawLogWatchData {
     bool loaded_;
     std::string_view name_;
     cfg::EventLevels level_;
-    bool context_;
+    LogWatchContext context_;
 };
 
 };  // namespace cma::provider

@@ -27,8 +27,7 @@ namespace rs = std::ranges;
 
 namespace cma::provider {
 
-// trivial converter. kOff if LevelValue is not valid
-// safe for nullptr and mixed case
+// kOff if LevelValue is not valid safe for nullptr and mixed case
 cfg::EventLevels LabelToEventLevel(std::string_view required_level) {
     using cfg::EventLevels;
     if (required_level.data() == nullptr) {
@@ -54,7 +53,7 @@ cfg::EventLevels LabelToEventLevel(std::string_view required_level) {
 }
 
 void LogWatchEntry::init(std::string_view name, std::string_view level_value,
-                         bool context) {
+                         LogWatchContext context) {
     name_ = name;
     context_ = context;
     level_ = LabelToEventLevel(level_value);
@@ -113,6 +112,7 @@ bool LogWatchEntry::loadFromMapNode(const YAML::Node &node) {
         return false;
     }
 }
+
 // For one-line encoding, example:
 // - 'Application' : crit context
 bool LogWatchEntry::loadFrom(std::string_view line) {
@@ -123,7 +123,7 @@ bool LogWatchEntry::loadFrom(std::string_view line) {
     }
 
     try {
-        bool context = false;
+        auto context = LogWatchContext::hide;
         auto [name, body] = ParseLine(line);
         if (name.empty()) {
             return false;
@@ -137,7 +137,9 @@ bool LogWatchEntry::loadFrom(std::string_view line) {
             if (table.size() > 1) {
                 auto context_value = table[1];
                 tools::AllTrim(context_value);
-                context = tools::IsEqual(context_value, "context");
+                context = tools::IsEqual(context_value, "context")
+                              ? LogWatchContext::with
+                              : LogWatchContext::hide;
             }
         } else {
             XLOG::d("logwatch entry '{}' has no data, this is not normal",
@@ -241,7 +243,7 @@ void LogWatchEvent::loadConfig() {
         if (!default_found) {
             // making default entry
             entries_.emplace_back(LogWatchEntry());
-            entries_.back().init("*", "off", false);
+            entries_.back().init("*", "off", LogWatchContext::hide);
             default_entry_ = entries_.size() - 1;
         }
         XLOG::d.t("Loaded [{}] entries in LogWatch", count);
@@ -370,7 +372,7 @@ void AddConfigEntry(StateVector &states, const LogWatchEntry &log_entry,
             XLOG::t("Old event log '{}' found", log_entry.name());
 
             state.setDefaults();
-            state.hide_context_ = !log_entry.context();
+            state.hide_context_ = log_entry.context() == LogWatchContext::hide;
             state.level_ = log_entry.level();
             state.in_config_ = true;
             state.presented_ = true;
@@ -383,7 +385,7 @@ void AddConfigEntry(StateVector &states, const LogWatchEntry &log_entry,
     states.emplace_back(log_entry.name(), pos, true);
     states.back().in_config_ = true;
     states.back().level_ = log_entry.level();
-    states.back().hide_context_ = !log_entry.context();
+    states.back().hide_context_ = log_entry.context() == LogWatchContext::hide;
     XLOG::t("New event log '{}' added with pos {}", log_entry.name(), pos);
 }
 
@@ -507,35 +509,33 @@ std::optional<std::string> ReadDataFromLog(EvlType type, State &state,
 
 LogWatchEntry GenerateDefaultValue() { return LogWatchEntry().withDefault(); }
 
-bool LoadFromConfig(State &state, const LogWatchEntryVector &entries) noexcept {
+bool UpdateState(State &state, const LogWatchEntryVector &entries) noexcept {
     for (const auto &config_entry : entries) {
         if (tools::IsEqual(state.name_, config_entry.name())) {
-            // found, check that param is not off
-            state.hide_context_ = !config_entry.context();
+            state.hide_context_ =
+                config_entry.context() == LogWatchContext::hide;
             state.level_ = config_entry.level();
             state.in_config_ = true;
             return true;
         }
     }
 
-    // check default entry
     return false;
 }
 
-void UpdateStatesByConfig(StateVector &states,
-                          const LogWatchEntryVector &entries,
-                          const LogWatchEntry *dflt) {
+void UpdateStates(StateVector &states, const LogWatchEntryVector &entries,
+                  const LogWatchEntry *dflt) {
     LogWatchEntry default_entry =
         dflt != nullptr ? *dflt : GenerateDefaultValue();
 
     // filtering states
     for (auto &s : states) {
-        if (LoadFromConfig(s, entries)) {
+        if (UpdateState(s, entries)) {
             continue;
         }
 
         // not found - attempting to load default value
-        s.hide_context_ = !default_entry.context();
+        s.hide_context_ = default_entry.context() == LogWatchContext::hide;
         s.level_ = default_entry.level();
 
         // if default level isn't off, then we set entry as configured
@@ -634,7 +634,7 @@ std::string LogWatchEvent::makeBody() {
     }
 
     // now we have states list and want to mark all registered sources
-    UpdateStatesByConfig(states, entries_, defaultEntry());
+    UpdateStates(states, entries_, defaultEntry());
 
     // make string
     auto out = GenerateOutputFromStates(evl_type_, states, getLogWatchLimits());

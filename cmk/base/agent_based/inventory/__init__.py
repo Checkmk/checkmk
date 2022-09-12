@@ -176,7 +176,7 @@ def _execute_active_check_inventory(
 
     if inv_result.processing_failed:
         old_tree = None
-        update_result = ActiveCheckResult(1, "Cannot update tree")
+        update_result = ActiveCheckResult(fail_status, "Cannot update tree")
     else:
         old_tree = _save_inventory_tree(hostname, trees.inventory, retentions)
         update_result = ActiveCheckResult()

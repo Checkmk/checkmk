@@ -40,7 +40,7 @@ def check_mail_loop_arguments(params):
     --smtp-password=p4ssw0rd
     --mail-from=me_from@gmx.de
     --mail-to=me_to@gmx.de
-    --status-suffix=host-MailLoop_imap
+    --status-suffix=patched_doctest_host-MailLoop_imap
     --warning=93780
     --critical=183840
     --subject=Some subject

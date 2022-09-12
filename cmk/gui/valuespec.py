@@ -4367,8 +4367,6 @@ class AbsoluteDate(ValueSpec[None | float]):
             try:
                 varname = varprefix + "_" + what
                 part_str = request.var(varname, "")
-                if part_str is None:
-                    raise ValueError()
                 part = int(part_str)
             except ValueError:
                 if self._allow_empty:

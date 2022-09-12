@@ -11,7 +11,7 @@ import cmk.gui.valuespec as vs
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.utils.html import HTML
 
-from .utils import expect_validate_failure, expect_validate_success, request_var
+from .utils import expect_validate_failure, expect_validate_success, raise_exception, request_var
 
 FAILURE_MATCH = "The data type of the value does not match any of the allowed alternatives."
 
@@ -67,7 +67,7 @@ class TestValuespecAlternative:
         assert get_alternative().default_value() == 1
         assert get_alternative(default_value="zwei").default_value() == "zwei"
         assert get_alternative(default_value=lambda: "drei").default_value() == "drei"
-        assert get_alternative(default_value=lambda: 1 / 0).default_value() == 1
+        assert get_alternative(default_value=raise_exception).default_value() == 1
 
     def test_mask(self) -> None:
         assert get_alternative().mask(1) == 1

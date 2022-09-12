@@ -58,3 +58,7 @@ def expect_validate_success_migrate_or_transform(
     valuespec: vs.Migrate | vs.Transform, value: object
 ) -> None:
     _validate_migrate_or_transform(valuespec, value)
+
+
+def raise_exception() -> None:
+    raise Exception("This is an exception")

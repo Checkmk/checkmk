@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+from typing import MutableMapping
 
 import pytest
 from pytest_mock import MockerFixture
@@ -47,13 +48,22 @@ def test_main_calls_config_updater(mocker: MockerFixture) -> None:
     mock_config_udpater_call.assert_called_once()
 
 
+class MockUpdateAction(registry.UpdateAction):
+    def __init__(self, name: str, title: str, sort_index: int) -> None:
+        super().__init__(name=name, title=title, sort_index=sort_index)
+        self.calls = 0
+
+    def __call__(self, logger: logging.Logger, update_state: MutableMapping[str, str]) -> None:
+        self.calls += 1
+
+
 def test_config_updater_executes_plugins(
     mocker: MockerFixture,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     reg = registry.UpdateActionRegistry()
     reg.register(
-        mock_plugin := mocker.MagicMock(
+        mock_plugin := MockUpdateAction(
             name="test",
             title="Test Title",
             sort_index=4,
@@ -69,7 +79,7 @@ def test_config_updater_executes_plugins(
     assert "1/1 Test Title..." in output.out
     assert output.out.endswith("Done\n")
 
-    mock_plugin.assert_called_once()
+    assert mock_plugin.calls == 1
 
 
 def test_load_plugins() -> None:

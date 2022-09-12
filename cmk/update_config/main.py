@@ -12,9 +12,10 @@ be called manually.
 import argparse
 import logging
 from itertools import chain
+from pathlib import Path
 from typing import Final, Sequence
 
-from cmk.utils import debug, log, tty
+from cmk.utils import debug, log, paths, tty
 from cmk.utils.log import VERBOSE
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
 from cmk.utils.version import is_raw_edition
@@ -36,6 +37,7 @@ from cmk.gui.watolib.changes import ActivateChangesWriter, add_change
 from cmk.gui.watolib.hosts_and_folders import disable_redis
 
 from .registry import update_action_registry
+from .update_state import UpdateState
 
 
 def main(args: Sequence[str]) -> bool:
@@ -45,10 +47,11 @@ def main(args: Sequence[str]) -> bool:
     if arguments.debug:
         debug.enable()
 
+    update_state = UpdateState.load(Path(paths.var_dir))
     _load_plugins(logger)
 
     try:
-        return ConfigUpdater(logger)()
+        return ConfigUpdater(logger, update_state)()
     except Exception:
         if debug.enabled():
             raise
@@ -112,8 +115,9 @@ def _load_plugins(logger: logging.Logger) -> None:
 
 
 class ConfigUpdater:
-    def __init__(self, logger: logging.Logger) -> None:
+    def __init__(self, logger: logging.Logger, update_state: UpdateState) -> None:
         self._logger: Final = logger
+        self.update_state: Final = update_state
 
     def __call__(self) -> bool:
         self._has_errors = False
@@ -140,7 +144,7 @@ class ConfigUpdater:
                 self._logger.log(VERBOSE, " %i/%i %s..." % (count, total, action.title))
                 try:
                     with ActivateChangesWriter.disable():
-                        action(self._logger)
+                        action(self._logger, self.update_state.setdefault(action.name))
                 except Exception:
                     self._has_errors = True
                     self._logger.error(' + "%s" failed' % action.title, exc_info=True)
@@ -155,6 +159,7 @@ class ConfigUpdater:
                     need_sync=True,
                 )
 
+        self.update_state.save()
         self._logger.log(VERBOSE, "Done")
         return self._has_errors
 

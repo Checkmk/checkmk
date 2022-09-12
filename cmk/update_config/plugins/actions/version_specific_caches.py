@@ -12,10 +12,11 @@ from cmk.utils import paths as paths_utils
 from cmk.gui import visuals
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
+from cmk.update_config.update_state import UpdateActionState
 
 
 class VersionSpecificCachesCleaner(UpdateAction):
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
         paths = [
             Path(paths_utils.include_cache_dir, "builtin"),
             Path(paths_utils.include_cache_dir, "local"),

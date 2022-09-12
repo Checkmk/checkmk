@@ -9,6 +9,8 @@ from typing import Final
 
 from cmk.utils.plugin_registry import Registry
 
+from .update_state import UpdateActionState
+
 
 class UpdateAction(ABC):
     """Base class for all update actions"""
@@ -25,7 +27,7 @@ class UpdateAction(ABC):
         self.sort_index: Final = sort_index
 
     @abstractmethod
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
         """Execute the update action"""
 
 

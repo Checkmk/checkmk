@@ -17,6 +17,7 @@ from cmk.gui.watolib.rulesets import AllRulesets, RulesetCollection
 
 from cmk.update_config.plugins.actions.removed_check_plugins import REMOVED_CHECK_PLUGINS
 from cmk.update_config.registry import update_action_registry, UpdateAction
+from cmk.update_config.update_state import UpdateActionState
 
 REMOVED_RULESETS: Mapping[RulesetName, RulesetName] = {
     "discovery_systemd_units_services_rules": "discovery_systemd_units_services",
@@ -26,7 +27,7 @@ REMOVED_RULESETS: Mapping[RulesetName, RulesetName] = {
 
 
 class UpdateRulesets(UpdateAction):
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
         all_rulesets = AllRulesets()
         all_rulesets.load()
         _transform_fileinfo_timeofday_to_timeperiods(all_rulesets)

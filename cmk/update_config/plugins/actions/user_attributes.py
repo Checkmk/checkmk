@@ -10,6 +10,7 @@ from cmk.gui.plugins.userdb.utils import USER_SCHEME_SERIAL
 from cmk.gui.userdb import load_users, save_users, Users
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
+from cmk.update_config.update_state import UpdateActionState
 
 
 def _add_user_scheme_serial(users: Users) -> Users:
@@ -21,7 +22,7 @@ def _add_user_scheme_serial(users: Users) -> Users:
 
 
 class UpdateUserAttributes(UpdateAction):
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
         save_users(
             _add_user_scheme_serial(load_users(lock=True)),
             datetime.now(),

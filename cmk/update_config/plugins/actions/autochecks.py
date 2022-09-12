@@ -19,10 +19,11 @@ from cmk.gui.watolib.rulesets import AllRulesets, RulesetCollection
 
 from cmk.update_config.plugins.actions.removed_check_plugins import REMOVED_CHECK_PLUGINS
 from cmk.update_config.registry import update_action_registry, UpdateAction
+from cmk.update_config.update_state import UpdateActionState
 
 
 class UpdateAutochecks(UpdateAction):
-    def __call__(self, logger: Logger) -> None:
+    def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
         failed_hosts = []
 
         all_rulesets = AllRulesets()

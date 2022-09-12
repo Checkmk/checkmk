@@ -37,6 +37,7 @@ import os
 import re
 import subprocess
 import sys
+from ipaddress import ip_network
 from pathlib import Path
 from typing import Dict, Iterable, List, Pattern, Tuple, TYPE_CHECKING, Union
 
@@ -59,13 +60,15 @@ ConfigHookResult = Tuple[int, str]
 
 
 class IpAddressListHasError(ConfigChoiceHasError):
-    _IP_PATTERN = re.compile(
-        r"(?:(?:[\d]{1,3})\.(?:[\d]{1,3})\.(?:[\d]{1,3})\.(?:[\d]{1,3})(/[0-9]{1,2})?\s?)+$"
-    )
-
     def __call__(self, value: str) -> result.Result[None, str]:
-        if not IpAddressListHasError._IP_PATTERN.match(value):
-            return result.Error("Does not match allowed pattern.")
+        ip_addresses = value.split()
+        if not ip_addresses:
+            return result.Error("Specify at least one IP address.")
+        for ip_address in ip_addresses:
+            try:
+                ip_network(ip_address)
+            except ValueError:
+                return result.Error(f"The IP address {ip_address} does match the expected format.")
         return result.OK(None)
 
 

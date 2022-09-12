@@ -1,0 +1,19 @@
+Title: LIVESTATUS_TCP_ONLY_FROM now allows IPv6 addresses
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1663308105
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Previously, using the command <tt>omd config set LIVESTATUS_TCP_ONLY_FROM</tt> with any IPv6 address
+would fail. For example, the command
+C+:
+$ omd config set LIVESTATUS_TCP_ONLY_FROM "0.0.0.0 ::/0"
+C-:
+resulted in <tt>Invalid value for '0.0.0.0 ::/0'. Does not match allowed pattern.</tt>
+
+With this werk, each IP address is matched using <tt>ipaddress.ip_network</tt> from the Python
+standard library. In particular, this allows the usage of IPv6 addresses.

@@ -4244,13 +4244,6 @@ class CEEConfigCache(ConfigCache):
         }
 
     def generic_agent_config_entries(self) -> Iterable[tuple[str, Mapping[str, Any]]]:
-        paths_for_rule_matching_to_bake_for = [
-            # Watch out: this is a layering violation in disguise!
-            # The "/wato/" is `CREFolder.root_folder().path_for_rule_matching()`.
-            # We want to bake for the root folder (for now). Clean this up!
-            "/wato/",
-        ]
-
         yield from (
             (
                 match_path,
@@ -4259,7 +4252,8 @@ class CEEConfigCache(ConfigCache):
                     for varname, ruleset in self._agent_config_rulesets()
                 },
             )
-            for match_path in paths_for_rule_matching_to_bake_for
+            for match_path, attributes in folder_attributes.items()
+            if attributes.get("bake_agent_package", False)
         )
 
     def _agent_config_rulesets(self) -> Iterable[tuple[str, Any]]:

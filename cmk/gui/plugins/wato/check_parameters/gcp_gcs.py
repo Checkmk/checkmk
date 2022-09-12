@@ -429,3 +429,27 @@ rulespec_registry.register(
         title=lambda: _("GCP Health"),
     )
 )
+
+
+def _vs_sql_replication_lag() -> ValueSpec:
+    return Dictionary(
+        title=_("Parameters for the replication lag"),
+        elements=[
+            (
+                "replication_lag",
+                Levels(title=_("Upper levels on the replication lag"), unit="second"),
+            )
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="gcp_replication_lag",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_vs_sql_replication_lag,
+        title=lambda: _("GCP/Cloud SQL replication lag"),
+        item_spec=_item_spec_sql,
+    )
+)

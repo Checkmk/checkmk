@@ -20,6 +20,7 @@ from cmk.base.plugins.agent_based.gcp_sql import (
     check_gcp_sql_disk,
     check_gcp_sql_memory,
     check_gcp_sql_network,
+    check_gcp_sql_replication,
     check_gcp_sql_status,
     check_summary,
     discover,
@@ -216,6 +217,16 @@ PLUGINS = [
             ],
         ),
         id="disk",
+    ),
+    pytest.param(
+        Plugin(
+            function=check_gcp_sql_replication,
+            metrics=["replication_lag"],
+            results=[
+                Result(state=State.OK, summary="Replication lag: 420 milliseconds"),
+            ],
+        ),
+        id="replication",
     ),
 ]
 

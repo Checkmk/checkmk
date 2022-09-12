@@ -260,3 +260,32 @@ register.check_plugin(
     discovery_function=discovery_summary,
     check_function=check_summary,
 )
+
+
+def check_gcp_sql_replication(
+    item: str,
+    params: Mapping[str, Any],
+    section_gcp_service_cloud_sql: Optional[gcp.Section],
+    section_gcp_assets: Optional[gcp.AssetSection],
+) -> CheckResult:
+    metrics = {
+        "replication_lag": gcp.MetricSpec(
+            "cloudsql.googleapis.com/database/replication/replica_lag",
+            "Replication lag",
+            render.timespan,
+        )
+    }
+    yield from gcp.check(
+        metrics, item, params, section_gcp_service_cloud_sql, ASSET_TYPE, section_gcp_assets
+    )
+
+
+register.check_plugin(
+    name="gcp_sql_replication",
+    sections=["gcp_service_cloud_sql", "gcp_assets"],
+    service_name=service_namer("replication"),
+    check_ruleset_name="gcp_replication_lag",
+    discovery_function=discover,
+    check_function=check_gcp_sql_replication,
+    check_default_parameters={"replication_lag": None},
+)

@@ -5,14 +5,13 @@
 
 # pylint: disable=redefined-outer-name
 
+import os
 from pathlib import Path
 
 import pytest
 
-import tests.testlib as testlib
-from tests.testlib.pylint_cmk import is_python_file
-
 import docker  # type: ignore[import]
+from tests import testlib
 
 
 @pytest.fixture(scope="module")
@@ -40,6 +39,14 @@ def _get_python_plugins():
         for p in Path(testlib.cmk_path(), "agents", "plugins").iterdir()
         if is_python_file(p, "python") or is_python_file(p, "python3")
     ]
+
+
+def is_python_file(path: Path, shebang_name: str) -> bool:
+    if not os.path.isfile(path) or os.path.islink(path):
+        return False
+    with path.open() as f:
+        shebang = f.readline().rstrip()
+    return shebang.startswith("#!") and shebang.endswith(shebang_name)
 
 
 @pytest.mark.parametrize("plugin_path", _get_python_plugins())

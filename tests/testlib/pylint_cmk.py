@@ -3,24 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Library for pylint checks of Checkmk
-
-import os
-from pathlib import Path
-
 from pylint.lint import PyLinter  # type: ignore[import]
 
 from tests.testlib import is_enterprise_repo
-
-
-def is_python_file(path: Path, shebang_name: str | None = None) -> bool:
-    if shebang_name is None:
-        shebang_name = "python3"
-    if not os.path.isfile(path) or os.path.islink(path):
-        return False
-    with path.open() as f:
-        shebang = f.readline().rstrip()
-    return shebang.startswith("#!") and shebang.endswith(shebang_name)
 
 
 # Is called by pylint to load this plugin

@@ -731,6 +731,12 @@ CLOUDSQL = Service(
                 per_series_aligner=Aligner.ALIGN_MAX,
             ),
         ),
+        Metric(
+            name="cloudsql.googleapis.com/database/replication/replica_lag",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MAX,
+            ),
+        ),
     ],
 )
 

@@ -9,23 +9,31 @@ from cmk.base.check_api import passwordstore_get_cmdline
 
 def check_mail_loop_arguments(params):
     """
-    >>> for a in check_mail_loop_arguments({
-    ...     'item': 'MailLoop_imap',
-    ...     'subject': 'Some subject',
-    ...     'smtp_server': 'smtp.gmx.de',
-    ...     'smtp_tls': True,
-    ...     'smtp_port': 42,
-    ...     'smtp_auth': ('me@gmx.de', ('password', 'p4ssw0rd')),
-    ...     'fetch': ('IMAP', {
-    ...       'server': 'imap.gmx.de',
-    ...       'auth': ('me@gmx.de', ('password', 'p4ssw0rd')),
-    ...       'connection': {'disable_tls': False, 'tcp_port': 123}}),
-    ...     'mail_from': 'me_from@gmx.de',
-    ...     'mail_to': 'me_to@gmx.de',
-    ...     'connect_timeout': 23,
-    ...     'duration': (93780, 183840),
-    ... }):
-    ...   print(a)
+    >>> from cmk.base.plugin_contexts import current_host
+    >>> with current_host("hurz"):
+    ...     for a in check_mail_loop_arguments(
+    ...         {
+    ...             "item": "MailLoop_imap",
+    ...             "subject": "Some subject",
+    ...             "smtp_server": "smtp.gmx.de",
+    ...             "smtp_tls": True,
+    ...             "smtp_port": 42,
+    ...             "smtp_auth": ("me@gmx.de", ("password", "p4ssw0rd")),
+    ...             "fetch": (
+    ...                 "IMAP",
+    ...                 {
+    ...                     "server": "imap.gmx.de",
+    ...                     "auth": ("me@gmx.de", ("password", "p4ssw0rd")),
+    ...                     "connection": {"disable_tls": False, "tcp_port": 123},
+    ...                 },
+    ...             ),
+    ...             "mail_from": "me_from@gmx.de",
+    ...             "mail_to": "me_to@gmx.de",
+    ...             "connect_timeout": 23,
+    ...             "duration": (93780, 183840),
+    ...         }
+    ...     ):
+    ...         print(a)
     --fetch-protocol=IMAP
     --fetch-server=imap.gmx.de
     --fetch-tls
@@ -40,7 +48,7 @@ def check_mail_loop_arguments(params):
     --smtp-password=p4ssw0rd
     --mail-from=me_from@gmx.de
     --mail-to=me_to@gmx.de
-    --status-suffix=patched_doctest_host-MailLoop_imap
+    --status-suffix=hurz-MailLoop_imap
     --warning=93780
     --critical=183840
     --subject=Some subject

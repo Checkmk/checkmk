@@ -61,6 +61,7 @@ from cmk.base.api.agent_based.inventory_classes import (
 )
 from cmk.base.checkers import Source
 from cmk.base.checkers.host_sections import HostKey, HostSections, MultiHostSections
+from cmk.base.utils import worst_service_state
 
 
 class InventoryTrees(NamedTuple):
@@ -154,9 +155,9 @@ def do_inv_check(
     if inv_result.safe_to_write:
         old_tree = _save_inventory_tree(hostname, trees.inventory)
     else:
-        old_tree, sources_state = None, 1
-        status = max(status, sources_state)
-        infotexts.append("Cannot update tree%s" % check_api_utils.state_markers[sources_state])
+        old_tree = None
+        status = worst_service_state(_inv_fail_status, status)
+        infotexts.append("Cannot update tree%s" % check_api_utils.state_markers[_inv_fail_status])
 
     _run_inventory_export_hooks(host_config, trees.inventory)
 

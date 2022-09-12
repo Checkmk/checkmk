@@ -105,6 +105,18 @@ class LegacyVarsMixin:
         # up with 1.7, once we have moved to python 3.
         return super().has_var(varname)  # type: ignore[misc]
 
+    @overload
+    def var(self, name: str) -> Optional[str]:
+        ...
+
+    @overload
+    def var(self, name: str, default: str) -> str:
+        ...
+
+    @overload
+    def var(self, name: str, default: Optional[str]) -> Optional[str]:
+        ...
+
     def var(self, name: str, default: Optional[str] = None) -> Optional[str]:
         legacy_var = self.legacy_vars.get(name, None)
         if legacy_var is not None:
@@ -158,6 +170,18 @@ class LegacyDeprecatedMixin:
                 yield name, ensure_str(  # pylint: disable= six-ensure-str-bin-call
                     values[-1]
                 ) if values else None
+
+    @overload
+    def var(self, name: str) -> Optional[str]:
+        ...
+
+    @overload
+    def var(self, name: str, default: str) -> str:
+        ...
+
+    @overload
+    def var(self, name: str, default: Optional[str]) -> Optional[str]:
+        ...
 
     def var(self, name: str, default: Optional[str] = None) -> Optional[str]:
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned

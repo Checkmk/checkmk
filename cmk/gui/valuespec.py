@@ -6208,6 +6208,12 @@ class Migrate(Transform[T]):
         )
 
 
+class MigrateNotUpdated(Migrate[T]):
+    """Marks places which are not covered by update_config, ie. places which cannot
+    be cleaned up after a new major release.
+    """
+
+
 class Transparent(Transform[T]):
     """Transparenly changes the title or the help of a wrapped ValueSpec"""
 

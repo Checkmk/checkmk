@@ -13,7 +13,7 @@ from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
     FixedValue,
-    Migrate,
+    MigrateNotUpdated,
     TextInput,
     Tuple,
     ValueSpec,
@@ -52,7 +52,7 @@ class DisableNotificationsUserAttribute(UserAttribute):
         return "personal"
 
     def valuespec(self) -> ValueSpec:
-        return Migrate(
+        return MigrateNotUpdated(
             valuespec=Dictionary(
                 title=_("Disable notifications"),
                 help=_(
@@ -102,7 +102,7 @@ class StartURLUserAttribute(UserAttribute):
         return "personal"
 
     def valuespec(self) -> ValueSpec:
-        return Migrate(
+        return MigrateNotUpdated(
             valuespec=Alternative(
                 title=_("Start URL to display in main frame"),
                 orientation="horizontal",

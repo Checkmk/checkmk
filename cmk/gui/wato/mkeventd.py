@@ -140,7 +140,7 @@ from cmk.gui.valuespec import (
     ListOf,
     ListOfStrings,
     LogLevelChoice,
-    Migrate,
+    MigrateNotUpdated,
     Optional,
     RegExp,
     rule_option_elements,
@@ -848,7 +848,7 @@ def vs_mkeventd_rule(customer=None):
                     ),
                     (
                         "merge",
-                        Migrate(
+                        MigrateNotUpdated(
                             valuespec=CascadingDropdown(
                                 title=_("Merge with open event"),
                                 help=_(

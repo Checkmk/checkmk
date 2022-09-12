@@ -45,7 +45,7 @@ from cmk.gui.valuespec import (
     IPNetwork,
     ListChoice,
     ListOfStrings,
-    Migrate,
+    MigrateNotUpdated,
     TextInput,
     Tuple,
 )
@@ -426,7 +426,7 @@ class CEESiteManagement(SiteManagement):
                     title=_("Connect directly, without Livestatus Proxy"),
                     totext="",
                 ),
-                Migrate(
+                MigrateNotUpdated(
                     valuespec=Dictionary(
                         title=_("Use Livestatus Proxy Daemon"),
                         optional_keys=["tcp"],

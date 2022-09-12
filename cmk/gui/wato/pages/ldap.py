@@ -38,7 +38,7 @@ from cmk.gui.plugins.userdb.utils import (
 )
 from cmk.gui.plugins.wato.utils import (
     make_confirm_link,
-    MigrateToIndividualOrStoredPassword,
+    MigrateNotUpdatedToIndividualOrStoredPassword,
     mode_registry,
     mode_url,
     redirect,
@@ -69,7 +69,7 @@ from cmk.gui.valuespec import (
     Integer,
     LDAPDistinguishedName,
     ListOfStrings,
-    Migrate,
+    MigrateNotUpdated,
     rule_option_elements,
     TextInput,
     Tuple,
@@ -94,7 +94,7 @@ else:
 #   '----------------------------------------------------------------------'
 
 
-class LDAPConnectionValuespec(Migrate):
+class LDAPConnectionValuespec(MigrateNotUpdated):
     def __init__(self, new, connection_id) -> None:  # type:ignore[no-untyped-def]
         self._new = new
         self._connection_id = connection_id
@@ -225,7 +225,7 @@ class LDAPConnectionValuespec(Migrate):
                             ),
                             size=63,
                         ),
-                        MigrateToIndividualOrStoredPassword(
+                        MigrateNotUpdatedToIndividualOrStoredPassword(
                             title=_("Bind password"),
                             help=_(
                                 "Specify the password to be used to bind to the LDAP directory."
@@ -506,7 +506,7 @@ class LDAPConnectionValuespec(Migrate):
             ),
             (
                 "user_id_umlauts",
-                Migrate(
+                MigrateNotUpdated(
                     valuespec=DropdownChoice(
                         title=_("Umlauts in User-IDs (deprecated)"),
                         help=_(

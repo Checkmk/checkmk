@@ -31,7 +31,7 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.valuespec import Dictionary, DropdownChoice, Migrate, ValueSpec
+from cmk.gui.valuespec import Dictionary, DropdownChoice, MigrateNotUpdated, ValueSpec
 from cmk.gui.view_store import multisite_builtin_views
 from cmk.gui.view_utils import CellSpec
 
@@ -236,7 +236,7 @@ def cmk_time_graph_params():
         ("graph_render_options", vs_graph_render_options()),
     ]
 
-    return Migrate(
+    return MigrateNotUpdated(
         valuespec=Dictionary(
             elements=elements,
             optional_keys=[],

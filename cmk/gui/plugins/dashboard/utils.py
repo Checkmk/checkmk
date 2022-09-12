@@ -65,7 +65,7 @@ from cmk.gui.valuespec import (
     DictionaryEntry,
     DropdownChoice,
     FixedValue,
-    Migrate,
+    MigrateNotUpdated,
     TextInput,
     TimerangeValue,
     ValueSpec,
@@ -728,8 +728,8 @@ class ABCFigureDashlet(Dashlet[T], abc.ABC):
         return "%s_%s" % (self.type_name(), self._dashlet_id)
 
     @classmethod
-    def vs_parameters(cls) -> Migrate:
-        return Migrate(
+    def vs_parameters(cls) -> MigrateNotUpdated:
+        return MigrateNotUpdated(
             valuespec=Dictionary(
                 title=_("Properties"),
                 render="form",

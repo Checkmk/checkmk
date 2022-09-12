@@ -90,7 +90,7 @@ from cmk.gui.valuespec import (
     LDAPDistinguishedName,
     ListChoice,
     ListOf,
-    Migrate,
+    MigrateNotUpdated,
     TextInput,
     Tuple,
 )
@@ -2431,9 +2431,9 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
             elements.append(
                 (
                     role_id,
-                    Migrate(
+                    MigrateNotUpdated(
                         valuespec=ListOf(
-                            valuespec=Migrate(
+                            valuespec=MigrateNotUpdated(
                                 valuespec=Tuple(
                                     elements=[
                                         LDAPDistinguishedName(

@@ -71,7 +71,7 @@ from cmk.gui.valuespec import (
     ListChoice,
     ListOf,
     ListOfStrings,
-    Migrate,
+    MigrateNotUpdated,
     RegExp,
     rule_option_elements,
     TextInput,
@@ -203,7 +203,7 @@ class ABCNotificationsMode(ABCEventsMode):
                             elements=[
                                 (
                                     "match_rule_id",
-                                    Migrate(
+                                    MigrateNotUpdated(
                                         valuespec=ListOf(
                                             valuespec=ID(
                                                 title=_("Match event rule"),
@@ -1482,7 +1482,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 ),
                 (
                     "bulk",
-                    Migrate(
+                    MigrateNotUpdated(
                         valuespec=CascadingDropdown(
                             title="Notification Bulking",
                             orientation="vertical",

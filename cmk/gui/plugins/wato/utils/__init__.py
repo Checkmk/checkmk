@@ -114,6 +114,7 @@ from cmk.gui.valuespec import (
     ListOfMultiple,
     ListOfStrings,
     Migrate,
+    MigrateNotUpdated,
     MonitoredHostname,
     Password,
     Percentage,
@@ -356,7 +357,7 @@ def _snmpv1_v2_credentials_element() -> ValueSpec:
 
 
 def _snmpv3_no_auth_no_priv_credentials_element() -> ValueSpec:
-    return Migrate(
+    return MigrateNotUpdated(
         valuespec=Tuple(
             title=_("Credentials for SNMPv3 without authentication and privacy (noAuthNoPriv)"),
             elements=[
@@ -530,7 +531,7 @@ def translation_elements(what: str) -> List[_Tuple[str, ValueSpec]]:
         ),
         (
             "regex",
-            Migrate(
+            MigrateNotUpdated(
                 valuespec=ListOf(
                     valuespec=Tuple(
                         orientation="horizontal",
@@ -736,6 +737,23 @@ def MigrateToIndividualOrStoredPassword(  # pylint: disable=redefined-builtin
     size: int = 25,
 ) -> Migrate:
     return Migrate(
+        valuespec=IndividualOrStoredPassword(
+            title=title,
+            help=help,
+            allow_empty=allow_empty,
+            size=size,
+        ),
+        migrate=lambda v: ("password", v) if not isinstance(v, tuple) else v,
+    )
+
+
+def MigrateNotUpdatedToIndividualOrStoredPassword(  # pylint: disable=redefined-builtin
+    title: _Optional[str] = None,
+    help: _Optional[ValueSpecHelp] = None,
+    allow_empty: bool = True,
+    size: int = 25,
+) -> MigrateNotUpdated:
+    return MigrateNotUpdated(
         valuespec=IndividualOrStoredPassword(
             title=title,
             help=help,

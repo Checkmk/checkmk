@@ -8,8 +8,8 @@ description:
  Rittal CMC-III. The state given by the system is
  taken as the state of the check as follows:
  If the device returns {lost} or {error}, the check is {CRIT}.
- If the device returns {detect}, the check is {WARN}.
- if the device return {changed} or {OK}, the check is {OK}.
+ If the device returns {detect} or {changed}, the check is {WARN}.
+ If the device returns {OK}, the check is {OK}.
  Otherwise the check is {UNKNOWN}.
 
 item:

@@ -303,9 +303,12 @@ class SorterSpec:
         return str(self.to_raw())
 
 
+# TODO: Replace with TypedViewSpec once we are ready
 ViewSpec = dict[str, Any]
+
 AllViewSpecs = dict[tuple[UserId, ViewName], ViewSpec]
 PermittedViewSpecs = dict[ViewName, ViewSpec]
+
 SorterFunction = Callable[[ColumnName, Row, Row], int]
 FilterHeader = str
 

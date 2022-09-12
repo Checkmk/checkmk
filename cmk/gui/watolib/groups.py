@@ -5,6 +5,7 @@
 
 import copy
 import re
+from collections.abc import Sequence
 from typing import Any, Dict, get_args, List, Literal, Optional, Tuple, Type, Union
 
 import cmk.utils.paths
@@ -391,7 +392,7 @@ def _find_usages_of_contact_group_in_dashboards(name: str) -> List[Tuple[str, st
     from cmk.gui.plugins.dashboard.utils import get_all_dashboards
 
     for (dashboard_owner, dashboard_name), board in get_all_dashboards().items():
-        public_value: Union[bool, Tuple[str, List[str]]] = board["public"]
+        public_value: Union[bool, Tuple[str, Sequence[str]]] = board["public"]
         if isinstance(public_value, tuple) and name in public_value[1]:
             title = "%s: %s" % (_("Dashboard of user %s") % dashboard_owner, dashboard_name)
             used_in.append(

@@ -87,7 +87,9 @@ def get_view_menu_items(include_reports: bool) -> List[TopicMenuTopic]:
     pages_to_show = [(network_topology_visual_spec["name"], network_topology_visual_spec)]
 
     visuals_to_show = [("views", e) for e in views_to_show]
-    visuals_to_show += [("dashboards", e) for e in dashboard.get_permitted_dashboards().items()]
+    visuals_to_show += [
+        ("dashboards", (k, dict(v))) for k, v in dashboard.get_permitted_dashboards().items()
+    ]
     visuals_to_show += [("pages", e) for e in pages_to_show]
     visuals_to_show += page_type_items
 

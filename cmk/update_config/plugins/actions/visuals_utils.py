@@ -13,12 +13,12 @@ from typing import Iterator
 from cmk.utils.type_defs import UserId
 
 from cmk.gui import visuals
-from cmk.gui.type_defs import Visual, VisualTypeName
+from cmk.gui.type_defs import VisualTypeName
 
 
 def update_visuals(
     visual_type: VisualTypeName,
-    all_visuals: dict[tuple[UserId, str], Visual],
+    all_visuals: dict[tuple[UserId, str], visuals.T],
 ) -> None:
     with _save_user_visuals(visual_type, all_visuals) as affected_user:
         # skip builtins, only users
@@ -28,7 +28,7 @@ def update_visuals(
 @contextmanager
 def _save_user_visuals(
     visual_type: VisualTypeName,
-    all_visuals: dict[tuple[UserId, str], Visual],
+    all_visuals: dict[tuple[UserId, str], visuals.T],
 ) -> Iterator[set[UserId]]:
     modified_user_instances: set[UserId] = set()
 

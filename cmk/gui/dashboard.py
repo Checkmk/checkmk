@@ -183,7 +183,7 @@ class VisualTypeDashboards(VisualType):
 
         for name, board in get_permitted_dashboards().items():
             yield PageMenuEntry(
-                title=board["title"],
+                title=str(board["title"]),
                 icon_name="dashboard",
                 item=make_javascript_link(
                     "cmk.popup_menu.add_to_visual('dashboards', %s)" % json.dumps(name)
@@ -1137,7 +1137,7 @@ def _dashboard_other_entries(
             continue
 
         yield PageMenuEntry(
-            title=dashboard["title"],
+            title=str(dashboard["title"]),
             icon_name=dashboard["icon"] or "dashboard",
             item=make_simple_link(
                 makeuri_contextless(
@@ -1162,7 +1162,7 @@ def _dashboard_related_entries(
             continue
         dashboard = dashboards[entry_name]
         yield PageMenuEntry(
-            title=dashboard["title"],
+            title=str(dashboard["title"]),
             icon_name=dashboard["icon"] or "unknown",
             item=make_simple_link(
                 makeuri_contextless(
@@ -1721,8 +1721,9 @@ def page_edit_dashboards() -> None:
     visuals.page_list(
         what="dashboards",
         title=_("Edit dashboards"),
-        visuals=get_all_dashboards(),
-        render_custom_buttons=_render_dashboard_buttons,
+        # Intermediate step. Will be cleaned up once all visuals are TypedDicts
+        visuals=get_all_dashboards(),  # type: ignore[arg-type]
+        render_custom_buttons=_render_dashboard_buttons,  # type: ignore[arg-type]
     )
 
 
@@ -1785,7 +1786,8 @@ def page_create_dashboard() -> None:
 def page_edit_dashboard() -> None:
     visuals.page_edit_visual(
         "dashboards",
-        get_all_dashboards(),
+        # Intermediate step. Will be cleaned up once all visuals are TypedDicts
+        get_all_dashboards(),  # type: ignore[arg-type]
         create_handler=create_dashboard,
         custom_field_handler=dashboard_fields_handler,
         info_handler=_dashboard_info_handler,
@@ -1804,14 +1806,17 @@ def _dashboard_info_handler(visual):
 
 
 def dashboard_fields_handler(dashboard: DashboardConfig) -> None:
-    _vs_dashboard().render_input("dashboard", dashboard and dashboard or None)
+    _vs_dashboard().render_input("dashboard", dict(dashboard) if dashboard else None)
 
 
 def create_dashboard(old_dashboard: DashboardConfig, dashboard: DashboardConfig) -> DashboardConfig:
     vs_dashboard = _vs_dashboard()
     board_properties = vs_dashboard.from_html_vars("dashboard")
     vs_dashboard.validate_value(board_properties, "dashboard")
-    dashboard.update(board_properties)
+    # Can hopefully be removed one day once we have improved typing in the valuespecs. Until
+    # then we'll have to trust that from_html_vars and validate_value ensure we get the right
+    # data.
+    dashboard.update(board_properties)  # type: ignore[typeddict-item]
 
     # Do not remove the dashlet configuration during general property editing
     dashboard["dashlets"] = old_dashboard.get("dashlets", [])
@@ -1915,10 +1920,29 @@ def _create_cloned_view_dashlet_spec(dashlet_id: int, view_name: str) -> ViewDas
     dashlet_spec = ViewDashletConfig(
         {
             "type": "view",
+            "datasource": "hosts",
+            "description": "",
             "position": dashlet_registry["linked_view"].initial_position(),
             "size": dashlet_registry["linked_view"].initial_size(),
+            "hidden": False,
+            "public": True,
             "show_title": True,
+            "layout": "table",
+            "browser_reload": 30,
+            "num_columns": 1,
+            "column_headers": "pergroup",
             "name": "",
+            "owner": "",
+            "hidebutton": False,
+            "group_painters": [],
+            "painters": [],
+            "sorters": [],
+            "topic": "",
+            "link_from": {},
+            "icon": None,
+            "add_context_to_title": True,
+            "sort_index": 99,
+            "is_show_more": False,
         }
     )
 

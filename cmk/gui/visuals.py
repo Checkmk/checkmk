@@ -863,8 +863,8 @@ def _visual_can_be_linked(what, visual_name, user_visuals, visual, owner):
 
 
 def _partition_visuals(
-    visuals: Dict[Tuple[UserId, str], Dict], what: str
-) -> List[Tuple[str, List[Tuple[UserId, str, Dict]]]]:
+    visuals: Dict[Tuple[UserId, VisualName], Visual], what: str
+) -> List[Tuple[str, List[Tuple[UserId, VisualName, Visual]]]]:
     keys_sorted = sorted(visuals.keys(), key=lambda x: (x[1], x[0]))
 
     my_visuals, foreign_visuals, builtin_visuals = [], [], []

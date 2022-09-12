@@ -10,6 +10,7 @@ import abc
 import copy
 import json
 import urllib.parse
+from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import partial
 from itertools import chain
@@ -53,7 +54,19 @@ from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.plugins.metrics.utils import GraphRenderOptions
 from cmk.gui.plugins.views.painters import host_state_short, service_state_short
 from cmk.gui.sites import get_alias_of_host
-from cmk.gui.type_defs import ColumnName, HTTPVariables, Row, SingleInfos, VisualContext
+from cmk.gui.type_defs import (
+    ColumnName,
+    FilterName,
+    HTTPVariables,
+    Icon,
+    LinkFromSpec,
+    PainterSpec,
+    Row,
+    SingleInfos,
+    SorterSpec,
+    TypedVisual,
+    VisualContext,
+)
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
 from cmk.gui.utils.speaklater import LazyString
@@ -74,7 +87,13 @@ from cmk.gui.valuespec import (
 from cmk.gui.view_store import get_all_views, get_permitted_views, internal_view_to_runtime_view
 
 DashboardName = str
-DashboardConfig = Dict[str, Any]
+
+
+class DashboardConfig(TypedVisual):
+    mtime: int
+    dashlets: list[DashletConfig]
+    show_title: bool
+    mandatory_context_filters: list[FilterName]
 
 
 class _DashletConfigMandatory(TypedDict):
@@ -102,11 +121,48 @@ class LinkedViewDashletConfig(ABCViewDashletConfig):
     ...
 
 
-# TODO: Inherit ViewSpec attributes once it's a TypedDict. Until then fall back to total=False
-# and define the attribute mypy complains about.
-class ViewDashletConfig(ABCViewDashletConfig, total=False):  # , ViewSpec):
+class _ViewDashletConfigMandatory(ABCViewDashletConfig):
+    # TODO: Find a way to clean up the rendundancies with ViewSpec and Visual
+    # From: Visual
+    owner: str
+    # These fields are redundant between DashletConfig and Visual
+    # name: str
+    # context: VisualContext
+    # single_infos: SingleInfos
+    # title: str | LazyString
+    add_context_to_title: bool
+    description: str | LazyString
+    topic: str
+    sort_index: int
+    is_show_more: bool
+    icon: Icon | None
+    hidden: bool
+    hidebutton: bool
+    public: bool | tuple[Literal["contact_groups"], Sequence[str]]
+    # From: ViewSpec
     datasource: str
+    layout: str  # TODO: Replace with literal? See layout_registry.get_choices()
+    group_painters: list[PainterSpec]
+    painters: list[PainterSpec]
+    browser_reload: int
+    num_columns: int
+    column_headers: Literal["off", "pergroup", "repeat"]
+    sorters: Sequence[SorterSpec]
+
+
+class ViewDashletConfig(_ViewDashletConfigMandatory, total=False):
+    # TODO: Find a way to clean up the rendundancies with ViewSpec and Visual
+    # From: Visual
+    link_from: LinkFromSpec
+    # From: ViewSpec
+    add_headers: str
+    # View editor only adds them in case they are truish. In our builtin specs these flags are also
+    # partially set in case they are falsy
+    mobile: bool
     mustsearch: bool
+    force_checkboxes: bool
+    user_sortable: bool
+    play_sounds: bool
 
 
 class ABCGraphDashletConfig(DashletConfig):
@@ -811,7 +867,9 @@ class ABCFigureDashlet(Dashlet[T], abc.ABC):
 
 def _internal_dashboard_to_runtime_dashboard(raw_dashboard: dict[str, Any]) -> DashboardConfig:
     return {
-        **raw_dashboard,
+        # Need to assume that we are right for now. We will have to introduce parsing there to do a
+        # real conversion in one of the following typing steps
+        **raw_dashboard,  # type: ignore[misc]
         "dashlets": [
             internal_view_to_runtime_view(dashlet_spec)
             if dashlet_spec["type"] == "view"
@@ -852,11 +910,11 @@ def save_all_dashboards() -> None:
     visuals.save("dashboards", get_all_dashboards())
 
 
-def get_all_dashboards() -> Dict[Tuple[UserId, DashboardName], DashboardConfig]:
+def get_all_dashboards() -> dict[tuple[UserId, DashboardName], DashboardConfig]:
     return DashboardStore.get_instance().all
 
 
-def get_permitted_dashboards() -> Dict[DashboardName, DashboardConfig]:
+def get_permitted_dashboards() -> dict[DashboardName, DashboardConfig]:
     return DashboardStore.get_instance().permitted
 
 

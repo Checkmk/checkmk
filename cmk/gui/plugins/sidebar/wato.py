@@ -345,7 +345,9 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         )
 
         visuals_to_show = [("views", e) for e in views_to_show]
-        visuals_to_show += [("dashboards", e) for e in dashboard.get_permitted_dashboards().items()]
+        visuals_to_show += [
+            ("dashboards", (k, dict(v))) for k, v in dashboard.get_permitted_dashboards().items()
+        ]
 
         topics = make_topic_menu(visuals_to_show)
         topic_choices: Choices = [(topic.title, topic.title) for topic in topics]

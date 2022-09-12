@@ -189,7 +189,7 @@ STAGES:
       ONLY_WHEN_NOT_EMPTY: CHANGED_PYLINT_RC_FILE,CHANGED_PYTHON_FILES,CHANGED_PIPFILE_LOCK,CHANGED_PYTEST_INI_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT
       DIR: 'tests'
       ENV_VARS:
-        PYLINT_ARGS: "--output-format=cmk_parseable"
+        PYLINT_ARGS: "--jobs=10 --output-format=cmk_parseable"
       COMMAND: "make test-pylint-docker &> ${RESULTS}/pylint.txt"
       TEXT_ON_SKIP: 'Neither .pylintrc nor Python files changed'
       RESULT_CHECK_TYPE: "PYLINT"

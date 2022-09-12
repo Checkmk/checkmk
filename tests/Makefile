@@ -3,7 +3,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 SHELL := /bin/bash -e
-SCRIPTS := ../scripts
+SCRIPTS := $(realpath ../scripts)
 FIND_PYTHON_FILES := $(SCRIPTS)/find-python-files
 PIPENV := $(SCRIPTS)/run-pipenv
 PYTEST := $(PIPENV) run pytest $(PYTEST_ARGS)
@@ -53,6 +53,11 @@ SHELL_FILES_REL = $(shell cd ..; grep -rl \
     --exclude="install-sh" \
     --exclude="code_examples.py" \
     '^\#!/.*sh' [^.]* 2>/dev/null)
+
+LEGACY_CHECKS := $(patsubst ../checks/%,../cmk/base/legacy_checks/%.py,$(wildcard ../checks/*))
+
+../cmk/base/legacy_checks/%.py: ../checks/% ../checks/.header-for-pylint Makefile
+	sed "s,@@ORIG-FILE@@,$(realpath $<)," ../checks/.header-for-pylint $< > $@
 
 # Due to https://github.com/pypa/pypi-support/issues/978, we need to disable Plugin tests for py2.6
 # until we have a feasible solution or we drop the support for 2.6 completly.
@@ -312,10 +317,8 @@ test-code-quality: test-license-headers test-pipfile test-file-content test-werk
 test-code-quality-docker:
 	../scripts/run-in-docker.sh make --quiet test-code-quality
 
-test-mypy: prepare-protobuf-files
-	PYTHON_FILES=$$($(FIND_PYTHON_FILES) | \
-	`: filter out plugins, they are not real modules` \
-	grep -v $$(realpath '../checks') | \
+test-mypy: prepare-protobuf-files $(LEGACY_CHECKS)
+	PYTHON_FILES=$$($(FIND_PYTHON_FILES) --omit-legacy-checks | \
 	`: files are only needed for pylint to understand the module hierarchy` \
 	grep -v $$(realpath -m '../enterprise/cmk/__init__.py') | \
 	grep -v $$(realpath -m '../enterprise/cmk/base/__init__.py') | \
@@ -336,8 +339,8 @@ test-packaging:
 test-pipenv-deps:
 	$(PIPENV) check
 
-test-pylint: prepare-protobuf-files
-	$(PYTEST) -T pylint pylint
+test-pylint: prepare-protobuf-files $(LEGACY_CHECKS)
+	cd ..; $(PIPENV) run pylint --jobs=6 $(PYLINT_ARGS) $$($(FIND_PYTHON_FILES) --omit-legacy-checks)
 
 test-pylint-docker:
 	../scripts/run-in-docker.sh make --quiet test-pylint
@@ -359,7 +362,7 @@ test-cycles:
 test-cycles-docker:
 	../scripts/run-in-docker.sh make --quiet test-cycles
 
-test-unit: prepare-protobuf-files
+test-unit: prepare-protobuf-files $(LEGACY_CHECKS)
 	$(PYTEST) \
 		$(PYTEST_ADDITIONAL_UNIT_TEST_OPTS) \
 		$(PYTEST_UNIT_TEST_OPTS)
@@ -367,7 +370,7 @@ test-unit: prepare-protobuf-files
 test-unit-docker:
 	../scripts/run-in-docker.sh make --quiet test-unit
 
-test-unit-resilience: prepare-protobuf-files
+test-unit-resilience: prepare-protobuf-files $(LEGACY_CHECKS)
 	$(PYTEST) \
 		--count=2 \
 		--random-order-bucket=global \
@@ -381,7 +384,7 @@ test-unit-resilience-docker:
 test-agent-plugin-docker:
 	../scripts/run-in-docker.sh make $(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker)
 
-test-unit-coverage-html: prepare-protobuf-files
+test-unit-coverage-html: prepare-protobuf-files $(LEGACY_CHECKS)
 	$(PYTEST) \
 		--cov=cmk \
 		--cov-report=html \

@@ -815,14 +815,9 @@ class RowTableLivestatus(RowTable):
             dynamic_columns[index] = dyn_col
             columns += dyn_col
 
-        columns = list(set(columns))
-
         datasource = view.datasource
-        merge_column = datasource.merge_by
-        if merge_column:
-            # Prevent merge column from being duplicated in the query. It needs
-            # to be at first position, see _merge_data()
-            columns = [merge_column] + [c for c in columns if c != merge_column]
+        # Prevent merge column from being duplicated in the query
+        columns = list(set(columns + ([datasource.merge_by] if datasource.merge_by else [])))
 
         # Most layouts need current state of object in order to
         # choose background color - even if no painter for state
@@ -875,8 +870,8 @@ class RowTableLivestatus(RowTable):
             datasource.auth_domain,
         )
 
-        if datasource.merge_by:
-            data = _merge_data(data, columns)
+        if merge_column := datasource.merge_by:
+            data = _merge_data(data, columns, merge_column)
 
         # convert lists-rows into dictionaries.
         # performance, but makes live much easier later.
@@ -1638,7 +1633,9 @@ def get_perfdata_nth_value(row: Row, n: int, remove_unit: bool = False) -> str:
         return str(e)
 
 
-def _merge_data(data: List[LivestatusRow], columns: List[ColumnName]) -> List[LivestatusRow]:
+def _merge_data(
+    data: List[LivestatusRow], columns: List[ColumnName], merge_column: ColumnName
+) -> List[LivestatusRow]:
     """Merge all data rows with different sites but the same value in merge_column
 
     We require that all column names are prefixed with the tablename. The column with the merge key
@@ -1670,8 +1667,9 @@ def _merge_data(data: List[LivestatusRow], columns: List[ColumnName]) -> List[Li
 
         mergefuncs.append(mergefunc)
 
+    merge_column_index = columns.index(merge_column) + 1  # first entry in row is the site
     for row in data:
-        mergekey = row[1]
+        mergekey = row[merge_column_index]
         if mergekey in merged:
             merged[mergekey] = cast(
                 LivestatusRow, [f(a, b) for f, a, b in zip(mergefuncs, merged[mergekey], row)]

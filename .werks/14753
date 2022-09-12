@@ -1,0 +1,14 @@
+Title: Fix possible TypeError on views
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1662970535
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p12
+
+If you used views like "Host groups" with column "Hosts colored according to
+state" and without column "Host alias" an error like "TypeError: unhashable
+type: 'list'" occurred.

@@ -316,10 +316,6 @@ class GroupSpec(TypedDict):
     min_items: int
 
 
-# Configuration related
-ConfigDomainName = str
-
-
 class SetOnceDict(dict):
     """A subclass of `dict` on which every key can only ever be set once.
 

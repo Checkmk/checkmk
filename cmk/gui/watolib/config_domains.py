@@ -36,8 +36,8 @@ from cmk.gui.plugins.watolib.utils import (
     SerializedSettings,
 )
 from cmk.gui.site_config import is_wato_slave_site
-from cmk.gui.type_defs import ConfigDomainName
 from cmk.gui.watolib.audit_log import log_audit
+from cmk.gui.watolib.config_domain_name import ConfigDomainName
 from cmk.gui.watolib.utils import liveproxyd_config_dir, multisite_dir, wato_root_dir
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
@@ -58,7 +58,7 @@ class ConfigDomainCoreSettings:
 class ConfigDomainCore(ABCConfigDomain):
     @classmethod
     def ident(cls) -> ConfigDomainName:
-        return "check_mk"
+        return ConfigDomainName.CORE
 
     def config_dir(self):
         return wato_root_dir()
@@ -103,7 +103,7 @@ class ConfigDomainGUI(ABCConfigDomain):
 
     @classmethod
     def ident(cls) -> ConfigDomainName:
-        return "multisite"
+        return ConfigDomainName.GUI
 
     def config_dir(self):
         return multisite_dir()
@@ -126,7 +126,7 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
 
     @classmethod
     def ident(cls) -> ConfigDomainName:
-        return "liveproxyd"
+        return ConfigDomainName.LIVEPROXY
 
     @classmethod
     def enabled(cls):
@@ -201,7 +201,7 @@ class ConfigDomainEventConsole(ABCConfigDomain):
 
     @classmethod
     def ident(cls) -> ConfigDomainName:
-        return "ec"
+        return ConfigDomainName.EVENT_CONSOLE
 
     @classmethod
     def enabled(cls):
@@ -240,7 +240,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
 
     @classmethod
     def ident(cls) -> ConfigDomainName:
-        return "ca-certificates"
+        return ConfigDomainName.CA_CERTIFICATE
 
     def config_dir(self):
         return multisite_dir()
@@ -365,7 +365,7 @@ class ConfigDomainOMD(ABCConfigDomain):
 
     @classmethod
     def ident(cls) -> ConfigDomainName:
-        return "omd"
+        return ConfigDomainName.OMD
 
     def config_dir(self):
         return self.omd_config_dir

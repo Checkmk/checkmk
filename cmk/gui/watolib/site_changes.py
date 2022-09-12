@@ -3,10 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from contextlib import suppress
 from pathlib import Path
 from typing import Any, Dict
 
 from cmk.gui.watolib.appendstore import ABCAppendStore
+from cmk.gui.watolib.config_domain_name import ConfigDomainName
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.paths import wato_var_dir
 
@@ -22,8 +24,18 @@ class SiteChanges(ABCAppendStore[ChangeSpec]):
 
     @staticmethod
     def _serialize(entry: ChangeSpec) -> object:
+        def serialize_domain_name(domain_name: ConfigDomainName | str) -> str:
+            if isinstance(domain_name, ConfigDomainName):
+                return domain_name.value
+            return domain_name
+
         raw = entry.copy()
         raw["object"] = raw["object"].serialize() if raw["object"] else None
+        raw["domains"] = [serialize_domain_name(domains) for domains in raw["domains"]]
+        with suppress(KeyError):
+            raw["domain_settings"] = {
+                serialize_domain_name(k): v for k, v in raw["domain_settings"].items()
+            }
         return raw
 
     @staticmethod
@@ -41,4 +53,9 @@ class SiteChanges(ABCAppendStore[ChangeSpec]):
             raw["object"] = ObjectRef(ObjectRefType(type_name), ident)
         else:
             raw["object"] = ObjectRef.deserialize(raw["object"]) if raw["object"] else None
+        raw["domains"] = [ConfigDomainName(domain) for domain in raw["domains"]]
+        with suppress(KeyError):
+            raw["domain_settings"] = {
+                ConfigDomainName(k): v for k, v in raw["domain_settings"].items()
+            }
         return raw

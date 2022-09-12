@@ -27,7 +27,6 @@ from cmk.gui.plugins.watolib.utils import (
     SerializedSettings,
     wato_fileheader,
 )
-from cmk.gui.type_defs import ConfigDomainName
 from cmk.gui.valuespec import (
     Age,
     Checkbox,
@@ -41,6 +40,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.watolib.activate_changes import add_replication_paths
+from cmk.gui.watolib.config_domain_name import ConfigDomainName
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.sites import LivestatusViaTCP
 
@@ -197,7 +197,7 @@ class ConfigDomainDiskspace(ABCConfigDomain):
 
     @classmethod
     def ident(cls) -> ConfigDomainName:
-        return "diskspace"
+        return ConfigDomainName.DISKSPACE
 
     def activate(self, settings: _Optional[SerializedSettings] = None) -> ConfigurationWarnings:
         return []
@@ -391,7 +391,7 @@ class ConfigDomainApache(ABCConfigDomain):
 
     @classmethod
     def ident(cls) -> ConfigDomainName:
-        return "apache"
+        return ConfigDomainName.APACHE
 
     def config_dir(self):
         return cmk.utils.paths.default_config_dir + "/apache.d/wato/"
@@ -515,7 +515,7 @@ class ConfigDomainRRDCached(ABCConfigDomain):
 
     @classmethod
     def ident(cls) -> ConfigDomainName:
-        return "rrdcached"
+        return ConfigDomainName.RRD_CACHED
 
     def config_dir(self):
         return cmk.utils.paths.default_config_dir + "/rrdcached.d/wato/"

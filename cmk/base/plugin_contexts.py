@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterator
+
 # NOTE: This module is for dependency-breaking purposes only, and its contents
 # should probably moved somewhere else when there are no import cycles anymore.
 # But at the current state of affairs we have no choice, otherwise an
@@ -21,7 +23,7 @@ _service_description: Optional[str] = None
 
 
 @contextmanager
-def current_host(host_name_: HostName):  # type:ignore[no-untyped-def]
+def current_host(host_name_: HostName) -> Iterator[None]:
     """Make a bit of context information globally available
 
     So that functions called by checks know this context.
@@ -38,9 +40,7 @@ def current_host(host_name_: HostName):  # type:ignore[no-untyped-def]
 
 
 @contextmanager
-def current_service(  # type:ignore[no-untyped-def]
-    plugin_name: CheckPluginName, description: ServiceName
-):
+def current_service(plugin_name: CheckPluginName, description: ServiceName) -> Iterator[None]:
     """Make a bit of context information globally available
 
     So that functions called by checks know this context.

@@ -1089,12 +1089,12 @@ def _precompile_hostchecks(config_path: VersionedConfigPath) -> None:
             sys.exit(5)
 
 
-def _dump_precompiled_hostcheck(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branches
+def _dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
     config_cache: ConfigCache,
     config_path: VersionedConfigPath,
     hostname: HostName,
     *,
-    verify_site_python=True,
+    verify_site_python: bool = True,
 ) -> Optional[str]:
     host_config = config_cache.get_host_config(hostname)
 

@@ -824,7 +824,7 @@ class PackedConfigStore:
         return cls(cls.make_packed_config_store_path(config_path))
 
     @classmethod
-    def make_packed_config_store_path(cls, config_path: ConfigPath):  # type:ignore[no-untyped-def]
+    def make_packed_config_store_path(cls, config_path: ConfigPath) -> Path:
         return Path(config_path) / "precompiled_check_config.mk"
 
     def write(self, helper_config: Mapping[str, Any]) -> None:
@@ -1176,7 +1176,7 @@ def _get_service_description_template_and_item(plugin: CheckPlugin, item: Item) 
     return descr_format, item if preserve_item else None
 
 
-def _format_item_with_template(template: str, item: Item):  # type:ignore[no-untyped-def]
+def _format_item_with_template(template: str, item: Item) -> str:
     """
     >>> _format_item_with_template("Foo", None)
     'Foo'
@@ -1935,11 +1935,11 @@ def _precompiled_plugin_path(path: str) -> str:
     )
 
 
-def _set_check_variable_defaults(  # type:ignore[no-untyped-def]
+def _set_check_variable_defaults(
     variables: Dict[str, Any],
     context_idents: List[str],
     skip_names: Optional[Set[str]] = None,
-):
+) -> None:
     """Save check variables for e.g. after config loading that the config can
     be added to the check contexts."""
     for varname, value in variables.items():

@@ -6,7 +6,9 @@
 
 Some of these are exposed in the API, some are not.
 """
+
 import pprint
+from collections.abc import Iterator
 from typing import (
     Any,
     Callable,
@@ -40,7 +42,7 @@ class PluginSuppliedLabel(
     code from internal representations.
     """
 
-    def __init__(self, name, value) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, name: str, value: str) -> None:
         super().__init__()
         if not isinstance(name, str):
             raise TypeError(f"Invalid label name given: Expected string (got {name!r})")
@@ -65,19 +67,16 @@ class HostLabel(PluginSuppliedLabel):
 class Parameters(ParametersTypeAlias):
     """Parameter objects are used to pass parameters to plugin functions"""
 
-    def __init__(self, data) -> None:  # type:ignore[no-untyped-def]
-        if not isinstance(data, dict):
-            self._data = data  # error handling will try to repr(self).
-            raise TypeError("Parameters expected dict, got %r" % (data,))
+    def __init__(self, data: ParametersTypeAlias) -> None:
         self._data = dict(data)
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> Any:
         return self._data[key]
 
     def __len__(self) -> int:
         return len(self._data)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         return iter(self._data)
 
     def __repr__(self) -> str:
@@ -91,7 +90,7 @@ class OIDSpecTuple(NamedTuple):
     save_to_cache: bool
 
     # we create a deepcopy in our unit tests, so support it.
-    def __deepcopy__(self, _memo) -> "OIDSpecTuple":  # type:ignore[no-untyped-def]
+    def __deepcopy__(self, _memo: object) -> "OIDSpecTuple":
         return self
 
 

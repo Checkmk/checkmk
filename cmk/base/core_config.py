@@ -428,7 +428,7 @@ def _verify_non_deprecated_checkgroups() -> None:
             )
 
 
-def _verify_non_duplicate_hosts(duplicates) -> None:  # type:ignore[no-untyped-def]
+def _verify_non_duplicate_hosts(duplicates: Iterable[HostName]) -> None:
     if duplicates:
         warning(
             "The following host names have duplicates: %s. "

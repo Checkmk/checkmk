@@ -460,8 +460,8 @@ class IgnoreResults:
     def __str__(self) -> str:
         return self._value if isinstance(self._value, str) else repr(self._value)
 
-    def __eq__(self, other) -> bool:  # type:ignore[no-untyped-def]
-        return other.__class__ == self.__class__ and self._value == other._value
+    def __eq__(self, other: object) -> bool:
+        return isinstance(other, IgnoreResults) and self._value == other._value
 
 
 CheckResult = Iterable[Union[IgnoreResults, Metric, Result]]

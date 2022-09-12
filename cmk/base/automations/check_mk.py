@@ -14,6 +14,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+from collections.abc import Iterable, Mapping
 from contextlib import redirect_stderr, redirect_stdout
 from itertools import islice
 from pathlib import Path
@@ -81,6 +82,7 @@ import cmk.base.notify as notify
 import cmk.base.parent_scan
 import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.sources as sources
+from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.autochecks import AutocheckEntry, AutocheckServiceWithNodes
 from cmk.base.automations import Automation, automations, MKAutomationError
 from cmk.base.config import ConfigCache, HostConfig
@@ -877,7 +879,7 @@ class ABCDeleteHosts:
             self._delete_host_files(HostName(hostname_str))
 
     @abc.abstractmethod
-    def _single_file_paths(self, hostname: HostName):  # type:ignore[no-untyped-def]
+    def _single_file_paths(self, hostname: HostName) -> Iterable[str]:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -934,7 +936,7 @@ class AutomationDeleteHosts(ABCDeleteHosts, Automation):
         self._execute(args)
         return automation_results.DeleteHostsResult()
 
-    def _single_file_paths(self, hostname: HostName):  # type:ignore[no-untyped-def]
+    def _single_file_paths(self, hostname: HostName) -> list[str]:
         return [
             "%s/%s" % (precompiled_hostchecks_dir, hostname),
             "%s/%s.py" % (precompiled_hostchecks_dir, hostname),
@@ -975,7 +977,7 @@ class AutomationDeleteHostsKnownRemote(ABCDeleteHosts, Automation):
         self._execute(args)
         return automation_results.DeleteHostsKnownRemoteResult()
 
-    def _single_file_paths(self, hostname: HostName):  # type:ignore[no-untyped-def]
+    def _single_file_paths(self, hostname: HostName) -> list[str]:
         return [
             "%s/%s" % (precompiled_hostchecks_dir, hostname),
             "%s/%s.py" % (precompiled_hostchecks_dir, hostname),
@@ -1162,7 +1164,7 @@ class AutomationGetCheckInformation(Automation):
         return automation_results.GetCheckInformationResult(plugin_infos)
 
     @staticmethod
-    def _get_title(manuals, plugin) -> str:  # type:ignore[no-untyped-def]
+    def _get_title(manuals: Mapping[str, str], plugin: CheckPlugin) -> str:
         manfile = manuals.get(str(plugin.name))
         if manfile:
             try:

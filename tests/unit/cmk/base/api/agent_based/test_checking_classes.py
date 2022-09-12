@@ -17,20 +17,6 @@ from cmk.base.api.agent_based.checking_classes import (
 from cmk.base.api.agent_based.type_defs import Parameters
 
 
-@pytest.mark.parametrize(
-    "data",
-    [
-        None,
-        (),
-        [],
-        "",
-    ],
-)
-def test_paramters_invalid(data) -> None:  # type:ignore[no-untyped-def]
-    with pytest.raises(TypeError, match="expected dict"):
-        _ = Parameters(data)
-
-
 def test_parameters_features() -> None:
     par0 = Parameters({})
     par1 = Parameters({"olaf": "schneemann"})

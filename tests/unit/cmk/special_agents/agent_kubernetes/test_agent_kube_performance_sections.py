@@ -4,18 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Sequence
 
-from cmk.special_agents.agent_kube import (
+from cmk.special_agents.utils_kubernetes.common import lookup_name
+from cmk.special_agents.utils_kubernetes.performance import (
+    _group_container_components,
+    _group_containers_by_pods,
+    _group_metrics_by_container,
+    _parse_containers_metadata,
+    _parse_performance_metrics,
+    _pod_lookup_from_metric,
     ContainerName,
-    group_container_components,
-    group_containers_by_pods,
-    group_metrics_by_container,
-    lookup_name,
     MetricName,
-    parse_containers_metadata,
-    parse_performance_metrics,
     PerformanceContainer,
     PerformanceMetric,
-    pod_lookup_from_metric,
 )
 from cmk.special_agents.utils_kubernetes.schemata import api
 
@@ -61,10 +61,10 @@ def test_group_metrics_by_containers() -> None:
             "namespace": "default",
         },
     ]
-    performance_metrics = parse_performance_metrics(cluster_resp)
-    containers_metadata = parse_containers_metadata(cluster_resp, pod_lookup_from_metric)
-    containers_metrics = group_metrics_by_container(performance_metrics)
-    containers = list(group_container_components(containers_metadata, containers_metrics))
+    performance_metrics = _parse_performance_metrics(cluster_resp)
+    containers_metadata = _parse_containers_metadata(cluster_resp, _pod_lookup_from_metric)
+    containers_metrics = _group_metrics_by_container(performance_metrics)
+    containers = list(_group_container_components(containers_metadata, containers_metrics))
     assert len(containers) == 1
     assert isinstance(containers[0], PerformanceContainer)
     assert len(containers[0].metrics) == 2
@@ -85,7 +85,7 @@ def test_containers_by_pods() -> None:
         for pod in pod_names
         for i in range(container_per_pod_count)
     )
-    pods = group_containers_by_pods(containers)
+    pods = _group_containers_by_pods(containers)
     assert len(pods) == len(pod_names)
     assert all(lookup_name(namespace, pod_name) in pods for pod_name in pod_names)
     assert all(len(pod.containers) == container_per_pod_count for pod in pods.values())

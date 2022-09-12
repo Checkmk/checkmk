@@ -7,12 +7,12 @@ from typing import Sequence
 
 from tests.unit.cmk.special_agents.agent_kube.factory import PerformancePodFactory
 
-from cmk.special_agents.agent_kube import (
+from cmk.special_agents.utils_kubernetes.performance import (
+    _determine_rate_metrics,
+    _kube_object_performance_sections,
     ContainerMetricsStore,
     ContainerName,
     CounterMetric,
-    determine_rate_metrics,
-    kube_object_performance_sections,
     MetricName,
 )
 from cmk.special_agents.utils_kubernetes.schemata.section import PerformanceUsage
@@ -41,7 +41,7 @@ def test_determine_rate_metrics() -> None:
         container_name=ContainerName("container"),
         metrics=[counter_metric(metric_name=metric_name, value=1, timestamp=0)],
     )
-    containers_rate_metrics = determine_rate_metrics(
+    containers_rate_metrics = _determine_rate_metrics(
         {current_containers.name: current_containers}, {old_containers.name: old_containers}
     )
     assert len(containers_rate_metrics) == 1
@@ -61,7 +61,7 @@ def test_determine_rate_metrics_for_containers_with_same_timestamp() -> None:
         metrics=[counter_metric(metric_name=metric_name, value=1, timestamp=timestamp)],
     )
 
-    containers_rate_metrics = determine_rate_metrics(
+    containers_rate_metrics = _determine_rate_metrics(
         {current_containers.name: current_containers}, {old_containers.name: old_containers}
     )
     assert len(containers_rate_metrics) == 0
@@ -73,7 +73,7 @@ def test_kube_object_performance_sections() -> None:
         PerformancePodFactory.build(),
     ]
 
-    performance_sections = kube_object_performance_sections(performance_pods)
+    performance_sections = _kube_object_performance_sections(performance_pods)
 
     assert [section[0] for section in performance_sections] == [
         "kube_performance_memory_v1",

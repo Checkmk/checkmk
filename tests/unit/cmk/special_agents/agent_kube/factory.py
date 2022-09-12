@@ -8,6 +8,7 @@ from typing import Iterator, Sequence
 from pydantic_factories import ModelFactory, Use
 
 from cmk.special_agents import agent_kube as agent
+from cmk.special_agents.utils_kubernetes import performance
 from cmk.special_agents.utils_kubernetes.schemata import api
 
 
@@ -150,7 +151,7 @@ class APIResourceQuotaFactory(ModelFactory):
 
 
 class PerformancePodFactory(ModelFactory):
-    __model__ = agent.PerformancePod
+    __model__ = performance.PerformancePod
 
 
 # Node related Factories

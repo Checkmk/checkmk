@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping, Sequence
+from typing import NamedTuple
 
 import pytest
 
@@ -12,21 +13,33 @@ from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 
+
+class ScaleioVolume(NamedTuple):
+    volume_id: str
+    name: str
+    size: float
+    size_unit: str
+    read_ios: Sequence[str]
+    write_ios: Sequence[str]
+
+
 SECTION = {
-    "c07a5f6c00000001": {
-        "ID": ["c07a5f6c00000001"],
-        "NAME": ["CF1SIOVCD001"],
-        "SIZE": ["2.0", "TB", "(2048", "GB)"],
-        "USER_DATA_READ_BWC": ["4", "IOPS", "7.0", "KB", "(7168", "Bytes)", "per-second"],
-        "USER_DATA_WRITE_BWC": ["10", "IOPS", "31.0", "KB", "(31744", "Bytes)", "per-second"],
-    },
-    "c07a867c00000002": {
-        "ID": ["c07a867c00000002"],
-        "NAME": ["CF1SIOVCD002"],
-        "SIZE": ["5.0", "TB", "(5120", "GB)"],
-        "USER_DATA_READ_BWC": ["7", "IOPS", "43.0", "KB", "(44032", "Bytes)", "per-second"],
-        "USER_DATA_WRITE_BWC": ["28", "IOPS", "106.0", "KB", "(108544", "Bytes)", "per-second"],
-    },
+    "c07a5f6c00000001": ScaleioVolume(
+        "c07a5f6c00000001",
+        "CF1SIOVCD001",
+        2.0,
+        "TB",
+        ["4", "IOPS", "7.0", "KB", "(7168", "Bytes)", "per-second"],
+        ["10", "IOPS", "31.0", "KB", "(31744", "Bytes)", "per-second"],
+    ),
+    "c07a867c00000002": ScaleioVolume(
+        "c07a867c00000002",
+        "CF1SIOVCD002",
+        5.0,
+        "TB",
+        ["7", "IOPS", "43.0", "KB", "(44032", "Bytes)", "per-second"],
+        ["28", "IOPS", "106.0", "KB", "(108544", "Bytes)", "per-second"],
+    ),
 }
 
 ITEM = "c07a5f6c00000001"

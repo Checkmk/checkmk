@@ -6,14 +6,9 @@
 from pathlib import Path
 from typing import Optional
 
-# TODO: Import errors from passlib are suppressed right now since now
-# stub files for mypy are not available.
-from passlib.context import CryptContext  # type: ignore[import]
-from passlib.exc import PasswordTruncateError  # type: ignore[import]
-from passlib.hash import bcrypt  # type: ignore[import]
-
 import cmk.utils.paths
 import cmk.utils.store as store
+from cmk.utils.crypto import password_hashing
 from cmk.utils.type_defs import UserId
 
 from cmk.gui.exceptions import MKUserError
@@ -24,19 +19,6 @@ from cmk.gui.plugins.userdb.utils import (
     UserConnector,
 )
 from cmk.gui.type_defs import UserSpec
-
-crypt_context = CryptContext(
-    schemes=[
-        "bcrypt",
-        # Kept for compatibility with Checkmk < 2.1
-        "sha256_crypt",
-        # Kept for compatibility with Checkmk < 1.6
-        # htpasswd has still md5 as default, also the docs include the "-m" param
-        "md5_crypt",
-        "apr_md5_crypt",
-        "des_crypt",
-    ]
-)
 
 
 class Htpasswd:
@@ -87,32 +69,20 @@ class Htpasswd:
 # - https://httpd.apache.org/docs/2.4/misc/password_encryptions.html
 # - https://passlib.readthedocs.io/en/stable/lib/passlib.apache.html
 #
-# NOTE: The time for hashing is *exponential* in the number of rounds, so this
-# can get *very* slow! On a laptop with a i9-9880H CPU, the runtime is roughly
-# 43 microseconds * 2**rounds, so for 12 rounds this takes about 0.176s.
-# Nevertheless, the rounds a.k.a. workfactor should be more than 10 for security
-# reasons. It defaults to 12, but let's be explicit.
 def hash_password(password: str, *, rounds: Optional[int] = None) -> str:
+    """Hash a password
+
+    Invalid inputs raise MKUserError.
+    """
     try:
-        return bcrypt.using(rounds=12 if rounds is None else rounds, truncate_error=True).hash(
-            password
-        )
-    except PasswordTruncateError:
+        return password_hashing.hash_password(password, rounds=rounds)
+    except password_hashing.PasswordTooLongError:
         raise MKUserError(
             None, "Passwords over 72 bytes would be truncated and are therefore not allowed!"
         )
-
-
-# NOTE: The same warning regarding runtime is applicable here, the runtime for
-# verification is roughly the same as for the hashing above.
-def check_password(password: str, pwhash: str) -> bool:
-    try:
-        return crypt_context.verify(password, pwhash)
     except ValueError:
-        # ValueError("hash could not be identified")
-        # Is raised in case of locked users because we prefix the hashes with
-        # a "!" sign in this situation.
-        return False
+        # either password contained a null byte or rounds was < 4.
+        raise MKUserError(None, "Password could not be hashed.")
 
 
 @user_connector_registry.register
@@ -153,7 +123,7 @@ class HtpasswdUserConnector(UserConnector):
         return Path(cmk.utils.paths.var_dir, "web", str(user_id), "automation.secret").is_file()
 
     def _password_valid(self, pwhash: str, password: str) -> bool:
-        return check_password(password, pwhash)
+        return password_hashing.check_password(password, pwhash)
 
     def save_users(self, users: dict[UserId, UserSpec]) -> None:
         # Apache htpasswd. We only store passwords here. During

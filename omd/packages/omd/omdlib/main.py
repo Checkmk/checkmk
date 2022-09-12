@@ -59,7 +59,6 @@ from typing import (
 )
 
 import psutil  # type: ignore[import]
-from passlib.hash import sha256_crypt  # type: ignore[import]
 
 import omdlib
 import omdlib.backup
@@ -125,6 +124,7 @@ from omdlib.version_info import VersionInfo
 import cmk.utils.log
 import cmk.utils.tty as tty
 from cmk.utils.certs import cert_dir, root_cert_path, RootCA
+from cmk.utils.crypto.password_hashing import sha256_crypt
 from cmk.utils.exceptions import MKTerminate
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import mkbackup_lock_dir
@@ -277,7 +277,7 @@ def calculate_admin_password(options: CommandOptions) -> str:
 
 def set_admin_password(site: SiteContext, pw: str) -> None:
     with open("%s/etc/htpasswd" % site.dir, "w") as f:
-        f.write("cmkadmin:%s\n" % hash_password(pw))
+        f.write("cmkadmin:%s\n" % sha256_crypt(pw))
 
 
 def create_skeleton_files(site: SiteContext, directory: str) -> None:
@@ -4411,10 +4411,6 @@ def exec_other_omd(site: SiteContext, version: str, command: str) -> NoReturn:
 
 def random_password() -> str:
     return "".join(random.choice(string.ascii_letters + string.digits) for i in range(8))
-
-
-def hash_password(password: str) -> str:
-    return sha256_crypt.hash(password)
 
 
 def ensure_mkbackup_lock_dir_rights() -> None:

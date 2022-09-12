@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
-from passlib.hash import bcrypt  # type: ignore[import]
 
+from cmk.utils.crypto import password_hashing
 from cmk.utils.type_defs import UserId
 
 from cmk.gui.exceptions import MKUserError
@@ -84,7 +84,7 @@ def test_hash_password(password: str) -> None:
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=DeprecationWarning)
         hashed_pw = htpasswd.hash_password(password)
-    assert bcrypt.verify(password, hashed_pw)
+    assert password_hashing.check_password(password, hashed_pw)
 
 
 def test_truncation_error() -> None:

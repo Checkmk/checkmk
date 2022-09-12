@@ -18,6 +18,7 @@ from tests.testlib import is_managed_repo
 
 import cmk.utils.paths
 import cmk.utils.version
+from cmk.utils.crypto.password_hashing import check_password
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.plugins.userdb.utils as utils
@@ -755,7 +756,7 @@ def test_make_two_factor_backup_codes(user_id: UserId) -> None:
     codes = userdb.make_two_factor_backup_codes(rounds=5)
     assert len(codes) == 10
     for password, pwhashed in codes:
-        assert htpasswd.check_password(password, pwhashed)
+        assert check_password(password, pwhashed)
 
 
 def test_is_two_factor_backup_code_valid_no_codes(user_id: UserId) -> None:

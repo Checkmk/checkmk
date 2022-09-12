@@ -36,6 +36,7 @@ from six import ensure_str
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils.crypto.password_hashing import check_password, hash_password
 from cmk.utils.type_defs import ContactgroupName, UserId
 
 import cmk.gui.background_job as background_job
@@ -69,7 +70,7 @@ from cmk.gui.plugins.userdb.utils import (
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.type_defs import SessionInfo, TwoFactorCredentials, Users, UserSpec
 from cmk.gui.userdb import user_attributes
-from cmk.gui.userdb.htpasswd import check_password, hash_password, Htpasswd
+from cmk.gui.userdb.htpasswd import Htpasswd
 from cmk.gui.userdb.ldap_connector import MKLDAPException
 from cmk.gui.utils.roles import roles_of_user
 from cmk.gui.utils.urls import makeuri_contextless

@@ -5,9 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=protected-access
-from typing import List, Union
+from typing import List, Optional, Union
 
 import pytest
+
+from tests.testlib.base import Scenario  # type: ignore[import]
 
 import cmk.utils.debug
 from cmk.utils.structured_data import RetentionIntervals, StructuredDataNode
@@ -1408,3 +1410,52 @@ def test_updater_merge_tables_outdated(
         assert not result.reason
 
     assert inv_node.table.retentions == expected_retentions
+
+
+@pytest.mark.parametrize(
+    "failed_state, expected",
+    [
+        (None, 1),
+        (0, 0),
+        (1, 1),
+        (2, 2),
+        (3, 3),
+    ],
+)
+def test_do_inv_check(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    failed_state: Optional[int],
+    expected: int,
+):
+    hostname = "my-host"
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.apply(monkeypatch)
+
+    monkeypatch.setattr(
+        inventory,
+        "_inventorize_host",
+        lambda host_config, selected_sections, run_plugin_names, retentions_tracker: inventory.ActiveInventoryResult(
+            trees=inventory.InventoryTrees(
+                inventory=StructuredDataNode(),
+                status_data=StructuredDataNode(),
+            ),
+            source_results=[],
+            parsing_errors=[],
+            processing_failed=True,
+        ),
+    )
+
+    monkeypatch.setattr(
+        inventory,
+        "_run_inventory_export_hooks",
+        lambda h, i: None,
+    )
+
+    assert expected == inventory.active_check_inventory(
+        hostname, {} if failed_state is None else {"inv-fail-status": failed_state}
+    )
+
+    cap_out_err = capsys.readouterr()
+    assert "Cannot update tree" in cap_out_err.out

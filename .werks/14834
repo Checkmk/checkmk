@@ -1,0 +1,14 @@
+Title: HW/SW Inventory: Use status for failed inventory if "Cannot update tree"
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1662980135
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p14
+
+The configured status of {{State when inventory fails}} in the ruleset
+{{Do hardware/software inventory}} did not apply if the inventory could not be
+updated with {{Cannot update tree}}. This has been fixed now.

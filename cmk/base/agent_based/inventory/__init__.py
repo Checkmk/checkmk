@@ -30,7 +30,6 @@ from cmk.utils.type_defs import (
     result,
     ServiceState,
     SourceType,
-    state_markers,
 )
 
 from cmk.core_helpers.host_sections import HostSections
@@ -176,7 +175,7 @@ def active_check_inventory(hostname: HostName, options: Dict[str, int]) -> Activ
 
     if inv_result.processing_failed:
         old_tree = None
-        update_result = ActiveCheckResult(1, "Cannot update tree")
+        update_result = ActiveCheckResult(_inv_fail_status, "Cannot update tree")
     else:
         old_tree = _save_inventory_tree(hostname, trees.inventory, retentions)
         update_result = ActiveCheckResult()

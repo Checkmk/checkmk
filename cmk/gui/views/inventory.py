@@ -1709,31 +1709,11 @@ def _register_views(
     inventory_paths: Sequence[inventory.InventoryPath],
     icon: Icon | None = None,
 ) -> None:
+    """Declare two views: one for searching globally. And one for the items of one host"""
     is_show_more = True
     if len(inventory_paths) == 1:
         is_show_more = DISPLAY_HINTS.get_hints(inventory_paths[0].path).table_hint.is_show_more
 
-    # Declare two views: one for searching globally. And one
-    # for the items of one host.
-    view_spec = {
-        "datasource": table_view_name,
-        "topic": "inventory",
-        "sort_index": 30,
-        "public": True,
-        "layout": "table",
-        "num_columns": 1,
-        "browser_reload": 0,
-        "column_headers": "pergroup",
-        "user_sortable": True,
-        "play_sounds": False,
-        "force_checkboxes": False,
-        "mobile": False,
-        "group_painters": [],
-        "sorters": [],
-        "is_show_more": is_show_more,
-        "owner": "",
-        "add_context_to_title": True,
-    }
     context: VisualContext = {f: {} for f in filters}
 
     # View for searching for items
@@ -1743,6 +1723,7 @@ def _register_views(
         "title": _l("Search %s") % title_plural,
         "description": _l("A view for searching in the inventory data for %s") % title_plural,
         "hidden": False,
+        "hidebutton": False,
         "mustsearch": True,
         # Columns
         "painters": [
@@ -1774,7 +1755,23 @@ def _register_views(
         "link_from": {},
         "icon": None,
         "single_infos": [],
-        **view_spec,
+        "datasource": table_view_name,
+        "topic": "inventory",
+        "sort_index": 30,
+        "public": True,
+        "layout": "table",
+        "num_columns": 1,
+        "browser_reload": 0,
+        "column_headers": "pergroup",
+        "user_sortable": True,
+        "play_sounds": False,
+        "force_checkboxes": False,
+        "mobile": False,
+        "group_painters": [],
+        "sorters": [],
+        "is_show_more": is_show_more,
+        "owner": "",
+        "add_context_to_title": True,
     }
 
     # View for the items of one host
@@ -1784,6 +1781,7 @@ def _register_views(
         "title": title_plural,
         "description": _l("A view for the %s of one host") % title_plural,
         "hidden": True,
+        "hidebutton": False,
         "mustsearch": False,
         "link_from": {
             "single_infos": ["host"],
@@ -1796,7 +1794,23 @@ def _register_views(
         "icon": icon,
         "name": host_view_name,
         "single_infos": ["host"],
-        **view_spec,
+        "datasource": table_view_name,
+        "topic": "inventory",
+        "sort_index": 30,
+        "public": True,
+        "layout": "table",
+        "num_columns": 1,
+        "browser_reload": 0,
+        "column_headers": "pergroup",
+        "user_sortable": True,
+        "play_sounds": False,
+        "force_checkboxes": False,
+        "mobile": False,
+        "group_painters": [],
+        "sorters": [],
+        "is_show_more": is_show_more,
+        "owner": "",
+        "add_context_to_title": True,
     }
 
 
@@ -1864,6 +1878,7 @@ multisite_builtin_views["inv_hosts_cpu"] = {
     "description": _("A list of all hosts with some CPU related inventory data"),
     "public": True,
     "hidden": False,
+    "hidebutton": False,
     "is_show_more": True,
     # Layout options
     "layout": "table",
@@ -1922,6 +1937,7 @@ multisite_builtin_views["inv_hosts_ports"] = {
     ),
     "public": True,
     "hidden": False,
+    "hidebutton": False,
     "is_show_more": False,
     # Layout options
     "layout": "table",

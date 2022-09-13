@@ -280,7 +280,7 @@ class MonitorsQuerier:
         return resp.json()
 
 
-class Event(pydantic.BaseModel):
+class Event(pydantic.BaseModel, frozen=True):
     id: int
     tags: Sequence[str]
     text: str

@@ -104,7 +104,7 @@ def patch_omd_site(monkeypatch):
     _touch(cmk.utils.paths.default_config_dir + "/mkeventd.mk")
     _touch(cmk.utils.paths.default_config_dir + "/multisite.mk")
 
-    omd_config_dir = "%s/etc/omd" % (cmk.utils.paths.omd_root,)
+    omd_config_dir = f"{cmk.utils.paths.omd_root}/etc/omd"
     _dump(
         omd_config_dir + "/site.conf",
         """CONFIG_ADMIN_MAIL=''

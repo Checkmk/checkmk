@@ -32,8 +32,8 @@ from cmk.gui.utils.theme import theme
 def render_checkbox(view: ViewSpec, row: Row, num_tds: int) -> None:
     # value contains the number of columns of this datarow. This is
     # needed for hiliting the correct number of TDs
-    html.input(type_="checkbox", name=row_id(view, row), value=str(num_tds + 1))
-    html.label("", row_id(view, row))
+    html.input(type_="checkbox", name=row_id(view["datasource"], row), value=str(num_tds + 1))
+    html.label("", row_id(view["datasource"], row))
 
 
 def render_checkbox_td(view: ViewSpec, row: Row, num_tds: int) -> None:
@@ -134,7 +134,7 @@ class GroupedBoxesLayout(Layout):
                 last_group = this_group
                 current_group: list[Tuple[str, Row]] = []
                 groups.append((this_group, current_group))
-            current_group.append((row_id(view, row), row))
+            current_group.append((row_id(view["datasource"], row), row))
 
         # Create empty columns
         columns: list[list[tuple[Hashable, list[tuple[str, Row]]]]] = []
@@ -620,7 +620,7 @@ class LayoutTable(Layout):
         if not group_cells and view.get("column_headers") != "off":
             self._show_header_line(cells, num_columns, show_checkboxes)
 
-        rows_with_ids = [(row_id(view, row), row) for row in rows]
+        rows_with_ids = [(row_id(view["datasource"], row), row) for row in rows]
         groups, rows_with_ids = calculate_view_grouping_of_services(
             rows_with_ids, row_group_cells=group_cells
         )

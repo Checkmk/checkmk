@@ -14,7 +14,7 @@ from livestatus import OnlySites
 from cmk.utils.plugin_registry import Registry
 
 from cmk.gui.plugins.visuals.utils import Filter
-from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, ViewSpec
+from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos
 
 if TYPE_CHECKING:
     from cmk.gui.view import View
@@ -175,10 +175,10 @@ class DataSourceRegistry(Registry[Type[ABCDataSource]]):
 data_source_registry = DataSourceRegistry()
 
 
-def row_id(view_spec: ViewSpec, row: Row) -> str:
+def row_id(datasource: str, row: Row) -> str:
     """Calculates a uniq id for each data row which identifies the current
     row accross different page loadings."""
     key = ""
-    for col in data_source_registry[view_spec["datasource"]]().id_keys:
+    for col in data_source_registry[datasource]().id_keys:
         key += "~%s" % row[col]
     return hashlib.sha256(key.encode("utf-8")).hexdigest()

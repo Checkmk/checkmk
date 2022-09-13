@@ -66,7 +66,7 @@ if not cmk_version.is_raw_edition():
 def _filter_selected_rows(view_spec: ViewSpec, rows: Rows, selected_ids: List[str]) -> Rows:
     action_rows: Rows = []
     for row in rows:
-        if row_id(view_spec, row) in selected_ids:
+        if row_id(view_spec["datasource"], row) in selected_ids:
             action_rows.append(row)
     return action_rows
 

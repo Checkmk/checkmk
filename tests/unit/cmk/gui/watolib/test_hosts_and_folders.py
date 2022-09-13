@@ -171,7 +171,6 @@ def test_write_and_read_host_attributes(
     )
 
     # Write data
-    # Note: The create_hosts function modifies the attributes dict, adding a meta_data key inplace
     write_data_folder.create_hosts(
         [("testhost", attributes, [])],
         bake=lambda *args: None,
@@ -183,7 +182,10 @@ def test_write_and_read_host_attributes(
     read_folder_hosts = read_data_folder.hosts()
     assert len(read_folder_hosts) == 1
     for _, host in read_folder_hosts.items():
-        assert host.attributes() == attributes
+        assert host.attributes() == {
+            "meta_data": host.attributes()["meta_data"],
+            **attributes,
+        }
 
 
 @contextmanager

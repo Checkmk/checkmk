@@ -14,6 +14,7 @@ import shutil
 import subprocess
 import time
 import uuid
+from collections.abc import Collection
 from contextlib import contextmanager, suppress
 from enum import Enum
 from pathlib import Path
@@ -1009,7 +1010,7 @@ class BaseFolder:
 
     def create_hosts(
         self,
-        entries: Iterable[Tuple[HostName, object, object]],
+        entries: Iterable[Tuple[HostName, HostAttributes, object]],
         *,
         bake: Callable[[List[HostName]], object],
     ) -> None:
@@ -1020,9 +1021,9 @@ class BaseFolder:
 
 
 def update_metadata(
-    attributes: Dict[str, Any],
+    attributes: Mapping[str, Any],
     created_by: Optional[str] = None,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Update meta_data timestamps and set created_by if provided.
 
     Args:
@@ -1047,13 +1048,13 @@ def update_metadata(
             Key 'updated_at' in 'meta_data' added for use in the REST API.
 
     """
-    attributes.setdefault("meta_data", {})
+    attributes_updated: dict[str, Any] = {"meta_data": {}, **attributes}
 
     now_ = time.time()
-    last_update = attributes["meta_data"].get("updated_at", None)
+    last_update = attributes_updated["meta_data"].get("updated_at", None)
     # These attributes are only set if they don't exist or were set to None before.
     deep_update(
-        attributes,
+        attributes_updated,
         {
             "meta_data": {
                 "created_at": last_update if last_update is not None else now_,  # fix empty field
@@ -1065,9 +1066,9 @@ def update_metadata(
     )
 
     # Intentionally overwrite updated_at every time
-    deep_update(attributes, {"meta_data": {"updated_at": now_}}, overwrite=True)
+    deep_update(attributes_updated, {"meta_data": {"updated_at": now_}}, overwrite=True)
 
-    return attributes
+    return attributes_updated
 
 
 def get_wato_redis_client() -> _RedisHelper:
@@ -2445,21 +2446,31 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
     def create_hosts(
         self,
-        entries: Iterable[Tuple[HostName, object, object]],
+        entries: Iterable[Tuple[HostName, HostAttributes, object]],
         *,
         bake: Callable[[List[HostName]], object],
     ) -> None:
         # 1. Check preconditions
         self.prepare_create_hosts()
 
-        for host_name, attributes, _cluster_nodes in entries:
-            self.verify_host_details(host_name, attributes)
-
-        self.create_validated_hosts(entries, bake=bake)
+        self.create_validated_hosts(
+            [
+                (
+                    host_name,
+                    self.verify_and_update_host_details(
+                        host_name,
+                        attributes,
+                    ),
+                    _cluster_nodes,
+                )
+                for host_name, attributes, _cluster_nodes in entries
+            ],
+            bake=bake,
+        )
 
     def create_validated_hosts(
         self,
-        entries: Iterable[Tuple[HostName, object, object]],
+        entries: Collection[tuple[HostName, HostAttributes, object]],
         *,
         bake: Callable[[List[HostName]], object],
     ) -> None:
@@ -2483,11 +2494,13 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         Folder.add_hosts_to_lookup_cache([(x[0], folder_path) for x in entries])
 
     @staticmethod
-    def verify_host_details(name, attributes):
+    def verify_and_update_host_details(
+        name: HostName, attributes: HostAttributes
+    ) -> HostAttributes:
         # MKAuthException, MKUserError
         _must_be_in_contactgroups(_get_cgconf_from_attributes(attributes)["groups"])
         validate_host_uniqueness("host", name)
-        update_metadata(attributes, created_by=user.id)
+        return update_metadata(attributes, created_by=user.id)
 
     def propagate_hosts_changes(self, host_name, attributes, cluster_nodes):
         host = Host(self, host_name, attributes, cluster_nodes)
@@ -3610,7 +3623,7 @@ class CMEFolder(CREFolder):
 
     def create_hosts(
         self,
-        entries: Iterable[Tuple[HostName, object, object]],
+        entries: Iterable[Tuple[HostName, HostAttributes, object]],
         *,
         bake: Callable[[List[HostName]], object],
     ) -> None:

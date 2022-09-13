@@ -673,16 +673,19 @@ def test_openapi_bulk_simple(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_bulk_with_failed(  # type:ignore[no-untyped-def]
+def test_openapi_bulk_with_failed(
     base: str,
     monkeypatch: pytest.MonkeyPatch,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-):
+) -> None:
     def _raise(_self, _host_name, _attributes):
         if _host_name == "foobar":
             raise MKUserError(None, "fail")
+        return _attributes
 
-    monkeypatch.setattr("cmk.gui.watolib.hosts_and_folders.CREFolder.verify_host_details", _raise)
+    monkeypatch.setattr(
+        "cmk.gui.watolib.hosts_and_folders.CREFolder.verify_and_update_host_details", _raise
+    )
 
     resp = aut_user_auth_wsgi_app.call_method(
         "post",

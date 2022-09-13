@@ -228,10 +228,14 @@ def bulk_create_hosts(params: Mapping[str, Any]) -> Response:
         folder.prepare_create_hosts()
         for host in grouped_hosts:
             host_name = host["host_name"]
-            attributes = host["attributes"]
             try:
-                folder.verify_host_details(host_name, attributes)
-                validated_entries.append((host_name, attributes, None))
+                validated_entries.append(
+                    (
+                        host_name,
+                        folder.verify_and_update_host_details(host_name, host["attributes"]),
+                        None,
+                    )
+                )
             except (MKUserError, MKAuthException) as e:
                 failed_hosts[host_name] = f"Validation failed: {e}"
 

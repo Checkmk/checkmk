@@ -60,5 +60,18 @@ exit /b 1
 )
 
 %Print%{255;255;255}Signing %3 using key %1\n
-@"C:\Program Files (x86)\Microsoft SDKs\ClickOnce\SignTool\signtool.exe" sign /tr http://timestamp.digicert.com /fd sha256 /td sha256 /f %1 /p %2 %3
+set ext=raw
+set loc_1="C:\Program Files (x86)\Microsoft SDKs\ClickOnce\SignTool\signtool.exe"
+set loc_2="C:\Program Files (x86)\Windows Kits\10\App Certification Kit\signtool.exe"
+if exist %loc_1%  (
+copy %3 %3.%ext%
+%loc_1% sign /tr http://timestamp.digicert.com /fd sha256 /td sha256 /f %1 /p %2 %3 
+) else (
+if exist %loc_2% (
+copy %3 %3.%ext%
+%loc_2% sign /tr http://timestamp.digicert.com /fd sha256 /td sha256 /f %1 /p %2 %3 
+) else (
+%Print%{255;0;0}Not found signtool.exe\n
+)
+)
 exit /b 0

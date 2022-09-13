@@ -715,6 +715,29 @@ class TableViewSpec:
     title: str
     icon: str | None
 
+    @classmethod
+    def from_raw(cls, path: SDPath, raw_hint: InventoryHintSpec) -> TableViewSpec | None:
+        def _get_table_view_name(path: SDPath, raw_table_hint: InventoryHintSpec) -> str | None:
+            if "view" not in raw_table_hint:
+                return None
+            if (view_name := raw_table_hint["view"]).endswith("_of_host"):
+                return view_name[:-8]
+            return view_name
+
+        if "*" in path:
+            # See DYNAMIC-PATHS
+            return None
+
+        if view_name := _get_table_view_name(path, raw_hint):
+            title = raw_hint.get("title", "")
+            return TableViewSpec(
+                view_name=view_name,
+                title=title,
+                icon=raw_hint.get("icon"),
+            )
+
+        return None
+
 
 KeyOrder = Sequence[str]
 
@@ -728,14 +751,14 @@ class TableDisplayHint:
     @classmethod
     def from_raw(
         cls,
+        path: SDPath,
         raw_hint: InventoryHintSpec,
         key_order: KeyOrder,
-        table_view_spec: TableViewSpec | None = None,
     ) -> TableDisplayHint:
         return cls(
             key_order=key_order,
             is_show_more=raw_hint.get("is_show_more", True),
-            view_spec=table_view_spec,
+            view_spec=TableViewSpec.from_raw(path, raw_hint),
         )
 
 
@@ -941,7 +964,7 @@ class DisplayHints:
         return DisplayHints(
             path=path,
             node_hint=NodeDisplayHint.from_raw(path, {"title": _l("Inventory Tree")}),
-            table_hint=TableDisplayHint.from_raw({}, []),
+            table_hint=TableDisplayHint.from_raw(path, {}, []),
             column_hints=OrderedDict({}),
             attributes_hint=AttributesDisplayHint.from_raw([]),
             attribute_hints=OrderedDict({}),
@@ -952,7 +975,7 @@ class DisplayHints:
         return DisplayHints(
             path=path,
             node_hint=NodeDisplayHint.from_raw(path, {}),
-            table_hint=TableDisplayHint.from_raw({}, []),
+            table_hint=TableDisplayHint.from_raw(path, {}, []),
             column_hints=OrderedDict({}),
             attributes_hint=AttributesDisplayHint.from_raw([]),
             attribute_hints=OrderedDict({}),
@@ -987,13 +1010,9 @@ class DisplayHints:
                         {**related_raw_hints.for_node, **related_raw_hints.for_table},
                     ),
                     table_hint=TableDisplayHint.from_raw(
-                        related_raw_hints.for_table,
+                        path,
+                        {**related_raw_hints.for_node, **related_raw_hints.for_table},
                         table_keys,
-                        self._get_table_view_spec(
-                            path,
-                            related_raw_hints.for_node,
-                            related_raw_hints.for_table,
-                        ),
                     ),
                     column_hints=OrderedDict(
                         {
@@ -1062,29 +1081,6 @@ class DisplayHints:
                 node = node.nodes.setdefault(node_name, DisplayHints.default(path))
 
         return node
-
-    def _get_table_view_spec(
-        self, path: SDPath, raw_node_hint: InventoryHintSpec, raw_table_hint: InventoryHintSpec
-    ) -> TableViewSpec | None:
-        def _get_table_view_name(path: SDPath, raw_table_hint: InventoryHintSpec) -> str | None:
-            if "view" not in raw_table_hint:
-                return None
-            if (view_name := raw_table_hint["view"]).endswith("_of_host"):
-                return view_name[:-8]
-            return view_name
-
-        if "*" in path:
-            # See DYNAMIC-PATHS
-            return None
-
-        if view_name := _get_table_view_name(path, raw_table_hint):
-            return TableViewSpec(
-                view_name=view_name,
-                title=raw_table_hint.get("title", raw_node_hint.get("title", "")),
-                icon=raw_table_hint.get("icon", raw_node_hint.get("icon")),
-            )
-
-        return None
 
     def __iter__(self) -> Iterator[DisplayHints]:
         yield from self._make_inventory_paths_or_hints([])

@@ -34,7 +34,7 @@ from six import ensure_str
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
-from cmk.utils.crypto.password_hashing import check_password, hash_password
+from cmk.utils.crypto import password_hashing
 from cmk.utils.type_defs import ContactgroupName, UserId
 
 import cmk.gui.background_job as background_job
@@ -296,7 +296,7 @@ def make_two_factor_backup_codes() -> Tuple[List[str], List[str]]:
     for _index in range(10):
         code = utils.get_random_string(10)
         display_codes.append(code)
-        store_codes.append(hash_password(code))
+        store_codes.append(password_hashing.hash_password(code))
     return display_codes, store_codes
 
 
@@ -304,10 +304,14 @@ def is_two_factor_backup_code_valid(user_id: UserId, code: str) -> bool:
     """Verifies whether or not the given backup code is valid and invalidates the code"""
     credentials = load_two_factor_credentials(user_id)
     matched_code = ""
+
     for stored_code in credentials["backup_codes"]:
-        if check_password(code, stored_code):
+        try:
+            password_hashing.verify(code, stored_code)
             matched_code = stored_code
             break
+        except (password_hashing.PasswordInvalidError, ValueError):
+            continue
 
     if not matched_code:
         return False
@@ -1219,7 +1223,7 @@ def create_cmk_automation_user() -> None:
         "alias": "Check_MK Automation - used for calling web services",
         "contactgroups": [],
         "automation_secret": secret,
-        "password": cmk.gui.plugins.userdb.htpasswd.hash_password(secret),
+        "password": password_hashing.hash_password(secret),
         "roles": ["admin"],
         "locked": False,
         "serial": 0,

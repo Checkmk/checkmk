@@ -6,146 +6,112 @@
 
 At the moment it wraps the respective functionality from passlib, with the goal of replacing
 passlib in the future.
+
+The password hashing functions return hashes in the Modular Crypto Format
+(https://passlib.readthedocs.io/en/stable/modular_crypt_format.html#modular-crypt-format).
+The format contains an identifier for the hash algorithm that was used, the number of rounds,
+a salt, and the actual checksum -- which is all the information needed to verify the hash with a
+given password (see `verify`).
 """
 
-from typing import Optional
+from collections.abc import Sequence
 
 # TODO: Import errors from passlib are suppressed right now since now
 # stub files for mypy are not available.
-from passlib import hash as passlib_hash  # type: ignore[import]
-from passlib.context import CryptContext  # type: ignore[import]
-from passlib.exc import PasswordTruncateError  # type: ignore[import]
+import passlib.context  # type: ignore[import]
+import passlib.exc  # type: ignore[import]
+from passlib import hash as passlib_hash
 
 from cmk.utils.exceptions import MKException
+
+# Using code should not be able to change the number of rounds (to unsafe values), but test code
+# has to run with reduced rounds. They can be monkeypatched here.
+BCRYPT_ROUNDS = 12
+SHA256_CRYPT_ROUNDS = 535000
 
 
 class PasswordTooLongError(MKException):
     """Indicates that the provided password is too long to be used
 
-    Currently this will happen when trying to hash a password longer than
-    72 bytes with bcrypt. See hash_password for more details.
+    Currently this will happen when trying to hash a password longer than 72 bytes due to
+    restrictions of bcrypt.
     """
 
 
-def hash_password(password: str, *, rounds: Optional[int] = None) -> str:
-    """Hash a password using bcrypt
+class PasswordInvalidError(MKException):
+    """Indicates that the provided password could not be verified"""
 
-    :param password: The password to hash.
-    :param rounds: Number of bcrypt rounds to use. This parameter is only used to reduce the
-                   runtime of unit tests. Production code should always use the default (12).
-                   Must be at least 4.
 
-    :return: The hashed password concatenated with the necessary information to validate the hash
-             in the so-called Modular Crypto Format. The result string has the form
-               $2b${rounds}${salt}{checksum}
-             See also:
-               https://passlib.readthedocs.io/en/stable/modular_crypt_format.html#modular-crypt-format.
+def hash_password(password: str) -> str:
+    """Hash a password using the preferred algorithm
+
+    Uses bcrypt with 12 rounds to hash a password.
+
+    :param password: The password to hash. The password must not be longer than 72 bytes.
+
+    :return: The hashed password Modular Crypto Format (see module docstring). The identifier for
+             bcrypt is "2b".
 
     :raise: PasswordTooLongError if the provided password is longer than 72 bytes.
-    :raise: ValueError if fewer than 4 rounds are selected or if the input password contains
-            null bytes.
-
-    The output of hash_password functions as the input for check_password:
-        >>> check_password("foobar", hash_password("foobar", rounds=4))
-        True
-
-    Empty passwords are also hashed:
-        >>> "$2b$04$" in hash_password("", rounds=4)
-        True
-
-    hash_password will fail as follows:
-        >>> hash_password("", rounds=3)
-        Traceback (most recent call last):
-            ...
-        ValueError: ...
-
-        >>> "$2b$04$" in hash_password("bar\0foo", rounds=4)
-        Traceback (most recent call last):
-            ...
-        ValueError: source code string cannot contain null bytes
-
-        >>> hash_password(73*"a", rounds=4)
-        Traceback (most recent call last):
-            ...
-        cmk.utils.crypto.password_hashing.PasswordTooLongError: Password too long (bcrypt truncates to 72 characters)
+    :raise: ValueError if the input password contains null bytes.
     """
-    # NOTE: The time for hashing is *exponential* in the number of rounds, so this
-    # can get *very* slow! On a laptop with a i9-9880H CPU, the runtime is roughly
-    # 43 microseconds * 2**rounds, so for 12 rounds this takes about 0.176s.
-    # Nevertheless, the rounds a.k.a. workfactor should be more than 10 for security
-    # reasons. It defaults to 12, but let's be explicit.
     try:
-        return passlib_hash.bcrypt.using(
-            rounds=12 if rounds is None else rounds,
-            truncate_error=True,
-        ).hash(password)
-    except PasswordTruncateError as e:
+        return passlib_hash.bcrypt.using(rounds=BCRYPT_ROUNDS, truncate_error=True).hash(password)
+    except passlib.exc.PasswordTruncateError as e:
         raise PasswordTooLongError(e)
 
 
 def sha256_crypt(password: str) -> str:
-    return passlib_hash.sha256_crypt.hash(password)
+    """Hash a password using sha256-crypt, only use if you know what you're doing.
+
+    Most code should use hash_password instead.
+
+    :param password: The password to hash.
+
+    :return: The hashed password Modular Crypto Format (see module docstring). The identifier for
+             sha256_crypt is "5".
+
+    :raise: ValueError if the input password contains null bytes.
+    """
+    return passlib_hash.sha256_crypt.using(rounds=SHA256_CRYPT_ROUNDS).hash(password)
 
 
-_default_policy = CryptContext(
-    schemes=[
-        "bcrypt",
-        # Kept for compatibility with Checkmk < 2.1
-        "sha256_crypt",
+def _allowed_schemes() -> Sequence[str]:
+    """List of hash algorithms allowed in `verify`
+
+    While using code should no longer select an algorithm itself (but use `hash_password` instead),
+    we still have to account for existing passwords created with now-deprecated schemes and created
+    by external tools (notably `htpasswd -m`).
+    """
+    return [
+        "bcrypt",  # Preferred and default for hashing
+        "sha256_crypt",  # Kept for compatibility with Checkmk < 2.1
         # Kept for compatibility with Checkmk < 1.6
         # htpasswd has still md5 as default, also the docs include the "-m" param
         "md5_crypt",
         "apr_md5_crypt",
         "des_crypt",
     ]
-)
 
 
-def check_password(password: str, pwhash: str) -> bool:
-    """Validate a password given a password hash
+def verify(password: str, password_hash: str) -> None:
+    """Verify if a password matches a password hash.
 
-    :param password: The plaintext password.
-    :param pwhash: The hash of the password along with meta information about the hash algorithm
-                   that was used, as output by hash_password.
+    :param password: The password to check.
+    :param password_hash: The password hash to check.
 
-    :return: True iff the password is valid.
+    :return: None
 
-    The algorithm to use, the number of rounds, and, where applicable, the salt are detected from
-    the input string:
-    sha256-crypto:
-        >>> check_password("foobar", "$5$rounds=1000$.J4mcfJGFGgWJA7R$bDhUCLMe2v1.L3oWclfsVYMyOhsS/6RmyzqFRyCgDi/")
-        True
-
-    bcrypt:
-        >>> check_password("foobar", "$2b$04$5LiM0CX3wUoO55cGCwrkDeZIU5zyBqPDZfV9zU4Q2WH/Lkkn2lypa")
-        True
-        >>> check_password("raboof", "$2b$04$5LiM0CX3wUoO55cGCwrkDeZIU5zyBqPDZfV9zU4Q2WH/Lkkn2lypa")
-        False
-        >>> check_password("", "$2b$04$5LiM0CX3wUoO55cGCwrkDeZIU5zyBqPDZfV9zU4Q2WH/Lkkn2lypa")
-        False
-        >>> check_password("empty_hash", "")
-        False
-
-    The rounds parameter in the hash specification for sha256-crypt may be omitted to indicate 5000 rounds.
-    (https://passlib.readthedocs.io/en/stable/lib/passlib.hash.sha256_crypt.html#passlib.hash.sha256_crypt)
-        >>> check_password("foobar", "$5$H2kwlVdGl9PLMISm$RrQUaIqzFzHmW7SjvCRGV4LsHM2WBT4B0OaGm7TIFI9")
-        True
-
-    ... or not omitted.
-        >>> check_password("foobar", "$5$rounds=5000$H2kwlVdGl9PLMISm$RrQUaIqzFzHmW7SjvCRGV4LsHM2WBT4B0OaGm7TIFI9")
-        True
-
-    The hash algorithm must be allowed in _crypt_context. Otherwise validation fails.
-        >>> check_password("password", "$pbkdf2-sha256$5$n7O2NmaMMeZ87w$1q0e9XwOYpkcY2E1rYGpP1MChmGdKdQDFzuZIzGOML0")
-        False
+    :raise: PasswordInvalidError if the password does not match the hash.
+    :raise: ValueError - if the hash algorithm in `password_hash` could not be identified.
+                       - if the identified hash algorithm specifies too few rounds.
+                       - if `password` or `password_hash` contain invalid characters (e.g. NUL).
     """
-    # NOTE: The same warning regarding runtime is applicable here, the runtime for
-    # verification is roughly the same as for the hashing above.
     try:
-        return _default_policy.verify(password, pwhash)
-    except ValueError:
-        # TODO: make this throw so using code MUST deal with the error.
-        # ValueError("hash could not be identified")
-        # Is raised in case of locked users because we prefix the hashes with
-        # a "!" sign in this situation.
-        return False
+        valid = passlib.context.CryptContext(schemes=_allowed_schemes()).verify(
+            password, password_hash
+        )
+    except passlib.exc.UnknownHashError:
+        raise ValueError("Invalid hash")
+    if not valid:
+        raise PasswordInvalidError

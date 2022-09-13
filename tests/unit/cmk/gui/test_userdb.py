@@ -18,7 +18,7 @@ from tests.testlib import is_managed_repo, on_time
 
 import cmk.utils.paths
 import cmk.utils.version
-from cmk.utils.crypto.password_hashing import check_password
+from cmk.utils.crypto import password_hashing
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.plugins.userdb.htpasswd as htpasswd
@@ -777,14 +777,15 @@ def test_make_two_factor_backup_codes(user_id) -> None:
     assert len(display_codes) == 10
     assert len(store_codes) == 10
     for index in range(10):
-        assert check_password(display_codes[index], store_codes[index])
+        password_hashing.verify(display_codes[index], store_codes[index])
 
 
 def test_is_two_factor_backup_code_valid_no_codes(user_id) -> None:
     assert userdb.is_two_factor_backup_code_valid(user_id, "yxz") is False
 
 
-def test_is_two_factor_backup_code_valid_matches(user_id) -> None:
+def test_is_two_factor_backup_code_valid_matches(monkeypatch: MonkeyPatch, user_id: UserId) -> None:
+    monkeypatch.setattr("cmk.utils.crypto.password_hashing.BCRYPT_ROUNDS", 4)
     display_codes, store_codes = userdb.make_two_factor_backup_codes()
     credentials = userdb.load_two_factor_credentials(user_id)
     credentials["backup_codes"] = store_codes

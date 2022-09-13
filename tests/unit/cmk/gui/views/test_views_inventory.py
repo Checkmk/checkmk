@@ -373,6 +373,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                 view_spec=TableViewSpec(
                     view_name="invdockerimages",
                     title="Docker images",
+                    _long_title_function=lambda: "Docker ➤ Docker images",
                     icon=None,
                 ),
             ),
@@ -412,7 +413,14 @@ def test_make_node_displayhint(
 
     assert hints.table_hint.key_order == expected_table_hint.key_order
     assert hints.table_hint.is_show_more == expected_table_hint.is_show_more
-    assert hints.table_hint.view_spec == expected_table_hint.view_spec
+
+    if expected_table_hint.view_spec:
+        assert hints.table_hint.view_spec is not None
+        assert hints.table_hint.view_spec.long_title == expected_table_hint.view_spec.long_title
+        assert (
+            hints.table_hint.view_spec.long_inventory_title
+            == expected_table_hint.view_spec.long_inventory_title
+        )
 
 
 @pytest.mark.parametrize(
@@ -482,6 +490,7 @@ def test_make_node_displayhint(
                 view_spec=TableViewSpec(
                     view_name="invdockercontainers",
                     title="Docker containers",
+                    _long_title_function=lambda: "Docker ➤ Docker containers",
                     icon=None,
                 ),
             ),
@@ -505,7 +514,14 @@ def test_make_node_displayhint_from_hint(
 
     assert hints.table_hint.key_order == expected_table_hint.key_order
     assert hints.table_hint.is_show_more == expected_table_hint.is_show_more
-    assert hints.table_hint.view_spec == expected_table_hint.view_spec
+
+    if expected_table_hint.view_spec:
+        assert hints.table_hint.view_spec is not None
+        assert hints.table_hint.view_spec.long_title == expected_table_hint.view_spec.long_title
+        assert (
+            hints.table_hint.view_spec.long_inventory_title
+            == expected_table_hint.view_spec.long_inventory_title
+        )
 
 
 @pytest.mark.parametrize(

@@ -14,6 +14,7 @@ from typing import (
     Callable,
     Iterable,
     Iterator,
+    Literal,
     Mapping,
     NamedTuple,
     Protocol,
@@ -676,9 +677,22 @@ def _make_long_title_function(title: str, parent_path: SDPath) -> Callable[[], s
     )
 
 
-def _make_long_inventory_title(long_title: str) -> str:
+def _make_long_inventory_title(
+    long_title: str, *, node_type: Literal["node", "attribute", "table", "column"]
+) -> str:
     # This long title with topic 'Inventory' is used for painters, sorters and filters.
-    return _("Inventory") + ": " + long_title
+    if node_type == "node":
+        title_prefix = _("Inventory node")
+    elif node_type == "attribute":
+        title_prefix = _("Inventory attribute")
+    elif node_type == "table":
+        title_prefix = _("Inventory table")
+    elif node_type == "column":
+        title_prefix = _("Inventory column")
+    else:
+        raise ValueError(node_type)
+
+    return f"{title_prefix}: {long_title}"
 
 
 def _make_table_view_name_of_host(view_name: str) -> str:
@@ -697,7 +711,7 @@ class NodeDisplayHint:
 
     @property
     def long_inventory_title(self) -> str:
-        return _make_long_inventory_title(self.long_title)
+        return _make_long_inventory_title(self.long_title, node_type="node")
 
     @classmethod
     def from_raw(cls, path: SDPath, raw_hint: InventoryHintSpec) -> NodeDisplayHint:
@@ -713,6 +727,7 @@ class NodeDisplayHint:
 class TableViewSpec:
     view_name: str
     title: str
+    _long_title_function: Callable[[], str]
     icon: str | None
 
     @classmethod
@@ -733,10 +748,19 @@ class TableViewSpec:
             return TableViewSpec(
                 view_name=view_name,
                 title=title,
+                _long_title_function=_make_long_title_function(title, path[:-1]),
                 icon=raw_hint.get("icon"),
             )
 
         return None
+
+    @property
+    def long_title(self) -> str:
+        return self._long_title_function()
+
+    @property
+    def long_inventory_title(self) -> str:
+        return _make_long_inventory_title(self.long_title, node_type="table")
 
 
 KeyOrder = Sequence[str]
@@ -784,7 +808,7 @@ class ColumnDisplayHint:
 
     @property
     def long_inventory_title(self) -> str:
-        return _make_long_inventory_title(self.long_title)
+        return _make_long_inventory_title(self.long_title, node_type="column")
 
     @classmethod
     def from_raw(cls, path: SDPath, key: str, raw_hint: InventoryHintSpec) -> ColumnDisplayHint:
@@ -854,7 +878,7 @@ class AttributeDisplayHint:
 
     @property
     def long_inventory_title(self) -> str:
-        return _make_long_inventory_title(self.long_title)
+        return _make_long_inventory_title(self.long_title, node_type="attribute")
 
     @classmethod
     def from_raw(cls, path: SDPath, key: str, raw_hint: InventoryHintSpec) -> AttributeDisplayHint:
@@ -1492,7 +1516,7 @@ def _register_table_view(
             {
                 "_ident": table_view_spec.view_name,
                 "_inventory_path": inventory_path,
-                "_title": "%s: %s" % (_("Inventory"), table_view_spec.title),
+                "_title": table_view_spec.long_inventory_title,
                 "_infos": ["host", table_view_spec.view_name],
                 "ident": property(lambda s: s._ident),
                 "title": property(lambda s: s._title),

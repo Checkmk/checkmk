@@ -807,7 +807,8 @@ class ActivateChangesManager(ActivateChanges):
 
     def _get_sites(self, sites: List[SiteId]) -> List[SiteId]:
         for site_id in sites:
-            if site_id not in activation_sites():
+            # suppression needed because of pylint bug, see https://github.com/PyCQA/pylint/issues/2296
+            if site_id not in activation_sites():  # pylint: disable=unsupported-membership-test
                 raise MKUserError("sites", _('The site "%s" does not exist.') % site_id)
 
         return sites

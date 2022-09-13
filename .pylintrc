@@ -124,10 +124,6 @@ disable=
     duplicate-code,
     R0801,
     #---------------------------------------------------------------------------
-    # werkzeug's LocalProxy uses slots, so this check doesn't really blend well
-    # with out cmk.gui.globals.
-    assigning-non-slot,
-    #---------------------------------------------------------------------------
     # Useful, but quite a few findings.
     use-implicit-booleaness-not-comparison,
     #---------------------------------------------------------------------------

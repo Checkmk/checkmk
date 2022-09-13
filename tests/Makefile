@@ -54,16 +54,11 @@ SHELL_FILES_REL = $(shell cd ..; grep -rl \
     --exclude="code_examples.py" \
     '^\#!/.*sh' [^.]* 2>/dev/null)
 
-LEGACY_CHECKS := $(patsubst ../checks/%,../cmk/base/legacy_checks/%.py,$(wildcard ../checks/*))
-
-../cmk/base/legacy_checks/%.py: ../checks/% ../checks/.header-for-pylint Makefile
-	sed "s,@@ORIG-FILE@@,$(realpath $<)," ../checks/.header-for-pylint $< > $@
-
 # Due to https://github.com/pypa/pypi-support/issues/978, we need to disable Plugin tests for py2.6
 # until we have a feasible solution or we drop the support for 2.6 completly.
 PYTHON_VERSIONS := 2.7 3.3 3.4 3.5 3.6 3.7 3.8 3.9
 
-.PHONY: clean format-shell help prepare-protobuf-files prepare-playwright  bandit.ini \
+.PHONY: clean sync-legacy-checks format-shell help prepare-protobuf-files prepare-playwright  bandit.ini \
 	$(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
 	test-bandit test-code-quality test-code-quality-docker test-composition test-composition-docker \
 	test-composition-docker-debug test-docker test-docker-docker test-format-python test-format-python-docker \
@@ -80,6 +75,16 @@ PYTHON_VERSIONS := 2.7 3.3 3.4 3.5 3.6 3.7 3.8 3.9
 
 clean:
 	$(RM) -r .mypy_cache $(AGENT_PLUGIN_UNIT_TEST_FILES_PY2)
+
+sync-legacy-checks: $(patsubst ../checks/%,../cmk/base/legacy_checks/%.py,$(wildcard ../checks/*))
+	@for i in ../cmk/base/legacy_checks/*.py; do \
+	  j=$${i#../cmk/base/legacy_checks/}; \
+	  test "$$j" == __init__.py && continue; \
+	  test -f ../checks/$${j%.py} || rm -fv $$i; \
+	done
+
+../cmk/base/legacy_checks/%.py: ../checks/% ../checks/.header-for-pylint Makefile
+	sed "s,@@ORIG-FILE@@,$(realpath $<)," ../checks/.header-for-pylint $< > $@
 
 help:
 	@echo "format-shell                        - Format shell agents"
@@ -317,7 +322,7 @@ test-code-quality: test-license-headers test-pipfile test-file-content test-werk
 test-code-quality-docker:
 	../scripts/run-in-docker.sh make --quiet test-code-quality
 
-test-mypy: prepare-protobuf-files $(LEGACY_CHECKS)
+test-mypy: prepare-protobuf-files sync-legacy-checks
 	cd .. ; scripts/run-mypy $(MYPY_ADDOPTS) $(ADDITIONAL_MYPY_ARGS) $$($(FIND_PYTHON_FILES) --omit-legacy-checks)
 
 test-mypy-raw:
@@ -332,7 +337,7 @@ test-packaging:
 test-pipenv-deps:
 	$(PIPENV) check
 
-test-pylint: prepare-protobuf-files $(LEGACY_CHECKS)
+test-pylint: prepare-protobuf-files sync-legacy-checks
 	cd ..; $(PIPENV) run pylint --jobs=6 $(PYLINT_ARGS) $$($(FIND_PYTHON_FILES) --omit-legacy-checks)
 
 test-pylint-docker:
@@ -355,7 +360,7 @@ test-cycles:
 test-cycles-docker:
 	../scripts/run-in-docker.sh make --quiet test-cycles
 
-test-unit: prepare-protobuf-files $(LEGACY_CHECKS)
+test-unit: prepare-protobuf-files sync-legacy-checks
 	$(PYTEST) \
 		$(PYTEST_ADDITIONAL_UNIT_TEST_OPTS) \
 		$(PYTEST_UNIT_TEST_OPTS)
@@ -363,7 +368,7 @@ test-unit: prepare-protobuf-files $(LEGACY_CHECKS)
 test-unit-docker:
 	../scripts/run-in-docker.sh make --quiet test-unit
 
-test-unit-resilience: prepare-protobuf-files $(LEGACY_CHECKS)
+test-unit-resilience: prepare-protobuf-files sync-legacy-checks
 	$(PYTEST) \
 		--count=2 \
 		--random-order-bucket=global \
@@ -377,7 +382,7 @@ test-unit-resilience-docker:
 test-agent-plugin-docker:
 	../scripts/run-in-docker.sh make $(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker)
 
-test-unit-coverage-html: prepare-protobuf-files $(LEGACY_CHECKS)
+test-unit-coverage-html: prepare-protobuf-files sync-legacy-checks
 	$(PYTEST) \
 		--cov=cmk \
 		--cov-report=html \

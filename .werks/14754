@@ -1,0 +1,16 @@
+Title: Fix search result on "Hosts" page if tags or labels are shown
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1663064159
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p29
+
+If the inpage search on the page "Setup" - "Hosts" was used and the display
+options "Show host tags" and/or "Show explicit host labels" were enabled, the
+search result returned all hosts.
+
+A workaround was to use the "... (show all)" link in the "Tags" column after
+the search result returned. This only returned the matched hosts.

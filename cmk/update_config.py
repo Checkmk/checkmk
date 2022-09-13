@@ -1802,6 +1802,7 @@ class UpdateConfig:
             return
 
         self._rewrite_generic_agent_link(baked_agents_dir)
+        self._eneable_baking_generic_package_for_root_folder()
 
     def _rewrite_generic_agent_link(self, agents_dir: Path) -> None:
         try:
@@ -1814,6 +1815,20 @@ class UpdateConfig:
                 continue
             with suppress(FileNotFoundError):
                 (d / "_GENERIC").rename(d / BakeryTargetFolder("/wato/").serialize())
+
+    def _eneable_baking_generic_package_for_root_folder(self) -> None:
+        update_state = UpdateState.load(Path(cmk.utils.paths.var_dir))
+        state = update_state.setdefault("bakery")
+        state_key = "activated_main_generic_package"
+        if state.get(state_key, "False") != "False":
+            return
+
+        root_folder = cmk.gui.watolib.CREFolder.root_folder()
+        root_folder.set_attribute("bake_agent_package", True)
+        root_folder.save()
+        root_folder.save_hosts()
+        state[state_key] = "True"
+        update_state.save()
 
 
 class PasswordSanitizer:

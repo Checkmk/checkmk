@@ -18,6 +18,7 @@ multisite_builtin_views.update(
             ),
             "group_painters": [],
             "hidden": True,
+            "hidebutton": True,
             "layout": "table",
             "mustsearch": False,
             "name": "topology_filters",

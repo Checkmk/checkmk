@@ -1390,7 +1390,7 @@ def make_host_breadcrumb(host_name: HostName) -> Breadcrumb:
     # 1. level: list of all hosts
     breadcrumb.append(
         BreadcrumbItem(
-            title=_u(allhosts_view_spec["title"]),
+            title=_u(str(allhosts_view_spec["title"])),
             url=makeuri_contextless(
                 request,
                 [("view_name", "allhosts")],

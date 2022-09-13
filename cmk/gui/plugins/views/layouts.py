@@ -528,7 +528,7 @@ class LayoutTiled(Layout):
             # We need at least five cells
             render_cells = list(cells)
             if len(render_cells) < 5:
-                render_cells += [EmptyCell({}, None)] * (5 - len(render_cells))
+                render_cells += [EmptyCell(view, None)] * (5 - len(render_cells))
 
             rendered = [cell.render(row) for cell in render_cells]
 

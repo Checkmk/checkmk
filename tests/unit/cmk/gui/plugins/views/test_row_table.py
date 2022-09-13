@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.gui.livestatus_data_source import RowTableLivestatus
-from cmk.gui.type_defs import VisualContext
 from cmk.gui.view import View
+from cmk.gui.view_store import multisite_builtin_views
 
 
 def test_row_table_object(mock_livestatus, request_context) -> None:  # type:ignore[no-untyped-def]
@@ -24,16 +24,16 @@ def test_row_table_object(mock_livestatus, request_context) -> None:  # type:ign
         "GET hosts\nColumns: host_has_been_checked host_state name\nFilter: name = heute"
     )
 
-    view_name = "hosts"
-    view_spec = {
-        "datasource": "hosts",
-        "painters": [],
-    }
-    context: VisualContext = {
+    view_name = "allhosts"
+    view_spec = multisite_builtin_views[view_name].copy()
+    view_spec["painters"] = []
+    view_spec["group_painters"] = []
+    view_spec["sorters"] = []
+    view_spec["context"] = {
         "host": {"host": "heute"},
         "service": {},
     }
-    view = View(view_name, view_spec, context)
+    view = View(view_name, view_spec, view_spec["context"])
     rt = RowTableLivestatus("hosts")
 
     # @Christoph: Test geht kaputt wenn headers="Filter: host_name = heute"

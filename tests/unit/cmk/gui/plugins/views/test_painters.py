@@ -3,11 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 import pytest
 
 from tests.testlib import on_time
 
 import cmk.utils.version as cmk_version
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.structured_data import StructuredDataNode
 
 from cmk.gui import sites
@@ -20,7 +23,9 @@ from cmk.gui.views import painters_of_datasource
 
 
 @pytest.fixture(name="live")
-def fixture_livestatus_test_config(mock_livestatus):
+def fixture_livestatus_test_config(
+    mock_livestatus: MockLiveStatusConnection,
+) -> MockLiveStatusConnection:
     live = mock_livestatus
     live.set_sites(["NO_SITE"])
     live.add_table(
@@ -798,12 +803,13 @@ def test_registered_painters() -> None:
 # way to create test parameters while depending on a fixture we can not use pytests parametrization
 @pytest.mark.usefixtures("load_config")
 @pytest.fixture(name="service_painter_idents")
-def fixture_service_painter_names():
+def fixture_service_painter_names() -> list[str]:
     return sorted(list(painters_of_datasource("services").keys()))
 
 
-def test_service_painters(  # type:ignore[no-untyped-def]
-    request_context, service_painter_idents, live
+@pytest.mark.usefixtures("request_context")
+def test_service_painters(
+    service_painter_idents: Sequence[str], live: MockLiveStatusConnection
 ) -> None:
     with live(expect_status_query=False), request.stashed_vars(), on_time(
         "2018-04-15 16:50", "CET"
@@ -814,7 +820,7 @@ def test_service_painters(  # type:ignore[no-untyped-def]
             _test_painter(painter_ident, live)
 
 
-def _test_painter(painter_ident, live):
+def _test_painter(painter_ident: str, live: MockLiveStatusConnection) -> None:
     _set_expected_queries(painter_ident, live)
 
     name, params = _painter_name_spec(painter_ident)
@@ -826,6 +832,28 @@ def _test_painter(painter_ident, live):
             "painters": [PainterSpec(name=name, parameters=params)],
             "sorters": [],
             "datasource": "services",
+            "browser_reload": 30,
+            "column_headers": "pergroup",
+            "description": "",
+            "hidden": False,
+            "hidebutton": False,
+            "layout": "table",
+            "mustsearch": False,
+            "name": "allhosts",
+            "num_columns": 3,
+            "owner": "",
+            "play_sounds": False,
+            "public": True,
+            "title": "Test view",
+            "topic": "overview",
+            "sort_index": 20,
+            "icon": "folder",
+            "user_sortable": True,
+            "single_infos": [],
+            "context": {},
+            "link_from": {},
+            "add_context_to_title": True,
+            "is_show_more": False,
         },
         context={},
     )

@@ -4,9 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Literal, Tuple
 
 import pytest
+from pytest_mock import MockerFixture
+
+from livestatus import SiteId
 
 import cmk.utils.version as cmk_version
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
@@ -23,14 +26,14 @@ from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.plugins.views.utils import Cell, Painter
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.sorter import sorter_registry
-from cmk.gui.type_defs import PainterSpec
+from cmk.gui.type_defs import PainterSpec, SorterSpec
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view import View
 from cmk.gui.view_store import multisite_builtin_views
 
 
 @pytest.fixture(name="view")
-def view_fixture(request_context):
+def view_fixture(request_context: None) -> View:
     view_name = "allhosts"
     view_spec = multisite_builtin_views[view_name].copy()
     return View(view_name, view_spec, view_spec.get("context", {}))
@@ -146,7 +149,7 @@ def test_registered_command_groups() -> None:
     assert sorted(expected) == sorted(names)
 
 
-def test_legacy_register_command_group(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_legacy_register_command_group(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         cmk.gui.plugins.views.utils,
         "command_group_registry",
@@ -285,7 +288,7 @@ def test_registered_commands() -> None:
         assert cmd.permission.name == cmd_spec["permission"]
 
 
-def test_legacy_register_command(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_legacy_register_command(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         cmk.gui.plugins.views.utils,
         "command_registry",
@@ -666,12 +669,12 @@ def test_registered_datasources() -> None:
         assert ds.infos == spec["infos"]
 
 
-def test_painter_export_title(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_painter_export_title(monkeypatch: pytest.MonkeyPatch, view: View) -> None:
     painters: list[Painter] = [
         painter_class() for painter_class in cmk.gui.plugins.views.utils.painter_registry.values()
     ]
     painters_and_cells: list[Tuple[Painter, Cell]] = [
-        (painter, Cell({}, None, PainterSpec(name=painter.ident))) for painter in painters
+        (painter, Cell(view.spec, None, PainterSpec(name=painter.ident))) for painter in painters
     ]
 
     dummy_ident: str = "einszwo"
@@ -683,7 +686,7 @@ def test_painter_export_title(monkeypatch) -> None:  # type:ignore[no-untyped-de
         assert painter.export_title(cell) == expected_title
 
 
-def test_legacy_register_painter(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch, view: View) -> None:
     monkeypatch.setattr(
         cmk.gui.plugins.views.utils,
         "painter_registry",
@@ -708,7 +711,7 @@ def test_legacy_register_painter(monkeypatch) -> None:  # type:ignore[no-untyped
     )
 
     painter = cmk.gui.plugins.views.utils.painter_registry["abc"]()
-    dummy_cell = cmk.gui.plugins.views.utils.Cell({}, None, PainterSpec(name=painter.ident))
+    dummy_cell = cmk.gui.plugins.views.utils.Cell(view.spec, None, PainterSpec(name=painter.ident))
     assert isinstance(painter, cmk.gui.plugins.views.utils.Painter)
     assert painter.ident == "abc"
     assert painter.title(dummy_cell) == "A B C"
@@ -1865,7 +1868,7 @@ def test_registered_sorters() -> None:
         assert sorter.load_inv == spec.get("load_inv", False)
 
 
-def test_get_needed_regular_columns(view) -> None:  # type:ignore[no-untyped-def]
+def test_get_needed_regular_columns(view: View) -> None:
     class SomeFilter(Filter):
         def display(self, value):
             return
@@ -1926,9 +1929,13 @@ def test_get_needed_regular_columns(view) -> None:  # type:ignore[no-untyped-def
     )
 
 
-def test_get_needed_join_columns(view, load_config) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("load_config")
+def test_get_needed_join_columns(view: View) -> None:
     view_spec = copy.deepcopy(view.spec)
-    view_spec["painters"].append(PainterSpec(name="service_description", join_index="CPU load"))
+    view_spec["painters"] = [
+        *view_spec["painters"],
+        PainterSpec(name="service_description", join_index="CPU load"),
+    ]
     view = View(view.name, view_spec, view_spec.get("context", {}))
 
     columns = cmk.gui.views._get_needed_join_columns(view.join_cells, view.sorters)
@@ -1962,7 +1969,7 @@ def test_create_view_basics() -> None:
     assert view.only_sites is None
 
 
-def test_view_row_limit(view) -> None:  # type:ignore[no-untyped-def]
+def test_view_row_limit(view: View) -> None:
     assert view.row_limit is None
     view.row_limit = 101
     assert view.row_limit == 101
@@ -1984,13 +1991,13 @@ def test_view_row_limit(view) -> None:  # type:ignore[no-untyped-def]
         ("none", {"general.ignore_soft_limit": True, "general.ignore_hard_limit": True}, None),
     ],
 )
-def test_gui_view_row_limit(  # type:ignore[no-untyped-def]
-    request_context,
-    monkeypatch,
-    mocker,
-    limit,
-    permissions,
-    result,
+@pytest.mark.usefixtures("request_context")
+def test_gui_view_row_limit(
+    monkeypatch: pytest.MonkeyPatch,
+    mocker: MockerFixture,
+    limit: Literal["soft", "hard", "none"] | None,
+    permissions: dict[str, bool],
+    result: int | None,
 ) -> None:
     if limit is not None:
         monkeypatch.setitem(html.request._vars, "limit", limit)
@@ -2000,19 +2007,19 @@ def test_gui_view_row_limit(  # type:ignore[no-untyped-def]
     assert cmk.gui.views.get_limit() == result
 
 
-def test_view_only_sites(view) -> None:  # type:ignore[no-untyped-def]
+def test_view_only_sites(view: View) -> None:
     assert view.only_sites is None
-    view.only_sites = ["unit"]
-    assert view.only_sites == ["unit"]
+    view.only_sites = [SiteId("unit")]
+    assert view.only_sites == [SiteId("unit")]
 
 
-def test_view_user_sorters(view) -> None:  # type:ignore[no-untyped-def]
+def test_view_user_sorters(view: View) -> None:
     assert view.user_sorters is None
-    view.user_sorters = [("abc", True)]
-    assert view.user_sorters == [("abc", True)]
+    view.user_sorters = [SorterSpec(sorter="abc", negate=True)]
+    assert view.user_sorters == [SorterSpec(sorter="abc", negate=True)]
 
 
-def test_view_want_checkboxes(view) -> None:  # type:ignore[no-untyped-def]
+def test_view_want_checkboxes(view: View) -> None:
     assert view.want_checkboxes is False
     view.want_checkboxes = True
     assert view.want_checkboxes is True

@@ -23,6 +23,7 @@ import cmk.gui.utils
 from cmk.gui.num_split import cmp_version
 from cmk.gui.plugins.visuals.inventory import FilterInvtableVersion
 from cmk.gui.view import View
+from cmk.gui.view_store import multisite_builtin_views
 from cmk.gui.views.inventory import (
     _cmp_inv_generic,
     _decorate_sort_function,
@@ -122,12 +123,18 @@ EXPECTED_INV_MULTI_KEYS = [
 ]
 
 
+@pytest.fixture(name="view")
+def fixture_view() -> View:
+    """Provide some arbitrary view for testing"""
+    view_spec = multisite_builtin_views["invinterface_of_host"]
+    return View("invdockerimages", view_spec, view_spec["context"])
+
+
 @pytest.mark.usefixtures("request_context")
-def test_query_row_table_inventory(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_query_row_table_inventory(monkeypatch: pytest.MonkeyPatch, view: View) -> None:
     row_table = RowTableInventory(
         "invtesttable", cmk.gui.inventory.InventoryPath.parse(".foo.bar:")
     )
-    view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS)
     rows, _len_rows = row_table.query(view, [], "", None, None, [])
@@ -136,13 +143,12 @@ def test_query_row_table_inventory(monkeypatch) -> None:  # type:ignore[no-untyp
 
 
 @pytest.mark.usefixtures("request_context")
-def test_query_row_table_inventory_unknown_columns(  # type:ignore[no-untyped-def]
-    monkeypatch,
+def test_query_row_table_inventory_unknown_columns(
+    monkeypatch: pytest.MonkeyPatch, view: View
 ) -> None:
     row_table = RowTableInventory(
         "invtesttable", cmk.gui.inventory.InventoryPath.parse(".foo.bar:")
     )
-    view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS)
     rows, _len_rows = row_table.query(view, ["foo"], "", None, None, [])
@@ -151,11 +157,10 @@ def test_query_row_table_inventory_unknown_columns(  # type:ignore[no-untyped-de
 
 
 @pytest.mark.usefixtures("request_context")
-def test_query_row_table_inventory_add_columns(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_query_row_table_inventory_add_columns(monkeypatch: pytest.MonkeyPatch, view: View) -> None:
     row_table = RowTableInventory(
         "invtesttable", cmk.gui.inventory.InventoryPath.parse(".foo.bar:")
     )
-    view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS2)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS)
     rows, _len_rows = row_table.query(view, ["host_foo"], "", None, None, [])
@@ -164,9 +169,8 @@ def test_query_row_table_inventory_add_columns(monkeypatch) -> None:  # type:ign
 
 
 @pytest.mark.usefixtures("request_context")
-def test_query_row_table_inventory_history(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_query_row_table_inventory_history(monkeypatch: pytest.MonkeyPatch, view: View) -> None:
     row_table = RowTableInventoryHistory()
-    view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_HIST_ROWS)
     rows, _len_rows = row_table.query(view, [], "", None, None, [])
@@ -175,11 +179,10 @@ def test_query_row_table_inventory_history(monkeypatch) -> None:  # type:ignore[
 
 
 @pytest.mark.usefixtures("request_context")
-def test_query_row_table_inventory_history_unknown_columns(  # type:ignore[no-untyped-def]
-    monkeypatch,
+def test_query_row_table_inventory_history_unknown_columns(
+    monkeypatch: pytest.MonkeyPatch, view: View
 ) -> None:
     row_table = RowTableInventoryHistory()
-    view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_HIST_ROWS)
     rows, _len_rows = row_table.query(view, ["foo"], "", None, None, [])
@@ -188,11 +191,10 @@ def test_query_row_table_inventory_history_unknown_columns(  # type:ignore[no-un
 
 
 @pytest.mark.usefixtures("request_context")
-def test_query_row_table_inventory_history_add_columns(  # type:ignore[no-untyped-def]
-    monkeypatch,
+def test_query_row_table_inventory_history_add_columns(
+    monkeypatch: pytest.MonkeyPatch, view: View
 ) -> None:
     row_table = RowTableInventoryHistory()
-    view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS2)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_HIST_ROWS)
     rows, _len_rows = row_table.query(view, ["host_foo"], "", None, None, [])
@@ -201,7 +203,7 @@ def test_query_row_table_inventory_history_add_columns(  # type:ignore[no-untype
 
 
 @pytest.mark.usefixtures("request_context")
-def test_query_row_multi_table_inventory(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_query_row_multi_table_inventory(monkeypatch: pytest.MonkeyPatch, view: View) -> None:
     sources = list(
         zip(
             ["invtesttable1", "invtesttable2"],
@@ -212,7 +214,6 @@ def test_query_row_multi_table_inventory(monkeypatch) -> None:  # type:ignore[no
         )
     )
     row_table = RowMultiTableInventory(sources, ["sid"], [])
-    view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS_MULTI)
     rows, _len_rows = row_table.query(view, [], "", None, None, [])
@@ -221,8 +222,8 @@ def test_query_row_multi_table_inventory(monkeypatch) -> None:  # type:ignore[no
 
 
 @pytest.mark.usefixtures("request_context")
-def test_query_row_multi_table_inventory_unknown_columns(  # type:ignore[no-untyped-def]
-    monkeypatch,
+def test_query_row_multi_table_inventory_unknown_columns(
+    monkeypatch: pytest.MonkeyPatch, view: View
 ) -> None:
     sources = list(
         zip(
@@ -234,7 +235,6 @@ def test_query_row_multi_table_inventory_unknown_columns(  # type:ignore[no-unty
         )
     )
     row_table = RowMultiTableInventory(sources, ["sid"], [])
-    view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS_MULTI)
     rows, _len_rows = row_table.query(view, ["foo"], "", None, None, [])
@@ -243,8 +243,8 @@ def test_query_row_multi_table_inventory_unknown_columns(  # type:ignore[no-unty
 
 
 @pytest.mark.usefixtures("request_context")
-def test_query_row_multi_table_inventory_add_columns(  # type:ignore[no-untyped-def]
-    monkeypatch,
+def test_query_row_multi_table_inventory_add_columns(
+    monkeypatch: pytest.MonkeyPatch, view: View
 ) -> None:
     sources = list(
         zip(
@@ -256,7 +256,6 @@ def test_query_row_multi_table_inventory_add_columns(  # type:ignore[no-untyped-
         )
     )
     row_table = RowMultiTableInventory(sources, ["sid"], [])
-    view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS2)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS_MULTI)
     rows, _len_rows = row_table.query(view, ["host_foo"], "", None, None, [])

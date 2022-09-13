@@ -17,8 +17,14 @@ from cmk.gui.plugins.views.utils import (
     PainterRegistry,
     replace_action_url_macros,
 )
-from cmk.gui.type_defs import PainterSpec, SorterSpec
+from cmk.gui.type_defs import PainterSpec, Row, SorterSpec, ViewSpec
+from cmk.gui.view_store import multisite_builtin_views
 from cmk.gui.views import _parse_url_sorters
+
+
+@pytest.fixture(name="view_spec")
+def view_spec_fixture(request_context: None) -> ViewSpec:
+    return multisite_builtin_views["allhosts"]
 
 
 @pytest.mark.parametrize(
@@ -87,10 +93,10 @@ def test_replace_action_url_macros(
     assert replace_action_url_macros(url, what, row) == result
 
 
-def test_group_value(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_group_value(monkeypatch: pytest.MonkeyPatch, view_spec: ViewSpec) -> None:
     monkeypatch.setattr(utils, "painter_registry", PainterRegistry())
 
-    def rendr(row) -> tuple[str, str]:  # type:ignore[no-untyped-def]
+    def rendr(row: Row) -> tuple[str, str]:
         return ("abc", "xyz")
 
     utils.register_painter(
@@ -108,6 +114,6 @@ def test_group_value(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     )
 
     painter: Painter = utils.painter_registry["tag_painter"]()
-    dummy_cell: Cell = Cell({}, None, PainterSpec(name=painter.ident))
+    dummy_cell: Cell = Cell(view_spec, None, PainterSpec(name=painter.ident))
 
     assert group_value({"host_tags": {"networking": "dmz"}}, [dummy_cell]) == ("dmz",)

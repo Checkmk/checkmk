@@ -300,9 +300,7 @@ def change_host_tags(
 
 @request_memoize()
 def _get_all_rulesets() -> AllRulesets:
-    all_rulesets = cmk.gui.watolib.rulesets.AllRulesets()
-    all_rulesets.load()
-    return all_rulesets
+    return cmk.gui.watolib.rulesets.AllRulesets.load_all_rulesets()
 
 
 def change_host_tags_in_rulesets(operation: ABCOperation, mode: TagCleanupMode) -> List[Ruleset]:

@@ -26,8 +26,7 @@ class UpdateAutochecks(UpdateAction):
     def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
         failed_hosts = []
 
-        all_rulesets = AllRulesets()
-        all_rulesets.load()
+        all_rulesets = AllRulesets.load_all_rulesets()
 
         for autocheck_file in Path(autochecks_dir).glob("*.mk"):
             hostname = HostName(autocheck_file.stem)

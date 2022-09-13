@@ -249,20 +249,19 @@ class RulesetCollection:
     specific class is the FolderRulesets class which cares about all rulesets
     configured in a folder."""
 
-    def __init__(self) -> None:
+    def __init__(self, rulesets: Dict[RulesetName, Ruleset]) -> None:
         super().__init__()
         # A dictionary containing all ruleset objects of the collection.
         # The name of the ruleset is used as key in the dict.
-        self._tag_to_group_map = ruleset_matcher.get_tag_to_group_map(active_config.tags)
-        self._rulesets: Dict[RulesetName, Ruleset] = {}
+        self._rulesets = rulesets
 
-    # Has to be implemented by the subclasses to load the right rulesets
-    def load(self):
-        raise NotImplementedError()
-
-    def _initialize_rulesets(self, only_varname: Optional[RulesetName] = None) -> None:
+    @staticmethod
+    def _initialize_rulesets(
+        only_varname: Optional[RulesetName] = None,
+    ) -> Dict[RulesetName, Ruleset]:
+        tag_to_group_map = ruleset_matcher.get_tag_to_group_map(active_config.tags)
         varnames = [only_varname] if only_varname else rulespec_registry.keys()
-        self._rulesets = {varname: Ruleset(varname, self._tag_to_group_map) for varname in varnames}
+        return {varname: Ruleset(varname, tag_to_group_map) for varname in varnames}
 
     def _load_folder_rulesets(
         self, folder: CREFolder, only_varname: Optional[RulesetName] = None
@@ -314,13 +313,13 @@ class RulesetCollection:
 
             self._rulesets[varname].from_config(folder, ruleset_config)
 
-    def save(self):
+    def save(self) -> None:
         raise NotImplementedError()
 
-    def save_folder(self, folder):
+    def save_folder(self, folder: CREFolder) -> None:
         raise NotImplementedError()
 
-    def _save_folder(self, folder):
+    def _save_folder(self, folder: CREFolder) -> None:
         store.mkdir(folder.get_root_dir())
 
         has_content = False
@@ -367,9 +366,6 @@ class RulesetCollection:
 
     def get_rulesets(self) -> Mapping[RulesetName, Ruleset]:
         return self._rulesets
-
-    def set_rulesets(self, rulesets: Dict[RulesetName, Ruleset]) -> None:
-        self._rulesets = rulesets
 
     # Groups the rulesets in 3 layers (main group, sub group, rulesets)
     def get_grouped(self) -> List[Tuple[str, List[Tuple[str, List[Ruleset]]]]]:
@@ -428,12 +424,15 @@ class AllRulesets(RulesetCollection):
             stripped_folder = folder_path_with_slash.strip("/")
             self._load_folder_rulesets(Folder.folder(stripped_folder), only_varname)
 
-    def load(self) -> None:
+    @staticmethod
+    def load_all_rulesets() -> AllRulesets:
         """Load all rules of all folders"""
-        self._initialize_rulesets()
+        rulesets = RulesetCollection._initialize_rulesets()
+        self = AllRulesets(rulesets)
         self._load_rulesets_recursively(Folder.root_folder())
+        return self
 
-    def save_folder(self, folder):
+    def save_folder(self, folder: CREFolder) -> None:
         self._save_folder(folder)
 
     def save(self) -> None:
@@ -448,30 +447,37 @@ class AllRulesets(RulesetCollection):
 
 
 class SingleRulesetRecursively(AllRulesets):
-    def __init__(self, name: RulesetName) -> None:
-        super().__init__()
-        self._name = name
-
     # Load single ruleset from all folders
-    def load(self) -> None:
-        self._initialize_rulesets(only_varname=self._name)
-        self._load_rulesets_recursively(Folder.root_folder(), only_varname=self._name)
+    @staticmethod
+    def load_single_ruleset_recursively(name: RulesetName) -> SingleRulesetRecursively:
+        rulesets = RulesetCollection._initialize_rulesets(only_varname=name)
+        self = SingleRulesetRecursively(rulesets)
+        self._load_rulesets_recursively(Folder.root_folder(), only_varname=name)
+        return self
 
     def save_folder(self, folder: CREFolder) -> None:
         raise NotImplementedError()
 
 
 class FolderRulesets(RulesetCollection):
-    def __init__(self, folder: CREFolder) -> None:
-        super().__init__()
-        self._folder = folder
+    def __init__(
+        self,
+        rulesets: Dict[RulesetName, Ruleset],
+        *,
+        folder: CREFolder,
+    ) -> None:
+        super().__init__(rulesets)
+        self.folder: Final = folder
 
-    def load(self) -> None:
-        self._initialize_rulesets()
-        self._load_folder_rulesets(self._folder)
+    @staticmethod
+    def load_folder_rulesets(folder: CREFolder) -> FolderRulesets:
+        rulesets = RulesetCollection._initialize_rulesets()
+        self = FolderRulesets(rulesets, folder=folder)
+        self._load_folder_rulesets(folder)
+        return self
 
     def save(self) -> None:
-        self._save_folder(self._folder)
+        self._save_folder(self.folder)
 
 
 class FilteredRulesetCollection(AllRulesets):
@@ -480,32 +486,37 @@ class FilteredRulesetCollection(AllRulesets):
 
 
 class StaticChecksRulesets(FilteredRulesetCollection):
-    def load(self) -> None:
-        super().load()
-        self._remove_non_static_checks_rulesets()
+    @staticmethod
+    def load_static_checks_rulesets() -> StaticChecksRulesets:
+        rulesets = AllRulesets.load_all_rulesets()._rulesets
+        return StaticChecksRulesets._remove_non_static_checks_rulesets(rulesets)
 
-    def _remove_non_static_checks_rulesets(self) -> None:
-        for name, ruleset in list(self._rulesets.items()):
+    @staticmethod
+    def _remove_non_static_checks_rulesets(
+        rulesets: Mapping[RulesetName, Ruleset]
+    ) -> StaticChecksRulesets:
+        filtered = dict(rulesets).copy()
+        for name, ruleset in list(filtered.items()):
             if ruleset.rulespec.main_group_name != "static":
-                del self._rulesets[name]
+                del filtered[name]
+        return StaticChecksRulesets(filtered)
 
 
 class SearchedRulesets(FilteredRulesetCollection):
-    def __init__(self, origin_rulesets: RulesetCollection, search_options: SearchOptions) -> None:
-        super().__init__()
-        self._origin_rulesets = origin_rulesets
-        self._search_options = search_options
-        self._load_filtered()
-
-    def _load_filtered(self) -> None:
+    @staticmethod
+    def load_searched_rulesets(
+        origin_rulesets: RulesetCollection,
+        search_options: SearchOptions,
+    ) -> SearchedRulesets:
         """Iterates the rulesets from the original collection,
         applies the search option and takes over the rulesets
         that have at least one matching rule or match itself,
         e.g. by their name, title or help."""
-
-        for ruleset in self._origin_rulesets.get_rulesets().values():
-            if ruleset.matches_search_with_rules(self._search_options):
-                self._rulesets[ruleset.name] = ruleset
+        rulesets: Dict[RulesetName, Ruleset] = {}
+        for ruleset in origin_rulesets.get_rulesets().values():
+            if ruleset.matches_search_with_rules(search_options):
+                rulesets[ruleset.name] = ruleset
+        return SearchedRulesets(rulesets)
 
 
 class Ruleset:

@@ -268,8 +268,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
             ],
         }
 
-        rulesets = FolderRulesets(Folder.root_folder())
-        rulesets.load()
+        rulesets = FolderRulesets.load_folder_rulesets(Folder.root_folder())
         rulesets.from_config(Folder.root_folder(), ruleset_config)
         rulesets.save()
 

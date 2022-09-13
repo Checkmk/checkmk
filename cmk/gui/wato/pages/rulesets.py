@@ -229,11 +229,10 @@ class ABCRulesetMode(WatoMode):
             html.help(self._help)
 
         rulesets = self._rulesets()
-        rulesets.load()
 
         # In case the user has filled in the search form, filter the rulesets by the given query
         if self._search_options:
-            rulesets = SearchedRulesets(rulesets, self._search_options)
+            rulesets = SearchedRulesets.load_searched_rulesets(rulesets, self._search_options)
 
         if self._page_type is PageType.RuleSearch and not html.form_submitted():
             return  # Do not show the result list when no query has been made
@@ -333,8 +332,8 @@ class ModeRuleSearch(ABCRulesetMode):
 
     def _rulesets(self) -> AllRulesets:
         if self._group_name == "static":
-            return StaticChecksRulesets()
-        return AllRulesets()
+            return StaticChecksRulesets.load_static_checks_rulesets()
+        return AllRulesets.load_all_rulesets()
 
     def _set_title_and_help(self) -> None:
         if self._page_type is PageType.DeprecatedRulesets:
@@ -555,8 +554,8 @@ class ModeRulesetGroup(ABCRulesetMode):
 
     def _rulesets(self) -> AllRulesets:
         if self._group_name == "static":
-            return StaticChecksRulesets()
-        return AllRulesets()
+            return StaticChecksRulesets.load_static_checks_rulesets()
+        return AllRulesets.load_all_rulesets()
 
     def _set_title_and_help(self) -> None:
         if self._group_name == "static":
@@ -828,8 +827,7 @@ class ModeEditRuleset(WatoMode):
             return
 
         rule_folder = Folder.folder(folder)
-        rulesets = FolderRulesets(rule_folder)
-        rulesets.load()
+        rulesets = FolderRulesets.load_folder_rulesets(rule_folder)
         ruleset = rulesets.get(self._name)
 
         self._just_edited_rule = None
@@ -981,8 +979,7 @@ class ModeEditRuleset(WatoMode):
 
         rule_folder = Folder.folder(request.get_str_input_mandatory("_folder", folder))
         rule_folder.need_permission("write")
-        rulesets = FolderRulesets(rule_folder)
-        rulesets.load()
+        rulesets = FolderRulesets.load_folder_rulesets(rule_folder)
         ruleset = rulesets.get(self._name)
 
         try:
@@ -1010,9 +1007,9 @@ class ModeEditRuleset(WatoMode):
             )
             html.div(display_varname, class_="varname")
 
-        rulesets = SingleRulesetRecursively(self._name)
-        rulesets.load()
-        ruleset = rulesets.get(self._name)
+        ruleset = SingleRulesetRecursively.load_single_ruleset_recursively(self._name).get(
+            self._name
+        )
 
         html.help(ruleset.help())
         self._explain_match_type(ruleset.match_type())
@@ -1663,8 +1660,7 @@ class ABCEditRuleMode(WatoMode):
 
         self._set_folder()
 
-        self._rulesets = FolderRulesets(self._folder)
-        self._rulesets.load()
+        self._rulesets = FolderRulesets.load_folder_rulesets(self._folder)
         self._ruleset = self._rulesets.get(self._name)
 
         self._set_rule()
@@ -1683,8 +1679,7 @@ class ABCEditRuleMode(WatoMode):
         else:
             rule_id = request.get_ascii_input_mandatory("rule_id")
 
-            collection = SingleRulesetRecursively(self._name)
-            collection.load()
+            collection = SingleRulesetRecursively.load_single_ruleset_recursively(self._name)
             ruleset = collection.get(self._name)
             try:
                 self._folder = ruleset.get_rule_by_id(rule_id).folder
@@ -1805,8 +1800,7 @@ class ABCEditRuleMode(WatoMode):
             # Set new folder
             self._rule.folder = new_rule_folder
 
-            self._rulesets = FolderRulesets(new_rule_folder)
-            self._rulesets.load()
+            self._rulesets = FolderRulesets.load_folder_rulesets(new_rule_folder)
             self._ruleset = self._rulesets.get(self._name)
             self._ruleset.append_rule(new_rule_folder, self._rule)
             self._rulesets.save()

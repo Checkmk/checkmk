@@ -110,10 +110,8 @@ class ModePredefinedConditions(SimpleListMode):
         return _("Predefined conditions")
 
     def _validate_deletion(self, ident, entry):
-        rulesets = AllRulesets()
-        rulesets.load()
-        matched_rulesets = SearchedRulesets(
-            rulesets, {"rule_predefined_condition": ident}
+        matched_rulesets = SearchedRulesets.load_searched_rulesets(
+            AllRulesets.load_all_rulesets(), {"rule_predefined_condition": ident}
         ).get_rulesets()
 
         if matched_rulesets:
@@ -289,12 +287,10 @@ class ModeEditPredefinedCondition(SimpleEditMode):
         # type (RuleConditions, str) -> None
         """Apply changed folder of predefined condition to rules"""
         old_folder = Folder.folder(old_path)
-        old_rulesets = FolderRulesets(old_folder)
-        old_rulesets.load()
+        old_rulesets = FolderRulesets.load_folder_rulesets(old_folder)
 
         new_folder = Folder.folder(conditions.host_folder)
-        new_rulesets = FolderRulesets(new_folder)
-        new_rulesets.load()
+        new_rulesets = FolderRulesets.load_folder_rulesets(new_folder)
 
         for old_ruleset in old_rulesets.get_rulesets().values():
             for rule in old_ruleset.get_folder_rules(old_folder):
@@ -316,8 +312,7 @@ class ModeEditPredefinedCondition(SimpleEditMode):
         rules while saving them this step is needed.
         """
         folder = Folder.folder(conditions.host_folder)
-        rulesets = FolderRulesets(folder)
-        rulesets.load()
+        rulesets = FolderRulesets.load_folder_rulesets(folder)
 
         for ruleset in rulesets.get_rulesets().values():
             for rule in ruleset.get_folder_rules(folder):

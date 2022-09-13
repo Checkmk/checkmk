@@ -28,8 +28,7 @@ REMOVED_RULESETS: Mapping[RulesetName, RulesetName] = {
 
 class UpdateRulesets(UpdateAction):
     def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
-        all_rulesets = AllRulesets()
-        all_rulesets.load()
+        all_rulesets = AllRulesets.load_all_rulesets()
         _transform_fileinfo_timeofday_to_timeperiods(all_rulesets)
         _transform_replaced_wato_rulesets(
             logger,

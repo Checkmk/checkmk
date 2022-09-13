@@ -121,8 +121,7 @@ def test_transform_wato_rulesets_params(
         param_value,
         rulespec=rulespec_with_migration,
     )
-    rulesets = RulesetCollection()
-    rulesets.set_rulesets({rulespec_with_migration.name: ruleset})
+    rulesets = RulesetCollection({rulespec_with_migration.name: ruleset})
 
     rulesets_updater._transform_wato_rulesets_params(getLogger(), rulesets)
 
@@ -146,8 +145,7 @@ def test_transform_replaced_wato_rulesets_and_params(
     param_value: RuleValue,
     transformed_param_value: RuleValue,
 ) -> None:
-    all_rulesets = RulesetCollection()
-    all_rulesets.set_rulesets(
+    all_rulesets = RulesetCollection(
         {
             replaced_rulespec.name: _instantiate_ruleset(
                 replaced_rulespec.name,
@@ -214,8 +212,7 @@ def test_remove_removed_check_plugins_from_ignored_checks() -> None:
             },
         ],
     )
-    rulesets = RulesetCollection()
-    rulesets.set_rulesets({"ignored_checks": ruleset})
+    rulesets = RulesetCollection({"ignored_checks": ruleset})
     rulesets_updater._remove_removed_check_plugins_from_ignored_checks(
         rulesets,
         {
@@ -274,8 +271,7 @@ def test_validate_rule_values(
     rulesets: Mapping[RulesetName, RuleValue],
     n_expected_warnings: int,
 ) -> None:
-    all_rulesets = RulesetCollection()
-    all_rulesets.set_rulesets(
+    all_rulesets = RulesetCollection(
         {
             ruleset_name: _instantiate_ruleset(
                 ruleset_name,
@@ -361,9 +357,8 @@ def test_transform_fileinfo_timeofday_to_timeperiods(
     old_param_value: RuleValue,
     transformed_param_value: RuleValue,
 ) -> None:
-    rulesets = RulesetCollection()
     ruleset = _instantiate_ruleset("checkgroup_parameters:fileinfo", old_param_value)
-    rulesets.set_rulesets({"checkgroup_parameters:fileinfo": ruleset})
+    rulesets = RulesetCollection({"checkgroup_parameters:fileinfo": ruleset})
 
     rulesets_updater._transform_fileinfo_timeofday_to_timeperiods(rulesets)
 

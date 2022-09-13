@@ -1,0 +1,12 @@
+Title: kemp_loadmaster_services: Missing Conns metric
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1663048863
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p29
+
+The active connections are now shown in the service graph, again.

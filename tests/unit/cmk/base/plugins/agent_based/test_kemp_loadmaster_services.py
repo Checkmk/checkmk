@@ -8,7 +8,7 @@ from typing import Sequence
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.kemp_loadmaster_services import (
     check_kemp_loadmaster_services,
     discover_kemp_loadmaster_services,
@@ -52,6 +52,7 @@ def test_discovery_kemp_loadmaster_services(section: Section,
             [
                 Result(state=State.OK, summary="Status: in service"),
                 Result(state=State.OK, summary="Active connections: 200"),
+                Metric("conns", 200),
             ],
         ),
         (
@@ -59,6 +60,7 @@ def test_discovery_kemp_loadmaster_services(section: Section,
             [
                 Result(state=State.OK, summary="Status: in service"),
                 Result(state=State.OK, summary="Active connections: 100"),
+                Metric("conns", 100),
             ],
         ),
         (
@@ -66,6 +68,7 @@ def test_discovery_kemp_loadmaster_services(section: Section,
             [
                 Result(state=State.UNKNOWN, summary="Status: unknown[8]"),
                 Result(state=State.OK, summary="Active connections: 0"),
+                Metric("conns", 0),
             ],
         ),
     ],

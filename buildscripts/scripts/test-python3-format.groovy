@@ -1,22 +1,25 @@
+#!groovy
+
+/// test-python3-format.groovy
+
 def main() {
-    /*
-    properties([
-        pipelineTriggers([upstream('pylint3')]),
-    ])
+    dir("${checkout_dir}") {
+        stage("Execute Test") {
+            sh("make -C tests test-format-python-docker");
+        }
 
-    stage("Execute Test") {
-        sh("make -C $WORKSPACE/tests test-format-python-docker");
+        stage("Analyse Issues") {
+            publishIssues(
+                issues: [scanForIssues(tool: clang())],
+                trendChartType: 'TOOLS_ONLY',
+                qualityGates: [[
+                    threshold: 1,
+                    type: 'TOTAL',
+                    unstable: false,
+                ]],
+            );
+        }
     }
-
-    stage("Analyse Issues") {
-        def CLANG = scanForIssues tool: clang()
-        publishIssues(
-            issues:[CLANG],
-            trendChartType: 'TOOLS_ONLY',
-            qualityGates: [[threshold: 1, type: 'TOTAL', unstable: false]]
-        );
-    }
-    */
 }
 return this;
 

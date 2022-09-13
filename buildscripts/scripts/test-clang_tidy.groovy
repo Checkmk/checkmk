@@ -1,5 +1,7 @@
 #!groovy
 
+/// test-clang_tidy.groovy
+
 def main() {
     dir("${checkout_dir}") {
         stage("Execute Test") {

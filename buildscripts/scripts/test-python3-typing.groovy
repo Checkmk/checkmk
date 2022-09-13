@@ -1,12 +1,12 @@
-def main() {
-    /*
-    properties([
-        pipelineTriggers([upstream('pylint3')]),
-    ])
+#!groovy
 
+/// test-python3-typing.groovy
+
+def main() {
     stage("Execute Test") {
-        sh("""MYPY_ADDOPTS='--cobertura-xml-report=$WORKSPACE/mypy_reports --html-report=$WORKSPACE/mypy_reports/html' \
-              make -C $WORKSPACE/tests test-mypy-docker
+        sh("""
+            MYPY_ADDOPTS='--cobertura-xml-report=$WORKSPACE/mypy_reports --html-report=$WORKSPACE/mypy_reports/html' \
+            make -C $checkout_dir/tests test-mypy-docker
            """);
     }
 
@@ -22,7 +22,7 @@ def main() {
                 [
                     threshold: 1,
                     type: 'TOTAL',
-                    unstable: false
+                    unstable: false,
                 ]
             ]
         )
@@ -36,10 +36,9 @@ def main() {
             reportDir: 'mypy_reports/html',
             reportFiles: 'index.html',
             reportName: 'Typing coverage',
-            reportTitles: ''
+            reportTitles: '',
         ])
     }
-    */
 }
 return this;
 

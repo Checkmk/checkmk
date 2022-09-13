@@ -157,8 +157,27 @@ bool LogWatchEntry::loadFrom(std::string_view line) {
     }
 }
 
-// returns count of loaded
 void LogWatchEvent::loadConfig() {
+    loadSectionParameters();
+    size_t count = 0;
+    try {
+        auto log_array = readLogEntryArray();
+        if (!log_array.has_value()) {
+            return;
+        }
+        count = processLogEntryArray(*log_array);
+        setupDefaultEntry();
+        XLOG::d.t("Loaded [{}] entries in LogWatch", count);
+
+    } catch (const std::exception &e) {
+        XLOG::l(
+            "CONFIG for '{}.{}' is seriously not valid, skipping. Exception {}. Loaded {} entries",
+            cfg::groups::kLogWatchEvent, cfg::vars::kLogWatchEventLogFile,
+            e.what(), count);
+    }
+}
+
+void LogWatchEvent::loadSectionParameters() {
     using cfg::GetVal;
     send_all_ = GetVal(cfg::groups::kLogWatchEvent,
                        cfg::vars::kLogWatchEventSendall, true);
@@ -190,70 +209,74 @@ void LogWatchEvent::loadConfig() {
             "Vista API requested in config, but support in OS is absent. Disabling...");
         evl_type_ = EvlType::classic;
     }
+}
+
+std::optional<YAML::Node> LogWatchEvent::readLogEntryArray() {
     const auto cfg = cfg::GetLoadedConfig();
-    int count = 0;
-    try {
-        const auto section = cfg[cfg::groups::kLogWatchEvent];
+    const auto section = cfg[cfg::groups::kLogWatchEvent];
 
-        // sanity checks:
-        if (!section) {
-            XLOG::t("'{}' section absent", cfg::groups::kLogWatchEvent);
-            return;
-        }
-
-        if (!section.IsMap()) {
-            XLOG::l("'{}' is not correct", cfg::groups::kLogWatchEvent);
-            return;
-        }
-
-        // get array, on success, return it
-        const auto log_array = section[cfg::vars::kLogWatchEventLogFile];
-        if (!log_array) {
-            XLOG::t("'{}' section has no '{}' member",
-                    cfg::groups::kLogWatchEvent,
-                    cfg::vars::kLogWatchEventLogFile);
-            return;
-        }
-
-        if (!log_array.IsSequence()) {
-            XLOG::t("'{}' section has no '{}' member",
-                    cfg::groups::kLogWatchEvent,
-                    cfg::vars::kLogWatchEventLogFile);
-            return;
-        }
-
-        entries_.clear();
-        bool default_found = false;
-        for (const auto &l : log_array) {
-            entries_.emplace_back(LogWatchEntry());
-            entries_.back().loadFromMapNode(l);
-            if (entries_.back().loaded()) {
-                ++count;
-                if (entries_.back().name() == "*") {
-                    default_found = true;
-                    default_entry_ = entries_.size() - 1;
-                }
-
-            } else {
-                if (!entries_.empty()) {
-                    entries_.pop_back();
-                }
-            }
-        }
-        if (!default_found) {
-            // making default entry
-            entries_.emplace_back(LogWatchEntry());
-            entries_.back().init("*", "off", LogWatchContext::hide);
-            default_entry_ = entries_.size() - 1;
-        }
-        XLOG::d.t("Loaded [{}] entries in LogWatch", count);
-
-    } catch (const std::exception &e) {
-        XLOG::l(
-            "CONFIG for '{}.{}' is seriously not valid, skipping. Exception {}. Loaded {} entries",
-            cfg::groups::kLogWatchEvent, cfg::vars::kLogWatchEventLogFile,
-            e.what(), count);
+    // sanity checks:
+    if (!section) {
+        XLOG::t("'{}' section absent", cfg::groups::kLogWatchEvent);
+        return {};
     }
+
+    if (!section.IsMap()) {
+        XLOG::l("'{}' is not correct", cfg::groups::kLogWatchEvent);
+        return {};
+    }
+
+    // get array, on success, return it
+    const auto log_array = section[cfg::vars::kLogWatchEventLogFile];
+    if (!log_array) {
+        XLOG::t("'{}' section has no '{}' member", cfg::groups::kLogWatchEvent,
+                cfg::vars::kLogWatchEventLogFile);
+        return {};
+    }
+
+    if (!log_array.IsSequence()) {
+        XLOG::t("'{}' section has no '{}' member", cfg::groups::kLogWatchEvent,
+                cfg::vars::kLogWatchEventLogFile);
+        return {};
+    }
+    return log_array;
+}
+
+size_t LogWatchEvent::processLogEntryArray(const YAML::Node &log_array) {
+    size_t count{0U};
+    entries_.clear();
+    for (const auto &l : log_array) {
+        LogWatchEntry lwe;
+        lwe.loadFromMapNode(l);
+        if (lwe.loaded()) {
+            ++count;
+            entries_.emplace_back(lwe);
+        }
+    }
+
+    return count;
+}
+
+namespace {
+std::optional<size_t> FindLastEntryWithName(const LogWatchEntryVector &entries,
+                                            std::string_view name) {
+    auto found = rs::find_if(entries.rbegin(), entries.rend(),
+                             [name](auto e) { return e.name() == name; });
+    return found == entries.rend()
+               ? std::optional<size_t>{}
+               : entries.size() - 1 - std::distance(entries.rbegin(), found);
+}
+}  // namespace
+
+void LogWatchEvent::setupDefaultEntry() {
+    auto offset = FindLastEntryWithName(entries_, "*");
+    default_entry_ = offset.has_value() ? *offset : addDefaultEntry();
+}
+
+size_t LogWatchEvent::addDefaultEntry() {
+    entries_.emplace_back(LogWatchEntry());
+    entries_.back().init("*", "off", LogWatchContext::hide);
+    return entries_.size() - 1;
 }
 
 namespace details {
@@ -367,17 +390,17 @@ void AddLogState(StateVector &states, bool from_config,
 // main API to add config entries to the engine
 void AddConfigEntry(StateVector &states, const LogWatchEntry &log_entry,
                     bool reset_to_null) {
-    for (auto &state : states) {
-        if (tools::IsEqual(state.name_, log_entry.name())) {
-            XLOG::t("Old event log '{}' found", log_entry.name());
-
-            state.setDefaults();
-            state.hide_context_ = log_entry.context() == LogWatchContext::hide;
-            state.level_ = log_entry.level();
-            state.in_config_ = true;
-            state.presented_ = true;
-            return;
-        }
+    auto found = rs::find_if(states, [&](auto s) {
+        return tools::IsEqual(s.name_, log_entry.name());
+    });
+    if (found != states.end()) {
+        XLOG::t("Old event log '{}' found", log_entry.name());
+        found->setDefaults();
+        found->hide_context_ = log_entry.context() == LogWatchContext::hide;
+        found->level_ = log_entry.level();
+        found->in_config_ = true;
+        found->presented_ = true;
+        return;
     }
 
     // new added

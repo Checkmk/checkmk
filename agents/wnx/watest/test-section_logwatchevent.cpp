@@ -680,39 +680,69 @@ TEST(LogWatchEventTest, CheckMakeBodyIntegration) {
     EXPECT_LE(table.size(), old_size * 2);
 }
 
-TEST(LogWatchEventTest, TestDefaultEntry) {
-    {
-        StateVector st;
-        st.emplace_back("Abc");
-        LogWatchEvent lw;
-        LogWatchEntry dflt_entry = GenerateDefaultValue();
-        LogWatchEntry entry;
-        entry.loadFrom("'*': warn context");
-        EXPECT_EQ(dflt_entry.name(), entry.name());
-        EXPECT_EQ(dflt_entry.level(), entry.level());
-        EXPECT_EQ(dflt_entry.context(), entry.context());
-
-        lw.entries_.push_back(entry);
-        lw.default_entry_ = 0;
-        UpdateStates(st, lw.entries(), lw.defaultEntry());
-        EXPECT_EQ(st[0].in_config_, true);
-        EXPECT_EQ(st[0].level_, cfg::EventLevels::kWarn);
-        EXPECT_EQ(st[0].hide_context_, false);
+class LogWatchEventProviderFixture : public ::testing::Test {
+public:
+    void SetUp() override {
+        st_.emplace_back("Abc");
+        temp_fs_ = tst::TempCfgFs::CreateNoIo();
     }
+    void loadFrom(std::string_view entry_text) {
+        ASSERT_TRUE(
+            temp_fs_->loadContent(fmt::format("logwatch:\n"
+                                              "  enabled: yes\n"
+                                              "  sendall: no\n"
+                                              "  vista_api: no\n"
+                                              "  skip_duplicated: no\n"
+                                              "  max_size: 500000\n"
+                                              "  max_line_length: -1\n"
+                                              "  max_entries: -1\n"
+                                              "  timeout: 60\n"
+                                              "  logfile:\n"
+                                              "    - {}\n",
+                                              entry_text
 
-    {
-        StateVector st;
-        st.emplace_back("Abc");
-        LogWatchEvent lw;
-        LogWatchEntry entry;
-        entry.loadFrom("'*': off context");
-        lw.entries_.push_back(entry);
-        lw.default_entry_ = 0;
-        UpdateStates(st, lw.entries(), lw.defaultEntry());
-        EXPECT_EQ(st[0].in_config_, false);
-        EXPECT_EQ(st[0].level_, cfg::EventLevels::kOff);
-        EXPECT_EQ(st[0].hide_context_, false);
+                                              )));
+        lw_.loadConfig();
+        UpdateStates(st_, lw_.entries(), lw_.defaultEntry());
     }
+    LogWatchEvent lw_;
+    LogWatchEntry dflt_entry_{GenerateDefaultValue()};
+    LogWatchEntry entry_;
+    StateVector st_;
+
+private:
+    tst::TempCfgFs::ptr temp_fs_;
+};
+
+TEST_F(LogWatchEventProviderFixture, ConfigLoaderWarn) {
+    loadFrom("'*': warn context");
+    const auto &e = lw_.entries()[0];
+    EXPECT_TRUE(e.loaded());
+    EXPECT_EQ(e.level(), cfg::EventLevels::kWarn);
+    EXPECT_EQ(e.context(), LogWatchContext::with);
+    EXPECT_TRUE(st_[0].in_config_);
+    EXPECT_EQ(st_[0].level_, cfg::EventLevels::kWarn);
+    EXPECT_FALSE(st_[0].hide_context_);
+}
+
+TEST_F(LogWatchEventProviderFixture, ConfigLoaderOff) {
+    loadFrom("'*': off context");
+    const auto &e = lw_.entries()[0];
+    EXPECT_TRUE(e.loaded());
+    EXPECT_EQ(e.level(), cfg::EventLevels::kOff);
+    EXPECT_EQ(e.context(), LogWatchContext::with);
+    EXPECT_FALSE(st_[0].in_config_);
+    EXPECT_EQ(st_[0].level_, cfg::EventLevels::kOff);
+    EXPECT_FALSE(st_[0].hide_context_);
+}
+
+TEST_F(LogWatchEventProviderFixture, DefaultEntry) {
+    loadFrom("'*': warn context");
+    const LogWatchEntry dflt_entry_{GenerateDefaultValue()};
+    const auto &e = lw_.entries()[0];
+    EXPECT_EQ(dflt_entry_.name(), e.name());
+    EXPECT_EQ(dflt_entry_.level(), e.level());
+    EXPECT_EQ(dflt_entry_.context(), e.context());
 }
 
 TEST(LogWatchEventTest, TestMakeBody) {

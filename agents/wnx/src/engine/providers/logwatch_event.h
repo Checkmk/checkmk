@@ -34,8 +34,6 @@ struct LogWatchLimits {
 
 enum class LogWatchContext { with, hide };
 
-// simple data structure to keep states internally
-// name, value and new or not
 struct State {
     State(std::string name, uint64_t pos, bool new_found)
         : name_(std::move(name))
@@ -63,7 +61,6 @@ struct State {
 
 using StateVector = std::vector<State>;
 
-// loaded normally from the yaml
 struct LogWatchEntry {
 public:
     bool loadFromMapNode(const YAML::Node &node);
@@ -103,7 +100,7 @@ public:
 
     void loadConfig() override;
 
-    auto entries() const { return entries_; }
+    const auto &entries() const { return entries_; }
     const LogWatchEntry *defaultEntry() const {
         if (default_entry_ < entries().size()) {
             return &entries_[default_entry_];
@@ -126,15 +123,18 @@ private:
     bool send_all_ = false;
     EvlType evl_type_ = EvlType::classic;
     evl::SkipDuplicatedRecords skip_{evl::SkipDuplicatedRecords::no};
+    void loadSectionParameters();
+    static std::optional<YAML::Node> readLogEntryArray();
+    /// returns count of found entries
+    size_t processLogEntryArray(const YAML::Node &log_array);
+    void setupDefaultEntry();
+    size_t addDefaultEntry();
 
     // limits block
     int64_t max_size_ = cfg::logwatch::kMaxSize;
     int64_t max_line_length_ = cfg::logwatch::kMaxLineLength;
     int64_t max_entries_ = cfg::logwatch::kMaxEntries;
     int64_t timeout_ = cfg::logwatch::kTimeout;
-#if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
-    FRIEND_TEST(LogWatchEventTest, TestDefaultEntry);
-#endif
 };
 
 // ***********************************************************************
@@ -182,7 +182,6 @@ std::string GenerateOutputFromStates(
     EvlType type, StateVector &states,
     LogWatchLimits lwl);  // by value(32 bytes is ok)
 
-// used to check presence of some logs in registry
 bool IsEventLogInRegistry(std::string_view name);
 
 cfg::EventLevels LabelToEventLevel(std::string_view required_level);

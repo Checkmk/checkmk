@@ -344,7 +344,7 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
             "foldertree", (dflt_topic_name, dflt_target_name)
         )
 
-        visuals_to_show = [("views", e) for e in views_to_show]
+        visuals_to_show = [("views", (k, dict(v))) for k, v in views_to_show]
         visuals_to_show += [
             ("dashboards", (k, dict(v))) for k, v in dashboard.get_permitted_dashboards().items()
         ]

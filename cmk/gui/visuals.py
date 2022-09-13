@@ -1581,7 +1581,7 @@ def get_link_filter_names(
 
 
 def filters_of_visual(
-    visual: Visual,
+    visual: Visual | TypedVisual,
     info_keys: SingleInfos,
     link_filters: Optional[Dict[FilterName, FilterName]] = None,
 ) -> List[Filter]:
@@ -1630,7 +1630,9 @@ def get_ubiquitary_filters() -> List[FilterName]:
 # which are really presented to the user later.
 # For the moment we only remove the single context filters which have a
 # hard coded default value which is treated as enforced value.
-def visible_filters_of_visual(visual: Visual, use_filters: List[Filter]) -> List[Filter]:
+def visible_filters_of_visual(
+    visual: Visual | TypedVisual, use_filters: List[Filter]
+) -> List[Filter]:
     show_filters = []
 
     single_keys = get_single_info_keys(visual["single_infos"])

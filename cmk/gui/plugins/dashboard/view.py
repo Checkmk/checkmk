@@ -89,7 +89,10 @@ class ABCViewDashlet(IFrameDashlet[VT]):
         }
         context = visuals.get_merged_context(self.context, view_context)
 
-        view = View(self._dashlet_spec["name"], dict(view_spec), context)
+        # We are only interested in the ViewSpec specific attributes here. Once we have the full
+        # picture (dashlets typed (already done) and reports typed), we can better decide how to do
+        # it
+        view = View(self._dashlet_spec["name"], view_spec, context)  # type: ignore[arg-type]
         view.row_limit = views.get_limit()
         view.only_sites = visuals.get_only_sites_from_context(context)
         view.user_sorters = views.get_user_sorters()
@@ -129,7 +132,10 @@ class ViewDashlet(ABCViewDashlet[ViewDashletConfig]):
         def _render_input(dashlet: ViewDashletConfig) -> None:
             # TODO: Don't modify the self._dashlet data structure here!
             views.transform_view_to_valuespec_value(dashlet)
-            views.render_view_config(dict(dashlet))
+            # We are only interested in the ViewSpec specific attributes here. Once we have the full
+            # picture (dashlets typed (already done) and reports typed), we can better decide how to do
+            # it
+            views.render_view_config(dashlet)  # type: ignore[arg-type]
 
         def _handle_input(ident: DashletId, dashlet: ViewDashletConfig) -> ViewDashletConfig:
             dashlet["name"] = "dashlet_%d" % ident

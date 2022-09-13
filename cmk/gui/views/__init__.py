@@ -633,9 +633,10 @@ def _get_tag_group_value(row, what, tag_group_id) -> str:  # type:ignore[no-unty
 
 
 @cmk.gui.pages.register("edit_views")
-def page_edit_views():
+def page_edit_views() -> None:
     cols = [(_("Datasource"), lambda v: data_source_registry[v["datasource"]]().title)]
-    visuals.page_list("views", _("Edit Views"), get_all_views(), cols)
+    # Intermediate step. Will be cleaned up once all visuals are TypedDicts
+    visuals.page_list("views", _("Edit Views"), get_all_views(), cols)  # type: ignore[arg-type]
 
 
 # .
@@ -654,7 +655,7 @@ def page_edit_views():
 
 
 @cmk.gui.pages.register("create_view_infos")
-def page_create_view_infos():
+def page_create_view_infos() -> None:
     ds_class, ds_name = request.get_item_input("datasource", data_source_registry)
     visuals.page_create_visual(
         "views",
@@ -677,15 +678,16 @@ def page_create_view_infos():
 
 
 @cmk.gui.pages.register("edit_view")
-def page_edit_view():
+def page_edit_view() -> None:
     def get_view_infos(view: ViewSpec) -> SingleInfos:
         """Return list of available datasources (used to render filters)"""
-        ds_name = view.get("datasource", request.var("datasource"))
+        ds_name = view.get("datasource", request.get_ascii_input_mandatory("datasource"))
         return data_source_registry[ds_name]().infos
 
     visuals.page_edit_visual(
         "views",
-        get_all_views(),
+        # Intermediate step. Will be cleaned up once all visuals are TypedDicts
+        get_all_views(),  # type: ignore[arg-type]
         custom_field_handler=render_view_config,
         load_handler=transform_view_to_valuespec_value,
         create_handler=create_view_from_valuespec,

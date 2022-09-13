@@ -303,8 +303,27 @@ class SorterSpec:
         return str(self.to_raw())
 
 
-# TODO: Replace with TypedViewSpec once we are ready
-ViewSpec = dict[str, Any]
+class _ViewSpecMandatory(TypedVisual):
+    datasource: str
+    layout: str  # TODO: Replace with literal? See layout_registry.get_choices()
+    group_painters: Sequence[PainterSpec]
+    painters: Sequence[PainterSpec]
+    browser_reload: int
+    num_columns: int
+    column_headers: Literal["off", "pergroup", "repeat"]
+    sorters: Sequence[SorterSpec]
+
+
+class ViewSpec(_ViewSpecMandatory, total=False):
+    add_headers: str
+    # View editor only adds them in case they are truish. In our builtin specs these flags are also
+    # partially set in case they are falsy
+    mobile: bool
+    mustsearch: bool
+    force_checkboxes: bool
+    user_sortable: bool
+    play_sounds: bool
+
 
 AllViewSpecs = dict[tuple[UserId, ViewName], ViewSpec]
 PermittedViewSpecs = dict[ViewName, ViewSpec]

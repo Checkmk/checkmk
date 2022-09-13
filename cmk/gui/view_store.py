@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Final
+from typing import Any, Final
 
 import cmk.gui.visuals as visuals
 from cmk.gui.data_source import data_source_registry
@@ -20,25 +20,31 @@ from cmk.gui.type_defs import (
 )
 
 # TODO: Refactor to plugin_registries
-multisite_builtin_views: Dict = {}
+multisite_builtin_views: dict[ViewName, ViewSpec] = {}
 
 
 def internal_view_to_runtime_view(raw_view: dict[str, Any]) -> ViewSpec:
-    return _sorter_specs_to_runtime_format(_painter_specs_to_runtime_format(raw_view))
+    # Need to assume that we are right for now. We will have to introduce parsing there to do a real
+    # conversion in one of the following typing steps.
+    return _sorter_specs_to_runtime_format(_painter_specs_to_runtime_format(raw_view))  # type: ignore[arg-type]
 
 
-def _painter_specs_to_runtime_format(view: ViewSpec) -> ViewSpec:
+def _painter_specs_to_runtime_format(view: dict[str, Any]) -> ViewSpec:
     if "painters" in view:
         view["painters"] = [PainterSpec.from_raw(v) for v in view["painters"]]
     if "group_painters" in view:
         view["group_painters"] = [PainterSpec.from_raw(v) for v in view["group_painters"]]
-    return view
+    # Need to assume that we are right for now. We will have to introduce parsing there to do a real
+    # conversion in one of the following typing steps.
+    return view  # type: ignore[return-value]
 
 
-def _sorter_specs_to_runtime_format(view: ViewSpec) -> ViewSpec:
+def _sorter_specs_to_runtime_format(view: dict[str, Any]) -> ViewSpec:
     if "sorters" in view:
         view["sorters"] = [SorterSpec(*s) for s in view["sorters"]]
-    return view
+    # Need to assume that we are right for now. We will have to introduce parsing there to do a real
+    # conversion in one of the following typing steps.
+    return view  # type: ignore[return-value]
 
 
 class ViewStore:

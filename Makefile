@@ -687,7 +687,7 @@ Pipfile.lock: Pipfile
 	      echo "Cleaning up .venv before sync..."; \
 	      $(RM) -r .venv; \
 	    fi; \
-	    ( PIPENV_COLORBLIND=1 SKIP_MAKEFILE_CALL=1 VIRTUAL_ENV="" $(PIPENV) sync --python $(PYTHON_MAJOR_DOT_MINOR) --dev && touch .venv ) || ( $(RM) -r .venv ; exit 1 ) \
+	    ( SKIP_MAKEFILE_CALL=1 VIRTUAL_ENV="" $(PIPENV) sync --python $(PYTHON_MAJOR_DOT_MINOR) --dev && touch .venv ) || ( $(RM) -r .venv ; exit 1 ) \
 	) $(LOCK_FD)>$(LOCK_PATH)
 
 # This dummy rule is called from subdirectories whenever one of the

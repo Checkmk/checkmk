@@ -2,17 +2,24 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import NamedTuple
+import time
+from collections.abc import Mapping, MutableMapping
+from typing import Any, NamedTuple
 
-from cmk.base.api.agent_based.type_defs import StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
+from cmk.base.plugins.agent_based.utils.scaleio import (
+    create_disk_read_write,
+    DiskReadWrite,
+    parse_scaleio,
+    StorageConversionError,
+)
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.scaleio import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from .agent_based_api.v1 import get_value_store, register, Result, Service, State
+from .utils.diskstat import check_diskstat_dict
 
 # <<<scaleio_volume>>>
 # VOLUME f6a9425800000002:
@@ -36,8 +43,7 @@ class ScaleioVolume(NamedTuple):
     name: str
     size: float
     size_unit: str
-    read_ios: Sequence[str]
-    write_ios: Sequence[str]
+    volume_ios: DiskReadWrite | StorageConversionError
 
 
 ScaleioVolumeSection = Mapping[str, ScaleioVolume]
@@ -45,23 +51,37 @@ ScaleioVolumeSection = Mapping[str, ScaleioVolume]
 
 def parse_scaleio_volume(string_table: StringTable) -> ScaleioVolumeSection:
     section: MutableMapping[str, ScaleioVolume] = {}
+
     for volume_id, volume in parse_scaleio(string_table, "VOLUME").items():
         section[volume_id] = ScaleioVolume(
             volume_id=volume_id,
             name=volume["NAME"][0],
             size=float(volume["SIZE"][0]),
             size_unit=volume["SIZE"][1],
-            read_ios=volume["USER_DATA_READ_BWC"],
-            write_ios=volume["USER_DATA_WRITE_BWC"],
+            volume_ios=create_disk_read_write(
+                volume["USER_DATA_READ_BWC"],
+                volume["USER_DATA_WRITE_BWC"],
+            ),
         )
 
-
-def discover_scaleio_volume(section):
-    for volume_id in section:
-        yield volume_id, {}
+    return section
 
 
-def check_scaleio_volume(item: str, params: Mapping[str, Any], section: ScaleioVolumeSection):
+register.agent_section(
+    name="scaleio_volume",
+    parse_function=parse_scaleio_volume,
+)
+
+
+def discover_scaleio_volume(section: ScaleioVolumeSection) -> DiscoveryResult:
+    yield from (Service(item=volume_id) for volume_id in section)
+
+
+def check_scaleio_volume(
+    item: str,
+    params: Mapping[str, Any],
+    section: ScaleioVolumeSection,
+) -> CheckResult:
     change_unit = {
         "KB": "MB",
         "MB": "GB",
@@ -77,27 +97,36 @@ def check_scaleio_volume(item: str, params: Mapping[str, Any], section: ScaleioV
     if total > 1024:
         total = total // 1024
         unit = change_unit[unit]
-    yield 0, f"Name: {volume.name}, Size: {total:.1f} {unit}"
+    yield Result(
+        state=State.OK,
+        summary=f"Name: {volume.name}, Size: {total:.1f} {unit}",
+    )
 
-    for io_type in list(
-        check_diskstat_dict(
-            item,
-            params,
-            get_disks(
-                item,
-                volume.read_ios,
-                volume.write_ios,
-            ),
+    if isinstance(volume.volume_ios, StorageConversionError):
+        yield Result(
+            state=State.UNKNOWN,
+            summary=f"Unknown unit: {volume.volume_ios.unit}",
         )
-    ):
-        yield io_type
+        return
+
+    yield from check_diskstat_dict(
+        params=params,
+        disk={
+            "read_ios": volume.volume_ios.read_operations,
+            "read_throughput": volume.volume_ios.read_throughput,
+            "write_ios": volume.volume_ios.write_operations,
+            "write_throughput": volume.volume_ios.write_throughput,
+        },
+        value_store=get_value_store(),
+        this_time=time.time(),
+    )
 
 
-check_info["scaleio_volume"] = {
-    "parse_function": parse_scaleio_volume,
-    "inventory_function": discover_scaleio_volume,
-    "check_function": check_scaleio_volume,
-    "service_description": "ScaleIO Volume %s",
-    "has_perfdata": True,
-    "group": "diskstat",
-}
+register.check_plugin(
+    name="scaleio_volume",
+    service_name="ScaleIO Volume %s",
+    check_function=check_scaleio_volume,
+    discovery_function=discover_scaleio_volume,
+    check_ruleset_name="diskstat",
+    check_default_parameters={},
+)

@@ -2,7 +2,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Mapping, MutableMapping, Sequence
+from typing import Mapping, MutableMapping, NamedTuple, Sequence
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
@@ -23,6 +23,42 @@ KNOWN_CONVERSION_VALUES_INTO_BYTES = {
     "GB": 1024.0**3,
     "TB": 1024.0**4,
 }
+
+
+class StorageConversionError(NamedTuple):
+    unit: str
+
+
+class DiskReadWrite(NamedTuple):
+    read_throughput: float
+    write_throughput: float
+    read_operations: float
+    write_operations: float
+
+
+def create_disk_read_write(
+    read_data: Sequence[str], write_data: Sequence[str]
+) -> DiskReadWrite | StorageConversionError:
+    read_data_unit, write_data_unit = read_data[3], write_data[3]
+
+    if read_data_unit not in KNOWN_CONVERSION_VALUES_INTO_BYTES:
+        return StorageConversionError(unit=read_data_unit)
+
+    if write_data_unit not in KNOWN_CONVERSION_VALUES_INTO_BYTES:
+        return StorageConversionError(unit=write_data_unit)
+
+    return DiskReadWrite(
+        read_throughput=convert_throughput_into_bytes(
+            unit=read_data_unit,
+            throughput=float(read_data[2]),
+        ),
+        write_throughput=convert_throughput_into_bytes(
+            unit=write_data_unit,
+            throughput=float(write_data[2]),
+        ),
+        read_operations=float(read_data[0]),
+        write_operations=float(write_data[0]),
+    )
 
 
 def convert_scaleio_space_into_mb(unit: str, value: float) -> float:

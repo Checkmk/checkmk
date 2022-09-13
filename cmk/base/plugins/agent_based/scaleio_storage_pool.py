@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-from typing import Any, Mapping, MutableMapping, NamedTuple, Sequence
+from typing import Any, Mapping, MutableMapping, NamedTuple
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
@@ -16,10 +16,11 @@ from .utils.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
 from .utils.diskstat import check_diskstat_dict
 from .utils.scaleio import (
     convert_scaleio_space_into_mb,
-    convert_throughput_into_bytes,
-    KNOWN_CONVERSION_VALUES_INTO_BYTES,
+    create_disk_read_write,
+    DiskReadWrite,
     KNOWN_CONVERSION_VALUES_INTO_MB,
     parse_scaleio,
+    StorageConversionError,
 )
 
 # <<<scaleio_storage_pool>>>
@@ -42,17 +43,6 @@ class FilesystemStoragePool(NamedTuple):
     failed_capacity: float
 
 
-class StorageConversionError(NamedTuple):
-    unit: str
-
-
-class DiskReadWrite(NamedTuple):
-    read_throughput: float
-    write_throughput: float
-    read_operations: float
-    write_operations: float
-
-
 class StoragePool(NamedTuple):
     pool_id: str
     name: str
@@ -62,31 +52,6 @@ class StoragePool(NamedTuple):
 
 
 ScaleioStoragePoolSection = Mapping[str, StoragePool]
-
-
-def _create_disk_read_write(
-    read_data: Sequence[str], write_data: Sequence[str]
-) -> DiskReadWrite | StorageConversionError:
-    read_data_unit, write_data_unit = read_data[3], write_data[3]
-
-    if read_data_unit not in KNOWN_CONVERSION_VALUES_INTO_BYTES:
-        return StorageConversionError(unit=read_data_unit)
-
-    if write_data_unit not in KNOWN_CONVERSION_VALUES_INTO_BYTES:
-        return StorageConversionError(unit=write_data_unit)
-
-    return DiskReadWrite(
-        read_throughput=convert_throughput_into_bytes(
-            unit=read_data_unit,
-            throughput=float(read_data[2]),
-        ),
-        write_throughput=convert_throughput_into_bytes(
-            unit=write_data_unit,
-            throughput=float(write_data[2]),
-        ),
-        read_operations=float(read_data[0]),
-        write_operations=float(write_data[0]),
-    )
 
 
 def _create_filesystem_storage_pool(
@@ -127,11 +92,11 @@ def parse_scaleio_storage_pool(string_table: StringTable) -> ScaleioStoragePoolS
                 free_capacity=pool["UNUSED_CAPACITY_IN_KB"][0],
                 failed_capacity=pool["FAILED_CAPACITY_IN_KB"][0],
             ),
-            total_io=_create_disk_read_write(
+            total_io=create_disk_read_write(
                 read_data=pool["TOTAL_READ_BWC"],
                 write_data=pool["TOTAL_WRITE_BWC"],
             ),
-            rebalance_io=_create_disk_read_write(
+            rebalance_io=create_disk_read_write(
                 read_data=pool["REBALANCE_READ_BWC"],
                 write_data=pool["REBALANCE_WRITE_BWC"],
             ),

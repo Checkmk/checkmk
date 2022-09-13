@@ -4,14 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from collections.abc import Mapping, MutableMapping
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+
+Section = Mapping[str, MutableMapping[str, float]]
 
 
-def parse_cadvisor_diskstat(info):
-    diskstat_info = json.loads(info[0][0])
+def parse_cadvisor_diskstat(string_table: StringTable) -> Section:
     diskstat_mapping = {
         "disk_utilisation": "utilization",
         "disk_write_operation": "write_ios",
@@ -19,26 +22,39 @@ def parse_cadvisor_diskstat(info):
         "disk_write_throughput": "write_throughput",
         "disk_read_throughput": "read_throughput",
     }
-    parsed = {}
-    for diskstat_name, diskstat_entries in diskstat_info.items():
+
+    section: MutableMapping[str, float] = {}
+    for diskstat_name, diskstat_entries in json.loads(string_table[0][0]).items():
         if len(diskstat_entries) != 1:
             continue
         try:
-            parsed[diskstat_mapping[diskstat_name]] = float(diskstat_entries[0]["value"])
+            section[diskstat_mapping[diskstat_name]] = float(diskstat_entries[0]["value"])
         except KeyError:
             continue
-    return {"Summary": parsed}
 
-
-def check_cadvisor_diskstat(item, params, parsed):
-    return check_diskstat_dict(item, params, parsed)
+    return {"Summary": section}
 
 
 check_info["cadvisor_diskstat"] = {
     "parse_function": parse_cadvisor_diskstat,
-    "inventory_function": discover(),
-    "check_function": check_cadvisor_diskstat,
-    "service_description": "Disk IO %s",
-    "has_perfdata": True,
-    "group": "diskstat",
 }
+
+
+def discover_cadvisor_diskstat(section: Section):
+    for disk in section:
+        yield disk, {}
+
+
+def check_cadvisor_diskstat(item: str, params: Mapping[str, Any], section: Section):
+    yield from check_diskstat_dict(item, params, section)
+
+
+check_info["cadvisor_diskstat"].update(
+    {
+        "inventory_function": discover_cadvisor_diskstat,
+        "check_function": check_cadvisor_diskstat,
+        "service_description": "Disk IO %s",
+        "has_perfdata": True,
+        "group": "diskstat",
+    }
+)

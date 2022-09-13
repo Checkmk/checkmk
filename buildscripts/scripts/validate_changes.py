@@ -159,7 +159,7 @@ def apply_variables(in_data: StageInfo, env_vars: Vars) -> StageInfo:
 def finalize_stage(stage: StageInfo, env_vars: Vars, no_skip: bool) -> StageInfo:
     """Return an updated list of stages with conditions applied and values reformatted"""
     condition_vars = stage.get("ONLY_WHEN_NOT_EMPTY")
-    skip_stage = condition_vars and not any(env_vars[v] for v in condition_vars.split(","))
+    skip_stage = condition_vars and not any(env_vars[v.strip()] for v in condition_vars.split(","))
     result = (
         StageInfo(
             NAME=stage["NAME"],

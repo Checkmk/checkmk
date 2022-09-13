@@ -2,14 +2,19 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 import json
+import time
 from collections.abc import Mapping, MutableMapping
+from typing import Any
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
+from cmk.base.plugins.agent_based.utils.diskstat import check_diskstat_dict
+
+from .agent_based_api.v1 import get_value_store, register, Service
 
 Section = Mapping[str, MutableMapping[str, float]]
 
@@ -35,26 +40,35 @@ def parse_cadvisor_diskstat(string_table: StringTable) -> Section:
     return {"Summary": section}
 
 
-check_info["cadvisor_diskstat"] = {
-    "parse_function": parse_cadvisor_diskstat,
-}
+register.agent_section(
+    name="cadvisor_diskstat",
+    parse_function=parse_cadvisor_diskstat,
+)
 
 
-def discover_cadvisor_diskstat(section: Section):
+def discover_cadvisor_diskstat(section: Section) -> DiscoveryResult:
     for disk in section:
-        yield disk, {}
+        yield Service(item=disk)
 
 
-def check_cadvisor_diskstat(item: str, params: Mapping[str, Any], section: Section):
-    yield from check_diskstat_dict(item, params, section)
+def check_cadvisor_diskstat(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+
+    if (disk := section.get(item)) is None:
+        return
+
+    yield from check_diskstat_dict(
+        params=params,
+        disk=disk,
+        value_store=get_value_store(),
+        this_time=time.time(),
+    )
 
 
-check_info["cadvisor_diskstat"].update(
-    {
-        "inventory_function": discover_cadvisor_diskstat,
-        "check_function": check_cadvisor_diskstat,
-        "service_description": "Disk IO %s",
-        "has_perfdata": True,
-        "group": "diskstat",
-    }
+register.check_plugin(
+    name="cadvisor_diskstat",
+    service_name="Disk IO %s",
+    discovery_function=discover_cadvisor_diskstat,
+    check_function=check_cadvisor_diskstat,
+    check_ruleset_name="diskstat",
+    check_default_parameters={},
 )

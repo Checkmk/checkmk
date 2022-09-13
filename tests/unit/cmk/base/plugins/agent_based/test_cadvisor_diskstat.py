@@ -3,15 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
-from cmk.utils.type_defs import CheckPluginName
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Service
+from cmk.base.plugins.agent_based.cadvisor_diskstat import (
+    check_cadvisor_diskstat,
+    discover_cadvisor_diskstat,
+    Section,
+)
 
 SECTION = {
     "Summary": {
@@ -40,21 +41,17 @@ SECTION = {
     ],
 )
 def test_discover_cadvisor_diskstat(
-    section: Mapping[str, Mapping[str, float]],
+    section: Section,
     discovered_services: Sequence[Service],
-    fix_register: FixRegister,
 ) -> None:
-    check = fix_register.check_plugins[CheckPluginName("cadvisor_diskstat")]
-    assert list(check.discovery_function(section)) == discovered_services
+    assert list(discover_cadvisor_diskstat(section)) == discovered_services
 
 
-def test_check_cadvisor_diskstat(fix_register: FixRegister) -> None:
-    check = fix_register.check_plugins[CheckPluginName("cadvisor_diskstat")]
-    check_result = list(check.check_function(item="Summary", params={}, section=SECTION))
+def test_check_cadvisor_diskstat() -> None:
+    check_result = list(check_cadvisor_diskstat(item="Summary", params={}, section=SECTION))
     assert len(check_result) == 10  # A Result and Metric for every field in the section
 
 
-def test_check_cadvisor_diskstat_item_not_found(fix_register: FixRegister) -> None:
-    check = fix_register.check_plugins[CheckPluginName("cadvisor_diskstat")]
-    check_result = list(check.check_function(item="not_found", params={}, section=SECTION))
+def test_check_cadvisor_diskstat_item_not_found() -> None:
+    check_result = list(check_cadvisor_diskstat(item="not_found", params={}, section=SECTION))
     assert check_result == []

@@ -1087,7 +1087,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
         "bvip_video_alerts",
         "cadvisor_cpu",
         "cadvisor_df",
-        "cadvisor_diskstat",
         "cadvisor_memory",
         "carel_sensors",
         "carel_uniflair_cooling",

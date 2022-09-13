@@ -84,11 +84,12 @@ from cmk.gui.site_config import allsites, get_site_config, is_single_local_site,
 from cmk.gui.sites import disconnect as sites_disconnect
 from cmk.gui.sites import SiteStatus
 from cmk.gui.sites import states as sites_states
+from cmk.gui.type_defs import ConfigDomainName
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
-from cmk.gui.watolib.config_domain_name import ConfigDomainName
+from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.config_sync import ReplicationPath
 from cmk.gui.watolib.global_settings import save_site_global_settings
 from cmk.gui.watolib.hosts_and_folders import (
@@ -1630,7 +1631,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         for domain, warnings in sorted(configuration_warnings.items()):
             for warning in warnings:
                 html_code += "<li>%s: %s</li>" % (
-                    escaping.escape_attribute(domain.value),
+                    escaping.escape_attribute(domain),
                     escaping.escape_attribute(warning),
                 )
         html_code += "</ul>"
@@ -1830,7 +1831,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         return configuration_warnings
 
     def _call_activate_changes_automation(self) -> ConfigWarnings:
-        omd_ident: ConfigDomainName = ConfigDomainName.OMD
+        omd_ident: ConfigDomainName = ConfigDomainOMD.ident()
         domain_requests = self._get_domains_needing_activation(omd_ident)
 
         if site_is_local(self._site_id):
@@ -1904,7 +1905,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
                 get_config_domain(domain_name).get_domain_request(settings_list)
                 for (domain_name, settings_list) in domain_settings.items()
             ),
-            key=lambda x: x.name.value,
+            key=lambda x: x.name,
         )
 
         if omd_domain_used:
@@ -2041,11 +2042,11 @@ def execute_activate_changes(domain_requests: DomainRequests) -> ConfigWarnings:
         if domain.ident() not in domain_names
     ]
     all_domain_requests.extend(domain_requests)
-    all_domain_requests.sort(key=lambda x: x.name.value)
+    all_domain_requests.sort(key=lambda x: x.name)
 
     results: ConfigWarnings = {}
     for domain_request in all_domain_requests:
-        warnings = get_config_domain(domain_request.name.value)().activate(domain_request.settings)
+        warnings = get_config_domain(domain_request.name)().activate(domain_request.settings)
         results[domain_request.name] = warnings or []
 
     _add_extensions_for_license_usage()
@@ -2479,7 +2480,7 @@ def _create_config_sync_file_hash(file_path: Path) -> str:
     return sha256.hexdigest()
 
 
-def update_config_generation() -> None:
+def update_config_generation():
     """Increase the config generation ID
 
     This ID is used to detect whether something else has been changed in the configuration between
@@ -2495,7 +2496,7 @@ def _get_current_config_generation(lock: bool = False) -> int:
     return store.load_object_from_file(_config_generation_path(), default=0, lock=lock)
 
 
-def _config_generation_path() -> Path:
+def _config_generation_path():
     return Path(cmk.utils.paths.var_dir) / "wato" / "config-generation.mk"
 
 
@@ -2515,7 +2516,7 @@ class AutomationReceiveConfigSync(AutomationCommand):
     been made between the two sync steps (get-config-sync-state and this autmoation).
     """
 
-    def command_name(self) -> str:
+    def command_name(self):
         return "receive-config-sync"
 
     def get_request(self) -> ReceiveConfigSyncRequest:

@@ -8,7 +8,7 @@ FIND_PYTHON_FILES := $(SCRIPTS)/find-python-files
 PIPENV := $(SCRIPTS)/run-pipenv
 PYTEST := $(PIPENV) run pytest $(PYTEST_ARGS)
 CYCLES := $(PIPENV) run py_import_cycles
-CYCLES_THRESHOLD := 13
+CYCLES_THRESHOLD := 14
 PYTEST_UNIT_TEST_OPTS = \
     -T unit \
     --doctest-modules \

@@ -8,7 +8,7 @@ from typing import Any, Dict, Optional
 from livestatus import SiteGlobals
 
 from cmk.gui.plugins.watolib.utils import ABCConfigDomain, config_variable_registry
-from cmk.gui.watolib.config_domain_name import ConfigDomainName
+from cmk.gui.watolib.config_domains import ConfigDomainGUI
 
 GlobalSettings = Dict[str, Any]
 
@@ -32,7 +32,7 @@ def rulebased_notifications_enabled() -> bool:
 
 
 def save_global_settings(vars_, site_specific=False, custom_site_path=None):
-    per_domain: Dict[ConfigDomainName, Dict[str, Any]] = {}
+    per_domain: Dict[str, Dict[Any, Any]] = {}
     # TODO: Uee _get_global_config_var_names() from domain class?
     for config_variable_class in config_variable_registry.values():
         config_variable = config_variable_class()
@@ -50,7 +50,7 @@ def save_global_settings(vars_, site_specific=False, custom_site_path=None):
         "user_login",
     ]:
         if varname in vars_:
-            per_domain.setdefault(ConfigDomainName.GUI, {})[varname] = vars_[varname]
+            per_domain.setdefault(ConfigDomainGUI.ident(), {})[varname] = vars_[varname]
 
     for domain in ABCConfigDomain.enabled_domains():
         domain_config = per_domain.get(domain().ident(), {})

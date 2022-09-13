@@ -19,7 +19,6 @@ from cmk.utils.type_defs import UserId
 from cmk.gui.utils.html import HTML
 from cmk.gui.watolib.audit_log import AuditLogStore, log_audit
 from cmk.gui.watolib.changes import ActivateChangesWriter, add_change
-from cmk.gui.watolib.config_domain_name import ConfigDomainName
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.site_changes import SiteChanges
 
@@ -139,7 +138,7 @@ class TestSiteChanges:
             "text": "Created new host node1.",
             "object": ObjectRef(ObjectRefType.Host, "node1"),
             "user_id": "cmkadmin",
-            "domains": [ConfigDomainName.CORE],
+            "domains": ["check_mk"],
             "time": 1605461248.786142,
             "need_sync": True,
             "need_restart": True,
@@ -195,7 +194,7 @@ class TestSiteChanges:
                         "text": "Created new host node1.",
                         "object": (old_type, "node1"),
                         "user_id": "cmkadmin",
-                        "domains": ["check_mk"],  # old type
+                        "domains": ["check_mk"],
                         "time": 1605461248.786142,
                         "need_sync": True,
                         "need_restart": True,

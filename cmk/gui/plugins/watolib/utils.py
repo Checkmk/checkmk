@@ -3,26 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from __future__ import annotations
-
 import abc
 import os
 import pprint
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import (
-    Any,
-    Dict,
-    Iterable,
-    List,
-    Literal,
-    Mapping,
-    Optional,
-    overload,
-    Sequence,
-    Type,
-    Union,
-)
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Type
 
 import cmk.utils.plugin_registry
 import cmk.utils.store as store
@@ -31,9 +17,9 @@ from cmk.utils.type_defs import ConfigurationWarnings, HostName
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
+from cmk.gui.type_defs import ConfigDomainName
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import ValueSpec
-from cmk.gui.watolib.config_domain_name import ConfigDomainName
 
 
 def wato_fileheader() -> str:
@@ -46,7 +32,7 @@ DomainSettings = Mapping[ConfigDomainName, SerializedSettings]
 
 @dataclass
 class DomainRequest:
-    name: ConfigDomainName
+    name: str
     settings: SerializedSettings = field(default_factory=dict)
 
 
@@ -65,7 +51,7 @@ class ABCConfigDomain(abc.ABC):
         ...
 
     @classmethod
-    def enabled_domains(cls) -> Sequence[Type[ABCConfigDomain]]:
+    def enabled_domains(cls):
         return [d for d in config_domain_registry.values() if d.enabled()]
 
     @abc.abstractmethod
@@ -73,11 +59,11 @@ class ABCConfigDomain(abc.ABC):
         raise MKGeneralException(_('The domain "%s" does not support activation.') % self.ident())
 
     @classmethod
-    def get_class(cls, ident: str) -> Type[ABCConfigDomain]:
+    def get_class(cls, ident):
         return config_domain_registry[ident]
 
     @classmethod
-    def enabled(cls) -> Literal[True]:
+    def enabled(cls):
         return True
 
     @classmethod
@@ -167,20 +153,8 @@ def _get_all_default_globals() -> Dict[str, Any]:
     return settings
 
 
-@overload
-def get_config_domain(domain_ident: str) -> Type[ABCConfigDomain]:
-    ...
-
-
-@overload
-def get_config_domain(domain_ident: ConfigDomainName) -> Type[ABCConfigDomain]:
-    ...
-
-
-def get_config_domain(domain_ident: Union[str, ConfigDomainName]) -> Type[ABCConfigDomain]:
-    return config_domain_registry[
-        domain_ident.value if isinstance(domain_ident, ConfigDomainName) else domain_ident
-    ]
+def get_config_domain(domain_ident: ConfigDomainName):  # type:ignore[no-untyped-def]
+    return config_domain_registry[domain_ident]
 
 
 def get_always_activate_domains() -> Sequence[Type[ABCConfigDomain]]:
@@ -188,8 +162,8 @@ def get_always_activate_domains() -> Sequence[Type[ABCConfigDomain]]:
 
 
 class ConfigDomainRegistry(cmk.utils.plugin_registry.Registry[Type[ABCConfigDomain]]):
-    def plugin_name(self, instance: Type[ABCConfigDomain]) -> str:
-        return instance.ident().value
+    def plugin_name(self, instance):
+        return instance.ident()
 
 
 config_domain_registry = ConfigDomainRegistry()

@@ -6,7 +6,7 @@
 
 import time
 from contextlib import contextmanager
-from typing import Iterable, Iterator, Optional, Sequence, Type
+from typing import Iterable, Iterator, List, Optional, Type
 
 from livestatus import SiteId
 
@@ -35,8 +35,8 @@ def add_change(
     add_user: bool = True,
     need_sync: Optional[bool] = None,
     need_restart: Optional[bool] = None,
-    domains: Optional[Sequence[Type[ABCConfigDomain]]] = None,
-    sites: Optional[Iterable[SiteId]] = None,
+    domains: Optional[List[Type[ABCConfigDomain]]] = None,
+    sites: Optional[List[SiteId]] = None,
     domain_settings: Optional[DomainSettings] = None,
 ) -> None:
     log_audit(
@@ -83,7 +83,7 @@ class ActivateChangesWriter:
         add_user: bool,
         need_sync: Optional[bool],
         need_restart: Optional[bool],
-        domains: Optional[Sequence[Type[ABCConfigDomain]]],
+        domains: Optional[List[Type[ABCConfigDomain]]],
         sites: Optional[Iterable[SiteId]],
         domain_settings: Optional[DomainSettings],
     ) -> None:
@@ -127,7 +127,7 @@ class ActivateChangesWriter:
         add_user: bool,
         need_sync: Optional[bool],
         need_restart: Optional[bool],
-        domains: Sequence[Type[ABCConfigDomain]],
+        domains: List[Type[ABCConfigDomain]],
         domain_settings: Optional[DomainSettings],
     ) -> None:
         # Individual changes may override the domain restart default value

@@ -163,7 +163,7 @@ class ABCGlobalSettingsMode(WatoMode):
                 if (
                     search
                     and search not in group.title().lower()
-                    and search not in config_variable.domain().ident().value.lower()
+                    and search not in config_variable.domain().ident().lower()
                     and search not in varname
                     and search not in help_text.lower()
                     and search not in title_text.lower()

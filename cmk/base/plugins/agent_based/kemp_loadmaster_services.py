@@ -9,6 +9,7 @@ from typing import Final, List
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     any_of,
     equals,
+    Metric,
     OIDEnd,
     register,
     Result,
@@ -76,6 +77,7 @@ def check_kemp_loadmaster_services(item: str, section: Section) -> CheckResult:
     yield Result(state=virtual_service.state, summary=f"Status: {virtual_service.state_txt}")
     if virtual_service.connections is not None:
         yield Result(state=State.OK, summary=f"Active connections: {virtual_service.connections}")
+        yield Metric("conns", virtual_service.connections)
 
 
 register.check_plugin(

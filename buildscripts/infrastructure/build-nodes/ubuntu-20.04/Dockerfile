@@ -87,6 +87,7 @@ RUN apt-get update \
     vim \
     libc6-dbg \
     upx-ucl \
+    msitools \
     && rm -rf /var/lib/apt/lists/*
 
 

@@ -74,6 +74,8 @@ from cmk.utils.type_defs import RulesetName  # alias for str
 from cmk.utils.type_defs import (
     ActiveCheckPluginName,
     AgentTargetVersion,
+    BakeryHostName,
+    BuiltinBakeryHostName,
     CheckPluginName,
     CheckPluginNameStr,
     CheckVariables,
@@ -4243,9 +4245,12 @@ class CEEConfigCache(ConfigCache):
             for varname, ruleset in self._agent_config_rulesets()
         }
 
-    def matched_generic_agent_config_entries(self, folder: str) -> Dict[str, Any]:
-        return {
-            varname: self.ruleset_matcher.get_values_for_generic_agent(ruleset, folder)
+    def generic_agent_config_entries(self) -> Iterable[tuple[BakeryHostName, Mapping[str, Any]]]:
+        yield BuiltinBakeryHostName.GENERIC, {
+            # Watch out: this is a layering violation in disguise!
+            # The "/wato/" is `CREFolder.root_folder().path_for_rule_maching()`.
+            # We want to bake for the root folder. Clean this up!
+            varname: self.ruleset_matcher.get_values_for_generic_agent(ruleset, "/wato/")
             for varname, ruleset in self._agent_config_rulesets()
         }
 

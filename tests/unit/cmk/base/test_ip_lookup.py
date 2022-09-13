@@ -17,6 +17,12 @@ from cmk.utils.type_defs import HostName
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 
+
+@pytest.fixture(autouse=True)
+def autouse_fix_ip_lookup(fixup_ip_lookup):
+    pass
+
+
 _PatchMapping = Mapping[ip_lookup.IPLookupCacheId, Optional[str]]
 
 

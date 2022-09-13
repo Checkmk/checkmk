@@ -7,7 +7,7 @@ import json
 import random
 import string
 from contextlib import contextmanager
-from typing import Iterator, Mapping
+from typing import Callable, ContextManager, Iterator, Mapping
 
 import pytest
 from freezegun import freeze_time
@@ -34,8 +34,8 @@ managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #
 
 
 @managedtest
-def test_openapi_customer(  # type:ignore[no-untyped-def]
-    aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch
+def test_openapi_customer(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch
 ) -> None:
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
@@ -90,8 +90,8 @@ def test_openapi_customer(  # type:ignore[no-untyped-def]
 
 
 @managedtest
-def test_openapi_user_minimal_settings(  # type:ignore[no-untyped-def]
-    monkeypatch, run_as_superuser
+def test_openapi_user_minimal_settings(
+    monkeypatch: MonkeyPatch, run_as_superuser: Callable[[], ContextManager[None]]
 ) -> None:
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
@@ -124,7 +124,7 @@ def test_openapi_user_minimal_settings(  # type:ignore[no-untyped-def]
             }
         )
 
-    user_attributes = _load_internal_attributes("user")
+    user_attributes = _load_internal_attributes(UserId("user"))
 
     assert user_attributes == {
         "alias": "User Name",
@@ -145,10 +145,10 @@ def test_openapi_user_minimal_settings(  # type:ignore[no-untyped-def]
 
 
 @managedtest
-def test_openapi_user_minimal_password_settings(  # type:ignore[no-untyped-def]
+def test_openapi_user_minimal_password_settings(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    monkeypatch,
-):
+    monkeypatch: MonkeyPatch,
+) -> None:
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
     )
@@ -204,7 +204,9 @@ def test_openapi_user_minimal_password_settings(  # type:ignore[no-untyped-def]
     assert extensions["roles"] == ["user"]
 
 
-def test_openapi_all_users(wsgi_app, with_automation_user) -> None:  # type:ignore[no-untyped-def]
+def test_openapi_all_users(
+    wsgi_app: WebTestAppForCMK, with_automation_user: tuple[UserId, str]
+) -> None:
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
     base = "/NO_SITE/check_mk/api/1.0"
@@ -224,9 +226,11 @@ def test_openapi_all_users(wsgi_app, with_automation_user) -> None:  # type:igno
 
 
 @managedtest
-def test_openapi_user_config(  # type:ignore[no-untyped-def]
-    aut_user_auth_wsgi_app: WebTestAppForCMK, with_automation_user, monkeypatch
-):
+def test_openapi_user_config(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    with_automation_user: tuple[UserId, str],
+    monkeypatch: MonkeyPatch,
+) -> None:
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
     )
@@ -301,8 +305,8 @@ def test_openapi_user_config(  # type:ignore[no-untyped-def]
 
 
 @managedtest
-def test_openapi_user_internal_with_notifications(  # type:ignore[no-untyped-def]
-    monkeypatch, run_as_superuser
+def test_openapi_user_internal_with_notifications(
+    monkeypatch: MonkeyPatch, run_as_superuser: Callable[[], ContextManager[None]]
 ) -> None:
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
@@ -339,7 +343,7 @@ def test_openapi_user_internal_with_notifications(  # type:ignore[no-untyped-def
     with run_as_superuser():
         edit_users(user_data)
 
-    assert _load_internal_attributes(name) == {
+    assert _load_internal_attributes(UserId(name)) == {
         "alias": "KPECYCq79E",
         "customer": "provider",
         "pager": "",
@@ -405,13 +409,13 @@ def test_update_user_auth_options(
         content_type="application/json",
     )
 
-    serial_count_after = _load_user(name)["serial"]
+    serial_count_after = _load_user(UserId(name))["serial"]
     assert serial_count_after == expected_serial_count
 
 
 @managedtest
-def test_openapi_user_edit_auth(  # type:ignore[no-untyped-def]
-    aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch
+def test_openapi_user_edit_auth(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch
 ) -> None:
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
@@ -473,8 +477,8 @@ def test_openapi_user_edit_auth(  # type:ignore[no-untyped-def]
 
 
 @managedtest
-def test_openapi_user_internal_auth_handling(  # type:ignore[no-untyped-def]
-    monkeypatch, run_as_superuser
+def test_openapi_user_internal_auth_handling(
+    monkeypatch: MonkeyPatch, run_as_superuser: Callable[[], ContextManager[None]]
 ) -> None:
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
@@ -600,8 +604,8 @@ def test_openapi_user_internal_auth_handling(  # type:ignore[no-untyped-def]
 
 
 @managedtest
-def test_openapi_managed_global_edition(  # type:ignore[no-untyped-def]
-    aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch
+def test_openapi_managed_global_edition(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch
 ) -> None:
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
@@ -631,8 +635,8 @@ def test_openapi_managed_global_edition(  # type:ignore[no-untyped-def]
 
 
 @managedtest
-def test_managed_global_internal(  # type:ignore[no-untyped-def]
-    monkeypatch, run_as_superuser
+def test_managed_global_internal(
+    monkeypatch: MonkeyPatch, run_as_superuser: Callable[[], ContextManager[None]]
 ) -> None:
     # this test uses the internal mechanics of the user endpoint
     monkeypatch.setattr(
@@ -671,8 +675,8 @@ def test_managed_global_internal(  # type:ignore[no-untyped-def]
 
 
 @managedtest
-def test_global_full_configuration(  # type:ignore[no-untyped-def]
-    aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch
+def test_global_full_configuration(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch
 ) -> None:
     # this test uses the internal mechanics of the user endpoint
     monkeypatch.setattr(
@@ -733,8 +737,10 @@ def test_global_full_configuration(  # type:ignore[no-untyped-def]
     }
 
 
-def test_managed_idle_internal(  # type:ignore[no-untyped-def]
-    with_automation_user, monkeypatch, run_as_superuser
+def test_managed_idle_internal(
+    with_automation_user: tuple[UserId, str],
+    monkeypatch: MonkeyPatch,
+    run_as_superuser: Callable[[], ContextManager[None]],
 ) -> None:
     # this test uses the internal mechanics of the user endpoint
     monkeypatch.setattr(
@@ -847,8 +853,8 @@ def test_openapi_user_update_contact_options(
 
 
 @managedtest
-def test_openapi_user_disable_notifications(  # type:ignore[no-untyped-def]
-    aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch
+def test_openapi_user_disable_notifications(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch
 ) -> None:
     # this test uses the internal mechanics of the user endpoint
     monkeypatch.setattr(
@@ -895,8 +901,8 @@ def test_openapi_user_disable_notifications(  # type:ignore[no-untyped-def]
 
 
 @managedtest
-def test_show_all_users_with_no_email(  # type:ignore[no-untyped-def]
-    aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch
+def test_show_all_users_with_no_email(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch
 ) -> None:
     """Test a user which has no email internally similar to the internal cmkadmin user"""
     monkeypatch.setattr(
@@ -930,12 +936,12 @@ def test_show_all_users_with_no_email(  # type:ignore[no-untyped-def]
         status=200,
     )
     assert len(resp.json["value"]) == 2
-    assert all(("contact_options" not in user["extensions"] for user in resp.json["value"]))
+    assert all("contact_options" not in user["extensions"] for user in resp.json["value"])
 
 
 @managedtest
-def test_user_enforce_password_change_option(  # type:ignore[no-untyped-def]
-    aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch
+def test_user_enforce_password_change_option(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch
 ) -> None:
     """Test enforce password change option for create and update endpoints"""
     monkeypatch.setattr(
@@ -982,8 +988,8 @@ def test_user_enforce_password_change_option(  # type:ignore[no-untyped-def]
 
 
 @managedtest
-def test_user_interface_settings(  # type:ignore[no-untyped-def]
-    aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch
+def test_user_interface_settings(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch
 ) -> None:
     """Test enforce password change option for create and update endpoints"""
     monkeypatch.setattr(
@@ -1029,11 +1035,11 @@ def test_user_interface_settings(  # type:ignore[no-untyped-def]
     assert resp.json["extensions"]["interface_options"]["interface_theme"] == "light"
 
 
-def _random_string(size):
+def _random_string(size: int) -> str:
     return "".join(random.choice(string.ascii_letters + string.digits) for _ in range(size))
 
 
-def _load_internal_attributes(username):
+def _load_internal_attributes(username: UserId) -> object:
     return complement_customer(_internal_attributes(_load_user(username)))
 
 
@@ -1055,9 +1061,9 @@ def _internal_attributes(user_attributes):
 
 
 @managedtest
-def test_openapi_new_user_with_cloned_role(  # type:ignore[no-untyped-def]
-    base: str, aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch
-):
+def test_openapi_new_user_with_cloned_role(
+    base: str, aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch
+) -> None:
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
     )
@@ -1095,9 +1101,9 @@ def test_openapi_new_user_with_cloned_role(  # type:ignore[no-untyped-def]
 
 
 @managedtest
-def test_openapi_new_user_with_non_existing_role(  # type:ignore[no-untyped-def]
+def test_openapi_new_user_with_non_existing_role(
     base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
-):
+) -> None:
     userrole = "non-existing-userole"
     user_detail = {
         "username": f"new_user_with_role_{userrole}",
@@ -1126,12 +1132,12 @@ def custom_user_attributes_ctx(attrs: list[Mapping[str, str | bool]]) -> Iterato
         save_custom_attrs_to_mk_file({})
 
 
-def test_openapi_custom_attributes_of_user(  # type:ignore[no-untyped-def]
+def test_openapi_custom_attributes_of_user(
     base: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     with_user: tuple[UserId, str],
-    run_as_superuser,
-):
+    run_as_superuser: Callable[[], ContextManager[None]],
+) -> None:
 
     attr: Mapping[str, str | bool] = {
         "name": "judas",

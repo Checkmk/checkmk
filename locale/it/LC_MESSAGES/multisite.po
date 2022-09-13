@@ -11353,6 +11353,10 @@ msgstr "Impossibile rilevare il tipo di manpage: %s. Forse manca il controllo "
 msgid "Could not determine current theme."
 msgstr "Impossibile determinare il tema attuale."
 
+#, fuzzy, python-format
+msgid "Could not find an entry matching %r in choices"
+msgstr "Impossibile trovare il crash richiesto %s sul sito %s"
+
 #, python-format
 msgid ""
 "Could not find any service for your cluster. You first need to specify which "
@@ -11397,10 +11401,6 @@ msgid ""
 msgstr ""
 "Impossibile ricaricare Livestatus Proxy: %s. Vedere web.log e liveproxyd.log "
 "per ulteriori informazioni."
-
-#, fuzzy, python-format
-msgid "Could not render: %r"
-msgstr "Impossibile salvare le modifiche: %s"
 
 #, python-format
 msgid "Could not save changes: %s"
@@ -20055,6 +20055,10 @@ msgstr "Richieste IPv6"
 msgid "GET/POST variables of this page"
 msgstr "Variabili GET/POST di questa pagina"
 
+#, fuzzy
+msgid "GPU utilization"
+msgstr "Utilizzo della CPU"
+
 msgid "GUI"
 msgstr "GUI"
 
@@ -23725,6 +23729,10 @@ msgstr ""
 "minuto sarà confrontato con il delta della media di X minuti. È possibile "
 "impostare i livelli WARN o CRIT per controllare se il delta dell'ultimo "
 "minuto è superiore del X per cento al delta medio."
+
+#, fuzzy
+msgid "If value is a tuple it has to have length of two."
+msgstr "Il valore deve essere una tupla con due elementi."
 
 msgid ""
 "If you activate the monitoring of the admin state (<tt>ifAdminStatus</tt>), "
@@ -33835,6 +33843,10 @@ msgstr "Nvidia"
 #, fuzzy
 msgid "Nvidia GPU monitoring (Windows)"
 msgstr "Monitoraggio MegaRAID (Windows)"
+
+#, fuzzy
+msgid "Nvidia GPU utilization"
+msgstr "Utilizzo della CPU"
 
 msgid "O"
 msgstr "O"
@@ -58708,9 +58720,6 @@ msgstr "Il valore %r non è consentito qui."
 msgid "Value Type"
 msgstr "Tipo di valore"
 
-msgid "Value must be a tuple with two elements."
-msgstr "Il valore deve essere una tupla con due elementi."
-
 #, python-brace-format
 msgid "Value of {diff_path} changed from {val_t1} to {val_t2}."
 msgstr "Valore di {diff_path} cambiato da {val_t1} a {val_t2}."
@@ -65229,6 +65238,11 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 
+#, fuzzy, python-format
+#~| msgid "Could not save changes: %s"
+#~ msgid "Could not render: %r"
+#~ msgstr "Impossibile salvare le modifiche: %s"
+
 #~ msgid "Activated changes of event console configuration"
 #~ msgstr "Modifiche attivate della configurazione della console degli eventi"
 
@@ -69805,9 +69819,6 @@ msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 
 #~ msgid "No username given."
 #~ msgstr "Nessun nome utente indicato."
-
-#~ msgid "Could not find the requested crash %s on site %s"
-#~ msgstr "Impossibile trovare il crash richiesto %s sul sito %s"
 
 #~ msgid ""
 #~ "You can set a limit to the number of table extents for Informix Database "

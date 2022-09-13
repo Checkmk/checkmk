@@ -10666,6 +10666,10 @@ msgstr ""
 msgid "Could not determine current theme."
 msgstr "現在のテーマを特定できませんでした。"
 
+#, fuzzy, python-format
+msgid "Could not find an entry matching %r in choices"
+msgstr "サイト%sで要求されたクラッシュ%sが見つかりませんでした"
+
 #, python-format
 msgid ""
 "Could not find any service for your cluster. You first need to specify which "
@@ -10708,10 +10712,6 @@ msgid ""
 msgstr ""
 "Livestatusプロキシをリロードできませんでした:%s。詳細については、web.logおよ"
 "びliveproxyd.logを参照してください。"
-
-#, python-format
-msgid "Could not render: %r"
-msgstr "レンンダリングできませんでした: %r"
 
 #, python-format
 msgid "Could not save changes: %s"
@@ -18999,6 +18999,10 @@ msgstr "GCP/Cloud Runリクエスト"
 msgid "GET/POST variables of this page"
 msgstr ""
 
+#, fuzzy
+msgid "GPU utilization"
+msgstr "CPU使用率"
+
 msgid "GUI"
 msgstr "GUI"
 
@@ -22383,6 +22387,10 @@ msgid ""
 "to the delta of the average X minutes. You can set WARN or CRIT levels to "
 "check if the last minute's delta is X percent higher than the average delta."
 msgstr ""
+
+#, fuzzy
+msgid "If value is a tuple it has to have length of two."
+msgstr "値は、2つの要素を持つタプルである必要があります。"
 
 msgid ""
 "If you activate the monitoring of the admin state (<tt>ifAdminStatus</tt>), "
@@ -31941,6 +31949,10 @@ msgstr "Nvidia"
 #, fuzzy
 msgid "Nvidia GPU monitoring (Windows)"
 msgstr "MegaRAIDモニタリング(Windows)"
+
+#, fuzzy
+msgid "Nvidia GPU utilization"
+msgstr "CPU使用率"
 
 msgid "O"
 msgstr "O"
@@ -54937,9 +54949,6 @@ msgstr "ここでは値 %r は許可されていません。"
 msgid "Value Type"
 msgstr "値型"
 
-msgid "Value must be a tuple with two elements."
-msgstr "値は、2つの要素を持つタプルである必要があります。"
-
 #, python-brace-format
 msgid "Value of {diff_path} changed from {val_t1} to {val_t2}."
 msgstr "{diff_path} の値が{val_t1} から {val_t2}に変更されました。"
@@ -60934,6 +60943,10 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
+#, python-format
+#~ msgid "Could not render: %r"
+#~ msgstr "レンンダリングできませんでした: %r"
+
 #~ msgid "Activated changes of event console configuration"
 #~ msgstr "イベントコンソール構成のアクティブ化された変更"
 
@@ -65090,9 +65103,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "No username given."
 #~ msgstr "ユーザー名が指定されていません。"
-
-#~ msgid "Could not find the requested crash %s on site %s"
-#~ msgstr "サイト%sで要求されたクラッシュ%sが見つかりませんでした"
 
 #~ msgid "Parameters of"
 #~ msgstr "のパラメータ"

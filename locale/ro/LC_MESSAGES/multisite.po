@@ -10565,6 +10565,10 @@ msgid "Could not determine current theme."
 msgstr ""
 
 #, python-format
+msgid "Could not find an entry matching %r in choices"
+msgstr ""
+
+#, python-format
 msgid ""
 "Could not find any service for your cluster. You first need to specify which "
 "services of your nodes shal be added to the cluster. This is done using the "
@@ -10596,10 +10600,6 @@ msgstr ""
 msgid ""
 "Could not reload Livestatus Proxy: %s. See web.log and liveproxyd.log for "
 "further information."
-msgstr ""
-
-#, python-format
-msgid "Could not render: %r"
 msgstr ""
 
 #, python-format
@@ -19229,6 +19229,10 @@ msgstr "cereri"
 msgid "GET/POST variables of this page"
 msgstr ""
 
+#, fuzzy
+msgid "GPU utilization"
+msgstr "Dezactiveaza Notificarile"
+
 msgid "GUI"
 msgstr ""
 
@@ -22383,6 +22387,9 @@ msgid ""
 "If this parameter is set, the size delta of the last minute will be compared "
 "to the delta of the average X minutes. You can set WARN or CRIT levels to "
 "check if the last minute's delta is X percent higher than the average delta."
+msgstr ""
+
+msgid "If value is a tuple it has to have length of two."
 msgstr ""
 
 msgid ""
@@ -32199,6 +32206,10 @@ msgstr ""
 #, fuzzy
 msgid "Nvidia GPU monitoring (Windows)"
 msgstr " pe siteul de monitorizare: "
+
+#, fuzzy
+msgid "Nvidia GPU utilization"
+msgstr "Dezactiveaza Notificarile"
 
 msgid "O"
 msgstr ""
@@ -54278,9 +54289,6 @@ msgstr ""
 msgid "Value Type"
 msgstr ""
 
-msgid "Value must be a tuple with two elements."
-msgstr ""
-
 #, python-brace-format
 msgid "Value of {diff_path} changed from {val_t1} to {val_t2}."
 msgstr ""
@@ -60981,10 +60989,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Extents"
 #~ msgstr "Adaugă Conținut"
-
-#, fuzzy
-#~ msgid "FGPA utilization"
-#~ msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
 #~ msgid "Failed notifications"

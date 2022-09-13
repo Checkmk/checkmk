@@ -11225,6 +11225,10 @@ msgstr ""
 msgid "Could not determine current theme."
 msgstr "Não consegui determinar o tema actual."
 
+#, fuzzy, python-format
+msgid "Could not find an entry matching %r in choices"
+msgstr "Não foi possível encontrar as %s de crash solicitadas no local %s"
+
 #, python-format
 msgid ""
 "Could not find any service for your cluster. You first need to specify which "
@@ -11267,10 +11271,6 @@ msgid ""
 msgstr ""
 "Não foi possível recarregar o Livestatus Proxy: %s. Veja web.log e "
 "liveproxyd.log para mais informações."
-
-#, fuzzy, python-format
-msgid "Could not render: %r"
-msgstr "Não foi possível salvar as mudanças: %s"
 
 #, python-format
 msgid "Could not save changes: %s"
@@ -19889,6 +19889,10 @@ msgstr "Pedidos IPv6"
 msgid "GET/POST variables of this page"
 msgstr "Variáveis GET/POST desta página"
 
+#, fuzzy
+msgid "GPU utilization"
+msgstr "utilização da CPU"
+
 msgid "GUI"
 msgstr "GUI"
 
@@ -23520,6 +23524,10 @@ msgstr ""
 "comparado com o delta do X minutos médio. Você pode definir os níveis de "
 "AVISO ou CRIT para verificar se o delta do último minuto é X por cento maior "
 "que o delta da média."
+
+#, fuzzy
+msgid "If value is a tuple it has to have length of two."
+msgstr "O valor deve ser um tuple com dois elementos."
 
 #, fuzzy
 msgid ""
@@ -33580,6 +33588,10 @@ msgstr "Nvidia"
 #, fuzzy
 msgid "Nvidia GPU monitoring (Windows)"
 msgstr "Monitoramento MegaRAID (Windows)"
+
+#, fuzzy
+msgid "Nvidia GPU utilization"
+msgstr "utilização da CPU"
 
 msgid "O"
 msgstr "O"
@@ -58199,9 +58211,6 @@ msgstr "Valor %r não é permitido aqui."
 msgid "Value Type"
 msgstr "Tipo de valor"
 
-msgid "Value must be a tuple with two elements."
-msgstr "O valor deve ser um tuple com dois elementos."
-
 #, python-brace-format
 msgid "Value of {diff_path} changed from {val_t1} to {val_t2}."
 msgstr "O valor de {diff_path} mudou de {val_t1} para {val_t2}."
@@ -64632,6 +64641,11 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
 
+#, fuzzy, python-format
+#~| msgid "Could not save changes: %s"
+#~ msgid "Could not render: %r"
+#~ msgstr "Não foi possível salvar as mudanças: %s"
+
 #~ msgid "Activated changes of event console configuration"
 #~ msgstr "Alterações ativadas na configuração do console de eventos"
 
@@ -69158,9 +69172,6 @@ msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
 
 #~ msgid "No username given."
 #~ msgstr "Sem nome de usuário dado."
-
-#~ msgid "Could not find the requested crash %s on site %s"
-#~ msgstr "Não foi possível encontrar as %s de crash solicitadas no local %s"
 
 #~ msgid ""
 #~ "You can set a limit to the number of table extents for Informix Database "

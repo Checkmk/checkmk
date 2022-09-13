@@ -16,6 +16,8 @@ use tokio::sync::mpsc::{
     unbounded_channel as channel, UnboundedReceiver as Receiver, UnboundedSender as Sender,
 };
 
+pub const SERVER_CREATION_TIMEOUT: Duration = Duration::from_secs(5);
+
 // data must be in sync with windows agent
 const PROVIDER_NAME_LENGTH: usize = 32;
 pub enum DataType {
@@ -179,13 +181,13 @@ impl MailSlotBackend {
             let (lock, cond_var) = &*cv_pair;
             let wait_result = cond_var
                 .wait_timeout_while(
-                    lock.lock().unwrap(),    // mutex guard
-                    Duration::from_secs(1),  // duration
+                    lock.lock().unwrap(), // mutex guard
+                    SERVER_CREATION_TIMEOUT,
                     |&mut started| !started, // predicate: for wait(opposite to C++)
                 )
                 .unwrap();
             if wait_result.1.timed_out() {
-                return Err(anyhow!("timeout"));
+                return Err(anyhow!("server creation timeout"));
             }
         }
 

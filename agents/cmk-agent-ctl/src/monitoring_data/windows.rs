@@ -164,6 +164,7 @@ pub fn collect() -> IoResult<Vec<u8>> {
 #[cfg(test)]
 #[cfg(windows)]
 mod tests {
+    use crate::mailslot_transport::SERVER_CREATION_TIMEOUT as MAILSLOT_SERVER_TIMEOUT;
     use crate::monitoring_data::windows::make_yaml_command;
 
     use super::{async_collect, AgentChannel, ChannelType};
@@ -248,11 +249,12 @@ mod tests {
         );
     }
 
+    /// TODO(sk): estimate to move to integration
     #[tokio::test(flavor = "multi_thread")]
     async fn test_async_collect_missing_mailslot() {
         assert_eq!(
             tokio::time::timeout(
-                Duration::from_secs(1),
+                MAILSLOT_SERVER_TIMEOUT + Duration::from_secs(1),
                 async_collect(&AgentChannel::from("ms/xxxx"), addr())
             )
             .await

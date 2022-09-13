@@ -366,7 +366,7 @@ def load_plugins() -> None:
         declare_permission(
             "view.%s" % name,
             format_view_title(name, view_spec),
-            "%s - %s" % (name, _u(view_spec["description"])),
+            "%s - %s" % (name, _u(str(view_spec["description"]))),
             builtin_role_ids,
         )
 

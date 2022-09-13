@@ -954,12 +954,13 @@ def copy_view_into_dashlet(
         view = permitted_views[view_name]
 
     view = copy.deepcopy(view)  # Clone the view
-    # the view definition may contain lazy strings
-    # that will be serialized to 'l"to translage"' which will cause an
-    # SyntaxError when trying to load the .mk file.
-    for key, value in view.items():
-        if isinstance(value, LazyString):
-            view[key] = str(value)
+
+    # the view definition may contain lazy strings that will be serialized to 'l"to translate"' when
+    # saving the view data structure. Which will later cause an SyntaxError when trying to load the
+    # .mk file. Resolve these strings here to prevent that issue.
+    view["title"] = str(view["title"])
+    view["description"] = str(view["description"])
+
     # TODO: Can hopefully be claned up once view is also a TypedDict
     dashlet.update(view)  # type: ignore[typeddict-item]
     if add_context:

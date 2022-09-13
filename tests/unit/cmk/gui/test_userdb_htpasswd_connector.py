@@ -16,6 +16,12 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.userdb import htpasswd
 
 
+@pytest.fixture(autouse=True)
+def reduce_bcrypt_rounds(monkeypatch: MonkeyPatch) -> None:
+    """Reduce the number of rounds for hashing bcrypt"""
+    monkeypatch.setattr("cmk.utils.crypto.password_hashing.BCRYPT_ROUNDS", 4)
+
+
 @pytest.fixture(name="htpasswd_file")
 def htpasswd_file_fixture(tmp_path: Path) -> Path:
     htpasswd_file_path = tmp_path / "htpasswd"
@@ -84,7 +90,7 @@ def test_hash_password(password: str) -> None:
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=DeprecationWarning)
         hashed_pw = htpasswd.hash_password(password)
-    assert password_hashing.check_password(password, hashed_pw)
+    password_hashing.verify(password, hashed_pw)
 
 
 def test_truncation_error() -> None:

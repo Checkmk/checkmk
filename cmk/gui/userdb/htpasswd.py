@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Optional
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -69,19 +68,19 @@ class Htpasswd:
 # - https://httpd.apache.org/docs/2.4/misc/password_encryptions.html
 # - https://passlib.readthedocs.io/en/stable/lib/passlib.apache.html
 #
-def hash_password(password: str, *, rounds: Optional[int] = None) -> str:
+def hash_password(password: str) -> str:
     """Hash a password
 
     Invalid inputs raise MKUserError.
     """
     try:
-        return password_hashing.hash_password(password, rounds=rounds)
+        return password_hashing.hash_password(password)
+
     except password_hashing.PasswordTooLongError:
         raise MKUserError(
             None, "Passwords over 72 bytes would be truncated and are therefore not allowed!"
         )
     except ValueError:
-        # either password contained a null byte or rounds was < 4.
         raise MKUserError(None, "Password could not be hashed.")
 
 
@@ -123,7 +122,12 @@ class HtpasswdUserConnector(UserConnector):
         return Path(cmk.utils.paths.var_dir, "web", str(user_id), "automation.secret").is_file()
 
     def _password_valid(self, pwhash: str, password: str) -> bool:
-        return password_hashing.check_password(password, pwhash)
+        try:
+            password_hashing.verify(password, pwhash)
+        except (password_hashing.PasswordInvalidError, ValueError):
+            return False
+        else:
+            return True
 
     def save_users(self, users: dict[UserId, UserSpec]) -> None:
         # Apache htpasswd. We only store passwords here. During

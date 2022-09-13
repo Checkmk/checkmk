@@ -18,7 +18,7 @@ from tests.testlib import is_managed_repo
 
 import cmk.utils.paths
 import cmk.utils.version
-from cmk.utils.crypto.password_hashing import check_password
+from cmk.utils.crypto import password_hashing
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.plugins.userdb.utils as utils
@@ -752,19 +752,21 @@ def test_disable_two_factor_authentication(user_id: UserId) -> None:
     assert not userdb.is_two_factor_login_enabled(user_id)
 
 
-def test_make_two_factor_backup_codes(user_id: UserId) -> None:
-    codes = userdb.make_two_factor_backup_codes(rounds=5)
+def test_make_two_factor_backup_codes(monkeypatch: MonkeyPatch, user_id: UserId) -> None:
+    monkeypatch.setattr("cmk.utils.crypto.password_hashing.BCRYPT_ROUNDS", 4)
+    codes = userdb.make_two_factor_backup_codes()
     assert len(codes) == 10
     for password, pwhashed in codes:
-        assert check_password(password, pwhashed)
+        password_hashing.verify(password, pwhashed)
 
 
 def test_is_two_factor_backup_code_valid_no_codes(user_id: UserId) -> None:
     assert not userdb.is_two_factor_backup_code_valid(user_id, "yxz")
 
 
-def test_is_two_factor_backup_code_valid_matches(user_id: UserId) -> None:
-    codes = userdb.make_two_factor_backup_codes(rounds=5)
+def test_is_two_factor_backup_code_valid_matches(monkeypatch: MonkeyPatch, user_id: UserId) -> None:
+    monkeypatch.setattr("cmk.utils.crypto.password_hashing.BCRYPT_ROUNDS", 4)
+    codes = userdb.make_two_factor_backup_codes()
     credentials = userdb.load_two_factor_credentials(user_id)
     credentials["backup_codes"] = [pwhashed for _password, pwhashed in codes]
     userdb.save_two_factor_credentials(user_id, credentials)

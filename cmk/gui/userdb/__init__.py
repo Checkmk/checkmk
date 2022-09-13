@@ -36,7 +36,7 @@ from six import ensure_str
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
-from cmk.utils.crypto.password_hashing import check_password, hash_password
+from cmk.utils.crypto import password_hashing
 from cmk.utils.type_defs import ContactgroupName, UserId
 
 import cmk.gui.background_job as background_job
@@ -276,13 +276,13 @@ def save_two_factor_credentials(user_id: UserId, credentials: TwoFactorCredentia
     save_custom_attr(user_id, "two_factor_credentials", repr(credentials))
 
 
-def make_two_factor_backup_codes(*, rounds: Optional[int] = None) -> list[Tuple[str, str]]:
+def make_two_factor_backup_codes() -> list[Tuple[str, str]]:
     """Creates a set of new two factor backup codes
 
     The codes are returned in plain form for displaying and in hashed+salted form for storage
     """
     return [
-        (password, hash_password(password, rounds=rounds))
+        (password, password_hashing.hash_password(password))
         for password in (utils.get_random_string(10) for i in range(10))
     ]
 
@@ -291,10 +291,14 @@ def is_two_factor_backup_code_valid(user_id: UserId, code: str) -> bool:
     """Verifies whether or not the given backup code is valid and invalidates the code"""
     credentials = load_two_factor_credentials(user_id)
     matched_code = ""
+
     for stored_code in credentials["backup_codes"]:
-        if check_password(code, stored_code):
+        try:
+            password_hashing.verify(code, stored_code)
             matched_code = stored_code
             break
+        except (password_hashing.PasswordInvalidError, ValueError):
+            continue
 
     if not matched_code:
         return False
@@ -1143,7 +1147,7 @@ def create_cmk_automation_user(now: datetime) -> None:
         "alias": "Check_MK Automation - used for calling web services",
         "contactgroups": [],
         "automation_secret": secret,
-        "password": hash_password(secret),
+        "password": password_hashing.hash_password(secret),
         "roles": ["admin"],
         "locked": False,
         "serial": 0,

@@ -266,9 +266,7 @@ class RulesetMatcher:
             return not negate
         return negate
 
-    def get_values_for_generic_agent(
-        self, ruleset: Ruleset, path_for_rule_matching: str
-    ) -> list[RuleValue]:
+    def get_values_for_generic_agent(self, ruleset: Ruleset, folder: str) -> list[RuleValue]:
         """Compute rulesets for "generic" hosts
 
         This fictious host has no name and no tags.
@@ -277,13 +275,15 @@ class RulesetMatcher:
         """
         self.tuple_transformer.transform_in_place(ruleset, is_service=False, is_binary=False)
 
+        main_folder = "/"
+
         entries = []
         for rule in ruleset:
             if _is_disabled(rule):
                 continue
 
-            rule_path = (cond := rule["condition"]).get("host_folder")
-            if rule_path is not None and not path_for_rule_matching.startswith(rule_path):
+            rule_path = (cond := rule["condition"]).get("host_folder", main_folder)
+            if not folder.startswith(rule_path):
                 continue
 
             if (tags := cond.get("host_tags", {})) and not self.ruleset_optimizer.matches_host_tags(

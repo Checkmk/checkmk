@@ -9,12 +9,15 @@ This command is normally executed automatically at the end of "omd update" on
 all sites and on remote sites after receiving a snapshot and does not need to
 be called manually.
 """
+from __future__ import annotations
+
 import argparse
 import ast
 import copy
 import errno
 import gzip
 import hashlib
+import json
 import logging
 import multiprocessing
 import re
@@ -28,6 +31,7 @@ from typing import (
     Callable,
     Container,
     Dict,
+    Final,
     Iterable,
     List,
     Mapping,
@@ -53,7 +57,7 @@ from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import VERBOSE
 from cmk.utils.regex import unescape
-from cmk.utils.store import load_from_mk_file, save_mk_file
+from cmk.utils.store import load_from_mk_file, ObjectStore, save_mk_file
 from cmk.utils.type_defs import (
     CheckPluginName,
     ContactgroupName,
@@ -195,6 +199,59 @@ def _save_user_instances(visual_type: str, all_visuals: Dict):
     # Now persist all modified instances
     for user_id in modified_user_instances:
         visuals.save(visual_type, all_visuals, user_id)
+
+
+UpdateActionState = MutableMapping[str, str]
+
+_UpdateStatePayload = MutableMapping[str, UpdateActionState]
+
+
+class _UpdateStateSerializer:
+    @staticmethod
+    def _assert_str(raw: str) -> str:
+        if not isinstance(raw, str):
+            raise TypeError(raw)
+        return raw
+
+    def serialize(self, data: _UpdateStatePayload) -> bytes:
+        # Make sure we write it in a strucure s.t. it can be deserialized.
+        # Rather crash upon serializing.
+        return json.dumps(
+            {
+                self._assert_str(action_name): {
+                    self._assert_str(k): self._assert_str(v) for k, v in action_value.items()
+                }
+                for action_name, action_value in data.items()
+            }
+        ).encode()
+
+    @staticmethod
+    def deserialize(raw: bytes) -> _UpdateStatePayload:
+        return {
+            str(action_name): {str(k): str(v) for k, v in raw_action_value.items()}
+            for action_name, raw_action_value in json.loads(raw.decode()).items()
+        }
+
+
+class UpdateState:
+    _BASE_NAME = "update_state.json"
+
+    def __init__(
+        self, store: ObjectStore[_UpdateStatePayload], payload: _UpdateStatePayload
+    ) -> None:
+        self.store: Final = store
+        self.payload: Final = payload
+
+    @classmethod
+    def load(cls, path: Path) -> UpdateState:
+        store = ObjectStore(path / cls._BASE_NAME, serializer=_UpdateStateSerializer())
+        return cls(store, store.read_obj(default={}))
+
+    def save(self) -> None:
+        self.store.write_obj(self.payload)
+
+    def setdefault(self, name: str) -> UpdateActionState:
+        return self.payload.setdefault(name, {})
 
 
 class UpdateConfig:

@@ -27,7 +27,7 @@ from cmk.base.plugins.agent_based.utils import gcp
 
 from cmk.special_agents.agent_gcp import HTTP_LOADBALANCER
 
-from .gcp_test_util import DiscoverTester, generate_timeseries, Plugin
+from .gcp_test_util import DiscoverTester, generate_stringtable, Plugin
 
 ASSET_TABLE = [
     [f'{{"project":"backup-255820", "config":["{HTTP_LOADBALANCER.name}"]}}'],
@@ -88,7 +88,7 @@ def generate_results(plugin: Plugin) -> CheckResult:
             f'{{"name": "//compute.googleapis.com/projects/tribe29-load-balancer-test/global/urlMaps/{item}", "asset_type": "compute.googleapis.com/UrlMap", "resource": {{"version": "v1", "discovery_document_uri": "https://www.googleapis.com/discovery/v1/apis/compute/v1/rest", "discovery_name": "UrlMap", "parent": "//cloudresourcemanager.googleapis.com/projects/1085633905945", "data": {{"selfLink": "https://www.googleapis.com/compute/v1/projects/tribe29-load-balancer-test/global/urlMaps/{item}", "creationTimestamp": "2022-08-24T01:24:13.799-07:00", "fingerprint": "lWKVO4QpW1o=", "name": "{item}", "hostRules": [{{"pathMatcher": "path-matcher-2", "hosts": ["*"]}}], "id": "5820867100963004098", "defaultService": "https://www.googleapis.com/compute/v1/projects/tribe29-load-balancer-test/global/backendBuckets/cats", "pathMatchers": [{{"name": "path-matcher-2", "defaultService": "https://www.googleapis.com/compute/v1/projects/tribe29-load-balancer-test/global/backendBuckets/cats", "pathRules": [{{"paths": ["/love-to-fetch/*"], "service": "https://www.googleapis.com/compute/v1/projects/tribe29-load-balancer-test/global/backendBuckets/dogs"}}]}}]}}, "location": "global", "resource_url": ""}}, "ancestors": ["projects/1085633905945", "folders/1022571519427", "organizations/668598212003"], "update_time": "2022-08-24T08:24:30.849036Z", "org_policy": []}}'
         ],
     ]
-    section = parse(generate_timeseries(item, 42.0, HTTP_LOADBALANCER))
+    section = parse(generate_stringtable(item, 42.0, HTTP_LOADBALANCER))
     yield from plugin.function(
         item=item,
         params={k: None for k in plugin.metrics},

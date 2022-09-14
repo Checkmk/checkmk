@@ -25,7 +25,7 @@ from cmk.base.plugins.agent_based.utils import gcp
 
 from cmk.special_agents.agent_gcp import GCE_STORAGE
 
-from .gcp_test_util import DiscoverTester, generate_timeseries, Plugin
+from .gcp_test_util import DiscoverTester, generate_stringtable, Plugin
 
 ASSET_TABLE = [
     [f'{{"project":"backup-255820", "config":["{GCE_STORAGE.name}"]}}'],
@@ -118,7 +118,7 @@ def generate_results(plugin: Plugin) -> CheckResult:
             '{"name": "//compute.googleapis.com/projects/tribe29-check-development/zones/us-central1-a/disks/item", "asset_type": "compute.googleapis.com/Disk", "resource": {"version": "v1", "discovery_document_uri": "https://www.googleapis.com/discovery/v1/apis/compute/v1/rest", "discovery_name": "Disk", "parent": "//cloudresourcemanager.googleapis.com/projects/1074106860578", "data": {"type": "https://www.googleapis.com/compute/v1/projects/tribe29-check-development/zones/us-central1-a/diskTypes/pd-balanced", "status": "READY", "physicalBlockSizeBytes": "4096", "sizeGb": "10", "selfLink": "https://www.googleapis.com/compute/v1/projects/tribe29-check-development/zones/us-central1-a/disks/item", "labels": {"amon": "amarth", "judas": "priest"}, "labelFingerprint": "qig8Gf7QLPc=", "zone": "https://www.googleapis.com/compute/v1/projects/tribe29-check-development/zones/us-central1-a", "id": "6876419180096736884", "creationTimestamp": "2022-08-11T05:05:47.456-07:00", "name": "item"}, "location": "us-central1-a", "resource_url": ""}, "ancestors": ["projects/1074106860578", "folders/1022571519427", "organizations/668598212003"], "update_time": "2022-08-11T12:05:47.734688Z", "org_policy": []}'
         ],
     ]
-    section = parse(generate_timeseries(item, 42.0, GCE_STORAGE))
+    section = parse(generate_stringtable(item, 42.0, GCE_STORAGE))
     yield from plugin.function(
         item=item,
         params={k: None for k in plugin.metrics},

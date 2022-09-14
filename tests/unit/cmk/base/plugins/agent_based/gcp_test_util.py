@@ -100,7 +100,7 @@ def generate_labels(item: str, service_desc: agent_gcp.Service) -> Tuple[Mapping
     return metric_labels, resource_labels
 
 
-def generate_timeseries(item: str, value: float, service_desc: agent_gcp.Service) -> StringTable:
+def generate_stringtable(item: str, value: float, service_desc: agent_gcp.Service) -> StringTable:
     start_time = datetime.datetime(2016, 4, 6, 22, 5, 0, 42)
     end_time = datetime.datetime(2016, 4, 6, 22, 5, 1, 42)
     interval = monitoring_v3.TimeInterval(end_time=end_time, start_time=start_time)

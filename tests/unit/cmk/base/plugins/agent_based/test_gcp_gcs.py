@@ -28,7 +28,7 @@ from cmk.base.plugins.agent_based.utils import gcp
 
 from cmk.special_agents.agent_gcp import GCS
 
-from .gcp_test_util import DiscoverTester, generate_timeseries, Plugin
+from .gcp_test_util import DiscoverTester, generate_stringtable, Plugin
 
 ASSET_TABLE = [
     [f'{{"project":"backup-255820", "config":["{GCS.name}"]}}'],
@@ -135,7 +135,7 @@ def generate_results(plugin: Plugin) -> CheckResult:
             f'{{"name": "//storage.googleapis.com/backup-home-ml-free", "asset_type": "storage.googleapis.com/Bucket", "resource": {{"version": "v1", "discovery_document_uri": "https://www.googleapis.com/discovery/v1/apis/storage/v1/rest", "discovery_name": "Bucket", "parent": "//cloudresourcemanager.googleapis.com/projects/360989076580", "data": {{"name": "backup-home-ml-free", "id": "{item}", "labels": {{"tag": "freebackup"}}, "projectNumber": 360989076580.0, "timeCreated": "2019-11-03T13:48:57.905Z", "lifecycle": {{"rule": []}}, "metageneration": 1.0, "cors": [], "storageClass": "STANDARD", "etag": "CAE=", "kind": "storage#bucket", "billing": {{}}, "versioning": {{}}, "iamConfiguration": {{"uniformBucketLevelAccess": {{"enabled": false}}, "bucketPolicyOnly": {{"enabled": false}}}}, "owner": {{}}, "encryption": {{}}, "updated": "2019-11-03T13:48:57.905Z", "locationType": "region", "logging": {{}}, "acl": [], "retentionPolicy": {{}}, "defaultObjectAcl": [], "location": "US-CENTRAL1", "selfLink": "https://www.googleapis.com/storage/v1/b/backup-home-ml-free", "website": {{}}, "autoclass": {{}}}}, "location": "us-central1", "resource_url": ""}}, "ancestors": ["projects/360989076580"], "update_time": "2021-09-20T20:35:59.747Z", "org_policy": []}}'
         ],
     ]
-    section = parse_gcp_gcs(generate_timeseries(item, 42.0, GCS))
+    section = parse_gcp_gcs(generate_stringtable(item, 42.0, GCS))
     yield from plugin.function(
         item=item,
         params={k: None for k in plugin.metrics},

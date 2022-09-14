@@ -19,7 +19,7 @@ from __future__ import annotations
 
 from collections.abc import Collection, Container, Hashable, Iterable, Mapping, Sequence, Set
 from pathlib import Path
-from typing import Protocol, TypeVar
+from typing import NewType, Protocol, TypeVar
 
 import jsonschema  # type: ignore[import]
 import yaml
@@ -31,14 +31,16 @@ from pylint.lint import PyLinter  # type: ignore[import]
 # our main "business logic", the heart of our import checking logic
 ####################################################################################################
 
+PackageName = NewType("PackageName", str)
+
 
 class PackageFor(Protocol):
-    def __call__(self, name: str) -> str:
+    def __call__(self, name: str) -> PackageName:
         ...
 
 
 class IsPackageRelationshipOK(Protocol):
-    def __call__(self, *, importing_package: str, imported_package: str) -> bool:
+    def __call__(self, *, importing_package: PackageName, imported_package: PackageName) -> bool:
         ...
 
 
@@ -238,7 +240,7 @@ def extract_imported_names(node: nodes.Import) -> Sequence[str]:
 
 
 class PackageMapper:
-    def __init__(self, package_definitions: Iterable[tuple[str, Iterable[str]]]) -> None:
+    def __init__(self, package_definitions: Iterable[tuple[PackageName, Iterable[str]]]) -> None:
         super().__init__()
         self._package_definitions = list(package_definitions)
         self._validate_no_prefix_shadowing()
@@ -254,10 +256,10 @@ class PackageMapper:
                         )
             prefixes_seen |= set(prefixes)
 
-    def defined_package_names(self) -> Set[str]:
+    def defined_package_names(self) -> Set[PackageName]:
         return {package_name for package_name, _prefixes in self._package_definitions}
 
-    def package_for(self, name: str) -> str:
+    def package_for(self, name: str) -> PackageName:
         for package_name, prefixes in self._package_definitions:
             if any(self._is_prefix_of(p, name) for p in prefixes):
                 return package_name
@@ -276,9 +278,9 @@ class PackageMapper:
 class RelationChecker:
     def __init__(
         self,
-        allowed_package_relationships: Mapping[str, Iterable[str]],
-        defined_package_names: Set[str],
-        known_package_cycles: Collection[Sequence[str]],
+        allowed_package_relationships: Mapping[PackageName, Iterable[PackageName]],
+        defined_package_names: Set[PackageName],
+        known_package_cycles: Collection[Sequence[PackageName]],
     ) -> None:
         super().__init__()
         self._allowed_package_relationships = allowed_package_relationships
@@ -287,7 +289,7 @@ class RelationChecker:
 
     def _validate_only_defined_package_names_used(
         self,
-        defined_package_names: Set[str],
+        defined_package_names: Set[PackageName],
         known_package_cycles: Collection[Sequence[str]],
     ) -> None:
         def validate_defined(package_name: str, where: str) -> None:
@@ -314,9 +316,11 @@ class RelationChecker:
             )
             raise ValueError(f"cycle{plural} in allowed package relationships: {pretty_cycles}")
 
-    def is_package_relationship_ok(self, importing_package: str, imported_package: str) -> bool:
+    def is_package_relationship_ok(
+        self, importing_package: PackageName, imported_package: PackageName
+    ) -> bool:
         return (
-            imported_package in ("stdlib", importing_package)
+            imported_package in (PackageName("stdlib"), importing_package)
             or imported_package in self._allowed_package_relationships[importing_package]
         )
 

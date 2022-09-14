@@ -18,15 +18,15 @@ Important: 1) If MongoDB runs as single instance the agent data is assigned
 
 __version__ = "2.0.0p29"
 
+import inspect
+import json
 import os
 import sys
 import time
-import inspect
-import json
 from collections import defaultdict
 
 try:
-    from typing import Callable, Dict, Any
+    from typing import Any, Callable, Dict
 except ImportError:
     pass
 
@@ -42,6 +42,7 @@ except ImportError:
 from bson.json_util import dumps  # type: ignore[import]
 
 MK_VARDIR = os.environ.get("MK_VARDIR")
+PYMONGO_VERSION = tuple(int(i) for i in pymongo.version.split("."))
 
 
 def get_database_info(client):
@@ -647,16 +648,25 @@ def section_logwatch(client):
 
 
 def main():
-    client = pymongo.MongoClient(
-        # Requests are distributed to secondaries, ref.
-        # https://www.mongodb.com/docs/manual/core/read-preference/
-        read_preference=pymongo.ReadPreference.SECONDARY,
-        # The agent plugin is expected to run on each host, returing
-        # information from only that host.
-        # If directConnection is set to False (default), the plugin could also
-        # connect to a totally different host from where it is located.
-        directconnection=True,
-    )
+    if PYMONGO_VERSION >= (3, 11, 0):
+        # See 'Changes in Version 3.11.0' on
+        # https://pymongo.readthedocs.io/en/stable/changelog.html
+        client = pymongo.MongoClient(
+            # Requests are distributed to secondaries, ref.
+            # https://www.mongodb.com/docs/manual/core/read-preference/
+            read_preference=pymongo.ReadPreference.SECONDARY,
+            # The agent plugin is expected to run on each host, returing
+            # information from only that host.
+            # If directConnection is set to False (default), the plugin could also
+            # connect to a totally different host from where it is located.
+            directconnection=True,
+        )
+    else:
+        client = pymongo.MongoClient(
+            # Requests are distributed to secondaries, ref.
+            # https://www.mongodb.com/docs/manual/core/read-preference/
+            read_preference=pymongo.ReadPreference.SECONDARY)
+
     try:
         # connecting is lazy, it might fail only now
         server_status = client.admin.command("serverStatus")

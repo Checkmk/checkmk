@@ -1473,15 +1473,11 @@ class RowTableInventory(ABCRowTable):
         return _get_table_rows(merged_tree, self._inventory_path)
 
     def _prepare_rows(self, inv_data: Sequence[SDRow]) -> Iterable[Row]:
-        # TODO check: hopefully there's only a table as input arg
-        info_name = self._info_names[0]
-        entries = []
-        for entry in inv_data:
-            newrow: Row = {}
-            for key, value in entry.items():
-                newrow[info_name + "_" + key] = value
-            entries.append(newrow)
-        return entries
+        return (
+            [{info_name + "_" + key: value for key, value in row.items()} for row in inv_data]
+            if self._info_names and (info_name := self._info_names[0])
+            else []
+        )
 
 
 class ABCDataSourceInventory(ABCDataSource):

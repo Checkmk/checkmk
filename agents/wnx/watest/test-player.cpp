@@ -41,48 +41,6 @@ TEST(PlayerTest, Pipe) {
     delete p2;
 }
 
-TEST(PlayerTest, Extensions) {
-    using namespace std;
-    cma::player::TheBox box;
-
-    auto pshell = MakePowershellWrapper();
-    EXPECT_TRUE(pshell.find(L"powershell.exe") != std::wstring::npos);
-
-    auto p = ConstructCommandToExec(L"a.exe");
-    auto p_expected = L"\"a.exe\"";
-    EXPECT_EQ(p, p_expected);
-
-    p = ConstructCommandToExec(L"a.cmd");
-    p_expected = L"\"a.cmd\"";
-    EXPECT_EQ(p, p_expected);
-
-    p = ConstructCommandToExec(L"a.bat");
-    p_expected = L"\"a.bat\"";
-    EXPECT_EQ(p, p_expected);
-
-    p = ConstructCommandToExec(L"a.e");
-    EXPECT_EQ(p.empty(), true);
-    p = ConstructCommandToExec(L"xxxxxxxxx");
-    EXPECT_EQ(p.empty(), true);
-
-    p = ConstructCommandToExec(L"a.pl");
-    p_expected = L"perl.exe \"a.pl\"";
-    EXPECT_EQ(p, p_expected);
-
-    p = ConstructCommandToExec(L"a.py");
-    p_expected = L"python.exe \"a.py\"";
-    EXPECT_EQ(p, p_expected);
-
-    p = ConstructCommandToExec(L"a.vbs");
-    p_expected = L"cscript.exe //Nologo \"a.vbs\"";
-    EXPECT_EQ(p, p_expected);
-
-    p = ConstructCommandToExec(L"a.ps1");
-    p_expected =
-        L"powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File \"a.ps1\"";
-    EXPECT_EQ(p, p_expected);
-}
-
 TEST(PlayerTest, ConfigFolders) {
     using namespace cma::cfg;
     using namespace wtools;

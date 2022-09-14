@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
-from typing import Any, Mapping, Optional
+from typing import Any, List, Mapping, Optional
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     register,
@@ -29,6 +29,27 @@ service_namer = gcp.service_name_factory("Cloud SQL")
 ASSET_TYPE = gcp.AssetType("sqladmin.googleapis.com/Instance")
 
 
+def _get_service_labels(
+    section_gcp_assets: gcp.AssetSection, service: gcp.GCPAsset, item: str
+) -> List[ServiceLabel]:
+    data = service.resource_data
+    labels = (
+        [ServiceLabel(f"gcp/labels/{k}", v) for k, v in data["settings"]["userLabels"].items()]
+        if "userLabels" in data["settings"]
+        else []
+    )
+    labels.extend(
+        [
+            ServiceLabel("gcp/location", service.location),
+            ServiceLabel("gcp/cloud_sql/name", item),
+            ServiceLabel("gcp/cloud_sql/databaseVersion", data["databaseVersion"]),
+            ServiceLabel("gcp/cloud_sql/availability", data["settings"]["availabilityType"]),
+            ServiceLabel("gcp/projectId", section_gcp_assets.project),
+        ]
+    )
+    return labels
+
+
 def discover(
     section_gcp_service_cloud_sql: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
@@ -39,22 +60,9 @@ def discover(
         or not ASSET_TYPE in section_gcp_assets
     ):
         return
+
     for item, service in section_gcp_assets[ASSET_TYPE].items():
-        data = service.resource_data
-        labels = (
-            [ServiceLabel(f"gcp/labels/{k}", v) for k, v in data["settings"]["userLabels"].items()]
-            if "userLabels" in data["settings"]
-            else []
-        )
-        labels.extend(
-            [
-                ServiceLabel("gcp/location", service.location),
-                ServiceLabel("gcp/cloud_sql/name", item),
-                ServiceLabel("gcp/cloud_sql/databaseVersion", data["databaseVersion"]),
-                ServiceLabel("gcp/cloud_sql/availability", data["settings"]["availabilityType"]),
-                ServiceLabel("gcp/projectId", section_gcp_assets.project),
-            ]
-        )
+        labels = _get_service_labels(section_gcp_assets, service, item)
         yield Service(item=item, labels=labels)
 
 

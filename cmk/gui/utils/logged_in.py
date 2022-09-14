@@ -10,7 +10,8 @@ import errno
 import logging
 import os
 import time
-from typing import Any, ContextManager, Dict, Iterator, List, Optional, Set, Tuple, Union
+from collections.abc import Container
+from typing import Any, ContextManager, Dict, Final, Iterator, List, Optional, Set, Tuple, Union
 
 from livestatus import SiteConfigurations, SiteId
 
@@ -38,7 +39,12 @@ class LoggedInUser:
     authentication.
     """
 
-    def __init__(self, user_id: Optional[str]) -> None:
+    def __init__(
+        self,
+        user_id: Optional[str],
+        *,
+        explicitly_given_permissions: Container[str] = frozenset(),
+    ) -> None:
         self.id = UserId(user_id) if user_id else None
         self.transactions = TransactionManager(request, self)
 
@@ -50,6 +56,7 @@ class LoggedInUser:
         self.alias = self._attributes.get("alias", self.id)
         self.email = self._attributes.get("email", self.id)
 
+        self.explicitly_given_permissions: Final = explicitly_given_permissions
         self._permissions: dict[str, bool] = {}
         self._siteconf = self.load_file("siteconfig", {})
         self._button_counts: Dict[str, float] = {}
@@ -354,7 +361,9 @@ class LoggedInUser:
         )
 
     def may(self, pname: str) -> bool:
-        they_may = may_with_roles(self.role_ids, pname)
+        they_may = (pname in self.explicitly_given_permissions) or may_with_roles(
+            self.role_ids, pname
+        )
         self._permissions[pname] = they_may
 
         is_rest_api_call = bool(endpoint)  # we can't check if "is None" because it's a LocalProxy
@@ -461,20 +470,21 @@ class LoggedInNobody(LoggedInUser):
         raise TypeError("The profiles of LoggedInNobody cannot be saved")
 
 
-def UserContext(user_id: UserId) -> ContextManager[None]:
+def UserContext(
+    user_id: UserId,
+    *,
+    explicit_permissions: Container[str] = frozenset(),
+) -> ContextManager[None]:
     """Execute a block of code as another user
 
     After the block exits, the previous user will be replaced again.
-
-    Args:
-        user_id:
-            The user-id of the user.
-
-    Returns:
-        The context manager.
-
     """
-    return _UserContext(LoggedInUser(user_id))
+    return _UserContext(
+        LoggedInUser(
+            user_id,
+            explicitly_given_permissions=explicit_permissions,
+        )
+    )
 
 
 def SuperUserContext() -> ContextManager[None]:

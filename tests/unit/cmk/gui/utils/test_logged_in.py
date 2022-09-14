@@ -11,6 +11,7 @@ import pytest
 from tests.testlib.users import create_and_destroy_user
 
 import cmk.utils.paths
+from cmk.utils.type_defs import UserId
 
 import cmk.gui.permissions as permissions
 from cmk.gui.config import builtin_role_ids
@@ -61,6 +62,16 @@ def test_user_context_nested(with_user, with_admin):
         assert global_user.id == first_user_id
 
     assert global_user.id is None
+
+
+def test_user_context_explicit_permissions(with_user: tuple[UserId, str]) -> None:
+    assert not global_user.may("some_permission")
+    with UserContext(
+        with_user[0],
+        explicit_permissions={"some_permission", "some_other_permission"},
+    ):
+        assert global_user.may("some_permission")
+    assert not global_user.may("some_permission")
 
 
 @pytest.mark.parametrize(

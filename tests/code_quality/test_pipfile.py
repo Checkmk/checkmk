@@ -258,7 +258,6 @@ CEE_UNUSED_PACKAGES = [
     "importlib_metadata",
     "itsdangerous",
     "jmespath",
-    "jsonschema",
     "more-itertools",
     "multidict",
     "npyscreen",

@@ -13,6 +13,7 @@ load-plugins=
     tests.testlib.pylint_checker_localization,
     tests.testlib.pylint_checker_forbidden_objects,
     tests.testlib.pylint_checker_cmk_module_layers,
+    tests.testlib.pylint_checker_layering_violation,
     pylint.extensions.bad_builtin
 jobs=0
 # pickle collected data for later comparisons. Not used in our CI and makes runs faster
@@ -161,3 +162,6 @@ max-line-length=100
 [VARIABLES]
 # Be a little bit more mypy-friendly.
 additional-builtins=reveal_type
+
+[LAYERING_VIOLATION]
+# layering-definition=.layering.yaml

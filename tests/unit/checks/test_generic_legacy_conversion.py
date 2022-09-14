@@ -944,7 +944,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
         "aws_dynamodb_table.read_capacity",
         "aws_dynamodb_table.write_capacity",
         "aws_dynamodb_table.latency",
-        "aws_ebs",
         "aws_ebs.burst_balance",
         "aws_ebs_summary",
         "aws_ebs_summary.health",

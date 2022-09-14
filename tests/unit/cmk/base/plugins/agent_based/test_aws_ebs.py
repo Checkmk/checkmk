@@ -8,14 +8,11 @@ from collections.abc import Sequence
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
-from cmk.utils.type_defs import CheckPluginName, SectionName
-
 from cmk.base import item_state
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.api.agent_based.utils import GetRateError
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Service
+from cmk.base.plugins.agent_based.aws_ebs import check_aws_ebs, discover_aws_ebs, parse_aws_ebs
 
 STRING_TABLE = [
     [
@@ -108,28 +105,22 @@ STRING_TABLE = [
 def test_aws_ebs_discovery(
     string_table: StringTable,
     discovery_result: Sequence[Service],
-    fix_register: FixRegister,
 ) -> None:
-    check = fix_register.check_plugins[CheckPluginName("aws_ebs")]
-    parse_function = fix_register.agent_sections[SectionName("aws_ebs")].parse_function
-
-    assert list(check.discovery_function(parse_function(string_table))) == discovery_result
+    assert list(discover_aws_ebs(parse_aws_ebs(string_table))) == discovery_result
 
 
-def test_check_aws_ebs_raise_get_rate_error(fix_register: FixRegister) -> None:
-    check = fix_register.check_plugins[CheckPluginName("aws_ebs")]
-    parse_function = fix_register.agent_sections[SectionName("aws_ebs")].parse_function
+def test_check_aws_ebs_raise_get_rate_error() -> None:
     with pytest.raises(GetRateError):
         list(
-            check.check_function(
+            check_aws_ebs(
                 item="123",
                 params={},
-                section=parse_function(STRING_TABLE),
+                section=parse_aws_ebs(STRING_TABLE),
             )
         )
 
 
-def test_check_aws_ebs(fix_register: FixRegister) -> None:
+def test_check_aws_ebs() -> None:
     for metric in [
         "aws_ebs_disk_io_read_ios",
         "aws_ebs_disk_io_write_ios",
@@ -138,7 +129,9 @@ def test_check_aws_ebs(fix_register: FixRegister) -> None:
         "aws_ebs_disk_io_queue_len",
     ]:
         item_state.set_item_state(f"{metric}.123", (0, 0))
-    check = fix_register.check_plugins[CheckPluginName("aws_ebs")]
-    parse_function = fix_register.agent_sections[SectionName("aws_ebs")].parse_function
-    check_result = check.check_function(item="123", params={}, section=parse_function(STRING_TABLE))
+    check_result = check_aws_ebs(
+        item="123",
+        params={},
+        section=parse_aws_ebs(STRING_TABLE),
+    )
     assert len(list(check_result)) == 10

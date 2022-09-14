@@ -2,11 +2,15 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import time
 from collections.abc import Mapping
+from typing import Any
 
-from .agent_based_api.v1 import register
-from .agent_based_api.v1.type_defs import StringTable
-from .utils.aws import extract_aws_metrics_by_labels, parse_aws
+from cmk.base.plugins.agent_based.utils.diskstat import check_diskstat_dict
+
+from .agent_based_api.v1 import get_rate, get_value_store, register
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.aws import discover_aws_generic, extract_aws_metrics_by_labels, parse_aws
 
 Section = Mapping[str, Mapping[str, float]]
 
@@ -40,4 +44,84 @@ def parse_aws_ebs(string_table: StringTable) -> Section:
 register.agent_section(
     name="aws_ebs",
     parse_function=parse_aws_ebs,
+)
+
+#   .--Disk IO-------------------------------------------------------------.
+#   |                     ____  _     _      ___ ___                       |
+#   |                    |  _ \(_)___| | __ |_ _/ _ \                      |
+#   |                    | | | | / __| |/ /  | | | | |                     |
+#   |                    | |_| | \__ \   <   | | |_| |                     |
+#   |                    |____/|_|___/_|\_\ |___\___/                      |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                             main check                               |
+#   '----------------------------------------------------------------------'
+
+
+def discover_aws_ebs(section: Section) -> DiscoveryResult:
+    yield from discover_aws_generic(
+        section,
+        [
+            "VolumeReadOps",
+            "VolumeWriteOps",
+            "VolumeReadBytes",
+            "VolumeWriteBytes",
+            "VolumeQueueLength",
+        ],
+    )
+
+
+def check_aws_ebs(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if (disk := section.get(item)) is None:
+        return
+
+    now = time.time()
+    disk_data: Mapping[str, float] = {
+        "read_ios": get_rate(
+            get_value_store(),
+            f"aws_ebs_disk_io_read_ios.{item}",
+            now,
+            disk["VolumeReadOps"],
+        ),
+        "write_ios": get_rate(
+            get_value_store(),
+            f"aws_ebs_disk_io_write_ios.{item}",
+            now,
+            disk["VolumeWriteOps"],
+        ),
+        "read_throughput": get_rate(
+            get_value_store(),
+            f"aws_ebs_disk_io_read_throughput.{item}",
+            now,
+            disk["VolumeReadBytes"],
+        ),
+        "write_throughput": get_rate(
+            get_value_store(),
+            f"aws_ebs_disk_io_write_throughput.{item}",
+            now,
+            disk["VolumeWriteBytes"],
+        ),
+        "queue_length": get_rate(
+            get_value_store(),
+            f"aws_ebs_disk_io_queue_len.{item}",
+            now,
+            disk["VolumeQueueLength"],
+        ),
+    }
+
+    yield from check_diskstat_dict(
+        params=params,
+        disk=disk_data,
+        value_store=get_value_store(),
+        this_time=now,
+    )
+
+
+register.check_plugin(
+    name="aws_ebs",
+    service_name="AWS/EBS Disk IO %s",
+    discovery_function=discover_aws_ebs,
+    check_function=check_aws_ebs,
+    check_ruleset_name="diskstat",
+    check_default_parameters={},
 )

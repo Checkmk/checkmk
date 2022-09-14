@@ -10,6 +10,7 @@ ROOT=/omd/sites/$SITE
 
 make
 sudo install -m 755 \
+    apply_unsign_msi_patch.sh \
     check_mk \
     livedump \
     mkeventd \

@@ -17,6 +17,7 @@ from typing import (
     Container,
     Dict,
     Final,
+    Iterable,
     List,
     Mapping,
     Optional,
@@ -446,7 +447,7 @@ class FolderRulesets(RulesetCollection):
         folder: CREFolder,
     ) -> None:
         super().__init__(rulesets)
-        self.folder: Final = folder
+        self._folder: Final = folder
 
     @staticmethod
     def load_folder_rulesets(folder: CREFolder) -> FolderRulesets:
@@ -456,12 +457,16 @@ class FolderRulesets(RulesetCollection):
         return self
 
     def save(self) -> None:
-        self._save_folder(self.folder)
+        self._save_folder(self._folder)
 
 
-class FilteredRulesetCollection(AllRulesets):
-    def save(self) -> None:
-        raise NotImplementedError("Filtered ruleset collections can not be saved.")
+class FilteredRulesetCollection:
+    def __init__(self, rulesets: Dict[RulesetName, Ruleset]) -> None:
+        super().__init__()
+        self._rulesets: Final = rulesets
+
+    def get_rulesets(self) -> Mapping[RulesetName, Ruleset]:
+        return self._rulesets
 
 
 class StaticChecksRulesets(FilteredRulesetCollection):
@@ -484,7 +489,7 @@ class StaticChecksRulesets(FilteredRulesetCollection):
 class SearchedRulesets(FilteredRulesetCollection):
     @staticmethod
     def load_searched_rulesets(
-        origin_rulesets: RulesetCollection,
+        origin_rulesets: Iterable[Ruleset],
         search_options: SearchOptions,
     ) -> SearchedRulesets:
         """Iterates the rulesets from the original collection,
@@ -492,7 +497,7 @@ class SearchedRulesets(FilteredRulesetCollection):
         that have at least one matching rule or match itself,
         e.g. by their name, title or help."""
         rulesets: Dict[RulesetName, Ruleset] = {}
-        for ruleset in origin_rulesets.get_rulesets().values():
+        for ruleset in origin_rulesets:
             if ruleset.matches_search_with_rules(search_options):
                 rulesets[ruleset.name] = ruleset
         return SearchedRulesets(rulesets)

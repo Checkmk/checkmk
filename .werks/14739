@@ -1,0 +1,22 @@
+Title: Regression: Activate agent controller daemon on Debian based systems
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1663144006
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p13
+
+This is a regression that occurs with Checkmk 2.1.0p11.
+
+When installing the prepackaged <tt>check-mk-agent_2.1.0p11-1_all.deb</tt>
+agent package on a Linux host, the installation scripts miss to activate
+the agent controller daemon, that is responsible for providing the agent port.<br>
+Agent bakery packages (including the VANILLA package) are not affected.
+
+You can activate it manually by calling the scripts
+<tt>/var/lib/cmk-agent/scripts/cmk-agent-useradd.sh</tt> and
+<tt>/var/lib/cmk-agent/scripts/super-server/setup trigger</tt>
+(in that order) on affected hosts after agent package installation.
+

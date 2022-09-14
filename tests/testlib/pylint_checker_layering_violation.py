@@ -31,11 +31,13 @@ from pylint.lint import PyLinter  # type: ignore[import]
 # our main "business logic", the heart of our import checking logic
 ####################################################################################################
 
-PackageName = NewType("PackageName", str)
+PackageName = NewType("PackageName", str)  # something like "requests-oauthlib"
+ModuleName = NewType("ModuleName", str)  # something like "cmk.utils.debug"
+ImportedName = NewType("ImportedName", str)
 
 
 class PackageFor(Protocol):
-    def __call__(self, name: str) -> PackageName:
+    def __call__(self, name: ModuleName | ImportedName) -> PackageName:
         ...
 
 
@@ -51,7 +53,7 @@ class IsImportOK:
         self._package_for = package_for
         self._is_package_relationship_ok = is_package_relationship_ok
 
-    def __call__(self, *, importing_module: str, imported_name: str) -> bool:
+    def __call__(self, *, importing_module: ModuleName, imported_name: ImportedName) -> bool:
         return self._is_package_relationship_ok(
             importing_package=self._package_for(importing_module),
             imported_package=self._package_for(imported_name),
@@ -113,11 +115,16 @@ class LayerViolationChecker(BaseChecker):
     def visit_importfrom(self, node: nodes.ImportFrom) -> None:
         importing_module = extract_importing_module(node)
         imported_module = extract_imported_module(node)
-        imported_names = [imported_module + "." + name for name in extract_imported_names(node)]
+        imported_names = [
+            ImportedName(imported_module + "." + name) for name in extract_imported_names(node)
+        ]
         self._check_imports(node, importing_module, imported_names)
 
     def _check_imports(
-        self, node: nodes.NodeNG, importing_module: str, imported_names: Sequence[str]
+        self,
+        node: nodes.NodeNG,
+        importing_module: ModuleName,
+        imported_names: Sequence[ImportedName],
     ) -> None:
         if self._is_import_ok is None:
             return
@@ -216,22 +223,22 @@ additionalProperties: false
 ####################################################################################################
 
 
-def extract_importing_module(node: nodes.Import) -> str:
-    return node.root().name
+def extract_importing_module(node: nodes.Import) -> ModuleName:
+    return ModuleName(node.root().name)
 
 
-def extract_imported_module(node: nodes.ImportFrom) -> str:
+def extract_imported_module(node: nodes.ImportFrom) -> ModuleName:
     level: int | None = node.level  # numer of dots in relative import, 0 (None?) for absolute
     modname: str = node.modname  # the module that is being imported from
     if level:
         root: nodes.Module = node.root()
         index = (None if level == 1 else -(level - 1)) if root.package else -level
-        return ".".join(root.name.split(".")[:index] + ([modname] if modname else []))
-    return modname
+        return ModuleName(".".join(root.name.split(".")[:index] + ([modname] if modname else [])))
+    return ModuleName(modname)
 
 
-def extract_imported_names(node: nodes.Import) -> Sequence[str]:
-    return [name for name, _alias in node.names]  # we don't care about any aliases
+def extract_imported_names(node: nodes.Import) -> Sequence[ImportedName]:
+    return [ImportedName(name) for name, _alias in node.names]  # we don't care about any aliases
 
 
 ####################################################################################################
@@ -240,13 +247,15 @@ def extract_imported_names(node: nodes.Import) -> Sequence[str]:
 
 
 class PackageMapper:
-    def __init__(self, package_definitions: Iterable[tuple[PackageName, Iterable[str]]]) -> None:
+    def __init__(
+        self, package_definitions: Iterable[tuple[PackageName, Iterable[ModuleName]]]
+    ) -> None:
         super().__init__()
         self._package_definitions = list(package_definitions)
         self._validate_no_prefix_shadowing()
 
     def _validate_no_prefix_shadowing(self) -> None:
-        prefixes_seen: set[str] = set()
+        prefixes_seen: set[ModuleName] = set()
         for package_name, prefixes in self._package_definitions:
             for prefix in prefixes:
                 for prefix_seen in prefixes_seen:
@@ -259,14 +268,14 @@ class PackageMapper:
     def defined_package_names(self) -> Set[PackageName]:
         return {package_name for package_name, _prefixes in self._package_definitions}
 
-    def package_for(self, name: str) -> PackageName:
+    def package_for(self, name: ModuleName | ImportedName) -> PackageName:
         for package_name, prefixes in self._package_definitions:
             if any(self._is_prefix_of(p, name) for p in prefixes):
                 return package_name
         raise ValueError(f"undefined package name for {name!r}")
 
     @staticmethod
-    def _is_prefix_of(module_prefix: str, name: str) -> bool:
+    def _is_prefix_of(module_prefix: ModuleName, name: ModuleName | ImportedName) -> bool:
         return (name + ".").startswith(module_prefix + ".")
 
 
@@ -290,9 +299,9 @@ class RelationChecker:
     def _validate_only_defined_package_names_used(
         self,
         defined_package_names: Set[PackageName],
-        known_package_cycles: Collection[Sequence[str]],
+        known_package_cycles: Collection[Sequence[PackageName]],
     ) -> None:
-        def validate_defined(package_name: str, where: str) -> None:
+        def validate_defined(package_name: PackageName, where: str) -> None:
             if package_name not in defined_package_names:
                 raise ValueError(f"unknown package {package_name!r} in {where}")
 
@@ -304,7 +313,7 @@ class RelationChecker:
             for package_name in cycle:
                 validate_defined(package_name, f"known package cycle {cycle!r}")
 
-    def _validate_no_cycles(self, known_package_cycles: Container[Sequence[str]]) -> None:
+    def _validate_no_cycles(self, known_package_cycles: Container[Sequence[PackageName]]) -> None:
         if cycles := [
             scc
             for scc in tarjan(self._allowed_package_relationships)

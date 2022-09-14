@@ -5,6 +5,7 @@
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
+
 from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
@@ -19,37 +20,12 @@ from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcar
 #   |                             main check                               |
 #   '----------------------------------------------------------------------'
 
-
-def check_aws_ebs(item, params, parsed):
-    now = time.time()
-    disks = {}
-    for disk_name, metrics in parsed.items():
-        disks.setdefault(
-            disk_name,
-            {
-                "read_ios": get_rate(
-                    "aws_ebs_disk_io_read_ios.%s" % item, now, metrics["VolumeReadOps"]
-                ),
-                "write_ios": get_rate(
-                    "aws_ebs_disk_io_write_ios.%s" % item, now, metrics["VolumeWriteOps"]
-                ),
-                "read_throughput": get_rate(
-                    "aws_ebs_disk_io_read_throughput.%s" % item, now, metrics["VolumeReadBytes"]
-                ),
-                "write_throughput": get_rate(
-                    "aws_ebs_disk_io_write_throughput.%s" % item, now, metrics["VolumeWriteBytes"]
-                ),
-                "queue_length": get_rate(
-                    "aws_ebs_disk_io_queue_len.%s" % item, now, metrics["VolumeQueueLength"]
-                ),
-            },
-        )
-    return check_diskstat_dict(item, params, disks)
+Section = Mapping[str, Mapping[str, float]]
 
 
-check_info["aws_ebs"] = {
-    "inventory_function": lambda p: inventory_aws_generic(
-        p,
+def discover_aws_ebs(section: Section):
+    yield from inventory_aws_generic(
+        section,
         [
             "VolumeReadOps",
             "VolumeWriteOps",
@@ -57,7 +33,48 @@ check_info["aws_ebs"] = {
             "VolumeWriteBytes",
             "VolumeQueueLength",
         ],
-    ),
+    )
+
+
+def check_aws_ebs(item: str, params: Mapping[str, Any], section: Section):
+    now = time.time()
+    disks: MutableMapping[str, MutableMapping[str, float]] = {}
+    for disk_name, metrics in section.items():
+        disks.setdefault(
+            disk_name,
+            {
+                "read_ios": get_rate(
+                    f"aws_ebs_disk_io_read_ios.{item}",
+                    now,
+                    metrics["VolumeReadOps"],
+                ),
+                "write_ios": get_rate(
+                    f"aws_ebs_disk_io_write_ios.{item}",
+                    now,
+                    metrics["VolumeWriteOps"],
+                ),
+                "read_throughput": get_rate(
+                    f"aws_ebs_disk_io_read_throughput.{item}",
+                    now,
+                    metrics["VolumeReadBytes"],
+                ),
+                "write_throughput": get_rate(
+                    f"aws_ebs_disk_io_write_throughput.{item}",
+                    now,
+                    metrics["VolumeWriteBytes"],
+                ),
+                "queue_length": get_rate(
+                    f"aws_ebs_disk_io_queue_len.{item}",
+                    now,
+                    metrics["VolumeQueueLength"],
+                ),
+            },
+        )
+    yield from check_diskstat_dict(item, params, disks)
+
+
+check_info["aws_ebs"] = {
+    "inventory_function": discover_aws_ebs,
     "check_function": check_aws_ebs,
     "service_description": "AWS/EBS Disk IO %s",
     "group": "diskstat",

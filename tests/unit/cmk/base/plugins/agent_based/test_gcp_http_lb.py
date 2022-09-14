@@ -43,7 +43,7 @@ class TestHTTPLoadBalancerDiscover(DiscoverTester):
         return ASSET_TABLE
 
     @property
-    def expected_services(self) -> set[str]:
+    def expected_items(self) -> set[str]:
         return {
             "http-lb",
         }

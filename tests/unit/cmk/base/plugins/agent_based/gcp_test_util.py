@@ -33,7 +33,7 @@ class DiscoverTester(ABC):
 
     @property
     @abstractmethod
-    def expected_services(self) -> set[str]:
+    def expected_items(self) -> set[str]:
         raise NotImplementedError
 
     @property
@@ -71,8 +71,8 @@ class DiscoverTester(ABC):
         for asset in services:
             assert ServiceLabel("gcp/projectId", "backup-255820") in asset.labels
 
-    def test_discover_all_services(self, services: Sequence[Service]) -> None:
-        assert {a.item for a in services} == self.expected_services
+    def test_discover_all_items(self, services: Sequence[Service]) -> None:
+        assert {a.item for a in services} == self.expected_items
 
     def test_discover_all_services_labels(self, services: Sequence[Service]) -> None:
         assert set(services[0].labels) == self.expected_labels

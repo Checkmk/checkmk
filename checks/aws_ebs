@@ -7,27 +7,6 @@
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.plugins.agent_based.utils.aws import extract_aws_metrics_by_labels, parse_aws
-
-
-def parse_aws_ebs(info):
-    return extract_aws_metrics_by_labels(
-        [
-            "VolumeReadOps",
-            "VolumeWriteOps",
-            "VolumeReadBytes",
-            "VolumeWriteBytes",
-            "VolumeQueueLength",
-            "BurstBalance",
-            # "VolumeThroughputPercentage",
-            # "VolumeConsumedReadWriteOps",
-            # "VolumeTotalReadTime",
-            # "VolumeTotalWriteTime",
-            # "VolumeIdleTime",
-        ],
-        parse_aws(info),
-    )
-
 
 #   .--Disk IO-------------------------------------------------------------.
 #   |                     ____  _     _      ___ ___                       |
@@ -69,7 +48,6 @@ def check_aws_ebs(item, params, parsed):
 
 
 check_info["aws_ebs"] = {
-    "parse_function": parse_aws_ebs,
     "inventory_function": lambda p: inventory_aws_generic(
         p,
         [

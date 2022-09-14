@@ -104,7 +104,7 @@ def main() {
                                 credentialsId: 'cmkadmin_pass',
                                 variable: 'CMKADMIN_PASS'),
                         ]) {
-                            /// NOTE: workaround 1): 
+                            /// NOTE: workaround 1):
                             /// "export DEFAULT_LOCAL_TMP" is required because ansible creates temporary
                             /// data in this directory if the variable DEFAULT_LOCAL_TMP is not specified
                             /// the temporary directory would be the root folder of the environment
@@ -131,7 +131,7 @@ def run_ansible(playbook_file, cmk_version) {
     sh("printenv");
     dir("${checkout_dir}/buildscripts/infrastructure/build-nodes/aws") {
         sh("""
-            export DEFAULT_LOCAL_TMP=$WORKSPACE_TMP &&
+            export DEFAULT_LOCAL_TMP=/tmp &&
             export ANSIBLE_HOST_KEY_CHECKING=False &&
             HOME=$WORKSPACE_TMP \
             AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID \

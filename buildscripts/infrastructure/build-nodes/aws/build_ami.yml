@@ -1,4 +1,4 @@
-#!/usr/bin/env ansible-playbook
+#!/usr/bin/env ansible-playbook -vvvv
 # doc for modules:
 # https://docs.ansible.com/ansible/latest/modules/ec2_module.html
 # https://docs.ansible.com/ansible/latest/collections/amazon/aws/ec2_ami_module.html

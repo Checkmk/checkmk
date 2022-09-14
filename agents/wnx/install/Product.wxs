@@ -273,6 +273,14 @@ just to signal that real build script was not called -->
                         DiskId="1" />
             </Component>
 
+            <Component Id="configure_and_exec.ps1" Guid="{A217520D-ED21-4369-8A71-2AEBE09080EB}">
+                <File Id="configure_and_exec.ps1"
+                        Source="resources\configure_and_exec.ps1"
+                        KeyPath="yes"
+                        Checksum="yes"
+                        DiskId="1" />
+            </Component>
+
         </DirectoryRef>
 
         <DirectoryRef Id="plugins">
@@ -393,7 +401,7 @@ just to signal that real build script was not called -->
             <ComponentRef Id="checkmk.dat" />
             <ComponentRef Id="execute_update.cmd" />
             <ComponentRef Id="check_mk.user.yml" />
-
+            <ComponentRef Id="configure_and_exec.ps1" />
             <!-- Modules -->
             <ComponentRef Id="python_3.cab" />
         </Feature>

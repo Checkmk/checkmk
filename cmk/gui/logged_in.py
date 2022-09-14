@@ -64,7 +64,6 @@ class LoggedInUser:
         self.alias = self._attributes.get("alias", self.id)
         self.email = self._attributes.get("email", self.id)
 
-        self._permissions: dict[str, bool] = {}
         self._siteconf = self.load_file("siteconfig", {})
         self._button_counts: Dict[str, float] = {}
         self._stars: Set[str] = set()
@@ -379,7 +378,6 @@ class LoggedInUser:
 
     def may(self, pname: str) -> bool:
         they_may = may_with_roles(self.role_ids, pname)
-        self._permissions[pname] = they_may
 
         is_rest_api_call = bool(endpoint)  # we can't check if "is None" because it's a LocalProxy
         if is_rest_api_call and endpoint.track_permissions:

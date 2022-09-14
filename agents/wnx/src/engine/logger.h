@@ -55,7 +55,7 @@ void LogWindowsEventAlways(EventLevel level, int code,
     const auto type = LoggerEventLevelToWindowsEventType(level);
     std::string x;
     try {
-        x = fmt::format(format_str, args...);
+        x = fmt::format(fmt::runtime(format_str), args...);
     } catch (...) {
         x = format_str;
     }

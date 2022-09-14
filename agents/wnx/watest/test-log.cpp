@@ -519,13 +519,3 @@ TEST(LogTest, Level2Type) {
 }  // namespace details
 
 }  // namespace XLOG
-
-// Do formatting:
-namespace fmt {
-TEST(LogTest, Fmt) {
-    auto result = formatv("-{} {}-", 3, "c");
-    EXPECT_EQ(result, "-3 c-");
-
-    EXPECT_NO_THROW(formatv("<GTEST> -{} {}-", 3));
-}
-}  // namespace fmt

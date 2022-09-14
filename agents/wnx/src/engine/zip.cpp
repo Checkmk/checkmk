@@ -9,6 +9,7 @@
 #include "zip.h"
 
 #include <fmt/format.h>
+#include <fmt/xchar.h>
 #include <shellapi.h>
 
 #include <array>

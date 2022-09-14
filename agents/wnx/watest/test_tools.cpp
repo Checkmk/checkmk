@@ -19,6 +19,7 @@
 #include "exception"            // for terminate
 #include "firewall.h"
 #include "fmt/format.h"
+#include "fmt/xchar.h"
 #include "install_api.h"  // for terminate
 #include "on_start.h"
 #include "tools/_misc.h"
@@ -35,12 +36,12 @@ namespace tst {
 
 void AllowReadWriteAccess(const fs::path &path,
                           std::vector<std::wstring> &commands) {
-    const std::vector<std::wstring_view> command_templates = {
+    const std::vector<std::wstring> command_templates = {
         L"icacls \"{}\" /inheritance:d /c",  // disable inheritance
         L"icacls \"{}\" /grant:r *S-1-5-32-545:(OI)(CI)(RX) /c"};  // read/exec
 
     for (const auto &t : command_templates) {
-        auto cmd = fmt::format(t.data(), path.wstring());
+        auto cmd = fmt::format(t, path.wstring());
         commands.emplace_back(cmd);
     }
     XLOG::l.i("Protect file from User write '{}'", path);

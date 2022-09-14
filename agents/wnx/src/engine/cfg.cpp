@@ -1024,7 +1024,7 @@ YAML::Node LoadAndCheckYamlFile(const std::wstring &file_name,
         case FallbackPolicy::kLastGoodOnly:
         case FallbackPolicy::kStandard:
             XLOG::l(XLOG_FLINE + " Error: Fallback [{}] NOT SUPPORTED",
-                    fallback_policy);
+                    static_cast<size_t>(fallback_policy));
             return {};
     }
 

@@ -330,7 +330,7 @@ const std::pair<std::string, bool> ip_allowed[] = {
 TEST(ExternalPortTest, IsIpAllowedAsExceptionYes) {
     auto test_fs = tst::TempCfgFs::CreateNoIo();
     cfg::GetLoadedConfig()[cfg::groups::kSystem] =
-        YAML::Load(fmt::format(base, "yes"));
+        YAML::Load(fmt::format(fmt::runtime(base), "yes"));
     for (const auto &t : ip_allowed) {
         EXPECT_EQ(IsIpAllowedAsException(t.first), t.second);
     }
@@ -339,7 +339,7 @@ TEST(ExternalPortTest, IsIpAllowedAsExceptionYes) {
 TEST(ExternalPortTest, IsIpAllowedAsExceptionNo) {
     auto test_fs = tst::TempCfgFs::CreateNoIo();
     cfg::GetLoadedConfig()[cfg::groups::kSystem] =
-        YAML::Load(fmt::format(base, "no"));
+        YAML::Load(fmt::format(fmt::runtime(base), "no"));
     for (const auto &t : ip_allowed) {
         EXPECT_FALSE(IsIpAllowedAsException(t.first));
     }

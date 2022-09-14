@@ -9,6 +9,7 @@
 #include "modules.h"
 
 #include <fmt/format.h>
+#include <fmt/xchar.h>
 
 #include <filesystem>
 #include <ranges>
@@ -273,7 +274,7 @@ ModuleCommander::GetSystemExtensions() {
             dir = std::string{defaults::kModulesDir};
         }
 
-        dir_ = fmt::format(dir, name());
+        dir_ = fmt::format(fmt::runtime(dir), name());
 
     } catch (const std::exception &e) {
         XLOG::l("failed loading module '{}'", e);

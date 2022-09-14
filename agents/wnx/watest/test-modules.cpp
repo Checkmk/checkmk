@@ -201,7 +201,8 @@ TEST(ModulesTest, Loader) {
         if (s.dir.size() <= 5)
             EXPECT_EQ(m.dir(), fmt::format(defaults::kModulesDir, m.name()));
         else
-            EXPECT_EQ(m.dir(), fmt::format(s.dir.c_str() + 5, m.name()));
+            EXPECT_EQ(m.dir(),
+                      fmt::format(fmt::runtime(s.dir.c_str() + 5), m.name()));
     }
 
     {

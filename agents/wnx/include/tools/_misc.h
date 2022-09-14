@@ -575,39 +575,14 @@ inline std::string RemoveQuotes(const std::string &in) {
 }
 
 inline std::wstring RemoveQuotes(const std::wstring &in) {
-    std::wstring val{in};
-    if (val.size() < 2) {
-        return val;
+    if (in.size() < 2) {
+        return in;
     }
 
-    if (val.back() == L'\'' || val.back() == L'\"') {
-        val.pop_back();
-    }
-    if (val[0] == L'\'' || val[0] == L'\"') {
-        val = val.substr(1, val.size() - 1);
-    }
-    return val;
+    size_t start = in.front() == L'\'' || in.front() == L'\"' ? 1 : 0;
+    size_t end = in.back() == L'\'' || in.back() == L'\"' ? 1 : 0;
+
+    return end + start != 0 ? in.substr(start, in.size() - (start + end)) : in;
 }
 
 }  // namespace cma::tools
-
-namespace fmt {
-
-// formatter extender for variable count of parameters
-template <typename... Args>
-auto formatv(const std::string &format_string, const Args &...args) {
-    std::string buffer;
-    try {
-        auto x = std::make_tuple(format_string, args...);
-        auto print_message = [&buffer](const auto &...args) {
-            buffer = fmt::format(args...);
-        };
-        std::apply(print_message, x);
-    } catch (const std::exception &) {
-        xlog::l("Invalid string/parameters to format '%s'",
-                format_string.c_str());
-    }
-    return buffer;
-}
-
-}  // namespace fmt

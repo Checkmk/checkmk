@@ -8,6 +8,8 @@
 #include <Psapi.h>
 #include <WS2tcpip.h>
 #include <comdef.h>
+#include <fmt/format.h>
+#include <fmt/xchar.h>
 #include <iphlpapi.h>
 #include <sddl.h>
 #include <shellapi.h>
@@ -2634,7 +2636,7 @@ void ProtectPathFromUserWrite(const fs::path &path,
         L"icacls \"{}\" /grant:r *S-1-5-32-545:(OI)(CI)(RX) /c"};  // read/exec
 
     for (auto const t : command_templates) {
-        auto cmd = fmt::format(t.data(), path.wstring());
+        auto cmd = fmt::format(std::wstring{t}, path.wstring());
         commands.emplace_back(cmd);
     }
     XLOG::l.i("Protect path from User write '{}'", path);

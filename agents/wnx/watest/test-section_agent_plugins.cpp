@@ -60,45 +60,46 @@ TEST_F(AgentPluginsTest, File) {
 }
 
 TEST_F(AgentPluginsTest, FileMix) {
-    const std::vector<std::tuple<fs::path, std::string, std::string>> to_create = {
-        {fs::path{cfg::GetUserPluginsDir()} / "p.ps1",
-         "#\n"
-         "$CMK_VERSION = {}\n",
-         "\"2.2.0i1\""},
-        {fs::path{cfg::GetUserPluginsDir()} / "p.bat",
-         "@rem \n"
-         "set CMK_VERSION={}\nxxxx\n",
-         "\"2.2.0i1\""},
-        {fs::path{cfg::GetUserPluginsDir()} / "p.vbs",
-         "\n"
-         "Const CMK_VERSION = {}\nxxxx\n",
-         "\"2.2.0i1\""},
-        {fs::path{cfg::GetLocalDir()} / "p.ps1",
-         "#\n"
-         "$CMK_VERSION = {}\n",
-         "\"2.2.0i1\""},
-        {fs::path{cfg::GetLocalDir()} / "p.cmd",
-         "@rem \n"
-         "set CMK_VERSION={}\nxxxx\n",
-         "\"2.2.0i1\""},
-        {fs::path{cfg::GetUserPluginsDir()} / "unversioned.ps1",
-         "#\n",
-         "unversioned"},
-        {fs::path{cfg::GetLocalDir()} / "unversioned.cmd",
-         "@rem \n",
-         "unversioned"},
-        {fs::path{cfg::GetUserPluginsDir()} / "p.py",
-         "#\n"
-         "__version__ = {}\n",
-         "\"2.2.0i1\""},
-        {fs::path{cfg::GetLocalDir()} / "p.py",
-         "#\n"
-         "__version__ = {}\n",
-         "\"2.2.0i1\""},
-    };
+    const std::vector<std::tuple<fs::path, std::string, std::string>>
+        to_create = {
+            {fs::path{cfg::GetUserPluginsDir()} / "p.ps1",
+             "#\n"
+             "$CMK_VERSION = {}\n",
+             "\"2.2.0i1\""},
+            {fs::path{cfg::GetUserPluginsDir()} / "p.bat",
+             "@rem \n"
+             "set CMK_VERSION={}\nxxxx\n",
+             "\"2.2.0i1\""},
+            {fs::path{cfg::GetUserPluginsDir()} / "p.vbs",
+             "\n"
+             "Const CMK_VERSION = {}\nxxxx\n",
+             "\"2.2.0i1\""},
+            {fs::path{cfg::GetLocalDir()} / "p.ps1",
+             "#\n"
+             "$CMK_VERSION = {}\n",
+             "\"2.2.0i1\""},
+            {fs::path{cfg::GetLocalDir()} / "p.cmd",
+             "@rem \n"
+             "set CMK_VERSION={}\nxxxx\n",
+             "\"2.2.0i1\""},
+            {fs::path{cfg::GetUserPluginsDir()} / "unversioned.ps1", "#\n",
+             "unversioned"},
+            {fs::path{cfg::GetLocalDir()} / "unversioned.cmd", "@rem \n",
+             "unversioned"},
+            {fs::path{cfg::GetUserPluginsDir()} / "p.py",
+             "#\n"
+             "__version__ = {}\n",
+             "\"2.2.0i1\""},
+            {fs::path{cfg::GetLocalDir()} / "p.py",
+             "#\n"
+             "__version__ = {}\n",
+             "\"2.2.0i1\""},
+        };
 
     for (const auto [p, s, ver] : to_create) {
-        tst::CreateTextFile(p, ((ver == "unversioned") ? s : fmt::format(s, ver)));
+        tst::CreateTextFile(
+            p,
+            ((ver == "unversioned") ? s : fmt::format(fmt::runtime(s), ver)));
     }
     auto rows = getRows();
     EXPECT_EQ(rows.size(), to_create.size() + 3);

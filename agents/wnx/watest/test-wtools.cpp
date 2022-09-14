@@ -3,6 +3,9 @@
 
 #include "pch.h"
 
+#include <fmt/format.h>
+#include <fmt/xchar.h>
+
 #include <chrono>
 #include <string_view>
 

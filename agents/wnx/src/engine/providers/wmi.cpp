@@ -304,8 +304,8 @@ std::pair<std::string, wtools::WmiStatus> GenerateWmiTable(
     const auto object_name = wtools::ToUtf8(wmi_object);
     tools::TimeLog tl(object_name);  // start measure
     const auto id = [&]() {
-        return fmt::formatv(R"("{}\{}")", wtools::ToUtf8(wmi_namespace),
-                            object_name);
+        return fmt::format(R"("{}\{}")", wtools::ToUtf8(wmi_namespace),
+                           object_name);
     };
 
     wtools::WmiWrapper wrapper;

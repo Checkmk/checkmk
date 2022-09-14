@@ -296,7 +296,7 @@ bool readConfigFile(std::istream &is, const std::string &hostname,
                 XLOG::l("file error");
                 break;
             default:
-                XLOG::l("unknown error {}", res);
+                XLOG::l("unknown error {}", static_cast<int>(res));
                 break;
         }
         return false;

@@ -17,7 +17,3 @@ is mounted with noexec-flag and hence the scripts failed to execute.
 
 To fix this situation, the installation scripts now get executed by
 passing them to <tt>/bin/sh</tt>.
-
-
-
-

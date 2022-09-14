@@ -40,8 +40,11 @@ import sys
 from pathlib import Path
 from typing import Dict, Iterable, List, Pattern, Tuple, TYPE_CHECKING, Union
 
+from omdlib.type_defs import ConfigChoiceHasError
+
 from cmk.utils.exceptions import MKTerminate
 from cmk.utils.log import VERBOSE
+from cmk.utils.type_defs import result
 
 if TYPE_CHECKING:
     from omdlib.contexts import SiteContext
@@ -49,10 +52,21 @@ if TYPE_CHECKING:
 logger = logging.getLogger("cmk.omd")
 
 ConfigHookChoiceItem = Tuple[str, str]
-ConfigHookChoices = Union[None, Pattern, List[ConfigHookChoiceItem]]
+ConfigHookChoices = Union[None, Pattern, List[ConfigHookChoiceItem], ConfigChoiceHasError]
 ConfigHook = Dict[str, Union[str, bool, ConfigHookChoices]]
 ConfigHooks = Dict[str, ConfigHook]
 ConfigHookResult = Tuple[int, str]
+
+
+class IpAddressListHasError(ConfigChoiceHasError):
+    _IP_PATTERN = re.compile(
+        r"(?:(?:[\d]{1,3})\.(?:[\d]{1,3})\.(?:[\d]{1,3})\.(?:[\d]{1,3})(/[0-9]{1,2})?\s?)+$"
+    )
+
+    def __call__(self, value: str) -> result.Result[None, str]:
+        if not IpAddressListHasError._IP_PATTERN.match(value):
+            return result.Error("Does not match allowed pattern.")
+        return result.OK(None)
 
 
 # Put all site configuration (explicit and defaults) into environment
@@ -141,6 +155,8 @@ def _parse_hook_choices(hook_info: str) -> ConfigHookChoices:
     match [choice.strip() for choice in hook_info.split("\n")]:
         case [""]:
             return None
+        case ["@{IP_ADDRESS_LIST}"]:
+            return IpAddressListHasError()
         case [regextext]:
             return re.compile(regextext + "$")
         case choices_list:

@@ -23,8 +23,17 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+from abc import ABC, abstractmethod
 from typing import Dict, Optional
+
+from cmk.utils.type_defs import result
 
 Config = Dict[str, str]
 Replacements = Dict[str, str]
 CommandOptions = Dict[str, Optional[str]]
+
+
+class ConfigChoiceHasError(ABC):
+    @abstractmethod
+    def __call__(self, value: str) -> result.Result[None, str]:
+        raise NotImplementedError

@@ -41,10 +41,10 @@ import sys
 import tarfile
 import time
 import traceback
+from collections.abc import Callable
 from pathlib import Path
 from typing import (
     BinaryIO,
-    Callable,
     cast,
     Dict,
     Final,
@@ -105,7 +105,7 @@ from omdlib.tmpfs import (
     tmpfs_mounted,
     unmount_tmpfs,
 )
-from omdlib.type_defs import CommandOptions, Config, Replacements
+from omdlib.type_defs import CommandOptions, Config, ConfigChoiceHasError, Replacements
 from omdlib.users_and_groups import (
     find_processes_of_user,
     group_exists,
@@ -1395,6 +1395,8 @@ def _error_from_config_choice(
     elif isinstance(choices, re.Pattern):
         if not choices.match(value):
             return Error("Does not match allowed pattern.")
+    elif isinstance(choices, ConfigChoiceHasError):
+        return choices(value)
     else:
         raise NotImplementedError()
     return OK(None)

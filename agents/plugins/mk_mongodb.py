@@ -861,7 +861,10 @@ class Config:
         # information from only that host.
         # If directConnection is set to False (default), the plugin could also
         # connect to a totally different host from where it is located.
-        pymongo_config["directConnection"] = True
+        if PYMONGO_VERSION >= (3, 11, 0):
+            # See 'Changes in Version 3.11.0' on
+            # https://pymongo.readthedocs.io/en/stable/changelog.html
+            pymongo_config["directConnection"] = True
 
         return pymongo_config
 

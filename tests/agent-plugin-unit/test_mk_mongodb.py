@@ -210,7 +210,6 @@ def test_router_instance_mongodb_3_4(mk_mongodb):
             {},
             {
                 "read_preference": pymongo.ReadPreference.SECONDARY,
-                "directConnection": True,
             },
         ),
         (
@@ -222,7 +221,6 @@ def test_router_instance_mongodb_3_4(mk_mongodb):
                 "username": "t_user",
                 "password": "t_pwd",
                 "read_preference": pymongo.ReadPreference.SECONDARY,
-                "directConnection": True,
             },
         ),
         (
@@ -236,7 +234,6 @@ def test_router_instance_mongodb_3_4(mk_mongodb):
                 "password": "t_pwd",
                 "tls": True,
                 "read_preference": pymongo.ReadPreference.SECONDARY,
-                "directConnection": True,
             },
         ),
         (
@@ -254,7 +251,6 @@ def test_router_instance_mongodb_3_4(mk_mongodb):
                 "tlsInsecure": True,
                 "tlsCAFile": "/path/to/ca.pem",
                 "read_preference": pymongo.ReadPreference.SECONDARY,
-                "directConnection": True,
             },
         ),
         (
@@ -276,7 +272,6 @@ def test_router_instance_mongodb_3_4(mk_mongodb):
                 "tlsInsecure": True,
                 "username": "t_user",
                 "read_preference": pymongo.ReadPreference.SECONDARY,
-                "directConnection": True,
             },
         ),
     ],
@@ -289,6 +284,10 @@ def test_read_config(config, expected_pymongo_config, mk_mongodb):
     config_parser.add_section("MONGODB")
     for key, value in config.items():
         config_parser.set("MONGODB", key, value)
+
+    if mk_mongodb.PYMONGO_VERSION >= (3, 11, 0):
+        expected_pymongo_config.update({"directConnection": True})
+
     assert mk_mongodb.Config(config_parser).get_pymongo_config() == expected_pymongo_config
 
 
@@ -307,12 +306,42 @@ def test_read_config(config, expected_pymongo_config, mk_mongodb):
             },
         ),
         (
-            (3, 2, 0),
+            (3, 11, 0),
+            {
+                "host": "example.com",
+                "password": "/?!/",
+                "tls": True,
+                "username": "username",
+                "read_preference": pymongo.ReadPreference.SECONDARY,
+                "directConnection": True,
+            },
+        ),
+        (
+            (3, 10, 0),
+            {
+                "host": "example.com",
+                "password": "/?!/",
+                "tls": True,
+                "username": "username",
+                "read_preference": pymongo.ReadPreference.SECONDARY,
+            },
+        ),
+        (
+            (3, 8, 0),
+            {
+                "host": "example.com",
+                "password": "/?!/",
+                "ssl": True,
+                "username": "username",
+                "read_preference": pymongo.ReadPreference.SECONDARY,
+            },
+        ),
+        (
+            (3, 4, 0),
             {
                 "host": "mongodb://username:%2F%3F%21%2F@example.com:27017",
                 "ssl": True,
                 "read_preference": pymongo.ReadPreference.SECONDARY,
-                "directConnection": True,
             },
         ),
     ],

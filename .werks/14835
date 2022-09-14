@@ -1,0 +1,12 @@
+Title: mk_mongodb: Fix unknown option 'directConnection' which is only available since pymongo3.11
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1663146719
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p13
+
+

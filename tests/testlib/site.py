@@ -913,7 +913,7 @@ class Site:
 
         web = CMKWebSession(self)
         web.login()
-        web.enforce_non_localized_gui()
+        self.enforce_non_localized_gui(web)
         self._add_wato_test_config()
 
     # Add some test configuration that is not test specific. These settings are set only to have a
@@ -929,6 +929,18 @@ class Site:
             value={"group_patterns": [("TESTGROUP", ("*gwia*", ""))]},
             folder="/",
         )
+
+    def enforce_non_localized_gui(self, web: CMKWebSession) -> None:
+        r = web.get("user_profile.py")
+        assert "Edit profile" in r.text, "Body: %s" % r.text
+
+        user_spec, etag = self.openapi.get_user("cmkadmin")
+        user_spec["language"] = "en"
+        self.openapi.edit_user("cmkadmin", user_spec, etag)
+
+        # Verify the language is as expected now
+        r = web.get("user_profile.py")
+        assert "Edit profile" in r.text, "Body: %s" % r.text
 
     def open_livestatus_tcp(self, encrypted: bool) -> None:
         """This opens a currently free TCP port and remembers it in the object for later use

@@ -219,15 +219,6 @@ class CMKWebSession:
         assert "sidebar" in r.text
         assert "dashboard.py" in r.text
 
-    def enforce_non_localized_gui(self) -> None:
-        all_users = self.get_all_users()
-        all_users["cmkadmin"]["language"] = "en"
-        self.edit_htpasswd_users(all_users)
-
-        # Verify the language is as expected now
-        r = self.get("user_profile.py")
-        assert "Edit profile" in r.text, "Body: %s" % r.text
-
     def logout(self) -> None:
         r = self.get("logout.py", allow_redirect_to_login=True)
         assert 'action="login.py"' in r.text
@@ -307,16 +298,4 @@ class CMKWebSession:
             "webapi.py?action=login_site",
             {"request": json.dumps({"site_id": site_id, "username": user, "password": password})},
         )
-        assert result is None
-
-    # TODO: Cleanup remaining API call
-    def get_all_users(self):
-        return self._api_request("webapi.py?action=get_all_users", {})
-
-    # TODO: Cleanup remaining API call
-    def edit_htpasswd_users(self, users: object) -> None:
-        result = self._api_request(
-            "webapi.py?action=edit_users", {"request": json.dumps({"users": users})}
-        )
-
         assert result is None

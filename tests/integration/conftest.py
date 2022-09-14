@@ -21,7 +21,7 @@ def fixture_site() -> Site:
 def fixture_web(site: Site) -> CMKWebSession:
     web = CMKWebSession(site)
     web.login()
-    web.enforce_non_localized_gui()
+    site.enforce_non_localized_gui(web)
     return web
 
 

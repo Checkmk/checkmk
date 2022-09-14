@@ -6,7 +6,7 @@
 import logging
 import time
 from contextlib import contextmanager
-from typing import Any, Iterator, NamedTuple, NoReturn, Optional, Union
+from typing import Any, Iterator, Mapping, NamedTuple, NoReturn, Optional, Union
 
 import requests
 
@@ -153,6 +153,30 @@ class CMKOpenApiSession(requests.Session):
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
         return [User(title=user_dict["title"]) for user_dict in response.json()["value"]]
+
+    def get_user(self, username: str) -> tuple[dict[str, Any], str]:
+        response = self.get(f"/objects/user_config/{username}")
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+        # Workaround a bug in the API endpoint (See CMK-11027)
+        user = response.json()["extensions"]
+        if "enforce_password_change" in user:
+            del user["enforce_password_change"]
+
+        return user, response.headers["Etag"]
+
+    def edit_user(self, username: str, user_spec: Mapping[str, Any], etag: str) -> None:
+        print(user_spec)
+        response = self.put(
+            f"objects/user_config/{username}",
+            headers={
+                "If-Match": etag,
+            },
+            json=user_spec,
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
 
     def delete_user(self, username: str) -> None:
         response = self.delete(f"/objects/user_config/{username}")

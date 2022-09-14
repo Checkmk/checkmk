@@ -14,7 +14,7 @@ def test_01_login_and_logout(site: Site) -> None:
     assert "Global settings" not in r.text
 
     web.login()
-    web.enforce_non_localized_gui()
+    site.enforce_non_localized_gui(web)
     r = web.get("wato.py?mode=globalvars")
     assert "Global settings" in r.text
 

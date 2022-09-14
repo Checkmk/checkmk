@@ -54,6 +54,7 @@ constexpr std::wstring_view kDatFile = L"checkmk.dat";
 constexpr std::wstring_view kUserYmlFile = L"check_mk.user.yml";
 constexpr std::wstring_view kBakeryYmlFile = L"check_mk.bakery.yml";
 constexpr std::wstring_view kExecuteUpdateFile = L"execute_update.cmd";
+constexpr std::wstring_view kConfigureAndExecPs1 = L"configure_and_exec.ps1";
 
 // extensions
 constexpr const wchar_t *kDefaultBakeryExt = L".bakery.yml";

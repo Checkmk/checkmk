@@ -60,8 +60,7 @@ std::wstring FindPowershellExe() noexcept {
         }
         XLOG::l("Not found powershell");
     } catch (const std::exception &e) {
-        XLOG::l("malformed name {} e:{}", wtools::ToUtf8(powershell_path),
-                e.what());
+        XLOG::l("malformed name {} e:{}", wtools::ToUtf8(powershell_path), e);
     }
     return {};
 }
@@ -651,7 +650,8 @@ bool HackDataWithCacheInfo(std::vector<char> &out,
 // Max Timeout < 0 use default
 std::vector<char> PluginEntry::getResultsSync(const std::wstring &id,
                                               int max_timeout) {
-    const auto exec = cmd_line_.empty() ? ConstructCommandToExec(path()) : cmd_line_;
+    const auto exec =
+        cmd_line_.empty() ? ConstructCommandToExec(path()) : cmd_line_;
     if (exec.empty()) {
         XLOG::l(
             "Failed to start minibox sync '{}', can't find executables for the '{}'",
@@ -1480,6 +1480,36 @@ std::vector<char> RunAsyncPlugins(PluginMap &plugins, int &total,
 namespace cma {
 std::mutex g_users_lock;
 std::unordered_map<std::wstring, wtools::InternalUser> g_users;
+constexpr bool enable_ps1_proxy{false};
+
+std::wstring LocatePs1Proxy() {
+    if constexpr (!enable_ps1_proxy) {
+        return L"";
+    }
+
+    auto path_to_configure_and_exec =
+        fs::path{cfg::GetRootInstallDir()} / cfg::files::kConfigureAndExecPs1;
+    std::error_code ec;
+    return fs::exists(path_to_configure_and_exec, ec)
+               ? fmt::format(L" \"{}\"", path_to_configure_and_exec.wstring())
+               : L"";
+}
+
+std::wstring MakePowershellWrapper() noexcept {
+    try {
+        auto powershell_exe = FindPowershellExe();
+        auto proxy = LocatePs1Proxy();
+
+        return powershell_exe +
+               fmt::format(
+                   L" -NoLogo -NoProfile -ExecutionPolicy Bypass -File{}",
+                   proxy) +
+               L" \"{}\"";
+    } catch (const std::exception &e) {
+        XLOG::l("Exception when finding powershell e:{}", e);
+        return L"";
+    }
+}
 
 wtools::InternalUser ObtainInternalUser(std::wstring_view group) {
     std::wstring group_name(group);

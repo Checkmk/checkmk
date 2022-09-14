@@ -291,10 +291,11 @@ TEST(PluginTest, Extensions) {
     p_expected = L"cscript.exe //Nologo \"a.vbs\"";
     EXPECT_EQ(p, p_expected);
 
-    p = ConstructCommandToExec(L"a.ps1");
-    p_expected =
-        L"powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File \"a.ps1\"";
-    EXPECT_EQ(p, p_expected);
+    EXPECT_EQ(
+        ConstructCommandToExec(L"a.ps1"),
+        fmt::format(
+            L"powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File {}\"a.ps1\"",
+            LocatePs1Proxy()));
 }
 
 namespace {

@@ -80,16 +80,9 @@ namespace cma {
 bool IsValidFile(const std::filesystem::path &file_to_exec);
 bool IsExecutable(const std::filesystem::path &file_to_exec);
 std::wstring FindPowershellExe() noexcept;
+std::wstring LocatePs1Proxy();
 
-// either finds powershell on the path
-// or build command
-inline std::wstring MakePowershellWrapper() {
-    std::wstring powershell_exe = FindPowershellExe();
-
-    // file found
-    return powershell_exe +
-           L" -NoLogo -NoProfile -ExecutionPolicy Bypass -File \"{}\"";
-}
+std::wstring MakePowershellWrapper() noexcept;
 
 // add to scripts interpreter
 inline std::wstring ConstructCommandToExec(
@@ -441,7 +434,6 @@ public:
         std::lock_guard lk(lock_);
         return thread_on_ && main_thread_;
     }
-
 
     std::vector<char> cache() const {
         if (cacheAge() == 0) {

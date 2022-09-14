@@ -142,7 +142,7 @@ def run_ansible(playbook_file, cmk_version) {
             PACKAGE_DIR=/download \
             EDITION=$EDITION \
             CMK_VERS=${cmk_version} \
-            ${playbook_file} -vvvv --ssh-common-args "-o ControlMaster=no"
+            ./${playbook_file} -vvvv --ssh-common-args "-o ControlMaster=no"
         """);
     }
 }

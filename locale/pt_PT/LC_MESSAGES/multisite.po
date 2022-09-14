@@ -13004,6 +13004,10 @@ msgstr "Modelo e inversão"
 msgid "Declined requests (PID %s: %s)"
 msgstr ""
 
+#, fuzzy
+msgid "Decoder utilization"
+msgstr "Utilização da fita adesiva"
+
 msgid "Dedicated white-/blacklists for new and vanished services"
 msgstr "Listas brancas/blacklists dedicadas a serviços novos e desaparecidos"
 
@@ -17034,6 +17038,10 @@ msgstr "Estatísticas do Encerramento"
 
 msgid "Enclosures"
 msgstr "Compartimentos"
+
+#, fuzzy
+msgid "Encoder utilization"
+msgstr "Utilização da fita adesiva"
 
 msgid "Encrypt SMTP communication using TLS"
 msgstr "Encriptar a comunicação SMTP usando TLS"
@@ -33586,6 +33594,14 @@ msgid "Nvidia"
 msgstr "Nvidia"
 
 #, fuzzy
+msgid "Nvidia GPU En-/Decoder utilization"
+msgstr "utilização da CPU"
+
+#, fuzzy
+msgid "Nvidia GPU Power"
+msgstr "utilização da CPU"
+
+#, fuzzy
 msgid "Nvidia GPU monitoring (Windows)"
 msgstr "Monitoramento MegaRAID (Windows)"
 
@@ -36698,6 +36714,10 @@ msgstr "Nome da fonte de alimentação"
 
 msgid "Power Usage"
 msgstr "Uso de energia"
+
+#, fuzzy
+msgid "Power consumption draw"
+msgstr "Consumo de energia APC"
 
 msgid "Powered OFF"
 msgstr "Desligado"

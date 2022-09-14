@@ -12419,6 +12419,10 @@ msgstr ""
 msgid "Declined requests (PID %s: %s)"
 msgstr ""
 
+#, fuzzy
+msgid "Decoder utilization"
+msgstr "Dezactiveaza Notificarile"
+
 msgid "Dedicated white-/blacklists for new and vanished services"
 msgstr ""
 
@@ -16427,6 +16431,10 @@ msgstr ""
 
 msgid "Enclosures"
 msgstr ""
+
+#, fuzzy
+msgid "Encoder utilization"
+msgstr "Dezactiveaza Notificarile"
 
 msgid "Encrypt SMTP communication using TLS"
 msgstr ""
@@ -32204,6 +32212,14 @@ msgid "Nvidia"
 msgstr ""
 
 #, fuzzy
+msgid "Nvidia GPU En-/Decoder utilization"
+msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
+msgid "Nvidia GPU Power"
+msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
 msgid "Nvidia GPU monitoring (Windows)"
 msgstr " pe siteul de monitorizare: "
 
@@ -35153,6 +35169,10 @@ msgstr "Nume AP"
 
 msgid "Power Usage"
 msgstr ""
+
+#, fuzzy
+msgid "Power consumption draw"
+msgstr "APC consum de Curent"
 
 msgid "Powered OFF"
 msgstr ""

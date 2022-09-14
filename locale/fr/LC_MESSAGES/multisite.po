@@ -13103,6 +13103,10 @@ msgstr "Raison du refus"
 msgid "Declined requests (PID %s: %s)"
 msgstr "Demandes rejetées (PID %s : %s)"
 
+#, fuzzy
+msgid "Decoder utilization"
+msgstr "Utilisation des nœuds"
+
 msgid "Dedicated white-/blacklists for new and vanished services"
 msgstr ""
 "Listes blanches et noires dédiées aux nouveaux services et à ceux qui "
@@ -17141,6 +17145,10 @@ msgstr "Statistiques sur les boîtiers"
 
 msgid "Enclosures"
 msgstr "Enceintes"
+
+#, fuzzy
+msgid "Encoder utilization"
+msgstr "Utilisation des nœuds"
 
 msgid "Encrypt SMTP communication using TLS"
 msgstr "Crypter la communication SMTP en utilisant TLS"
@@ -33694,6 +33702,14 @@ msgid "Nvidia"
 msgstr "Nvidia"
 
 #, fuzzy
+msgid "Nvidia GPU En-/Decoder utilization"
+msgstr "Utilisation du CPU"
+
+#, fuzzy
+msgid "Nvidia GPU Power"
+msgstr "Utilisation du CPU"
+
+#, fuzzy
 msgid "Nvidia GPU monitoring (Windows)"
 msgstr "Surveillance de MegaRAID (Windows)"
 
@@ -36823,6 +36839,10 @@ msgstr "Nom de l'alimentation"
 
 msgid "Power Usage"
 msgstr "Utilisation de l'énergie"
+
+#, fuzzy
+msgid "Power consumption draw"
+msgstr "Consommation électrique d'APC"
 
 msgid "Powered OFF"
 msgstr "Powered OFF"

@@ -12945,6 +12945,10 @@ msgstr "Afgewezen reden"
 msgid "Declined requests (PID %s: %s)"
 msgstr "Afgewezen verzoeken (PID %s: %s)"
 
+#, fuzzy
+msgid "Decoder utilization"
+msgstr "Gebruik knooppunten"
+
 msgid "Dedicated white-/blacklists for new and vanished services"
 msgstr "Speciale witte/blacklists voor nieuwe en verdwenen diensten"
 
@@ -16918,6 +16922,10 @@ msgstr "Gegevens behuizing"
 
 msgid "Enclosures"
 msgstr "Bijlagen"
+
+#, fuzzy
+msgid "Encoder utilization"
+msgstr "Gebruik knooppunten"
 
 msgid "Encrypt SMTP communication using TLS"
 msgstr "SMTP-communicatie versleutelen met TLS"
@@ -33273,6 +33281,14 @@ msgid "Nvidia"
 msgstr "Nvidia"
 
 #, fuzzy
+msgid "Nvidia GPU En-/Decoder utilization"
+msgstr "CPU-gebruik"
+
+#, fuzzy
+msgid "Nvidia GPU Power"
+msgstr "CPU-gebruik"
+
+#, fuzzy
 msgid "Nvidia GPU monitoring (Windows)"
 msgstr "MegaRAID bewaking (Windows)"
 
@@ -36339,6 +36355,10 @@ msgstr "Naam stroomvoorziening"
 
 msgid "Power Usage"
 msgstr "Stroomverbruik"
+
+#, fuzzy
+msgid "Power consumption draw"
+msgstr "APC Stroomverbruik"
 
 msgid "Powered OFF"
 msgstr "Uitgeschakeld"

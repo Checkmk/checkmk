@@ -12395,6 +12395,10 @@ msgstr "辞退理由"
 msgid "Declined requests (PID %s: %s)"
 msgstr ""
 
+#, fuzzy
+msgid "Decoder utilization"
+msgstr "ノードの使用率"
+
 msgid "Dedicated white-/blacklists for new and vanished services"
 msgstr "新規および消滅したサービス専用のホワイト/ブラックリスト"
 
@@ -16270,6 +16274,10 @@ msgstr "エンクロージャー統計"
 
 msgid "Enclosures"
 msgstr "エンクロージャー"
+
+#, fuzzy
+msgid "Encoder utilization"
+msgstr "ノードの使用率"
 
 msgid "Encrypt SMTP communication using TLS"
 msgstr "TLSを使用してSMTP通信を暗号化する"
@@ -31947,6 +31955,14 @@ msgid "Nvidia"
 msgstr "Nvidia"
 
 #, fuzzy
+msgid "Nvidia GPU En-/Decoder utilization"
+msgstr "CPU使用率"
+
+#, fuzzy
+msgid "Nvidia GPU Power"
+msgstr "CPU使用率"
+
+#, fuzzy
 msgid "Nvidia GPU monitoring (Windows)"
 msgstr "MegaRAIDモニタリング(Windows)"
 
@@ -34888,6 +34904,10 @@ msgstr "電源名"
 
 msgid "Power Usage"
 msgstr "電力使用量"
+
+#, fuzzy
+msgid "Power consumption draw"
+msgstr "APCの消費電力"
 
 msgid "Powered OFF"
 msgstr "電源オフ"

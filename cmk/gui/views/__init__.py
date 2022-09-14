@@ -811,7 +811,7 @@ def view_editor_general_properties(ds_name):
     )
 
 
-def view_editor_column_spec(ds_name: str) -> tuple[str, Dictionary]:
+def view_editor_column_spec(ident: str, ds_name: str) -> Dictionary:
     vs_column = _get_common_vs_column(ds_name)
 
     if join_vs_column := _get_join_vs_column(ds_name):
@@ -823,8 +823,7 @@ def view_editor_column_spec(ds_name: str) -> tuple[str, Dictionary]:
             match=lambda x: 1 * (x is not None and x[1] is not None),
         )
 
-    ident = "columns"
-    return ident, _view_editor_spec(
+    return _view_editor_spec(
         ds_name=ds_name,
         ident=ident,
         title=_("Columns"),
@@ -834,10 +833,9 @@ def view_editor_column_spec(ds_name: str) -> tuple[str, Dictionary]:
     )
 
 
-def view_editor_grouping_spec(ds_name: str) -> tuple[str, Dictionary]:
+def view_editor_grouping_spec(ident: str, ds_name: str) -> Dictionary:
     vs_column = _get_common_vs_column(ds_name)
-    ident = "grouping"
-    return ident, _view_editor_spec(
+    return _view_editor_spec(
         ds_name=ds_name,
         ident=ident,
         title=_("Grouping"),
@@ -969,7 +967,7 @@ def _column_link_choices() -> List[CascadingDropdownChoice]:
     ]
 
 
-def view_editor_sorter_specs(view: ViewSpec) -> _Tuple[str, Dictionary]:
+def view_editor_sorter_specs(ident: str, view: ViewSpec) -> Dictionary:
     def _sorter_choices(
         view: ViewSpec,
     ) -> Iterator[Union[DropdownChoiceEntry, CascadingDropdownChoice]]:
@@ -1005,37 +1003,34 @@ def view_editor_sorter_specs(view: ViewSpec) -> _Tuple[str, Dictionary]:
                     % (title, painter_spec.parameters["column_title"]),
                 )
 
-    return (
-        "sorting",
-        Dictionary(
-            title=_("Sorting"),
-            render="form",
-            optional_keys=False,
-            elements=[
-                (
-                    "sorters",
-                    ListOf(
-                        valuespec=Tuple(
-                            elements=[
-                                CascadingDropdown(
-                                    title=_("Column"),
-                                    choices=list(_sorter_choices(view)),
-                                    sorted=True,
-                                    no_preselect_title="",
-                                ),
-                                DropdownChoice(
-                                    title=_("Order"),
-                                    choices=[(False, _("Ascending")), (True, _("Descending"))],
-                                ),
-                            ],
-                            orientation="horizontal",
-                        ),
-                        title=_("Sorting"),
-                        add_label=_("Add sorter"),
+    return Dictionary(
+        title=_("Sorting"),
+        render="form",
+        optional_keys=False,
+        elements=[
+            (
+                "sorters",
+                ListOf(
+                    valuespec=Tuple(
+                        elements=[
+                            CascadingDropdown(
+                                title=_("Column"),
+                                choices=list(_sorter_choices(view)),
+                                sorted=True,
+                                no_preselect_title="",
+                            ),
+                            DropdownChoice(
+                                title=_("Order"),
+                                choices=[(False, _("Ascending")), (True, _("Descending"))],
+                            ),
+                        ],
+                        orientation="horizontal",
                     ),
+                    title=_("Sorting"),
+                    add_label=_("Add sorter"),
                 ),
-            ],
-        ),
+            ),
+        ],
     )
 
 
@@ -1068,9 +1063,7 @@ class PageAjaxCascadingRenderPainterParameters(AjaxPage):
         raise MKGeneralException("Invaild choice")
 
 
-def render_view_config(  # type:ignore[no-untyped-def]
-    view_spec: ViewSpec, general_properties=True
-) -> None:
+def render_view_config(view_spec: dict[str, Any], general_properties: bool = True) -> None:
     ds_name = view_spec.get("datasource", request.var("datasource"))
     if not ds_name:
         raise MKInternalError(_("No datasource defined."))
@@ -1082,12 +1075,14 @@ def render_view_config(  # type:ignore[no-untyped-def]
     if general_properties:
         view_editor_general_properties(ds_name).render_input("view", view_spec.get("view"))
 
-    for ident, vs in [
-        view_editor_column_spec(ds_name),
-        view_editor_sorter_specs(view_spec),
-        view_editor_grouping_spec(ds_name),
-    ]:
-        vs.render_input(ident, view_spec.get(ident))
+    vs_columns = view_editor_column_spec("columns", ds_name)
+    vs_columns.render_input("columns", view_spec["columns"])
+
+    vs_sorting = view_editor_sorter_specs("sorting", ds_name)
+    vs_sorting.render_input("sorting", view_spec["sorting"])
+
+    vs_grouping = view_editor_grouping_spec("grouping", ds_name)
+    vs_grouping.render_input("grouping", view_spec["grouping"])
 
 
 # Is used to change the view structure to be compatible to
@@ -1163,14 +1158,10 @@ def create_view_from_valuespec(old_view, view):
         vs.validate_value(attrs, ident)
         view.update(transform_valuespec_value_to_view(ident, attrs))
 
-    for ident, vs in [
-        ("view", view_editor_general_properties(ds_name)),
-        view_editor_column_spec(ds_name),
-        view_editor_grouping_spec(ds_name),
-    ]:
-        update_view(ident, vs)
-
-    update_view(*view_editor_sorter_specs(view))
+    update_view("view", view_editor_general_properties(ds_name))
+    update_view("columns", view_editor_column_spec("columns", ds_name))
+    update_view("grouping", view_editor_grouping_spec("grouping", ds_name))
+    update_view("sorting", view_editor_sorter_specs("sorting", view))
     return view
 
 
@@ -2001,13 +1992,47 @@ def _get_info_title(plugin: Union[Painter, Sorter]) -> str:
     )
 
 
+def _dummy_view_spec() -> ViewSpec:
+    # Just some dummy view to make the query() method callable. We'll review this for a cleanup.
+    return ViewSpec(
+        {
+            "browser_reload": 30,
+            "column_headers": "pergroup",
+            "datasource": "hosts",
+            "description": "",
+            "group_painters": [],
+            "hidden": False,
+            "hidebutton": False,
+            "layout": "table",
+            "mustsearch": False,
+            "name": "allhosts",
+            "num_columns": 3,
+            "owner": "",
+            "painters": [],
+            "play_sounds": False,
+            "public": True,
+            "sorters": [],
+            "title": "",
+            "topic": "overview",
+            "sort_index": 20,
+            "icon": "folder",
+            "user_sortable": True,
+            "single_infos": [],
+            "context": {},
+            "link_from": {},
+            "add_context_to_title": True,
+            "is_show_more": False,
+        }
+    )
+
+
 def _get_painter_plugin_title_for_choices(plugin: Painter) -> str:
-    dummy_cell = Cell({}, None, PainterSpec(plugin.ident))
+    dummy_cell = Cell(_dummy_view_spec(), None, PainterSpec(plugin.ident))
     return "%s: %s" % (_get_info_title(plugin), plugin.list_title(dummy_cell))
 
 
 def get_sorter_plugin_title_for_choices(plugin: Sorter) -> str:
-    dummy_cell = Cell({}, None, PainterSpec(plugin.ident))
+    dummy_cell = Cell(_dummy_view_spec(), None, PainterSpec(plugin.ident))
     title: str
     if callable(plugin.title):
         title = plugin.title(dummy_cell)

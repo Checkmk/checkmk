@@ -3,13 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable, Iterator, Sequence
 from pathlib import Path
+from typing import ContextManager
 
 import pytest
+from pytest import MonkeyPatch
+from pytest_mock import MockerFixture
 
 from tests.testlib.users import create_and_destroy_user
 
+from livestatus import SiteConfigurations, SiteId
+
 import cmk.utils.paths
+from cmk.utils.type_defs import UserId
 
 import cmk.gui.permissions as permissions
 from cmk.gui.config import active_config, builtin_role_ids
@@ -20,7 +27,7 @@ from cmk.gui.logged_in import UserContext
 from cmk.gui.watolib.utils import may_edit_ruleset
 
 
-def test_user_context(with_user) -> None:  # type:ignore[no-untyped-def]
+def test_user_context(with_user: tuple[UserId, str]) -> None:
     user_id = with_user[0]
     assert global_user.id is None
     with UserContext(user_id):
@@ -28,8 +35,9 @@ def test_user_context(with_user) -> None:  # type:ignore[no-untyped-def]
     assert global_user.id is None
 
 
-def test_super_user_context(  # type:ignore[no-untyped-def]
-    request_context, run_as_superuser
+@pytest.mark.usefixtures("request_context")
+def test_super_user_context(
+    run_as_superuser: Callable[[], ContextManager[None]],
 ) -> None:
     assert global_user.id is None
     with run_as_superuser():
@@ -37,7 +45,7 @@ def test_super_user_context(  # type:ignore[no-untyped-def]
     assert global_user.id is None
 
 
-def test_user_context_with_exception(with_user) -> None:  # type:ignore[no-untyped-def]
+def test_user_context_with_exception(with_user: tuple[UserId, str]) -> None:
     user_id = with_user[0]
     assert global_user.id is None
     with pytest.raises(MKAuthException):
@@ -48,7 +56,7 @@ def test_user_context_with_exception(with_user) -> None:  # type:ignore[no-untyp
     assert global_user.id is None
 
 
-def test_user_context_nested(with_user, with_admin) -> None:  # type:ignore[no-untyped-def]
+def test_user_context_nested(with_user: tuple[UserId, str], with_admin: tuple[UserId, str]) -> None:
     first_user_id = with_user[0]
     second_user_id = with_admin[0]
 
@@ -83,8 +91,8 @@ def test_user_context_nested(with_user, with_admin) -> None:  # type:ignore[no-u
         ),
     ],
 )
-def test_unauthenticated_users(  # type:ignore[no-untyped-def]
-    user, alias, email, role_ids, baserole_id
+def test_unauthenticated_users(
+    user: LoggedInUser, alias: str, email: str, role_ids: Sequence[str], baserole_id: str
 ) -> None:
     assert user.id is None
     assert user.alias == alias
@@ -101,7 +109,7 @@ def test_unauthenticated_users(  # type:ignore[no-untyped-def]
     assert user.customer_id is None
     assert user.contact_groups == []
     assert user.stars == set()
-    assert user.is_site_disabled("any_site") is False
+    assert user.is_site_disabled(SiteId("any_site")) is False
 
     assert user.load_file("any_file", "default") == "default"
     assert user.file_modified("any_file") == 0
@@ -114,7 +122,7 @@ def test_unauthenticated_users(  # type:ignore[no-untyped-def]
 
 @pytest.mark.parametrize("user", [LoggedInNobody(), LoggedInSuperUser()])
 @pytest.mark.usefixtures("request_context")
-def test_unauthenticated_users_language(mocker, user) -> None:  # type:ignore[no-untyped-def]
+def test_unauthenticated_users_language(mocker: MockerFixture, user: LoggedInUser) -> None:
     mocker.patch.object(active_config, "default_language", "esperanto")
     assert user.language == "esperanto"
 
@@ -126,10 +134,10 @@ def test_unauthenticated_users_language(mocker, user) -> None:  # type:ignore[no
 
 
 @pytest.mark.parametrize("user", [LoggedInNobody(), LoggedInSuperUser()])
-def test_unauthenticated_users_authorized_sites(  # type:ignore[no-untyped-def]
-    monkeypatch, user
+def test_unauthenticated_users_authorized_sites(
+    monkeypatch: MonkeyPatch, user: LoggedInUser
 ) -> None:
-    assert user.authorized_sites({"site1": {},}) == {
+    assert user.authorized_sites(SiteConfigurations({SiteId("site1"): {},})) == {
         "site1": {},
     }
 
@@ -138,8 +146,8 @@ def test_unauthenticated_users_authorized_sites(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.parametrize("user", [LoggedInNobody(), LoggedInSuperUser()])
-def test_unauthenticated_users_authorized_login_sites(  # type:ignore[no-untyped-def]
-    monkeypatch, user
+def test_unauthenticated_users_authorized_login_sites(
+    monkeypatch: MonkeyPatch, user: LoggedInUser
 ) -> None:
     monkeypatch.setattr("cmk.gui.site_config.get_login_slave_sites", lambda: ["slave_site"])
     monkeypatch.setattr(
@@ -153,7 +161,7 @@ def test_unauthenticated_users_authorized_login_sites(  # type:ignore[no-untyped
 
 
 @pytest.mark.usefixtures("request_context")
-def test_logged_in_nobody_permissions(mocker) -> None:  # type:ignore[no-untyped-def]
+def test_logged_in_nobody_permissions(mocker: MockerFixture) -> None:
     user = LoggedInNobody()
 
     mocker.patch.object(active_config, "roles", {})
@@ -165,7 +173,7 @@ def test_logged_in_nobody_permissions(mocker) -> None:  # type:ignore[no-untyped
 
 
 @pytest.mark.usefixtures("request_context")
-def test_logged_in_super_user_permissions(mocker) -> None:  # type:ignore[no-untyped-def]
+def test_logged_in_super_user_permissions(mocker: MockerFixture) -> None:
     user = LoggedInSuperUser()
 
     mocker.patch.object(
@@ -213,8 +221,9 @@ MONITORING_USER_BUTTONCOUNTS = {
 MONITORING_USER_FAVORITES = ["heute;CPU load"]
 
 
+@pytest.mark.usefixtures("request_context")
 @pytest.fixture(name="monitoring_user")
-def fixture_monitoring_user(request_context):
+def fixture_monitoring_user() -> Iterator[LoggedInUser]:
     """Returns a "Normal monitoring user" object."""
     user_dir = cmk.utils.paths.profile_dir / "test"
     user_dir.mkdir(parents=True)
@@ -233,10 +242,11 @@ def fixture_monitoring_user(request_context):
         yield LoggedInUser(user[0])
 
 
-def test_monitoring_user(monitoring_user) -> None:  # type:ignore[no-untyped-def]
+def test_monitoring_user(monitoring_user: LoggedInUser) -> None:
     assert monitoring_user.id == "test"
     assert monitoring_user.alias == "Test user"
     assert monitoring_user.email == "test_user_test@tribe29.com"
+    assert monitoring_user.confdir
     assert monitoring_user.confdir.endswith("/web/test")
 
     assert monitoring_user.role_ids == ["user"]
@@ -255,17 +265,17 @@ def test_monitoring_user(monitoring_user) -> None:  # type:ignore[no-untyped-def
     monitoring_user.save_stars()
     assert set(monitoring_user.load_file("favorites", [])) == monitoring_user.stars
 
-    assert monitoring_user.is_site_disabled("heute_slave_1") is False
-    assert monitoring_user.is_site_disabled("heute_slave_2") is True
+    assert monitoring_user.is_site_disabled(SiteId("heute_slave_1")) is False
+    assert monitoring_user.is_site_disabled(SiteId("heute_slave_2")) is True
 
     assert monitoring_user.load_file("siteconfig", None) == MONITORING_USER_SITECONFIG
     assert monitoring_user.file_modified("siteconfig") > 0
     assert monitoring_user.file_modified("unknown_file") == 0
 
-    monitoring_user.disable_site("heute_slave_1")
-    monitoring_user.enable_site("heute_slave_2")
-    assert monitoring_user.is_site_disabled("heute_slave_1") is True
-    assert monitoring_user.is_site_disabled("heute_slave_2") is False
+    monitoring_user.disable_site(SiteId("heute_slave_1"))
+    monitoring_user.enable_site(SiteId("heute_slave_2"))
+    assert monitoring_user.is_site_disabled(SiteId("heute_slave_1")) is True
+    assert monitoring_user.is_site_disabled(SiteId("heute_slave_2")) is False
 
     assert monitoring_user.show_help is False
     monitoring_user.show_help = True
@@ -277,16 +287,15 @@ def test_monitoring_user(monitoring_user) -> None:  # type:ignore[no-untyped-def
     assert monitoring_user.acknowledged_notifications == timestamp
 
 
-def test_monitoring_user_read_broken_file(monitoring_user) -> None:  # type:ignore[no-untyped-def]
+def test_monitoring_user_read_broken_file(monitoring_user: LoggedInUser) -> None:
+    assert monitoring_user.confdir
     with Path(monitoring_user.confdir, "asd.mk").open("w") as f:
         f.write("%#%#%")
 
     assert monitoring_user.load_file("asd", deflt="xyz") == "xyz"
 
 
-def test_monitoring_user_permissions(  # type:ignore[no-untyped-def]
-    mocker, monitoring_user
-) -> None:
+def test_monitoring_user_permissions(mocker: MockerFixture, monitoring_user: LoggedInUser) -> None:
     mocker.patch.object(
         active_config,
         "roles",
@@ -320,6 +329,7 @@ def test_monitoring_user_permissions(  # type:ignore[no-untyped-def]
         monitoring_user.need_permission("unknown_permission")
 
 
+@pytest.mark.usefixtures("monitoring_user")
 @pytest.mark.parametrize(
     "varname",
     [
@@ -331,7 +341,5 @@ def test_monitoring_user_permissions(  # type:ignore[no-untyped-def]
         "agent_config:only_from",
     ],
 )
-def test_ruleset_permissions_with_commandline_access(  # type:ignore[no-untyped-def]
-    monitoring_user, varname
-) -> None:
+def test_ruleset_permissions_with_commandline_access(varname: str) -> None:
     assert may_edit_ruleset(varname) is False

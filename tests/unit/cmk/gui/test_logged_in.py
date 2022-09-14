@@ -72,6 +72,16 @@ def test_user_context_nested(with_user: tuple[UserId, str], with_admin: tuple[Us
     assert global_user.id is None
 
 
+def test_user_context_explicit_permissions(with_user: tuple[UserId, str]) -> None:
+    assert not global_user.may("some_permission")
+    with UserContext(
+        with_user[0],
+        explicit_permissions={"some_permission", "some_other_permission"},
+    ):
+        assert global_user.may("some_permission")
+    assert not global_user.may("some_permission")
+
+
 @pytest.mark.parametrize(
     "user, alias, email, role_ids, baserole_id",
     [

@@ -1480,7 +1480,7 @@ std::vector<char> RunAsyncPlugins(PluginMap &plugins, int &total,
 namespace cma {
 std::mutex g_users_lock;
 std::unordered_map<std::wstring, wtools::InternalUser> g_users;
-constexpr bool enable_ps1_proxy{false};
+constexpr bool enable_ps1_proxy{true};
 
 std::wstring LocatePs1Proxy() {
     if constexpr (!enable_ps1_proxy) {

@@ -7,6 +7,8 @@ Provides the user with hints about his setup. Performs different
 checks and tells the user what could be improved.
 """
 
+from __future__ import annotations
+
 import ast
 import multiprocessing
 import queue
@@ -401,7 +403,7 @@ class ModeAnalyzeConfig(WatoMode):
     # Executes the tests on the site. This method is executed in a dedicated
     # subprocess (One per site)
     def _perform_tests_for_site(
-        self, site_id: SiteId, result_queue: "multiprocessing.Queue[Tuple[SiteId, str]]"
+        self, site_id: SiteId, result_queue: multiprocessing.Queue[Tuple[SiteId, str]]
     ) -> None:
         self._logger.debug("[%s] Starting" % site_id)
         result = None

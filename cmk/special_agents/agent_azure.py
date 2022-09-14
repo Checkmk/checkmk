@@ -5,6 +5,9 @@
 """
 Special agent azure: Monitoring Azure cloud applications with Checkmk
 """
+
+from __future__ import annotations
+
 import abc
 import argparse
 import datetime

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
-from typing import Optional
+from typing import Optional, Sequence
 
 import pytest
 
@@ -24,6 +24,7 @@ from cmk.base.plugins.agent_based.gcp_sql import (
     check_gcp_sql_status,
     check_summary,
     discover,
+    discover_gcp_sql_replication,
     parse,
 )
 from cmk.base.plugins.agent_based.utils import gcp
@@ -38,6 +39,9 @@ ASSET_TABLE = [
     [
         '{"name": "//cloudsql.googleapis.com/projects/tribe29-check-development/instances/checktest", "asset_type": "sqladmin.googleapis.com/Instance", "resource": {"version": "v1beta4", "discovery_document_uri": "https://www.googleapis.com/discovery/v1/apis/sqladmin/v1beta4/rest", "discovery_name": "DatabaseInstance", "parent": "//cloudresourcemanager.googleapis.com/projects/1074106860578", "data": {"serviceAccountEmailAddress": "p1074106860578-yhxe0q@gcp-sa-cloud-sql.iam.gserviceaccount.com", "instanceType": "CLOUDSQL_INSTANCE", "settings": {"dataDiskSizeGb": "20", "kind": "sql#settings", "storageAutoResize": true, "availabilityType": "ZONAL", "settingsVersion": "1", "backupConfiguration": {"kind": "sql#backupConfiguration", "backupRetentionSettings": {"retainedBackups": 7.0, "retentionUnit": "COUNT"}, "startTime": "01:00", "enabled": true, "transactionLogRetentionDays": 7.0, "binaryLogEnabled": false, "location": "us"}, "userLabels": {"reason": "check-development", "team": "dev"}, "activationPolicy": "ALWAYS", "replicationType": "SYNCHRONOUS", "pricingPlan": "PER_USE", "locationPreference": {"kind": "sql#locationPreference", "zone": "us-central1-f"}, "storageAutoResizeLimit": "0", "dataDiskType": "PD_HDD", "ipConfiguration": {"ipv4Enabled": true}, "tier": "db-custom-4-26624", "maintenanceWindow": {"hour": 0.0, "day": 0.0, "kind": "sql#maintenanceWindow"}}, "ipAddresses": [{"ipAddress": "34.121.172.190", "type": "PRIMARY"}], "selfLink": "https://sqladmin.googleapis.com/sql/v1beta4/projects/tribe29-check-development/instances/checktest", "region": "us-central1", "backendType": "SECOND_GEN", "databaseInstalledVersion": "MYSQL_5_7_36", "createTime": "2022-03-15T08:48:13.998Z", "connectionName": "tribe29-check-development:us-central1:checktest", "kind": "sql#instance", "serverCaCert": {"expirationTime": "2032-03-12T08:51:12.19Z", "kind": "sql#sslCert", "certSerialNumber": "0", "instance": "checktest", "sha1Fingerprint": "05e6c602375a78bd86ca46d9b80709d9bb43a0f2", "createTime": "2022-03-15T08:50:12.19Z", "commonName": "C=US,O=Google\\\\, Inc,CN=Google Cloud SQL Server CA,dnQualifier=8c6bc987-8655-4ff1-aebc-01d408409866"}, "databaseVersion": "MYSQL_5_7", "gceZone": "us-central1-f", "project": "tribe29-check-development", "state": "RUNNABLE", "name": "checktest"}, "location": "us-central1", "resource_url": ""}, "ancestors": ["projects/1074106860578", "folders/1022571519427", "organizations/668598212003"], "update_time": "2022-03-15T08:53:30.997492Z", "org_policy": []}'
     ],
+    [
+        '{"name": "//cloudsql.googleapis.com/projects/tribe29-check-development/instances/follower", "asset_type": "sqladmin.googleapis.com/Instance", "resource": {"version": "v1beta4", "discovery_document_uri": "https://www.googleapis.com/discovery/v1/apis/sqladmin/v1beta4/rest", "discovery_name": "DatabaseInstance", "parent": "//cloudresourcemanager.googleapis.com/projects/1074106860578", "data": {"serviceAccountEmailAddress": "p1074106860578-yhxe0q@gcp-sa-cloud-sql.iam.gserviceaccount.com", "instanceType": "CLOUDSQL_INSTANCE", "settings": {"dataDiskSizeGb": "20", "kind": "sql#settings", "storageAutoResize": true, "availabilityType": "ZONAL", "settingsVersion": "1", "backupConfiguration": {"kind": "sql#backupConfiguration", "backupRetentionSettings": {"retainedBackups": 7.0, "retentionUnit": "COUNT"}, "startTime": "01:00", "enabled": true, "transactionLogRetentionDays": 7.0, "binaryLogEnabled": false, "location": "us"}, "userLabels": {"reason": "check-development", "team": "dev"}, "activationPolicy": "ALWAYS", "replicationType": "SYNCHRONOUS", "pricingPlan": "PER_USE", "locationPreference": {"kind": "sql#locationPreference", "zone": "us-central1-f"}, "storageAutoResizeLimit": "0", "dataDiskType": "PD_HDD", "ipConfiguration": {"ipv4Enabled": true}, "tier": "db-custom-4-26624", "maintenanceWindow": {"hour": 0.0, "day": 0.0, "kind": "sql#maintenanceWindow"}}, "ipAddresses": [{"ipAddress": "34.121.172.190", "type": "PRIMARY"}], "selfLink": "https://sqladmin.googleapis.com/sql/v1beta4/projects/tribe29-check-development/instances/follower", "region": "us-central1", "backendType": "SECOND_GEN", "databaseInstalledVersion": "MYSQL_5_7_36", "createTime": "2022-03-15T08:48:13.998Z", "connectionName": "tribe29-check-development:us-central1:follower", "kind": "sql#instance", "serverCaCert": {"expirationTime": "2032-03-12T08:51:12.19Z", "kind": "sql#sslCert", "certSerialNumber": "0", "instance": "follower", "sha1Fingerprint": "05e6c602375a78bd86ca46d9b80709d9bb43a0f2", "createTime": "2022-03-15T08:50:12.19Z", "commonName": "C=US,O=Google\\\\, Inc,CN=Google Cloud SQL Server CA,dnQualifier=8c6bc987-8655-4ff1-aebc-01d408409866"}, "databaseVersion": "MYSQL_5_7", "gceZone": "us-central1-f", "project": "tribe29-check-development", "state": "RUNNABLE", "name": "follower"}, "location": "us-central1", "resource_url": ""}, "ancestors": ["projects/1074106860578", "folders/1022571519427", "organizations/668598212003"], "update_time": "2022-03-15T08:53:30.997492Z", "org_policy": []}'
+    ],
 ]
 
 
@@ -48,9 +52,7 @@ class TestDiscover(DiscoverTester):
 
     @property
     def expected_items(self) -> set[str]:
-        return {
-            "checktest",
-        }
+        return {"checktest", "follower"}
 
     @property
     def expected_labels(self) -> set[ServiceLabel]:
@@ -66,6 +68,49 @@ class TestDiscover(DiscoverTester):
 
     def discover(self, assets: Optional[gcp.AssetSection]) -> DiscoveryResult:
         yield from discover(section_gcp_service_cloud_sql=None, section_gcp_assets=assets)
+
+
+class TestDiscoverReplication(TestDiscover):
+    def discover(self, assets: Optional[gcp.AssetSection]) -> DiscoveryResult:
+
+        cloud_sql_stringtable = generate_stringtable("checktest", 0.42, CLOUDSQL)
+        cloud_sql_stringtable.extend(generate_stringtable("follower", 0.42, CLOUDSQL))
+
+        yield from discover_gcp_sql_replication(
+            section_gcp_service_cloud_sql=parse(cloud_sql_stringtable), section_gcp_assets=assets
+        )
+
+
+def cloud_sql_stringtable_without_lag() -> Section:
+    def _is_replica_lag_metric(json_metric: str) -> bool:
+        return "replica_lag" in json_metric
+
+    stringtable_checktest = generate_stringtable("checktest", 0.42, CLOUDSQL)
+    stringtable_follower = generate_stringtable("follower", 0.42, CLOUDSQL)
+    stringtable_without_lag = [
+        metric for metric in stringtable_checktest if not _is_replica_lag_metric(metric[0])
+    ]
+    stringtable_without_lag.extend(stringtable_follower)
+    return parse(stringtable_without_lag)
+
+
+@pytest.mark.parametrize(
+    "cloud_sql_section, expected",
+    [
+        pytest.param(cloud_sql_stringtable_without_lag(), ["follower"], id="follower"),
+        pytest.param(None, [], id="None"),
+    ],
+)
+def test_discover_replication_lag_metric(
+    cloud_sql_section: Optional[Section], expected: Sequence[str]
+) -> None:
+    assert expected == [
+        el.item
+        for el in discover_gcp_sql_replication(
+            section_gcp_service_cloud_sql=cloud_sql_section,
+            section_gcp_assets=parse_assets(ASSET_TABLE),
+        )
+    ]
 
 
 def test_discover_labels_labels_without_user_labels() -> None:
@@ -263,4 +308,4 @@ def test_yield_metrics_as_specified(plugin: Plugin) -> None:
 def test_check_summary() -> None:
     assets = parse_assets(ASSET_TABLE)
     results = set(check_summary(section=assets))
-    assert results == {Result(state=State.OK, summary="1 Server", details="Found 1 server")}
+    assert results == {Result(state=State.OK, summary="2 Servers", details="Found 2 servers")}

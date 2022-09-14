@@ -270,6 +270,42 @@ register.check_plugin(
 )
 
 
+def _has_metric(
+    section_gcp_service_cloud_sql: Optional[gcp.Section], item: str, metric_type: str
+) -> bool:
+    if not section_gcp_service_cloud_sql:
+        return False
+
+    section_item = section_gcp_service_cloud_sql.get(item, gcp.SectionItem(rows=[]))
+    return any((row.metric_type == metric_type for row in section_item.rows))
+
+
+# Custom discovery function since only the follower database has a replica_lag
+# metric. The standard discovery would create a service for the leader database
+# as well where the nonexistent lag would be shown with default value.
+def discover_gcp_sql_replication(
+    section_gcp_service_cloud_sql: Optional[gcp.Section],
+    section_gcp_assets: Optional[gcp.AssetSection],
+) -> DiscoveryResult:
+    if (
+        section_gcp_assets is None
+        or not section_gcp_assets.config.is_enabled("cloud_sql")
+        or not ASSET_TYPE in section_gcp_assets
+    ):
+        return
+
+    for item, service in section_gcp_assets[ASSET_TYPE].items():
+        if not _has_metric(
+            section_gcp_service_cloud_sql,
+            item,
+            "cloudsql.googleapis.com/database/replication/replica_lag",
+        ):
+            continue
+
+        labels = _get_service_labels(section_gcp_assets, service, item)
+        yield Service(item=item, labels=labels)
+
+
 def check_gcp_sql_replication(
     item: str,
     params: Mapping[str, Any],
@@ -293,7 +329,7 @@ register.check_plugin(
     sections=["gcp_service_cloud_sql", "gcp_assets"],
     service_name=service_namer("replication"),
     check_ruleset_name="gcp_replication_lag",
-    discovery_function=discover,
+    discovery_function=discover_gcp_sql_replication,
     check_function=check_gcp_sql_replication,
     check_default_parameters={"replication_lag": None},
 )

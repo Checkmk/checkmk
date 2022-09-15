@@ -88,6 +88,7 @@ from cmk.gui.watolib.activate_changes import (
 from cmk.gui.watolib.git import do_git_commit
 
 if typing.TYPE_CHECKING:
+    # TODO: Directly import from wsgiref.types in Python 3.11, without any import guard
     from _typeshed.wsgi import WSGIApplication
 
 _SEEN_ENDPOINTS: Set[FunctionType] = set()

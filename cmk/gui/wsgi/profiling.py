@@ -18,6 +18,7 @@ import cmk.utils.paths
 from cmk.gui.wsgi.applications.utils import load_single_global_wato_setting
 
 if typing.TYPE_CHECKING:
+    # TODO: Directly import from wsgiref.types in Python 3.11, without any import guard
     from _typeshed.wsgi import StartResponse, WSGIApplication, WSGIEnvironment
 
     from cmk.gui.wsgi.type_defs import WSGIResponse

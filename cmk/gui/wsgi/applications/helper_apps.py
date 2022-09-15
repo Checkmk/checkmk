@@ -11,6 +11,7 @@ from typing import List, TYPE_CHECKING
 from cmk.utils.site import get_omd_config
 
 if TYPE_CHECKING:
+    # TODO: Directly import from wsgiref.types in Python 3.11, without any import guard
     from _typeshed.wsgi import StartResponse, WSGIApplication, WSGIEnvironment
 
     from cmk.gui.wsgi.type_defs import WSGIResponse

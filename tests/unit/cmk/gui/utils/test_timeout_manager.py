@@ -17,6 +17,7 @@ from cmk.gui.utils.timeout_manager import timeout_manager, TimeoutManager
 from cmk.gui.wsgi.applications.checkmk import CheckmkApp
 
 if t.TYPE_CHECKING:
+    # TODO: Directly import from wsgiref.types in Python 3.11, without any import guard
     from _typeshed.wsgi import StartResponse, WSGIEnvironment
 
     from cmk.gui.wsgi.type_defs import WSGIResponse

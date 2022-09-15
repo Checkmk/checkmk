@@ -50,12 +50,5 @@
             "ubuntu-22.04",
             "debian-10"
         ]
-    },
-    "testbuild": {
-        "DISTROS": [
-            "ubuntu-20.04",
-            "centos-7",
-            "cma"
-        ]
     }
 }

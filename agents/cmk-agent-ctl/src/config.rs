@@ -52,12 +52,8 @@ pub trait TOMLLoader: DeserializeOwned {
 }
 
 pub struct RegistrationConfig {
-    pub coordinates: site_spec::Coordinates,
-    pub opt_pwd_credentials: types::OptPwdCredentials,
-    pub root_certificate: Option<String>,
+    pub connection_config: RegistrationConnectionConfig,
     pub host_reg_data: HostRegistrationData,
-    pub trust_server_cert: bool,
-    pub client_config: ClientConfig,
 }
 
 impl RegistrationConfig {
@@ -65,36 +61,9 @@ impl RegistrationConfig {
         runtime_config: RuntimeConfig,
         preset: RegistrationPreset,
         reg_args: cli::RegistrationArgs,
-    ) -> AnyhowResult<RegistrationConfig> {
-        let (server_spec, site) = match reg_args.connection_args.site {
-            Some(site) => {
-                match reg_args.connection_args.server {
-                    Some(server_spec) => (server_spec, site),
-                    None => return Err(anyhow!("Server not specified in the command line arguments, but site was. This should never happen.")),
-                }
-            }
-            None => match preset.site_spec {
-                Some(site_spec) => (site_spec.server_spec, site_spec.site),
-                None => return Err(anyhow!("Missing server and site specifications"))
-            }
-        };
-        let client_config = ClientConfig::new(runtime_config, reg_args.connection_args.client_opts);
-        let coordinates = site_spec::make_coordinates(
-            &server_spec.server,
-            server_spec.port,
-            &site,
-            &client_config,
-        )?;
-        let opt_pwd_credentials = match reg_args.connection_args.user {
-            Some(username) => types::OptPwdCredentials {
-                username,
-                password: reg_args.connection_args.password,
-            },
-            None => preset.credentials.context("Missing credentials")?,
-        };
-        let root_certificate = preset.root_certificate;
-        let stored_host_name = preset.host_name;
-        let stored_agent_labels = preset.agent_labels;
+    ) -> AnyhowResult<Self> {
+        let stored_host_name = preset.host_name.to_owned();
+        let stored_agent_labels = preset.agent_labels.to_owned();
         let host_reg_data = match reg_args
             .host_name
             .map(HostRegistrationData::Name)
@@ -105,13 +74,13 @@ impl RegistrationConfig {
                 stored_agent_labels.unwrap_or_default(),
             )?),
         };
-        Ok(RegistrationConfig {
-            coordinates,
-            opt_pwd_credentials,
-            root_certificate,
+        Ok(Self {
+            connection_config: RegistrationConnectionConfig::new(
+                runtime_config,
+                preset,
+                reg_args.connection_args,
+            )?,
             host_reg_data,
-            trust_server_cert: reg_args.connection_args.trust_server_cert,
-            client_config,
         })
     }
 
@@ -138,6 +107,57 @@ impl RegistrationConfig {
         let mut agent_labels = Self::automatic_agent_labels()?;
         agent_labels.extend(user_defined_agent_labels);
         Ok(agent_labels)
+    }
+}
+
+pub struct RegistrationConnectionConfig {
+    pub coordinates: site_spec::Coordinates,
+    pub opt_pwd_credentials: types::OptPwdCredentials,
+    pub root_certificate: Option<String>,
+    pub trust_server_cert: bool,
+    pub client_config: ClientConfig,
+}
+
+impl RegistrationConnectionConfig {
+    fn new(
+        runtime_config: RuntimeConfig,
+        preset: RegistrationPreset,
+        reg_args_conn: cli::RegistrationArgsConnection,
+    ) -> AnyhowResult<Self> {
+        let (server_spec, site) = match reg_args_conn.site {
+            Some(site) => {
+                match reg_args_conn.server {
+                    Some(server_spec) => (server_spec, site),
+                    None => return Err(anyhow!("Server not specified in the command line arguments, but site was. This should never happen.")),
+                }
+            }
+            None => match preset.site_spec {
+                Some(site_spec) => (site_spec.server_spec, site_spec.site),
+                None => return Err(anyhow!("Missing server and site specifications"))
+            }
+        };
+        let client_config = ClientConfig::new(runtime_config, reg_args_conn.client_opts);
+        let coordinates = site_spec::make_coordinates(
+            &server_spec.server,
+            server_spec.port,
+            &site,
+            &client_config,
+        )?;
+        let opt_pwd_credentials = match reg_args_conn.user {
+            Some(username) => types::OptPwdCredentials {
+                username,
+                password: reg_args_conn.password,
+            },
+            None => preset.credentials.context("Missing credentials")?,
+        };
+        let root_certificate = preset.root_certificate;
+        Ok(Self {
+            coordinates,
+            opt_pwd_credentials,
+            root_certificate,
+            trust_server_cert: reg_args_conn.trust_server_cert,
+            client_config,
+        })
     }
 }
 
@@ -544,19 +564,23 @@ impl Registry {
 mod test_registration_config {
     use super::*;
 
+    fn registration_args_connection() -> cli::RegistrationArgsConnection {
+        cli::RegistrationArgsConnection {
+            server: None,
+            site: None,
+            user: None,
+            password: None,
+            trust_server_cert: false,
+            client_opts: cli::ClientOpts {
+                detect_proxy: false,
+                validate_api_cert: false,
+            },
+        }
+    }
+
     fn registration_args() -> cli::RegistrationArgs {
         cli::RegistrationArgs {
-            connection_args: cli::RegistrationArgsConnection {
-                server: None,
-                site: None,
-                user: None,
-                password: None,
-                trust_server_cert: false,
-                client_opts: cli::ClientOpts {
-                    detect_proxy: false,
-                    validate_api_cert: false,
-                },
-            },
+            connection_args: registration_args_connection(),
             logging_opts: cli::LoggingOpts { verbose: 0 },
             host_name: None,
         }
@@ -582,7 +606,7 @@ mod test_registration_config {
     }
 
     #[test]
-    fn test_args_win_over_preset() {
+    fn test_conn_args_win_over_preset() {
         let mut reg_preset = registration_preset();
         reg_preset.site_spec = Some(site_spec::PresetSiteSpec {
             server_spec: site_spec::ServerSpec {
@@ -597,30 +621,26 @@ mod test_registration_config {
         });
         reg_preset.host_name = Some(String::from("unused"));
 
-        let mut reg_args = registration_args();
-        reg_args.connection_args.server = Some(site_spec::ServerSpec {
+        let mut reg_args_conn = registration_args_connection();
+        reg_args_conn.server = Some(site_spec::ServerSpec {
             server: String::from("server"),
             port: Some(123),
         });
-        reg_args.connection_args.site = Some(String::from("site"));
-        reg_args.host_name = Some(String::from("hostname"));
-        reg_args.connection_args.user = Some(String::from("user"));
+        reg_args_conn.site = Some(String::from("site"));
+        reg_args_conn.user = Some(String::from("user"));
 
-        let reg_config = RegistrationConfig::new(runtime_config(), reg_preset, reg_args).unwrap();
+        let reg_conn_config =
+            RegistrationConnectionConfig::new(runtime_config(), reg_preset, reg_args_conn).unwrap();
 
-        assert_eq!(reg_config.coordinates.server, "server");
-        assert_eq!(reg_config.coordinates.port, 123);
-        assert_eq!(reg_config.coordinates.site, "site");
-        assert_eq!(reg_config.opt_pwd_credentials.username, "user");
-        assert!(reg_config.opt_pwd_credentials.password.is_none());
-        assert_eq!(
-            reg_config.host_reg_data,
-            HostRegistrationData::Name(String::from("hostname"))
-        );
+        assert_eq!(reg_conn_config.coordinates.server, "server");
+        assert_eq!(reg_conn_config.coordinates.port, 123);
+        assert_eq!(reg_conn_config.coordinates.site, "site");
+        assert_eq!(reg_conn_config.opt_pwd_credentials.username, "user");
+        assert!(reg_conn_config.opt_pwd_credentials.password.is_none());
     }
 
     #[test]
-    fn test_preset_as_fallback() {
+    fn test_conn_preset_as_fallback() {
         let mut reg_preset = registration_preset();
         reg_preset.site_spec = Some(site_spec::PresetSiteSpec {
             server_spec: site_spec::ServerSpec {
@@ -633,18 +653,81 @@ mod test_registration_config {
             username: String::from("user"),
             password: Some(String::from("secret")),
         });
+
+        let reg_conn_config = RegistrationConnectionConfig::new(
+            runtime_config(),
+            reg_preset,
+            registration_args_connection(),
+        )
+        .unwrap();
+
+        assert_eq!(reg_conn_config.coordinates.server, "server");
+        assert_eq!(reg_conn_config.coordinates.port, 123);
+        assert_eq!(reg_conn_config.coordinates.site, "site");
+        assert_eq!(reg_conn_config.opt_pwd_credentials.username, "user");
+        assert_eq!(
+            reg_conn_config.opt_pwd_credentials.password.unwrap(),
+            "secret"
+        );
+    }
+
+    #[test]
+    fn test_host_name_arg_wins_over_preset() {
+        let mut reg_preset = registration_preset();
+        reg_preset.site_spec = Some(site_spec::PresetSiteSpec {
+            server_spec: site_spec::ServerSpec {
+                server: String::from("server"),
+                port: Some(123),
+            },
+            site: String::from("site"),
+        });
+        reg_preset.credentials = Some(types::OptPwdCredentials {
+            username: String::from("user"),
+            password: None,
+        });
+        reg_preset.host_name = Some(String::from("hopefully_unused"));
+
+        assert_eq!(
+            RegistrationConfig::new(
+                runtime_config(),
+                reg_preset,
+                cli::RegistrationArgs {
+                    connection_args: registration_args_connection(),
+                    logging_opts: cli::LoggingOpts { verbose: 0 },
+                    host_name: Some(String::from("hostname")),
+                },
+            )
+            .unwrap()
+            .host_reg_data,
+            HostRegistrationData::Name(String::from("hostname"))
+        );
+    }
+
+    #[test]
+    fn test_host_name_preset_as_fallback() {
+        let mut reg_preset = registration_preset();
         reg_preset.host_name = Some(String::from("hostname"));
 
-        let reg_config =
-            RegistrationConfig::new(runtime_config(), reg_preset, registration_args()).unwrap();
+        let mut reg_args_conn = registration_args_connection();
+        reg_args_conn.server = Some(site_spec::ServerSpec {
+            server: String::from("server"),
+            port: Some(123),
+        });
+        reg_args_conn.site = Some(String::from("site"));
+        reg_args_conn.user = Some(String::from("user"));
 
-        assert_eq!(reg_config.coordinates.server, "server");
-        assert_eq!(reg_config.coordinates.port, 123);
-        assert_eq!(reg_config.coordinates.site, "site");
-        assert_eq!(reg_config.opt_pwd_credentials.username, "user");
-        assert_eq!(reg_config.opt_pwd_credentials.password.unwrap(), "secret");
         assert_eq!(
-            reg_config.host_reg_data,
+            RegistrationConfig::new(
+                runtime_config(),
+                reg_preset,
+                cli::RegistrationArgs {
+                    connection_args: reg_args_conn,
+                    logging_opts: cli::LoggingOpts { verbose: 0 },
+                    host_name: None,
+                },
+            )
+            .unwrap()
+            .host_reg_data,
             HostRegistrationData::Name(String::from("hostname"))
         );
     }

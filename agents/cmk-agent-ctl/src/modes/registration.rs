@@ -69,7 +69,7 @@ impl TrustEstablishing for InteractiveTrust {
 }
 
 fn registration_server_cert<'a>(
-    config: &'a config::RegistrationConfig,
+    config: &'a config::RegistrationConnectionConfig,
     trust_establisher: &impl TrustEstablishing,
 ) -> AnyhowResult<Option<&'a str>> {
     match &config.root_certificate {
@@ -92,7 +92,7 @@ fn registration_server_cert<'a>(
 }
 
 fn prepare_registration(
-    config: &config::RegistrationConfig,
+    config: &config::RegistrationConnectionConfig,
     agent_rec_api: &impl agent_receiver_api::Pairing,
     trust_establisher: &impl TrustEstablishing,
 ) -> AnyhowResult<(types::Credentials, PairingResult)> {
@@ -148,13 +148,13 @@ fn _register(
     trust_establisher: &impl TrustEstablishing,
 ) -> AnyhowResult<()> {
     let (credentials, pairing_result) =
-        prepare_registration(&config, agent_rec_api, trust_establisher)?;
+        prepare_registration(&config.connection_config, agent_rec_api, trust_establisher)?;
 
     match &config.host_reg_data {
         config::HostRegistrationData::Name(hn) => {
             agent_rec_api
                 .register_with_hostname(
-                    &config.coordinates.to_url()?,
+                    &config.connection_config.coordinates.to_url()?,
                     &pairing_result.pairing_response.root_cert,
                     &credentials,
                     &pairing_result.uuid,
@@ -162,13 +162,13 @@ fn _register(
                 )
                 .context(format!(
                     "Error registering with hostname at {}",
-                    &config.coordinates,
+                    &config.connection_config.coordinates,
                 ))?;
         }
         config::HostRegistrationData::Labels(al) => {
             agent_rec_api
                 .register_with_agent_labels(
-                    &config.coordinates.to_url()?,
+                    &config.connection_config.coordinates.to_url()?,
                     &pairing_result.pairing_response.root_cert,
                     &credentials,
                     &pairing_result.uuid,
@@ -176,7 +176,7 @@ fn _register(
                 )
                 .context(format!(
                     "Error registering with agent labels at {}",
-                    &config.coordinates,
+                    &config.connection_config.coordinates,
                 ))?;
         }
     }
@@ -188,8 +188,12 @@ fn _register(
         root_cert: pairing_result.pairing_response.root_cert,
     };
     registry.register_connection(
-        post_registration_conn_type(&config.coordinates, &connection, agent_rec_api)?,
-        &config.coordinates,
+        post_registration_conn_type(
+            &config.connection_config.coordinates,
+            &connection,
+            agent_rec_api,
+        )?,
+        &config.connection_config.coordinates,
         connection,
     );
 
@@ -202,7 +206,7 @@ pub fn register(
     config: config::RegistrationConfig,
     registry: &mut config::Registry,
 ) -> AnyhowResult<()> {
-    let use_proxy = config.client_config.use_proxy;
+    let use_proxy = config.connection_config.client_config.use_proxy;
     _register(
         config,
         registry,
@@ -231,11 +235,11 @@ fn _proxy_register(
         }
     };
     let (credentials, pairing_result) =
-        prepare_registration(&config, agent_rec_api, trust_establisher)?;
+        prepare_registration(&config.connection_config, agent_rec_api, trust_establisher)?;
 
     agent_rec_api
         .register_with_hostname(
-            &config.coordinates.to_url()?,
+            &config.connection_config.coordinates.to_url()?,
             &pairing_result.pairing_response.root_cert,
             &credentials,
             &pairing_result.uuid,
@@ -243,7 +247,7 @@ fn _proxy_register(
         )
         .context(format!(
             "Error registering with hostname at {}",
-            &config.coordinates
+            &config.connection_config.coordinates
         ))?;
 
     println!(
@@ -262,7 +266,7 @@ fn _proxy_register(
 }
 
 pub fn proxy_register(config: config::RegistrationConfig) -> AnyhowResult<()> {
-    let use_proxy = config.client_config.use_proxy;
+    let use_proxy = config.connection_config.client_config.use_proxy;
     _proxy_register(
         config,
         &agent_receiver_api::Api { use_proxy },
@@ -383,19 +387,17 @@ mod tests {
         al
     }
 
-    fn registration_config(
+    fn registration_connection_config(
         root_certificate: Option<String>,
-        host_reg_data: config::HostRegistrationData,
         trust_server_cert: bool,
-    ) -> config::RegistrationConfig {
-        config::RegistrationConfig {
+    ) -> config::RegistrationConnectionConfig {
+        config::RegistrationConnectionConfig {
             coordinates: site_spec::Coordinates::from_str(SITE_COORDINATES).unwrap(),
             opt_pwd_credentials: types::OptPwdCredentials {
                 username: String::from("user"),
                 password: Some(String::from("password")),
             },
             root_certificate,
-            host_reg_data,
             trust_server_cert,
             client_config: config::ClientConfig {
                 use_proxy: false,
@@ -410,11 +412,7 @@ mod tests {
         #[test]
         fn test_interactive_trust() {
             assert!(prepare_registration(
-                &registration_config(
-                    None,
-                    config::HostRegistrationData::Name(String::from(HOST_NAME)),
-                    false,
-                ),
+                &registration_connection_config(None, false),
                 &MockApi {
                     expect_root_cert_for_pairing: false,
                     expected_registration_method: None,
@@ -427,11 +425,7 @@ mod tests {
         #[test]
         fn test_blind_trust() {
             assert!(prepare_registration(
-                &registration_config(
-                    None,
-                    config::HostRegistrationData::Name(String::from(HOST_NAME)),
-                    true,
-                ),
+                &registration_connection_config(None, true),
                 &MockApi {
                     expect_root_cert_for_pairing: false,
                     expected_registration_method: None,
@@ -444,11 +438,7 @@ mod tests {
         #[test]
         fn test_root_cert_from_config() {
             assert!(prepare_registration(
-                &registration_config(
-                    Some(String::from("root_certificate")),
-                    config::HostRegistrationData::Labels(agent_labels()),
-                    false,
-                ),
+                &registration_connection_config(Some(String::from("root_certificate")), false),
                 &MockApi {
                     expect_root_cert_for_pairing: true,
                     expected_registration_method: None,
@@ -461,11 +451,7 @@ mod tests {
         #[test]
         fn test_root_cert_from_config_and_blind_trust() {
             assert!(prepare_registration(
-                &registration_config(
-                    Some(String::from("root_certificate")),
-                    config::HostRegistrationData::Labels(agent_labels()),
-                    true
-                ),
+                &registration_connection_config(Some(String::from("root_certificate")), true),
                 &MockApi {
                     expect_root_cert_for_pairing: true,
                     expected_registration_method: None,
@@ -484,11 +470,10 @@ mod tests {
             let mut registry = registry();
             assert!(!registry.path().exists());
             assert!(_register(
-                registration_config(
-                    None,
-                    config::HostRegistrationData::Name(String::from(HOST_NAME)),
-                    false,
-                ),
+                config::RegistrationConfig {
+                    connection_config: registration_connection_config(None, false),
+                    host_reg_data: config::HostRegistrationData::Name(String::from(HOST_NAME)),
+                },
                 &mut registry,
                 &MockApi {
                     expect_root_cert_for_pairing: false,
@@ -506,11 +491,13 @@ mod tests {
             let mut registry = registry();
             assert!(!registry.path().exists());
             assert!(_register(
-                registration_config(
-                    Some(String::from("root_certificate")),
-                    config::HostRegistrationData::Labels(agent_labels()),
-                    false,
-                ),
+                config::RegistrationConfig {
+                    connection_config: registration_connection_config(
+                        Some(String::from("root_certificate")),
+                        false
+                    ),
+                    host_reg_data: config::HostRegistrationData::Labels(agent_labels()),
+                },
                 &mut registry,
                 &MockApi {
                     expect_root_cert_for_pairing: true,
@@ -530,11 +517,10 @@ mod tests {
         #[test]
         fn test_host_name() {
             assert!(_proxy_register(
-                registration_config(
-                    None,
-                    config::HostRegistrationData::Name(String::from(HOST_NAME)),
-                    true,
-                ),
+                config::RegistrationConfig {
+                    connection_config: registration_connection_config(None, true),
+                    host_reg_data: config::HostRegistrationData::Name(String::from(HOST_NAME)),
+                },
                 &MockApi {
                     expect_root_cert_for_pairing: false,
                     expected_registration_method: Some(RegistrationMethod::HostName),
@@ -546,11 +532,10 @@ mod tests {
 
         #[test]
         fn test_agent_labels() {
-            assert!(proxy_register(registration_config(
-                None,
-                config::HostRegistrationData::Labels(agent_labels()),
-                true,
-            ),)
+            assert!(proxy_register(config::RegistrationConfig {
+                connection_config: registration_connection_config(None, true),
+                host_reg_data: config::HostRegistrationData::Labels(agent_labels()),
+            },)
             .is_err());
         }
     }

@@ -498,7 +498,7 @@ section_cpu() {
 section_zpool() {
     # zpool status
     if [ -x /sbin/zpool ]; then
-        run_cached "zpool_status" 120 "echo <<<zpool_status>>>; /sbin/zpool status -x"
+        run_cached "zpool_status" 120 "echo '<<<zpool_status>>>'; /sbin/zpool status -x"
 
         ${MK_RUN_SYNC_PARTS} || return
 
@@ -534,7 +534,7 @@ section_solaris_prtg() {
         # prtdiag does not work in local zones
         if [ "${zonename}" == "global" ]; then
             run_cached "solaris_prtdiag_status" 300 \
-                'echo <<<solaris_prtdiag_status>>>; /usr/sbin/prtdiag 1>/dev/null 2>&1; echo $?'
+                'echo "<<<solaris_prtdiag_status>>>"; /usr/sbin/prtdiag 1>/dev/null 2>&1; echo $?'
         fi
     fi
 }

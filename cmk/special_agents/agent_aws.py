@@ -454,7 +454,7 @@ def fetch_resources_matching_tags(  # type:ignore[no-untyped-def]
     return matching_resources_arn
 
 
-#
+# .
 #   .--section API---------------------------------------------------------.
 #   |                       _   _                  _    ____ ___           |
 #   |         ___  ___  ___| |_(_) ___  _ __      / \  |  _ \_ _|          |
@@ -3563,6 +3563,7 @@ class RDS(AWSSectionCloudwatch):
         return [AWSSectionResult("", computed_content.content)]
 
 
+# .
 #   .--CloudFront----------------------------------------------------------.
 #   |          ____ _                 _ _____                _             |
 #   |         / ___| | ___  _   _  __| |  ___| __ ___  _ __ | |_           |
@@ -3573,7 +3574,6 @@ class RDS(AWSSectionCloudwatch):
 #   +----------------------------------------------------------------------+
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-# .
 
 
 class CloudFrontSummary(AWSSection):

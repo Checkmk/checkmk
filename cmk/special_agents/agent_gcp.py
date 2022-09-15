@@ -189,7 +189,7 @@ class Metric:
 
 @dataclass(frozen=True)
 class Service:
-    metrics: list[Metric]
+    metrics: Sequence[Metric]
     name: str
     default_groupby: str
 

@@ -43,7 +43,7 @@ pub struct ClientOpts {
 }
 
 #[derive(StructOpt)]
-pub struct RegistrationArgs {
+pub struct RegistrationArgsConnection {
     /// Address of the Checkmk site in the format "<server>" or "<server>:<port>"
     #[structopt(long, short = "s", requires = "site", parse(try_from_str))]
     pub server: Option<site_spec::ServerSpec>,
@@ -60,11 +60,6 @@ pub struct RegistrationArgs {
     #[structopt(long, short = "P", requires = "user", parse(from_str))]
     pub password: Option<String>,
 
-    /// Name of this host in the monitoring site
-    // We are consistent with agent updater, which uses "hostname", not "host-name".
-    #[structopt(long, short = "H", long = "hostname", parse(from_str))]
-    pub host_name: Option<String>,
-
     /// Blindly trust the server certificate of the Checkmk site
     // We are consistent with agent updater, which uses "trust-cert"
     #[structopt(long = "trust-cert")]
@@ -72,9 +67,20 @@ pub struct RegistrationArgs {
 
     #[structopt(flatten)]
     pub client_opts: ClientOpts,
+}
+
+#[derive(StructOpt)]
+pub struct RegistrationArgs {
+    #[structopt(flatten)]
+    pub connection_args: RegistrationArgsConnection,
 
     #[structopt(flatten)]
     pub logging_opts: LoggingOpts,
+
+    /// Name of this host in the monitoring site
+    // We are consistent with agent updater, which uses "hostname", not "host-name".
+    #[structopt(long, short = "H", long = "hostname", parse(from_str))]
+    pub host_name: Option<String>,
 }
 
 #[derive(StructOpt)]

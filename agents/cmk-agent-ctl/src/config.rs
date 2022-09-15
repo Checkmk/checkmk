@@ -92,9 +92,9 @@ impl RegistrationConfig {
         preset: RegistrationPreset,
         reg_args: cli::RegistrationArgs,
     ) -> AnyhowResult<RegistrationConfig> {
-        let (server_spec, site) = match reg_args.site {
+        let (server_spec, site) = match reg_args.connection_args.site {
             Some(site) => {
-                match reg_args.server {
+                match reg_args.connection_args.server {
                     Some(server_spec) => (server_spec, site),
                     None => return Err(anyhow!("Server not specified in the command line arguments, but site was. This should never happen.")),
                 }
@@ -104,17 +104,17 @@ impl RegistrationConfig {
                 None => return Err(anyhow!("Missing server and site specifications"))
             }
         };
-        let client_config = ClientConfig::new(runtime_config, reg_args.client_opts);
+        let client_config = ClientConfig::new(runtime_config, reg_args.connection_args.client_opts);
         let coordinates = site_spec::make_coordinates(
             &server_spec.server,
             server_spec.port,
             &site,
             &client_config,
         )?;
-        let opt_pwd_credentials = match reg_args.user {
+        let opt_pwd_credentials = match reg_args.connection_args.user {
             Some(username) => types::OptPwdCredentials {
                 username,
-                password: reg_args.password,
+                password: reg_args.connection_args.password,
             },
             None => preset.credentials.context("Missing credentials")?,
         };
@@ -136,7 +136,7 @@ impl RegistrationConfig {
             opt_pwd_credentials,
             root_certificate,
             host_reg_data,
-            trust_server_cert: reg_args.trust_server_cert,
+            trust_server_cert: reg_args.connection_args.trust_server_cert,
             client_config,
         })
     }
@@ -546,17 +546,19 @@ mod test_registration_config {
 
     fn registration_args() -> cli::RegistrationArgs {
         cli::RegistrationArgs {
-            server: None,
-            site: None,
-            user: None,
-            password: None,
-            host_name: None,
-            trust_server_cert: false,
-            client_opts: cli::ClientOpts {
-                detect_proxy: false,
-                validate_api_cert: false,
+            connection_args: cli::RegistrationArgsConnection {
+                server: None,
+                site: None,
+                user: None,
+                password: None,
+                trust_server_cert: false,
+                client_opts: cli::ClientOpts {
+                    detect_proxy: false,
+                    validate_api_cert: false,
+                },
             },
             logging_opts: cli::LoggingOpts { verbose: 0 },
+            host_name: None,
         }
     }
 
@@ -596,13 +598,13 @@ mod test_registration_config {
         reg_preset.host_name = Some(String::from("unused"));
 
         let mut reg_args = registration_args();
-        reg_args.server = Some(site_spec::ServerSpec {
+        reg_args.connection_args.server = Some(site_spec::ServerSpec {
             server: String::from("server"),
             port: Some(123),
         });
-        reg_args.site = Some(String::from("site"));
+        reg_args.connection_args.site = Some(String::from("site"));
         reg_args.host_name = Some(String::from("hostname"));
-        reg_args.user = Some(String::from("user"));
+        reg_args.connection_args.user = Some(String::from("user"));
 
         let reg_config = RegistrationConfig::new(runtime_config(), reg_preset, reg_args).unwrap();
 

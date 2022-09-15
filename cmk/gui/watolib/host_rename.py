@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import os
 
-from typing import List, Dict, Tuple as _Tuple
+from typing import List, Dict, Tuple as _Tuple, Union
 from livestatus import SiteId
 
 import cmk.utils.store as store
@@ -68,7 +68,7 @@ def perform_rename_hosts(renamings, job_interface=None):
             update_interface("Renaming host(s) in cluster nodes...")
             this_host_actions += _rename_host_as_cluster_node(all_hosts, oldname, newname)
             update_interface("Renaming host(s) in parents...")
-            this_host_actions += _rename_host_in_parents(oldname, newname)
+            this_host_actions += _rename_parents(oldname, newname)
             update_interface("Renaming host(s) in rulesets...")
             this_host_actions += _rename_host_in_rulesets(folder, oldname, newname)
             update_interface("Renaming host(s) in BI aggregations...")
@@ -115,9 +115,33 @@ def _rename_host_as_cluster_node(all_hosts, oldname, newname):
     return []
 
 
-def _rename_host_in_parents(oldname, newname):
-    parents = _rename_host_as_parent(oldname, newname)
-    return ["parents"] * len(parents)
+def _rename_parents(
+    oldname: HostName,
+    newname: HostName,
+) -> List[str]:
+    parent_renamed: List[str]
+    folder_parent_renamed: List[CREFolder]
+    parent_renamed, folder_parent_renamed = _rename_host_in_parents(oldname, newname)
+    # Needed because hosts.mk in folders with parent as effective attribute
+    # would not be updated
+    for folder in folder_parent_renamed:
+        folder.rewrite_hosts_files()
+
+    return parent_renamed
+
+
+def _rename_host_in_parents(
+    oldname: HostName,
+    newname: HostName,
+) -> _Tuple[List[str], List[CREFolder]]:
+    folder_parent_renamed: List[CREFolder] = []
+    parents, folder_parent_renamed = _rename_host_as_parent(
+        oldname,
+        newname,
+        folder_parent_renamed,
+        Folder.root_folder(),
+    )
+    return ["parents"] * len(parents), folder_parent_renamed
 
 
 def _rename_host_in_rulesets(folder, oldname, newname):
@@ -280,9 +304,12 @@ def _rename_host_in_multisite(oldname, newname):
     return []
 
 
-def _rename_host_as_parent(oldname, newname, in_folder=None):
-    if in_folder is None:
-        in_folder = Folder.root_folder()
+def _rename_host_as_parent(
+    oldname: HostName,
+    newname: HostName,
+    folder_parent_renamed: List[CREFolder],
+    in_folder: CREFolder,
+) -> _Tuple[List[Union[HostName, str]], List[CREFolder]]:
 
     parents = []
     for somehost in in_folder.hosts().values():
@@ -292,12 +319,16 @@ def _rename_host_as_parent(oldname, newname, in_folder=None):
 
     if in_folder.has_explicit_attribute("parents"):
         if in_folder.rename_parent(oldname, newname):
+            if in_folder not in folder_parent_renamed:
+                folder_parent_renamed.append(in_folder)
             parents.append(in_folder.name())
 
     for subfolder in in_folder.subfolders():
-        parents += _rename_host_as_parent(oldname, newname, subfolder)
+        subfolder_parents, folder_parent_renamed = _rename_host_as_parent(
+            oldname, newname, folder_parent_renamed, subfolder)
+        parents += subfolder_parents
 
-    return parents
+    return parents, folder_parent_renamed
 
 
 def _merge_action_counts(action_counts, new_counts):

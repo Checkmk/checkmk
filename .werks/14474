@@ -1,0 +1,21 @@
+Title: Fix parent renaming for hosts in subfolders
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1661337543
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p29
+
+The renaming of hosts includes the renaming of parents, if the host that is
+renamed is a parent of other hosts.
+
+This renaming was faulty if the child host was in a subfolder that inherited
+the parent attribute from a parent folder, leading to messages like "The parent
+"FOO" of the host "BAR" is not defined on this site" on activation of changes.
+
+Note that the parent was renamed correctly in the parent folder where the
+attribute was effectivly set. Saving the folder properties again after renaming
+fixed the mentioned error message.

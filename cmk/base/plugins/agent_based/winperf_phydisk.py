@@ -14,37 +14,37 @@ from .utils import diskstat
 # <<<winperf_phydisk>>>
 # 1352457622.31 234
 # 2 instances: 0_C: _Total
-# -36 0 0 rawcount
-# -34 235822560 235822560 type(20570500)
-# -34 2664021277 2664021277 type(40030500)
-# 1166 235822560 235822560 type(550500)        ----> Average Disk Queue Length
-# -32 109877176 109877176 type(20570500)
-# -32 2664021277 2664021277 type(40030500)
-# 1168 109877176 109877176 type(550500)        ----> Average Disk Read Queue Length
-# -30 125945384 125945384 type(20570500)
-# -30 2664021277 2664021277 type(40030500)
-# 1170 125945384 125945384 type(550500)        ----> Average Disk Write Queue Length
-# -28 3526915777 3526915777 average_timer
-# -28 36283 36283 average_base
-# -26 1888588843 1888588843 average_timer     ----> Average Disk Seconds/Read
-# -26 17835 17835 average_base
-# -24 1638326933 1638326933 average_timer
-# -24 18448 18448 average_base                ----> Average Disk Seconds/Write
-# -22 36283 36283 counter
-# -20 17835 17835 counter                     ----> Disk Reads/sec
-# -18 18448 18448 counter                     ----> Disk Writes/sec
-# -16 1315437056 1315437056 bulk_count
-# -14 672711680 672711680 bulk_count          ----> Disk Read Bytes/sec
-# -12 642725376 642725376 bulk_count          ----> Disk Write Bytes/sec
-# -10 1315437056 1315437056 average_bulk
-# -10 36283 36283 average_base
-# -8 672711680 672711680 average_bulk
-# -8 17835 17835 average_base
-# -6 642725376 642725376 average_bulk
-# -6 18448 18448 average_base
-# 1248 769129229 769129229 type(20570500)
-# 1248 2664021277 2664021277 type(40030500)
-# 1250 1330 1330 counter
+# -36 0 0 rawcount                              ----> Current Disk Queue Length as in Windows 10
+# -34 235822560 235822560 type(20570500)        ----> % Disk Time
+# -34 2664021277 2664021277 type(40030500)      ----
+# 1166 235822560 235822560 type(550500)         ----> Average Disk Queue Length
+# -32 109877176 109877176 type(20570500)        ----> % Disk Read Time
+# -32 2664021277 2664021277 type(40030500)      ----
+# 1168 109877176 109877176 type(550500)         ----> Average Disk Read Queue Length
+# -30 125945384 125945384 type(20570500)        ----> % Disk Write Time
+# -30 2664021277 2664021277 type(40030500)      ----
+# 1170 125945384 125945384 type(550500)         ----> Average Disk Write Queue Length
+# -28 3526915777 3526915777 average_timer       ----> Avg. Disk sec/Transfer
+# -28 36283 36283 average_base                  ----
+# -26 1888588843 1888588843 average_timer       ----> Average Disk Seconds/Read
+# -26 17835 17835 average_base                  ----
+# -24 1638326933 1638326933 average_timer       ----> Average Disk Seconds/Write
+# -24 18448 18448 average_base                  ----
+# -22 36283 36283 counter                       ----> Disk Transfers/sec
+# -20 17835 17835 counter                       ----> Disk Reads/sec
+# -18 18448 18448 counter                       ----> Disk Writes/sec
+# -16 1315437056 1315437056 bulk_count          ----> Disk Bytes/sec
+# -14 672711680 672711680 bulk_count            ----> Disk Read Bytes/sec
+# -12 642725376 642725376 bulk_count            ----> Disk Write Bytes/sec
+# -10 1315437056 1315437056 average_bulk        ----> Avg. Disk Bytes/Transfer
+# -10 36283 36283 average_base                  ----
+# -8 672711680 672711680 average_bulk           ----> Avg. Disk Bytes/Read
+# -8 17835 17835 average_base                   ----
+# -6 642725376 642725376 average_bulk           ----> Avg. Disk Bytes/Write
+# -6 18448 18448 average_base                   ----
+# 1248 769129229 769129229 type(20570500)       ----> % Idle  Time
+# 1248 2664021277 2664021277 type(40030500)     ----
+# 1250 1330 1330 counter                        ----> Split IO/Sec
 #
 # Explanation for two-lines values counters:
 #
@@ -74,16 +74,27 @@ from .utils import diskstat
 # Result is (7 - 3) / 2 /(2 - 1) = 2
 #            N1  N0   F   D1  D0
 
-
+# NOTE! Data Row
+# FirstColumn = CounterNameTitleIndex(as in MSDN) - CounterForPhydisk
+# CounterNum for phydisk is 234
+# Database location:
+# Key: HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Perflib\009
+# Value: Counter
+# Format is multi string:
+# Index0
+# Title0
+# ...
+# IndexN
+# TitleN
 _LINE_TO_METRIC: Final = {
-    "-14": "read_throughput",
-    "-12": "write_throughput",
-    "-20": "read_ios",
-    "-18": "write_ios",
-    "1168": "read_ql",
-    "1170": "write_ql",
-    "-24": "average_read_wait",
-    "-26": "average_write_wait",
+    "-14": "read_throughput",  # 220 Disk Read Bytes/sec
+    "-12": "write_throughput",  # 222 Disk Write Bytes/sec
+    "-20": "read_ios",  # 214 Disk Reads/sec
+    "-18": "write_ios",  # 216 Disk Writes/sec
+    "1168": "read_ql",  # 1402 Avg. Disc Read Queue length
+    "1170": "write_ql",  # 1402 Avg. Disc Write Queue length
+    "-24": "average_read_wait",  # 210 Avg. Disc sec/Write
+    "-26": "average_write_wait",  # 208 Avg. Disc sec/Read
 }
 
 DiskType = dict[str, Union[int, float]]

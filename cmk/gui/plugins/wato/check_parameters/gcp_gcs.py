@@ -15,8 +15,10 @@ from cmk.gui.valuespec import (
     Dictionary,
     Filesize,
     Integer,
+    ListOf,
     MonitoringState,
     Percentage,
+    RegExp,
     TextInput,
     ValueSpec,
 )
@@ -363,5 +365,67 @@ rulespec_registry.register(
         parameter_valuespec=_vs_gcs_http_lb_latencies,
         title=lambda: _("GCP/HTTP(S) load balancer Latencies"),
         item_spec=_item_spec_http_lb,
+    )
+)
+
+
+def _vs_health() -> Dictionary:
+    return Dictionary(
+        title=_("GCP status product selection"),
+        elements=[
+            (
+                "time_window",
+                Integer(
+                    minvalue=1,
+                    title="Range to look for incidents",
+                    help="Report incidents x days in the past",
+                    default_value=2,
+                ),
+            ),
+            (
+                "region_filter",
+                ListOf(
+                    title="Regions to monitor",
+                    valuespec=RegExp(
+                        mode=RegExp.infix,
+                        title=_("pattern"),
+                        allow_empty=False,
+                    ),
+                    add_label=_("add new pattern"),
+                    help=_(
+                        "You can specify a list of regex patterns to monitor specific "
+                        "regions. Only those that do match the predefined patterns "
+                        "will be monitored. If empty all regions are monitored."
+                    ),
+                ),
+            ),
+            (
+                "product_filter",
+                ListOf(
+                    title="Products to monitor",
+                    valuespec=RegExp(
+                        mode=RegExp.infix,
+                        title=_("pattern"),
+                        allow_empty=False,
+                    ),
+                    add_label=_("add new pattern"),
+                    help=_(
+                        "You can specify a list of regex patterns to monitor specific "
+                        "products. Only those that do match the predefined patterns "
+                        "will be monitored. If empty all products are monitored."
+                    ),
+                ),
+            ),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="gcp_health",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_vs_health,
+        title=lambda: _("GCP Health"),
     )
 )

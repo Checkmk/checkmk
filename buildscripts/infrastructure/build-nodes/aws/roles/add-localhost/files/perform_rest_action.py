@@ -42,14 +42,14 @@ def add_localhost(entrypoint: str, my_session: requests.Session) -> None:
             },
         },
     )
-    assert resp.status_code == 200, f"{resp.status_code=}"
+    assert resp.status_code == 200, f"{resp.status_code=}, {resp.text=}"
 
 
 def remove_localhost(entrypoint: str, my_session: requests.Session) -> None:
     resp = my_session.delete(
         f"{entrypoint}/objects/host_config/localhost",
     )
-    assert resp.status_code == 204, f"{resp.status_code=}"
+    assert resp.status_code == 204, f"{resp.status_code=}, {resp.text=}"
 
 
 def discover_services(entrypoint: str, my_session: requests.Session) -> None:
@@ -65,7 +65,7 @@ def discover_services(entrypoint: str, my_session: requests.Session) -> None:
             allow_redirects=False,
         )
         time.sleep(1)
-    assert resp.status_code == 204, f"{resp.status_code=}"
+    assert resp.status_code == 204, f"{resp.status_code=}, {resp.text=}"
 
 
 def activate_changes(entrypoint: str, my_session: requests.Session) -> None:

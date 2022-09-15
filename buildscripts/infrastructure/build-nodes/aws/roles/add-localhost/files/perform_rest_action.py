@@ -80,7 +80,7 @@ def activate_changes(entrypoint: str, my_session: requests.Session) -> None:
             f"{entrypoint}/objects/activation_run/{activation_id}/actions/wait-for-completion/invoke",
         )
         time.sleep(1)
-    assert resp.status_code == 200, f"{resp.status_code=}"
+    assert resp.status_code == 200, f"{resp.status_code=}, {resp.text=}"
 
 
 action_to_function: Mapping[str, Callable[[str, requests.Session], None]] = {

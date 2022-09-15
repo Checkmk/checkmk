@@ -58,7 +58,6 @@ def discover_services(entrypoint: str, my_session: requests.Session) -> None:
         json={"host_name": "localhost", "mode": "tabula_rasa"},
         allow_redirects=False,
     )
-    assert resp.status_code == 302, f"{resp.status_code=}"
     while resp.status_code == 302:
         resp = my_session.get(
             f"{entrypoint}/objects/service_discovery_run/localhost/actions/wait-for-completion/invoke",

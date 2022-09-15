@@ -70,7 +70,7 @@ pub struct RegistrationArgsConnection {
 }
 
 #[derive(StructOpt)]
-pub struct RegistrationArgs {
+pub struct RegistrationArgsHostName {
     #[structopt(flatten)]
     pub connection_args: RegistrationArgsConnection,
 
@@ -81,6 +81,15 @@ pub struct RegistrationArgs {
     // We are consistent with agent updater, which uses "hostname", not "host-name".
     #[structopt(long, short = "H", long = "hostname", parse(from_str))]
     pub host_name: Option<String>,
+}
+
+#[derive(StructOpt)]
+pub struct RegistrationArgsAgentLabels {
+    #[structopt(flatten)]
+    pub connection_args: RegistrationArgsConnection,
+
+    #[structopt(flatten)]
+    pub logging_opts: LoggingOpts,
 }
 
 #[derive(StructOpt)]
@@ -209,15 +218,23 @@ pub enum Args {
     ///
     /// Register with a Checkmk instance for monitoring. The required information
     /// can be read from a config file or must be passed via command line.
-    #[structopt()]
-    Register(RegistrationArgs),
+    #[structopt(name = "register")]
+    RegisterHostName(RegistrationArgsHostName),
+
+    /// Register with a Checkmk site, automatically creating a new host.
+    ///
+    /// Register with a Checkmk instance for monitoring. A new host will be created
+    /// in the target Checkmk instance. This mode is only available if the target
+    /// is an Enterprise Plus edition.
+    #[structopt(name = "register-new")]
+    RegisterAgentLabels(RegistrationArgsAgentLabels),
 
     /// Register with a Checkmk site on behalf of another host
     ///
     /// This allows a registration by proxy for hosts which cannot register themselves.
     /// The gathered connection information is written to standard output.
     #[structopt()]
-    ProxyRegister(RegistrationArgs),
+    ProxyRegister(RegistrationArgsHostName),
 
     /// Push monitoring data to all Checkmk sites configured for 'push'
     ///
@@ -271,7 +288,8 @@ pub enum Args {
 impl Args {
     pub fn logging_level(&self) -> String {
         match self {
-            Args::Register(args) => args.logging_opts.logging_level(),
+            Args::RegisterHostName(args) => args.logging_opts.logging_level(),
+            Args::RegisterAgentLabels(args) => args.logging_opts.logging_level(),
             Args::ProxyRegister(args) => args.logging_opts.logging_level(),
             Args::Push(args) => args.logging_opts.logging_level(),
             Args::Pull(args) => args.logging_opts.logging_level(),

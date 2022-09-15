@@ -25,6 +25,7 @@ fn supported_modes() -> Vec<&'static str> {
         "pull",
         "push",
         "register",
+        "register-new",
         "status",
     ]
 }
@@ -146,7 +147,7 @@ fn test_fail_socket_missing() {
 
         match mode {
             // these commands are expected to fail due to missing socket
-            "register" | "import" => {
+            "register" | "register-new" | "import" => {
                 let err = output_res.unwrap_err();
                 let stderr = std::str::from_utf8(&err.as_output().unwrap().stderr).unwrap();
                 assert!(stderr.contains(error_message_socket));

@@ -60,18 +60,18 @@ impl RegistrationConfigHostName {
     pub fn new(
         runtime_config: RuntimeConfig,
         preset: RegistrationPreset,
-        reg_args: cli::RegistrationArgs,
+        reg_args_host_name: cli::RegistrationArgsHostName,
     ) -> AnyhowResult<Self> {
-        let hn_preset = preset.host_name.to_owned();
+        let preset_host_name = preset.host_name.to_owned();
         Ok(Self {
             connection_config: RegistrationConnectionConfig::new(
                 runtime_config,
                 preset,
-                reg_args.connection_args,
+                reg_args_host_name.connection_args,
             )?,
-            host_name: reg_args
+            host_name: reg_args_host_name
                 .host_name
-                .or(hn_preset)
+                .or(preset_host_name)
                 .context("Missing name of target host in Checkmk")?,
         })
     }
@@ -86,16 +86,18 @@ impl RegistrationConfigAgentLabels {
     pub fn new(
         runtime_config: RuntimeConfig,
         preset: RegistrationPreset,
-        reg_args: cli::RegistrationArgs,
+        reg_args_agent_labels: cli::RegistrationArgsAgentLabels,
     ) -> AnyhowResult<Self> {
-        let al_preset = preset.agent_labels.to_owned();
+        let preset_agent_labels = preset.agent_labels.to_owned();
         Ok(Self {
             connection_config: RegistrationConnectionConfig::new(
                 runtime_config,
                 preset,
-                reg_args.connection_args,
+                reg_args_agent_labels.connection_args,
             )?,
-            agent_labels: Self::enrich_with_automatic_agent_labels(al_preset.unwrap_or_default())?,
+            agent_labels: Self::enrich_with_automatic_agent_labels(
+                preset_agent_labels.unwrap_or_default(),
+            )?,
         })
     }
 
@@ -194,7 +196,7 @@ pub struct RegistrationPreset {
     root_certificate: Option<String>,
 
     #[serde(default)]
-    pub host_name: Option<String>,
+    host_name: Option<String>,
 
     #[serde(default)]
     agent_labels: Option<types::AgentLabels>,
@@ -593,11 +595,10 @@ mod test_registration_config {
         }
     }
 
-    fn registration_args() -> cli::RegistrationArgs {
-        cli::RegistrationArgs {
+    fn registration_args_agent_labels() -> cli::RegistrationArgsAgentLabels {
+        cli::RegistrationArgsAgentLabels {
             connection_args: registration_args_connection(),
             logging_opts: cli::LoggingOpts { verbose: 0 },
-            host_name: None,
         }
     }
 
@@ -706,7 +707,7 @@ mod test_registration_config {
             RegistrationConfigHostName::new(
                 runtime_config(),
                 reg_preset,
-                cli::RegistrationArgs {
+                cli::RegistrationArgsHostName {
                     connection_args: registration_args_connection(),
                     logging_opts: cli::LoggingOpts { verbose: 0 },
                     host_name: Some(String::from("hostname")),
@@ -735,7 +736,7 @@ mod test_registration_config {
             RegistrationConfigHostName::new(
                 runtime_config(),
                 reg_preset,
-                cli::RegistrationArgs {
+                cli::RegistrationArgsHostName {
                     connection_args: reg_args_conn,
                     logging_opts: cli::LoggingOpts { verbose: 0 },
                     host_name: None,
@@ -763,10 +764,13 @@ mod test_registration_config {
         });
         reg_preset.agent_labels = Some(types::AgentLabels::new());
 
-        let agent_labels =
-            RegistrationConfigAgentLabels::new(runtime_config(), reg_preset, registration_args())
-                .unwrap()
-                .agent_labels;
+        let agent_labels = RegistrationConfigAgentLabels::new(
+            runtime_config(),
+            reg_preset,
+            registration_args_agent_labels(),
+        )
+        .unwrap()
+        .agent_labels;
 
         let mut keys = agent_labels.keys().collect::<Vec<&String>>();
         keys.sort();
@@ -792,10 +796,13 @@ mod test_registration_config {
             (String::from("key2"), String::from("value2")),
         ]));
 
-        let agent_labels =
-            RegistrationConfigAgentLabels::new(runtime_config(), reg_preset, registration_args())
-                .unwrap()
-                .agent_labels;
+        let agent_labels = RegistrationConfigAgentLabels::new(
+            runtime_config(),
+            reg_preset,
+            registration_args_agent_labels(),
+        )
+        .unwrap()
+        .agent_labels;
 
         let mut keys = agent_labels.keys().collect::<Vec<&String>>();
         keys.sort();

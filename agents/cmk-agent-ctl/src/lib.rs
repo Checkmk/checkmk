@@ -57,32 +57,31 @@ pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> Anyhow
         }
     );
     match args {
-        cli::Args::Register(reg_args) => {
-            if reg_args.host_name.is_some() || registration_preset.host_name.is_some() {
-                registration::register_host_name(
-                    &config::RegistrationConfigHostName::new(
-                        runtime_config,
-                        registration_preset,
-                        reg_args,
-                    )?,
-                    &mut registry,
-                )?;
-                legacy_pull_marker.remove().context(
-                    "Registration successful, but could not delete marker for legacy pull mode",
-                )
-            } else {
-                registration::register_agent_labels(
-                    &config::RegistrationConfigAgentLabels::new(
-                        runtime_config,
-                        registration_preset,
-                        reg_args,
-                    )?,
-                    &mut registry,
-                )?;
-                legacy_pull_marker.remove().context(
-                    "Registration successful, but could not delete marker for legacy pull mode",
-                )
-            }
+        cli::Args::RegisterHostName(reg_args) => {
+            registration::register_host_name(
+                &config::RegistrationConfigHostName::new(
+                    runtime_config,
+                    registration_preset,
+                    reg_args,
+                )?,
+                &mut registry,
+            )?;
+            legacy_pull_marker.remove().context(
+                "Registration successful, but could not delete marker for legacy pull mode",
+            )
+        }
+        cli::Args::RegisterAgentLabels(reg_args) => {
+            registration::register_agent_labels(
+                &config::RegistrationConfigAgentLabels::new(
+                    runtime_config,
+                    registration_preset,
+                    reg_args,
+                )?,
+                &mut registry,
+            )?;
+            legacy_pull_marker.remove().context(
+                "Registration successful, but could not delete marker for legacy pull mode",
+            )
         }
         cli::Args::ProxyRegister(proxy_reg_args) => {
             registration::proxy_register(&config::RegistrationConfigHostName::new(
@@ -150,15 +149,15 @@ pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> Anyhow
 fn agent_socket_operational(args: &cli::Args) -> AnyhowResult<()> {
     let agent_channel = setup::agent_channel();
     match *args {
-        cli::Args::Register { .. } | cli::Args::Import { .. } => {
-            match agent_channel.operational() {
-                true => Ok(()),
-                false => Err(anyhow!(format!(
-                    "Something seems wrong with the agent socket ({}), aborting",
-                    agent_channel
-                ))),
-            }
-        }
+        cli::Args::RegisterHostName { .. }
+        | cli::Args::RegisterAgentLabels { .. }
+        | cli::Args::Import { .. } => match agent_channel.operational() {
+            true => Ok(()),
+            false => Err(anyhow!(format!(
+                "Something seems wrong with the agent socket ({}), aborting",
+                agent_channel
+            ))),
+        },
         _ => Ok(()),
     }
 }

@@ -11,7 +11,7 @@ has the following features:
 
 Please look at the two examples:
 
-example.py:           Example for a single site
+example_singlesite.py: Example for a single site
 example_multisite.py: Example querying several sites
 
 Both example are written to be run within an OMD instance

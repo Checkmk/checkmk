@@ -31750,7 +31750,7 @@ msgid "OFFLINE"
 msgstr "オフライン"
 
 msgid "OK"
-msgstr "services"
+msgstr "OK"
 
 msgid "OK - do not alert, just display"
 msgstr "OK - 警告せず、表示するだけ"

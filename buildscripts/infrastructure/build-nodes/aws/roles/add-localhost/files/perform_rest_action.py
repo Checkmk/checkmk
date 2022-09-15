@@ -64,7 +64,7 @@ def discover_services(entrypoint: str, my_session: requests.Session) -> None:
             allow_redirects=False,
         )
         time.sleep(1)
-    assert resp.status_code == 204, f"{resp.status_code=}, {resp.text=}"
+    assert resp.status_code == 200, f"{resp.status_code=}, {resp.text=}"
 
 
 def activate_changes(entrypoint: str, my_session: requests.Session) -> None:

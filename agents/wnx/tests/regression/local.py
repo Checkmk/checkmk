@@ -11,7 +11,6 @@ import platform
 import re
 import subprocess
 import sys
-from builtins import zip
 from pathlib import Path
 
 import yaml

@@ -7,7 +7,6 @@
 import os
 import platform
 import sys
-from builtins import range
 from typing import List
 
 import pytest

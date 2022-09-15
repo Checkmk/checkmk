@@ -235,9 +235,9 @@ STAGES:
     - NAME: 'TypeScript Type Checking'
       ONLY_WHEN_NOT_EMPTY: CHANGED_JS_FILES
       DIR: 'tests'
-      COMMAND: 'make test-typescript-types-docker &> ${RESULTS}/ts-types.txt'
+      COMMAND: 'make test-typescript-types-docker &> ${RESULTS}/js-types.txt'
       TEXT_ON_SKIP: 'No relevant JS/TS files changed'
-      RESULT_CHECK_FILE_PATTERN: "results/js-build.txt"
+      RESULT_CHECK_FILE_PATTERN: "results/js-types.txt"
 
     - NAME: 'CSS Format'
       ONLY_WHEN_NOT_EMPTY: CHANGED_CSS_FILES,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PRETTIER_SCRIPT,CHANGED_PACKAGE_JSON

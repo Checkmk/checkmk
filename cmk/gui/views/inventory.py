@@ -746,7 +746,9 @@ class TableViewSpec:
         if view_name := _get_table_view_name(path, raw_hint):
             title = raw_hint.get("title", "")
             return TableViewSpec(
-                view_name=view_name,
+                # This seems to be important for the availability of GUI elements, such as filters,
+                # sorter, etc. in related contexts (eg. data source inv*).
+                view_name=view_name if view_name.startswith("inv") else f"inv{view_name}",
                 title=title,
                 _long_title_function=_make_long_title_function(title, path[:-1]),
                 icon=raw_hint.get("icon"),

@@ -816,3 +816,16 @@ def test_make_attribute_displayhint_from_hint(
 )
 def test_replace_placeholder(abc_path: SDPath, path: SDPath, expected_title: str) -> None:
     assert DISPLAY_HINTS.get_hints(abc_path).replace_placeholders(path) == expected_title
+
+
+@pytest.mark.parametrize(
+    "view_name, expected",
+    [
+        ("viewname", "invviewname"),
+        ("invviewname", "invviewname"),
+    ],
+)
+def test_view_spec_view_name(view_name: str, expected: str) -> None:
+    table_view_spec = TableViewSpec.from_raw(tuple(), {"view": view_name})
+    assert table_view_spec is not None
+    assert table_view_spec.view_name == expected

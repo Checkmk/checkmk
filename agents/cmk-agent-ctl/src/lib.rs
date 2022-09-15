@@ -27,7 +27,7 @@ use modes::dump::dump;
 use modes::import_connection::import;
 use modes::pull::pull;
 use modes::push::handle_push_cycle as push;
-use modes::registration::{proxy_register, register};
+use modes::registration;
 use modes::status::status;
 pub use setup::init;
 
@@ -58,13 +58,38 @@ pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> Anyhow
     );
     match args {
         cli::Args::Register(reg_args) => {
-            register(
-                config::RegistrationConfig::new(runtime_config, registration_preset, reg_args)?,
-                &mut registry,
-            )?;
-            legacy_pull_marker.remove().context(
-                "Registration successful, but could not delete marker for legacy pull mode",
-            )
+            if reg_args.host_name.is_some() || registration_preset.host_name.is_some() {
+                registration::register_host_name(
+                    &config::RegistrationConfigHostName::new(
+                        runtime_config,
+                        registration_preset,
+                        reg_args,
+                    )?,
+                    &mut registry,
+                )?;
+                legacy_pull_marker.remove().context(
+                    "Registration successful, but could not delete marker for legacy pull mode",
+                )
+            } else {
+                registration::register_agent_labels(
+                    &config::RegistrationConfigAgentLabels::new(
+                        runtime_config,
+                        registration_preset,
+                        reg_args,
+                    )?,
+                    &mut registry,
+                )?;
+                legacy_pull_marker.remove().context(
+                    "Registration successful, but could not delete marker for legacy pull mode",
+                )
+            }
+        }
+        cli::Args::ProxyRegister(proxy_reg_args) => {
+            registration::proxy_register(&config::RegistrationConfigHostName::new(
+                runtime_config,
+                registration_preset,
+                proxy_reg_args,
+            )?)
         }
         cli::Args::Import(import_args) => {
             import(&mut registry, &import_args)?;
@@ -72,9 +97,6 @@ pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> Anyhow
                 .remove()
                 .context("Import successful, but could not delete marker for legacy pull mode")
         }
-        cli::Args::ProxyRegister(proxy_reg_args) => proxy_register(
-            config::RegistrationConfig::new(runtime_config, registration_preset, proxy_reg_args)?,
-        ),
         cli::Args::Push(push_args) => push(
             &registry,
             &config::ClientConfig::new(runtime_config, push_args.client_opts),

@@ -51,36 +51,51 @@ pub trait TOMLLoader: DeserializeOwned {
     }
 }
 
-pub struct RegistrationConfig {
+pub struct RegistrationConfigHostName {
     pub connection_config: RegistrationConnectionConfig,
-    pub host_reg_data: HostRegistrationData,
+    pub host_name: String,
 }
 
-impl RegistrationConfig {
+impl RegistrationConfigHostName {
     pub fn new(
         runtime_config: RuntimeConfig,
         preset: RegistrationPreset,
         reg_args: cli::RegistrationArgs,
     ) -> AnyhowResult<Self> {
-        let stored_host_name = preset.host_name.to_owned();
-        let stored_agent_labels = preset.agent_labels.to_owned();
-        let host_reg_data = match reg_args
-            .host_name
-            .map(HostRegistrationData::Name)
-            .or_else(|| stored_host_name.map(HostRegistrationData::Name))
-        {
-            Some(hrd) => hrd,
-            None => HostRegistrationData::Labels(Self::enrich_with_automatic_agent_labels(
-                stored_agent_labels.unwrap_or_default(),
-            )?),
-        };
+        let hn_preset = preset.host_name.to_owned();
         Ok(Self {
             connection_config: RegistrationConnectionConfig::new(
                 runtime_config,
                 preset,
                 reg_args.connection_args,
             )?,
-            host_reg_data,
+            host_name: reg_args
+                .host_name
+                .or(hn_preset)
+                .context("Missing name of target host in Checkmk")?,
+        })
+    }
+}
+
+pub struct RegistrationConfigAgentLabels {
+    pub connection_config: RegistrationConnectionConfig,
+    pub agent_labels: types::AgentLabels,
+}
+
+impl RegistrationConfigAgentLabels {
+    pub fn new(
+        runtime_config: RuntimeConfig,
+        preset: RegistrationPreset,
+        reg_args: cli::RegistrationArgs,
+    ) -> AnyhowResult<Self> {
+        let al_preset = preset.agent_labels.to_owned();
+        Ok(Self {
+            connection_config: RegistrationConnectionConfig::new(
+                runtime_config,
+                preset,
+                reg_args.connection_args,
+            )?,
+            agent_labels: Self::enrich_with_automatic_agent_labels(al_preset.unwrap_or_default())?,
         })
     }
 
@@ -179,7 +194,7 @@ pub struct RegistrationPreset {
     root_certificate: Option<String>,
 
     #[serde(default)]
-    host_name: Option<String>,
+    pub host_name: Option<String>,
 
     #[serde(default)]
     agent_labels: Option<types::AgentLabels>,
@@ -688,7 +703,7 @@ mod test_registration_config {
         reg_preset.host_name = Some(String::from("hopefully_unused"));
 
         assert_eq!(
-            RegistrationConfig::new(
+            RegistrationConfigHostName::new(
                 runtime_config(),
                 reg_preset,
                 cli::RegistrationArgs {
@@ -698,8 +713,8 @@ mod test_registration_config {
                 },
             )
             .unwrap()
-            .host_reg_data,
-            HostRegistrationData::Name(String::from("hostname"))
+            .host_name,
+            "hostname"
         );
     }
 
@@ -717,7 +732,7 @@ mod test_registration_config {
         reg_args_conn.user = Some(String::from("user"));
 
         assert_eq!(
-            RegistrationConfig::new(
+            RegistrationConfigHostName::new(
                 runtime_config(),
                 reg_preset,
                 cli::RegistrationArgs {
@@ -727,37 +742,8 @@ mod test_registration_config {
                 },
             )
             .unwrap()
-            .host_reg_data,
-            HostRegistrationData::Name(String::from("hostname"))
-        );
-    }
-
-    #[test]
-    fn test_hostname_wins_over_labels() {
-        let mut reg_preset = registration_preset();
-        reg_preset.site_spec = Some(site_spec::PresetSiteSpec {
-            server_spec: site_spec::ServerSpec {
-                server: String::from("server"),
-                port: Some(123),
-            },
-            site: String::from("site"),
-        });
-        reg_preset.credentials = Some(types::OptPwdCredentials {
-            username: String::from("user"),
-            password: None,
-        });
-        reg_preset.host_name = Some(String::from("hostname"));
-        reg_preset.agent_labels = Some(types::AgentLabels::from([(
-            String::from("a"),
-            String::from("A"),
-        )]));
-
-        let reg_config =
-            RegistrationConfig::new(runtime_config(), reg_preset, registration_args()).unwrap();
-
-        assert_eq!(
-            reg_config.host_reg_data,
-            HostRegistrationData::Name(String::from("hostname"))
+            .host_name,
+            "hostname"
         );
     }
 
@@ -777,16 +763,14 @@ mod test_registration_config {
         });
         reg_preset.agent_labels = Some(types::AgentLabels::new());
 
-        let reg_config =
-            RegistrationConfig::new(runtime_config(), reg_preset, registration_args()).unwrap();
+        let agent_labels =
+            RegistrationConfigAgentLabels::new(runtime_config(), reg_preset, registration_args())
+                .unwrap()
+                .agent_labels;
 
-        if let HostRegistrationData::Labels(al) = reg_config.host_reg_data {
-            let mut keys = al.keys().collect::<Vec<&String>>();
-            keys.sort();
-            assert_eq!(keys, ["cmk/hostname-simple", "cmk/os-family"]);
-        } else {
-            panic!("Should have found agent labels")
-        }
+        let mut keys = agent_labels.keys().collect::<Vec<&String>>();
+        keys.sort();
+        assert_eq!(keys, ["cmk/hostname-simple", "cmk/os-family"]);
     }
 
     #[test]
@@ -808,17 +792,15 @@ mod test_registration_config {
             (String::from("key2"), String::from("value2")),
         ]));
 
-        let reg_config =
-            RegistrationConfig::new(runtime_config(), reg_preset, registration_args()).unwrap();
+        let agent_labels =
+            RegistrationConfigAgentLabels::new(runtime_config(), reg_preset, registration_args())
+                .unwrap()
+                .agent_labels;
 
-        if let HostRegistrationData::Labels(al) = reg_config.host_reg_data {
-            let mut keys = al.keys().collect::<Vec<&String>>();
-            keys.sort();
-            assert_eq!(keys, ["cmk/hostname-simple", "cmk/os-family", "key2"]);
-            assert_eq!(al["cmk/os-family"], "funny");
-        } else {
-            panic!("Should have found agent labels")
-        }
+        let mut keys = agent_labels.keys().collect::<Vec<&String>>();
+        keys.sort();
+        assert_eq!(keys, ["cmk/hostname-simple", "cmk/os-family", "key2"]);
+        assert_eq!(agent_labels["cmk/os-family"], "funny");
     }
 }
 

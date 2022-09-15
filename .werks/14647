@@ -30,7 +30,9 @@ to
 
 <pre>
   Vanilla (factory settings)
-  Folders: / (root)
+  Folders: / (root folder)
   Hosts: MyHost1, MyHost2
 </pre>
 
+In the REST API users can download these generic agents by setting <tt>agent_type='generic'</tt> and adding the <i>folder_name</i> field to the request.
+Omiting the <i>folder_name</i> will default to the generic agent of the root folder, to provide compatibility.

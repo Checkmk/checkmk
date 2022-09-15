@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.fields import HostField
+from cmk.gui.fields import FolderField, HostField
 
 from cmk.fields import List, String
 
@@ -18,6 +18,14 @@ OPTIONAL_HOST_NAME = {
     "host_name": HostField(
         description="A hostname.",
         should_exist=True,
+        required=False,
+    )
+}
+
+OPTIONAL_FOLDER_NAME = {
+    "folder_name": FolderField(
+        description="A folder name.",
+        metadata={"should_exist": True},
         required=False,
     )
 }

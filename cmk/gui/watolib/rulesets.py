@@ -468,39 +468,29 @@ class FilteredRulesetCollection:
     def get_rulesets(self) -> Mapping[RulesetName, Ruleset]:
         return self._rulesets
 
-
-class StaticChecksRulesets(FilteredRulesetCollection):
     @staticmethod
-    def load_static_checks_rulesets() -> StaticChecksRulesets:
-        rulesets = AllRulesets.load_all_rulesets()._rulesets
-        return StaticChecksRulesets._remove_non_static_checks_rulesets(rulesets)
-
-    @staticmethod
-    def _remove_non_static_checks_rulesets(
-        rulesets: Mapping[RulesetName, Ruleset]
-    ) -> StaticChecksRulesets:
-        filtered = dict(rulesets).copy()
-        for name, ruleset in list(filtered.items()):
+    def load_static_checks_rulesets(
+        origin: Mapping[RulesetName, Ruleset]
+    ) -> FilteredRulesetCollection:
+        filtered = dict(origin)
+        for name, ruleset in filtered.items():
             if ruleset.rulespec.main_group_name != "static":
                 del filtered[name]
-        return StaticChecksRulesets(filtered)
+        return FilteredRulesetCollection(filtered)
 
-
-class SearchedRulesets(FilteredRulesetCollection):
     @staticmethod
     def load_searched_rulesets(
-        origin_rulesets: Iterable[Ruleset],
-        search_options: SearchOptions,
-    ) -> SearchedRulesets:
+        origin: Iterable[Ruleset], search_options: SearchOptions
+    ) -> FilteredRulesetCollection:
         """Iterates the rulesets from the original collection,
         applies the search option and takes over the rulesets
         that have at least one matching rule or match itself,
         e.g. by their name, title or help."""
         rulesets: Dict[RulesetName, Ruleset] = {}
-        for ruleset in origin_rulesets:
+        for ruleset in origin:
             if ruleset.matches_search_with_rules(search_options):
                 rulesets[ruleset.name] = ruleset
-        return SearchedRulesets(rulesets)
+        return FilteredRulesetCollection(rulesets)
 
 
 class Ruleset:

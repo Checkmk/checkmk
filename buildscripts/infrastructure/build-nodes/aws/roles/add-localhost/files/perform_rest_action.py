@@ -55,7 +55,7 @@ def remove_localhost(entrypoint: str, my_session: requests.Session) -> None:
 def discover_services(entrypoint: str, my_session: requests.Session) -> None:
     resp = my_session.post(
         f"{entrypoint}/domain-types/service_discovery_run/actions/start/invoke",
-        json={"host_name": "localhost", "mode": "fix-all"},
+        json={"host_name": "localhost", "mode": "fix_all"},
         allow_redirects=False,
     )
     while resp.status_code == 302:

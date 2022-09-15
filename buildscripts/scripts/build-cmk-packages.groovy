@@ -443,21 +443,27 @@ def create_source_package(workspace, source_dir, cmk_version) {
 
     stage("Create source package") {
         def agents_dir = "${workspace}/agents";
+        def signed_msi = "check_mk_agent.msi";
+        def unsigned_msi = "check_mk_agent_unsigned.msi";
+        def target_dir = "agents/windows";
+        def scripts_dir = "${checkout_dir}/buildscripts/scripts";
+        def patch_script = "create_unsign_msi_patch.sh"
+        def patch_file = "unsign-msi.patch"
         if (params.FAKE_WINDOWS_ARTIFACTS) {
             sh "mkdir -p ${agents_dir}"
             if(EDITION != 'raw') {
                 sh "touch ${agents_dir}/cmk-update-agent"
                 sh "touch ${agents_dir}/cmk-update-agent-32"
             }
-            sh "touch ${agents_dir}/{check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk_agent_unsigned.msi,check_mk.user.yml,python-3.cab,python-3.4.cab}"
+            sh "touch ${agents_dir}/{check_mk_agent-64.exe,check_mk_agent.exe,${signed_msi},${unsigned_msi},check_mk.user.yml,python-3.cab,python-3.4.cab}"
         }
         dir("${checkout_dir}") {
             if(EDITION != 'raw') {
                 sh "cp ${agents_dir}/cmk-update-agent enterprise/agents/plugins/"
                 sh "cp ${agents_dir}/cmk-update-agent-32 enterprise/agents/plugins/"
             }
-            sh "cp ${agents_dir}/{check_mk_agent-64.exe,check_mk_agent.exe,check_mk_agent.msi,check_mk_agent_unsigned.msi,check_mk.user.yml,python-3.cab,python-3.4.cab} agents/windows"
-            sh "${checkout_dir}/buildscripts/scripts/create_unsign_msi_patch.sh agents/windows/check_mk_agent.msi agents/windows/check_mk_agent_unsigned.msi agents/windows/unsing-msi.patch"
+            sh "cp ${agents_dir}/{check_mk_agent-64.exe,check_mk_agent.exe,${signed_msi},${unsigned_msi},check_mk.user.yml,python-3.cab,python-3.4.cab} ${target_dir}"
+            sh "${scripts_dir}/${patch_script} ${target_dir}/${signed_msi} ${target_dir}/${unsigned_msi} ${target_dir}/${patch_file}"
             sh 'make dist || cat /root/.npm/_logs/*-debug.log'
         }
     }

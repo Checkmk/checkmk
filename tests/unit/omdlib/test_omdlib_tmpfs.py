@@ -9,25 +9,26 @@ from pathlib import Path
 import pytest
 
 import omdlib.tmpfs
+from omdlib.contexts import SiteContext
 from omdlib.tmpfs import add_to_fstab, restore_tmpfs_dump, unmount_tmpfs
 from omdlib.utils import delete_directory_contents
 
 
 @pytest.fixture(name="tmp_fstab")
-def fixture_tmp_fstab(tmp_path, monkeypatch):
+def fixture_tmp_fstab(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     fstab_path = tmp_path / "fstab"
     monkeypatch.setattr(omdlib.tmpfs, "fstab_path", lambda: fstab_path)
     return fstab_path
 
 
 @pytest.mark.usefixtures("site_context")
-def test_add_to_fstab_not_existing(tmp_fstab, site_context) -> None:  # type:ignore[no-untyped-def]
+def test_add_to_fstab_not_existing(tmp_fstab: Path, site_context: SiteContext) -> None:
     assert not tmp_fstab.exists()
     add_to_fstab(site_context)
     assert not tmp_fstab.exists()
 
 
-def test_add_to_fstab(tmp_path, tmp_fstab, site_context) -> None:  # type:ignore[no-untyped-def]
+def test_add_to_fstab(tmp_path: Path, tmp_fstab: Path, site_context: SiteContext) -> None:
     tmp_fstab.open("w", encoding="utf-8").write("# system fstab bla\n")
     add_to_fstab(site_context)
     assert tmp_fstab.open().read() == (
@@ -37,9 +38,7 @@ def test_add_to_fstab(tmp_path, tmp_fstab, site_context) -> None:  # type:ignore
     )
 
 
-def test_add_to_fstab_with_size(  # type:ignore[no-untyped-def]
-    tmp_path, tmp_fstab, site_context
-) -> None:
+def test_add_to_fstab_with_size(tmp_path: Path, tmp_fstab: Path, site_context: SiteContext) -> None:
     tmp_fstab.open("w", encoding="utf-8").write("# system fstab bla\n")
     add_to_fstab(site_context, tmpfs_size="1G")
     assert tmp_fstab.open().read() == (
@@ -49,8 +48,8 @@ def test_add_to_fstab_with_size(  # type:ignore[no-untyped-def]
     )
 
 
-def test_add_to_fstab_no_newline_at_end(  # type:ignore[no-untyped-def]
-    tmp_path, tmp_fstab, site_context
+def test_add_to_fstab_no_newline_at_end(
+    tmp_path: Path, tmp_fstab: Path, site_context: SiteContext
 ) -> None:
     tmp_fstab.open("w", encoding="utf-8").write("# system fstab bla")
     add_to_fstab(site_context)
@@ -61,9 +60,7 @@ def test_add_to_fstab_no_newline_at_end(  # type:ignore[no-untyped-def]
     )
 
 
-def test_add_to_fstab_empty(  # type:ignore[no-untyped-def]
-    tmp_path, tmp_fstab, site_context
-) -> None:
+def test_add_to_fstab_empty(tmp_path: Path, tmp_fstab: Path, site_context: SiteContext) -> None:
     tmp_fstab.open("w", encoding="utf-8").write("")
     add_to_fstab(site_context)
     assert tmp_fstab.open().read() == (
@@ -106,8 +103,8 @@ def _prepare_tmpfs(site_context):
     return files
 
 
-def test_tmpfs_restore_no_tmpfs(  # type:ignore[no-untyped-def]
-    site_context, monkeypatch, not_restored_file
+def test_tmpfs_restore_no_tmpfs(
+    site_context: SiteContext, monkeypatch: pytest.MonkeyPatch, not_restored_file: Path
 ) -> None:
     # Use rm logic in unmount_tmpfs instead of unmount
     monkeypatch.setattr(omdlib.tmpfs, "tmpfs_mounted", lambda x: False)
@@ -158,8 +155,8 @@ def fixture_mock_umount(monkeypatch):
 
 
 @pytest.mark.usefixtures("mock_umount")
-def test_tmpfs_restore_with_tmpfs(  # type:ignore[no-untyped-def]
-    site_context, monkeypatch, not_restored_file
+def test_tmpfs_restore_with_tmpfs(
+    site_context: SiteContext, monkeypatch: pytest.MonkeyPatch, not_restored_file: Path
 ) -> None:
     tmp_files = _prepare_tmpfs(site_context)
 
@@ -178,7 +175,7 @@ def test_tmpfs_restore_with_tmpfs(  # type:ignore[no-untyped-def]
     assert not not_restored_file.exists()
 
 
-def test_tmpfs_mount_no_dump(site_context, monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_tmpfs_mount_no_dump(site_context: SiteContext, monkeypatch: pytest.MonkeyPatch) -> None:
     tmp_dir = Path(site_context.tmp_dir)
     tmp_dir.mkdir(parents=True, exist_ok=True)
 

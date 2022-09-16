@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
 import pytest
 
 import cmk.utils.prediction as prediction
@@ -21,7 +23,7 @@ import cmk.utils.prediction as prediction
         ),
     ],
 )
-def test_lq_logic(filter_condition, values, join, result) -> None:  # type:ignore[no-untyped-def]
+def test_lq_logic(filter_condition: str, values: list[str], join: str, result: str) -> None:
     assert prediction.lq_logic(filter_condition, values, join) == result
 
 
@@ -58,14 +60,14 @@ Filter: service_description = invent\n""",
         ),
     ],
 )
-def test_livestatus_lql(args, result) -> None:  # type:ignore[no-untyped-def]
+def test_livestatus_lql(args: tuple[list[str], list[str], str], result: str) -> None:
     assert prediction.livestatus_lql(*args) == result
 
 
 @pytest.mark.parametrize(
     "twindow, result", [((0, 0, 0), []), ((100, 200, 25), [125, 150, 175, 200])]
 )
-def test_rrdtimestamps(twindow, result) -> None:  # type:ignore[no-untyped-def]
+def test_rrdtimestamps(twindow: prediction.TimeWindow, result: list[int]) -> None:
     assert prediction.rrd_timestamps(twindow) == result
 
 
@@ -90,8 +92,11 @@ def test_rrdtimestamps(twindow, result) -> None:  # type:ignore[no-untyped-def]
         ([0, 120, 40, 25, 65, 105], (330, 410, 10), 300, [25, 65, 65, 65, 65, 105, 105, 105]),
     ],
 )
-def test_time_series_upsampling(  # type:ignore[no-untyped-def]
-    rrddata, twindow, shift, upsampled
+def test_time_series_upsampling(
+    rrddata: prediction.TimeSeriesValues,
+    twindow: prediction.TimeWindow,
+    shift: int,
+    upsampled: prediction.TimeSeriesValues,
 ) -> None:
     ts = prediction.TimeSeries(rrddata)
     assert ts.bfill_upsample(twindow, shift) == upsampled
@@ -115,8 +120,11 @@ def test_time_series_upsampling(  # type:ignore[no-untyped-def]
         ([10, 45, 5, 15, 20, 25, 30, None, 40, 45], (10, 40, 10), "average", [17.5, 27.5, 40.0]),
     ],
 )
-def test_time_series_downsampling(  # type:ignore[no-untyped-def]
-    rrddata, twindow, cf, downsampled
+def test_time_series_downsampling(
+    rrddata: prediction.TimeSeriesValues,
+    twindow: prediction.TimeWindow,
+    cf: prediction.ConsolidationFunctionName,
+    downsampled: prediction.TimeSeriesValues,
 ) -> None:
     ts = prediction.TimeSeries(rrddata)
     assert ts.downsample(twindow, cf) == downsampled
@@ -210,8 +218,12 @@ def test__get_reference_deviation_stdev_bad() -> None:
         ),
     ],
 )
-def test_estimate_levels(  # type:ignore[no-untyped-def]
-    reference_value, reference_deviation, params, levels_factor, result
+def test_estimate_levels(
+    reference_value: float | None,
+    reference_deviation: float | None,
+    params: Mapping,
+    levels_factor: float,
+    result: prediction.EstimatedLevels,
 ) -> None:
     assert (
         prediction.estimate_levels(

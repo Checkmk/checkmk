@@ -7,6 +7,7 @@ import time
 from typing import Any, Mapping, Tuple
 
 import pytest
+from pytest import MonkeyPatch
 
 import livestatus
 
@@ -30,7 +31,7 @@ from cmk.utils.license_usage.export import (
 )
 
 
-def test_update_license_usage(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_update_license_usage(monkeypatch: MonkeyPatch) -> None:
     def _mock_livestatus(query: str) -> Tuple[int, int]:
         if "GET hosts" in query:
             return 10, 5
@@ -54,8 +55,8 @@ def test_update_license_usage(monkeypatch) -> None:  # type:ignore[no-untyped-de
     assert len(_load_history_dump().history) == 1
 
 
-def test_update_license_usage_livestatus_socket_error(  # type:ignore[no-untyped-def]
-    monkeypatch,
+def test_update_license_usage_livestatus_socket_error(
+    monkeypatch: MonkeyPatch,
 ) -> None:
     def _mock_livestatus(query: str) -> Tuple[int, int]:
         raise livestatus.MKLivestatusSocketError()
@@ -78,8 +79,8 @@ def test_update_license_usage_livestatus_socket_error(  # type:ignore[no-untyped
     assert len(_load_history_dump().history) == 0
 
 
-def test_update_license_usage_livestatus_not_found_error(  # type:ignore[no-untyped-def]
-    monkeypatch,
+def test_update_license_usage_livestatus_not_found_error(
+    monkeypatch: MonkeyPatch,
 ) -> None:
     def _mock_livestatus(query: str) -> Tuple[int, int]:
         raise livestatus.MKLivestatusNotFoundError()
@@ -102,8 +103,8 @@ def test_update_license_usage_livestatus_not_found_error(  # type:ignore[no-unty
     assert len(_load_history_dump().history) == 0
 
 
-def test_update_license_usage_next_run_ts_not_reached(  # type:ignore[no-untyped-def]
-    monkeypatch,
+def test_update_license_usage_next_run_ts_not_reached(
+    monkeypatch: MonkeyPatch,
 ) -> None:
     def _mock_livestatus(query: str) -> Tuple[int, int]:
         if "GET hosts" in query:

@@ -426,7 +426,8 @@ def find_usages_of_service_group(name: GroupName) -> List[Tuple[str, str]]:
 
 def _find_usages_of_group_in_rules(name: GroupName, varnames: List[str]) -> List[Tuple[str, str]]:
     used_in = []
-    rulesets = AllRulesets.load_all_rulesets()
+    rulesets = AllRulesets()
+    rulesets.load()
     for varname in varnames:
         ruleset = rulesets.get(varname)
         for _folder, _rulenr, rule in ruleset.get_rules():

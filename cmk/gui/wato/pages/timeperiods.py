@@ -180,7 +180,8 @@ class ModeTimeperiods(WatoMode):
 
     def _find_usages_in_host_and_service_rules(self, tpname: str) -> List[TimeperiodUsage]:
         used_in: List[TimeperiodUsage] = []
-        rulesets = AllRulesets.load_all_rulesets()
+        rulesets = AllRulesets()
+        rulesets.load()
         for varname, ruleset in rulesets.get_rulesets().items():
             if not isinstance(ruleset.valuespec(), watolib.timeperiods.TimeperiodSelection):
                 continue
@@ -298,7 +299,8 @@ class ModeTimeperiods(WatoMode):
 
     def _find_usages_in_time_specific_parameters(self, tpname: str) -> List[TimeperiodUsage]:
         used_in: List[TimeperiodUsage] = []
-        rulesets = AllRulesets.load_all_rulesets()
+        rulesets = AllRulesets()
+        rulesets.load()
         for ruleset in rulesets.get_rulesets().values():
             vs = ruleset.valuespec()
             if not isinstance(vs, cmk.gui.plugins.wato.utils.TimeperiodValuespec):

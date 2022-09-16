@@ -703,7 +703,8 @@ class APICallRules(APICallCollection):
         }
 
     def _get_ruleset_configuration(self, ruleset_name):
-        collection = SingleRulesetRecursively.load_single_ruleset_recursively(ruleset_name)
+        collection = SingleRulesetRecursively(ruleset_name)
+        collection.load()
         ruleset = collection.get(ruleset_name)
 
         ruleset_dict: Dict[str, List[Any]] = {}
@@ -771,7 +772,8 @@ class APICallRules(APICallCollection):
             new_ruleset = Ruleset(ruleset_name, tag_to_group_map)
             new_ruleset.from_config(folder, rules)
 
-            folder_rulesets = FolderRulesets.load_folder_rulesets(folder)
+            folder_rulesets = FolderRulesets(folder)
+            folder_rulesets.load()
             # TODO: This add_change() call should be made by the data classes
             _changes.add_change(
                 "edit-ruleset",
@@ -791,7 +793,8 @@ class APICallRules(APICallCollection):
         for folder_path in folders_obsolete_ruleset:
             folder = Folder.folder(folder_path)
 
-            folder_rulesets = FolderRulesets.load_folder_rulesets(folder)
+            folder_rulesets = FolderRulesets(folder)
+            folder_rulesets.load()
 
             new_ruleset = Ruleset(ruleset_name, tag_to_group_map)
             new_ruleset.from_config(folder, [])
@@ -813,7 +816,8 @@ class APICallRules(APICallCollection):
 
     def _get_rulesets_info(self, request):
         rulesets_info = {}
-        all_rulesets = AllRulesets.load_all_rulesets()
+        all_rulesets = AllRulesets()
+        all_rulesets.load()
 
         for varname, ruleset in all_rulesets.get_rulesets().items():
             rulesets_info[varname] = {
@@ -935,7 +939,8 @@ class APICallHosttags(APICallCollection):
     ) -> Set[Tuple[TagID, Optional[TagID]]]:
         used_tags: Set[Tuple[TagID, Optional[TagID]]] = set()
 
-        all_rulesets = AllRulesets.load_all_rulesets()
+        all_rulesets = AllRulesets()
+        all_rulesets.load()
         for ruleset in all_rulesets.get_rulesets().values():
             for _folder, _rulenr, rule in ruleset.get_rules():
                 for tag_group_id, tag_spec in rule.conditions.host_tags.items():

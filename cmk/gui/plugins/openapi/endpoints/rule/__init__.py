@@ -178,7 +178,8 @@ def create_rule(param):
 
     folder.need_permission("write")
 
-    rulesets = FolderRulesets.load_folder_rulesets(folder)
+    rulesets = FolderRulesets(folder)
+    rulesets.load()
     try:
         ruleset = rulesets.get(ruleset_name)
     except KeyError:
@@ -244,7 +245,8 @@ def create_rule(param):
 def list_rules(param):
     """List rules"""
     user.need_permission("wato.rulesets")
-    all_rulesets = AllRulesets.load_all_rulesets()
+    all_rulesets = AllRulesets()
+    all_rulesets.load()
     ruleset_name = param["ruleset_name"]
 
     try:
@@ -298,7 +300,8 @@ def show_rule(param):
 
 def _get_rule_by_id(rule_uuid: str, all_rulesets=None) -> RuleEntry:  # type:ignore[no-untyped-def]
     if all_rulesets is None:
-        all_rulesets = AllRulesets.load_all_rulesets()
+        all_rulesets = AllRulesets()
+        all_rulesets.load()
 
     for ruleset in all_rulesets.get_rulesets().values():
         folder: CREFolder
@@ -343,7 +346,8 @@ def delete_rule(param):
     user.need_permission("wato.rulesets")
     rule_id = param["rule_id"]
     rule: Rule
-    all_rulesets = AllRulesets.load_all_rulesets()
+    all_rulesets = AllRulesets()
+    all_rulesets.load()
 
     found = False
     for ruleset in all_rulesets.get_rulesets().values():

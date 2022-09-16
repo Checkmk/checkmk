@@ -156,7 +156,8 @@ def _rename_host_in_rulesets(folder, oldname, newname):
     changed_rulesets = []
 
     def rename_host_in_folder_rules(folder):
-        rulesets = FolderRulesets.load_folder_rulesets(folder)
+        rulesets = FolderRulesets(folder)
+        rulesets.load()
 
         changed_folder_rulesets = []
         for varname, ruleset in rulesets.get_rulesets().items():

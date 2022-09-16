@@ -298,7 +298,8 @@ class Discovery:
         if not services:
             return
 
-        rulesets = AllRulesets.load_all_rulesets()
+        rulesets = AllRulesets()
+        rulesets.load()
 
         try:
             ruleset = rulesets.get("ignored_services")

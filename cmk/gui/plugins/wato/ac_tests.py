@@ -1131,9 +1131,8 @@ class ACTestESXDatasources(ACTest):
         )
 
     def _get_rules(self):
-        collection = SingleRulesetRecursively.load_single_ruleset_recursively(
-            "special_agents:vsphere"
-        )
+        collection = SingleRulesetRecursively("special_agents:vsphere")
+        collection.load()
 
         ruleset = collection.get("special_agents:vsphere")
         return ruleset.get_rules()
@@ -1289,9 +1288,9 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
             yield ACResultCRIT("Rule in <b>%s</b> has value <b>%s</b>" % (folder_title, rule_state))
 
     def _get_rules(self):
-        ruleset = SingleRulesetRecursively.load_single_ruleset_recursively(
-            "check_mk_exit_status"
-        ).get("check_mk_exit_status")
+        collection = SingleRulesetRecursively("check_mk_exit_status")
+        collection.load()
+        ruleset = collection.get("check_mk_exit_status")
         state_map = {0: "OK", 1: "WARN", 2: "CRIT", 3: "UNKNOWN"}
         return [
             (folder.title(), state_map[rule.value.get("restricted_address_mismatch", 1)])

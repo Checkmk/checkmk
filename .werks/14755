@@ -1,0 +1,20 @@
+Title: Fix selection on "Activate pending changes" page
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1663313198
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p13
+
+This werk fixes two problems regarding the selection of sites on the activation
+page.
+
+First, if no changes were pending, the option "Select all checkboxes" in the
+"Changes" menu was still selectable.
+
+Furthermore, the mentioned option was still "Select all checkboxes" instead of
+"Deselect all checkboxes" on page visit with pending changes (all affected
+sites are already selected on page visit).

@@ -15,6 +15,8 @@ from typing import Dict, Iterator, List, NamedTuple, Optional, Tuple, Union
 
 from six import ensure_str
 
+from livestatus import SiteConfiguration, SiteId
+
 import cmk.utils.render as render
 
 import cmk.gui.forms as forms
@@ -71,6 +73,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         return _("Activate pending changes")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+        self._select_sites_with_pending_changes()
         return PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -85,7 +88,10 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                             title=_("On selected sites"),
                             entries=list(self._page_menu_entries_selected_sites()),
                         ),
-                        make_checkbox_selection_topic(self.name()),
+                        make_checkbox_selection_topic(
+                            selection_key=self.name(),
+                            is_enabled=self.has_changes(),
+                        ),
                     ],
                 ),
                 PageMenuDropdown(
@@ -395,8 +401,7 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
 
                 is_online = self._site_is_online(status)
                 is_logged_in = self._site_is_logged_in(site_id, site)
-                has_foreign = self._site_has_foreign_changes(site_id)
-                can_activate_all = not has_foreign or user.may("wato.activateforeign")
+                can_activate_all = self._can_activate_all(site_id)
 
                 # Disable actions for offline sites and not logged in sites
                 if not is_online or not is_logged_in:
@@ -495,6 +500,29 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
                     )
 
                 html.close_div()
+
+    def _can_activate_all(self, site_id: SiteId) -> bool:
+        return not self._site_has_foreign_changes(site_id) or user.may("wato.activateforeign")
+
+    def _get_selected_sites(self) -> List[SiteId]:
+        return [
+            "site_%s" % site_id
+            for site_id, site in sort_sites(activation_sites())
+            if len(self._changes_of_site(site_id))
+            and self._can_activate_all(site_id)
+            and self._is_active_site(
+                site_id=site_id,
+                site=site,
+                status=self._get_site_status(site_id, site)[1],
+            )
+        ]
+
+    def _select_sites_with_pending_changes(self) -> None:
+        selected_sites: List[SiteId] = self._get_selected_sites()
+        user.set_rowselection(weblib.selection_id(), self.name(), selected_sites, "set")
+
+    def _is_active_site(self, site_id: SiteId, site: SiteConfiguration, status: str) -> bool:
+        return self._site_is_online(status) and self._site_is_logged_in(site_id, site)
 
 
 def render_object_ref_as_icon(object_ref: Optional[ObjectRef]) -> Optional[HTML]:

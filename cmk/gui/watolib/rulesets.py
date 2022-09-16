@@ -367,27 +367,6 @@ class RulesetCollection:
     def get_rulesets(self) -> Mapping[RulesetName, Ruleset]:
         return self._rulesets
 
-    # Groups the rulesets in 3 layers (main group, sub group, rulesets)
-    def get_grouped(self) -> List[Tuple[str, List[Tuple[str, List[Ruleset]]]]]:
-        grouped_dict: Dict[str, Dict[str, List[Ruleset]]] = {}
-        for ruleset in self._rulesets.values():
-            main_group = grouped_dict.setdefault(ruleset.rulespec.main_group_name, {})
-            group_rulesets = main_group.setdefault(ruleset.rulespec.group_name, [])
-            group_rulesets.append(ruleset)
-
-        grouped = []
-        for main_group_name, sub_groups in grouped_dict.items():
-            sub_group_list = []
-
-            for group_name, group_rulesets in sorted(sub_groups.items(), key=lambda x: x[0]):
-                sub_group_list.append(
-                    (group_name, sorted(group_rulesets, key=lambda x: str(x.title())))
-                )
-
-            grouped.append((main_group_name, sub_group_list))
-
-        return grouped
-
 
 class AllRulesets(RulesetCollection):
     def _load_rulesets_recursively(

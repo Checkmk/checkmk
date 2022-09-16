@@ -10,7 +10,6 @@ const webpack = require("webpack");
 module.exports = {
     mode: "production",
     devtool: "source-map",
-    watch: true,
     optimization: {
         minimizer: [
             new TerserPlugin({
@@ -152,6 +151,7 @@ let babel_loader = {
 };
 
 if (process.env.WEBPACK_MODE === "quick") {
+    module.exports.watch = true;
     babel_loader["test"] = /\.ts?$/;
 } else {
     babel_loader["test"] = /\.(ts|js)?$/;

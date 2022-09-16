@@ -9,6 +9,7 @@ from cmk.gui.plugins.wato.active_checks.common import RulespecGroupActiveChecks
 from cmk.gui.plugins.wato.utils import check_icmp_params, HostRulespec, rulespec_registry
 from cmk.gui.valuespec import (
     CascadingDropdown,
+    Checkbox,
     Dictionary,
     DictionaryEntry,
     Hostname,
@@ -65,6 +66,14 @@ def _valuespec_active_checks_icmp() -> ValueSpec:
                         Integer(default_value=1),
                     ),
                 ],
+            ),
+        ),
+        (
+            "multiple_services",
+            Checkbox(
+                title=_("Multiple services"),
+                label=_("Create a service for every pinged IP address"),
+                default_value=False,
             ),
         ),
         (

@@ -5,7 +5,7 @@
 """Rulesets"""
 from __future__ import annotations
 
-from typing import List, Union
+from typing import List
 
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.openapi.endpoints.ruleset.fields import (
@@ -18,9 +18,13 @@ from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, perm
 from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.plugins.openapi.utils import ProblemException, serve_json
 from cmk.gui.utils.escaping import strip_tags
-from cmk.gui.watolib.rulesets import AllRulesets, FilteredRulesetCollection, FolderRulesets, Ruleset
-from cmk.gui.watolib.rulesets import RulesetCollection as RulesetCollection_
-from cmk.gui.watolib.rulesets import SearchedRulesets, SingleRulesetRecursively
+from cmk.gui.watolib.rulesets import (
+    AllRulesets,
+    FolderRulesets,
+    Ruleset,
+    SearchedRulesets,
+    SingleRulesetRecursively,
+)
 
 PERMISSIONS = permissions.Perm("wato.rulesets")
 
@@ -50,16 +54,10 @@ def list_rulesets(param):
         return options
 
     if search_options := _get_search_options(param):
-        rulesets: Union[
-            RulesetCollection_, FilteredRulesetCollection
-        ] = SearchedRulesets.load_searched_rulesets(
-            all_sets.get_rulesets().values(), search_options
-        )
-    else:
-        rulesets = all_sets
+        all_sets = SearchedRulesets.load_searched_rulesets(all_sets, search_options)
 
     ruleset_collection: List[DomainObject] = []
-    for ruleset in rulesets.get_rulesets().values():
+    for ruleset in all_sets.get_rulesets().values():
         ruleset_collection.append(_serialize_ruleset(ruleset))
 
     # We don't do grouping like in the GUI. This would not add any value here.

@@ -111,8 +111,7 @@ class ModePredefinedConditions(SimpleListMode):
 
     def _validate_deletion(self, ident, entry):
         matched_rulesets = SearchedRulesets.load_searched_rulesets(
-            AllRulesets.load_all_rulesets().get_rulesets().values(),
-            {"rule_predefined_condition": ident},
+            AllRulesets.load_all_rulesets(), {"rule_predefined_condition": ident}
         ).get_rulesets()
 
         if matched_rulesets:

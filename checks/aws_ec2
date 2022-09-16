@@ -11,11 +11,6 @@ from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-imp
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.plugins.agent_based.aws_ec2 import EC2DefaultItemName
-
 #   .--status check--------------------------------------------------------.
 #   |           _        _                    _               _            |
 #   |       ___| |_ __ _| |_ _   _ ___    ___| |__   ___  ___| | __        |
@@ -139,76 +134,5 @@ check_info["aws_ec2.cpu_util"] = {
     "service_description": "AWS/EC2 CPU utilization",
     "group": "cpu_utilization",
     "default_levels_variable": "aws_ec2_cpu_util_default_levels",
-    "has_perfdata": True,
-}
-
-# .
-#   .--disk IO-------------------------------------------------------------.
-#   |                         _ _     _      ___ ___                       |
-#   |                      __| (_)___| | __ |_ _/ _ \                      |
-#   |                     / _` | / __| |/ /  | | | | |                     |
-#   |                    | (_| | \__ \   <   | | |_| |                     |
-#   |                     \__,_|_|___/_|\_\ |___\___/                      |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-# It would be better to use metrics with the statistics "Sum" instead of "Average" for this check
-# (since we want to compute rates). However, this is does not seem to be possible here. AWS
-# publishes the EC2 metrics at 5-minute intervals, whereby each published datapoint consists of 5
-# 1-minute datapoints (one can check this using the statistics "SampleCount", which gives the number
-# of data points in the specified interval). If we request one of the metrics used below for the
-# last 600s (which is what the agent does), we should get a SampleCount of 10, however, we will
-# only get a sample count of 5. Hence, if we used the "Sum" statistics, we would be dividing a sum
-# corresponding to a 5-minute interval by 10 minutes. Note that this problem does not occur when
-# collecting the metrics for a 10-minute interval further in the past (for example from -20 min to
-# -10 min).
-DiskIOSection = Mapping[str, float]
-
-
-def discover_aws_ec2_disk_io(section: DiskIOSection):
-    yield from inventory_aws_generic(
-        {EC2DefaultItemName: section},
-        [
-            "DiskReadOps",
-            "DiskWriteOps",
-            "DiskReadBytes",
-            "DiskWriteBytes",
-        ],
-    )
-
-
-def check_aws_ec2_disk_io(
-    item: str,
-    params: Mapping[str, Any],
-    section: DiskIOSection,
-):
-    disk_data: MutableMapping[str, float] = {}
-    key_pairs: Mapping[
-        str, str
-    ] = {  # The key from the Mapping is the result that we want and the value is how we get the data
-        "read_ios": "DiskReadOps",
-        "write_ios": "DiskWriteOps",
-        "read_throughput": "DiskReadBytes",
-        "write_throughput": "DiskWriteBytes",
-    }
-
-    for key, section_key in key_pairs.items():
-        if (value := section.get(section_key)) is None:
-            continue
-
-        disk_data[key] = value / 60.0
-
-    if not disk_data:
-        raise MKCounterWrapped("Currently no data from AWS")
-
-    return check_diskstat_dict(item, params, {item: disk_data})
-
-
-check_info["aws_ec2.disk_io"] = {
-    "inventory_function": discover_aws_ec2_disk_io,
-    "check_function": check_aws_ec2_disk_io,
-    "service_description": "AWS/EC2 Disk IO %s",
-    "group": "diskstat",
     "has_perfdata": True,
 }

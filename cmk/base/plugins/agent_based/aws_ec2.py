@@ -4,7 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Mapping
+from collections.abc import Mapping, MutableMapping
+from typing import Any
+
+from cmk.base.plugins.agent_based.utils.diskstat import check_diskstat_dict
 
 from .agent_based_api.v1 import get_value_store, IgnoreResultsError, register
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -110,4 +113,81 @@ register.check_plugin(
     check_ruleset_name="if",
     check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
     check_function=check_aws_ec2_network_io,
+)
+
+# .
+#   .--disk IO-------------------------------------------------------------.
+#   |                         _ _     _      ___ ___                       |
+#   |                      __| (_)___| | __ |_ _/ _ \                      |
+#   |                     / _` | / __| |/ /  | | | | |                     |
+#   |                    | (_| | \__ \   <   | | |_| |                     |
+#   |                     \__,_|_|___/_|\_\ |___\___/                      |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+# It would be better to use metrics with the statistics "Sum" instead of "Average" for this check
+# (since we want to compute rates). However, this is does not seem to be possible here. AWS
+# publishes the EC2 metrics at 5-minute intervals, whereby each published datapoint consists of 5
+# 1-minute datapoints (one can check this using the statistics "SampleCount", which gives the number
+# of data points in the specified interval). If we request one of the metrics used below for the
+# last 600s (which is what the agent does), we should get a SampleCount of 10, however, we will
+# only get a sample count of 5. Hence, if we used the "Sum" statistics, we would be dividing a sum
+# corresponding to a 5-minute interval by 10 minutes. Note that this problem does not occur when
+# collecting the metrics for a 10-minute interval further in the past (for example from -20 min to
+# -10 min).
+
+
+def discover_aws_ec2_disk_io(section: Section) -> DiscoveryResult:
+    yield from discover_aws_generic(
+        {EC2DefaultItemName: section},
+        [
+            "DiskReadOps",
+            "DiskWriteOps",
+            "DiskReadBytes",
+            "DiskWriteBytes",
+        ],
+    )
+
+
+def check_aws_ec2_disk_io(
+    item: str,
+    params: Mapping[str, Any],
+    section: Section,
+) -> CheckResult:
+    disk_data: MutableMapping[str, float] = {}
+    key_pairs: Mapping[
+        str, str
+    ] = {  # The key from the Mapping is the result that we want and the value is how we get the data
+        "read_ios": "DiskReadOps",
+        "write_ios": "DiskWriteOps",
+        "read_throughput": "DiskReadBytes",
+        "write_throughput": "DiskWriteBytes",
+    }
+
+    for key, section_key in key_pairs.items():
+        if (value := section.get(section_key)) is None:
+            continue
+
+        disk_data[key] = value / 60.0
+
+    if not disk_data:
+        raise IgnoreResultsError("Currently no data from AWS")
+
+    yield from check_diskstat_dict(
+        params=params,
+        disk=disk_data,
+        value_store=get_value_store(),
+        this_time=time.time(),
+    )
+
+
+register.check_plugin(
+    name="aws_ec2_disk_io",
+    check_function=check_aws_ec2_disk_io,
+    discovery_function=discover_aws_ec2_disk_io,
+    check_default_parameters={},
+    check_ruleset_name="diskstat",
+    service_name="AWS/EC2 Disk IO %s",
+    sections=["aws_ec2"],
 )

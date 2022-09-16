@@ -272,3 +272,18 @@ def test_demo_modifications(package_path, cmk_version) -> None:  # type:ignore[n
         assert b"in this demo" in nagios_bin
     else:
         assert b"in this demo" not in nagios_bin
+
+
+def test_not_rc_tag(package_path: str, cmk_version: str) -> None:
+    msi_file_path = os.path.join(
+        os.path.dirname(__file__), "../../agents/windows/check_mk_agent.msi"
+    )
+    assert os.path.isfile(msi_file_path)
+
+    output = subprocess.check_output(["msiinfo", "export", msi_file_path, "Property"], text=True)
+    assert "ProductVersion" in output
+
+    for line in output.splitlines():
+        if "ProductVersion" in line:
+            assert cmk_version in line
+            assert "-rc" not in line

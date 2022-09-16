@@ -1625,19 +1625,7 @@ def do_site_restore(opts, info, site=None):
                 stream=backup_file, is_alive=lambda: False, key_ident=g_job_config["encrypt"]
             )
             try:
-                archive_started = False
                 for chunk in s.process():
-                    # Hack for all handling of site backups created with Checkmk
-                    # versions < 2016-03-16 and till 1.2.8p6:
-                    # When a site was just stopped, the next "omd backup" unmounts the sites
-                    # tmpfs. In this case the output "Unmounting temporary filesystem...OK" was
-                    # produced which broke the restore of the site on the local system. Skip to
-                    # the beginning of the archive
-                    if not archive_started:
-                        if chunk.startswith(b"Unmounting temporary filesystem"):
-                            chunk = chunk[37:]
-                        archive_started = True
-
                     p.stdin.write(chunk)
             except OSError as e:
                 log("Error while sending data to restore process: %s" % e)

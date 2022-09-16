@@ -144,30 +144,6 @@ else:
     agent_bakery = None  # type: ignore[assignment]
 
 
-def _group_rulesets(
-    rulesets: Iterable[Ruleset],
-) -> List[_Tuple[str, List[_Tuple[str, List[Ruleset]]]]]:
-    """Groups the rulesets in 3 layers (main group, sub group, rulesets)."""
-    grouped_dict: Dict[str, Dict[str, List[Ruleset]]] = {}
-    for ruleset in rulesets:
-        main_group = grouped_dict.setdefault(ruleset.rulespec.main_group_name, {})
-        group_rulesets = main_group.setdefault(ruleset.rulespec.group_name, [])
-        group_rulesets.append(ruleset)
-
-    grouped = []
-    for main_group_name, sub_groups in grouped_dict.items():
-        sub_group_list = []
-
-        for group_name, group_rulesets in sorted(sub_groups.items(), key=lambda x: x[0]):
-            sub_group_list.append(
-                (group_name, sorted(group_rulesets, key=lambda x: str(x.title())))
-            )
-
-        grouped.append((main_group_name, sub_group_list))
-
-    return grouped
-
-
 class PageType(Enum):
     DeprecatedRulesets = auto()
     IneffectiveRules = auto()
@@ -264,8 +240,7 @@ class ABCRulesetMode(WatoMode):
         html.open_div(class_="rulesets")
 
         grouped_rulesets = sorted(
-            _group_rulesets(rulesets.get_rulesets().values()),
-            key=lambda k_v: get_rulegroup(k_v[0]).title,
+            rulesets.get_grouped(), key=lambda k_v: get_rulegroup(k_v[0]).title
         )
 
         show_main_group_title = len(grouped_rulesets) > 1

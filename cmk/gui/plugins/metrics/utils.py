@@ -229,7 +229,7 @@ class AutomaticDict(OrderedDict[str, GraphTemplate]):
 
 # TODO: Refactor to plugin_registry structures
 unit_info: Dict[str, UnitInfo] = {}
-metric_info: Dict[str, MetricInfo] = {}
+metric_info: dict[_MetricName, MetricInfo] = {}
 check_metrics: Dict[str, Dict[str, CheckMetricEntry]] = {}
 perfometer_info: List[Union[LegacyPerfometer, PerfometerSpec]] = []
 # _AutomaticDict is used here to provide some list methods.

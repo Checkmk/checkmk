@@ -5,7 +5,8 @@
 
 import re
 import subprocess
-from typing import Iterator, NamedTuple
+from collections.abc import Iterator
+from typing import NamedTuple
 
 import pytest
 
@@ -290,63 +291,6 @@ def test_paths(execute) -> None:  # type:ignore[no-untyped-def]
     assert "Main components of check_mk" in p.stdout
     assert "Locally installed " in p.stdout
     assert len(p.stdout.split("\n")) > 40
-
-
-# .
-#   .--backup/restore------------------------------------------------------.
-#   |      _                _                  __             _            |
-#   |     | |__   __ _  ___| | ___   _ _ __   / / __ ___  ___| |_          |
-#   |     | '_ \ / _` |/ __| |/ / | | | '_ \ / / '__/ _ \/ __| __|         |
-#   |     | |_) | (_| | (__|   <| |_| | |_) / /| | |  __/\__ \ |_ _        |
-#   |     |_.__/ \__,_|\___|_|\_\\__,_| .__/_/ |_|  \___||___/\__(_)       |
-#   |                                 |_|                                  |
-#   '----------------------------------------------------------------------'
-
-
-def _create_cmk_backup(site: Site, execute):  # type:ignore[no-untyped-def]
-    p = execute(["cmk", "--backup", "x.tgz"], cwd=site.root)
-    assert p.returncode == 0, on_failure(p)
-    assert p.stderr == ""
-    assert p.stdout == ""
-    assert site.file_exists("x.tgz")
-
-
-def test_backup(request, site: Site, execute) -> None:  # type:ignore[no-untyped-def]
-    def cleanup():
-        site.delete_file("x.tgz")
-
-    request.addfinalizer(cleanup)
-
-    _create_cmk_backup(site, execute)
-
-
-def test_restore(request, site: Site, execute) -> None:  # type:ignore[no-untyped-def]
-    # TODO: main.mk cannot be restored.
-    def cleanup():
-        if site.file_exists("etc/check_mk.sav"):
-            site.delete_dir("etc/check_mk.sav")
-        if site.file_exists("etc/check_mk/final.mk"):
-            site.delete_file("etc/check_mk/final.mk")
-        site.delete_file("x.tgz")
-
-    request.addfinalizer(cleanup)
-
-    # Add `final.mk` to the site, delete it, and restore it from a backup.
-    assert (
-        execute(["cp", "etc/check_mk/main.mk", "etc/check_mk/final.mk"], cwd=site.root).returncode
-        == 0
-    )
-    assert execute(["cp", "-pr", "etc/check_mk", "etc/check_mk.sav"], cwd=site.root).returncode == 0
-    _create_cmk_backup(site, execute)
-
-    site.delete_file("etc/check_mk/final.mk")
-    p = execute(["cmk", "--restore", "x.tgz"], cwd=site.root)
-    assert p.returncode == 0, on_failure(p)
-    assert p.stderr == ""
-    assert p.stdout == ""
-
-    p = execute(["diff", "-ur", "etc/check_mk", "etc/check_mk.sav"], cwd=site.root)
-    assert p.returncode == 0, on_failure(p)
 
 
 # .

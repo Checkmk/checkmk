@@ -1,0 +1,14 @@
+Title: Remove cmk backup
+Class: fix
+Compatible: incomp
+Component: core
+Date: 1663356801
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+The "cmk backup" command has been removed. Use "omd backup" instead.
+
+"cmk backup" only did an incomplete back up and did not guarantee a sucessful restore.
+

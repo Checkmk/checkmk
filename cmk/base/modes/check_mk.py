@@ -50,7 +50,6 @@ from cmk.core_helpers.type_defs import NO_SELECTION, SectionNameCollection
 import cmk.base.agent_based.discovery as discovery
 import cmk.base.agent_based.inventory as inventory
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.backup
 import cmk.base.check_utils
 import cmk.base.config as config
 import cmk.base.core
@@ -680,54 +679,6 @@ modes.register(
         handler_function=mode_paths,
         needs_config=False,
         short_help="List all pathnames and directories",
-    )
-)
-
-# .
-#   .--backup/restore------------------------------------------------------.
-#   |      _                _                  __             _            |
-#   |     | |__   __ _  ___| | ___   _ _ __   / / __ ___  ___| |_          |
-#   |     | '_ \ / _` |/ __| |/ / | | | '_ \ / / '__/ _ \/ __| __|         |
-#   |     | |_) | (_| | (__|   <| |_| | |_) / /| | |  __/\__ \ |_ _        |
-#   |     |_.__/ \__,_|\___|_|\_\\__,_| .__/_/ |_|  \___||___/\__(_)       |
-#   |                                 |_|                                  |
-#   '----------------------------------------------------------------------'
-
-
-def mode_backup(tarname: str) -> None:
-    cmk.base.backup.do_backup(tarname)
-
-
-modes.register(
-    Mode(
-        long_option="backup",
-        handler_function=mode_backup,
-        argument=True,
-        argument_descr="BACKUPFILE.tar.gz",
-        short_help="make backup of configuration and data",
-        long_help=[
-            "Saves all configuration and runtime data to a gzip "
-            "compressed tar file to the path specified as argument.",
-        ],
-    )
-)
-
-
-def mode_restore(tarname: str) -> None:
-    cmk.base.backup.do_restore(tarname)
-
-
-modes.register(
-    Mode(
-        long_option="restore",
-        handler_function=mode_restore,
-        argument=True,
-        argument_descr="BACKUPFILE.tar.gz",
-        short_help="restore configuration and data",
-        long_help=[
-            "*Erases* the current configuration and data and replaces "
-            "it with that from the backup file."
-        ],
     )
 )
 

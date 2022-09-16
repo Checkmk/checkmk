@@ -19936,8 +19936,16 @@ msgstr "Stockage"
 msgid "GCP Cost"
 msgstr "TCP Connect"
 
+#, fuzzy
+msgid "GCP Health"
+msgstr "Santé"
+
 msgid "GCP services to monitor"
 msgstr "Services de BPC à surveiller"
+
+#, fuzzy
+msgid "GCP status product selection"
+msgstr "Sélection des contacts"
 
 msgid "GCP/Cloud SQL CPU"
 msgstr "GCP/Cloud SQL CPU"
@@ -19950,6 +19958,10 @@ msgstr "Disque GCP/Cloud SQL"
 
 msgid "GCP/Cloud SQL memory"
 msgstr "Mémoire GCP/Cloud SQL"
+
+#, fuzzy
+msgid "GCP/Cloud SQL replication lag"
+msgstr "Réseau GCP/Cloud SQL"
 
 msgid "GCP/Cloud SQL status"
 msgstr "Statut de GCP/Cloud SQL"
@@ -26142,11 +26154,23 @@ msgstr "Historiques d'inventaire"
 msgid "Inventory Tree"
 msgstr "Arbre d'inventaire"
 
+#, fuzzy
+msgid "Inventory attribute"
+msgstr "Date/heure de l'inventaire"
+
 msgid "Inventory changes"
+msgstr "Variation des stocks"
+
+#, fuzzy
+msgid "Inventory column"
 msgstr "Variation des stocks"
 
 msgid "Inventory history of host"
 msgstr "Historique de l'inventaire de l'hôte"
+
+#, fuzzy
+msgid "Inventory node"
+msgstr "Arbre d'inventaire"
 
 msgid "Inventory of Linux kernel configuration (sysctl)"
 msgstr "Inventaire de la configuration du noyau Linux (sysctl)"
@@ -26156,6 +26180,10 @@ msgstr "Inventaire de tous les plugins d'agent déployés et de leurs versions"
 
 msgid "Inventory of host"
 msgstr "Inventaire de l'hôte"
+
+#, fuzzy
+msgid "Inventory table"
+msgstr "Arbre d'inventaire"
 
 msgid "Inventory: History"
 msgstr "Inventaire : Histoire"
@@ -32505,6 +32533,10 @@ msgstr "Aucun utilisateur n'est encore défini."
 msgid "No valid target folder."
 msgstr "Aucun dossier cible valide."
 
+#, fuzzy
+msgid "No valid theme directories found."
+msgstr "Aucun dossier cible valide."
+
 msgid "No version limitation"
 msgstr "Aucune limitation de version"
 
@@ -35193,6 +35225,10 @@ msgstr "Paramètres pour les demandes de seau"
 
 #, fuzzy
 msgid "Parameters for the latencies"
+msgstr "Paramètres pour ce service"
+
+#, fuzzy
+msgid "Parameters for the replication lag"
 msgstr "Paramètres pour ce service"
 
 msgid "Parameters for this host"
@@ -47686,6 +47722,11 @@ msgstr ""
 "Veuillez envisager de les réduire si votre système de stockage est "
 "entièrement flash."
 
+#, python-format
+msgid ""
+"The default theme \"%s\" is not given among the found theme choices: %s."
+msgstr ""
+
 msgid "The default/fixed service level to use for this rule."
 msgstr "Le niveau de service par défaut/fixe à utiliser pour cette règle."
 
@@ -57219,6 +57260,10 @@ msgstr ""
 msgid "Upper levels on the replica lag"
 msgstr "Niveaux supérieurs sur le décalage de la réplique"
 
+#, fuzzy
+msgid "Upper levels on the replication lag"
+msgstr "Niveaux supérieurs sur le décalage de la réplique"
+
 msgid "Upper levels on total request latency"
 msgstr "Niveaux supérieurs de latence totale des demandes"
 
@@ -62063,6 +62108,26 @@ msgstr ""
 "de noms spécifiques. Seuls ceux qui correspondent aux motifs prédéfinis "
 "seront surveillés."
 
+#, fuzzy
+msgid ""
+"You can specify a list of regex patterns to monitor specific products. Only "
+"those that do match the predefined patterns will be monitored. If empty all "
+"products are monitored."
+msgstr ""
+"Vous pouvez spécifier une liste de motifs regex pour surveiller des espaces "
+"de noms spécifiques. Seuls ceux qui correspondent aux motifs prédéfinis "
+"seront surveillés."
+
+#, fuzzy
+msgid ""
+"You can specify a list of regex patterns to monitor specific regions. Only "
+"those that do match the predefined patterns will be monitored. If empty all "
+"regions are monitored."
+msgstr ""
+"Vous pouvez spécifier une liste de motifs regex pour surveiller des espaces "
+"de noms spécifiques. Seuls ceux qui correspondent aux motifs prédéfinis "
+"seront surveillés."
+
 msgid ""
 "You can specify a relative path here. The report will be created in the "
 "given subdirectory. In case a directory does not exist, it will be created "
@@ -63310,6 +63375,10 @@ msgstr ""
 
 msgid "add ISL"
 msgstr "ajouter ISL"
+
+#, fuzzy
+msgid "add new pattern"
+msgstr "Ajouter un nouveau modèle"
 
 msgid "ago"
 msgstr "il y a un an"
@@ -64584,6 +64653,10 @@ msgstr "chemin écho"
 
 msgid "path levels"
 msgstr "niveaux de chemin"
+
+#, fuzzy
+msgid "pattern"
+msgstr "Patronage"
 
 msgid "pending"
 msgstr "en attente de"

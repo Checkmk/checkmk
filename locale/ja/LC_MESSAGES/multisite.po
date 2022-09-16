@@ -18956,8 +18956,16 @@ msgstr "ストレージ"
 msgid "GCP Cost"
 msgstr "TCPコネクト"
 
+#, fuzzy
+msgid "GCP Health"
+msgstr "健康"
+
 msgid "GCP services to monitor"
 msgstr "監視するGCPサービス"
+
+#, fuzzy
+msgid "GCP status product selection"
+msgstr "連絡先の選択"
 
 msgid "GCP/Cloud SQL CPU"
 msgstr ""
@@ -18970,6 +18978,10 @@ msgstr "GCP/Cloud SQLディスク"
 
 msgid "GCP/Cloud SQL memory"
 msgstr "GCP/Cloud SQL メモリー"
+
+#, fuzzy
+msgid "GCP/Cloud SQL replication lag"
+msgstr "GCP/Cloud SQLネットワーク"
 
 msgid "GCP/Cloud SQL status"
 msgstr "GCP/Cloud SQL ステータス"
@@ -24659,11 +24671,23 @@ msgstr "インベントリー履歴"
 msgid "Inventory Tree"
 msgstr "インベントリツリー"
 
+#, fuzzy
+msgid "Inventory attribute"
+msgstr "インベントリ Date/Time"
+
 msgid "Inventory changes"
+msgstr "インベントリーの変更"
+
+#, fuzzy
+msgid "Inventory column"
 msgstr "インベントリーの変更"
 
 msgid "Inventory history of host"
 msgstr "ホストのインベントリ履歴"
+
+#, fuzzy
+msgid "Inventory node"
+msgstr "インベントリツリー"
 
 msgid "Inventory of Linux kernel configuration (sysctl)"
 msgstr "Linuxカーネル構成のインベントリ (sysctl)"
@@ -24673,6 +24697,10 @@ msgstr ""
 
 msgid "Inventory of host"
 msgstr "ホストのインベントリ"
+
+#, fuzzy
+msgid "Inventory table"
+msgstr "インベントリツリー"
 
 msgid "Inventory: History"
 msgstr "インベントリ:履歴"
@@ -30818,6 +30846,10 @@ msgstr "ユーザーはまだ定義されていません。"
 msgid "No valid target folder."
 msgstr "有効なターゲットフォルダがありません。"
 
+#, fuzzy
+msgid "No valid theme directories found."
+msgstr "有効なターゲットフォルダがありません。"
+
 msgid "No version limitation"
 msgstr "バージョン制限なし"
 
@@ -33380,6 +33412,10 @@ msgstr "バケットリクエストのパラメーター"
 
 #, fuzzy
 msgid "Parameters for the latencies"
+msgstr "このサービスのパラメーター"
+
+#, fuzzy
+msgid "Parameters for the replication lag"
 msgstr "このサービスのパラメーター"
 
 msgid "Parameters for this host"
@@ -45134,6 +45170,11 @@ msgid ""
 "lowering them if your storage system is all-flash."
 msgstr ""
 
+#, python-format
+msgid ""
+"The default theme \"%s\" is not given among the found theme choices: %s."
+msgstr ""
+
 msgid "The default/fixed service level to use for this rule."
 msgstr "このルールに使用するデフォルト/固定サービスレベル。"
 
@@ -53694,6 +53735,10 @@ msgstr "最も古いレプリケーションスロットラグの上位レベル
 msgid "Upper levels on the replica lag"
 msgstr "レプリカラグの上位レベル"
 
+#, fuzzy
+msgid "Upper levels on the replication lag"
+msgstr "レプリカラグの上位レベル"
+
 msgid "Upper levels on total request latency"
 msgstr "リクエストの合計レイテンシの上位レベル"
 
@@ -58039,6 +58084,18 @@ msgid ""
 msgstr ""
 
 msgid ""
+"You can specify a list of regex patterns to monitor specific products. Only "
+"those that do match the predefined patterns will be monitored. If empty all "
+"products are monitored."
+msgstr ""
+
+msgid ""
+"You can specify a list of regex patterns to monitor specific regions. Only "
+"those that do match the predefined patterns will be monitored. If empty all "
+"regions are monitored."
+msgstr ""
+
+msgid ""
 "You can specify a relative path here. The report will be created in the "
 "given subdirectory. In case a directory does not exist, it will be created "
 "on demand."
@@ -59111,6 +59168,10 @@ msgstr "スイッチ間リンクのサービスの説明に\"ISL\"を追加"
 
 msgid "add ISL"
 msgstr "ISLを追加"
+
+#, fuzzy
+msgid "add new pattern"
+msgstr "新しいパターンを追加する"
 
 msgid "ago"
 msgstr "前"
@@ -60378,6 +60439,10 @@ msgstr "パスエコー"
 
 msgid "path levels"
 msgstr "パスレベル"
+
+#, fuzzy
+msgid "pattern"
+msgstr "パターン"
 
 msgid "pending"
 msgstr "保留中"

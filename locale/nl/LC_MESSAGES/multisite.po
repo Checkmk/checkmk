@@ -19686,8 +19686,16 @@ msgstr "Opslag"
 msgid "GCP Cost"
 msgstr "TCP Verbinden"
 
+#, fuzzy
+msgid "GCP Health"
+msgstr "Gezondheid"
+
 msgid "GCP services to monitor"
 msgstr "GCP-diensten voor toezicht"
+
+#, fuzzy
+msgid "GCP status product selection"
+msgstr "Contact Selectie"
 
 msgid "GCP/Cloud SQL CPU"
 msgstr "GCP/Cloud SQL CPU"
@@ -19700,6 +19708,10 @@ msgstr "GCP/Cloud SQL schijf"
 
 msgid "GCP/Cloud SQL memory"
 msgstr "GCP/Cloud SQL geheugen"
+
+#, fuzzy
+msgid "GCP/Cloud SQL replication lag"
+msgstr "GCP/Cloud SQL Netwerk"
 
 msgid "GCP/Cloud SQL status"
 msgstr "GCP/Cloud SQL status"
@@ -25796,11 +25808,23 @@ msgstr "Inventaris Historie"
 msgid "Inventory Tree"
 msgstr "Inventaris Boom"
 
+#, fuzzy
+msgid "Inventory attribute"
+msgstr "Inventaris Datum/Tijd"
+
 msgid "Inventory changes"
+msgstr "Inventariswijzigingen"
+
+#, fuzzy
+msgid "Inventory column"
 msgstr "Inventariswijzigingen"
 
 msgid "Inventory history of host"
 msgstr "Inventarisatie geschiedenis van host"
+
+#, fuzzy
+msgid "Inventory node"
+msgstr "Inventaris Boom"
 
 msgid "Inventory of Linux kernel configuration (sysctl)"
 msgstr "Inventarisatie van Linux kernel configuratie (sysctl)"
@@ -25810,6 +25834,10 @@ msgstr "Inventaris van alle ingezette agent plugins en hun versies"
 
 msgid "Inventory of host"
 msgstr "Inventaris van de gastheer"
+
+#, fuzzy
+msgid "Inventory table"
+msgstr "Inventaris Boom"
 
 msgid "Inventory: History"
 msgstr "Inventaris: Geschiedenis"
@@ -32098,6 +32126,10 @@ msgstr "Er zijn nog geen gebruikers gedefinieerd."
 msgid "No valid target folder."
 msgstr "Geen geldige doelmap."
 
+#, fuzzy
+msgid "No valid theme directories found."
+msgstr "Geen geldige doelmap."
+
 msgid "No version limitation"
 msgstr "Geen versiebeperking"
 
@@ -34748,6 +34780,10 @@ msgstr "Parameters voor de emmeraanvragen"
 
 #, fuzzy
 msgid "Parameters for the latencies"
+msgstr "Parameters voor deze dienst"
+
+#, fuzzy
+msgid "Parameters for the replication lag"
 msgstr "Parameters voor deze dienst"
 
 msgid "Parameters for this host"
@@ -47070,6 +47106,11 @@ msgstr ""
 "De standaardniveaus zijn geschikt voor hybride opslagsystemen. Overweeg ze "
 "te verlagen als uw opslagsysteem volledig flash is."
 
+#, python-format
+msgid ""
+"The default theme \"%s\" is not given among the found theme choices: %s."
+msgstr ""
+
 msgid "The default/fixed service level to use for this rule."
 msgstr ""
 "Het standaard/vaste serviceniveau dat voor deze regel moet worden gebruikt."
@@ -56476,6 +56517,10 @@ msgstr "Bovenste niveaus op de oudste replicatiesleuf achterstand"
 msgid "Upper levels on the replica lag"
 msgstr "Hogere niveaus op de replica lag"
 
+#, fuzzy
+msgid "Upper levels on the replication lag"
+msgstr "Hogere niveaus op de replica lag"
+
 msgid "Upper levels on total request latency"
 msgstr "Bovenste niveaus op totale verzoeklatentie"
 
@@ -61230,6 +61275,26 @@ msgstr ""
 "monitoren. Enkel diegene die overeenkomen met de voorgedefinieerde patronen "
 "zullen gemonitord worden."
 
+#, fuzzy
+msgid ""
+"You can specify a list of regex patterns to monitor specific products. Only "
+"those that do match the predefined patterns will be monitored. If empty all "
+"products are monitored."
+msgstr ""
+"U kunt een lijst van regexpatronen specificeren om specifieke namespaces te "
+"monitoren. Enkel diegene die overeenkomen met de voorgedefinieerde patronen "
+"zullen gemonitord worden."
+
+#, fuzzy
+msgid ""
+"You can specify a list of regex patterns to monitor specific regions. Only "
+"those that do match the predefined patterns will be monitored. If empty all "
+"regions are monitored."
+msgstr ""
+"U kunt een lijst van regexpatronen specificeren om specifieke namespaces te "
+"monitoren. Enkel diegene die overeenkomen met de voorgedefinieerde patronen "
+"zullen gemonitord worden."
+
 msgid ""
 "You can specify a relative path here. The report will be created in the "
 "given subdirectory. In case a directory does not exist, it will be created "
@@ -62437,6 +62502,10 @@ msgstr "ISL\" toevoegen aan dienstbeschrijving voor interswitch links"
 
 msgid "add ISL"
 msgstr "ISL toevoegen"
+
+#, fuzzy
+msgid "add new pattern"
+msgstr "Nieuw patroon toevoegen"
 
 msgid "ago"
 msgstr "geleden"
@@ -63711,6 +63780,10 @@ msgstr "pad-echo"
 
 msgid "path levels"
 msgstr "padniveaus"
+
+#, fuzzy
+msgid "pattern"
+msgstr "Patroon"
 
 msgid "pending"
 msgstr "in afwachting van"

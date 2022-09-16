@@ -20003,8 +20003,16 @@ msgstr "Stoccaggio"
 msgid "GCP Cost"
 msgstr "TCP Connect"
 
+#, fuzzy
+msgid "GCP Health"
+msgstr "Salute"
+
 msgid "GCP services to monitor"
 msgstr "Servizi globali per monitorare"
+
+#, fuzzy
+msgid "GCP status product selection"
+msgstr "Selezione dei contatti"
 
 msgid "GCP/Cloud SQL CPU"
 msgstr "CPU GCP/Cloud SQL"
@@ -20019,6 +20027,10 @@ msgstr "Rete IP"
 
 #, fuzzy
 msgid "GCP/Cloud SQL memory"
+msgstr "Rete IP"
+
+#, fuzzy
+msgid "GCP/Cloud SQL replication lag"
 msgstr "Rete IP"
 
 #, fuzzy
@@ -26187,11 +26199,23 @@ msgstr "Storia dell'inventario"
 msgid "Inventory Tree"
 msgstr "Albero dell'inventario"
 
+#, fuzzy
+msgid "Inventory attribute"
+msgstr "Data/ora di inventario"
+
 msgid "Inventory changes"
+msgstr "Cambiamenti di inventario"
+
+#, fuzzy
+msgid "Inventory column"
 msgstr "Cambiamenti di inventario"
 
 msgid "Inventory history of host"
 msgstr "Storia dell'inventario dell'host"
+
+#, fuzzy
+msgid "Inventory node"
+msgstr "Albero dell'inventario"
 
 msgid "Inventory of Linux kernel configuration (sysctl)"
 msgstr "Inventario della configurazione del kernel Linux (sysctl)"
@@ -26202,6 +26226,10 @@ msgstr ""
 
 msgid "Inventory of host"
 msgstr "Inventario dell'ospite"
+
+#, fuzzy
+msgid "Inventory table"
+msgstr "Albero dell'inventario"
 
 msgid "Inventory: History"
 msgstr "Inventario: Storia"
@@ -32635,6 +32663,10 @@ msgstr "Nessun utente è ancora definito."
 msgid "No valid target folder."
 msgstr "Nessuna cartella di destinazione valida."
 
+#, fuzzy
+msgid "No valid theme directories found."
+msgstr "Nessuna cartella di destinazione valida."
+
 msgid "No version limitation"
 msgstr "Nessuna limitazione di versione"
 
@@ -35341,6 +35373,10 @@ msgstr "Parametri per questo host"
 
 #, fuzzy
 msgid "Parameters for the latencies"
+msgstr "Parametri per questo servizio"
+
+#, fuzzy
+msgid "Parameters for the replication lag"
 msgstr "Parametri per questo servizio"
 
 msgid "Parameters for this host"
@@ -47865,6 +47901,11 @@ msgstr ""
 "I livelli predefiniti sono adatti a sistemi di storage ibridi. Considerate "
 "di abbassarli se il vostro sistema di storage è all-flash."
 
+#, python-format
+msgid ""
+"The default theme \"%s\" is not given among the found theme choices: %s."
+msgstr ""
+
 msgid "The default/fixed service level to use for this rule."
 msgstr "Il livello di servizio predefinito/fisso da usare per questa regola."
 
@@ -57366,6 +57407,10 @@ msgstr "Livelli superiori sul ritardo dello slot di replica più vecchio"
 msgid "Upper levels on the replica lag"
 msgstr "Livelli superiori sul ritardo della replica"
 
+#, fuzzy
+msgid "Upper levels on the replication lag"
+msgstr "Livelli superiori sul ritardo della replica"
+
 msgid "Upper levels on total request latency"
 msgstr "Livelli superiori sulla latenza totale della richiesta"
 
@@ -62160,6 +62205,26 @@ msgstr ""
 "nomi specifici. Verranno monitorati solo quelli che corrispondono agli "
 "schemi predefiniti."
 
+#, fuzzy
+msgid ""
+"You can specify a list of regex patterns to monitor specific products. Only "
+"those that do match the predefined patterns will be monitored. If empty all "
+"products are monitored."
+msgstr ""
+"È possibile specificare un elenco di pattern regex per monitorare spazi dei "
+"nomi specifici. Verranno monitorati solo quelli che corrispondono agli "
+"schemi predefiniti."
+
+#, fuzzy
+msgid ""
+"You can specify a list of regex patterns to monitor specific regions. Only "
+"those that do match the predefined patterns will be monitored. If empty all "
+"regions are monitored."
+msgstr ""
+"È possibile specificare un elenco di pattern regex per monitorare spazi dei "
+"nomi specifici. Verranno monitorati solo quelli che corrispondono agli "
+"schemi predefiniti."
+
 msgid ""
 "You can specify a relative path here. The report will be created in the "
 "given subdirectory. In case a directory does not exist, it will be created "
@@ -63375,6 +63440,10 @@ msgstr ""
 
 msgid "add ISL"
 msgstr "aggiungere ISL"
+
+#, fuzzy
+msgid "add new pattern"
+msgstr "Aggiungi un nuovo modello"
 
 msgid "ago"
 msgstr "fa"
@@ -64665,6 +64734,10 @@ msgstr "percorso eco"
 
 msgid "path levels"
 msgstr "livelli di percorso"
+
+#, fuzzy
+msgid "pattern"
+msgstr "Modello"
 
 msgid "pending"
 msgstr "in attesa di"

@@ -19757,8 +19757,16 @@ msgstr "Massenspeicher"
 msgid "GCP Cost"
 msgstr "GCP Kosten"
 
+#, fuzzy
+msgid "GCP Health"
+msgstr "Integrität"
+
 msgid "GCP services to monitor"
 msgstr "GCP-Dienste zur Überwachung"
+
+#, fuzzy
+msgid "GCP status product selection"
+msgstr "Kontaktauswahl"
 
 msgid "GCP/Cloud SQL CPU"
 msgstr "GCP/Wolken-SQL-CPU"
@@ -19771,6 +19779,10 @@ msgstr "GCP/Cloud SQL-Festplatte"
 
 msgid "GCP/Cloud SQL memory"
 msgstr "GCP/Cloud SQL-Speicher"
+
+#, fuzzy
+msgid "GCP/Cloud SQL replication lag"
+msgstr "GCP/Cloud SQL-Netzwerk"
 
 msgid "GCP/Cloud SQL status"
 msgstr "GCP/Cloud SQL-Status"
@@ -25857,11 +25869,23 @@ msgstr "Inventurgeschichten"
 msgid "Inventory Tree"
 msgstr "Inventarbaum"
 
+#, fuzzy
+msgid "Inventory attribute"
+msgstr "Datum/Zeit der Inventur"
+
 msgid "Inventory changes"
+msgstr "Änderungen in der Inventur"
+
+#, fuzzy
+msgid "Inventory column"
 msgstr "Änderungen in der Inventur"
 
 msgid "Inventory history of host"
 msgstr "Inventur-Geschichte von Host"
+
+#, fuzzy
+msgid "Inventory node"
+msgstr "Inventarbaum"
 
 msgid "Inventory of Linux kernel configuration (sysctl)"
 msgstr "Inventur der Linux-Kernel-Konfiguration (sysctl)"
@@ -25872,6 +25896,10 @@ msgstr ""
 
 msgid "Inventory of host"
 msgstr "Hostinventar"
+
+#, fuzzy
+msgid "Inventory table"
+msgstr "Inventarbaum"
 
 msgid "Inventory: History"
 msgstr "Inventur: Geschichte"
@@ -32160,6 +32188,10 @@ msgstr "Keine Benutzer definiert."
 msgid "No valid target folder."
 msgstr "Ungültiger Zielordner."
 
+#, fuzzy
+msgid "No valid theme directories found."
+msgstr "Ungültiger Zielordner."
+
 msgid "No version limitation"
 msgstr "Keine Versionsbeschränkung"
 
@@ -34809,6 +34841,10 @@ msgstr "Parameter für die Schaufelanforderungen"
 
 #, fuzzy
 msgid "Parameters for the latencies"
+msgstr "Parameter für diesen Service"
+
+#, fuzzy
+msgid "Parameters for the replication lag"
 msgstr "Parameter für diesen Service"
 
 msgid "Parameters for this host"
@@ -47164,6 +47200,11 @@ msgstr ""
 "Die Standardwerte sind für hybride Speichersysteme geeignet. Bitte ziehen "
 "Sie in Betracht, sie zu senken, wenn Ihr Speichersystem All-Flash ist."
 
+#, python-format
+msgid ""
+"The default theme \"%s\" is not given among the found theme choices: %s."
+msgstr ""
+
 msgid "The default/fixed service level to use for this rule."
 msgstr "Der default/gewählte Service Level für diese Regel"
 
@@ -56543,6 +56584,10 @@ msgstr "Obergrenze auf dem ältesten Replikationssteckplatz verzögern"
 msgid "Upper levels on the replica lag"
 msgstr "Obergrenze bei der Replica-Verzögerung"
 
+#, fuzzy
+msgid "Upper levels on the replication lag"
+msgstr "Obergrenze bei der Replica-Verzögerung"
+
 msgid "Upper levels on total request latency"
 msgstr "Obere Schwellwerte für die totale Latenzzeit von Anfragen"
 
@@ -61282,6 +61327,26 @@ msgstr ""
 "überwachen. Nur diejenigen, die mit den vordefinierten Mustern "
 "übereinstimmen, werden überwacht."
 
+#, fuzzy
+msgid ""
+"You can specify a list of regex patterns to monitor specific products. Only "
+"those that do match the predefined patterns will be monitored. If empty all "
+"products are monitored."
+msgstr ""
+"Sie können eine Liste von Regex-Mustern angeben, um bestimmte Namensräume zu "
+"überwachen. Nur diejenigen, die mit den vordefinierten Mustern "
+"übereinstimmen, werden überwacht."
+
+#, fuzzy
+msgid ""
+"You can specify a list of regex patterns to monitor specific regions. Only "
+"those that do match the predefined patterns will be monitored. If empty all "
+"regions are monitored."
+msgstr ""
+"Sie können eine Liste von Regex-Mustern angeben, um bestimmte Namensräume zu "
+"überwachen. Nur diejenigen, die mit den vordefinierten Mustern "
+"übereinstimmen, werden überwacht."
+
 msgid ""
 "You can specify a relative path here. The report will be created in the "
 "given subdirectory. In case a directory does not exist, it will be created "
@@ -62505,6 +62570,10 @@ msgstr "Bei Links zwischen zwei Switchen das Kürzel \"ISL\" hinzufügen"
 
 msgid "add ISL"
 msgstr "ISL markieren"
+
+#, fuzzy
+msgid "add new pattern"
+msgstr "Neues Muster hinzufügen"
 
 msgid "ago"
 msgstr "vor"
@@ -63780,6 +63849,10 @@ msgstr "Pfad Echo"
 
 msgid "path levels"
 msgstr "Ebenen in der Pfad-Hierarchie"
+
+#, fuzzy
+msgid "pattern"
+msgstr "Muster"
 
 msgid "pending"
 msgstr "anstehend"

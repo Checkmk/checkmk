@@ -19837,8 +19837,16 @@ msgid "GCP Cost"
 msgstr "Ligação TCP"
 
 #, fuzzy
+msgid "GCP Health"
+msgstr "Saúde"
+
+#, fuzzy
 msgid "GCP services to monitor"
 msgstr "Serviços globais para monitorar"
+
+#, fuzzy
+msgid "GCP status product selection"
+msgstr "Selecção de contactos"
 
 msgid "GCP/Cloud SQL CPU"
 msgstr ""
@@ -19853,6 +19861,10 @@ msgstr "Rede IP"
 
 #, fuzzy
 msgid "GCP/Cloud SQL memory"
+msgstr "Rede IP"
+
+#, fuzzy
+msgid "GCP/Cloud SQL replication lag"
 msgstr "Rede IP"
 
 #, fuzzy
@@ -25963,11 +25975,23 @@ msgstr "Histórico de Estoques"
 msgid "Inventory Tree"
 msgstr "Árvore de Inventário"
 
+#, fuzzy
+msgid "Inventory attribute"
+msgstr "Data/Hora do Inventário"
+
 msgid "Inventory changes"
+msgstr "Modificações no inventário"
+
+#, fuzzy
+msgid "Inventory column"
 msgstr "Modificações no inventário"
 
 msgid "Inventory history of host"
 msgstr "Histórico de inventário do anfitrião"
+
+#, fuzzy
+msgid "Inventory node"
+msgstr "Árvore de Inventário"
 
 msgid "Inventory of Linux kernel configuration (sysctl)"
 msgstr "Inventário da configuração do kernel Linux (sysctl)"
@@ -25977,6 +26001,10 @@ msgstr ""
 
 msgid "Inventory of host"
 msgstr "Inventário do anfitrião"
+
+#, fuzzy
+msgid "Inventory table"
+msgstr "Árvore de Inventário"
 
 msgid "Inventory: History"
 msgstr "Inventário: História"
@@ -32389,6 +32417,10 @@ msgstr "Nenhum usuário está definido ainda."
 msgid "No valid target folder."
 msgstr "Nenhuma pasta de destino válida."
 
+#, fuzzy
+msgid "No valid theme directories found."
+msgstr "Nenhuma pasta de destino válida."
+
 msgid "No version limitation"
 msgstr "Sem limitação de versão"
 
@@ -35079,6 +35111,10 @@ msgstr "Parâmetros para este anfitrião"
 
 #, fuzzy
 msgid "Parameters for the latencies"
+msgstr "Parâmetros para este serviço"
+
+#, fuzzy
+msgid "Parameters for the replication lag"
 msgstr "Parâmetros para este serviço"
 
 msgid "Parameters for this host"
@@ -47521,6 +47557,11 @@ msgstr ""
 "Os níveis padrão são adequados para sistemas de armazenamento híbridos. Por "
 "favor, considere baixá-los se o seu sistema de armazenamento for tudo-flash."
 
+#, python-format
+msgid ""
+"The default theme \"%s\" is not given among the found theme choices: %s."
+msgstr ""
+
 msgid "The default/fixed service level to use for this rule."
 msgstr "O nível de serviço padrão/fixo a ser usado para esta regra."
 
@@ -56867,6 +56908,10 @@ msgstr "Níveis superiores no intervalo de replicação mais antigo"
 msgid "Upper levels on the replica lag"
 msgstr "Níveis superiores no desfasamento das réplicas"
 
+#, fuzzy
+msgid "Upper levels on the replication lag"
+msgstr "Níveis superiores no desfasamento das réplicas"
+
 msgid "Upper levels on total request latency"
 msgstr "Níveis superiores na latência total de pedidos"
 
@@ -61590,6 +61635,18 @@ msgid ""
 msgstr ""
 
 msgid ""
+"You can specify a list of regex patterns to monitor specific products. Only "
+"those that do match the predefined patterns will be monitored. If empty all "
+"products are monitored."
+msgstr ""
+
+msgid ""
+"You can specify a list of regex patterns to monitor specific regions. Only "
+"those that do match the predefined patterns will be monitored. If empty all "
+"regions are monitored."
+msgstr ""
+
+msgid ""
 "You can specify a relative path here. The report will be created in the "
 "given subdirectory. In case a directory does not exist, it will be created "
 "on demand."
@@ -62777,6 +62834,10 @@ msgstr "adicionar \"ISL\" à descrição do serviço para links de interswitch"
 
 msgid "add ISL"
 msgstr "adicionar ISL"
+
+#, fuzzy
+msgid "add new pattern"
+msgstr "Adicionar novo padrão"
 
 msgid "ago"
 msgstr "atrás"
@@ -64070,6 +64131,10 @@ msgstr "eco do caminho"
 
 msgid "path levels"
 msgstr "níveis do caminho"
+
+#, fuzzy
+msgid "pattern"
+msgstr "Padrão"
 
 msgid "pending"
 msgstr "pendente"

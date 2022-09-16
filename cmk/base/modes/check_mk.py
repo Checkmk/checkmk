@@ -5,27 +5,10 @@
 
 import os
 import sys
+from collections.abc import Callable, Container, Mapping, Sequence
 from functools import partial
 from pathlib import Path
-from typing import (
-    Callable,
-    Container,
-    Dict,
-    Final,
-    List,
-    Literal,
-    Mapping,
-    Optional,
-    overload,
-    Protocol,
-    Sequence,
-    Set,
-    Tuple,
-    Type,
-    TypedDict,
-    TypeVar,
-    Union,
-)
+from typing import Final, Literal, overload, Protocol, TypedDict, TypeVar, Union
 
 import cmk.utils.debug
 import cmk.utils.log as log
@@ -237,7 +220,7 @@ _FETCHER_OPTIONS: Final = [
 #   '----------------------------------------------------------------------'
 
 
-def mode_list_hosts(options: Dict, args: List[str]) -> None:
+def mode_list_hosts(options: dict, args: list[str]) -> None:
     hosts = _list_all_hosts(args, options)
     out.output("\n".join(hosts))
     if hosts:
@@ -245,7 +228,7 @@ def mode_list_hosts(options: Dict, args: List[str]) -> None:
 
 
 # TODO: Does not care about internal group "check_mk"
-def _list_all_hosts(hostgroups: List[HostgroupName], options: Dict) -> List[HostName]:
+def _list_all_hosts(hostgroups: list[HostgroupName], options: dict) -> list[HostName]:
     config_cache = config.get_config_cache()
 
     hostnames = set()
@@ -311,14 +294,14 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_list_tag(args: List[str]) -> None:
+def mode_list_tag(args: list[str]) -> None:
     hosts = _list_all_hosts_with_tags(args)
     out.output("\n".join(sorted(hosts)))
     if hosts:
         out.output("\n")
 
 
-def _list_all_hosts_with_tags(tags: List[TagID]) -> List[HostName]:
+def _list_all_hosts_with_tags(tags: list[TagID]) -> list[HostName]:
     config_cache = config.get_config_cache()
     hosts = []
 
@@ -362,7 +345,7 @@ def mode_list_checks() -> None:
 
     all_check_manuals = {maincheckify(n): k for n, k in man_pages.all_man_pages().items()}
 
-    all_checks: List[Union[CheckPluginName, str]] = [  #
+    all_checks: list[CheckPluginName | str] = [  #
         p.name for p in agent_based_register.iter_all_check_plugins()
     ]
     all_checks += ["check_%s" % name for name in config.active_check_info]
@@ -374,7 +357,7 @@ def mode_list_checks() -> None:
         out.output(f"{tty.bold}{plugin_name!s:44}{ds_protocol} {tty.normal}{title}\n")
 
 
-def _get_ds_protocol(check_name: Union[CheckPluginName, str]) -> str:
+def _get_ds_protocol(check_name: CheckPluginName | str) -> str:
     if isinstance(check_name, str):  # active check
         return f"{tty.blue}{'active':10}"
 
@@ -397,7 +380,7 @@ def _get_ds_protocol(check_name: Union[CheckPluginName, str]) -> str:
 
 def _get_check_plugin_title(
     check_plugin_name: str,
-    all_man_pages: Dict[str, str],
+    all_man_pages: dict[str, str],
 ) -> str:
 
     man_filename = all_man_pages.get(check_plugin_name)
@@ -512,7 +495,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_dump_hosts(hostlist: List[HostName]) -> None:
+def mode_dump_hosts(hostlist: list[HostName]) -> None:
     config_cache = config.get_config_cache()
     if not hostlist:
         hostlist = sorted(config_cache.all_active_hosts())
@@ -759,7 +742,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_packaging(args: List[str]) -> None:
+def mode_packaging(args: list[str]) -> None:
     cmk.base.packaging.do_packaging(args)
 
 
@@ -793,7 +776,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_localize(args: List[str]) -> None:
+def mode_localize(args: list[str]) -> None:
     cmk.base.localize.do_localize(args)
 
 
@@ -900,7 +883,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_scan_parents(options: Dict, args: List[str]) -> None:
+def mode_scan_parents(options: dict, args: list[str]) -> None:
     config.load(exclude_parents_mk=True)
 
     if "procs" in options:
@@ -978,11 +961,11 @@ modes.register(
 #   |                               |_|                                    |
 #   '----------------------------------------------------------------------'
 
-_oids: List[str] = []
-_extra_oids: List[str] = []
+_oids: list[str] = []
+_extra_oids: list[str] = []
 
 
-def mode_snmpwalk(options: Dict, hostnames: List[str]) -> None:
+def mode_snmpwalk(options: dict, hostnames: list[str]) -> None:
     if _oids:
         options["oids"] = _oids
     if _extra_oids:
@@ -1054,7 +1037,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_snmpget(args: List[str]) -> None:
+def mode_snmpget(args: list[str]) -> None:
     if not args:
         raise MKBailOut("You need to specify an OID.")
 
@@ -1105,7 +1088,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_flush(hosts: List[HostName]) -> None:  # pylint: disable=too-many-branches
+def mode_flush(hosts: list[HostName]) -> None:  # pylint: disable=too-many-branches
     config_cache = config.get_config_cache()
 
     if not hosts:
@@ -1209,7 +1192,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_dump_nagios_config(args: List[HostName]) -> None:
+def mode_dump_nagios_config(args: list[HostName]) -> None:
     from cmk.base.core_nagios import create_config  # pylint: disable=import-outside-toplevel
 
     create_config(sys.stdout, args if len(args) else None)
@@ -1361,7 +1344,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_man(args: List[str]) -> None:
+def mode_man(args: list[str]) -> None:
     import cmk.utils.man_pages as man_pages  # pylint: disable=import-outside-toplevel
 
     if args:
@@ -1428,7 +1411,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_automation(args: List[str]) -> None:
+def mode_automation(args: list[str]) -> None:
     import cmk.base.automations as automations  # pylint: disable=import-outside-toplevel
 
     if not args:
@@ -1467,7 +1450,7 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_notify(options: Dict, args: List[str]) -> Optional[int]:
+def mode_notify(options: dict, args: list[str]) -> int | None:
     import cmk.base.notify as notify  # pylint: disable=import-outside-toplevel
 
     with store.lock_checkmk_configuration():
@@ -1612,7 +1595,7 @@ if cmk_version.edition() is cmk_version.Edition.CRE:
 _TName = TypeVar("_TName", str, CheckPluginName, InventoryPluginName, SectionName)
 
 
-def _convert_sections_argument(arg: str) -> Set[SectionName]:
+def _convert_sections_argument(arg: str) -> set[SectionName]:
     try:
         # kindly forgive empty strings
         return {SectionName(n) for n in arg.split(",") if n}
@@ -1632,8 +1615,8 @@ _option_sections = Option(
 )
 
 
-def _get_plugins_option(type_: Type[_TName]) -> Option:
-    def _convert_plugins_argument(arg: str) -> Set[_TName]:
+def _get_plugins_option(type_: type[_TName]) -> Option:
+    def _convert_plugins_argument(arg: str) -> set[_TName]:
         try:
             # kindly forgive empty strings
             return {type_(n) for n in arg.split(",") if n}
@@ -1649,7 +1632,7 @@ def _get_plugins_option(type_: Type[_TName]) -> Option:
     )
 
 
-def _convert_detect_plugins_argument(arg: str) -> Set[str]:
+def _convert_detect_plugins_argument(arg: str) -> set[str]:
     try:
         # kindly forgive empty strings
         # also maincheckify, as we may be dealing with old "--checks" input including dots.
@@ -1671,23 +1654,23 @@ _option_detect_plugins = Option(
 @overload
 def _extract_plugin_selection(
     options: Union["_CheckingOptions", "_DiscoveryOptions"],
-    type_: Type[CheckPluginName],
-) -> Tuple[SectionNameCollection, Container[CheckPluginName]]:
+    type_: type[CheckPluginName],
+) -> tuple[SectionNameCollection, Container[CheckPluginName]]:
     pass
 
 
 @overload
 def _extract_plugin_selection(
     options: "_InventoryOptions",
-    type_: Type[InventoryPluginName],
-) -> Tuple[SectionNameCollection, Container[InventoryPluginName]]:
+    type_: type[InventoryPluginName],
+) -> tuple[SectionNameCollection, Container[InventoryPluginName]]:
     pass
 
 
 def _extract_plugin_selection(
     options: Union["_CheckingOptions", "_DiscoveryOptions", "_InventoryOptions"],
-    type_: Type,
-) -> Tuple[SectionNameCollection, Container]:
+    type_: type,
+) -> tuple[SectionNameCollection, Container]:
     detect_plugins = options.get("detect-plugins")
     if detect_plugins is None:
         return (
@@ -1742,9 +1725,9 @@ _DiscoveryOptions = TypedDict(
         "no-cache": Literal[True],
         "no-tcp": Literal[True],
         "usewalk": Literal[True],
-        "detect-sections": Set[SectionName],
-        "plugins": Set[CheckPluginName],
-        "detect-plugins": Set[str],
+        "detect-sections": set[SectionName],
+        "plugins": set[CheckPluginName],
+        "detect-plugins": set[str],
         "discover": int,
         "only-host-labels": bool,
     },
@@ -1752,7 +1735,7 @@ _DiscoveryOptions = TypedDict(
 )
 
 
-def mode_discover(options: _DiscoveryOptions, args: List[str]) -> None:
+def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     _handle_fetcher_options(options)
     hostnames = modes.parse_hostname_list(args)
     cmk.core_helpers.cache.FileCacheFactory.maybe = True
@@ -1832,9 +1815,9 @@ _CheckingOptions = TypedDict(
         "usewalk": Literal[True],
         "no-submit": bool,
         "perfdata": bool,
-        "detect-sections": Set[SectionName],
-        "plugins": Set[CheckPluginName],
-        "detect-plugins": Set[str],
+        "detect-sections": set[SectionName],
+        "plugins": set[CheckPluginName],
+        "detect-plugins": set[str],
     },
     total=False,
 )
@@ -1857,7 +1840,7 @@ class GetSubmitter(Protocol):
 def mode_check(
     get_submitter_: GetSubmitter,
     options: _CheckingOptions,
-    args: List[str],
+    args: list[str],
     *,
     active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,
@@ -1874,7 +1857,7 @@ def mode_check(
 
     # handle adhoc-check
     hostname = HostName(args[0])
-    ipaddress: Optional[HostAddress] = None
+    ipaddress: HostAddress | None = None
     if len(args) == 2:
         ipaddress = args[1]
 
@@ -1971,15 +1954,15 @@ _InventoryOptions = TypedDict(
         "no-tcp": Literal[True],
         "usewalk": Literal[True],
         "force": bool,
-        "detect-sections": Set[SectionName],
-        "plugins": Set[InventoryPluginName],
-        "detect-plugins": Set[str],
+        "detect-sections": set[SectionName],
+        "plugins": set[InventoryPluginName],
+        "detect-plugins": set[str],
     },
     total=False,
 )
 
 
-def mode_inventory(options: _InventoryOptions, args: List[str]) -> None:
+def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     _handle_fetcher_options(options)
 
     config_cache = config.get_config_cache()
@@ -2046,7 +2029,7 @@ modes.register(
 
 
 def mode_inventory_as_check(
-    options: Dict,
+    options: dict,
     hostname: HostName,
     *,
     active_check_handler: Callable[[HostName, str], object],
@@ -2225,7 +2208,7 @@ def mode_create_diagnostics_dump(options: DiagnosticsModesParameters) -> None:
     )
 
 
-def _get_diagnostics_dump_sub_options() -> List[Option]:
+def _get_diagnostics_dump_sub_options() -> list[Option]:
     sub_options = [
         Option(
             long_option=OPT_LOCAL_FILES,

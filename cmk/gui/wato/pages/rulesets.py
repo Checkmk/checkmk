@@ -125,8 +125,10 @@ from cmk.gui.watolib.rulesets import (
     RuleConditions,
     Ruleset,
     RulesetCollection,
+    SearchedRulesets,
     SearchOptions,
     SingleRulesetRecursively,
+    StaticChecksRulesets,
     UseHostFolder,
 )
 from cmk.gui.watolib.rulespecs import (
@@ -256,7 +258,7 @@ class ABCRulesetMode(WatoMode):
         if self._search_options:
             rulesets: Union[
                 FilteredRulesetCollection, RulesetCollection
-            ] = FilteredRulesetCollection.load_searched_rulesets(
+            ] = SearchedRulesets.load_searched_rulesets(
                 self._rulesets().get_rulesets().values(), self._search_options
             )
         else:
@@ -360,12 +362,9 @@ class ModeRuleSearch(ABCRulesetMode):
         return PageType.RuleSearch
 
     def _rulesets(self) -> Union[RulesetCollection, FilteredRulesetCollection]:
-        all_rulesets = AllRulesets.load_all_rulesets()
         if self._group_name == "static":
-            return FilteredRulesetCollection.load_static_checks_rulesets(
-                all_rulesets.get_rulesets()
-            )
-        return all_rulesets
+            return StaticChecksRulesets.load_static_checks_rulesets()
+        return AllRulesets.load_all_rulesets()
 
     def _set_title_and_help(self) -> None:
         if self._page_type is PageType.DeprecatedRulesets:
@@ -585,12 +584,9 @@ class ModeRulesetGroup(ABCRulesetMode):
         return PageType.RulesetGroup
 
     def _rulesets(self) -> Union[RulesetCollection, FilteredRulesetCollection]:
-        all_rulesets = AllRulesets.load_all_rulesets()
         if self._group_name == "static":
-            return FilteredRulesetCollection.load_static_checks_rulesets(
-                all_rulesets.get_rulesets()
-            )
-        return all_rulesets
+            return StaticChecksRulesets.load_static_checks_rulesets()
+        return AllRulesets.load_all_rulesets()
 
     def _set_title_and_help(self) -> None:
         if self._group_name == "static":

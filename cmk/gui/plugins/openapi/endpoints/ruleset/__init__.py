@@ -20,7 +20,7 @@ from cmk.gui.plugins.openapi.utils import ProblemException, serve_json
 from cmk.gui.utils.escaping import strip_tags
 from cmk.gui.watolib.rulesets import AllRulesets, FilteredRulesetCollection, FolderRulesets, Ruleset
 from cmk.gui.watolib.rulesets import RulesetCollection as RulesetCollection_
-from cmk.gui.watolib.rulesets import SingleRulesetRecursively
+from cmk.gui.watolib.rulesets import SearchedRulesets, SingleRulesetRecursively
 
 PERMISSIONS = permissions.Perm("wato.rulesets")
 
@@ -52,7 +52,7 @@ def list_rulesets(param):
     if search_options := _get_search_options(param):
         rulesets: Union[
             RulesetCollection_, FilteredRulesetCollection
-        ] = FilteredRulesetCollection.load_searched_rulesets(
+        ] = SearchedRulesets.load_searched_rulesets(
             all_sets.get_rulesets().values(), search_options
         )
     else:

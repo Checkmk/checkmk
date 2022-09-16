@@ -19,9 +19,9 @@ from pipfile import Pipfile  # type: ignore[import]
 from tests.testlib import repo_path
 from tests.testlib.utils import is_enterprise_repo
 
-IGNORED_LIBS = set(["cmk", "livestatus", "mk_jolokia"])  # our stuff
+IGNORED_LIBS = {"cmk", "livestatus", "mk_jolokia"}  # our stuff
 IGNORED_LIBS |= isort.stdlibs._all.stdlib  # builtin stuff
-IGNORED_LIBS |= set(["__future__", "typing_extensions"])  # other builtin stuff
+IGNORED_LIBS |= {"__future__", "typing_extensions"}  # other builtin stuff
 
 BUILD_DIRS = {Path(repo_path(), "agent-receiver", "build")}
 
@@ -260,7 +260,6 @@ CEE_UNUSED_PACKAGES = [
     "jmespath",
     "more-itertools",
     "multidict",
-    "npyscreen",
     "ordered-set",
     "pbr",
     "ply",
@@ -299,21 +298,19 @@ def test_dependencies_are_declared() -> None:
     issubset() is used since the dependencies vary between the versions."""
 
     assert set(get_undeclared_dependencies()).issubset(
-        set(
-            [
-                "NaElement",  # Optional import cmk/special_agents/agent_netapp.py
-                "NaServer",  # Optional import cmk/special_agents/agent_netapp.py
-                "lxml",  # Optional import cmk/special_agents/agent_netapp.py
-                "matplotlib",  # Disabled debug code in enterprise/cmk/gui/cee/sla.py
-                "mock",  # Mixin prod and test code... cmk/gui/plugins/openapi/restful_objects/constructors.py
-                "mpld3",  # Disabled debug code in enterprise/cmk/gui/cee/sla.py
-                "netsnmp",  # We ship it with omd/packages
-                "pymongo",  # Optional except ImportError...
-                "pytest",  # In __main__ guarded section in cmk/special_agents/utils/misc.py
-                "tinkerforge",  # agents/plugins/mk_tinkerforge.py has its own install routine
-                "_typeshed",  # used by mypy within typing.TYPE_CHECKING
-            ]
-        )
+        {
+            "NaElement",  # Optional import cmk/special_agents/agent_netapp.py
+            "NaServer",  # Optional import cmk/special_agents/agent_netapp.py
+            "lxml",  # Optional import cmk/special_agents/agent_netapp.py
+            "matplotlib",  # Disabled debug code in enterprise/cmk/gui/cee/sla.py
+            "mock",  # Mixin prod and test code... cmk/gui/plugins/openapi/restful_objects/constructors.py
+            "mpld3",  # Disabled debug code in enterprise/cmk/gui/cee/sla.py
+            "netsnmp",  # We ship it with omd/packages
+            "pymongo",  # Optional except ImportError...
+            "pytest",  # In __main__ guarded section in cmk/special_agents/utils/misc.py
+            "tinkerforge",  # agents/plugins/mk_tinkerforge.py has its own install routine
+            "_typeshed",  # used by mypy within typing.TYPE_CHECKING
+        }
     )
 
 

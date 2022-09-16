@@ -174,7 +174,6 @@ exchangelib = "==4.7.2"  # used by active checks for mail
 lxml = "==4.9.1"  # used via beautifulsoup4 as a parser and in the agent_netapp special agent
 grpcio = "==1.46.3"  # newer versions (1.47) caused problems in Centos7 and SLES12
 google-api-python-client = "==2.53.0"  # use rest api to query big query for gcp cost monitoring
-npyscreen = "==4.10.5"  # used by mkbench
 setproctitle = "==1.2.3"  # used by mkbench/dcd/liveproxyd
 black = {version = "==22.6.0", extras = ["d"]}  # used in our CI, the LSP-integration and in the OpenAPI part, "d" for broken black packaging only, see https://github.com/psf/black/issues/690
 

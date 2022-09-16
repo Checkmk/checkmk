@@ -96,6 +96,7 @@ on the configuration.
     [OMD]
     node "Site processes" as omd_p {
         component "[[../arch-comp-crontab.html cron jobs]]" as cronjobs
+        component "[[../arch-comp-backup.html backup]]" as backup
         component "[[../arch-comp-mknotifyd.html mknotifyd]]" as mknotifyd
         [mkeventd]
         component "[[../arch-comp-rrdcached.html rrdcached]]" as rrdcached
@@ -130,3 +131,4 @@ on the configuration.
     liveproxyd -d-> liveproxyd_p
     apache -d-> apache_p
     cron -d-> cronjobs
+    cronjobs -d-> backup

@@ -51,6 +51,7 @@ package "[[../arch-comp-omd.html OMD: Checkmk run-time environment]]" as omd {
     interface "call" as call_notification_plugins
 
     component "[[../arch-comp-crontab.html crontab]]" as crontab
+    component "[[../arch-comp-backup.html backup]]" as backup
 
     component "[[../arch-comp-liveproxyd.html liveproxyd]]" as liveproxyd
     interface "[[../arch-comp-livestatus-client.html Livestatus client]]" as liveproxyd_livestatus_client

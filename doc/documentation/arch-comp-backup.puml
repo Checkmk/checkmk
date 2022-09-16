@@ -1,0 +1,26 @@
+@startuml
+
+component "System cron" as cron
+
+node "Root context (Appliance)" {
+    component "mkbackup (system backup)" as system_mkbackup
+    database "System files" as system_files
+}
+
+node "Site context" as omd_p {
+    component "[[../arch-comp-crontab.html cron jobs]]" as cronjobs
+    component "mkbackup (site backup)" as site_mkbackup
+    component "omd backup" as omd_backup
+    database "Site files" as site_files
+}
+
+cron --> system_mkbackup
+system_mkbackup -> site_mkbackup
+system_mkbackup --> system_files
+
+cron -> cronjobs
+cronjobs --> site_mkbackup
+site_mkbackup --> omd_backup
+omd_backup --> site_files
+
+@enduml

@@ -751,32 +751,8 @@ def do_site_backup(opts, site=None, try_stop=True):  # pylint: disable=too-many-
 
         err = p.stderr.read().decode()
 
-    if p.returncode:
-        if not compress_archives() and "Invalid option '--no-compression'" in err:
-            err = (
-                "The Check_MK version of this site does not support uncompressed backups. "
-                "you can either re-enable the compression or update your site to version "
-                "1.2.8p5 or later."
-            )
-        elif "The site needs to be stopped" in err:
-            if try_stop:
-                log(
-                    "The Check_MK version of this site does not support online backups. The site "
-                    "seems to be at least partially running. Stopping the site during backup and "
-                    "starting it again after completion."
-                )
-                log("Stopping site")
-                stop_site(site)
-                try:
-                    log("Start offline site backup")
-                    return do_site_backup(opts, site, try_stop=False)
-                finally:
-                    log("Starting site again")
-                    start_site(site)
-            else:
-                raise MKGeneralException("Failed to backup site that only supports offline backup.")
+    if p.returncode != 0:
         raise MKGeneralException("Site backup failed: %s" % err)
-    return None
 
 
 def start_site(site: str) -> None:

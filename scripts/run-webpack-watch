@@ -12,4 +12,4 @@
 # After that 'npm run dev' you can run webpack in watch mode.
 
 # TODO: Add better handling for the ENTERPRISE and MANAGED variables
-WEBPACK_MODE=quick ENTERPRISE=yes MANAGED=no npx --no webpack --mode development --watch
+WEBPACK_MODE=quick ENTERPRISE=yes MANAGED=no npx --no webpack --watch --progress

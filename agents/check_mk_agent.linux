@@ -624,7 +624,7 @@ section_nfs_mounts() {
 
 section_mounts() {
     echo '<<<mounts>>>'
-    grep ^/dev </proc/mounts | grep -v " squashfs "
+    grep -E "^/dev|fuse\." </proc/mounts | grep -v " squashfs "
 }
 
 section_ps() {

@@ -4,15 +4,22 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 import pytest
 
 from cmk.base import item_state
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.api.agent_based.utils import GetRateError
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Service
-from cmk.base.plugins.agent_based.aws_ebs import check_aws_ebs, discover_aws_ebs, parse_aws_ebs
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.aws_ebs import (
+    check_aws_ebs,
+    check_aws_ebs_burst_balance,
+    discover_aws_ebs,
+    discover_aws_ebs_burst_balance,
+    parse_aws_ebs,
+)
 
 STRING_TABLE = [
     [
@@ -107,6 +114,7 @@ def test_aws_ebs_discovery(
     discovery_result: Sequence[Service],
 ) -> None:
     assert list(discover_aws_ebs(parse_aws_ebs(string_table))) == discovery_result
+    assert list(discover_aws_ebs_burst_balance(parse_aws_ebs(string_table))) == discovery_result
 
 
 def test_check_aws_ebs_raise_get_rate_error() -> None:
@@ -135,3 +143,43 @@ def test_check_aws_ebs() -> None:
         section=parse_aws_ebs(STRING_TABLE),
     )
     assert len(list(check_result)) == 10
+
+
+@pytest.mark.parametrize(
+    "item, params, string_table, expected_check_result",
+    [
+        pytest.param(
+            "123",
+            {},
+            STRING_TABLE,
+            [
+                Result(state=State.OK, summary="Balance: <0.01%"),
+                Metric("aws_burst_balance", 0.0030055),
+            ],
+            id="If the item is present, the check result is the appropriate values from the check_levels function.",
+        ),
+        pytest.param(
+            "122",
+            {},
+            STRING_TABLE,
+            [],
+            id="If the item is not present, no result is returned.",
+        ),
+    ],
+)
+def test_check_aws_ebs_burst_balance(
+    item: str,
+    params: Mapping[str, Any],
+    string_table: StringTable,
+    expected_check_result: Sequence[Result | Metric],
+) -> None:
+
+    check_result = list(
+        check_aws_ebs_burst_balance(
+            item=item,
+            params=params,
+            section=parse_aws_ebs(string_table),
+        )
+    )
+
+    assert check_result == expected_check_result

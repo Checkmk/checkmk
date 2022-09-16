@@ -344,6 +344,11 @@ std::string ProducePsWmi(bool use_full_path) {
 
         auto process_name = BuildProcessName(object, use_full_path);
 
+        // some process name includes trash output which includes carriage
+        // return. Example: is pascom client crash handler.
+        std::ranges::replace(process_name, L'\n', L' ');
+        std::ranges::replace(process_name, L'\r', L' ');
+
         auto uptime = CalculateUptime(object);
 
         auto handle_count = GetUint32AsInt64(object, L"HandleCount");

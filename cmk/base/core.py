@@ -157,12 +157,12 @@ def do_core_action(
 #   |       |_| |_|_| |_| |_|\___| .__/ \___|_|  |_|\___/ \__,_|___/       |
 #   |                            |_|                                       |
 #   +----------------------------------------------------------------------+
-#   | Fetching timeperiods from the core                                   |
+#   | Fetching time periods from the core                                   |
 #   '----------------------------------------------------------------------'
 
 
 def check_timeperiod(timeperiod: TimeperiodName) -> bool:
-    """Check if a timeperiod is currently active. We have no other way than
+    """Check if a time period is currently active. We have no other way than
     doing a Livestatus query. This is not really nice, but if you have a better
     idea, please tell me..."""
     # Let exceptions happen, they will be handled upstream.
@@ -178,8 +178,8 @@ def check_timeperiod(timeperiod: TimeperiodName) -> bool:
         # If the query is not successful better skip this check then fail
         return True
 
-    # Note: This also returns True when the timeperiod is unknown
-    #       The following function timeperiod_active handles this differently
+    # Note: This also returns True when the time period is unknown
+    #       The following function time period_active handles this differently
     return _config_cache.get("timeperiods_cache").get(timeperiod, True)
 
 

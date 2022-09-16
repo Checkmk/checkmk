@@ -1654,9 +1654,9 @@ class ABCEventsMode(WatoMode, abc.ABC):
             (
                 "match_timeperiod",
                 _timeperiods.TimeperiodSelection(
-                    title=_("Match only during timeperiod"),
+                    title=_("Match only during time period"),
                     help=_(
-                        "Match this rule only during times where the selected timeperiod from the monitoring "
+                        "Match this rule only during times where the selected time period from the monitoring "
                         "system is active."
                     ),
                 ),

@@ -391,8 +391,8 @@ permission_registry.register(
     Permission(
         section=PermissionSectionWATO,
         name="timeperiods",
-        title=_l("Timeperiods"),
-        description=_l("Access to the module <i>Timeperiods</i>"),
+        title=_l("Time periods"),
+        description=_l("Access to the module <i>Time periods</i>"),
         defaults=["admin"],
     )
 )

@@ -764,7 +764,7 @@ class MainModuleTimeperiods(ABCMainModule):
     @property
     def description(self) -> str:
         return _(
-            "Timeperiods restrict notifications and other things to certain periods of the day."
+            "Time periods restrict notifications and other things to certain periods of the day."
         )
 
     @property

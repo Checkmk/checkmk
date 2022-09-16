@@ -413,9 +413,9 @@ def service_outside_check_period(
     if period is None:
         return False
     if cmk.base.core.check_timeperiod(period):
-        console.vverbose("Service %s: timeperiod %s is currently active.\n", description, period)
+        console.vverbose("Service %s: time period %s is currently active.\n", description, period)
         return False
-    console.verbose("Skipping service %s: currently not in timeperiod %s.\n", description, period)
+    console.verbose("Skipping service %s: currently not in time period %s.\n", description, period)
     return True
 
 

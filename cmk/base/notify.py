@@ -858,7 +858,7 @@ def rbn_get_bulk_params(rule: EventRule) -> Optional[NotifyBulkParameters]:
             # notification in the first place. When the connection is available
             # again and the period is not active the notifications will be sent.
             logger.info(
-                "   - Error checking activity of timeperiod %s: assuming active",
+                "   - Error checking activity of time period %s: assuming active",
                 params["timeperiod"],
             )
             active = True
@@ -2045,7 +2045,7 @@ def find_bulks(only_ripe: bool) -> NotifyBulks:  # pylint: disable=too-many-bran
                         # that an ongoing connection error will hold back bulk
                         # notifications.
                         logger.info(
-                            "Error while checking activity of timeperiod %s: assuming active",
+                            "Error while checking activity of time period %s: assuming active",
                             timeperiod,
                         )
                         active = True
@@ -2055,7 +2055,7 @@ def find_bulks(only_ripe: bool) -> NotifyBulks:  # pylint: disable=too-many-bran
                         # can be very long (The default would be 10s).
                         if now % 600 <= config.notification_bulk_interval:
                             logger.info(
-                                "Bulk %s is not ripe yet (timeperiod %s: active, count: %d)",
+                                "Bulk %s is not ripe yet (time period %s: active, count: %d)",
                                 bulk_dir,
                                 timeperiod,
                                 len(uuids),
@@ -2065,13 +2065,13 @@ def find_bulks(only_ripe: bool) -> NotifyBulks:  # pylint: disable=too-many-bran
                             continue
                     elif active is False:
                         logger.info(
-                            "Bulk %s is ripe: timeperiod %s has ended", bulk_dir, timeperiod
+                            "Bulk %s is ripe: time period %s has ended", bulk_dir, timeperiod
                         )
                     elif len(uuids) >= count:
                         logger.info("Bulk %s is ripe: count %d >= %d", bulk_dir, len(uuids), count)
                     else:
                         logger.info(
-                            "Bulk %s is ripe: timeperiod %s is not known anymore",
+                            "Bulk %s is ripe: time period %s is not known anymore",
                             bulk_dir,
                             timeperiod,
                         )

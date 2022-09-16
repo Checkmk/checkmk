@@ -1047,12 +1047,12 @@ def vs_mkeventd_rule(customer=None):
         (
             "match_timeperiod",
             watolib.timeperiods.TimeperiodSelection(
-                title=_("Match only during timeperiod"),
+                title=_("Match only during time period"),
                 help=_(
-                    "Match this rule only during times where the selected timeperiod from the monitoring "
-                    "system is active. The Timeperiod definitions are taken from the monitoring core that "
+                    "Match this rule only during times where the selected time period from the monitoring "
+                    "system is active. The Time Period definitions are taken from the monitoring core that "
                     "is running on the same host or OMD site as the event daemon. Please note, that this "
-                    "selection only offers timeperiods that are defined with WATO."
+                    "selection only offers time periods that are defined with WATO."
                 ),
             ),
         ),

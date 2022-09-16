@@ -1055,7 +1055,7 @@ class TimeperiodValuespec(ValueSpec[dict[str, Any]]):
         # The display mode differs when the valuespec is activated
         vars_copy = dict(request.itervars())
 
-        # The timeperiod mode can be set by either the GUI switch or by the value itself
+        # The time period mode can be set by either the GUI switch or by the value itself
         # GUI switch overrules the information stored in the value
         if request.has_var(self.tp_toggle_var):
             is_active = self._is_switched_on()
@@ -1122,7 +1122,7 @@ class TimeperiodValuespec(ValueSpec[dict[str, Any]]):
                     self.tp_default_value_key,
                     Transparent(
                         valuespec=self._enclosed_valuespec,
-                        title=_("Default parameters when no timeperiod matches"),
+                        title=_("Default parameters when no time period matches"),
                     ),
                 ),
                 (
@@ -1131,17 +1131,17 @@ class TimeperiodValuespec(ValueSpec[dict[str, Any]]):
                         valuespec=Tuple(
                             elements=[
                                 TimeperiodSelection(
-                                    title=_("Match only during timeperiod"),
+                                    title=_("Match only during time period"),
                                     help=_(
                                         "Match this rule only during times where the "
-                                        "selected timeperiod from the monitoring "
+                                        "selected time period from the monitoring "
                                         "system is active."
                                     ),
                                 ),
                                 self._enclosed_valuespec,
                             ]
                         ),
-                        title=_("Configured timeperiod parameters"),
+                        title=_("Configured time period parameters"),
                     ),
                 ),
             ],

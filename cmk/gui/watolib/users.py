@@ -323,7 +323,7 @@ def get_vs_flexible_notifications():
                                 (
                                     "timeperiod",
                                     cmk.gui.watolib.timeperiods.TimeperiodSelection(
-                                        title=_("Timeperiod"),
+                                        title=_("Time period"),
                                         help=_("Do only notifiy alerts within this time period"),
                                     ),
                                 ),

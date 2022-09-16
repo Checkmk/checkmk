@@ -69,7 +69,7 @@ def _filter_builtin_timeperiods(timeperiods: TimeperiodSpecs) -> TimeperiodSpecs
 
 class TimeperiodSelection(DropdownChoice[str]):
     def __init__(self, **kwargs) -> None:  # type:ignore[no-untyped-def]
-        kwargs.setdefault("no_preselect_title", _("Select a timeperiod"))
+        kwargs.setdefault("no_preselect_title", _("Select a time period"))
         super().__init__(choices=self._get_choices, **kwargs)
 
     def _get_choices(self) -> list[tuple[str, str]]:

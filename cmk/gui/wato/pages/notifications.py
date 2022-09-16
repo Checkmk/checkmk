@@ -731,7 +731,7 @@ class ModeNotifications(ABCNotificationsMode):
                 table.cell(_("Age (sec)"), str(age), css=["number"])
                 if interval and age >= float(interval):
                     html.icon("warning", _("Age of oldest notification is over maximum age"))
-                table.cell(_("Timeperiod"), str(timeperiod))
+                table.cell(_("Time Period"), str(timeperiod))
                 table.cell(_("Max. Count"), str(maxcount), css=["number"])
                 table.cell(_("Count"), str(len(uuids)), css=["number"])
                 if len(uuids) >= maxcount:
@@ -1401,7 +1401,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
             (
                 "timeperiod",
                 watolib.timeperiods.TimeperiodSelection(
-                    title=_("Only bulk notifications during the following timeperiod"),
+                    title=_("Only bulk notifications during the following time period"),
                 ),
             ),
         ]
@@ -1410,10 +1410,10 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
             (
                 "bulk_outside",
                 Dictionary(
-                    title=_("Also bulk outside of timeperiod"),
+                    title=_("Also bulk outside of time period"),
                     help=_(
                         "By enabling this option notifications will be bulked "
-                        "outside of the defined timeperiod as well."
+                        "outside of the defined time period as well."
                     ),
                     elements=make_interval_entry() + bulk_options,
                     columns=1,
@@ -1504,15 +1504,15 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                                 ),
                                 (
                                     "timeperiod",
-                                    _("Bulk during timeperiod"),
+                                    _("Bulk during time period"),
                                     Dictionary(
                                         help=_(
                                             "By enabling this option notifications will be bulked only if the "
-                                            "specified timeperiod is active. When the timeperiod ends a "
+                                            "specified time period is active. When the time period ends a "
                                             "bulk containing all notifications that appeared during that time "
                                             "will be sent. "
-                                            "If bulking should be enabled outside of the timeperiod as well, "
-                                            'the option "Also Bulk outside of timeperiod" can be used.'
+                                            "If bulking should be enabled outside of the time period as well, "
+                                            'the option "Also Bulk outside of time period" can be used.'
                                         ),
                                         elements=timeperiod_entry
                                         + bulk_options

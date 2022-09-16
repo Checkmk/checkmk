@@ -372,7 +372,7 @@ class MKSignalException(MKException):
 #   |       |_| |_|_| |_| |_|\___| .__/ \___|_|  |_|\___/ \__,_|___/       |
 #   |                            |_|                                       |
 #   +----------------------------------------------------------------------+
-#   |  Timeperiods are used in rule conditions                             |
+#   |  Time Periods are used in rule conditions                             |
 #   '----------------------------------------------------------------------'
 
 
@@ -391,13 +391,13 @@ class TimePeriods:
                 self._active = query_timeperiods_in()
                 self._cache_timestamp = timestamp
         except Exception as e:
-            self._logger.exception("Cannot update timeperiod information: %s", e)
+            self._logger.exception("Cannot update time period information: %s", e)
             raise
 
     def active(self, name: TimeperiodName) -> bool:
         self._update()
         if (is_active := self._active.get(name)) is None:
-            self._logger.warning("unknown timeperiod '%s', assuming it is active", name)
+            self._logger.warning("unknown time period '%s', assuming it is active", name)
             is_active = True
         return is_active
 
@@ -2098,7 +2098,7 @@ class RuleMatcher:
         if "match_timeperiod" in rule and not self._time_periods.active(rule["match_timeperiod"]):
             if self._debug_rules:
                 self._logger.info(
-                    "  did not match, because timeperiod %s is not active"
+                    "  did not match, because time period %s is not active"
                     % rule["match_timeperiod"]
                 )
             return False

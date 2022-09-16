@@ -138,12 +138,12 @@ class ModeTimeperiods(WatoMode):
             return redirect(mode_url("timeperiods"))
 
         if delname in watolib.timeperiods.builtin_timeperiods():
-            raise MKUserError("_delete", _("Builtin timeperiods can not be modified"))
+            raise MKUserError("_delete", _("Builtin time periods can not be modified"))
 
         usages = self._find_usages_of_timeperiod(delname)
         if usages:
             message = "<b>%s</b><br>%s:<ul>" % (
-                _("You cannot delete this timeperiod."),
+                _("You cannot delete this time period."),
                 _("It is still in use by"),
             )
             for title, link in usages:
@@ -153,19 +153,19 @@ class ModeTimeperiods(WatoMode):
 
         del self._timeperiods[delname]
         watolib.timeperiods.save_timeperiods(self._timeperiods)
-        _changes.add_change("edit-timeperiods", _("Deleted timeperiod %s") % delname)
+        _changes.add_change("edit-timeperiods", _("Deleted time period %s") % delname)
         return redirect(mode_url("timeperiods"))
 
-    # Check if a timeperiod is currently in use and cannot be deleted
+    # Check if a time period is currently in use and cannot be deleted
     # Returns a list of two element tuples (title, url) that refer to the single occurrances.
     #
     # Possible usages:
     # - 1. rules: service/host-notification/check-period
     # - 2. user accounts (notification period)
-    # - 3. excluded by other timeperiods
-    # - 4. timeperiod condition in notification and alerting rules
+    # - 3. excluded by other time periods
+    # - 4. time period condition in notification and alerting rules
     # - 5. bulk operation in notification rules
-    # - 6. timeperiod condition in EC rules
+    # - 6. time period condition in EC rules
     # - 7. rules: time specific parameters
     def _find_usages_of_timeperiod(self, tpname: str) -> List[TimeperiodUsage]:
         used_in: List[TimeperiodUsage] = []
@@ -224,7 +224,7 @@ class ModeTimeperiods(WatoMode):
                 used_in.append(
                     (
                         "%s: %s (%s)"
-                        % (_("Timeperiod"), timeperiod_spec_alias(tp, tpn), _("excluded")),
+                        % (_("Time period"), timeperiod_spec_alias(tp, tpn), _("excluded")),
                         folder_preserving_link([("mode", "edit_timeperiod"), ("edit", tpn)]),
                     )
                 )
@@ -325,7 +325,7 @@ class ModeTimeperiods(WatoMode):
 
     def page(self) -> None:
         with table_element(
-            "timeperiods", empty_text=_("There are no timeperiods defined yet.")
+            "timeperiods", empty_text=_("There are no time periods defined yet.")
         ) as table:
             for name, timeperiod in sorted(self._timeperiods.items()):
                 table.row()
@@ -621,7 +621,7 @@ class ModeTimeperiodImportICal(WatoMode):
     def _show_import_ical_page(self) -> None:
         html.p(
             _(
-                "This page can be used to generate a new timeperiod definition based "
+                "This page can be used to generate a new time period definition based "
                 "on the appointments of an iCalendar (<tt>*.ics</tt>) file. This import is normally used "
                 "to import events like holidays, therefore only single whole day appointments are "
                 "handled by this import."
@@ -708,7 +708,7 @@ class ModeEditTimeperiod(WatoMode):
         self._new = self._name is None
 
         if self._name in watolib.timeperiods.builtin_timeperiods():
-            raise MKUserError("edit", _("Builtin timeperiods can not be modified"))
+            raise MKUserError("edit", _("Builtin time periods can not be modified"))
         if self._new:
             clone_name = request.var("clone")
             if request.var("mode") == "import_ical":
@@ -727,7 +727,7 @@ class ModeEditTimeperiod(WatoMode):
         try:
             return self._timeperiods[name]
         except KeyError:
-            raise MKUserError(None, _("This timeperiod does not exist."))
+            raise MKUserError(None, _("This time period does not exist."))
 
     def title(self) -> str:
         if self._new:
@@ -747,7 +747,7 @@ class ModeEditTimeperiod(WatoMode):
                 title=_("Internal ID"),
                 regex=r"^[-a-z0-9A-Z_]*$",
                 regex_error=_(
-                    "Invalid timeperiod name. Only the characters a-z, A-Z, 0-9, "
+                    "Invalid time period name. Only the characters a-z, A-Z, 0-9, "
                     "_ and - are allowed."
                 ),
                 allow_empty=False,
@@ -764,7 +764,7 @@ class ModeEditTimeperiod(WatoMode):
                     "alias",
                     TextInput(
                         title=_("Alias"),
-                        help=_("An alias or description of the timeperiod"),
+                        help=_("An alias or description of the time period"),
                         allow_empty=False,
                         size=80,
                     ),
@@ -785,7 +785,7 @@ class ModeEditTimeperiod(WatoMode):
     def _validate_id(self, value, varprefix):
         if self._name is None and value in self._timeperiods:
             raise MKUserError(
-                varprefix, _("This name is already being used by another timeperiod.")
+                varprefix, _("This name is already being used by another time period.")
             )
 
     def _validate_alias(self, name, alias, varprefix):
@@ -830,7 +830,7 @@ class ModeEditTimeperiod(WatoMode):
                 elements=[
                     TextInput(
                         regex="^[-a-z0-9A-Z /]*$",
-                        regex_error=_("This is not a valid Nagios timeperiod day specification."),
+                        regex_error=_("This is not a valid Nagios time period day specification."),
                         allow_empty=False,
                         validate=self._validate_timeperiod_exception,
                     ),
@@ -863,7 +863,7 @@ class ModeEditTimeperiod(WatoMode):
                 time.strptime(value, "%Y-%m-%d")
             except ValueError:
                 raise MKUserError(
-                    varprefix, _("You need to provide timeperiod exceptions in YYYY-MM-DD format")
+                    varprefix, _("You need to provide time period exceptions in YYYY-MM-DD format")
                 )
 
     def _vs_exclude(self):
@@ -871,16 +871,16 @@ class ModeEditTimeperiod(WatoMode):
             choices=self._other_timeperiod_choices(),
             title=_("Exclude"),
             help=_(
-                "You can use other timeperiod definitions to exclude the times "
-                "defined in the other timeperiods from this current timeperiod."
+                "You can use other time period definitions to exclude the times "
+                "defined in the other time periods from this current time period."
             ),
         )
 
     def _other_timeperiod_choices(self):
         """List of timeperiods that can be used for exclusions
 
-        We offer the list of all other timeperiods - but only those that do not exclude the current
-        timeperiod (in order to avoid cycles)"""
+        We offer the list of all other time periods - but only those that do not exclude the current
+        time period (in order to avoid cycles)"""
         other_tps = []
 
         for tpname, tp in self._timeperiods.items():

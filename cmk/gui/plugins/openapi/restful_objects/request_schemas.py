@@ -652,8 +652,8 @@ class TimePeriodAlias(fields.String):
     """A field representing a time_period name"""
 
     default_error_messages = {
-        "should_exist": "Timeperiod alias does not exist: {name!r}",
-        "should_not_exist": "Timeperiod alias {name!r} already exists.",
+        "should_exist": "Time period alias does not exist: {name!r}",
+        "should_not_exist": "Time period alias {name!r} already exists.",
     }
 
     def __init__(  # type:ignore[no-untyped-def]

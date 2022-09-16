@@ -17,7 +17,6 @@ sudo install -m 755 \
     mkeventd_open514 \
     mkevent \
     mkbackup \
-    mkbench \
     cmk-update-config \
     cmk-update-license-usage \
     post-rename-site \

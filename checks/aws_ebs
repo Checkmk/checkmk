@@ -5,6 +5,8 @@
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
+from collections.abc import Mapping
+from typing import Any
 
 from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
@@ -17,13 +19,28 @@ from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-imp
 #   |   |_.__/ \__,_|_|  |___/\__| |_.__/ \__,_|_|\__,_|_| |_|\___\___|    |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+Section = Mapping[str, Mapping[str, float]]
 
 
-@get_parsed_item_data
-def check_aws_ebs_burst_balance(item, params, metrics):
+def discover_aws_ebs_burst_balance(section: Section):
+    yield from inventory_aws_generic(
+        section,
+        ["BurstBalance"],
+    )
+
+
+def check_aws_ebs_burst_balance(
+    item: str,
+    params: Mapping[str, Any],
+    section: Section,
+):
+    if (disk_data := section.get(item)) is None:
+        return
+
     warn, crit = params.get("burst_balance_levels_lower", (None, None))
+
     yield check_levels(
-        metrics["BurstBalance"],
+        disk_data["BurstBalance"],
         "aws_burst_balance",
         (None, None, warn, crit),
         human_readable_func=get_percent_human_readable,
@@ -32,7 +49,7 @@ def check_aws_ebs_burst_balance(item, params, metrics):
 
 
 check_info["aws_ebs.burst_balance"] = {
-    "inventory_function": lambda p: inventory_aws_generic(p, ["BurstBalance"]),
+    "inventory_function": discover_aws_ebs_burst_balance,
     "check_function": check_aws_ebs_burst_balance,
     "service_description": "AWS/EBS Burst Balance %s",
     "group": "aws_ebs_burst_balance",

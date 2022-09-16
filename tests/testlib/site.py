@@ -615,6 +615,10 @@ class Site:
                 )
                 logger.info('Executing .f12 in "%s" DONE', path)
 
+        assert (
+            self.execute(["cmk-update-config"]).wait() == 0
+        ), "Failed to execute cmk-update-config"
+
     def _update_cmk_core_config(self) -> None:
         logger.info("Updating core configuration...")
         p = self.execute(["cmk", "-U"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)

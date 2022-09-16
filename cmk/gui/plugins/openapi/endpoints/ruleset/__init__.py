@@ -40,8 +40,11 @@ PERMISSIONS = permissions.Perm("wato.rulesets")
 def list_rulesets(param):
     """Search rule sets"""
     user.need_permission("wato.rulesets")
-    all_sets = FolderRulesets(param["folder"]) if param.get("folder") else AllRulesets()
-    all_sets.load()
+    all_sets = (
+        FolderRulesets.load_folder_rulesets(param["folder"])
+        if param.get("folder")
+        else AllRulesets.load_all_rulesets()
+    )
 
     def _get_search_options(params):
         # We remove 'folder' because that has already been handled at the start of the endpoint.
@@ -51,7 +54,7 @@ def list_rulesets(param):
         return options
 
     if search_options := _get_search_options(param):
-        all_sets = SearchedRulesets(all_sets, search_options)
+        all_sets = SearchedRulesets.load_searched_rulesets(all_sets, search_options)
 
     ruleset_collection: List[DomainObject] = []
     for ruleset in all_sets.get_rulesets().values():
@@ -79,11 +82,11 @@ def show_ruleset(param):
     """Show a ruleset"""
     ruleset_name = param["ruleset_name"]
     user.need_permission("wato.rulesets")
-    collection = SingleRulesetRecursively(ruleset_name)
 
     try:
-        collection.load()
-        ruleset = collection.get(ruleset_name)
+        ruleset = SingleRulesetRecursively.load_single_ruleset_recursively(ruleset_name).get(
+            ruleset_name
+        )
     except KeyError:
         raise ProblemException(
             title="Unknown ruleset.",

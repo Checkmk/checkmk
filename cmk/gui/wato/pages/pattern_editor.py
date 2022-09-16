@@ -186,9 +186,9 @@ class ModePatternEditor(WatoMode):
     def _show_patterns(self):  # pylint: disable=too-many-branches
         import cmk.gui.logwatch as logwatch
 
-        collection = SingleRulesetRecursively("logwatch_rules")
-        collection.load()
-        ruleset = collection.get("logwatch_rules")
+        ruleset = SingleRulesetRecursively.load_single_ruleset_recursively("logwatch_rules").get(
+            "logwatch_rules"
+        )
 
         html.h3(_("Logfile patterns"))
         if ruleset.is_empty():

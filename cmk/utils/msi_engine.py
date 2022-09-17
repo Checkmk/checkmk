@@ -20,7 +20,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, NoReturn
 
-import cmk.utils.obfuscate as obfuscate
 from cmk.utils import msi_patch
 
 AGENT_MSI_FILE: Final = "check_mk_agent_unsigned.msi"
@@ -296,6 +295,12 @@ def _export_required_tables(bin_dir: Path, *, msi: Path, work_dir: Path) -> None
         _export_msi_file_table(bin_dir, name=name, msi_in=msi, out_dir=work_dir)
 
 
+def _unsign_file(src: Path, *, dst: Path) -> None:
+    # at the moment it's stub
+    # will be replaced with apply_patch call
+    shutil.copy(src, dst)
+
+
 def msi_update_core(
     msi_file_name: Path,
     src_dir: Path,
@@ -318,8 +323,7 @@ def msi_update_core(
         new_msi_file: Final = src_dir / AGENT_MSI_FILE
         work_dir = Path(tempfile.mkdtemp(prefix=str(tmp_dir) + "/msi-update."))
 
-        if (error := obfuscate.deobfuscate_file(Path(msi_file_name), file_out=new_msi_file)) != 0:
-            bail_out(f"Deobfuscate returns error {error=}")
+        _unsign_file(msi_file_name, dst=new_msi_file)
 
         # When this script is run in the build environment then we need to specify
         # paths to the msitools. When running in an OMD site, these tools are in

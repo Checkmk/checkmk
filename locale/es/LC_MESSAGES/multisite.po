@@ -3131,7 +3131,8 @@ msgstr "Conexiones activas"
 msgid "Active guest memory"
 msgstr "Memoria de invitados activa"
 
-msgid "Active in timeperiod"
+#, fuzzy
+msgid "Active in time period"
 msgstr "Activo en el periodo de tiempo"
 
 msgid "Active modems"
@@ -3489,7 +3490,8 @@ msgstr "Añadir nueva etiqueta"
 msgid "Add new time"
 msgstr "Añadir nueva hora"
 
-msgid "Add new timeperiod"
+#, fuzzy
+msgid "Add new time period"
 msgstr "Añadir un nuevo periodo de tiempo"
 
 msgid "Add new topic"
@@ -4257,6 +4259,10 @@ msgstr "Claves de firma del agente"
 msgid "Agent signing"
 msgstr "Firma de agentes"
 
+#, fuzzy
+msgid "Agent type"
+msgstr "Tipo de comentario"
+
 msgid "Agent updater (Linux, Windows, Solaris)"
 msgstr "Actualizador de agentes (Linux, Windows, Solaris)"
 
@@ -4870,7 +4876,8 @@ msgstr "Permite ver y editar %s creados por otros usuarios."
 msgid "Allows you to use a sidebar element in the dashboard."
 msgstr "Permite utilizar un elemento de la barra lateral en el tablero."
 
-msgid "Also bulk outside of timeperiod"
+#, fuzzy
+msgid "Also bulk outside of time period"
 msgstr "También a granel fuera del período de tiempo"
 
 msgid "Also contact Checkmk agent"
@@ -5009,7 +5016,8 @@ msgstr "Un alias o descripción de la función"
 msgid "An alias or description of the site."
 msgstr "Un alias o descripción del sitio."
 
-msgid "An alias or description of the timeperiod"
+#, fuzzy
+msgid "An alias or description of the time period"
 msgstr "Un alias o descripción del periodo de tiempo"
 
 msgid "An alias or description of this group."
@@ -6337,6 +6345,26 @@ msgstr "B/d"
 msgid "B/s"
 msgstr "B/s"
 
+#, fuzzy
+msgid "BAR1 memory usage"
+msgstr "Uso de la memoria de DB2"
+
+#, fuzzy
+msgid "BAR1 memory usage (free)"
+msgstr "Uso de la memoria de DB2"
+
+#, fuzzy
+msgid "BAR1 memory usage (total)"
+msgstr "Uso de la memoria de DB2"
+
+#, fuzzy
+msgid "BAR1 memory usage (used)"
+msgstr "Uso de la memoria de DB2"
+
+#, fuzzy
+msgid "BAR1 memory utilization"
+msgstr "Utilización de la memoria"
+
 msgid "BBcredit zero"
 msgstr "BBcrédito cero"
 
@@ -6505,6 +6533,9 @@ msgstr "Copias de seguridad"
 
 msgid "Bad Requests Received"
 msgstr "Solicitudes mal recibidas"
+
+msgid "Bake a generic agent package for this folder."
+msgstr ""
 
 #, fuzzy
 msgid "Bake agent packages"
@@ -6923,7 +6954,8 @@ msgstr "Incorporado"
 msgid "Builtin icon visibility"
 msgstr "Visibilidad de los iconos incorporados"
 
-msgid "Builtin timeperiods can not be modified"
+#, fuzzy
+msgid "Builtin time periods can not be modified"
 msgstr "Los periodos de tiempo incorporados no pueden ser modificados"
 
 msgid "Builtin: Force"
@@ -6963,7 +6995,8 @@ msgstr "El descubrimiento a granel comenzó..."
 msgid "Bulk discovery successful"
 msgstr "Descubrimiento masivo con éxito"
 
-msgid "Bulk during timeperiod"
+#, fuzzy
+msgid "Bulk during time period"
 msgstr "Volumen durante el período de tiempo"
 
 msgid "Bulk edit hosts"
@@ -7581,12 +7614,13 @@ msgstr ""
 "sistemas de ficheros que coincidan con uno de los patrones de exclusión "
 "serán excluidos del grupo y monitorizados individualmente."
 
+#, fuzzy
 msgid ""
 "By enabling this option notifications will be bulked only if the specified "
-"timeperiod is active. When the timeperiod ends a bulk containing all "
+"time period is active. When the time period ends a bulk containing all "
 "notifications that appeared during that time will be sent. If bulking should "
-"be enabled outside of the timeperiod as well, the option \"Also Bulk outside "
-"of timeperiod\" can be used."
+"be enabled outside of the time period as well, the option \"Also Bulk "
+"outside of time period\" can be used."
 msgstr ""
 "Al activar esta opción, las notificaciones se agruparán sólo si el período "
 "de tiempo especificado está activo. Cuando el periodo de tiempo termine, se "
@@ -7594,9 +7628,10 @@ msgstr ""
 "tiempo. Si se quiere activar el bulking también fuera del período de tiempo, "
 "se puede utilizar la opción \"Bulk también fuera del período de tiempo\"."
 
+#, fuzzy
 msgid ""
 "By enabling this option notifications will be bulked outside of the defined "
-"timeperiod as well."
+"time period as well."
 msgstr ""
 "Si se activa esta opción, las notificaciones también se acumularán fuera del "
 "periodo de tiempo definido."
@@ -10647,7 +10682,8 @@ msgstr "Integraciones API configuradas, sin agente Checkmk"
 msgid "Configured feature mismatch"
 msgstr "Desajuste de las características configuradas"
 
-msgid "Configured timeperiod parameters"
+#, fuzzy
+msgid "Configured time period parameters"
 msgstr "Parámetros configurados del periodo de tiempo"
 
 msgid ""
@@ -13120,7 +13156,8 @@ msgstr "Color de la métrica por defecto"
 msgid "Default parameters for detected services"
 msgstr "Parámetros por defecto para los servicios detectados"
 
-msgid "Default parameters when no timeperiod matches"
+#, fuzzy
+msgid "Default parameters when no time period matches"
 msgstr "Parámetros por defecto cuando no coincide ningún periodo de tiempo"
 
 msgid "Default reporting timerange"
@@ -13673,8 +13710,8 @@ msgstr "Eliminado el conjunto de reglas '%s' para '%s'"
 msgid "Deleted site %s"
 msgstr "Sitio borrado %s"
 
-#, python-format
-msgid "Deleted timeperiod %s"
+#, fuzzy, python-format
+msgid "Deleted time period %s"
 msgstr "Periodo de tiempo borrado %s"
 
 #, python-format
@@ -15034,7 +15071,7 @@ msgstr ""
 "No haga una copia de seguridad de los datos métricos (archivos RRD), del "
 "historial de monitorización y de los archivos de registro"
 
-msgid "Do not bake agent packages for this folder if it is empty."
+msgid "Do not bake a generic agent package for this folder."
 msgstr ""
 
 msgid "Do not check"
@@ -15819,12 +15856,12 @@ msgid "Download %s package of agent for %s"
 msgstr "Descargue el paquete de agente %s para %s"
 
 #, python-format
-msgid "Download Checkmk %s agent"
-msgstr "Descargar el agente Checkmk %s"
-
-#, python-format
 msgid "Download Checkmk Agent for host %s"
 msgstr "Descargar el agente Checkmk para el host %s"
+
+#, fuzzy
+msgid "Download Checkmk agent Vanilla"
+msgstr "Descargar el agente Checkmk %s"
 
 msgid "Download SNMP walk"
 msgstr "Descargar el paseo de SNMP"
@@ -15840,6 +15877,10 @@ msgstr "Descarga de la clave de seguridad"
 
 msgid "Download filename"
 msgstr "Descargar nombre de archivo"
+
+#, fuzzy, python-format
+msgid "Download generic Checkmk Agent for folder %s"
+msgstr "Descargar el agente Checkmk para el host %s"
 
 msgid "Download license usage report"
 msgstr "Descargar el informe de uso de licencias"
@@ -17380,8 +17421,8 @@ msgstr ""
 "Error: El proceso responsable de la creación de la instantánea ya no se está "
 "ejecutando."
 
-#, python-format
-msgid "Error: Unknown timeperiod id '%s'"
+#, fuzzy, python-format
+msgid "Error: Unknown time period id '%s'"
 msgstr "Error: ID de periodo de tiempo desconocido '%s'"
 
 msgid "Errors"
@@ -18164,6 +18205,26 @@ msgstr "Velocidad del ventilador de los dispositivos de hardware"
 
 msgid "FAULTED"
 msgstr "FALLO"
+
+#, fuzzy
+msgid "FB memory usage"
+msgstr "Uso de la memoria de DB2"
+
+#, fuzzy
+msgid "FB memory usage (free)"
+msgstr "Uso de la memoria de DB2"
+
+#, fuzzy
+msgid "FB memory usage (total)"
+msgstr "Uso de la memoria de DB2"
+
+#, fuzzy
+msgid "FB memory usage (used)"
+msgstr "Uso de la memoria de DB2"
+
+#, fuzzy
+msgid "FB memory utilization"
+msgstr "Utilización de la memoria"
 
 msgid "FC Ports"
 msgstr "Puertos FC"
@@ -21771,7 +21832,8 @@ msgstr "Hop %d Media de ida y vuelta"
 msgid "Hop response times"
 msgstr "Tiempos de respuesta de los saltos"
 
-msgid "Horizon for timeperiod computation"
+#, fuzzy
+msgid "Horizon for time period computation"
 msgstr "Horizonte de cálculo del periodo de tiempo"
 
 msgid "Horizontal padding"
@@ -23056,6 +23118,17 @@ msgstr ""
 "Si se activa, cualquier entrada de \"Acción fallida\" se mostrará en la "
 "comprobación principal y la comprobación pasará al estado WARN."
 
+#, python-format
+msgid ""
+"If activated, the agent bakery will bake a generic agent package for this "
+"folder. In the configuration all rules are considered that unconditionally "
+"match all hosts in the folder. This package will be created even if the "
+"folder is empty.\n"
+"This is option is useful in combination with the %s feature of the %s. It "
+"allows for baking agent packages for hosts which will be created in this "
+"folder in the future, usually via the auto registration."
+msgstr ""
+
 msgid ""
 "If active the check will not only notify about un-monitored services, it "
 "will also automatically add/remove them as neccessary."
@@ -23085,7 +23158,8 @@ msgstr ""
 "monitorización en el contexto del usuario del sitio de monitorización), así "
 "que por favor haga esto si entiende las consecuencias."
 
-msgid "If agent_hash is omitted, hostname needs to be given."
+#, fuzzy
+msgid "If agent_hash is omitted, target needs to be given."
 msgstr "Si se omite agent_hash, es necesario indicar el nombre del host."
 
 msgid "If available, the following metric will be shown"
@@ -24837,9 +24911,10 @@ msgstr ""
 "niveles superiores o inferiores. Si se alcanzan todos los niveles "
 "configurados dentro de una conjunción, se informa del estado relacionado."
 
+#, fuzzy
 msgid ""
 "In order to keep the core simple, Check_MK pre-computes all transitions for "
-"all timeperiods in advance. Since that cannot be done until infinity you "
+"all time periods in advance. Since that cannot be done until infinity you "
 "need to specify the number of days for the precomputation. After that time "
 "all periods remain in their last state. Make sure that you <i>Activate "
 "Changes</i> before that time."
@@ -25929,16 +26004,17 @@ msgstr ""
 "Formato de hora inválido '<tt>%s</tt>', por favor utilice el formato "
 "<tt>24:00</tt>."
 
-#, python-format
-msgid "Invalid time resolution key \"%s\" given"
-msgstr "Clave de resolución de tiempo inválida \"%s\" dada"
-
+#, fuzzy
 msgid ""
-"Invalid timeperiod name. Only the characters a-z, A-Z, 0-9, _ and - are "
+"Invalid time period name. Only the characters a-z, A-Z, 0-9, _ and - are "
 "allowed."
 msgstr ""
 "Nombre de periodo de tiempo inválido. Sólo se permiten los caracteres a-z, A-"
 "Z, 0-9, _ y -."
+
+#, python-format
+msgid "Invalid time resolution key \"%s\" given"
+msgstr "Clave de resolución de tiempo inválida \"%s\" dada"
 
 #, python-format
 msgid "Invalid timestep \"%d\" given"
@@ -29434,7 +29510,8 @@ msgstr "Comentario de la notificación del partido"
 msgid "Match only Event Console alerts"
 msgstr "Alertas de la Consola de Eventos sólo para los partidos"
 
-msgid "Match only during timeperiod"
+#, fuzzy
+msgid "Match only during time period"
 msgstr "Partido sólo durante el período de tiempo"
 
 msgid "Match original source IP address"
@@ -29494,18 +29571,20 @@ msgstr "Empareja a los anfitriones con..."
 msgid "Match the internal identifier"
 msgstr "Coincidir con el identificador interno"
 
+#, fuzzy
 msgid ""
-"Match this rule only during times where the selected timeperiod from the "
+"Match this rule only during times where the selected time period from the "
 "monitoring system is active."
 msgstr ""
 "Haga coincidir esta regla sólo durante las horas en las que el periodo de "
 "tiempo seleccionado del sistema de supervisión esté activo."
 
+#, fuzzy
 msgid ""
-"Match this rule only during times where the selected timeperiod from the "
-"monitoring system is active. The Timeperiod definitions are taken from the "
+"Match this rule only during times where the selected time period from the "
+"monitoring system is active. The Time Period definitions are taken from the "
 "monitoring core that is running on the same host or OMD site as the event "
-"daemon. Please note, that this selection only offers timeperiods that are "
+"daemon. Please note, that this selection only offers time periods that are "
 "defined with WATO."
 msgstr ""
 "Haga coincidir esta regla sólo durante las horas en las que el periodo de "
@@ -33590,6 +33669,10 @@ msgid "Nvidia GPU En-/Decoder utilization"
 msgstr "Utilización de la CPU"
 
 #, fuzzy
+msgid "Nvidia GPU Memory utilization"
+msgstr "Utilización de la CPU"
+
+#, fuzzy
 msgid "Nvidia GPU Power"
 msgstr "Utilización de la CPU"
 
@@ -33997,7 +34080,8 @@ msgstr ""
 "de plugins de comprobación. Nota: Las notificaciones del host nunca "
 "coinciden con esta regla si se está utilizando esta opción."
 
-msgid "Only bulk notifications during the following timeperiod"
+#, fuzzy
+msgid "Only bulk notifications during the following time period"
 msgstr "Sólo las notificaciones masivas durante el siguiente período de tiempo"
 
 msgid ""
@@ -40530,14 +40614,15 @@ msgstr "Ver usuario %s"
 msgid "Select Datasource"
 msgstr "Seleccione la fuente de datos"
 
+#, fuzzy
+msgid "Select a time period"
+msgstr "Seleccione un periodo de tiempo"
+
 msgid ""
 "Select a time period over which the alerts or notifications are added up"
 msgstr ""
 "Seleccione un período de tiempo en el que se suman las alertas o "
 "notificaciones"
-
-msgid "Select a timeperiod"
-msgstr "Seleccione un periodo de tiempo"
 
 msgid "Select all checkboxes"
 msgstr "Seleccione todas las casillas de verificación"
@@ -45593,11 +45678,12 @@ msgid ""
 "Table ID found in the Details of the table in the SQL workspace of BigQuery"
 msgstr ""
 
-msgid "Table Layout"
-msgstr "Disposición de la mesa"
-
 msgid "Table absolute bloat levels"
 msgstr "Tabla de niveles absolutos de hinchazón"
+
+#, fuzzy
+msgid "Table layout"
+msgstr "Disposición de la mesa"
 
 msgid "Table of Contents (only active in frontmatter templates)"
 msgstr "Índice de contenidos (sólo activo en las plantillas de portada)"
@@ -46455,10 +46541,11 @@ msgstr ""
 "sistema de monitorización. También es necesario instalar el plugin pynotify "
 "python en el sistema de destino."
 
+#, fuzzy
 msgid ""
 "The Inotify is running permanently on the target system and expects regular "
-"heartbeats to continue running. If no heartbeat is received over this "
-"timeperiod, the plugin simply stops. It starts again, the next time the "
+"heartbeats to continue running. If no heartbeat is received over this time "
+"period, the plugin simply stops. It starts again, the next time the "
 "check_mk_agent is triggered."
 msgstr ""
 "Inotify se ejecuta permanentemente en el sistema de destino y espera que los "
@@ -50310,7 +50397,8 @@ msgstr "No hay reglas definidas en este conjunto."
 msgid "There are no rulesets or rules matching your search."
 msgstr "No hay conjuntos de reglas o reglas que coincidan con su búsqueda."
 
-msgid "There are no timeperiods defined yet."
+#, fuzzy
+msgid "There are no time periods defined yet."
 msgstr "Todavía no hay periodos de tiempo definidos."
 
 msgid ""
@@ -51508,19 +51596,13 @@ msgstr ""
 msgid "This is not a valid Checkmk version number"
 msgstr "Este no es un número de versión válido de Checkmk"
 
-msgid "This is not a valid Nagios timeperiod day specification."
+#, fuzzy
+msgid "This is not a valid Nagios time period day specification."
 msgstr ""
 "Esta no es una especificación válida del día del período de tiempo de Nagios."
 
 msgid "This is only be used in case of percentual levels"
 msgstr "Esto sólo se utiliza en caso de niveles porcentuales"
-
-#, python-format
-msgid ""
-"This is option is useful in combination with the %s feature of the %s. It "
-"allows for baking agent packages for hosts which will be created in this "
-"folder in the future, usually via the auto registration."
-msgstr ""
 
 msgid ""
 "This is relevant during periods where the according check cannot be executed "
@@ -51743,7 +51825,8 @@ msgid "This name corresponds to the single file name to be monitored."
 msgstr ""
 "Este nombre corresponde al nombre del archivo único que se va a supervisar."
 
-msgid "This name is already being used by another timeperiod."
+#, fuzzy
+msgid "This name is already being used by another time period."
 msgstr "Este nombre ya está siendo utilizado por otro período de tiempo."
 
 msgid "This name is already used. Please choose another one."
@@ -52172,8 +52255,9 @@ msgstr "Este paquete aún no contiene ninguna norma."
 msgid "This package is missing or broken."
 msgstr "Este paquete está perdido o roto."
 
+#, fuzzy
 msgid ""
-"This page can be used to generate a new timeperiod definition based on the "
+"This page can be used to generate a new time period definition based on the "
 "appointments of an iCalendar (<tt>*.ics</tt>) file. This import is normally "
 "used to import events like holidays, therefore only single whole day "
 "appointments are handled by this import."
@@ -54112,7 +54196,8 @@ msgstr ""
 "de comprobación que produjeron la alerta. No es un prefijo sino una "
 "coincidencia infija."
 
-msgid "This timeperiod does not exist."
+#, fuzzy
+msgid "This time period does not exist."
 msgstr "Este periodo de tiempo no existe."
 
 #, python-format
@@ -54494,6 +54579,10 @@ msgstr ""
 msgid "Time MTR waits between sending pings"
 msgstr "Tiempo de espera de MTR entre el envío de pings"
 
+#, fuzzy
+msgid "Time Period"
+msgstr "Periodo de tiempo"
+
 msgid "Time Range"
 msgstr "Rango de tiempo"
 
@@ -54591,6 +54680,14 @@ msgstr "Período de recuento"
 
 msgid "Time periods"
 msgstr "Periodos de tiempo"
+
+#, fuzzy
+msgid ""
+"Time periods restrict notifications and other things to certain periods of "
+"the day."
+msgstr ""
+"Los periodos de tiempo restringen las notificaciones y otras cosas a ciertos "
+"periodos del día."
 
 msgid "Time range"
 msgstr "Rango de tiempo"
@@ -54801,16 +54898,6 @@ msgstr "Se ha agotado el tiempo de espera"
 
 msgid "Timeout waiting for a free channel"
 msgstr "Tiempo de espera de un canal libre"
-
-msgid "Timeperiod"
-msgstr "Periodo de tiempo"
-
-msgid ""
-"Timeperiods restrict notifications and other things to certain periods of "
-"the day."
-msgstr ""
-"Los periodos de tiempo restringen las notificaciones y otras cosas a ciertos "
-"periodos del día."
 
 msgid "Timer"
 msgstr "Temporizador"
@@ -55224,6 +55311,10 @@ msgstr "Tamaño total del archivo de registro: Niveles superiores absolutos"
 
 msgid "Total memory usage"
 msgstr "Uso total de la memoria"
+
+#, fuzzy
+msgid "Total memory utilization"
+msgstr "Utilización de la memoria"
 
 msgid "Total message count lower levels"
 msgstr "Recuento total de mensajes niveles inferiores"
@@ -61973,9 +62064,10 @@ msgstr ""
 "host llamado <tt>foo</tt> con el valor <tt>bar</tt> daría como resultado que "
 "la macro <tt>$_HOSTFOO$</tt> fuera reemplazada por <tt>bar</tt>. "
 
+#, fuzzy
 msgid ""
-"You can use other timeperiod definitions to exclude the times defined in the "
-"other timeperiods from this current timeperiod."
+"You can use other time period definitions to exclude the times defined in "
+"the other time periods from this current time period."
 msgstr ""
 "Puede utilizar otras definiciones de periodos de tiempo para excluir las "
 "horas definidas en los otros periodos de tiempo de este periodo de tiempo "
@@ -62137,7 +62229,8 @@ msgstr ""
 msgid "You cannot delete this rule: it is still used by other rules."
 msgstr "No puede eliminar esta regla: sigue siendo utilizada por otras reglas."
 
-msgid "You cannot delete this timeperiod."
+#, fuzzy
+msgid "You cannot delete this time period."
 msgstr "No se puede eliminar este periodo de tiempo."
 
 msgid "You cannot delete your own account!"
@@ -62686,7 +62779,8 @@ msgstr ""
 msgid "You need to provide at least %d characters."
 msgstr "Debe proporcionar al menos %d caracteres."
 
-msgid "You need to provide timeperiod exceptions in YYYY-MM-DD format"
+#, fuzzy
+msgid "You need to provide time period exceptions in YYYY-MM-DD format"
 msgstr ""
 "Debe proporcionar las excepciones del período de tiempo en formato AAAA-MM-DD"
 
@@ -64898,6 +64992,9 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Todos los derechos reservados."
+
+#~ msgid "Timeperiod"
+#~ msgstr "Periodo de tiempo"
 
 #, python-format
 #~ msgid "Could not render: %r"

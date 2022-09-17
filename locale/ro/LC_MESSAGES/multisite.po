@@ -2793,7 +2793,7 @@ msgid "Active guest memory"
 msgstr "Memorie liberă exactă"
 
 #, fuzzy
-msgid "Active in timeperiod"
+msgid "Active in time period"
 msgstr "Perioada de timp Noua"
 
 #, fuzzy
@@ -3232,7 +3232,7 @@ msgid "Add new time"
 msgstr "Adaungă un nou element"
 
 #, fuzzy
-msgid "Add new timeperiod"
+msgid "Add new time period"
 msgstr "Perioada de timp Noua"
 
 #, fuzzy
@@ -3986,6 +3986,10 @@ msgstr "actualizare"
 msgid "Agent signing"
 msgstr ""
 
+#, fuzzy
+msgid "Agent type"
+msgstr "Adaugă element"
+
 msgid "Agent updater (Linux, Windows, Solaris)"
 msgstr ""
 
@@ -4596,8 +4600,9 @@ msgstr ""
 msgid "Allows you to use a sidebar element in the dashboard."
 msgstr ""
 
-msgid "Also bulk outside of timeperiod"
-msgstr ""
+#, fuzzy
+msgid "Also bulk outside of time period"
+msgstr "Perioada de timp Noua"
 
 msgid "Also contact Checkmk agent"
 msgstr ""
@@ -4730,8 +4735,9 @@ msgstr ""
 msgid "An alias or description of the site."
 msgstr "O descriere sau comentariu despre acest element"
 
-msgid "An alias or description of the timeperiod"
-msgstr ""
+#, fuzzy
+msgid "An alias or description of the time period"
+msgstr "O descriere sau comentariu despre acest element"
 
 #, fuzzy
 msgid "An alias or description of this group."
@@ -5992,6 +5998,26 @@ msgstr ""
 msgid "B/s"
 msgstr ""
 
+#, fuzzy
+msgid "BAR1 memory usage"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "BAR1 memory usage (free)"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "BAR1 memory usage (total)"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "BAR1 memory usage (used)"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "BAR1 memory utilization"
+msgstr "Dezactiveaza Notificarile"
+
 msgid "BBcredit zero"
 msgstr ""
 
@@ -6176,6 +6202,9 @@ msgstr "foloseste numele portului"
 #, fuzzy
 msgid "Bad Requests Received"
 msgstr "cereri/sec"
+
+msgid "Bake a generic agent package for this folder."
+msgstr ""
 
 #, fuzzy
 msgid "Bake agent packages"
@@ -6619,7 +6648,7 @@ msgstr ""
 msgid "Builtin icon visibility"
 msgstr ""
 
-msgid "Builtin timeperiods can not be modified"
+msgid "Builtin time periods can not be modified"
 msgstr ""
 
 msgid "Builtin: Force"
@@ -6664,8 +6693,9 @@ msgstr "Inventariere in masa"
 msgid "Bulk discovery successful"
 msgstr "Inventariere in masa"
 
-msgid "Bulk during timeperiod"
-msgstr ""
+#, fuzzy
+msgid "Bulk during time period"
+msgstr "Perioada de timp Noua"
 
 msgid "Bulk edit hosts"
 msgstr ""
@@ -7078,15 +7108,15 @@ msgstr ""
 
 msgid ""
 "By enabling this option notifications will be bulked only if the specified "
-"timeperiod is active. When the timeperiod ends a bulk containing all "
+"time period is active. When the time period ends a bulk containing all "
 "notifications that appeared during that time will be sent. If bulking should "
-"be enabled outside of the timeperiod as well, the option \"Also Bulk outside "
-"of timeperiod\" can be used."
+"be enabled outside of the time period as well, the option \"Also Bulk "
+"outside of time period\" can be used."
 msgstr ""
 
 msgid ""
 "By enabling this option notifications will be bulked outside of the defined "
-"timeperiod as well."
+"time period as well."
 msgstr ""
 
 msgid ""
@@ -9914,8 +9944,9 @@ msgstr "TCP port pentru conexiunile la agentul Check_MK"
 msgid "Configured feature mismatch"
 msgstr ""
 
-msgid "Configured timeperiod parameters"
-msgstr ""
+#, fuzzy
+msgid "Configured time period parameters"
+msgstr "Dezactiveaza Notificarile"
 
 msgid ""
 "Configures the roles of the user depending on its group memberships in LDAP."
@@ -12511,7 +12542,7 @@ msgstr "afiseaza erori"
 msgid "Default parameters for detected services"
 msgstr ""
 
-msgid "Default parameters when no timeperiod matches"
+msgid "Default parameters when no time period matches"
 msgstr ""
 
 msgid "Default reporting timerange"
@@ -13052,9 +13083,9 @@ msgstr ""
 msgid "Deleted site %s"
 msgstr ""
 
-#, python-format
-msgid "Deleted timeperiod %s"
-msgstr ""
+#, fuzzy, python-format
+msgid "Deleted time period %s"
+msgstr "Perioada de timp Noua"
 
 #, python-format
 msgid "Deleted user: %s"
@@ -14426,7 +14457,7 @@ msgid ""
 "Do not backup metric data (RRD files), the monitoring history and log files"
 msgstr ""
 
-msgid "Do not bake agent packages for this folder if it is empty."
+msgid "Do not bake a generic agent package for this folder."
 msgstr ""
 
 msgid "Do not check"
@@ -15217,12 +15248,12 @@ msgid "Download %s package of agent for %s"
 msgstr ""
 
 #, python-format
-msgid "Download Checkmk %s agent"
-msgstr ""
-
-#, python-format
 msgid "Download Checkmk Agent for host %s"
 msgstr ""
+
+#, fuzzy
+msgid "Download Checkmk agent Vanilla"
+msgstr " pe siteul de monitorizare: "
 
 #, fuzzy
 msgid "Download SNMP walk"
@@ -15238,6 +15269,10 @@ msgid "Download backup key"
 msgstr ""
 
 msgid "Download filename"
+msgstr ""
+
+#, python-format
+msgid "Download generic Checkmk Agent for folder %s"
 msgstr ""
 
 #, fuzzy
@@ -16748,7 +16783,7 @@ msgid ""
 msgstr ""
 
 #, python-format
-msgid "Error: Unknown timeperiod id '%s'"
+msgid "Error: Unknown time period id '%s'"
 msgstr ""
 
 msgid "Errors"
@@ -17583,6 +17618,26 @@ msgstr ""
 
 msgid "FAULTED"
 msgstr ""
+
+#, fuzzy
+msgid "FB memory usage"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "FB memory usage (free)"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "FB memory usage (total)"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "FB memory usage (used)"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "FB memory utilization"
+msgstr "Dezactiveaza Notificarile"
 
 msgid "FC Ports"
 msgstr ""
@@ -20835,8 +20890,9 @@ msgstr ""
 msgid "Hop response times"
 msgstr ""
 
-msgid "Horizon for timeperiod computation"
-msgstr ""
+#, fuzzy
+msgid "Horizon for time period computation"
+msgstr "foloseste configuratia locala"
 
 msgid "Horizontal padding"
 msgstr ""
@@ -22085,6 +22141,17 @@ msgid ""
 "and the check will go to the WARN state."
 msgstr ""
 
+#, python-format
+msgid ""
+"If activated, the agent bakery will bake a generic agent package for this "
+"folder. In the configuration all rules are considered that unconditionally "
+"match all hosts in the folder. This package will be created even if the "
+"folder is empty.\n"
+"This is option is useful in combination with the %s feature of the %s. It "
+"allows for baking agent packages for hosts which will be created in this "
+"folder in the future, usually via the auto registration."
+msgstr ""
+
 msgid ""
 "If active the check will not only notify about un-monitored services, it "
 "will also automatically add/remove them as neccessary."
@@ -22102,7 +22169,7 @@ msgid ""
 "consequences."
 msgstr ""
 
-msgid "If agent_hash is omitted, hostname needs to be given."
+msgid "If agent_hash is omitted, target needs to be given."
 msgstr ""
 
 msgid "If available, the following metric will be shown"
@@ -23264,7 +23331,7 @@ msgstr ""
 
 msgid ""
 "In order to keep the core simple, Check_MK pre-computes all transitions for "
-"all timeperiods in advance. Since that cannot be done until infinity you "
+"all time periods in advance. Since that cannot be done until infinity you "
 "need to specify the number of days for the precomputation. After that time "
 "all periods remain in their last state. Make sure that you <i>Activate "
 "Changes</i> before that time."
@@ -24292,13 +24359,13 @@ msgstr ""
 msgid "Invalid time format '<tt>%s</tt>', please use <tt>24:00</tt> format."
 msgstr ""
 
-#, python-format
-msgid "Invalid time resolution key \"%s\" given"
+msgid ""
+"Invalid time period name. Only the characters a-z, A-Z, 0-9, _ and - are "
+"allowed."
 msgstr ""
 
-msgid ""
-"Invalid timeperiod name. Only the characters a-z, A-Z, 0-9, _ and - are "
-"allowed."
+#, python-format
+msgid "Invalid time resolution key \"%s\" given"
 msgstr ""
 
 #, python-format
@@ -27913,8 +27980,9 @@ msgstr "Adaugă notificare"
 msgid "Match only Event Console alerts"
 msgstr ""
 
-msgid "Match only during timeperiod"
-msgstr ""
+#, fuzzy
+msgid "Match only during time period"
+msgstr "Perioada de timp Noua"
 
 msgid "Match original source IP address"
 msgstr ""
@@ -27981,15 +28049,15 @@ msgid "Match the internal identifier"
 msgstr ""
 
 msgid ""
-"Match this rule only during times where the selected timeperiod from the "
+"Match this rule only during times where the selected time period from the "
 "monitoring system is active."
 msgstr ""
 
 msgid ""
-"Match this rule only during times where the selected timeperiod from the "
-"monitoring system is active. The Timeperiod definitions are taken from the "
+"Match this rule only during times where the selected time period from the "
+"monitoring system is active. The Time Period definitions are taken from the "
 "monitoring core that is running on the same host or OMD site as the event "
-"daemon. Please note, that this selection only offers timeperiods that are "
+"daemon. Please note, that this selection only offers time periods that are "
 "defined with WATO."
 msgstr ""
 
@@ -32247,6 +32315,10 @@ msgid "Nvidia GPU En-/Decoder utilization"
 msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
+msgid "Nvidia GPU Memory utilization"
+msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
 msgid "Nvidia GPU Power"
 msgstr "Dezactiveaza Notificarile"
 
@@ -32645,7 +32717,7 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Only bulk notifications during the following timeperiod"
+msgid "Only bulk notifications during the following time period"
 msgstr "(nu trimite notificări câtre Event Console)"
 
 msgid ""
@@ -39140,13 +39212,13 @@ msgstr ""
 msgid "Select Datasource"
 msgstr ""
 
+#, fuzzy
+msgid "Select a time period"
+msgstr "Perioada de timp Noua"
+
 msgid ""
 "Select a time period over which the alerts or notifications are added up"
 msgstr ""
-
-#, fuzzy
-msgid "Select a timeperiod"
-msgstr "Perioada de timp Noua"
 
 #, fuzzy
 msgid "Select all checkboxes"
@@ -43990,11 +44062,12 @@ msgid ""
 "Table ID found in the Details of the table in the SQL workspace of BigQuery"
 msgstr ""
 
-msgid "Table Layout"
-msgstr "Asezare tabel"
-
 msgid "Table absolute bloat levels"
 msgstr ""
+
+#, fuzzy
+msgid "Table layout"
+msgstr "Asezare tabel"
 
 msgid "Table of Contents (only active in frontmatter templates)"
 msgstr ""
@@ -44701,8 +44774,8 @@ msgstr ""
 
 msgid ""
 "The Inotify is running permanently on the target system and expects regular "
-"heartbeats to continue running. If no heartbeat is received over this "
-"timeperiod, the plugin simply stops. It starts again, the next time the "
+"heartbeats to continue running. If no heartbeat is received over this time "
+"period, the plugin simply stops. It starts again, the next time the "
 "check_mk_agent is triggered."
 msgstr ""
 
@@ -47655,8 +47728,9 @@ msgstr ""
 msgid "There are no rulesets or rules matching your search."
 msgstr ""
 
-msgid "There are no timeperiods defined yet."
-msgstr ""
+#, fuzzy
+msgid "There are no time periods defined yet."
+msgstr "Reguli neaplicate"
 
 msgid ""
 "There are some changes made by your colleagues and you did not confirm to "
@@ -48504,17 +48578,10 @@ msgstr ""
 msgid "This is not a valid Checkmk version number"
 msgstr ""
 
-msgid "This is not a valid Nagios timeperiod day specification."
+msgid "This is not a valid Nagios time period day specification."
 msgstr ""
 
 msgid "This is only be used in case of percentual levels"
-msgstr ""
-
-#, python-format
-msgid ""
-"This is option is useful in combination with the %s feature of the %s. It "
-"allows for baking agent packages for hosts which will be created in this "
-"folder in the future, usually via the auto registration."
 msgstr ""
 
 msgid ""
@@ -48670,7 +48737,7 @@ msgstr ""
 msgid "This name corresponds to the single file name to be monitored."
 msgstr ""
 
-msgid "This name is already being used by another timeperiod."
+msgid "This name is already being used by another time period."
 msgstr ""
 
 msgid "This name is already used. Please choose another one."
@@ -48953,7 +49020,7 @@ msgid "This package is missing or broken."
 msgstr ""
 
 msgid ""
-"This page can be used to generate a new timeperiod definition based on the "
+"This page can be used to generate a new time period definition based on the "
 "appointments of an iCalendar (<tt>*.ics</tt>) file. This import is normally "
 "used to import events like holidays, therefore only single whole day "
 "appointments are handled by this import."
@@ -50252,8 +50319,9 @@ msgid ""
 "match."
 msgstr ""
 
-msgid "This timeperiod does not exist."
-msgstr ""
+#, fuzzy
+msgid "This time period does not exist."
+msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 #, python-format
 msgid ""
@@ -50535,6 +50603,10 @@ msgstr ""
 msgid "Time MTR waits between sending pings"
 msgstr ""
 
+#, fuzzy
+msgid "Time Period"
+msgstr "Perioada de timp Noua"
+
 msgid "Time Range"
 msgstr ""
 
@@ -50632,6 +50704,11 @@ msgstr ""
 #, fuzzy
 msgid "Time periods"
 msgstr "Perioada de timp Noua"
+
+msgid ""
+"Time periods restrict notifications and other things to certain periods of "
+"the day."
+msgstr ""
 
 msgid "Time range"
 msgstr ""
@@ -50832,14 +50909,6 @@ msgid "Timeout occured"
 msgstr ""
 
 msgid "Timeout waiting for a free channel"
-msgstr ""
-
-msgid "Timeperiod"
-msgstr ""
-
-msgid ""
-"Timeperiods restrict notifications and other things to certain periods of "
-"the day."
 msgstr ""
 
 msgid "Timer"
@@ -51238,6 +51307,10 @@ msgstr ""
 #, fuzzy
 msgid "Total memory usage"
 msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
+msgid "Total memory utilization"
+msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
 msgid "Total message count lower levels"
@@ -57148,8 +57221,8 @@ msgid ""
 msgstr ""
 
 msgid ""
-"You can use other timeperiod definitions to exclude the times defined in the "
-"other timeperiods from this current timeperiod."
+"You can use other time period definitions to exclude the times defined in "
+"the other time periods from this current time period."
 msgstr ""
 
 msgid ""
@@ -57262,8 +57335,9 @@ msgstr ""
 msgid "You cannot delete this rule: it is still used by other rules."
 msgstr ""
 
-msgid "You cannot delete this timeperiod."
-msgstr ""
+#, fuzzy
+msgid "You cannot delete this time period."
+msgstr "TCP port pentru conexiunile la agentul Check_MK"
 
 msgid "You cannot delete your own account!"
 msgstr ""
@@ -57683,7 +57757,7 @@ msgstr ""
 msgid "You need to provide at least %d characters."
 msgstr ""
 
-msgid "You need to provide timeperiod exceptions in YYYY-MM-DD format"
+msgid "You need to provide time period exceptions in YYYY-MM-DD format"
 msgstr ""
 
 msgid "You need to provide your current password."
@@ -63550,10 +63624,6 @@ msgstr ""
 #~ msgstr "Numele elementului pentru eveniment"
 
 #, fuzzy
-#~ msgid "Time Periods"
-#~ msgstr "Perioada de timp Noua"
-
-#, fuzzy
 #~ msgid "Time of log entry"
 #~ msgstr "Cluster nou"
 
@@ -64605,10 +64675,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Tablespace max size"
 #~ msgstr "Nume tablespace"
-
-#, fuzzy
-#~ msgid "There are no ineffective rules."
-#~ msgstr "Reguli neaplicate"
 
 #, fuzzy
 #~ msgid "This aggregation is currently in a scheduled downtime"

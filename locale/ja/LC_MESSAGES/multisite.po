@@ -2955,7 +2955,8 @@ msgstr "アクティブな接続"
 msgid "Active guest memory"
 msgstr "アクティブなゲストメモリ"
 
-msgid "Active in timeperiod"
+#, fuzzy
+msgid "Active in time period"
 msgstr "期間中アクティブ"
 
 msgid "Active modems"
@@ -3310,7 +3311,8 @@ msgstr "新しいタグを追加する"
 msgid "Add new time"
 msgstr "新しい時間を追加する"
 
-msgid "Add new timeperiod"
+#, fuzzy
+msgid "Add new time period"
 msgstr "新しい期間を追加する"
 
 msgid "Add new topic"
@@ -4034,6 +4036,10 @@ msgstr "エージェントの署名キー"
 msgid "Agent signing"
 msgstr "エージェントの署名"
 
+#, fuzzy
+msgid "Agent type"
+msgstr "コメントタイプ"
+
 msgid "Agent updater (Linux, Windows, Solaris)"
 msgstr "エージェントアップデーター(Linux、Windows、Solaris)"
 
@@ -4630,7 +4636,8 @@ msgstr ""
 msgid "Allows you to use a sidebar element in the dashboard."
 msgstr "ダッシュボードでサイドバー要素を使用できます。"
 
-msgid "Also bulk outside of timeperiod"
+#, fuzzy
+msgid "Also bulk outside of time period"
 msgstr "また、期間外のバルク"
 
 msgid "Also contact Checkmk agent"
@@ -4767,7 +4774,8 @@ msgstr "役割のエイリアスまたは説明"
 msgid "An alias or description of the site."
 msgstr "サイトのエイリアスまたは説明。"
 
-msgid "An alias or description of the timeperiod"
+#, fuzzy
+msgid "An alias or description of the time period"
 msgstr "期間のエイリアスまたは説明"
 
 msgid "An alias or description of this group."
@@ -6035,6 +6043,26 @@ msgstr "B/d"
 msgid "B/s"
 msgstr "B/s"
 
+#, fuzzy
+msgid "BAR1 memory usage"
+msgstr "DB2メモリー使用量"
+
+#, fuzzy
+msgid "BAR1 memory usage (free)"
+msgstr "DB2メモリー使用量"
+
+#, fuzzy
+msgid "BAR1 memory usage (total)"
+msgstr "DB2メモリー使用量"
+
+#, fuzzy
+msgid "BAR1 memory usage (used)"
+msgstr "DB2メモリー使用量"
+
+#, fuzzy
+msgid "BAR1 memory utilization"
+msgstr "メモリ使用率"
+
 msgid "BBcredit zero"
 msgstr "BBcreditゼロ"
 
@@ -6203,6 +6231,9 @@ msgstr "バックアップ"
 
 msgid "Bad Requests Received"
 msgstr "不正なリクエストを受信しました"
+
+msgid "Bake a generic agent package for this folder."
+msgstr ""
 
 #, fuzzy
 msgid "Bake agent packages"
@@ -6613,7 +6644,8 @@ msgstr "ビルトイン"
 msgid "Builtin icon visibility"
 msgstr "ビルトインアイコンの可視性"
 
-msgid "Builtin timeperiods can not be modified"
+#, fuzzy
+msgid "Builtin time periods can not be modified"
 msgstr "組み込み期間は変更できません"
 
 msgid "Builtin: Force"
@@ -6653,7 +6685,8 @@ msgstr "一括検出が開始されました..."
 msgid "Bulk discovery successful"
 msgstr "一括検出に成功"
 
-msgid "Bulk during timeperiod"
+#, fuzzy
+msgid "Bulk during time period"
 msgstr "期間中のバルク"
 
 msgid "Bulk edit hosts"
@@ -7186,15 +7219,16 @@ msgstr ""
 
 msgid ""
 "By enabling this option notifications will be bulked only if the specified "
-"timeperiod is active. When the timeperiod ends a bulk containing all "
+"time period is active. When the time period ends a bulk containing all "
 "notifications that appeared during that time will be sent. If bulking should "
-"be enabled outside of the timeperiod as well, the option \"Also Bulk outside "
-"of timeperiod\" can be used."
+"be enabled outside of the time period as well, the option \"Also Bulk "
+"outside of time period\" can be used."
 msgstr ""
 
+#, fuzzy
 msgid ""
 "By enabling this option notifications will be bulked outside of the defined "
-"timeperiod as well."
+"time period as well."
 msgstr ""
 "このオプションを有効にすると、通知は定義された期間外にもまとめられます。"
 
@@ -10064,7 +10098,8 @@ msgstr ""
 msgid "Configured feature mismatch"
 msgstr "構成された機能の不一致"
 
-msgid "Configured timeperiod parameters"
+#, fuzzy
+msgid "Configured time period parameters"
 msgstr "構成された期間パラメーター"
 
 msgid ""
@@ -12479,7 +12514,8 @@ msgstr "デフォルトのメトリックカラー"
 msgid "Default parameters for detected services"
 msgstr "検出されたサービスのデフォルトパラメータ"
 
-msgid "Default parameters when no timeperiod matches"
+#, fuzzy
+msgid "Default parameters when no time period matches"
 msgstr "期間が一致しない場合のデフォルトパラメータ"
 
 msgid "Default reporting timerange"
@@ -12996,8 +13032,8 @@ msgstr "%s' に対するルールセット '%s' を削除しました"
 msgid "Deleted site %s"
 msgstr "削除されたサイト %s"
 
-#, python-format
-msgid "Deleted timeperiod %s"
+#, fuzzy, python-format
+msgid "Deleted time period %s"
 msgstr "削除された期間 %s"
 
 #, python-format
@@ -14296,7 +14332,7 @@ msgstr ""
 "メトリックデータ(RRDファイル)、監視履歴、およびログファイルをバックアップしな"
 "いでください"
 
-msgid "Do not bake agent packages for this folder if it is empty."
+msgid "Do not bake a generic agent package for this folder."
 msgstr ""
 
 msgid "Do not check"
@@ -15069,12 +15105,12 @@ msgid "Download %s package of agent for %s"
 msgstr "%sのエージェントの%sパッケージをダウンロードします"
 
 #, python-format
-msgid "Download Checkmk %s agent"
-msgstr "Checkmk%sエージェントをダウンロード"
-
-#, python-format
 msgid "Download Checkmk Agent for host %s"
 msgstr "ホスト %s のCheckmkエージェントをダウンロードします"
+
+#, fuzzy
+msgid "Download Checkmk agent Vanilla"
+msgstr "Checkmk%sエージェントをダウンロード"
 
 msgid "Download SNMP walk"
 msgstr "SNMP walkをダウンロード"
@@ -15090,6 +15126,10 @@ msgstr "バックアップキーをダウンロードする"
 
 msgid "Download filename"
 msgstr "ファイル名をダウンロード"
+
+#, fuzzy, python-format
+msgid "Download generic Checkmk Agent for folder %s"
+msgstr "ホスト %s のCheckmkエージェントをダウンロードします"
 
 msgid "Download license usage report"
 msgstr "ライセンス使用状況レポートをダウンロードする"
@@ -16579,8 +16619,8 @@ msgid ""
 "running!"
 msgstr "エラー:スナップショットの作成を担当するプロセスは実行されていません！"
 
-#, python-format
-msgid "Error: Unknown timeperiod id '%s'"
+#, fuzzy, python-format
+msgid "Error: Unknown time period id '%s'"
 msgstr "エラー:不明な期間ID '%s'"
 
 msgid "Errors"
@@ -17351,6 +17391,26 @@ msgstr "ハードウェアデバイスのファン速度"
 
 msgid "FAULTED"
 msgstr "故障"
+
+#, fuzzy
+msgid "FB memory usage"
+msgstr "DB2メモリー使用量"
+
+#, fuzzy
+msgid "FB memory usage (free)"
+msgstr "DB2メモリー使用量"
+
+#, fuzzy
+msgid "FB memory usage (total)"
+msgstr "DB2メモリー使用量"
+
+#, fuzzy
+msgid "FB memory usage (used)"
+msgstr "DB2メモリー使用量"
+
+#, fuzzy
+msgid "FB memory utilization"
+msgstr "メモリ使用率"
 
 msgid "FC Ports"
 msgstr "FCポート"
@@ -20736,7 +20796,8 @@ msgstr "ホップ %d 往復平均"
 msgid "Hop response times"
 msgstr "ホップの応答時間"
 
-msgid "Horizon for timeperiod computation"
+#, fuzzy
+msgid "Horizon for time period computation"
 msgstr "期間計算の範囲"
 
 msgid "Horizontal padding"
@@ -21974,6 +22035,17 @@ msgstr ""
 "有効にすると、 \"Failed Action\"エントリがメインチェックに表示され、チェック"
 "はWARN状態になります。"
 
+#, python-format
+msgid ""
+"If activated, the agent bakery will bake a generic agent package for this "
+"folder. In the configuration all rules are considered that unconditionally "
+"match all hosts in the folder. This package will be created even if the "
+"folder is empty.\n"
+"This is option is useful in combination with the %s feature of the %s. It "
+"allows for baking agent packages for hosts which will be created in this "
+"folder in the future, usually via the auto registration."
+msgstr ""
+
 msgid ""
 "If active the check will not only notify about un-monitored services, it "
 "will also automatically add/remove them as neccessary."
@@ -21991,7 +22063,8 @@ msgid ""
 "consequences."
 msgstr ""
 
-msgid "If agent_hash is omitted, hostname needs to be given."
+#, fuzzy
+msgid "If agent_hash is omitted, target needs to be given."
 msgstr "agent_hashを省略する場合は、ホスト名を指定する必要があります。"
 
 msgid "If available, the following metric will be shown"
@@ -23548,9 +23621,10 @@ msgstr ""
 "成されます。接続詞内で構成されたすべてのレベルに達すると、関連する状態が報告"
 "されます。"
 
+#, fuzzy
 msgid ""
 "In order to keep the core simple, Check_MK pre-computes all transitions for "
-"all timeperiods in advance. Since that cannot be done until infinity you "
+"all time periods in advance. Since that cannot be done until infinity you "
 "need to specify the number of days for the precomputation. After that time "
 "all periods remain in their last state. Make sure that you <i>Activate "
 "Changes</i> before that time."
@@ -24579,14 +24653,16 @@ msgstr "無効なテスト。"
 msgid "Invalid time format '<tt>%s</tt>', please use <tt>24:00</tt> format."
 msgstr ""
 
+#, fuzzy
+msgid ""
+"Invalid time period name. Only the characters a-z, A-Z, 0-9, _ and - are "
+"allowed."
+msgstr ""
+"フォルダー名が無効です。文字 a-z, A-Z, 0-9, _ および - のみが許可されます。"
+
 #, python-format
 msgid "Invalid time resolution key \"%s\" given"
 msgstr "無効な時間解決キー \"%s\" が指定されました"
-
-msgid ""
-"Invalid timeperiod name. Only the characters a-z, A-Z, 0-9, _ and - are "
-"allowed."
-msgstr ""
 
 #, python-format
 msgid "Invalid timestep \"%d\" given"
@@ -27962,7 +28038,8 @@ msgstr "通知コメントの一致"
 msgid "Match only Event Console alerts"
 msgstr "イベントコンソールアラートのみに一致"
 
-msgid "Match only during timeperiod"
+#, fuzzy
+msgid "Match only during time period"
 msgstr "期間中にのみ一致する"
 
 msgid "Match original source IP address"
@@ -28022,18 +28099,20 @@ msgstr "ホストを一致させる"
 msgid "Match the internal identifier"
 msgstr "内部識別子と一致する"
 
+#, fuzzy
 msgid ""
-"Match this rule only during times where the selected timeperiod from the "
+"Match this rule only during times where the selected time period from the "
 "monitoring system is active."
 msgstr ""
 "このルールは、監視システムから選択した期間がアクティブな時間帯にのみ一致しま"
 "す。"
 
+#, fuzzy
 msgid ""
-"Match this rule only during times where the selected timeperiod from the "
-"monitoring system is active. The Timeperiod definitions are taken from the "
+"Match this rule only during times where the selected time period from the "
+"monitoring system is active. The Time Period definitions are taken from the "
 "monitoring core that is running on the same host or OMD site as the event "
-"daemon. Please note, that this selection only offers timeperiods that are "
+"daemon. Please note, that this selection only offers time periods that are "
 "defined with WATO."
 msgstr ""
 "このルールは、監視システムから選択した期間がアクティブな時間帯にのみ一致しま"
@@ -31991,6 +32070,10 @@ msgid "Nvidia GPU En-/Decoder utilization"
 msgstr "CPU使用率"
 
 #, fuzzy
+msgid "Nvidia GPU Memory utilization"
+msgstr "CPU使用率"
+
+#, fuzzy
 msgid "Nvidia GPU Power"
 msgstr "CPU使用率"
 
@@ -32384,7 +32467,8 @@ msgstr ""
 "適用してください。注意:このオプションが使用されている場合、ホスト通知がこの"
 "ルールに一致することはありません。"
 
-msgid "Only bulk notifications during the following timeperiod"
+#, fuzzy
+msgid "Only bulk notifications during the following time period"
 msgstr "次の期間中の一括通知のみ"
 
 msgid ""
@@ -38661,12 +38745,13 @@ msgstr "ユーザー%sを参照してください"
 msgid "Select Datasource"
 msgstr "データソースを選択"
 
+#, fuzzy
+msgid "Select a time period"
+msgstr "期間を選択してください"
+
 msgid ""
 "Select a time period over which the alerts or notifications are added up"
 msgstr ""
-
-msgid "Select a timeperiod"
-msgstr "期間を選択してください"
 
 msgid "Select all checkboxes"
 msgstr "すべてのチェックボックスを選択します"
@@ -43443,11 +43528,12 @@ msgid ""
 "Table ID found in the Details of the table in the SQL workspace of BigQuery"
 msgstr ""
 
-msgid "Table Layout"
-msgstr "テーブルレイアウト"
-
 msgid "Table absolute bloat levels"
 msgstr "テーブルの絶対膨満レベル"
+
+#, fuzzy
+msgid "Table layout"
+msgstr "テーブルレイアウト"
 
 msgid "Table of Contents (only active in frontmatter templates)"
 msgstr "目次(frontmatterテンプレートでのみアクティブ)"
@@ -44240,10 +44326,11 @@ msgstr ""
 "これらの変更を収集し、監視システムに報告します。また、pynotify pythonプラグイ"
 "ンをターゲットシステムにインストールする必要があります。"
 
+#, fuzzy
 msgid ""
 "The Inotify is running permanently on the target system and expects regular "
-"heartbeats to continue running. If no heartbeat is received over this "
-"timeperiod, the plugin simply stops. It starts again, the next time the "
+"heartbeats to continue running. If no heartbeat is received over this time "
+"period, the plugin simply stops. It starts again, the next time the "
 "check_mk_agent is triggered."
 msgstr ""
 "Inotifyはターゲットシステムで永続的に実行されており、定期的なハートビートが引"
@@ -47664,7 +47751,8 @@ msgstr "このセットで定義されているルールはありません。"
 msgid "There are no rulesets or rules matching your search."
 msgstr "検索に一致するルールセットやルールはありません。"
 
-msgid "There are no timeperiods defined yet."
+#, fuzzy
+msgid "There are no time periods defined yet."
 msgstr "まだ定義されている期間はありません。"
 
 msgid ""
@@ -48707,18 +48795,12 @@ msgstr ""
 msgid "This is not a valid Checkmk version number"
 msgstr "これは有効なCheckmkバージョン番号ではありません"
 
-msgid "This is not a valid Nagios timeperiod day specification."
+#, fuzzy
+msgid "This is not a valid Nagios time period day specification."
 msgstr "これは有効なNagios期間の日の指定ではありません。"
 
 msgid "This is only be used in case of percentual levels"
 msgstr "これは、パーセントレベルの場合にのみ使用されます"
-
-#, python-format
-msgid ""
-"This is option is useful in combination with the %s feature of the %s. It "
-"allows for baking agent packages for hosts which will be created in this "
-"folder in the future, usually via the auto registration."
-msgstr ""
 
 msgid ""
 "This is relevant during periods where the according check cannot be executed "
@@ -48918,7 +49000,8 @@ msgstr "この名前は、監視対象の冷却装置に対応しています。
 msgid "This name corresponds to the single file name to be monitored."
 msgstr "この名前は、監視対象の単一のファイル名に対応しています。"
 
-msgid "This name is already being used by another timeperiod."
+#, fuzzy
+msgid "This name is already being used by another time period."
 msgstr "この名前はすでに別の期間で使用されています。"
 
 msgid "This name is already used. Please choose another one."
@@ -49287,8 +49370,9 @@ msgstr "このパッケージにはまだルールが含まれていません。
 msgid "This package is missing or broken."
 msgstr "このパッケージは存在しない、または破損しています。"
 
+#, fuzzy
 msgid ""
-"This page can be used to generate a new timeperiod definition based on the "
+"This page can be used to generate a new time period definition based on the "
 "appointments of an iCalendar (<tt>*.ics</tt>) file. This import is normally "
 "used to import events like holidays, therefore only single whole day "
 "appointments are handled by this import."
@@ -50969,7 +51053,8 @@ msgstr ""
 "このテキストは、アラートを生成したチェックプラグインの出力で検索されている正"
 "規表現です。これは接頭辞ではなく、中置の一致です。"
 
-msgid "This timeperiod does not exist."
+#, fuzzy
+msgid "This time period does not exist."
 msgstr "この期間は存在しません。"
 
 #, python-format
@@ -51323,6 +51408,10 @@ msgstr "クリティカル状態がトリガーされるバッテリーの残り
 msgid "Time MTR waits between sending pings"
 msgstr "MTRがpingの送信間で待機する時間"
 
+#, fuzzy
+msgid "Time Period"
+msgstr "期間"
+
 msgid "Time Range"
 msgstr "時間範囲"
 
@@ -51416,6 +51505,11 @@ msgstr "カウントする期間"
 
 msgid "Time periods"
 msgstr "期間"
+
+msgid ""
+"Time periods restrict notifications and other things to certain periods of "
+"the day."
+msgstr ""
 
 msgid "Time range"
 msgstr "時間範囲"
@@ -51618,14 +51712,6 @@ msgstr "タイムアウトが発生しました"
 
 msgid "Timeout waiting for a free channel"
 msgstr "空きチャネルを待機しているタイムアウト"
-
-msgid "Timeperiod"
-msgstr "期間"
-
-msgid ""
-"Timeperiods restrict notifications and other things to certain periods of "
-"the day."
-msgstr ""
 
 msgid "Timer"
 msgstr "タイマー"
@@ -52016,6 +52102,10 @@ msgstr "ログファイルの合計サイズ: 絶対上位レベル"
 
 msgid "Total memory usage"
 msgstr "合計メモリ使用量"
+
+#, fuzzy
+msgid "Total memory utilization"
+msgstr "メモリ使用率"
 
 msgid "Total message count lower levels"
 msgstr "合計メッセージ数の下位レベル"
@@ -58237,9 +58327,10 @@ msgid ""
 "replaced with <tt>bar</tt> "
 msgstr ""
 
+#, fuzzy
 msgid ""
-"You can use other timeperiod definitions to exclude the times defined in the "
-"other timeperiods from this current timeperiod."
+"You can use other time period definitions to exclude the times defined in "
+"the other time periods from this current time period."
 msgstr ""
 "他の期間定義を使用して、他の期間で定義された時間をこの現在の期間から除外でき"
 "ます。"
@@ -58377,7 +58468,8 @@ msgstr "このルールは削除できません。他の集計で引き続き使
 msgid "You cannot delete this rule: it is still used by other rules."
 msgstr "このルールは削除できません。他のルールで引き続き使用されます。"
 
-msgid "You cannot delete this timeperiod."
+#, fuzzy
+msgid "You cannot delete this time period."
 msgstr "この期間は削除できません。"
 
 msgid "You cannot delete your own account!"
@@ -58858,7 +58950,8 @@ msgstr "通知を送信するには、有効なパスワードを入力する必
 msgid "You need to provide at least %d characters."
 msgstr "少なくとも%d文字を指定する必要があります。"
 
-msgid "You need to provide timeperiod exceptions in YYYY-MM-DD format"
+#, fuzzy
+msgid "You need to provide time period exceptions in YYYY-MM-DD format"
 msgstr "YYYY-MM-DD形式で期間例外を提供する必要があります"
 
 msgid "You need to provide your current password."
@@ -61027,6 +61120,9 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Timeperiod"
+#~ msgstr "期間"
 
 #, python-format
 #~ msgid "Could not render: %r"

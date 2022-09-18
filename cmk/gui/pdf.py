@@ -510,6 +510,9 @@ class Document:
         self.advance(self.lineskip() / 2.0)
         self.restore_state()
 
+    def headings(self) -> Sequence[tuple[str, int]]:
+        return self._heading_entries
+
     # Add vertical white space, skip. If that does not fit onto the current
     # page, then make a page break and *do not* skip!
     def add_margin(self, height: Optional[SizeMM] = None, force: bool = False) -> None:

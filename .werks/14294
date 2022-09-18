@@ -1,0 +1,13 @@
+Title: Fix empty elements for frontmatter templates
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1663524240
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+When trying to edit a report that is configured to be a front matter template,
+the element and fixel tables were always empty, even when there were elements
+configured.

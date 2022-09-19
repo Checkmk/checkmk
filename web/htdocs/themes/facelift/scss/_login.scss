@@ -40,18 +40,18 @@ body.login {
     margin: -30px auto 10px;
     background: $navigation-bg-color;
     border-radius: 8px;
+
+    .login_window_logo_link {
+      position: absolute;
+      top: 25px;
+      left: 40px;
+      width: 120px;
+      height: auto;
+    }
   }
 
-  #logo {
-    position: absolute;
-    top: 25px;
-    left: 40px;
-    width: 120px;
-    height: auto;
-
-    &.custom {
-      width: 60px;
-    }
+  #logo.custom {
+    width: 60px;
   }
 
   #version {

@@ -546,7 +546,7 @@ class LoginPage(Page):
 
         html.open_div(id_="login_window")
 
-        html.open_a(href="https://checkmk.com")
+        html.open_a(href="https://checkmk.com", class_="login_window_logo_link")
         html.img(
             src=theme.detect_icon_path(icon_name="logo", prefix="mk-"),
             id_="logo",

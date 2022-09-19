@@ -62,6 +62,7 @@ from cmk.gui.type_defs import (
     Perfdata,
     PerfometerSpec,
     RenderableRecipe,
+    RGBColor,
     Row,
     TranslatedMetric,
     TranslatedMetrics,
@@ -80,7 +81,6 @@ StackElement = Union[Atom, TransformedAtom]
 
 ScalarDefinition = Union[str, Tuple[str, Union[str, LazyString]]]
 HorizontalRule = tuple[float, str, str, Union[str, LazyString]]
-RGBColor = tuple[float, float, float]  # (1.5, 0.0, 0.5)
 
 
 class _CurveMandatory(TypedDict):

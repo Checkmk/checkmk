@@ -490,6 +490,7 @@ MetricDefinition = Union[  # https://github.com/python/mypy/issues/11098
 PerfometerSpec = dict[str, Any]
 PerfdataTuple = tuple[str, float, str, float | None, float | None, float | None, float | None]
 Perfdata = list[PerfdataTuple]
+RGBColor = tuple[float, float, float]  # (1.5, 0.0, 0.5)
 
 
 class GraphSpec(TypedDict):

@@ -38,13 +38,13 @@ import cmk.utils.version as cmk_version
 from cmk.gui.exceptions import MKInternalError
 from cmk.gui.http import response
 from cmk.gui.i18n import _
+from cmk.gui.type_defs import RGBColor
 
 RawIconColumn = tuple[Literal["icon"], str]
 RawRendererColumn = tuple[Literal["object"], "CellRenderer"]
 RawTableColumn = tuple[str, Union[str, RawIconColumn, RawRendererColumn]]
 RawTableRow = list[RawTableColumn]
 RawTableRows = list[RawTableRow]
-RGBColor = tuple[float, float, float]  # (1.5, 0.0, 0.5)
 SizePT = float
 SizeInternal = float
 SizeMM = float

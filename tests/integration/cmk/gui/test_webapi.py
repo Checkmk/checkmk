@@ -500,6 +500,7 @@ def test_write_host_labels(web, site: Site):  # noqa: F811 # pylint: disable=red
             "host_labels": {},
             "ipaddresses": {},
             "host_attributes": {},
+            "folder_attributes": {},
             "explicit_host_conf": {},
             "host_contactgroups": [],
             "service_contactgroups": [],

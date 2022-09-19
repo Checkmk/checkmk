@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
-from typing import Any, List, Mapping, Optional
+from collections.abc import Mapping
+from typing import Any, Optional
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     register,
@@ -31,7 +32,7 @@ ASSET_TYPE = gcp.AssetType("sqladmin.googleapis.com/Instance")
 
 def _get_service_labels(
     section_gcp_assets: gcp.AssetSection, service: gcp.GCPAsset, item: str
-) -> List[ServiceLabel]:
+) -> list[ServiceLabel]:
     data = service.resource_data
     labels = (
         [ServiceLabel(f"gcp/labels/{k}", v) for k, v in data["settings"]["userLabels"].items()]
@@ -50,19 +51,31 @@ def _get_service_labels(
     return labels
 
 
+def validate_sections(
+    section_gcp_service_cloud_sql: Optional[gcp.Section],
+    section_gcp_assets: Optional[gcp.AssetSection],
+) -> tuple[gcp.Section, gcp.AssetSection]:
+    section = section_gcp_service_cloud_sql if section_gcp_service_cloud_sql is not None else {}
+    if (
+        section_gcp_assets is None
+        or not section_gcp_assets.config.is_enabled("cloud_sql")
+        or ASSET_TYPE not in section_gcp_assets
+    ):
+        assets = gcp.AssetSection(
+            gcp.Project(""), gcp.Config(services=[]), _assets={ASSET_TYPE: {}}
+        )
+    else:
+        assets = section_gcp_assets
+    return section, assets
+
+
 def discover(
     section_gcp_service_cloud_sql: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> DiscoveryResult:
-    if (
-        section_gcp_assets is None
-        or not section_gcp_assets.config.is_enabled("cloud_sql")
-        or not ASSET_TYPE in section_gcp_assets
-    ):
-        return
-
-    for item, service in section_gcp_assets[ASSET_TYPE].items():
-        labels = _get_service_labels(section_gcp_assets, service, item)
+    _, assets = validate_sections(section_gcp_service_cloud_sql, section_gcp_assets)
+    for item, service in assets[ASSET_TYPE].items():
+        labels = _get_service_labels(assets, service, item)
         yield Service(item=item, labels=labels)
 
 
@@ -277,7 +290,7 @@ def _has_metric(
         return False
 
     section_item = section_gcp_service_cloud_sql.get(item, gcp.SectionItem(rows=[]))
-    return any((row.metric_type == metric_type for row in section_item.rows))
+    return any(row.metric_type == metric_type for row in section_item.rows)
 
 
 # Custom discovery function since only the follower database has a replica_lag
@@ -287,22 +300,17 @@ def discover_gcp_sql_replication(
     section_gcp_service_cloud_sql: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> DiscoveryResult:
-    if (
-        section_gcp_assets is None
-        or not section_gcp_assets.config.is_enabled("cloud_sql")
-        or not ASSET_TYPE in section_gcp_assets
-    ):
-        return
+    section, assets = validate_sections(section_gcp_service_cloud_sql, section_gcp_assets)
 
-    for item, service in section_gcp_assets[ASSET_TYPE].items():
+    for item, service in assets[ASSET_TYPE].items():
         if not _has_metric(
-            section_gcp_service_cloud_sql,
+            section,
             item,
             "cloudsql.googleapis.com/database/replication/replica_lag",
         ):
             continue
 
-        labels = _get_service_labels(section_gcp_assets, service, item)
+        labels = _get_service_labels(assets, service, item)
         yield Service(item=item, labels=labels)
 
 

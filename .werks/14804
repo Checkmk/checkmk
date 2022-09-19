@@ -1,0 +1,12 @@
+Title: Deprecate cmk backup and cmk restore
+Class: fix
+Compatible: compat
+Component: core
+Date: 1663578463
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p29
+
+'cmk backup' and 'cmk restore' will be removed in checkmk 2.2. Please use 'omd backup' instead.

@@ -39,6 +39,8 @@ def backup_paths() -> List[BackupPath]:
 
 
 def do_backup(tarname: str) -> None:
+    console.verbose(
+        "'cmk backup' is deprecated and will be removed in 2.2. Please use 'omd backup' instead.")
     console.verbose("Creating backup file '%s'...\n", tarname)
     tar = tarfile.open(tarname, "w:gz")
 
@@ -73,6 +75,8 @@ def do_backup(tarname: str) -> None:
 
 
 def do_restore(tarname: str) -> None:
+    console.verbose(
+        "'cmk restore' is deprecated and will be removed in 2.2. Please use 'omd backup' instead.")
     console.verbose("Restoring from '%s'...\n", tarname)
 
     if not os.path.exists(tarname):

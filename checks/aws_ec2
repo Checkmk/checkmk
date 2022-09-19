@@ -2,15 +2,10 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Mapping
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # .
 #   .--CPU credits---------------------------------------------------------.
@@ -58,46 +53,5 @@ check_info["aws_ec2.cpu_credits"] = {
     "service_description": "AWS/EC2 CPU Credits",
     "group": "aws_ec2_cpu_credits",
     "default_levels_variable": "aws_cpu_credits",
-    "has_perfdata": True,
-}
-
-# .
-#   .--CPU utilization-----------------------------------------------------.
-#   |    ____ ____  _   _         _   _ _ _          _   _                 |
-#   |   / ___|  _ \| | | |  _   _| |_(_) (_)______ _| |_(_) ___  _ __      |
-#   |  | |   | |_) | | | | | | | | __| | | |_  / _` | __| |/ _ \| '_ \     |
-#   |  | |___|  __/| |_| | | |_| | |_| | | |/ / (_| | |_| | (_) | | | |    |
-#   |   \____|_|    \___/   \__,_|\__|_|_|_/___\__,_|\__|_|\___/|_| |_|    |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-Section = Mapping[str, float]
-
-factory_settings["aws_ec2_cpu_util_default_levels"] = {
-    "util": (90.0, 95.0),
-}
-
-
-def discover_aws_ec2_cpu_util(section: Section):
-    yield from inventory_aws_generic_single(
-        section,
-        ["CPUUtilization"],
-    )
-
-
-def check_aws_ec2_cpu_util(item: str, params: Mapping[str, Any], section: Section):
-    if (cpu_utilization_value := section.get("CPUUtilization")) is None:
-        raise MKCounterWrapped("Currently no data from AWS")
-
-    yield from check_cpu_util(cpu_utilization_value, params, time.time())
-
-
-check_info["aws_ec2.cpu_util"] = {
-    # section is already migrated!
-    "inventory_function": discover_aws_ec2_cpu_util,
-    "check_function": check_aws_ec2_cpu_util,
-    "service_description": "AWS/EC2 CPU utilization",
-    "group": "cpu_utilization",
-    "default_levels_variable": "aws_ec2_cpu_util_default_levels",
     "has_perfdata": True,
 }

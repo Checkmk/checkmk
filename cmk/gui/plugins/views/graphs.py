@@ -83,7 +83,7 @@ multisite_builtin_views.update(
             "public": True,
             "show_filters": [],
             "sorters": [],
-            "icon": "graph",
+            "icon": "host_graph",
             "title": _("Host graphs"),
             "topic": "history",
         },

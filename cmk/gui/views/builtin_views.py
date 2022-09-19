@@ -1963,7 +1963,7 @@ builtin_views.update(
             ],
             "hidden": False,
             "hide_filters": [],
-            "icon": {"icon": "graph", "emblem": "search"},
+            "icon": {"icon": "service_graph", "emblem": "search"},
             "layout": "boxed_graph",
             "mustsearch": True,
             "name": "searchpnp",

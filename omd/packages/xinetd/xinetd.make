@@ -24,7 +24,7 @@ XINETD_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(XINETD_DIR)
 XINETD_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(XINETD_DIR)
 #XINETD_WORK_DIR := $(PACKAGE_WORK_DIR)/$(XINETD_DIR)
 
-ifneq ($(filter sles%,$(DISTRO_CODE)),)
+ifneq ($(filter sles% el9,$(DISTRO_CODE)),)
 $(XINETD_BUILD): $(XINETD_UNPACK)
 	cd $(XINETD_BUILD_DIR) && \
 	    ./configure \
@@ -43,7 +43,7 @@ XINETD_CACHE_PKG_PATH := $(call cache_pkg_path,$(XINETD_DIR),$(XINETD_BUILD_ID))
 $(XINETD_CACHE_PKG_PATH):
 	$(call pack_pkg_archive,$@,$(XINETD_DIR),$(XINETD_BUILD_ID),$(XINETD_INTERMEDIATE_INSTALL))
 
-ifneq ($(filter sles%,$(DISTRO_CODE)),)
+ifneq ($(filter sles% el9,$(DISTRO_CODE)),)
 $(XINETD_CACHE_PKG_PROCESS): $(XINETD_CACHE_PKG_PATH)
 	$(call unpack_pkg_archive,$(XINETD_CACHE_PKG_PATH),$(XINETD_DIR))
 	$(call upload_pkg_archive,$(XINETD_CACHE_PKG_PATH),$(XINETD_DIR),$(XINETD_BUILD_ID))
@@ -54,7 +54,7 @@ $(XINETD_CACHE_PKG_PROCESS):
 endif
 
 $(XINETD_INTERMEDIATE_INSTALL): $(XINETD_BUILD)
-ifneq ($(filter sles%,$(DISTRO_CODE)),)
+ifneq ($(filter sles% el9,$(DISTRO_CODE)),)
 	$(MKDIR) $(XINETD_INSTALL_DIR)/bin
 	install -m 755 $(XINETD_BUILD_DIR)/xinetd $(XINETD_INSTALL_DIR)/bin
 	
@@ -74,7 +74,7 @@ $(XINETD_INTERMEDIATE_INSTALL):
 	$(TOUCH) $@
 endif
 
-ifneq ($(filter sles%,$(DISTRO_CODE)),)
+ifneq ($(filter sles% el9,$(DISTRO_CODE)),)
 $(XINETD_INSTALL): $(XINETD_CACHE_PKG_PROCESS)
 	$(RSYNC) $(XINETD_INSTALL_DIR)/ $(DESTDIR)$(OMD_ROOT)/
 	$(TOUCH) $@

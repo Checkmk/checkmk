@@ -1,0 +1,1 @@
+FROM artifacts.lan.tribe29.com:4000/almalinux@sha256:00a0184936f4a0e4bad1e8a434efb76172ca6ac3752917f9ae7c5989473023b8

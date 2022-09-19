@@ -70,6 +70,8 @@ def get_omd_distro_name() -> str:
             return "el7"
         if content.startswith("CentOS Linux release 8"):
             return "el8"
+        if content.startswith("AlmaLinux release 9"):
+            return "el9"
         raise NotImplementedError()
 
     os_spec = _read_os_release()

@@ -66,6 +66,12 @@ then
         [[ $VERSION =~ (Fedora release ([0-9]+)) ]] && REL=${BASH_REMATCH[2]} || exit 0
         echo "FEDORA$SEP$REL"
         exit 0
+    elif [ "${VERSION:0:9}" = "AlmaLinux" ]
+    then
+        if [ "${VERSION:0:21}" = "AlmaLinux release 9.0" ]; then
+            echo "ALMALINUX${SEP}9"
+            exit 0
+        fi
     fi
 fi
 

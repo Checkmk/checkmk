@@ -5,12 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest  # type: ignore[import]
+from typing import List, Tuple
 from werkzeug.test import create_environ
 
 import cmk.utils.paths
 import cmk.gui.groups as gui_groups
 import cmk.gui.watolib.groups as groups
 import cmk.gui.htmllib as htmllib
+from cmk.ec.export import ECRulePacks
 from cmk.gui.http import Request
 from cmk.gui.globals import AppContext, RequestContext
 from testlib.utils import DummyApplication
@@ -119,3 +121,71 @@ multisite_contactgroups = {
                 "d1ng": "dong",
             }
         }
+
+
+def _rule_packs() -> ECRulePacks:
+    return [{
+        'id': 'default',
+        'title': 'Default rule pack',
+        'rules': [{
+            'id': 'test2',
+            'contact_groups': {
+                'groups': ['my_contact_group'],
+                'notify': True,
+                'precedence': 'host'
+            },
+        }, {
+            'id': 'test4',
+            'contact_groups': {
+                'groups': ['all'],
+                'notify': True,
+                'precedence': 'host'
+            },
+        }, {
+            'id': 'test1',
+            'contact_groups': {
+                'groups': ['my_contact_group'],
+                'notify': True,
+                'precedence': 'host'
+            },
+        }, {
+            'id': 'test',
+            'contact_groups': {
+                'groups': ['my_contact_group'],
+                'notify': True,
+                'precedence': 'host'
+            },
+        }],
+    }]
+
+
+@pytest.mark.parametrize("contact_group, rule_packs, expected_result", [
+    pytest.param(
+        "my_contact_group",
+        _rule_packs,
+        [
+            ('Event console rule: test2',
+             'wato.py?edit=0&folder=&mode=mkeventd_edit_rule&rule_pack=default'),
+            ('Event console rule: test1',
+             'wato.py?edit=2&folder=&mode=mkeventd_edit_rule&rule_pack=default'),
+            ('Event console rule: test',
+             'wato.py?edit=3&folder=&mode=mkeventd_edit_rule&rule_pack=default'),
+        ],
+        id="existing contact group, should match",
+    ),
+    pytest.param(
+        "bielefeld",
+        _rule_packs,
+        [],
+        id="none existing contact group",
+    ),
+])
+def test_find_usages_of_contact_group_in_ec_rules(
+    register_builtin_html,
+    monkeypatch,
+    contact_group: str,
+    rule_packs: ECRulePacks,
+    expected_result: List[Tuple[str, str]],
+) -> None:
+    monkeypatch.setattr(cmk.gui.wato.mkeventd, "load_mkeventd_rules", _rule_packs)
+    assert groups._find_usages_of_contact_group_in_ec_rules(contact_group) == expected_result  # pylint: disable=protected-access

@@ -2238,7 +2238,7 @@ builtin_views.update(
             ],
             "hidden": False,
             "hidebutton": False,
-            "icon": {"icon": "graph", "emblem": "search"},
+            "icon": {"icon": "service_graph", "emblem": "search"},
             "layout": "boxed_graph",
             "mustsearch": True,
             "name": "searchpnp",

@@ -415,8 +415,7 @@ class PerfgraphIcon(Icon):
     def render(  # type:ignore[no-untyped-def]
         self, what, row, tags, custom_vars
     ) -> Union[None, str, HTML, Tuple[str, str], Tuple[str, str, str]]:
-        pnpgraph_present = row[what + "_pnpgraph_present"]
-        if pnpgraph_present == 1:
+        if row[what + "_pnpgraph_present"] == 1:
             return self._pnp_icon(row, what)
         return None
 
@@ -429,8 +428,10 @@ class PerfgraphIcon(Icon):
         if is_mobile(request, response):
             return None
 
+        graph_icon_name = ("%s_graph" % what) if what in ["host", "service"] else "graph"
+
         return HTMLWriter.render_a(
-            content=html.render_icon("graph", ""),
+            content=html.render_icon(graph_icon_name, ""),
             href=url,
             onmouseout="cmk.hover.hide()",
             onmouseover="cmk.graph_integration.show_hover_graphs(event, %s, %s, %s);"

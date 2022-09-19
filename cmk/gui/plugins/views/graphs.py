@@ -108,7 +108,7 @@ multisite_builtin_views.update(
             "painters": [PainterSpec(name="host_graphs")],
             "public": True,
             "sorters": [],
-            "icon": "graph",
+            "icon": "host_graph",
             "title": _l("Host graphs"),
             "topic": "history",
             "user_sortable": True,

@@ -153,8 +153,8 @@ powershell Write-Host "Elapsed time: %hh%:%mm%:%ss%,%cc%" -Foreground Yellow
 if not "%2" == "" (
 powershell Write-Host "Signing MSI" -Foreground White
 copy /Y %arte%\check_mk_agent.msi %arte%\check_mk_agent_unsigned.msi
-:: obfuscate is disabled to have more reliable patch
-:: python ..\..\cmk\utils\obfuscate.py -obfuscate %arte%\check_mk_agent_unsigned.msi %arte%\check_mk_agent_unsigned.msi
+:: obfuscate
+python ..\..\cmk\utils\obfuscate.py -obfuscate %arte%\check_mk_agent_unsigned.msi %arte%\check_mk_agent_unsigned.msi
 @call sign_windows_exe c:\common\store\%1 %2 %arte%\check_mk_agent.msi
 )
 

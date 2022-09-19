@@ -31,7 +31,7 @@ ASSET_TYPE = gcp.AssetType("sqladmin.googleapis.com/Instance")
 
 
 def _get_service_labels(
-    section_gcp_assets: gcp.AssetSection, service: gcp.GCPAsset, item: str
+    project: gcp.Project, service: gcp.GCPAsset, item: str
 ) -> list[ServiceLabel]:
     data = service.resource_data
     labels = (
@@ -45,7 +45,7 @@ def _get_service_labels(
             ServiceLabel("gcp/cloud_sql/name", item),
             ServiceLabel("gcp/cloud_sql/databaseVersion", data["databaseVersion"]),
             ServiceLabel("gcp/cloud_sql/availability", data["settings"]["availabilityType"]),
-            ServiceLabel("gcp/projectId", section_gcp_assets.project),
+            ServiceLabel("gcp/projectId", project),
         ]
     )
     return labels
@@ -75,7 +75,7 @@ def discover(
 ) -> DiscoveryResult:
     _, assets = validate_sections(section_gcp_service_cloud_sql, section_gcp_assets)
     for item, service in assets[ASSET_TYPE].items():
-        labels = _get_service_labels(assets, service, item)
+        labels = _get_service_labels(assets.project, service, item)
         yield Service(item=item, labels=labels)
 
 
@@ -310,7 +310,7 @@ def discover_gcp_sql_replication(
         ):
             continue
 
-        labels = _get_service_labels(assets, service, item)
+        labels = _get_service_labels(assets.project, service, item)
         yield Service(item=item, labels=labels)
 
 

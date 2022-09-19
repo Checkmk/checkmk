@@ -26,25 +26,6 @@ def test_perl_modules(site: Site):
         "Math::Calc::Units",
         "Config::Tiny",
         "Class::Accessor",
-        # Webinject
-        "Carp",
-        "LWP",
-        "URI",
-        "HTTP::Request::Common",
-        "HTTP::Cookies",
-        "XML::Simple",
-        "Time::HiRes",
-        "Crypt::SSLeay",
-        "XML::Parser",
-        "Data::Dumper",
-        "File::Temp",
-        # Check_oracle_health
-        "File::Basename",
-        "IO::File",
-        "File::Copy",
-        "Sys::Hostname",
-        "Data::Dumper",
-        "Net::Ping",
     ]
 
     for module in test_modules:

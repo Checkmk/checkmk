@@ -19,7 +19,9 @@ managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #
 @managedtest
 @pytest.mark.parametrize("group_type", ["host", "contact", "service"])
 def test_openapi_groups(  # type:ignore[no-untyped-def]
-    group_type, aut_user_auth_wsgi_app: WebTestAppForCMK
+    monkeypatch,
+    group_type,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
 
     name = _random_string(10)
@@ -71,6 +73,7 @@ def test_openapi_groups(  # type:ignore[no-untyped-def]
         content_type="application/json",
     )
 
+    monkeypatch.setattr("cmk.gui.wato.mkeventdstore.load_mkeventd_rules", lambda: [{}])
     aut_user_auth_wsgi_app.follow_link(
         resp,
         ".../delete",
@@ -83,6 +86,7 @@ def test_openapi_groups(  # type:ignore[no-untyped-def]
 @managedtest
 @pytest.mark.parametrize("group_type", ["host", "service", "contact"])
 def test_openapi_bulk_groups(  # type:ignore[no-untyped-def]
+    monkeypatch,
     group_type,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ):
@@ -172,6 +176,7 @@ def test_openapi_bulk_groups(  # type:ignore[no-untyped-def]
     )
     assert resp.json_body["extensions"]["customer"] == "global"
 
+    monkeypatch.setattr("cmk.gui.wato.mkeventdstore.load_mkeventd_rules", lambda: [{}])
     _resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + f"/domain-types/{group_type}_group_config/actions/bulk-delete/invoke",
@@ -185,6 +190,7 @@ def test_openapi_bulk_groups(  # type:ignore[no-untyped-def]
 @managedtest
 @pytest.mark.parametrize("group_type", ["host", "contact", "service"])
 def test_openapi_groups_with_customer(  # type:ignore[no-untyped-def]
+    monkeypatch,
     group_type,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ):
@@ -236,6 +242,7 @@ def test_openapi_groups_with_customer(  # type:ignore[no-untyped-def]
     )
     assert resp.json_body["extensions"]["customer"] == "provider"
 
+    monkeypatch.setattr("cmk.gui.wato.mkeventdstore.load_mkeventd_rules", lambda: [{}])
     aut_user_auth_wsgi_app.delete(
         base + f"/objects/{group_type}_group_config/{name}",
         headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},

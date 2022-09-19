@@ -2,6 +2,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import Any, Mapping
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
@@ -22,36 +23,40 @@ from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcar
 #   |                            main check                                |
 #   '----------------------------------------------------------------------'
 
+Section = Mapping[str, float]
 
-def check_aws_ec2_status_check(item, params, parsed):
+
+def discover_aws_ec2(section: Section):
+    yield from inventory_aws_generic_single(
+        section,
+        [
+            "StatusCheckFailed_System",
+            "StatusCheckFailed_Instance",
+        ],
+    )
+
+
+def check_aws_ec2_status_check(item: str, params: Mapping[str, Any], section: Section):
+    key_pairs: Mapping[str, str] = {
+        "System": "StatusCheckFailed_System",
+        "Instance": "StatusCheckFailed_Instance",
+    }
+
     go_stale = True
-
-    for title, key in [
-        ("System", "StatusCheckFailed_System"),
-        ("Instance", "StatusCheckFailed_Instance"),
-    ]:
-        try:
-            state, state_readable = _get_status_check_readable(parsed[key])
-        except KeyError:
+    for key, section_key in key_pairs.items():
+        if (value := section.get(section_key)) is None:
             continue
-        yield state, "%s: %s" % (title, state_readable)
+
+        state, summary = (0, "passed") if value < 1.0 else (2, "failed")
+        yield state, f"{key}: {summary}"
         go_stale = False
 
     if go_stale:
         raise MKCounterWrapped("Currently no data from AWS")
 
 
-def _get_status_check_readable(value):
-    if int(value) == 0:
-        return 0, "passed"
-    return 2, "failed"
-
-
 check_info["aws_ec2"] = {
-    "inventory_function": lambda p: inventory_aws_generic_single(
-        p,
-        ["StatusCheckFailed_System", "StatusCheckFailed_Instance"],
-    ),
+    "inventory_function": discover_aws_ec2,
     "check_function": check_aws_ec2_status_check,
     "service_description": "AWS/EC2 Status Check",
 }

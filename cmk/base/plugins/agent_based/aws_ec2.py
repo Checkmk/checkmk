@@ -9,10 +9,15 @@ from typing import Any
 
 from cmk.base.plugins.agent_based.utils.diskstat import check_diskstat_dict
 
-from .agent_based_api.v1 import get_value_store, IgnoreResultsError, register
+from .agent_based_api.v1 import get_value_store, IgnoreResultsError, register, Result, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import interfaces
-from .utils.aws import discover_aws_generic, extract_aws_metrics_by_labels, parse_aws
+from .utils.aws import (
+    discover_aws_generic,
+    discover_aws_generic_single,
+    extract_aws_metrics_by_labels,
+    parse_aws,
+)
 
 Section = Mapping[str, float]
 
@@ -55,6 +60,59 @@ def parse_aws_ec2(string_table: StringTable) -> Section:
 register.agent_section(
     name="aws_ec2",
     parse_function=parse_aws_ec2,
+)
+
+#   .--status check--------------------------------------------------------.
+#   |           _        _                    _               _            |
+#   |       ___| |_ __ _| |_ _   _ ___    ___| |__   ___  ___| | __        |
+#   |      / __| __/ _` | __| | | / __|  / __| '_ \ / _ \/ __| |/ /        |
+#   |      \__ \ || (_| | |_| |_| \__ \ | (__| | | |  __/ (__|   <         |
+#   |      |___/\__\__,_|\__|\__,_|___/  \___|_| |_|\___|\___|_|\_\        |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                            main check                                |
+#   '----------------------------------------------------------------------'
+
+
+def discover_aws_ec2(section: Section) -> DiscoveryResult:
+    yield from discover_aws_generic_single(
+        section,
+        [
+            "StatusCheckFailed_System",
+            "StatusCheckFailed_Instance",
+        ],
+    )
+
+
+def check_aws_ec2_status_check(
+    section: Section,
+) -> CheckResult:
+    key_pairs: Mapping[str, str] = {
+        "System": "StatusCheckFailed_System",
+        "Instance": "StatusCheckFailed_Instance",
+    }
+
+    go_stale = True
+    for key, section_key in key_pairs.items():
+        if (value := section.get(section_key)) is None:
+            continue
+
+        yield (
+            Result(state=State.OK, summary=f"{key}: Passed")
+            if value < 1.0
+            else Result(state=State.CRIT, summary=f"{key}: Failed")
+        )
+        go_stale = False
+
+    if go_stale:
+        raise IgnoreResultsError("Currently no data from AWS")
+
+
+register.check_plugin(
+    name="aws_ec2",
+    check_function=check_aws_ec2_status_check,
+    discovery_function=discover_aws_ec2,
+    service_name="AWS/EC2 Status Check",
 )
 
 # .

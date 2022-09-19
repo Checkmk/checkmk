@@ -2,14 +2,22 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    IgnoreResultsError,
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.aws_ec2 import (
     check_aws_ec2_disk_io,
     check_aws_ec2_network_io,
+    check_aws_ec2_status_check,
+    discover_aws_ec2,
     discover_aws_ec2_disk_io,
     Section,
 )
@@ -77,3 +85,66 @@ def test_check_aws_ec2_disk_io() -> None:
         Result(state=State.OK, notice="Write operations: 0.00/s"),
         Metric("disk_write_ios", 0.0),
     ]
+
+
+@pytest.mark.parametrize(
+    "section, discovery_result",
+    [
+        pytest.param(
+            METRICS,
+            [Service()],
+            id="For every disk in the section a Service with no item is discovered.",
+        ),
+        pytest.param(
+            {},
+            [],
+            id="If the section is empty, no Services are discovered.",
+        ),
+    ],
+)
+def test_aws_ec2_discovery(
+    section: Mapping[str, float],
+    discovery_result: Sequence[Service],
+) -> None:
+
+    assert list(discover_aws_ec2(section)) == discovery_result
+
+
+def test_check_aws_ec2_state_ok() -> None:
+
+    check_result = list(
+        check_aws_ec2_status_check(
+            section=METRICS,
+        )
+    )
+    assert check_result == [
+        Result(state=State.OK, summary="System: Passed"),
+        Result(state=State.OK, summary="Instance: Passed"),
+    ]
+
+
+def test_check_aws_ec2_state_crit() -> None:
+
+    check_result = list(
+        check_aws_ec2_status_check(
+            section={
+                "StatusCheckFailed_Instance": 1.0,
+                "StatusCheckFailed_System": 2.0,
+            },
+        )
+    )
+    assert check_result == [
+        Result(state=State.CRIT, summary="System: Failed"),
+        Result(state=State.CRIT, summary="Instance: Failed"),
+    ]
+
+
+def test_check_aws_ec2_raise_error() -> None:
+    # If both of the fields are missing, the check raises a MKCounterWrapped error
+
+    with pytest.raises(IgnoreResultsError):
+        list(
+            check_aws_ec2_status_check(
+                section={},
+            )
+        )

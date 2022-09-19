@@ -5,7 +5,7 @@
 
 import json
 from dataclasses import dataclass
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Sequence
 
 from ..agent_based_api.v1 import check_levels, Metric, render, Result, Service, State
 from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -164,6 +164,29 @@ def discover_aws_generic(
     for instance_name, instance in section.items():
         if all(required_metric in instance for required_metric in required_metrics):
             yield Service(item=instance_name)
+
+
+def discover_aws_generic_single(
+    section: Mapping[str, float],
+    required_metrics: Iterable[str],
+    requirement: Callable[[Iterable], bool] = all,
+) -> DiscoveryResult:
+    """
+    >>> list(discover_aws_generic_single(
+    ... {'CPUCreditUsage': 0.002455, 'CPUCreditBalance': 43.274031, 'CPUUtilization': 0.033333333},
+    ... ['CPUCreditUsage', 'CPUCreditBalance'],
+    ... ))
+    [Service()]
+
+    >>> list(discover_aws_generic_single(
+    ... {'CPUCreditUsage': 0.002455, 'CPUUtilization': 0.033333333},
+    ... ['CPUCreditUsage', 'CPUCreditBalance'],
+    ... ))
+    []
+    """
+    if requirement(required_metric in section for required_metric in required_metrics):
+        yield Service()
+    return []
 
 
 def aws_rds_service_item(instance_id: str, region: str) -> str:

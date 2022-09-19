@@ -2,7 +2,6 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Mapping
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
@@ -11,55 +10,6 @@ from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-imp
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
-#   .--status check--------------------------------------------------------.
-#   |           _        _                    _               _            |
-#   |       ___| |_ __ _| |_ _   _ ___    ___| |__   ___  ___| | __        |
-#   |      / __| __/ _` | __| | | / __|  / __| '_ \ / _ \/ __| |/ /        |
-#   |      \__ \ || (_| | |_| |_| \__ \ | (__| | | |  __/ (__|   <         |
-#   |      |___/\__\__,_|\__|\__,_|___/  \___|_| |_|\___|\___|_|\_\        |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |                            main check                                |
-#   '----------------------------------------------------------------------'
-
-Section = Mapping[str, float]
-
-
-def discover_aws_ec2(section: Section):
-    yield from inventory_aws_generic_single(
-        section,
-        [
-            "StatusCheckFailed_System",
-            "StatusCheckFailed_Instance",
-        ],
-    )
-
-
-def check_aws_ec2_status_check(item: str, params: Mapping[str, Any], section: Section):
-    key_pairs: Mapping[str, str] = {
-        "System": "StatusCheckFailed_System",
-        "Instance": "StatusCheckFailed_Instance",
-    }
-
-    go_stale = True
-    for key, section_key in key_pairs.items():
-        if (value := section.get(section_key)) is None:
-            continue
-
-        state, summary = (0, "passed") if value < 1.0 else (2, "failed")
-        yield state, f"{key}: {summary}"
-        go_stale = False
-
-    if go_stale:
-        raise MKCounterWrapped("Currently no data from AWS")
-
-
-check_info["aws_ec2"] = {
-    "inventory_function": discover_aws_ec2,
-    "check_function": check_aws_ec2_status_check,
-    "service_description": "AWS/EC2 Status Check",
-}
 
 # .
 #   .--CPU credits---------------------------------------------------------.
@@ -98,6 +48,7 @@ def check_aws_ec2_cpu_credits(item, params, parsed):
 
 
 check_info["aws_ec2.cpu_credits"] = {
+    # section is already migrated!
     "inventory_function": lambda p: inventory_aws_generic_single(
         p,
         ["CPUCreditUsage", "CPUCreditBalance"],
@@ -131,6 +82,7 @@ def check_aws_ec2_cpu_util(item, params, parsed):
 
 
 check_info["aws_ec2.cpu_util"] = {
+    # section is already migrated!
     "inventory_function": lambda p: inventory_aws_generic_single(
         p,
         ["CPUUtilization"],

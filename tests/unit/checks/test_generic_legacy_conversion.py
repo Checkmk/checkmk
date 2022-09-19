@@ -945,7 +945,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
         "aws_dynamodb_table.latency",
         "aws_ebs_summary",
         "aws_ebs_summary.health",
-        "aws_ec2",
         "aws_ec2.cpu_credits",
         "aws_ec2.cpu_util",
         "aws_ec2_limits",

@@ -5183,18 +5183,14 @@ class Optional(ValueSpec[None | T]):
         return self._valuespec.has_show_more()
 
     def value_to_json(self, value: T | None) -> JSONValue:
-        if value is not None:
-            return self._valuespec.value_to_json(value)
-        if isinstance(value, tuple):
-            return list(value)
-        return value
+        if value is None:
+            return None
+        return self._valuespec.value_to_json(value)
 
     def value_from_json(self, json_value: JSONValue) -> T | None:
-        if json_value is not None:
-            return self._valuespec.value_from_json(json_value)
-        if isinstance(json_value, list):
-            return tuple(json_value)
-        return json_value
+        if json_value is None:
+            return None
+        return self._valuespec.value_from_json(json_value)
 
 
 AlternativeModel = Any

@@ -1,0 +1,12 @@
+Title: Add support for RedHat 9
+Class: feature
+Compatible: compat
+Component: distros
+Date: 1663615103
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+The Packages for RedHat 9 are built on AlmaLinux 9.
+

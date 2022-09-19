@@ -90,7 +90,7 @@ def get_git_hash(String git_dir=".") {
 
 distro_package_type = { distro ->
     return (
-      (distro ==~ /centos.*|rh.*|sles.*|opensuse.*/) ? "rpm" :
+      (distro ==~ /centos.*|rh.*|sles.*|opensuse.*|alma.*/) ? "rpm" :
       (distro ==~ /cma.*/) ? "cma" :
       (distro ==~ /debian.*|ubuntu.*/) ? "deb" :
       raise("Cannot associate distro ${distro}"));

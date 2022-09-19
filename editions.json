@@ -11,6 +11,7 @@
             "ubuntu-22.04",
             "centos-7",
             "centos-8",
+            "almalinux-9",
             "sles-12sp3",
             "sles-12sp4",
             "sles-12sp5",

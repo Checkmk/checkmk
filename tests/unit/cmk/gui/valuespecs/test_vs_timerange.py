@@ -19,6 +19,7 @@ import cmk.gui.valuespec as vs
         ("y1", ((1514764800, 1546300800), "2018")),
         ("y0", ((1546300800, 1567702200), "2019")),
         ("4h", ((1567687800, 1567702200), "Last 4 hours")),
+        (None, ((1567687800, 1567702200), "Last 4 hours")),
         (4 * 60 * 60, ((1567687800, 1567702200), "The last 4 hours")),
         ("25h", ((1567612200, 1567702200), "Last 25 hours")),
         ("8d", ((1567011000, 1567702200), "Last 8 days")),
@@ -37,6 +38,10 @@ import cmk.gui.valuespec as vs
         (("time", (1549374782, 1567687982)), ((1549374782, 1567687982), "2019-02-05 — 2019-09-05")),
         (("age", 2 * 3600), ((1567695000, 1567702200), "The last 2 hours")),
         (("next", 3 * 3600), ((1567702200, 1567713000), "The next 3 hours")),
+        # pnp compatibility:
+        (("pnp_view", 99), ((1567687800, 1567702200), "Last 4 hours")),  # fallback
+        (("pnp_view", 1), ((1567687800, 1567702200), "Last 4 hours")),
+        (("pnp_view", 5), ((1533142200, 1567702200), "Last 400 days")),
     ],
 )
 def test_timerange(entry, result) -> None:  # type:ignore[no-untyped-def]

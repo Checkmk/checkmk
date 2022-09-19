@@ -461,6 +461,7 @@ def test_write_host_tags(web, site: Site):  # noqa: F811 # pylint: disable=redef
             "host_labels": {},
             "ipaddresses": {},
             "host_attributes": {},
+            "folder_attributes": {},
             "explicit_host_conf": {},
             "host_contactgroups": [],
             "service_contactgroups": [],

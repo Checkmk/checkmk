@@ -274,6 +274,7 @@ def test_registered_painters() -> None:
         "inv_hardware_system_model_name",
         "inv_hardware_system_node_name",
         "inv_hardware_system_partition_name",
+        "inv_hardware_system_pki_appliance_version",
         "inv_hardware_system_product",
         "inv_hardware_system_serial",
         "inv_hardware_system_serial_number",

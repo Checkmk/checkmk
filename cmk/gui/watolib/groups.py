@@ -281,6 +281,7 @@ def find_usages_of_contact_group(name: GroupName) -> List[Tuple[str, str]]:
     used_in += _find_usages_of_contact_group_in_hosts_and_folders(name, Folder.root_folder())
     used_in += _find_usages_of_contact_group_in_notification_rules(name)
     used_in += _find_usages_of_contact_group_in_dashboards(name)
+    used_in += _find_usages_of_contact_group_in_ec_rules(name)
 
     return used_in
 
@@ -407,6 +408,28 @@ def _find_usages_of_contact_group_in_dashboards(name: str) -> List[Tuple[str, st
                     ),
                 )
             )
+    return used_in
+
+
+def _find_usages_of_contact_group_in_ec_rules(name: str) -> List[Tuple[str, str]]:
+    """Is the contactgroup used in an eventconsole rule?"""
+    used_in: List[Tuple[str, str]] = []
+    rule_packs = cmk.gui.wato.mkeventd.load_mkeventd_rules()
+    for pack in rule_packs:
+        for nr, rule in enumerate(pack.get("rules", [])):
+            if name in rule.get("contact_groups", {}).get("groups", []):
+                used_in.append(
+                    (
+                        "%s: %s" % (_("Event console rule"), rule["id"]),
+                        folder_preserving_link(
+                            [
+                                ("mode", "mkeventd_edit_rule"),
+                                ("edit", nr),
+                                ("rule_pack", pack["id"]),
+                            ]
+                        ),
+                    )
+                )
     return used_in
 
 

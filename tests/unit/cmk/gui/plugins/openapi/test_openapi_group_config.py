@@ -19,7 +19,7 @@ managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #
 
 @managedtest
 @pytest.mark.parametrize("group_type", ["host", "contact", "service"])
-def test_openapi_groups(group_type, aut_user_auth_wsgi_app: WebTestAppForCMK):
+def test_openapi_groups(monkeypatch, group_type, aut_user_auth_wsgi_app: WebTestAppForCMK):
 
     name = _random_string(10)
     alias = _random_string(10)
@@ -70,6 +70,7 @@ def test_openapi_groups(group_type, aut_user_auth_wsgi_app: WebTestAppForCMK):
         content_type="application/json",
     )
 
+    monkeypatch.setattr("cmk.gui.wato.mkeventd.load_mkeventd_rules", lambda: [{}])
     aut_user_auth_wsgi_app.follow_link(
         resp,
         ".../delete",
@@ -82,6 +83,7 @@ def test_openapi_groups(group_type, aut_user_auth_wsgi_app: WebTestAppForCMK):
 @managedtest
 @pytest.mark.parametrize("group_type", ["host", "service", "contact"])
 def test_openapi_bulk_groups(
+    monkeypatch,
     group_type,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ):
@@ -171,6 +173,7 @@ def test_openapi_bulk_groups(
     )
     assert resp.json_body["extensions"]["customer"] == "global"
 
+    monkeypatch.setattr("cmk.gui.wato.mkeventd.load_mkeventd_rules", lambda: [{}])
     _resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/%s_group_config/actions/bulk-delete/invoke" % (group_type,),

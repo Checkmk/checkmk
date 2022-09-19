@@ -320,13 +320,14 @@ def logged_in_admin_wsgi_app(wsgi_app, with_admin):
 
 
 @pytest.fixture()
-def with_groups(request_context, with_admin_login, suppress_remote_automation_calls):
+def with_groups(monkeypatch, request_context, with_admin_login, suppress_remote_automation_calls):
     watolib.add_group("windows", "host", {"alias": "windows"})
     watolib.add_group("routers", "service", {"alias": "routers"})
     watolib.add_group("admins", "contact", {"alias": "admins"})
     yield
     watolib.delete_group("windows", "host")
     watolib.delete_group("routers", "service")
+    monkeypatch.setattr(cmk.gui.wato.mkeventd, "load_mkeventd_rules", lambda: [{}])
     watolib.delete_group("admins", "contact")
 
 

@@ -1,0 +1,15 @@
+Title: Fix validation of contact groups on deletion
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1663601687
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p13
+
+The validation for used contact groups in event console rules was missing on
+contact group deletion.
+
+You will now be warned if a contact group is used in such a rule.

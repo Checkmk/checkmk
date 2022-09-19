@@ -2,6 +2,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import Any, Mapping
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
@@ -70,23 +71,30 @@ check_info["aws_ec2.cpu_credits"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+Section = Mapping[str, float]
+
 factory_settings["aws_ec2_cpu_util_default_levels"] = {
     "util": (90.0, 95.0),
 }
 
 
-def check_aws_ec2_cpu_util(item, params, parsed):
-    if "CPUUtilization" not in parsed:
+def discover_aws_ec2_cpu_util(section: Section):
+    yield from inventory_aws_generic_single(
+        section,
+        ["CPUUtilization"],
+    )
+
+
+def check_aws_ec2_cpu_util(item: str, params: Mapping[str, Any], section: Section):
+    if (cpu_utilization_value := section.get("CPUUtilization")) is None:
         raise MKCounterWrapped("Currently no data from AWS")
-    return check_cpu_util(parsed["CPUUtilization"], params, time.time())
+
+    yield from check_cpu_util(cpu_utilization_value, params, time.time())
 
 
 check_info["aws_ec2.cpu_util"] = {
     # section is already migrated!
-    "inventory_function": lambda p: inventory_aws_generic_single(
-        p,
-        ["CPUUtilization"],
-    ),
+    "inventory_function": discover_aws_ec2_cpu_util,
     "check_function": check_aws_ec2_cpu_util,
     "service_description": "AWS/EC2 CPU utilization",
     "group": "cpu_utilization",

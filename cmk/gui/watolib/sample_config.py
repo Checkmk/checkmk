@@ -10,6 +10,7 @@ from typing import Any, Dict
 
 from cmk.utils import store
 from cmk.utils.encryption import raw_certificates_from_file
+from cmk.utils.log import VERBOSE
 from cmk.utils.paths import site_cert_file
 from cmk.utils.tags import sample_tag_config, TagConfig
 
@@ -34,6 +35,7 @@ def init_wato_datastructures(with_wato_lock: bool = False) -> None:
         os.path.exists(ConfigDomainCACertificates.trusted_cas_file)
         and not _need_to_create_sample_config()
     ):
+        logger.log(VERBOSE, "No need to create the sample config")
         return
 
     def init():
@@ -79,7 +81,7 @@ def _create_sample_config() -> None:
         except Exception:
             logger.exception("Exception in sample config generator [%s]", generator.ident())
 
-    logger.debug("Finished creating the sample config")
+    logger.log(VERBOSE, "Finished creating the sample config")
 
 
 @sample_config_generator_registry.register

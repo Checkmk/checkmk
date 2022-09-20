@@ -23,19 +23,28 @@ from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcar
 #   |   \____|_|    \___/   \__,_|\__|_|_|_/___\__,_|\__|_|\___/|_| |_|    |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
+Section = Mapping[str, Mapping[str, float]]
 factory_settings["aws_rds_cpu_util"] = {
     "levels": (80.0, 90.0),
 }
 
 
-@get_parsed_item_data
-def check_aws_rds(item, params, metrics):
-    return check_cpu_util(metrics["CPUUtilization"], params, time.time())
+def discover_aws_rds(section: Section):
+    yield from inventory_aws_generic(
+        section,
+        ["CPUUtilization"],
+    )
+
+
+def check_aws_rds(item: str, params: Mapping[str, Any], section: Section):
+    if (metrics := section.get(item)) is None:
+        return
+
+    yield from check_cpu_util(metrics["CPUUtilization"], params, time.time())
 
 
 check_info["aws_rds"] = {
-    "inventory_function": lambda p: inventory_aws_generic(p, ["CPUUtilization"]),
+    "inventory_function": discover_aws_rds,
     "check_function": check_aws_rds,
     "service_description": "AWS/RDS %s CPU Utilization",
     "group": "cpu_utilization_multiitem",

@@ -256,8 +256,9 @@ class ABCRulesetMode(WatoMode):
         if self._search_options:
             rulesets: Union[
                 FilteredRulesetCollection, RulesetCollection
-            ] = FilteredRulesetCollection.load_searched_rulesets(
-                self._rulesets().get_rulesets(), self._search_options
+            ] = FilteredRulesetCollection.filter(
+                self._rulesets().get_rulesets(),
+                key=lambda ruleset: ruleset.matches_search_with_rules(self._search_options),
             )
         else:
             rulesets = self._rulesets()
@@ -362,8 +363,9 @@ class ModeRuleSearch(ABCRulesetMode):
     def _rulesets(self) -> Union[RulesetCollection, FilteredRulesetCollection]:
         all_rulesets = AllRulesets.load_all_rulesets()
         if self._group_name == "static":
-            return FilteredRulesetCollection.load_static_checks_rulesets(
-                all_rulesets.get_rulesets()
+            return FilteredRulesetCollection.filter(
+                all_rulesets.get_rulesets(),
+                key=lambda ruleset: ruleset.rulespec.main_group_name == "static",
             )
         return all_rulesets
 
@@ -587,8 +589,9 @@ class ModeRulesetGroup(ABCRulesetMode):
     def _rulesets(self) -> Union[RulesetCollection, FilteredRulesetCollection]:
         all_rulesets = AllRulesets.load_all_rulesets()
         if self._group_name == "static":
-            return FilteredRulesetCollection.load_static_checks_rulesets(
-                all_rulesets.get_rulesets()
+            return FilteredRulesetCollection.filter(
+                all_rulesets.get_rulesets(),
+                key=lambda ruleset: ruleset.rulespec.main_group_name == "static",
             )
         return all_rulesets
 

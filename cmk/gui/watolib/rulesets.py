@@ -468,32 +468,13 @@ class FilteredRulesetCollection:
         return self._rulesets
 
     @classmethod
-    def load_static_checks_rulesets(
-        cls, origin: Mapping[RulesetName, Ruleset]
+    def filter(
+        cls,
+        origin: Mapping[RulesetName, Ruleset],
+        *,
+        key: Callable[[Ruleset], bool],
     ) -> FilteredRulesetCollection:
-        return cls(
-            {
-                name: ruleset
-                for name, ruleset in origin.items()
-                if ruleset.rulespec.main_group_name == "static"
-            }
-        )
-
-    @classmethod
-    def load_searched_rulesets(
-        cls, origin: Mapping[RulesetName, Ruleset], search_options: SearchOptions
-    ) -> FilteredRulesetCollection:
-        """Iterates the rulesets from the original collection,
-        applies the search option and takes over the rulesets
-        that have at least one matching rule or match itself,
-        e.g. by their name, title or help."""
-        return cls(
-            {
-                name: ruleset
-                for name, ruleset in origin.items()
-                if ruleset.matches_search_with_rules(search_options)
-            }
-        )
+        return cls({name: ruleset for name, ruleset in origin.items() if key(ruleset)})
 
 
 class Ruleset:

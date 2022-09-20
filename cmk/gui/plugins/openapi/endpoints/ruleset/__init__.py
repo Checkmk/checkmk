@@ -52,8 +52,9 @@ def list_rulesets(param):
     if search_options := _get_search_options(param):
         rulesets: Union[
             RulesetCollection_, FilteredRulesetCollection
-        ] = FilteredRulesetCollection.load_searched_rulesets(
-            all_sets.get_rulesets(), search_options
+        ] = FilteredRulesetCollection.filter(
+            all_sets.get_rulesets(),
+            key=lambda ruleset: ruleset.matches_search_with_rules(search_options),
         )
     else:
         rulesets = all_sets

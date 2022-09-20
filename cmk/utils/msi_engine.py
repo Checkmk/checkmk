@@ -339,7 +339,7 @@ def msi_update_core(
         _patch_msi_components(work_dir)
         _patch_msi_properties(
             work_dir,
-            product_code=f"{uuid.uuid1()}\r\n".upper(),
+            product_code=f"{{{uuid.uuid1()}}}\r\n".upper(),
             version_build=new_version_build,
         )
         # ==============================================

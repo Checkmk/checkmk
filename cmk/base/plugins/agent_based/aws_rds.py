@@ -7,6 +7,7 @@ import time
 from collections.abc import Mapping, MutableMapping
 from typing import Any
 
+from cmk.base.plugins.agent_based.utils.cpu_util import check_cpu_util
 from cmk.base.plugins.agent_based.utils.diskstat import check_diskstat_dict
 
 from .agent_based_api.v1 import get_value_store, IgnoreResultsError, register
@@ -197,4 +198,43 @@ register.check_plugin(
     check_default_parameters={},
     check_ruleset_name="diskstat",
     sections=["aws_rds"],
+)
+
+
+#   .--CPU utilization-----------------------------------------------------.
+#   |    ____ ____  _   _         _   _ _ _          _   _                 |
+#   |   / ___|  _ \| | | |  _   _| |_(_) (_)______ _| |_(_) ___  _ __      |
+#   |  | |   | |_) | | | | | | | | __| | | |_  / _` | __| |/ _ \| '_ \     |
+#   |  | |___|  __/| |_| | | |_| | |_| | | |/ / (_| | |_| | (_) | | | |    |
+#   |   \____|_|    \___/   \__,_|\__|_|_|_/___\__,_|\__|_|\___/|_| |_|    |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def discover_aws_rds(section: AWSSectionMetrics) -> DiscoveryResult:
+    yield from discover_aws_generic(
+        section,
+        ["CPUUtilization"],
+    )
+
+
+def check_aws_rds(item: str, params: Mapping[str, Any], section: AWSSectionMetrics) -> CheckResult:
+    if (metrics := section.get(item)) is None:
+        return
+
+    yield from check_cpu_util(
+        util=metrics["CPUUtilization"],
+        params=params,
+        value_store=get_value_store(),
+        this_time=time.time(),
+    )
+
+
+register.check_plugin(
+    name="aws_rds",
+    service_name="AWS/RDS %s CPU Utilization",
+    check_default_parameters={"levels": (80.0, 90.0)},
+    check_ruleset_name="cpu_utilization_multiitem",
+    check_function=check_aws_rds,
+    discovery_function=discover_aws_rds,
 )

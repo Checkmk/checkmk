@@ -15,43 +15,6 @@ from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcar
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
-#   .--CPU utilization-----------------------------------------------------.
-#   |    ____ ____  _   _         _   _ _ _          _   _                 |
-#   |   / ___|  _ \| | | |  _   _| |_(_) (_)______ _| |_(_) ___  _ __      |
-#   |  | |   | |_) | | | | | | | | __| | | |_  / _` | __| |/ _ \| '_ \     |
-#   |  | |___|  __/| |_| | | |_| | |_| | | |/ / (_| | |_| | (_) | | | |    |
-#   |   \____|_|    \___/   \__,_|\__|_|_|_/___\__,_|\__|_|\___/|_| |_|    |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-Section = Mapping[str, Mapping[str, float]]
-factory_settings["aws_rds_cpu_util"] = {
-    "levels": (80.0, 90.0),
-}
-
-
-def discover_aws_rds(section: Section):
-    yield from inventory_aws_generic(
-        section,
-        ["CPUUtilization"],
-    )
-
-
-def check_aws_rds(item: str, params: Mapping[str, Any], section: Section):
-    if (metrics := section.get(item)) is None:
-        return
-
-    yield from check_cpu_util(metrics["CPUUtilization"], params, time.time())
-
-
-check_info["aws_rds"] = {
-    "inventory_function": discover_aws_rds,
-    "check_function": check_aws_rds,
-    "service_description": "AWS/RDS %s CPU Utilization",
-    "group": "cpu_utilization_multiitem",
-    "default_levels_variable": "aws_rds_cpu_util",
-    "has_perfdata": True,
-}
-
 # .
 #   .--CPU credits---------------------------------------------------------.
 #   |           ____ ____  _   _                     _ _ _                 |
@@ -105,6 +68,7 @@ def check_aws_rds_cpu_credits(item, params, metrics):
 
 
 check_info["aws_rds.cpu_credits"] = {
+    # section already migrated!
     "inventory_function": lambda p: inventory_aws_generic(
         p,
         [
@@ -148,6 +112,7 @@ def check_aws_rds_bin_log_usage(item, params, metrics):
 
 
 check_info["aws_rds.bin_log_usage"] = {
+    # section already migrated!
     "inventory_function": lambda p: inventory_aws_generic(p, ["BinLogDiskUsage"]),
     "check_function": check_aws_rds_bin_log_usage,
     "service_description": "AWS/RDS %s Binary Log Usage",
@@ -195,6 +160,7 @@ def check_aws_rds_transaction_logs_usage(item, params, metrics):
 
 
 check_info["aws_rds.transaction_logs_usage"] = {
+    # section already migrated!
     "inventory_function": lambda p: inventory_aws_generic(p, ["TransactionLogsDiskUsage"]),
     "check_function": check_aws_rds_transaction_logs_usage,
     "service_description": "AWS/RDS %s Transaction Logs Usage",
@@ -238,6 +204,7 @@ def check_aws_rds_replication_slot_usage(item, params, metrics):
 
 
 check_info["aws_rds.replication_slot_usage"] = {
+    # section already migrated!
     "inventory_function": lambda p: inventory_aws_generic(p, ["ReplicationSlotDiskUsage"]),
     "check_function": check_aws_rds_replication_slot_usage,
     "service_description": "AWS/RDS %s Replication Slot Usage",
@@ -268,6 +235,7 @@ def check_aws_rds_connections(item, params, metrics):
 
 
 check_info["aws_rds.connections"] = {
+    # section already migrated!
     "inventory_function": lambda p: inventory_aws_generic(p, ["DatabaseConnections"]),
     "check_function": check_aws_rds_connections,
     "service_description": "AWS/RDS %s Connections",
@@ -297,6 +265,7 @@ def check_aws_rds_agent_jobs(item, params, metrics):
 
 
 check_info["aws_rds.agent_jobs"] = {
+    # section already migrated!
     "inventory_function": lambda p: inventory_aws_generic(p, ["FailedSQLServerAgentJobsCount"]),
     "check_function": check_aws_rds_agent_jobs,
     "service_description": "AWS/RDS %s SQL Server Agent Jobs",
@@ -337,6 +306,7 @@ def check_aws_rds_replica_lag(item, params, metrics):
 
 
 check_info["aws_rds.replica_lag"] = {
+    # section already migrated!
     "inventory_function": lambda p: inventory_aws_generic(p, ["ReplicaLag"]),
     "check_function": check_aws_rds_replica_lag,
     "service_description": "AWS/RDS %s Replica Lag",

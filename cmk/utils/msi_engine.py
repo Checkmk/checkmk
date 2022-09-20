@@ -24,7 +24,8 @@ import cmk.utils.obfuscate as obfuscate
 from cmk.utils import msi_patch
 
 PRODUCT_NAME: Final = "Check MK Agent 2.1"
-AGENT_MSI_FILE: Final = "check_mk_agent_unsigned.msi"
+AGENT_STANDARD_MSI_FILE: Final = "check_mk_agent.msi"
+AGENT_UNSIGNED_MSI_FILE: Final = "check_mk_agent_unsigned.msi"
 _MSI_FILES: Final = sorted(["check_mk_install_yml", "checkmk.dat", "plugins_cap", "python_3.cab"])
 _MSI_COMPONENTS: Final = sorted(
     [
@@ -336,8 +337,10 @@ def msi_update_core(
             bin_dir = Path(".")
             tmp_dir = Path(".")
 
-        new_msi_file: Final = src_dir / AGENT_MSI_FILE
+        new_msi_file: Final = src_dir / AGENT_UNSIGNED_MSI_FILE
         work_dir = Path(tempfile.mkdtemp(prefix=str(tmp_dir) + "/msi-update."))
+
+        _unsign_file(msi_file_name, dst=new_msi_file)
 
         if (error := obfuscate.deobfuscate_file(Path(msi_file_name), file_out=new_msi_file)) != 0:
             bail_out(f"Deobfuscate returns error {error=}")
@@ -381,6 +384,13 @@ def msi_update_core(
         # if work_dir and os.path.exists(work_dir):
         #    shutil.rmtree(work_dir)
         bail_out(f"Error on creating msi file: {e}, work_dir is {work_dir}")
+
+
+def _unsign_file(src: Path, *, dst: Path) -> None:
+    # At the moment it's stub
+    # will be replaced with apply_patch call
+    # TODO(sk): replace with apply_patching script
+    shutil.copy(src, dst)
 
 
 # NOTES:

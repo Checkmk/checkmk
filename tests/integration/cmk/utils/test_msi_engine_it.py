@@ -16,7 +16,11 @@ import cmk.utils.obfuscate as obfuscate
 
 MSI_LOCATION: Final = "share/check_mk/agents/windows"
 EXPECTED_EXECUTABLES: Final = ["msiinfo", "msibuild", "lcab"]
-EXPECTED_TEST_FILES: Final = ["check_mk_agent.msi", msi_engine.AGENT_MSI_FILE, "check_mk.user.yml"]
+EXPECTED_TEST_FILES: Final = [
+    msi_engine.AGENT_STANDARD_MSI_FILE,
+    msi_engine.AGENT_UNSIGNED_MSI_FILE,
+    "check_mk.user.yml",
+]
 TEST_MSI_FILE: Final = Path("agents/wnx/test_files/msibuild/msi") / "check_mk_agent.msi"
 
 
@@ -33,7 +37,7 @@ def test_files(site: Site, test_file) -> None:  # type:ignore[no-untyped-def]
 
 
 def _get_msi_file_path_not_signed(site: Site) -> Path:
-    return Path(site.path(MSI_LOCATION)) / msi_engine.AGENT_MSI_FILE
+    return Path(site.path(MSI_LOCATION)) / msi_engine.AGENT_STANDARD_MSI_FILE
 
 
 @pytest.fixture(name="out_dir")

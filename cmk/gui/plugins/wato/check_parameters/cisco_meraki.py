@@ -12,7 +12,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Age, Dictionary, TextInput, Tuple
 
 
-def _parameter_valuespec_cisco_meraki():
+def _parameter_valuespec_cisco_meraki_org_licenses_overview():
     return Dictionary(
         title=_("Cisco Meraki Organisation Licenses Overview"),
         optional_keys=True,
@@ -36,7 +36,7 @@ rulespec_registry.register(
         title=lambda: _("Cisco Meraki Organisation Licenses Overview"),
         check_group_name="cisco_meraki_org_licenses_overview",
         group=RulespecGroupCheckParametersApplications,
-        parameter_valuespec=_parameter_valuespec_cisco_meraki,
+        parameter_valuespec=_parameter_valuespec_cisco_meraki_org_licenses_overview,
         item_spec=lambda: TextInput(
             title=_("The organisation ID"),
         ),

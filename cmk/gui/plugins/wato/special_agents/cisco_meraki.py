@@ -30,6 +30,8 @@ def _valuespec_special_agent_cisco_meraki() -> ValueSpec:
                     title=_("Sections"),
                     choices=[
                         ("licenses-overview", _("Organisation licenses overview")),
+                        ("device-statuses", _("Organisation device statuses")),
+                        ("sensor-readings", _("Organisation sensor readings")),
                     ],
                     rows=12,
                 ),

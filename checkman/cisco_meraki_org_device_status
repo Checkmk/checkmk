@@ -1,0 +1,19 @@
+title: Cisco Meraki: Device Status
+agents: cisco_meraki
+catalog: os/services
+license: GPLv2
+distribution: check_mk
+description:
+ This check plugin monitors the device status.
+
+ It is OK, if the status is {online}, it is CRIT if the status is {altering}
+ and it is WARN if the status is {offline} or {dormant}.
+
+ In order to make this check plugin work you have to configure the ruleset for
+ the special agent {{Cisco Meraki}}.
+
+ The check plugin can be configured via the corresponding WATO rule
+ {{Cisco Meraki Organisation Device Status}}.
+
+discovery:
+ One service per organisation ID is created.

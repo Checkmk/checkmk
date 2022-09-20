@@ -14,8 +14,9 @@ from cmk.gui import userdb
 from cmk.gui.fields.base import BaseSchema
 from cmk.gui.fields.definitions import GroupField, Timestamp
 from cmk.gui.fields.mixins import CheckmkTuple, Converter
+from cmk.gui.watolib.tags import load_tag_group
 
-from cmk.fields import Boolean, Constant, DateTime, Integer, List, Nested, String, Time
+from cmk.fields import Boolean, Constant, Integer, List, Nested, String, Time
 from cmk.fields.validators import IsValidRegexp, ValidateIPv4, ValidateIPv4Network
 
 # TODO: make wrong 'tuple_fields' entries fail at compile not, not at runtime.
@@ -118,7 +119,51 @@ class IPAddressRange(BaseSchema, CheckmkTuple):
     )
 
 
+class IPNetworkCIDR(String):
+    """
+    >>> schema = IPNetworkCIDR()
+    >>> schema.serialize("d", dict(d=("192.168.178.10", 24)))
+    '192.168.178.10/24'
+    >>> schema.deserialize("192.168.178.10/24")
+    ('192.168.178.10', 24)
+    >>> class FooSchema(BaseSchema):
+    ...    blah = IPNetworkCIDR()
+    >>> schema = FooSchema()
+    >>> schema.load({"blah": "broken"})
+    Traceback (most recent call last):
+    ...
+    marshmallow.exceptions.ValidationError: {'blah': ["Expected an IP network in CIDR notation like '192.168.0.0/24'"]}
+    >>> schema.dump({"blah": "broken"})
+    Traceback (most recent call last):
+    ...
+    marshmallow.exceptions.ValidationError: Error handling 'broken', expected a tuple of IPv4 address and network size e.g. ('192.168.0.0', 24)
+    """
+
+    def _deserialize(self, value, attr, data, **kwargs):
+        try:
+            network, mask = tuple(value.split("/"))
+            return (network, int(mask))
+        except ValueError:
+            raise ValidationError("Expected an IP network in CIDR notation like '192.168.0.0/24'")
+
+    def _serialize(self, value, attr, obj, **kwargs):
+        if isinstance(value, (list, tuple)) and len(value) == 2:
+            return f"{value[0]}/{value[1]}"
+        raise ValidationError(
+            f"Error handling {value!r}, expected a tuple of IPv4 address and network size e.g. ('192.168.0.0', 24)"
+        )
+
+
 class IPNetwork(BaseSchema, CheckmkTuple):
+    """
+    >>> schema = IPNetwork()
+    >>> rv = schema.dump(('ip_network', ('192.168.0.0', 24)))
+    >>> rv
+    {'type': 'ip_network', 'network': '192.168.0.0/24'}
+    >>> schema.load(rv)
+    ('ip_network', ('192.168.0.0', 24))
+    """
+
     tuple_fields = ("type", "network")
     cast_to_dict = True
 
@@ -126,7 +171,7 @@ class IPNetwork(BaseSchema, CheckmkTuple):
         description="A single IPv4 network in CIDR notation.",
         constant="ip_network",
     )
-    network = String(
+    network = IPNetworkCIDR(
         description=(
             "A IPv4 network in CIDR notation. Minimum prefix length is 8 bit, "
             "maximum prefix length is 30 bit.\n\nValid examples:\n\n"
@@ -207,7 +252,7 @@ class IPRange(OneOfSchema):
 
     Loading defective values from store is possible...
 
-        >>> rv = s.dump(('ip_network', '127.0.0.1/32'))
+        >>> rv = s.dump(('ip_network', ('127.0.0.1', '32')))
         >>> rv
         {'type': 'network_range', 'network': '127.0.0.1/32'}
 
@@ -388,6 +433,7 @@ class NetworkScan(BaseSchema):
     ...     'exclude_ranges': [('ip_list', ['192.168.0.2']),
     ...                        ('ip_regex_list', ['192.168.[02].*'])],
     ...     'ip_ranges': [('ip_range', ('192.168.0.10', '192.168.0.244')),
+    ...                   ('ip_network', ('172.10.9.0', 24)),
     ...                   ('ip_regex_list', ['192.168.[01].*']),
     ...                   ('ip_list', ['192.168.0.2'])],
     ...     'max_parallel_pings': 100,
@@ -402,7 +448,7 @@ class NetworkScan(BaseSchema):
     ...         'mapping': [('example.com', 'www.example.com')],
     ...         'regex': [('.*', 'mehrfacheregulaere')]}}
     >>> result = schema.dump(settings)
-    >>> assert len(result['addresses']) == 3
+    >>> assert len(result['addresses']) == 4
     >>> assert len(result['exclude_addresses']) == 2
     >>> assert len(result['time_allowed'][0]) == 2
     >>> assert len(result['translate_names']) == 4
@@ -455,24 +501,59 @@ class NetworkScan(BaseSchema):
         required=False,
         validate=_active_users,
     )
+    tag_criticality = String(
+        description=(
+            "Specify which criticality tag to set on the host created by the network scan. "
+            "This field is required if the criticality tag group exists, "
+            "otherwise it as to be omitted."
+        ),
+        required=False,
+    )
     translate_names = Nested(TranslateNames)
+
+    @validates_schema
+    def validate_tag_criticality(self, data: dict[str, typing.Any], **kwargs: typing.Any) -> None:
+        tag_criticality = load_tag_group("criticality")
+        if tag_criticality is None:
+            if "tag_criticality" in data:
+                raise ValidationError(
+                    "Tag group criticality does not exist. tag_criticality must be omitted."
+                )
+        else:
+            if "tag_criticality" not in data:
+                raise ValidationError("tag_criticality must be specified")
+            if (value := data["tag_criticality"]) not in (t.id for t in tag_criticality.tags):
+                raise ValidationError(
+                    f"tag_criticality value {value!r} is not defined for criticality tag group"
+                )
+
+
+class NetworkScanResultState(String):
+    def _serialize(self, value, attr, obj, **kwargs):
+        if value is None:
+            return "running"
+        if value is True:
+            return "succeeded"
+        if value is False:
+            return "failed"
+        raise AssertionError(f"NetworkScanResult: value {value} not defined")
 
 
 class NetworkScanResult(BaseSchema):
-    start = DateTime(description="When the scan started")
-    end = DateTime(
+    start = Timestamp(description="When the scan started")
+    end = Timestamp(
         description="When the scan finished. Will be Null if not yet run.",
         allow_none=True,
     )
-    state = String(
+    state = NetworkScanResultState(
         description="Last scan result",
         enum=[
-            "not_started",
             "running",
             "succeeded",
             "failed",
         ],
     )
+    output = String(description="Short human readable description of what is happening.")
 
 
 class LockedBy(BaseSchema, CheckmkTuple):

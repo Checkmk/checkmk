@@ -1,0 +1,14 @@
+Title: REST API: Fix network scan related schemas
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1663832802
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+A Folder with configured network scan with an "IP Network" as "IP
+ranges to scan" could not be returned by the REST API.
+An error with status code 500 was returned.
+

@@ -49,6 +49,8 @@ class ValueType(Enum):
         (ValueType.none, "dong-"),
         (ValueType.none, "01234567"),
         (ValueType.none, "012.345.67"),
+        (ValueType.none, "127.1"),
+        (ValueType.none, "a" * 256 + ".com"),
         (ValueType.none, ""),
     ],
 )

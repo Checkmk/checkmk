@@ -1,0 +1,12 @@
+Title: Fix availability timeline in reports
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1663657566
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p13
+
+Since version 2.0 the timeline alignment was not set to 100% in all rows.

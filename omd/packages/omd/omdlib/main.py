@@ -125,7 +125,7 @@ from omdlib.version_info import VersionInfo
 import cmk.utils.log
 import cmk.utils.tty as tty
 from cmk.utils.certs import cert_dir, root_cert_path, RootCA
-from cmk.utils.crypto.password_hashing import sha256_crypt
+from cmk.utils.crypto.password_hashing import hash_password
 from cmk.utils.exceptions import MKTerminate
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import mkbackup_lock_dir
@@ -279,7 +279,7 @@ def calculate_admin_password(options: CommandOptions) -> str:
 
 def set_admin_password(site: SiteContext, pw: str) -> None:
     with open("%s/etc/htpasswd" % site.dir, "w") as f:
-        f.write("cmkadmin:%s\n" % sha256_crypt(pw))
+        f.write("cmkadmin:%s\n" % hash_password(pw))
 
 
 def create_skeleton_files(site: SiteContext, directory: str) -> None:

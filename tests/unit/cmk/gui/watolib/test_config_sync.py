@@ -58,7 +58,7 @@ def fixture_disable_ec_rule_stats_loading(monkeypatch):
     # During CME config computation the EC rule packs are loaded which currently also load the
     # rule usage information from the running EC. Since we do not have a EC running this fails
     # and causes timeouts. Disable this for these tests.
-    monkeypatch.setattr(cmk.gui.wato.mkeventd, "_get_rule_stats_from_ec", lambda: {})
+    monkeypatch.setattr(cmk.gui.watolib.mkeventd, "_get_rule_stats_from_ec", lambda: {})
 
 
 @pytest.fixture(autouse=True)

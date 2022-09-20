@@ -70,7 +70,7 @@ def test_openapi_groups(monkeypatch, group_type, aut_user_auth_wsgi_app: WebTest
         content_type="application/json",
     )
 
-    monkeypatch.setattr("cmk.gui.wato.mkeventd.load_mkeventd_rules", lambda: [{}])
+    monkeypatch.setattr("cmk.gui.watolib.mkeventd._get_rule_stats_from_ec", lambda: {})
     aut_user_auth_wsgi_app.follow_link(
         resp,
         ".../delete",
@@ -173,7 +173,7 @@ def test_openapi_bulk_groups(
     )
     assert resp.json_body["extensions"]["customer"] == "global"
 
-    monkeypatch.setattr("cmk.gui.wato.mkeventd.load_mkeventd_rules", lambda: [{}])
+    monkeypatch.setattr("cmk.gui.watolib.mkeventd._get_rule_stats_from_ec", lambda: {})
     _resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/%s_group_config/actions/bulk-delete/invoke" % (group_type,),

@@ -181,6 +181,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     make_action_link,
     validate_all_hosts,
 )
+from cmk.gui.watolib.mkeventd import load_mkeventd_rules
 
 # TODO: Cleanup all except declare_host_attribute which is still neded for pre 1.6 plugin
 # compatibility. For the others: Find the call sites and change to full module import

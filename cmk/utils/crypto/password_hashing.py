@@ -18,9 +18,9 @@ from collections.abc import Sequence
 
 # TODO: Import errors from passlib are suppressed right now since now
 # stub files for mypy are not available.
-import passlib.context  # type: ignore[import]
-import passlib.exc  # type: ignore[import]
-from passlib import hash as passlib_hash
+import passlib.context  # type: ignore[import]  # pylint: disable=passlib-module-import
+import passlib.exc  # type: ignore[import]  # pylint: disable=passlib-module-import
+from passlib import hash as passlib_hash  # pylint: disable=passlib-module-import
 
 from cmk.utils.exceptions import MKException
 

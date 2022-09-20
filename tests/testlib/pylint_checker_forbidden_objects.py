@@ -16,6 +16,7 @@ def register(linter: PyLinter) -> None:
     linter.register_checker(TypingNamedTupleChecker(linter))
     linter.register_checker(SixEnsureStrBinChecker(linter))
     linter.register_checker(ABCMetaChecker(linter))
+    linter.register_checker(PasslibImportChecker(linter))
 
 
 class ForbiddenObjectChecker(BaseChecker):
@@ -94,6 +95,17 @@ class ForbiddenMetaclassChecker(ForbiddenObjectChecker):
         )
 
 
+class ForbiddenImportChecker(ForbiddenObjectChecker):
+    def visit_import(self, node: astroid.node_classes.Import) -> None:
+        for library, _ in node.names:
+            if library == self.target_lib or library.startswith(f"{self.target_lib}."):
+                self.add_message(self.name, node=node)
+
+    def visit_importfrom(self, node: astroid.node_classes.ImportFrom) -> None:
+        if node.modname == self.target_lib or node.modname.startswith(f"{self.target_lib}."):
+            self.add_message(self.name, node=node)
+
+
 class TypingNamedTupleChecker(ForbiddenFunctionChecker):
     name = "typing-namedtuple-call"
     target_lib = "typing"
@@ -143,4 +155,16 @@ class ABCMetaChecker(ForbiddenMetaclassChecker):
             "abcmeta-metaclass",
             "Inheritance from ABC should be used instead to define metaclass",
         )
+    }
+
+
+class PasslibImportChecker(ForbiddenImportChecker):
+    name = "passlib-module-import"
+    target_lib = "passlib"
+    msgs = {
+        "E9310": (
+            "Imports passlib",
+            "passlib-module-import",
+            "Passlib should not be used directly. Use cmk.utils.crypto.password_hashing instead.",
+        ),
     }

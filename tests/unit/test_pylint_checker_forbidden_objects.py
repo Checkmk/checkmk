@@ -8,10 +8,12 @@ from typing import Iterable, Tuple
 import astroid  # type: ignore[import]
 import pytest
 from pylint.lint import PyLinter  # type: ignore[import]
+from pylint.testutils import CheckerTestCase, MessageTest  # type: ignore[import]
 
 from tests.testlib.pylint_checker_forbidden_objects import (
     ABCMetaChecker,
     ForbiddenFunctionChecker,
+    PasslibImportChecker,
     SixEnsureStrBinChecker,
     TypingNamedTupleChecker,
 )
@@ -301,3 +303,45 @@ class a(metaclass=smth): #@
 def test_abcmeta_usage(call_code: str, ref_value: bool, abcmeta_checker: ABCMetaChecker) -> None:
     node = astroid.extract_node(call_code)
     assert abcmeta_checker._visit_classdef(node) is ref_value
+
+
+class TestPasslibImportChecker(CheckerTestCase):
+    CHECKER_CLASS = PasslibImportChecker
+
+    @pytest.mark.parametrize(
+        "code,expect_message",
+        [
+            ("import passlib #@", True),
+            ("import passlib as findme #@", True),
+            ("import passlib.context #@", True),
+            ("import passlib2 #@", False),
+            ("import passlib2 as passlib #@", False),
+            ("import otherpasslib #@", False),
+            ("import other.passlib #@", False),
+        ],
+    )
+    def test_passlib_import(self, code: str, expect_message: bool) -> None:
+        node = astroid.extract_node(code)
+        with self.assertAddsMessages(
+            MessageTest(msg_id=self.checker.name, node=node), ignore_position=True
+        ) if expect_message else self.assertNoMessages():
+            self.checker.visit_import(node)
+
+    @pytest.mark.parametrize(
+        "code,expect_message",
+        [
+            ("from passlib import * #@", True),
+            ("from passlib import context #@", True),
+            ("from passlib import context as alias #@", True),
+            ("from passlib.context import CryptContext #@", True),
+            ("from elsewhere import passlib #@", False),
+            ("from elsewhere import passlib as passlib #@", False),
+            ("from passlib2 import context #@", False),
+        ],
+    )
+    def test_passlib_importfrom(self, code: str, expect_message: bool) -> None:
+        node = astroid.extract_node(code)
+        with self.assertAddsMessages(
+            MessageTest(msg_id=self.checker.name, node=node), ignore_position=True
+        ) if expect_message else self.assertNoMessages():
+            self.checker.visit_importfrom(node)

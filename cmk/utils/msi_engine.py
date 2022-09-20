@@ -23,6 +23,7 @@ from typing import Final, NoReturn
 import cmk.utils.obfuscate as obfuscate
 from cmk.utils import msi_patch
 
+PRODUCT_NAME: Final = "Check MK Agent 2.1"
 AGENT_MSI_FILE: Final = "check_mk_agent_unsigned.msi"
 _MSI_FILES: Final = sorted(["check_mk_install_yml", "checkmk.dat", "plugins_cap", "python_3.cab"])
 _MSI_COMPONENTS: Final = sorted(
@@ -96,13 +97,13 @@ def update_package_code(file_name: Path, *, package_code: str | None) -> None:
         raise Exception("Failed to patch package code")
 
 
-def read_file_as_lines(f_to_read: Path) -> list[str]:
-    with f_to_read.open("r", newline="", encoding="utf8") as in_file:
+def read_file_as_lines(file_name: Path) -> list[str]:
+    with file_name.open("r", newline="", encoding="utf8") as in_file:
         return in_file.readlines()
 
 
 def _patch_msi_files(use_dir: Path, version_build: str) -> None:
-    name = "File.idt"
+    name: Final = "File.idt"
     lines_file_idt = read_file_as_lines(use_dir / name)
 
     with (use_dir / (name + ".new")).open("w", newline="", encoding="utf8") as out_file:
@@ -129,7 +130,7 @@ def _patch_msi_files(use_dir: Path, version_build: str) -> None:
 
 
 def _patch_msi_components(use_dir: Path) -> None:
-    name = "Component.idt"
+    name: Final = "Component.idt"
     lines_component_idt = read_file_as_lines(use_dir / name)
 
     with (use_dir / (name + ".new")).open("w", newline="", encoding="utf8") as out_file:
@@ -142,24 +143,44 @@ def _patch_msi_components(use_dir: Path) -> None:
             out_file.write("\t".join(words))
 
 
-def _patch_msi_properties(use_dir: Path, *, product_code: str, version_build: str) -> None:
-    name = "Property.idt"
-    lines_property_idt = read_file_as_lines(use_dir / name)
-    with (use_dir / (name + ".new")).open("w", newline="", encoding="utf8") as out_file:
-        out_file.write("".join(lines_property_idt[:3]))
+_DATA_ROW_INDEX: Final = 3
 
-        for line in lines_property_idt[3:]:
-            tokens = line.split("\t")
-            if tokens[0] == "ProductName":
-                tokens[1] = "Check MK Agent 2.1\r\n"
-            # The upgrade code defines the product family. Do not change it!
-            #    elif tokens[0] == "UpgradeCode":
-            #        tokens[1] = upgrade_code
-            elif tokens[0] == "ProductCode":
-                tokens[1] = product_code
-            elif tokens[0] == "ProductVersion":
-                tokens[1] = "%s\r\n" % ".".join(version_build.split(".")[:4])
-            out_file.write("\t".join(tokens))
+
+def _patch_msi_properties(use_dir: Path, *, product_code: str, version_build: str) -> None:
+    name: Final = "Property.idt"
+    lines_property_idt = read_file_as_lines(use_dir / name)
+    version_string = _make_windows_version_string(version_build)
+    with (use_dir / (name + ".new")).open("w", newline="", encoding="utf8") as out_file:
+        out_file.write("".join(lines_property_idt[:_DATA_ROW_INDEX]))
+
+        for line in lines_property_idt[_DATA_ROW_INDEX:]:
+            out_file.write(
+                _patch_line_conditionally(
+                    line, product_code=product_code, version_string=version_string
+                )
+            )
+
+
+def _make_windows_version_string(version_build: str) -> str:
+    """Windows version should have format `v0.v1.v2.v3\r\n`"""
+    win_version_string = ".".join(version_build.split(".")[:4])
+    return f"{win_version_string}"
+
+
+def _patch_line_conditionally(line: str, *, product_code: str, version_string: str) -> str:
+    """NOTE: Patches ProductName, ProductCode and ProductVersion
+    Doesn't touch UpgradeCode: upgrade code defines the product family."""
+    tokens = line.split("\t")
+    match tokens[0]:
+        case "ProductName":
+            tokens[1] = f"{PRODUCT_NAME}\r\n"
+        case "ProductCode":
+            tokens[1] = f"{product_code}\r\n"
+        case "ProductVersion":
+            tokens[1] = f"{version_string}\r\n"
+        case _:
+            return line
+    return "\t".join(tokens)
 
 
 def _copy_file_safe(s: Path, *, d: Path) -> bool:
@@ -339,7 +360,7 @@ def msi_update_core(
         _patch_msi_components(work_dir)
         _patch_msi_properties(
             work_dir,
-            product_code=f"{{{uuid.uuid1()}}}\r\n".upper(),
+            product_code=f"{{{uuid.uuid1()}}}".upper(),
             version_build=new_version_build,
         )
         # ==============================================

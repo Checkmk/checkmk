@@ -75,3 +75,40 @@ def test_msi_tables() -> None:
 )
 def test_generate_product_versions(version: str, expected: str) -> None:
     assert msi_engine.generate_product_version(version, revision_text="xxx") == expected
+
+
+@pytest.mark.parametrize(
+    "version, expected",
+    [
+        ("1.2.3.4.5", "1.2.3.4"),
+        ("1.2.3", "1.2.3"),
+    ],
+)
+def test__make_windows_version_string(version: str, expected: str) -> None:
+    """Testing private function is intended, we want to prevent non-discoverable errors when
+    building MSI, integration tests don't check MSI"""
+    assert msi_engine._make_windows_version_string(version) == expected
+
+
+_PRODUCT_CODE: Final = "SomeCode"
+_PRODUCT_VERSION: Final = "1.2.3.4"
+
+
+@pytest.mark.parametrize(
+    "line, expected",
+    [
+        ("ProductCode\tz123", f"ProductCode\t{_PRODUCT_CODE}\r\n"),
+        ("ProductVersion\tz", f"ProductVersion\t{_PRODUCT_VERSION}\r\n"),
+        ("ProductName\tz567", f"ProductName\t{msi_engine.PRODUCT_NAME}\r\n"),
+        ("UpgradeCode\tZZZ1", "UpgradeCode\tZZZ1"),
+    ],
+)
+def test__patch_line_conditionally(line: str, expected: str) -> None:
+    """Testing private function is intended, we want to prevent non-discoverable errors when
+    building MSI, integration tests don't check MSI"""
+    assert (
+        msi_engine._patch_line_conditionally(
+            line, version_string=_PRODUCT_VERSION, product_code=_PRODUCT_CODE
+        )
+        == expected
+    )

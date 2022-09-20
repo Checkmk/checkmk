@@ -983,7 +983,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
         "aws_rds.bin_log_usage",
         "aws_rds.transaction_logs_usage",
         "aws_rds.replication_slot_usage",
-        "aws_rds.disk_io",
         "aws_rds.connections",
         "aws_rds.agent_jobs",
         "aws_rds.replica_lag",

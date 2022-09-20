@@ -4,7 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Dict, Mapping
+from collections.abc import Mapping, MutableMapping
+from typing import Any
+
+from cmk.base.plugins.agent_based.utils.diskstat import check_diskstat_dict
 
 from .agent_based_api.v1 import get_value_store, IgnoreResultsError, register
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -19,7 +22,7 @@ from .utils.aws import (
 
 
 def parse_aws_rds(string_table: StringTable) -> AWSSectionMetrics:
-    section: Dict[str, Mapping[str, Any]] = {}
+    section: dict[str, Mapping[str, Any]] = {}
     for metrics in extract_aws_metrics_by_labels(
         [
             "CPUUtilization",
@@ -128,4 +131,70 @@ register.check_plugin(
     check_ruleset_name="if",
     check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
     check_function=check_aws_rds_network_io,
+)
+
+# .
+#   .--disk IO-------------------------------------------------------------.
+#   |                         _ _     _      ___ ___                       |
+#   |                      __| (_)___| | __ |_ _/ _ \                      |
+#   |                     / _` | / __| |/ /  | | | | |                     |
+#   |                    | (_| | \__ \   <   | | |_| |                     |
+#   |                     \__,_|_|___/_|\_\ |___\___/                      |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def discover_aws_rds_disk_io(section: AWSSectionMetrics) -> DiscoveryResult:
+    yield from discover_aws_generic(
+        section,
+        [
+            "DiskQueueDepth",
+            "ReadIOPS",
+            "ReadLatency",
+            "ReadThroughput",
+            "WriteIOPS",
+            "WriteLatency",
+            "WriteThroughput",
+        ],
+    )
+
+
+def check_aws_rds_disk_io(
+    item: str,
+    params: Mapping[str, Any],
+    section: AWSSectionMetrics,
+) -> CheckResult:
+    disk_data: MutableMapping[str, float] = {}
+
+    if (metrics := section.get(item)) is None:
+        return
+
+    for key, metric_key, scale in [
+        ("read_ios", "ReadIOPS", 1.0),
+        ("write_ios", "WriteIOPS", 1.0),
+        ("read_throughput", "ReadThroughput", 1.0),
+        ("write_throughput", "WriteThroughput", 1.0),
+        ("read_latency", "ReadLatency", 1000.0),
+        ("write_latency", "WriteLatency", 1000.0),
+    ]:
+        if (metric := metrics.get(metric_key)) is None:
+            continue
+        disk_data[key] = metric * scale
+
+    yield from check_diskstat_dict(
+        params=params,
+        disk=disk_data,
+        value_store=get_value_store(),
+        this_time=time.time(),
+    )
+
+
+register.check_plugin(
+    name="aws_rds_disk_io",
+    service_name="AWS/RDS %s Disk IO",
+    check_function=check_aws_rds_disk_io,
+    discovery_function=discover_aws_rds_disk_io,
+    check_default_parameters={},
+    check_ruleset_name="diskstat",
+    sections=["aws_rds"],
 )

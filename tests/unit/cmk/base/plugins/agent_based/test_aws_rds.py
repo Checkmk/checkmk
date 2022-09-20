@@ -2,9 +2,17 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Mapping, Sequence
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.aws_rds import check_aws_rds_network_io, parse_aws_rds
+import pytest
+
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.aws_rds import (
+    check_aws_rds_disk_io,
+    check_aws_rds_network_io,
+    discover_aws_rds_disk_io,
+    parse_aws_rds,
+)
 
 SECTION = {
     "database-1 [eu-central-1]": {
@@ -3043,3 +3051,62 @@ def test_check_aws_rds_network_io() -> None:
         Result(state=State.OK, summary="Out: 2.67 kB/s"),
         Metric("out", 2671.1907577121706, boundaries=(0.0, None)),
     ]
+
+
+@pytest.mark.parametrize(
+    "section, discovery_result",
+    [
+        pytest.param(
+            SECTION,
+            [Service(item="database-1 [eu-central-1]")],
+            id="For every disk in the section a Service is discovered.",
+        ),
+        pytest.param(
+            {},
+            [],
+            id="If the section is empty, no Services are discovered.",
+        ),
+    ],
+)
+def test_aws_ec2_disk_io_discovery(
+    section: Mapping[str, Mapping[str, float]],
+    discovery_result: Sequence[Service],
+) -> None:
+
+    assert list(discover_aws_rds_disk_io(section)) == discovery_result
+
+
+def test_check_aws_rds_disk_io() -> None:
+    check_result = list(
+        check_aws_rds_disk_io(
+            item="database-1 [eu-central-1]",
+            params={},
+            section=SECTION,
+        )
+    )
+    assert len(check_result) == 12
+    assert check_result == [
+        Result(state=State.OK, summary="Read: 137 B/s"),
+        Metric("disk_read_throughput", 136.53447113007437),
+        Result(state=State.OK, summary="Write: 3.34 kB/s"),
+        Metric("disk_write_throughput", 3338.060601250865),
+        Result(state=State.OK, notice="Read operations: 0.23/s"),
+        Metric("disk_read_ios", 0.23333527781018573),
+        Result(state=State.OK, notice="Write operations: 0.32/s"),
+        Metric("disk_write_ios", 0.3249847523733059),
+        Result(state=State.OK, notice="Read latency: 40 milliseconds"),
+        Metric("disk_read_latency", 0.04),
+        Result(state=State.OK, notice="Write latency: 248 milliseconds"),
+        Metric("disk_write_latency", 0.24792140430921572),
+    ]
+
+
+def test_check_aws_rds_disk_io_item_not_foung() -> None:
+    check_result = list(
+        check_aws_rds_disk_io(
+            item="item_not_found",
+            params={},
+            section=SECTION,
+        )
+    )
+    assert check_result == []

@@ -236,61 +236,6 @@ check_info["aws_rds.replication_slot_usage"] = {
     "group": "aws_rds_disk_usage",
 }
 
-# .
-#   .--disk IO-------------------------------------------------------------.
-#   |                         _ _     _      ___ ___                       |
-#   |                      __| (_)___| | __ |_ _/ _ \                      |
-#   |                     / _` | / __| |/ /  | | | | |                     |
-#   |                    | (_| | \__ \   <   | | |_| |                     |
-#   |                     \__,_|_|___/_|\_\ |___\___/                      |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-Section = Mapping[str, Mapping[str, float]]
-
-
-def discover_aws_rds_disk_io(section: Section):
-    yield from inventory_aws_generic(
-        section,
-        [
-            "DiskQueueDepth",
-            "ReadIOPS",
-            "ReadLatency",
-            "ReadThroughput",
-            "WriteIOPS",
-            "WriteLatency",
-            "WriteThroughput",
-        ],
-    )
-
-
-def check_aws_rds_disk_io(item: str, params: Mapping[str, Any], section: Section):
-    disks: MutableMapping[str, MutableMapping[str, float]] = {}
-
-    for disk_name, metrics in section.items():
-        disk = disks.setdefault(disk_name, {})
-        for key, metric_key, scale in [
-            ("read_ios", "ReadIOPS", 1.0),
-            ("write_ios", "WriteIOPS", 1.0),
-            ("read_throughput", "ReadThroughput", 1.0),
-            ("write_throughput", "WriteThroughput", 1.0),
-            ("read_latency", "ReadLatency", 1000.0),
-            ("write_latency", "WriteLatency", 1000.0),
-        ]:
-            if (metric := metrics.get(metric_key)) is None:
-                continue
-            disk[key] = metric * scale
-
-    yield from check_diskstat_dict(item, params, disks)
-
-
-check_info["aws_rds.disk_io"] = {
-    "inventory_function": discover_aws_rds_disk_io,
-    "check_function": check_aws_rds_disk_io,
-    "service_description": "AWS/RDS %s Disk IO",
-    "group": "diskstat",
-    "has_perfdata": True,
-}
 
 # .
 #   .--connections---------------------------------------------------------.

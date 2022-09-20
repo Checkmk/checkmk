@@ -14,7 +14,7 @@ import webtest  # type: ignore[import]
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
-from cmk.utils import paths
+from cmk.utils import paths, version
 from cmk.utils.store import load_mk_file
 
 from cmk.gui.exceptions import MKAuthException
@@ -581,9 +581,14 @@ def _make_folder_inaccessible(wsgi_app: WebTestAppForCMK, base: str, folder: str
     etag = resp.headers["etag"]
 
     nobody = "".join(random.choices(string.ascii_uppercase + string.digits, k=8))
+
+    params = {"name": nobody, "alias": nobody}
+    if version.is_managed_edition():
+        params["customer"] = "provider"
+
     wsgi_app.post(
         url=base + "/domain-types/contact_group_config/collections/all",
-        params=json.dumps({"name": nobody, "alias": nobody, "customer": "provider"}),
+        params=json.dumps(params),
         headers={
             "Accept": "application/json",
             "Content-Type": "application/json",

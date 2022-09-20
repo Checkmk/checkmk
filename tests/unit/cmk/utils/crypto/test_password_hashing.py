@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Callable
-
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
@@ -13,30 +11,14 @@ from cmk.utils.crypto import password_hashing as ph
 
 @pytest.fixture(autouse=True)
 def reduce_rounds(monkeypatch: MonkeyPatch) -> None:
-    """Reduce the number of rounds for hashing bcrypt and sha256_crypt to their respective minima"""
+    """Reduce the number of rounds for hashing bcrypt to the allowed minimum"""
     monkeypatch.setattr("cmk.utils.crypto.password_hashing.BCRYPT_ROUNDS", 4)
-    monkeypatch.setattr("cmk.utils.crypto.password_hashing.SHA256_CRYPT_ROUNDS", 1000)
 
 
-@pytest.mark.parametrize(
-    "algo,identifier,len_checksum",
-    [
-        (ph.hash_password, "$2b$04$", 43),  # bcrypt
-        (ph.sha256_crypt, "$5$rounds=1000$", 31),
-    ],
-)
 @pytest.mark.parametrize("password", ["", "blä", "😀", "😀" * 18, "a" * 72])
-def test_hash_verify_roundtrip(
-    algo: Callable,
-    identifier: str,
-    len_checksum: int,
-    password: str,
-) -> None:
-    pw_hash = algo(password)
-
-    assert pw_hash.startswith(identifier)
-    assert len(pw_hash) > len(identifier) + len_checksum  # length of included salt may vary
-
+def test_hash_verify_roundtrip(password: str) -> None:
+    pw_hash = ph.hash_password(password)
+    assert pw_hash.startswith("$2b$04$")  # bcrypt 4 rounds
     ph.verify(password, pw_hash)
 
 
@@ -45,11 +27,10 @@ def test_hash_no_white_space_trimming() -> None:
         ph.verify(" ", ph.hash_password("    "))
 
 
-@pytest.mark.parametrize("algo", [ph.sha256_crypt, ph.hash_password])
-def test_bcrypt_null_bytes(algo: Callable) -> None:
+def test_bcrypt_null_bytes() -> None:
     # Note: pyca/bcrypt 4.0 removes this limitation, so this test is bound to fail.
-    with pytest.raises(ValueError, match=r".*(NULL|null) (byte|character).*"):
-        algo("foo\0bar")
+    with pytest.raises(ValueError, match="NULL byte"):
+        ph.hash_password("foo\0bar")
 
 
 @pytest.mark.parametrize("password", [" " * 73, "🙀" * 19])

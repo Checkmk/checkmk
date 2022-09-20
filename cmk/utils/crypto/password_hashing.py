@@ -27,7 +27,6 @@ from cmk.utils.exceptions import MKException
 # Using code should not be able to change the number of rounds (to unsafe values), but test code
 # has to run with reduced rounds. They can be monkeypatched here.
 BCRYPT_ROUNDS = 12
-SHA256_CRYPT_ROUNDS = 535000
 
 
 class PasswordTooLongError(MKException):
@@ -59,21 +58,6 @@ def hash_password(password: str) -> str:
         return passlib_hash.bcrypt.using(rounds=BCRYPT_ROUNDS, truncate_error=True).hash(password)
     except passlib.exc.PasswordTruncateError as e:
         raise PasswordTooLongError(e)
-
-
-def sha256_crypt(password: str) -> str:
-    """Hash a password using sha256-crypt, only use if you know what you're doing.
-
-    Most code should use hash_password instead.
-
-    :param password: The password to hash.
-
-    :return: The hashed password Modular Crypto Format (see module docstring). The identifier for
-             sha256_crypt is "5".
-
-    :raise: ValueError if the input password contains null bytes.
-    """
-    return passlib_hash.sha256_crypt.using(rounds=SHA256_CRYPT_ROUNDS).hash(password)
 
 
 def _allowed_schemes() -> Sequence[str]:

@@ -17,7 +17,6 @@ from cmk.utils.type_defs import EventRule, timeperiod_spec_alias, UserId
 import cmk.gui.forms as forms
 import cmk.gui.plugins.wato.utils
 import cmk.gui.userdb as userdb
-import cmk.gui.wato.mkeventdstore as mkeventdstore
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.changes as _changes
 import cmk.gui.watolib.groups as groups
@@ -64,6 +63,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
+from cmk.gui.watolib.mkeventd import load_mkeventd_rules
 from cmk.gui.watolib.notifications import load_notification_rules
 from cmk.gui.watolib.rulesets import AllRulesets
 
@@ -282,7 +282,7 @@ class ModeTimeperiods(WatoMode):
 
     def _find_usages_in_ec_rules(self, tpname: str) -> List[TimeperiodUsage]:
         used_in: List[TimeperiodUsage] = []
-        rule_packs = mkeventdstore.load_mkeventd_rules()
+        rule_packs = load_mkeventd_rules()
         for rule_pack in rule_packs:
             for rule_index, rule in enumerate(rule_pack["rules"]):
                 if rule.get("match_timeperiod") == tpname:

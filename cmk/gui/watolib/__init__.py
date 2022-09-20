@@ -25,6 +25,7 @@ from cmk.gui.utils import load_web_plugins as _load_web_plugins
 from cmk.gui.watolib._host_attributes import register as _register_host_attributes
 from cmk.gui.watolib.host_attributes import ABCHostAttribute
 from cmk.gui.watolib.host_attributes import host_attribute_registry as _host_attributes_registry
+from cmk.gui.watolib.mkeventd import load_mkeventd_rules
 
 # Disable python warnings in background job output or logs like "Unverified
 # HTTPS request is being made". We warn the user using analyze configuration.

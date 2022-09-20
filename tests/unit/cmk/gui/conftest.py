@@ -380,7 +380,7 @@ def with_groups(monkeypatch, request_context, with_admin_login, suppress_remote_
     yield
     groups.delete_group("windows", "host")
     groups.delete_group("routers", "service")
-    monkeypatch.setattr(cmk.gui.wato.mkeventdstore, "load_mkeventd_rules", lambda: [{}])
+    monkeypatch.setattr(cmk.gui.watolib.mkeventd, "_get_rule_stats_from_ec", lambda: {})
     groups.delete_group("admins", "contact")
 
 

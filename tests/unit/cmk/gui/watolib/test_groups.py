@@ -187,5 +187,5 @@ def test_find_usages_of_contact_group_in_ec_rules(
     rule_packs: ECRulePacks,
     expected_result: List[Tuple[str, str]],
 ) -> None:
-    monkeypatch.setattr(cmk.gui.wato.mkeventd, "load_mkeventd_rules", _rule_packs)
+    monkeypatch.setattr(cmk.gui.watolib.mkeventd, "load_mkeventd_rules", rule_packs)
     assert groups._find_usages_of_contact_group_in_ec_rules(contact_group) == expected_result  # pylint: disable=protected-access

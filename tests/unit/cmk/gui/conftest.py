@@ -419,7 +419,7 @@ def with_groups(
     yield
     watolib.delete_group('windows', 'host')
     watolib.delete_group('routers', 'service')
-    monkeypatch.setattr(cmk.gui.wato.mkeventd, "load_mkeventd_rules", lambda: [{}])
+    monkeypatch.setattr(cmk.gui.watolib.mkeventd, "_get_rule_stats_from_ec", lambda: {})
     watolib.delete_group('admins', 'contact')
 
 

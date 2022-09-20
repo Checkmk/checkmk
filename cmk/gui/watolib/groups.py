@@ -36,6 +36,7 @@ from cmk.gui.watolib.host_attributes import (
     ABCHostAttribute,
     HostAttributeTopicBasicSettings,
 )
+import cmk.gui.watolib.mkeventd as mkeventd
 from cmk.gui.plugins.watolib.utils import (
     config_variable_registry,
     wato_fileheader,
@@ -356,7 +357,7 @@ def _find_usages_of_contact_group_in_dashboards(name: str) -> List[Tuple[str, st
 def _find_usages_of_contact_group_in_ec_rules(name: str) -> List[Tuple[str, str]]:
     """Is the contactgroup used in an eventconsole rule?"""
     used_in: List[Tuple[str, str]] = []
-    rule_packs = cmk.gui.wato.mkeventd.load_mkeventd_rules()
+    rule_packs = mkeventd.load_mkeventd_rules()
     for pack in rule_packs:
         for nr, rule in enumerate(pack.get("rules", [])):
             if name in rule.get("contact_groups", {}).get("groups", []):

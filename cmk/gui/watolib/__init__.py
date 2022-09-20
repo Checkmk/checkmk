@@ -256,6 +256,7 @@ from cmk.gui.watolib.utils import (
     site_neutral_path,
 )
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
+from cmk.gui.watolib.mkeventd import load_mkeventd_rules
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 

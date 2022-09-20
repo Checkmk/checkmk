@@ -54,7 +54,6 @@ else:
 from cmk.gui.breadcrumb import BreadcrumbItem
 import cmk.gui.forms as forms
 import cmk.gui.config as config
-import cmk.gui.sites as sites
 import cmk.gui.mkeventd
 import cmk.gui.watolib as watolib
 import cmk.gui.hooks as hooks
@@ -158,6 +157,8 @@ from cmk.gui.utils.urls import (
     makeuri_contextless_rulespec_group,
     make_confirm_link,
 )
+
+from cmk.gui.watolib.mkeventd import load_mkeventd_rules, save_mkeventd_rules, export_mkp_rule_pack
 
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
@@ -1054,42 +1055,6 @@ def vs_mkeventd_rule(customer=None):
 #   +----------------------------------------------------------------------+
 #   |  Loading and saving of rule packages                                 |
 #   '----------------------------------------------------------------------'
-
-
-def load_mkeventd_rules():
-    rule_packs = ec.load_rule_packs()
-
-    # TODO: We should really separate the rule stats from this "config load logic"
-    rule_stats = _get_rule_stats_from_ec()
-
-    for rule_pack in rule_packs:
-        pack_hits = 0
-        for rule in rule_pack["rules"]:
-            hits = rule_stats.get(rule["id"], 0)
-            rule["hits"] = hits
-            pack_hits += hits
-        rule_pack["hits"] = pack_hits
-
-    return rule_packs
-
-
-def _get_rule_stats_from_ec() -> Dict[str, int]:
-    # Add information about rule hits: If we are running on OMD then we know
-    # the path to the state retention file of mkeventd and can read the rule
-    # statistics directly from that file.
-    rule_stats: Dict[str, int] = {}
-    for rule_id, count in sites.live().query("GET eventconsolerules\nColumns: rule_id rule_hits\n"):
-        rule_stats.setdefault(rule_id, 0)
-        rule_stats[rule_id] += count
-    return rule_stats
-
-
-def save_mkeventd_rules(rule_packs):
-    ec.save_rule_packs(rule_packs, config.mkeventd_pprint_rules)
-
-
-def export_mkp_rule_pack(rule_pack):
-    ec.export_rule_pack(rule_pack, config.mkeventd_pprint_rules)
 
 
 @sample_config_generator_registry.register

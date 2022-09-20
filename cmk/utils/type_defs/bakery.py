@@ -15,7 +15,6 @@ from ._misc import HostName
 __all__ = [
     "get_bakery_target",
     "AgentConfig",
-    "MutableAgentConfig",
     "AgentHash",
     "AgentPackagePlatform",
     "BakeryOpSys",
@@ -28,7 +27,6 @@ __all__ = [
 
 AgentHash = NewType("AgentHash", str)
 AgentConfig = Mapping[str, Any]  # TODO Split into more sub configs
-MutableAgentConfig = dict[str, Any]  # TODO Split into more sub config
 
 
 class AgentPackagePlatform(enum.Enum):

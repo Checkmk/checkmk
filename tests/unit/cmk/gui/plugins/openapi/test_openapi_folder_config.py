@@ -7,11 +7,14 @@
 import json
 import re
 import uuid
+from ast import literal_eval
 from typing import Sequence
 
 import pytest
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+
+from cmk.utils import paths
 
 from cmk.gui.fields import FOLDER_PATTERN, FolderField
 from cmk.gui.fields.utils import BaseSchema
@@ -334,6 +337,186 @@ def test_openapi_hosts_in_folder_collection(aut_user_auth_wsgi_app: WebTestAppFo
         headers={"Accept": "application/json"},
     )
     assert "hosts" not in resp.json["value"][0]["members"]
+
+
+def _create_criticality_tag(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+    aut_user_auth_wsgi_app.call_method(
+        "post",
+        "/NO_SITE/check_mk/api/1.0/domain-types/host_tag_group/collections/all",
+        params=json.dumps(
+            {
+                "ident": "criticality",
+                "title": "criticality",
+                "topic": "nothing",
+                "tags": [
+                    {
+                        "ident": "discovered",
+                        "title": "discovered",
+                    }
+                ],
+            }
+        ),
+        headers={"Accept": "application/json"},
+        status=200,
+        content_type="application/json",
+    )
+
+
+def test_openapi_create_folder_with_network_scan(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, with_automation_user: tuple[str, str]
+) -> None:
+    _create_criticality_tag(aut_user_auth_wsgi_app)
+    user, _ = with_automation_user
+    aut_user_auth_wsgi_app.call_method(
+        "post",
+        "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
+        params=json.dumps(
+            dict(
+                name="my_folder_name",
+                title="some title",
+                parent="~",
+                attributes=dict(
+                    network_scan={
+                        "addresses": [
+                            {"type": "network_range", "network": "172.10.9.0/24"},
+                            {
+                                "addresses": ["10.10.10.10", "10.10.10.9"],
+                                "type": "explicit_addresses",
+                            },
+                            {
+                                "from_address": "192.168.178.10",
+                                "to_address": "192.168.178.20",
+                                "type": "address_range",
+                            },
+                        ],
+                        "exclude_addresses": [
+                            {"regexp_list": ["some_pattern"], "type": "exclude_by_regexp"}
+                        ],
+                        "scan_interval": 86400,
+                        "time_allowed": [{"start": "00:00:00", "end": "23:00:00"}],
+                        "set_ip_address": True,
+                        "tag_criticality": "discovered",
+                        "run_as": user,
+                        "translate_names": {"drop_domain": True, "convert_case": "lower"},
+                    }
+                ),
+            )
+        ),
+        status=200,
+        headers={"Accept": "application/json"},
+        content_type="application/json",
+    )
+    path = paths.omd_root / "etc/check_mk/conf.d/wato/my_folder_name/.wato"
+    with path.open() as fo:
+        result = literal_eval(fo.read())
+    assert user == result["attributes"]["network_scan"].pop("run_as")
+    assert result["attributes"]["network_scan"] == {
+        "exclude_ranges": [("ip_regex_list", ["some_pattern"])],
+        "ip_ranges": [
+            ("ip_network", ("172.10.9.0", 24)),
+            ("ip_list", ["10.10.10.10", "10.10.10.9"]),
+            ("ip_range", ("192.168.178.10", "192.168.178.20")),
+        ],
+        "max_parallel_pings": 100,
+        "scan_interval": 86400,
+        "set_ipaddress": True,
+        "time_allowed": [((0, 0), (23, 0))],
+        "tag_criticality": "discovered",
+        "translate_names": {"case": "lower", "drop_domain": True},
+    }
+
+
+def test_openapi_show_folder_with_network_scan_result(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, with_automation_user: tuple[str, str]
+) -> None:
+    _create_criticality_tag(aut_user_auth_wsgi_app)
+    path = paths.omd_root / "etc/check_mk/conf.d/wato/my_folder_name/.wato"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    user, _ = with_automation_user
+    with path.open("w") as fo:
+        fo.write(
+            str(
+                {
+                    "title": "Clients (9)",
+                    "attributes": {
+                        "network_scan": {
+                            "ip_ranges": [
+                                ("ip_network", ("172.10.9.0", 24)),
+                                ("ip_list", ["10.10.10.10", "10.10.10.9"]),
+                                ("ip_range", ("192.168.178.10", "192.168.178.20")),
+                            ],
+                            "exclude_ranges": [("ip_regex_list", ["some_pattern"])],
+                            "scan_interval": 86400,
+                            "time_allowed": [((0, 0), (23, 0))],
+                            "set_ipaddress": True,
+                            "tag_criticality": "discovered",
+                            "run_as": user,
+                            "translate_names": {"drop_domain": True, "case": "lower"},
+                        },
+                        "network_scan_result": {
+                            "start": 1661972701.0,
+                            "end": 1661972713.0,
+                            "state": True,
+                            "output": "The network scan found 10 new hosts.",
+                        },
+                        "meta_data": {
+                            "created_at": 1635451787.0,
+                            "created_by": user,
+                            "updated_at": 1661980583.1332564,
+                        },
+                    },
+                    "num_hosts": 40,
+                    "lock": False,
+                    "lock_subfolders": False,
+                    "__id": "cf2b6294fec34e57af4a164ee99134d7",
+                }
+            )
+        )
+    resp = aut_user_auth_wsgi_app.call_method(
+        "get",
+        "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
+        params={"show_hosts": False},
+        headers={"Accept": "application/json"},
+    )
+    assert resp.json["value"][0]["extensions"] == {
+        "path": "/my_folder_name",
+        "attributes": {
+            "network_scan": {
+                "addresses": [
+                    {"type": "network_range", "network": "172.10.9.0/24"},
+                    {
+                        "addresses": ["10.10.10.10", "10.10.10.9"],
+                        "type": "explicit_addresses",
+                    },
+                    {
+                        "from_address": "192.168.178.10",
+                        "to_address": "192.168.178.20",
+                        "type": "address_range",
+                    },
+                ],
+                "exclude_addresses": [
+                    {"regexp_list": ["some_pattern"], "type": "exclude_by_regexp"}
+                ],
+                "scan_interval": 86400,
+                "time_allowed": [{"start": "00:00:00", "end": "23:00:00"}],
+                "set_ip_address": True,
+                "tag_criticality": "discovered",
+                "run_as": user,
+                "translate_names": {"convert_case": "lower", "drop_domain": True},
+            },
+            "network_scan_result": {
+                "start": "2022-08-31T19:05:01+00:00",
+                "end": "2022-08-31T19:05:13+00:00",
+                "state": "succeeded",
+                "output": "The network scan found 10 new hosts.",
+            },
+            "meta_data": {
+                "created_at": "2021-10-28T20:09:47+00:00",
+                "updated_at": "2022-08-31T21:16:23.133256+00:00",
+                "created_by": user,
+            },
+        },
+    }
 
 
 def test_openapi_show_hosts_on_folder(aut_user_auth_wsgi_app: WebTestAppForCMK):

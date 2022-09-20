@@ -15,26 +15,11 @@ import json
 import logging
 import sys
 from collections import Counter, defaultdict
+from collections.abc import Iterable, Mapping, Sequence
 from datetime import datetime, timedelta
 from pathlib import Path
 from time import sleep
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Literal,
-    Mapping,
-    NamedTuple,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
-    TypedDict,
-    TypeVar,
-    Union,
-)
+from typing import Any, Callable, Literal, NamedTuple, Optional, TypedDict, TypeVar
 
 import boto3  # type: ignore[import]
 import botocore  # type: ignore[import]
@@ -64,7 +49,7 @@ NOW = datetime.now()
 # and may be wrong, but at least they make mypy happy for now. Nevertheless, we
 # really need more type annotations to comprehend the dict-o-mania below...
 
-AWSStrings = Union[bytes, str]
+AWSStrings = bytes | str
 
 T = TypeVar("T")
 
@@ -239,7 +224,7 @@ class AWSConfig:
         try:
             with self._config_hash_file.open(mode="r", encoding="utf-8") as f:
                 return f.read().strip()
-        except IOError as e:
+        except OSError as e:
             if e.errno != errno.ENOENT:
                 # No such file or directory
                 raise
@@ -273,7 +258,7 @@ def _get_ec2_piggyback_hostname(inst, region):
     # In this case we do not deliever any data for this piggybacked host such that
     # the services go stable and Check_MK service reports "CRIT - Got not information".
     try:
-        return "%s-%s-%s" % (inst["PrivateIpAddress"], region, inst["InstanceId"])
+        return "{}-{}-{}".format(inst["PrivateIpAddress"], region, inst["InstanceId"])
     except KeyError:
         return None
 
@@ -283,7 +268,7 @@ def _hostname_from_name_and_region(name, region):
     We add the region to the the hostname because resources in different regions might have the
     same names (for example replicated DynamoDB tables).
     """
-    return "%s_%s" % (name, region)
+    return f"{name}_{region}"
 
 
 def _elbv2_load_balancer_arn_to_dim(arn):
@@ -349,7 +334,7 @@ def _validate_wafv2_scope_and_region(scope, region):
 
 def _iterate_through_wafv2_list_operations(
     list_operation: Callable, scope: str, entry_name: str, get_response_content: Callable
-) -> List:
+) -> list:
     """
     For some reason, the return objects of the list_... functions of the WAFV2-client seem to
     always contain 'NextMarker', indicating that there are more values to retrieve, even if there
@@ -393,7 +378,7 @@ def _get_wafv2_web_acls(
 
 
 def _fetch_tagged_resources_with_types(  # type:ignore[no-untyped-def]
-    tagging_client, resource_type_filters: List[str]
+    tagging_client, resource_type_filters: list[str]
 ) -> list:
     tagged_resources = []
     # The get_resource API call has a matching rule (AND) different than the one that we use in
@@ -413,9 +398,9 @@ def _fetch_tagged_resources_with_types(  # type:ignore[no-untyped-def]
 
 def fetch_resources_matching_tags(  # type:ignore[no-untyped-def]
     tagging_client,
-    tags_to_match: List[Dict[Literal["Key", "Value"], str]],
-    resource_type_filters: List[str],
-) -> Set[str]:
+    tags_to_match: list[dict[Literal["Key", "Value"], str]],
+    resource_type_filters: list[str],
+) -> set[str]:
     """Returns the ARN of all the resources in the region that match **ANY** of the provided tags.
 
     This is useful when the service-specific API is not returning tags for every resource as this
@@ -514,7 +499,7 @@ class ResultDistributorS3Limits(ResultDistributor):
 
 
 class AWSSectionResults(NamedTuple):
-    results: List
+    results: list
     cache_timestamp: float
 
 
@@ -740,7 +725,7 @@ class AWSSection(DataCache):
         """
 
     @abc.abstractmethod
-    def _create_results(self, computed_content: Any) -> List[AWSSectionResult]:
+    def _create_results(self, computed_content: Any) -> list[AWSSectionResult]:
         pass
 
     def _get_response_content(self, response, key, dflt=None):
@@ -1046,7 +1031,7 @@ class EC2Limits(AWSSectionLimits):
 
         total_ris = 0
         running_ris = 0
-        ondemand_limits: Dict[str, int] = {}
+        ondemand_limits: dict[str, int] = {}
         # subtract reservations from instance usage
         for inst_az, inst_types in inst_limits.items():
             if inst_az not in res_limits:
@@ -1116,7 +1101,7 @@ class EC2Limits(AWSSectionLimits):
 
     def _get_inst_limits(self, instances, spot_inst_requests):
         spot_instance_ids = [inst["InstanceId"] for inst in spot_inst_requests]
-        inst_limits: Dict[str, Dict[str, int]] = {}
+        inst_limits: dict[str, dict[str, int]] = {}
         for inst_id, inst in instances.items():
             if inst_id in spot_instance_ids:
                 continue
@@ -1134,7 +1119,7 @@ class EC2Limits(AWSSectionLimits):
         return inst_limits
 
     def _get_res_inst_limits(self, res_instances):
-        res_limits: Dict[str, Dict[str, int]] = {}
+        res_limits: dict[str, dict[str, int]] = {}
         for res_inst in res_instances.values():
             if res_inst["State"] != "active":
                 continue
@@ -1409,7 +1394,7 @@ class EC2Labels(AWSSectionLabels):
             for ec2_instance_id, inst in colleague_contents.content.items()
         }
 
-        computed_content: Dict[str, Dict[str, str]] = {}
+        computed_content: dict[str, dict[str, str]] = {}
         for tag in raw_content.content:
             ec2_piggyback_hostname = inst_id_to_ec2_piggyback_hostname_map.get(tag["ResourceId"])
             if not ec2_piggyback_hostname:
@@ -1469,7 +1454,7 @@ class EC2SecurityGroups(AWSSection):
         return self._get_response_content(response, "SecurityGroups")
 
     def _compute_content(self, raw_content, colleague_contents):
-        content_by_piggyback_hosts: Dict[str, List[str]] = {}
+        content_by_piggyback_hosts: dict[str, list[str]] = {}
         for instance_name, instance in colleague_contents.content.items():
             for security_group_from_instance in instance.get("SecurityGroups", []):
                 security_group = raw_content.content.get(security_group_from_instance["GroupId"])
@@ -1545,7 +1530,7 @@ class EC2(AWSSectionCloudwatch):
         return metrics
 
     def _compute_content(self, raw_content, colleague_contents):
-        content_by_piggyback_hosts: Dict[str, List[str]] = {}
+        content_by_piggyback_hosts: dict[str, list[str]] = {}
         for row in raw_content.content:
             content_by_piggyback_hosts.setdefault(row["Label"], []).append(row)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
@@ -1808,7 +1793,7 @@ class EBSSummary(AWSSection):
         _col_volumes, col_instances = colleague_contents.content
         instance_name_mapping = {v["InstanceId"]: k for k, v in col_instances.items()}
 
-        content_by_piggyback_hosts: Dict[str, List[str]] = {}
+        content_by_piggyback_hosts: dict[str, list[str]] = {}
         for vol in raw_content.content.values():
             instance_names = []
             for attachment in vol["Attachments"]:
@@ -1860,7 +1845,7 @@ class EBS(AWSSectionCloudwatch):
         return AWSColleagueContents([], 0.0)
 
     def _get_metrics(self, colleague_contents):
-        muv: List[Tuple[str, str, List[str]]] = [
+        muv: list[tuple[str, str, list[str]]] = [
             ("VolumeReadOps", "Count", []),
             ("VolumeWriteOps", "Count", []),
             ("VolumeReadBytes", "Bytes", []),
@@ -1904,7 +1889,7 @@ class EBS(AWSSectionCloudwatch):
         return metrics
 
     def _compute_content(self, raw_content, colleague_contents):
-        content_by_piggyback_hosts: Dict[str, List[str]] = {}
+        content_by_piggyback_hosts: dict[str, list[str]] = {}
         for row in raw_content.content:
             content_by_piggyback_hosts.setdefault(row["Label"], []).append(row)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
@@ -2609,7 +2594,7 @@ class ELBSummaryGeneric(AWSSection):
         return False
 
     def _compute_content(self, raw_content, colleague_contents):
-        content_by_piggyback_hosts: Dict[str, str] = {}
+        content_by_piggyback_hosts: dict[str, str] = {}
         for load_balancer in raw_content.content:
             content_by_piggyback_hosts.setdefault(load_balancer["DNSName"], load_balancer)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
@@ -2676,7 +2661,7 @@ class ELBHealth(AWSSection):
 
     def get_live_data(self, *args):
         (colleague_contents,) = args
-        load_balancers: Dict[str, List[str]] = {}
+        load_balancers: dict[str, list[str]] = {}
         for load_balancer_dns_name, load_balancer in colleague_contents.content.items():
             load_balancer_name = load_balancer["LoadBalancerName"]
             response = self._client.describe_instance_health(LoadBalancerName=load_balancer_name)
@@ -2758,7 +2743,7 @@ class ELB(AWSSectionCloudwatch):
         return metrics
 
     def _compute_content(self, raw_content, colleague_contents):
-        content_by_piggyback_hosts: Dict[str, List[str]] = {}
+        content_by_piggyback_hosts: dict[str, list[str]] = {}
         for row in raw_content.content:
             content_by_piggyback_hosts.setdefault(row["Label"], []).append(row)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
@@ -2960,7 +2945,7 @@ class ELBv2TargetGroups(AWSSection):
 
     def get_live_data(self, *args):
         (colleague_contents,) = args
-        load_balancers: Dict[str, List[Tuple[str, List[str]]]] = {}
+        load_balancers: dict[str, list[tuple[str, list[str]]]] = {}
         for load_balancer_dns_name, load_balancer in colleague_contents.content.items():
             load_balancer_type = load_balancer.get("Type")
             if load_balancer_type not in ["application", "network"]:
@@ -3085,7 +3070,7 @@ class ELBv2Application(AWSSectionCloudwatch):
         return metrics
 
     def _compute_content(self, raw_content, colleague_contents):
-        content_by_piggyback_hosts: Dict[str, List[str]] = {}
+        content_by_piggyback_hosts: dict[str, list[str]] = {}
         for row in raw_content.content:
             content_by_piggyback_hosts.setdefault(row["Label"], []).append(row)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
@@ -3180,7 +3165,7 @@ class ELBv2ApplicationTargetGroupsResponses(AWSSectionCloudwatch):
         return metrics
 
     def _compute_content(self, raw_content, colleague_contents):
-        content_by_piggyback_hosts: Dict[str, List[Any]] = {}
+        content_by_piggyback_hosts: dict[str, list[Any]] = {}
         for row in raw_content.content:
             load_bal_dns, target_group_name = row["Label"].split(self._separator)
             row["Label"] = target_group_name
@@ -3304,7 +3289,7 @@ class ELBv2Network(AWSSectionCloudwatch):
         return metrics
 
     def _compute_content(self, raw_content, colleague_contents):
-        content_by_piggyback_hosts: Dict[str, List[str]] = {}
+        content_by_piggyback_hosts: dict[str, list[str]] = {}
         for row in raw_content.content:
             content_by_piggyback_hosts.setdefault(row["Label"], []).append(row)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
@@ -4014,7 +3999,7 @@ class DynamoDBSummary(AWSSection):
         return False
 
     def _compute_content(self, raw_content, colleague_contents):
-        content_by_piggyback_hosts: Dict[str, str] = {}
+        content_by_piggyback_hosts: dict[str, str] = {}
         for table in raw_content.content:
             content_by_piggyback_hosts.setdefault(
                 _hostname_from_name_and_region(table["TableName"], self._region), table
@@ -4096,7 +4081,7 @@ class DynamoDBTable(AWSSectionCloudwatch):
 
     def _compute_content(self, raw_content, colleague_contents):
 
-        content_by_piggyback_hosts: Dict[str, List[Dict]] = {}
+        content_by_piggyback_hosts: dict[str, list[dict]] = {}
         for row in raw_content.content:
             content_by_piggyback_hosts.setdefault(row["Label"], []).append(row)
 
@@ -4167,7 +4152,7 @@ class WAFV2Limits(AWSSectionLimits):
         limits on how many rules they can use.
         """
 
-        resources: Dict = {}
+        resources: dict = {}
 
         for list_operation, key in [
             (self._client.list_web_acls, "WebACLs"),
@@ -4301,7 +4286,7 @@ class WAFV2Summary(AWSSection):
         return False
 
     def _compute_content(self, raw_content, colleague_contents):
-        content_by_piggyback_hosts: Dict[str, str] = {}
+        content_by_piggyback_hosts: dict[str, str] = {}
         for web_acl in raw_content.content:
             content_by_piggyback_hosts.setdefault(
                 _hostname_from_name_and_region(web_acl["Name"], self._region_report), web_acl
@@ -4324,7 +4309,7 @@ class WAFV2WebACL(AWSSectionCloudwatch):
                 "since metrics for CloudFront-WAFs can only be "
                 "accessed from this region"
             )
-        self._metric_dimensions: List[Dict] = [
+        self._metric_dimensions: list[dict] = [
             {"Name": "WebACL", "Value": None},
             {"Name": "Rule", "Value": "ALL"},
         ]
@@ -4377,7 +4362,7 @@ class WAFV2WebACL(AWSSectionCloudwatch):
         return metrics
 
     def _compute_content(self, raw_content, colleague_contents):
-        content_by_piggyback_hosts: Dict[str, List[Dict]] = {}
+        content_by_piggyback_hosts: dict[str, list[dict]] = {}
         for row in raw_content.content:
             content_by_piggyback_hosts.setdefault(row["Label"], []).append(row)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
@@ -4859,7 +4844,7 @@ class LambdaCloudwatchInsights(AWSSection):
             raw_content.cache_timestamp,
         )
 
-    def _create_results(self, computed_content: AWSComputedContent) -> List[AWSSectionResult]:
+    def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [AWSSectionResult("", computed_content.content)]
 
     def _validate_result_content(self, content: AWSSectionResult) -> None:
@@ -4939,7 +4924,7 @@ class Route53HealthChecks(AWSSection):
 
     def _create_results(  # type:ignore[no-untyped-def]
         self, computed_content
-    ) -> List[AWSSectionResult]:
+    ) -> list[AWSSectionResult]:
         return [AWSSectionResult("", computed_content.content)]
 
 
@@ -5005,14 +4990,14 @@ class Route53Cloudwatch(AWSSectionCloudwatch):
     def _compute_content(  # type:ignore[no-untyped-def]
         self, raw_content, colleague_contents
     ) -> AWSComputedContent:
-        content_by_piggyback_hosts: Dict[str, List[str]] = {}
+        content_by_piggyback_hosts: dict[str, list[str]] = {}
         for row in raw_content.content:
             content_by_piggyback_hosts.setdefault(row["Label"], []).append(row)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
     def _create_results(  # type:ignore[no-untyped-def]
         self, computed_content
-    ) -> List[AWSSectionResult]:
+    ) -> list[AWSSectionResult]:
         return [AWSSectionResult("", rows) for _id, rows in computed_content.content.items()]
 
 
@@ -5158,7 +5143,7 @@ class AWSSections(abc.ABC):
 
     def run(self, use_cache=True):
         exceptions = []
-        results: Dict[Tuple[str, float, float], str] = {}
+        results: dict[tuple[str, float, float], str] = {}
         for section in self._sections:
             try:
                 section_result = section.run(use_cache=use_cache)
@@ -5186,7 +5171,7 @@ class AWSSections(abc.ABC):
             out = "\n".join([e.message for e in exceptions])
         else:
             out = "No exceptions"
-        sys.stdout.write("%s: %s\n" % (self.__class__.__name__, out))
+        sys.stdout.write(f"{self.__class__.__name__}: {out}\n")
 
     def _write_section_results(self, results):
         if not results:
@@ -5207,7 +5192,7 @@ class AWSSections(abc.ABC):
 
             cached_suffix = ""
             if section_interval > 60:
-                cached_suffix = ":cached(%s,%s)" % (
+                cached_suffix = ":cached({},{})".format(
                     int(cache_timestamp),
                     int(section_interval + 60),
                 )
@@ -5217,9 +5202,9 @@ class AWSSections(abc.ABC):
 
     def _write_section_result(self, section_name, cached_suffix, result):
         if section_name.endswith("labels"):
-            section_header = "<<<%s:sep(0)%s>>>\n" % (section_name, cached_suffix)
+            section_header = f"<<<{section_name}:sep(0){cached_suffix}>>>\n"
         else:
-            section_header = "<<<aws_%s%s>>>\n" % (section_name, cached_suffix)
+            section_header = f"<<<aws_{section_name}{cached_suffix}>>>\n"
 
         for row in result:
             write_piggyback_header = (
@@ -5294,7 +5279,7 @@ class AWSSectionsUSEast(AWSSections):
 
 def _create_lamdba_sections(  # type:ignore[no-untyped-def]
     lambda_client, cloudwatch_client, cloudwatch_logs_client, region: str, config: AWSConfig
-) -> Tuple[
+) -> tuple[
     LambdaRegionLimits,
     LambdaSummary,
     LambdaProvisionedConcurrency,
@@ -5349,7 +5334,7 @@ def _create_lamdba_sections(  # type:ignore[no-untyped-def]
 
 def _create_route53_sections(  # type:ignore[no-untyped-def]
     route53_client, cloudwatch_client, region: str, config: AWSConfig
-) -> Tuple[Route53HealthChecks, Route53Cloudwatch]:
+) -> tuple[Route53HealthChecks, Route53Cloudwatch]:
     route53_distributor = ResultDistributor()
     route53_health_checks = Route53HealthChecks(route53_client, region, config, route53_distributor)
     route53_cloudwatch = Route53Cloudwatch(cloudwatch_client, region, config, distributor=None)
@@ -5479,7 +5464,7 @@ class AWSSectionsGeneric(AWSSections):
             # using the special distributor for S3 limits.
             s3_client = self._init_client("s3")
             if s3_limits_distributor.is_empty():
-                s3_limits: Union[None, S3Limits] = S3Limits(
+                s3_limits: S3Limits | None = S3Limits(
                     s3_client, region, config, s3_limits_distributor
                 )
             else:
@@ -5932,7 +5917,7 @@ def _sanitize_aws_services_params(g_aws_services, r_aws_services, r_and_g_aws_se
                                  ones only from us-east-1
     :return: two lists of global and regional services
     """
-    aws_service_keys: Set[str] = set()
+    aws_service_keys: set[str] = set()
     if g_aws_services is not None:
         aws_service_keys = aws_service_keys.union(g_aws_services)
 

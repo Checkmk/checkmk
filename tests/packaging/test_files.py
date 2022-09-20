@@ -16,7 +16,7 @@ LOGGER = logging.getLogger()
 def _get_omd_version(cmk_version, package_path):
     # Extract the files edition
     edition_short = _edition_short_from_pkg_path(package_path)
-    return "%s.%s" % (cmk_version, edition_short)
+    return f"{cmk_version}.{edition_short}"
 
 
 def _is_demo(package_path) -> bool:  # type:ignore[no-untyped-def]
@@ -49,14 +49,14 @@ def _get_file_from_package(package_path, cmk_version, version_rel_path):
                 "-i",
                 "--quiet",
                 "--to-stdout",
-                "./opt/omd/versions/%s/%s" % (omd_version, version_rel_path),
+                f"./opt/omd/versions/{omd_version}/{version_rel_path}",
             ],
             input=rpm2cpio.stdout,
         )
 
     if package_path.endswith(".deb"):
         return subprocess.check_output(
-            ["tar", "xOf", "-", "./opt/omd/versions/%s/%s" % (omd_version, version_rel_path)],
+            ["tar", "xOf", "-", f"./opt/omd/versions/{omd_version}/{version_rel_path}"],
             input=subprocess.run(
                 ["dpkg", "--fsys-tarfile", package_path], stdout=subprocess.PIPE, check=False
             ).stdout,
@@ -64,7 +64,7 @@ def _get_file_from_package(package_path, cmk_version, version_rel_path):
 
     if package_path.endswith(".cma"):
         return subprocess.check_output(
-            ["tar", "xOzf", package_path, "%s/%s" % (omd_version, version_rel_path)]
+            ["tar", "xOzf", package_path, f"{omd_version}/{version_rel_path}"]
         )
 
     if package_path.endswith(".tar.gz"):
@@ -94,7 +94,7 @@ def test_package_sizes(  # type:ignore[no-untyped-def]
         pytest.skip("only testing enterprise packages")
 
     size = os.stat(package_path).st_size
-    assert min_size <= size <= max_size, "Package %s size %s not between %s and %s bytes." % (
+    assert min_size <= size <= max_size, "Package {} size {} not between {} and {} bytes.".format(
         package_path,
         size,
         min_size,
@@ -172,7 +172,7 @@ def test_files_not_in_version_path(  # type:ignore[no-untyped-def]
         is_allowed = any(
             re.match(p.replace("###OMD_VERSION###", omd_version), path) for p in allowed_patterns
         )
-        assert is_allowed, "Found unexpected global file: %s in %s" % (path, package_path)
+        assert is_allowed, f"Found unexpected global file: {path} in {package_path}"
 
 
 def test_cma_only_contains_version_paths(  # type:ignore[no-untyped-def]

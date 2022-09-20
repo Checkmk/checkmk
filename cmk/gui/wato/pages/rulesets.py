@@ -119,10 +119,12 @@ from cmk.gui.watolib.hosts_and_folders import (
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.rulesets import (
     AllRulesets,
+    FilteredRulesetCollection,
     FolderRulesets,
     Rule,
     RuleConditions,
     Ruleset,
+    RulesetCollection,
     SearchedRulesets,
     SearchOptions,
     SingleRulesetRecursively,
@@ -242,21 +244,25 @@ class ABCRulesetMode(WatoMode):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _rulesets(self) -> AllRulesets:
+    def _rulesets(self) -> Union[RulesetCollection, FilteredRulesetCollection]:
         raise NotImplementedError()
 
     def title(self) -> str:
         return self._title
 
-    def page(self) -> None:
+    def page(self) -> None:  # pylint: disable=too-many-branches
         if self._help:
             html.help(self._help)
 
-        rulesets = self._rulesets()
-
         # In case the user has filled in the search form, filter the rulesets by the given query
         if self._search_options:
-            rulesets = SearchedRulesets.load_searched_rulesets(rulesets, self._search_options)
+            rulesets: Union[
+                FilteredRulesetCollection, RulesetCollection
+            ] = SearchedRulesets.load_searched_rulesets(
+                self._rulesets().get_rulesets().values(), self._search_options
+            )
+        else:
+            rulesets = self._rulesets()
 
         if self._page_type is PageType.RuleSearch and not html.form_submitted():
             return  # Do not show the result list when no query has been made
@@ -355,7 +361,7 @@ class ModeRuleSearch(ABCRulesetMode):
 
         return PageType.RuleSearch
 
-    def _rulesets(self) -> AllRulesets:
+    def _rulesets(self) -> Union[RulesetCollection, FilteredRulesetCollection]:
         if self._group_name == "static":
             return StaticChecksRulesets.load_static_checks_rulesets()
         return AllRulesets.load_all_rulesets()
@@ -577,7 +583,7 @@ class ModeRulesetGroup(ABCRulesetMode):
     def _get_page_type(self, search_options: Dict[str, str]) -> PageType:
         return PageType.RulesetGroup
 
-    def _rulesets(self) -> AllRulesets:
+    def _rulesets(self) -> Union[RulesetCollection, FilteredRulesetCollection]:
         if self._group_name == "static":
             return StaticChecksRulesets.load_static_checks_rulesets()
         return AllRulesets.load_all_rulesets()

@@ -16,64 +16,6 @@ from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcar
 from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # .
-#   .--transaction logs usage----------------------------------------------.
-#   |        _                                  _   _                      |
-#   |       | |_ _ __ __ _ _ __  ___  __ _  ___| |_(_) ___  _ __           |
-#   |       | __| '__/ _` | '_ \/ __|/ _` |/ __| __| |/ _ \| '_ \          |
-#   |       | |_| | | (_| | | | \__ \ (_| | (__| |_| | (_) | | | |         |
-#   |        \__|_|  \__,_|_| |_|___/\__,_|\___|\__|_|\___/|_| |_|         |
-#   |                                                                      |
-#   |           _                                                          |
-#   |          | | ___   __ _ ___   _   _ ___  __ _  __ _  ___             |
-#   |          | |/ _ \ / _` / __| | | | / __|/ _` |/ _` |/ _ \            |
-#   |          | | (_) | (_| \__ \ | |_| \__ \ (_| | (_| |  __/            |
-#   |          |_|\___/ \__, |___/  \__,_|___/\__,_|\__, |\___|            |
-#   |                   |___/                       |___/                  |
-#   '----------------------------------------------------------------------'
-
-Section = Mapping[str, Mapping[str, float]]
-
-
-def discover_aws_rds_transaction_logs_usage(section: Section):
-    yield from inventory_aws_generic(
-        section,
-        ["TransactionLogsDiskUsage"],
-    )
-
-
-def check_aws_rds_transaction_logs_usage(item: str, params: Mapping[str, Any], section: Section):
-    if (metrics := section.get(item)) is None:
-        return
-
-    transaction_logs_space = metrics["TransactionLogsDiskUsage"]
-    yield 0, get_bytes_human_readable(transaction_logs_space)
-
-    if (allocated_storage := metrics.get("AllocatedStorage")) is None or allocated_storage == 0.0:
-        yield 1, "Cannot calculate usage"
-        return
-
-    usage = 100.0 * transaction_logs_space / allocated_storage
-    yield check_levels(
-        usage,
-        "aws_rds_transaction_logs_disk_usage",
-        params.get("levels"),
-        human_readable_func=get_percent_human_readable,
-    )
-
-    if generation := metrics.get("TransactionLogsGeneration"):
-        yield 0, f"Generation rate: {aws_get_bytes_rate_human_readable(generation)}"
-
-
-check_info["aws_rds.transaction_logs_usage"] = {
-    # section already migrated!
-    "inventory_function": discover_aws_rds_transaction_logs_usage,
-    "check_function": check_aws_rds_transaction_logs_usage,
-    "service_description": "AWS/RDS %s Transaction Logs Usage",
-    "has_perfdata": True,
-    "group": "aws_rds_disk_usage",
-}
-
-# .
 #   .--replication slot usage----------------------------------------------.
 #   |                 _ _           _   _                   _       _      |
 #   |  _ __ ___ _ __ | (_) ___ __ _| |_(_) ___  _ __    ___| | ___ | |_    |

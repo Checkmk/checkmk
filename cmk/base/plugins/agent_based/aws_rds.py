@@ -418,3 +418,73 @@ register.check_plugin(
     service_name="AWS/RDS %s Binary Log Usage",
     sections=["aws_rds"],
 )
+
+# .
+#   .--transaction logs usage----------------------------------------------.
+#   |        _                                  _   _                      |
+#   |       | |_ _ __ __ _ _ __  ___  __ _  ___| |_(_) ___  _ __           |
+#   |       | __| '__/ _` | '_ \/ __|/ _` |/ __| __| |/ _ \| '_ \          |
+#   |       | |_| | | (_| | | | \__ \ (_| | (__| |_| | (_) | | | |         |
+#   |        \__|_|  \__,_|_| |_|___/\__,_|\___|\__|_|\___/|_| |_|         |
+#   |                                                                      |
+#   |           _                                                          |
+#   |          | | ___   __ _ ___   _   _ ___  __ _  __ _  ___             |
+#   |          | |/ _ \ / _` / __| | | | / __|/ _` |/ _` |/ _ \            |
+#   |          | | (_) | (_| \__ \ | |_| \__ \ (_| | (_| |  __/            |
+#   |          |_|\___/ \__, |___/  \__,_|___/\__,_|\__, |\___|            |
+#   |                   |___/                       |___/                  |
+#   '----------------------------------------------------------------------'
+
+
+def discover_aws_rds_transaction_logs_usage(section: AWSSectionMetrics) -> DiscoveryResult:
+    yield from discover_aws_generic(
+        section,
+        ["TransactionLogsDiskUsage"],
+    )
+
+
+def check_aws_rds_transaction_logs_usage(
+    item: str,
+    params: Mapping[str, Any],
+    section: AWSSectionMetrics,
+) -> CheckResult:
+    if (metrics := section.get(item)) is None:
+        return
+
+    transaction_logs_space = metrics["TransactionLogsDiskUsage"]
+    yield Result(
+        state=State.OK,
+        summary=render.bytes(transaction_logs_space),
+    )
+
+    if (allocated_storage := metrics.get("AllocatedStorage")) is None or allocated_storage == 0.0:
+        yield Result(
+            state=State.WARN,
+            summary="Cannot calculate usage",
+        )
+        return
+
+    usage = 100.0 * transaction_logs_space / allocated_storage
+    yield from check_levels(
+        value=usage,
+        metric_name="aws_rds_transaction_logs_disk_usage",
+        levels_upper=params.get("levels"),
+        render_func=render.percent,
+    )
+
+    if generation := metrics.get("TransactionLogsGeneration"):
+        yield Result(
+            state=State.OK,
+            summary=f"Generation rate: {render.iobandwidth(generation)}",
+        )
+
+
+register.check_plugin(
+    name="aws_rds_transaction_logs_usage",
+    service_name="AWS/RDS %s Transaction Logs Usage",
+    check_function=check_aws_rds_transaction_logs_usage,
+    discovery_function=discover_aws_rds_transaction_logs_usage,
+    check_default_parameters={},
+    check_ruleset_name="aws_rds_disk_usage",
+    sections=["aws_rds"],
+)

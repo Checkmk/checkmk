@@ -31,32 +31,42 @@ from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcar
 #   |                   |___/                       |___/                  |
 #   '----------------------------------------------------------------------'
 
+Section = Mapping[str, Mapping[str, float]]
 
-@get_parsed_item_data
-def check_aws_rds_transaction_logs_usage(item, params, metrics):
+
+def discover_aws_rds_transaction_logs_usage(section: Section):
+    yield from inventory_aws_generic(
+        section,
+        ["TransactionLogsDiskUsage"],
+    )
+
+
+def check_aws_rds_transaction_logs_usage(item: str, params: Mapping[str, Any], section: Section):
+    if (metrics := section.get(item)) is None:
+        return
+
     transaction_logs_space = metrics["TransactionLogsDiskUsage"]
     yield 0, get_bytes_human_readable(transaction_logs_space)
 
-    try:
-        usage = 100.0 * transaction_logs_space / metrics["AllocatedStorage"]
-    except (KeyError, ZeroDivisionError):
+    if (allocated_storage := metrics.get("AllocatedStorage")) is None or allocated_storage == 0.0:
         yield 1, "Cannot calculate usage"
-    else:
-        yield check_levels(
-            usage,
-            "aws_rds_transaction_logs_disk_usage",
-            params.get("levels"),
-            human_readable_func=get_percent_human_readable,
-        )
+        return
 
-    generation = metrics.get("TransactionLogsGeneration")
-    if generation:
-        yield 0, "Generation rate: %s" % aws_get_bytes_rate_human_readable(generation)
+    usage = 100.0 * transaction_logs_space / allocated_storage
+    yield check_levels(
+        usage,
+        "aws_rds_transaction_logs_disk_usage",
+        params.get("levels"),
+        human_readable_func=get_percent_human_readable,
+    )
+
+    if generation := metrics.get("TransactionLogsGeneration"):
+        yield 0, f"Generation rate: {aws_get_bytes_rate_human_readable(generation)}"
 
 
 check_info["aws_rds.transaction_logs_usage"] = {
     # section already migrated!
-    "inventory_function": lambda p: inventory_aws_generic(p, ["TransactionLogsDiskUsage"]),
+    "inventory_function": discover_aws_rds_transaction_logs_usage,
     "check_function": check_aws_rds_transaction_logs_usage,
     "service_description": "AWS/RDS %s Transaction Logs Usage",
     "has_perfdata": True,

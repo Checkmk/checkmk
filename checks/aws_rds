@@ -24,10 +24,20 @@ from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcar
 #   |           |_|  \___| .__/|_|_|\___\__,_| |_|\__,_|\__, |             |
 #   |                    |_|                            |___/              |
 #   '----------------------------------------------------------------------'
+Section = Mapping[str, Mapping[str, float]]
 
 
-@get_parsed_item_data
-def check_aws_rds_replica_lag(item, params, metrics):
+def discover_aws_rds_replica_lag(section: Section):
+    yield from inventory_aws_generic(
+        section,
+        ["ReplicaLag"],
+    )
+
+
+def check_aws_rds_replica_lag(item: str, params: Mapping[str, Any], section: Section):
+    if (metrics := section.get(item)) is None:
+        return
+
     yield check_levels(
         metrics["ReplicaLag"],
         "aws_rds_replica_lag",
@@ -36,8 +46,7 @@ def check_aws_rds_replica_lag(item, params, metrics):
         infoname="Lag",
     )
 
-    oldest_replica_lag_space = metrics.get("OldestReplicationSlotLag")
-    if oldest_replica_lag_space is not None:
+    if (oldest_replica_lag_space := metrics.get("OldestReplicationSlotLag")) is not None:
         yield check_levels(
             oldest_replica_lag_space,
             "aws_rds_oldest_replication_slot_lag",
@@ -51,7 +60,7 @@ def check_aws_rds_replica_lag(item, params, metrics):
 
 check_info["aws_rds.replica_lag"] = {
     # section already migrated!
-    "inventory_function": lambda p: inventory_aws_generic(p, ["ReplicaLag"]),
+    "inventory_function": discover_aws_rds_replica_lag,
     "check_function": check_aws_rds_replica_lag,
     "service_description": "AWS/RDS %s Replica Lag",
     "has_perfdata": True,

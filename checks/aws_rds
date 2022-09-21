@@ -252,21 +252,31 @@ check_info["aws_rds.connections"] = {
 #   |          \__,_|\__, |\___|_| |_|\__|  _/ |\___/|_.__/|___/           |
 #   |                |___/                 |__/                            |
 #   '----------------------------------------------------------------------'
+Section = Mapping[str, Mapping[str, float]]
 
 
-@get_parsed_item_data
-def check_aws_rds_agent_jobs(item, params, metrics):
+def discover_aws_rds_agent_jobs(section: Section):
+    yield from inventory_aws_generic(
+        section,
+        ["FailedSQLServerAgentJobsCount"],
+    )
+
+
+def check_aws_rds_agent_jobs(item: str, params: Mapping[str, Any], section: Section):
+    if (metrics := section.get(item)) is None:
+        return
+
     failed_agent_jobs = metrics["FailedSQLServerAgentJobsCount"]
     if failed_agent_jobs > 0:
-        state = 1
-    else:
-        state = 0
-    yield state, "Rate of failing jobs: %s" % aws_get_counts_rate_human_readable(failed_agent_jobs)
+        yield 1, "Rate of failing jobs: %s" % aws_get_counts_rate_human_readable(failed_agent_jobs)
+        return
+
+    yield 0, "Rate of failing jobs: %s" % aws_get_counts_rate_human_readable(failed_agent_jobs)
 
 
 check_info["aws_rds.agent_jobs"] = {
     # section already migrated!
-    "inventory_function": lambda p: inventory_aws_generic(p, ["FailedSQLServerAgentJobsCount"]),
+    "inventory_function": discover_aws_rds_agent_jobs,
     "check_function": check_aws_rds_agent_jobs,
     "service_description": "AWS/RDS %s SQL Server Agent Jobs",
 }

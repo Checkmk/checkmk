@@ -10,10 +10,11 @@ from typing import Any
 from cmk.base.plugins.agent_based.utils.cpu_util import check_cpu_util
 from cmk.base.plugins.agent_based.utils.diskstat import check_diskstat_dict
 
-from .agent_based_api.v1 import get_value_store, IgnoreResultsError, register
+from .agent_based_api.v1 import get_value_store, IgnoreResultsError, register, Result, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import interfaces
 from .utils.aws import (
+    aws_get_counts_rate_human_readable,
     aws_rds_service_item,
     AWSSectionMetrics,
     discover_aws_generic,
@@ -237,4 +238,48 @@ register.check_plugin(
     check_ruleset_name="cpu_utilization_multiitem",
     check_function=check_aws_rds,
     discovery_function=discover_aws_rds,
+)
+
+# .
+#   .--agent jobs----------------------------------------------------------.
+#   |                                 _       _       _                    |
+#   |           __ _  __ _  ___ _ __ | |_    (_) ___ | |__  ___            |
+#   |          / _` |/ _` |/ _ \ '_ \| __|   | |/ _ \| '_ \/ __|           |
+#   |         | (_| | (_| |  __/ | | | |_    | | (_) | |_) \__ \           |
+#   |          \__,_|\__, |\___|_| |_|\__|  _/ |\___/|_.__/|___/           |
+#   |                |___/                 |__/                            |
+#   '----------------------------------------------------------------------'
+
+
+def discover_aws_rds_agent_jobs(section: AWSSectionMetrics) -> DiscoveryResult:
+    yield from discover_aws_generic(
+        section,
+        ["FailedSQLServerAgentJobsCount"],
+    )
+
+
+def check_aws_rds_agent_jobs(item: str, section: AWSSectionMetrics) -> CheckResult:
+    if (metrics := section.get(item)) is None:
+        return
+
+    failed_agent_jobs = metrics["FailedSQLServerAgentJobsCount"]
+    if failed_agent_jobs > 0:
+        yield Result(
+            state=State.WARN,
+            summary=f"Rate of failing jobs: {aws_get_counts_rate_human_readable(failed_agent_jobs)}",
+        )
+        return
+
+    yield Result(
+        state=State.OK,
+        summary=f"Rate of failing jobs: {aws_get_counts_rate_human_readable(failed_agent_jobs)}",
+    )
+
+
+register.check_plugin(
+    name="aws_rds_agent_jobs",
+    service_name="AWS/RDS %s SQL Server Agent Jobs",
+    check_function=check_aws_rds_agent_jobs,
+    discovery_function=discover_aws_rds_agent_jobs,
+    sections=["aws_rds"],
 )

@@ -11,9 +11,11 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Serv
 from cmk.base.plugins.agent_based.aws_rds import (
     AWSSectionMetrics,
     check_aws_rds,
+    check_aws_rds_agent_jobs,
     check_aws_rds_disk_io,
     check_aws_rds_network_io,
     discover_aws_rds,
+    discover_aws_rds_agent_jobs,
     discover_aws_rds_disk_io,
     parse_aws_rds,
 )
@@ -3205,3 +3207,79 @@ def test_check_aws_rds_item_not_found() -> None:
         )
         == []
     )
+
+
+@pytest.mark.parametrize(
+    "section, discovery_result",
+    [
+        pytest.param(
+            {"disk": {"FailedSQLServerAgentJobsCount": 99}},
+            [Service(item="disk")],
+            id="For every disk in the section a Service with no item is discovered.",
+        ),
+        pytest.param(
+            {},
+            [],
+            id="If the section is empty, no Services are discovered.",
+        ),
+    ],
+)
+def test_aws_rds_agent_jobs_discovery(
+    section: Mapping[str, Mapping[str, float]],
+    discovery_result: Sequence[Service],
+) -> None:
+    assert list(discover_aws_rds_agent_jobs(section)) == discovery_result
+
+
+def test_check_aws_rds_agent_jobs_item_not_found() -> None:
+    assert (
+        list(
+            check_aws_rds_agent_jobs(
+                item="disk",
+                section={},
+            )
+        )
+        == []
+    )
+
+
+def test_check_aws_rds_agent_jobs_metric_not_found() -> None:
+    with pytest.raises(KeyError):
+        list(
+            check_aws_rds_agent_jobs(
+                item="disk",
+                section={"disk": {"CPUUtilization": 1}},
+            )
+        )
+
+
+@pytest.mark.parametrize(
+    "section, expected_check_result",
+    [
+        pytest.param(
+            {"disk": {"FailedSQLServerAgentJobsCount": 1.0}},
+            [
+                Result(state=State.WARN, summary="Rate of failing jobs: 1.000/s"),
+            ],
+            id="If there are any FailedSQLServerAgentJobs, the check state turn to WARN and provides a description with more information.",
+        ),
+        pytest.param(
+            {"disk": {"FailedSQLServerAgentJobsCount": 0.0}},
+            [
+                Result(state=State.OK, summary="Rate of failing jobs: 0.000/s"),
+            ],
+            id="If there are no FailedSQLServerAgentJobs, the check state is OK.",
+        ),
+    ],
+)
+def test_check_aws_rds_agent_jobs(
+    section: Mapping[str, Mapping[str, float]],
+    expected_check_result: Sequence[Result | Metric],
+) -> None:
+    check_result = list(
+        check_aws_rds_agent_jobs(
+            item="disk",
+            section=section,
+        )
+    )
+    assert check_result == expected_check_result

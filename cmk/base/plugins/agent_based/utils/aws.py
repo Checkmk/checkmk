@@ -189,6 +189,28 @@ def discover_aws_generic_single(
     return []
 
 
+def get_number_with_precision(
+    v: float,
+    precision: int = 2,
+    unit: str = "",
+) -> str:
+    """
+    >>> get_number_with_precision(123.4324)
+    '123.43'
+    >>> get_number_with_precision(2.3e5, precision=3, unit='V')
+    '230000.000 V'
+    """
+    return "%.*f" % (precision, v) + f"{' ' if unit else ''}{unit}"
+
+
+def aws_get_float_human_readable(f, unit=""):
+    return get_number_with_precision(f, unit=unit, precision=3)
+
+
+def aws_get_counts_rate_human_readable(rate):
+    return aws_get_float_human_readable(rate) + "/s"
+
+
 def aws_rds_service_item(instance_id: str, region: str) -> str:
     return f"{instance_id} [{region}]"
 

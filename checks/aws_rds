@@ -24,29 +24,39 @@ from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcar
 #   |    |_.__/|_|_| |_| |_|\___/ \__, |  \__,_|___/\__,_|\__, |\___|      |
 #   |                             |___/                   |___/            |
 #   '----------------------------------------------------------------------'
+Section = Mapping[str, Mapping[str, float]]
 
 
-@get_parsed_item_data
-def check_aws_rds_bin_log_usage(item, params, metrics):
+def discover_aws_rds_bin_log_usage(section: Section):
+    yield from inventory_aws_generic(
+        section,
+        ["BinLogDiskUsage"],
+    )
+
+
+def check_aws_rds_bin_log_usage(item: str, params: Mapping[str, Any], section: Section):
+    if (metrics := section.get(item)) is None:
+        return
+
     bin_log_usage = metrics["BinLogDiskUsage"]
     yield 0, get_bytes_human_readable(bin_log_usage)
 
-    try:
-        usage = 100.0 * bin_log_usage / metrics["AllocatedStorage"]
-    except (KeyError, ZeroDivisionError):
+    if (allocated_storage := metrics.get("AllocatedStorage")) is None or allocated_storage == 0.0:
         yield 1, "Cannot calculate usage"
-    else:
-        yield check_levels(
-            usage,
-            "aws_rds_bin_log_disk_usage",
-            params.get("levels"),
-            human_readable_func=get_percent_human_readable,
-        )
+        return
+
+    usage = 100.0 * bin_log_usage / allocated_storage
+    yield check_levels(
+        usage,
+        "aws_rds_bin_log_disk_usage",
+        params.get("levels"),
+        human_readable_func=get_percent_human_readable,
+    )
 
 
 check_info["aws_rds.bin_log_usage"] = {
     # section already migrated!
-    "inventory_function": lambda p: inventory_aws_generic(p, ["BinLogDiskUsage"]),
+    "inventory_function": discover_aws_rds_bin_log_usage,
     "check_function": check_aws_rds_bin_log_usage,
     "service_description": "AWS/RDS %s Binary Log Usage",
     "has_perfdata": True,

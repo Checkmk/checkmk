@@ -11,10 +11,10 @@ import cmk.gui.gui_background_job as _gui_background_job
 import cmk.gui.hooks as _hooks
 import cmk.gui.mkeventd as _mkeventd
 import cmk.gui.pages as _pages
-import cmk.gui.plugins.wato.builtin_attributes as builtin_attributes
 import cmk.gui.userdb as _userdb
 import cmk.gui.watolib.auth_php as _auth_php
 import cmk.gui.watolib.automation_commands as _automation_commands
+import cmk.gui.watolib.builtin_attributes as builtin_attributes
 import cmk.gui.watolib.config_domains as _config_domains
 import cmk.gui.watolib.groups as groups
 import cmk.gui.weblib as _webling

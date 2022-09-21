@@ -42,10 +42,24 @@ from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcar
 # create an alert for when your credit balance drops below a threshold while CPU
 # usage remains above baseline.
 
+Section = Mapping[str, Mapping[str, float]]
 
-@get_parsed_item_data
-def check_aws_rds_cpu_credits(item, params, metrics):
-    yield 0, "CPU Credit Usage: %.2f" % metrics["CPUCreditUsage"]
+
+def discover_aws_rds_cpu_credits(section: Section):
+    yield from inventory_aws_generic(
+        section,
+        [
+            "CPUCreditUsage",
+            "CPUCreditBalance",
+        ],
+    )
+
+
+def check_aws_rds_cpu_credits(item: str, params: Mapping[str, Any], section: Section):
+    if (metrics := section.get(item)) is None:
+        return
+
+    yield 0, f"CPU Credit Usage: {metrics['CPUCreditUsage']:.2f}"
     warn, crit = params.get("balance_levels_lower", (None, None))
     yield check_levels(
         metrics["CPUCreditBalance"],
@@ -55,8 +69,7 @@ def check_aws_rds_cpu_credits(item, params, metrics):
         infoname="CPU Credit Balance",
     )
 
-    burst_balance = metrics.get("BurstBalance")
-    if burst_balance is not None:
+    if metrics.get("BurstBalance"):
         warn, crit = params.get("burst_balance_levels_lower", (None, None))
         yield check_levels(
             metrics["BurstBalance"],
@@ -69,13 +82,7 @@ def check_aws_rds_cpu_credits(item, params, metrics):
 
 check_info["aws_rds.cpu_credits"] = {
     # section already migrated!
-    "inventory_function": lambda p: inventory_aws_generic(
-        p,
-        [
-            "CPUCreditUsage",
-            "CPUCreditBalance",
-        ],
-    ),
+    "inventory_function": discover_aws_rds_cpu_credits,
     "check_function": check_aws_rds_cpu_credits,
     "service_description": "AWS/RDS %s CPU Credits",
     "group": "aws_rds_cpu_credits",

@@ -474,7 +474,7 @@ def build_package(DISTRO, OMD_ENV_VARS) {
         dir('git') {
             sh """
                 case $DISTRO in
-                    centos*|rh*|sles*|opensuse*)
+                    centos*|rh*|sles*|opensuse*|alma*)
                         ${OMD_ENV_VARS} make -C omd rpm
                         ;;
                     cma*)
@@ -494,7 +494,7 @@ def get_package_name(WORKSPACE, DISTRO, CMK_VERS) {
     def PACKAGE_NAME = sh(script: """
         PATTERN_ROOT=check-mk-$EDITION-${CMK_VERS}
         case ${DISTRO} in
-            centos*|rh*|sles*|opensuse*)
+            centos*|rh*|sles*|opensuse*|alma*)
                 RESULT_FILE_PATTERN=\${PATTERN_ROOT}-*.rpm
                 ;;
             cma*)

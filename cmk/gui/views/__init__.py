@@ -681,8 +681,12 @@ def page_create_view_infos() -> None:
 def page_edit_view() -> None:
     def get_view_infos(view: ViewSpec) -> SingleInfos:
         """Return list of available datasources (used to render filters)"""
-        ds_name = view.get("datasource", request.get_ascii_input_mandatory("datasource"))
-        return data_source_registry[ds_name]().infos
+        # In create mode "datasource" is mandatory, in other mode it's not
+        ds_name = view.get("datasource", request.get_ascii_input_mandatory("datasource", ""))
+        try:
+            return data_source_registry[ds_name]().infos
+        except KeyError:
+            raise MKUserError("datasource", _("Invalid data source: %s") % ds_name)
 
     visuals.page_edit_visual(
         "views",
@@ -969,9 +973,12 @@ def _column_link_choices() -> List[CascadingDropdownChoice]:
     ]
 
 
-def view_editor_sorter_specs(ident: str, view: ViewSpec) -> Dictionary:
+# Hint: view_spec is not the ViewSpec here. It's a dict in the visual editor and report ViewConfig
+# format. We need a separate type for that or rework the editor. Let's see once we come to the
+# visual editor typing.
+def view_editor_sorter_specs(ident: str, view: dict[str, Any]) -> Dictionary:
     def _sorter_choices(
-        view: ViewSpec,
+        view: dict[str, Any],
     ) -> Iterator[Union[DropdownChoiceEntry, CascadingDropdownChoice]]:
         ds_name = view["datasource"]
         datasource: ABCDataSource = data_source_registry[ds_name]()
@@ -1065,8 +1072,11 @@ class PageAjaxCascadingRenderPainterParameters(AjaxPage):
         raise MKGeneralException("Invaild choice")
 
 
+# Hint: view_spec is not the ViewSpec here. It's a dict in the visual editor format. We need a
+# separate type for that or rework the editor. Let's see once we come to the visual editor typing.
 def render_view_config(view_spec: dict[str, Any], general_properties: bool = True) -> None:
-    ds_name = view_spec.get("datasource", request.var("datasource"))
+    # TODO: This and the modification of the view_spec should not be here. Find a better place
+    ds_name: str = view_spec.get("datasource", request.get_ascii_input_mandatory("datasource", ""))
     if not ds_name:
         raise MKInternalError(_("No datasource defined."))
     if ds_name not in data_source_registry:
@@ -1080,7 +1090,7 @@ def render_view_config(view_spec: dict[str, Any], general_properties: bool = Tru
     vs_columns = view_editor_column_spec("columns", ds_name)
     vs_columns.render_input("columns", view_spec["columns"])
 
-    vs_sorting = view_editor_sorter_specs("sorting", ds_name)
+    vs_sorting = view_editor_sorter_specs("sorting", view_spec)
     vs_sorting.render_input("sorting", view_spec["sorting"])
 
     vs_grouping = view_editor_grouping_spec("grouping", ds_name)

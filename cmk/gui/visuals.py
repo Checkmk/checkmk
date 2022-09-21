@@ -1291,9 +1291,6 @@ def page_edit_visual(  # type:ignore[no-untyped-def] # pylint: disable=too-many-
 
         single_infos = visual["single_infos"]
 
-        if load_handler:
-            load_handler(visual)
-
     else:
         title = _("Create %s") % visual_type.title
         mode = "create"
@@ -1494,6 +1491,11 @@ def page_edit_visual(  # type:ignore[no-untyped-def] # pylint: disable=too-many-
     visual["visibility"] = visib
 
     vs_general.render_input("general", visual)
+
+    # TODO: Only views are using it. Looks like we can move it to the view custom field handler in a
+    # follow up clean up
+    if load_handler:
+        load_handler(visual)
 
     if custom_field_handler and custom_field_handler.__name__ != "dashboard_fields_handler":
         custom_field_handler(visual)

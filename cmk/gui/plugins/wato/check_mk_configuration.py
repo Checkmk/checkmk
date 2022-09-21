@@ -35,7 +35,6 @@ from cmk.gui.plugins.wato.utils import (
     HostGroupSelection,
     HostRulespec,
     HTTPProxyInput,
-    IPMIParameters,
     PluginCommandLine,
     rulespec_group_registry,
     rulespec_registry,
@@ -52,7 +51,6 @@ from cmk.gui.plugins.wato.utils import (
     RulespecSubGroup,
     ServiceGroupSelection,
     ServiceRulespec,
-    SNMPCredentials,
     UserIconOrAction,
     valuespec_check_plugin_selection,
 )
@@ -97,6 +95,7 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
+from cmk.gui.watolib.attributes import IPMIParameters, SNMPCredentials
 from cmk.gui.watolib.bulk_discovery import vs_bulk_discovery
 from cmk.gui.watolib.config_domains import (
     ConfigDomainCACertificates,

@@ -79,6 +79,7 @@ import cmk.gui.wato.pages.fetch_agent_output
 import cmk.gui.wato.pages.user_profile
 import cmk.gui.wato.permissions
 import cmk.gui.watolib as watolib
+import cmk.gui.watolib.attributes
 import cmk.gui.watolib.changes
 import cmk.gui.watolib.config_hostname
 import cmk.gui.watolib.host_attributes
@@ -214,7 +215,6 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersPrinters,
     RulespecGroupCheckParametersStorage,
     RulespecGroupCheckParametersVirtualization,
-    SNMPCredentials,
     sort_sites,
     UserIconOrAction,
 )
@@ -326,7 +326,6 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "HTTPProxyInput",
         "HTTPProxyReference",
         "MigrateToIndividualOrStoredPassword",
-        "IPMIParameters",
         "is_wato_slave_site",
         "Levels",
         "main_module_registry",
@@ -385,7 +384,6 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "SimpleListMode",
         "SimpleModeType",
         "SiteBackupJobs",
-        "SNMPCredentials",
         "sort_sites",
         "UserIconOrAction",
         "valuespec_check_plugin_selection",
@@ -393,6 +391,11 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "WatoModule",
     ):
         api_module.__dict__[name] = cmk.gui.plugins.wato.utils.__dict__[name]
+    for name in (
+        "IPMIParameters",
+        "SNMPCredentials",
+    ):
+        api_module.__dict__[name] = cmk.gui.watolib.attributes.__dict__[name]
     for name in ("add_change",):
         api_module.__dict__[name] = cmk.gui.watolib.changes.__dict__[name]
     for name in (

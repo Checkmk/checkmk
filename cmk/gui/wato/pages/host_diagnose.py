@@ -22,14 +22,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import AjaxPage, page_registry, PageResult
-from cmk.gui.plugins.wato.utils import (
-    flash,
-    mode_registry,
-    mode_url,
-    redirect,
-    SNMPCredentials,
-    WatoMode,
-)
+from cmk.gui.plugins.wato.utils import flash, mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.transaction_manager import transactions
@@ -44,6 +37,7 @@ from cmk.gui.valuespec import (
     Password,
 )
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
+from cmk.gui.watolib.attributes import SNMPCredentials
 from cmk.gui.watolib.check_mk_automations import diag_host
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link, Host
 

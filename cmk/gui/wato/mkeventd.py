@@ -96,7 +96,6 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupHostsMonitoringRulesVarious,
     RulespecGroupMonitoringConfigurationVarious,
     ServiceRulespec,
-    SNMPCredentials,
     WatoMode,
 )
 from cmk.gui.plugins.watolib.utils import (
@@ -154,6 +153,7 @@ from cmk.gui.wato.pages.global_settings import (
     ABCGlobalSettingsMode,
     MatchItemGeneratorSettings,
 )
+from cmk.gui.watolib.attributes import SNMPCredentials
 from cmk.gui.watolib.config_domains import ConfigDomainEventConsole, ConfigDomainGUI
 from cmk.gui.watolib.global_settings import load_configuration_settings, save_global_settings
 from cmk.gui.watolib.hosts_and_folders import make_action_link

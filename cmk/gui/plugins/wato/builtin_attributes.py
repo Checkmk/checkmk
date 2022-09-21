@@ -17,16 +17,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.wato.utils import (
-    ABCHostAttributeNagiosText,
-    ABCHostAttributeValueSpec,
     ConfigHostname,
-    HostAttributeTopicAddress,
-    HostAttributeTopicBasicSettings,
-    HostAttributeTopicCustomAttributes,
-    HostAttributeTopicDataSources,
-    HostAttributeTopicManagementBoard,
-    HostAttributeTopicMetaData,
-    HostAttributeTopicNetworkScan,
     HostnameTranslation,
     IPMIParameters,
     SNMPCredentials,
@@ -65,7 +56,19 @@ from cmk.gui.valuespec import (
     ValueSpecText,
     ValueSpecValidateFunc,
 )
-from cmk.gui.watolib.host_attributes import host_attribute_registry, HostAttributeTopic
+from cmk.gui.watolib.host_attributes import (
+    ABCHostAttributeNagiosText,
+    ABCHostAttributeValueSpec,
+    host_attribute_registry,
+    HostAttributeTopic,
+    HostAttributeTopicAddress,
+    HostAttributeTopicBasicSettings,
+    HostAttributeTopicCustomAttributes,
+    HostAttributeTopicDataSources,
+    HostAttributeTopicManagementBoard,
+    HostAttributeTopicMetaData,
+    HostAttributeTopicNetworkScan,
+)
 from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.tags import TagConfigFile
 

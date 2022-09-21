@@ -10,7 +10,15 @@ from typing import Any
 from cmk.base.plugins.agent_based.utils.cpu_util import check_cpu_util
 from cmk.base.plugins.agent_based.utils.diskstat import check_diskstat_dict
 
-from .agent_based_api.v1 import get_value_store, IgnoreResultsError, register, Result, State
+from .agent_based_api.v1 import (
+    check_levels,
+    get_value_store,
+    IgnoreResultsError,
+    register,
+    render,
+    Result,
+    State,
+)
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import interfaces
 from .utils.aws import (
@@ -281,5 +289,80 @@ register.check_plugin(
     service_name="AWS/RDS %s SQL Server Agent Jobs",
     check_function=check_aws_rds_agent_jobs,
     discovery_function=discover_aws_rds_agent_jobs,
+    sections=["aws_rds"],
+)
+
+# .
+#   .--CPU credits---------------------------------------------------------.
+#   |           ____ ____  _   _                     _ _ _                 |
+#   |          / ___|  _ \| | | |   ___ _ __ ___  __| (_) |_ ___           |
+#   |         | |   | |_) | | | |  / __| '__/ _ \/ _` | | __/ __|          |
+#   |         | |___|  __/| |_| | | (__| | |  __/ (_| | | |_\__ \          |
+#   |          \____|_|    \___/   \___|_|  \___|\__,_|_|\__|___/          |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+# CPU credit balance:
+# For standard T2 instances with bursting, a burst can continue only as long as
+# there are available CPU credits, so it’s important to monitor your instance’s
+# balance. Credits are earned any time the instance is running below its baseline
+# CPU performance level. The initial balance, accrual rate, and maximum possible
+# balance are all dependent on the instance level.
+#
+# CPU credit usage:
+# One CPU credit is equivalent to one minute of 100 percent CPU utilization (or
+# two minutes at 50 percent, etc.). Whenever an instance requires CPU performance
+# above that instance type’s baseline, it will burst, consuming CPU credits until
+# the demand lessens or the credit balance runs out. Keeping an eye on your
+# instances’ credit usage will help you identify whether you might need to switch
+# to an instance type that is optimized for CPU-intensive workloads. Or, you can
+# create an alert for when your credit balance drops below a threshold while CPU
+# usage remains above baseline.
+
+
+def discover_aws_rds_cpu_credits(section: AWSSectionMetrics) -> DiscoveryResult:
+    yield from discover_aws_generic(
+        section,
+        [
+            "CPUCreditUsage",
+            "CPUCreditBalance",
+        ],
+    )
+
+
+def check_aws_rds_cpu_credits(
+    item: str,
+    params: Mapping[str, Any],
+    section: AWSSectionMetrics,
+) -> CheckResult:
+    if (metrics := section.get(item)) is None:
+        return
+
+    yield Result(state=State.OK, summary=f"CPU Credit Usage: {metrics['CPUCreditUsage']:.2f}")
+
+    yield from check_levels(
+        value=metrics["CPUCreditBalance"],
+        metric_name="aws_cpu_credit_balance",
+        levels_lower=params.get("balance_levels_lower", (None, None)),
+        label="CPU Credit Balance",
+    )
+
+    if metrics.get("BurstBalance"):
+        yield from check_levels(
+            value=metrics["BurstBalance"],
+            metric_name="aws_burst_balance",
+            levels_lower=params.get("burst_balance_levels_lower", (None, None)),
+            render_func=render.percent,
+            label="Burst Balance",
+        )
+
+
+register.check_plugin(
+    name="aws_rds_cpu_credits",
+    service_name="AWS/RDS %s CPU Credits",
+    check_function=check_aws_rds_cpu_credits,
+    discovery_function=discover_aws_rds_cpu_credits,
+    check_default_parameters={},
+    check_ruleset_name="aws_rds_cpu_credits",
     sections=["aws_rds"],
 )

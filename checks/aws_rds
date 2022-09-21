@@ -16,62 +16,6 @@ from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcar
 from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # .
-#   .--replication slot usage----------------------------------------------.
-#   |                 _ _           _   _                   _       _      |
-#   |  _ __ ___ _ __ | (_) ___ __ _| |_(_) ___  _ __    ___| | ___ | |_    |
-#   | | '__/ _ \ '_ \| | |/ __/ _` | __| |/ _ \| '_ \  / __| |/ _ \| __|   |
-#   | | | |  __/ |_) | | | (_| (_| | |_| | (_) | | | | \__ \ | (_) | |_    |
-#   | |_|  \___| .__/|_|_|\___\__,_|\__|_|\___/|_| |_| |___/_|\___/ \__|   |
-#   |          |_|                                                         |
-#   |                                                                      |
-#   |                     _   _ ___  __ _  __ _  ___                       |
-#   |                    | | | / __|/ _` |/ _` |/ _ \                      |
-#   |                    | |_| \__ \ (_| | (_| |  __/                      |
-#   |                     \__,_|___/\__,_|\__, |\___|                      |
-#   |                                     |___/                            |
-#   '----------------------------------------------------------------------'
-
-Section = Mapping[str, Mapping[str, float]]
-
-
-def discover_aws_rds_replication_slot_usage(section: Section):
-    yield from inventory_aws_generic(
-        section,
-        ["ReplicationSlotDiskUsage"],
-    )
-
-
-def check_aws_rds_replication_slot_usage(item: str, params: Mapping[str, Any], section: Section):
-    if (metrics := section.get(item)) is None:
-        return
-
-    replication_slot_space = metrics["ReplicationSlotDiskUsage"]
-    yield 0, get_bytes_human_readable(replication_slot_space)
-
-    if (allocated_storage := metrics.get("AllocatedStorage")) is None or allocated_storage == 0.0:
-        yield 1, "Cannot calculate usage"
-        return
-
-    usage = 100.0 * replication_slot_space / allocated_storage
-    yield check_levels(
-        usage,
-        "aws_rds_replication_slot_disk_usage",
-        params.get("levels"),
-        human_readable_func=get_percent_human_readable,
-    )
-
-
-check_info["aws_rds.replication_slot_usage"] = {
-    # section already migrated!
-    "inventory_function": discover_aws_rds_replication_slot_usage,
-    "check_function": check_aws_rds_replication_slot_usage,
-    "service_description": "AWS/RDS %s Replication Slot Usage",
-    "has_perfdata": True,
-    "group": "aws_rds_disk_usage",
-}
-
-
-# .
 #   .--connections---------------------------------------------------------.
 #   |                                        _   _                         |
 #   |         ___ ___  _ __  _ __   ___  ___| |_(_) ___  _ __  ___         |

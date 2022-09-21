@@ -975,7 +975,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
         "aws_glacier",
         "aws_glacier.summary",
         "aws_glacier_limits",
-        "aws_rds.replication_slot_usage",
         "aws_rds.connections",
         "aws_rds.replica_lag",
         "aws_rds_limits",

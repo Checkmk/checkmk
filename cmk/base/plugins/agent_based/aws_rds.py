@@ -488,3 +488,61 @@ register.check_plugin(
     check_ruleset_name="aws_rds_disk_usage",
     sections=["aws_rds"],
 )
+
+# .
+#   .--replication slot usage----------------------------------------------.
+#   |                 _ _           _   _                   _       _      |
+#   |  _ __ ___ _ __ | (_) ___ __ _| |_(_) ___  _ __    ___| | ___ | |_    |
+#   | | '__/ _ \ '_ \| | |/ __/ _` | __| |/ _ \| '_ \  / __| |/ _ \| __|   |
+#   | | | |  __/ |_) | | | (_| (_| | |_| | (_) | | | | \__ \ | (_) | |_    |
+#   | |_|  \___| .__/|_|_|\___\__,_|\__|_|\___/|_| |_| |___/_|\___/ \__|   |
+#   |          |_|                                                         |
+#   |                                                                      |
+#   |                     _   _ ___  __ _  __ _  ___                       |
+#   |                    | | | / __|/ _` |/ _` |/ _ \                      |
+#   |                    | |_| \__ \ (_| | (_| |  __/                      |
+#   |                     \__,_|___/\__,_|\__, |\___|                      |
+#   |                                     |___/                            |
+#   '----------------------------------------------------------------------'
+
+
+def discover_aws_rds_replication_slot_usage(section: AWSSectionMetrics) -> DiscoveryResult:
+    yield from discover_aws_generic(
+        section,
+        ["ReplicationSlotDiskUsage"],
+    )
+
+
+def check_aws_rds_replication_slot_usage(
+    item: str,
+    params: Mapping[str, Any],
+    section: AWSSectionMetrics,
+) -> CheckResult:
+    if (metrics := section.get(item)) is None:
+        return
+
+    replication_slot_space = metrics["ReplicationSlotDiskUsage"]
+    yield Result(state=State.OK, summary=render.bytes(replication_slot_space))
+
+    if (allocated_storage := metrics.get("AllocatedStorage")) is None or allocated_storage == 0.0:
+        yield Result(state=State.WARN, summary="Cannot calculate usage")
+        return
+
+    usage = 100.0 * replication_slot_space / allocated_storage
+    yield from check_levels(
+        value=usage,
+        metric_name="aws_rds_replication_slot_disk_usage",
+        levels_upper=params.get("levels"),
+        render_func=render.percent,
+    )
+
+
+register.check_plugin(
+    name="aws_rds_replication_slot_usage",
+    service_name="AWS/RDS %s Replication Slot Usage",
+    check_function=check_aws_rds_replication_slot_usage,
+    discovery_function=discover_aws_rds_replication_slot_usage,
+    check_default_parameters={},
+    check_ruleset_name="aws_rds_disk_usage",
+    sections=["aws_rds"],
+)

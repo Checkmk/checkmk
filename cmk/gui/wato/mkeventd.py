@@ -84,7 +84,6 @@ from cmk.gui.plugins.wato.utils import (
     ContactGroupSelection,
     flash,
     get_search_expression,
-    HostnameTranslation,
     HostRulespec,
     main_module_registry,
     MainModuleTopicEvents,
@@ -164,6 +163,7 @@ from cmk.gui.watolib.search import (
     MatchItem,
     MatchItems,
 )
+from cmk.gui.watolib.translation import HostnameTranslation
 from cmk.gui.watolib.utils import site_neutral_path
 
 

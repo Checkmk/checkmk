@@ -80,11 +80,13 @@ import cmk.gui.wato.pages.user_profile
 import cmk.gui.wato.permissions
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.changes
+import cmk.gui.watolib.config_hostname
 import cmk.gui.watolib.host_attributes
 import cmk.gui.watolib.hosts_and_folders
 import cmk.gui.watolib.rulespecs
 import cmk.gui.watolib.sites
 import cmk.gui.watolib.timeperiods
+import cmk.gui.watolib.translation
 import cmk.gui.watolib.user_scripts
 import cmk.gui.watolib.utils
 import cmk.gui.weblib as weblib
@@ -196,7 +198,6 @@ from cmk.gui.plugins.wato.utils import (
     get_hostnames_from_checkboxes,
     get_hosts_from_checkboxes,
     get_search_expression,
-    HostnameTranslation,
     Levels,
     mode_registry,
     monitoring_macro_help,
@@ -217,6 +218,7 @@ from cmk.gui.plugins.wato.utils import (
     sort_sites,
     UserIconOrAction,
 )
+from cmk.gui.watolib.translation import HostnameTranslation
 
 # Has to be kept for compatibility with pre 1.6 register_rule() and register_check_parameters()
 # calls in the WATO plugin context
@@ -287,7 +289,7 @@ def load_plugins() -> None:
         )
 
 
-def _register_pre_21_plugin_api() -> None:
+def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
     """Register pre 2.1 "plugin API"
 
     This was never an official API, but the names were used by builtin and also 3rd party plugins.
@@ -310,7 +312,6 @@ def _register_pre_21_plugin_api() -> None:
         "BinaryServiceRulespec",
         "CheckParameterRulespecWithItem",
         "CheckParameterRulespecWithoutItem",
-        "ConfigHostname",
         "ContactGroupSelection",
         "DictHostTagCondition",
         "flash",
@@ -320,7 +321,6 @@ def _register_pre_21_plugin_api() -> None:
         "get_hosts_from_checkboxes",
         "get_search_expression",
         "HostGroupSelection",
-        "HostnameTranslation",
         "HostRulespec",
         "HostTagCondition",
         "HTTPProxyInput",
@@ -379,7 +379,6 @@ def _register_pre_21_plugin_api() -> None:
         "RulespecGroupEnforcedServicesVirtualization",
         "RulespecSubGroup",
         "search_form",
-        "ServiceDescriptionTranslation",
         "ServiceGroupSelection",
         "ServiceRulespec",
         "SimpleEditMode",
@@ -404,6 +403,8 @@ def _register_pre_21_plugin_api() -> None:
         "ConfigDomainOMD",
     ):
         api_module.__dict__[name] = cmk.gui.watolib.config_domains.__dict__[name]
+    for name in ("ConfigHostname",):
+        api_module.__dict__[name] = cmk.gui.watolib.config_hostname.__dict__[name]
     for name in (
         "host_attribute_registry",
         "host_attribute_topic_registry",
@@ -432,6 +433,11 @@ def _register_pre_21_plugin_api() -> None:
         api_module.__dict__[name] = cmk.gui.watolib.sites.__dict__[name]
     for name in ("TimeperiodSelection",):
         api_module.__dict__[name] = cmk.gui.watolib.timeperiods.__dict__[name]
+    for name in (
+        "HostnameTranslation",
+        "ServiceDescriptionTranslation",
+    ):
+        api_module.__dict__[name] = cmk.gui.watolib.translation.__dict__[name]
     for name in (
         "user_script_choices",
         "user_script_title",

@@ -28,12 +28,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.plugins.wato.utils import (
-    ConfigHostname,
-    configure_attributes,
-    make_confirm_link,
-    mode_registry,
-)
+from cmk.gui.plugins.wato.utils import configure_attributes, make_confirm_link, mode_registry
 from cmk.gui.plugins.wato.utils.base_modes import mode_url, redirect, WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import make_host_status_link
 from cmk.gui.site_config import is_wato_slave_site
@@ -47,6 +42,7 @@ from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.agent_registration import remove_tls_registration
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.check_mk_automations import delete_hosts, update_dns_cache
+from cmk.gui.watolib.config_hostname import ConfigHostname
 from cmk.gui.watolib.host_attributes import collect_attributes
 from cmk.gui.watolib.hosts_and_folders import (
     CREHost,

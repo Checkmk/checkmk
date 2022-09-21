@@ -27,14 +27,12 @@ from cmk.gui.plugins.views.icons.utils import icon_and_action_registry
 from cmk.gui.plugins.wato.utils import (
     BinaryHostRulespec,
     BinaryServiceRulespec,
-    ConfigHostname,
     ConfigVariableGroupSiteManagement,
     ConfigVariableGroupUserInterface,
     ConfigVariableGroupWATO,
     ContactGroupSelection,
     get_section_information,
     HostGroupSelection,
-    HostnameTranslation,
     HostRulespec,
     HTTPProxyInput,
     IPMIParameters,
@@ -52,7 +50,6 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupMonitoringConfigurationServiceChecks,
     RulespecGroupMonitoringConfigurationVarious,
     RulespecSubGroup,
-    ServiceDescriptionTranslation,
     ServiceGroupSelection,
     ServiceRulespec,
     SNMPCredentials,
@@ -107,7 +104,9 @@ from cmk.gui.watolib.config_domains import (
     ConfigDomainGUI,
     ConfigDomainOMD,
 )
+from cmk.gui.watolib.config_hostname import ConfigHostname
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
+from cmk.gui.watolib.translation import HostnameTranslation, ServiceDescriptionTranslation
 from cmk.gui.watolib.utils import site_neutral_path
 
 #   .--Global Settings-----------------------------------------------------.

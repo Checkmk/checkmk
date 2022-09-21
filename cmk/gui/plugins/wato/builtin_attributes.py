@@ -16,12 +16,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.wato.utils import (
-    ConfigHostname,
-    HostnameTranslation,
-    IPMIParameters,
-    SNMPCredentials,
-)
+from cmk.gui.plugins.wato.utils import IPMIParameters, SNMPCredentials
 from cmk.gui.site_config import has_wato_slave_sites, is_wato_slave_site
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import urlencode_vars
@@ -56,6 +51,7 @@ from cmk.gui.valuespec import (
     ValueSpecText,
     ValueSpecValidateFunc,
 )
+from cmk.gui.watolib.config_hostname import ConfigHostname
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttributeNagiosText,
     ABCHostAttributeValueSpec,
@@ -71,6 +67,7 @@ from cmk.gui.watolib.host_attributes import (
 )
 from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.tags import TagConfigFile
+from cmk.gui.watolib.translation import HostnameTranslation
 
 import cmk.fields.validators
 from cmk import fields

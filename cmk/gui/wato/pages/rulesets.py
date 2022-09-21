@@ -71,7 +71,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.plugins.wato.utils import (
-    ConfigHostname,
     DictHostTagCondition,
     flash,
     HostTagCondition,
@@ -107,6 +106,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.check_mk_automations import analyse_service, get_check_information
+from cmk.gui.watolib.config_hostname import ConfigHostname
 from cmk.gui.watolib.host_label_sync import execute_host_label_sync
 from cmk.gui.watolib.hosts_and_folders import (
     CREFolder,

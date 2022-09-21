@@ -546,3 +546,47 @@ register.check_plugin(
     check_ruleset_name="aws_rds_disk_usage",
     sections=["aws_rds"],
 )
+
+# .
+#   .--connections---------------------------------------------------------.
+#   |                                        _   _                         |
+#   |         ___ ___  _ __  _ __   ___  ___| |_(_) ___  _ __  ___         |
+#   |        / __/ _ \| '_ \| '_ \ / _ \/ __| __| |/ _ \| '_ \/ __|        |
+#   |       | (_| (_) | | | | | | |  __/ (__| |_| | (_) | | | \__ \        |
+#   |        \___\___/|_| |_|_| |_|\___|\___|\__|_|\___/|_| |_|___/        |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def discover_aws_rds_connections(section: AWSSectionMetrics) -> DiscoveryResult:
+    yield from discover_aws_generic(
+        section,
+        ["DatabaseConnections"],
+    )
+
+
+def check_aws_rds_connections(
+    item: str,
+    params: Mapping[str, Any],
+    section: AWSSectionMetrics,
+) -> CheckResult:
+    if (metrics := section.get(item)) is None:
+        return
+
+    yield from check_levels(
+        value=metrics["DatabaseConnections"],
+        metric_name="aws_rds_connections",
+        levels_upper=params.get("levels"),
+        label="In use",
+    )
+
+
+register.check_plugin(
+    name="aws_rds_connections",
+    service_name="AWS/RDS %s Connections",
+    sections=["aws_rds"],
+    check_function=check_aws_rds_connections,
+    discovery_function=discover_aws_rds_connections,
+    check_default_parameters={},
+    check_ruleset_name="aws_rds_connections",
+)

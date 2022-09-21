@@ -31,28 +31,39 @@ from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcar
 #   |                                     |___/                            |
 #   '----------------------------------------------------------------------'
 
+Section = Mapping[str, Mapping[str, float]]
 
-@get_parsed_item_data
-def check_aws_rds_replication_slot_usage(item, params, metrics):
+
+def discover_aws_rds_replication_slot_usage(section: Section):
+    yield from inventory_aws_generic(
+        section,
+        ["ReplicationSlotDiskUsage"],
+    )
+
+
+def check_aws_rds_replication_slot_usage(item: str, params: Mapping[str, Any], section: Section):
+    if (metrics := section.get(item)) is None:
+        return
+
     replication_slot_space = metrics["ReplicationSlotDiskUsage"]
     yield 0, get_bytes_human_readable(replication_slot_space)
 
-    try:
-        usage = 100.0 * replication_slot_space / metrics["AllocatedStorage"]
-    except (KeyError, ZeroDivisionError):
+    if (allocated_storage := metrics.get("AllocatedStorage")) is None or allocated_storage == 0.0:
         yield 1, "Cannot calculate usage"
-    else:
-        yield check_levels(
-            usage,
-            "aws_rds_replication_slot_disk_usage",
-            params.get("levels"),
-            human_readable_func=get_percent_human_readable,
-        )
+        return
+
+    usage = 100.0 * replication_slot_space / allocated_storage
+    yield check_levels(
+        usage,
+        "aws_rds_replication_slot_disk_usage",
+        params.get("levels"),
+        human_readable_func=get_percent_human_readable,
+    )
 
 
 check_info["aws_rds.replication_slot_usage"] = {
     # section already migrated!
-    "inventory_function": lambda p: inventory_aws_generic(p, ["ReplicationSlotDiskUsage"]),
+    "inventory_function": discover_aws_rds_replication_slot_usage,
     "check_function": check_aws_rds_replication_slot_usage,
     "service_description": "AWS/RDS %s Replication Slot Usage",
     "has_perfdata": True,

@@ -90,8 +90,11 @@ def _valuespec_special_agents_kube():
                                 allow_empty=False,
                                 default_value="https://<control plane ip>:443",
                                 help=_(
-                                    "The full URL to the Kubernetes API server including the "
-                                    "protocol (http or https) and the port."
+                                    "The full URL to the Kubernetes API server "
+                                    "including the protocol (http or https) and "
+                                    "the port. Be aware that a trailing "
+                                    "slash at the end of the URL is likely to "
+                                    "result in an error."
                                 ),
                                 size=80,
                             ),

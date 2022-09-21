@@ -24,10 +24,20 @@ from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcar
 #   |        \___\___/|_| |_|_| |_|\___|\___|\__|_|\___/|_| |_|___/        |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+Section = Mapping[str, Mapping[str, float]]
 
 
-@get_parsed_item_data
-def check_aws_rds_connections(item, params, metrics):
+def discover_aws_rds_connections(section: Section):
+    yield from inventory_aws_generic(
+        section,
+        ["DatabaseConnections"],
+    )
+
+
+def check_aws_rds_connections(item: str, params: Mapping[str, Any], section: Section):
+    if (metrics := section.get(item)) is None:
+        return
+
     yield check_levels(
         metrics["DatabaseConnections"],
         "aws_rds_connections",
@@ -38,7 +48,7 @@ def check_aws_rds_connections(item, params, metrics):
 
 check_info["aws_rds.connections"] = {
     # section already migrated!
-    "inventory_function": lambda p: inventory_aws_generic(p, ["DatabaseConnections"]),
+    "inventory_function": discover_aws_rds_connections,
     "check_function": check_aws_rds_connections,
     "service_description": "AWS/RDS %s Connections",
     "has_perfdata": True,

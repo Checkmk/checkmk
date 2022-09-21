@@ -8016,12 +8016,6 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Changed properties of rule \"%s\", moved from folder \"%s\" to bottom of "
-"folder \"%s\""
-msgstr ""
-
-#, python-format
-msgid ""
 "Changed properties of rule \"%s\", moved from folder \"%s\" to top of folder "
 "\"%s\""
 msgstr ""
@@ -8029,18 +8023,6 @@ msgstr ""
 #, python-format
 msgid ""
 "Changed properties of rule \"%s\", moved rule from folder \"%s\" to \"%s\""
-msgstr ""
-
-#, python-format
-msgid ""
-"Changed properties of rule \"%s\", moved to after rule \"%s\" in folder \"%s"
-"\""
-msgstr ""
-
-#, python-format
-msgid ""
-"Changed properties of rule \"%s\", moved to before rule \"%s\" in folder \"%s"
-"\""
 msgstr ""
 
 #, python-format
@@ -10854,6 +10836,10 @@ msgstr ""
 
 msgid "Create a service for each instance and backup type"
 msgstr ""
+
+#, fuzzy
+msgid "Create a service for every pinged IP address"
+msgstr "Grup nou"
 
 #, fuzzy
 msgid "Create a summary service for all alert rules"
@@ -29931,6 +29917,10 @@ msgstr ""
 msgid "Multiple regular expressions"
 msgstr ""
 
+#, fuzzy
+msgid "Multiple services"
+msgstr "Probleme"
+
 msgid "Multiplicative: Seasonality grows with the trend."
 msgstr ""
 
@@ -39552,14 +39542,6 @@ msgstr ""
 msgid "Service Filters"
 msgstr "Grup nou"
 
-# georgem ##############
-#, fuzzy
-msgid "Service Graphs"
-msgstr "Grup nou"
-
-msgid "Service Graphs with Timerange Previews"
-msgstr ""
-
 #, fuzzy
 msgid "Service Labels"
 msgstr "Numele Elementului"
@@ -39743,6 +39725,15 @@ msgstr ""
 
 msgid "Service goes into warning state"
 msgstr ""
+
+# georgem ##############
+#, fuzzy
+msgid "Service graphs"
+msgstr "Grup nou"
+
+#, fuzzy
+msgid "Service graphs with timerange previews"
+msgstr "Numele Elementului"
 
 # georgem ##############
 #, fuzzy
@@ -60013,6 +60004,11 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
+# georgem ##############
+#, fuzzy
+#~ msgid "Service Graphs"
+#~ msgstr "Grup nou"
+
 #, fuzzy
 #~ msgid "Configure non compliant devices summary percent levels"
 #~ msgstr "Portul TCP pentru conexiune"
@@ -60416,14 +60412,6 @@ msgstr ""
 
 #~ msgid "Syslog Priority"
 #~ msgstr "Prioritatea Syslog"
-
-#, fuzzy
-#~ msgid "Create a service for every pinged IP address"
-#~ msgstr "Grup nou"
-
-#, fuzzy
-#~ msgid "Multiple services"
-#~ msgstr "Probleme"
 
 #, fuzzy
 #~ msgid "detailed config"
@@ -63489,11 +63477,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Service globally"
 #~ msgstr "Numele Elementului"
-
-# georgem ##############
-#, fuzzy
-#~ msgid "Service graphs"
-#~ msgstr "Grup nou"
 
 #, fuzzy
 #~ msgid "Service groups are used for visualization and filtering of services"

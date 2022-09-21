@@ -8613,14 +8613,6 @@ msgstr "Modification des propriétés du paquet d'extension installé %s"
 
 #, python-format
 msgid ""
-"Changed properties of rule \"%s\", moved from folder \"%s\" to bottom of "
-"folder \"%s\""
-msgstr ""
-"Modification des propriétés de la règle \"%s\" ;, déplacée du dossier \"%s"
-"\" ; vers le bas du dossier \"%s\" ;"
-
-#, python-format
-msgid ""
 "Changed properties of rule \"%s\", moved from folder \"%s\" to top of folder "
 "\"%s\""
 msgstr ""
@@ -8633,22 +8625,6 @@ msgid ""
 msgstr ""
 "Modification des propriétés de la règle \"%s\", déplacement de la règle du "
 "dossier \"%s\" vers \"%s\"."
-
-#, python-format
-msgid ""
-"Changed properties of rule \"%s\", moved to after rule \"%s\" in folder \"%s"
-"\""
-msgstr ""
-"Modification des propriétés de la règle \"%s\" ;, déplacée après la règle "
-"\"%s\" ; dans le dossier \"%s\" ;"
-
-#, python-format
-msgid ""
-"Changed properties of rule \"%s\", moved to before rule \"%s\" in folder \"%s"
-"\""
-msgstr ""
-"Modification des propriétés de la règle \"%s\" ;, déplacée avant la règle "
-"\"%s\" ; dans le dossier \"%s\" ;"
 
 #, python-format
 msgid "Changed properties of rule #%d in ruleset \"%s\" in folder \"%s\""
@@ -11632,6 +11608,10 @@ msgstr "Créer un service pour chaque instance"
 
 msgid "Create a service for each instance and backup type"
 msgstr "Créer un service pour chaque instance et type de sauvegarde"
+
+#, fuzzy
+msgid "Create a service for every pinged IP address"
+msgstr "Créer un service pour chaque instance"
 
 msgid "Create a summary service for all alert rules"
 msgstr "Créer un service de résumé pour toutes les règles d'alerte"
@@ -31483,6 +31463,10 @@ msgstr "Graphiques multiples"
 msgid "Multiple regular expressions"
 msgstr "Expressions régulières multiples"
 
+#, fuzzy
+msgid "Multiple services"
+msgstr "Services périmés"
+
 msgid "Multiplicative: Seasonality grows with the trend."
 msgstr "Multiplicatif : La saisonnalité croît avec la tendance."
 
@@ -41150,12 +41134,6 @@ msgstr "Événements de service"
 msgid "Service Filters"
 msgstr "Filtres de service"
 
-msgid "Service Graphs"
-msgstr "Graphiques de service"
-
-msgid "Service Graphs with Timerange Previews"
-msgstr "Graphiques de service avec aperçu de l'intervalle de temps"
-
 msgid "Service Labels"
 msgstr "Étiquettes de service"
 
@@ -41323,6 +41301,14 @@ msgstr "Le service passe dans un état inconnu"
 
 msgid "Service goes into warning state"
 msgstr "Le service passe en état d'alerte"
+
+#, fuzzy
+msgid "Service graphs"
+msgstr "Graphiques de service"
+
+#, fuzzy
+msgid "Service graphs with timerange previews"
+msgstr "Graphiques de service avec aperçu de l'intervalle de temps"
 
 msgid "Service group"
 msgstr "Groupes de service"
@@ -65341,6 +65327,30 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Tous droits réservés."
 
+#, python-format
+#~ msgid ""
+#~ "Changed properties of rule \"%s\", moved from folder \"%s\" to bottom of "
+#~ "folder \"%s\""
+#~ msgstr ""
+#~ "Modification des propriétés de la règle \"%s\" ;, déplacée du dossier \"%s"
+#~ "\" ; vers le bas du dossier \"%s\" ;"
+
+#, python-format
+#~ msgid ""
+#~ "Changed properties of rule \"%s\", moved to after rule \"%s\" in folder "
+#~ "\"%s\""
+#~ msgstr ""
+#~ "Modification des propriétés de la règle \"%s\" ;, déplacée après la règle "
+#~ "\"%s\" ; dans le dossier \"%s\" ;"
+
+#, python-format
+#~ msgid ""
+#~ "Changed properties of rule \"%s\", moved to before rule \"%s\" in folder "
+#~ "\"%s\""
+#~ msgstr ""
+#~ "Modification des propriétés de la règle \"%s\" ;, déplacée avant la règle "
+#~ "\"%s\" ; dans le dossier \"%s\" ;"
+
 #~ msgid "Timeperiod"
 #~ msgstr "Période de temps"
 
@@ -66319,16 +66329,6 @@ msgstr "© %s tribe29 GmbH. Tous droits réservés."
 
 #~ msgid "Time of the most recent occurrance"
 #~ msgstr "Heure de l'événement le plus récent"
-
-#, fuzzy
-#~| msgid "Create a service for each instance"
-#~ msgid "Create a service for every pinged IP address"
-#~ msgstr "Créer un service pour chaque instance"
-
-#, fuzzy
-#~| msgid "Stale services"
-#~ msgid "Multiple services"
-#~ msgstr "Services périmés"
 
 #, fuzzy
 #~| msgid "This rule representation can be used for Web API calls."

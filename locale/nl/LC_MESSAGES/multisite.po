@@ -8513,14 +8513,6 @@ msgstr "Gewijzigde eigenschappen van geïnstalleerd extensiepakket %s"
 
 #, python-format
 msgid ""
-"Changed properties of rule \"%s\", moved from folder \"%s\" to bottom of "
-"folder \"%s\""
-msgstr ""
-"Eigenschappen van regel \"%s\" gewijzigd, verplaatst van map \"%s\" naar "
-"onderkant van map \"%s\""
-
-#, python-format
-msgid ""
 "Changed properties of rule \"%s\", moved from folder \"%s\" to top of folder "
 "\"%s\""
 msgstr ""
@@ -8533,22 +8525,6 @@ msgid ""
 msgstr ""
 "Eigenschappen van regel \"%s\" gewijzigd, regel verplaatst van map \"%s\" "
 "naar \"%s\""
-
-#, python-format
-msgid ""
-"Changed properties of rule \"%s\", moved to after rule \"%s\" in folder \"%s"
-"\""
-msgstr ""
-"Gewijzigde eigenschappen van regel \"%s\", verplaatst naar na regel \"%s\" "
-"in map \"%s\""
-
-#, python-format
-msgid ""
-"Changed properties of rule \"%s\", moved to before rule \"%s\" in folder \"%s"
-"\""
-msgstr ""
-"Gewijzigde eigenschappen van regel \"%s\", verplaatst naar vóór regel \"%s\" "
-"in map \"%s\""
 
 #, python-format
 msgid "Changed properties of rule #%d in ruleset \"%s\" in folder \"%s\""
@@ -11489,6 +11465,10 @@ msgstr "Maak een dienst voor elke instantie"
 
 msgid "Create a service for each instance and backup type"
 msgstr "Maak een service voor elke instantie en backup type"
+
+#, fuzzy
+msgid "Create a service for every pinged IP address"
+msgstr "Maak een dienst voor elke instantie"
 
 msgid "Create a summary service for all alert rules"
 msgstr "Maak een overzichtsdienst voor alle waarschuwingsregels"
@@ -31087,6 +31067,10 @@ msgstr "Meervoudige grafieken"
 msgid "Multiple regular expressions"
 msgstr "Meervoudige reguliere uitdrukkingen"
 
+#, fuzzy
+msgid "Multiple services"
+msgstr "Oudbakken diensten"
+
 msgid "Multiplicative: Seasonality grows with the trend."
 msgstr "Multiplicatief: Seizoensgebondenheid groeit met de trend."
 
@@ -40618,12 +40602,6 @@ msgstr "Service Evenementen"
 msgid "Service Filters"
 msgstr "Service Filters"
 
-msgid "Service Graphs"
-msgstr "Dienstengrafieken"
-
-msgid "Service Graphs with Timerange Previews"
-msgstr "Service Grafieken met Tijdslimietvoorbeelden"
-
 msgid "Service Labels"
 msgstr "Dienst Etiketten"
 
@@ -40790,6 +40768,14 @@ msgstr "Dienst gaat in onbekende toestand"
 
 msgid "Service goes into warning state"
 msgstr "Dienst gaat in waarschuwingsstatus"
+
+#, fuzzy
+msgid "Service graphs"
+msgstr "Dienstengrafieken"
+
+#, fuzzy
+msgid "Service graphs with timerange previews"
+msgstr "Service Grafieken met Tijdslimietvoorbeelden"
 
 msgid "Service group"
 msgstr "Dienstengroep"
@@ -64467,6 +64453,30 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 
+#, python-format
+#~ msgid ""
+#~ "Changed properties of rule \"%s\", moved from folder \"%s\" to bottom of "
+#~ "folder \"%s\""
+#~ msgstr ""
+#~ "Eigenschappen van regel \"%s\" gewijzigd, verplaatst van map \"%s\" naar "
+#~ "onderkant van map \"%s\""
+
+#, python-format
+#~ msgid ""
+#~ "Changed properties of rule \"%s\", moved to after rule \"%s\" in folder "
+#~ "\"%s\""
+#~ msgstr ""
+#~ "Gewijzigde eigenschappen van regel \"%s\", verplaatst naar na regel \"%s"
+#~ "\" in map \"%s\""
+
+#, python-format
+#~ msgid ""
+#~ "Changed properties of rule \"%s\", moved to before rule \"%s\" in folder "
+#~ "\"%s\""
+#~ msgstr ""
+#~ "Gewijzigde eigenschappen van regel \"%s\", verplaatst naar vóór regel \"%s"
+#~ "\" in map \"%s\""
+
 #~ msgid "Timeperiod"
 #~ msgstr "Periode"
 
@@ -65424,16 +65434,6 @@ msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 
 #~ msgid "Time of the most recent occurrance"
 #~ msgstr "Tijdstip van de meest recente gebeurtenis"
-
-#, fuzzy
-#~| msgid "Create a service for each instance"
-#~ msgid "Create a service for every pinged IP address"
-#~ msgstr "Maak een dienst voor elke instantie"
-
-#, fuzzy
-#~| msgid "Stale services"
-#~ msgid "Multiple services"
-#~ msgstr "Oudbakken diensten"
 
 #, fuzzy
 #~| msgid "This rule representation can be used for Web API calls."

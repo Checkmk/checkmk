@@ -8126,14 +8126,6 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Changed properties of rule \"%s\", moved from folder \"%s\" to bottom of "
-"folder \"%s\""
-msgstr ""
-"ルール \"%s\"のプロパティを変更し、フォルダ \"%s\"からフォルダ最下部 \"%s\"に"
-"移動しました"
-
-#, python-format
-msgid ""
 "Changed properties of rule \"%s\", moved from folder \"%s\" to top of folder "
 "\"%s\""
 msgstr ""
@@ -8146,22 +8138,6 @@ msgid ""
 msgstr ""
 "ルール \"%s\"のプロパティを変更し、ルールをフォルダ \"%s\"から \"%s\"に移動し"
 "ました"
-
-#, python-format
-msgid ""
-"Changed properties of rule \"%s\", moved to after rule \"%s\" in folder \"%s"
-"\""
-msgstr ""
-"ルール \"%s\" のプロパティは変更され、フォルダ \"%s\" 内のルール \"%s\" の後"
-"に移動しました"
-
-#, python-format
-msgid ""
-"Changed properties of rule \"%s\", moved to before rule \"%s\" in folder \"%s"
-"\""
-msgstr ""
-"ルール \"%s\" のプロパティは変更され、フォルダ \"%s\" 内のルール \"%s\" の前"
-"に移動しました"
 
 #, python-format
 msgid "Changed properties of rule #%d in ruleset \"%s\" in folder \"%s\""
@@ -10950,6 +10926,10 @@ msgstr "インスタンスごとにサービスを作成する"
 
 msgid "Create a service for each instance and backup type"
 msgstr "インスタンスとバックアップの種類ごとにサービスを作成します"
+
+#, fuzzy
+msgid "Create a service for every pinged IP address"
+msgstr "インスタンスごとにサービスを作成する"
 
 msgid "Create a summary service for all alert rules"
 msgstr "すべてのアラートルールに対するサマリーサービスを作成する"
@@ -29824,6 +29804,10 @@ msgstr "複数のグラフ"
 msgid "Multiple regular expressions"
 msgstr "複数の正規表現"
 
+#, fuzzy
+msgid "Multiple services"
+msgstr "古いサービス"
+
 msgid "Multiplicative: Seasonality grows with the trend."
 msgstr "乗法:季節性はトレンドとともに成長します。"
 
@@ -39070,12 +39054,6 @@ msgstr "サービスイベント"
 msgid "Service Filters"
 msgstr "サービスフィルター"
 
-msgid "Service Graphs"
-msgstr "サービスグラフ"
-
-msgid "Service Graphs with Timerange Previews"
-msgstr "タイムレンジプレビュー付きのサービスグラフ"
-
 msgid "Service Labels"
 msgstr "サービスラベル"
 
@@ -39240,6 +39218,14 @@ msgstr "サービスが不明な状態になります"
 
 msgid "Service goes into warning state"
 msgstr "サービスが警告状態になります"
+
+#, fuzzy
+msgid "Service graphs"
+msgstr "サービスグラフ"
+
+#, fuzzy
+msgid "Service graphs with timerange previews"
+msgstr "タイムレンジプレビュー付きのサービスグラフ"
 
 msgid "Service group"
 msgstr "サービスグループ"
@@ -61121,6 +61107,30 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
+#, python-format
+#~ msgid ""
+#~ "Changed properties of rule \"%s\", moved from folder \"%s\" to bottom of "
+#~ "folder \"%s\""
+#~ msgstr ""
+#~ "ルール \"%s\"のプロパティを変更し、フォルダ \"%s\"からフォルダ最下部 \"%s"
+#~ "\"に移動しました"
+
+#, python-format
+#~ msgid ""
+#~ "Changed properties of rule \"%s\", moved to after rule \"%s\" in folder "
+#~ "\"%s\""
+#~ msgstr ""
+#~ "ルール \"%s\" のプロパティは変更され、フォルダ \"%s\" 内のルール \"%s\" の"
+#~ "後に移動しました"
+
+#, python-format
+#~ msgid ""
+#~ "Changed properties of rule \"%s\", moved to before rule \"%s\" in folder "
+#~ "\"%s\""
+#~ msgstr ""
+#~ "ルール \"%s\" のプロパティは変更され、フォルダ \"%s\" 内のルール \"%s\" の"
+#~ "前に移動しました"
+
 #~ msgid "Timeperiod"
 #~ msgstr "期間"
 
@@ -61975,16 +61985,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Time of the most recent occurrance"
 #~ msgstr "最新の発生時刻"
-
-#, fuzzy
-#~| msgid "Create a service for each instance"
-#~ msgid "Create a service for every pinged IP address"
-#~ msgstr "インスタンスごとにサービスを作成する"
-
-#, fuzzy
-#~| msgid "Stale services"
-#~ msgid "Multiple services"
-#~ msgstr "古いサービス"
 
 #, fuzzy
 #~| msgid "This rule representation can be used for Web API calls."

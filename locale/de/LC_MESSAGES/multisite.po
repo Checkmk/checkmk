@@ -8524,14 +8524,6 @@ msgstr "Eigenschaften des installierten Erweiterungspaketes %s geändert"
 
 #, python-format
 msgid ""
-"Changed properties of rule \"%s\", moved from folder \"%s\" to bottom of "
-"folder \"%s\""
-msgstr ""
-"Geänderte Eigenschaften der Regel \"%s\", verschoben vom Ordner \"%s\" an "
-"den unteren Rand des Ordners \"%s\""
-
-#, python-format
-msgid ""
 "Changed properties of rule \"%s\", moved from folder \"%s\" to top of folder "
 "\"%s\""
 msgstr ""
@@ -8544,22 +8536,6 @@ msgid ""
 msgstr ""
 "Eigenschaften von Regel \"%s\" geändert: Regel von \"%s\" nach \"%s\" "
 "verschoben"
-
-#, python-format
-msgid ""
-"Changed properties of rule \"%s\", moved to after rule \"%s\" in folder \"%s"
-"\""
-msgstr ""
-"Geänderte Eigenschaften von Regel \"%s\", verschoben nach Regel \"%s\" im "
-"Ordner \"%s\""
-
-#, python-format
-msgid ""
-"Changed properties of rule \"%s\", moved to before rule \"%s\" in folder \"%s"
-"\""
-msgstr ""
-"Geänderte Eigenschaften von Regel \"%s\", verschoben vor Regel \"%s\" im "
-"Ordner \"%s\""
 
 #, python-format
 msgid "Changed properties of rule #%d in ruleset \"%s\" in folder \"%s\""
@@ -11506,6 +11482,10 @@ msgstr "Einen Service für jede Instanz anlegen"
 
 msgid "Create a service for each instance and backup type"
 msgstr "Einen Service für jede Instanz und jeden Backup-Typ erstellen"
+
+#, fuzzy
+msgid "Create a service for every pinged IP address"
+msgstr "Einen Service für jede Instanz anlegen"
 
 msgid "Create a summary service for all alert rules"
 msgstr "Erstellen Sie einen zusammenfassenden Dienst für alle Warnregeln"
@@ -31142,6 +31122,10 @@ msgstr "Mehrere Graphen"
 msgid "Multiple regular expressions"
 msgstr "Mehrfache reguläre Ausdrücke"
 
+#, fuzzy
+msgid "Multiple services"
+msgstr "Veraltete Services"
+
 msgid "Multiplicative: Seasonality grows with the trend."
 msgstr "Multiplikativ: Die Saisonalität wächst mit dem Trend."
 
@@ -40714,12 +40698,6 @@ msgstr "Serviceereignisse"
 msgid "Service Filters"
 msgstr "Servicefilter"
 
-msgid "Service Graphs"
-msgstr "Servicegraphen"
-
-msgid "Service Graphs with Timerange Previews"
-msgstr "Service Graphen mit Zeitspannenvorschau"
-
 msgid "Service Labels"
 msgstr "Servicelabels"
 
@@ -40886,6 +40864,13 @@ msgstr "Service in Status UNKNOWN gewechselt"
 
 msgid "Service goes into warning state"
 msgstr "Service in Status WARN gewechselt"
+
+msgid "Service graphs"
+msgstr "Servicegraphen"
+
+#, fuzzy
+msgid "Service graphs with timerange previews"
+msgstr "Service Graphen mit Zeitspannenvorschau"
 
 msgid "Service group"
 msgstr "Servicegruppen"
@@ -64534,6 +64519,33 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
+#, python-format
+#~ msgid ""
+#~ "Changed properties of rule \"%s\", moved from folder \"%s\" to bottom of "
+#~ "folder \"%s\""
+#~ msgstr ""
+#~ "Geänderte Eigenschaften der Regel \"%s\", verschoben vom Ordner \"%s\" an "
+#~ "den unteren Rand des Ordners \"%s\""
+
+#, python-format
+#~ msgid ""
+#~ "Changed properties of rule \"%s\", moved to after rule \"%s\" in folder "
+#~ "\"%s\""
+#~ msgstr ""
+#~ "Geänderte Eigenschaften von Regel \"%s\", verschoben nach Regel \"%s\" im "
+#~ "Ordner \"%s\""
+
+#, python-format
+#~ msgid ""
+#~ "Changed properties of rule \"%s\", moved to before rule \"%s\" in folder "
+#~ "\"%s\""
+#~ msgstr ""
+#~ "Geänderte Eigenschaften von Regel \"%s\", verschoben vor Regel \"%s\" im "
+#~ "Ordner \"%s\""
+
+#~ msgid "Service Graphs"
+#~ msgstr "Servicegraphen"
+
 #~ msgid "Timeperiod"
 #~ msgstr "Zeitperiode"
 
@@ -65498,16 +65510,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Time of the most recent occurrance"
 #~ msgstr "Zeitstempel des letzten Vorkommens"
-
-#, fuzzy
-#~| msgid "Create a service for each instance"
-#~ msgid "Create a service for every pinged IP address"
-#~ msgstr "Einen Service für jede Instanz anlegen"
-
-#, fuzzy
-#~| msgid "Stale services"
-#~ msgid "Multiple services"
-#~ msgstr "Veraltete Services"
 
 #, fuzzy
 #~| msgid "This rule representation can be used for Web API calls."
@@ -72802,9 +72804,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Service globally"
 #~ msgstr "Globaler Service"
-
-#~ msgid "Service graphs"
-#~ msgstr "Servicegraphen"
 
 #~ msgid ""
 #~ "Service grouped by host groups. Services not member of a host group are "

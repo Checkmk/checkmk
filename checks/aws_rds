@@ -16,54 +16,6 @@ from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcar
 from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # .
-#   .--bin log usage-------------------------------------------------------.
-#   |     _     _         _                                                |
-#   |    | |__ (_)_ __   | | ___   __ _   _   _ ___  __ _  __ _  ___       |
-#   |    | '_ \| | '_ \  | |/ _ \ / _` | | | | / __|/ _` |/ _` |/ _ \      |
-#   |    | |_) | | | | | | | (_) | (_| | | |_| \__ \ (_| | (_| |  __/      |
-#   |    |_.__/|_|_| |_| |_|\___/ \__, |  \__,_|___/\__,_|\__, |\___|      |
-#   |                             |___/                   |___/            |
-#   '----------------------------------------------------------------------'
-Section = Mapping[str, Mapping[str, float]]
-
-
-def discover_aws_rds_bin_log_usage(section: Section):
-    yield from inventory_aws_generic(
-        section,
-        ["BinLogDiskUsage"],
-    )
-
-
-def check_aws_rds_bin_log_usage(item: str, params: Mapping[str, Any], section: Section):
-    if (metrics := section.get(item)) is None:
-        return
-
-    bin_log_usage = metrics["BinLogDiskUsage"]
-    yield 0, get_bytes_human_readable(bin_log_usage)
-
-    if (allocated_storage := metrics.get("AllocatedStorage")) is None or allocated_storage == 0.0:
-        yield 1, "Cannot calculate usage"
-        return
-
-    usage = 100.0 * bin_log_usage / allocated_storage
-    yield check_levels(
-        usage,
-        "aws_rds_bin_log_disk_usage",
-        params.get("levels"),
-        human_readable_func=get_percent_human_readable,
-    )
-
-
-check_info["aws_rds.bin_log_usage"] = {
-    # section already migrated!
-    "inventory_function": discover_aws_rds_bin_log_usage,
-    "check_function": check_aws_rds_bin_log_usage,
-    "service_description": "AWS/RDS %s Binary Log Usage",
-    "has_perfdata": True,
-    "group": "aws_rds_disk_usage",
-}
-
-# .
 #   .--transaction logs usage----------------------------------------------.
 #   |        _                                  _   _                      |
 #   |       | |_ _ __ __ _ _ __  ___  __ _  ___| |_(_) ___  _ __           |

@@ -1,0 +1,20 @@
+Title: Add unit conversion support for graphs
+Class: feature
+Compatible: compat
+Component: metrics
+Date: 1663756126
+Edition: cee
+Knowledge: undoc
+Level: 2
+Version: 2.2.0i1
+
+This werk adds the support for converting the displayed unit of a metric
+in a graph.
+
+Currently we only support conversion of degrees from Celsius to
+Fahrenheit or Kelvin but this can be extended in the future.
+
+To convert a unit you can use the <i>Convert unit to<i> option in
+<i>Graph Tunings<i>.
+
+

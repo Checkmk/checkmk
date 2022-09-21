@@ -116,6 +116,7 @@ class Worker(threading.Thread):
                 "application/x-deb",
                 "application/x-debian-package",
                 "application/x-gzip",
+                "application/x-mkp",
                 "application/x-msdos-program",
                 "application/x-msi",
                 "application/x-tgz",

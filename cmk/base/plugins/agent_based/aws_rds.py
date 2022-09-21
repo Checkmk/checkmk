@@ -590,3 +590,57 @@ register.check_plugin(
     check_default_parameters={},
     check_ruleset_name="aws_rds_connections",
 )
+
+# .
+#   .--replica lag---------------------------------------------------------.
+#   |                           _ _             _                          |
+#   |            _ __ ___ _ __ | (_) ___ __ _  | | __ _  __ _              |
+#   |           | '__/ _ \ '_ \| | |/ __/ _` | | |/ _` |/ _` |             |
+#   |           | | |  __/ |_) | | | (_| (_| | | | (_| | (_| |             |
+#   |           |_|  \___| .__/|_|_|\___\__,_| |_|\__,_|\__, |             |
+#   |                    |_|                            |___/              |
+#   '----------------------------------------------------------------------'
+
+
+def discover_aws_rds_replica_lag(section: AWSSectionMetrics) -> DiscoveryResult:
+    yield from discover_aws_generic(
+        section,
+        ["ReplicaLag"],
+    )
+
+
+def check_aws_rds_replica_lag(
+    item: str,
+    params: Mapping[str, Any],
+    section: AWSSectionMetrics,
+) -> CheckResult:
+    if (metrics := section.get(item)) is None:
+        return
+
+    yield from check_levels(
+        value=metrics["ReplicaLag"],
+        metric_name="aws_rds_replica_lag",
+        levels_upper=params.get("lag_levels"),
+        render_func=render.timespan,
+        label="Lag",
+    )
+
+    if (oldest_replica_lag_space := metrics.get("OldestReplicationSlotLag")) is not None:
+        yield from check_levels(
+            value=oldest_replica_lag_space,
+            metric_name="aws_rds_oldest_replication_slot_lag",
+            levels_upper=params.get("slot_levels"),
+            render_func=render.bytes,
+            label="Oldest replication slot lag",
+        )
+
+
+register.check_plugin(
+    name="aws_rds_replica_lag",
+    service_name="AWS/RDS %s Replica Lag",
+    check_function=check_aws_rds_replica_lag,
+    discovery_function=discover_aws_rds_replica_lag,
+    check_default_parameters={},
+    check_ruleset_name="aws_rds_replica_lag",
+    sections=["aws_rds"],
+)

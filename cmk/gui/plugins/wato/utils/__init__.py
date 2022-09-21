@@ -127,6 +127,10 @@ from cmk.gui.valuespec import (
     ValueSpecHelp,
     ValueSpecText,
 )
+from cmk.gui.watolib.attributes import (  # noqa: F401 # pylint: disable=unused-import
+    IPMIParameters,
+    SNMPCredentials,
+)
 from cmk.gui.watolib.check_mk_automations import (
     get_check_information as get_check_information_automation,
 )
@@ -134,6 +138,9 @@ from cmk.gui.watolib.check_mk_automations import (
     get_section_information as get_section_information_automation,
 )
 from cmk.gui.watolib.config_domains import ConfigDomainCore as _ConfigDomainCore
+from cmk.gui.watolib.config_hostname import (  # noqa: F401 # pylint: disable=unused-import
+    ConfigHostname,
+)
 from cmk.gui.watolib.config_sync import (  # noqa: F401 # pylint: disable=unused-import
     ReplicationPath,
 )
@@ -191,6 +198,11 @@ from cmk.gui.watolib.rulespecs import (  # noqa: F401 # pylint: disable=unused-i
     RulespecSubGroup,
     ServiceRulespec,
     TimeperiodValuespec,
+)
+from cmk.gui.watolib.translation import (  # noqa: F401 # pylint: disable=unused-import
+    HostnameTranslation,
+    ServiceDescriptionTranslation,
+    translation_elements,
 )
 from cmk.gui.watolib.users import notification_script_title
 

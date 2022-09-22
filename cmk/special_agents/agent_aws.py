@@ -153,14 +153,16 @@ T = TypeVar("T")
 
 
 class AWSConfig:
-    def __init__(self, hostname, sys_argv, overall_tags) -> None:  # type:ignore[no-untyped-def]
+    def __init__(  # type:ignore[no-untyped-def]
+        self, hostname: str, sys_argv: Sequence[str], overall_tags
+    ) -> None:
         self.hostname = hostname
         self._overall_tags = self._prepare_tags(overall_tags)
         self.service_config: dict = {}
         self._config_hash_file = AWSCacheFilePath / ("%s.config_hash" % hostname)
         self._current_config_hash = self._compute_config_hash(sys_argv)
 
-    def add_service_tags(self, tags_key, tags):
+    def add_service_tags(self, tags_key: str, tags) -> None:  # type:ignore[no-untyped-def]
         """Convert commandline input
         from
             ([['foo'], ['aaa'], ...], [['bar', 'baz'], ['bbb', 'ccc'], ...])
@@ -184,10 +186,10 @@ class AWSConfig:
             ]
         return None
 
-    def add_single_service_config(self, key, value):
+    def add_single_service_config(self, key: str, value) -> None:  # type:ignore[no-untyped-def]
         self.service_config.setdefault(key, value)
 
-    def _compute_config_hash(self, sys_argv):
+    def _compute_config_hash(self, sys_argv: Sequence[str]) -> str:
         filtered_sys_argv = [
             arg for arg in sys_argv if arg not in ["--debug", "--verbose", "--no-cache"]
         ]
@@ -220,7 +222,7 @@ class AWSConfig:
         )
         return True
 
-    def _load_config_hash(self):
+    def _load_config_hash(self) -> str | None:
         try:
             with self._config_hash_file.open(mode="r", encoding="utf-8") as f:
                 return f.read().strip()
@@ -230,8 +232,8 @@ class AWSConfig:
                 raise
             return None
 
-    def _write_config_hash(self):
-        store.save_text_to_file(self._config_hash_file, "%s\n" % self._current_config_hash)
+    def _write_config_hash(self) -> None:
+        store.save_text_to_file(self._config_hash_file, f"{self._current_config_hash}\n")
 
 
 # .

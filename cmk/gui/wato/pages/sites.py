@@ -735,12 +735,11 @@ class ModeDistributedMonitoring(WatoMode):
 
         html.p(
             _(
-                "For the initial login into the remote site %s "
-                "we need once your administration login for the Multsite "
-                "GUI on that site. Your credentials will only be used for "
-                "the initial handshake and not be stored. If the login is "
-                "successful then both side will exchange a login secret "
-                "which is used for the further remote calls."
+                "One manual login as administrator to the Multisite GUI of the remote site"
+                ' "%s" is required to initialize the connection.'
+                " The credentials will only be used for the initial handshake and not be stored."
+                " If the login is successful then both sides will exchange a login secret"
+                " which will be used for subsequent remote calls."
             )
             % HTMLWriter.render_tt(site["alias"])
         )

@@ -5,12 +5,13 @@
 
 signed="$1"
 unsigned="$2"
-unsigning_patch="$3"
-if test ! -f "$signed" || test ! -f "$unsigning_patch"; then
-    echo "$0: Can't apply a patch, $signed or $unsigning_patch does not exist." >&2
+unsign_msi_patch="$3"
+if test ! -f "$signed" || test ! -f "$unsign_msi_patch"; then
+    echo "$0: Can't apply a patch, $signed or $unsign_msi_patch does not exist." >&2
     exit 1
 fi
-base64 "$signed" >"$signed".base64
-patch "$signed".base64 <"$unsigning_patch"
-base64 -d "$signed".base64 >"$unsigned"
-rm "$signed".base64
+raw_base64="$unsigned".raw.base64
+base64 "$signed" >"$raw_base64"
+patch "$raw_base64" <"$unsign_msi_patch"
+base64 -d "$raw_base64" >"$unsigned"
+rm "$raw_base64"

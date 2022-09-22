@@ -18,14 +18,16 @@ import uuid
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
+from subprocess import PIPE, Popen
 from typing import Final, NoReturn
 
-import cmk.utils.obfuscate as obfuscate
 from cmk.utils import msi_patch
 
 PRODUCT_NAME: Final = "Check MK Agent 2.1"
 AGENT_STANDARD_MSI_FILE: Final = "check_mk_agent.msi"
 AGENT_UNSIGNED_MSI_FILE: Final = "check_mk_agent_unsigned.msi"
+_APPLY_PATCH_SCRIPT: Final = "apply_unsign_msi_patch.sh"
+_UNSIGN_MSI_PATCH: Final = "unsign-msi.patch"
 _MSI_FILES: Final = sorted(["check_mk_install_yml", "checkmk.dat", "plugins_cap", "python_3.cab"])
 _MSI_COMPONENTS: Final = sorted(
     [
@@ -345,17 +347,9 @@ def msi_update_core(
         new_msi_file: Final = src_dir / AGENT_UNSIGNED_MSI_FILE
         bin_dir, tmp_dir = _get_dirs()
         work_dir = Path(tempfile.mkdtemp(prefix=str(tmp_dir) + "/msi-update."))
-        _unsign_file(msi_file_name, dst=new_msi_file)
-
-        if (error := obfuscate.deobfuscate_file(Path(msi_file_name), file_out=new_msi_file)) != 0:
-            bail_out(f"Deobfuscate returns error {error=}")
-
-        # When this script is run in the build environment then we need to specify
-        # paths to the msitools. When running in an OMD site, these tools are in
-        # our path
+        _unsign_msi(bin_dir, signed=msi_file_name, unsigned=new_msi_file)
 
         _export_required_tables(bin_dir, msi=new_msi_file, work_dir=work_dir)
-
         _verbose("Modify extracted files..")
         # ==============================================
         # Modify File.idt
@@ -390,11 +384,16 @@ def msi_update_core(
         bail_out(f"Error on creating msi file: {e}, work_dir is {work_dir}")
 
 
-def _unsign_file(src: Path, *, dst: Path) -> None:
-    # At the moment it's stub
-    # will be replaced with apply_patch call
-    # TODO(sk): replace with apply_patching script
-    shutil.copy(src, dst)
+def _unsign_msi(bin_dir: Path, *, signed: Path, unsigned: Path) -> None:
+    if not (script := bin_dir / _APPLY_PATCH_SCRIPT).exists():
+        shutil.copy(signed, unsigned)  # fallback case for CI and Testing
+        return
+
+    cmd_line = [script, signed, unsigned, signed.parent / _UNSIGN_MSI_PATCH]
+    with Popen(cmd_line, stdout=PIPE, stderr=PIPE) as process:
+        out, err = process.communicate()
+        if process.returncode != 0:
+            bail_out(f"{_APPLY_PATCH_SCRIPT}' is failed:\n{out=}\n{err=}\n")
 
 
 # NOTES:

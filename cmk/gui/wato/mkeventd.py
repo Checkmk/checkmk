@@ -3026,12 +3026,15 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         (cmk.gui.mkeventd.mib_upload_dir() / filename).unlink()
 
         # Also delete the compiled files
+        def append_suffix(path: Path, suffix: str) -> Path:
+            return path.with_suffix(path.suffix + suffix)
+
         compiled_mibs_dir = _compiled_mibs_dir()
         for f in [
-            compiled_mibs_dir / mib_name + ".py",
-            compiled_mibs_dir / mib_name + ".pyc",
-            compiled_mibs_dir / filename.rsplit(".", 1)[0].upper() + ".py",
-            compiled_mibs_dir / filename.rsplit(".", 1)[0].upper() + ".pyc",
+            append_suffix(compiled_mibs_dir / mib_name, ".py"),
+            append_suffix(compiled_mibs_dir / mib_name, ".pyc"),
+            (compiled_mibs_dir / filename.upper()).with_suffix(".py"),
+            (compiled_mibs_dir / filename.upper()).with_suffix(".pyc"),
         ]:
             f.unlink(missing_ok=True)
 

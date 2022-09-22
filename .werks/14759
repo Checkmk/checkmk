@@ -1,0 +1,18 @@
+Title: Fix stale services in tactical overview
+Class: fix
+Compatible: incomp
+Component: multisite
+Date: 1663830937
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p14
+
+This werk changes the computation of stale services in the tactical overview
+sidebar snapin.
+So far, the computation was also based on down hosts.
+
+From now on, down hosts are no longer taken into acount for stale services.
+
+

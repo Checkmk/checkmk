@@ -405,7 +405,8 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             "Stats: service_staleness >= %s\n"
             "Stats: host_scheduled_downtime_depth = 0\n"
             "Stats: service_scheduled_downtime_depth = 0\n"
-            "StatsAnd: 3\n"
+            "Stats: host_state = 0\n"
+            "StatsAnd: 4\n"
             "%s"
         ) % (config.staleness_threshold, context_filters)
 

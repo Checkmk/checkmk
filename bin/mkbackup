@@ -25,7 +25,7 @@ import textwrap
 import threading
 import time
 import traceback
-from collections.abc import Callable, Generator, Iterator
+from collections.abc import Callable, Generator, Iterator, Mapping, Sequence
 from contextlib import contextmanager, ExitStack
 from hashlib import md5
 from pathlib import Path
@@ -186,7 +186,7 @@ def local_lock_file_path(site_name: str) -> Path:
     return mkbackup_lock_dir / Path(f"mkbackup-{site_name}.lock")
 
 
-def get_needed_lock_files(opts) -> list[Path]:  # type:ignore[no-untyped-def]
+def get_needed_lock_files(opts: Mapping[str, str]) -> list[Path]:  # type:ignore[no-untyped-def]
     if not is_root():
         site_id = current_site_id()
         assert site_id
@@ -352,7 +352,7 @@ def load_config() -> dict[str, Any]:
 
 
 # TODO: Duplicate code with htdocs/backup.py
-def load_backup_info(path: str) -> dict[str, Any]:
+def load_backup_info(path: str) -> Mapping[str, Any]:
     with open(path) as f:
         info = json.load(f)
 
@@ -366,16 +366,16 @@ def load_backup_info(path: str) -> dict[str, Any]:
     return info
 
 
-def get_site_ids_of_backup(info: dict[str, Any]) -> list[str]:
+def get_site_ids_of_backup(info: Mapping[str, Any]) -> list[str]:
     return [f[0].split(".", 1)[0][5:] for f in info["files"] if f[0].startswith("site-")]
 
 
-def save_backup_info(info: dict[str, Any]) -> None:
+def save_backup_info(info: Mapping[str, Any]) -> None:
     with open(backup_info_path(), "w") as f:
         json.dump(info, f, sort_keys=True, indent=4, separators=(",", ": "))
 
 
-def create_backup_info() -> dict[str, Any]:
+def create_backup_info() -> Mapping[str, Any]:
     files = get_files_for_backup_info()
 
     info = {
@@ -690,9 +690,9 @@ def mode_backup(local_job_id: str, opts: dict[str, str]) -> None:
             )
 
 
-def do_backup(opts):
+def do_backup(opts: Mapping[str, str]) -> None:
     if not is_root():
-        do_site_backup(opts)
+        do_site_backup()
     elif is_cma():
         do_system_backup(opts)
     else:
@@ -700,7 +700,9 @@ def do_backup(opts):
     complete_backup()
 
 
-def do_site_backup(opts, site=None, try_stop=True):  # pylint: disable=too-many-branches
+def do_site_backup(
+    site: str | None = None, try_stop: bool = True
+) -> None:  # pylint: disable=too-many-branches
     cmd = ["omd", "backup"]
 
     if not compress_archives():
@@ -1224,7 +1226,7 @@ def verify_backup_files(info, files, needed):
             )
 
 
-def do_system_backup(opts):
+def do_system_backup(opts: Mapping[str, str]) -> None:
     # Create missing directories. Ensure group permissions and mode.
     try:
         makedirs(os.path.dirname(system_backup_archive_path()), group="omd", mode=0o775)
@@ -1258,7 +1260,7 @@ def do_system_backup(opts):
     if not exclude_sites(opts):
         for site_id in existing_sites():
             log("Performing site backup: %s" % site_id)
-            do_site_backup(opts, site=site_id)
+            do_site_backup(site=site_id)
     else:
         log("Skipping site backup (disabled)")
 
@@ -1308,7 +1310,7 @@ def existing_sites():
     )
 
 
-def exclude_sites(opts):
+def exclude_sites(opts: Mapping[str, str]) -> bool:
     return "without-sites" in opts or g_job_config.get("without_sites", False)
 
 
@@ -1571,9 +1573,9 @@ def mode_restore(target_id: str, backup_id: str, opts: dict[str, str]) -> None:
             )
 
 
-def do_restore(opts, info):
+def do_restore(opts: Mapping[str, str], info: Mapping[str, Any]) -> None:
     if not is_root():
-        do_site_restore(opts, info)
+        do_site_restore(info)
     elif is_cma():
         do_system_restore(opts, info)
     else:
@@ -1589,7 +1591,7 @@ def do_system_restart():
     os.system("reboot")
 
 
-def do_site_restore(opts, info, site=None):
+def do_site_restore(info: Mapping[str, str], site: str | None = None) -> None:
     cmd = ["omd", "restore", "--kill"]
 
     # When executed as site user, "omd restore" is executed without the site
@@ -1637,12 +1639,12 @@ def do_site_restore(opts, info, site=None):
         raise MKGeneralException("Site restore failed")
 
     if not is_root():
-        site_arg = [site] if is_root() else []
+        site_arg = [site] if is_root() and site is not None else []
         if subprocess.call(["omd", "start"] + site_arg) != 0:
             raise MKGeneralException("Failed to start the site after restore")
 
 
-def do_system_restore(opts, info):
+def do_system_restore(opts: Mapping[str, str], info: Mapping[str, Any]) -> None:
     verify_cma_version_compatible(info)
     prepare_system_restore()
     prepare_cluster_environment(info)
@@ -1650,7 +1652,7 @@ def do_system_restore(opts, info):
     # Perform restore of the /rw volume
     log("Performing system restore (system%s)" % archive_suffix())
     system_rw_files_before = get_system_rw_files()
-    system_rw_files_restored = do_system_rw_restore(opts, info)
+    system_rw_files_restored = do_system_rw_restore()
     cleanup_system_rw_files(system_rw_files_before, system_rw_files_restored)
     log("Finished system restore")
 
@@ -1669,7 +1671,7 @@ def do_system_restore(opts, info):
 
     log("Performing system data restore (system-data%s)" % archive_suffix())
     cleanup_directory_contents("/omd", excludes=["/omd/lost+found"])
-    do_system_data_restore(opts, info)
+    do_system_data_restore()
     fix_linux_capabilities()
     log("Finished system data restore")
 
@@ -1680,7 +1682,7 @@ def do_system_restore(opts, info):
     # Now run the site restore for all sites found in the backup
     for site_id in get_site_ids_of_backup(info):
         log("Performing site restore: %s" % site_id)
-        do_site_restore(opts, info, site=site_id)
+        do_site_restore(info, site=site_id)
     log("Finished site restore")
 
 
@@ -1854,15 +1856,15 @@ def cleanup_system_processes():
     os.system("/etc/init.d/nullmailer stop")
 
 
-def do_system_rw_restore(opts, info):
+def do_system_rw_restore() -> Sequence[str]:
     return restore_system_backup(system_backup_archive_path())
 
 
-def do_system_data_restore(opts, info):
+def do_system_data_restore() -> Sequence[str]:
     return restore_system_backup(system_data_backup_archive_path())
 
 
-def restore_system_backup(backup_path: str) -> list[str]:
+def restore_system_backup(backup_path: str) -> Sequence[str]:
     with open(backup_path, "rb") as backup_file:
         s = RestoreStream(
             stream=backup_file, is_alive=lambda: False, key_ident=g_job_config["encrypt"]
@@ -1936,7 +1938,7 @@ def mode_list(target_id: str, opts: dict[str, str]) -> None:
     sys.stdout.write("\n")
 
 
-def mode_jobs(opts: dict[str, str]) -> None:
+def mode_jobs(opts: Mapping[str, str]) -> None:
     fmt = "%-29s %-30s\n"
     sys.stdout.write(fmt % ("Job-ID", "Title"))
     sys.stdout.write("%s\n" % ("-" * 60))

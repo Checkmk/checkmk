@@ -7,7 +7,15 @@ import json
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Sequence
 
-from ..agent_based_api.v1 import check_levels, Metric, render, Result, Service, State
+from ..agent_based_api.v1 import (
+    check_levels,
+    IgnoreResultsError,
+    Metric,
+    render,
+    Result,
+    Service,
+    State,
+)
 from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 GenericAWSSection = Sequence[Any]
@@ -30,6 +38,14 @@ class LambdaFunctionConfiguration:
     Timeout: float  # limit of the timeout
     MemorySize: float  # limit of the memory size
     CodeSize: float  # current code size
+
+
+@dataclass(frozen=True)
+class AWSMetric:
+    value: float
+    levels_lower: tuple[float, float] | None = None
+    name: str | None = None
+    label: str | None = None
 
 
 LambdaSummarySection = Mapping[str, LambdaFunctionConfiguration]
@@ -105,6 +121,19 @@ def check_aws_limits(
                 human_readable_func(limit_ref),
                 result.summary,
             ),
+        )
+
+
+def check_aws_metrics(metric_infos: Sequence[AWSMetric]) -> CheckResult:
+    if not metric_infos:
+        raise IgnoreResultsError("Currently no data from AWS")
+
+    for metric_info in metric_infos:
+        yield from check_levels(
+            value=metric_info.value,
+            metric_name=metric_info.name,
+            levels_lower=metric_info.levels_lower,
+            label=metric_info.label,
         )
 
 

@@ -318,8 +318,22 @@ def _export_required_tables(bin_dir: Path, *, msi: Path, work_dir: Path) -> None
         _export_msi_file_table(bin_dir, name=name, msi_in=msi, out_dir=work_dir)
 
 
+def _get_dirs() -> tuple[Path, Path]:
+    if "OMD_ROOT" in os.environ:
+        omd_root = Path(os.environ["OMD_ROOT"])
+        bin_dir = omd_root / "bin"
+        tmp_dir = omd_root / "tmp"
+    else:
+        bin_dir = Path(".")
+        tmp_dir = Path(".")
+
+    return bin_dir, tmp_dir
+
+
+# TODO(sk): refactor this function
 def msi_update_core(
     msi_file_name: Path,
+    *,
     src_dir: Path,
     revision_text: str,
     version: str,
@@ -328,18 +342,9 @@ def msi_update_core(
     work_dir = Path()
     try:
         new_version_build = generate_product_version(version, revision_text=revision_text)
-
-        if "OMD_ROOT" in os.environ:
-            omd_root = Path(os.environ["OMD_ROOT"])
-            bin_dir = omd_root / "bin"
-            tmp_dir = omd_root / "tmp"
-        else:
-            bin_dir = Path(".")
-            tmp_dir = Path(".")
-
         new_msi_file: Final = src_dir / AGENT_UNSIGNED_MSI_FILE
+        bin_dir, tmp_dir = _get_dirs()
         work_dir = Path(tempfile.mkdtemp(prefix=str(tmp_dir) + "/msi-update."))
-
         _unsign_file(msi_file_name, dst=new_msi_file)
 
         if (error := obfuscate.deobfuscate_file(Path(msi_file_name), file_out=new_msi_file)) != 0:
@@ -352,7 +357,6 @@ def msi_update_core(
         _export_required_tables(bin_dir, msi=new_msi_file, work_dir=work_dir)
 
         _verbose("Modify extracted files..")
-
         # ==============================================
         # Modify File.idt
 
@@ -402,4 +406,10 @@ def _unsign_file(src: Path, *, dst: Path) -> None:
 # MAIN:
 if __name__ == "__main__":
     p = parse_command_line(sys.argv)
-    msi_update_core(p.msi, p.src_dir, p.revision, p.version, package_code_base=p.package_code_hash)
+    msi_update_core(
+        p.msi,
+        src_dir=p.src_dir,
+        revision_text=p.revision,
+        version=p.version,
+        package_code_base=p.package_code_hash,
+    )

@@ -1251,13 +1251,13 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
     def help(self) -> str:
         return _(
             "This check returns CRIT if the parameter <b>State in case of restricted address missmatch</b> "
-            "in the ruleset <b>Status of the Checkmk services</b> is configured and differs from default "
+            "in the ruleset <b>Checkmk Agent installation auditing</b> is configured and differs from default "
             "state <b>WARN</b>. "
             "With the above setting you can overwrite the default service state. This will help "
             "you to reduce above warnings during the update process of your Checkmk sites "
             "and agents. "
             "We recommend to set this option only for the affected hosts as long as you "
-            "monitor agents older than Checkmk 1.7. After updating them, you should change "
+            "monitor agents older than Checkmk 2.0. After updating them, you should change "
             "this setting back to it's original value. "
             "Background: With IP access lists you can control which servers are allowed to talk "
             "to these agents. Thus it's a security issue and should not be disabled or set to "
@@ -1279,14 +1279,14 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
             yield ACResultCRIT("Rule in <b>%s</b> has value <b>%s</b>" % (folder_title, rule_state))
 
     def _get_rules(self):
-        collection = watolib.SingleRulesetRecursively("check_mk_exit_status")
+        collection = watolib.SingleRulesetRecursively("checkgroup_parameters:agent_update")
         collection.load()
-        ruleset = collection.get("check_mk_exit_status")
+        ruleset = collection.get("checkgroup_parameters:agent_update")
         state_map = {0: "OK", 1: "WARN", 2: "CRIT", 3: "UNKNOWN"}
         return [
             (folder.title(), state_map[rule.value.get("restricted_address_mismatch", 1)])
             for folder, _rule_index, rule in ruleset.get_rules()
-            if rule.value.get("restricted_address_mismatch") != "1"
+            if rule.value.get("restricted_address_mismatch") != 1
         ]
 
 

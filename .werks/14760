@@ -1,0 +1,14 @@
+Title: Fix "Restricted address missmatch" in "Analyze configuration"
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1663853942
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p13
+
+The "Restricted address missmatch" option of the setup menu "Analyze
+configuration" showed wrong results because it was linked to the previous
+ruleset of the configuration option "State in case of restricted address
+missmatch".

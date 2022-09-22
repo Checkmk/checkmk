@@ -1,0 +1,12 @@
+Title: Add support for Cisco WLC C9800-L-F-K9
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1663850155
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p13
+
+Check plugin cisco_wlc can now handle snmp data of Cisco WLC C9800-L-F-K9

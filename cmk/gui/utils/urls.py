@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+import re
 import urllib.parse
 from enum import Enum
 from functools import lru_cache
@@ -67,22 +68,95 @@ def urlencode(value: Optional[str]) -> str:
     return "" if value is None else quote_plus(value)
 
 
+# Matches paths which may have a /site/check_mk/ prefix and end with "filename.py". See doctests.
+PATH_RE = re.compile(r"^(?:/[^/]+/check_mk/)?([^/.]+)\.py(?:$|[^/])")
+
+
 def _file_name_from_path(path: str) -> str:
-    parts = path.rstrip("/").split("/")
-    file_name = "index"
-    if parts[-1].endswith(".py") and len(parts[-1]) > 3:
-        # Regular pages end with .py - Strip it away to get the page name
-        file_name = parts[-1][:-3]
-    return file_name
+    """Derive a "file name" from the path.
+
+    These no longer map to real file names, but rather to the page handlers attached to the names.
+
+    Args:
+        path:
+            The path, without query string, and without server portion.
+
+    Returns:
+        The "file name" as a string.
+
+    Examples:
+
+        Sensible values.
+
+            >>> _file_name_from_path("/NO_SITE/check_mk/should_match.py")
+            'should_match'
+
+            >>> _file_name_from_path("/NO_SITE/check_mk/should_match.py/NO_SITE/check_mk/blubb.py")
+            'index'
+
+            >>> _file_name_from_path("/NO_SITE/check_mk/foo/bar")
+            'index'
+
+            >>> _file_name_from_path("/NO_SITE/check_mk/")
+            'index'
+
+            >>> _file_name_from_path("/NO_SITE/check_mk/.py")
+            'index'
+
+        Not so sensible values. Not sure where this would occur, but tests were in place which
+        required this.
+
+            >>> _file_name_from_path("/NO_SITE/check_mk/should_match.py/")
+            'should_match'
+
+        `file_name_and_query_vars_from_url` expects relative URLs, so we sadly need to support
+        those as well.
+
+            >>> _file_name_from_path("wato.py")
+            'wato'
+
+        This works as expected.
+
+            >>> _file_name_from_path(".py")
+            'index'
+
+    """
+    if match := PATH_RE.match(path.rstrip("/")):
+        return match.group(1)
+
+    return "index"
 
 
 def requested_file_name(request: Request) -> str:
-    return _file_name_from_path(request.requested_file)
+    """Convenience wrapper around _file_name_from_path
+
+    Args:
+        request:
+            A Werkzeug or Flask request wrapper.
+
+    Returns:
+        The "file name".
+
+    Examples:
+
+        >>> from unittest.mock import Mock
+        >>> requested_file_name(Mock(path="/dev/check_mk/foo_bar.py"))
+        'foo_bar'
+
+        >>> requested_file_name(Mock(path="/dev/check_mk/foo_bar.py/"))
+        'foo_bar'
+
+        >>> requested_file_name(Mock(path="/dev/check_mk/foo_bar.py/foo"))
+        'index'
+
+    """
+    return _file_name_from_path(request.path)
 
 
 def requested_file_with_query(request: Request) -> str:
     """Returns a string containing the requested file name and query to be used in hyperlinks"""
-    file_name, query = requested_file_name(request), request.query_string.decode(request.charset)
+    file_name = requested_file_name(request)
+    query = request.query_string.decode(request.charset)
     return f"{file_name}.py?{query}"
 
 
@@ -168,6 +242,38 @@ def make_confirm_link(*, url: str, message: str) -> str:
 
 
 def file_name_and_query_vars_from_url(url: str) -> Tuple[str, QueryVars]:
+    """Deconstruct a (potentially relative) URL.
+
+    Args:
+        url:
+            A URL path without the server portion, but optionally including the `query string`.
+
+    Returns:
+        A tuple of "file name" and a parsed query string dict.
+
+    Examples:
+
+        With path and query string (relative)
+
+            >>> file_name_and_query_vars_from_url("wato.py?foo=bar")
+            ('wato', {'foo': ['bar']})
+
+        With path and query string (absolute)
+
+            >>> file_name_and_query_vars_from_url("/dev/check_mk/wato.py?foo=bar")
+            ('wato', {'foo': ['bar']})
+
+        Without path
+
+            >>> file_name_and_query_vars_from_url("?foo=bar")
+            ('index', {'foo': ['bar']})
+
+        Without path and without query string
+
+            >>> file_name_and_query_vars_from_url("")
+            ('index', {})
+
+    """
     split_result = urllib.parse.urlsplit(url)
     return _file_name_from_path(split_result.path), urllib.parse.parse_qs(split_result.query)
 

@@ -2093,7 +2093,7 @@ def welcome_message(site: SiteContext, admin_password: str) -> None:
     )
     sys.stdout.write(
         "  After logging in, you can change the password for cmkadmin with "
-        "%s'htpasswd etc/htpasswd cmkadmin'%s.\n" % (tty.bold, tty.normal)
+        "%s'htpasswd -B -C 12 etc/htpasswd cmkadmin'%s.\n" % (tty.bold, tty.normal)
     )
     sys.stdout.write("\n")
 

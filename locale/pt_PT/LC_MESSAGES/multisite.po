@@ -16002,6 +16002,13 @@ msgid ""
 msgstr ""
 
 msgid ""
+"During each run, the agent will fetch logs which are at maximum this old. "
+"The agent memorizes logs already fetched during the last run, s.t. no logs "
+"will be sent to the event console multiple times. Setting this value lower "
+"than the check interval of the host will result in missing logs. "
+msgstr ""
+
+msgid ""
 "During monitoring there are several dedicated files created for each host. "
 "There are, for example, the discovered services, performance data and "
 "different temporary files created. During deletion of a host, these files "
@@ -18638,7 +18645,7 @@ msgstr "Buscar cada"
 
 msgid ""
 "Fetch events from the event stream of your datadog instance. Fetched events "
-"will be forwared to the event console of the site where the special agent is "
+"will be forwared to the Event Console of the site where the special agent is "
 "executed."
 msgstr ""
 
@@ -18656,6 +18663,15 @@ msgstr "Buscar cabeça"
 
 msgid "Fetch intervals for SNMP sections"
 msgstr "Intervalos de busca para as secções SNMP"
+
+#, fuzzy
+msgid "Fetch logs"
+msgstr "Busca"
+
+msgid ""
+"Fetch logs of your datadog instance. Fetched logs will be forwared to the "
+"Event Console of the site where the special agent is executed."
+msgstr ""
 
 #, fuzzy
 msgid "Fetch monitors"
@@ -25149,6 +25165,13 @@ msgstr "Níveis de inchaço percentual do índice"
 msgid "Index space"
 msgstr "Espaço de índice"
 
+#, fuzzy
+msgid "Indexes to search"
+msgstr "Índices a consultar"
+
+msgid "Indexes to search, defaults to '*', which means all indexes."
+msgstr ""
+
 msgid "Indexspace wasted"
 msgstr "Espaço de índice desperdiçado"
 
@@ -28348,6 +28371,10 @@ msgstr "Eventos de replicação de log"
 msgid "Log rule hits"
 msgstr "Regra de registo de acessos"
 
+#, fuzzy
+msgid "Log search query"
+msgstr "Consulta de pesquisa personalizada"
+
 msgid "Log switches in the last 60 minutes"
 msgstr "Interruptores de registo nos últimos 60 minutos"
 
@@ -29746,6 +29773,10 @@ msgstr "Idade máxima dos backups"
 
 #, fuzzy
 msgid "Maximum age of fetched events (10 hours max.)"
+msgstr "Taxa Máxima de Pacotes Aceites"
+
+#, fuzzy
+msgid "Maximum age of fetched logs (10 hours max.)"
 msgstr "Taxa Máxima de Pacotes Aceites"
 
 msgid "Maximum age of latest timemachine backup"
@@ -36500,7 +36531,8 @@ msgstr "Por favor especifique pelo menos um tipo de nível"
 msgid "Please specify at least one value"
 msgstr "Por favor, especifique pelo menos um valor"
 
-msgid "Please specify hostname or hash."
+#, fuzzy
+msgid "Please specify host or hash."
 msgstr "Por favor, especifique o nome da hostname ou hash."
 
 msgid "Please specify the extensions in lower case and without dot."
@@ -37474,6 +37506,12 @@ msgstr "Consulta de logs de procura elástica"
 
 msgid "Query or SQL statement"
 msgstr "Consulta ou instrução SQL"
+
+msgid ""
+"Query to speficy which logs should be forwarded to the event console. Use "
+"the Datadog <a href='https://docs.datadoghq.com/logs/explorer/"
+"search_syntax'>log search syntax</a>."
+msgstr ""
 
 msgid "Queue Latency"
 msgstr "Latência das filas"
@@ -41247,6 +41285,10 @@ msgstr "Nível de serviço"
 
 #, fuzzy
 msgid "Service level of forwarded events shown in Event Console."
+msgstr "Directamente para a Consola de Eventos"
+
+#, fuzzy
+msgid "Service level of forwarded logs shown in Event Console."
 msgstr "Directamente para a Consola de Eventos"
 
 msgid "Service limits"
@@ -45471,6 +45513,10 @@ msgstr "Facilidade Syslog para o encaminhamento de mensagens"
 msgid "Syslog facility of forwarded events shown in Event Console."
 msgstr "Facilidade Syslog para o encaminhamento de mensagens"
 
+#, fuzzy
+msgid "Syslog facility of forwarded logs shown in Event Console."
+msgstr "Facilidade Syslog para o encaminhamento de mensagens"
+
 msgid "Syslog priority"
 msgstr "Prioridade do Syslog"
 
@@ -46042,6 +46088,10 @@ msgstr "Texto"
 
 msgid "Text logfiles (Linux, Solaris, Windows)"
 msgstr "Ficheiros de registo de texto (Linux, Solaris, Windows)"
+
+#, fuzzy
+msgid "Text of forwarded events"
+msgstr "Texto para cancelar evento(s)"
 
 msgid "Text output"
 msgstr "Saída de texto"
@@ -50007,6 +50057,14 @@ msgstr ""
 "O texto aqui inserido deve ser bem prefixado ao nome do anfitrião. "
 "Terminando o prefixo com um ponto final será criada uma pasta separada em "
 "Graphite"
+
+msgid ""
+"The text of the event can be constructed from the <a href='https://docs."
+"datadoghq.com/api/latest/logs/#search-logs'>attributes section of a log "
+"entry</a>. The text elements are rendered as 'Name:str(attributes[Key])', "
+"separated by a comma. To access nested fields, use 'key.subkey'. Defaults to "
+"the message of the log."
+msgstr ""
 
 msgid ""
 "The threshholds for wait_duration_ms. Will overwrite the default state set "
@@ -63987,6 +64045,10 @@ msgstr "n/d"
 
 msgid "negate"
 msgstr "negar"
+
+#, fuzzy
+msgid "new element"
+msgstr "Novo elemento"
 
 msgid "new host name"
 msgstr "novo nome de anfitrião"

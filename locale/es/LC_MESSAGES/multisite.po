@@ -16028,6 +16028,22 @@ msgstr ""
 "Tales eventos serán omitidos por el agente si su antigüedad excede el valor "
 "especificado aquí."
 
+#, fuzzy
+msgid ""
+"During each run, the agent will fetch logs which are at maximum this old. "
+"The agent memorizes logs already fetched during the last run, s.t. no logs "
+"will be sent to the event console multiple times. Setting this value lower "
+"than the check interval of the host will result in missing logs. "
+msgstr ""
+"Durante cada ejecución, el agente recuperará los eventos que tengan como "
+"máximo esta antigüedad. El agente memoriza los eventos ya obtenidos durante "
+"la última ejecución, por lo que ningún evento será enviado a la consola de "
+"eventos varias veces. Si se establece este valor por debajo del intervalo de "
+"comprobación del host, se perderán eventos. Tenga en cuenta también que la "
+"API de Datadog permite crear nuevos eventos que se encuentran en el pasado. "
+"Tales eventos serán omitidos por el agente si su antigüedad excede el valor "
+"especificado aquí."
+
 msgid ""
 "During monitoring there are several dedicated files created for each host. "
 "There are, for example, the discovered services, performance data and "
@@ -18648,9 +18664,10 @@ msgstr "Recuperación de los trozos"
 msgid "Fetch events"
 msgstr "Recoger eventos"
 
+#, fuzzy
 msgid ""
 "Fetch events from the event stream of your datadog instance. Fetched events "
-"will be forwared to the event console of the site where the special agent is "
+"will be forwared to the Event Console of the site where the special agent is "
 "executed."
 msgstr ""
 "Obtenga eventos del flujo de eventos de su instancia de Datadog. Los eventos "
@@ -18671,6 +18688,19 @@ msgstr "Cabezal de búsqueda"
 
 msgid "Fetch intervals for SNMP sections"
 msgstr "Intervalos de búsqueda de secciones SNMP"
+
+#, fuzzy
+msgid "Fetch logs"
+msgstr "Busca"
+
+#, fuzzy
+msgid ""
+"Fetch logs of your datadog instance. Fetched logs will be forwared to the "
+"Event Console of the site where the special agent is executed."
+msgstr ""
+"Obtenga eventos del flujo de eventos de su instancia de Datadog. Los eventos "
+"obtenidos se reenviarán a la consola de eventos del sitio donde se ejecuta "
+"el agente especial."
 
 msgid "Fetch monitors"
 msgstr "Recoger monitoreos"
@@ -25208,6 +25238,13 @@ msgstr "Índice de porcentaje de hinchazón"
 msgid "Index space"
 msgstr "Espacio del índice"
 
+#, fuzzy
+msgid "Indexes to search"
+msgstr "Índices a consultar"
+
+msgid "Indexes to search, defaults to '*', which means all indexes."
+msgstr ""
+
 msgid "Indexspace wasted"
 msgstr "Espacio de índice desperdiciado"
 
@@ -28351,6 +28388,10 @@ msgstr "Registro de eventos de replicación"
 msgid "Log rule hits"
 msgstr "Registrar los aciertos de las reglas"
 
+#, fuzzy
+msgid "Log search query"
+msgstr "Consulta de búsqueda personalizada"
+
 msgid "Log switches in the last 60 minutes"
 msgstr "Cambios de registro en los últimos 60 minutos"
 
@@ -29749,6 +29790,10 @@ msgid "Maximum age of backups"
 msgstr "Antigüedad máxima de las copias de seguridad"
 
 msgid "Maximum age of fetched events (10 hours max.)"
+msgstr "Antigüedad máxima de los eventos recuperados (10 horas como máximo)"
+
+#, fuzzy
+msgid "Maximum age of fetched logs (10 hours max.)"
 msgstr "Antigüedad máxima de los eventos recuperados (10 horas como máximo)"
 
 msgid "Maximum age of latest timemachine backup"
@@ -36452,7 +36497,8 @@ msgstr "Por favor, especifique al menos un tipo de niveles"
 msgid "Please specify at least one value"
 msgstr "Por favor, especifique al menos un valor"
 
-msgid "Please specify hostname or hash."
+#, fuzzy
+msgid "Please specify host or hash."
 msgstr "Por favor, especifique el nombre de host o el hash."
 
 msgid "Please specify the extensions in lower case and without dot."
@@ -37429,6 +37475,12 @@ msgstr "Consulta de los registros de elasticsearch"
 
 msgid "Query or SQL statement"
 msgstr "Consulta o sentencia SQL"
+
+msgid ""
+"Query to speficy which logs should be forwarded to the event console. Use "
+"the Datadog <a href='https://docs.datadoghq.com/logs/explorer/"
+"search_syntax'>log search syntax</a>."
+msgstr ""
 
 msgid "Queue Latency"
 msgstr "Latencia de la cola"
@@ -41172,6 +41224,12 @@ msgid "Service level"
 msgstr "Nivel de servicio"
 
 msgid "Service level of forwarded events shown in Event Console."
+msgstr ""
+"Nivel de servicio de los eventos reenviados mostrados en la Consola de "
+"Eventos."
+
+#, fuzzy
+msgid "Service level of forwarded logs shown in Event Console."
 msgstr ""
 "Nivel de servicio de los eventos reenviados mostrados en la Consola de "
 "Eventos."
@@ -45431,6 +45489,12 @@ msgstr ""
 "Instalación de Syslog de eventos reenviados mostrados en la Consola de "
 "Eventos."
 
+#, fuzzy
+msgid "Syslog facility of forwarded logs shown in Event Console."
+msgstr ""
+"Instalación de Syslog de eventos reenviados mostrados en la Consola de "
+"Eventos."
+
 msgid "Syslog priority"
 msgstr "Prioridad del syslog"
 
@@ -45997,6 +46061,10 @@ msgstr "Texto"
 
 msgid "Text logfiles (Linux, Solaris, Windows)"
 msgstr "Archivos de registro de texto (Linux, Solaris, Windows)"
+
+#, fuzzy
+msgid "Text of forwarded events"
+msgstr "Texto para cancelar el evento(s)"
 
 msgid "Text output"
 msgstr "Salida de texto"
@@ -50030,6 +50098,14 @@ msgid ""
 msgstr ""
 "El texto introducido aquí debe ir precedido del nombre de host. Si el "
 "prefijo termina con un punto, se creará una carpeta separada en Graphite"
+
+msgid ""
+"The text of the event can be constructed from the <a href='https://docs."
+"datadoghq.com/api/latest/logs/#search-logs'>attributes section of a log "
+"entry</a>. The text elements are rendered as 'Name:str(attributes[Key])', "
+"separated by a comma. To access nested fields, use 'key.subkey'. Defaults to "
+"the message of the log."
+msgstr ""
 
 msgid ""
 "The threshholds for wait_duration_ms. Will overwrite the default state set "
@@ -64160,6 +64236,10 @@ msgstr "n/a"
 
 msgid "negate"
 msgstr "negar"
+
+#, fuzzy
+msgid "new element"
+msgstr "Nuevo elemento"
 
 msgid "new host name"
 msgstr "nuevo nombre de host"

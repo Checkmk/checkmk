@@ -15266,6 +15266,13 @@ msgid ""
 msgstr ""
 
 msgid ""
+"During each run, the agent will fetch logs which are at maximum this old. "
+"The agent memorizes logs already fetched during the last run, s.t. no logs "
+"will be sent to the event console multiple times. Setting this value lower "
+"than the check interval of the host will result in missing logs. "
+msgstr ""
+
+msgid ""
 "During monitoring there are several dedicated files created for each host. "
 "There are, for example, the discovered services, performance data and "
 "different temporary files created. During deletion of a host, these files "
@@ -17818,7 +17825,7 @@ msgstr "イベントをフェッチ"
 
 msgid ""
 "Fetch events from the event stream of your datadog instance. Fetched events "
-"will be forwared to the event console of the site where the special agent is "
+"will be forwared to the Event Console of the site where the special agent is "
 "executed."
 msgstr ""
 
@@ -17836,6 +17843,15 @@ msgstr "フェッチヘッド"
 
 msgid "Fetch intervals for SNMP sections"
 msgstr "SNMPセクションのフェッチ間隔"
+
+#, fuzzy
+msgid "Fetch logs"
+msgstr "フェッチ"
+
+msgid ""
+"Fetch logs of your datadog instance. Fetched logs will be forwared to the "
+"Event Console of the site where the special agent is executed."
+msgstr ""
 
 msgid "Fetch monitors"
 msgstr "モニターの取得"
@@ -23892,6 +23908,13 @@ msgstr "肥大化レベルのパーセンテージのインデックス"
 msgid "Index space"
 msgstr "インデックススペース"
 
+#, fuzzy
+msgid "Indexes to search"
+msgstr "クエリするインデックス"
+
+msgid "Indexes to search, defaults to '*', which means all indexes."
+msgstr ""
+
 msgid "Indexspace wasted"
 msgstr "インデックススペースが無駄になります"
 
@@ -26930,6 +26953,10 @@ msgstr "ログレプリケーションイベント"
 msgid "Log rule hits"
 msgstr "ログルールのヒット"
 
+#, fuzzy
+msgid "Log search query"
+msgstr "カスタム検索クエリ"
+
 msgid "Log switches in the last 60 minutes"
 msgstr "過去60分間のログスイッチ"
 
@@ -28276,6 +28303,10 @@ msgid "Maximum age of backups"
 msgstr "バックアップの最大経過時間"
 
 msgid "Maximum age of fetched events (10 hours max.)"
+msgstr "取得したイベントの最大経過時間(最大10時間)"
+
+#, fuzzy
+msgid "Maximum age of fetched logs (10 hours max.)"
 msgstr "取得したイベントの最大経過時間(最大10時間)"
 
 msgid "Maximum age of latest timemachine backup"
@@ -34706,7 +34737,8 @@ msgstr "レベルの種類を少なくとも1つ指定してください"
 msgid "Please specify at least one value"
 msgstr "少なくとも1つの値を指定してください"
 
-msgid "Please specify hostname or hash."
+#, fuzzy
+msgid "Please specify host or hash."
 msgstr "ホスト名またはハッシュを指定してください。"
 
 msgid "Please specify the extensions in lower case and without dot."
@@ -35651,6 +35683,12 @@ msgstr "Elasticsearchログをクエリする"
 
 msgid "Query or SQL statement"
 msgstr "クエリまたはSQLステートメント"
+
+msgid ""
+"Query to speficy which logs should be forwarded to the event console. Use "
+"the Datadog <a href='https://docs.datadoghq.com/logs/explorer/"
+"search_syntax'>log search syntax</a>."
+msgstr ""
 
 msgid "Queue Latency"
 msgstr "キューの待ち時間"
@@ -39267,6 +39305,10 @@ msgid "Service level"
 msgstr "サービスレベル"
 
 msgid "Service level of forwarded events shown in Event Console."
+msgstr "イベントコンソールに表示される転送イベントのサービスレベルを設定する"
+
+#, fuzzy
+msgid "Service level of forwarded logs shown in Event Console."
 msgstr "イベントコンソールに表示される転送イベントのサービスレベルを設定する"
 
 msgid "Service limits"
@@ -43284,6 +43326,10 @@ msgstr "転送されたメッセージのSyslog機能"
 msgid "Syslog facility of forwarded events shown in Event Console."
 msgstr "イベントコンソールに表示される、転送されたメッセージのSyslog機能"
 
+#, fuzzy
+msgid "Syslog facility of forwarded logs shown in Event Console."
+msgstr "イベントコンソールに表示される、転送されたメッセージのSyslog機能"
+
 msgid "Syslog priority"
 msgstr "Syslogの優先順位"
 
@@ -43833,6 +43879,10 @@ msgstr "テキスト"
 
 msgid "Text logfiles (Linux, Solaris, Windows)"
 msgstr ""
+
+#, fuzzy
+msgid "Text of forwarded events"
+msgstr "イベントをキャンセルするためのテキスト"
 
 msgid "Text output"
 msgstr "テキスト出力"
@@ -47398,6 +47448,14 @@ msgid ""
 msgstr ""
 "ここに入力されたテキストは、ホスト名の前に付けられます。プレフィックスをピリ"
 "オドで終了すると、Graphiteに別のフォルダーが作成されます"
+
+msgid ""
+"The text of the event can be constructed from the <a href='https://docs."
+"datadoghq.com/api/latest/logs/#search-logs'>attributes section of a log "
+"entry</a>. The text elements are rendered as 'Name:str(attributes[Key])', "
+"separated by a comma. To access nested fields, use 'key.subkey'. Defaults to "
+"the message of the log."
+msgstr ""
 
 msgid ""
 "The threshholds for wait_duration_ms. Will overwrite the default state set "
@@ -60294,6 +60352,10 @@ msgstr "該当なし"
 
 msgid "negate"
 msgstr "否定する"
+
+#, fuzzy
+msgid "new element"
+msgstr "新しい要素"
 
 msgid "new host name"
 msgstr "新しいホスト名"

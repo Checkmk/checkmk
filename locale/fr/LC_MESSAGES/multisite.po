@@ -16107,6 +16107,22 @@ msgstr ""
 "situent dans le passé. De tels événements seront manqués par l'agent si leur "
 "âge dépasse la valeur spécifiée ici."
 
+#, fuzzy
+msgid ""
+"During each run, the agent will fetch logs which are at maximum this old. "
+"The agent memorizes logs already fetched during the last run, s.t. no logs "
+"will be sent to the event console multiple times. Setting this value lower "
+"than the check interval of the host will result in missing logs. "
+msgstr ""
+"Lors de chaque exécution, l'agent récupère les événements qui datent au "
+"maximum de cet âge. L'agent mémorise les événements déjà récupérés lors de "
+"la dernière exécution, de sorte qu'aucun événement ne sera envoyé plusieurs "
+"fois à la console d'événements. Si cette valeur est inférieure à "
+"l'intervalle de vérification de l'hôte, des événements manqueront. Notez "
+"également que l'API Datadog permet de créer de nouveaux événements qui se "
+"situent dans le passé. De tels événements seront manqués par l'agent si leur "
+"âge dépasse la valeur spécifiée ici."
+
 msgid ""
 "During monitoring there are several dedicated files created for each host. "
 "There are, for example, the discovered services, performance data and "
@@ -18730,9 +18746,10 @@ msgstr "Récupérer les données par morceaux"
 msgid "Fetch events"
 msgstr "Récupérer les événements"
 
+#, fuzzy
 msgid ""
 "Fetch events from the event stream of your datadog instance. Fetched events "
-"will be forwared to the event console of the site where the special agent is "
+"will be forwared to the Event Console of the site where the special agent is "
 "executed."
 msgstr ""
 "Récupère les événements du flux d'événements de votre instance datadog. Les "
@@ -18753,6 +18770,19 @@ msgstr "Tête de lecture"
 
 msgid "Fetch intervals for SNMP sections"
 msgstr "Intervalles de récupération des sections SNMP"
+
+#, fuzzy
+msgid "Fetch logs"
+msgstr "Récupérations"
+
+#, fuzzy
+msgid ""
+"Fetch logs of your datadog instance. Fetched logs will be forwared to the "
+"Event Console of the site where the special agent is executed."
+msgstr ""
+"Récupère les événements du flux d'événements de votre instance datadog. Les "
+"événements récupérés seront transmis à la console d'événements du site où "
+"l'agent spécial est exécuté."
 
 msgid "Fetch monitors"
 msgstr "Récupérer les moniteurs"
@@ -25334,6 +25364,13 @@ msgstr "Niveaux de ballonnement en pourcentage de l'indice"
 msgid "Index space"
 msgstr "Espace d'indexation"
 
+#, fuzzy
+msgid "Indexes to search"
+msgstr "Indices à interroger"
+
+msgid "Indexes to search, defaults to '*', which means all indexes."
+msgstr ""
+
 msgid "Indexspace wasted"
 msgstr "L'espace d'indexation est gaspillé"
 
@@ -28488,6 +28525,10 @@ msgstr "Journaliser les événements de réplication"
 msgid "Log rule hits"
 msgstr "Enregistrer les occurrences des règles"
 
+#, fuzzy
+msgid "Log search query"
+msgstr "Requête de recherche personnalisée"
+
 msgid "Log switches in the last 60 minutes"
 msgstr "Commutation des journaux au cours des 60 dernières minutes"
 
@@ -29887,6 +29928,10 @@ msgid "Maximum age of backups"
 msgstr "Âge maximal des sauvegardes"
 
 msgid "Maximum age of fetched events (10 hours max.)"
+msgstr "Âge maximum des événements récupérés (10 heures max.)"
+
+#, fuzzy
+msgid "Maximum age of fetched logs (10 hours max.)"
 msgstr "Âge maximum des événements récupérés (10 heures max.)"
 
 msgid "Maximum age of latest timemachine backup"
@@ -36619,7 +36664,8 @@ msgstr "Veuillez préciser au moins un type de niveaux"
 msgid "Please specify at least one value"
 msgstr "Veuillez indiquer au moins une valeur"
 
-msgid "Please specify hostname or hash."
+#, fuzzy
+msgid "Please specify host or hash."
 msgstr "Veuillez spécifier le nom d'hôte ou le hash."
 
 msgid "Please specify the extensions in lower case and without dot."
@@ -37603,6 +37649,12 @@ msgstr "Interroger les journaux d'elasticsearch"
 
 msgid "Query or SQL statement"
 msgstr "Requête ou instruction SQL"
+
+msgid ""
+"Query to speficy which logs should be forwarded to the event console. Use "
+"the Datadog <a href='https://docs.datadoghq.com/logs/explorer/"
+"search_syntax'>log search syntax</a>."
+msgstr ""
 
 msgid "Queue Latency"
 msgstr "Latence des files d'attente"
@@ -41350,6 +41402,12 @@ msgid "Service level"
 msgstr "Niveau de service"
 
 msgid "Service level of forwarded events shown in Event Console."
+msgstr ""
+"Niveau de service des événements transférés affichés dans la console "
+"d'événements."
+
+#, fuzzy
+msgid "Service level of forwarded logs shown in Event Console."
 msgstr ""
 "Niveau de service des événements transférés affichés dans la console "
 "d'événements."
@@ -45618,6 +45676,12 @@ msgstr ""
 "Installation Syslog des événements transférés affichés dans la console "
 "d'événements."
 
+#, fuzzy
+msgid "Syslog facility of forwarded logs shown in Event Console."
+msgstr ""
+"Installation Syslog des événements transférés affichés dans la console "
+"d'événements."
+
 msgid "Syslog priority"
 msgstr "Priorité Syslog"
 
@@ -46184,6 +46248,10 @@ msgstr "Texte"
 
 msgid "Text logfiles (Linux, Solaris, Windows)"
 msgstr "Fichiers journaux textuels (Linux, Solaris, Windows)"
+
+#, fuzzy
+msgid "Text of forwarded events"
+msgstr "Texte pour annuler le(s) événement(s)"
 
 msgid "Text output"
 msgstr "Sortie de texte"
@@ -50252,6 +50320,14 @@ msgid ""
 msgstr ""
 "Le texte saisi ici doit être préfixé au nom d'hôte. Terminer le préfixe par "
 "un point créera un dossier séparé dans Graphite."
+
+msgid ""
+"The text of the event can be constructed from the <a href='https://docs."
+"datadoghq.com/api/latest/logs/#search-logs'>attributes section of a log "
+"entry</a>. The text elements are rendered as 'Name:str(attributes[Key])', "
+"separated by a comma. To access nested fields, use 'key.subkey'. Defaults to "
+"the message of the log."
+msgstr ""
 
 msgid ""
 "The threshholds for wait_duration_ms. Will overwrite the default state set "
@@ -64508,6 +64584,10 @@ msgstr "s/o"
 
 msgid "negate"
 msgstr "annuler"
+
+#, fuzzy
+msgid "new element"
+msgstr "Nouvel élément"
 
 msgid "new host name"
 msgstr "nouveau nom d'hôte"

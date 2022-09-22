@@ -15423,6 +15423,13 @@ msgid ""
 msgstr ""
 
 msgid ""
+"During each run, the agent will fetch logs which are at maximum this old. "
+"The agent memorizes logs already fetched during the last run, s.t. no logs "
+"will be sent to the event console multiple times. Setting this value lower "
+"than the check interval of the host will result in missing logs. "
+msgstr ""
+
+msgid ""
 "During monitoring there are several dedicated files created for each host. "
 "There are, for example, the discovered services, performance data and "
 "different temporary files created. During deletion of a host, these files "
@@ -18043,7 +18050,7 @@ msgstr "(fără parametri)"
 
 msgid ""
 "Fetch events from the event stream of your datadog instance. Fetched events "
-"will be forwared to the event console of the site where the special agent is "
+"will be forwared to the Event Console of the site where the special agent is "
 "executed."
 msgstr ""
 
@@ -18063,6 +18070,15 @@ msgstr ""
 #, fuzzy
 msgid "Fetch intervals for SNMP sections"
 msgstr "Verificare activă"
+
+#, fuzzy
+msgid "Fetch logs"
+msgstr "nemonitorizat"
+
+msgid ""
+"Fetch logs of your datadog instance. Fetched logs will be forwared to the "
+"Event Console of the site where the special agent is executed."
+msgstr ""
 
 #, fuzzy
 msgid "Fetch monitors"
@@ -23569,6 +23585,13 @@ msgstr ""
 msgid "Index space"
 msgstr "spatiu utilizat"
 
+#, fuzzy
+msgid "Indexes to search"
+msgstr "Cautare noua"
+
+msgid "Indexes to search, defaults to '*', which means all indexes."
+msgstr ""
+
 msgid "Indexspace wasted"
 msgstr ""
 
@@ -26792,6 +26815,10 @@ msgstr ""
 msgid "Log rule hits"
 msgstr ""
 
+#, fuzzy
+msgid "Log search query"
+msgstr "Atribute personalizate"
+
 msgid "Log switches in the last 60 minutes"
 msgstr ""
 
@@ -28252,6 +28279,10 @@ msgstr "Vechimea maxima a backup-urilor"
 
 #, fuzzy
 msgid "Maximum age of fetched events (10 hours max.)"
+msgstr "Vechimea maxima a backup-urilor"
+
+#, fuzzy
+msgid "Maximum age of fetched logs (10 hours max.)"
 msgstr "Vechimea maxima a backup-urilor"
 
 msgid "Maximum age of latest timemachine backup"
@@ -34960,8 +34991,9 @@ msgstr ""
 msgid "Please specify at least one value"
 msgstr ""
 
-msgid "Please specify hostname or hash."
-msgstr ""
+#, fuzzy
+msgid "Please specify host or hash."
+msgstr "Adresă"
 
 msgid "Please specify the extensions in lower case and without dot."
 msgstr ""
@@ -35953,6 +35985,12 @@ msgid "Query elasticsearch logs"
 msgstr ""
 
 msgid "Query or SQL statement"
+msgstr ""
+
+msgid ""
+"Query to speficy which logs should be forwarded to the event console. Use "
+"the Datadog <a href='https://docs.datadoghq.com/logs/explorer/"
+"search_syntax'>log search syntax</a>."
 msgstr ""
 
 msgid "Queue Latency"
@@ -39788,6 +39826,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Service level of forwarded events shown in Event Console."
+msgstr "Acces la Consola de Evenimente"
+
+#, fuzzy
+msgid "Service level of forwarded logs shown in Event Console."
 msgstr "Acces la Consola de Evenimente"
 
 #, fuzzy
@@ -43796,6 +43838,10 @@ msgid "Syslog facility of forwarded events shown in Event Console."
 msgstr "Acces la Consola de Evenimente"
 
 #, fuzzy
+msgid "Syslog facility of forwarded logs shown in Event Console."
+msgstr "Acces la Consola de Evenimente"
+
+#, fuzzy
 msgid "Syslog priority"
 msgstr "Prioritatea Syslog"
 
@@ -44383,6 +44429,10 @@ msgstr ""
 
 msgid "Text logfiles (Linux, Solaris, Windows)"
 msgstr ""
+
+#, fuzzy
+msgid "Text of forwarded events"
+msgstr "Adaugă element"
 
 msgid "Text output"
 msgstr ""
@@ -47413,6 +47463,14 @@ msgstr ""
 msgid ""
 "The text entered here well be prefixed to the hostname. Ending the prefix "
 "with a period will create a separate folder in Graphite"
+msgstr ""
+
+msgid ""
+"The text of the event can be constructed from the <a href='https://docs."
+"datadoghq.com/api/latest/logs/#search-logs'>attributes section of a log "
+"entry</a>. The text elements are rendered as 'Name:str(attributes[Key])', "
+"separated by a comma. To access nested fields, use 'key.subkey'. Defaults to "
+"the message of the log."
 msgstr ""
 
 msgid ""
@@ -59157,6 +59215,10 @@ msgid "negate"
 msgstr ""
 
 #, fuzzy
+msgid "new element"
+msgstr "Adaungă un nou element"
+
+#, fuzzy
 msgid "new host name"
 msgstr "foloseste numele portului"
 
@@ -62162,10 +62224,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Forecast Graphs"
 #~ msgstr "Grup nou"
-
-#, fuzzy
-#~ msgid "Reset search"
-#~ msgstr "Cautare noua"
 
 #, fuzzy
 #~ msgid "Select metric: "

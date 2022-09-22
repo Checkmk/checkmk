@@ -15939,6 +15939,22 @@ msgstr ""
 "Solche Ereignisse werden vom Agenten übersehen, wenn ihr Alter den hier "
 "angegebenen Wert überschreitet."
 
+#, fuzzy
+msgid ""
+"During each run, the agent will fetch logs which are at maximum this old. "
+"The agent memorizes logs already fetched during the last run, s.t. no logs "
+"will be sent to the event console multiple times. Setting this value lower "
+"than the check interval of the host will result in missing logs. "
+msgstr ""
+"Bei jedem Lauf holt der Agent Ereignisse ab, die maximal so alt sind. Der "
+"Agent merkt sich die Ereignisse, die bereits beim letzten Lauf abgeholt "
+"wurden, d.h. kein Ereignis wird mehrfach an die Ereigniskonsole gesendet. "
+"Wenn Sie diesen Wert niedriger als das Prüfintervall des Hosts einstellen, "
+"führt dies zu fehlenden Ereignissen. Beachten Sie auch, dass die Datadog-API "
+"es erlaubt, neue Ereignisse zu erstellen, die in der Vergangenheit liegen. "
+"Solche Ereignisse werden vom Agenten übersehen, wenn ihr Alter den hier "
+"angegebenen Wert überschreitet."
+
 msgid ""
 "During monitoring there are several dedicated files created for each host. "
 "There are, for example, the discovered services, performance data and "
@@ -18555,9 +18571,10 @@ msgstr "Anfrage chunked"
 msgid "Fetch events"
 msgstr "Ereignisse abrufen"
 
+#, fuzzy
 msgid ""
 "Fetch events from the event stream of your datadog instance. Fetched events "
-"will be forwared to the event console of the site where the special agent is "
+"will be forwared to the Event Console of the site where the special agent is "
 "executed."
 msgstr ""
 "Holen Sie Ereignisse aus dem Ereignisstrom Ihrer Datadog-Instanz. Die "
@@ -18578,6 +18595,19 @@ msgstr "Anfrage head"
 
 msgid "Fetch intervals for SNMP sections"
 msgstr "Abrufintervalle für SNMP-Abschnitte"
+
+#, fuzzy
+msgid "Fetch logs"
+msgstr "Abfragen"
+
+#, fuzzy
+msgid ""
+"Fetch logs of your datadog instance. Fetched logs will be forwared to the "
+"Event Console of the site where the special agent is executed."
+msgstr ""
+"Holen Sie Ereignisse aus dem Ereignisstrom Ihrer Datadog-Instanz. Die "
+"abgerufenen Ereignisse werden an die Ereigniskonsole der Seite "
+"weitergeleitet, auf der der spezielle Agent ausgeführt wird."
 
 msgid "Fetch monitors"
 msgstr "Monitore abrufen"
@@ -25061,6 +25091,13 @@ msgstr "Prozentuale Schwellen für Index-Bloat"
 msgid "Index space"
 msgstr "Index-Platz"
 
+#, fuzzy
+msgid "Indexes to search"
+msgstr "Suche zurücksetzen"
+
+msgid "Indexes to search, defaults to '*', which means all indexes."
+msgstr ""
+
 msgid "Indexspace wasted"
 msgstr "Ungenutzter Indexbereich"
 
@@ -28184,6 +28221,10 @@ msgstr "Replikationsereignisse loggen"
 msgid "Log rule hits"
 msgstr "Zugriff auf Regeln loggen"
 
+#, fuzzy
+msgid "Log search query"
+msgstr "Benutzerdefinierte Suchabfrage"
+
 msgid "Log switches in the last 60 minutes"
 msgstr "Logswitche in den letzten 60 Sekunden"
 
@@ -29560,6 +29601,10 @@ msgid "Maximum age of backups"
 msgstr "Maximales Alter für Backups"
 
 msgid "Maximum age of fetched events (10 hours max.)"
+msgstr "Maximales Alter der abgerufenen Ereignisse (max. 10 Stunden)"
+
+#, fuzzy
+msgid "Maximum age of fetched logs (10 hours max.)"
 msgstr "Maximales Alter der abgerufenen Ereignisse (max. 10 Stunden)"
 
 msgid "Maximum age of latest timemachine backup"
@@ -36226,7 +36271,8 @@ msgstr "Bitte geben Sie mindestens einen Typ von Schwellwerten an"
 msgid "Please specify at least one value"
 msgstr "Bitte mindestens einen Wert angeben"
 
-msgid "Please specify hostname or hash."
+#, fuzzy
+msgid "Please specify host or hash."
 msgstr "Bitte Hostnamen oder Hashwert angeben."
 
 msgid "Please specify the extensions in lower case and without dot."
@@ -37201,6 +37247,12 @@ msgstr "Abfrage von Elasticsearch Logs"
 
 msgid "Query or SQL statement"
 msgstr "Query oder SQL-Anfrage"
+
+msgid ""
+"Query to speficy which logs should be forwarded to the event console. Use "
+"the Datadog <a href='https://docs.datadoghq.com/logs/explorer/"
+"search_syntax'>log search syntax</a>."
+msgstr ""
 
 msgid "Queue Latency"
 msgstr "Durchschnittliche Warteschlangenlatenz"
@@ -40912,6 +40964,12 @@ msgid "Service level"
 msgstr "Servicelevel"
 
 msgid "Service level of forwarded events shown in Event Console."
+msgstr ""
+"Servicelevel der weitergeleiteten Ereignisse, die in der Event Console "
+"angezeigt werden."
+
+#, fuzzy
+msgid "Service level of forwarded logs shown in Event Console."
 msgstr ""
 "Servicelevel der weitergeleiteten Ereignisse, die in der Event Console "
 "angezeigt werden."
@@ -45122,6 +45180,12 @@ msgstr ""
 "Syslog-Einrichtung für weitergeleitete Ereignisse, die in der "
 "Ereigniskonsole angezeigt werden."
 
+#, fuzzy
+msgid "Syslog facility of forwarded logs shown in Event Console."
+msgstr ""
+"Syslog-Einrichtung für weitergeleitete Ereignisse, die in der "
+"Ereigniskonsole angezeigt werden."
+
 msgid "Syslog priority"
 msgstr "Syslog-Priorität"
 
@@ -45683,6 +45747,10 @@ msgstr "Text"
 
 msgid "Text logfiles (Linux, Solaris, Windows)"
 msgstr "Text-Logdateien (Linux, Solaris, Windows)"
+
+#, fuzzy
+msgid "Text of forwarded events"
+msgstr "Text um Ereignis(se) abzubrechen"
 
 msgid "Text output"
 msgstr "Textausgabe"
@@ -49687,6 +49755,14 @@ msgstr ""
 "Der hier eingegebene Text wird an den Hostnamen als Präfix angehängt. Das "
 "Präfix mit einem Punkt zu beenden wird in Graphite einen eigenen Ordner "
 "erzeugen."
+
+msgid ""
+"The text of the event can be constructed from the <a href='https://docs."
+"datadoghq.com/api/latest/logs/#search-logs'>attributes section of a log "
+"entry</a>. The text elements are rendered as 'Name:str(attributes[Key])', "
+"separated by a comma. To access nested fields, use 'key.subkey'. Defaults to "
+"the message of the log."
+msgstr ""
 
 msgid ""
 "The threshholds for wait_duration_ms. Will overwrite the default state set "
@@ -63703,6 +63779,10 @@ msgstr "n.v."
 msgid "negate"
 msgstr "invers"
 
+#, fuzzy
+msgid "new element"
+msgstr "Neues Element"
+
 msgid "new host name"
 msgstr "Neuer Hostname"
 
@@ -69944,9 +70024,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Performance Graph"
 #~ msgstr "Messdatengraph"
-
-#~ msgid "Reset search"
-#~ msgstr "Suche zurücksetzen"
 
 #, fuzzy
 #~ msgid "Select metric: "

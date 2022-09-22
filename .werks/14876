@@ -1,0 +1,16 @@
+Title: display host tag checkbox correctly in edit host properties
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1663841502
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p13
+
+Previously, host tags with single values (i.e. checkboxes) were reset when
+the Edit Host Properties page was loaded. Although the save mechanism was
+unaffected by this behaviour, the user was required to reclick on the checkbox
+whenever the host was edited. This werk resolves this issue.
+

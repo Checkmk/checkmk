@@ -980,16 +980,19 @@ class ABCHostAttributeHostTagList(ABCHostAttributeTag, abc.ABC):
 class ABCHostAttributeHostTagCheckbox(ABCHostAttributeTag, abc.ABC):
     """A checkbox for a host tag group"""
 
-    def valuespec(self) -> Transform:
+    def _valuespec(self) -> Checkbox:
         choice = self._tag_group.get_tag_choices()[0]
+        return Checkbox(
+            title=self._tag_group.title,
+            label=_u(choice[1]),
+            true_label=self._tag_group.title,
+            false_label="%s %s" % (_("Not"), self._tag_group.title),
+            onclick="cmk.wato.fix_visibility();",
+        )
+
+    def valuespec(self) -> Transform:
         return Transform(
-            valuespec=Checkbox(
-                title=self._tag_group.title,
-                label=_u(choice[1]),
-                true_label=self._tag_group.title,
-                false_label="%s %s" % (_("Not"), self._tag_group.title),
-                onclick="cmk.wato.fix_visibility();",
-            ),
+            valuespec=self._valuespec(),
             forth=lambda s: s == self._tag_value(),
             back=lambda s: self._tag_value() if s is True else None,
         )
@@ -999,7 +1002,7 @@ class ABCHostAttributeHostTagCheckbox(ABCHostAttributeTag, abc.ABC):
         return True
 
     def render_input(self, varprefix: str, value: Optional[TagID]) -> None:
-        super().render_input(varprefix, bool(value))
+        self._valuespec().render_input(varprefix + self.name(), bool(value))
 
     def _tag_value(self) -> Optional[TagID]:
         return self._tag_group.get_tag_choices()[0][0]

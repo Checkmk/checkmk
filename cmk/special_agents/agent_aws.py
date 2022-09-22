@@ -247,11 +247,11 @@ class AWSConfig:
 #   '----------------------------------------------------------------------'
 
 
-def _chunks(list_, length=100):
+def _chunks(list_: Sequence[T], length: int = 100) -> Sequence[Sequence[T]]:
     return [list_[i : i + length] for i in range(0, len(list_), length)]
 
 
-def _get_ec2_piggyback_hostname(inst, region):
+def _get_ec2_piggyback_hostname(inst: Mapping[str, str], region: str) -> str | None:
     # PrivateIpAddress and InstanceId is available although the instance is stopped
     # When we terminate an instance, the instance gets the state "terminated":
     # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-lifecycle.html
@@ -260,12 +260,12 @@ def _get_ec2_piggyback_hostname(inst, region):
     # In this case we do not deliever any data for this piggybacked host such that
     # the services go stable and Check_MK service reports "CRIT - Got not information".
     try:
-        return "{}-{}-{}".format(inst["PrivateIpAddress"], region, inst["InstanceId"])
+        return f"{inst['PrivateIpAddress']}-{region}-{inst['InstanceId']}"
     except KeyError:
         return None
 
 
-def _hostname_from_name_and_region(name, region):
+def _hostname_from_name_and_region(name: str, region: str) -> str:
     """
     We add the region to the the hostname because resources in different regions might have the
     same names (for example replicated DynamoDB tables).
@@ -273,7 +273,7 @@ def _hostname_from_name_and_region(name, region):
     return f"{name}_{region}"
 
 
-def _elbv2_load_balancer_arn_to_dim(arn):
+def _elbv2_load_balancer_arn_to_dim(arn: str) -> str:
     # for application load balancers:
     # arn:aws:elasticloadbalancing:region:account-id:loadbalancer/app/load-balancer-name/load-balancer-id
     # We need: app/LOAD-BALANCER-NAME/LOAD-BALANCER-ID
@@ -283,7 +283,7 @@ def _elbv2_load_balancer_arn_to_dim(arn):
     return "/".join(arn.split("/")[-3:])
 
 
-def _elbv2_target_group_arn_to_dim(arn):
+def _elbv2_target_group_arn_to_dim(arn: str) -> str:
     return arn.split(":")[-1]
 
 
@@ -310,7 +310,7 @@ def _describe_dynamodb_tables(client, get_response_content, table_names=None):
     return tables
 
 
-def _validate_wafv2_scope_and_region(scope, region):
+def _validate_wafv2_scope_and_region(scope: Literal["REGIONAL", "CLOUDFRONT"], region: str) -> str:
     """
     WAFs can either be deployed locally, for example in front of Application Load Balancers,
     or globally, in front of CloudFront. The global ones can only be queried from the region
@@ -336,7 +336,7 @@ def _validate_wafv2_scope_and_region(scope, region):
 
 def _iterate_through_wafv2_list_operations(
     list_operation: Callable, scope: str, entry_name: str, get_response_content: Callable
-) -> list:
+) -> Sequence:
     """
     For some reason, the return objects of the list_... functions of the WAFV2-client seem to
     always contain 'NextMarker', indicating that there are more values to retrieve, even if there
@@ -380,8 +380,8 @@ def _get_wafv2_web_acls(
 
 
 def _fetch_tagged_resources_with_types(  # type:ignore[no-untyped-def]
-    tagging_client, resource_type_filters: list[str]
-) -> list:
+    tagging_client, resource_type_filters: Sequence[str]
+) -> Sequence:
     tagged_resources = []
     # The get_resource API call has a matching rule (AND) different than the one that we use in
     # checkmk (OR) so we need to fetch all the resources containing tags first and then apply our
@@ -400,8 +400,8 @@ def _fetch_tagged_resources_with_types(  # type:ignore[no-untyped-def]
 
 def fetch_resources_matching_tags(  # type:ignore[no-untyped-def]
     tagging_client,
-    tags_to_match: list[dict[Literal["Key", "Value"], str]],
-    resource_type_filters: list[str],
+    tags_to_match: Sequence[dict[Literal["Key", "Value"], str]],
+    resource_type_filters: Sequence[str],
 ) -> set[str]:
     """Returns the ARN of all the resources in the region that match **ANY** of the provided tags.
 

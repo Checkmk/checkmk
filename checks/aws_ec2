@@ -5,6 +5,8 @@
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
+from typing import Any, Mapping
+
 from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
 # .
@@ -20,13 +22,21 @@ from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-imp
 factory_settings["aws_cpu_credits"] = {
     "balance_levels_lower": (10, 5),
 }
+Section = Mapping[str, float]
 
 
-def check_aws_ec2_cpu_credits(item, params, parsed):
-    return check_aws_metrics(
+def discover_aws_ec2_cpu_credits(section: Section):
+    yield from inventory_aws_generic_single(
+        section,
+        ["CPUCreditUsage", "CPUCreditBalance"],
+    )
+
+
+def check_aws_ec2_cpu_credits(item: str, params: Mapping[str, Any], section: Section):
+    yield from check_aws_metrics(
         [
             {
-                "metric_val": parsed.get(cw_metric_name),
+                "metric_val": section.get(cw_metric_name),
                 "metric_name": metric_name,
                 "levels": levels,
                 "human_readable_func": human_readable_func,
@@ -45,10 +55,7 @@ def check_aws_ec2_cpu_credits(item, params, parsed):
 
 check_info["aws_ec2.cpu_credits"] = {
     # section is already migrated!
-    "inventory_function": lambda p: inventory_aws_generic_single(
-        p,
-        ["CPUCreditUsage", "CPUCreditBalance"],
-    ),
+    "inventory_function": discover_aws_ec2_cpu_credits,
     "check_function": check_aws_ec2_cpu_credits,
     "service_description": "AWS/EC2 CPU Credits",
     "group": "aws_ec2_cpu_credits",

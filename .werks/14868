@@ -1,0 +1,11 @@
+Title: Using of the rule 'Installation paths for agents' doesn't crash bake process
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1663846550
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0p13
+
+

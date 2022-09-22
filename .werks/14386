@@ -1,0 +1,13 @@
+Title: Recommend using htpasswd with bcrypt
+Class: feature
+Compatible: compat
+Component: omd
+Date: 1663852784
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p15
+
+The welcome message displayed by <tt>omd create</tt> now recommends setting the password for cmkadmin using <tt>htpasswd -B -C 12</tt>.
+This way htpasswd will use bcrypt with a work factor of 12 instead of MD5 to hash the password, which is consistent with the behavior when setting passwords in WATO.

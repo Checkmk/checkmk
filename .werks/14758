@@ -1,0 +1,12 @@
+Title: Fix missing downtime icon in BI visualization
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1663830212
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p13
+
+

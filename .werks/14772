@@ -1,0 +1,17 @@
+Title: Fix crash when deleting custom MIB in EC
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1663834337
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p13
+
+Attempting to delete a MIB under "SNMP MIBs for trap translation"
+of the event console would fail and crash with the error
+<tt>
+TypeError (unsupported operand type(s) for +: 'PosixPath' and 'str')
+</tt>
+
+This has been fixed.

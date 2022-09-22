@@ -10,7 +10,7 @@ import pytest
 
 # TODO: Better hand over arguments using pytest mechanisms (http://doc.pytest.org/en/latest/example/parametrize.html)
 @pytest.fixture(scope="module")
-def package_path():
+def package_path() -> str:
     path = os.environ.get("PACKAGE_PATH")
     if not path:
         raise Exception(
@@ -21,7 +21,7 @@ def package_path():
 
 # TODO: Better hand over arguments using pytest mechanisms (http://doc.pytest.org/en/latest/example/parametrize.html)
 @pytest.fixture(scope="module")
-def cmk_version():
+def cmk_version() -> str:
     version = os.environ.get("VERSION")
     if not version:
         raise Exception("VERSION environment variable, e.g. 2016.12.22, is missing")

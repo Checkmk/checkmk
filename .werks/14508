@@ -1,0 +1,17 @@
+Title: profiling using "enable_by_var" in the REST API
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1663855572
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p13
+
+When using the query string variable "_profile=1" to dynamically enable profiling,
+the REST API complained about "_profile" being an unknown paramter. This is no longer
+the case, as the argument is now removed before passing the request to the REST API.
+
+There are no futher actions to be taken.
+

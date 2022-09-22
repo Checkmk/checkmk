@@ -25,12 +25,12 @@ import textwrap
 import threading
 import time
 import traceback
-from collections.abc import Generator, Iterator
+from collections.abc import Callable, Generator, Iterator
 from contextlib import contextmanager, ExitStack
 from hashlib import md5
 from pathlib import Path
 from tarfile import ReadError, TarFile
-from typing import Any, Callable, IO, NamedTuple, NoReturn, Optional
+from typing import Any, IO, NamedTuple, NoReturn
 
 from Cryptodome.Cipher import AES, PKCS1_OAEP
 from Cryptodome.Cipher._mode_cbc import CbcMode
@@ -143,7 +143,7 @@ def is_cma() -> bool:
     return os.path.exists("/etc/cma/cma.conf")
 
 
-def current_site_id() -> Optional[str]:
+def current_site_id() -> str | None:
     return os.environ.get("OMD_SITE")
 
 
@@ -259,7 +259,7 @@ def acquire_single_lock(lock_file_path: Path) -> Generator[IO[bytes], None, None
         yield backup_lock
 
 
-def set_permissions(path: str, uid: int, gid: int, mode: Optional[int]) -> None:
+def set_permissions(path: str, uid: int, gid: int, mode: int | None) -> None:
     try:
         os.chown(path, uid, gid)
     except OSError as e:
@@ -290,7 +290,7 @@ def set_permissions(path: str, uid: int, gid: int, mode: Optional[int]) -> None:
 
 # TODO: Move to cmklib?
 def makedirs(
-    path: str, user: Optional[str] = None, group: Optional[str] = None, mode: Optional[int] = None
+    path: str, user: str | None = None, group: str | None = None, mode: int | None = None
 ) -> None:
     head, tail = os.path.split(path)
     if not tail:
@@ -310,7 +310,7 @@ def makedirs(
 
 # TODO: Move to cmklib?
 def makedir(
-    path: str, user: Optional[str] = None, group: Optional[str] = None, mode: Optional[int] = None
+    path: str, user: str | None = None, group: str | None = None, mode: int | None = None
 ) -> None:
     if os.path.exists(path):
         return
@@ -626,11 +626,11 @@ modes = {
     ),
 }
 
-g_job_id: Optional[str] = None
-g_local_job_id: Optional[str] = None
+g_job_id: str | None = None
+g_local_job_id: str | None = None
 g_job_config: dict[str, Any] = {}
-g_target_id: Optional[str] = None
-g_backup_id: Optional[str] = None
+g_target_id: str | None = None
+g_backup_id: str | None = None
 
 
 def mode_backup(local_job_id: str, opts: dict[str, str]) -> None:
@@ -806,17 +806,17 @@ def omd_command(cmd: list[str]) -> None:
 # c) the unencrypted random key is used as AES key for encrypting the backup stream
 class MKBackupStream:
     def __init__(
-        self, stream: IO[bytes], is_alive: Callable[[], bool], key_ident: Optional[str]
+        self, stream: IO[bytes], is_alive: Callable[[], bool], key_ident: str | None
     ) -> None:
         self._stream = stream
         self._is_alive = is_alive
-        self._cipher: Optional[CbcMode] = None
+        self._cipher: CbcMode | None = None
         self._key_ident = key_ident
 
         self._last_state_update = time.time()
-        self._last_bps: Optional[float] = None
+        self._last_bps: float | None = None
         self._bytes_copied = 0
-        self._next_chunk: Optional[bytes] = None
+        self._next_chunk: bytes | None = None
 
         # The iv is an initialization vector for the CBC mode of operation. It
         # needs to be unique per key per message. Normally, it's sent alongside
@@ -841,7 +841,7 @@ class MKBackupStream:
 
             self._update_state()
 
-    def _init_processing(self) -> Optional[bytes]:
+    def _init_processing(self) -> bytes | None:
         raise NotImplementedError()
 
     def _read_from_stream(self, size: int) -> bytes:
@@ -899,7 +899,7 @@ class MKBackupStream:
 
 
 class BackupStream(MKBackupStream):
-    def _init_processing(self) -> Optional[bytes]:
+    def _init_processing(self) -> bytes | None:
         if self._key_ident is None:
             return None
 
@@ -964,7 +964,7 @@ class BackupStream(MKBackupStream):
 
 
 class RestoreStream(MKBackupStream):
-    def _init_processing(self) -> Optional[bytes]:
+    def _init_processing(self) -> bytes | None:
         if self._key_ident is None:
             return None
 
@@ -1956,7 +1956,7 @@ def mode_targets(opts: dict[str, str]) -> None:
         )
 
 
-def usage(error: Optional[str] = None) -> NoReturn:
+def usage(error: str | None = None) -> NoReturn:
     if error:
         sys.stderr.write("ERROR: %s\n" % error)
     sys.stdout.write("Usage: mkbackup [OPTIONS] MODE [MODE_ARGUMENTS...] [MODE_OPTIONS...]\n")

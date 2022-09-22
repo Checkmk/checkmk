@@ -717,6 +717,8 @@ def do_site_backup(
     # "omd backup".
     if site is None:
         site = current_site_id()
+        if site is None:
+            raise MKGeneralException("Running outsite of site context")
     else:
         if not is_root():
             raise MKGeneralException(
@@ -1094,7 +1096,7 @@ def backup_info_path():
     return "%s/mkbackup.info" % (backup_base_path())
 
 
-def site_backup_archive_path(site_id):
+def site_backup_archive_path(site_id: str) -> str:
     return f"{backup_base_path()}/site-{site_id}{archive_suffix()}"
 
 
@@ -1601,6 +1603,8 @@ def do_site_restore(info: Mapping[str, str], site: str | None = None) -> None:
     if site is None:
         # Care about restore from a backup made in a site with another site_id
         site = info.get("site_id", current_site_id())
+        if site is None:
+            raise MKGeneralException("Running outsite of site context and no site_id configured")
     else:
         if not is_root():
             raise MKGeneralException(

@@ -186,7 +186,7 @@ def local_lock_file_path(site_name: str) -> Path:
     return mkbackup_lock_dir / Path(f"mkbackup-{site_name}.lock")
 
 
-def get_needed_lock_files(opts: Mapping[str, str]) -> list[Path]:  # type:ignore[no-untyped-def]
+def get_needed_lock_files(opts: Mapping[str, str]) -> Sequence[Path]:
     if not is_root():
         site_id = current_site_id()
         assert site_id
@@ -194,8 +194,7 @@ def get_needed_lock_files(opts: Mapping[str, str]) -> list[Path]:  # type:ignore
 
     lock_files = [global_lock_file_path()]
     if not exclude_sites(opts):
-        for site in existing_sites():
-            lock_files.append(local_lock_file_path(site))
+        lock_files += [local_lock_file_path(site) for site in existing_sites()]
     return lock_files
 
 
@@ -213,7 +212,7 @@ def _ensure_lock_file(lock_file_path: Path) -> None:
             dir=str(lock_file_path.parent),
             delete=False,
         ) as backup_lock:
-            set_permissions(backup_lock.name, -1, grp.getgrnam("omd").gr_gid, 0o660)
+            set_permissions(path=backup_lock.name, gid=grp.getgrnam("omd").gr_gid, mode=0o660)
             os.rename(backup_lock.name, lock_file_path)
     except OSError as e:
         raise MKGeneralException(f'Failed to open lock file "{lock_file_path}": {e}')
@@ -259,9 +258,11 @@ def acquire_single_lock(lock_file_path: Path) -> Generator[IO[bytes], None, None
         yield backup_lock
 
 
-def set_permissions(path: str, uid: int, gid: int, mode: int | None) -> None:
+def set_permissions(
+    *, path: str, uid: int | None = None, gid: int | None = None, mode: int | None = None
+) -> None:
     try:
-        os.chown(path, uid, gid)
+        os.chown(path, uid if uid is not None else -1, gid if gid is not None else -1)
     except OSError as e:
         if e.errno == errno.EACCES:
             pass  # On CIFS mounts where "uid=0,forceuid,gid=1000,forcegid" mount options
@@ -315,9 +316,9 @@ def makedir(
     if os.path.exists(path):
         return
     os.mkdir(path)
-    uid = -1 if user is None else pwd.getpwnam(user).pw_uid
-    gid = -1 if group is None else grp.getgrnam(group).gr_gid
-    set_permissions(path, uid, gid, mode)
+    uid = pwd.getpwnam(user).pw_uid if user is not None else None
+    gid = grp.getgrnam(group).gr_gid if group is not None else None
+    set_permissions(path=path, uid=uid, gid=gid, mode=mode)
 
 
 # Wenn als root ausgeführt:
@@ -1618,7 +1619,12 @@ def do_site_restore(info: Mapping[str, str], site: str | None = None) -> None:
         omd_root = "/omd/sites/%s" % site
         if not os.path.exists(omd_root):
             os.mkdir(omd_root)
-            set_permissions(omd_root, pwd.getpwnam(site).pw_uid, grp.getgrnam(site).gr_gid, 0o775)
+            set_permissions(
+                path=omd_root,
+                uid=pwd.getpwnam(site).pw_uid,
+                gid=grp.getgrnam(site).gr_gid,
+                mode=0o775,
+            )
 
     cmd.append("-")
 

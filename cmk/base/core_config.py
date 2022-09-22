@@ -960,6 +960,16 @@ def get_host_macros_from_attributes(hostname: HostName, attrs: ObjectAttributes)
     return macros
 
 
+def get_service_macros_from_attributes(attrs: ObjectAttributes) -> ObjectMacros:
+    # We may want to implement a superset of Nagios' own macros, see
+    # https://assets.nagios.com/downloads/nagioscore/docs/nagioscore/3/en/macrolist.html
+    macros = {}
+    for macro_name, value in attrs.items():
+        if macro_name[0] == "_":
+            macros["$_SERVICE" + macro_name[1:] + "$"] = value
+    return macros
+
+
 def replace_macros(s: str, macros: ObjectMacros) -> str:
     for key, value in macros.items():
         if isinstance(value, (numbers.Integral, float)):

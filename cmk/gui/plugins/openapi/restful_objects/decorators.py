@@ -214,7 +214,30 @@ def _render_path_item(
     return response
 
 
-def _from_multi_dict(multi_dict: MultiDict) -> Dict[str, Union[List[str], str]]:
+ArgDict = dict[str, str | list[str]]
+
+
+def _filter_profile_headers(arg_dict: ArgDict) -> ArgDict:
+    """Filter the _profile variable from the query string
+
+    Args:
+        arg_dict:
+            A dict of query string arguments
+
+    Returns:
+        A new dict without the '_profile' parameter.
+
+
+    Examples:
+
+        >>> _filter_profile_headers({'foo': 'bar', '_profile': '1'})
+        {'foo': 'bar'}
+
+    """
+    return {key: value for key, value in arg_dict.items() if not key.startswith("_profile")}
+
+
+def _from_multi_dict(multi_dict: MultiDict) -> ArgDict:
     """Transform a MultiDict to a non-heterogenous dict
 
     Meaning: lists are lists and lists of lenght 1 are scalars.
@@ -674,7 +697,9 @@ class Endpoint:
 
             try:
                 if query_schema:
-                    _params.update(query_schema().load(_from_multi_dict(request.args)))
+                    _params.update(
+                        query_schema().load(_filter_profile_headers(_from_multi_dict(request.args)))
+                    )
 
                 if header_schema:
                     _params.update(header_schema().load(request.headers))

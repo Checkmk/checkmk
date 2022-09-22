@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
-from typing import Any, Mapping, Optional
+from collections.abc import Mapping
+from typing import Any, Optional
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register, render, Service, ServiceLabel
 from cmk.base.plugins.agent_based.utils import gcp
@@ -25,18 +26,13 @@ def discover(
     section_gcp_service_filestore: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> DiscoveryResult:
-    if (
-        section_gcp_assets is None
-        or not section_gcp_assets.config.is_enabled("filestore")
-        or not ASSET_TYPE in section_gcp_assets
-    ):
-        return
-    for item, share in section_gcp_assets[ASSET_TYPE].items():
+    assets = gcp.validate_asset_section(section_gcp_assets, "filestore")
+    for item, share in assets[ASSET_TYPE].items():
         data = share.resource_data
         labels = [
             ServiceLabel("gcp/location", share.location),
             ServiceLabel("gcp/filestore/name", item),
-            ServiceLabel("gcp/projectId", section_gcp_assets.project),
+            ServiceLabel("gcp/projectId", assets.project),
         ]
         labels.extend([ServiceLabel(f"gcp/labels/{k}", v) for k, v in data["labels"].items()])
         yield Service(item=item, labels=labels)

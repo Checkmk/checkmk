@@ -156,6 +156,14 @@ class MetricSpec:
     filter_by: Optional[Filter] = None
 
 
+def validate_asset_section(
+    section_gcp_assets: Optional[AssetSection], service: str
+) -> AssetSection:
+    if section_gcp_assets is None or not section_gcp_assets.config.is_enabled(service):
+        return AssetSection(Project(""), Config(services=[]), _assets={})
+    return section_gcp_assets
+
+
 def get_value(results: Sequence[GCPResult], spec: MetricSpec) -> float:
     # GCP does not always deliver all metrics. i.e. api/request_count only contains values if
     # api requests have occured. To ensure all metrics are displayed in check mk we default to

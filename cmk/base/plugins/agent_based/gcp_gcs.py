@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
-from typing import Any, Mapping, Optional
+from collections.abc import Mapping
+from typing import Any, Optional
 
 from .agent_based_api.v1 import register, render, Service, ServiceLabel
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -26,19 +27,14 @@ def discover(
     section_gcp_service_gcs: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> DiscoveryResult:
-    if (
-        section_gcp_assets is None
-        or not section_gcp_assets.config.is_enabled("gcs")
-        or not ASSET_TYPE in section_gcp_assets
-    ):
-        return
-    for item, bucket in section_gcp_assets[ASSET_TYPE].items():
+    assets = gcp.validate_asset_section(section_gcp_assets, "gcs")
+    for item, bucket in assets[ASSET_TYPE].items():
         data = bucket.resource_data
         labels = [ServiceLabel(f"gcp/labels/{k}", v) for k, v in data["labels"].items()]
         labels.append(ServiceLabel("gcp/location", data["location"]))
         labels.append(ServiceLabel("gcp/bucket/storageClass", data["storageClass"]))
         labels.append(ServiceLabel("gcp/bucket/locationType", data["locationType"]))
-        labels.append(ServiceLabel("gcp/projectId", section_gcp_assets.project))
+        labels.append(ServiceLabel("gcp/projectId", assets.project))
         yield Service(item=item, labels=labels)
 
 

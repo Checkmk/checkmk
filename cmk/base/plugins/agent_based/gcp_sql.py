@@ -51,19 +51,11 @@ def _get_service_labels(
     return labels
 
 
-def validate_asset_section(
-    section_gcp_assets: Optional[gcp.AssetSection],
-) -> gcp.AssetSection:
-    if section_gcp_assets is None or not section_gcp_assets.config.is_enabled("cloud_sql"):
-        return gcp.AssetSection(gcp.Project(""), gcp.Config(services=[]), _assets={})
-    return section_gcp_assets
-
-
 def discover(
     section_gcp_service_cloud_sql: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> DiscoveryResult:
-    assets = validate_asset_section(section_gcp_assets)
+    assets = gcp.validate_asset_section(section_gcp_assets, "cloud_sql")
     for item, service in assets[ASSET_TYPE].items():
         labels = _get_service_labels(assets.project, service, item)
         yield Service(item=item, labels=labels)
@@ -290,7 +282,7 @@ def discover_gcp_sql_replication(
     section_gcp_service_cloud_sql: Optional[gcp.Section],
     section_gcp_assets: Optional[gcp.AssetSection],
 ) -> DiscoveryResult:
-    assets = validate_asset_section(section_gcp_assets)
+    assets = gcp.validate_asset_section(section_gcp_assets, "cloud_sql")
 
     for item, service in assets[ASSET_TYPE].items():
         if not _has_metric(

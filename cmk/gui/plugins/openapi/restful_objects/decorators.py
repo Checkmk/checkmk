@@ -590,11 +590,16 @@ class Endpoint:
                 except ValidationError as exc:
                     return problem(
                         status=500,
-                        title="Server was about to send an invalid response.",
-                        detail="This is an error of the implementation.",
+                        title="Mismatch between endpoint and internal data format. ",
+                        detail=
+                        "This could be due to invalid or outdated configuration, or be an error of the implementation. "
+                        "Please check your *.mk files in case you have modified them by hand and run cmk-update-config. "
+                        "If the problem persists afterwards, please report a bug.",
                         ext={
-                            'errors': exc.messages,
-                            'orig': data,
+                            "errors": exc.messages,
+                            "debug_data": {
+                                "orig": data
+                            },
                         },
                     )
 

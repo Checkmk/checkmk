@@ -451,52 +451,6 @@ def fetch_resources_matching_tags(  # type:ignore[no-untyped-def]
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-#   ---result distributor---------------------------------------------------
-
-
-class ResultDistributor:
-    """
-    Mediator which distributes results from sections
-    in order to reduce queries to AWS account.
-    """
-
-    def __init__(self) -> None:
-        self._colleagues: list = []
-
-    def add(self, colleague) -> None:  # type:ignore[no-untyped-def]
-        self._colleagues.append(colleague)
-
-    def distribute(self, sender, result) -> None:  # type:ignore[no-untyped-def]
-        for colleague in self._colleagues:
-            if colleague.name != sender.name:
-                colleague.receive(sender, result)
-
-
-class ResultDistributorS3Limits(ResultDistributor):
-    """
-    Special mediator for distributing results from S3Limits. This mediator stores any received
-    results and distributes both upon receiving and upon adding a new colleague. This is done
-    because we want to run S3Limits only once (does not matter for which region, results are the
-    same for all regions) and later distribute the results to S3Summary objects in other regions.
-    """
-
-    def __init__(self) -> None:
-        super().__init__()
-        self._received_results: dict = {}
-
-    def add(self, colleague) -> None:  # type:ignore[no-untyped-def]
-        super().add(colleague)
-        for sender, content in self._received_results.values():
-            colleague.receive(sender, content)
-
-    def distribute(self, sender, result) -> None:  # type:ignore[no-untyped-def]
-        self._received_results.setdefault(sender.name, (sender, result))
-        super().distribute(sender, result)
-
-    def is_empty(self) -> bool:
-        return len(self._colleagues) == 0
-
-
 #   ---sections/colleagues--------------------------------------------------
 
 
@@ -553,7 +507,7 @@ class AWSSection(DataCache):
         self._region = region
         self._config = config
         self._distributor = ResultDistributor() if distributor is None else distributor
-        self._received_results: dict = {}
+        self._received_results: dict[str, Any] = {}
 
     @property
     @abc.abstractmethod
@@ -625,7 +579,7 @@ class AWSSection(DataCache):
     def _send(self, content):
         self._distributor.distribute(self, content)
 
-    def receive(self, sender, content):
+    def receive(self, sender: "AWSSection", content: Any) -> None:
         self._received_results.setdefault(sender.name, content)
 
     def run(self, use_cache=False):
@@ -869,6 +823,52 @@ class AWSSectionCloudwatch(AWSSection):
             else:
                 period = None
             metric_contents["Values"] = [(v, period) for v in metric_contents["Values"]]
+
+
+#   ---result distributor---------------------------------------------------
+
+
+class ResultDistributor:
+    """
+    Mediator which distributes results from sections
+    in order to reduce queries to AWS account.
+    """
+
+    def __init__(self) -> None:
+        self._colleagues: list[AWSSection] = []
+
+    def add(self, colleague: AWSSection) -> None:
+        self._colleagues.append(colleague)
+
+    def distribute(self, sender: AWSSection, result: Any) -> None:
+        for colleague in self._colleagues:
+            if colleague.name != sender.name:
+                colleague.receive(sender, result)
+
+
+class ResultDistributorS3Limits(ResultDistributor):
+    """
+    Special mediator for distributing results from S3Limits. This mediator stores any received
+    results and distributes both upon receiving and upon adding a new colleague. This is done
+    because we want to run S3Limits only once (does not matter for which region, results are the
+    same for all regions) and later distribute the results to S3Summary objects in other regions.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._received_results: dict[str, tuple[AWSSection, Any]] = {}
+
+    def add(self, colleague: AWSSection) -> None:
+        super().add(colleague)
+        for sender, content in self._received_results.values():
+            colleague.receive(sender, content)
+
+    def distribute(self, sender: AWSSection, result: Any) -> None:
+        self._received_results.setdefault(sender.name, (sender, result))
+        super().distribute(sender, result)
+
+    def is_empty(self) -> bool:
+        return len(self._colleagues) == 0
 
 
 # .

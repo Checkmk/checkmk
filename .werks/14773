@@ -1,0 +1,16 @@
+Title: CMC expands custom services attributes for Nagios plugins
+Class: feature
+Compatible: compat
+Component: cmc
+Date: 1663850153
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p13
+
+For example, users may now define a custom service attribute
+"PORT" in the global settings, set a value to this attribute
+with a rule under "Custom service attributes", and use the
+corresponding macro "$_SERVICEPORT$" under "Integrate
+Nagios plugins".

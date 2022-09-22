@@ -110,7 +110,7 @@ class AssetSection:
     _assets: Mapping[AssetType, AssetTypeSection]
 
     def __getitem__(self, key: AssetType) -> AssetTypeSection:
-        return self._assets[key]
+        return self._assets.get(key, {})
 
     def get(
         self, key: AssetType, default: Optional[AssetTypeSection] = None

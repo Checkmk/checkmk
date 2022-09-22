@@ -16,11 +16,6 @@ default_stages:
     - push
     - manual
 repos:
-    - repo: https://github.com/asottile/pyupgrade
-      rev: v2.37.3
-      hooks:
-          - id: pyupgrade
-            args: [--py39-plus]
     - repo: https://github.com/pre-commit/pre-commit-hooks
       rev: v4.0.1
       hooks:

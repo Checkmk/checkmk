@@ -14,6 +14,8 @@ from .agent_based_api.v1 import get_value_store, IgnoreResultsError, register, R
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import interfaces
 from .utils.aws import (
+    AWSMetric,
+    check_aws_metrics,
     discover_aws_generic,
     discover_aws_generic_single,
     extract_aws_metrics_by_labels,
@@ -289,4 +291,53 @@ register.check_plugin(
     check_default_parameters={"util": (90.0, 95.0)},
     sections=["aws_ec2"],
     check_ruleset_name="cpu_utilization",
+)
+
+# .
+#   .--CPU credits---------------------------------------------------------.
+#   |           ____ ____  _   _                     _ _ _                 |
+#   |          / ___|  _ \| | | |   ___ _ __ ___  __| (_) |_ ___           |
+#   |         | |   | |_) | | | |  / __| '__/ _ \/ _` | | __/ __|          |
+#   |         | |___|  __/| |_| | | (__| | |  __/ (_| | | |_\__ \          |
+#   |          \____|_|    \___/   \___|_|  \___|\__,_|_|\__|___/          |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def discover_aws_ec2_cpu_credits(section: Section) -> DiscoveryResult:
+    yield from discover_aws_generic_single(
+        section,
+        ["CPUCreditUsage", "CPUCreditBalance"],
+    )
+
+
+def check_aws_ec2_cpu_credits(params: Mapping[str, Any], section: Section) -> CheckResult:
+
+    yield from check_aws_metrics(
+        [
+            AWSMetric(
+                value=value,
+                name=name,
+                levels_lower=levels_lower,
+                label=label,
+            )
+            for metric_name, name, levels_lower, label in zip(
+                ["CPUCreditUsage", "CPUCreditBalance"],
+                [None, "aws_cpu_credit_balance"],
+                [None, params.get("balance_levels_lower")],
+                ["Usage", "Balance"],
+            )
+            if (value := section.get(metric_name)) is not None
+        ]
+    )
+
+
+register.check_plugin(
+    name="aws_ec2_cpu_credits",
+    service_name="AWS/EC2 CPU Credits",
+    check_function=check_aws_ec2_cpu_credits,
+    discovery_function=discover_aws_ec2_cpu_credits,
+    check_default_parameters={"balance_levels_lower": (10, 5)},
+    check_ruleset_name="aws_ec2_cpu_credits",
+    sections=["aws_ec2"],
 )

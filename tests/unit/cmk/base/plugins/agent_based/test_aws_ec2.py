@@ -15,11 +15,13 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
 )
 from cmk.base.plugins.agent_based.aws_ec2 import (
+    check_aws_ec2_cpu_credits,
     check_aws_ec2_cpu_util,
     check_aws_ec2_disk_io,
     check_aws_ec2_network_io,
     check_aws_ec2_status_check,
     discover_aws_ec2,
+    discover_aws_ec2_cpu_credits,
     discover_aws_ec2_cpu_util,
     discover_aws_ec2_disk_io,
     Section,
@@ -67,7 +69,7 @@ def test_check_aws_ec2_network_io() -> None:
         ),
     ],
 )
-def test_aws_ebs_discovery(
+def test_aws_ec2_disk_io_discovery(
     section: Section,
     discovery_result: Sequence[Service],
 ) -> None:
@@ -240,3 +242,90 @@ def test_check_aws_ec2_cpu_util_no_data_raises_error() -> None:
                 section={},
             )
         )
+
+
+@pytest.mark.parametrize(
+    "section, discovery_result",
+    [
+        pytest.param(
+            METRICS,
+            [Service()],
+            id="For every disk in the section a Service with no item is discovered.",
+        ),
+        pytest.param(
+            {},
+            [],
+            id="If the section is empty, no Services are discovered.",
+        ),
+    ],
+)
+def test_aws_ec2_cpu_credits_discovery(
+    section: Section,
+    discovery_result: Sequence[Service],
+) -> None:
+    assert list(discover_aws_ec2_cpu_credits(section)) == discovery_result
+
+
+def test_check_aws_ec2_cpu_credits_raises_error() -> None:
+    with pytest.raises(IgnoreResultsError):
+        list(
+            check_aws_ec2_cpu_credits(
+                params={"balance_levels_lower": (10, 5)},
+                section={},
+            )
+        )
+
+
+@pytest.mark.parametrize(
+    "section, expected_result",
+    [
+        pytest.param(
+            {
+                "CPUCreditUsage": 0.5,
+                "CPUCreditBalance": 75.0,
+            },
+            [
+                Result(state=State.OK, summary="Usage: 0.50"),
+                Result(state=State.OK, summary="Balance: 75.00"),
+                Metric("aws_cpu_credit_balance", 75.0),
+            ],
+            id="If the CPUCreditBalance is above the warn/crit levels the check state is OK.",
+        ),
+        pytest.param(
+            {
+                "CPUCreditUsage": 0.5,
+                "CPUCreditBalance": 8.0,
+            },
+            [
+                Result(state=State.OK, summary="Usage: 0.50"),
+                Result(state=State.WARN, summary="Balance: 8.00 (warn/crit below 10.00/5.00)"),
+                Metric("aws_cpu_credit_balance", 8.0),
+            ],
+            id="If the CPUCreditBalance is below the warn level the check state is WARN.",
+        ),
+        pytest.param(
+            {
+                "CPUCreditUsage": 0.5,
+                "CPUCreditBalance": 4.0,
+            },
+            [
+                Result(state=State.OK, summary="Usage: 0.50"),
+                Result(state=State.CRIT, summary="Balance: 4.00 (warn/crit below 10.00/5.00)"),
+                Metric("aws_cpu_credit_balance", 4.0),
+            ],
+            id="If the CPUCreditBalance is below the crit level the check state is CRIT.",
+        ),
+    ],
+)
+def test_check_aws_ec2_cpu_credits(
+    section: Section,
+    expected_result: Sequence[Result | Metric],
+) -> None:
+
+    check_result = list(
+        check_aws_ec2_cpu_credits(
+            params={"balance_levels_lower": (10, 5)},
+            section=section,
+        )
+    )
+    assert check_result == expected_result

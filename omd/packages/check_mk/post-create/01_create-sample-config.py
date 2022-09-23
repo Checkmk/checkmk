@@ -7,7 +7,7 @@
 
 
 from cmk.gui import main_modules
-from cmk.gui.utils.logged_in import SuperUserContext
+from cmk.gui.logged_in import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.sample_config import init_wato_datastructures
 

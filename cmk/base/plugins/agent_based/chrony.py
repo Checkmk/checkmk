@@ -91,6 +91,9 @@ def check_chrony(params, section_chrony, section_ntp):
     check if sys_time_offset_offset is in range
     check if stratum is too high
     """
+    if not section_chrony:
+        return
+
     if "error" in section_chrony:
         yield Result(state=state.CRIT, summary="%s" % section_chrony["error"])
         return

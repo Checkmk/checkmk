@@ -1,0 +1,14 @@
+Title: FIX chrony check no longer crashes if section is not available
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1663920941
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p14
+
+Chrony check no longer crashes if the section is not available and the service was previously discovered.
+Instead of crashing, now it moves to an UNKWOWN state.
+

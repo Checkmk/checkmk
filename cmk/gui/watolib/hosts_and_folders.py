@@ -85,12 +85,13 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.watolib.utils import generate_hosts_to_update_settings, SerializedSettings
 from cmk.gui.site_config import allsites, is_wato_slave_site
-from cmk.gui.type_defs import ConfigDomainName, HTTPVariables, SetOnceDict
+from cmk.gui.type_defs import HTTPVariables, SetOnceDict
 from cmk.gui.utils import urls
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import Choices
 from cmk.gui.watolib.changes import add_change
+from cmk.gui.watolib.config_domain_name import ConfigDomainName
 from cmk.gui.watolib.host_attributes import collect_attributes, host_attribute_registry
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.search import (

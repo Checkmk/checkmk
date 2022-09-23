@@ -27,7 +27,6 @@ from cmk.gui.plugins.watolib.utils import (
     SerializedSettings,
     wato_fileheader,
 )
-from cmk.gui.type_defs import ConfigDomainName
 from cmk.gui.valuespec import (
     Age,
     Checkbox,
@@ -41,6 +40,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.watolib.activate_changes import add_replication_paths
+from cmk.gui.watolib.config_domain_name import ConfigDomainName
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.sites import LivestatusViaTCP
 

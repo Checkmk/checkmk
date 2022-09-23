@@ -7,8 +7,8 @@ from typing import Any, Dict, Optional
 
 from livestatus import SiteGlobals
 
+import cmk.gui.watolib.config_domain_name as config_domain_name
 from cmk.gui.plugins.watolib.utils import ABCConfigDomain, config_variable_registry
-from cmk.gui.watolib.config_domains import ConfigDomainGUI
 
 GlobalSettings = Dict[str, Any]
 
@@ -50,7 +50,7 @@ def save_global_settings(vars_, site_specific=False, custom_site_path=None):
         "user_login",
     ]:
         if varname in vars_:
-            per_domain.setdefault(ConfigDomainGUI.ident(), {})[varname] = vars_[varname]
+            per_domain.setdefault(config_domain_name.GUI, {})[varname] = vars_[varname]
 
     for domain in ABCConfigDomain.enabled_domains():
         domain_config = per_domain.get(domain().ident(), {})

@@ -25,6 +25,7 @@ import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 import cmk.gui.hooks as hooks
 import cmk.gui.mkeventd as mkeventd
+import cmk.gui.watolib.config_domain_name as config_domain_name
 from cmk.gui.config import active_config, get_default_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.i18n import _
@@ -36,8 +37,8 @@ from cmk.gui.plugins.watolib.utils import (
     SerializedSettings,
 )
 from cmk.gui.site_config import is_wato_slave_site
-from cmk.gui.type_defs import ConfigDomainName
 from cmk.gui.watolib.audit_log import log_audit
+from cmk.gui.watolib.config_domain_name import ConfigDomainName
 from cmk.gui.watolib.utils import liveproxyd_config_dir, multisite_dir, wato_root_dir
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
@@ -58,7 +59,7 @@ class ConfigDomainCoreSettings:
 class ConfigDomainCore(ABCConfigDomain):
     @classmethod
     def ident(cls) -> ConfigDomainName:
-        return "check_mk"
+        return config_domain_name.CORE
 
     def config_dir(self):
         return wato_root_dir()
@@ -103,7 +104,7 @@ class ConfigDomainGUI(ABCConfigDomain):
 
     @classmethod
     def ident(cls) -> ConfigDomainName:
-        return "multisite"
+        return config_domain_name.GUI
 
     def config_dir(self):
         return multisite_dir()
@@ -126,7 +127,7 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
 
     @classmethod
     def ident(cls) -> ConfigDomainName:
-        return "liveproxyd"
+        return config_domain_name.LIVEPROXY
 
     @classmethod
     def enabled(cls):
@@ -201,7 +202,7 @@ class ConfigDomainEventConsole(ABCConfigDomain):
 
     @classmethod
     def ident(cls) -> ConfigDomainName:
-        return "ec"
+        return config_domain_name.EVENT_CONSOLE
 
     @classmethod
     def enabled(cls):
@@ -240,7 +241,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
 
     @classmethod
     def ident(cls) -> ConfigDomainName:
-        return "ca-certificates"
+        return config_domain_name.CA_CERTIFICATES
 
     def config_dir(self):
         return multisite_dir()
@@ -365,7 +366,7 @@ class ConfigDomainOMD(ABCConfigDomain):
 
     @classmethod
     def ident(cls) -> ConfigDomainName:
-        return "omd"
+        return config_domain_name.OMD
 
     def config_dir(self):
         return self.omd_config_dir

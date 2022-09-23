@@ -19,9 +19,9 @@ from cmk.utils.type_defs import ConfigurationWarnings, HostName
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
-from cmk.gui.type_defs import ConfigDomainName
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import ValueSpec
+from cmk.gui.watolib.config_domain_name import ConfigDomainName
 
 
 def wato_fileheader() -> str:

@@ -55,6 +55,7 @@ import cmk.gui.log as log
 import cmk.gui.utils
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.watolib.automations
+import cmk.gui.watolib.config_domain_name as config_domain_name
 import cmk.gui.watolib.git
 import cmk.gui.watolib.sidebar_reload
 import cmk.gui.watolib.snapshots
@@ -84,12 +85,11 @@ from cmk.gui.site_config import allsites, get_site_config, is_single_local_site,
 from cmk.gui.sites import disconnect as sites_disconnect
 from cmk.gui.sites import SiteStatus
 from cmk.gui.sites import states as sites_states
-from cmk.gui.type_defs import ConfigDomainName
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
-from cmk.gui.watolib.config_domains import ConfigDomainOMD
+from cmk.gui.watolib.config_domain_name import ConfigDomainName
 from cmk.gui.watolib.config_sync import ReplicationPath
 from cmk.gui.watolib.global_settings import save_site_global_settings
 from cmk.gui.watolib.hosts_and_folders import (
@@ -1831,7 +1831,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         return configuration_warnings
 
     def _call_activate_changes_automation(self) -> ConfigWarnings:
-        omd_ident: ConfigDomainName = ConfigDomainOMD.ident()
+        omd_ident: ConfigDomainName = config_domain_name.OMD
         domain_requests = self._get_domains_needing_activation(omd_ident)
 
         if site_is_local(self._site_id):

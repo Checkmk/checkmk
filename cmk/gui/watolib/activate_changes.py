@@ -2480,7 +2480,7 @@ def _create_config_sync_file_hash(file_path: Path) -> str:
     return sha256.hexdigest()
 
 
-def update_config_generation():
+def update_config_generation() -> None:
     """Increase the config generation ID
 
     This ID is used to detect whether something else has been changed in the configuration between
@@ -2496,7 +2496,7 @@ def _get_current_config_generation(lock: bool = False) -> int:
     return store.load_object_from_file(_config_generation_path(), default=0, lock=lock)
 
 
-def _config_generation_path():
+def _config_generation_path() -> Path:
     return Path(cmk.utils.paths.var_dir) / "wato" / "config-generation.mk"
 
 
@@ -2516,7 +2516,7 @@ class AutomationReceiveConfigSync(AutomationCommand):
     been made between the two sync steps (get-config-sync-state and this autmoation).
     """
 
-    def command_name(self):
+    def command_name(self) -> str:
         return "receive-config-sync"
 
     def get_request(self) -> ReceiveConfigSyncRequest:

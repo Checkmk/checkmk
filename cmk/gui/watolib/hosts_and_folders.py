@@ -2524,8 +2524,14 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         validate_host_uniqueness("host", name)
         return update_metadata(attributes, created_by=user.id)
 
-    def propagate_hosts_changes(self, host_name, attributes, cluster_nodes):
+    def propagate_hosts_changes(
+        self,
+        host_name: HostName,
+        attributes: object,
+        cluster_nodes: object,
+    ) -> None:
         host = Host(self, host_name, attributes, cluster_nodes)
+        assert self._hosts is not None
         self._hosts[host_name] = host
         self._num_hosts = len(self._hosts)
         add_change(
@@ -3255,7 +3261,7 @@ class CREHost(WithPermissions, WithAttributes):
         ) % (self.name(), ", ".join(permitted_groups), ", ".join(user_contactgroups))
         raise MKAuthException(reason)
 
-    def edit_url(self):
+    def edit_url(self) -> str:
         return urls.makeuri_contextless(
             request,
             [
@@ -3266,7 +3272,7 @@ class CREHost(WithPermissions, WithAttributes):
             filename="wato.py",
         )
 
-    def params_url(self):
+    def params_url(self) -> str:
         return urls.makeuri_contextless(
             request,
             [
@@ -3277,7 +3283,7 @@ class CREHost(WithPermissions, WithAttributes):
             filename="wato.py",
         )
 
-    def services_url(self):
+    def services_url(self) -> str:
         return urls.makeuri_contextless(
             request,
             [
@@ -3288,7 +3294,7 @@ class CREHost(WithPermissions, WithAttributes):
             filename="wato.py",
         )
 
-    def clone_url(self):
+    def clone_url(self) -> str:
         return urls.makeuri_contextless(
             request,
             [
@@ -3306,7 +3312,7 @@ class CREHost(WithPermissions, WithAttributes):
     # | want to modify hosts. See details at the comment header in Folder. |
     # '--------------------------------------------------------------------'
 
-    def edit(self, attributes, cluster_nodes):
+    def edit(self, attributes: Dict[str, Any], cluster_nodes: object) -> None:
         # 1. Check preconditions
         if attributes.get("contactgroups") != self._attributes.get("contactgroups"):
             self._need_folder_write_permissions()

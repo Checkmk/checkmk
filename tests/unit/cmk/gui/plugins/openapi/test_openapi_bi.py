@@ -7,7 +7,7 @@ import json
 
 import pytest
 
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+from tests.unit.cmk.gui.conftest import SetConfig, WebTestAppForCMK
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
@@ -394,7 +394,7 @@ def test_openapi_delete_pack_forbidden(aut_user_auth_wsgi_app: WebTestAppForCMK)
 
 @pytest.mark.parametrize("wato_enabled", [True, False])
 def test_get_aggregation_state_empty(  # type:ignore[no-untyped-def]
-    aut_user_auth_wsgi_app, mock_livestatus, wato_enabled
+    aut_user_auth_wsgi_app, mock_livestatus, wato_enabled, set_config: SetConfig
 ) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
     postfix = "/domain-types/bi_aggregation/actions/aggregation_state/invoke"
@@ -409,7 +409,7 @@ def test_get_aggregation_state_empty(  # type:ignore[no-untyped-def]
     )
 
     with live():
-        with aut_user_auth_wsgi_app.set_config(wato_enabled=wato_enabled):
+        with set_config(wato_enabled=wato_enabled):
             _response = aut_user_auth_wsgi_app.post(
                 url,
                 headers={"Accept": "application/json", "Content-Type": "application/json"},
@@ -420,7 +420,7 @@ def test_get_aggregation_state_empty(  # type:ignore[no-untyped-def]
 
 @pytest.mark.parametrize("wato_enabled", [True, False])
 def test_get_aggregation_state_filter_names(  # type:ignore[no-untyped-def]
-    aut_user_auth_wsgi_app, mock_livestatus, wato_enabled
+    aut_user_auth_wsgi_app, mock_livestatus, wato_enabled, set_config: SetConfig
 ) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
     postfix = "/domain-types/bi_aggregation/actions/aggregation_state/invoke"
@@ -435,7 +435,7 @@ def test_get_aggregation_state_filter_names(  # type:ignore[no-untyped-def]
     )
 
     with live():
-        with aut_user_auth_wsgi_app.set_config(wato_enabled=wato_enabled):
+        with set_config(wato_enabled=wato_enabled):
             _response = aut_user_auth_wsgi_app.post(
                 url,
                 headers={"Accept": "application/json", "Content-Type": "application/json"},

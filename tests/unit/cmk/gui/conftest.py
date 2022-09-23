@@ -12,12 +12,14 @@ from contextlib import contextmanager
 from http.cookiejar import CookieJar
 from typing import Any, Callable, ContextManager, Dict, Iterator, Literal, NamedTuple, Optional
 
+import mock
 import pytest
 import webtest  # type: ignore[import]
 
 # TODO: Change to pytest.MonkeyPatch. It will be available in future pytest releases.
 from _pytest.monkeypatch import MonkeyPatch
 from mock import MagicMock
+from mypy_extensions import KwArg
 
 from tests.testlib.plugin_registry import reset_registries
 from tests.testlib.users import create_and_destroy_user
@@ -105,6 +107,35 @@ def load_config(request_context: None) -> Iterator[None]:
     config_module.initialize()
     yield
     cmk.utils.log.logger.setLevel(old_root_log_level)
+
+
+SetConfig = Callable[[KwArg(Any)], ContextManager[None]]
+
+
+@pytest.fixture(name="set_config")
+def set_config_fixture() -> SetConfig:
+    return set_config
+
+
+@contextmanager
+def set_config(**kwargs: Any) -> Iterator[None]:
+    """Patch the GUI config for the current test
+
+    In normal tests, if you want to patch the GUI config, you can simply monkeypatch the
+    attribute of your choice. But with the webtest, the config is read during the request
+    handling in the test. This needs a special handling.
+    """
+
+    def _set_config():
+        for key, val in kwargs.items():
+            setattr(active_config, key, val)
+
+    try:
+        config_module.register_post_config_load_hook(_set_config)
+        with mock.patch.multiple(active_config, **kwargs):
+            yield
+    finally:
+        config_module._post_config_load_hooks.remove(_set_config)
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -296,25 +327,6 @@ class WebTestAppForCMK(webtest.TestApp):
                 params["content_type"] = "application/json"
             resp = self.call_method(link["method"], link["href"], **params)
         return resp
-
-    @contextmanager
-    def set_config(self, **kwargs: Any) -> Iterator[None]:
-        """Patch the GUI config for the current test
-
-        In normal tests, if you want to patch the GUI config, you can simply monkeypatch the
-        attribute of your choice. But with the webtest, the config is read during the request
-        handling in the test. This needs a special handling.
-        """
-
-        def _set_config():
-            for key, val in kwargs.items():
-                setattr(active_config, key, val)
-
-        try:
-            config_module.register_post_config_load_hook(_set_config)
-            yield
-        finally:
-            config_module._post_config_load_hooks.remove(_set_config)
 
     def login(self, username: str, password: str) -> WebTestAppForCMK:
         self.username = username

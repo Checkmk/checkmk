@@ -2,10 +2,12 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from __future__ import annotations
 
 from typing import Iterator
 
 import pytest
+import typing_extensions
 from _pytest.monkeypatch import MonkeyPatch
 
 import cmk.gui.main
@@ -14,7 +16,10 @@ from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.htmllib.html import html
 from cmk.gui.logged_in import user
 
-RequestContextFixture = Iterator[None]
+if typing_extensions.TYPE_CHECKING:
+    from tests.unit.cmk.gui.conftest import SetConfig
+
+    RequestContextFixture = Iterator[None]
 
 
 def test_get_start_url_default(request_context: RequestContextFixture) -> None:
@@ -29,10 +34,8 @@ def test_get_start_url_default_config(
 
 
 def test_get_start_url_user_config(
-    monkeypatch: MonkeyPatch, request_context: RequestContextFixture
+    monkeypatch: MonkeyPatch, request_context: RequestContextFixture, set_config: SetConfig
 ) -> None:
-    monkeypatch.setattr(active_config, "start_url", "bla.py")
-
     class MockUser:
         @property
         def start_url(self) -> str:
@@ -40,8 +43,8 @@ def test_get_start_url_user_config(
 
     local = request_local_attr()
     monkeypatch.setattr(local, "user", MockUser())
-
-    assert cmk.gui.main._get_start_url() == "user_url.py"
+    with set_config(start_url="bla.py"):
+        assert cmk.gui.main._get_start_url() == "user_url.py"
 
 
 def test_get_start_url(request_context: RequestContextFixture) -> None:

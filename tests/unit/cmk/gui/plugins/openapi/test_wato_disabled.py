@@ -5,7 +5,7 @@
 
 import pytest
 
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+from tests.unit.cmk.gui.conftest import SetConfig, WebTestAppForCMK
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
@@ -14,6 +14,7 @@ from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 def test_openapi_wato_disabled_blocks_query(  # type:ignore[no-untyped-def]
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus,
+    set_config: SetConfig,
 ):
     live: MockLiveStatusConnection = mock_livestatus
 
@@ -45,7 +46,7 @@ def test_openapi_wato_disabled_blocks_query(  # type:ignore[no-untyped-def]
     )
 
     # disable wato
-    with aut_user_auth_wsgi_app.set_config(wato_enabled=False):
+    with set_config(wato_enabled=False):
         # calls to setup endpoints are forbidden
         aut_user_auth_wsgi_app.call_method(
             "get",

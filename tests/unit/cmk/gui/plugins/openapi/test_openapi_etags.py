@@ -6,12 +6,14 @@ from typing import Iterator
 
 import pytest
 
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+from tests.unit.cmk.gui.conftest import SetConfig, WebTestAppForCMK
 
 
 @pytest.fixture(scope="function", name="etags_off")
-def etags_off_fixture(aut_user_auth_wsgi_app: WebTestAppForCMK) -> Iterator[None]:
-    with aut_user_auth_wsgi_app.set_config(rest_api_etag_locking=False):
+def etags_off_fixture(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, set_config: SetConfig
+) -> Iterator[None]:
+    with set_config(rest_api_etag_locking=False):
         yield
 
 

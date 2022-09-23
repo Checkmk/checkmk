@@ -2,6 +2,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from __future__ import annotations
 
 import logging
 import os
@@ -9,7 +10,7 @@ import uuid
 from dataclasses import asdict
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Iterable
+from typing import Iterable, TYPE_CHECKING
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -29,6 +30,9 @@ from cmk.gui.type_defs import SessionId, WebAuthnCredential
 from cmk.gui.userdb import htpasswd
 from cmk.gui.userdb import ldap_connector as ldap
 from cmk.gui.valuespec import Dictionary
+
+if TYPE_CHECKING:
+    from tests.unit.cmk.gui.conftest import SetConfig
 
 
 @pytest.fixture(name="user_id")
@@ -263,16 +267,16 @@ def test_on_access_update_unknown_session(user_id: UserId) -> None:
         userdb.on_access(user_id, "xyz", now)
 
 
-def test_on_access_logout_on_idle_timeout(monkeypatch: MonkeyPatch, user_id: UserId) -> None:
+def test_on_access_logout_on_idle_timeout(user_id: UserId, set_config: SetConfig) -> None:
     now = datetime.now()
     session_timed_out = make_timed_out_session(user_id, now)
-    monkeypatch.setattr(active_config, "user_idle_timeout", 8)
 
-    session_info = userdb._load_session_infos(user_id)[session_timed_out]
-    session_info.started_at = int(now.timestamp()) - 10
+    with set_config(user_idle_timeout=8):
+        session_info = userdb._load_session_infos(user_id)[session_timed_out]
+        session_info.started_at = int(now.timestamp()) - 10
 
-    with pytest.raises(MKAuthException, match="login timed out"):
-        userdb.on_access(user_id, session_timed_out, now)
+        with pytest.raises(MKAuthException, match="login timed out"):
+            userdb.on_access(user_id, session_timed_out, now)
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")

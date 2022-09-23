@@ -7,7 +7,7 @@ import json
 
 import pytest
 
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+from tests.unit.cmk.gui.conftest import SetConfig, WebTestAppForCMK
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
@@ -893,7 +893,10 @@ def test_openapi_downtime_non_existing_groups(aut_user_auth_wsgi_app: WebTestApp
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 @pytest.mark.parametrize("wato_enabled", [True, False])
 def test_openapi_downtime_get_single(  # type:ignore[no-untyped-def]
-    aut_user_auth_wsgi_app: WebTestAppForCMK, mock_livestatus, wato_enabled: bool
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus,
+    wato_enabled: bool,
+    set_config: SetConfig,
 ):
     live: MockLiveStatusConnection = mock_livestatus
 
@@ -936,7 +939,7 @@ def test_openapi_downtime_get_single(  # type:ignore[no-untyped-def]
     )
 
     with live:
-        with aut_user_auth_wsgi_app.set_config(wato_enabled=wato_enabled):
+        with set_config(wato_enabled=wato_enabled):
             resp = aut_user_auth_wsgi_app.call_method(
                 "get",
                 base + "/objects/downtime/123",

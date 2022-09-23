@@ -41,6 +41,7 @@ Components
    arch-comp-nagvis.rst
    arch-comp-crontab.rst
    arch-comp-backup.rst
+   arch-comp-agent-receiver.rst
 
    arch-comp-agent-linux.rst
    arch-comp-grafana-connector.rst

@@ -19,6 +19,8 @@ package "API clients" as api_clients {
 package "[[../arch-comp-omd.html OMD: Checkmk run-time environment]]" as omd {
     interface HTTP as http_gui
     interface HTTP as http_rest_api
+    interface HTTPS as https_agent_receiver
+
     component "[[../arch-comp-apache.html Apache]]" as apache {
         component "mod_wsgi" as mod_wsgi {
             package "[[../arch-comp-gui.html GUI]]" {
@@ -32,6 +34,8 @@ package "[[../arch-comp-omd.html OMD: Checkmk run-time environment]]" as omd {
         }
     }
     interface Livestatus as apache_livestatus
+
+    component "[[../arch-comp-agent-receiver.html agent-receiver]]" as agent_receiver
 
     component "[[../arch-comp-core.html Monitoring Core]]" as cmc {
         component "RRD integration" as rrd_integration
@@ -85,6 +89,14 @@ package "[[../arch-comp-hosts.html hosts]]" as hosts {
     package ping_host
     package api_hosts
 }
+
+package "Push-Agent" as push-agent {
+    component "Checkmk Agent" as checkmk_agent
+    component "cmk-agent-ctl" as cmk_agent_ctl
+    component "Agent updater" as agent_updater
+    interface TLS as tls_agent
+}
+
 interface TCP
 interface Syslog
 interface SNMP
@@ -98,6 +110,9 @@ grafana_connector -- http_rest_api
 http_gui -- GUI
 http_gui -- nagvis
 http_rest_api -- rest_api
+
+https_agent_receiver - agent_receiver
+agent_receiver ..> http_rest_api
 
 GUI -- apache_livestatus_client
 rest_api -- apache_livestatus_client
@@ -144,5 +159,13 @@ mkeventd --- Syslog
 Syslog -- agent_based_host
 mkeventd ------ trap
 trap -- snmp_host
+
+tls_agent - cmk_agent_ctl
+cmk_agent_ctl ..> checkmk_agent
+
+cmk_agent_ctl ..> https_agent_receiver
+Fetcher ..> tls_agent
+agent_updater ..> http_gui
+checkmk_agent --> agent_updater
 
 @enduml

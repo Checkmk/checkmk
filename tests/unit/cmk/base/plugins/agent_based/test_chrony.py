@@ -112,3 +112,15 @@ def test_chrony_last_sync():
             "Time since last sync: 31 minutes 0 seconds (warn/crit at 30 minutes 0 seconds/1 hour 0 minutes)",
         ),
     ]
+
+
+def test_chrony_section_is_none() -> None:
+    assert (list(
+        chrony.check_chrony(
+            {
+                "ntp_levels": (10, 200.0, 500.0),
+                "alert_delay": (1800, 3600),
+            },
+            None,
+            None,
+        )) == [])

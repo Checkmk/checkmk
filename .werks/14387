@@ -1,0 +1,13 @@
+Title: Render all Custom URL Dashlets in iframes
+Class: feature
+Compatible: incomp
+Component: wato
+Date: 1664200466
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+This werk removes the option to configure Custom URL Dashlets that are not rendered within an iframe.
+Such non-iframe dashlets could not be rendered successfully due to broken update logic.
+All Custom URL Dashlets are now rendered in iframes, as was the default behavior previously.

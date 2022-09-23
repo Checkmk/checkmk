@@ -1558,23 +1558,18 @@ def used_dashlet_types(board):
     return [dashlet_registry[ty] for ty in type_names if ty in dashlet_registry]
 
 
-# dashlets using the 'url' method will be refreshed by us. Those
-# dashlets using static content (such as an iframe) will not be
+# Dashlets using static content (such as an iframe) will not be
 # refreshed by us but need to do that themselves.
 # TODO: Refactor this to Dashlet or later Dashboard class
 def get_dashlet_refresh(
     dashlet: Dashlet,
 ) -> Optional[Tuple[DashletId, DashletRefreshInterval, DashletRefreshAction]]:
-    if dashlet.type_name() == "url" or (
-        not dashlet.is_iframe_dashlet() and dashlet.refresh_interval()
+    if (
+        not dashlet.is_iframe_dashlet()
+        and (refresh := dashlet.refresh_interval())
+        and (action := dashlet.get_refresh_action())
     ):
-        refresh = dashlet.refresh_interval()
-        if not refresh:
-            return None
-
-        action = dashlet.get_refresh_action()
-        if action:
-            return (dashlet.dashlet_id, refresh, action)
+        return (dashlet.dashlet_id, refresh, action)
     return None
 
 

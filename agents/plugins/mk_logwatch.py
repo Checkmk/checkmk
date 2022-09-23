@@ -266,9 +266,9 @@ def get_config_files(directory, config_file_arg=None):
         return [config_file_arg]
 
     config_file_paths = []
-    config_file_paths.append(directory + "/logwatch.cfg")
+    config_file_paths.append(os.path.join(directory, "logwatch.cfg"))
     # Add config file paths from a logwatch.d folder
-    for config_file in glob.glob(directory + "/logwatch.d/*.cfg"):
+    for config_file in glob.glob(os.path.join(directory, "logwatch.d", "*.cfg")):
         config_file_paths.append(config_file)
     LOGGER.info("Configuration file paths: %r", config_file_paths)
     return config_file_paths

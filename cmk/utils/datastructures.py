@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Mapping, MutableMapping, Optional, overload, TypeVar, Union
+from typing import Any, Mapping, MutableMapping, overload, TypeVar
 
 from typing_extensions import assert_never
 
@@ -57,18 +57,18 @@ def deep_update(
 
 
 @overload
-def denilled(obj: list[Optional[T]]) -> list[T]:
+def denilled(obj: list[T | None]) -> list[T]:
     ...
 
 
 @overload
-def denilled(obj: dict[str, Optional[T]]) -> dict[str, T]:
+def denilled(obj: dict[str, T | None]) -> dict[str, T]:
     ...
 
 
 def denilled(  # pylint: disable=inconsistent-return-statements
-    obj: Union[list[Optional[T]], dict[str, Optional[T]]],
-) -> Union[list[T], dict[str, T]]:
+    obj: list[T | None] | dict[str, T | None],
+) -> list[T] | dict[str, T]:
     """Remove all None values from a dict or list.
 
     Examples:

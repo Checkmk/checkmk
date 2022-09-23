@@ -8,7 +8,7 @@ from typing import List, Tuple
 import pytest  # type: ignore[import]
 
 from cmk.gui.forms import remove_unused_vars
-from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.wato.pages.rulesets import _is_var_to_delete
 
 
@@ -209,11 +209,11 @@ def test_vars_to_delete(  # type:ignore[no-untyped-def]
 ):
     form_prefix: str = "search_p_rule"
     for var, val in request_vars:
-        html.request.set_var(var, val)
+        request.set_var(var, val)
 
     remove_unused_vars(form_prefix, _is_var_to_delete)
     for varname, _value in request_vars:
         if varname in expected_removed:
-            assert not html.request.var(varname)
+            assert not request.var(varname)
         else:
-            assert html.request.var(varname)
+            assert request.var(varname)

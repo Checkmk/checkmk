@@ -13,7 +13,7 @@ from _pytest.monkeypatch import MonkeyPatch
 import cmk.gui.main
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import request_local_attr
-from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.logged_in import user
 
 if typing_extensions.TYPE_CHECKING:
@@ -49,7 +49,7 @@ def test_get_start_url_user_config(
 
 def test_get_start_url(request_context: RequestContextFixture) -> None:
     start_url = "dashboard.py?name=mein_dashboard"
-    html.request.set_var("start_url", start_url)
+    request.set_var("start_url", start_url)
 
     assert cmk.gui.main._get_start_url() == start_url
 
@@ -64,7 +64,7 @@ def test_get_start_url(request_context: RequestContextFixture) -> None:
     ],
 )
 def test_get_start_url_invalid(request_context: RequestContextFixture, invalid_url: str) -> None:
-    html.request.set_var("start_url", invalid_url)
+    request.set_var("start_url", invalid_url)
 
     assert cmk.gui.main._get_start_url() == "dashboard.py"
 

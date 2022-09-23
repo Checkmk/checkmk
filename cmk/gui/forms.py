@@ -14,6 +14,7 @@ from cmk.gui.htmllib.foldable_container import (
 )
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.theme import theme
@@ -193,7 +194,7 @@ def remove_unused_vars(
     * is_var_to_delete: determines variables to keep
     """
     checkboxes, variables = set(), {}
-    for varname, value in html.request.itervars(form_prefix):
+    for varname, value in request.itervars(form_prefix):
         if varname.endswith("_USE"):
             checkboxes.add(varname)
             continue
@@ -209,4 +210,4 @@ def remove_unused_vars(
         if not any(varname.startswith(p) for p in active_prefixes) or is_var_to_delete(
             form_prefix, varname, value
         ):
-            html.request.del_var(varname)
+            request.del_var(varname)

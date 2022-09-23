@@ -13,10 +13,10 @@ from werkzeug.test import create_environ
 
 import cmk.gui.http as http
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.htmllib.html import html
-from cmk.gui.http import request as global_request
-from cmk.gui.http import response
+from cmk.gui.http import request, response
 from cmk.gui.utils.script_helpers import application_and_request_context
+
+global_request = request
 
 RequestContextFixture = Iterator[None]
 
@@ -73,215 +73,215 @@ def test_http_request_allowed_vars() -> None:
 
 @pytest.fixture()
 def set_vars(request_context: RequestContextFixture) -> None:
-    html.request.set_var("xyz", "x")
-    html.request.set_var("abc", "äbc")
+    request.set_var("xyz", "x")
+    request.set_var("abc", "äbc")
 
 
 @pytest.fixture()
 def set_int_vars(request_context: RequestContextFixture) -> None:
-    html.request.set_var("number", "2")
-    html.request.set_var("float", "2.2")
-    html.request.set_var("not_a_number", "a")
+    request.set_var("number", "2")
+    request.set_var("float", "2.2")
+    request.set_var("not_a_number", "a")
 
 
 @pytest.mark.usefixtures("set_vars")
 def test_get_str_input_type() -> None:
-    assert html.request.get_str_input("xyz") == "x"
-    assert isinstance(html.request.get_str_input("xyz"), str)
+    assert request.get_str_input("xyz") == "x"
+    assert isinstance(request.get_str_input("xyz"), str)
 
 
 @pytest.mark.usefixtures("set_vars")
 def test_get_str_input_non_ascii() -> None:
-    assert html.request.get_str_input("abc") == "äbc"
+    assert request.get_str_input("abc") == "äbc"
 
 
 @pytest.mark.usefixtures("set_vars")
 def test_get_str_input_default() -> None:
-    assert html.request.get_str_input("get_default", "xyz") == "xyz"
-    assert html.request.get_str_input("zzz") is None
+    assert request.get_str_input("get_default", "xyz") == "xyz"
+    assert request.get_str_input("zzz") is None
 
 
 @pytest.mark.usefixtures("set_vars")
 def test_get_str_input_mandatory_input_type() -> None:
-    assert html.request.get_str_input_mandatory("xyz") == "x"
-    assert isinstance(html.request.get_str_input_mandatory("xyz"), str)
+    assert request.get_str_input_mandatory("xyz") == "x"
+    assert isinstance(request.get_str_input_mandatory("xyz"), str)
 
 
 @pytest.mark.usefixtures("set_vars")
 def test_get_str_input_mandatory_non_ascii() -> None:
-    assert html.request.get_str_input_mandatory("abc") == "äbc"
+    assert request.get_str_input_mandatory("abc") == "äbc"
 
 
 @pytest.mark.usefixtures("set_vars")
 def test_get_str_input_mandatory_default() -> None:
-    assert html.request.get_str_input_mandatory("get_default", "xyz") == "xyz"
+    assert request.get_str_input_mandatory("get_default", "xyz") == "xyz"
 
     with pytest.raises(MKUserError, match="is missing"):
-        html.request.get_str_input_mandatory("zzz")
+        request.get_str_input_mandatory("zzz")
 
 
 @pytest.mark.usefixtures("set_vars")
 def test_get_binary_input_type() -> None:
-    assert html.request.get_binary_input("xyz") == b"x"
-    assert isinstance(html.request.get_str_input("xyz"), str)
+    assert request.get_binary_input("xyz") == b"x"
+    assert isinstance(request.get_str_input("xyz"), str)
 
 
 @pytest.mark.usefixtures("set_vars")
 def test_get_binary_input_non_ascii() -> None:
-    assert html.request.get_binary_input("abc") == "äbc".encode("utf-8")
+    assert request.get_binary_input("abc") == "äbc".encode("utf-8")
 
 
 @pytest.mark.usefixtures("set_vars")
 def test_get_binary_input_default() -> None:
-    assert html.request.get_binary_input("get_default", b"xyz") == b"xyz"
-    assert html.request.get_binary_input("zzz") is None
+    assert request.get_binary_input("get_default", b"xyz") == b"xyz"
+    assert request.get_binary_input("zzz") is None
 
 
 @pytest.mark.usefixtures("set_vars")
 def test_get_binary_input_mandatory_input_type() -> None:
-    assert html.request.get_binary_input_mandatory("xyz") == b"x"
-    assert isinstance(html.request.get_binary_input_mandatory("xyz"), bytes)
+    assert request.get_binary_input_mandatory("xyz") == b"x"
+    assert isinstance(request.get_binary_input_mandatory("xyz"), bytes)
 
 
 @pytest.mark.usefixtures("set_vars")
 def test_get_binary_input_mandatory_non_ascii() -> None:
-    assert html.request.get_binary_input_mandatory("abc") == "äbc".encode("utf-8")
+    assert request.get_binary_input_mandatory("abc") == "äbc".encode("utf-8")
 
 
 @pytest.mark.usefixtures("set_vars")
 def test_get_binary_input_mandatory_default() -> None:
-    assert html.request.get_binary_input_mandatory("get_default", b"xyz") == b"xyz"
+    assert request.get_binary_input_mandatory("get_default", b"xyz") == b"xyz"
 
     with pytest.raises(MKUserError, match="is missing"):
-        html.request.get_binary_input_mandatory("zzz")
+        request.get_binary_input_mandatory("zzz")
 
 
 @pytest.mark.usefixtures("set_vars")
 def test_get_ascii_input_input_type() -> None:
-    assert html.request.get_ascii_input("xyz") == "x"
-    assert isinstance(html.request.get_ascii_input("xyz"), str)
+    assert request.get_ascii_input("xyz") == "x"
+    assert isinstance(request.get_ascii_input("xyz"), str)
 
 
 @pytest.mark.usefixtures("set_vars")
 def test_get_ascii_input_non_ascii() -> None:
     with pytest.raises(MKUserError) as e:
-        html.request.get_ascii_input("abc")
+        request.get_ascii_input("abc")
     assert "must only contain ASCII" in "%s" % e
 
 
 @pytest.mark.usefixtures("set_vars")
 def test_get_ascii_input_default() -> None:
-    assert html.request.get_ascii_input("get_default", "xyz") == "xyz"
-    assert html.request.get_ascii_input("zzz") is None
+    assert request.get_ascii_input("get_default", "xyz") == "xyz"
+    assert request.get_ascii_input("zzz") is None
 
 
 @pytest.mark.usefixtures("set_vars")
 def test_get_ascii_input_mandatory_input_type() -> None:
-    assert html.request.get_ascii_input_mandatory("xyz") == "x"
-    assert isinstance(html.request.get_ascii_input_mandatory("xyz"), str)
+    assert request.get_ascii_input_mandatory("xyz") == "x"
+    assert isinstance(request.get_ascii_input_mandatory("xyz"), str)
 
 
 @pytest.mark.usefixtures("set_vars")
 def test_get_ascii_input_mandatory_non_ascii() -> None:
     with pytest.raises(MKUserError) as e:
-        html.request.get_ascii_input_mandatory("abc")
+        request.get_ascii_input_mandatory("abc")
     assert "must only contain ASCII" in "%s" % e
 
 
 @pytest.mark.usefixtures("set_vars")
 def test_get_ascii_input_mandatory_default() -> None:
-    assert html.request.get_ascii_input_mandatory("get_default", "xyz") == "xyz"
+    assert request.get_ascii_input_mandatory("get_default", "xyz") == "xyz"
 
     with pytest.raises(MKUserError, match="is missing"):
-        html.request.get_ascii_input_mandatory("zzz")
+        request.get_ascii_input_mandatory("zzz")
 
 
 @pytest.mark.usefixtures("set_int_vars")
 def test_get_integer_input_default() -> None:
-    assert html.request.get_integer_input("not_existing") is None
-    assert html.request.get_integer_input("get_default", 1) == 1
-    assert html.request.get_integer_input("bla") is None
+    assert request.get_integer_input("not_existing") is None
+    assert request.get_integer_input("get_default", 1) == 1
+    assert request.get_integer_input("bla") is None
 
 
 @pytest.mark.usefixtures("set_int_vars")
 def test_get_integer_input_regular() -> None:
-    assert html.request.get_integer_input("number") == 2
+    assert request.get_integer_input("number") == 2
 
 
 @pytest.mark.usefixtures("set_int_vars")
 def test_get_integer_input_float() -> None:
     with pytest.raises(MKUserError) as e:
-        html.request.get_integer_input("float")
+        request.get_integer_input("float")
     assert "is not an integer" in "%s" % e
 
 
 @pytest.mark.usefixtures("set_int_vars")
 def test_get_integer_input_not_a_number() -> None:
     with pytest.raises(MKUserError) as e:
-        html.request.get_integer_input("not_a_number")
+        request.get_integer_input("not_a_number")
     assert "is not an integer" in "%s" % e
 
 
 @pytest.mark.usefixtures("set_int_vars")
 def test_get_integer_input_mandatory_default() -> None:
     with pytest.raises(MKUserError) as e:
-        html.request.get_integer_input_mandatory("not_existing")
+        request.get_integer_input_mandatory("not_existing")
     assert "is missing" in "%s" % e
 
-    assert html.request.get_integer_input_mandatory("get_default", 1) == 1
+    assert request.get_integer_input_mandatory("get_default", 1) == 1
 
     with pytest.raises(MKUserError) as e:
-        html.request.get_integer_input_mandatory("bla")
+        request.get_integer_input_mandatory("bla")
     assert "is missing" in "%s" % e
 
 
 @pytest.mark.usefixtures("set_int_vars")
 def test_get_integer_input_mandatory_regular() -> None:
-    assert html.request.get_integer_input_mandatory("number") == 2
+    assert request.get_integer_input_mandatory("number") == 2
 
 
 @pytest.mark.usefixtures("set_int_vars")
 def test_get_integer_input_mandatory_float() -> None:
     with pytest.raises(MKUserError) as e:
-        html.request.get_integer_input_mandatory("float")
+        request.get_integer_input_mandatory("float")
     assert "is not an integer" in "%s" % e
 
 
 @pytest.mark.usefixtures("set_int_vars")
 def test_get_integer_input_mandatory_not_a_number() -> None:
     with pytest.raises(MKUserError) as e:
-        html.request.get_integer_input_mandatory("not_a_number")
+        request.get_integer_input_mandatory("not_a_number")
     assert "is not an integer" in "%s" % e
 
 
 @pytest.mark.usefixtures("set_int_vars")
 def test_get_validated_type_input() -> None:
     with pytest.raises(MKUserError) as e:
-        html.request.get_validated_type_input(int, "not_a_number")
+        request.get_validated_type_input(int, "not_a_number")
     assert "The value is not valid: " in str(e)
 
-    assert html.request.get_validated_type_input(int, "Not existing", deflt=0) == 0
+    assert request.get_validated_type_input(int, "Not existing", deflt=0) == 0
 
-    assert html.request.get_validated_type_input(int, "Not existing") is None
-    assert html.request.get_validated_type_input(int, "number") == 2
-    assert html.request.get_validated_type_input(str, "number") == "2"
+    assert request.get_validated_type_input(int, "Not existing") is None
+    assert request.get_validated_type_input(int, "number") == 2
+    assert request.get_validated_type_input(str, "number") == "2"
 
 
 @pytest.mark.usefixtures("set_int_vars")
 def test_get_validated_type_input_mandatory() -> None:
     with pytest.raises(MKUserError) as e:
-        html.request.get_validated_type_input_mandatory(int, "Not existing")
+        request.get_validated_type_input_mandatory(int, "Not existing")
     assert 'The parameter "Not existing" is missing.' in str(e)
 
-    assert html.request.get_validated_type_input_mandatory(int, "Not existing", deflt=0) == 0
+    assert request.get_validated_type_input_mandatory(int, "Not existing", deflt=0) == 0
 
 
 def test_cookie_handling(request_context: RequestContextFixture, monkeypatch: MonkeyPatch) -> None:
-    monkeypatch.setattr(html.request, "cookies", {"cookie1": {"key": "1a"}})
-    assert html.request.has_cookie("cookie1")
-    assert not html.request.has_cookie("cookie2")
+    monkeypatch.setattr(request, "cookies", {"cookie1": {"key": "1a"}})
+    assert request.has_cookie("cookie1")
+    assert not request.has_cookie("cookie2")
     # TODO: Write proper test assert html.cookie("cookie1", "2n class") == "1a"
-    assert html.request.cookie("cookie2", "2n class") == "2n class"
+    assert request.cookie("cookie2", "2n class") == "2n class"
 
 
 # TODO: Write valid test
@@ -348,13 +348,13 @@ def test_pre_16_format_cookie_handling(monkeypatch: MonkeyPatch) -> None:
             "utf-8"
         ),
     )
-    request = http.Request(environ)
+    _request = http.Request(environ)
 
-    assert isinstance(request.cookie("auth_stable"), str)
-    assert request.cookie("auth_stable") == "lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b"
+    assert isinstance(_request.cookie("auth_stable"), str)
+    assert _request.cookie("auth_stable") == "lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b"
 
-    assert request.has_cookie("xyz")
-    assert request.has_cookie("abc")
+    assert _request.has_cookie("xyz")
+    assert _request.has_cookie("abc")
 
 
 def test_del_vars_from_post() -> None:
@@ -379,20 +379,20 @@ def test_del_vars_from_env() -> None:
         # First we hit the cached property, so we can see that the underlying Request object
         # actually got replaced later.
         _ = global_request.args
-        _ = html.request.args
+        _ = request.args
 
-        assert html.request.query_string
+        assert request.query_string
 
-        html.request.set_var("foo", "123")
+        request.set_var("foo", "123")
 
-        html.request.del_var_from_env("_username")
-        html.request.del_var_from_env("_password")
+        request.del_var_from_env("_username")
+        request.del_var_from_env("_password")
 
         # Make test independent of dict sorting
-        assert html.request.query_string in [b"foo=foo&bar=bar", b"bar=bar&foo=foo"]
+        assert request.query_string in [b"foo=foo&bar=bar", b"bar=bar&foo=foo"]
 
-        assert "_password" not in html.request.args
-        assert "_username" not in html.request.args
+        assert "_password" not in request.args
+        assert "_username" not in request.args
 
         # Check the request local proxied version too.
         # Make test independent of dict sorting
@@ -400,7 +400,7 @@ def test_del_vars_from_env() -> None:
         assert "_password" not in global_request.args
         assert "_username" not in global_request.args
 
-        assert html.request.var("foo") == "123"
+        assert request.var("foo") == "123"
 
 
 def test_del_vars() -> None:
@@ -408,13 +408,13 @@ def test_del_vars() -> None:
         query_string="opt_x=x&foo=foo",
     )
     with application_and_request_context(environ):
-        assert html.request.var("opt_x") == "x"
-        assert html.request.var("foo") == "foo"
+        assert request.var("opt_x") == "x"
+        assert request.var("foo") == "foo"
 
-        html.request.del_vars(prefix="opt_")
+        request.del_vars(prefix="opt_")
 
-        assert html.request.var("opt_x") is None
-        assert html.request.var("foo") == "foo"
+        assert request.var("opt_x") is None
+        assert request.var("foo") == "foo"
 
         # Check the request local proxied version too
         assert global_request.var("opt_x") is None
@@ -425,7 +425,7 @@ def test_del_vars() -> None:
 def test_get_url_input_invalid_urls(
     request_context: RequestContextFixture, invalid_url: str
 ) -> None:
-    html.request.set_var("varname", invalid_url)
+    request.set_var("varname", invalid_url)
 
     with pytest.raises(MKUserError) as e:
         global_request.get_url_input("varname")

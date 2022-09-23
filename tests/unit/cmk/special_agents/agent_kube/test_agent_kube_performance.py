@@ -11,12 +11,14 @@ from tests.unit.cmk.special_agents.agent_kube.factory import (
     PerformanceSampleFactory,
 )
 
-from cmk.special_agents.utils_kubernetes.common import Piggyback, PodsToHost, SectionName
-from cmk.special_agents.utils_kubernetes.performance import (
-    _determine_cpu_rate_metrics,
+from cmk.special_agents.utils_kubernetes.common import (
     create_sections,
+    Piggyback,
+    PodsToHost,
+    SectionName,
     Selector,
 )
+from cmk.special_agents.utils_kubernetes.performance import _determine_cpu_rate_metrics
 
 
 def test_determine_cpu_rate_metrics() -> None:

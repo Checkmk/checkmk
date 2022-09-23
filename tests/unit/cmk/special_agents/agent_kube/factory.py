@@ -8,7 +8,7 @@ from collections.abc import Iterator, Sequence
 from pydantic_factories import ModelFactory, Use
 
 from cmk.special_agents import agent_kube as agent
-from cmk.special_agents.utils_kubernetes import performance
+from cmk.special_agents.utils_kubernetes import common, performance
 from cmk.special_agents.utils_kubernetes.api_server import APIData
 from cmk.special_agents.utils_kubernetes.schemata import api
 
@@ -164,7 +164,7 @@ class CPURateSampleFactory(ModelFactory):
 
 
 class IdentifiableSampleFactory(ModelFactory):
-    __model__ = performance.IdentifiableSample
+    __model__ = common.IdentifiableSample
 
 
 # Node related Factories

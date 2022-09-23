@@ -9,28 +9,19 @@ Cluster Collector for the Kubernetes Monitoring solution
 from __future__ import annotations
 
 import enum
-import itertools
 import json
 import os
 import tempfile
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Generic, Literal, NewType, TypeVar
+from typing import Literal, NewType, TypeVar
 
 from pydantic import BaseModel, Field, parse_raw_as, ValidationError
 
 import cmk.utils
 
-from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, SectionWriter
-from cmk.special_agents.utils_kubernetes.common import (
-    LOGGER,
-    lookup_name,
-    Piggyback,
-    PodLookupName,
-    PodsToHost,
-    SectionName,
-)
+from cmk.special_agents.utils_kubernetes import common
 from cmk.special_agents.utils_kubernetes.schemata import section
 
 AGENT_TMP_PATH = Path(
@@ -44,15 +35,7 @@ class UsedMetric(str, enum.Enum):
     container_cpu_usage_seconds_total = "container_cpu_usage_seconds_total"
 
 
-class IdentifiableSample(BaseModel):
-    namespace: str
-    pod_name: str
-
-    def pod_lookup_from_metric(self) -> PodLookupName:
-        return lookup_name(self.namespace, self.pod_name)
-
-
-class PerformanceSample(IdentifiableSample):
+class PerformanceSample(common.IdentifiableSample):
     """BaseModel for parsing data obtained from the `/container_metrics` endpoint.
 
     From https://prometheus.io/docs/concepts/data_model/
@@ -63,7 +46,7 @@ class PerformanceSample(IdentifiableSample):
     > - a float64 value
     > - a millisecond-precision timestamp
 
-    Here, we additionally includes the metric labels inside a `Sample`. This is similiar to the HTTP
+    Here, we additionally includes the metric labels inside a `Sample`. This is similar to the HTTP
     API of Prometheus.
 
     The sample matching mechanism between different timeseries objects behaves as follows:
@@ -90,7 +73,7 @@ class UnusedSample(BaseModel):
     pass
 
 
-class CPURateSample(IdentifiableSample):
+class CPURateSample(common.IdentifiableSample):
     rate: float
 
 
@@ -107,91 +90,24 @@ class Samples:
 _AllSamples = MemorySample | CPUSample | UnusedSample
 
 
-@dataclass(frozen=True)
-class WriteableSection:
-    piggyback_name: str
-    section_name: SectionName
-    section: section.Section
-
-
 def parse_performance_metrics(cluster_collector_metrics: bytes) -> Sequence[_AllSamples]:
     return parse_raw_as(list[_AllSamples], cluster_collector_metrics)
 
 
 def create_selectors(
     cluster_name: str, container_metrics: Sequence[_AllSamples]
-) -> tuple[Selector[CPURateSample], Selector[MemorySample]]:
+) -> tuple[common.Selector[CPURateSample], common.Selector[MemorySample]]:
     """Converts parsed metrics into Selectors."""
 
     metrics = _group_metric_types(container_metrics)
     cpu_rate_metrics = _create_cpu_rate_metrics(cluster_name, metrics.cpu)
     return (
-        Selector(cpu_rate_metrics, aggregator=_aggregate_cpu_metrics),
-        Selector(metrics.memory, aggregator=_aggregate_memory_metrics),
+        common.Selector(cpu_rate_metrics, aggregator=_aggregate_cpu_metrics),
+        common.Selector(metrics.memory, aggregator=_aggregate_memory_metrics),
     )
 
 
-def write_sections(items: Iterator[WriteableSection]) -> None:
-    def key_function(item: WriteableSection) -> str:
-        return item.piggyback_name
-
-    # Optimize for size of agent output
-    for key, group in itertools.groupby(sorted(items, key=key_function), key_function):
-        with ConditionalPiggybackSection(key):
-            for item in group:
-                with SectionWriter(item.section_name) as writer:
-                    writer.append(item.section.json())
-
-
-T = TypeVar("T", bound=IdentifiableSample)
-
-
-class Selector(Generic[T]):
-    def __init__(self, metrics: Sequence[T], aggregator: Callable[[Sequence[T]], section.Section]):
-        self.aggregator = aggregator
-        self.metrics_map: dict[PodLookupName, list[T]] = {}
-        for m in metrics:
-            key = m.pod_lookup_from_metric()
-            self.metrics_map.setdefault(key, []).append(m)
-
-    def get_section(
-        self, piggyback: Piggyback, section_name: SectionName
-    ) -> Iterator[WriteableSection]:
-        metrics = [
-            m for pod_name in piggyback.pod_names for m in self.metrics_map.get(pod_name, [])
-        ]
-        if metrics:
-            yield WriteableSection(
-                piggyback_name=piggyback.piggyback,
-                section_name=section_name,
-                section=self.aggregator(metrics),
-            )
-
-
-def create_sections(
-    cpu_selector: Selector[CPURateSample],
-    memory_selector: Selector[MemorySample],
-    pods_to_host: PodsToHost,
-) -> Iterator[WriteableSection]:
-    for piggyback in pods_to_host.piggybacks:
-        yield from memory_selector.get_section(
-            piggyback,
-            SectionName("kube_performance_memory_v1"),
-        )
-        yield from cpu_selector.get_section(
-            piggyback,
-            SectionName("kube_performance_cpu_v1"),
-        )
-
-    for piggyback in pods_to_host.namespace_piggies:
-        yield from memory_selector.get_section(
-            piggyback,
-            SectionName("kube_resource_quota_performance_memory_v1"),
-        )
-        yield from cpu_selector.get_section(
-            piggyback,
-            SectionName("kube_resource_quota_performance_cpu_v1"),
-        )
+T = TypeVar("T", bound=common.IdentifiableSample)
 
 
 def _aggregate_memory_metrics(metrics: Iterable[MemorySample]) -> section.PerformanceUsage:
@@ -243,14 +159,14 @@ def _create_cpu_rate_metrics(
 
 
 def _load_containers_store(path: Path, file_name: str) -> ContainersStore:
-    LOGGER.debug("Load previous cycle containers store from %s", file_name)
+    common.LOGGER.debug("Load previous cycle containers store from %s", file_name)
     try:
         return ContainersStore.parse_file(f"{path}/{file_name}")
     except FileNotFoundError as e:
-        LOGGER.info("Could not find metrics file. This is expected if the first run.")
-        LOGGER.debug("Exception: %s", e)
+        common.LOGGER.info("Could not find metrics file. This is expected if the first run.")
+        common.LOGGER.debug("Exception: %s", e)
     except (ValidationError, json.decoder.JSONDecodeError):
-        LOGGER.exception("Found metrics file, but could not parse it.")
+        common.LOGGER.exception("Found metrics file, but could not parse it.")
 
     return ContainersStore(cpu=[])
 
@@ -259,9 +175,9 @@ def _persist_containers_store(
     containers_store: ContainersStore, path: Path, file_name: str
 ) -> None:
     file_path = f"{path}/{file_name}"
-    LOGGER.debug("Creating directory %s for containers store file", path)
+    common.LOGGER.debug("Creating directory %s for containers store file", path)
     path.mkdir(parents=True, exist_ok=True)
-    LOGGER.debug("Persisting current containers store under %s", file_path)
+    common.LOGGER.debug("Persisting current containers store under %s", file_path)
     with open(file_path, "w") as f:
         f.write(containers_store.json())
 
@@ -273,7 +189,7 @@ def _determine_cpu_rate_metrics(
     """Determine the rate metrics for each container based on the current and previous
     counter metric values"""
 
-    LOGGER.debug("Determine rate metrics from the latest containers counters stores")
+    common.LOGGER.debug("Determine rate metrics from the latest containers counters stores")
     cpu_metrics_old_map = {metric.container_name: metric for metric in cpu_metrics_old}
     return [
         CPURateSample(

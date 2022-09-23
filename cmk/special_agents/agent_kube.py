@@ -50,7 +50,13 @@ from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 from cmk.special_agents.utils import vcrtrace
 from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, SectionWriter
 from cmk.special_agents.utils.request_helper import get_requests_ca
-from cmk.special_agents.utils_kubernetes import performance, query
+from cmk.special_agents.utils_kubernetes import (
+    common,
+    performance,
+    prometheus_api,
+    prometheus_section,
+    query,
+)
 from cmk.special_agents.utils_kubernetes.api_server import APIData, from_kubernetes
 from cmk.special_agents.utils_kubernetes.common import (
     LOGGER,
@@ -148,23 +154,8 @@ def parse_arguments(args: list[str]) -> argparse.Namespace:
             "will be used."
         ),
     )
-    p.add_argument(
-        "--cluster-collector-endpoint",
-        help="Endpoint to query metrics from Kubernetes cluster agent",
-    )
-    p.add_argument(
-        "--cluster-collector-proxy",
-        type=str,
-        default="FROM_ENVIRONMENT",
-        metavar="PROXY",
-        help=(
-            "HTTP proxy used to connect to the Kubernetes cluster agent. If not set, the environment settings "
-            "will be used."
-        ),
-    )
 
     p.add_argument("--verify-cert-api", action="store_true", help="Verify certificate")
-    p.add_argument("--verify-cert-collector", action="store_true", help="Verify certificate")
     namespaces = p.add_mutually_exclusive_group()
     namespaces.add_argument(
         "--namespace-include-patterns",
@@ -185,20 +176,6 @@ def parse_arguments(args: list[str]) -> argparse.Namespace:
         "--profile",
         metavar="FILE",
         help="Profile the performance of the agent and write the output to a file",
-    )
-    p.add_argument(
-        "--cluster-collector-connect-timeout",
-        type=int,
-        default=10,
-        help="The timeout in seconds the special agent will wait for a "
-        "connection to the cluster collector.",
-    )
-    p.add_argument(
-        "--cluster-collector-read-timeout",
-        type=int,
-        default=12,
-        help="The timeout in seconds the special agent will wait for a "
-        "response from the cluster collector.",
     )
     p.add_argument(
         "--k8s-api-connect-timeout",
@@ -256,6 +233,50 @@ def parse_arguments(args: list[str]) -> argparse.Namespace:
     )
     group_host_labels.set_defaults(annotation_key_pattern=AnnotationNonPatternOption.ignore_all)
 
+    data_endpoint = p.add_mutually_exclusive_group()
+    data_endpoint.add_argument(
+        "--cluster-collector-endpoint",
+        help="Endpoint to query metrics from Kubernetes cluster agent",
+    )
+    data_endpoint.add_argument(
+        "--prometheus-endpoint",
+        help="The full URL to the Prometheus API endpoint including the protocol (http or https). "
+        "OpenShift exposes such endpoints via a route in the openshift-monitoring namespace called "
+        "prometheus-k8s.",
+    )
+    p.add_argument(
+        "--usage-connect-timeout",
+        type=int,
+        default=10,
+        help="The timeout in seconds the special agent will wait for a "
+        "connection to the endpoint specified by --prometheus-endpoint or "
+        "--cluster-collector-endpoint.",
+    )
+    p.add_argument(
+        "--usage-read-timeout",
+        type=int,
+        default=12,
+        help="The timeout in seconds the special agent will wait for a "
+        "response from the endpoint specified by --prometheus-endpoint or "
+        "--cluster-collector-endpoint.",
+    )
+    p.add_argument(
+        "--usage-proxy",
+        type=str,
+        default="FROM_ENVIRONMENT",
+        metavar="PROXY",
+        help=(
+            "HTTP proxy used to connect to the endpoint specified by --prometheus-endpoint or "
+            "--cluster-collector-endpoint. "
+            "If not set, the environment settings will be used."
+        ),
+    )
+    p.add_argument(
+        "--usage-verify-cert",
+        action="store_true",
+        help="Verify certificate for the endpoint specified by --prometheus-endpoint or "
+        "--cluster-collector-endpoint.",
+    )
     arguments = p.parse_args(args)
     return arguments
 
@@ -1400,7 +1421,7 @@ def request_cluster_collector(
     prepare_request = session.prepare_request(request)
     try:
         cluster_resp = session.send(
-            prepare_request, verify=config.verify_cert_collector, timeout=config.requests_timeout()
+            prepare_request, verify=config.usage_verify_cert, timeout=config.requests_timeout()
         )
         cluster_resp.raise_for_status()
     except requests.HTTPError as e:
@@ -2100,9 +2121,54 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                 )
 
             usage_config = query.parse_session_config(arguments)
+
             # Skip machine & container sections when cluster agent endpoint not configured
             if isinstance(usage_config, query.NoUsageConfig):
                 return 0
+
+            if isinstance(usage_config, query.PrometheusSessionConfig):
+                cpu, memory = query.send_requests(
+                    usage_config,
+                    [
+                        query.Query.sum_rate_container_cpu_usage_seconds_total,
+                        query.Query.sum_container_memory_working_set_bytes,
+                    ],
+                    logger=LOGGER,
+                )
+                # TODO: CMK-11387
+                if (
+                    not isinstance(cpu, prometheus_api.ResponseSuccess)
+                    or not isinstance(cpu.data, prometheus_api.Vector)
+                    or not cpu.data.result
+                ):
+                    return 0
+                if (
+                    not isinstance(memory, prometheus_api.ResponseSuccess)
+                    or not isinstance(memory.data, prometheus_api.Vector)
+                    or not memory.data.result
+                ):
+                    return 0
+                prometheus_selectors = prometheus_section.create_selectors(
+                    cpu.data.result,
+                    memory.data.result,
+                )
+                pods_to_host = determine_pods_to_host(
+                    composed_entities=composed_entities,
+                    monitored_objects=arguments.monitored_objects,
+                    monitored_namespaces=monitored_namespace_names,
+                    api_pods=api_data.pods,
+                    resource_quotas=resource_quotas,
+                    api_cron_jobs=api_data.cron_jobs,
+                    monitored_api_namespaces=monitored_api_namespaces,
+                    piggyback_formatter=piggyback_formatter,
+                    piggyback_formatter_node=piggyback_formatter_node,
+                )
+                common.write_sections(
+                    common.create_sections(*prometheus_selectors, pods_to_host=pods_to_host)
+                )
+                return 0
+
+            assert isinstance(usage_config, query.CollectorSessionConfig)
 
             # Sections based on cluster collector performance data
 
@@ -2184,7 +2250,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                     piggyback_formatter=piggyback_formatter,
                 )
                 try:
-                    selectors = performance.create_selectors(
+                    collector_selectors = performance.create_selectors(
                         cluster_name=arguments.cluster,
                         container_metrics=container_metrics,
                     )
@@ -2196,8 +2262,8 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                     ) from e
 
                 try:
-                    performance.write_sections(
-                        performance.create_sections(*selectors, pods_to_host=pods_to_host)
+                    common.write_sections(
+                        common.create_sections(*collector_selectors, pods_to_host=pods_to_host)
                     )
 
                 except Exception as e:

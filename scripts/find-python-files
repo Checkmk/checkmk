@@ -73,6 +73,7 @@ get_candidates_from_filesystem() {
     SEARCH+=" omd/packages/appliance"
     SEARCH+=" omd/packages/maintenance"
     SEARCH+=" omd/packages/omd"
+    SEARCH+=" omd/packages/check_mk"
     SEARCH+=" scripts"
     SEARCH+=" tests"
     SEARCH+=" web/app"

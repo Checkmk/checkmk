@@ -5,6 +5,7 @@
 """Initialize the Checkmk default configuration in case it is necessary.
 """
 
+# pylint: disable=cmk-module-layer-violation
 
 from cmk.gui import main_modules
 from cmk.gui.logged_in import SuperUserContext

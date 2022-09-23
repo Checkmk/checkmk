@@ -12,7 +12,7 @@ import logging
 import os
 import time
 from collections.abc import Container
-from typing import Any, ContextManager, Dict, Final, Iterator, List, Optional, Set, Tuple, Union
+from typing import Any, ContextManager, Final, Iterator
 
 from livestatus import SiteConfigurations, SiteId
 
@@ -55,7 +55,7 @@ class LoggedInUser:
 
     def __init__(
         self,
-        user_id: Optional[str],
+        user_id: str | None,
         *,
         explicitly_given_permissions: Container[str] = frozenset(),
     ) -> None:
@@ -72,11 +72,11 @@ class LoggedInUser:
 
         self.explicitly_given_permissions: Final = explicitly_given_permissions
         self._siteconf = self.load_file("siteconfig", {})
-        self._button_counts: Dict[str, float] = {}
-        self._stars: Set[str] = set()
-        self._tree_states: Dict = {}
-        self._bi_assumptions: Dict[Union[Tuple[str, str], Tuple[str, str, str]], int] = {}
-        self._tableoptions: Dict[str, Dict[str, Any]] = {}
+        self._button_counts: dict[str, float] = {}
+        self._stars: set[str] = set()
+        self._tree_states: dict = {}
+        self._bi_assumptions: dict[tuple[str, str] | tuple[str, str, str], int] = {}
+        self._tableoptions: dict[str, dict[str, Any]] = {}
 
     @property
     def ident(self) -> UserId:
@@ -93,10 +93,10 @@ class LoggedInUser:
             raise AttributeError("No user_id on this instance.")
         return self.id
 
-    def _gather_roles(self, user_id: Optional[UserId]) -> List[str]:
+    def _gather_roles(self, user_id: UserId | None) -> list[str]:
         return roles_of_user(user_id)
 
-    def _load_attributes(self, user_id: Optional[UserId], role_ids: List[str]) -> Any:
+    def _load_attributes(self, user_id: UserId | None, role_ids: list[str]) -> Any:
         if user_id is None:
             return {"roles": role_ids}
         attributes = self.load_file("cached_profile", None)
@@ -122,11 +122,11 @@ class LoggedInUser:
             pass
 
     @property
-    def language(self) -> Optional[str]:
+    def language(self) -> str | None:
         return self.get_attribute("language", active_config.default_language)
 
     @language.setter
-    def language(self, value: Optional[str]) -> None:
+    def language(self, value: str | None) -> None:
         self._set_attribute("language", value)
 
     def reset_language(self) -> None:
@@ -141,15 +141,15 @@ class LoggedInUser:
         return "show_more" in self.show_mode
 
     @property
-    def customer_id(self) -> Optional[str]:
+    def customer_id(self) -> str | None:
         return self.get_attribute("customer")
 
     @property
-    def contact_groups(self) -> List:
+    def contact_groups(self) -> list:
         return self.get_attribute("contactgroups", [])
 
     @property
-    def start_url(self) -> Optional[str]:
+    def start_url(self) -> str | None:
         return self.load_file("start_url", None)
 
     @property
@@ -225,7 +225,7 @@ class LoggedInUser:
         self.save_file("bi_treestate", (value,))
 
     @property
-    def stars(self) -> Set[str]:
+    def stars(self) -> set[str]:
         if not self._stars:
             self._stars = set(self.load_file("favorites", []))
         return self._stars
@@ -234,7 +234,7 @@ class LoggedInUser:
         self.save_file("favorites", list(self._stars))
 
     @property
-    def tree_states(self) -> Dict:
+    def tree_states(self) -> dict:
         if not self._tree_states:
             self._tree_states = self.load_file("treestates", {})
         return self._tree_states
@@ -282,7 +282,7 @@ class LoggedInUser:
         self.save_file("bi_assumptions", self._bi_assumptions)
 
     @property
-    def tableoptions(self) -> Dict[str, Dict[str, Any]]:
+    def tableoptions(self) -> dict[str, dict[str, Any]]:
         if not self._tableoptions:
             self._tableoptions = self.load_file("tableoptions", {})
         return self._tableoptions
@@ -290,12 +290,12 @@ class LoggedInUser:
     def save_tableoptions(self) -> None:
         self.save_file("tableoptions", self._tableoptions)
 
-    def get_rowselection(self, selection_id: str, identifier: str) -> List[str]:
+    def get_rowselection(self, selection_id: str, identifier: str) -> list[str]:
         vo = self.load_file("rowselection/%s" % selection_id, {})
         return vo.get(identifier, [])
 
     def set_rowselection(
-        self, selection_id: str, identifier: str, rows: List[str], action: str
+        self, selection_id: str, identifier: str, rows: list[str], action: str
     ) -> None:
         vo = self.load_file("rowselection/%s" % selection_id, {}, lock=True)
 
@@ -328,10 +328,10 @@ class LoggedInUser:
         except OSError:
             pass  # no directory -> no cleanup
 
-    def get_sidebar_configuration(self, default: Dict[str, Any]) -> Dict[str, Any]:
+    def get_sidebar_configuration(self, default: dict[str, Any]) -> dict[str, Any]:
         return self.load_file("sidebar", default)
 
-    def set_sidebar_configuration(self, configuration: Dict[str, Any]) -> None:
+    def set_sidebar_configuration(self, configuration: dict[str, Any]) -> None:
         self.save_file("sidebar", configuration)
 
     def is_site_disabled(self, site_id: SiteId) -> bool:
@@ -346,15 +346,15 @@ class LoggedInUser:
     def save_site_config(self) -> None:
         self.save_file("siteconfig", self._siteconf)
 
-    def transids(self, lock: bool = False) -> List[str]:
+    def transids(self, lock: bool = False) -> list[str]:
         return self.load_file("transids", [], lock=lock)
 
-    def save_transids(self, transids: List[str]) -> None:
+    def save_transids(self, transids: list[str]) -> None:
         if self.id:
             self.save_file("transids", transids)
 
     def authorized_sites(
-        self, unfiltered_sites: Optional[SiteConfigurations] = None
+        self, unfiltered_sites: SiteConfigurations | None = None
     ) -> SiteConfigurations:
         if unfiltered_sites is None:
             unfiltered_sites = site_config.allsites()
@@ -460,7 +460,9 @@ class LoggedInUser:
     def get_docs_base_url(self) -> str:
         version = Version(__version__).version_base
         version = version if version != "" else "master"
-        return "https://docs.checkmk.com/%s/%s" % (version, "de" if self.language == "de" else "en")
+        return "https://docs.checkmk.com/{}/{}".format(
+            version, "de" if self.language == "de" else "en"
+        )
 
 
 # Login a user that has all permissions. This is needed for making
@@ -472,7 +474,7 @@ class LoggedInSuperUser(LoggedInUser):
         self.alias = "Superuser for unauthenticated pages"
         self.email = "admin"
 
-    def _gather_roles(self, _user_id: Optional[UserId]) -> List[str]:
+    def _gather_roles(self, _user_id: UserId | None) -> list[str]:
         return ["admin"]
 
     def save_file(self, name: str, content: Any) -> None:
@@ -485,7 +487,7 @@ class LoggedInNobody(LoggedInUser):
         self.alias = "Unauthenticated user"
         self.email = "nobody"
 
-    def _gather_roles(self, _user_id: Optional[UserId]) -> List[str]:
+    def _gather_roles(self, _user_id: UserId | None) -> list[str]:
         return []
 
     def save_file(self, name: str, content: Any) -> None:
@@ -534,7 +536,7 @@ def _UserContext(user_obj: LoggedInUser) -> Iterator[None]:
         request_local_attr().user = old_user
 
 
-def _confdir_for_user_id(user_id: Optional[UserId]) -> Optional[str]:
+def _confdir_for_user_id(user_id: UserId | None) -> str | None:
     if user_id is None:
         return None
 
@@ -543,7 +545,7 @@ def _confdir_for_user_id(user_id: Optional[UserId]) -> Optional[str]:
     return str(confdir)
 
 
-def _baserole_ids_from_role_ids(role_ids: List[str]) -> List[str]:
+def _baserole_ids_from_role_ids(role_ids: list[str]) -> list[str]:
     base_roles = set()
     for r in role_ids:
         if r in builtin_role_ids:
@@ -553,7 +555,7 @@ def _baserole_ids_from_role_ids(role_ids: List[str]) -> List[str]:
     return list(base_roles)
 
 
-def _most_permissive_baserole_id(baserole_ids: List[str]) -> str:
+def _most_permissive_baserole_id(baserole_ids: list[str]) -> str:
     if "admin" in baserole_ids:
         return "admin"
     if "user" in baserole_ids:

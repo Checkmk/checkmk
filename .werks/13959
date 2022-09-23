@@ -1,0 +1,17 @@
+Title: REST API: Create users with custom attributes
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1663925256
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p15
+
+The POST method of the "/domain-types/user_config/collections/all" endpoint
+has been extended to allow you to create users with custom attributes.
+Please note that the attributes must have been already defined by other means
+such as the GUI.
+Due to technical limitations, the ReDoc/Swagger documentation won't show custom
+attributes in neither the schema nor the examples.

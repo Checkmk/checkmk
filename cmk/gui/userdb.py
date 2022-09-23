@@ -703,6 +703,10 @@ class GenericUserAttribute(UserAttribute):
     def domain(self) -> str:
         return self._domain
 
+    @classmethod
+    def is_custom(cls) -> bool:
+        return False
+
 
 # TODO: Legacy plugin API. Converts to new internal structure. Drop this with 1.6 or later.
 def declare_user_attribute(
@@ -1266,6 +1270,47 @@ def _convert_idle_timeout(value: str) -> Union[int, bool, None]:
 #   +----------------------------------------------------------------------+
 #   | Mange custom attributes of users (in future hosts etc.)              |
 #   '----------------------------------------------------------------------'
+def register_custom_user_attributes(attributes: list[dict[str, Any]]) -> None:
+    for attr in attributes:
+        if attr["type"] != "TextAscii":
+            raise NotImplementedError()
+
+        @user_attribute_registry.register
+        class _LegacyUserAttribute(GenericUserAttribute):
+            # Play safe: Grab all necessary data at class construction time,
+            # it's highly unclear if the attr dict is mutated later or not.
+            _name = attr["name"]
+            _valuespec = TextInput(title=attr["title"], help=attr["help"])
+            _topic = attr.get("topic", "personal")
+            _user_editable = attr["user_editable"]
+            _show_in_table = attr.get("show_in_table", False)
+            _add_custom_macro = attr.get("add_custom_macro", False)
+
+            @classmethod
+            def name(cls) -> str:
+                return cls._name
+
+            def valuespec(self) -> ValueSpec:
+                return self._valuespec
+
+            def topic(self) -> str:
+                return self._topic
+
+            def __init__(self) -> None:
+                super().__init__(
+                    user_editable=self._user_editable,
+                    show_in_table=self._show_in_table,
+                    add_custom_macro=self._add_custom_macro,
+                    domain="multisite",
+                    permission=None,
+                    from_config=True,
+                )
+
+            @classmethod
+            def is_custom(cls) -> bool:
+                return True
+
+        cmk.gui.plugins.userdb.ldap_connector.register_user_attribute_sync_plugins()
 
 
 def update_config_based_user_attributes() -> None:

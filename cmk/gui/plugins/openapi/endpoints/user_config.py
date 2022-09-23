@@ -115,8 +115,10 @@ def list_users(params):
         ]
     ),
 )
-def create_user(params):
-    """Create a user"""
+def create_user(params) -> Response:
+    """Create a user
+
+    You can pass custom attributes you defined directly in the top level JSON object of the request."""
     api_attrs = params["body"]
     username = api_attrs["username"]
 

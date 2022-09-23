@@ -387,7 +387,6 @@ def test_update_user_auth_options(
     test_data: Mapping[str, str],
     expected_serial_count: int,
 ) -> None:
-
     monkeypatch.setattr(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
     )
@@ -1145,9 +1144,11 @@ def custom_user_attributes_ctx(attrs: list[Mapping[str, str | bool]]) -> Iterato
 def test_openapi_custom_attributes_of_user(
     base: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
-    with_user: tuple[UserId, str],
-    run_as_superuser: Callable[[], ContextManager[None]],
+    monkeypatch: MonkeyPatch,
 ) -> None:
+    monkeypatch.setattr(
+        "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
+    )
 
     attr: Mapping[str, str | bool] = {
         "name": "judas",
@@ -1158,20 +1159,29 @@ def test_openapi_custom_attributes_of_user(
         "user_editable": True,
     }
 
-    user, _password = with_user
-    changed_users = {
-        user: {
-            "attributes": {"alias": "Ian Hill", "notification_method": "email", "judas": "priest"},
-            "is_new_user": False,
-        }
-    }
-    # context managers are order dependent
-    with custom_user_attributes_ctx([attr]), run_as_superuser():
-        print("edit user", user)
-        edit_users(changed_users)
-        user_from_db = userdb.load_user(user)
-        # well of course we monkeypatch a typed dict ;-)
-        assert user_from_db["judas"] == "priest"  # type:ignore[typeddict-item]
+    with custom_user_attributes_ctx([attr]):
+        user = "rob_halford"
+        aut_user_auth_wsgi_app.post(
+            url=f"{base}/domain-types/user_config/collections/all",
+            status=200,
+            headers={"Accept": "application/json"},
+            content_type="application/json",
+            params=json.dumps(
+                {
+                    "username": user,
+                    "fullname": "Mathias Kettner",
+                    "customer": "global",
+                    "interface_options": {
+                        "interface_theme": "dark",
+                        "sidebar_position": "left",
+                        "navigation_bar_icons": "show",
+                        "mega_menu_icons": "entry",
+                        "show_mode": "enforce_show_more",
+                    },
+                    "judas": "priest",
+                }
+            ),
+        )
 
         resp = aut_user_auth_wsgi_app.call_method(
             "get",
@@ -1179,4 +1189,34 @@ def test_openapi_custom_attributes_of_user(
             status=200,
             headers={"Accept": "application/json"},
         )
-    assert resp.json["extensions"]["judas"] == "priest"
+        assert resp.json["extensions"]["judas"] == "priest"
+
+
+def test_create_user_with_non_existing_custom_attribute(
+    base: str, aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch
+) -> None:
+    monkeypatch.setattr(
+        "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
+    )
+
+    aut_user_auth_wsgi_app.post(
+        url=f"{base}/domain-types/user_config/collections/all",
+        status=400,
+        headers={"Accept": "application/json"},
+        content_type="application/json",
+        params=json.dumps(
+            {
+                "username": "cmkuser",
+                "fullname": "Mathias Kettner",
+                "customer": "global",
+                "interface_options": {
+                    "interface_theme": "dark",
+                    "sidebar_position": "left",
+                    "navigation_bar_icons": "show",
+                    "mega_menu_icons": "entry",
+                    "show_mode": "enforce_show_more",
+                },
+                "i_do_not": "exists",
+            }
+        ),
+    )

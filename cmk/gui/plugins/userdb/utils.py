@@ -412,6 +412,10 @@ class UserAttribute(abc.ABC):
     def name(cls) -> str:
         raise NotImplementedError()
 
+    @classmethod
+    def is_custom(cls) -> bool:
+        return False
+
     @abc.abstractmethod
     def topic(self) -> str:
         raise NotImplementedError()

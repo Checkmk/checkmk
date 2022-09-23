@@ -115,7 +115,9 @@ def list_users(params: Mapping[str, Any]) -> Response:
     ),
 )
 def create_user(params: Mapping[str, Any]) -> Response:
-    """Create a user"""
+    """Create a user
+
+    You can pass custom attributes you defined directly in the top level JSON object of the request."""
     api_attrs = params["body"]
     username = api_attrs["username"]
 

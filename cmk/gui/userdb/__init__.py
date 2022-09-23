@@ -673,6 +673,10 @@ class GenericUserAttribute(UserAttribute):
     def domain(self) -> str:
         return self._domain
 
+    @classmethod
+    def is_custom(cls) -> bool:
+        return False
+
 
 def load_contacts() -> dict[str, Any]:
     return store.load_from_mk_file(_contacts_filepath(), "contacts", {})
@@ -1176,12 +1180,8 @@ def _convert_idle_timeout(value: str) -> int | bool | None:
 #   +----------------------------------------------------------------------+
 #   | Mange custom attributes of users (in future hosts etc.)              |
 #   '----------------------------------------------------------------------'
-
-
-def update_config_based_user_attributes() -> None:
-    _clear_config_based_user_attributes()
-
-    for attr in active_config.wato_user_attrs:
+def register_custom_user_attributes(attributes: list[dict[str, Any]]) -> None:
+    for attr in attributes:
         if attr["type"] != "TextAscii":
             raise NotImplementedError()
 
@@ -1216,7 +1216,16 @@ def update_config_based_user_attributes() -> None:
                     from_config=True,
                 )
 
+            @classmethod
+            def is_custom(cls) -> bool:
+                return True
+
     cmk.gui.userdb.ldap_connector.register_user_attribute_sync_plugins()
+
+
+def update_config_based_user_attributes() -> None:
+    _clear_config_based_user_attributes()
+    register_custom_user_attributes(active_config.wato_user_attrs)
 
 
 def _clear_config_based_user_attributes() -> None:

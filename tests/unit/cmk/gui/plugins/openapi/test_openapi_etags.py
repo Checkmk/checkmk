@@ -2,6 +2,7 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import Iterator
 
 import pytest
 
@@ -9,7 +10,7 @@ from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 
 @pytest.fixture(scope="function", name="etags_off")
-def etags_off_fixture(aut_user_auth_wsgi_app: WebTestAppForCMK):  # type:ignore[no-untyped-def]
+def etags_off_fixture(aut_user_auth_wsgi_app: WebTestAppForCMK) -> Iterator[None]:
     with aut_user_auth_wsgi_app.set_config(rest_api_etag_locking=False):
         yield
 

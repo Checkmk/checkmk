@@ -69,6 +69,14 @@ def dump_privatekey_pem(pkey: crypto.PKey) -> bytes:
     return crypto.dump_privatekey(crypto.FILETYPE_PEM, pkey)
 
 
+TargetId = NewType("TargetId", str)
+
+
+class Config(TypedDict):
+    targets: dict[str, Any]
+    jobs: dict[str, Any]
+
+
 class ScheduleConfig(TypedDict):
     disabled: bool
     period: str
@@ -89,6 +97,29 @@ class Job:
     config: JobConfig
     local_id: str | None
 
+
+@dataclass(frozen=True)
+class BackupTarget:
+    config: Config
+    target_id: TargetId
+
+    @property
+    def base_path(self) -> str:
+        return job_backup_path_during_backup(self.config, self.target_id)
+
+
+@dataclass(frozen=True)
+class RestoreTarget:
+    target_id: TargetId
+    backup_id: str
+    config: Config
+
+    @property
+    def base_path(self) -> str:
+        return f"{target_path(self.target_id, self.config)}/{self.backup_id}"
+
+
+Target = BackupTarget | RestoreTarget
 
 # Is used to duplicate output from stdout/stderr to a the job log. This
 # is e.g. used during "mkbackup backup" to store the output.
@@ -337,12 +368,6 @@ def makedir(
 # Wenn als Site-User ausgeführt:
 # - TargetIds aus System-Konfiguration laden
 # - Site-Konfiguration laden
-TargetId = NewType("TargetId", str)
-
-
-class Config(TypedDict):
-    targets: dict[str, Any]
-    jobs: dict[str, Any]
 
 
 def get_needed_lock_files(opts: Mapping[str, str], job_config: JobConfig) -> Sequence[Path]:
@@ -402,8 +427,8 @@ def get_site_ids_of_backup(info: Mapping[str, Any]) -> list[str]:
     return [f[0].split(".", 1)[0][5:] for f in info["files"] if f[0].startswith("site-")]
 
 
-def save_backup_info(info: Mapping[str, Any], config: Config, target_id: TargetId) -> None:
-    with open(backup_info_path(config, target_id), "w") as f:
+def save_backup_info(info: Mapping[str, Any], target: Target) -> None:
+    with open(backup_info_path(target), "w") as f:
         json.dump(info, f, sort_keys=True, indent=4, separators=(",", ": "))
 
 
@@ -666,6 +691,7 @@ g_backup_id: str | None = None
 def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None:
     verify_compatible_cma_version()
     job = load_job(local_job_id, config)
+    target = BackupTarget(config, job.config["target_id"])
 
     with ExitStack() as stack:
         for cm in [
@@ -697,7 +723,7 @@ def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None
                 job,
             )
 
-            do_backup(opts, config, job)
+            do_backup(opts, config, job, target)
             success = True
 
         except MKGeneralException as e:
@@ -723,19 +749,20 @@ def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None
             )
 
 
-def do_backup(opts: Mapping[str, str], config: Config, job: Job) -> None:
+def do_backup(opts: Mapping[str, str], config: Config, job: Job, target: BackupTarget) -> None:
     if not is_root():
-        do_site_backup(config, job)
+        do_site_backup(config, job, target)
     elif is_cma():
-        do_system_backup(opts, config, job)
+        do_system_backup(opts, config, job, target)
     else:
         raise MKGeneralException("System backup not supported.")
-    complete_backup(config, job)
+    complete_backup(config, job, target)
 
 
 def do_site_backup(
     config: Config,
     job: Job,
+    target: BackupTarget,
     site: str | None = None,
     try_stop: bool = True,
 ) -> None:  # pylint: disable=too-many-branches
@@ -764,7 +791,7 @@ def do_site_backup(
 
     cmd.append("-")
 
-    backup_path = site_backup_archive_path(site, config, job.config)
+    backup_path = site_backup_archive_path(site, target, job.config)
 
     # Create missing directories. Ensure group permissions and mode.
     makedirs(os.path.dirname(backup_path), group="omd", mode=0o775)
@@ -1120,32 +1147,24 @@ class RestoreStream(MKBackupStream):
 
 # Returns the base path for the backup to work with. In backup mode, this is
 # the directory of the target+job. In restore mode it is the target+backup path.
-def backup_base_path(config: Config, target: TargetId) -> str:
-    if g_job_id is not None:
-        return job_backup_path_during_backup(config, target)
-    return existing_backup_path(config)
+def backup_base_path(target: Target) -> str:
+    return target.base_path
 
 
-def existing_backup_path(config: Config) -> str:
-    if g_target_id is None:
-        raise MKGeneralException("wow no id has been set. Global variables are a bad idea!")
-    return f"{target_path(g_target_id, config)}/{g_backup_id}"
+def backup_info_path(target: Target) -> str:
+    return "%s/mkbackup.info" % (backup_base_path(target))
 
 
-def backup_info_path(config: Config, target_id: TargetId) -> str:
-    return "%s/mkbackup.info" % (backup_base_path(config, target_id))
+def site_backup_archive_path(site_id: str, target: Target, job_config: JobConfig) -> str:
+    return f"{backup_base_path(target)}/site-{site_id}{archive_suffix(job_config)}"
 
 
-def site_backup_archive_path(site_id: str, config: Config, job_config: JobConfig) -> str:
-    return f"{backup_base_path(config, job_config['target_id'])}/site-{site_id}{archive_suffix(job_config)}"
+def system_backup_archive_path(target: Target, job_config: JobConfig) -> str:
+    return f"{backup_base_path(target)}/system{archive_suffix(job_config)}"
 
 
-def system_backup_archive_path(config: Config, job_config: JobConfig) -> str:
-    return f"{backup_base_path(config, job_config['target_id'])}/system{archive_suffix(job_config)}"
-
-
-def system_data_backup_archive_path(config: Config, job_config: JobConfig) -> str:
-    return f"{backup_base_path(config, job_config['target_id'])}/system-data{archive_suffix(job_config)}"
+def system_data_backup_archive_path(target: Target, job_config: JobConfig) -> str:
+    return f"{backup_base_path(target)}/system-data{archive_suffix(job_config)}"
 
 
 def job_backup_path_during_backup(config: Config, target_id: TargetId) -> str:
@@ -1214,10 +1233,8 @@ def verify_target_is_ready(target_ident: str, config: Config) -> None:
         )
 
 
-def verify_backup_exists(config: Config, target_id: TargetId) -> None:
-    if not os.path.exists(backup_base_path(config, target_id)) or not os.path.exists(
-        backup_info_path(config, target_id)
-    ):
+def verify_backup_exists(config: Config, target: Target) -> None:
+    if not os.path.exists(backup_base_path(target)) or not os.path.exists(backup_info_path(target)):
         raise MKGeneralException(
             'This backup does not exist (Use "mkbackup list %s" to '
             "show a list of available backups)." % g_target_id
@@ -1225,22 +1242,18 @@ def verify_backup_exists(config: Config, target_id: TargetId) -> None:
 
 
 def verify_backup_consistency(
-    info: Mapping[str, Any], config: Config, job_config: JobConfig
+    info: Mapping[str, Any], target: Target, job_config: JobConfig
 ) -> None:
     log("Verifying backup consistency")
     needed_files = needed_backup_archive_files(info, job_config)
     optional_files = [entry[0] for entry in info["files"] if entry[0] not in needed_files]
 
-    verify_backup_files(
-        info, needed_files, needed=True, config=config, target_id=job_config["target_id"]
-    )
-    verify_backup_files(
-        info, optional_files, needed=False, config=config, target_id=job_config["target_id"]
-    )
+    verify_backup_files(info, needed_files, needed=True, target=target)
+    verify_backup_files(info, optional_files, needed=False, target=target)
 
 
 def verify_backup_files(
-    info: Mapping[str, Any], files: Sequence[str], needed: bool, config: Config, target_id: TargetId
+    info: Mapping[str, Any], files: Sequence[str], needed: bool, target: Target
 ) -> None:
     for archive_file in files:
         size, checksum = None, None
@@ -1256,7 +1269,7 @@ def verify_backup_files(
                 )
             continue  # missing optional files are OK
 
-        archive_path = f"{backup_base_path(config, target_id)}/{archive_file}"
+        archive_path = f"{backup_base_path(target)}/{archive_file}"
         this_checksum = file_checksum(archive_path)
         if this_checksum != checksum:
             raise MKGeneralException(
@@ -1266,11 +1279,13 @@ def verify_backup_files(
             )
 
 
-def do_system_backup(opts: Mapping[str, str], config: Config, job: Job) -> None:
+def do_system_backup(
+    opts: Mapping[str, str], config: Config, job: Job, target: BackupTarget
+) -> None:
     # Create missing directories. Ensure group permissions and mode.
     try:
         makedirs(
-            os.path.dirname(system_backup_archive_path(config, job.config)),
+            os.path.dirname(system_backup_archive_path(target, job.config)),
             group="omd",
             mode=0o775,
         )
@@ -1282,7 +1297,7 @@ def do_system_backup(opts: Mapping[str, str], config: Config, job: Job) -> None:
     # Perform backup of the /rw volume on all devices
     log("Performing system backup (system%s)" % archive_suffix(job.config))
     perform_backup(
-        backup_archive_path=system_backup_archive_path(config, job.config),
+        backup_archive_path=system_backup_archive_path(target, job.config),
         base_path="/rw",
         exclude_patterns=["mnt/*/*"],
         job=job,
@@ -1296,7 +1311,7 @@ def do_system_backup(opts: Mapping[str, str], config: Config, job: Job) -> None:
 
     log("Performing system data backup (system-data%s)" % archive_suffix(job.config))
     perform_backup(
-        backup_archive_path=system_data_backup_archive_path(config, job.config),
+        backup_archive_path=system_data_backup_archive_path(target, job.config),
         base_path="/omd",
         exclude_patterns=["sites/*"],
         job=job,
@@ -1306,7 +1321,7 @@ def do_system_backup(opts: Mapping[str, str], config: Config, job: Job) -> None:
     if not exclude_sites(opts, job.config):
         for site_id in existing_sites():
             log("Performing site backup: %s" % site_id)
-            do_site_backup(site=site_id, config=config, job=job)
+            do_site_backup(site=site_id, config=config, job=job, target=target)
     else:
         log("Skipping site backup (disabled)")
 
@@ -1390,9 +1405,9 @@ def backup_files_to_tarfile(
         raise
 
 
-def complete_backup(config: Config, job: Job) -> None:
+def complete_backup(config: Config, job: Job, target: Target) -> None:
     info = create_backup_info(config, job)
-    save_backup_info(info, config, job.config["target_id"])
+    save_backup_info(info, target)
 
     save_state(
         {
@@ -1401,7 +1416,7 @@ def complete_backup(config: Config, job: Job) -> None:
         job=job,
     )
 
-    verify_backup_consistency(info, config, job.config)
+    verify_backup_consistency(info, target, job.config)
 
     # Now we can be sure this new backup is a good one. Remove eventual old
     # backup and move from "incomplete" to "complete".
@@ -1572,8 +1587,9 @@ def add_output(s: str, job: Job) -> None:
 def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: Config) -> None:
     global g_target_id, g_backup_id
     g_target_id, g_backup_id = target_id, backup_id
+    target = RestoreTarget(TargetId(target_id), backup_id, config)
 
-    info = load_backup_info(backup_info_path(config, TargetId(target_id)))
+    info = load_backup_info(backup_info_path(target))
     job = Job(config=info["config"], local_id=info["job_id"])
 
     verify_compatible_cma_version()
@@ -1585,10 +1601,10 @@ def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: C
             stack.enter_context(cm)
 
         verify_target_is_ready(target_id, config)
-        verify_backup_exists(config, job.config["target_id"])
+        verify_backup_exists(config, target)
 
         if "no-verify" not in opts:
-            verify_backup_consistency(info, config, job.config)
+            verify_backup_consistency(info, target, job.config)
 
         init_new_run(job)
 
@@ -1608,7 +1624,7 @@ def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: C
                 job,
             )
 
-            do_restore(opts, info, config, job)
+            do_restore(opts, info, config, job, target)
             success = True
 
         except MKGeneralException as e:
@@ -1634,11 +1650,17 @@ def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: C
             )
 
 
-def do_restore(opts: Mapping[str, str], info: Mapping[str, Any], config: Config, job: Job) -> None:
+def do_restore(
+    opts: Mapping[str, str],
+    info: Mapping[str, Any],
+    config: Config,
+    job: Job,
+    target: RestoreTarget,
+) -> None:
     if not is_root():
-        do_site_restore(info, config, job)
+        do_site_restore(info, config, job, target)
     elif is_cma():
-        do_system_restore(opts, info, config, job)
+        do_system_restore(opts, info, config, job, target)
     else:
         raise MKGeneralException("System backup not supported.")
     complete_restore(job)
@@ -1653,7 +1675,11 @@ def do_system_restart() -> None:
 
 
 def do_site_restore(
-    info: Mapping[str, str], config: Config, job: Job, site: str | None = None
+    info: Mapping[str, str],
+    config: Config,
+    job: Job,
+    target: RestoreTarget,
+    site: str | None = None,
 ) -> None:
     cmd = ["omd", "restore", "--kill"]
 
@@ -1686,7 +1712,7 @@ def do_site_restore(
 
     cmd.append("-")
 
-    backup_path = site_backup_archive_path(site, config, job.config)
+    backup_path = site_backup_archive_path(site, target, job.config)
 
     with subprocess.Popen(cmd, close_fds=True, stderr=subprocess.PIPE, stdin=subprocess.PIPE) as p:
         assert p.stdin is not None
@@ -1715,7 +1741,11 @@ def do_site_restore(
 
 
 def do_system_restore(
-    opts: Mapping[str, str], info: Mapping[str, Any], config: Config, job: Job
+    opts: Mapping[str, str],
+    info: Mapping[str, Any],
+    config: Config,
+    job: Job,
+    target: RestoreTarget,
 ) -> None:
     verify_cma_version_compatible(info)
     prepare_system_restore()
@@ -1724,7 +1754,7 @@ def do_system_restore(
     # Perform restore of the /rw volume
     log("Performing system restore (system%s)" % archive_suffix(job.config))
     system_rw_files_before = get_system_rw_files()
-    system_rw_files_restored = do_system_rw_restore(config, job)
+    system_rw_files_restored = do_system_rw_restore(target, job)
     cleanup_system_rw_files(system_rw_files_before, system_rw_files_restored)
     log("Finished system restore")
 
@@ -1743,7 +1773,7 @@ def do_system_restore(
 
     log("Performing system data restore (system-data%s)" % archive_suffix(job.config))
     cleanup_directory_contents("/omd", excludes=["/omd/lost+found"])
-    do_system_data_restore(config, job)
+    do_system_data_restore(target, job)
     fix_linux_capabilities()
     log("Finished system data restore")
 
@@ -1754,7 +1784,7 @@ def do_system_restore(
     # Now run the site restore for all sites found in the backup
     for site_id in get_site_ids_of_backup(info):
         log("Performing site restore: %s" % site_id)
-        do_site_restore(info, site=site_id, config=config, job=job)
+        do_site_restore(info, site=site_id, config=config, job=job, target=target)
     log("Finished site restore")
 
 
@@ -1927,12 +1957,12 @@ def cleanup_system_processes() -> None:
     os.system("/etc/init.d/nullmailer stop")
 
 
-def do_system_rw_restore(config: Config, job: Job) -> Sequence[str]:
-    return restore_system_backup(system_backup_archive_path(config, job.config), job)
+def do_system_rw_restore(target: RestoreTarget, job: Job) -> Sequence[str]:
+    return restore_system_backup(system_backup_archive_path(target, job.config), job)
 
 
-def do_system_data_restore(config: Config, job: Job) -> Sequence[str]:
-    return restore_system_backup(system_data_backup_archive_path(config, job.config), job)
+def do_system_data_restore(target: RestoreTarget, job: Job) -> Sequence[str]:
+    return restore_system_backup(system_data_backup_archive_path(target, job.config), job)
 
 
 def restore_system_backup(backup_path: str, job: Job) -> Sequence[str]:

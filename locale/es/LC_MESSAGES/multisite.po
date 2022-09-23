@@ -48005,9 +48005,11 @@ msgstr ""
 "(http o https) y el puerto. Dependiendo de la configuración desplegada del "
 "servicio, este puede ser el NodePort o el Ingress endpoint."
 
+#, fuzzy
 msgid ""
 "The full URL to the Kubernetes API server including the protocol (http or "
-"https) and the port."
+"https) and the port. Be aware that a trailing slash at the end of the URL is "
+"likely to result in an error."
 msgstr ""
 "La URL completa del servidor de la API de Kubernetes, incluyendo el "
 "protocolo (http o https) y el puerto."

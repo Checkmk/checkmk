@@ -48015,7 +48015,8 @@ msgstr ""
 
 msgid ""
 "The full URL to the Kubernetes API server including the protocol (http or "
-"https) and the port."
+"https) and the port. Be aware that a trailing slash at the end of the URL is "
+"likely to result in an error."
 msgstr ""
 
 #, python-format

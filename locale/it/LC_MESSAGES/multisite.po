@@ -7819,6 +7819,10 @@ msgstr "CHIUSURA"
 msgid "CMA"
 msgstr "CMA"
 
+#, fuzzy
+msgid "CMC (Checkmk Microcore)"
+msgstr "Checkmk Micro Core"
+
 msgid "CPG member name"
 msgstr "Nome del membro del CPG"
 
@@ -9081,6 +9085,10 @@ msgstr "File di configurazione di Checkmk"
 
 msgid "Checkmk Configuration files"
 msgstr "File di configurazione di Checkmk"
+
+#, fuzzy
+msgid "Checkmk Core Files"
+msgstr "File di log di Checkmk"
 
 msgid "Checkmk Log Files"
 msgstr "File di log di Checkmk"
@@ -10365,6 +10373,10 @@ msgstr "Latenza di assegnazione della conferenza"
 msgid "Confidence interval%s"
 msgstr "Intervallo di confidenza%s"
 
+#, fuzzy
+msgid "Config and state dumps of the CMC"
+msgstr "Considerare lo stato del lavoro"
+
 msgid "Configuration"
 msgstr "Configurazione"
 
@@ -10451,6 +10463,11 @@ msgstr "Configurazione"
 
 msgid "Configuration variable:"
 msgstr "Variabile di configurazione:"
+
+msgid ""
+"Configuration, status, and status history data of the CMC (Checkmk "
+"Microcore); cmcdump output of the status and config."
+msgstr ""
 
 msgid "Configure"
 msgstr "Configurare"
@@ -11276,6 +11293,18 @@ msgstr "Nucleo e impostazione"
 
 msgid "Core configuration reloaded"
 msgstr "Configurazione del nucleo ricaricata"
+
+#, fuzzy
+msgid "Core files"
+msgstr "File di registro"
+
+#, python-format
+msgid "Core files (config, state and history) from var/check_mk/core.%s"
+msgstr ""
+
+#, python-format
+msgid "Core files (config, state and history) from var/check_mk/core: %s"
+msgstr ""
 
 msgid "Core produced a notification"
 msgstr "Il nucleo ha prodotto una notifica"
@@ -25992,6 +26021,10 @@ msgstr "hash di configurazione non valido"
 
 msgid "Invalid credentials"
 msgstr "Credenziali non valide"
+
+#, fuzzy, python-format
+msgid "Invalid data source: %s"
+msgstr "Identità non valida: %s"
 
 #, fuzzy, python-format
 msgid "Invalid datasource '%s' configured."
@@ -51642,12 +51675,12 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This check returns CRIT if the parameter <b>State in case of restricted "
-"address mismatch</b> in the ruleset <b>Status of the Checkmk services</b> is "
-"configured and differs from default state <b>WARN</b>. With the above "
+"address mismatch</b> in the ruleset <b>Checkmk Agent installation auditing</"
+"b> is configured and differs from default state <b>WARN</b>. With the above "
 "setting you can overwrite the default service state. This will help you to "
 "reduce above warnings during the update process of your Checkmk sites and "
 "agents. We recommend to set this option only for the affected hosts as long "
-"as you monitor agents older than Checkmk 1.7. After updating them, you "
+"as you monitor agents older than Checkmk 2.0. After updating them, you "
 "should change this setting back to it's original value. Background: With IP "
 "access lists you can control which servers are allowed to talk to these "
 "agents. Thus it's a security issue and should not be disabled or set to "

@@ -7731,6 +7731,10 @@ msgstr "CLOSING"
 msgid "CMA"
 msgstr "CMA"
 
+#, fuzzy
+msgid "CMC (Checkmk Microcore)"
+msgstr "Checkmk Micro Core"
+
 msgid "CPG member name"
 msgstr "CPG Mitglieds Name"
 
@@ -8976,6 +8980,10 @@ msgstr "Checkmk-Konfigurationsdateien"
 
 msgid "Checkmk Configuration files"
 msgstr "Checkmk-Konfigurationsdateien"
+
+#, fuzzy
+msgid "Checkmk Core Files"
+msgstr "Checkmk Log-Dateien"
 
 msgid "Checkmk Log Files"
 msgstr "Checkmk Log-Dateien"
@@ -10231,6 +10239,10 @@ msgstr "Latenz der Bereitstellung von Konferenzen"
 msgid "Confidence interval%s"
 msgstr "Konfidenzintervall%s"
 
+#, fuzzy
+msgid "Config and state dumps of the CMC"
+msgstr "Den Zustand des Jobs berücksichtigen"
+
 msgid "Configuration"
 msgstr "Einstellungen"
 
@@ -10317,6 +10329,11 @@ msgstr ""
 
 msgid "Configuration variable:"
 msgstr "Konfigurationsvariable:"
+
+msgid ""
+"Configuration, status, and status history data of the CMC (Checkmk "
+"Microcore); cmcdump output of the status and config."
+msgstr ""
 
 msgid "Configure"
 msgstr "Konfiguriere"
@@ -11130,6 +11147,18 @@ msgstr "Core & Setup"
 
 msgid "Core configuration reloaded"
 msgstr "Konfiguration des Kerns neu geladen"
+
+#, fuzzy
+msgid "Core files"
+msgstr "Logdateien"
+
+#, python-format
+msgid "Core files (config, state and history) from var/check_mk/core.%s"
+msgstr ""
+
+#, python-format
+msgid "Core files (config, state and history) from var/check_mk/core: %s"
+msgstr ""
 
 msgid "Core produced a notification"
 msgstr "Der Kern hat einen Alarm produziert"
@@ -25661,6 +25690,10 @@ msgstr "Ungültiger Konfigurationshashwert"
 
 msgid "Invalid credentials"
 msgstr "Anmeldedaten sind ungültig"
+
+#, fuzzy, python-format
+msgid "Invalid data source: %s"
+msgstr "Ungültiger Wert: %s"
 
 #, python-format
 msgid "Invalid datasource '%s' configured."
@@ -50899,14 +50932,15 @@ msgid "This check returns CRIT if the connection to the remote site failed."
 msgstr ""
 "Der Check gibt CRIT zurück wenn die Verbindung zur Remote Site fehlschlägt."
 
+#, fuzzy
 msgid ""
 "This check returns CRIT if the parameter <b>State in case of restricted "
-"address mismatch</b> in the ruleset <b>Status of the Checkmk services</b> is "
-"configured and differs from default state <b>WARN</b>. With the above "
+"address mismatch</b> in the ruleset <b>Checkmk Agent installation auditing</"
+"b> is configured and differs from default state <b>WARN</b>. With the above "
 "setting you can overwrite the default service state. This will help you to "
 "reduce above warnings during the update process of your Checkmk sites and "
 "agents. We recommend to set this option only for the affected hosts as long "
-"as you monitor agents older than Checkmk 1.7. After updating them, you "
+"as you monitor agents older than Checkmk 2.0. After updating them, you "
 "should change this setting back to it's original value. Background: With IP "
 "access lists you can control which servers are allowed to talk to these "
 "agents. Thus it's a security issue and should not be disabled or set to "

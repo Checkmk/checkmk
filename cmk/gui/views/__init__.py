@@ -973,14 +973,12 @@ def _column_link_choices() -> List[CascadingDropdownChoice]:
     ]
 
 
-# Hint: view_spec is not the ViewSpec here. It's a dict in the visual editor and report ViewConfig
-# format. We need a separate type for that or rework the editor. Let's see once we come to the
-# visual editor typing.
-def view_editor_sorter_specs(ident: str, view: dict[str, Any]) -> Dictionary:
+def view_editor_sorter_specs(
+    ident: str, ds_name: str, painters: Sequence[PainterSpec]
+) -> Dictionary:
     def _sorter_choices(
-        view: dict[str, Any],
+        ds_name: str, painters: Sequence[PainterSpec]
     ) -> Iterator[Union[DropdownChoiceEntry, CascadingDropdownChoice]]:
-        ds_name = view["datasource"]
         datasource: ABCDataSource = data_source_registry[ds_name]()
         unsupported_columns: List[ColumnName] = datasource.unsupported_columns
 
@@ -995,8 +993,7 @@ def view_editor_sorter_specs(ident: str, view: dict[str, Any]) -> Dictionary:
             else:
                 yield name, get_sorter_plugin_title_for_choices(p)
 
-        painter_spec: PainterSpec
-        for painter_spec in view.get("painters", []):
+        for painter_spec in painters:
             # look through all defined columns and add sorters for
             # svc_metrics_hist and svc_metrics_forecast columns.
             if (
@@ -1024,7 +1021,7 @@ def view_editor_sorter_specs(ident: str, view: dict[str, Any]) -> Dictionary:
                         elements=[
                             CascadingDropdown(
                                 title=_("Column"),
-                                choices=list(_sorter_choices(view)),
+                                choices=list(_sorter_choices(ds_name, painters)),
                                 sorted=True,
                                 no_preselect_title="",
                             ),
@@ -1090,7 +1087,9 @@ def render_view_config(view_spec: dict[str, Any], general_properties: bool = Tru
     vs_columns = view_editor_column_spec("columns", ds_name)
     vs_columns.render_input("columns", view_spec["columns"])
 
-    vs_sorting = view_editor_sorter_specs("sorting", view_spec)
+    vs_sorting = view_editor_sorter_specs(
+        "sorting", ds_name, [PainterSpec.from_raw(v) for v in view_spec["columns"]]
+    )
     vs_sorting.render_input("sorting", view_spec["sorting"])
 
     vs_grouping = view_editor_grouping_spec("grouping", ds_name)
@@ -1173,7 +1172,7 @@ def create_view_from_valuespec(old_view, view):
     update_view("view", view_editor_general_properties(ds_name))
     update_view("columns", view_editor_column_spec("columns", ds_name))
     update_view("grouping", view_editor_grouping_spec("grouping", ds_name))
-    update_view("sorting", view_editor_sorter_specs("sorting", view))
+    update_view("sorting", view_editor_sorter_specs("sorting", ds_name, view["painters"]))
     return view
 
 

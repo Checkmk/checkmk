@@ -6,6 +6,8 @@ import re
 from dataclasses import dataclass
 from typing import Any, Iterable, Mapping, Sequence, Tuple, TypedDict
 
+from typing_extensions import NotRequired
+
 from .agent_based_api.v1 import (
     check_levels,
     get_value_store,
@@ -23,15 +25,13 @@ class CheckParams(TypedDict):
     stratum_level: int
     quality_levels: Tuple[float, float]
     alert_delay: Tuple[int, int]
-    last_synchronized: Tuple[int, int]
+    last_synchronized: NotRequired[Tuple[int, int]]
 
 
-# last_synchronized default values increased since a few systems required longer time
 default_check_parameters = CheckParams(
     stratum_level=10,
     quality_levels=(200.0, 500.0),
     alert_delay=(300, 3600),
-    last_synchronized=(7500, 10800),
 )
 
 

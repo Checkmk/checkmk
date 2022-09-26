@@ -8,7 +8,7 @@ from unittest import mock
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.utils.timesync import store_sync_time, tolerance_check
 
 
@@ -36,6 +36,7 @@ def test_tolerance_check_new_sync_time() -> None:
             state=State.CRIT,
             summary="Time since last sync: 10 seconds (warn/crit at 0 seconds/0 seconds)",
         ),
+        Metric("last_sync_time", 10.0, levels=(0.0, 0.0)),
     ]
     assert value_store["time_server"] == sync_time
 
@@ -103,5 +104,6 @@ def test_tolerance_check_stored_sync_time() -> None:
             state=State.CRIT,
             summary="Time since last sync: 10 seconds (warn/crit at 0 seconds/0 seconds)",
         ),
+        Metric("last_sync_time", 10.0, levels=(0.0, 0.0)),
     ]
     assert value_store["time_server"] == sync_time

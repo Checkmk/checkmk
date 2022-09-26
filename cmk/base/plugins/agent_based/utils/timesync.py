@@ -29,6 +29,7 @@ def _check_time_difference(
     yield from check_levels(
         value=time_difference,
         levels_upper=levels_upper,
+        metric_name="last_sync_time",
         render_func=render.timespan,
         label=label,
         notice_only=notice_only,

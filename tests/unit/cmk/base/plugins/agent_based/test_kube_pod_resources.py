@@ -5,7 +5,7 @@
 
 
 import itertools
-from typing import MutableMapping, Sequence, Tuple
+from typing import Sequence
 
 import pytest
 
@@ -23,11 +23,9 @@ from cmk.base.plugins.agent_based.utils.kube import AllocatablePods, PodResource
 
 
 @pytest.fixture(name="get_value_store")
-def fixture_get_value_store(mocker):
-    value_store: MutableMapping[str, PodPhaseTimes] = {}
-    get_value_store_mock = mocker.MagicMock(return_value=value_store)
-    mocker.patch.object(kube_pod_resources, "get_value_store", get_value_store_mock)
-    return get_value_store_mock
+def fixture_get_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    vs: dict[str, PodPhaseTimes] = {}
+    monkeypatch.setattr(kube_pod_resources, "get_value_store", lambda: vs)
 
 
 @pytest.mark.parametrize(
@@ -144,10 +142,10 @@ def fixture_get_value_store(mocker):
         ),
     ],
 )
-def test_check_phase_duration_with_different_pods(  # type:ignore[no-untyped-def]
-    pending_pods_in_each_check_call: Tuple[PodSequence, ...],
-    expected_result_in_each_check_call: Tuple[Result, ...],
-    get_value_store,
+def test_check_phase_duration_with_different_pods(
+    pending_pods_in_each_check_call: tuple[PodSequence, ...],
+    expected_result_in_each_check_call: tuple[Result, ...],
+    get_value_store: None,
 ) -> None:
     """
     We simulate multiple calls to check function at different points in time.
@@ -208,10 +206,10 @@ def test_check_phase_duration_with_different_pods(  # type:ignore[no-untyped-def
         ),
     ],
 )
-def test_check_phase_duration_with_changing_params(  # type:ignore[no-untyped-def]
-    params_in_each_check_call: Tuple[Params, ...],
-    expected_result_in_each_check_call: Tuple[Result, ...],
-    get_value_store,
+def test_check_phase_duration_with_changing_params(
+    params_in_each_check_call: tuple[Params, ...],
+    expected_result_in_each_check_call: tuple[Result, ...],
+    get_value_store: None,
 ) -> None:
     """
     We simulate multiple calls to check function at different points in time.
@@ -268,10 +266,10 @@ def test_check_phase_duration_with_changing_params(  # type:ignore[no-untyped-de
         ),
     ],
 )
-def test_check_bevaviour_if_there_are_unknown_pods(  # type:ignore[no-untyped-def]
-    pending_pods_in_each_check_call: Tuple[PodSequence, ...],
-    expected_result_in_each_check_call: Tuple[Result, ...],
-    get_value_store,
+def test_check_bevaviour_if_there_are_unknown_pods(
+    pending_pods_in_each_check_call: tuple[PodSequence, ...],
+    expected_result_in_each_check_call: tuple[Result, ...],
+    get_value_store: None,
 ) -> None:
     """
     We simulate multiple calls to check function at different points in time.
@@ -352,7 +350,7 @@ def test_check_bevaviour_if_there_are_unknown_pods(  # type:ignore[no-untyped-de
     ],
 )
 def test_check_levels_free_pods(
-    pending_pods_in_each_check_call: Tuple[PodSequence, ...],
+    pending_pods_in_each_check_call: tuple[PodSequence, ...],
     param: VSResultPercent,
     expected_result_in_each_check_call: Sequence[Result],
 ) -> None:
@@ -465,11 +463,11 @@ _PYTEST_PARAMS_OVER_ALL_LOOK = [
     "pending_pods_in_each_check_call,params_in_each_check_call,expected_result",
     _PYTEST_PARAMS_OVER_ALL_LOOK,
 )
-def test_check_kube_pod_resources_overall_look(  # type:ignore[no-untyped-def]
-    pending_pods_in_each_check_call: Tuple[PodSequence, ...],
-    params_in_each_check_call: Tuple[Params, ...],
-    expected_result,
-    get_value_store,
+def test_check_kube_pod_resources_overall_look(
+    pending_pods_in_each_check_call: tuple[PodSequence, ...],
+    params_in_each_check_call: tuple[Params, ...],
+    expected_result: Sequence[Result | Metric],
+    get_value_store: None,
 ) -> None:
     for time, pod_names, params in zip(
         itertools.count(0.1, 60.1), pending_pods_in_each_check_call, params_in_each_check_call
@@ -489,11 +487,11 @@ def test_check_kube_pod_resources_overall_look(  # type:ignore[no-untyped-def]
     "pending_pods_in_each_check_call,params_in_each_check_call,expected_result",
     _PYTEST_PARAMS_OVER_ALL_LOOK,
 )
-def test_check_kube_pod_resources_with_capacity_overall_look(  # type:ignore[no-untyped-def]
-    pending_pods_in_each_check_call: Tuple[PodSequence, ...],
-    params_in_each_check_call: Tuple[Params, ...],
-    expected_result,
-    get_value_store,
+def test_check_kube_pod_resources_with_capacity_overall_look(
+    pending_pods_in_each_check_call: tuple[PodSequence, ...],
+    params_in_each_check_call: tuple[Params, ...],
+    expected_result: Sequence[Result | Metric],
+    get_value_store: None,
 ) -> None:
     for time, pod_names, params in zip(
         itertools.count(0.1, 60.1), pending_pods_in_each_check_call, params_in_each_check_call

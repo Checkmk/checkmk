@@ -184,7 +184,7 @@ class TestMakeHostSectionsHosts:
             lambda hostname, ipaddress, simulation_mode, agent_simulator, translation, encoding_fallback: ProgramSource.ds(
                 hostname,
                 ipaddress,
-                template="",
+                cmdline="",
                 simulation_mode=simulation_mode,
                 agent_simulator=agent_simulator,
                 translation=translation,
@@ -241,7 +241,7 @@ class TestMakeHostSectionsHosts:
             ProgramSource.ds(
                 host_config,
                 ipaddress,
-                template="",
+                cmdline="",
                 simulation_mode=True,
                 agent_simulator=True,
                 translation={},
@@ -295,7 +295,7 @@ class TestMakeHostSectionsHosts:
             ProgramSource.ds(
                 HostConfig.make_host_config(HostName(f"{hostname}0")),
                 ipaddress,
-                template="",
+                cmdline="",
                 simulation_mode=True,
                 agent_simulator=True,
                 translation={},

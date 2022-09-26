@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import Dict, Optional
 
 import cmk.utils.paths
-from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.translations import TranslationOptions
 from cmk.utils.type_defs import HostAddress, HostName, SourceType
 
@@ -86,7 +85,7 @@ class ProgramSource(AgentSource):
         ipaddress: HostAddress,
         *,
         main_data_source: bool = False,
-        template: str,
+        cmdline: str,
         simulation_mode: bool,
         agent_simulator: bool,
         translation: TranslationOptions,
@@ -96,7 +95,7 @@ class ProgramSource(AgentSource):
             host_config,
             ipaddress,
             main_data_source=main_data_source,
-            template=template,
+            cmdline=cmdline,
             simulation_mode=simulation_mode,
             agent_simulator=agent_simulator,
             translation=translation,
@@ -136,7 +135,7 @@ class DSProgramSource(ProgramSource):
         ipaddress: Optional[HostAddress],
         *,
         main_data_source: bool = False,
-        template: str,
+        cmdline: str,
         simulation_mode: bool,
         agent_simulator: bool,
         translation: TranslationOptions,
@@ -147,64 +146,13 @@ class DSProgramSource(ProgramSource):
             ipaddress,
             id_="agent",
             main_data_source=main_data_source,
-            cmdline=DSProgramSource._translate(
-                template,
-                host_config,
-                ipaddress,
-            ),
+            cmdline=cmdline,
             stdin=None,
             simulation_mode=simulation_mode,
             agent_simulator=agent_simulator,
             translation=translation,
             encoding_fallback=encoding_fallback,
         )
-
-    @staticmethod
-    def _translate(
-        cmd: str,
-        host_config: HostConfig,
-        ipaddress: Optional[HostAddress],
-    ) -> str:
-        return DSProgramSource._translate_host_macros(
-            DSProgramSource._translate_legacy_macros(cmd, host_config.hostname, ipaddress),
-            host_config,
-        )
-
-    @staticmethod
-    def _translate_legacy_macros(
-        cmd: str,
-        hostname: HostName,
-        ipaddress: Optional[HostAddress],
-    ) -> str:
-        # Make "legacy" translation. The users should use the $...$ macros in future
-        return replace_macros_in_str(
-            cmd,
-            {
-                "<IP>": ipaddress or "",
-                "<HOST>": hostname,
-            },
-        )
-
-    @staticmethod
-    def _translate_host_macros(cmd: str, host_config: HostConfig) -> str:
-        config_cache = config.get_config_cache()
-        attrs = core_config.get_host_attributes(host_config.hostname, config_cache)
-        if host_config.is_cluster:
-            parents_list = core_config.get_cluster_nodes_for_config(
-                config_cache,
-                host_config,
-            )
-            attrs.setdefault("alias", "cluster of %s" % ", ".join(parents_list))
-            attrs.update(
-                core_config.get_cluster_attributes(
-                    config_cache,
-                    host_config,
-                    parents_list,
-                )
-            )
-
-        macros = core_config.get_host_macros_from_attributes(host_config.hostname, attrs)
-        return core_config.replace_macros(cmd, macros)
 
 
 class SpecialAgentSource(ProgramSource):

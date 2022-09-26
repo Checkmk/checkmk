@@ -49,7 +49,6 @@ class TestDSProgramChecker:
     def test_attribute_defaults(  # type:ignore[no-untyped-def]
         self, ipaddress, monkeypatch
     ) -> None:
-        template = ""
         hostname = HostName("testhost")
         ts = Scenario()
         ts.add_host(hostname)
@@ -58,7 +57,7 @@ class TestDSProgramChecker:
         source = DSProgramSource(
             config.HostConfig.make_host_config(hostname),
             ipaddress,
-            template=template,
+            cmdline="",
             simulation_mode=True,
             agent_simulator=True,
             translation={},
@@ -70,30 +69,6 @@ class TestDSProgramChecker:
         assert source.stdin is None
         assert source.description == "Program: "
         assert source.id == "agent"
-
-    @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
-    def test_template_translation(  # type:ignore[no-untyped-def]
-        self, ipaddress, monkeypatch
-    ) -> None:
-        template = "<NOTHING>x<IP>x<HOST>x<host>x<ip>x"
-        hostname = HostName("testhost")
-        ts = Scenario()
-        ts.add_host(hostname)
-        ts.apply(monkeypatch)
-        source = DSProgramSource(
-            config.HostConfig.make_host_config(hostname),
-            ipaddress,
-            template=template,
-            simulation_mode=True,
-            agent_simulator=True,
-            translation={},
-            encoding_fallback="ascii",
-        )
-
-        assert source.cmdline == "<NOTHING>x%sx%sx<host>x<ip>x" % (
-            ipaddress if ipaddress is not None else "",
-            hostname,
-        )
 
 
 class TestSpecialAgentChecker:

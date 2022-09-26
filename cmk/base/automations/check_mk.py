@@ -1392,7 +1392,11 @@ class AutomationDiagHost(Automation):
                 source = source.ds(
                     host_config,
                     ipaddress,
-                    template=cmd,
+                    cmdline=core_config.translate_ds_program_source_cmdline(
+                        cmd,
+                        host_config,
+                        ipaddress,
+                    ),
                     simulation_mode=config.simulation_mode,
                     agent_simulator=config.agent_simulator,
                     translation=config.get_piggyback_translations(host_config.hostname),

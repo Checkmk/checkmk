@@ -119,7 +119,7 @@ def test_host_config_creates_passing_source_sources(
     "source, kwargs",
     [
         (SpecialAgentSource, {"special_agent_id": None, "params": None}),
-        (DSProgramSource, {"template": ""}),
+        (DSProgramSource, {"cmdline": ""}),
         (PiggybackSource, {"time_settings": ()}),
         (TCPSource, {}),
     ],

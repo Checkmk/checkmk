@@ -36,6 +36,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
+from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import (
     CheckPluginName,
@@ -987,3 +988,48 @@ def replace_macros(s: str, macros: ObjectMacros) -> str:
                     raise
 
     return s
+
+
+def translate_ds_program_source_cmdline(
+    template: str,
+    host_config: HostConfig,
+    ipaddress: Optional[HostAddress],
+) -> str:
+    def _translate_host_macros(cmd: str, host_config: HostConfig) -> str:
+        config_cache = config.get_config_cache()
+        attrs = get_host_attributes(host_config.hostname, config_cache)
+        if host_config.is_cluster:
+            parents_list = get_cluster_nodes_for_config(
+                config_cache,
+                host_config,
+            )
+            attrs.setdefault("alias", "cluster of %s" % ", ".join(parents_list))
+            attrs.update(
+                get_cluster_attributes(
+                    config_cache,
+                    host_config,
+                    parents_list,
+                )
+            )
+
+        macros = get_host_macros_from_attributes(host_config.hostname, attrs)
+        return replace_macros(cmd, macros)
+
+    def _translate_legacy_macros(
+        cmd: str,
+        hostname: HostName,
+        ipaddress: Optional[HostAddress],
+    ) -> str:
+        # Make "legacy" translation. The users should use the $...$ macros in future
+        return replace_macros_in_str(
+            cmd,
+            {
+                "<IP>": ipaddress or "",
+                "<HOST>": hostname,
+            },
+        )
+
+    return _translate_host_macros(
+        _translate_legacy_macros(template, host_config.hostname, ipaddress),
+        host_config,
+    )

@@ -22,6 +22,7 @@ from cmk.core_helpers.protocol import FetcherMessage
 from cmk.core_helpers.type_defs import NO_SELECTION, SectionNameCollection
 
 import cmk.base.config as config
+import cmk.base.core_config as core_config
 from cmk.base.config import HostConfig
 
 from ._abstract import Mode, Source
@@ -208,7 +209,9 @@ class _Builder:
                 self.host_config,
                 self.ipaddress,
                 main_data_source=main_data_source,
-                template=datasource_program,
+                cmdline=core_config.translate_ds_program_source_cmdline(
+                    datasource_program, self.host_config, self.ipaddress
+                ),
                 simulation_mode=self.simulation_mode,
                 agent_simulator=self.agent_simulator,
                 translation=self.translation,

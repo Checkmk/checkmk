@@ -382,3 +382,18 @@ def test_iter_active_check_services(  # type:ignore[no-untyped-def]
         core_config.iter_active_check_services(check_name, active_info, hostname, host_attrs, {})
     )
     assert services == expected_result
+
+
+@pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
+def test_template_translation(ipaddress, monkeypatch):  # type: ignore[no-untyped-def]
+    template = "<NOTHING>x<IP>x<HOST>x<host>x<ip>x"
+    hostname = HostName("testhost")
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.apply(monkeypatch)
+
+    assert core_config.translate_ds_program_source_cmdline(
+        template,
+        config.HostConfig.make_host_config(hostname),
+        ipaddress,
+    ) == "<NOTHING>x%sx%sx<host>x<ip>x" % (ipaddress if ipaddress is not None else "", hostname)

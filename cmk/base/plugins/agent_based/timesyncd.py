@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import re
-import time
 from dataclasses import dataclass
 from typing import Any, Iterable, Mapping, Sequence, Tuple, TypedDict
 
@@ -153,22 +152,14 @@ def check_timesyncd(params: Mapping[str, Any], section: Section) -> CheckResult:
         )
 
     synctime = section.get("synctime")
-    # either set the sync time, and yield nothing OR
-    # check for how long we've been seeing None as sync time
+    levels_upper = (
+        params.get("alert_delay") if synctime is None else params.get("last_synchronized")
+    )
     yield from tolerance_check(
-        set_sync_time=synctime,
-        levels_upper=params.get("alert_delay"),
-        now=time.time(),
+        sync_time=synctime,
+        levels_upper=levels_upper,
         value_store=get_value_store(),
     )
-    if synctime is not None:
-        # now we have set it, but not yet checked it. Check it!
-        yield from tolerance_check(
-            set_sync_time=None,  # use the time we just set.
-            levels_upper=params.get("last_synchronized"),
-            now=time.time(),
-            value_store=get_value_store(),
-        )
 
     server = section.get("server")
     if server is None or server == "null":

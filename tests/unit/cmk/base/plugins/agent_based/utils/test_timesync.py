@@ -5,6 +5,8 @@
 import time
 from typing import Any, Dict
 
+import pytest
+
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.utils.timesync import tolerance_check
 
@@ -26,9 +28,45 @@ def test_tolerance_check_set_sync_time() -> None:
     assert value_store["time_server"] == sync_time
 
 
-def test_tolerance_check_no_last_sync() -> None:
+@pytest.mark.parametrize(
+    "notice_only,expected_result",
+    [
+        pytest.param(
+            False,
+            Result(
+                state=State.OK,
+                summary="Time since last sync: N/A (started monitoring)",
+            ),
+            id="summary",
+        ),
+        pytest.param(
+            True,
+            Result(
+                state=State.OK,
+                notice="Time since last sync: N/A (started monitoring)",
+            ),
+            id="notice_only",
+        ),
+    ],
+)
+def test_tolerance_check_no_last_sync(notice_only: bool, expected_result: Result) -> None:
     now = 42.0
     value_store: Dict[str, Any] = {}
+    assert list(
+        tolerance_check(
+            set_sync_time=None,
+            levels_upper=None,
+            now=now,
+            value_store=value_store,
+            notice_only=notice_only,
+        )
+    ) == [expected_result]
+    assert value_store["time_server"] == now
+
+
+def test_host_time_ahead():
+    now = 42.0
+    value_store: Dict[str, Any] = {"time_server": 43.0}
     assert list(
         tolerance_check(
             set_sync_time=None,
@@ -38,11 +76,10 @@ def test_tolerance_check_no_last_sync() -> None:
         )
     ) == [
         Result(
-            state=State.OK,
-            summary="Time since last sync: N/A (started monitoring)",
+            state=State.CRIT,
+            summary="Cannot reasonably calculate time since last synchronization (hosts time is running ahead)",
         ),
     ]
-    assert value_store["time_server"] == now
 
 
 def test_tolerance_check() -> None:

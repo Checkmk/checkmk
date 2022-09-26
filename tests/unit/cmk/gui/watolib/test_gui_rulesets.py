@@ -455,35 +455,38 @@ checkgroup_parameters['local'] = [
     ],
 )
 def test_ruleset_to_config(  # type:ignore[no-untyped-def]
-    request_context, monkeypatch, wato_use_git, expected_result
+    request_context,
+    monkeypatch,
+    wato_use_git,
+    expected_result,
+    set_config,
 ) -> None:
-    monkeypatch.setattr(active_config, "wato_use_git", wato_use_git)
-
-    ruleset = rulesets.Ruleset(
-        "checkgroup_parameters:local", ruleset_matcher.get_tag_to_group_map(active_config.tags)
-    )
-    ruleset.from_config(
-        hosts_and_folders.Folder.root_folder(),
-        [
-            {
-                "id": "1",
-                "value": "VAL",
-                "condition": {
-                    "host_name": ["HOSTLIST"],
-                    "service_description": [{"$regex": "SVC"}, {"$regex": "LIST"}],
+    with set_config(wato_use_git=wato_use_git):
+        ruleset = rulesets.Ruleset(
+            "checkgroup_parameters:local", ruleset_matcher.get_tag_to_group_map(active_config.tags)
+        )
+        ruleset.from_config(
+            hosts_and_folders.Folder.root_folder(),
+            [
+                {
+                    "id": "1",
+                    "value": "VAL",
+                    "condition": {
+                        "host_name": ["HOSTLIST"],
+                        "service_description": [{"$regex": "SVC"}, {"$regex": "LIST"}],
+                    },
                 },
-            },
-            {
-                "id": "2",
-                "value": "VAL2",
-                "condition": {
-                    "host_name": ["HOSTLIST"],
-                    "service_description": [{"$regex": "SVC"}, {"$regex": "LIST"}],
+                {
+                    "id": "2",
+                    "value": "VAL2",
+                    "condition": {
+                        "host_name": ["HOSTLIST"],
+                        "service_description": [{"$regex": "SVC"}, {"$regex": "LIST"}],
+                    },
                 },
-            },
-        ],
-    )
-    assert ruleset.to_config(hosts_and_folders.Folder.root_folder()) == expected_result
+            ],
+        )
+        assert ruleset.to_config(hosts_and_folders.Folder.root_folder()) == expected_result
 
 
 @pytest.mark.parametrize(
@@ -512,39 +515,38 @@ checkgroup_parameters['local'] = [
     ],
 )
 def test_ruleset_to_config_sub_folder(  # type:ignore[no-untyped-def]
-    with_admin_login, monkeypatch, wato_use_git, expected_result
+    with_admin_login, monkeypatch, wato_use_git, expected_result, set_config
 ) -> None:
-    monkeypatch.setattr(active_config, "wato_use_git", wato_use_git)
+    with set_config(wato_use_git=wato_use_git):
+        ruleset = rulesets.Ruleset(
+            "checkgroup_parameters:local", ruleset_matcher.get_tag_to_group_map(active_config.tags)
+        )
 
-    ruleset = rulesets.Ruleset(
-        "checkgroup_parameters:local", ruleset_matcher.get_tag_to_group_map(active_config.tags)
-    )
+        hosts_and_folders.Folder.create_missing_folders("abc")
+        folder = hosts_and_folders.Folder.folder("abc")
 
-    hosts_and_folders.Folder.create_missing_folders("abc")
-    folder = hosts_and_folders.Folder.folder("abc")
-
-    ruleset.from_config(
-        folder,
-        [
-            {
-                "id": "1",
-                "value": "VAL",
-                "condition": {
-                    "host_name": ["HOSTLIST"],
-                    "service_description": [{"$regex": "SVC"}, {"$regex": "LIST"}],
+        ruleset.from_config(
+            folder,
+            [
+                {
+                    "id": "1",
+                    "value": "VAL",
+                    "condition": {
+                        "host_name": ["HOSTLIST"],
+                        "service_description": [{"$regex": "SVC"}, {"$regex": "LIST"}],
+                    },
                 },
-            },
-            {
-                "id": "2",
-                "value": "VAL2",
-                "condition": {
-                    "host_name": ["HOSTLIST"],
-                    "service_description": [{"$regex": "SVC"}, {"$regex": "LIST"}],
+                {
+                    "id": "2",
+                    "value": "VAL2",
+                    "condition": {
+                        "host_name": ["HOSTLIST"],
+                        "service_description": [{"$regex": "SVC"}, {"$regex": "LIST"}],
+                    },
                 },
-            },
-        ],
-    )
-    assert ruleset.to_config(folder) == expected_result
+            ],
+        )
+        assert ruleset.to_config(folder) == expected_result
 
 
 def test_rule_clone(request_context) -> None:  # type:ignore[no-untyped-def]

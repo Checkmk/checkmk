@@ -10,7 +10,7 @@ import uuid
 from dataclasses import asdict
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Iterable, TYPE_CHECKING
+from typing import Generator, Iterable, TYPE_CHECKING
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -48,9 +48,12 @@ def zero_uuid_fixture(monkeypatch: MonkeyPatch) -> None:
 # user_id needs to be used here because it executes a reload of the config and the monkeypatch of
 # the config needs to be done after loading the config
 @pytest.fixture()
-def single_user_session_enabled(monkeypatch: MonkeyPatch, user_id: UserId) -> None:
-    monkeypatch.setattr(active_config, "single_user_session", 10)
-    assert active_config.single_user_session == 10
+def single_user_session_enabled(
+    set_config: SetConfig, user_id: UserId
+) -> Generator[None, None, None]:
+    with set_config(single_user_session=10):
+        assert active_config.single_user_session == 10
+        yield
 
 
 def _load_users_uncached(*, lock: bool) -> userdb.Users:
@@ -169,25 +172,26 @@ def test_on_failed_login_count_reset_on_succeeded_login(user_id: UserId) -> None
 
 
 @pytest.mark.usefixtures("request_context")
-def test_on_failed_login_with_locking(monkeypatch: MonkeyPatch, user_id: UserId) -> None:
+def test_on_failed_login_with_locking(
+    monkeypatch: MonkeyPatch, user_id: UserId, set_config: SetConfig
+) -> None:
     now = datetime.now()
-    monkeypatch.setattr(active_config, "lock_on_logon_failures", 3)
+    with set_config(lock_on_logon_failures=3):
+        assert active_config.lock_on_logon_failures == 3
+        assert userdb._load_failed_logins(user_id) == 0
+        assert not userdb.user_locked(user_id)
 
-    assert active_config.lock_on_logon_failures == 3
-    assert userdb._load_failed_logins(user_id) == 0
-    assert not userdb.user_locked(user_id)
+        userdb.on_failed_login(user_id, now)
+        assert userdb._load_failed_logins(user_id) == 1
+        assert not userdb.user_locked(user_id)
 
-    userdb.on_failed_login(user_id, now)
-    assert userdb._load_failed_logins(user_id) == 1
-    assert not userdb.user_locked(user_id)
+        userdb.on_failed_login(user_id, now)
+        assert userdb._load_failed_logins(user_id) == 2
+        assert not userdb.user_locked(user_id)
 
-    userdb.on_failed_login(user_id, now)
-    assert userdb._load_failed_logins(user_id) == 2
-    assert not userdb.user_locked(user_id)
-
-    userdb.on_failed_login(user_id, now)
-    assert userdb._load_failed_logins(user_id) == 3
-    assert userdb.user_locked(user_id)
+        userdb.on_failed_login(user_id, now)
+        assert userdb._load_failed_logins(user_id) == 3
+        assert userdb.user_locked(user_id)
 
 
 def test_on_logout_no_session(user_id: UserId) -> None:
@@ -471,7 +475,9 @@ def test_get_last_activity(with_user: tuple[UserId, str]) -> None:
     assert userdb.get_last_activity(user) == int(now.timestamp())
 
 
-def test_user_attribute_sync_plugins(request_context: None, monkeypatch: MonkeyPatch) -> None:
+def test_user_attribute_sync_plugins(
+    request_context: None, monkeypatch: MonkeyPatch, set_config: SetConfig
+) -> None:
     monkeypatch.setattr(
         active_config,
         "wato_user_attrs",
@@ -526,8 +532,8 @@ def test_user_attribute_sync_plugins(request_context: None, monkeypatch: MonkeyP
     assert isinstance(ldap_plugin.parameters(connection), Dictionary)
 
     # Test removing previously registered ones
-    monkeypatch.setattr(active_config, "wato_user_attrs", [])
-    userdb.update_config_based_user_attributes()
+    with set_config(wato_user_attrs=[]):
+        userdb.update_config_based_user_attributes()
 
     assert "vip" not in utils.user_attribute_registry
     assert "vip" not in ldap.ldap_attribute_plugin_registry
@@ -578,13 +584,16 @@ def test_check_credentials_local_user_disallow_locked(with_user: tuple[UserId, s
 # user_id needs to be used here because it executes a reload of the config and the monkeypatch of
 # the config needs to be done after loading the config
 @pytest.fixture()
-def make_cme(monkeypatch: MonkeyPatch, user_id: UserId) -> None:
+def make_cme(
+    monkeypatch: MonkeyPatch, user_id: UserId, set_config: SetConfig
+) -> Generator[None, None, None]:
     monkeypatch.setattr(cmk.utils.version, "omd_version", lambda: "2.0.0i1.cme")
     assert cmk.utils.version.is_managed_edition()
 
-    monkeypatch.setattr(active_config, "current_customer", "test-customer")
-    # Fix CRE mypy tests that do not have this attribute defined
-    assert active_config.current_customer == "test-customer"  # type: ignore[attr-defined]
+    with set_config(current_customer="test-customer"):
+        # Fix CRE mypy tests that do not have this attribute defined
+        assert active_config.current_customer == "test-customer"  # type: ignore[attr-defined]
+        yield
 
 
 @pytest.mark.skipif(not is_managed_repo(), reason="managed-edition-only test")

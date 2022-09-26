@@ -11,7 +11,6 @@ import typing_extensions
 from _pytest.monkeypatch import MonkeyPatch
 
 import cmk.gui.main
-from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
@@ -27,10 +26,11 @@ def test_get_start_url_default(request_context: RequestContextFixture) -> None:
 
 
 def test_get_start_url_default_config(
-    request_context: RequestContextFixture, monkeypatch: MonkeyPatch
+    request_context: RequestContextFixture,
+    set_config: SetConfig,
 ) -> None:
-    monkeypatch.setattr(active_config, "start_url", "bla.py")
-    assert cmk.gui.main._get_start_url() == "bla.py"
+    with set_config(start_url="bla.py"):
+        assert cmk.gui.main._get_start_url() == "bla.py"
 
 
 def test_get_start_url_user_config(

@@ -132,7 +132,11 @@ def set_config(**kwargs: Any) -> Iterator[None]:
 
     try:
         config_module.register_post_config_load_hook(_set_config)
-        with mock.patch.multiple(active_config, **kwargs):
+        if kwargs:
+            # NOTE: patch.multiple doesn't want to receive an empty kwargs dict and will crash.
+            with mock.patch.multiple(active_config, **kwargs):
+                yield
+        else:
             yield
     finally:
         config_module._post_config_load_hooks.remove(_set_config)

@@ -5,10 +5,11 @@
 
 import pytest
 
+from tests.unit.cmk.gui.conftest import SetConfig
+
 import cmk.utils.version
 
 import cmk.gui.metrics as metrics
-from cmk.gui.config import active_config
 from cmk.gui.plugins.metrics import utils
 from cmk.gui.type_defs import Perfdata
 
@@ -78,9 +79,8 @@ def test_parse_perf_data(  # type:ignore[no-untyped-def]
     assert utils.parse_perf_data(perf_str, check_command) == result
 
 
-def test_parse_perf_data2(request_context, monkeypatch) -> None:  # type:ignore[no-untyped-def]
-    with pytest.raises(ValueError):
-        monkeypatch.setattr(active_config, "debug", True)
+def test_parse_perf_data2(request_context: None, set_config: SetConfig) -> None:
+    with pytest.raises(ValueError), set_config(debug=True):
         utils.parse_perf_data("hi ho", None)
 
 

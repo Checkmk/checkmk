@@ -19,7 +19,6 @@ import cmk.gui.plugins.visuals
 # Triggers plugin loading
 import cmk.gui.views
 import cmk.gui.visuals
-from cmk.gui.config import active_config
 from cmk.gui.plugins.visuals import filters
 from cmk.gui.plugins.visuals.wato import FilterWatoFolder
 from cmk.gui.type_defs import VisualContext
@@ -591,14 +590,11 @@ def filter_test_id(t):
 
 
 @pytest.mark.parametrize("test", filter_tests, ids=filter_test_id)
-def test_filters_filter(request_context, test, monkeypatch) -> None:  # type:ignore[no-untyped-def]
-    # Needed for ABCFilterCustomAttribute
-    monkeypatch.setattr(active_config, "wato_host_attrs", [{"name": "bla", "title": "Bla"}])
-
-    # Need for ABCTagFilter
-    monkeypatch.setattr(active_config, "tags", cmk.utils.tags.BuiltinTagConfig())
-
-    with on_time("2018-04-15 16:50", "CET"):
+def test_filters_filter(request_context, test, set_config) -> None:  # type:ignore[no-untyped-def]
+    with set_config(
+        wato_host_attrs=[{"name": "bla", "title": "Bla"}],  # Needed for ABCFilterCustomAttribute
+        tags=cmk.utils.tags.BuiltinTagConfig(),  # Need for ABCTagFilter
+    ), on_time("2018-04-15 16:50", "CET"):
         filt = cmk.gui.plugins.visuals.utils.filter_registry[test.ident]
         filter_vars = dict(filt.value())  # Default empty vars, exhaustive
         filter_vars.update(dict(test.request_vars))

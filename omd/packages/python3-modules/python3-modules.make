@@ -6,7 +6,7 @@ PYTHON3_MODULES_DIR := $(PYTHON3_MODULES)-$(PYTHON3_MODULES_VERS)
 # Note: Because the versions of the individual modules is not reflected in PYTHON3_MODULES_VERS,
 #       like it is done in other OMD packages, we'll have to increase the BUILD_ID on every package
 #       change.
-PYTHON3_MODULES_BUILD_ID := 9
+PYTHON3_MODULES_BUILD_ID := 10
 
 PYTHON3_MODULES_UNPACK:= $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-unpack
 PYTHON3_MODULES_PATCHING := $(BUILD_HELPER_DIR)/$(PYTHON3_MODULES_DIR)-patching
@@ -26,7 +26,6 @@ PACKAGE_PYTHON3_MODULES_PYTHONPATH := $(PACKAGE_PYTHON3_MODULES_DESTDIR)/lib/pyt
 PYTHON3_MODULES_LIST :=
 
 PYTHON3_MODULES_LIST += setuptools_scm-4.1.2.tar.gz # needed by various setup.py
-PYTHON3_MODULES_LIST += setuptools-git-1.2.tar.gz # needed by various setup.py
 PYTHON3_MODULES_LIST += six-1.15.0.tar.gz # direct dependency + needed by bcrypt, cryptography, PyNaCl, python-dateutil, vcrpy, pyOpenSSL, python-active-directory
 PYTHON3_MODULES_LIST += python-dateutil-2.8.2.tar.gz # direct dependency
 

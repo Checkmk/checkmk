@@ -50,7 +50,6 @@ pipfile = "*"
 
 [packages]
 setuptools_scm = "==4.1.2"  # needed by various setup.py
-setuptools-git = "==1.2"  # needed by various setup.py
 six = "==1.15.0"  # direct dependency + needed by bcrypt, cryptography, PyNaCl, python-dateutil, vcrpy, python-active-directory
 python-dateutil = "==2.8.2"  # direct dependency
 PyYAML = "==5.4.1"  # needed by vcrpy

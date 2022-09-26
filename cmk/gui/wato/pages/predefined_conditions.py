@@ -69,7 +69,7 @@ def dummy_rulespec() -> ServiceRulespec:
 def vs_conditions() -> Transform:
     return Transform(
         valuespec=VSExplicitConditions(rulespec=dummy_rulespec(), render="form_part"),
-        to_valuespec=lambda c: RuleConditions("").from_config(c),
+        to_valuespec=lambda c: RuleConditions.from_config("", c),
         from_valuespec=lambda c: c.to_config(UseHostFolder.HOST),
     )
 
@@ -283,7 +283,7 @@ class ModeEditPredefinedCondition(SimpleEditMode):
 
         super()._save(entries)
 
-        conditions = RuleConditions("").from_config(entries[self._ident]["conditions"])
+        conditions = RuleConditions.from_config("", entries[self._ident]["conditions"])
 
         # Update rules of source folder in case the folder was changed
         if old_path is not None and old_path != conditions.host_folder:

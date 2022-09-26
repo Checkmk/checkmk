@@ -9,7 +9,13 @@ from typing import Dict, Final, Optional, Set
 from cmk.utils.exceptions import OnError
 from cmk.utils.type_defs import HostAddress, SectionName, SourceType
 
-from cmk.snmplib.type_defs import BackendSNMPTree, SNMPDetectSpec, SNMPRawData, SNMPRawDataSection
+from cmk.snmplib.type_defs import (
+    BackendSNMPTree,
+    SNMPDetectSpec,
+    SNMPHostConfig,
+    SNMPRawData,
+    SNMPRawDataSection,
+)
 
 from cmk.core_helpers import FetcherType, SNMPFetcher
 from cmk.core_helpers.cache import FileCache, SectionStore
@@ -76,14 +82,18 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
         agent_simulator: bool,
         missing_sys_description: bool,
     ):
+        snmp_config = (
+            # Because of crap inheritance.
+            host_config.snmp_config(ipaddress)
+            if source_type is SourceType.HOST
+            else host_config.management_snmp_config
+        )
         super().__init__(
             host_config,
             ipaddress,
             source_type=source_type,
             fetcher_type=FetcherType.SNMP,
-            description=SNMPSource._make_description(
-                source_type, host_config, ipaddress, title=title
-            ),
+            description=SNMPSource._make_description(snmp_config, title=title),
             default_raw_data={},
             default_host_sections=HostSections[SNMPRawDataSection](),
             id_=id_,
@@ -93,12 +103,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             agent_simulator=agent_simulator,
         )
         self.selected_sections = selected_sections
-        self.snmp_config = (
-            # Because of crap inheritance.
-            self.host_config.snmp_config(self.ipaddress)
-            if self.source_type is SourceType.HOST
-            else self.host_config.management_snmp_config
-        )
+        self.snmp_config = snmp_config
         self.missing_sys_description: Final = missing_sys_description
         self._on_snmp_scan_error = on_scan_error
         self._force_cache_refresh = force_cache_refresh
@@ -250,18 +255,10 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
 
     @staticmethod
     def _make_description(
-        source_type: SourceType,
-        host_config: HostConfig,
-        ipaddress: Optional[HostAddress],
+        snmp_config: SNMPHostConfig,
         *,
         title: str,
     ) -> str:
-        snmp_config = (
-            host_config.snmp_config(ipaddress)
-            if source_type is SourceType.HOST
-            else host_config.management_snmp_config
-        )
-
         if snmp_config.is_usewalk_host:
             return "SNMP (use stored walk)"
 

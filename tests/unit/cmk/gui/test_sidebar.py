@@ -9,7 +9,7 @@ import pytest
 
 import cmk.gui.sidebar as sidebar
 from cmk.gui.config import active_config
-from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.sidebar import UserSidebarSnapin
 
@@ -240,7 +240,7 @@ def test_save_user_config_allowed(  # type:ignore[no-untyped-def]
 def test_ajax_fold(  # type:ignore[no-untyped-def]
     request_context, mocker, origin_state, fold_var, set_state
 ) -> None:
-    html.request.set_var("fold", fold_var)
+    request.set_var("fold", fold_var)
     m_config = mocker.patch.object(
         user,
         "load_file",
@@ -282,8 +282,8 @@ def test_ajax_fold(  # type:ignore[no-untyped-def]
 def test_ajax_openclose_close(  # type:ignore[no-untyped-def]
     request_context, mocker, origin_state, set_state
 ) -> None:
-    html.request.set_var("name", "tactical_overview")
-    html.request.set_var("state", set_state)
+    request.set_var("name", "tactical_overview")
+    request.set_var("state", set_state)
     m_config = mocker.patch.object(
         user,
         "load_file",
@@ -340,8 +340,8 @@ def test_move_snapin_not_permitted(  # type:ignore[no-untyped-def]
 def test_move_snapin(  # type:ignore[no-untyped-def]
     request_context, mocker, move, before, do_save
 ) -> None:
-    html.request.set_var("name", move)
-    html.request.set_var("before", before)
+    request.set_var("name", move)
+    request.set_var("before", before)
     m_save = mocker.patch.object(sidebar.UserSidebarConfig, "save")
 
     sidebar.move_snapin()

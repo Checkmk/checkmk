@@ -1768,11 +1768,11 @@ class FilterECServiceLevelRange(Filter):
         if not lower_bound:
             lower_bound = upper_bound
             assert upper_bound is not None
-            html.request.set_var(self.lower_bound_varname, upper_bound)
+            request.set_var(self.lower_bound_varname, upper_bound)
         if not upper_bound:
             upper_bound = lower_bound
             assert lower_bound is not None
-            html.request.set_var(self.upper_bound_varname, lower_bound)
+            request.set_var(self.upper_bound_varname, lower_bound)
 
         filtered_rows: Rows = []
         assert lower_bound is not None

@@ -20,7 +20,7 @@ import cmk.gui.views
 from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource, data_source_registry, RowTable
 from cmk.gui.exporter import exporter_registry
-from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.plugins.views.utils import Cell, Painter
@@ -2000,7 +2000,7 @@ def test_gui_view_row_limit(
     result: int | None,
 ) -> None:
     if limit is not None:
-        monkeypatch.setitem(html.request._vars, "limit", limit)
+        monkeypatch.setitem(request._vars, "limit", limit)
 
     mocker.patch.object(active_config, "roles", {"nobody": {"permissions": permissions}})
     mocker.patch.object(user, "role_ids", ["nobody"])

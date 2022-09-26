@@ -571,7 +571,7 @@ def _load_dashboard_with_cloning(
     all_dashboards = get_all_dashboards()
     board = visuals.get_permissioned_visual(
         name,
-        html.request.get_validated_type_input(UserId, "owner"),
+        request.get_validated_type_input(UserId, "owner"),
         "dashboard",
         permitted_dashboards,
         all_dashboards,

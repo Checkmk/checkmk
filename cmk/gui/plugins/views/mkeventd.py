@@ -483,7 +483,7 @@ class PainterEventHost(Painter):
         # See SUP-10272 for a detailed explanation, hacks of view.py do not
         # work for SNMP traps
         link = makeuri_contextless(
-            html.request,
+            request,
             [
                 ("view_name", "ec_events_of_host"),
                 ("host", host_name),
@@ -808,7 +808,7 @@ def render_delete_event_icons(row) -> str | HTML:  # type:ignore[no-untyped-def]
 
 
 def _is_rendered_from_view_dashlet() -> bool:
-    return html.request.has_var("name") and html.request.has_var("id")
+    return request.has_var("name") and request.has_var("id")
 
 
 def _is_view_dashlet(dashlet_config: DashletConfig) -> TypeGuard[ViewDashletConfig]:

@@ -217,7 +217,7 @@ class ModeAuditLog(WatoMode):
             user.need_permission("wato.edit")
             return self._clear_audit_log_after_confirm()
 
-        if html.request.var("_action") == "csv":
+        if request.var("_action") == "csv":
             user.need_permission("wato.auditlog")
             return self._export_audit_log(self._parse_audit_log())
 

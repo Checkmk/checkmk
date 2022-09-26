@@ -123,7 +123,7 @@ class ParentChildTopologyPage(Page):
         elif request.var("host_name"):
             # Explicit host_name. Used by icon linking to Topology
             topology_settings.growth_root_nodes = {
-                HostName(html.request.get_str_input_mandatory("host_name"))
+                HostName(request.get_str_input_mandatory("host_name"))
             }
         else:
             # Default page without further context

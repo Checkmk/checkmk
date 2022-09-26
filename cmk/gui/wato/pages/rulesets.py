@@ -476,12 +476,12 @@ def _is_var_to_delete(form_prefix: str, varname: str, value: str) -> bool:
             form_prefix,
             varname.split("_hosttags_tag_")[1],
         )
-        if html.request.var(tagvalue_varname):
+        if request.var(tagvalue_varname):
             return False
 
     if "_hosttags_tagvalue_" in varname:
         tag_varname = "%s_hosttags_tag_%s" % (form_prefix, varname.split("_hosttags_tagvalue_")[1])
-        tag_value = html.request.var(tag_varname)
+        tag_value = request.var(tag_varname)
         if tag_value and tag_value != "ignore":
             return False
 

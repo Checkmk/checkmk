@@ -384,12 +384,12 @@ class ModeTimeperiodImportICal(WatoMode):
         return ModeTimeperiods
 
     def title(self) -> str:
-        if html.request.var("upload"):
+        if request.var("upload"):
             return _("Add time period")
         return _("Import iCalendar File to create a time period")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        if not html.request.var("upload"):
+        if not request.var("upload"):
             return make_simple_form_page_menu(
                 _("iCalendar"),
                 breadcrumb,
@@ -611,7 +611,7 @@ class ModeTimeperiodImportICal(WatoMode):
         return ical
 
     def page(self) -> None:
-        if not html.request.var("upload"):
+        if not request.var("upload"):
             self._show_import_ical_page()
         else:
             self._show_add_timeperiod_page()
@@ -678,9 +678,9 @@ class ModeTimeperiodImportICal(WatoMode):
                 get_vars["timeperiod_p_exceptions_%d_1_indexof_%d" % (index, n)] = "%d" % index
 
         for var, val in get_vars.items():
-            html.request.set_var(var, val)
+            request.set_var(var, val)
 
-        html.request.set_var("mode", "edit_timeperiod")
+        request.set_var("mode", "edit_timeperiod")
 
         ModeEditTimeperiod().page()
 

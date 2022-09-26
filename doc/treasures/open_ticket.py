@@ -17,7 +17,7 @@ config.declare_permission(
 
 
 def command_open_ticket(cmdtag, spec, row):
-    if html.request.var("_sap_openticket"):
+    if request.var("_sap_openticket"):
         comment = "OPENTICKET:" + html.get_str_input("_sap_ticket_comment")
         broadcast = 0
         forced = 2

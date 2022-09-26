@@ -10,7 +10,7 @@ from tests.testlib import on_time
 import cmk.gui.valuespec as vs
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 
 
 @pytest.mark.parametrize(
@@ -216,8 +216,8 @@ class TestOptional:
 
 
 def test_password_from_html_vars_empty(request_context) -> None:  # type:ignore[no-untyped-def]
-    html.request.set_var("pw_orig", "")
-    html.request.set_var("pw", "")
+    request.set_var("pw_orig", "")
+    request.set_var("pw", "")
 
     pw = vs.Password()
     assert pw.from_html_vars("pw") == ""

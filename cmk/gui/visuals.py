@@ -1434,7 +1434,7 @@ def page_edit_visual(  # type:ignore[no-untyped-def] # pylint: disable=too-many-
 
                 if request.var("save_and_view"):
                     back_vars: HTTPVariables = []
-                    back_url_from_vars = html.request.var("back")
+                    back_url_from_vars = request.var("back")
                     if back_url_from_vars:
                         _file_name, query_vars = file_name_and_query_vars_from_url(
                             back_url_from_vars

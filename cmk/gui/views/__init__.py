@@ -1232,10 +1232,10 @@ class AjaxInitialViewFilters(ABCAjaxInitialFilters):
 def page_view():
     """Central entry point for the initial HTML page rendering of a view"""
     with CPUTracker() as page_view_tracker:
-        view_name = html.request.get_ascii_input_mandatory("view_name", "")
+        view_name = request.get_ascii_input_mandatory("view_name", "")
         view_spec = visuals.get_permissioned_visual(
             view_name,
-            html.request.get_validated_type_input(UserId, "owner"),
+            request.get_validated_type_input(UserId, "owner"),
             "view",
             get_permitted_views(),
             get_all_views(),

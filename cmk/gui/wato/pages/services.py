@@ -121,7 +121,7 @@ class ModeDiscovery(WatoMode):
         return ModeEditHost
 
     def _from_vars(self):
-        self._host = Folder.current().load_host(html.request.get_ascii_input_mandatory("host"))
+        self._host = Folder.current().load_host(request.get_ascii_input_mandatory("host"))
         if not self._host:
             raise MKUserError("host", _("You called this page with an invalid host name."))
 
@@ -234,14 +234,14 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         user.need_permission("wato.hosts")
 
         api_request: AjaxDiscoveryRequest = self.webapi_request()
-        html.request.del_var("request")  # Do not add this to URLs constructed later
+        request.del_var("request")  # Do not add this to URLs constructed later
         update_target = api_request.get("update_target", None)
         update_source = api_request.get("update_source", None)
         api_request.setdefault("update_services", [])
         update_services = api_request.get("update_services", [])
 
         # Make Folder() be able to detect the current folder correctly
-        html.request.set_var("folder", api_request["folder_path"])
+        request.set_var("folder", api_request["folder_path"])
 
         folder = Folder.folder(api_request["folder_path"])
         host = folder.host(api_request["host_name"])

@@ -285,7 +285,7 @@ def show_availability_page(  # pylint: disable=too-many-branches
     if display_options.enabled(display_options.T):
         top_heading(
             html,
-            html.request,
+            request,
             title,
             breadcrumb,
             page_menu=_page_menu_availability(
@@ -868,7 +868,7 @@ def show_bi_availability(  # pylint: disable=too-many-branches
 
         top_heading(
             html,
-            html.request,
+            request,
             title,
             breadcrumb,
             page_menu,
@@ -1191,7 +1191,7 @@ def edit_annotation(breadcrumb: Breadcrumb) -> bool:
     breadcrumb = _edit_annotation_breadcrumb(breadcrumb, title)
     top_heading(
         html,
-        html.request,
+        request,
         title,
         breadcrumb,
         _edit_annotation_page_menu(breadcrumb),

@@ -11,7 +11,7 @@ import cmk.utils.paths
 from cmk.utils.encryption import Encrypter
 
 import cmk.gui.valuespec as vs
-from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 
 from .utils import request_var
 
@@ -44,8 +44,8 @@ class TestValueSpecPassword:
 
 @pytest.mark.usefixtures("fixture_auth_secret")
 def test_password_from_html_vars_initial_pw(request_context) -> None:  # type:ignore[no-untyped-def]
-    html.request.set_var("pw_orig", "")
-    html.request.set_var("pw", "abc")
+    request.set_var("pw_orig", "")
+    request.set_var("pw", "abc")
     pw = vs.Password()
     assert pw.from_html_vars("pw") == "abc"
 
@@ -57,8 +57,8 @@ def test_password_from_html_vars_initial_pw(request_context) -> None:  # type:ig
 def test_password_from_html_vars_unchanged_pw(  # type:ignore[no-untyped-def]
     request_context,
 ) -> None:
-    html.request.set_var("pw_orig", base64.b64encode(Encrypter.encrypt("abc")).decode("ascii"))
-    html.request.set_var("pw", "")
+    request.set_var("pw_orig", base64.b64encode(Encrypter.encrypt("abc")).decode("ascii"))
+    request.set_var("pw", "")
     pw = vs.Password()
     assert pw.from_html_vars("pw") == "abc"
 
@@ -68,7 +68,7 @@ def test_password_from_html_vars_unchanged_pw(  # type:ignore[no-untyped-def]
 )
 @pytest.mark.usefixtures("fixture_auth_secret")
 def test_password_from_html_vars_change_pw(request_context) -> None:  # type:ignore[no-untyped-def]
-    html.request.set_var("pw_orig", base64.b64encode(Encrypter.encrypt("abc")).decode("ascii"))
-    html.request.set_var("pw", "xyz")
+    request.set_var("pw_orig", base64.b64encode(Encrypter.encrypt("abc")).decode("ascii"))
+    request.set_var("pw", "xyz")
     pw = vs.Password()
     assert pw.from_html_vars("pw") == "xyz"

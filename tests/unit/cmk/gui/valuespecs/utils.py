@@ -12,14 +12,14 @@ import pytest
 
 import cmk.gui.valuespec as vs
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.htmllib.html import html
+from cmk.gui.http import request
 
 
 @contextmanager
 def request_var(  # type:ignore[no-untyped-def]
     **request_variables: str,
 ):
-    with patch.dict(html.request.legacy_vars, request_variables):
+    with patch.dict(request.legacy_vars, request_variables):
         yield
 
 

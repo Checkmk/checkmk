@@ -129,7 +129,7 @@ class GUIViewRenderer(ABCViewRenderer):
             breadcrumb = self.view.breadcrumb()
             top_heading(
                 html,
-                html.request,
+                request,
                 view_title(view_spec, self.view.context),
                 breadcrumb,
                 page_menu=self._page_menu(rows, show_filters),

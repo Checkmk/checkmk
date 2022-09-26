@@ -6802,7 +6802,7 @@ class Labels(ValueSpec[LabelsModel]):
         return {}
 
     def from_html_vars(self, varprefix: str) -> LabelsModel:
-        value = html.request.get_str_input_mandatory(varprefix, "[]")
+        value = request.get_str_input_mandatory(varprefix, "[]")
         return self._from_html_vars(value, varprefix)
 
     def _from_html_vars(self, value: str, varprefix: str) -> LabelsModel:
@@ -7589,7 +7589,7 @@ class _CAInput(ValueSpec[_CAInputModel]):
     def from_html_vars(self, varprefix: str) -> _CAInputModel:
         address = self.address.from_html_vars(varprefix + "_address")
         port = self.port.from_html_vars(varprefix + "_port")
-        content = html.request.get_binary_input_mandatory(varprefix)
+        content = request.get_binary_input_mandatory(varprefix)
         return (address, port, content)
 
 

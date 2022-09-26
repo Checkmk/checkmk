@@ -505,7 +505,7 @@ class ModeBIPacks(ABCBIMode):
         if not transactions.check_transaction():
             return redirect(self.mode_url())
 
-        if request.has_var("_bi_packs_reset_sorting") or html.request.has_var("_bi_packs_sort"):
+        if request.has_var("_bi_packs_reset_sorting") or request.has_var("_bi_packs_sort"):
             return None
 
         if not request.has_var("_delete"):
@@ -2079,7 +2079,7 @@ class BIModeAggregations(ABCBIMode):
         )
 
     def page(self) -> None:
-        if html.request.has_var("reload_page"):
+        if request.has_var("reload_page"):
             url = mode_url(self.name(), pack=self.bi_pack.id)
             html.reload_whole_page(url)
 

@@ -69,31 +69,10 @@ def dump_privatekey_pem(pkey: crypto.PKey) -> bytes:
     return crypto.dump_privatekey(crypto.FILETYPE_PEM, pkey)
 
 
-class ScheduleConfig(TypedDict):
-    disabled: bool
-    period: str
-    timeofday: Sequence[tuple[int, int]]
-
-
-class JobConfig(TypedDict):
-    encrypt: str | None
-    target_id: TargetId
-    compress: bool
-    schedule: ScheduleConfig | None
-    no_history: bool
-    without_sites: bool
-
-
-@dataclass
-class Job:
-    config: JobConfig
-    local_id: str | None
-
-
 # Is used to duplicate output from stdout/stderr to a the job log. This
 # is e.g. used during "mkbackup backup" to store the output.
 class Log:
-    def __init__(self, fd: int, job: Job) -> None:
+    def __init__(self, fd: int) -> None:
         self.fd = fd
 
         if self.fd == 1:
@@ -104,7 +83,6 @@ class Log:
             sys.stderr = self  # type: ignore[assignment]
 
         self.color_replace = re.compile("\033\\[\\d{1,2}m", re.UNICODE)
-        self.job = job
 
     def __del__(self) -> None:
         if self.fd == 1:
@@ -115,7 +93,7 @@ class Log:
     def write(self, data: str) -> None:
         self.orig.write(data)
         try:
-            add_output(self.color_replace.sub("", data), self.job)
+            add_output(self.color_replace.sub("", data))
         except Exception as e:
             self.orig.write("Failed to add output: %s\n" % e)
 
@@ -127,10 +105,10 @@ g_stdout_log = None
 g_stderr_log = None
 
 
-def start_logging(job: Job) -> None:
+def start_logging() -> None:
     global g_stdout_log, g_stderr_log
-    g_stdout_log = Log(1, job)
-    g_stderr_log = Log(2, job)
+    g_stdout_log = Log(1)
+    g_stderr_log = Log(2)
 
 
 def stop_logging() -> None:
@@ -345,6 +323,26 @@ class Config(TypedDict):
     jobs: dict[str, Any]
 
 
+class ScheduleConfig(TypedDict):
+    disabled: bool
+    period: str
+    timeofday: Sequence[tuple[int, int]]
+
+
+class JobConfig(TypedDict):
+    encrypt: str | None
+    target_id: TargetId
+    compress: bool
+    schedule: ScheduleConfig | None
+    no_history: bool
+    without_sites: bool
+
+
+@dataclass
+class Job:
+    config: JobConfig
+
+
 def get_needed_lock_files(opts: Mapping[str, str], job_config: JobConfig) -> Sequence[Path]:
     if not is_root():
         site_id = current_site_id()
@@ -407,15 +405,15 @@ def save_backup_info(info: Mapping[str, Any], config: Config, target_id: TargetI
         json.dump(info, f, sort_keys=True, indent=4, separators=(",", ": "))
 
 
-def create_backup_info(config: Config, job: Job) -> Mapping[str, Any]:
-    files = get_files_for_backup_info(config, job.config["target_id"])
+def create_backup_info(config: Config, job_config: JobConfig) -> Mapping[str, Any]:
+    files = get_files_for_backup_info(config, job_config["target_id"])
 
     info = {
         "type": "Check_MK" if not is_root() else "Appliance",
-        "job_id": job.local_id,
-        "config": job.config,
+        "job_id": g_local_job_id,
+        "config": job_config,
         "hostname": hostname(),
-        "files": get_files_for_backup_info(config, job.config["target_id"]),
+        "files": get_files_for_backup_info(config, job_config["target_id"]),
         "finished": time.time(),
         "size": sum(f[1] for f in files),
     }
@@ -659,6 +657,7 @@ modes = {
 }
 
 g_job_id: str | None = None
+g_local_job_id: str | None = None
 g_target_id: str | None = None
 g_backup_id: str | None = None
 
@@ -676,14 +675,14 @@ def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None
         target_ident = job.config["target_id"]
         verify_target_is_ready(target_ident, config)
 
-        init_new_run(job)
-        save_next_run(job)
+        init_new_run()
+        save_next_run(job.config["schedule"])
 
         if "background" in opts:
             daemon.daemonize()
-            save_state({"pid": os.getpid()}, job)
+            save_state({"pid": os.getpid()})
 
-        start_logging(job)
+        start_logging()
         log(f"--- Starting backup ({g_job_id} to {target_ident}) ---")
 
         success = False
@@ -693,8 +692,7 @@ def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None
             save_state(
                 {
                     "state": "running",
-                },
-                job,
+                }
             )
 
             do_backup(opts, config, job)
@@ -718,8 +716,7 @@ def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None
                     "state": "finished",
                     "finished": time.time(),
                     "success": success,
-                },
-                job,
+                }
             )
 
 
@@ -730,7 +727,7 @@ def do_backup(opts: Mapping[str, str], config: Config, job: Job) -> None:
         do_system_backup(opts, config, job)
     else:
         raise MKGeneralException("System backup not supported.")
-    complete_backup(config, job)
+    complete_backup(config, job.config)
 
 
 def do_site_backup(
@@ -785,7 +782,6 @@ def do_site_backup(
                 stream=p.stdout,
                 is_alive=lambda: p.poll() is None,
                 key_ident=job.config["encrypt"],
-                job=job,
             )
             for chunk in s.process():
                 backup_file.write(chunk)
@@ -847,7 +843,7 @@ def omd_command(cmd: list[str]) -> None:
 # c) the unencrypted random key is used as AES key for encrypting the backup stream
 class MKBackupStream:
     def __init__(
-        self, stream: IO[bytes], is_alive: Callable[[], bool], key_ident: str | None, job: Job
+        self, stream: IO[bytes], is_alive: Callable[[], bool], key_ident: str | None
     ) -> None:
         self._stream = stream
         self._is_alive = is_alive
@@ -864,7 +860,6 @@ class MKBackupStream:
         # the data in cleartext. Here, since the key is only ever used once,
         # you can use a known IV.
         self._iv = b"\x00" * AES.block_size
-        self._job = job
 
     def process(self) -> Iterator[bytes]:
         head = self._init_processing()
@@ -913,7 +908,7 @@ class MKBackupStream:
                 weight = weight_per_sec**timedif
                 bps = self._last_bps * weight + this_bps * (1 - weight)
 
-            save_state({"bytes_per_second": bps}, self._job)
+            save_state({"bytes_per_second": bps})
             self._last_state_update, self._last_bps, self._bytes_copied = time.time(), bps, 0
 
     def _get_key_spec(self, key_id: bytes) -> dict[str, bytes]:
@@ -1326,9 +1321,7 @@ def perform_backup(
 
         # Process backup stream and write to destination file
         with open(pipein_fd, "rb") as pipein:
-            s = BackupStream(
-                stream=pipein, is_alive=t.is_alive, key_ident=job.config["encrypt"], job=job
-            )
+            s = BackupStream(stream=pipein, is_alive=t.is_alive, key_ident=job.config["encrypt"])
             for chunk in s.process():
                 backup_file.write(chunk)
 
@@ -1390,32 +1383,31 @@ def backup_files_to_tarfile(
         raise
 
 
-def complete_backup(config: Config, job: Job) -> None:
-    info = create_backup_info(config, job)
-    save_backup_info(info, config, job.config["target_id"])
+def complete_backup(config: Config, job_config: JobConfig) -> None:
+    info = create_backup_info(config, job_config)
+    save_backup_info(info, config, job_config["target_id"])
 
     save_state(
         {
             "size": info["size"],
-        },
-        job=job,
+        }
     )
 
-    verify_backup_consistency(info, config, job.config)
+    verify_backup_consistency(info, config, job_config)
 
     # Now we can be sure this new backup is a good one. Remove eventual old
     # backup and move from "incomplete" to "complete".
 
-    if os.path.exists(job_backup_path_complete(config, job.config["target_id"])):
+    if os.path.exists(job_backup_path_complete(config, job_config["target_id"])):
         log("Cleaning up previously completed backup")
-        shutil.rmtree(job_backup_path_complete(config, job.config["target_id"]))
+        shutil.rmtree(job_backup_path_complete(config, job_config["target_id"]))
 
     os.rename(
-        job_backup_path_during_backup(config, job.config["target_id"]),
-        job_backup_path_complete(config, job.config["target_id"]),
+        job_backup_path_during_backup(config, job_config["target_id"]),
+        job_backup_path_complete(config, job_config["target_id"]),
     )
 
-    state = load_state(job)
+    state = load_state()
     duration = time.time() - state["started"]
 
     log(
@@ -1440,13 +1432,14 @@ def cleanup_previous_incomplete_backup(config: Config, target_id: TargetId) -> N
 
 
 def load_job(local_job_id: str, config: Config) -> Job:
-    global g_job_id
+    global g_job_id, g_local_job_id
     g_job_id = globalize_job_id(local_job_id)
+    g_local_job_id = local_job_id
 
     if local_job_id not in config["jobs"]:
         raise MKGeneralException("This backup job does not exist.")
 
-    job = Job(config=config["jobs"][local_job_id], local_id=local_job_id)
+    job = Job(config=config["jobs"][local_job_id])
     return job
 
 
@@ -1469,7 +1462,7 @@ def globalize_job_id(local_job_id: str) -> str:
     return "-".join([p.replace("-", "+") for p in parts])
 
 
-def init_new_run(job: Job) -> None:
+def init_new_run() -> None:
     save_state(
         {
             "state": "started",
@@ -1478,13 +1471,11 @@ def init_new_run(job: Job) -> None:
             "output": "",
             "bytes_per_second": 0,
         },
-        job,
         update=False,
     )
 
 
-def save_next_run(job: Job) -> None:
-    schedule_cfg = job.config["schedule"]
+def save_next_run(schedule_cfg: ScheduleConfig | None) -> None:
     if not schedule_cfg:
         next_schedule: str | float | None = None
 
@@ -1498,7 +1489,7 @@ def save_next_run(job: Job) -> None:
             times.append(schedule.next_scheduled_time(schedule_cfg["period"], timespec))
         next_schedule = min(times)
 
-    save_state({"next_schedule": next_schedule}, job)
+    save_state({"next_schedule": next_schedule})
 
 
 g_state: dict[str, Any] | None = None
@@ -1506,27 +1497,27 @@ g_state: dict[str, Any] | None = None
 
 # The state file is in JSON format because it is 1:1 transfered
 # to the Checkmk server through the Checkmk agent.
-def load_state(job: Job) -> dict[str, Any]:
+def load_state() -> dict[str, Any]:
     global g_state
     if g_state is None:
-        g_state = json.loads(state_path(job).read_text())
+        g_state = json.loads(state_path().read_text())
 
     return g_state
 
 
-def save_state(new_attrs: Mapping[str, Any], job: Job, update: bool = True) -> None:
+def save_state(new_attrs: Mapping[str, Any], update: bool = True) -> None:
     if update:
-        state = load_state(job)
+        state = load_state()
     else:
         state = {}
     state.update(new_attrs)
 
     store.save_text_to_file(
-        state_path(job), json.dumps(state, sort_keys=True, indent=4, separators=(",", ": "))
+        state_path(), json.dumps(state, sort_keys=True, indent=4, separators=(",", ": "))
     )
 
 
-def state_path(job: Job) -> Path:
+def state_path() -> Path:
     if is_root():
         path = "/var/lib/mkbackup"
     else:
@@ -1539,7 +1530,7 @@ def state_path(job: Job) -> Path:
 
     if g_job_id:
         # backup
-        name = job.local_id
+        name = g_local_job_id
     else:
         # restore
         if is_root():
@@ -1563,10 +1554,10 @@ def cleanup_backup_job_states() -> None:
             os.unlink(f)
 
 
-def add_output(s: str, job: Job) -> None:
-    state = load_state(job)
+def add_output(s: str) -> None:
+    state = load_state()
     state["output"] += s
-    save_state(state, update=False, job=job)
+    save_state(state, update=False)
 
 
 def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: Config) -> None:
@@ -1574,7 +1565,7 @@ def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: C
     g_target_id, g_backup_id = target_id, backup_id
 
     info = load_backup_info(backup_info_path(config, TargetId(target_id)))
-    job = Job(config=info["config"], local_id=info["job_id"])
+    job = Job(config=info["config"])
 
     verify_compatible_cma_version()
     with ExitStack() as stack:
@@ -1590,13 +1581,13 @@ def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: C
         if "no-verify" not in opts:
             verify_backup_consistency(info, config, job.config)
 
-        init_new_run(job)
+        init_new_run()
 
         if "background" in opts:
             daemon.daemonize()
-            save_state({"pid": os.getpid()}, job)
+            save_state({"pid": os.getpid()})
 
-        start_logging(job)
+        start_logging()
         log("--- Starting restore (%s) ---" % g_backup_id)
 
         success = False
@@ -1604,8 +1595,7 @@ def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: C
             save_state(
                 {
                     "state": "running",
-                },
-                job,
+                }
             )
 
             do_restore(opts, info, config, job)
@@ -1629,8 +1619,7 @@ def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: C
                     "state": "finished",
                     "finished": time.time(),
                     "success": success,
-                },
-                job,
+                }
             )
 
 
@@ -1641,7 +1630,7 @@ def do_restore(opts: Mapping[str, str], info: Mapping[str, Any], config: Config,
         do_system_restore(opts, info, config, job)
     else:
         raise MKGeneralException("System backup not supported.")
-    complete_restore(job)
+    complete_restore()
 
     if "no-reboot" not in opts and is_root():
         log("--- Rebooting device now ---")
@@ -1694,7 +1683,7 @@ def do_site_restore(
 
         with open(backup_path, "rb") as backup_file:
             s = RestoreStream(
-                stream=backup_file, is_alive=lambda: False, key_ident=job.config["encrypt"], job=job
+                stream=backup_file, is_alive=lambda: False, key_ident=job.config["encrypt"]
             )
             try:
                 for chunk in s.process():
@@ -1938,7 +1927,7 @@ def do_system_data_restore(config: Config, job: Job) -> Sequence[str]:
 def restore_system_backup(backup_path: str, job: Job) -> Sequence[str]:
     with open(backup_path, "rb") as backup_file:
         s = RestoreStream(
-            stream=backup_file, is_alive=lambda: False, key_ident=job.config["encrypt"], job=job
+            stream=backup_file, is_alive=lambda: False, key_ident=job.config["encrypt"]
         )
 
         pipein_fd, pipeout_fd = os.pipe()
@@ -1968,9 +1957,9 @@ def read_from_tarfile_threaded(s: RestoreStream, pipeout_fd: int) -> None:
         log("Error while sending data to restore process: %s" % e)
 
 
-def complete_restore(job: Job) -> None:
+def complete_restore() -> None:
     cleanup_backup_job_states()
-    state = load_state(job)
+    state = load_state()
     duration = time.time() - state["started"]
     log(
         "--- Restore completed (Duration: %s, IO: %s/s) ---"

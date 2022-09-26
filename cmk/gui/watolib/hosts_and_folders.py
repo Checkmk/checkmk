@@ -2851,7 +2851,20 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             subfolder._add_all_sites_to_set(site_ids)
 
     def _rewrite_hosts_file(self):
+        UNUSED_ATTRIBUTES = [
+            "snmp_v3_credentials",  # added by host diagnose page
+            "hostname",  # added by host diagnose page
+        ]
+
         self._load_hosts_on_demand()
+
+        for host in self._hosts.values():
+            for attribute in UNUSED_ATTRIBUTES:
+                logger.debug("Rewriting %s", host.name())
+                if host.attribute(attribute, None):
+                    logger.debug("Removing attribute: %s", attribute)
+                    host.remove_attribute(attribute)
+
         self.save_hosts()
 
     # .-----------------------------------------------------------------------.

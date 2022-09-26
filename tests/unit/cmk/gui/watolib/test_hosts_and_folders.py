@@ -1019,3 +1019,32 @@ def test_folder_access(mocker: MagicMock, tmp_path: Path) -> None:
     assert isinstance(hosts_and_folders.Folder.folder(""), hosts_and_folders.CREFolder)
     with pytest.raises(MKGeneralException):
         hosts_and_folders.Folder.folder("unknown_folder")
+
+
+@pytest.mark.parametrize("blacklisted_attribute", ["snmp_v3_credentials", "hostname"])
+def test_host_rewrite_removes_blacklisted_attributes(
+    blacklisted_attribute, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    host_name = "test-host"
+
+    monkeypatch.setattr(
+        "cmk.gui.watolib.hosts_and_folders.delete_hosts",
+        lambda *args, **kwargs: None,
+    )
+
+    hosts_and_folders.CREFolder.root_folder().create_hosts(
+        [
+            (
+                host_name,
+                {"ipaddress": "127.0.0.1", blacklisted_attribute: "fooooooooobar"},
+                [],
+            )
+        ],
+        bake_hosts=False,
+    )
+    hosts_and_folders.CREFolder.root_folder().rewrite_hosts_files()
+
+    host = hosts_and_folders.Host.host(host_name)
+    assert host is not None
+    assert blacklisted_attribute not in host.attributes()
+    hosts_and_folders.CREFolder.root_folder().delete_hosts([host_name])

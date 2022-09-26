@@ -189,7 +189,7 @@ def check_timesyncd(params: Mapping[str, Any], section: Section) -> CheckResult:
             value=jitter,
             metric_name="jitter",
             levels_upper=levels,
-            render_func=render.datetime,
+            render_func=render.timespan,
             label="Jitter",
         )
 

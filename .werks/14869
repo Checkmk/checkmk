@@ -1,0 +1,21 @@
+Title: Fix regression in mk_logwatch plugin in Windows
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1664212709
+Edition: cre
+Knowledge: doc
+Level: 2
+State: unknown
+Version: 2.1.0p13
+
+Until now mk_logwatch plugin could not create a directory for batch 
+files because the directory name as a rule contained a colon and the 
+colon is a forbidden symbol in NTFS. Due to this bug the logwatch 
+monitoring was impossible.
+
+With this version mk_logwatch plugin replaces the colon in directory 
+name with an underscore thus fixing the regression.
+
+SUP-11644
+

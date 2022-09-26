@@ -1198,9 +1198,13 @@ def write_batch_file(lines, batch_id, batch_dir):
         handle.writelines([ensure_text_type(l) for l in lines])
 
 
+def _ip_to_dir(ip_addr):
+    return ip_addr.replace(":", "_") if os.name == "nt" else ip_addr
+
+
 def process_batches(current_batch, current_batch_id, remote, retention_period, now):
     # type: (Collection[str], str, str, float, float) -> None
-    batch_dir = os.path.join(MK_VARDIR, "logwatch-batches", remote)
+    batch_dir = os.path.join(MK_VARDIR, "logwatch-batches", _ip_to_dir(remote))
 
     try:
         os.makedirs(batch_dir)

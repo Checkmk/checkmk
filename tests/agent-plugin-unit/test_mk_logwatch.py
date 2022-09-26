@@ -680,13 +680,15 @@ def test_process_batches(tmpdir, mocker, lw):
             ]
         ],
         "batch_id",
-        "remote",
+        "::remote",
         123,
         456,
     )
     assert os.path.isfile(os.path.join(
         str(tmpdir),
-        "logwatch-batches/remote/logwatch-batch-file-batch_id",
+        "logwatch-batches",
+        "__remote" if os.name == "nt" else "::remote",
+        "logwatch-batch-file-batch_id",
     ))
 
 

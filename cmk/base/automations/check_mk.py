@@ -1733,7 +1733,10 @@ class AutomationGetAgentOutput(Automation):
 
                     raw_data = source.fetch(Mode.CHECKING)
                     host_sections = source.parse(raw_data, selection=NO_SELECTION)
-                    source_results = source.summarize(host_sections)
+                    source_results = source.summarize(
+                        host_sections,
+                        exit_spec_cb=host_config.exit_code_spec,
+                    )
                     if any(r.state != 0 for r in source_results):
                         # Optionally show errors of problematic data sources
                         success = False

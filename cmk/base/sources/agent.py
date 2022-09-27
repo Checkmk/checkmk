@@ -49,7 +49,7 @@ class AgentSource(Source[AgentRawData, AgentRawDataSection]):
         encoding_fallback: str,
     ):
         super().__init__(
-            host_config,
+            host_config.hostname,
             ipaddress,
             source_type=source_type,
             fetcher_type=fetcher_type,
@@ -64,6 +64,7 @@ class AgentSource(Source[AgentRawData, AgentRawDataSection]):
             simulation_mode=simulation_mode,
             agent_simulator=agent_simulator,
         )
+        self.host_config: Final = host_config
         # TODO: We should cleanup these old directories one day.
         #       Then we can remove this special case
         self.main_data_source: Final[bool] = main_data_source

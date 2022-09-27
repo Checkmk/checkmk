@@ -445,7 +445,10 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
 
             raw_data = source.fetch(FetchMode.CHECKING)
             host_sections = source.parse(raw_data, selection=NO_SELECTION)
-            source_results = source.summarize(host_sections)
+            source_results = source.summarize(
+                host_sections,
+                exit_spec_cb=host_config.exit_code_spec,
+            )
             if any(r.state != 0 for r in source_results):
                 console.error(
                     "ERROR [%s]: %s\n",

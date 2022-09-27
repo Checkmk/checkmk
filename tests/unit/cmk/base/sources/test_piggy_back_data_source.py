@@ -24,8 +24,9 @@ def test_attribute_defaults(monkeypatch: MonkeyPatch, ipaddress: HostAddress) ->
     ts.add_host(hostname)
     ts.apply(monkeypatch)
 
+    host_config = HostConfig.make_host_config(hostname)
     source = PiggybackSource(
-        HostConfig.make_host_config(hostname),
+        host_config,
         ipaddress,
         simulation_mode=True,
         agent_simulator=True,
@@ -33,8 +34,11 @@ def test_attribute_defaults(monkeypatch: MonkeyPatch, ipaddress: HostAddress) ->
         translation={},
         encoding_fallback="ascii",
     )
-    assert source.host_config.hostname == hostname
+    assert source.hostname == hostname
     assert source.ipaddress == ipaddress
     assert source.description.startswith("Process piggyback data from")
-    assert not source.summarize(result.OK(HostSections[AgentRawDataSection]()))
+    assert not source.summarize(
+        result.OK(HostSections[AgentRawDataSection]()),
+        exit_spec_cb=host_config.exit_code_spec,
+    )
     assert source.id == "piggyback"

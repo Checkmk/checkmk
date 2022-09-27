@@ -7,7 +7,7 @@ import abc
 import logging
 from functools import partial
 from pathlib import Path
-from typing import final, Final, Generic, Optional, Sequence
+from typing import Callable, final, Final, Generic, Optional, Sequence
 
 import cmk.utils
 import cmk.utils.debug
@@ -15,7 +15,7 @@ import cmk.utils.misc
 import cmk.utils.paths
 from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import HostAddress, result, SourceType
+from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, result, SourceType
 
 from cmk.snmplib.type_defs import TRawData
 
@@ -25,8 +25,6 @@ from cmk.core_helpers.cache import FileCache
 from cmk.core_helpers.controller import FetcherType
 from cmk.core_helpers.host_sections import HostSections, TRawDataSection
 from cmk.core_helpers.type_defs import Mode, SectionNameCollection
-
-from cmk.base.config import HostConfig
 
 __all__ = ["Source"]
 
@@ -43,7 +41,7 @@ class Source(Generic[TRawData, TRawDataSection], abc.ABC):
 
     def __init__(
         self,
-        host_config: HostConfig,
+        hostname: HostName,
         ipaddress: Optional[HostAddress],
         *,
         source_type: SourceType,
@@ -57,7 +55,7 @@ class Source(Generic[TRawData, TRawDataSection], abc.ABC):
         cache_dir: Optional[Path] = None,
         persisted_section_dir: Optional[Path] = None,
     ) -> None:
-        self.host_config: Final = host_config
+        self.hostname: Final = hostname
         self.ipaddress: Final = ipaddress
         self.source_type: Final = source_type
         self.fetcher_type: Final = fetcher_type
@@ -74,16 +72,14 @@ class Source(Generic[TRawData, TRawDataSection], abc.ABC):
 
         self.file_cache_base_path: Final = cache_dir
         self.file_cache_max_age: file_cache.MaxAge = file_cache.MaxAge.none()
-        self.persisted_sections_file_path: Final = persisted_section_dir / self.host_config.hostname
+        self.persisted_sections_file_path: Final = persisted_section_dir / self.hostname
 
         self._logger: Final = logging.getLogger("cmk.base.data_source.%s" % id_)
-
-        self.exit_spec = self.host_config.exit_code_spec(id_)
 
     def __repr__(self) -> str:
         return "%s(%r, %r, description=%r, id=%r)" % (
             type(self).__name__,
-            self.host_config,
+            self.hostname,
             self.ipaddress,
             self.description,
             self.id,
@@ -120,8 +116,10 @@ class Source(Generic[TRawData, TRawDataSection], abc.ABC):
     def summarize(
         self,
         host_sections: result.Result[HostSections[TRawDataSection], Exception],
+        *,
+        exit_spec_cb: Callable[[str], ExitSpec],
     ) -> Sequence[ActiveCheckResult]:
-        summarizer = self._make_summarizer()
+        summarizer = self._make_summarizer(exit_spec=exit_spec_cb(self.id))
         if host_sections.is_ok():
             return summarizer.summarize_success()
         return summarizer.summarize_failure(host_sections.error)
@@ -141,6 +139,6 @@ class Source(Generic[TRawData, TRawDataSection], abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def _make_summarizer(self) -> Summarizer:
+    def _make_summarizer(self, *, exit_spec: ExitSpec) -> Summarizer:
         """Create a summarizer with this configuration."""
         raise NotImplementedError

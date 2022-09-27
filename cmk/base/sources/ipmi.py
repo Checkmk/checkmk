@@ -7,7 +7,7 @@ from typing import cast, Final, Optional
 
 from cmk.utils.exceptions import MKAgentError
 from cmk.utils.translations import TranslationOptions
-from cmk.utils.type_defs import HostAddress, SourceType
+from cmk.utils.type_defs import ExitSpec, HostAddress, SourceType
 
 from cmk.core_helpers import FetcherType, IPMIFetcher
 from cmk.core_helpers.agent import AgentFileCache, AgentFileCacheFactory
@@ -74,8 +74,8 @@ class IPMISource(AgentSource):
             password=self.credentials.get("password"),
         )
 
-    def _make_summarizer(self) -> IPMISummarizer:
-        return IPMISummarizer(self.exit_spec)
+    def _make_summarizer(self, *, exit_spec: ExitSpec) -> IPMISummarizer:
+        return IPMISummarizer(exit_spec)
 
     @staticmethod
     def _make_description(  # type:ignore[no-untyped-def]

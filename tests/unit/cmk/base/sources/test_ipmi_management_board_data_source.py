@@ -38,9 +38,10 @@ def test_attribute_defaults(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     assert source.ipaddress == ipaddress
     assert source.description == "Management board - IPMI"
     assert source.source_type is SourceType.MANAGEMENT
-    assert source.summarize(result.OK(HostSections[AgentRawDataSection]())) == [
-        ActiveCheckResult(0, "Success")
-    ]
+    assert source.summarize(
+        result.OK(HostSections[AgentRawDataSection]()),
+        exit_spec_cb=host_config.exit_code_spec,
+    ) == [ActiveCheckResult(0, "Success")]
     assert source.id == "mgmt_ipmi"
 
 

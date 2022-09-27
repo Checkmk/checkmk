@@ -8,7 +8,7 @@ from typing import Final, Optional, Sequence, Tuple
 
 from cmk.utils.paths import tmp_dir
 from cmk.utils.translations import TranslationOptions
-from cmk.utils.type_defs import HostAddress, HostName, SourceType
+from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, SourceType
 
 from cmk.core_helpers import FetcherType, PiggybackFetcher
 from cmk.core_helpers.agent import AgentFileCache, NoCacheFactory
@@ -61,9 +61,9 @@ class PiggybackSource(AgentSource):
             time_settings=self.time_settings,
         )
 
-    def _make_summarizer(self) -> PiggybackSummarizer:
+    def _make_summarizer(self, *, exit_spec: ExitSpec) -> PiggybackSummarizer:
         return PiggybackSummarizer(
-            self.exit_spec,
+            exit_spec,
             hostname=self.host_config.hostname,
             ipaddress=self.ipaddress,
             time_settings=self.time_settings,

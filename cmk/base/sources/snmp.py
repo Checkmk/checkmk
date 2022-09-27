@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Dict, Final, Optional, Set
 
 from cmk.utils.exceptions import OnError
-from cmk.utils.type_defs import HostAddress, SectionName, SourceType
+from cmk.utils.type_defs import ExitSpec, HostAddress, SectionName, SourceType
 
 from cmk.snmplib.type_defs import (
     BackendSNMPTree,
@@ -89,7 +89,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             else host_config.management_snmp_config
         )
         super().__init__(
-            host_config,
+            host_config.hostname,
             ipaddress,
             source_type=source_type,
             fetcher_type=FetcherType.SNMP,
@@ -102,6 +102,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             simulation_mode=simulation_mode,
             agent_simulator=agent_simulator,
         )
+        self.host_config: Final = host_config
         self.selected_sections = selected_sections
         self.snmp_config = snmp_config
         self.missing_sys_description: Final = missing_sys_description
@@ -164,7 +165,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
 
     def _make_file_cache(self) -> FileCache[SNMPRawData]:
         return SNMPFileCacheFactory(
-            self.host_config.hostname,
+            self.hostname,
             base_path=self.file_cache_base_path,
             simulation=self.simulation_mode,
             max_age=self.file_cache_max_age,
@@ -209,7 +210,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
 
     def _make_parser(self) -> SNMPParser:
         return SNMPParser(
-            self.host_config.hostname,
+            self.hostname,
             SectionStore[SNMPRawDataSection](
                 self.persisted_sections_file_path,
                 logger=self._logger,
@@ -222,8 +223,8 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             logger=self._logger,
         )
 
-    def _make_summarizer(self) -> SNMPSummarizer:
-        return SNMPSummarizer(self.exit_spec)
+    def _make_summarizer(self, *, exit_spec: ExitSpec) -> SNMPSummarizer:
+        return SNMPSummarizer(exit_spec)
 
     def _make_disabled_sections(self) -> Set[SectionName]:
         return self.host_config.disabled_snmp_sections()
@@ -235,7 +236,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             checking_sections = set(
                 agent_based_register.get_relevant_raw_sections(
                     check_plugin_names=check_table.get_check_table(
-                        self.host_config.hostname,
+                        self.hostname,
                         filter_mode=check_table.FilterMode.INCLUDE_CLUSTERED,
                         skip_ignored=True,
                     ).needed_check_names(),

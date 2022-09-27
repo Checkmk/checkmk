@@ -176,13 +176,19 @@ class TestSNMPSummaryResult:
 
     @pytest.mark.usefixtures("scenario")
     def test_defaults(self, source) -> None:  # type:ignore[no-untyped-def]
-        assert source.summarize(result.OK(HostSections[AgentRawDataSection]())) == [
-            ActiveCheckResult(0, "Success")
+        assert source.summarize(
+            result.OK(HostSections[AgentRawDataSection]()),
+            exit_spec_cb=HostConfig.make_host_config(source.hostname).exit_code_spec,
+        ) == [
+            ActiveCheckResult(0, "Success"),
         ]
 
     @pytest.mark.usefixtures("scenario")
     def test_with_exception(self, source) -> None:  # type:ignore[no-untyped-def]
-        assert source.summarize(result.Error(Exception())) == [ActiveCheckResult(3)]
+        assert source.summarize(
+            result.Error(Exception()),
+            exit_spec_cb=HostConfig.make_host_config(source.hostname).exit_code_spec,
+        ) == [ActiveCheckResult(3)]
 
 
 @pytest.fixture(name="check_plugin")

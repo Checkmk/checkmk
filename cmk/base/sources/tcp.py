@@ -7,7 +7,7 @@ import socket
 from typing import Optional
 
 from cmk.utils.translations import TranslationOptions
-from cmk.utils.type_defs import HostAddress, SourceType
+from cmk.utils.type_defs import ExitSpec, HostAddress, SourceType
 
 from cmk.core_helpers import FetcherType, TCPFetcher
 from cmk.core_helpers.agent import AgentFileCache, AgentFileCacheFactory, AgentSummarizerDefault
@@ -69,8 +69,8 @@ class TCPSource(AgentSource):
             encryption_settings=self.host_config.agent_encryption,
         )
 
-    def _make_summarizer(self) -> AgentSummarizerDefault:
-        return AgentSummarizerDefault(self.exit_spec)
+    def _make_summarizer(self, *, exit_spec: ExitSpec) -> AgentSummarizerDefault:
+        return AgentSummarizerDefault(exit_spec)
 
     @staticmethod
     def _make_description(ipaddress: Optional[HostAddress], agent_port: int) -> str:

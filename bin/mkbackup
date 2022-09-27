@@ -684,8 +684,6 @@ modes = {
 }
 
 g_job_id: str | None = None
-g_target_id: str | None = None
-g_backup_id: str | None = None
 
 
 def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None:
@@ -1581,9 +1579,6 @@ def add_output(s: str, job: Job) -> None:
 
 
 def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: Config) -> None:
-    global g_target_id, g_backup_id
-    g_target_id, g_backup_id = target_id, backup_id
-
     target = RestoreTarget(TargetId(target_id), backup_id, config)
     info = load_backup_info(backup_info_path(target))
     job = Job(config=info["config"], local_id=info["job_id"])
@@ -1610,7 +1605,7 @@ def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: C
 
         start_logging(job)
 
-        log("--- Starting restore (%s) ---" % g_backup_id)
+        log("--- Starting restore (%s) ---" % backup_id)
 
         success = False
         try:

@@ -17,6 +17,7 @@ from typing import (
     Callable,
     Dict,
     List,
+    Literal,
     Mapping,
     Optional as _Optional,
     Tuple as _Tuple,
@@ -1134,9 +1135,8 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
     def _rule_match_conditions(cls):
         raise NotImplementedError()
 
-    # flavour = "notify" or "alert"
     @classmethod
-    def _event_rule_match_conditions(cls, flavour):
+    def _event_rule_match_conditions(cls, flavour: Literal["notify", "alerts"]):
         if flavour == "notify":
             add_choices = [
                 ('f', _("Start or end of flapping state")),
@@ -1160,17 +1160,7 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
                     "types then this rule will never hold for service notifications!<br>"
                     "Note: You can only match on event types <a href=\"%s\">created by the core</a>."
                    ) % "wato.py?mode=edit_ruleset&varname=extra_host_conf%3Anotification_options"),
-                 choices=[
-                     ('rd', _("UP") + u" ➤ " + _("DOWN")),
-                     ('ru', _("UP") + u" ➤ " + _("UNREACHABLE")),
-                     ('dr', _("DOWN") + u" ➤ " + _("UP")),
-                     ('du', _("DOWN") + u" ➤ " + _("UNREACHABLE")),
-                     ('ud', _("UNREACHABLE") + u" ➤ " + _("DOWN")),
-                     ('ur', _("UNREACHABLE") + u" ➤ " + _("UP")),
-                     ('?r', _("any") + u" ➤ " + _("UP")),
-                     ('?d', _("any") + u" ➤ " + _("DOWN")),
-                     ('?u', _("any") + u" ➤ " + _("UNREACHABLE")),
-                 ] + add_choices,
+                 choices=_get_host_event_choices(add_choices),
                  default_value=[
                      'rd',
                      'dr',
@@ -1185,25 +1175,7 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
                      "types then this rule will never hold for host notifications!<br>"
                      "Note: You can only match on event types <a href=\"%s\">created by the core</a>."
                  ) % "wato.py?mode=edit_ruleset&varname=extra_service_conf%3Anotification_options"),
-                 choices=[
-                     ('rw', _("OK") + u" ➤ " + _("WARN")),
-                     ('rr', _("OK") + u" ➤ " + _("OK")),
-                     ('rc', _("OK") + u" ➤ " + _("CRIT")),
-                     ('ru', _("OK") + u" ➤ " + _("UNKNOWN")),
-                     ('wr', _("WARN") + u" ➤ " + _("OK")),
-                     ('wc', _("WARN") + u" ➤ " + _("CRIT")),
-                     ('wu', _("WARN") + u" ➤ " + _("UNKNOWN")),
-                     ('cr', _("CRIT") + u" ➤ " + _("OK")),
-                     ('cw', _("CRIT") + u" ➤ " + _("WARN")),
-                     ('cu', _("CRIT") + u" ➤ " + _("UNKNOWN")),
-                     ('ur', _("UNKNOWN") + u" ➤ " + _("OK")),
-                     ('uw', _("UNKNOWN") + u" ➤ " + _("WARN")),
-                     ('uc', _("UNKNOWN") + u" ➤ " + _("CRIT")),
-                     ('?r', _("any") + u" ➤ " + _("OK")),
-                     ('?w', _("any") + u" ➤ " + _("WARN")),
-                     ('?c', _("any") + u" ➤ " + _("CRIT")),
-                     ('?u', _("any") + u" ➤ " + _("UNKNOWN")),
-                 ] + add_choices,
+                 choices=_get_service_event_choices(flavour, add_choices),
                  default_value=[
                      'rw',
                      'rc',
@@ -1392,6 +1364,64 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
                 save_rules(rules)
                 self._add_change(what + "-move-rule",
                                  _("Changed position of %s %d") % (what_title, from_pos))
+
+
+def _get_host_event_choices(add_choices: List[_Tuple[str, str]]) -> List[_Tuple[str, str]]:
+    return [
+        ('rd', _("UP") + u" ➤ " + _("DOWN")),
+        ('ru', _("UP") + u" ➤ " + _("UNREACHABLE")),
+        ('dr', _("DOWN") + u" ➤ " + _("UP")),
+        ('du', _("DOWN") + u" ➤ " + _("UNREACHABLE")),
+        ('ud', _("UNREACHABLE") + u" ➤ " + _("DOWN")),
+        ('ur', _("UNREACHABLE") + u" ➤ " + _("UP")),
+        ('?r', _("any") + u" ➤ " + _("UP")),
+        ('?d', _("any") + u" ➤ " + _("DOWN")),
+        ('?u', _("any") + u" ➤ " + _("UNREACHABLE")),
+    ] + add_choices
+
+
+def _get_service_event_choices(flavour: Literal["notify", "alerts"],
+                               add_choices: List[_Tuple[str, str]]) -> List[_Tuple[str, str]]:
+    """ Alert handler need some more options, this function is just to keep the sort order """
+    choices: List[_Tuple[str, str]] = [
+        ('rr', _("OK") + u" ➤ " + _("OK")),
+        ('rw', _("OK") + u" ➤ " + _("WARN")),
+        ('rc', _("OK") + u" ➤ " + _("CRIT")),
+        ('ru', _("OK") + u" ➤ " + _("UNKNOWN")),
+        ('wr', _("WARN") + u" ➤ " + _("OK")),
+    ]
+
+    if flavour == "alerts":
+        choices += [('ww', _("WARN") + u" ➤ " + _("WARN"))]
+
+    choices += [
+        ('wc', _("WARN") + u" ➤ " + _("CRIT")),
+        ('wu', _("WARN") + u" ➤ " + _("UNKNOWN")),
+        ('cr', _("CRIT") + u" ➤ " + _("OK")),
+        ('cw', _("CRIT") + u" ➤ " + _("WARN")),
+    ]
+
+    if flavour == "alerts":
+        choices += [('cc', _("CRIT") + u" ➤ " + _("CRIT"))]
+
+    choices += [
+        ('cu', _("CRIT") + u" ➤ " + _("UNKNOWN")),
+        ('ur', _("UNKNOWN") + u" ➤ " + _("OK")),
+        ('uw', _("UNKNOWN") + u" ➤ " + _("WARN")),
+        ('uc', _("UNKNOWN") + u" ➤ " + _("CRIT")),
+    ]
+
+    if flavour == "alerts":
+        choices += [('uu', _("UNKNOWN") + u" ➤ " + _("UNKNOWN"))]
+
+    choices += [
+        ('?r', _("any") + u" ➤ " + _("OK")),
+        ('?w', _("any") + u" ➤ " + _("WARN")),
+        ('?c', _("any") + u" ➤ " + _("CRIT")),
+        ('?u', _("any") + u" ➤ " + _("UNKNOWN")),
+    ]
+
+    return choices + add_choices
 
 
 def sort_sites(sites: SiteConfigurations) -> List[_Tuple[SiteId, SiteConfiguration]]:

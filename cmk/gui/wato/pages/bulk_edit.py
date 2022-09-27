@@ -92,13 +92,13 @@ class ModeBulkEdit(WatoMode):
                 )
                 % len(hosts),
                 _(
-                    "If a select is set to <i>don't change</i> then currenty not all selected "
-                    "hosts share the same setting for this attribute. "
-                    "If you leave that selection, all hosts will keep their individual settings."
+                    "If a selection is set to <i>This value differs between the selected hosts.</i> "
+                    "then currenty not all selected hosts share the same setting for this attribute. "
+                    "If you keep that selection, all hosts will keep their individual settings."
                 ),
                 _(
                     "In case you want to <i>unset</i> attributes on multiple hosts, you need to "
-                    "use the <i>bulk cleanup</i> action instead of bulk edit."
+                    "use the <i>Remove explicit attribute settings</i> option instead of bulk edit."
                 ),
             )
         )

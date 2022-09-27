@@ -147,7 +147,6 @@ class _Builder:
                 on_scan_error=self.on_scan_error,
                 force_cache_refresh=self.force_snmp_cache_refresh,
                 simulation_mode=self.simulation_mode,
-                agent_simulator=self.agent_simulator,
                 missing_sys_description=self.missing_sys_description,
             )
         )
@@ -172,7 +171,6 @@ class _Builder:
                     on_scan_error=self.on_scan_error,
                     force_cache_refresh=self.force_snmp_cache_refresh,
                     simulation_mode=self.simulation_mode,
-                    agent_simulator=self.agent_simulator,
                     missing_sys_description=self.missing_sys_description,
                 )
             )

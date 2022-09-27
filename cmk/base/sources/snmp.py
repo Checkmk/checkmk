@@ -79,7 +79,6 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
         title: str,
         on_scan_error: OnError,
         simulation_mode: bool,
-        agent_simulator: bool,
         missing_sys_description: bool,
     ):
         snmp_config = (
@@ -100,7 +99,6 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             cache_dir=cache_dir,
             persisted_section_dir=persisted_section_dir,
             simulation_mode=simulation_mode,
-            agent_simulator=agent_simulator,
         )
         self.host_config: Final = host_config
         self.selected_sections = selected_sections
@@ -119,7 +117,6 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
         on_scan_error: OnError,
         force_cache_refresh: bool,
         simulation_mode: bool,
-        agent_simulator: bool,
         missing_sys_description: bool,
     ) -> "SNMPSource":
         return cls(
@@ -132,7 +129,6 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             on_scan_error=on_scan_error,
             force_cache_refresh=force_cache_refresh,
             simulation_mode=simulation_mode,
-            agent_simulator=agent_simulator,
             missing_sys_description=missing_sys_description,
         )
 
@@ -146,7 +142,6 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
         on_scan_error: OnError,
         force_cache_refresh: bool,
         simulation_mode: bool,
-        agent_simulator: bool,
         missing_sys_description: bool,
     ) -> "SNMPSource":
         return cls(
@@ -159,7 +154,6 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             on_scan_error=on_scan_error,
             force_cache_refresh=force_cache_refresh,
             simulation_mode=simulation_mode,
-            agent_simulator=agent_simulator,
             missing_sys_description=missing_sys_description,
         )
 

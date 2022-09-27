@@ -154,7 +154,6 @@ class TestMakeHostSectionsHosts:
                         force_cache_refresh=False,
                         on_scan_error=OnError.RAISE,
                         simulation_mode=True,
-                        agent_simulator=True,
                         missing_sys_description=False,
                     ),
                     FetcherMessage.from_raw_data(

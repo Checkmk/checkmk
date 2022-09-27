@@ -62,7 +62,6 @@ class AgentSource(Source[AgentRawData, AgentRawDataSection]):
             if main_data_source
             else None,
             simulation_mode=simulation_mode,
-            agent_simulator=agent_simulator,
         )
         self.host_config: Final = host_config
         # TODO: We should cleanup these old directories one day.
@@ -70,6 +69,7 @@ class AgentSource(Source[AgentRawData, AgentRawDataSection]):
         self.main_data_source: Final[bool] = main_data_source
         self.translation: Final = translation
         self.encoding_fallback: Final = encoding_fallback
+        self.agent_simulator: Final = agent_simulator
 
     def _make_parser(self) -> AgentParser:
         return AgentParser(

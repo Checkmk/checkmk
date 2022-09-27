@@ -50,7 +50,6 @@ def source_fixture(scenario, hostname, ipaddress):
         on_scan_error=OnError.RAISE,
         force_cache_refresh=False,
         simulation_mode=True,
-        agent_simulator=True,
         missing_sys_description=False,
     )
 
@@ -106,7 +105,6 @@ class TestSNMPSource_SNMP:
             on_scan_error=OnError.RAISE,
             force_cache_refresh=False,
             simulation_mode=True,
-            agent_simulator=True,
             missing_sys_description=False,
         )
         assert source.description == (
@@ -137,7 +135,6 @@ class TestSNMPSource_MGMT:
             selected_sections=NO_SELECTION,
             on_scan_error=OnError.RAISE,
             simulation_mode=True,
-            agent_simulator=True,
             missing_sys_description=False,
         )
         assert source.description == (
@@ -170,7 +167,6 @@ class TestSNMPSummaryResult:
             title="snmp title",
             on_scan_error=OnError.RAISE,
             simulation_mode=True,
-            agent_simulator=True,
             missing_sys_description=False,
         )
 

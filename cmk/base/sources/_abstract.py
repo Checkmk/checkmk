@@ -51,7 +51,6 @@ class Source(Generic[TRawData, TRawDataSection], abc.ABC):
         default_host_sections: HostSections[TRawDataSection],
         id_: str,
         simulation_mode: bool,
-        agent_simulator: bool,
         cache_dir: Optional[Path] = None,
         persisted_section_dir: Optional[Path] = None,
     ) -> None:
@@ -64,7 +63,6 @@ class Source(Generic[TRawData, TRawDataSection], abc.ABC):
         self.default_host_sections: Final = default_host_sections
         self.id: Final = id_
         self.simulation_mode: Final = simulation_mode
-        self.agent_simulator: Final = agent_simulator
         if not cache_dir:
             cache_dir = Path(cmk.utils.paths.data_source_cache_dir) / self.id
         if not persisted_section_dir:

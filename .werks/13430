@@ -1,0 +1,14 @@
+Title: oracle_tablespaces: allow mapping of offline tablespace
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1664264494
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p14
+
+Before this werk certain tablespaces could not be mapped with the "Map file
+online states" option, if a tablespace only consisted of "offline" or "recover"
+datafiles.

@@ -475,10 +475,24 @@ def test_discovery():
             oracle_tablespaces.ORACLE_TABLESPACES_DEFAULTS,
             [
                 Result(
+                    state=state.OK,
+                    summary="ONLINE (TEMPORARY), Size: 17.6 GiB, 53.12% used (10.4 GiB of max. 19.5 GiB), Free: 9.16 GiB",
+                ),
+                Result(state=state.OK, summary="10 increments (1.95 GiB)"),
+                Metric(
+                    "size",
+                    18874368000.0,
+                    levels=(18874368000.0, 19922944000.0),
+                    boundaries=(0.0, 20971520000.0),
+                ),
+                Metric("used", 11141120000.0),
+                Metric("max_size", 20971520000.0),
+                Result(state=state.OK, summary="autoextend"),
+                Result(
                     state=state.CRIT,
-                    summary="One or more datafiles OFFLINE or RECOVER",
-                    details="One or more datafiles OFFLINE or RECOVER",
-                )
+                    summary="Datafiles OFFLINE: PPD",
+                    details="OFFLINE datafiles for PPD:\n/oracle/PPD/sapdata/sapdata4/temp_5/temp.data5",
+                ),
             ],
         ),
         (
@@ -503,7 +517,7 @@ def test_discovery():
                 Result(
                     state=state.CRIT,
                     summary="Datafiles OFFLINE: PPD",
-                    details="Datafiles OFFLINE: PPD",
+                    details="OFFLINE datafiles for PPD:\n/oracle/PPD/sapdata/sapdata4/temp_5/temp.data5",
                 ),
             ],
         ),
@@ -658,3 +672,24 @@ def test_inventory():
             )
         ]
     )
+
+
+def test_table_spaces__sup_10648() -> None:
+    data = "sid|/some/path/to/a/file.dbf.c1|tablespace|AVAILABLE||||||OFFLINE|8192|OFFLINE|0|PERMANENT|12.3.4.5.6"
+
+    string_table = [data.split("|")]
+    parsed = oracle_tablespaces.parse_oracle_tablespaces(string_table)
+    result = list(
+        oracle_tablespaces.check_oracle_tablespaces(
+            "sid.tablespace",
+            {"levels": (10.0, 5.0), "map_file_online_states": [("OFFLINE", 0)]},
+            parsed,
+        )
+    )
+    assert result == [
+        Result(
+            state=state.OK,
+            summary="Datafiles OFFLINE: sid",
+            details="OFFLINE datafiles for sid:\n/some/path/to/a/file.dbf.c1",
+        ),
+    ]

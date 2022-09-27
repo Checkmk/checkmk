@@ -1,0 +1,11 @@
+Title: Fix creating combined graph via element editor
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1664182713
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p14
+

@@ -4,12 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Mapping, NamedTuple, Optional, Tuple, TypedDict
+from typing import Dict, List, NamedTuple, Optional, Sequence, Tuple, TypedDict
 from ..agent_based_api.v1 import State as state
-
-
-class DatafilesException(RuntimeError):
-    pass
 
 
 class OraErrors:
@@ -116,37 +112,29 @@ SectionTableSpaces = TypedDict("SectionTableSpaces", {
 })
 
 
-class FileOnlineState(TypedDict):
-    state: str
-    sids: List[str]
+class Datafile(NamedTuple):
+    name: str
 
 
-def check_unavailable_datafiles(
-    datafiles: List[DataFiles],
-    sid: str,
-    params: Optional[Mapping[str, Any]],
-) -> Dict[str, FileOnlineState]:
-    file_online_states: Dict[str, FileOnlineState] = {}
+class UnavailableDatafiles(NamedTuple):
+    offline: Sequence[Datafile]
+    recover: Sequence[Datafile]
 
+
+def check_unavailable_datafiles(datafiles: List[DataFiles],) -> UnavailableDatafiles:
+    offline = []
+    recover = []
     for datafile in datafiles:
+        online_status = datafile["file_online_status"]
+        if online_status == "OFFLINE":
+            offline.append(Datafile(datafile["name"]))
+        if online_status == "RECOVER":
+            recover.append(Datafile(datafile["name"]))
 
-        df_file_online_status = datafile["file_online_status"]
-        if df_file_online_status in ["OFFLINE", "RECOVER"] and params:
-
-            file_online_states_params = dict(params.get("map_file_online_states", []))
-            if datafile["block_size"] is not None and file_online_states_params and \
-               df_file_online_status in file_online_states_params:
-
-                file_online_states.setdefault(df_file_online_status, {
-                    "state": file_online_states_params[df_file_online_status],
-                    "sids": [],
-                })
-                file_online_states[df_file_online_status]["sids"].append(sid)
-
-            else:
-                raise DatafilesException("One or more datafiles OFFLINE or RECOVER")
-
-    return file_online_states
+    return UnavailableDatafiles(
+        offline=offline,
+        recover=recover,
+    )
 
 
 class OnlineStatsResult(NamedTuple):

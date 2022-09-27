@@ -14,7 +14,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Result,
     Metric,
     IgnoreResultsError,
-    type_defs,
 )
 
 StringTable = [
@@ -322,9 +321,23 @@ def test_discovery():
                details='1 data files (1 avail, 0 autoext)'),
     ]),
     ("PPD.FOO", oracle_tablespaces.ORACLE_TABLESPACES_DEFAULTS, [
-        Result(state=state.CRIT,
-               summary='One or more datafiles OFFLINE or RECOVER',
-               details='One or more datafiles OFFLINE or RECOVER')
+        Result(
+            state=state.OK,
+            summary=
+            'ONLINE (TEMPORARY), Size: 17.6 GiB, 53.12% used (10.4 GiB of max. 19.5 GiB), Free: 9.16 GiB'
+        ),
+        Result(state=state.OK, summary='10 increments (1.95 GiB)'),
+        Metric('size',
+               18874368000.0,
+               levels=(18874368000.0, 19922944000.0),
+               boundaries=(0.0, 20971520000.0)),
+        Metric('used', 11141120000.0),
+        Metric('max_size', 20971520000.0),
+        Result(state=state.OK, summary='autoextend'),
+        Result(
+            state=state.CRIT,
+            summary='Datafiles OFFLINE: PPD',
+            details='OFFLINE datafiles for PPD:\n/oracle/PPD/sapdata/sapdata4/temp_5/temp.data5'),
     ]),
     ("PPD.FOO", {
         "levels": (10.0, 5.0),
@@ -345,8 +358,10 @@ def test_discovery():
         Metric('used', 11141120000.0),
         Metric('max_size', 20971520000.0),
         Result(state=state.OK, summary='autoextend'),
-        Result(state=state.CRIT, summary='Datafiles OFFLINE: PPD',
-               details='Datafiles OFFLINE: PPD'),
+        Result(
+            state=state.CRIT,
+            summary='Datafiles OFFLINE: PPD',
+            details='OFFLINE datafiles for PPD:\n/oracle/PPD/sapdata/sapdata4/temp_5/temp.data5'),
     ]),
     ("CLUSTER.FOO", oracle_tablespaces.ORACLE_TABLESPACES_DEFAULTS, [
         Result(
@@ -423,3 +438,26 @@ def test_check_cluster():
             oracle_tablespaces.ORACLE_TABLESPACES_DEFAULTS,
             node_section,
         ))
+
+
+def test_table_spaces__sup_10648() -> None:
+    data = "sid|/some/path/to/a/file.dbf.c1|tablespace|AVAILABLE||||||OFFLINE|8192|OFFLINE|0|PERMANENT|12.3.4.5.6"
+
+    string_table = [data.split("|")]
+    parsed = oracle_tablespaces.parse_oracle_tablespaces(string_table)
+    result = list(
+        oracle_tablespaces.check_oracle_tablespaces(
+            "sid.tablespace",
+            {
+                "levels": (10.0, 5.0),
+                "map_file_online_states": [("OFFLINE", 0)]
+            },
+            parsed,
+        ))
+    assert result == [
+        Result(
+            state=state.OK,
+            summary="Datafiles OFFLINE: sid",
+            details="OFFLINE datafiles for sid:\n/some/path/to/a/file.dbf.c1",
+        ),
+    ]

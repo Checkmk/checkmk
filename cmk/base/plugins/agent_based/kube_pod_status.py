@@ -18,10 +18,11 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from cmk.base.plugins.agent_based.utils.kube import (
-    ContainerRunningState,
     ContainerStatus,
     ContainerTerminatedState,
     ContainerWaitingState,
+    erroneous_or_incomplete_containers,
+    pod_status_message,
     PodContainers,
     PodLifeCycle,
     VSResultAge,
@@ -62,48 +63,6 @@ def _get_group_from_params(status_message: str, params: Params) -> Group:
     return "no_levels", []
 
 
-def _erroneous_or_incomplete_containers(
-    containers: Sequence[ContainerStatus],
-) -> Sequence[ContainerStatus]:
-    return [
-        container
-        for container in containers
-        if not isinstance(container.state, ContainerRunningState)
-        and not (
-            isinstance(container.state, ContainerTerminatedState) and container.state.exit_code == 0
-        )
-    ]
-
-
-def _pod_container_message(pod_containers: Sequence[ContainerStatus]) -> Optional[str]:
-    containers = _erroneous_or_incomplete_containers(pod_containers)
-    for container in containers:
-        if (
-            isinstance(container.state, ContainerWaitingState)
-            and container.state.reason != "ContainerCreating"
-        ):
-            return container.state.reason
-    for container in containers:
-        if (
-            isinstance(container.state, ContainerTerminatedState)
-            and container.state.reason is not None
-        ):
-            return container.state.reason
-    return None
-
-
-def _pod_status_message(
-    pod_containers: Sequence[ContainerStatus],
-    pod_init_containers: Sequence[ContainerStatus],
-    section_kube_pod_lifecycle: PodLifeCycle,
-) -> str:
-    if init_container_message := _pod_container_message(pod_init_containers):
-        return f"Init:{init_container_message}"
-    if container_message := _pod_container_message(pod_containers):
-        return container_message
-    return section_kube_pod_lifecycle.phase.title()
-
-
 def _pod_containers(pod_containers: Optional[PodContainers]) -> Sequence[ContainerStatus]:
     """Return a sequence of containers with their associated status information.
 
@@ -125,7 +84,7 @@ def _container_status_details(containers: Sequence[ContainerStatus]) -> CheckRes
             state=State.OK,
             notice=f"{container.name}: {container.state.detail}",
         )
-        for container in _erroneous_or_incomplete_containers(containers)
+        for container in erroneous_or_incomplete_containers(containers)
         if isinstance(container.state, (ContainerTerminatedState, ContainerWaitingState))
         and container.state.detail is not None
     )
@@ -152,7 +111,7 @@ def _check_kube_pod_status(
     pod_containers = _pod_containers(section_kube_pod_containers)
     pod_init_containers = _pod_containers(section_kube_pod_init_containers)
 
-    status_message = _pod_status_message(
+    status_message = pod_status_message(
         pod_containers,
         pod_init_containers,
         section_kube_pod_lifecycle,

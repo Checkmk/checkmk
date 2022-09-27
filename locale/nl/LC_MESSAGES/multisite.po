@@ -19310,20 +19310,6 @@ msgstr ""
 "Voor het indienen van licentiegebruiksrapporten moet u klantportaalgegevens "
 "toevoegen."
 
-#, python-format
-msgid ""
-"For the initial login into the remote site %s we need once your "
-"administration login for the Multsite GUI on that site. Your credentials "
-"will only be used for the initial handshake and not be stored. If the login "
-"is successful then both side will exchange a login secret which is used for "
-"the further remote calls."
-msgstr ""
-"Voor de initiële login op de externe site %s hebben we eenmalig uw "
-"administratie login nodig voor de Multsite GUI op die site. Uw inloggegevens "
-"worden alleen gebruikt voor de eerste handshake en worden niet opgeslagen. "
-"Als de login succesvol is zullen beide partijen een login geheim uitwisselen "
-"dat wordt gebruikt voor de verdere gesprekken op afstand."
-
 msgid ""
 "For these hosts there is a new agent available that is not yet installed. "
 "This simply means that the target agent configuration hash does not match "
@@ -22136,6 +22122,10 @@ msgstr "Host tags (met titels)"
 
 msgid "Host to use for connecting to Cisco Prime"
 msgstr "Host om te gebruiken voor verbinding met Cisco Prime"
+
+#, python-format
+msgid "Host uses xinetd or systemd %s"
+msgstr ""
 
 msgid "Host&nbsp;status"
 msgstr "Gastheer&nbsp;status"
@@ -33800,6 +33790,20 @@ msgstr "Een uur."
 msgid "One line of text"
 msgstr "Eén regel tekst"
 
+#, fuzzy, python-format
+msgid ""
+"One manual login as administrator to the Multisite GUI of the remote site "
+"\"%s\" is required to initialize the connection. The credentials will only "
+"be used for the initial handshake and not be stored. If the login is "
+"successful then both sides will exchange a login secret which will be used "
+"for subsequent remote calls."
+msgstr ""
+"Voor de initiële login op de externe site %s hebben we eenmalig uw "
+"administratie login nodig voor de Multsite GUI op die site. Uw inloggegevens "
+"worden alleen gebruikt voor de eerste handshake en worden niet opgeslagen. "
+"Als de login succesvol is zullen beide partijen een login geheim uitwisselen "
+"dat wordt gebruikt voor de verdere gesprekken op afstand."
+
 msgid "One match without arguments"
 msgstr "Een wedstrijd zonder argumenten"
 
@@ -38357,9 +38361,6 @@ msgstr "Hernoemen van %s"
 msgid "Renaming of %s -> %s"
 msgstr "Hernoemen van %s -> %s"
 
-msgid "Render URL contents in own frame"
-msgstr "URL inhoud in eigen frame renderen"
-
 msgid "Render an error message into the document"
 msgstr "Een foutmelding in het document weergeven"
 
@@ -38371,9 +38372,6 @@ msgstr "Render grijze achtergrond kleur achter de elementen inhoud."
 
 msgid "Render horizontal rules between rows"
 msgstr "Horizontale regels tussen rijen weergeven"
-
-msgid "Render in iframe"
-msgstr "Weergeven in iframe"
 
 msgid "Render the titlebar including title and link above the element."
 msgstr "Render de titelbalk inclusief titel en link boven het element."
@@ -47946,6 +47944,9 @@ msgid ""
 msgstr ""
 "Het interval waarmee de verbinding zal worden uitgevoerd om de gegevensbron "
 "te bevragen en de configuratie bij te werken."
+
+msgid "The interval the plugin is triggered by check-mk-agent-async.service"
+msgstr ""
 
 msgid ""
 "The item name. The meaning of this depends on the proxied device: - Wagner "
@@ -62380,9 +62381,6 @@ msgstr "U moet een icoon kiezen."
 msgid "You need to set the \"%s\" parameter."
 msgstr "Je moet de \"%s\" parameter instellen."
 
-msgid "You need to specify a URL in the element properties"
-msgstr "U moet een URL specificeren in de elementeigenschappen"
-
 msgid "You need to specify a backup job."
 msgstr "U moet een back-uptaak opgeven."
 
@@ -64309,6 +64307,10 @@ msgstr "sysdg"
 msgid "sysoper"
 msgstr "sysoper"
 
+#, fuzzy
+msgid "systemd"
+msgstr "Systeem"
+
 msgid "tasks"
 msgstr "taken"
 
@@ -64540,6 +64542,9 @@ msgstr "ergste staat"
 msgid "wrap"
 msgstr "wikkel"
 
+msgid "xinetd"
+msgstr ""
+
 msgid "y"
 msgstr "y"
 
@@ -64565,6 +64570,15 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Render URL contents in own frame"
+#~ msgstr "URL inhoud in eigen frame renderen"
+
+#~ msgid "Render in iframe"
+#~ msgstr "Weergeven in iframe"
+
+#~ msgid "You need to specify a URL in the element properties"
+#~ msgstr "U moet een URL specificeren in de elementeigenschappen"
 
 #, python-format
 #~ msgid ""

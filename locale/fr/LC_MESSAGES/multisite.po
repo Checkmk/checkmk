@@ -19553,21 +19553,6 @@ msgstr ""
 "Pour soumettre les rapports d'utilisation des licences, vous devez ajouter "
 "les informations d'identification du portail client."
 
-#, python-format
-msgid ""
-"For the initial login into the remote site %s we need once your "
-"administration login for the Multsite GUI on that site. Your credentials "
-"will only be used for the initial handshake and not be stored. If the login "
-"is successful then both side will exchange a login secret which is used for "
-"the further remote calls."
-msgstr ""
-"Pour la connexion initiale au site distant %s, nous avons besoin d'une fois "
-"votre connexion d'administration pour l'interface graphique de Multsite sur "
-"ce site. Vos informations d'identification ne seront utilisées que pour la "
-"prise de contact initiale et ne seront pas stockées. Si la connexion est "
-"réussie, les deux parties échangeront un secret de connexion qui sera "
-"utilisé pour les appels à distance suivants."
-
 msgid ""
 "For these hosts there is a new agent available that is not yet installed. "
 "This simply means that the target agent configuration hash does not match "
@@ -22426,6 +22411,10 @@ msgstr "Balises d'accueil (avec titres)"
 
 msgid "Host to use for connecting to Cisco Prime"
 msgstr "Hôte à utiliser pour se connecter à Cisco Prime"
+
+#, python-format
+msgid "Host uses xinetd or systemd %s"
+msgstr ""
 
 msgid "Host&nbsp;status"
 msgstr "Hôte&nbsp;statut"
@@ -34227,6 +34216,21 @@ msgstr "Une heure"
 msgid "One line of text"
 msgstr "Une ligne de texte"
 
+#, fuzzy, python-format
+msgid ""
+"One manual login as administrator to the Multisite GUI of the remote site "
+"\"%s\" is required to initialize the connection. The credentials will only "
+"be used for the initial handshake and not be stored. If the login is "
+"successful then both sides will exchange a login secret which will be used "
+"for subsequent remote calls."
+msgstr ""
+"Pour la connexion initiale au site distant %s, nous avons besoin d'une fois "
+"votre connexion d'administration pour l'interface graphique de Multsite sur "
+"ce site. Vos informations d'identification ne seront utilisées que pour la "
+"prise de contact initiale et ne seront pas stockées. Si la connexion est "
+"réussie, les deux parties échangeront un secret de connexion qui sera "
+"utilisé pour les appels à distance suivants."
+
 msgid "One match without arguments"
 msgstr "Un match sans arguments"
 
@@ -38860,9 +38864,6 @@ msgstr "Renommage de %s"
 msgid "Renaming of %s -> %s"
 msgstr "Renommage de %s -> %s"
 
-msgid "Render URL contents in own frame"
-msgstr "Rendre le contenu de l'URL dans son propre cadre"
-
 msgid "Render an error message into the document"
 msgstr "Rendre un message d'erreur dans le document"
 
@@ -38874,9 +38875,6 @@ msgstr "Rendre la couleur de fond grise derrière le contenu des éléments."
 
 msgid "Render horizontal rules between rows"
 msgstr "Rendre les règles horizontales entre les rangées"
-
-msgid "Render in iframe"
-msgstr "Rendu dans une iframe"
 
 msgid "Render the titlebar including title and link above the element."
 msgstr ""
@@ -48569,6 +48567,9 @@ msgid ""
 msgstr ""
 "L'intervalle dans lequel la connexion sera exécutée pour interroger la "
 "source de données et mettre à jour la configuration."
+
+msgid "The interval the plugin is triggered by check-mk-agent-async.service"
+msgstr ""
 
 msgid ""
 "The item name. The meaning of this depends on the proxied device: - Wagner "
@@ -63245,9 +63246,6 @@ msgstr "Vous devez sélectionner une icône."
 msgid "You need to set the \"%s\" parameter."
 msgstr "Vous devez définir le paramètre \"%s\"."
 
-msgid "You need to specify a URL in the element properties"
-msgstr "Vous devez spécifier une URL dans les propriétés de l'élément."
-
 msgid "You need to specify a backup job."
 msgstr "Vous devez spécifier une tâche de sauvegarde."
 
@@ -65186,6 +65184,10 @@ msgstr "sysdg"
 msgid "sysoper"
 msgstr "sysoper"
 
+#, fuzzy
+msgid "systemd"
+msgstr "Système"
+
 msgid "tasks"
 msgstr "tâches"
 
@@ -65417,6 +65419,9 @@ msgstr "pire état"
 msgid "wrap"
 msgstr "envelopper"
 
+msgid "xinetd"
+msgstr ""
+
 msgid "y"
 msgstr "y"
 
@@ -65442,6 +65447,15 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Tous droits réservés."
+
+#~ msgid "Render URL contents in own frame"
+#~ msgstr "Rendre le contenu de l'URL dans son propre cadre"
+
+#~ msgid "Render in iframe"
+#~ msgstr "Rendu dans une iframe"
+
+#~ msgid "You need to specify a URL in the element properties"
+#~ msgstr "Vous devez spécifier une URL dans les propriétés de l'élément."
 
 #, python-format
 #~ msgid ""

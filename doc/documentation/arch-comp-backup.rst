@@ -22,12 +22,12 @@ These requirements are addressed by these components:
 * `mkbackup`: Manage Checkmk site and Checkmk Appliance system backups
 * `omd backup/restore`: Execute the actual site backup
 
-`omd` is responsible for managing the checkmk sites. Accordingly, it also
-provides the simple basic site backup mechanism for configurationless site
-backups.
+`omd` is responsible for managing the Checkmk sites. Accordingly, it also
+provides the simple basic site backup mechanism for executing site backups
+without the need to configure anything.
 
-Backup jobs, backup targets, encyption and so on are higher level features of
-`mkbackup`.
+Backup jobs, backup targets, encryption and so on are higher level features of
+mkbackup.
 
 There is another important reason for the split: When we think of the Appliance
 system backup, we have one component that is responsible for each thing to be
@@ -57,12 +57,12 @@ System backup of the Checkmk Appliance
 
 It is executed in the system context as root user with the responsibility of
 creating an backup of the users files stored on the Checkmk appliance which
-includes the system configration and (optionally) the sites.
+includes the system configuration and (optionally) the sites.
 
 Encryption
 ----------
 
-The backups of `mkbackup` can optionally be encrypted. This encryption is
+The backups of mkbackup can optionally be encrypted. This encryption is
 realized using asymmetric encryption.
 
 In case the encryption is enabled, the RSA public key is used to encrypt the
@@ -83,8 +83,8 @@ backup keys managed by the user. The jobs can either be created according to a
 given schedule or manually.
 
 The targets always point to local file system paths. However, the path can
-point to a mounted network filesystem. On the appliance there is a mount
-management, which enables the user to configure network filesystems for the
+point to a mounted network file system. On the appliance there is a mount
+management, which enables the user to configure network file systems for the
 backup.
 
 The user manages the configuration of *system backup* through the Appliance UI
@@ -119,7 +119,7 @@ omd backup and restore
 ======================
 
 OMD is the tool for managing Checkmk sites. Besides others it has the following
-reasponsibilities:
+responsibilities:
 
 * Create a backup archive of a stopped Checkmk site
 * Create a backup archive of a running Checkmk site
@@ -138,8 +138,8 @@ See also
 Technical debts
 ---------------
 
-* Initially `mkbackup` was implemented in the Checkmk git and upstreamed to the
-  cma git to keep both repositories in Sync. Since the Appliance is still using
+* Initially mkbackup was implemented in the Checkmk git and upstreamed to the
+  CMA git to keep both repositories in Sync. Since the Appliance is still using
   Python 2.7 the implementations have diverged. This needs to be cleaned up.
   There is an ongoing approach to do the 2 to 3 transition for the appliance,
   but it will take some time to be merged.
@@ -153,4 +153,4 @@ Technical debts
   in `cmk.base.backup`.
   These commands are from the early days of Checkmk and does not create complete
   configuration backups. A large number of necessary files for having a
-  complete config dump is missing. So it might be better to drop this.
+  complete configuration dump is missing. So it might be better to drop this.

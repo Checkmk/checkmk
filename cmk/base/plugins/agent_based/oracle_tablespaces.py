@@ -224,17 +224,9 @@ def check_oracle_tablespaces(  # pylint: disable=too-many-branches
         )
         return
 
-    try:
-        file_online_states = oracle.check_unavailable_datafiles(
-            tablespace["datafiles"], sid, params
-        )
-    except oracle.DatafilesException as exc:
-        yield Result(state=State.CRIT, summary=str(exc))
-        return
-
     stats = oracle.datafiles_online_stats(tablespace["datafiles"], db_version)
-    if stats is not None:
 
+    if stats is not None:
         yield Result(
             state=State.OK,
             summary="%s (%s), Size: %s, %s used (%s of max. %s), Free: %s"
@@ -324,12 +316,19 @@ def check_oracle_tablespaces(  # pylint: disable=too-many-branches
                 % (stats.num_files, stats.num_avail, stats.num_extensible),
             )
 
-    for file_online_state, attrs in file_online_states.items():
-        this_state = attrs["state"]
-        yield Result(
-            state=State(this_state),
-            summary="Datafiles %s: %s" % (file_online_state, ", ".join(attrs["sids"])),
-        )
+    unavailable = oracle.check_unavailable_datafiles(tablespace["datafiles"])
+    unavailable_mapping = dict(params.get("map_file_online_states", []))
+    for datafile_status, datafiles in (
+        ("OFFLINE", unavailable.offline),
+        ("RECOVER", unavailable.recover),
+    ):
+        if datafiles:
+            details = "\n".join(e.name for e in datafiles)
+            yield Result(
+                state=State(unavailable_mapping.get(datafile_status, State.CRIT)),
+                summary=f"Datafiles {datafile_status}: {sid}",
+                details=f"{datafile_status} datafiles for {sid}:\n{details}",
+            )
 
 
 def cluster_check_oracle_tablespaces(  # type:ignore[no-untyped-def]

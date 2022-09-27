@@ -77,6 +77,6 @@ from cmk.notification_plugins.slack import slack_msg
         ),
     ],
 )
-def test_slack_message(context, result) -> None:  # type:ignore[no-untyped-def]
+def test_slack_message(context: dict[str, str], result: dict[str, list[dict[str, str]]]) -> None:
     msg = slack_msg(context)
     assert msg == result

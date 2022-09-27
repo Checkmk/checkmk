@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
+from pytest_mock import MockerFixture
 
 import cmk.notification_plugins.mail as mail
 
@@ -97,7 +98,7 @@ import cmk.notification_plugins.mail as mail
         ),
     ],
 )
-def test_event_templates(notification_type, expected) -> None:  # type:ignore[no-untyped-def]
+def test_event_templates(notification_type: str, expected: tuple[str, str]) -> None:
     assert mail.event_templates(notification_type) == expected
 
 
@@ -184,7 +185,10 @@ ALERTHANDLER_NAME_ELEMENT = (
         ),
     ],
 )
-def test_body_templates(args, expected) -> None:  # type:ignore[no-untyped-def]
+def test_body_templates(
+    args: tuple[str, bool, list[str], list[tuple[str, str, bool, str, str, str, str]]],
+    expected: tuple[str, str],
+) -> None:
     assert mail.body_templates(*args) == expected
 
 
@@ -311,7 +315,7 @@ Service Metrics:     \n\
 
 
 # TODO: validate the HTML content
-def test_mail_content_from_service_context(mocker) -> None:  # type:ignore[no-untyped-def]
+def test_mail_content_from_service_context(mocker: MockerFixture) -> None:
     # The items below are added by the mail plugin
     context = mock_service_context()
     assert "EVENT_TXT" not in context
@@ -452,7 +456,7 @@ Metrics:             \n\
 """
 
 
-def test_mail_content_from_host_context(mocker) -> None:  # type:ignore[no-untyped-def]
+def test_mail_content_from_host_context(mocker: MockerFixture) -> None:
     mocker.patch("cmk.notification_plugins.mail.socket.getfqdn", lambda: "mysite.com")
 
     context = mock_host_context()

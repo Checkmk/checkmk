@@ -42,7 +42,7 @@ from cmk.notification_plugins.pagerduty import _notification_source_from_context
         ),
     ],
 )
-def test_notification_source_from_context(context, result) -> None:  # type:ignore[no-untyped-def]
+def test_notification_source_from_context(context: dict[str, str], result: str) -> None:
     msg = _notification_source_from_context(context)
     assert msg == result
 
@@ -158,6 +158,9 @@ def test_notification_source_from_context(context, result) -> None:  # type:igno
         ),
     ],
 )
-def test_pagerduty_message(context, result) -> None:  # type:ignore[no-untyped-def]
+def test_pagerduty_message(
+    context: dict[str, str],
+    result: dict[str, str | dict[str, str | dict[str, str | dict[str, str]]]],
+) -> None:
     msg = pagerduty_msg(context)
     assert msg == result

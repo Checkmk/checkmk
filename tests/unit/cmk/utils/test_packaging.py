@@ -36,17 +36,13 @@ def package_dir():
 
 @pytest.fixture(autouse=True)
 def clean_dirs():
-    paths = [Path(p.path) for p in packaging.get_package_parts()] + [
-        cmk.utils.paths.local_optional_packages_dir,
-        cmk.utils.paths.local_enabled_packages_dir,
-    ]
-    for path in paths:
-        path.mkdir(parents=True, exist_ok=True)
+    for part in packaging.get_package_parts():
+        Path(part.path).mkdir(parents=True, exist_ok=True)
 
     yield
 
-    for path in paths:
-        shutil.rmtree(str(path))
+    for part in packaging.get_package_parts():
+        shutil.rmtree(part.path)
 
 
 @pytest.fixture(name="mkp_bytes")
@@ -61,7 +57,7 @@ def fixture_mkp_bytes():
     mkp.seek(0)
 
     # Remove files from local hierarchy
-    packaging.uninstall(package_info)
+    packaging.remove(package_info)
     assert packaging._package_exists("aaa") is False
 
     return mkp
@@ -167,7 +163,7 @@ def _create_simple_test_package(pacname):
     }
 
     packaging.create(package_info)
-    return packaging.read_package_info(pacname)
+    return packaging.read_package_info("aaa")
 
 
 def _create_test_file(name):
@@ -249,7 +245,7 @@ def test_install(mkp_bytes):
 
 
 def test_install_by_path(mkp_file):
-    packaging._install_by_path(mkp_file)
+    packaging.install_by_path(mkp_file)
 
     assert packaging._package_exists("aaa") is True
     package_info = _read_package_info("aaa")
@@ -295,9 +291,9 @@ def test_write_file():
     assert info2["name"] == "aaa"
 
 
-def test_uninstall():
+def test_remove():
     package_info = _create_simple_test_package("aaa")
-    packaging.uninstall(package_info)
+    packaging.remove(package_info)
     assert packaging._package_exists("aaa") is False
 
 
@@ -360,10 +356,16 @@ def test_get_all_package_infos():
     _create_test_file("abc")
     _create_simple_test_package("p1")
 
+    # Create a disabled package
+    _create_simple_test_package("disabled")
+    package_info = packaging.read_package_info("disabled")
+    assert package_info is not None
+    packaging.disable("disable", package_info)
+
     result = packaging.get_all_package_infos()
     assert "p1" in result["installed"]
     assert result["unpackaged"]["checks"] == ["abc"]
-    assert set(result["optional_packages"]) == {"p1-1.0.mkp"}
+    assert result["optional_packages"] == {}
     assert "agent_based" in result["parts"]
 
 
@@ -380,12 +382,12 @@ def test_get_optional_package_infos(monkeypatch, tmp_path):
     _create_simple_test_package("optional")
     package_info = _read_package_info("optional")
 
-    optional_packages_info = packaging.get_optional_package_infos()
-    assert len(optional_packages_info) == 1
-    assert optional_packages_info["optional-1.0.mkp"] == {
-        **{k: v for k, v in package_info.items() if k != "num_files"},
-        "is_local": True,
-    }
+    # Write MKP file
+    mkp_path = mkp_dir.joinpath("optional.mkp")
+    with mkp_path.open("wb") as mkp:
+        packaging.write_file(package_info, mkp)
+
+    assert packaging.get_optional_package_infos() == {"optional.mkp": package_info}
 
 
 def test_parse_package_info_pre_160():
@@ -395,3 +397,47 @@ def test_parse_package_info_pre_160():
 def test_parse_package_info():
     info_str = repr(packaging.get_initial_package_info("pkgname"))
     assert packaging.parse_package_info(info_str)["name"] == "pkgname"
+
+
+def test_disable_package(mkp_file):
+    _install_and_disable_package(mkp_file)
+
+
+def test_is_disabled(mkp_file):
+    package_file_name = _install_and_disable_package(mkp_file)
+    assert packaging.is_disabled(package_file_name)
+
+    packaging.enable(package_file_name)
+    assert not packaging.is_disabled(package_file_name)
+
+
+def _install_and_disable_package(mkp_file):
+    packaging.install_by_path(mkp_file)
+    assert packaging._package_exists("aaa") is True
+
+    package_info = packaging.read_package_info("aaa")
+    assert package_info is not None
+    package_file_name = packaging.format_file_name(name="aaa", version=package_info["version"])
+
+    packaging.disable("aaa", package_info)
+    assert packaging._package_exists("aaa") is False
+    assert cmk.utils.paths.disabled_packages_dir.joinpath(package_file_name).exists()
+    assert not cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
+    return package_file_name
+
+
+def test_enable_disabled_package(mkp_file):
+    package_file_name = _install_and_disable_package(mkp_file)
+
+    packaging.enable(package_file_name)
+    assert packaging._package_exists("aaa") is True
+    assert not cmk.utils.paths.disabled_packages_dir.joinpath(package_file_name).exists()
+    assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
+
+
+def test_remove_disabled_package(mkp_file):
+    package_file_name = _install_and_disable_package(mkp_file)
+
+    packaging.remove_disabled(package_file_name)
+    assert packaging._package_exists("aaa") is False
+    assert not cmk.utils.paths.disabled_packages_dir.joinpath(package_file_name).exists()

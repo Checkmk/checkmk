@@ -217,13 +217,7 @@ def test_diagnostics_element_local_files_json():
         "This also includes information about installed MKPs.")
 
 
-def test_diagnostics_element_local_files_json_content(monkeypatch, tmp_path, _collectors):
-
-    monkeypatch.setattr(cmk.utils.paths, "local_optional_packages_dir",
-                        tmp_path / "local_optional_packages_dir")
-    monkeypatch.setattr(cmk.utils.paths, "local_enabled_packages_dir",
-                        tmp_path / "local_enabled_packages_dir")
-
+def test_diagnostics_element_local_files_json_content(tmp_path, _collectors):
     diagnostics_element = diagnostics.LocalFilesJSONDiagnosticsElement()
 
     def create_test_package(name):
@@ -250,16 +244,16 @@ def test_diagnostics_element_local_files_json_content(monkeypatch, tmp_path, _co
     assert isinstance(filepath, Path)
     assert filepath == tmppath.joinpath("local_files.json")
 
-    with filepath.open() as fh:
-        content = json.loads(fh.read())
-
-    assert set(content) == {
+    info_keys = [
         "installed",
         "unpackaged",
         "parts",
         "optional_packages",
-        "enabled_packages",
-    }
+        "disabled_packages",
+    ]
+    content = json.loads(filepath.open().read())
+
+    assert sorted(content.keys()) == sorted(info_keys)
 
     installed_keys = [name]
     assert sorted(content['installed'].keys()) == sorted(installed_keys)
@@ -319,19 +313,12 @@ def test_diagnostics_element_local_files_json_content(monkeypatch, tmp_path, _co
             assert content["parts"][key]['files'] == []
             assert content["parts"][key]['permissions'] == []
 
-    assert set(content["optional_packages"]) == {'test-package-1.0.mkp'}
+    assert content["optional_packages"] == {}
 
     shutil.rmtree(str(packaging.package_dir()))
-    shutil.rmtree(str(cmk.utils.paths.local_share_dir))
 
 
-def test_diagnostics_element_local_files_csv_content(monkeypatch, tmp_path, _collectors):
-
-    monkeypatch.setattr(cmk.utils.paths, "local_optional_packages_dir",
-                        tmp_path / "local_optional_packages_dir")
-    monkeypatch.setattr(cmk.utils.paths, "local_enabled_packages_dir",
-                        tmp_path / "local_enabled_packages_dir")
-
+def test_diagnostics_element_local_files_csv_content(tmp_path, _collectors):
     diagnostics_element = diagnostics.LocalFilesCSVDiagnosticsElement()
     check_dir = cmk.utils.paths.local_checks_dir
 

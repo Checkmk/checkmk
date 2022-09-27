@@ -2,10 +2,24 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from __future__ import annotations
+
+import typing
+
+if typing.TYPE_CHECKING:
+    from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 
-def test_swagger_ui_http(wsgi_app) -> None:  # type:ignore[no-untyped-def]
-    resp = wsgi_app.get("/NO_SITE/check_mk/api/1.0.0/ui/index.html", status=200)
+def test_swagger_ui_http_unauthenticated(wsgi_app: WebTestAppForCMK) -> None:
+    wsgi_app.get("/NO_SITE/check_mk/api/1.0.0/ui/index.html", status=401)
+
+
+def test_swagger_ui_resource_urls_unauthenticated(wsgi_app: WebTestAppForCMK) -> None:
+    wsgi_app.get("/NO_SITE/check_mk/api/0/ui/swagger-ui.js", status=401)
+
+
+def test_swagger_ui_http(logged_in_wsgi_app: WebTestAppForCMK) -> None:
+    resp = logged_in_wsgi_app.get("/NO_SITE/check_mk/api/1.0.0/ui/index.html", status=200)
     assert resp.headers["content-type"] == "text/html"
     assert b"//" in resp.body
     assert b"petstore" not in resp.body
@@ -13,7 +27,8 @@ def test_swagger_ui_http(wsgi_app) -> None:  # type:ignore[no-untyped-def]
     assert b"openapi-swagger-ui.yaml" in resp.body
 
 
-def test_swagger_ui_https(wsgi_app) -> None:  # type:ignore[no-untyped-def]
+def test_swagger_ui_https(logged_in_wsgi_app: WebTestAppForCMK) -> None:
+    wsgi_app = logged_in_wsgi_app
     wsgi_app.extra_environ = {"wsgi.url_scheme": "https"}
     resp = wsgi_app.get("/NO_SITE/check_mk/api/1.0.0/ui/index.html", status=200)
     assert b"//" in resp.body
@@ -22,7 +37,8 @@ def test_swagger_ui_https(wsgi_app) -> None:  # type:ignore[no-untyped-def]
     assert b"openapi-swagger-ui.yaml" in resp.body
 
 
-def test_swagger_ui_resource_urls(wsgi_app) -> None:  # type:ignore[no-untyped-def]
+def test_swagger_ui_resource_urls(logged_in_wsgi_app: WebTestAppForCMK) -> None:
+    wsgi_app = logged_in_wsgi_app
     resp = wsgi_app.get("/NO_SITE/check_mk/api/0/ui/swagger-ui.js", status=200)
     assert resp.headers["content-type"] in ("application/javascript", "text/javascript")
     resp = wsgi_app.get("/NO_SITE/check_mk/api/0/ui/swagger-ui.css", status=200)

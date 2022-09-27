@@ -1195,7 +1195,7 @@ def _is_outdated_batch(batch_file, retention_period, now):
 def write_batch_file(lines, batch_id, batch_dir):
     # type: (Iterable[str], str, str) -> None
     with open(os.path.join(batch_dir, "logwatch-batch-file-%s" % batch_id), "w") as handle:
-        handle.writelines([ensure_text_type(l) for l in lines])
+        handle.writelines([ensure_text_type(l, errors="replace") for l in lines])
 
 
 def _ip_to_dir(ip_addr):

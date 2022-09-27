@@ -7,21 +7,27 @@ import sys
 from collections.abc import Mapping
 from typing import Any, List, NamedTuple
 
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
-    StringTable,
-)
 from cmk.base.plugins.agent_based.utils.temperature import check_temperature, TempParamType
 
-from .agent_based_api.v1 import equals, get_value_store, register, Result, Service, SNMPTree, State
+from .agent_based_api.v1 import (
+    check_levels,
+    equals,
+    get_value_store,
+    register,
+    render,
+    Result,
+    Service,
+    SNMPTree,
+    State,
+)
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
 class UPSBattery(NamedTuple):
     health: int
     uptime: int
-    remaining_time_in_min: int
-    capacity: int
+    remaining_time_in_min: float
+    capacity: float
     temperature: float | None
 
 
@@ -44,9 +50,9 @@ def parse_ups_modulys_battery(string_table: List[StringTable]) -> UPSBatterySect
         # configurations. We can still report useful data based on "capacity"
 
         # If the "raw_remaining_time" value is 0, it means that the device is not on battery so the it will not run out
-        remaining_time_in_min = sys.maxsize
+        remaining_time_in_min = float(sys.maxsize)
     else:
-        remaining_time_in_min = int(raw_remaining_time)
+        remaining_time_in_min = float(raw_remaining_time)
 
     try:
         # Sometimes it could happen that the temperature is not reported
@@ -87,55 +93,60 @@ def discover_ups_modulys_battery(section: UPSBatterySection) -> DiscoveryResult:
         yield Service()
 
 
-def check_ups_modulys_battery(
-    params: Mapping[str, Any],
-    section: UPSBatterySection,
+def _check_battery_uptime(uptime: int) -> CheckResult:
+    if uptime == 0:
+        yield Result(state=State.OK, summary="On mains")
+        return
+    yield Result(state=State.OK, summary=f"Discharging for {uptime // 60} minutes")
+
+
+def _check_battery_health(health: int) -> CheckResult:
+    if health == 1:
+        yield Result(state=State.WARN, summary="Battery health weak")
+    if health == 2:
+        yield Result(state=State.CRIT, summary="Battery needs to be replaced")
+
+
+def _check_battery_remaining_time(
+    remaining_time: float,
+    time_left_params: tuple[float, float],
 ) -> CheckResult:
-    warn_left, crit_left = params["battime"]
-    warn_perc, crit_perc = params["capacity"]
+    yield from check_levels(
+        value=remaining_time,
+        levels_lower=time_left_params,
+        label="Minutes remaining",
+    )
+
+
+def _check_battery_capacity(
+    capacity: float,
+    capacity_params: tuple[float, float],
+) -> CheckResult:
+    yield from check_levels(
+        value=capacity,
+        levels_lower=capacity_params,
+        render_func=render.percent,
+        label="Battery capacity at",
+    )
+
+
+def check_ups_modulys_battery(params: Mapping[str, Any], section: UPSBatterySection) -> CheckResult:
     if section is None:
         return
 
-    # test 1: on mains or on battery?
-    if section.uptime == 0:
-        yield Result(state=State.OK, summary="on mains")
-    else:
-        # we already have configurable levels on remaining capacity which
-        # would be superfluous if we reported the discharging state itself
-        # as a problem. Thus this reports "OK"
-        yield Result(state=State.OK, summary="discharging for %d minutes" % (section.uptime // 60))
+    yield from _check_battery_uptime(section.uptime)
 
-    # test 2: battery health
-    if section.health == 1:
-        yield Result(state=State.WARN, summary="battery health weak")
-    elif section.health == 2:
-        yield Result(state=State.CRIT, summary="battery needs to be replaced")
+    yield from _check_battery_health(section.health)
 
-    # test 3: remaining capacity
-    if section.remaining_time_in_min < crit_left or section.capacity < crit_perc:
-        status = State.CRIT
-    elif section.remaining_time_in_min < warn_left or section.capacity < warn_perc:
-        status = State.WARN
-    else:
-        status = State.OK
+    yield from _check_battery_remaining_time(
+        section.remaining_time_in_min,
+        params["battime"],
+    )
 
-    infotext = "OK"
-
-    if section.remaining_time_in_min < warn_left:
-        infotext = "%d minutes remaining (warn/crit at %d/%d min)" % (
-            section.remaining_time_in_min,
-            warn_left,
-            crit_left,
-        )
-
-    if section.capacity < warn_perc:
-        infotext = "%d percent charged (warn/crit at %d/%d perc)" % (
-            section.capacity,
-            warn_perc,
-            crit_perc,
-        )
-
-    yield Result(state=status, summary=infotext)
+    yield from _check_battery_capacity(
+        section.capacity,
+        params["capacity"],
+    )
 
 
 register.check_plugin(

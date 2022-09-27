@@ -2,6 +2,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 from collections.abc import Sequence
 
 import pytest
@@ -23,8 +24,8 @@ def test_discover_ups_modulys_battery() -> None:
             UPSBattery(
                 health=0,
                 uptime=0,
-                remaining_time_in_min=10,
-                capacity=100,
+                remaining_time_in_min=10.0,
+                capacity=100.0,
                 temperature=45.0,
             )
         )
@@ -38,13 +39,14 @@ def test_discover_ups_modulys_battery() -> None:
             UPSBattery(
                 health=0,
                 uptime=0,
-                remaining_time_in_min=10,
-                capacity=100,
+                remaining_time_in_min=10.0,
+                capacity=100.0,
                 temperature=45.0,
             ),
             [
-                Result(state=State.OK, summary="on mains"),
-                Result(state=State.OK, summary="OK"),
+                Result(state=State.OK, summary="On mains"),
+                Result(state=State.OK, summary="Minutes remaining: 10.00"),
+                Result(state=State.OK, summary="Battery capacity at: 100.00%"),
             ],
             id="Everything is OK",
         ),
@@ -52,13 +54,14 @@ def test_discover_ups_modulys_battery() -> None:
             UPSBattery(
                 health=0,
                 uptime=60,
-                remaining_time_in_min=10,
-                capacity=100,
+                remaining_time_in_min=10.0,
+                capacity=100.0,
                 temperature=45.0,
             ),
             [
-                Result(state=State.OK, summary="discharging for 1 minutes"),
-                Result(state=State.OK, summary="OK"),
+                Result(state=State.OK, summary="Discharging for 1 minutes"),
+                Result(state=State.OK, summary="Minutes remaining: 10.00"),
+                Result(state=State.OK, summary="Battery capacity at: 100.00%"),
             ],
             id="If the elapsed time is not 0, the desciption gives information in how many minutes the battery will discharge.",
         ),
@@ -66,14 +69,15 @@ def test_discover_ups_modulys_battery() -> None:
             UPSBattery(
                 health=1,
                 uptime=0,
-                remaining_time_in_min=10,
-                capacity=100,
+                remaining_time_in_min=10.0,
+                capacity=100.0,
                 temperature=45.0,
             ),
             [
-                Result(state=State.OK, summary="on mains"),
-                Result(state=State.WARN, summary="battery health weak"),
-                Result(state=State.OK, summary="OK"),
+                Result(state=State.OK, summary="On mains"),
+                Result(state=State.WARN, summary="Battery health weak"),
+                Result(state=State.OK, summary="Minutes remaining: 10.00"),
+                Result(state=State.OK, summary="Battery capacity at: 100.00%"),
             ],
             id="If the battery health is 1, the check result is a WARN state and description that tells that the battery is weak.",
         ),
@@ -81,14 +85,15 @@ def test_discover_ups_modulys_battery() -> None:
             UPSBattery(
                 health=2,
                 uptime=0,
-                remaining_time_in_min=10,
-                capacity=100,
+                remaining_time_in_min=10.0,
+                capacity=100.0,
                 temperature=45.0,
             ),
             [
-                Result(state=State.OK, summary="on mains"),
-                Result(state=State.CRIT, summary="battery needs to be replaced"),
-                Result(state=State.OK, summary="OK"),
+                Result(state=State.OK, summary="On mains"),
+                Result(state=State.CRIT, summary="Battery needs to be replaced"),
+                Result(state=State.OK, summary="Minutes remaining: 10.00"),
+                Result(state=State.OK, summary="Battery capacity at: 100.00%"),
             ],
             id="If the battery health is 2, the check result is a CRIT state and description that tells that the battery needs to be replaced.",
         ),
@@ -96,13 +101,17 @@ def test_discover_ups_modulys_battery() -> None:
             UPSBattery(
                 health=0,
                 uptime=0,
-                remaining_time_in_min=10,
-                capacity=80,
+                remaining_time_in_min=10.0,
+                capacity=80.0,
                 temperature=45.0,
             ),
             [
-                Result(state=State.OK, summary="on mains"),
-                Result(state=State.CRIT, summary="80 percent charged (warn/crit at 95/90 perc)"),
+                Result(state=State.OK, summary="On mains"),
+                Result(state=State.OK, summary="Minutes remaining: 10.00"),
+                Result(
+                    state=State.CRIT,
+                    summary="Battery capacity at: 80.00% (warn/crit below 95.00%/90.00%)",
+                ),
             ],
             id="If the remaining capacity is less than the crit level, the check result state is CRIT with the appropriate description.",
         ),
@@ -110,13 +119,17 @@ def test_discover_ups_modulys_battery() -> None:
             UPSBattery(
                 health=0,
                 uptime=0,
-                remaining_time_in_min=10,
-                capacity=92,
+                remaining_time_in_min=10.0,
+                capacity=92.0,
                 temperature=45.0,
             ),
             [
-                Result(state=State.OK, summary="on mains"),
-                Result(state=State.WARN, summary="92 percent charged (warn/crit at 95/90 perc)"),
+                Result(state=State.OK, summary="On mains"),
+                Result(state=State.OK, summary="Minutes remaining: 10.00"),
+                Result(
+                    state=State.WARN,
+                    summary="Battery capacity at: 92.00% (warn/crit below 95.00%/90.00%)",
+                ),
             ],
             id="If the remaining capacity is less than the warn level, the check result state is WARN with the appropriate description.",
         ),
@@ -124,13 +137,16 @@ def test_discover_ups_modulys_battery() -> None:
             UPSBattery(
                 health=0,
                 uptime=2,
-                remaining_time_in_min=8,
-                capacity=100,
+                remaining_time_in_min=8.0,
+                capacity=100.0,
                 temperature=45.0,
             ),
             [
-                Result(state=State.OK, summary="discharging for 0 minutes"),
-                Result(state=State.WARN, summary="8 minutes remaining (warn/crit at 9/7 min)"),
+                Result(state=State.OK, summary="Discharging for 0 minutes"),
+                Result(
+                    state=State.WARN, summary="Minutes remaining: 8.00 (warn/crit below 9.00/7.00)"
+                ),
+                Result(state=State.OK, summary="Battery capacity at: 100.00%"),
             ],
             id="If the remaining time is less than the warn level, the check result state is WARN with the appropriate description. The elapsed time must not be 0.",
         ),
@@ -138,13 +154,16 @@ def test_discover_ups_modulys_battery() -> None:
             UPSBattery(
                 health=0,
                 uptime=2,
-                remaining_time_in_min=5,
-                capacity=100,
+                remaining_time_in_min=5.0,
+                capacity=100.0,
                 temperature=45.0,
             ),
             [
-                Result(state=State.OK, summary="discharging for 0 minutes"),
-                Result(state=State.CRIT, summary="5 minutes remaining (warn/crit at 9/7 min)"),
+                Result(state=State.OK, summary="Discharging for 0 minutes"),
+                Result(
+                    state=State.CRIT, summary="Minutes remaining: 5.00 (warn/crit below 9.00/7.00)"
+                ),
+                Result(state=State.OK, summary="Battery capacity at: 100.00%"),
             ],
             id="If the remaining time is less than the crit level, the check result state is CRIT with the appropriate description. The elapsed time must not be 0.",
         ),
@@ -170,8 +189,8 @@ def test_discover_ups_modulys_battery_temp() -> None:
             UPSBattery(
                 health=0,
                 uptime=0,
-                remaining_time_in_min=10,
-                capacity=100,
+                remaining_time_in_min=10.0,
+                capacity=100.0,
                 temperature=45.0,
             )
         )
@@ -184,7 +203,7 @@ def test_discover_ups_modulys_battery_temp_is_zero() -> None:
             UPSBattery(
                 health=0,
                 uptime=0,
-                remaining_time_in_min=10,
+                remaining_time_in_min=10.0,
                 capacity=100,
                 temperature=0.0,
             )
@@ -201,8 +220,8 @@ def test_discover_ups_modulys_battery_temp_no_services_discovered() -> None:
                 UPSBattery(
                     health=0,
                     uptime=0,
-                    remaining_time_in_min=10,
-                    capacity=100,
+                    remaining_time_in_min=10.0,
+                    capacity=100.0,
                     temperature=None,
                 )
             )
@@ -219,7 +238,7 @@ def test_check_ups_modulys_battery_temp_ok_state() -> None:
             section=UPSBattery(
                 health=0,
                 uptime=0,
-                remaining_time_in_min=10,
+                remaining_time_in_min=10.0,
                 capacity=100,
                 temperature=45.0,
             ),
@@ -242,8 +261,8 @@ def test_check_ups_modulys_battery_temp_warn_state() -> None:
             section=UPSBattery(
                 health=0,
                 uptime=0,
-                remaining_time_in_min=10,
-                capacity=100,
+                remaining_time_in_min=10.0,
+                capacity=100.0,
                 temperature=92.0,
             ),
         ),
@@ -265,8 +284,8 @@ def test_check_ups_modulys_battery_temp_crit_state() -> None:
             section=UPSBattery(
                 health=0,
                 uptime=0,
-                remaining_time_in_min=10,
-                capacity=100,
+                remaining_time_in_min=10.0,
+                capacity=100.0,
                 temperature=96.0,
             ),
         ),

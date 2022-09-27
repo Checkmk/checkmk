@@ -1239,18 +1239,18 @@ def verify_backup_exists(target: Target) -> None:
 
 
 def verify_backup_consistency(
-    info: Mapping[str, Any], config: Config, job_config: JobConfig, target: Target
+    info: Mapping[str, Any], job_config: JobConfig, target: Target
 ) -> None:
     log("Verifying backup consistency")
     needed_files = needed_backup_archive_files(info, job_config)
     optional_files = [entry[0] for entry in info["files"] if entry[0] not in needed_files]
 
-    verify_backup_files(info, needed_files, needed=True, config=config, target=target)
-    verify_backup_files(info, optional_files, needed=False, config=config, target=target)
+    verify_backup_files(info, needed_files, needed=True, target=target)
+    verify_backup_files(info, optional_files, needed=False, target=target)
 
 
 def verify_backup_files(
-    info: Mapping[str, Any], files: Sequence[str], needed: bool, config: Config, target: Target
+    info: Mapping[str, Any], files: Sequence[str], needed: bool, target: Target
 ) -> None:
     for archive_file in files:
         size, checksum = None, None
@@ -1413,7 +1413,7 @@ def complete_backup(config: Config, job: Job, target: BackupTarget) -> None:
         job,
     )
 
-    verify_backup_consistency(info, config, job.config, target=target)
+    verify_backup_consistency(info, job.config, target=target)
 
     # Now we can be sure this new backup is a good one. Remove eventual old
     # backup and move from "incomplete" to "complete".
@@ -1597,7 +1597,7 @@ def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: C
         verify_backup_exists(target)
 
         if "no-verify" not in opts:
-            verify_backup_consistency(info, config, job.config, target)
+            verify_backup_consistency(info, job.config, target)
 
         init_new_run(job)
 

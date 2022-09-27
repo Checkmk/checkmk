@@ -12,7 +12,6 @@ import pytest
 from tests.testlib.site import Site
 
 import cmk.utils.msi_engine as msi_engine
-import cmk.utils.obfuscate as obfuscate
 
 MSI_LOCATION: Final = "share/check_mk/agents/windows"
 EXPECTED_EXECUTABLES: Final = ["msiinfo", "msibuild", "lcab"]
@@ -36,7 +35,7 @@ def test_files(site: Site, test_file) -> None:  # type:ignore[no-untyped-def]
     assert p.exists(), f"path: '{p}' file: '{test_file}'"
 
 
-def _get_msi_file_path_not_signed(site: Site) -> Path:
+def _get_msi_file_path_standard(site: Site) -> Path:
     return Path(site.path(MSI_LOCATION)) / msi_engine.AGENT_STANDARD_MSI_FILE
 
 
@@ -49,21 +48,13 @@ def fixture_out_dir(tmp_path: Path) -> Generator[Path, None, None]:
         shutil.rmtree(str(out_dir))
 
 
-def _create_msi_file(site: Site, *, out_dir: Path) -> Path:
-    msi_file: Final = _get_msi_file_path_not_signed(site)
-    out_file = out_dir / "deobfuscated.msi"
-    obfuscate.deobfuscate_file(msi_file, file_out=out_file)
-    return out_file
-
-
 # check the export with site/bin tools
 def test_export_msi_file_table(site: Site, out_dir: Path) -> None:
-    msi_file = _create_msi_file(site, out_dir=out_dir)
     for name in ["File", "Property", "Component"]:
         msi_engine._export_msi_file_table(
             Path(site.path("bin/")),
             name=name,
-            msi_in=msi_file,
+            msi_in=_get_msi_file_path_standard(site),
             out_dir=out_dir,
         )
         f = out_dir / (name + ".idt")

@@ -116,13 +116,18 @@ SectionTableSpaces = TypedDict("SectionTableSpaces", {
 })
 
 
+class FileOnlineState(TypedDict):
+    state: str
+    sids: List[str]
+
+
 def analyze_datafiles(
     datafiles: List[DataFiles],
     db_version: int,
     sid: str,
     params: Optional[Mapping[str, Any]] = None,
-    raise_on_offline_files: bool = False
-) -> Tuple[int, int, int, int, int, int, bool, int, int, int, Dict[str, Dict[str, Any]]]:
+    raise_on_offline_files: bool = False,
+) -> Tuple[int, int, int, int, int, int, bool, int, int, int, Dict[str, FileOnlineState]]:
     num_files = 0
     num_avail = 0
     num_extensible = 0
@@ -133,7 +138,7 @@ def analyze_datafiles(
     increment_size = 0
     uses_default_increment = False
     free_space = 0
-    file_online_states: Dict[str, Dict[str, Any]] = {}
+    file_online_states: Dict[str, FileOnlineState] = {}
 
     for datafile in datafiles:
 

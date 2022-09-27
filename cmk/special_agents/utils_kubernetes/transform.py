@@ -466,14 +466,60 @@ def parse_cron_job_spec(spec: client.V1CronJobSpec) -> api.CronJobSpec:
     )
 
 
+def parse_cron_job_status(status: client.V1CronJobStatus) -> api.CronJobStatus:
+    return api.CronJobStatus(
+        active=[ref.uid for ref in status.active] if status.active is not None else None,
+        last_successful_time=convert_to_timestamp(status.last_successful_time)
+        if status.last_successful_time is not None
+        else None,
+        last_schedule_time=convert_to_timestamp(status.last_schedule_time),
+    )
+
+
 def cron_job_from_client(
     cron_job: client.V1CronJob,
     pod_uids: Sequence[api.PodUID],
+    job_uids: Sequence[api.JobUID],
 ) -> api.CronJob:
     return api.CronJob(
         uid=api.CronJobUID(cron_job.metadata.uid),
         metadata=parse_metadata(cron_job.metadata, str),
         spec=parse_cron_job_spec(cron_job.spec),
+        status=parse_cron_job_status(cron_job.status),
+        pod_uids=pod_uids,
+        job_uids=job_uids,
+    )
+
+
+def parse_job_status(status: client.V1JobStatus) -> api.JobStatus:
+    def _parse_job_condition(condition: client.V1JobCondition) -> api.JobCondition:
+        return api.JobCondition(
+            type_=api.JobConditionType(condition.type.capitalize()),
+            status=api.ConditionStatus(condition.status.capitalize()),
+        )
+
+    return api.JobStatus(
+        active=status.active,
+        start_time=convert_to_timestamp(status.start_time) if status.start_time else None,
+        completion_time=convert_to_timestamp(status.completion_time)
+        if status.completion_time
+        else None,
+        failed=status.failed,
+        succeeded=status.succeeded,
+        conditions=[_parse_job_condition(condition) for condition in status.conditions]
+        if status.conditions is not None
+        else [],
+    )
+
+
+def job_from_client(
+    job: client.V1Job,
+    pod_uids: Sequence[api.PodUID],
+) -> api.Job:
+    return api.Job(
+        uid=api.JobUID(job.metadata.uid),
+        metadata=parse_metadata(job.metadata, str),
+        status=parse_job_status(job.status),
         pod_uids=pod_uids,
     )
 
@@ -672,7 +718,7 @@ def parse_object_to_owners(
 ) -> Mapping[str, api.OwnerReferences]:
     return {
         workload_resource.metadata.uid: dependent_object_owner_refererences_from_client(
-            workload_resource
+            dependent=workload_resource
         )
         for workload_resource in workload_resources_client
     } | {

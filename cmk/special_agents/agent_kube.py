@@ -74,10 +74,8 @@ AGENT_TMP_PATH = Path(
     cmk.utils.paths.tmp_dir if os.environ.get("OMD_SITE") else tempfile.gettempdir(), "agent_kube"
 )
 
-
 SectionName = NewType("SectionName", str)
 SectionJson = NewType("SectionJson", str)
-
 
 NATIVE_NODE_CONDITION_TYPES = [
     "Ready",
@@ -1202,7 +1200,6 @@ def cron_job_info(
     kubernetes_cluster_hostname: str,
     annotation_key_pattern: AnnotationOption,
 ) -> section.CronJobInfo:
-
     return section.CronJobInfo(
         name=cron_job.metadata.name,
         namespace=cron_job.metadata.namespace,
@@ -1218,6 +1215,55 @@ def cron_job_info(
         suspend=cron_job.spec.suspend,
         cluster=cluster_name,
         kubernetes_cluster_hostname=kubernetes_cluster_hostname,
+    )
+
+
+def cron_job_status(
+    status: api.CronJobStatus,
+    timestamp_sorted_jobs: Sequence[api.Job],
+) -> section.CronJobStatus:
+    return section.CronJobStatus(
+        active_jobs_count=len(status.active) if status.active else None,
+        last_duration=_calculate_job_duration(last_completed_job)
+        if (last_completed_job := _retrieve_last_completed_job(timestamp_sorted_jobs)) is not None
+        else None,
+        last_successful_time=status.last_successful_time,
+        last_schedule_time=status.last_schedule_time,
+    )
+
+
+def _retrieve_last_completed_job(jobs: Sequence[api.Job]) -> api.Job | None:
+    for job in jobs:
+        if job.status.completion_time is not None:
+            return job
+    return None
+
+
+def _calculate_job_duration(job: api.Job) -> float | None:
+    if job.status.completion_time is None or job.status.start_time is None:
+        return None
+
+    return job.status.completion_time - job.status.start_time
+
+
+def cron_job_latest_job(
+    job: api.Job, pods: Mapping[api.PodUID, api.Pod]
+) -> section.CronJobLatestJob:
+    return section.CronJobLatestJob(
+        status=section.JobStatus(
+            conditions=job.status.conditions,
+            start_time=job.status.start_time,
+            completion_time=job.status.completion_time,
+        ),
+        pods=[
+            section.JobPod(
+                init_containers=pod.init_containers,
+                containers=pod.containers,
+                lifecycle=pod_lifecycle_phase(pod.status),
+            )
+            for pod_uid in job.pod_uids
+            if (pod := pods.get(pod_uid)) is not None
+        ],
     )
 
 
@@ -1443,7 +1489,7 @@ def namespace_name(namespace: api.Namespace) -> api.NamespaceName:
 
 def cron_job_namespaced_name(cron_job: api.CronJob) -> str:
     """The name of the cron job appended to the namespace
-    >>> cron_job_namespaced_name(api.CronJob(uid="cron_job_uid", metadata=api.MetaData(namespace="bar", name="foo", creation_timestamp=0.0, labels={}, annotations={}), pod_uids=[], spec=api.CronJobSpec(concurrency_policy=api.ConcurrencyPolicy.Forbid, schedule="0 0 0 0 0", suspend=False, successful_jobs_history_limit=0, failed_jobs_history_limit=0)))
+    >>> cron_job_namespaced_name(api.CronJob(uid="cron_job_uid", job_uids=[], metadata=api.MetaData(namespace="bar", name="foo", creation_timestamp=0.0, labels={}, annotations={}), pod_uids=[], spec=api.CronJobSpec(concurrency_policy=api.ConcurrencyPolicy.Forbid, schedule="0 0 0 0 0", suspend=False, successful_jobs_history_limit=0, failed_jobs_history_limit=0), status=api.CronJobStatus(active=None, last_schedule_time=None, last_successful_time=None)))
     'bar_foo'
     """
     return f"{cron_job.metadata.namespace}_{cron_job.metadata.name}"
@@ -1483,24 +1529,33 @@ def write_cronjobs_api_sections(
     annotation_key_pattern: AnnotationOption,
     api_cron_jobs: Sequence[api.CronJob],
     api_cron_job_pods: Sequence[api.Pod],
+    api_jobs: Mapping[api.JobUID, api.Job],
     kubernetes_cluster_hostname: str,
     piggyback_formatter: ObjectSpecificPBFormatter,
 ) -> None:
     def output_cronjob_sections(
         cron_job: api.CronJob,
-        api_cron_job_pods: Sequence[api.Pod],
+        cron_job_pods: Sequence[api.Pod],
     ) -> None:
+        jobs = [api_jobs[uid] for uid in cron_job.job_uids]
+        timestamp_sorted_jobs = sorted(jobs, key=lambda job: job.metadata.creation_timestamp)
         sections = {
             "kube_cron_job_info_v1": lambda: cron_job_info(
                 cron_job, cluster_name, kubernetes_cluster_hostname, annotation_key_pattern
             ),
-            "kube_pod_resources_v1": lambda: _pod_resources_from_api_pods(api_cron_job_pods),
+            "kube_cron_job_status_v1": lambda: cron_job_status(
+                cron_job.status, timestamp_sorted_jobs
+            ),
+            "kube_cron_job_latest_job_v1": lambda: cron_job_latest_job(
+                timestamp_sorted_jobs[-1], {pod.uid: pod for pod in cron_job_pods}
+            )
+            if len(timestamp_sorted_jobs) > 0
+            else None,
+            "kube_pod_resources_v1": lambda: _pod_resources_from_api_pods(cron_job_pods),
             "kube_memory_resources_v1": lambda: _collect_memory_resources_from_api_pods(
-                api_cron_job_pods
+                cron_job_pods
             ),
-            "kube_cpu_resources_v1": lambda: _collect_cpu_resources_from_api_pods(
-                api_cron_job_pods
-            ),
+            "kube_cpu_resources_v1": lambda: _collect_cpu_resources_from_api_pods(cron_job_pods),
         }
         _write_sections(sections)
 
@@ -2505,7 +2560,6 @@ def _identify_unsupported_node_collector_components(
 def _group_metadata_by_node(
     node_collectors_metadata: Sequence[section.NodeCollectorMetadata],
 ) -> Sequence[section.NodeMetadata]:
-
     nodes_components: Dict[section.NodeName, Dict[str, section.NodeComponent]] = {}
     for node_collector in node_collectors_metadata:
         components = nodes_components.setdefault(node_collector.node, {})
@@ -2650,7 +2704,6 @@ def pod_info(
     kubernetes_cluster_hostname: str,
     annotation_key_pattern: AnnotationOption,
 ) -> section.PodInfo:
-
     return section.PodInfo(
         namespace=pod_namespace(pod),
         name=pod_name(pod),
@@ -2865,6 +2918,7 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
                 arguments.annotation_key_pattern,
                 api_data.cron_jobs,
                 monitored_api_cron_job_pods,
+                {job.uid: job for job in api_data.jobs},
                 kubernetes_cluster_hostname=arguments.kubernetes_cluster_hostname,
                 piggyback_formatter=functools.partial(piggyback_formatter, "cronjob"),
             )

@@ -101,5 +101,10 @@ def test_schema_did_not_diverge(
     name_to_check_model = {
         m.__name__: m.schema() for m in frozenset(kube_check_section_models.values())
     }
-    name_to_agent_model = {m.__name__: m.schema() for m in kube_agent_section_models}
+    # TODO: remove not in condition when cronjob_status check plugin is added
+    name_to_agent_model = {
+        m.__name__: m.schema()
+        for m in kube_agent_section_models
+        if m.__name__ not in ("CronJobStatus", "CronJobLatestJob")
+    }
     assert name_to_agent_model == name_to_check_model

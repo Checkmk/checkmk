@@ -31,16 +31,15 @@ from cmk.special_agents.utils_kubernetes.transform import (
     daemonset_from_client,
     dependent_object_owner_refererences_from_client,
     deployment_from_client,
+    job_from_client,
     namespace_from_client,
     node_from_client,
     parse_object_to_owners,
     pod_from_client,
     resource_quota_from_client,
     statefulset_from_client,
-    WorkloadResource,
 )
 from cmk.special_agents.utils_kubernetes.transform_json import (
-    JSONStatefulSet,
     JSONStatefulSetList,
     statefulset_list_from_json,
 )
@@ -370,6 +369,7 @@ class APIData:
     cron_jobs: Sequence[api.CronJob]
     deployments: Sequence[api.Deployment]
     daemonsets: Sequence[api.DaemonSet]
+    jobs: Sequence[api.Job]
     statefulsets: Sequence[api.StatefulSet]
     namespaces: Sequence[api.Namespace]
     nodes: Sequence[api.Node]
@@ -451,18 +451,25 @@ def query_raw_api_data_v2(
 
 def map_controllers(
     raw_pods: Sequence[client.V1Pod],
-    workload_resources_client: Iterable[WorkloadResource],
-    workload_resources_json: Iterable[JSONStatefulSet],
+    object_to_owners: Mapping[str, api.OwnerReferences],
 ) -> Tuple[Mapping[str, Sequence[api.PodUID]], Mapping[api.PodUID, Sequence[api.Controller]]]:
-    object_to_owners = parse_object_to_owners(
-        workload_resources_client=workload_resources_client,
-        workload_resources_json=workload_resources_json,
-    )
-
     return _match_controllers(
         pods=raw_pods,
         object_to_owners=object_to_owners,
     )
+
+
+def map_controllers_top_to_down(
+    object_to_owners: Mapping[str, api.OwnerReferences]
+) -> Mapping[str, Sequence[str]]:
+    """Creates a mapping where the key is the controller and the value a sequence of controlled
+    objects
+    """
+    top_down_references: Dict[str, List[str]] = {}
+    for object_uid, owner_references in object_to_owners.items():
+        for owner_reference in owner_references:
+            top_down_references.setdefault(owner_reference.uid, []).append(object_uid)
+    return top_down_references
 
 
 def statefulset_list_from_client(
@@ -480,6 +487,7 @@ def statefulset_list_from_client(
 def parse_api_data(
     raw_cron_jobs: Sequence[client.V1CronJob],
     raw_pods: Sequence[client.V1Pod],
+    raw_jobs: Sequence[client.V1Job],
     raw_nodes: Sequence[client.V1Node],
     raw_namespaces: Sequence[client.V1Namespace],
     raw_resource_quotas: Sequence[client.V1ResourceQuota],
@@ -490,13 +498,26 @@ def parse_api_data(
     api_health: api.APIHealth,
     controller_to_pods: Mapping[str, Sequence[api.PodUID]],
     pod_to_controllers: Mapping[api.PodUID, Sequence[api.Controller]],
+    controllers_to_dependents: Mapping[str, Sequence[str]],
     git_version: api.GitVersion,
     versioned_parse_statefulsets: Callable[
         [StatefulSets, Mapping[str, Sequence[api.PodUID]]], Sequence[api.StatefulSet]
     ],
 ) -> APIData:
+    """Parses the Kubernetes API to the format used"""
+    job_uids = {raw_job.metadata.uid for raw_job in raw_jobs}
+    pod_uids = {raw_pod.metadata.uid for raw_pod in raw_pods}
+
     cron_jobs = [
-        cron_job_from_client(raw_cron_job, controller_to_pods.get(raw_cron_job.metadata.uid, []))
+        cron_job_from_client(
+            raw_cron_job,
+            pod_uids=controller_to_pods.get(raw_cron_job.metadata.uid, []),
+            job_uids=[
+                api.JobUID(dependent_uid)
+                for dependent_uid in controllers_to_dependents.get(raw_cron_job.metadata.uid, [])
+                if dependent_uid in job_uids
+            ],
+        )
         for raw_cron_job in raw_cron_jobs
     ]
     deployments = [
@@ -508,6 +529,17 @@ def parse_api_data(
     daemonsets = [
         daemonset_from_client(raw_daemonset, controller_to_pods.get(raw_daemonset.metadata.uid, []))
         for raw_daemonset in raw_daemonsets
+    ]
+    jobs = [
+        job_from_client(
+            raw_job,
+            pod_uids=[
+                api.PodUID(dependent_uid)
+                for dependent_uid in controllers_to_dependents.get(raw_job.metadata.uid, [])
+                if dependent_uid in pod_uids
+            ],
+        )
+        for raw_job in raw_jobs
     ]
     statefulsets = versioned_parse_statefulsets(raw_statefulsets, controller_to_pods)
     namespaces = [namespace_from_client(raw_namespace) for raw_namespace in raw_namespaces]
@@ -529,6 +561,7 @@ def parse_api_data(
         cron_jobs=cron_jobs,
         deployments=deployments,
         daemonsets=daemonsets,
+        jobs=jobs,
         statefulsets=statefulsets,
         namespaces=namespaces,
         nodes=nodes,
@@ -551,8 +584,7 @@ def create_api_data_v1(
         raw_api,
         external_api,
     )
-    controller_to_pods, pod_to_controllers = map_controllers(
-        raw_api_data.raw_pods,
+    object_to_owners = parse_object_to_owners(
         workload_resources_client=itertools.chain(
             raw_api_data.raw_deployments,
             raw_api_data.raw_daemonsets,
@@ -563,9 +595,14 @@ def create_api_data_v1(
         ),
         workload_resources_json=(),
     )
+    controller_to_pods, pod_to_controllers = map_controllers(
+        raw_api_data.raw_pods,
+        object_to_owners=object_to_owners,
+    )
     return parse_api_data(
         raw_api_data.raw_cron_jobs,
         raw_api_data.raw_pods,
+        raw_api_data.raw_jobs,
         raw_api_data.raw_nodes,
         raw_api_data.raw_namespaces,
         raw_api_data.raw_resource_quotas,
@@ -576,6 +613,7 @@ def create_api_data_v1(
         raw_api_data.api_health,
         controller_to_pods,
         pod_to_controllers,
+        map_controllers_top_to_down(object_to_owners),
         git_version,
         versioned_parse_statefulsets=statefulset_list_from_client,
     )
@@ -594,20 +632,26 @@ def create_api_data_v2(
         raw_api,
         external_api,
     )
-    controller_to_pods, pod_to_controllers = map_controllers(
-        raw_api_data.raw_pods,
+    object_to_owners = parse_object_to_owners(
         workload_resources_client=itertools.chain(
             raw_api_data.raw_deployments,
             raw_api_data.raw_daemonsets,
             raw_api_data.raw_replica_sets,
             raw_api_data.raw_cron_jobs,
             raw_api_data.raw_jobs,
+            raw_api_data.raw_pods,
         ),
         workload_resources_json=raw_api_data.raw_statefulsets["items"],
     )
+    controller_to_pods, pod_to_controllers = map_controllers(
+        raw_api_data.raw_pods,
+        object_to_owners=object_to_owners,
+    )
+
     return parse_api_data(
         raw_api_data.raw_cron_jobs,
         raw_api_data.raw_pods,
+        raw_api_data.raw_jobs,
         raw_api_data.raw_nodes,
         raw_api_data.raw_namespaces,
         raw_api_data.raw_resource_quotas,
@@ -618,6 +662,7 @@ def create_api_data_v2(
         raw_api_data.api_health,
         controller_to_pods,
         pod_to_controllers,
+        map_controllers_top_to_down(object_to_owners),
         git_version,
         versioned_parse_statefulsets=statefulset_list_from_json,
     )

@@ -1,0 +1,17 @@
+Title: Add missing service state conditions for alert handler
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1664268314
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p14
+
+It's now possible to use "WARN" - "WARN", "CRIT" - "CRIT" and "UNKNOWN" -
+"UNKNOWN" in the alert handler rule option "Match service event type".
+
+Alert handler rely on the last soft state, so this states are needed, e.g. if
+you would like to create a rule that should match a WARN state on the second
+check attempt.

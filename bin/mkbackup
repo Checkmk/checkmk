@@ -96,16 +96,21 @@ class JobConfig(TypedDict):
 class Job:
     config: JobConfig
     local_id: str | None
+    id: str | None
 
 
 @dataclass(frozen=True)
 class BackupTarget:
     config: Config
-    target_id: TargetId
+    job: Job
 
     @property
     def base_path(self) -> str:
-        return job_backup_path_during_backup(self.config, self.target_id)
+        return job_backup_path_during_backup(self.config, self.job)
+
+    @property
+    def target_id(self) -> str:
+        return self.job.config["target"]
 
 
 @dataclass(frozen=True)
@@ -433,14 +438,14 @@ def save_backup_info(info: Mapping[str, Any], target: Target) -> None:
 
 
 def create_backup_info(config: Config, job: Job) -> Mapping[str, Any]:
-    files = get_files_for_backup_info(config, job.config["target"])
+    files = get_files_for_backup_info(config, job)
 
     info = {
         "type": "Check_MK" if not is_root() else "Appliance",
         "job_id": job.local_id,
         "config": job.config,
         "hostname": hostname(),
-        "files": get_files_for_backup_info(config, job.config["target"]),
+        "files": files,
         "finished": time.time(),
         "size": sum(f[1] for f in files),
     }
@@ -481,8 +486,8 @@ def add_system_info_to_backup_info(info: dict[str, Any]) -> None:
     }
 
 
-def get_files_for_backup_info(config: Config, target: TargetId) -> list[tuple[str, int, str]]:
-    backup_path = job_backup_path_during_backup(config, target)
+def get_files_for_backup_info(config: Config, job: Job) -> list[tuple[str, int, str]]:
+    backup_path = job_backup_path_during_backup(config, job)
     dir_entries: list[str] = os.listdir(backup_path)
     files = []
     for f in sorted(dir_entries):
@@ -683,13 +688,11 @@ modes = {
     ),
 }
 
-g_job_id: str | None = None
-
 
 def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None:
     verify_compatible_cma_version()
     job = load_job(local_job_id, config)
-    target = BackupTarget(config, job.config["target"])
+    target = BackupTarget(config, job)
 
     with ExitStack() as stack:
         for cm in [
@@ -708,11 +711,11 @@ def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None
             save_state({"pid": os.getpid()}, job)
 
         start_logging(job)
-        log(f"--- Starting backup ({g_job_id} to {target_ident}) ---")
+        log(f"--- Starting backup ({job.id} to {target_ident}) ---")
 
         success = False
         try:
-            cleanup_previous_incomplete_backup(config, job.config["target"])
+            cleanup_previous_incomplete_backup(config, job)
 
             save_state(
                 {
@@ -1161,16 +1164,16 @@ def system_data_backup_archive_path(target: Target, job_config: JobConfig) -> st
     return f"{target.base_path}/system-data{archive_suffix(job_config)}"
 
 
-def job_backup_path_during_backup(config: Config, target_id: TargetId) -> str:
-    return "%s-incomplete" % job_backup_path(config, target_id)
+def job_backup_path_during_backup(config: Config, job: Job) -> str:
+    return "%s-incomplete" % job_backup_path(config, job)
 
 
-def job_backup_path_complete(config: Config, target_id: TargetId) -> str:
-    return "%s-complete" % job_backup_path(config, target_id)
+def job_backup_path_complete(config: Config, job: Job) -> str:
+    return "%s-complete" % job_backup_path(config, job)
 
 
-def job_backup_path(config: Config, target_id: TargetId) -> str:
-    return "{}/{}".format(target_path(target_id, config), g_job_id)
+def job_backup_path(config: Config, job: Job) -> str:
+    return "{}/{}".format(target_path(job.config["target"], config), job.id)
 
 
 def archive_suffix(config: JobConfig) -> str:
@@ -1415,13 +1418,13 @@ def complete_backup(config: Config, job: Job, target: BackupTarget) -> None:
     # Now we can be sure this new backup is a good one. Remove eventual old
     # backup and move from "incomplete" to "complete".
 
-    if os.path.exists(job_backup_path_complete(config, job.config["target"])):
+    if os.path.exists(job_backup_path_complete(config, job)):
         log("Cleaning up previously completed backup")
-        shutil.rmtree(job_backup_path_complete(config, job.config["target"]))
+        shutil.rmtree(job_backup_path_complete(config, job))
 
     os.rename(
-        job_backup_path_during_backup(config, job.config["target"]),
-        job_backup_path_complete(config, job.config["target"]),
+        job_backup_path_during_backup(config, job),
+        job_backup_path_complete(config, job),
     )
 
     state = load_state(job)
@@ -1437,11 +1440,11 @@ def complete_backup(config: Config, job: Job, target: BackupTarget) -> None:
     )
 
 
-def cleanup_previous_incomplete_backup(config: Config, target_id: TargetId) -> None:
-    if os.path.exists(job_backup_path_during_backup(config, target_id)):
+def cleanup_previous_incomplete_backup(config: Config, job: Job) -> None:
+    if os.path.exists(job_backup_path_during_backup(config, job)):
         log("Found previous incomplete backup. Cleaning up those files.")
         try:
-            shutil.rmtree(job_backup_path_during_backup(config, target_id))
+            shutil.rmtree(job_backup_path_during_backup(config, job))
         except OSError as e:
             if e.errno == errno.EACCES:
                 raise MKGeneralException("Failed to write the backup directory: %s" % e)
@@ -1449,13 +1452,12 @@ def cleanup_previous_incomplete_backup(config: Config, target_id: TargetId) -> N
 
 
 def load_job(local_job_id: str, config: Config) -> Job:
-    global g_job_id
     g_job_id = globalize_job_id(local_job_id)
 
     if local_job_id not in config["jobs"]:
         raise MKGeneralException("This backup job does not exist.")
 
-    job = Job(config=config["jobs"][local_job_id], local_id=local_job_id)
+    job = Job(config=config["jobs"][local_job_id], local_id=local_job_id, id=g_job_id)
     return job
 
 
@@ -1539,14 +1541,14 @@ def state_path(job: Job) -> Path:
     if is_root():
         path = "/var/lib/mkbackup"
     else:
-        if g_job_id:
+        if job.id:
             # backup as site user
             path = "%s/var/check_mk/backup" % os.environ["OMD_ROOT"]
         else:
             # restore as site user
             path = "/tmp"
 
-    if g_job_id:
+    if job.id:
         # backup
         name = job.local_id
     else:
@@ -1581,7 +1583,7 @@ def add_output(s: str, job: Job) -> None:
 def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: Config) -> None:
     target = RestoreTarget(TargetId(target_id), backup_id, config)
     info = load_backup_info(backup_info_path(target))
-    job = Job(config=info["config"], local_id=info["job_id"])
+    job = Job(config=info["config"], local_id=info["job_id"], id=None)
 
     verify_compatible_cma_version()
     with ExitStack() as stack:

@@ -23,10 +23,6 @@ namespace wtools {
 extern std::vector<int> TsValues;
 }
 
-namespace cma::cfg::details {
-extern uint64_t g_registered_performance_freq;
-}
-
 namespace {
 bool ValidIndexOfTs(int index) {
     for (auto a : wtools::TsValues)
@@ -42,11 +38,6 @@ auto GetIndexOfTS() {
     uint32_t key_index = 0;
     auto r = details::LoadWinPerfData(L"Terminal Services", key_index);
     return key_index;
-}
-
-TEST(WinPerf, GetPerformanceFrequency) {
-    auto pf = cfg::GetPerformanceFrequency();
-    EXPECT_EQ(cfg::details::g_registered_performance_freq, pf);
 }
 
 TEST(WinPerf, ValidateFabricConfig) {

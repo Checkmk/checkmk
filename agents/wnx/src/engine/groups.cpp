@@ -15,107 +15,116 @@
 #include "tools/_raii.h"  // on out
 #include "tools/_tgt.h"   // we need IsDebug
 
+using namespace std::string_literals;
 namespace fs = std::filesystem;
 
 namespace cma::cfg {
 
-Global::Global() { setDefaults(); }
+Global::Global() noexcept { setDefaults(); }
+
+namespace {
+
+[[nodiscard]] bool IsSectionExist(std::string_view name) noexcept {
+    try {
+        auto _ = GetLoadedConfig()[name];
+        return true;
+    } catch (std::exception &) {
+        return false;
+    }
+}
+
+template <typename T>
+[[nodiscard]] T GetGlobalVal(std::string_view name, T dflt) noexcept {
+    return GetVal(groups::kGlobal, name, dflt);
+}
+template <typename T>
+[[nodiscard]] T GetLoggingVal(std::string_view name, T dflt) noexcept {
+    auto logging = GetNode(groups::kGlobal, vars::kLogging);
+    return GetVal(logging, name, dflt);
+}
+
+std::unordered_map<std::string_view, LogLevel> text_to_log_level = {
+    {"", LogLevel::kLogBase},     {"no", LogLevel::kLogBase},
+    {"yes", LogLevel::kLogDebug}, {"true", LogLevel::kLogDebug},
+    {"all", LogLevel::kLogAll},
+};
+
+[[nodiscard]] int GetLoggingDebugLevel() noexcept {
+    constexpr std::string_view default_debug = tgt::IsDebug() ? "yes" : "no";
+    auto level = GetLoggingVal(vars::kLogDebug, std::string{default_debug});
+    try {
+        return static_cast<int>(text_to_log_level.at(level));
+    } catch (const std::out_of_range & /* e*/) {
+        return static_cast<int>(tgt::IsDebug() ? LogLevel::kLogDebug
+                                               : LogLevel::kLogBase);
+    }
+}
+}  // namespace
 
 // loader of yaml is going here
 void Global::loadFromMainConfig() {
-    auto config = cma::cfg::GetLoadedConfig();
-
-    {
-        reset();
-        std::lock_guard lk(lock_);
-        me_.reset();
-        try {
-            me_ = config[groups::kGlobal];
-            exist_in_cfg_ = true;
-        } catch (std::exception &) {
-            me_.reset();
-        }
-
-        port_ = GetVal(groups::kGlobal, vars::kPort, cma::cfg::kMainPort);
-        enabled_in_cfg_ =
-            GetVal(groups::kGlobal, vars::kEnabled, exist_in_cfg_);
-        name_ = GetVal(groups::kGlobal, vars::kName, std::string(""));
-        ipv6_ = GetVal(groups::kGlobal, vars::kIpv6, false);
-        async_ = GetVal(groups::kGlobal, vars::kAsync, true);
-        flush_tcp_ = GetVal(groups::kGlobal, vars::kSectionFlush, false);
-
-        password_ =
-            GetVal(groups::kGlobal, vars::kGlobalPassword, std::string(""));
-
-        encrypt_ = GetVal(groups::kGlobal, vars::kGlobalEncrypt, false);
-
-        execute_ = GetInternalArray(groups::kGlobal, vars::kExecute);
-
-        auto only_from = GetInternalArray(groups::kGlobal, vars::kOnlyFrom);
-        fillOnlyFrom(only_from);
-
-        enabled_sections_ =
-            GetInternalArray(groups::kGlobal, vars::kSectionsEnabled);
-        disabled_sections_ =
-            GetInternalArray(groups::kGlobal, vars::kSectionsDisabled);
-        auto realtime = GetNode(groups::kGlobal, vars::kRealTime);
-
-        realtime_encrypt_ = GetVal(realtime, vars::kRtEncrypt, false);
-
-        realtime_enabled_ = GetVal(realtime, vars::kRtEnabled, true);
-
-        realtime_timeout_ =
-            GetVal(realtime, vars::kRtTimeout, kDefaultRealtimeTimeout);
-
-        realtime_port_ = GetVal(realtime, vars::kRtPort, kDefaultRealtimePort);
-
-        wmi_timeout_ = GetVal(groups::kGlobal, vars::kGlobalWmiTimeout,
-                              kDefaultWmiTimeout);
-        cpuload_method_ = GetVal(groups::kGlobal, vars::kCpuLoadMethod,
-                                 std::string{defaults::kCpuLoad});
-
-        realtime_sections_ = GetInternalArray(realtime, vars::kRtRun);
-        auto logging = GetNode(groups::kGlobal, vars::kLogging);
-
-        // we must reuse already set location
-        auto yml_log_location =
-            GetVal(logging, vars::kLogLocation, yaml_log_path_.u8string());
-        yaml_log_path_ =
-            cma::cfg::details::ConvertLocationToLogPath(yml_log_location);
-
-        std::string default_debug = tgt::IsDebug() ? "yes" : "no";
-        auto debug_level = GetVal(logging, vars::kLogDebug, default_debug);
-        if (debug_level.empty() || debug_level == "no")
-            debug_level_ = static_cast<int>(LogLevel::kLogBase);
-        else if (debug_level == "yes" || debug_level == "true")
-            debug_level_ = static_cast<int>(LogLevel::kLogDebug);
-        else if (debug_level == "all")
-            debug_level_ = static_cast<int>(LogLevel::kLogAll);
-        else
-            debug_level_ = static_cast<int>(
-                tgt::IsDebug() ? LogLevel::kLogDebug : LogLevel::kLogBase);
-
-        windbg_ = GetVal(logging, vars::kLogWinDbg, true);
-
-        event_log_ = GetVal(logging, vars::kLogEvent, true);
-
-        log_file_name_ = GetVal(logging, vars::kLogFile, std::string());
-        log_file_max_count_ =
-            GetVal(logging, vars::kLogFile, cfg::kLogFileMaxCount);
-        log_file_max_size_ =
-            GetVal(logging, vars::kLogFile, cfg::kLogFileMaxCount);
-        updateLogNames();
+    std::scoped_lock lk(lock_);
+    reset();
+    exist_in_cfg_ = IsSectionExist(groups::kGlobal);
+    if (!exist_in_cfg_) {
+        return;
     }
-    // UNLOCK HERE
+    loadGlobal();
+    loadRealTime();
+    loadLogging();
+}
+
+void Global::loadGlobal() {
+    port_ = GetGlobalVal(vars::kPort, kMainPort);
+    enabled_in_cfg_ = GetGlobalVal(vars::kEnabled, exist_in_cfg_.load());
+    name_ = GetGlobalVal(vars::kName, ""s);
+    ipv6_ = GetGlobalVal(vars::kIpv6, false);
+    async_ = GetGlobalVal(vars::kAsync, true);
+    flush_tcp_ = GetGlobalVal(vars::kSectionFlush, false);
+    password_ = GetGlobalVal(vars::kGlobalPassword, ""s);
+    encrypt_ = GetGlobalVal(vars::kGlobalEncrypt, false);
+    execute_ = GetInternalArray(groups::kGlobal, vars::kExecute);
+
+    fillOnlyFrom(GetInternalArray(groups::kGlobal, vars::kOnlyFrom));
+
+    enabled_sections_ =
+        GetInternalArray(groups::kGlobal, vars::kSectionsEnabled);
+    disabled_sections_ =
+        GetInternalArray(groups::kGlobal, vars::kSectionsDisabled);
+    wmi_timeout_ = GetGlobalVal(vars::kGlobalWmiTimeout, kDefaultWmiTimeout);
+    cpuload_method_ =
+        GetGlobalVal(vars::kCpuLoadMethod, std::string{defaults::kCpuLoad});
+}
+
+void Global::loadRealTime() {
+    auto realtime = GetNode(groups::kGlobal, vars::kRealTime);
+
+    realtime_encrypt_ = GetVal(realtime, vars::kRtEncrypt, false);
+    realtime_enabled_ = GetVal(realtime, vars::kRtEnabled, true);
+    realtime_timeout_ =
+        GetVal(realtime, vars::kRtTimeout, kDefaultRealtimeTimeout);
+
+    realtime_port_ = GetVal(realtime, vars::kRtPort, kDefaultRealtimePort);
+    realtime_sections_ = GetInternalArray(realtime, vars::kRtRun);
+}
+
+void Global::loadLogging() {
+    auto yml_log_location = GetLoggingVal(vars::kLogLocation, ""s);
+    yaml_log_path_ = details::ConvertLocationToLogPath(yml_log_location);
+    debug_level_ = GetLoggingDebugLevel();
+    windbg_ = GetLoggingVal(vars::kLogWinDbg, true);
+    event_log_ = GetLoggingVal(vars::kLogEvent, true);
+    log_file_name_ = GetLoggingVal(vars::kLogFile, ""s);
+    log_file_max_count_ = GetLoggingVal(vars::kLogFile, cfg::kLogFileMaxCount);
+    log_file_max_size_ = GetLoggingVal(vars::kLogFile, cfg::kLogFileMaxCount);
+    updateLogNames();
 }
 
 // Software defaults
 // Predefined and as logic as possible
 // as safe as possible
-void Global::setDefaults() {
-    std::lock_guard lk(lock_);
-    me_.reset();
-    port_ = cma::cfg::kMainPort;
+void Global::setDefaults() noexcept {
+    port_ = kMainPort;
     enabled_in_cfg_ = false;
     name_ = "";
     ipv6_ = false;
@@ -171,14 +180,14 @@ void Global::updateLogNames() {
     logfile_dir_ = log_path;
 
     logfile_ = logfile_dir_ / log_file_name_;
-    logfile_as_string_ = logfile_.u8string();
+    logfile_as_string_ = wtools::ToUtf8(logfile_.wstring());
     logfile_as_wide_ = logfile_.wstring();
 }
 
 // empty string does nothing
 // used to set values during start
 void Global::setLogFolder(const fs::path &forced_path) {
-    std::unique_lock lk(lock_);
+    std::scoped_lock lk(lock_);
     if (GetModus() == Modus::service) {
         XLOG::details::LogWindowsEventAlways(
             XLOG::EventLevel::information, 35,
@@ -189,7 +198,6 @@ void Global::setLogFolder(const fs::path &forced_path) {
     }
 
     yaml_log_path_ = CheckAndCreateLogPath(forced_path);
-
     updateLogNames();
 }
 
@@ -200,45 +208,34 @@ void Global::setupLogEnvironment() {
     GetCfg().setConfiguredLogFileDir(logfile_dir_.wstring());
 }
 
+namespace {
+template <typename T>
+[[nodiscard]] T GetWinPerfVal(std::string_view name, T dflt) noexcept {
+    return GetVal(groups::kWinPerf, name, dflt);
+}
+}  // namespace
+
 void WinPerf::loadFromMainConfig() {
     auto config = cfg::GetLoadedConfig();
 
     std::lock_guard lk(lock_);
     reset();
     counters_.resize(0);
-
-    try {
-        auto yaml = GetLoadedConfig();
-        auto me = yaml[groups::kWinPerf];
-        if (!me.IsMap()) {
-            XLOG::l("Section {} absent or invalid", groups::kWinPerf);
-            return;
-        }
-        exist_in_cfg_ = true;
-
-        exe_name_ =
-            GetVal(groups::kWinPerf, vars::kWinPerfExe, std::string("agent"));
-
-        prefix_ = GetVal(groups::kWinPerf, vars::kWinPerfPrefixName,
-                         std::string("winperf"));
-
-        timeout_ = GetVal(groups::kWinPerf, vars::kWinPerfTimeout,
-                          cfg::kDefaultWinPerfTimeout);
-
-        fork_ = GetVal(groups::kWinPerf, vars::kWinPerfFork,
-                       cfg::kDefaultWinPerfFork);
-
-        trace_ = GetVal(groups::kWinPerf, vars::kWinPerfTrace,
-                        cfg::kDefaultWinPerfTrace);
-
-        enabled_in_cfg_ =
-            GetVal(groups::kWinPerf, vars::kEnabled, exist_in_cfg_);
-        auto counters = GetPairArray(groups::kWinPerf, vars::kWinPerfCounters);
-        for (const auto &entry : counters) {
-            counters_.emplace_back(entry.first, entry.second);
-        }
-    } catch (const std::exception &e) {
-        XLOG::l("Section {} ", groups::kWinPerf, e);
+    exist_in_cfg_ = IsSectionExist(groups::kWinPerf);
+    if (!exist_in_cfg_) {
+        XLOG::l("Section {} absent or invalid", groups::kWinPerf);
+        return;
+    }
+    exe_name_ = GetWinPerfVal(vars::kWinPerfExe, "agent"s);
+    prefix_ = GetWinPerfVal(vars::kWinPerfPrefixName, "winperf"s);
+    timeout_ =
+        GetWinPerfVal(vars::kWinPerfTimeout, cfg::kDefaultWinPerfTimeout);
+    fork_ = GetWinPerfVal(vars::kWinPerfFork, cfg::kDefaultWinPerfFork);
+    trace_ = GetWinPerfVal(vars::kWinPerfTrace, cfg::kDefaultWinPerfTrace);
+    enabled_in_cfg_ = GetWinPerfVal(vars::kEnabled, exist_in_cfg_.load());
+    auto counters = GetPairArray(groups::kWinPerf, vars::kWinPerfCounters);
+    for (const auto [id, name] : counters) {
+        counters_.emplace_back(id, name);
     }
 }
 
@@ -335,14 +332,10 @@ void Plugins::ExeUnit::apply(std::string_view filename,
 }
 
 void Plugins::loadFromMainConfig(std::string_view group_name) {
-    auto config = GetLoadedConfig();
-
     std::lock_guard lk(lock_);
     reset();
     units_.resize(0);
-
     local_ = group_name == groups::kLocal;
-
     try {
         auto yaml = GetLoadedConfig();
         auto me = yaml[group_name];
@@ -351,14 +344,15 @@ void Plugins::loadFromMainConfig(std::string_view group_name) {
             return;
         }
         exist_in_cfg_ = true;
-        enabled_in_cfg_ = GetVal(group_name, vars::kEnabled, exist_in_cfg_);
+        enabled_in_cfg_ =
+            GetVal(group_name, vars::kEnabled, exist_in_cfg_.load());
         exe_name_ = GetVal(group_name, vars::kPluginExe,
                            std::string{"plugin_player.exe"});
         auto units = GetArray<YAML::Node>(group_name, vars::kPluginsExecution);
         LoadExeUnitsFromYaml(units_, units);
         folders_.clear();
         if (local_) {
-            folders_.push_back(cma::cfg::GetLocalDir());
+            folders_.push_back(GetLocalDir());
         } else {
             auto folders =
                 GetArray<std::string>(group_name, vars::kPluginsFolders);
@@ -410,7 +404,7 @@ Plugins::CmdLineInfo Plugins::buildCmdLine() const {
     // case when there is NO folder in array
     const auto default_folder_mark =
         wtools::ConvertToUTF16(vars::kPluginsDefaultFolderMark);
-    auto default_plugins_folder = cma::cfg::GetCfg().getSystemPluginsDir();
+    auto default_plugins_folder = GetCfg().getSystemPluginsDir();
     if (folders.empty()) {
         folders.emplace_back(default_folder_mark);
     }

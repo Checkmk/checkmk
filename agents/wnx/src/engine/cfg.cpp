@@ -233,7 +233,7 @@ bool MergeMapSequence(YAML::Node target_group, YAML::Node source_group,
 namespace details {
 ConfigInfo g_config_info;  // NOLINT
 // store boot fixed data
-uint64_t g_registered_performance_freq{
+const uint64_t g_registered_performance_freq{
     static_cast<uint64_t>(wtools::QueryPerformanceFreq())};
 
 fs::path GetDefaultLogPath() {

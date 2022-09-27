@@ -467,38 +467,27 @@ void LoadGlobal();
 struct Group {
 public:
     Group() noexcept : enabled_in_cfg_(false), exist_in_cfg_(false) {}
-    bool existInConfig() const {
-        std::lock_guard lk(lock_);
-        return exist_in_cfg_;
-    }
+    bool existInConfig() const { return exist_in_cfg_; }
 
-    bool enabledInConfig() const {
-        std::lock_guard lk(lock_);
-        return enabled_in_cfg_;
-    }
-    std::string name__() const noexcept {
-        std::lock_guard lk(lock_);
-        return name_;
-    }
+    bool enabledInConfig() const { return enabled_in_cfg_; }
 
+protected:
     void reset() {
-        std::lock_guard lk(lock_);
-        name_ = "";
+        name_.clear();
         enabled_in_cfg_ = false;
         exist_in_cfg_ = false;
     }
 
-protected:
-    // Data
     mutable std::mutex lock_;
+    // std::atomic<std::string> name_;
+    std::atomic<bool> enabled_in_cfg_;
+    std::atomic<bool> exist_in_cfg_;
     std::string name_;
-    bool enabled_in_cfg_;
-    bool exist_in_cfg_;
 };
 
 struct Global : public Group {
 public:
-    Global();
+    Global() noexcept;
 
     void loadFromMainConfig();
 
@@ -672,10 +661,11 @@ public:
     void setLogFolder(const std::filesystem::path &forced_path);
 
 private:
+    void loadGlobal();
+    void loadRealTime();
+    void loadLogging();
     void updateLogNames();
-
-    // called from ctor or loader
-    void setDefaults();
+    void setDefaults() noexcept;
 
     // check contents of only_from from the yml and fills array correct
     // * for ipv6-mode added mapped addresses of ipv4-entries and normal
@@ -728,9 +718,6 @@ private:
         }
         return static_cast<int>(only_from_.size());
     }
-
-    // node from the config file
-    YAML::Node me_;
 
     // root
     int port_;

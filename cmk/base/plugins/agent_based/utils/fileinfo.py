@@ -464,12 +464,12 @@ def _fileinfo_check_conjunctions(
         matches = 0
         for title, key, value, readable_f in check_definition:
             level = levels.get(key)
-            if level is not None and value >= level:
+            if level is not None and value is not None and value >= level:
                 match_texts.append("%s at %s" % (title.lower(), readable_f(level)))
                 matches += 1
 
             level_lower = levels.get("%s_lower" % key)
-            if level_lower is not None and value < level_lower:
+            if level_lower is not None and value is not None and value < level_lower:
                 match_texts.append("%s below %s" % (title.lower(), readable_f(level_lower)))
                 matches += 1
 

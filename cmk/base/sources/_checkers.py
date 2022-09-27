@@ -7,7 +7,7 @@
 # - Discovery works.
 # - Checking doesn't work - as it was before. Maybe we can handle this in the future.
 
-from typing import Dict, Final, Iterable, List, Optional, Sequence, Tuple
+from typing import Callable, Dict, Final, Iterable, List, Optional, Sequence, Tuple
 
 import cmk.utils.tty as tty
 from cmk.utils import version
@@ -15,14 +15,14 @@ from cmk.utils.cpu_tracking import CPUTracker
 from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
 from cmk.utils.translations import TranslationOptions
-from cmk.utils.type_defs import HostAddress
+from cmk.utils.type_defs import HostAddress, HostName
 
 import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers.protocol import FetcherMessage
 from cmk.core_helpers.type_defs import NO_SELECTION, SectionNameCollection
 
 import cmk.base.config as config
-from cmk.base.config import ConfigCache, HostConfig
+from cmk.base.config import HostConfig
 
 from ._abstract import Mode, Source
 from .ipmi import IPMISource
@@ -310,9 +310,9 @@ def fetch_all(
 
 
 def make_cluster_sources(
-    config_cache: ConfigCache,
     host_config: HostConfig,
     *,
+    ip_lookup: Callable[[HostName], Optional[HostAddress]],
     simulation_mode: bool,
     agent_simulator: bool,
     translation: TranslationOptions,
@@ -327,7 +327,7 @@ def make_cluster_sources(
         for host_name in host_config.nodes
         for source in make_non_cluster_sources(
             HostConfig.make_host_config(host_name),
-            config.lookup_ip_address(config_cache.get_host_config(host_name)),
+            ip_lookup(host_name),
             force_snmp_cache_refresh=False,
             simulation_mode=simulation_mode,
             agent_simulator=agent_simulator,
@@ -339,10 +339,10 @@ def make_cluster_sources(
 
 
 def make_sources(
-    config_cache: ConfigCache,
     host_config: HostConfig,
     ip_address: Optional[HostAddress],
     *,
+    ip_lookup: Callable[[HostName], Optional[HostAddress]],
     selected_sections: SectionNameCollection,
     force_snmp_cache_refresh: bool,
     on_scan_error: OnError,
@@ -367,8 +367,8 @@ def make_sources(
         )
         if host_config.nodes is None
         else make_cluster_sources(
-            config_cache,
             host_config,
+            ip_lookup=ip_lookup,
             simulation_mode=simulation_mode,
             agent_simulator=agent_simulator,
             translation=translation,

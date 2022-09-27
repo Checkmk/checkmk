@@ -422,8 +422,8 @@ class TestMakeHostSectionsClusters:
         self, cluster, nodes, config_cache, host_config
     ) -> None:
         sources = make_cluster_sources(
-            config_cache,
             host_config,
+            ip_lookup=lambda _: None,
             simulation_mode=True,
             agent_simulator=True,
             translation={},
@@ -472,22 +472,14 @@ def test_get_host_sections_cluster(monkeypatch, mocker) -> None:  # type:ignore[
     }
     tags = {"agent": "no-agent"}
     section_name = SectionName("test_section")
-    config_cache = make_scenario(hostname, tags).apply(monkeypatch)
+    make_scenario(hostname, tags).apply(monkeypatch)
     host_config = HostConfig.make_host_config(hostname)
-
-    def fake_lookup_ip_address(host_config, family=None):
-        return hosts[host_config.hostname]
 
     def check(_, *args, **kwargs):
         return result.OK(
             HostSections[AgentRawDataSection](sections={section_name: [[str(section_name)]]})
         )
 
-    monkeypatch.setattr(
-        config,
-        "lookup_ip_address",
-        fake_lookup_ip_address,
-    )
     monkeypatch.setattr(
         Source,
         "parse",
@@ -508,8 +500,8 @@ def test_get_host_sections_cluster(monkeypatch, mocker) -> None:  # type:ignore[
     host_config.nodes = list(hosts.keys())
 
     sources = make_cluster_sources(
-        config_cache,
         host_config,
+        ip_lookup=lambda host_name: hosts[host_name],
         simulation_mode=True,
         agent_simulator=True,
         translation={},

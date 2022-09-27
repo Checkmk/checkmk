@@ -177,9 +177,11 @@ def _commandline_checking(
 
     fetched = fetch_all(
         sources=make_sources(
-            config_cache,
             host_config,
             ipaddress,
+            ip_lookup=lambda host_name: config.lookup_ip_address(
+                config_cache.get_host_config(host_name)
+            ),
             selected_sections=selected_sections,
             force_snmp_cache_refresh=False,
             on_scan_error=OnError.RAISE,

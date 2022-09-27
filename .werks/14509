@@ -1,0 +1,18 @@
+Title: add authentication to REST API documentation
+Class: security
+Compatible: compat
+Component: rest-api
+Date: 1664265337
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p14
+
+It was previously not required to be authenticated to access the site's REST API documentation.
+
+Because custom user tags and comments may appear in the automatically generated documentation,
+this would represent an "information leak". Therefore, from this Werk onwards, the site's
+REST API documentation is only allowed to be accessed by logged in users.
+
+Vulnerability Management: We have rated the issue with a CVSS Score of 5.3 (Medium) with the following CVSS vector: CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N. A CVE has been requested

@@ -207,13 +207,10 @@ def user_from_bearer_header(auth_header: str) -> Tuple[UserId, str]:
     return UserId(user_id), secret
 
 
-class Authenticate:
-    """Wrap an Endpoint so it will be authenticated
+class EndpointAdapter:
+    """Wrap an Endpoint
 
-    This is not very memory efficient as it wraps every individual endpoint in its own
-    authenticator, even though this does not need to be. This has to be done this way right now,
-    because we have multiple endpoints without authentication in this app. A refactoring to lower
-    the memory foot-print of this is feasible and should be done if a good way has been found.
+    Makes a "real" WSGI application out of an endpoint. Should be refactored away.
     """
 
     def __init__(self, endpoint: Endpoint):
@@ -224,18 +221,8 @@ class Authenticate:
 
     def __call__(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         path_args = environ[ARGS_KEY]
-
-        try:
-            rfc7662 = _verify_user(environ)
-        except MKException as exc:
-            return problem(
-                status=401,
-                title=str(exc),
-            )(environ, start_response)
-
-        with set_user_context(rfc7662["sub"], rfc7662):
-            wsgi_app = self.endpoint.wrapped(ParameterDict(path_args))
-            return wsgi_app(environ, start_response)
+        wsgi_app = self.endpoint.wrapped(ParameterDict(path_args))
+        return wsgi_app(environ, start_response)
 
 
 @functools.lru_cache
@@ -424,7 +411,7 @@ class CheckmkRESTAPI:
                     endpoint=endpoint.ident,
                 )
             )
-            self.endpoints[endpoint.ident] = Authenticate(endpoint)
+            self.endpoints[endpoint.ident] = EndpointAdapter(endpoint)
 
         self.url_map = Map(
             [
@@ -449,13 +436,15 @@ class CheckmkRESTAPI:
 
     def _wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         urls = self.url_map.bind_to_environ(environ)
-        endpoint: Optional[Endpoint] = None
+        endpoint: Endpoint | None
         try:
             result: Tuple[str, Mapping[str, Any]] = urls.match(return_rule=False)
             endpoint_ident, matched_path_args = result  # pylint: disable=unpacking-non-sequence
             wsgi_app = self.endpoints[endpoint_ident]
-            if isinstance(wsgi_app, Authenticate):
+            if isinstance(wsgi_app, EndpointAdapter):
                 endpoint = wsgi_app.endpoint
+            else:
+                endpoint = None
 
             # Remove _path again (see Submount above), so the validators don't go crazy.
             path_args = {key: value for key, value in matched_path_args.items() if key != "_path"}
@@ -477,7 +466,18 @@ class CheckmkRESTAPI:
             ), cmk.utils.store.cleanup_locks(), sites.cleanup_connections():
                 config.initialize()
                 load_dynamic_permissions()
-                return wsgi_app(environ, start_response)
+
+                # Authenticate the user for all endpoints and sub-applications.
+                try:
+                    rfc7662 = _verify_user(environ)
+                except MKException as exc:
+                    return problem(
+                        status=401,
+                        title=str(exc),
+                    )(environ, start_response)
+
+                with set_user_context(rfc7662["sub"], rfc7662):
+                    return wsgi_app(environ, start_response)
         except ProblemException as exc:
             return exc(environ, start_response)
         except HTTPException as exc:

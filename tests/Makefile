@@ -208,7 +208,7 @@ test-integration-docker-debug test-composition-docker-debug:
 	$(PIPENV) run scripts/run-dockerized.py debug
 
 test-build-js:
-	../scripts/check-webpack-build
+	npm ci && ENTERPRISE=yes MANAGED=no npm run build
 
 test-composition-docker:
 	$(PIPENV) run scripts/run-dockerized.py "test-composition"

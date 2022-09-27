@@ -1,3 +1,0 @@
-#!/bin/bash
-
-npm ci && WEBPACK_MODE=quick ENTERPRISE=yes MANAGED=no npm run build

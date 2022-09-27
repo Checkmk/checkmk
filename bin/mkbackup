@@ -126,13 +126,73 @@ class RestoreTarget:
 
 Target = BackupTarget | RestoreTarget
 
+g_state: dict[str, Any] | None = None
+
+
+# The state file is in JSON format because it is 1:1 transfered
+# to the Checkmk server through the Checkmk agent.
+class State:
+    def __init__(self, job: Job) -> None:
+        self.path = _state_path(job)
+
+    def save(self, new_attrs: Mapping[str, Any], update: bool = True) -> None:
+        if update:
+            state = _load_state(self.path)
+        else:
+            state = {}
+        state.update(new_attrs)
+        store.save_text_to_file(
+            self.path,
+            json.dumps(
+                state,
+                sort_keys=True,
+                indent=4,
+                separators=(",", ": "),
+            ),
+        )
+
+    def load(self) -> dict[str, Any]:
+        return _load_state(self.path)
+
+
+def _load_state(path: Path) -> dict[str, Any]:
+    global g_state
+    if g_state is None:
+        g_state = json.loads(path.read_text())
+
+    return g_state
+
+
+def _state_path(job: Job) -> Path:
+    if is_root():
+        path = "/var/lib/mkbackup"
+    else:
+        if job.id:
+            # backup as site user
+            path = "%s/var/check_mk/backup" % os.environ["OMD_ROOT"]
+        else:
+            # restore as site user
+            path = "/tmp"
+
+    if job.id:
+        # backup
+        name = job.local_id
+    else:
+        # restore
+        if is_root():
+            name = "restore"
+        else:
+            name = "restore-%s" % current_site_id()
+
+    return Path(path, f"{name}.state")
+
+
 # Is used to duplicate output from stdout/stderr to a the job log. This
 # is e.g. used during "mkbackup backup" to store the output.
 class Log:
-    def __init__(self, fd: int, job: Job) -> None:
+    def __init__(self, fd: int, state: State) -> None:
         self.fd = fd
-        self.job = job
-
+        self.state = state
         if self.fd == 1:
             self.orig = sys.stdout
             sys.stdout = self  # type: ignore[assignment]
@@ -151,7 +211,7 @@ class Log:
     def write(self, data: str) -> None:
         self.orig.write(data)
         try:
-            add_output(self.color_replace.sub("", data), self.job)
+            add_output(self.color_replace.sub("", data), self.state)
         except Exception as e:
             self.orig.write("Failed to add output: %s\n" % e)
 
@@ -163,10 +223,10 @@ g_stdout_log = None
 g_stderr_log = None
 
 
-def start_logging(job: Job) -> None:
+def start_logging(state: State) -> None:
     global g_stdout_log, g_stderr_log
-    g_stdout_log = Log(1, job)
-    g_stderr_log = Log(2, job)
+    g_stdout_log = Log(1, state)
+    g_stderr_log = Log(2, state)
 
 
 def stop_logging() -> None:
@@ -693,6 +753,7 @@ def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None
     verify_compatible_cma_version()
     job = load_job(local_job_id, config)
     target = BackupTarget(config, job)
+    state = State(job)
 
     with ExitStack() as stack:
         for cm in [
@@ -703,28 +764,27 @@ def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None
         target_ident = job.config["target"]
         verify_target_is_ready(target_ident, config)
 
-        init_new_run(job)
-        save_next_run(job)
+        init_new_run(state)
+        save_next_run(job, state)
 
         if "background" in opts:
             daemon.daemonize()
-            save_state({"pid": os.getpid()}, job)
+            state.save({"pid": os.getpid()})
 
-        start_logging(job)
+        start_logging(state)
         log(f"--- Starting backup ({job.id} to {target_ident}) ---")
 
         success = False
         try:
             cleanup_previous_incomplete_backup(config, job)
 
-            save_state(
+            state.save(
                 {
                     "state": "running",
                 },
-                job,
             )
 
-            do_backup(opts, config, job, target)
+            do_backup(opts, config, job, target, state)
             success = True
 
         except MKGeneralException as e:
@@ -740,30 +800,36 @@ def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None
 
         finally:
             stop_logging()
-            save_state(
+            state.save(
                 {
                     "state": "finished",
                     "finished": time.time(),
                     "success": success,
                 },
-                job,
             )
 
 
-def do_backup(opts: Mapping[str, str], config: Config, job: Job, target: BackupTarget) -> None:
+def do_backup(
+    opts: Mapping[str, str],
+    config: Config,
+    job: Job,
+    target: BackupTarget,
+    state: State,
+) -> None:
     if not is_root():
-        do_site_backup(config, job, target)
+        do_site_backup(config, job, target, state)
     elif is_cma():
-        do_system_backup(opts, config, job, target)
+        do_system_backup(opts, config, job, target, state)
     else:
         raise MKGeneralException("System backup not supported.")
-    complete_backup(config, job, target)
+    complete_backup(config, job, target, state)
 
 
 def do_site_backup(
     config: Config,
     job: Job,
     target: BackupTarget,
+    state: State,
     site: str | None = None,
     try_stop: bool = True,
 ) -> None:  # pylint: disable=too-many-branches
@@ -813,7 +879,7 @@ def do_site_backup(
                 stream=p.stdout,
                 is_alive=lambda: p.poll() is None,
                 key_ident=job.config["encrypt"],
-                job=job,
+                state=state,
             )
             for chunk in s.process():
                 backup_file.write(chunk)
@@ -875,7 +941,7 @@ def omd_command(cmd: list[str]) -> None:
 # c) the unencrypted random key is used as AES key for encrypting the backup stream
 class MKBackupStream:
     def __init__(
-        self, stream: IO[bytes], is_alive: Callable[[], bool], key_ident: str | None, job: Job
+        self, stream: IO[bytes], is_alive: Callable[[], bool], key_ident: str | None, state: State
     ) -> None:
         self._stream = stream
         self._is_alive = is_alive
@@ -886,7 +952,7 @@ class MKBackupStream:
         self._last_bps: float | None = None
         self._bytes_copied = 0
         self._next_chunk: bytes | None = None
-        self._job = job
+        self._state = state
 
         # The iv is an initialization vector for the CBC mode of operation. It
         # needs to be unique per key per message. Normally, it's sent alongside
@@ -941,7 +1007,7 @@ class MKBackupStream:
                 weight = weight_per_sec**timedif
                 bps = self._last_bps * weight + this_bps * (1 - weight)
 
-            save_state({"bytes_per_second": bps}, self._job)
+            self._state.save(new_attrs={"bytes_per_second": bps})
             self._last_state_update, self._last_bps, self._bytes_copied = time.time(), bps, 0
 
     def _get_key_spec(self, key_id: bytes) -> dict[str, bytes]:
@@ -1277,7 +1343,11 @@ def verify_backup_files(
 
 
 def do_system_backup(
-    opts: Mapping[str, str], config: Config, job: Job, target: BackupTarget
+    opts: Mapping[str, str],
+    config: Config,
+    job: Job,
+    target: BackupTarget,
+    state: State,
 ) -> None:
     # Create missing directories. Ensure group permissions and mode.
     try:
@@ -1298,6 +1368,7 @@ def do_system_backup(
         base_path="/rw",
         exclude_patterns=["mnt/*/*"],
         job=job,
+        state=state,
     )
 
     # The data volume (/omd) is not backed up on slave cluster nodes
@@ -1312,19 +1383,24 @@ def do_system_backup(
         base_path="/omd",
         exclude_patterns=["sites/*"],
         job=job,
+        state=state,
     )
 
     # Now run the site backup for all sites
     if not exclude_sites(opts, job.config):
         for site_id in existing_sites():
             log("Performing site backup: %s" % site_id)
-            do_site_backup(site=site_id, config=config, job=job, target=target)
+            do_site_backup(site=site_id, config=config, job=job, target=target, state=state)
     else:
         log("Skipping site backup (disabled)")
 
 
 def perform_backup(
-    backup_archive_path: str, base_path: str, exclude_patterns: list[str], job: Job
+    backup_archive_path: str,
+    base_path: str,
+    exclude_patterns: list[str],
+    job: Job,
+    state: State,
 ) -> None:
     with open(backup_archive_path, "wb") as backup_file:
         pipein_fd, pipeout_fd = os.pipe()
@@ -1339,7 +1415,7 @@ def perform_backup(
         # Process backup stream and write to destination file
         with open(pipein_fd, "rb") as pipein:
             s = BackupStream(
-                stream=pipein, is_alive=t.is_alive, key_ident=job.config["encrypt"], job=job
+                stream=pipein, is_alive=t.is_alive, key_ident=job.config["encrypt"], state=state
             )
             for chunk in s.process():
                 backup_file.write(chunk)
@@ -1402,15 +1478,14 @@ def backup_files_to_tarfile(
         raise
 
 
-def complete_backup(config: Config, job: Job, target: BackupTarget) -> None:
+def complete_backup(config: Config, job: Job, target: BackupTarget, state: State) -> None:
     info = create_backup_info(config, job)
     save_backup_info(info, target)
 
-    save_state(
+    state.save(
         {
             "size": info["size"],
         },
-        job,
     )
 
     verify_backup_consistency(info, job.config, target=target)
@@ -1427,15 +1502,15 @@ def complete_backup(config: Config, job: Job, target: BackupTarget) -> None:
         job_backup_path_complete(config, job),
     )
 
-    state = load_state(job)
-    duration = time.time() - state["started"]
+    state_content = state.load()
+    duration = time.time() - state_content["started"]
 
     log(
         "--- Backup completed (Duration: %s, Size: %s, IO: %s/s) ---"
         % (
             render.timespan(duration),
             render.fmt_bytes(info["size"]),
-            render.fmt_bytes(state["bytes_per_second"]),
+            render.fmt_bytes(state_content["bytes_per_second"]),
         )
     )
 
@@ -1480,8 +1555,8 @@ def globalize_job_id(local_job_id: str) -> str:
     return "-".join([p.replace("-", "+") for p in parts])
 
 
-def init_new_run(job: Job) -> None:
-    save_state(
+def init_new_run(state: State) -> None:
+    state.save(
         {
             "state": "started",
             "pid": os.getpid(),
@@ -1489,12 +1564,11 @@ def init_new_run(job: Job) -> None:
             "output": "",
             "bytes_per_second": 0,
         },
-        job,
         update=False,
     )
 
 
-def save_next_run(job: Job) -> None:
+def save_next_run(job: Job, state: State) -> None:
     schedule_cfg = job.config["schedule"]
     if not schedule_cfg:
         next_schedule: str | float | None = None
@@ -1509,56 +1583,7 @@ def save_next_run(job: Job) -> None:
             times.append(schedule.next_scheduled_time(schedule_cfg["period"], timespec))
         next_schedule = min(times)
 
-    save_state({"next_schedule": next_schedule}, job)
-
-
-g_state: dict[str, Any] | None = None
-
-
-# The state file is in JSON format because it is 1:1 transfered
-# to the Checkmk server through the Checkmk agent.
-def load_state(job: Job) -> dict[str, Any]:
-    global g_state
-    if g_state is None:
-        g_state = json.loads(state_path(job).read_text())
-
-    return g_state
-
-
-def save_state(new_attrs: Mapping[str, Any], job: Job, update: bool = True) -> None:
-    if update:
-        state = load_state(job)
-    else:
-        state = {}
-    state.update(new_attrs)
-
-    store.save_text_to_file(
-        state_path(job), json.dumps(state, sort_keys=True, indent=4, separators=(",", ": "))
-    )
-
-
-def state_path(job: Job) -> Path:
-    if is_root():
-        path = "/var/lib/mkbackup"
-    else:
-        if job.id:
-            # backup as site user
-            path = "%s/var/check_mk/backup" % os.environ["OMD_ROOT"]
-        else:
-            # restore as site user
-            path = "/tmp"
-
-    if job.id:
-        # backup
-        name = job.local_id
-    else:
-        # restore
-        if is_root():
-            name = "restore"
-        else:
-            name = "restore-%s" % current_site_id()
-
-    return Path(path, f"{name}.state")
+    state.save({"next_schedule": next_schedule})
 
 
 def cleanup_backup_job_states() -> None:
@@ -1574,16 +1599,17 @@ def cleanup_backup_job_states() -> None:
             os.unlink(f)
 
 
-def add_output(s: str, job: Job) -> None:
-    state = load_state(job)
-    state["output"] += s
-    save_state(state, job, update=False)
+def add_output(s: str, state: State) -> None:
+    state_content = state.load()
+    state_content["output"] += s
+    state.save(state_content, update=False)
 
 
 def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: Config) -> None:
     target = RestoreTarget(TargetId(target_id), backup_id, config)
     info = load_backup_info(backup_info_path(target))
     job = Job(config=info["config"], local_id=info["job_id"], id=None)
+    state = State(job)
 
     verify_compatible_cma_version()
     with ExitStack() as stack:
@@ -1599,26 +1625,25 @@ def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: C
         if "no-verify" not in opts:
             verify_backup_consistency(info, job.config, target)
 
-        init_new_run(job)
+        init_new_run(state)
 
         if "background" in opts:
             daemon.daemonize()
-            save_state({"pid": os.getpid()}, job)
+            state.save({"pid": os.getpid()})
 
-        start_logging(job)
+        start_logging(state)
 
         log("--- Starting restore (%s) ---" % backup_id)
 
         success = False
         try:
-            save_state(
+            state.save(
                 {
                     "state": "running",
                 },
-                job,
             )
 
-            do_restore(opts, info, config, job, target)
+            do_restore(opts, info, config, job, target, state)
             success = True
 
         except MKGeneralException as e:
@@ -1634,13 +1659,12 @@ def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: C
 
         finally:
             stop_logging()
-            save_state(
+            state.save(
                 {
                     "state": "finished",
                     "finished": time.time(),
                     "success": success,
                 },
-                job,
             )
 
 
@@ -1650,14 +1674,15 @@ def do_restore(
     config: Config,
     job: Job,
     target: RestoreTarget,
+    state: State,
 ) -> None:
     if not is_root():
-        do_site_restore(info, config, job, target)
+        do_site_restore(info, config, job, target, state)
     elif is_cma():
-        do_system_restore(opts, info, config, job, target)
+        do_system_restore(opts, info, config, job, target, state)
     else:
         raise MKGeneralException("System backup not supported.")
-    complete_restore(job)
+    complete_restore(state)
 
     if "no-reboot" not in opts and is_root():
         log("--- Rebooting device now ---")
@@ -1673,6 +1698,7 @@ def do_site_restore(
     config: Config,
     job: Job,
     target: RestoreTarget,
+    state: State,
     site: str | None = None,
 ) -> None:
     cmd = ["omd", "restore", "--kill"]
@@ -1714,7 +1740,10 @@ def do_site_restore(
 
         with open(backup_path, "rb") as backup_file:
             s = RestoreStream(
-                stream=backup_file, is_alive=lambda: False, key_ident=job.config["encrypt"], job=job
+                stream=backup_file,
+                is_alive=lambda: False,
+                key_ident=job.config["encrypt"],
+                state=state,
             )
             try:
                 for chunk in s.process():
@@ -1740,6 +1769,7 @@ def do_system_restore(
     config: Config,
     job: Job,
     target: RestoreTarget,
+    state: State,
 ) -> None:
     verify_cma_version_compatible(info)
     prepare_system_restore()
@@ -1748,7 +1778,7 @@ def do_system_restore(
     # Perform restore of the /rw volume
     log("Performing system restore (system%s)" % archive_suffix(job.config))
     system_rw_files_before = get_system_rw_files()
-    system_rw_files_restored = do_system_rw_restore(target, job)
+    system_rw_files_restored = do_system_rw_restore(target, job, state)
     cleanup_system_rw_files(system_rw_files_before, system_rw_files_restored)
     log("Finished system restore")
 
@@ -1767,7 +1797,7 @@ def do_system_restore(
 
     log("Performing system data restore (system-data%s)" % archive_suffix(job.config))
     cleanup_directory_contents("/omd", excludes=["/omd/lost+found"])
-    do_system_data_restore(target, job)
+    do_system_data_restore(target, job, state)
     fix_linux_capabilities()
     log("Finished system data restore")
 
@@ -1778,7 +1808,7 @@ def do_system_restore(
     # Now run the site restore for all sites found in the backup
     for site_id in get_site_ids_of_backup(info):
         log("Performing site restore: %s" % site_id)
-        do_site_restore(info, site=site_id, config=config, job=job, target=target)
+        do_site_restore(info, site=site_id, config=config, job=job, target=target, state=state)
     log("Finished site restore")
 
 
@@ -1951,18 +1981,18 @@ def cleanup_system_processes() -> None:
     os.system("/etc/init.d/nullmailer stop")
 
 
-def do_system_rw_restore(target: Target, job: Job) -> Sequence[str]:
-    return restore_system_backup(system_backup_archive_path(target, job.config), job)
+def do_system_rw_restore(target: Target, job: Job, state: State) -> Sequence[str]:
+    return restore_system_backup(system_backup_archive_path(target, job.config), job, state)
 
 
-def do_system_data_restore(target: Target, job: Job) -> Sequence[str]:
-    return restore_system_backup(system_data_backup_archive_path(target, job.config), job)
+def do_system_data_restore(target: Target, job: Job, state: State) -> Sequence[str]:
+    return restore_system_backup(system_data_backup_archive_path(target, job.config), job, state)
 
 
-def restore_system_backup(backup_path: str, job: Job) -> Sequence[str]:
+def restore_system_backup(backup_path: str, job: Job, state: State) -> Sequence[str]:
     with open(backup_path, "rb") as backup_file:
         s = RestoreStream(
-            stream=backup_file, is_alive=lambda: False, key_ident=job.config["encrypt"], job=job
+            stream=backup_file, is_alive=lambda: False, key_ident=job.config["encrypt"], state=state
         )
 
         pipein_fd, pipeout_fd = os.pipe()
@@ -1992,13 +2022,13 @@ def read_from_tarfile_threaded(s: RestoreStream, pipeout_fd: int) -> None:
         log("Error while sending data to restore process: %s" % e)
 
 
-def complete_restore(job: Job) -> None:
+def complete_restore(state: State) -> None:
     cleanup_backup_job_states()
-    state = load_state(job)
-    duration = time.time() - state["started"]
+    state_content = state.load()
+    duration = time.time() - state_content["started"]
     log(
         "--- Restore completed (Duration: %s, IO: %s/s) ---"
-        % (render.timespan(duration), render.fmt_bytes(state["bytes_per_second"]))
+        % (render.timespan(duration), render.fmt_bytes(state_content["bytes_per_second"]))
     )
 
 

@@ -252,7 +252,12 @@ class _Builder:
                     agentname,
                     params,
                 ),
-                params=params,
+                stdin=core_config.make_special_agent_stdin(
+                    self.host_config.hostname,
+                    self.ipaddress,
+                    agentname,
+                    params,
+                ),
                 simulation_mode=self.simulation_mode,
                 agent_simulator=self.agent_simulator,
                 translation=self.translation,

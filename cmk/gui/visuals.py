@@ -556,11 +556,12 @@ def declare_visual_permission(what, name, visual):
 
 
 # Load all users visuals just in order to declare permissions of custom visuals
+# TODO: Use regular load logic here, e.g. _load_custom_user_visuals()
 def declare_custom_permissions(what):
     for dirpath in cmk.utils.paths.profile_dir.iterdir():
         try:
             if dirpath.is_dir():
-                path = dirpath.joinpath("%s.mk" % what)
+                path = dirpath.joinpath("user_%s.mk" % what)
                 if not path.exists():
                     continue
                 visuals = store.load_object_from_file(path, default={})

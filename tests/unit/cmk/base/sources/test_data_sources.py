@@ -118,7 +118,7 @@ def test_host_config_creates_passing_source_sources(
 @pytest.mark.parametrize(
     "source, kwargs",
     [
-        (SpecialAgentSource, {"special_agent_id": None, "params": None}),
+        (SpecialAgentSource, {"agentname": None, "params": None, "cmdline": ""}),
         (DSProgramSource, {"cmdline": ""}),
         (PiggybackSource, {"time_settings": ()}),
         (TCPSource, {}),

@@ -3,10 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from pathlib import Path
 from typing import Dict, Optional
 
-import cmk.utils.paths
 from cmk.utils.translations import TranslationOptions
 from cmk.utils.type_defs import HostAddress, HostName, SourceType
 
@@ -14,7 +12,6 @@ from cmk.core_helpers import FetcherType, ProgramFetcher
 from cmk.core_helpers.agent import AgentFileCache, AgentFileCacheFactory, AgentSummarizerDefault
 
 import cmk.base.config as config
-import cmk.base.core_config as core_config
 from cmk.base.config import HostConfig
 
 from .agent import AgentSource
@@ -60,8 +57,9 @@ class ProgramSource(AgentSource):
         ipaddress: Optional[HostAddress],
         *,
         main_data_source: bool = False,
-        special_agent_id: str,
+        agentname: str,
         params: Dict,
+        cmdline: str,
         simulation_mode: bool,
         agent_simulator: bool,
         translation: TranslationOptions,
@@ -71,8 +69,9 @@ class ProgramSource(AgentSource):
             host_config,
             ipaddress,
             main_data_source=main_data_source,
-            special_agent_id=special_agent_id,
+            agentname=agentname,
             params=params,
+            cmdline=cmdline,
             simulation_mode=simulation_mode,
             agent_simulator=agent_simulator,
             translation=translation,
@@ -162,7 +161,8 @@ class SpecialAgentSource(ProgramSource):
         ipaddress: Optional[HostAddress],
         *,
         main_data_source: bool = False,
-        special_agent_id: str,
+        agentname: str,
+        cmdline: str,
         params: Dict,
         simulation_mode: bool,
         agent_simulator: bool,
@@ -172,18 +172,13 @@ class SpecialAgentSource(ProgramSource):
         super().__init__(
             host_config,
             ipaddress,
-            id_="special_%s" % special_agent_id,
+            id_=f"special_{agentname}",
             main_data_source=main_data_source,
-            cmdline=SpecialAgentSource._make_cmdline(
-                host_config.hostname,
-                ipaddress,
-                special_agent_id,
-                params,
-            ),
+            cmdline=cmdline,
             stdin=SpecialAgentSource._make_stdin(
                 host_config.hostname,
                 ipaddress,
-                special_agent_id,
+                agentname,
                 params,
             ),
             simulation_mode=simulation_mode,
@@ -191,56 +186,20 @@ class SpecialAgentSource(ProgramSource):
             translation=translation,
             encoding_fallback=encoding_fallback,
         )
-        self.special_agent_id = special_agent_id
-        self.special_agent_plugin_file_name = "agent_%s" % special_agent_id
-
-    @staticmethod
-    def _make_cmdline(
-        hostname: HostName,
-        ipaddress: Optional[HostAddress],
-        special_agent_id: str,
-        params: Dict,
-    ) -> str:
-        path = SpecialAgentSource._make_source_path(special_agent_id)
-        args = SpecialAgentSource._make_source_args(
-            hostname,
-            ipaddress,
-            special_agent_id,
-            params,
-        )
-        return "%s %s" % (path, args)
+        self.special_agent_id = agentname
+        self.special_agent_plugin_file_name = "agent_%s" % agentname
 
     @staticmethod
     def _make_stdin(
         hostname: HostName,
         ipaddress: Optional[HostAddress],
-        special_agent_id: str,
+        agentname: str,
         params: Dict,
     ) -> Optional[str]:
-        info_func = config.special_agent_info[special_agent_id]
+        info_func = config.special_agent_info[agentname]
         # TODO: We call a user supplied function here.
         # If this crashes during config generation, it can get quite ugly.
         # We should really wrap this and implement proper sanitation and exception handling.
         # Deal with this when modernizing the API (CMK-3812).
         agent_configuration = info_func(params, hostname, ipaddress)
         return getattr(agent_configuration, "stdin", None)
-
-    @staticmethod
-    def _make_source_path(special_agent_id: str) -> Path:
-        file_name = "agent_%s" % special_agent_id
-        local_path = cmk.utils.paths.local_agents_dir / "special" / file_name
-        if local_path.exists():
-            return local_path
-        return Path(cmk.utils.paths.agents_dir) / "special" / file_name
-
-    @staticmethod
-    def _make_source_args(
-        hostname: HostName,
-        ipaddress: Optional[HostAddress],
-        special_agent_id: str,
-        params: Dict,
-    ) -> str:
-        info_func = config.special_agent_info[special_agent_id]
-        # TODO: CMK-3812 (see above)
-        agent_configuration = info_func(params, hostname, ipaddress)
-        return core_config.commandline_arguments(hostname, None, agent_configuration)

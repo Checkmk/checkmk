@@ -629,6 +629,40 @@ def commandline_arguments(
     return _prepare_check_command(args, hostname, description)
 
 
+def make_special_agent_cmdline(
+    hostname: HostName,
+    ipaddress: Optional[HostAddress],
+    agentname: str,
+    params: Dict,
+) -> str:
+    def _make_source_path(agentname: str) -> Path:
+        file_name = "agent_%s" % agentname
+        local_path = cmk.utils.paths.local_agents_dir / "special" / file_name
+        if local_path.exists():
+            return local_path
+        return Path(cmk.utils.paths.agents_dir) / "special" / file_name
+
+    def _make_source_args(
+        hostname: HostName,
+        ipaddress: Optional[HostAddress],
+        agentname: str,
+        params: Dict,
+    ) -> str:
+        info_func = config.special_agent_info[agentname]
+        # TODO: CMK-3812 (see above)
+        agent_configuration = info_func(params, hostname, ipaddress)
+        return commandline_arguments(hostname, None, agent_configuration)
+
+    path = _make_source_path(agentname)
+    args = _make_source_args(
+        hostname,
+        ipaddress,
+        agentname,
+        params,
+    )
+    return "%s %s" % (path, args)
+
+
 # .
 #   .--ServiceAttrs.-------------------------------------------------------.
 #   |     ____                  _             _   _   _                    |

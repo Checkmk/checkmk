@@ -245,7 +245,13 @@ class _Builder:
             SpecialAgentSource(
                 self.host_config,
                 self.ipaddress,
-                special_agent_id=agentname,
+                agentname=agentname,
+                cmdline=core_config.make_special_agent_cmdline(
+                    self.host_config.hostname,
+                    self.ipaddress,
+                    agentname,
+                    params,
+                ),
                 params=params,
                 simulation_mode=self.simulation_mode,
                 agent_simulator=self.agent_simulator,

@@ -1,0 +1,14 @@
+Title: Edit roles: Fix missing custom views, dashboard and report permissions
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1664307280
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p14
+
+In some cases the "Edit role" page could miss the permissions of custom views,
+dashboards or reports in the list of permissions. Dependent on the previously
+loaded pages the permissions in question could be available or not.

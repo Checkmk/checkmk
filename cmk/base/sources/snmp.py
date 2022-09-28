@@ -59,12 +59,12 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             simulation_mode=simulation_mode,
         )
         self.host_config: Final = host_config
-        self.snmp_config = snmp_config
+        self.snmp_config: Final = snmp_config
         self.missing_sys_description: Final = missing_sys_description
         self.sections: Final = sections
         self.check_intervals: Final = check_intervals
-        self._on_snmp_scan_error = on_scan_error
-        self._force_cache_refresh = force_cache_refresh
+        self._on_snmp_scan_error: Final = on_scan_error
+        self._force_cache_refresh: Final = force_cache_refresh
 
     @classmethod
     def snmp(

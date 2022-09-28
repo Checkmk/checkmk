@@ -7,7 +7,18 @@
 # - Discovery works.
 # - Checking doesn't work - as it was before. Maybe we can handle this in the future.
 
-from typing import Callable, Dict, Final, Iterable, List, Mapping, Optional, Sequence, Set, Tuple
+from typing import (
+    Callable,
+    Dict,
+    Final,
+    FrozenSet,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Tuple,
+)
 
 import cmk.utils.tty as tty
 from cmk.utils import version
@@ -53,8 +64,8 @@ else:
 __all__ = ["fetch_all", "make_non_cluster_sources", "make_cluster_sources", "make_sources"]
 
 
-def _make_inventory_sections() -> Set[SectionName]:
-    return {
+def _make_inventory_sections() -> FrozenSet[SectionName]:
+    return frozenset(
         s
         for s in agent_based_register.get_relevant_raw_sections(
             check_plugin_names=(),
@@ -63,7 +74,7 @@ def _make_inventory_sections() -> Set[SectionName]:
             ),
         )
         if agent_based_register.is_registered_snmp_section_plugin(s)
-    }
+    )
 
 
 def make_plugin_store() -> SNMPPluginStore:
@@ -122,11 +133,11 @@ def _make_checking_sections(
     hostname: HostName,
     *,
     selected_sections: SectionNameCollection,
-) -> Set[SectionName]:
+) -> FrozenSet[SectionName]:
     if selected_sections is not NO_SELECTION:
         checking_sections = selected_sections
     else:
-        checking_sections = set(
+        checking_sections = frozenset(
             agent_based_register.get_relevant_raw_sections(
                 check_plugin_names=check_table.get_check_table(
                     hostname,
@@ -136,9 +147,9 @@ def _make_checking_sections(
                 inventory_plugin_names=(),
             )
         )
-    return {
+    return frozenset(
         s for s in checking_sections if agent_based_register.is_registered_snmp_section_plugin(s)
-    }
+    )
 
 
 class _Builder:

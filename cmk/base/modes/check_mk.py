@@ -1648,7 +1648,7 @@ def _extract_plugin_selection(
     if type_ is CheckPluginName:
         check_plugin_names = {CheckPluginName(p) for p in detect_plugins}
         return (
-            set(
+            frozenset(
                 agent_based_register.get_relevant_raw_sections(
                     check_plugin_names=check_plugin_names,
                     inventory_plugin_names=(),
@@ -1660,7 +1660,7 @@ def _extract_plugin_selection(
     if type_ is InventoryPluginName:
         inventory_plugin_names = {InventoryPluginName(p) for p in detect_plugins}
         return (
-            set(
+            frozenset(
                 agent_based_register.get_relevant_raw_sections(
                     check_plugin_names=(),
                     inventory_plugin_names=inventory_plugin_names,
@@ -1679,9 +1679,9 @@ _DiscoveryOptions = TypedDict(
         "no-cache": Literal[True],
         "no-tcp": Literal[True],
         "usewalk": Literal[True],
-        "detect-sections": set[SectionName],
-        "plugins": set[CheckPluginName],
-        "detect-plugins": set[str],
+        "detect-sections": frozenset[SectionName],
+        "plugins": frozenset[CheckPluginName],
+        "detect-plugins": frozenset[str],
         "discover": int,
         "only-host-labels": bool,
     },
@@ -1769,9 +1769,9 @@ _CheckingOptions = TypedDict(
         "usewalk": Literal[True],
         "no-submit": bool,
         "perfdata": bool,
-        "detect-sections": set[SectionName],
-        "plugins": set[CheckPluginName],
-        "detect-plugins": set[str],
+        "detect-sections": frozenset[SectionName],
+        "plugins": frozenset[CheckPluginName],
+        "detect-plugins": frozenset[str],
     },
     total=False,
 )
@@ -1908,9 +1908,9 @@ _InventoryOptions = TypedDict(
         "no-tcp": Literal[True],
         "usewalk": Literal[True],
         "force": bool,
-        "detect-sections": set[SectionName],
-        "plugins": set[InventoryPluginName],
-        "detect-plugins": set[str],
+        "detect-sections": frozenset[SectionName],
+        "plugins": frozenset[InventoryPluginName],
+        "detect-plugins": frozenset[str],
     },
     total=False,
 )

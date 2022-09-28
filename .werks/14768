@@ -1,0 +1,39 @@
+Title: mssql.vbs: some database specific sections contain data from a different database
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1664352279
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p19
+
+If you require this fix, you must reinstall the agent plugin "mssql.vbs" on the
+relevant hosts.
+
+Please note that applying this fix could lead to vanished services. If this is
+the case, it makes sense to remove them from your monitoring, as these services
+belong to a different database and have been falsely created. You can find
+detailed error messages in the host's agent output.
+
+In some settings the user that is used to run queries against the various
+databases on a MSSQL server does not have access rights to query all databases.
+This could lead to data from a different database shown for any database that
+the user could not query.
+
+Known services affected by this error:
+
+LI: tablespaces
+LI: transactionlogs
+LI: datafiles
+LI: clusters
+
+The problem was that the error after attempting to switch to a different
+database was not captured, and it was assumed to be successful. Instead, the
+subsequent query was run against the database the user could last switch to.
+
+If you would like to give the user extended access rights to query all
+databases, please read the article at https://kb.checkmk.com/x/pAKqAg
+
+We have introduced a more consistent way to perform queries against the system
+and handle any errors.

@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import dataclass
+from itertools import islice
 from typing import ClassVar, NamedTuple, Optional, Pattern, Sequence
 
 from .agent_based_api.v1 import regex, register
 from .agent_based_api.v1.type_defs import StringTable
-from .utils.apt import ESM_ENABLED, ESM_NOT_ENABLED, NOTHING_PENDING_FOR_INSTALLATION
+from .utils.apt import ESM_ENABLED, ESM_NOT_ENABLED, NOTHING_PENDING_FOR_INSTALLATION, UBUNTU_PRO
 
 
 class Section(NamedTuple):
@@ -81,7 +82,7 @@ class ParsedLine:
         )
 
 
-def _trim_esm_enabled_warning(string_table: StringTable) -> StringTable:
+def _sanitize_string_table(string_table: StringTable) -> StringTable:
     """Trims infra warning of the format:
     *The following packages could receive security updates with UA Infra: ESM service enabled:
     libglib2.0-data libglib2.0-0
@@ -89,10 +90,24 @@ def _trim_esm_enabled_warning(string_table: StringTable) -> StringTable:
 
     Ubuntu comes with ABSOLUTELY NO WARRANTY, to the extent permitted by
     applicable law.
+
+    Also trims the Ubuntu Pro advertisement:
+    Receive additional future security updates with Ubuntu Pro.
+    Learn more about Ubuntu Pro at https://ubuntu.com/pro
     """
-    if ESM_ENABLED in string_table[0][0]:
-        return string_table[5:]
-    return string_table
+
+    sanitized_string_table = []
+    iter_table = iter(string_table)
+
+    for line in iter_table:
+        if UBUNTU_PRO in line[0]:
+            next(iter_table)
+        elif ESM_ENABLED in line[0]:
+            next(islice(iter_table, 3, 4))
+        else:
+            sanitized_string_table.append(line)
+
+    return sanitized_string_table
 
 
 # Check that the apt section is in valid format of mk_apt plugin and not
@@ -122,19 +137,19 @@ def _data_is_valid(string_table: StringTable) -> bool:
 
 
 def parse_apt(string_table: StringTable) -> Optional[Section]:
-    if ESM_NOT_ENABLED in string_table[0][0]:
+    sanitized_string_table = _sanitize_string_table(string_table)
+
+    if ESM_NOT_ENABLED in sanitized_string_table[0][0]:
         return Section(updates=[], removals=[], sec_updates=[], no_esm_support=True)
 
-    trimmed_string_table = _trim_esm_enabled_warning(string_table)
-
-    if not _data_is_valid(trimmed_string_table):
+    if not _data_is_valid(sanitized_string_table):
         return None
 
     updates = []
     removals = []
     sec_updates = []
 
-    for line in (ParsedLine.try_from_str(entry[0]) for entry in trimmed_string_table):
+    for line in (ParsedLine.try_from_str(entry[0]) for entry in sanitized_string_table):
         if line is None:
             continue
         if line.action == "Remv":

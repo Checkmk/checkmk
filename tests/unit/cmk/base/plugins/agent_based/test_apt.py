@@ -60,6 +60,11 @@ _SECTION_ESM_SUPPORT = [
         "Inst ubuntu-advantage-tools [27.4.1~16.04.1] (27.4.2~16.04.1 Ubuntu:16.04/xenial-updates [amd64])"
     ],
 ]
+_SECTION_UBUNTU_PRO_ADVERTISEMENT = [
+    ["Receive additional future security updates with Ubuntu Pro."],
+    ["Learn more about Ubuntu Pro at https://ubuntu.com/pro"],
+    ["Inst base-files [9.9+deb9u9] (9.9+deb9u11 Debian:9.11/oldstable [amd64])"],
+]
 
 
 @pytest.mark.parametrize(
@@ -88,6 +93,14 @@ _SECTION_ESM_SUPPORT = [
         pytest.param(
             _SECTION_KERNEL_UPDATES,
             True,
+        ),
+        pytest.param(
+            _SECTION_UBUNTU_PRO_ADVERTISEMENT,
+            False,
+        ),
+        pytest.param(
+            _SECTION_UBUNTU_PRO_ADVERTISEMENT + _SECTION_NO_ESM_SUPPORT,
+            False,
         ),
     ],
 )
@@ -147,6 +160,39 @@ def test_data_is_valid(
                 sec_updates=["linux-image-4.19.0-19-amd64", "linux-image-amd64"],
             ),
             id="security_kernel_debian_line",
+        ),
+        pytest.param(
+            _SECTION_UBUNTU_PRO_ADVERTISEMENT,
+            Section(
+                updates=["base-files"],
+                removals=[],
+                sec_updates=[],
+            ),
+            id="ubuntu_pro_advertisement",
+        ),
+        pytest.param(
+            _SECTION_UBUNTU_PRO_ADVERTISEMENT + _SECTION_ESM_SUPPORT,
+            Section(
+                updates=[
+                    "base-files",
+                    "ubuntu-advantage-tools",
+                ],
+                removals=[],
+                sec_updates=[],
+            ),
+            id="ubuntu_pro_advertisement_first_esm_enabled_second",
+        ),
+        pytest.param(
+            _SECTION_ESM_SUPPORT + _SECTION_UBUNTU_PRO_ADVERTISEMENT,
+            Section(
+                updates=[
+                    "ubuntu-advantage-tools",
+                    "base-files",
+                ],
+                removals=[],
+                sec_updates=[],
+            ),
+            id="esm_enabled_first_ubuntu_pro_advertisement_second",
         ),
     ],
 )

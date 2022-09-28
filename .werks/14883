@@ -1,0 +1,15 @@
+Title: Send scheduled reports per recipient
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1664355752
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p29
+
+Scheduled reports were send once for all recipient but some mail transfer
+agents like nullmailer fail on all emails if one recipient is rejected.
+
+To avoid this issue, such emails are now send one by one.

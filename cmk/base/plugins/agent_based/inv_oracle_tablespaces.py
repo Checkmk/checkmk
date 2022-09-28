@@ -28,7 +28,7 @@
 
 from .agent_based_api.v1.type_defs import InventoryResult
 from .agent_based_api.v1 import register, TableRow
-from .utils.oracle import SectionTableSpaces, analyze_datafiles
+from .utils.oracle import SectionTableSpaces, datafiles_online_stats
 
 
 def inventory_oracle_tablespaces(section: SectionTableSpaces) -> InventoryResult:
@@ -39,23 +39,22 @@ def inventory_oracle_tablespaces(section: SectionTableSpaces) -> InventoryResult
         attrs = tablespaces[tablespace]
         db_version = attrs["db_version"]
 
-        (
-            current_size,
-            used_size,
-            max_size,
-            free_space,
-            num_increments,
-            increment_size,
-            _,
-            _,
-            _,
-            _,
-            _,
-        ) = analyze_datafiles(
+        stats = datafiles_online_stats(
             attrs["datafiles"],
             db_version,
-            sid,
         )
+
+        status_columns = None
+        if stats is not None:
+            status_columns = {
+                "current_size": stats.current_size,
+                "max_size": stats.max_size,
+                "used_size": stats.used_size,
+                "num_increments": stats.num_increments,
+                "increment_size": stats.increment_size,
+                "free_space": stats.free_space,
+            }
+
         yield TableRow(
             path=path_tablespaces,
             key_columns={
@@ -67,14 +66,7 @@ def inventory_oracle_tablespaces(section: SectionTableSpaces) -> InventoryResult
                 "type": attrs["type"],
                 "autoextensible": attrs["autoextensible"] and "YES" or "NO",
             },
-            status_columns={
-                "current_size": current_size,
-                "max_size": max_size,
-                "used_size": used_size,
-                "num_increments": num_increments,
-                "increment_size": increment_size,
-                "free_space": free_space,
-            },
+            status_columns=status_columns,
         )
 
 

@@ -39,8 +39,12 @@ pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> Anyhow
 
     let registration_preset = config::RegistrationPreset::load(&paths.registration_preset_path)?;
     let runtime_config = config::RuntimeConfig::load(&paths.config_path)?;
-    let mut registry = config::Registry::from_file(&paths.registry_path)
-        .context("Error while loading registered connections.")?;
+    let mut registry = config::Registry::from_file(&paths.registry_path).with_context(|| {
+        format!(
+            "Error while loading registered connections from {:?}.",
+            &paths.config_path
+        )
+    })?;
     let legacy_pull_marker = config::LegacyPullMarker::new(&paths.legacy_pull_path);
     info!(
         "Loaded config from '{:?}', legacy pull '{:?}' {}",

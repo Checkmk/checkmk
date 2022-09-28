@@ -225,108 +225,104 @@ def check_oracle_tablespaces(  # pylint: disable=too-many-branches
         return
 
     try:
-        (
-            current_size,
-            used_size,
-            max_size,
-            free_space,
-            num_increments,
-            increment_size,
-            uses_default_increment,
-            num_extensible,
-            num_files,
-            num_avail,
-            file_online_states,
-        ) = oracle.analyze_datafiles(
-            tablespace["datafiles"],
-            db_version,
-            sid,
-            params,
-            True,
+        file_online_states = oracle.check_unavailable_datafiles(
+            tablespace["datafiles"], sid, params
         )
     except oracle.DatafilesException as exc:
         yield Result(state=State.CRIT, summary=str(exc))
         return
 
-    yield Result(
-        state=State.OK,
-        summary="%s (%s), Size: %s, %s used (%s of max. %s), Free: %s"
-        % (
-            ts_status,
-            ts_type,
-            render.bytes(current_size),
-            render.percent(100.0 * used_size / max_size),
-            render.bytes(used_size),
-            render.bytes(max_size),
-            render.bytes(free_space),
-        ),
-    )
+    stats = oracle.datafiles_online_stats(tablespace["datafiles"], db_version)
+    if stats is not None:
 
-    if num_extensible > 0 and db_version <= 10:
-        # only display the number of remaining extents in Databases <= 10g
         yield Result(
             state=State.OK,
-            summary="%d increments (%s)" % (num_increments, render.bytes(increment_size)),
+            summary="%s (%s), Size: %s, %s used (%s of max. %s), Free: %s"
+            % (
+                ts_status,
+                ts_type,
+                render.bytes(stats.current_size),
+                render.percent(100.0 * stats.used_size / stats.max_size),
+                render.bytes(stats.used_size),
+                render.bytes(stats.max_size),
+                render.bytes(stats.free_space),
+            ),
         )
 
-    if ts_status != "READONLY":
-        warn, crit, _as_perc, _info_text = db.get_tablespace_levels_in_bytes(max_size, params)
+        if stats.num_extensible > 0 and db_version <= 10:
+            # only display the number of remaining extents in Databases <= 10g
+            yield Result(
+                state=State.OK,
+                summary="%d increments (%s)"
+                % (stats.num_increments, render.bytes(stats.increment_size)),
+            )
 
-        yield Metric(
-            name="size",
-            value=current_size,
-            levels=(max_size - warn, max_size - crit) if warn and crit else None,
-            boundaries=(0, max_size),
-        )
-        yield Metric(
-            name="used",
-            value=used_size,
-        )
-        yield Metric(
-            name="max_size",
-            value=max_size,
-        )
+        if ts_status != "READONLY":
+            warn, crit, _as_perc, _info_text = db.get_tablespace_levels_in_bytes(
+                stats.max_size, params
+            )
 
-        # Check increment size, should not be set to default (1)
-        if params.get("defaultincrement"):
-            if uses_default_increment:
-                yield Result(state=State.WARN, summary="DEFAULT INCREMENT")
+            yield Metric(
+                name="size",
+                value=stats.current_size,
+                levels=(stats.max_size - warn, stats.max_size - crit) if warn and crit else None,
+                boundaries=(0, stats.max_size),
+            )
+            yield Metric(
+                name="used",
+                value=stats.used_size,
+            )
+            yield Metric(
+                name="max_size",
+                value=stats.max_size,
+            )
 
-    # Check autoextend status if parameter not set to None
-    if autoext is not None and ts_status != "READONLY":
-        autoext_info: Optional[str]
-        if autoext and num_extensible == 0:
-            autoext_info = "NO AUTOEXTEND"
-        elif not autoext and num_extensible > 0:
-            autoext_info = "AUTOTEXTEND"
+            # Check increment size, should not be set to default (1)
+            if params.get("defaultincrement"):
+                if uses_default_increment:
+                    yield Result(state=State.WARN, summary="DEFAULT INCREMENT")
+
+        # Check autoextend status if parameter not set to None
+        if autoext is not None and ts_status != "READONLY":
+            autoext_info: Optional[str]
+            if autoext and stats.num_extensible == 0:
+                autoext_info = "NO AUTOEXTEND"
+            elif not autoext and stats.num_extensible > 0:
+                autoext_info = "AUTOTEXTEND"
+            else:
+                autoext_info = None
+
+            if autoext_info:
+                yield Result(
+                    state=State(params.get("autoextend_severity", 2)), summary=autoext_info
+                )
+
+        elif stats.num_extensible > 0:
+            yield Result(state=State.OK, summary="autoextend")
+
         else:
-            autoext_info = None
+            yield Result(state=State.OK, summary="no autoextend")
 
-        if autoext_info:
-            yield Result(state=State(params.get("autoextend_severity", 2)), summary=autoext_info)
+        # Check free space, but only if status is not READONLY
+        # and Tablespace-Type must be PERMANENT or TEMPORARY, when temptablespace is True
+        # old plugins without v$tempseg_usage info send TEMP as type.
+        # => Impossible to monitor old plugin with TEMP instead TEMPORARY
+        if ts_status != "READONLY" and (
+            ts_type == "PERMANENT" or (ts_type == "TEMPORARY" and params.get("temptablespace"))
+        ):
 
-    elif num_extensible > 0:
-        yield Result(state=State.OK, summary="autoextend")
-
-    else:
-        yield Result(state=State.OK, summary="no autoextend")
-
-    # Check free space, but only if status is not READONLY
-    # and Tablespace-Type must be PERMANENT or TEMPORARY, when temptablespace is True
-    # old plugins without v$tempseg_usage info send TEMP as type.
-    # => Impossible to monitor old plugin with TEMP instead TEMPORARY
-    if ts_status != "READONLY" and (
-        ts_type == "PERMANENT" or (ts_type == "TEMPORARY" and params.get("temptablespace"))
-    ):
-
-        yield from check_levels(
-            free_space, levels_lower=(warn, crit), render_func=render.bytes, label="Space left"
-        )
-    if num_files != 1 or num_avail != 1 or num_extensible != 1:
-        yield Result(
-            state=State.OK,
-            summary="%d data files (%d avail, %d autoext)" % (num_files, num_avail, num_extensible),
-        )
+            yield from check_levels(
+                stats.free_space,
+                levels_lower=(warn, crit),
+                render_func=render.bytes,
+                label="Space left",
+            )
+        if stats.num_files != 1 or stats.num_avail != 1 or stats.num_extensible != 1:
+            yield Result(
+                state=State.OK,
+                summary="%d data files (%d avail, %d autoext)"
+                % (stats.num_files, stats.num_avail, stats.num_extensible),
+            )
 
     for file_online_state, attrs in file_online_states.items():
         this_state = attrs["state"]
@@ -398,23 +394,22 @@ def inventory_oracle_tablespaces(section: oracle.SectionTableSpaces) -> Inventor
         attrs = tablespaces[tablespace]
         db_version = attrs["db_version"]
 
-        (
-            current_size,
-            used_size,
-            max_size,
-            free_space,
-            num_increments,
-            increment_size,
-            _,
-            _,
-            _,
-            _,
-            _,
-        ) = oracle.analyze_datafiles(
+        stats = oracle.datafiles_online_stats(
             attrs["datafiles"],
             db_version,
-            sid,
         )
+
+        status_columns = None
+        if stats is not None:
+            status_columns = {
+                "current_size": stats.current_size,
+                "max_size": stats.max_size,
+                "used_size": stats.used_size,
+                "num_increments": stats.num_increments,
+                "increment_size": stats.increment_size,
+                "free_space": stats.free_space,
+            }
+
         yield TableRow(
             path=path_tablespaces,
             key_columns={
@@ -426,14 +421,7 @@ def inventory_oracle_tablespaces(section: oracle.SectionTableSpaces) -> Inventor
                 "type": attrs["type"],
                 "autoextensible": attrs["autoextensible"] and "YES" or "NO",
             },
-            status_columns={
-                "current_size": current_size,
-                "max_size": max_size,
-                "used_size": used_size,
-                "num_increments": num_increments,
-                "increment_size": increment_size,
-                "free_space": free_space,
-            },
+            status_columns=status_columns,
         )
 
 

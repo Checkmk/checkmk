@@ -97,26 +97,6 @@ def test_daemon_set_pod_resources_one_pod_per_phase() -> None:
         assert len(pods) == 1
 
 
-@pytest.mark.parametrize("phase", ["running", "pending", "succeeded", "failed", "unknown"])
-def test_daemon_set_pod_resources_pods_in_phase(phase: str) -> None:
-    daemon_set = api_to_agent_daemonset(
-        APIDaemonSetFactory.build(),
-        pods=APIPodFactory.batch(size=len(api.Phase), status=PodStatusFactory.build(phase=phase)),
-    )
-    pods = daemon_set.pods(api.Phase(phase))
-    assert len(pods) == len(api.Phase)
-
-
-@pytest.mark.parametrize("phase", ["running", "pending", "succeeded", "failed", "unknown"])
-def test_daemon_set_pod_resources_pods_in_phase_no_phase_param(phase: str) -> None:
-    daemon_set = api_to_agent_daemonset(
-        APIDaemonSetFactory.build(),
-        pods=APIPodFactory.batch(size=len(api.Phase), status=PodStatusFactory.build(phase=phase)),
-    )
-    pods = daemon_set.pods()
-    assert len(pods) == len(api.Phase)
-
-
 def test_daemonset_memory_resources() -> None:
     container_resources_requirements = ContainerResourcesFactory.build(
         limits=api.ResourcesRequirements(memory=2.0 * 1024),

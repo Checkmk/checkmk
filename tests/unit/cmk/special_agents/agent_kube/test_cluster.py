@@ -66,10 +66,10 @@ def _cluster_builder_from_agents(
     daemonsets: Sequence[agent.DaemonSet] = (),
     statefulsets: Sequence[agent.StatefulSet] = (),
     deployments: Sequence[agent.Deployment] = (),
-    pods: Sequence[agent.Pod] = (),
+    pods: Sequence[api.Pod] = (),
     nodes: Sequence[agent.Node] = (),
     cluster_aggregation_pods: Sequence[api.Pod] = (),
-    cluster_aggregation_nodes: Sequence[agent.Node] = (),
+    cluster_aggregation_nodes: Sequence[api.Node] = (),
 ) -> agent.Cluster:
     return agent.Cluster(
         cluster_details=cluster_details or ClusterDetailsFactory.build(),
@@ -78,7 +78,7 @@ def _cluster_builder_from_agents(
         statefulsets=statefulsets,
         deployments=deployments,
         daemonsets=daemonsets,
-        pods={pod.uid: pod for pod in pods},
+        pods=pods,
         cluster_aggregation_nodes=cluster_aggregation_nodes,
         cluster_aggregation_pods=cluster_aggregation_pods,
     )
@@ -114,11 +114,9 @@ def test_cluster_allocatable_memory_resource() -> None:
         "capacity": NodeResourcesFactory.build(),
         "allocatable": NodeResourcesFactory.build(memory=memory),
     }
-    nodes = [
-        api_to_agent_node(api_node)
-        for api_node in APINodeFactory.batch(size=3, resources=resources)
-    ]
-    cluster = _cluster_builder_from_agents(nodes=nodes, cluster_aggregation_nodes=nodes)
+    api_nodes = APINodeFactory.batch(size=3, resources=resources)
+    agent_nodes = [api_to_agent_node(api_node) for api_node in api_nodes]
+    cluster = _cluster_builder_from_agents(nodes=agent_nodes, cluster_aggregation_nodes=api_nodes)
 
     expected = section.AllocatableResource(context="cluster", value=memory * 3)
     actual = cluster.allocatable_memory_resource()
@@ -132,11 +130,9 @@ def test_cluster_allocatable_cpu_resource():
         "capacity": NodeResourcesFactory.build(),
         "allocatable": NodeResourcesFactory.build(cpu=cpu),
     }
-    nodes = [
-        api_to_agent_node(api_node)
-        for api_node in APINodeFactory.batch(size=number_nodes, resources=resources)
-    ]
-    cluster = _cluster_builder_from_agents(nodes=nodes, cluster_aggregation_nodes=nodes)
+    api_nodes = APINodeFactory.batch(size=number_nodes, resources=resources)
+    agent_nodes = [api_to_agent_node(api_node) for api_node in api_nodes]
+    cluster = _cluster_builder_from_agents(nodes=agent_nodes, cluster_aggregation_nodes=api_nodes)
 
     expected = section.AllocatableResource(context="cluster", value=cpu * number_nodes)
     actual = cluster.allocatable_cpu_resource()

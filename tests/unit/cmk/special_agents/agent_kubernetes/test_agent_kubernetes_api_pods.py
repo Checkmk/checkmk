@@ -6,14 +6,13 @@
 import datetime
 import json
 from unittest import TestCase
-from unittest.mock import Mock
 
 from dateutil.tz import tzutc
 from kubernetes import client  # type: ignore[import]
 from mocket import Mocketizer  # type: ignore[import]
 from mocket.mockhttp import Entry  # type: ignore[import]
 
-from cmk.special_agents.agent_kube import Pod
+from cmk.special_agents import agent_kube
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 from cmk.special_agents.utils_kubernetes.transform import (
     convert_to_timestamp,
@@ -338,17 +337,8 @@ class TestPodStartUp(TestCase):
             phase=api.Phase.PENDING,
             qos_class="burstable",
         )
-        pod = Pod(
-            uid=Mock(),
-            status=api_pod_status,
-            metadata=Mock(),
-            spec=Mock(),
-            containers=Mock(),
-            init_containers=Mock(),
-            controllers=Mock(),
-        )
         self.assertEqual(
-            pod.conditions(),
+            agent_kube.pod_conditions(api_pod_status),
             section.PodConditions(
                 initialized=section.PodCondition(status=True, reason=None, detail=None),
                 scheduled=section.PodCondition(status=True, reason=None, detail=None),
@@ -369,37 +359,29 @@ class TestPodStartUp(TestCase):
         """
         In this specific instance all of the fields except for the scheduled field are missing.
         """
-        pod = Pod(
-            uid=Mock(),
-            status=api.PodStatus(
-                start_time=int(
-                    convert_to_timestamp(
-                        datetime.datetime(
-                            2021, 11, 22, 16, 11, 38, 710257, tzinfo=datetime.timezone.utc
-                        )
+        api_pod_status = api.PodStatus(
+            start_time=int(
+                convert_to_timestamp(
+                    datetime.datetime(
+                        2021, 11, 22, 16, 11, 38, 710257, tzinfo=datetime.timezone.utc
                     )
-                ),
-                conditions=[
-                    api.PodCondition(
-                        status=True,
-                        type=api.ConditionType.PODSCHEDULED,
-                        custom_type=None,
-                        reason=None,
-                        detail=None,
-                    )
-                ],
-                phase=api.Phase.PENDING,
-                qos_class="burstable",
+                )
             ),
-            metadata=Mock(),
-            spec=Mock(),
-            containers=Mock(),
-            init_containers=Mock(),
-            controllers=Mock(),
+            conditions=[
+                api.PodCondition(
+                    status=True,
+                    type=api.ConditionType.PODSCHEDULED,
+                    custom_type=None,
+                    reason=None,
+                    detail=None,
+                )
+            ],
+            phase=api.Phase.PENDING,
+            qos_class="burstable",
         )
 
         self.assertEqual(
-            pod.conditions(),
+            agent_kube.pod_conditions(api_pod_status),
             section.PodConditions(
                 initialized=None,
                 scheduled=section.PodCondition(status=True, reason=None, detail=None),

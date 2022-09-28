@@ -5,13 +5,12 @@
 
 # pylint: disable=comparison-with-callable,redefined-outer-name
 
-from typing import Optional, Sequence
+from typing import Optional
 
 import pytest
 from pydantic_factories import ModelFactory
 
 from tests.unit.cmk.special_agents.agent_kube.factory import (
-    api_to_agent_pod,
     APIPodFactory,
     MetaDataFactory,
     pod_phase_generator,
@@ -86,7 +85,7 @@ def test_pod_node_allocation_within_cluster(  # type:ignore[no-untyped-def]
         cluster_details=ClusterDetailsFactory.build(),
     )
     assert len(cluster.nodes) == 1
-    assert len(cluster.nodes[0].pods()) == 1
+    assert len(cluster.nodes[0].pods) == 1
 
 
 def test_pod_deployment_allocation_within_cluster(  # type:ignore[no-untyped-def]
@@ -299,24 +298,20 @@ def test_collect_workload_resources_from_agent_pods(pods_count: int) -> None:
     requests = ResourcesRequirementsFactory.build(memory=ONE_MiB, cpu=0.5)
     limits = ResourcesRequirementsFactory.build(memory=2 * ONE_MiB, cpu=1.0)
     pods = [
-        api_to_agent_pod(
-            APIPodFactory.build(
-                spec=PodSpecFactory.build(
-                    containers=[
-                        ContainerSpecFactory.build(
-                            resources=ContainerResourcesFactory.build(
-                                limits=limits, requests=requests
-                            )
-                        )
-                    ]
-                )
+        APIPodFactory.build(
+            spec=PodSpecFactory.build(
+                containers=[
+                    ContainerSpecFactory.build(
+                        resources=ContainerResourcesFactory.build(limits=limits, requests=requests)
+                    )
+                ]
             )
         )
         for _ in range(pods_count)
     ]
 
-    memory_resources = agent._collect_memory_resources(pods)
-    cpu_resources = agent._collect_cpu_resources(pods)
+    memory_resources = agent._collect_memory_resources_from_api_pods(pods)
+    cpu_resources = agent._collect_cpu_resources_from_api_pods(pods)
 
     assert memory_resources == section.Resources(
         request=pods_count * ONE_MiB,
@@ -338,9 +333,8 @@ def test_collect_workload_resources_from_agent_pods(pods_count: int) -> None:
 
 
 def test_collect_workload_resources_from_agent_pods_no_pods_in_cluster() -> None:
-    pods: Sequence[agent.Pod] = []
-    memory_resources = agent._collect_memory_resources(pods)
-    cpu_resources = agent._collect_cpu_resources(pods)
+    memory_resources = agent._collect_memory_resources_from_api_pods([])
+    cpu_resources = agent._collect_cpu_resources_from_api_pods([])
     empty_section = section.Resources(
         request=0.0,
         limit=0.0,

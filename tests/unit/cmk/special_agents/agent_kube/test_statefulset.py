@@ -95,24 +95,12 @@ def test_statefulset_pod_resources_one_pod_per_phase() -> None:
 @pytest.mark.parametrize(
     "phases", [["running"], ["pending"], ["succeeded"], ["failed"], ["unknown"]]
 )
-def test_statefulset_pod_resources_pods_in_phase(phases: list[str]) -> None:
-    statefulset = api_to_agent_statefulset(
-        APIStatefulSetFactory.build(),
-        pods=[APIPodFactory.build(status=PodStatusFactory.build(phase=phase)) for phase in phases],
-    )
-    pods = statefulset.pods(api.Phase(phases[0]))
-    assert len(pods) == 1
-
-
-@pytest.mark.parametrize(
-    "phases", [["running"], ["pending"], ["succeeded"], ["failed"], ["unknown"]]
-)
 def test_statefulset_pod_resources_pods_in_phase_no_phase_param(phases: list[str]) -> None:
     statefulset = api_to_agent_statefulset(
         APIStatefulSetFactory.build(),
         pods=[APIPodFactory.build(status=PodStatusFactory.build(phase=phase)) for phase in phases],
     )
-    pods = statefulset.pods()
+    pods = statefulset.pods
     assert len(pods) == len(phases)
 
 

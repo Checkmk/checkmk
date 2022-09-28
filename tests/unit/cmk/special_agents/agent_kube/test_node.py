@@ -66,28 +66,6 @@ def test_node_pod_resources_one_pod_per_phase() -> None:
         assert len(pods) == 1
 
 
-@pytest.mark.parametrize("phase", ["running", "pending", "succeeded", "failed", "unknown"])
-def test_node_pod_resources_pods_in_phase(
-    phase: str,
-) -> None:
-    node = api_to_agent_node(
-        APINodeFactory.build(),
-        pods=APIPodFactory.batch(size=len(api.Phase), status=PodStatusFactory.build(phase=phase)),
-    )
-    pods = node.pods(api.Phase(phase))
-    assert len(pods) == len(api.Phase)
-
-
-@pytest.mark.parametrize("phase", ["running", "pending", "succeeded", "failed", "unknown"])
-def test_node_pod_resources_pods_in_phase_no_phase_param(phase: str) -> None:
-    node = api_to_agent_node(
-        APINodeFactory.build(),
-        pods=APIPodFactory.batch(size=len(api.Phase), status=PodStatusFactory.build(phase=phase)),
-    )
-    pods = node.pods()
-    assert len(pods) == len(api.Phase)
-
-
 def test_node_allocatable_memory_resource() -> None:
     memory = 2.0 * 1024
     resources = {

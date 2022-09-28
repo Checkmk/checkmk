@@ -77,18 +77,6 @@ def pod_phase_generator() -> Iterator[api.Phase]:
     yield from itertools.cycle(api.Phase)
 
 
-def api_to_agent_pod(pod: api.Pod, controllers: Sequence[api.Controller] = ()) -> agent.Pod:
-    return agent.Pod(
-        uid=pod.uid,
-        metadata=pod.metadata,
-        status=pod.status,
-        spec=pod.spec,
-        containers=pod.containers,
-        init_containers=pod.init_containers,
-        controllers=controllers,
-    )
-
-
 # Deployment related Factories
 
 

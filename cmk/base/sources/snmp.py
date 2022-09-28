@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Dict, Final, Optional, Set
+from typing import Dict, Final, Mapping, Optional, Set
 
 from cmk.utils.exceptions import OnError
-from cmk.utils.type_defs import ExitSpec, HostAddress, SectionName, SourceType
+from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, SectionName, SourceType
 
 from cmk.snmplib.type_defs import (
     BackendSNMPTree,
@@ -37,7 +37,7 @@ from cmk.base.config import HostConfig
 from ._abstract import Source
 
 
-def make_inventory_sections() -> Set[SectionName]:
+def _make_inventory_sections() -> Set[SectionName]:
     return {
         s
         for s in agent_based_register.get_relevant_raw_sections(
@@ -51,7 +51,7 @@ def make_inventory_sections() -> Set[SectionName]:
 
 
 def make_plugin_store() -> SNMPPluginStore:
-    inventory_sections = make_inventory_sections()
+    inventory_sections = _make_inventory_sections()
     return SNMPPluginStore(
         {
             s.name: SNMPPluginStoreItem(
@@ -62,6 +62,67 @@ def make_plugin_store() -> SNMPPluginStore:
             for s in agent_based_register.iter_all_snmp_sections()
         }
     )
+
+
+def make_check_intervals(
+    host_config: HostConfig,
+    *,
+    selected_sections: SectionNameCollection,
+) -> Mapping[SectionName, Optional[int]]:
+    return {
+        section_name: host_config.snmp_fetch_interval(section_name)
+        for section_name in _make_checking_sections(
+            host_config.hostname, selected_sections=selected_sections
+        )
+    }
+
+
+def make_sections(
+    host_config: HostConfig,
+    *,
+    selected_sections: SectionNameCollection,
+) -> Dict[SectionName, SectionMeta]:
+    def needs_redetection(section_name: SectionName) -> bool:
+        section = agent_based_register.get_section_plugin(section_name)
+        return len(agent_based_register.get_section_producers(section.parsed_section_name)) > 1
+
+    checking_sections = _make_checking_sections(
+        host_config.hostname,
+        selected_sections=selected_sections,
+    )
+    disabled_sections = host_config.disabled_snmp_sections()
+    return {
+        name: SectionMeta(
+            checking=name in checking_sections,
+            disabled=name in disabled_sections,
+            redetect=name in checking_sections and needs_redetection(name),
+            fetch_interval=host_config.snmp_fetch_interval(name),
+        )
+        for name in (checking_sections | disabled_sections)
+    }
+
+
+def _make_checking_sections(
+    hostname: HostName,
+    *,
+    selected_sections: SectionNameCollection,
+) -> Set[SectionName]:
+    if selected_sections is not NO_SELECTION:
+        checking_sections = selected_sections
+    else:
+        checking_sections = set(
+            agent_based_register.get_relevant_raw_sections(
+                check_plugin_names=check_table.get_check_table(
+                    hostname,
+                    filter_mode=check_table.FilterMode.INCLUDE_CLUSTERED,
+                    skip_ignored=True,
+                ).needed_check_names(),
+                inventory_plugin_names=(),
+            )
+        )
+    return {
+        s for s in checking_sections if agent_based_register.is_registered_snmp_section_plugin(s)
+    }
 
 
 class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
@@ -181,26 +242,16 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             # that all the relevant plugins are loaded at this point.
             SNMPFetcher.plugin_store = make_plugin_store()
         return SNMPFetcher(
-            sections=self._make_sections(),
+            sections=make_sections(
+                self.host_config,
+                selected_sections=self.selected_sections,
+            ),
             on_error=self._on_snmp_scan_error,
             missing_sys_description=self.missing_sys_description,
             do_status_data_inventory=self.host_config.do_status_data_inventory,
             section_store_path=self.persisted_sections_file_path,
             snmp_config=self.snmp_config,
         )
-
-    def _make_sections(self) -> Dict[SectionName, SectionMeta]:
-        checking_sections = self._make_checking_sections()
-        disabled_sections = self._make_disabled_sections()
-        return {
-            name: SectionMeta(
-                checking=name in checking_sections,
-                disabled=name in disabled_sections,
-                redetect=name in checking_sections and self._needs_redetection(name),
-                fetch_interval=self.host_config.snmp_fetch_interval(name),
-            )
-            for name in (checking_sections | disabled_sections)
-        }
 
     def _make_parser(self) -> SNMPParser:
         return SNMPParser(
@@ -209,44 +260,15 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
                 self.persisted_sections_file_path,
                 logger=self._logger,
             ),
-            check_intervals={
-                section_name: self.host_config.snmp_fetch_interval(section_name)
-                for section_name in self._make_checking_sections()
-            },
+            check_intervals=make_check_intervals(
+                self.host_config, selected_sections=self.selected_sections
+            ),
             keep_outdated=self.use_outdated_persisted_sections,
             logger=self._logger,
         )
 
     def _make_summarizer(self, *, exit_spec: ExitSpec) -> SNMPSummarizer:
         return SNMPSummarizer(exit_spec)
-
-    def _make_disabled_sections(self) -> Set[SectionName]:
-        return self.host_config.disabled_snmp_sections()
-
-    def _make_checking_sections(self) -> Set[SectionName]:
-        if self.selected_sections is not NO_SELECTION:
-            checking_sections = self.selected_sections
-        else:
-            checking_sections = set(
-                agent_based_register.get_relevant_raw_sections(
-                    check_plugin_names=check_table.get_check_table(
-                        self.hostname,
-                        filter_mode=check_table.FilterMode.INCLUDE_CLUSTERED,
-                        skip_ignored=True,
-                    ).needed_check_names(),
-                    inventory_plugin_names=(),
-                )
-            )
-        return {
-            s
-            for s in checking_sections
-            if agent_based_register.is_registered_snmp_section_plugin(s)
-        }
-
-    @staticmethod
-    def _needs_redetection(section_name: SectionName) -> bool:
-        section = agent_based_register.get_section_plugin(section_name)
-        return len(agent_based_register.get_section_producers(section.parsed_section_name)) > 1
 
     @staticmethod
     def _make_description(

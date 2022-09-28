@@ -9,18 +9,18 @@ import pytest
 from pydantic_factories import ModelFactory
 
 from cmk.special_agents import agent_kube as agent
-from cmk.special_agents.utils_kubernetes.schemata import api
+from cmk.special_agents.utils_kubernetes.schemata import api, section
 
 
 class DeploymentConditionFactory(ModelFactory):
     __model__ = api.DeploymentCondition
 
 
-def test_pod_deployment_controller_name(pod: agent.Pod, deployment: agent.Deployment) -> None:
-    pod.add_controller(deployment)
+def test_pod_deployment_controller_name(pod: agent.Pod) -> None:
+    pod._controllers.append(section.Controller(type_=section.ControllerType.deployment, name="hi"))
     pod_info = pod.info("cluster", "host", agent.AnnotationNonPatternOption.ignore_all)
     assert len(pod_info.controllers) == 1
-    assert pod_info.controllers[0].name == deployment.name()
+    assert pod_info.controllers[0].name == "hi"
 
 
 @pytest.mark.parametrize("deployment_pods", [0, 10, 20])

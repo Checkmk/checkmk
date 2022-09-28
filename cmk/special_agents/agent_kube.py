@@ -386,7 +386,7 @@ class Pod:
         self.status = status
         self.containers = containers
         self.init_containers = init_containers
-        self._controllers: List[Union[Deployment, DaemonSet, StatefulSet]] = []
+        self._controllers: list[section.Controller] = []
 
     @property
     def phase(self) -> api.Phase:
@@ -412,15 +412,6 @@ class Pod:
         kubernetes_cluster_hostname: str,
         annotation_key_pattern: AnnotationOption,
     ) -> section.PodInfo:
-        controllers = []
-        for controller in self._controllers:
-            controllers.append(
-                section.Controller(
-                    type_=section.ControllerType.from_str(controller.type_),
-                    name=controller.name(),
-                )
-            )
-
         return section.PodInfo(
             namespace=self.metadata.namespace,
             name=self.metadata.name,
@@ -437,7 +428,7 @@ class Pod:
             qos_class=self.status.qos_class,
             restart_policy=self.spec.restart_policy,
             uid=self.uid,
-            controllers=controllers,
+            controllers=self._controllers,
             cluster=cluster_name,
             kubernetes_cluster_hostname=kubernetes_cluster_hostname,
         )
@@ -495,15 +486,6 @@ class Pod:
             return None
         return section.StartTime(start_time=self.status.start_time)
 
-    def add_controller(self, controller: Union[Deployment, DaemonSet, StatefulSet]) -> None:
-        """Add a handling controller of the pod
-
-        Kubernetes control objects manage pods based on their labels. As the API does not
-        provide any information regarding these control objects from the pod's perspective
-        this double linking is done here
-        """
-        self._controllers.append(controller)
-
 
 def aggregate_resources(
     resource_type: Literal["memory", "cpu"], containers: Collection[api.ContainerSpec]
@@ -548,10 +530,6 @@ class Deployment(PodNamespacedOwner):
     @property
     def namespace(self) -> Optional[api.NamespaceName]:
         return self.metadata.namespace
-
-    def add_pod(self, pod: Pod) -> None:
-        super().add_pod(pod)
-        pod.add_controller(self)
 
     def name(self, prepend_namespace: bool = False) -> str:
         if not prepend_namespace:
@@ -646,10 +624,6 @@ class DaemonSet(PodNamespacedOwner):
             return self._pods
         return [pod for pod in self._pods if pod.phase == phase]
 
-    def add_pod(self, pod: Pod) -> None:
-        super().add_pod(pod)
-        pod.add_controller(self)
-
     def pod_resources(self) -> section.PodResources:
         return _pod_resources(self._pods)
 
@@ -715,10 +689,6 @@ class StatefulSet(PodNamespacedOwner):
         if phase is None:
             return self._pods
         return [pod for pod in self._pods if pod.phase == phase]
-
-    def add_pod(self, pod: Pod) -> None:
-        super().add_pod(pod)
-        pod.add_controller(self)
 
     def pod_resources(self) -> section.PodResources:
         return _pod_resources(self._pods)
@@ -924,11 +894,11 @@ class Cluster:
 
         LOGGER.debug("Constructing k8s objects based on collected API data")
 
-        _pod_owners_mapping: Dict[str, List[PodOwner]] = {}
+        _pod_owners_mapping: Dict[str, List[Deployment | StatefulSet | DaemonSet]] = {}
         _nodes: Dict[api.NodeName, Node] = {}
 
         def _register_owner_for_pods(
-            pod_controller: PodOwner, pod_uids: Sequence[api.PodUID]
+            pod_controller: Deployment | StatefulSet | DaemonSet, pod_uids: Sequence[api.PodUID]
         ) -> None:
             for pod_uid in pod_uids:
                 _pod_owners_mapping.setdefault(pod_uid, []).append(pod_controller)
@@ -999,6 +969,12 @@ class Cluster:
                 _nodes[pod.node].add_pod(pod)
             for pod_owner in _pod_owners_mapping.get(pod.uid, []):
                 pod_owner.add_pod(pod)
+                pod._controllers.append(
+                    section.Controller(
+                        type_=section.ControllerType.from_str(pod_owner.type_),
+                        name=pod_owner.name(),
+                    )
+                )
 
         LOGGER.debug(
             "Cluster composition: Nodes (%s), Deployments (%s), DaemonSets (%s), StatefulSets (%s), Pods (%s)",

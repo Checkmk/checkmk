@@ -26,7 +26,13 @@ from .conftest import (
     PodSpecFactory,
     PodStatusFactory,
 )
-from .factory import api_to_agent_daemonset, api_to_agent_pod, APIDaemonSetFactory, MetaDataFactory
+from .factory import (
+    api_to_agent_daemonset,
+    api_to_agent_statefulset,
+    APIDaemonSetFactory,
+    APIStatefulSetFactory,
+    MetaDataFactory,
+)
 
 
 class PerformanceMetricFactory(ModelFactory):
@@ -41,34 +47,50 @@ class PerformanceContainerFactory(ModelFactory):
     __model__ = agent.PerformanceContainer
 
 
+def _cluster_builder_from_agents(
+    *,
+    cluster_details: api.ClusterDetails | None = None,
+    excluded_node_roles: Sequence[str] = (),
+    daemonsets: Sequence[agent.DaemonSet] = (),
+    statefulsets: Sequence[agent.StatefulSet] = (),
+    deployments: Sequence[agent.Deployment] = (),
+    pods: Sequence[agent.Pod] = (),
+    nodes: Sequence[agent.Node] = (),
+    cluster_aggregation_pods: Sequence[api.Pod] = (),
+    cluster_aggregation_nodes: Sequence[agent.Node] = (),
+) -> agent.Cluster:
+    return agent.Cluster(
+        cluster_details=cluster_details or ClusterDetailsFactory.build(),
+        excluded_node_roles=excluded_node_roles,
+        nodes=nodes,
+        statefulsets=statefulsets,
+        deployments=deployments,
+        daemonsets=daemonsets,
+        pods={pod.uid: pod for pod in pods},
+        cluster_aggregation_nodes=cluster_aggregation_nodes,
+        cluster_aggregation_pods=cluster_aggregation_pods,
+    )
+
+
 def test_cluster_namespaces() -> None:
     pod_metadata = MetaDataFactory.build()
-    cluster = agent.Cluster(cluster_details=ClusterDetailsFactory.build(), excluded_node_roles=[])
-    api_pod = APIPodFactory.build(metadata=pod_metadata)
-    cluster.add_pod(
-        agent.Pod(
-            api_pod.uid,
-            api_pod.metadata,
-            api_pod.status,
-            api_pod.spec,
-            api_pod.containers,
-            api_pod.init_containers,
-        )
-    )
+    pod = APIPodFactory.build(metadata=pod_metadata)
+    cluster = _cluster_builder_from_agents(pods=[pod])
     assert cluster.namespaces() == {pod_metadata.namespace}
 
 
 @pytest.mark.parametrize("cluster_pods", [0, 10, 20])
 def test_cluster_resources(cluster_pods: int) -> None:
     pod_containers_count = 2
-    cluster = agent.Cluster(cluster_details=ClusterDetailsFactory.build(), excluded_node_roles=[])
-    for _ in range(cluster_pods):
-        api_pod = APIPodFactory.build(
+    pods = [
+        APIPodFactory.build(
             spec=PodSpecFactory.build(
                 node=None, containers=ContainerSpecFactory.batch(pod_containers_count)
             )
         )
-        cluster.add_pod(api_to_agent_pod(api_pod))
+        for _ in range(cluster_pods)
+    ]
+    cluster = _cluster_builder_from_agents(pods=pods, cluster_aggregation_pods=pods)
     assert cluster.memory_resources().count_total == cluster_pods * pod_containers_count
     assert cluster.cpu_resources().count_total == cluster_pods * pod_containers_count
     assert sum(len(pods) for _phase, pods in cluster.pod_resources()) == cluster_pods
@@ -80,10 +102,11 @@ def test_cluster_allocatable_memory_resource() -> None:
         "capacity": NodeResourcesFactory.build(),
         "allocatable": NodeResourcesFactory.build(memory=memory),
     }
-    cluster = agent.Cluster(cluster_details=ClusterDetailsFactory.build(), excluded_node_roles=[])
-    for _ in range(3):
-        node = api_to_agent_node(APINodeFactory.build(resources=resources))
-        cluster.add_node(node)
+    nodes = [
+        api_to_agent_node(api_node)
+        for api_node in APINodeFactory.batch(size=3, resources=resources)
+    ]
+    cluster = _cluster_builder_from_agents(nodes=nodes, cluster_aggregation_nodes=nodes)
 
     expected = section.AllocatableResource(context="cluster", value=memory * 3)
     actual = cluster.allocatable_memory_resource()
@@ -97,10 +120,11 @@ def test_cluster_allocatable_cpu_resource():
         "capacity": NodeResourcesFactory.build(),
         "allocatable": NodeResourcesFactory.build(cpu=cpu),
     }
-    cluster = agent.Cluster(cluster_details=ClusterDetailsFactory.build(), excluded_node_roles=[])
-    for _ in range(number_nodes):
-        node = api_to_agent_node(APINodeFactory.build(resources=resources))
-        cluster.add_node(node)
+    nodes = [
+        api_to_agent_node(api_node)
+        for api_node in APINodeFactory.batch(size=number_nodes, resources=resources)
+    ]
+    cluster = _cluster_builder_from_agents(nodes=nodes, cluster_aggregation_nodes=nodes)
 
     expected = section.AllocatableResource(context="cluster", value=cpu * number_nodes)
     actual = cluster.allocatable_cpu_resource()
@@ -108,15 +132,17 @@ def test_cluster_allocatable_cpu_resource():
 
 
 def test_write_cluster_api_sections_registers_sections_to_be_written(  # type:ignore[no-untyped-def]
-    cluster: agent.Cluster, cluster_api_sections: Sequence[str], write_sections_mock
+    cluster_api_sections: Sequence[str], write_sections_mock
 ):
+    cluster = _cluster_builder_from_agents()
     agent.write_cluster_api_sections("cluster", cluster)
     assert list(write_sections_mock.call_args[0][0]) == cluster_api_sections
 
 
 def test_write_cluster_api_sections_maps_section_names_to_callables(  # type:ignore[no-untyped-def]
-    cluster: agent.Cluster, cluster_api_sections: Sequence[str], write_sections_mock
+    cluster_api_sections: Sequence[str], write_sections_mock
 ):
+    cluster = _cluster_builder_from_agents()
     agent.write_cluster_api_sections("cluster", cluster)
     assert all(
         callable(write_sections_mock.call_args[0][0][section_name])
@@ -125,20 +151,21 @@ def test_write_cluster_api_sections_maps_section_names_to_callables(  # type:ign
 
 
 @pytest.mark.parametrize("cluster_nodes", [0, 10, 20])
-def test_node_count_returns_number_of_nodes_ready_not_ready(  # type:ignore[no-untyped-def]
-    cluster_nodes: int, cluster: agent.Cluster
-):
+def test_node_count_returns_number_of_nodes_ready_not_ready(cluster_nodes: int) -> None:
+    nodes = [api_to_agent_node(node) for node in APINodeFactory.batch(size=cluster_nodes)]
+    cluster = _cluster_builder_from_agents(nodes=nodes)
     node_count = cluster.node_count()
     assert node_count.worker.ready + node_count.worker.not_ready == cluster_nodes
 
 
 def test_node_control_plane_count() -> None:
-    cluster = agent.Cluster(cluster_details=ClusterDetailsFactory.build(), excluded_node_roles=[])
-    api_node = APINodeFactory.build(
-        roles=["master"],
-        status=node_status(api.NodeConditionStatus.TRUE),
+    api_node = api_to_agent_node(
+        APINodeFactory.build(
+            roles=["master"],
+            status=node_status(api.NodeConditionStatus.TRUE),
+        )
     )
-    cluster.add_node(api_to_agent_node(api_node))
+    cluster = _cluster_builder_from_agents(nodes=[api_node])
     node_count = cluster.node_count()
     assert node_count.worker.total == 0
     assert node_count.control_plane.total == 1
@@ -146,28 +173,33 @@ def test_node_control_plane_count() -> None:
 
 
 def test_node_control_plane_not_ready_count() -> None:
-    cluster = agent.Cluster(cluster_details=ClusterDetailsFactory.build(), excluded_node_roles=[])
-    api_node = APINodeFactory.build(
-        roles=["master"],
-        status=node_status(api.NodeConditionStatus.FALSE),
+    api_node = api_to_agent_node(
+        APINodeFactory.build(
+            roles=["master"],
+            status=node_status(api.NodeConditionStatus.FALSE),
+        )
     )
-    cluster.add_node(api_to_agent_node(api_node))
+    cluster = _cluster_builder_from_agents(nodes=[api_node])
     node_count = cluster.node_count()
     assert node_count.control_plane.not_ready == 1
 
 
 @pytest.mark.parametrize("cluster_daemon_sets", [0, 10, 20])
-def test_daemon_sets_returns_daemon_sets_of_cluster(  # type:ignore[no-untyped-def]
-    cluster_daemon_sets: int, cluster: agent.Cluster
-):
+def test_daemon_sets_returns_daemon_sets_of_cluster(cluster_daemon_sets: int) -> None:
+    daemonsets = [
+        api_to_agent_daemonset(d) for d in APIDaemonSetFactory.batch(size=cluster_daemon_sets)
+    ]
+    cluster = _cluster_builder_from_agents(daemonsets=daemonsets)
     daemon_sets = cluster.daemon_sets()
     assert len(daemon_sets) == cluster_daemon_sets
 
 
 @pytest.mark.parametrize("cluster_statefulsets", [0, 10, 20])
-def test_statefulsets_returns_statefulsets_of_cluster(  # type:ignore[no-untyped-def]
-    cluster_statefulsets, cluster
-) -> None:
+def test_statefulsets_returns_statefulsets_of_cluster(cluster_statefulsets: int) -> None:
+    agent_statefulsets = [
+        api_to_agent_statefulset(s) for s in APIStatefulSetFactory.batch(size=cluster_statefulsets)
+    ]
+    cluster = _cluster_builder_from_agents(statefulsets=agent_statefulsets)
     statefulsets = cluster.statefulsets()
     assert len(statefulsets) == cluster_statefulsets
 

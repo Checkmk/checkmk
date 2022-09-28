@@ -356,11 +356,8 @@ def setup_logging(verbosity: int) -> None:
 
 
 class PodOwner(abc.ABC):
-    def __init__(self) -> None:
-        self._pods: List[api.Pod] = []
-
-    def add_pod(self, pod: api.Pod) -> None:
-        self._pods.append(pod)
+    def __init__(self, pods: Sequence[api.Pod]) -> None:
+        self._pods: Sequence[api.Pod] = pods
 
 
 class PodNamespacedOwner(PodOwner, abc.ABC):
@@ -379,6 +376,7 @@ class Pod:
         spec: api.PodSpec,
         containers: Mapping[str, api.ContainerStatus],
         init_containers: Mapping[str, api.ContainerStatus],
+        controllers: Sequence[api.Controller],
     ) -> None:
         self.uid = uid
         self.metadata = metadata
@@ -386,7 +384,7 @@ class Pod:
         self.status = status
         self.containers = containers
         self.init_containers = init_containers
-        self._controllers: list[section.Controller] = []
+        self.controllers = controllers
 
     @property
     def phase(self) -> api.Phase:
@@ -428,7 +426,10 @@ class Pod:
             qos_class=self.status.qos_class,
             restart_policy=self.spec.restart_policy,
             uid=self.uid,
-            controllers=self._controllers,
+            controllers=[
+                section.Controller(type_=controller.type_.value, name=controller.name)
+                for controller in self.controllers
+            ],
             cluster=cluster_name,
             kubernetes_cluster_hostname=kubernetes_cluster_hostname,
         )
@@ -520,8 +521,9 @@ class Deployment(PodNamespacedOwner):
         metadata: api.MetaData[str],
         spec: api.DeploymentSpec,
         status: api.DeploymentStatus,
+        pods: Sequence[api.Pod],
     ) -> None:
-        super().__init__()
+        super().__init__(pods=pods)
         self.metadata = metadata
         self.spec = spec
         self.status = status
@@ -599,9 +601,13 @@ def _thin_containers(pods: Collection[api.Pod]) -> section.ThinContainers:
 
 class DaemonSet(PodNamespacedOwner):
     def __init__(
-        self, metadata: api.MetaData[str], spec: api.DaemonSetSpec, status: api.DaemonSetStatus
+        self,
+        metadata: api.MetaData[str],
+        spec: api.DaemonSetSpec,
+        status: api.DaemonSetStatus,
+        pods: Sequence[api.Pod],
     ) -> None:
-        super().__init__()
+        super().__init__(pods=pods)
         self.metadata = metadata
         self.spec = spec
         self._status = status
@@ -666,9 +672,13 @@ def daemonset_info(
 
 class StatefulSet(PodNamespacedOwner):
     def __init__(
-        self, metadata: api.MetaData[str], spec: api.StatefulSetSpec, status: api.StatefulSetStatus
+        self,
+        metadata: api.MetaData[str],
+        spec: api.StatefulSetSpec,
+        status: api.StatefulSetStatus,
+        pods: Sequence[api.Pod],
     ) -> None:
-        super().__init__()
+        super().__init__(pods=pods)
         self.metadata = metadata
         self.spec = spec
         self._status = status
@@ -737,8 +747,9 @@ class Node(PodOwner):
         resources: Dict[str, api.NodeResources],
         roles: Sequence[str],
         kubelet_info: api.KubeletInfo,
+        pods: Sequence[api.Pod],
     ) -> None:
-        super().__init__()
+        super().__init__(pods=pods)
         self.metadata = metadata
         self.status = status
         self.resources = resources
@@ -892,19 +903,57 @@ class Cluster:
 
         LOGGER.debug("Constructing k8s objects based on collected API data")
 
-        _pod_owners_mapping: Dict[str, List[Deployment | StatefulSet | DaemonSet]] = {}
-        _nodes: Dict[api.NodeName, Node] = {}
+        uid_to_api_pod = {api_pod.uid: api_pod for api_pod in pods}
+        agent_deployments = [
+            Deployment(
+                api_deployment.metadata,
+                api_deployment.spec,
+                api_deployment.status,
+                pods=[uid_to_api_pod[uid] for uid in api_deployment.pods],
+            )
+            for api_deployment in deployments
+        ]
 
-        def _register_owner_for_pods(
-            pod_controller: Deployment | StatefulSet | DaemonSet, pod_uids: Sequence[api.PodUID]
-        ) -> None:
-            for pod_uid in pod_uids:
-                _pod_owners_mapping.setdefault(pod_uid, []).append(pod_controller)
+        agent_daemonsets = [
+            DaemonSet(
+                metadata=api_daemon_set.metadata,
+                spec=api_daemon_set.spec,
+                status=api_daemon_set.status,
+                pods=[uid_to_api_pod[uid] for uid in api_daemon_set.pods],
+            )
+            for api_daemon_set in daemon_sets
+        ]
 
-        cluster = cls(
-            cluster_details=cluster_details,
-            excluded_node_roles=excluded_node_roles,
-        )
+        agent_statefulsets = [
+            StatefulSet(
+                metadata=api_statefulset.metadata,
+                spec=api_statefulset.spec,
+                status=api_statefulset.status,
+                pods=[uid_to_api_pod[uid] for uid in api_statefulset.pods],
+            )
+            for api_statefulset in statefulsets
+        ]
+
+        agent_pods = {
+            api_pod.uid: Pod(
+                api_pod.uid,
+                api_pod.metadata,
+                api_pod.status,
+                api_pod.spec,
+                api_pod.containers,
+                api_pod.init_containers,
+                api_pod.controllers,
+            )
+            for api_pod in pods
+        }
+
+        node_to_api_pod = collections.defaultdict(list)
+        for api_pod in pods:
+            if (node_name := api_pod.spec.node) is not None:
+                node_to_api_pod[node_name].append(api_pod)
+
+        cluster_aggregation_nodes = []
+        agent_nodes = []
         for node_api in nodes:
             node = Node(
                 node_api.metadata,
@@ -912,68 +961,34 @@ class Cluster:
                 node_api.resources,
                 node_api.roles,
                 node_api.kubelet_info,
+                pods=node_to_api_pod[node_api.metadata.name],
             )
-            cluster.add_node(node)
-            _nodes[node.name] = node
+            agent_nodes.append(node)
+            if not any(
+                any_match_from_list_of_infix_patterns(excluded_node_roles, role)
+                for role in node_api.roles
+            ):
+                cluster_aggregation_nodes.append(node)
 
-        for api_deployment in deployments:
-            deployment = Deployment(
-                api_deployment.metadata, api_deployment.spec, api_deployment.status
-            )
-            cluster.add_deployment(deployment)
-            _register_owner_for_pods(deployment, api_deployment.pods)
+        cluster_aggregation_node_names = [node.name for node in cluster_aggregation_nodes]
 
-        for api_daemon_set in daemon_sets:
-            daemon_set = DaemonSet(
-                metadata=api_daemon_set.metadata,
-                spec=api_daemon_set.spec,
-                status=api_daemon_set.status,
-            )
-            cluster.add_daemon_set(daemon_set)
-            _register_owner_for_pods(daemon_set, api_daemon_set.pods)
+        cluster_aggregation_pods = [
+            pod
+            for pod in pods
+            if pod.spec.node in cluster_aggregation_node_names or pod.spec.node is None
+        ]
 
-        for api_statefulset in statefulsets:
-            statefulset = StatefulSet(
-                metadata=api_statefulset.metadata,
-                spec=api_statefulset.spec,
-                status=api_statefulset.status,
-            )
-            cluster.add_statefulset(statefulset)
-            _register_owner_for_pods(statefulset, api_statefulset.pods)
-
-        owned_pods = set(_pod_owners_mapping.keys())
-        present_pods = set(pod.uid for pod in pods)
-        if not owned_pods.issubset(present_pods):
-            raise ValueError(
-                "The following owned pods are missing from the "
-                f"API data: {list(owned_pods.difference(present_pods))}"
-            )
-
-        for api_pod in pods:
-            pod = Pod(
-                api_pod.uid,
-                api_pod.metadata,
-                api_pod.status,
-                api_pod.spec,
-                api_pod.containers,
-                api_pod.init_containers,
-            )
-            cluster.add_pod(pod)
-            if pod.node is not None:
-                if pod.node not in _nodes:
-                    raise ValueError(
-                        f"Pod's ({api_pod.uid} {_nodes} {pod.node}) node is not present in the cluster"
-                    )
-                _nodes[pod.node].add_pod(api_pod)
-            for pod_owner in _pod_owners_mapping.get(pod.uid, []):
-                pod_owner.add_pod(api_pod)
-                pod._controllers.append(
-                    section.Controller(
-                        type_=section.ControllerType.from_str(pod_owner.type_),
-                        name=pod_owner.name(),
-                    )
-                )
-
+        cluster = cls(
+            cluster_details=cluster_details,
+            excluded_node_roles=excluded_node_roles,
+            deployments=agent_deployments,
+            daemonsets=agent_daemonsets,
+            statefulsets=agent_statefulsets,
+            pods=agent_pods,
+            nodes=agent_nodes,
+            cluster_aggregation_nodes=cluster_aggregation_nodes,
+            cluster_aggregation_pods=cluster_aggregation_pods,
+        )
         LOGGER.debug(
             "Cluster composition: Nodes (%s), Deployments (%s), DaemonSets (%s), StatefulSets (%s), Pods (%s)",
             len(cluster.nodes()),
@@ -985,52 +1000,38 @@ class Cluster:
         return cluster
 
     def __init__(
-        self, *, cluster_details: api.ClusterDetails, excluded_node_roles: Sequence[str]
+        self,
+        *,
+        cluster_details: api.ClusterDetails,
+        excluded_node_roles: Sequence[str],
+        daemonsets: Sequence[DaemonSet],
+        statefulsets: Sequence[StatefulSet],
+        deployments: Sequence[Deployment],
+        pods: Mapping[api.PodUID, Pod],
+        nodes: Sequence[Node],
+        cluster_aggregation_pods: Sequence[api.Pod],
+        cluster_aggregation_nodes: Sequence[Node],
     ) -> None:
         self._cluster_details: api.ClusterDetails = cluster_details
         self._excluded_node_roles: Sequence[str] = excluded_node_roles
-        self._daemon_sets: List[DaemonSet] = []
-        self._statefulsets: List[StatefulSet] = []
-        self._deployments: List[Deployment] = []
-        self._nodes: Dict[api.NodeName, Node] = {}
-        self._pods: Dict[str, Pod] = {}
-        self._cluster_aggregation_node_names: List[api.NodeName] = []
-        self._cluster_aggregation_pods: List[Pod] = []
-
-    def add_node(self, node: Node) -> None:
-        if not any(
-            any_match_from_list_of_infix_patterns(self._excluded_node_roles, role)
-            for role in node.roles
-        ):
-            self._cluster_aggregation_node_names.append(node.name)
-        self._nodes[node.name] = node
-
-    def add_deployment(self, deployment: Deployment) -> None:
-        self._deployments.append(deployment)
-
-    def add_daemon_set(self, daemon_set: DaemonSet) -> None:
-        self._daemon_sets.append(daemon_set)
-
-    def add_statefulset(self, statefulset: StatefulSet) -> None:
-        self._statefulsets.append(statefulset)
-
-    def add_pod(self, pod: Pod) -> None:
-        if pod.node in self._cluster_aggregation_node_names or pod.node is None:
-            self._cluster_aggregation_pods.append(pod)
-        self._pods[pod.uid] = pod
+        self._daemon_sets: Sequence[DaemonSet] = daemonsets
+        self._statefulsets: Sequence[StatefulSet] = statefulsets
+        self._deployments: Sequence[Deployment] = deployments
+        self._nodes: Sequence[Node] = nodes
+        self._pods: Mapping[api.PodUID, Pod] = pods
+        self.cluster_aggregation_pods: Sequence[api.Pod] = cluster_aggregation_pods
+        self._cluster_aggregation_nodes: Sequence[Node] = cluster_aggregation_nodes
 
     def pod_resources(self) -> section.PodResources:
-        return _pod_resources(self._cluster_aggregation_pods)
+        return _pod_resources_from_api_pods(self.cluster_aggregation_pods)
 
     def allocatable_pods(self) -> section.AllocatablePods:
         return section.AllocatablePods(
             capacity=sum(
-                self._nodes[node].resources["capacity"].pods
-                for node in self._cluster_aggregation_node_names
+                node.resources["capacity"].pods for node in self._cluster_aggregation_nodes
             ),
             allocatable=sum(
-                self._nodes[node].resources["allocatable"].pods
-                for node in self._cluster_aggregation_node_names
+                node.resources["allocatable"].pods for node in self._cluster_aggregation_nodes
             ),
         )
 
@@ -1039,18 +1040,14 @@ class Cluster:
         namespaces.update(api.NamespaceName(pod.metadata.namespace) for pod in self._pods.values())
         return namespaces
 
-    def pods(
-        self, phase: Optional[api.Phase] = None, for_cluster_aggregation_only: bool = False
-    ) -> Sequence[Pod]:
-        pods = (
-            self._cluster_aggregation_pods if for_cluster_aggregation_only else self._pods.values()
-        )
+    def pods(self, phase: Optional[api.Phase] = None) -> Collection[Pod]:
+        pods = self._pods.values()
         if phase is None:
-            return list(pods)
+            return pods
         return [pod for pod in pods if pod.phase == phase]
 
     def nodes(self) -> Sequence[Node]:
-        return list(self._nodes.values())
+        return self._nodes
 
     def daemon_sets(self) -> Sequence[DaemonSet]:
         return self._daemon_sets
@@ -1063,7 +1060,7 @@ class Cluster:
 
     def node_count(self) -> section.NodeCount:
         node_count = section.NodeCount()
-        for node in self._nodes.values():
+        for node in self._nodes:
             ready = (
                 conditions := node.conditions()
             ) is not None and conditions.ready.status == api.NodeConditionStatus.TRUE
@@ -1083,17 +1080,16 @@ class Cluster:
         return section.ClusterDetails(api_health=self._cluster_details.api_health)
 
     def memory_resources(self) -> section.Resources:
-        return _collect_memory_resources(self._cluster_aggregation_pods)
+        return _collect_memory_resources_from_api_pods(self.cluster_aggregation_pods)
 
     def cpu_resources(self) -> section.Resources:
-        return _collect_cpu_resources(self._cluster_aggregation_pods)
+        return _collect_cpu_resources_from_api_pods(self.cluster_aggregation_pods)
 
     def allocatable_memory_resource(self) -> section.AllocatableResource:
         return section.AllocatableResource(
             context="cluster",
             value=sum(
-                self._nodes[node_name].resources["allocatable"].memory
-                for node_name in self._cluster_aggregation_node_names
+                node.resources["allocatable"].memory for node in self._cluster_aggregation_nodes
             ),
         )
 
@@ -1101,8 +1097,7 @@ class Cluster:
         return section.AllocatableResource(
             context="cluster",
             value=sum(
-                self._nodes[node_name].resources["allocatable"].cpu
-                for node_name in self._cluster_aggregation_node_names
+                node.resources["allocatable"].cpu for node in self._cluster_aggregation_nodes
             ),
         )
 
@@ -2208,7 +2203,7 @@ def pod_lookup_from_metric(metric: Mapping[str, str]) -> PodLookupName:
     return lookup_name(metric["namespace"], metric["pod_name"])
 
 
-def pods_from_namespaces(pods: Sequence[Pod], namespaces: Set[api.NamespaceName]) -> Sequence[Pod]:
+def pods_from_namespaces(pods: Iterable[Pod], namespaces: Set[api.NamespaceName]) -> Sequence[Pod]:
     return [pod for pod in pods if pod.metadata.namespace in namespaces]
 
 
@@ -2460,8 +2455,8 @@ def determine_pods_to_host(
             )
     cluster_pods = list(
         map(
-            pod_lookup_from_agent_pod,
-            cluster.pods(phase=api.Phase.RUNNING, for_cluster_aggregation_only=True),
+            pod_lookup_from_api_pod,
+            filter_pods_by_phase(cluster.cluster_aggregation_pods, api.Phase.RUNNING),
         )
     )
     if MonitoredObject.cronjobs_pods in monitored_objects:

@@ -22,14 +22,7 @@ import pytest_mock
 from pydantic_factories import ModelFactory, Use
 
 # pylint: disable=comparison-with-callable,redefined-outer-name
-from tests.unit.cmk.special_agents.agent_kube.factory import (
-    api_to_agent_daemonset,
-    api_to_agent_statefulset,
-    APIDaemonSetFactory,
-    APIStatefulSetFactory,
-    MetaDataFactory,
-    NodeMetaDataFactory,
-)
+from tests.unit.cmk.special_agents.agent_kube.factory import MetaDataFactory, NodeMetaDataFactory
 
 from cmk.special_agents import agent_kube
 from cmk.special_agents.utils_kubernetes.schemata import api
@@ -231,55 +224,15 @@ def container_status(  # type:ignore[no-untyped-def]
     return _container_status
 
 
-def api_to_agent_node(node: api.Node) -> agent_kube.Node:
+def api_to_agent_node(node: api.Node, pods: Sequence[api.Pod] = ()) -> agent_kube.Node:
     return agent_kube.Node(
         metadata=node.metadata,
         status=node.status,
         resources=node.resources,
         roles=node.roles,
         kubelet_info=node.kubelet_info,
+        pods=pods,
     )
-
-
-@pytest.fixture
-def node_pods() -> int:
-    return len(api.Phase)
-
-
-@pytest.fixture
-def cluster_nodes() -> int:
-    return 3
-
-
-@pytest.fixture
-def cluster_daemon_sets() -> int:
-    return 6
-
-
-@pytest.fixture
-def cluster_statefulsets() -> int:
-    return 6
-
-
-@pytest.fixture
-def cluster(
-    cluster_nodes: int,
-    cluster_daemon_sets: int,
-    cluster_statefulsets: int,
-) -> agent_kube.Cluster:
-    cluster = agent_kube.Cluster(
-        excluded_node_roles=[], cluster_details=ClusterDetailsFactory.build()
-    )
-    for _ in range(cluster_nodes):
-        node = api_to_agent_node(APINodeFactory.build())
-        cluster.add_node(node)
-    for _ in range(cluster_daemon_sets):
-        daemonset = api_to_agent_daemonset(APIDaemonSetFactory.build())
-        cluster.add_daemon_set(daemonset)
-    for _ in range(cluster_statefulsets):
-        statefulset = api_to_agent_statefulset(APIStatefulSetFactory.build())
-        cluster.add_statefulset(statefulset)
-    return cluster
 
 
 def api_to_agent_cluster(

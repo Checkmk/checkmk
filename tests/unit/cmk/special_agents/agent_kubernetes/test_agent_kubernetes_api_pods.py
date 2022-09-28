@@ -345,6 +345,7 @@ class TestPodStartUp(TestCase):
             spec=Mock(),
             containers=Mock(),
             init_containers=Mock(),
+            controllers=Mock(),
         )
         self.assertEqual(
             pod.conditions(),
@@ -394,6 +395,7 @@ class TestPodStartUp(TestCase):
             spec=Mock(),
             containers=Mock(),
             init_containers=Mock(),
+            controllers=Mock(),
         )
 
         self.assertEqual(

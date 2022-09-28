@@ -38,7 +38,7 @@ class FakeGlacierClient:
 def get_glacier_sections():
     def _create_glacier_sections(names, tags):
         region = "eu-central-1"
-        config = AWSConfig("hostname", [], (None, None))
+        config = AWSConfig("hostname", [], ([], []))
         config.add_single_service_config("glacier_names", names)
         config.add_service_tags("glacier_tags", tags)
 

@@ -109,7 +109,7 @@ class FakeEC2Client:
 def get_ec2_sections():
     def _create_ec2_sections(names, tags, *, skip_entities=None):
         region = "region"
-        config = AWSConfig("hostname", [], (None, None))
+        config = AWSConfig("hostname", [], ([], []))
         config.add_single_service_config("ec2_names", names)
         config.add_service_tags("ec2_tags", tags)
         fake_ec2_client = FakeEC2Client(skip_entities)

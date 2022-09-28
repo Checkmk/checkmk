@@ -50,7 +50,7 @@ def _create_sns_limits(n_std_topics: int, n_fifo_topics: int, n_subs: int) -> SN
     return SNSLimits(
         client=FakeSNSClient(n_std_topics, n_fifo_topics, n_subs),
         region="region",
-        config=AWSConfig("hostname", [], (None, None)),
+        config=AWSConfig("hostname", [], ([], [])),
     )
 
 

@@ -69,7 +69,7 @@ class FakeELBClient:
 def get_elb_sections():
     def _create_elb_sections(names, tags):
         region = "region"
-        config = AWSConfig("hostname", [], (None, None))
+        config = AWSConfig("hostname", [], ([], []))
         config.add_single_service_config("elb_names", names)
         config.add_service_tags("elb_tags", tags)
 

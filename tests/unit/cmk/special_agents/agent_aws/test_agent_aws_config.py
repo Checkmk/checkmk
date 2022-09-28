@@ -25,8 +25,8 @@ from cmk.special_agents.agent_aws import AWSConfig
 def test_agent_aws_config_hash_names(  # type:ignore[no-untyped-def]
     sys_argv_1, sys_argv_2, expected_result
 ) -> None:
-    aws_config_1 = AWSConfig("heute1", sys_argv_1, (None, None))
-    aws_config_2 = AWSConfig("heute1", sys_argv_2, (None, None))
+    aws_config_1 = AWSConfig("heute1", sys_argv_1, ([], []))
+    aws_config_2 = AWSConfig("heute1", sys_argv_2, ([], []))
     assert (
         bool(
             aws_config_1._compute_config_hash(sys_argv_1)
@@ -57,5 +57,5 @@ def test_agent_aws_config_hash_processes(  # type:ignore[no-untyped-def]
     sys_argv, hashed_val, expected_result
 ) -> None:
     """Test whether the hash is the same across different python processes"""
-    aws_config_1 = AWSConfig("heute1", sys_argv, (None, None))
+    aws_config_1 = AWSConfig("heute1", sys_argv, ([], []))
     assert bool(aws_config_1._compute_config_hash(sys_argv) == hashed_val) is expected_result

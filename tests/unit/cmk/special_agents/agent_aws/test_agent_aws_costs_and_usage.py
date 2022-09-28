@@ -21,7 +21,7 @@ class FakeCEClient:
 
 def test_agent_aws_costs_and_usage() -> None:
     region = "us-east-1"
-    config = AWSConfig("hostname", [], (None, None))
+    config = AWSConfig("hostname", [], ([], []))
 
     ce = CostsAndUsage(FakeCEClient(), region, config)
     ce_results = ce.run().results

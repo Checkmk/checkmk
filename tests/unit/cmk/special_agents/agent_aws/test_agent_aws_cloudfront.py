@@ -216,7 +216,7 @@ def get_cloudfront_sections():
         names, tags, assign_to_domain_host: bool
     ):
         region = "us-east-1"
-        config = AWSConfig("hostname", [], (None, None))
+        config = AWSConfig("hostname", [], ([], []))
         config.add_single_service_config("cloudfront_names", names)
         config.add_service_tags("cloudfront_tags", tags)
 

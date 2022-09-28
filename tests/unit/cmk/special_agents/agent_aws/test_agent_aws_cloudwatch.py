@@ -23,7 +23,7 @@ from .agent_aws_fake_clients import FakeCloudwatchClient
 def get_cloudwatch_alarms_sections():
     def _create_cloudwatch_alarms_sections(alarm_names):
         region = "region"
-        config = AWSConfig("hostname", [], (None, None))
+        config = AWSConfig("hostname", [], ([], []))
         config.add_single_service_config("cloudwatch_alarms", alarm_names)
 
         fake_cloudwatch_client = FakeCloudwatchClient()

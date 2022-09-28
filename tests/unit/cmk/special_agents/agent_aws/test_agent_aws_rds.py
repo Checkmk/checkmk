@@ -69,7 +69,7 @@ class FakeRDSClient:
 def get_rds_sections():
     def _create_rds_sections(names, tags):
         region = "region"
-        config = AWSConfig("hostname", [], (None, None))
+        config = AWSConfig("hostname", [], ([], []))
         config.add_single_service_config("rds_names", names)
         config.add_service_tags("rds_tags", tags)
 

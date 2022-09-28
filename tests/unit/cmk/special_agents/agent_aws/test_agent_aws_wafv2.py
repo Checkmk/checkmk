@@ -5,6 +5,8 @@
 
 # pylint: disable=redefined-outer-name
 
+from typing import Literal
+
 import pytest
 
 from cmk.special_agents.agent_aws import (
@@ -53,14 +55,10 @@ class FakeWAFV2Client:
 
 def create_sections(names, tags, is_regional):
 
-    if is_regional:
-        region = "region"
-        scope = "REGIONAL"
-    else:
-        region = "us-east-1"
-        scope = "CLOUDFRONT"
+    region = "region" if is_regional else "us-east-1"
+    scope: Literal["REGIONAL", "CLOUDFRONT"] = "REGIONAL" if is_regional else "CLOUDFRONT"
 
-    config = AWSConfig("hostname", [], (None, None))
+    config = AWSConfig("hostname", [], ([], []))
     config.add_single_service_config("wafv2_names", names)
     config.add_service_tags("wafv2_tags", tags)
 
@@ -142,7 +140,7 @@ wafv2_params = [
 
 def test_agent_aws_wafv2_regional_cloudfront() -> None:
 
-    config = AWSConfig("hostname", [], (None, None))
+    config = AWSConfig("hostname", [], ([], []))
 
     region = "region"
     wafv2_limits_regional = WAFV2Limits(None, region, config, "REGIONAL")
@@ -153,7 +151,7 @@ def test_agent_aws_wafv2_regional_cloudfront() -> None:
 
     with pytest.raises(AssertionError):
         WAFV2Limits(None, "region", config, "CLOUDFRONT")
-        WAFV2Limits(None, "region", config, "WRONG")
+        WAFV2Limits(None, "region", config, "WRONG")  # type:ignore[arg-type]
         WAFV2WebACL(None, "region", config, False)
 
     assert len(WAFV2WebACL(None, "region", config, True)._metric_dimensions) == 3

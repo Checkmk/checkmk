@@ -80,7 +80,7 @@ def get_dynamodb_sections():
     def _create_dynamodb_sections(names, tags):
 
         region = "region"
-        config = AWSConfig("hostname", [], (None, None))
+        config = AWSConfig("hostname", [], ([], []))
         config.add_single_service_config("dynamodb_names", names)
         config.add_service_tags("dynamodb_tags", tags)
 

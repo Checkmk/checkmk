@@ -152,6 +152,7 @@ powershell Write-Host "Elapsed time: %hh%:%mm%:%ss%,%cc%" -Foreground Yellow
 !make_exe! msi_patch || powershell Write-Host "Failed to patch MSI exec" -Foreground Red && echo set && exit /b 36
 if not "%2" == "" (
 powershell Write-Host "Signing MSI" -Foreground White
+:: required to build correct patch for unsinging
 copy /Y %arte%\check_mk_agent.msi %arte%\check_mk_agent_unsigned.msi
 @call sign_windows_exe c:\common\store\%1 %2 %arte%\check_mk_agent.msi
 )

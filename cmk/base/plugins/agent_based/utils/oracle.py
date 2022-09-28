@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Mapping, Optional, Tuple, TypedDict
+from typing import Any, Dict, List, Mapping, NamedTuple, Optional, Tuple, TypedDict
 
 from ..agent_based_api.v1 import State
 
@@ -130,23 +130,11 @@ class FileOnlineState(TypedDict):
     sids: List[str]
 
 
-def analyze_datafiles(
+def check_unavailable_datafiles(
     datafiles: List[DataFiles],
-    db_version: int,
     sid: str,
-    params: Optional[Mapping[str, Any]] = None,
-    raise_on_offline_files: bool = False,
-) -> Tuple[int, int, int, int, int, int, bool, int, int, int, Dict[str, FileOnlineState]]:
-    num_files = 0
-    num_avail = 0
-    num_extensible = 0
-    current_size = 0
-    max_size = 0
-    used_size = 0
-    num_increments = 0
-    increment_size = 0
-    uses_default_increment = False
-    free_space = 0
+    params: Optional[Mapping[str, Any]],
+) -> Dict[str, FileOnlineState]:
     file_online_states: Dict[str, FileOnlineState] = {}
 
     for datafile in datafiles:
@@ -171,60 +159,101 @@ def analyze_datafiles(
                 file_online_states[df_file_online_status]["sids"].append(sid)
 
             else:
-                if raise_on_offline_files:
-                    raise DatafilesException("One or more datafiles OFFLINE or RECOVER")
+                raise DatafilesException("One or more datafiles OFFLINE or RECOVER")
 
+    return file_online_states
+
+
+class OnlineStatsResult(NamedTuple):
+    current_size: int
+    used_size: int
+    max_size: int
+    free_space: int
+    num_increments: int
+    increment_size: int
+    uses_default_increment: int
+    num_extensible: int
+    num_files: int
+    num_avail: int
+
+
+def datafiles_online_stats(
+    datafiles: List[DataFiles],
+    db_version: int,
+) -> Optional[OnlineStatsResult]:
+    """
+    calculate summary statistics over multiple datafiles. Only certain
+    datafiles will be included. If there are none, None will be returned.
+    """
+    num_files = 0
+    num_avail = 0
+    num_extensible = 0
+    current_size = 0
+    max_size = 0
+    used_size = 0
+    num_increments = 0
+    increment_size = 0
+    uses_default_increment = False
+    free_space = 0
+
+    for datafile in datafiles:
         num_files += 1
         if (
-            datafile["status"] in ["AVAILABLE", "ONLINE", "READONLY"]
-            and datafile["size"] is not None
-            and datafile["free_space"] is not None
-            and datafile["max_size"] is not None
+            datafile["status"] not in ["AVAILABLE", "ONLINE", "READONLY"]
+            or datafile["size"] is None
+            or datafile["free_space"] is None
+            or datafile["max_size"] is None
         ):
-            df_size = datafile["size"]
-            df_free_space = datafile["free_space"]
-            df_max_size = datafile["max_size"]
+            continue
 
-            num_avail += 1
-            current_size += df_size
-            used_size += df_size - df_free_space
+        df_size = datafile["size"]
+        df_free_space = datafile["free_space"]
+        df_max_size = datafile["max_size"]
 
-            # Autoextensible? Honor max size. Everything is computed in
-            # *Bytes* here!
-            if datafile["autoextensible"] and datafile["increment_size"] is not None:
-                num_extensible += 1
-                incsize = datafile["increment_size"]
+        num_avail += 1
+        current_size += df_size
+        used_size += df_size - df_free_space
 
-                if df_size > df_max_size:
-                    max_size += df_size
-                    # current file size > df_max_size => no more extents available
-                    free_extension = 0
-                else:
-                    max_size += df_max_size
-                    free_extension = df_max_size - df_size  # free extension space
+        # Autoextensible? Honor max size. Everything is computed in
+        # *Bytes* here!
+        if datafile["autoextensible"] and datafile["increment_size"] is not None:
+            num_extensible += 1
+            incsize = datafile["increment_size"]
 
-                if incsize == datafile["block_size"]:
-                    uses_default_increment = True
-
-                num_increments += free_extension // incsize
-                increment_size += free_extension
-
-                if db_version >= 11:
-                    # Newer versions of Oracle uses every time the remaining space of the
-                    # datafile. There is no need for calculation of remaing space with
-                    # next extend anymore!
-                    free_space += free_extension + df_free_space
-                else:
-                    # The free space in this table is the current free space plus
-                    # the additional space that can be gathered by using all available
-                    # remaining increments
-                    free_space += increment_size + df_free_space
-
-            # not autoextensible: take current size as maximum
-            else:
+            if df_size > df_max_size:
                 max_size += df_size
-                free_space += df_free_space
-    return (
+                # current file size > df_max_size => no more extents available
+                free_extension = 0
+            else:
+                max_size += df_max_size
+                free_extension = df_max_size - df_size  # free extension space
+
+            if incsize == datafile["block_size"]:
+                uses_default_increment = True
+
+            num_increments += free_extension // incsize
+            increment_size += free_extension
+
+            if db_version >= 11:
+                # Newer versions of Oracle uses every time the remaining space of the
+                # datafile. There is no need for calculation of remaing space with
+                # next extend anymore!
+                free_space += free_extension + df_free_space
+            else:
+                # The free space in this table is the current free space plus
+                # the additional space that can be gathered by using all available
+                # remaining increments
+                free_space += increment_size + df_free_space
+
+        # not autoextensible: take current size as maximum
+        else:
+            max_size += df_size
+            free_space += df_free_space
+
+    if num_avail == 0:
+        return None
+
+    return OnlineStatsResult(
         current_size,
         used_size,
         max_size,
@@ -235,5 +264,4 @@ def analyze_datafiles(
         num_extensible,
         num_files,
         num_avail,
-        file_online_states,
     )

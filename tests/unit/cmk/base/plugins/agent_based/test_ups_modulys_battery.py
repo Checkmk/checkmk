@@ -6,10 +6,12 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.ups_modulys_battery import (
     check_ups_modulys_battery,
+    check_ups_modulys_battery_temp,
     discover_ups_modulys_battery,
+    discover_ups_modulys_battery_temp,
     UPSBattery,
     UPSBatterySection,
 )
@@ -23,7 +25,7 @@ def test_discover_ups_modulys_battery() -> None:
                 uptime=0,
                 remaining_time_in_min=10,
                 capacity=100,
-                temperature=45,
+                temperature=45.0,
             )
         )
     ) == [Service()]
@@ -38,7 +40,7 @@ def test_discover_ups_modulys_battery() -> None:
                 uptime=0,
                 remaining_time_in_min=10,
                 capacity=100,
-                temperature=45,
+                temperature=45.0,
             ),
             [
                 Result(state=State.OK, summary="on mains"),
@@ -52,7 +54,7 @@ def test_discover_ups_modulys_battery() -> None:
                 uptime=60,
                 remaining_time_in_min=10,
                 capacity=100,
-                temperature=45,
+                temperature=45.0,
             ),
             [
                 Result(state=State.OK, summary="discharging for 1 minutes"),
@@ -66,7 +68,7 @@ def test_discover_ups_modulys_battery() -> None:
                 uptime=0,
                 remaining_time_in_min=10,
                 capacity=100,
-                temperature=45,
+                temperature=45.0,
             ),
             [
                 Result(state=State.OK, summary="on mains"),
@@ -81,7 +83,7 @@ def test_discover_ups_modulys_battery() -> None:
                 uptime=0,
                 remaining_time_in_min=10,
                 capacity=100,
-                temperature=45,
+                temperature=45.0,
             ),
             [
                 Result(state=State.OK, summary="on mains"),
@@ -96,7 +98,7 @@ def test_discover_ups_modulys_battery() -> None:
                 uptime=0,
                 remaining_time_in_min=10,
                 capacity=80,
-                temperature=45,
+                temperature=45.0,
             ),
             [
                 Result(state=State.OK, summary="on mains"),
@@ -110,7 +112,7 @@ def test_discover_ups_modulys_battery() -> None:
                 uptime=0,
                 remaining_time_in_min=10,
                 capacity=92,
-                temperature=45,
+                temperature=45.0,
             ),
             [
                 Result(state=State.OK, summary="on mains"),
@@ -124,7 +126,7 @@ def test_discover_ups_modulys_battery() -> None:
                 uptime=2,
                 remaining_time_in_min=8,
                 capacity=100,
-                temperature=45,
+                temperature=45.0,
             ),
             [
                 Result(state=State.OK, summary="discharging for 0 minutes"),
@@ -138,7 +140,7 @@ def test_discover_ups_modulys_battery() -> None:
                 uptime=2,
                 remaining_time_in_min=5,
                 capacity=100,
-                temperature=45,
+                temperature=45.0,
             ),
             [
                 Result(state=State.OK, summary="discharging for 0 minutes"),
@@ -160,3 +162,119 @@ def test_check_ups_modulys_battery(
         )
         == expected_result
     )
+
+
+def test_discover_ups_modulys_battery_temp() -> None:
+    assert list(
+        discover_ups_modulys_battery_temp(
+            UPSBattery(
+                health=0,
+                uptime=0,
+                remaining_time_in_min=10,
+                capacity=100,
+                temperature=45.0,
+            )
+        )
+    ) == [Service(item="Battery")]
+
+
+def test_discover_ups_modulys_battery_temp_is_zero() -> None:
+    assert list(
+        discover_ups_modulys_battery_temp(
+            UPSBattery(
+                health=0,
+                uptime=0,
+                remaining_time_in_min=10,
+                capacity=100,
+                temperature=0.0,
+            )
+        )
+    ) == [Service(item="Battery")]
+
+
+def test_discover_ups_modulys_battery_temp_no_services_discovered() -> None:
+    assert list(discover_ups_modulys_battery_temp(None)) == []
+
+    assert (
+        list(
+            discover_ups_modulys_battery_temp(
+                UPSBattery(
+                    health=0,
+                    uptime=0,
+                    remaining_time_in_min=10,
+                    capacity=100,
+                    temperature=None,
+                )
+            )
+        )
+        == []
+    )
+
+
+def test_check_ups_modulys_battery_temp_ok_state() -> None:
+    assert list(
+        check_ups_modulys_battery_temp(
+            item="test",
+            params={"levels": (90, 95)},
+            section=UPSBattery(
+                health=0,
+                uptime=0,
+                remaining_time_in_min=10,
+                capacity=100,
+                temperature=45.0,
+            ),
+        ),
+    ) == [
+        Metric("temp", 45.0, levels=(90.0, 95.0)),
+        Result(state=State.OK, summary="Temperature: 45.0°C"),
+        Result(
+            state=State.OK,
+            notice="Configuration: prefer user levels over device levels (used user levels)",
+        ),
+    ]
+
+
+def test_check_ups_modulys_battery_temp_warn_state() -> None:
+    assert list(
+        check_ups_modulys_battery_temp(
+            item="test",
+            params={"levels": (90, 95)},
+            section=UPSBattery(
+                health=0,
+                uptime=0,
+                remaining_time_in_min=10,
+                capacity=100,
+                temperature=92.0,
+            ),
+        ),
+    ) == [
+        Metric("temp", 92.0, levels=(90.0, 95.0)),
+        Result(state=State.WARN, summary="Temperature: 92.0°C (warn/crit at 90°C/95°C)"),
+        Result(
+            state=State.OK,
+            notice="Configuration: prefer user levels over device levels (used user levels)",
+        ),
+    ]
+
+
+def test_check_ups_modulys_battery_temp_crit_state() -> None:
+    assert list(
+        check_ups_modulys_battery_temp(
+            item="test",
+            params={"levels": (90, 95)},
+            section=UPSBattery(
+                health=0,
+                uptime=0,
+                remaining_time_in_min=10,
+                capacity=100,
+                temperature=96.0,
+            ),
+        ),
+    ) == [
+        Metric("temp", 96.0, levels=(90.0, 95.0)),
+        Result(state=State.CRIT, summary="Temperature: 96.0°C (warn/crit at 90°C/95°C)"),
+        Result(
+            state=State.OK,
+            notice="Configuration: prefer user levels over device levels (used user levels)",
+        ),
+    ]

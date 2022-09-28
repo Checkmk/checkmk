@@ -12,8 +12,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     DiscoveryResult,
     StringTable,
 )
+from cmk.base.plugins.agent_based.utils.temperature import check_temperature, TempParamType
 
-from .agent_based_api.v1 import equals, register, Result, Service, SNMPTree, State
+from .agent_based_api.v1 import equals, get_value_store, register, Result, Service, SNMPTree, State
 
 
 class UPSBattery(NamedTuple):
@@ -21,7 +22,7 @@ class UPSBattery(NamedTuple):
     uptime: int
     remaining_time_in_min: int
     capacity: int
-    temperature: int | None
+    temperature: float | None
 
 
 UPSBatterySection = UPSBattery | None
@@ -49,7 +50,7 @@ def parse_ups_modulys_battery(string_table: List[StringTable]) -> UPSBatterySect
 
     try:
         # Sometimes it could happen that the temperature is not reported
-        temperature = int(raw_temperature)
+        temperature = float(raw_temperature)
     except ValueError:
         temperature = None
 
@@ -144,4 +145,35 @@ register.check_plugin(
     service_name="Battery Charge",
     check_default_parameters={"capacity": (95, 90), "battime": (0, 0)},
     check_ruleset_name="ups_capacity",
+)
+
+
+def discover_ups_modulys_battery_temp(section: UPSBatterySection) -> DiscoveryResult:
+    if section and section.temperature is not None:
+        yield Service(item="Battery")
+
+
+def check_ups_modulys_battery_temp(
+    item: str,
+    params: TempParamType,
+    section: UPSBatterySection,
+) -> CheckResult:
+
+    if section and section.temperature is not None:
+        yield from check_temperature(
+            reading=section.temperature,
+            params=params,
+            unique_name=f"ups_modulys_battery_temp_{item}",
+            value_store=get_value_store(),
+        )
+
+
+register.check_plugin(
+    name="ups_modulys_battery_temp",
+    check_function=check_ups_modulys_battery_temp,
+    discovery_function=discover_ups_modulys_battery_temp,
+    check_default_parameters={},
+    check_ruleset_name="temperature",
+    service_name="Temperature %s",
+    sections=["ups_modulys_battery"],
 )

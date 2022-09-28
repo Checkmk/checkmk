@@ -7,7 +7,7 @@
 # - Discovery works.
 # - Checking doesn't work - as it was before. Maybe we can handle this in the future.
 
-from typing import Callable, Dict, Final, Iterable, List, Optional, Sequence, Tuple
+from typing import Callable, Dict, Final, Iterable, List, Mapping, Optional, Sequence, Set, Tuple
 
 import cmk.utils.tty as tty
 from cmk.utils import version
@@ -15,12 +15,17 @@ from cmk.utils.cpu_tracking import CPUTracker
 from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
 from cmk.utils.translations import TranslationOptions
-from cmk.utils.type_defs import HostAddress, HostName
+from cmk.utils.type_defs import HostAddress, HostName, SectionName
+
+from cmk.snmplib.type_defs import BackendSNMPTree, SNMPDetectSpec
 
 import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers.protocol import FetcherMessage
+from cmk.core_helpers.snmp import SectionMeta, SNMPFetcher, SNMPPluginStore, SNMPPluginStoreItem
 from cmk.core_helpers.type_defs import NO_SELECTION, SectionNameCollection
 
+import cmk.base.api.agent_based.register as agent_based_register
+import cmk.base.check_table as check_table
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 from cmk.base.config import HostConfig
@@ -46,6 +51,94 @@ else:
 
 
 __all__ = ["fetch_all", "make_non_cluster_sources", "make_cluster_sources", "make_sources"]
+
+
+def _make_inventory_sections() -> Set[SectionName]:
+    return {
+        s
+        for s in agent_based_register.get_relevant_raw_sections(
+            check_plugin_names=(),
+            inventory_plugin_names=(
+                p.name for p in agent_based_register.iter_all_inventory_plugins()
+            ),
+        )
+        if agent_based_register.is_registered_snmp_section_plugin(s)
+    }
+
+
+def make_plugin_store() -> SNMPPluginStore:
+    inventory_sections = _make_inventory_sections()
+    return SNMPPluginStore(
+        {
+            s.name: SNMPPluginStoreItem(
+                [BackendSNMPTree.from_frontend(base=t.base, oids=t.oids) for t in s.trees],
+                SNMPDetectSpec(s.detect_spec),
+                s.name in inventory_sections,
+            )
+            for s in agent_based_register.iter_all_snmp_sections()
+        }
+    )
+
+
+def make_check_intervals(
+    host_config: HostConfig,
+    *,
+    selected_sections: SectionNameCollection,
+) -> Mapping[SectionName, Optional[int]]:
+    return {
+        section_name: host_config.snmp_fetch_interval(section_name)
+        for section_name in _make_checking_sections(
+            host_config.hostname, selected_sections=selected_sections
+        )
+    }
+
+
+def make_sections(
+    host_config: HostConfig,
+    *,
+    selected_sections: SectionNameCollection,
+) -> Dict[SectionName, SectionMeta]:
+    def needs_redetection(section_name: SectionName) -> bool:
+        section = agent_based_register.get_section_plugin(section_name)
+        return len(agent_based_register.get_section_producers(section.parsed_section_name)) > 1
+
+    checking_sections = _make_checking_sections(
+        host_config.hostname,
+        selected_sections=selected_sections,
+    )
+    disabled_sections = host_config.disabled_snmp_sections()
+    return {
+        name: SectionMeta(
+            checking=name in checking_sections,
+            disabled=name in disabled_sections,
+            redetect=name in checking_sections and needs_redetection(name),
+            fetch_interval=host_config.snmp_fetch_interval(name),
+        )
+        for name in (checking_sections | disabled_sections)
+    }
+
+
+def _make_checking_sections(
+    hostname: HostName,
+    *,
+    selected_sections: SectionNameCollection,
+) -> Set[SectionName]:
+    if selected_sections is not NO_SELECTION:
+        checking_sections = selected_sections
+    else:
+        checking_sections = set(
+            agent_based_register.get_relevant_raw_sections(
+                check_plugin_names=check_table.get_check_table(
+                    hostname,
+                    filter_mode=check_table.FilterMode.INCLUDE_CLUSTERED,
+                    skip_ignored=True,
+                ).needed_check_names(),
+                inventory_plugin_names=(),
+            )
+        )
+    return {
+        s for s in checking_sections if agent_based_register.is_registered_snmp_section_plugin(s)
+    }
 
 
 class _Builder:
@@ -138,18 +231,42 @@ class _Builder:
                 )
             )
 
+    def _initialize_snmp_plugin_store(self) -> None:
+        if len(SNMPFetcher.plugin_store) != agent_based_register.len_snmp_sections():
+            # That's a hack.
+            #
+            # `make_plugin_store()` depends on
+            # `iter_all_snmp_sections()` and `iter_all_inventory_plugins()`
+            # that are populated by the Check API upon loading the plugins.
+            #
+            # It is there, when the plugins are loaded, that we should
+            # make the plugin store.  However, it is not clear whether
+            # the API would let us register hooks to accomplish that.
+            #
+            # The current solution is brittle in that there is not guarantee
+            # that all the relevant plugins are loaded at this point.
+            SNMPFetcher.plugin_store = make_plugin_store()
+
     def _initialize_snmp_based(self) -> None:
         if not self.host_config.is_snmp_host:
             return
+        self._initialize_snmp_plugin_store()
         self._add(
             SNMPSource.snmp(
                 self.host_config,
                 self.ipaddress,
-                selected_sections=self.selected_sections,
                 on_scan_error=self.on_scan_error,
                 force_cache_refresh=self.force_snmp_cache_refresh,
                 simulation_mode=self.simulation_mode,
                 missing_sys_description=self.missing_sys_description,
+                sections=make_sections(
+                    self.host_config,
+                    selected_sections=self.selected_sections,
+                ),
+                check_intervals=make_check_intervals(
+                    self.host_config,
+                    selected_sections=self.selected_sections,
+                ),
             )
         )
 
@@ -158,6 +275,7 @@ class _Builder:
         if protocol is None:
             return
 
+        self._initialize_snmp_plugin_store()
         ip_address = config.lookup_mgmt_board_ip_address(self.host_config)
         if ip_address is None:
             # HostAddress is not Optional.
@@ -169,11 +287,16 @@ class _Builder:
                 SNMPSource.management_board(
                     self.host_config,
                     ip_address,
-                    selected_sections=self.selected_sections,
                     on_scan_error=self.on_scan_error,
                     force_cache_refresh=self.force_snmp_cache_refresh,
                     simulation_mode=self.simulation_mode,
                     missing_sys_description=self.missing_sys_description,
+                    sections=make_sections(
+                        self.host_config, selected_sections=self.selected_sections
+                    ),
+                    check_intervals=make_check_intervals(
+                        self.host_config, selected_sections=self.selected_sections
+                    ),
                 )
             )
         elif protocol == "ipmi":

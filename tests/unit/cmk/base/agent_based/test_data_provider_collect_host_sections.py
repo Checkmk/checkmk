@@ -148,11 +148,12 @@ class TestMakeHostSectionsHosts:
                     SNMPSource.snmp(
                         host_config,
                         ipaddress,
-                        selected_sections=NO_SELECTION,
                         force_cache_refresh=False,
                         on_scan_error=OnError.RAISE,
                         simulation_mode=True,
                         missing_sys_description=False,
+                        sections={},
+                        check_intervals={},
                     ),
                     FetcherMessage.from_raw_data(
                         result.OK(raw_data),

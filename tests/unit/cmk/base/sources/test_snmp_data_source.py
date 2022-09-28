@@ -14,7 +14,6 @@ from cmk.utils.exceptions import MKIPAddressLookupError, OnError
 from cmk.utils.type_defs import CheckPluginName, HostName, ParsedSectionName, result, SourceType
 
 from cmk.core_helpers.host_sections import HostSections
-from cmk.core_helpers.type_defs import NO_SELECTION
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
@@ -46,11 +45,12 @@ def source_fixture(scenario, hostname, ipaddress):
     return SNMPSource.snmp(
         HostConfig.make_host_config(hostname),
         ipaddress,
-        selected_sections=NO_SELECTION,
         on_scan_error=OnError.RAISE,
         force_cache_refresh=False,
         simulation_mode=True,
         missing_sys_description=False,
+        sections={},
+        check_intervals={},
     )
 
 
@@ -101,11 +101,12 @@ class TestSNMPSource_SNMP:
         source = SNMPSource.snmp(
             HostConfig.make_host_config(hostname),
             ipaddress,
-            selected_sections=NO_SELECTION,
             on_scan_error=OnError.RAISE,
             force_cache_refresh=False,
             simulation_mode=True,
             missing_sys_description=False,
+            sections={},
+            check_intervals={},
         )
         assert source.description == (
             "SNMP (Community: 'public', Bulk walk: no, Port: 161, Backend: Classic)"
@@ -132,10 +133,11 @@ class TestSNMPSource_MGMT:
             HostConfig.make_host_config(hostname),
             ipaddress,
             force_cache_refresh=False,
-            selected_sections=NO_SELECTION,
             on_scan_error=OnError.RAISE,
             simulation_mode=True,
             missing_sys_description=False,
+            sections={},
+            check_intervals={},
         )
         assert source.description == (
             "Management board - SNMP "
@@ -161,13 +163,14 @@ class TestSNMPSummaryResult:
             HostConfig.make_host_config(hostname),
             "1.2.3.4",
             force_cache_refresh=False,
-            selected_sections=NO_SELECTION,
             source_type=SourceType.HOST,
             id_="snmp_id",
             title="snmp title",
             on_scan_error=OnError.RAISE,
             simulation_mode=True,
             missing_sys_description=False,
+            sections={},
+            check_intervals={},
         )
 
     @pytest.mark.usefixtures("scenario")

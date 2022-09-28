@@ -297,6 +297,33 @@ Class DbSession
       Set dbRecordHandler = Nothing
    End Function
 
+   Public Function queryDatabase(databaseName, sqlString)
+      ' Database specific queries
+      On Error Resume Next
+      Dim dbRecordHandler
+
+      Set dbRecordHandler = CreateObject("ADODB.Recordset")
+
+      dbRecordHandler.Open "USE [" & databaseName & "]", dbConnectionHandler
+      If hasErrors() Then
+         ' If the database returns an error while attempting to swtich to it,
+         ' e.g. due to access reasons, it does not make sense to proceed
+         Set queryDatabase = (New errorResponse)(dbConnectionHandler)
+         If dbRecordHandler.State <> 0 Then
+            dbRecordHandler.Close
+         End If
+         Set dbRecordHandler = Nothing
+         Exit Function
+      End If
+
+      dbRecordHandler.Open sqlString, dbConnectionHandler
+
+      Set queryDatabase = constructQueryResponse(dbRecordHandler)
+
+      dbRecordHandler.Close
+      Set dbRecordHandler = Nothing
+   End Function
+
    Private Function constructQueryResponse(dbRecordHandler)
       If hasErrors() Then
          Set constructQueryResponse = (New errorResponse)(dbConnectionHandler)

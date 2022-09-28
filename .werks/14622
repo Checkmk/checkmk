@@ -1,0 +1,15 @@
+Title: mk_apt: Now supports new Ubuntu Pro advertisement in agent output
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1664892025
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p14
+
+Now supports the new Ubuntu Pro advertisement. The message looks like:
+Receive additional future security updates with Ubuntu Pro.
+Learn more about Ubuntu Pro at https://ubuntu.com/pro
+

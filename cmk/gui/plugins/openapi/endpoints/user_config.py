@@ -424,6 +424,8 @@ def _update_auth_options(internal_attrs, auth_options: AuthOptions, new_user=Fal
 
             if internal_auth_attrs.get("enforce_password_change"):
                 internal_attrs["serial"] = 1
+
+        internal_attrs["connector"] = "htpasswd"
     return internal_attrs
 
 

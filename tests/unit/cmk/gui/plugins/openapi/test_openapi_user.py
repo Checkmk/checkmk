@@ -176,6 +176,10 @@ def test_openapi_user_minimal_password_settings(
     assert "last_pw_change" not in extensions
     assert "password" not in extensions
 
+    user_from_db = userdb.load_user(resp.json["id"])
+    assert user_from_db["connector"]
+    assert user_from_db["connector"] == "htpasswd"
+
     edit_details = {
         "auth_option": {
             "auth_type": "automation",
@@ -198,6 +202,10 @@ def test_openapi_user_minimal_password_settings(
     assert extensions["enforce_password_change"] is True
     assert extensions["idle_timeout"]["option"] == "disable"
     assert extensions["roles"] == ["user"]
+
+    user_from_db = userdb.load_user(resp.json["id"])
+    assert user_from_db["connector"]
+    assert user_from_db["connector"] == "htpasswd"
 
 
 def test_openapi_all_users(wsgi_app, with_automation_user):
@@ -505,6 +513,7 @@ def test_openapi_user_internal_auth_handling(monkeypatch, run_as_superuser):
         "last_pw_change": 1265011200,
         "enforce_pw_change": True,
         "num_failed_logins": 0,
+        "connector": "htpasswd",
     }
 
     with freeze_time("2010-02-01 09:00:00"):
@@ -535,6 +544,7 @@ def test_openapi_user_internal_auth_handling(monkeypatch, run_as_superuser):
         "last_pw_change": 1265011200,  # no change in time from previous edit
         "enforce_pw_change": True,
         "num_failed_logins": 0,
+        "connector": "htpasswd",
     }
 
 

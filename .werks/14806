@@ -1,0 +1,13 @@
+Title: Users created with the REST API can be edited
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1664368116
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p14
+
+Previously if a user was created via the REST-API it could not be edited in the GUI. This has been fixed now.
+

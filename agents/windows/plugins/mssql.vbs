@@ -84,6 +84,70 @@ Function readIniFile(path)
     Set parsed = Nothing
 End Function
 
+Class DbSession
+   Private dbConnectionHandler
+
+   Public Default Function Init(timeouts)
+      Set dbConnectionHandler = CreateObject("ADODB.Connection")
+
+      If timeouts.Exists("timeout_connection") Then
+          dbConnectionHandler.ConnectionTimeout = CInt(timeouts("timeout_connection"))
+      End If
+      If timeouts.Exists("timeout_command") Then
+          dbConnectionHandler.CommandTimeout = CInt(timeouts("timeout_command"))
+      End If
+
+      Set Init = Me
+   End Function
+
+   Public Function connect(instance, authenticationConfig, providers)
+      On Error Resume Next
+
+      Dim connectionProvider
+
+      For Each connectionProvider in providers
+          dbConnectionHandler.Provider = connectionProvider
+
+          ' Note that these properties have to be set after setting the provider
+
+          If Not authenticationConfig.Exists("type") or authenticationConfig("type") = "system" Then
+              dbConnectionHandler.Properties("Integrated Security").Value = "SSPI"
+          Else
+              dbConnectionHandler.Properties("User ID").Value = authenticationConfig("username")
+              dbConnectionHandler.Properties("Password").Value = authenticationConfig("password")
+          End If
+
+          dbConnectionHandler.Properties("Data Source").Value = instance
+
+          dbConnectionHandler.Open
+
+          ' 1 = connected
+          If dbConnectionHandler.State = 1 Then
+              Exit For
+          End If
+      Next
+
+      If dbConnectionHandler.State = 1 Then
+         connect = True
+      Else
+         connect = False
+      End If
+
+   End Function
+
+   Public Function terminateConnection( )
+      If dbConnectionHandler.State <> 0 Then
+         dbConnectionHandler.Close
+      End If
+   End Function
+
+   Public Function terminateSession( )
+      terminateConnection
+      Set dbConnectionHandler = Nothing
+   End Function
+
+End Class
+
 Set registry = GetObject("winmgmts:{impersonationLevel=impersonate}!\\.\root\default:StdRegProv")
 Set sources = CreateObject("Scripting.Dictionary")
 

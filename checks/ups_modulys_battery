@@ -5,77 +5,9 @@
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
-from typing import Any, Mapping
 
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.plugins.agent_based.ups_modulys_battery import UPSBatterySection
-
-factory_settings["ups_modulys_battery_default_levels"] = {"capacity": (95, 90), "battime": (0, 0)}
-
-
-def inventory_ups_modulys_battery(section: UPSBatterySection):
-    if section:
-        yield None, {}
-
-
-def check_ups_modulys_battery(
-    item: str, params: Mapping[str, Any], section: UPSBatterySection
-):  # pylint: disable=too-many-branches
-    warn_left, crit_left = params["battime"]
-    warn_perc, crit_perc = params["capacity"]
-    if section is None:
-        return
-
-    # test 1: on mains or on battery?
-    if section.uptime == 0:
-        yield 0, "on mains"
-    else:
-        # we already have configurable levels on remaining capacity which
-        # would be superfluous if we reported the discharging state itself
-        # as a problem. Thus this reports "OK"
-        yield 0, "discharging for %d minutes" % (section.uptime // 60)
-
-    # test 2: battery health
-    if section.health == 1:
-        yield 1, "battery health weak"
-    elif section.health == 2:
-        yield 2, "battery needs to be replaced"
-
-    # test 3: remaining capacity
-    if section.remaining_time_in_min < crit_left or section.capacity < crit_perc:
-        status = 2
-    elif section.remaining_time_in_min < warn_left or section.capacity < warn_perc:
-        status = 1
-    else:
-        status = 0
-
-    infotext = ""
-
-    if section.remaining_time_in_min < warn_left:
-        infotext = "%d minutes remaining (warn/crit at %d/%d min)" % (
-            section.remaining_time_in_min,
-            warn_left,
-            crit_left,
-        )
-
-    if section.capacity < warn_perc:
-        infotext = "%d percent charged (warn/crit at %d/%d perc)" % (
-            section.capacity,
-            warn_perc,
-            crit_perc,
-        )
-
-    yield status, infotext
-
-
-check_info["ups_modulys_battery"] = {
-    # section already migrated!
-    "inventory_function": inventory_ups_modulys_battery,
-    "check_function": check_ups_modulys_battery,
-    "service_description": "Battery Charge",
-    "default_levels_variable": "ups_modulys_battery_default_levels",
-    "group": "ups_capacity",
-}
 
 
 def inventory_ups_modulys_battery_temp(section: UPSBatterySection):

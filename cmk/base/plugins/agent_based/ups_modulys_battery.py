@@ -4,11 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
-from typing import List, NamedTuple
+from collections.abc import Mapping
+from typing import Any, List, NamedTuple
 
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
 
-from .agent_based_api.v1 import equals, register, SNMPTree
+from .agent_based_api.v1 import equals, register, Result, Service, SNMPTree, State
 
 
 class UPSBattery(NamedTuple):
@@ -73,4 +78,70 @@ register.snmp_section(
         )
     ],
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2254.2.4"),
+)
+
+
+def discover_ups_modulys_battery(section: UPSBatterySection) -> DiscoveryResult:
+    if section:
+        yield Service()
+
+
+def check_ups_modulys_battery(
+    params: Mapping[str, Any],
+    section: UPSBatterySection,
+) -> CheckResult:
+    warn_left, crit_left = params["battime"]
+    warn_perc, crit_perc = params["capacity"]
+    if section is None:
+        return
+
+    # test 1: on mains or on battery?
+    if section.uptime == 0:
+        yield Result(state=State.OK, summary="on mains")
+    else:
+        # we already have configurable levels on remaining capacity which
+        # would be superfluous if we reported the discharging state itself
+        # as a problem. Thus this reports "OK"
+        yield Result(state=State.OK, summary="discharging for %d minutes" % (section.uptime // 60))
+
+    # test 2: battery health
+    if section.health == 1:
+        yield Result(state=State.WARN, summary="battery health weak")
+    elif section.health == 2:
+        yield Result(state=State.CRIT, summary="battery needs to be replaced")
+
+    # test 3: remaining capacity
+    if section.remaining_time_in_min < crit_left or section.capacity < crit_perc:
+        status = State.CRIT
+    elif section.remaining_time_in_min < warn_left or section.capacity < warn_perc:
+        status = State.WARN
+    else:
+        status = State.OK
+
+    infotext = "OK"
+
+    if section.remaining_time_in_min < warn_left:
+        infotext = "%d minutes remaining (warn/crit at %d/%d min)" % (
+            section.remaining_time_in_min,
+            warn_left,
+            crit_left,
+        )
+
+    if section.capacity < warn_perc:
+        infotext = "%d percent charged (warn/crit at %d/%d perc)" % (
+            section.capacity,
+            warn_perc,
+            crit_perc,
+        )
+
+    yield Result(state=status, summary=infotext)
+
+
+register.check_plugin(
+    name="ups_modulys_battery",
+    discovery_function=discover_ups_modulys_battery,
+    check_function=check_ups_modulys_battery,
+    service_name="Battery Charge",
+    check_default_parameters={"capacity": (95, 90), "battime": (0, 0)},
+    check_ruleset_name="ups_capacity",
 )

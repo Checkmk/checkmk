@@ -219,6 +219,7 @@ class _Builder:
                 translation=self.translation,
                 encoding_fallback=self.encoding_fallback,
                 check_interval=self.host_config.check_mk_check_interval,
+                is_cmc=config.is_cmc(),
             )
 
         connection_mode = self.host_config.agent_connection_mode()
@@ -271,6 +272,7 @@ class _Builder:
                 translation=self.translation,
                 encoding_fallback=self.encoding_fallback,
                 check_interval=self.host_config.check_mk_check_interval,
+                is_cmc=config.is_cmc(),
             )
             for agentname, params in self.host_config.special_agents
         ]

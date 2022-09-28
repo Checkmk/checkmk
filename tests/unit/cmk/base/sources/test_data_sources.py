@@ -131,6 +131,7 @@ def test_host_config_creates_passing_source_sources(
             agentname="",
             cmdline="",
             stdin="",
+            is_cmc=False,
         ),
         lambda hostname, ipaddress: DSProgramSource(
             hostname,
@@ -141,6 +142,7 @@ def test_host_config_creates_passing_source_sources(
             encoding_fallback="ascii",
             check_interval=0,
             cmdline="",
+            is_cmc=False,
         ),
         lambda hostname, ipaddress: PiggybackSource(
             hostname,

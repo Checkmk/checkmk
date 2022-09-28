@@ -198,6 +198,7 @@ class TestMakeHostSectionsHosts:
                 translation={},
                 encoding_fallback="ascii",
                 check_interval=0,
+                is_cmc=False,
             ),
             lambda hostname, ipaddress: TCPSource(
                 hostname,
@@ -257,6 +258,7 @@ class TestMakeHostSectionsHosts:
                 translation={},
                 encoding_fallback="ascii",
                 check_interval=0,
+                is_cmc=False,
             ),
             TCPSource(
                 hostname,
@@ -317,6 +319,7 @@ class TestMakeHostSectionsHosts:
                 translation={},
                 encoding_fallback="ascii",
                 check_interval=0,
+                is_cmc=False,
             ),
             TCPSource(
                 HostName(f"{hostname}1"),

@@ -25,6 +25,7 @@ class TestDSProgramChecker:
             translation={},
             encoding_fallback="ascii",
             check_interval=0,
+            is_cmc=False,
         )
         # Only check the computed attributes.
         assert source.description == "Program: "

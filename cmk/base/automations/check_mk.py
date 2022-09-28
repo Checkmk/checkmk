@@ -1402,6 +1402,7 @@ class AutomationDiagHost(Automation):
                     translation=config.get_piggyback_translations(host_config.hostname),
                     encoding_fallback=config.fallback_agent_output_encoding,
                     check_interval=host_config.check_mk_check_interval,
+                    is_cmc=config.is_cmc(),
                 )
             elif isinstance(source, sources.tcp.TCPSource):
                 source.port = agent_port

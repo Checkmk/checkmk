@@ -3,15 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional
+from typing import Final, Optional
 
 from cmk.utils.translations import TranslationOptions
 from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, SourceType
 
 from cmk.core_helpers import FetcherType, ProgramFetcher
 from cmk.core_helpers.agent import AgentFileCache, AgentFileCacheFactory, AgentSummarizerDefault
-
-import cmk.base.config as config
 
 from .agent import AgentSource
 
@@ -31,6 +29,7 @@ class ProgramSource(AgentSource):
         translation: TranslationOptions,
         encoding_fallback: str,
         check_interval: int,
+        is_cmc: bool,
     ) -> None:
         super().__init__(
             hostname,
@@ -49,8 +48,9 @@ class ProgramSource(AgentSource):
             encoding_fallback=encoding_fallback,
             check_interval=check_interval,
         )
-        self.cmdline = cmdline
-        self.stdin = stdin
+        self.cmdline: Final = cmdline
+        self.stdin: Final = stdin
+        self.is_cmc: Final = is_cmc
 
     @staticmethod
     def special_agent(
@@ -66,6 +66,7 @@ class ProgramSource(AgentSource):
         translation: TranslationOptions,
         encoding_fallback: str,
         check_interval: int,
+        is_cmc: bool,
     ) -> "SpecialAgentSource":
         return SpecialAgentSource(
             hostname,
@@ -79,6 +80,7 @@ class ProgramSource(AgentSource):
             translation=translation,
             encoding_fallback=encoding_fallback,
             check_interval=check_interval,
+            is_cmc=is_cmc,
         )
 
     @staticmethod
@@ -93,6 +95,7 @@ class ProgramSource(AgentSource):
         translation: TranslationOptions,
         encoding_fallback: str,
         check_interval: int,
+        is_cmc: bool,
     ) -> "DSProgramSource":
         return DSProgramSource(
             hostname,
@@ -104,6 +107,7 @@ class ProgramSource(AgentSource):
             translation=translation,
             encoding_fallback=encoding_fallback,
             check_interval=check_interval,
+            is_cmc=is_cmc,
         )
 
     def _make_file_cache(self) -> AgentFileCache:
@@ -118,7 +122,7 @@ class ProgramSource(AgentSource):
         return ProgramFetcher(
             cmdline=self.cmdline,
             stdin=self.stdin,
-            is_cmc=config.is_cmc(),
+            is_cmc=self.is_cmc,
         )
 
     def _make_summarizer(self, *, exit_spec: ExitSpec) -> AgentSummarizerDefault:
@@ -145,6 +149,7 @@ class DSProgramSource(ProgramSource):
         translation: TranslationOptions,
         encoding_fallback: str,
         check_interval: int,
+        is_cmc: bool,
     ) -> None:
         super().__init__(
             hostname,
@@ -158,6 +163,7 @@ class DSProgramSource(ProgramSource):
             translation=translation,
             encoding_fallback=encoding_fallback,
             check_interval=check_interval,
+            is_cmc=is_cmc,
         )
 
 
@@ -176,6 +182,7 @@ class SpecialAgentSource(ProgramSource):
         translation: TranslationOptions,
         encoding_fallback: str,
         check_interval: int,
+        is_cmc: bool,
     ) -> None:
         super().__init__(
             hostname,
@@ -189,6 +196,7 @@ class SpecialAgentSource(ProgramSource):
             translation=translation,
             encoding_fallback=encoding_fallback,
             check_interval=check_interval,
+            is_cmc=is_cmc,
         )
         self.special_agent_id = agentname
         self.special_agent_plugin_file_name = "agent_%s" % agentname

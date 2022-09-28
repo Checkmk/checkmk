@@ -93,6 +93,26 @@ Function appendElement(array_, element)
    appendElement = array_
 End Function
 
+Function sanitiseString(valueString)
+   If IsNull(valueString) Then
+      sanitiseString = ""
+      Exit Function
+   End If
+
+   sanitiseString = valueString
+End Function
+
+Function isInList(list, element)
+   Dim value
+   For Each value in list
+      If value = element Then
+         isInList = True
+         Exit Function
+      End If
+   Next
+   isInList = False
+End Function
+
 Class connectionResponse
    Private connectionState
    Private connectionErrorLog
@@ -128,6 +148,73 @@ Class connectionResponse
       End If
 
       logMessage = message
+   End Property
+
+End Class
+
+Class errorResponse
+   Private queryErrors
+
+   Public Default Function Init(connectionHandler)
+      queryErrors = Array()
+
+      Dim error_, index
+      For Each error_ in connectionHandler.Errors
+         index = UBound(queryErrors) + 1
+         ReDim Preserve queryErrors(index) ' resize and keep existing elements
+         Set queryErrors(index) = error_
+      Next
+
+      Set Init = Me
+   End Function
+
+   Public Property Get errorMessage
+       Dim errorText, errorObject
+       errorText = "ERROR: "
+       For Each errorObject in queryErrors
+           errorText = errorText & errorObject.Description & " (SQLState: " & _
+                       errorObject.SQLState & "/NativeError: " & errorObject.NativeError & "). "
+       Next
+       errorMessage = errorText
+   End Property
+
+   Public Property Get hasError
+      hasError = True
+   End Property
+
+End Class
+
+Class queryResponse
+   Private queryRows
+
+   Public Default Function Init(recordHandler)
+      queryRows = Array()
+
+      Dim row, field_, index
+
+      Do Until recordHandler Is Nothing
+         Do Until recordHandler.EOF
+            Set row = CreateObject("Scripting.Dictionary")
+            For Each field_ in recordHandler.Fields
+               row.Add field_.Name, sanitiseString(field_.value)
+            Next
+            index = UBound(queryRows) + 1
+            ReDim Preserve queryRows(index) ' resize and keep existing elements
+            Set queryRows(index) = row
+            recordHandler.MoveNext
+         Loop
+         Set recordHandler = RecordHandler.NextRecordSet
+      Loop
+
+      Set Init = Me
+   End Function
+
+   Public Property Get Rows
+      Rows = queryRows
+   End Property
+
+   Public Property Get hasError
+      hasError = False
    End Property
 
 End Class
@@ -193,6 +280,48 @@ Class DbSession
 
       Set connect = (New connectionResponse)(dbConnectionHandler.State, errorLog, debugLog)
 
+   End Function
+
+   Public Function querySystem(sqlString)
+      ' System wide queries
+      On Error Resume Next
+      Dim dbRecordHandler
+
+      Set dbRecordHandler = CreateObject("ADODB.Recordset")
+
+      dbRecordHandler.Open sqlString, dbConnectionHandler
+
+      Set querySystem = constructQueryResponse(dbRecordHandler)
+
+      dbRecordHandler.Close
+      Set dbRecordHandler = Nothing
+   End Function
+
+   Private Function constructQueryResponse(dbRecordHandler)
+      If hasErrors() Then
+         Set constructQueryResponse = (New errorResponse)(dbConnectionHandler)
+      Else
+         Set constructQueryResponse = (New queryResponse)(dbRecordHandler)
+      End If
+   End Function
+
+   Private Function hasErrors( )
+      If dbConnectionHandler.Errors.Count = 0 Then
+         hasErrors = False
+         Exit Function
+      End If
+
+      Dim knownWarnings, warning, error_
+      knownWarnings = Array(5701) ' Infotext that says it has been successfully switched to a different DB
+      For Each error_ in dbConnectionHandler.Errors
+         If Not isInList(knownWarnings, error_.NativeError) Then
+            ' Errors may not be real errors, but warnings or other informational
+            ' text disguised as errors
+            hasErrors = True
+            Exit Function
+         End If
+      Next
+      hasErrors = False
    End Function
 
    Public Function terminateConnection( )

@@ -1,0 +1,15 @@
+Title: host_config: change community for snmp_community attribute to required
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1664358334
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p14
+
+Previously, the create host config endpoint returned a 500 error when the
+community field within the snmp_community attribute was missing. This werk
+resolves by making this field required.
+

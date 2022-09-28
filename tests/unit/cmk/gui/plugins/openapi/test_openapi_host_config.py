@@ -1373,3 +1373,25 @@ def test_openapi_host_with_labels(wsgi_app, with_automation_user) -> None:
         headers={"Accept": "application/json"},
     )
     assert resp.json["extensions"]["attributes"]["labels"] == {"label": "value"}
+
+
+def test_openapi_host_with_invalid_snmp_community_option(
+    base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
+) -> None:
+    json_data = {
+        "folder": "/",
+        "host_name": "example.com",
+        "attributes": {
+            "snmp_community": {
+                "type": "v1_v2_community",
+            }
+        },
+    }
+    aut_user_auth_wsgi_app.call_method(
+        "post",
+        f"{base}/domain-types/host_config/collections/all",
+        params=json.dumps(json_data),
+        status=400,
+        content_type="application/json",
+        headers={"Accept": "application/json"},
+    )

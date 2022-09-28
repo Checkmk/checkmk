@@ -32,7 +32,7 @@ class PiggybackSource(AgentSource):
         encoding_fallback: str,
     ) -> None:
         super().__init__(
-            host_config,
+            host_config.hostname,
             ipaddress,
             source_type=SourceType.HOST,
             fetcher_type=FetcherType.PIGGYBACK,
@@ -43,12 +43,14 @@ class PiggybackSource(AgentSource):
             agent_simulator=agent_simulator,
             translation=translation,
             encoding_fallback=encoding_fallback,
+            check_interval=host_config.check_mk_check_interval,
         )
         self.time_settings: Final = time_settings
+        self.host_config: Final = host_config
 
     def _make_file_cache(self) -> AgentFileCache:
         return NoCacheFactory(
-            self.host_config.hostname,
+            self.hostname,
             base_path=self.file_cache_base_path,
             simulation=False,  # TODO Quickfix for SUP-9912, should be handled in a better way
             max_age=self.file_cache_max_age,
@@ -56,7 +58,7 @@ class PiggybackSource(AgentSource):
 
     def _make_fetcher(self) -> PiggybackFetcher:
         return PiggybackFetcher(
-            hostname=self.host_config.hostname,
+            hostname=self.hostname,
             address=self.ipaddress,
             time_settings=self.time_settings,
         )
@@ -64,7 +66,7 @@ class PiggybackSource(AgentSource):
     def _make_summarizer(self, *, exit_spec: ExitSpec) -> PiggybackSummarizer:
         return PiggybackSummarizer(
             exit_spec,
-            hostname=self.host_config.hostname,
+            hostname=self.hostname,
             ipaddress=self.ipaddress,
             time_settings=self.time_settings,
             # Tag: 'Always use and expect piggback data'

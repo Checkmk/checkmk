@@ -8,14 +8,12 @@ from typing import Final, Optional
 
 import cmk.utils.misc
 from cmk.utils.translations import TranslationOptions
-from cmk.utils.type_defs import AgentRawData, HostAddress, SourceType
+from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, SourceType
 
 from cmk.core_helpers.agent import AgentParser, AgentRawDataSection
 from cmk.core_helpers.cache import SectionStore
 from cmk.core_helpers.controller import FetcherType
 from cmk.core_helpers.host_sections import HostSections
-
-from cmk.base.config import HostConfig
 
 from ._abstract import Source
 
@@ -35,7 +33,7 @@ class AgentSource(Source[AgentRawData, AgentRawDataSection]):
 
     def __init__(
         self,
-        host_config: HostConfig,
+        hostname: HostName,
         ipaddress: Optional[HostAddress],
         *,
         source_type: SourceType,
@@ -47,9 +45,10 @@ class AgentSource(Source[AgentRawData, AgentRawDataSection]):
         agent_simulator: bool,
         translation: TranslationOptions,
         encoding_fallback: str,
+        check_interval: int,
     ):
         super().__init__(
-            host_config.hostname,
+            hostname,
             ipaddress,
             source_type=source_type,
             fetcher_type=fetcher_type,
@@ -63,22 +62,22 @@ class AgentSource(Source[AgentRawData, AgentRawDataSection]):
             else None,
             simulation_mode=simulation_mode,
         )
-        self.host_config: Final = host_config
         # TODO: We should cleanup these old directories one day.
         #       Then we can remove this special case
         self.main_data_source: Final[bool] = main_data_source
         self.translation: Final = translation
         self.encoding_fallback: Final = encoding_fallback
         self.agent_simulator: Final = agent_simulator
+        self.check_interval: Final = check_interval
 
     def _make_parser(self) -> AgentParser:
         return AgentParser(
-            self.host_config.hostname,
+            self.hostname,
             SectionStore[AgentRawDataSection](
                 self.persisted_sections_file_path,
                 logger=self._logger,
             ),
-            check_interval=self.host_config.check_mk_check_interval,
+            check_interval=self.check_interval,
             keep_outdated=self.use_outdated_persisted_sections,
             translation=self.translation,
             encoding_fallback=self.encoding_fallback,

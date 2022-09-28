@@ -30,7 +30,7 @@ class IPMISource(AgentSource):
         encoding_fallback: str,
     ) -> None:
         super().__init__(
-            host_config,
+            host_config.hostname,
             ipaddress,
             source_type=SourceType.MANAGEMENT,
             fetcher_type=FetcherType.IPMI,
@@ -44,6 +44,7 @@ class IPMISource(AgentSource):
             agent_simulator=agent_simulator,
             translation=translation,
             encoding_fallback=encoding_fallback,
+            check_interval=host_config.check_mk_check_interval,
         )
         self.credentials: Final[IPMICredentials] = self.get_ipmi_credentials(host_config)
 
@@ -58,7 +59,7 @@ class IPMISource(AgentSource):
 
     def _make_file_cache(self) -> AgentFileCache:
         return AgentFileCacheFactory(
-            self.host_config.hostname,
+            self.hostname,
             base_path=self.file_cache_base_path,
             simulation=self.simulation_mode,
             max_age=self.file_cache_max_age,

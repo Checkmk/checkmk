@@ -34,7 +34,7 @@ def test_attribute_defaults(monkeypatch) -> None:  # type:ignore[no-untyped-def]
         translation={},
         encoding_fallback="ascii",
     )
-    assert source.host_config.hostname == hostname
+    assert source.hostname == hostname
     assert source.ipaddress == ipaddress
     assert source.description == "Management board - IPMI"
     assert source.source_type is SourceType.MANAGEMENT
@@ -64,15 +64,8 @@ def test_ipmi_ipaddress_from_mgmt_board(monkeypatch) -> None:  # type:ignore[no-
         },
     )
 
-    source = IPMISource(
-        HostConfig.make_host_config(hostname),
-        ipaddress,
-        simulation_mode=True,
-        agent_simulator=True,
-        translation={},
-        encoding_fallback="ascii",
-    )
-    assert source.host_config.management_address == ipaddress
+    host_config = HostConfig.make_host_config(hostname)
+    assert host_config.management_address == ipaddress
 
 
 def test_description_with_ipaddress(monkeypatch) -> None:  # type:ignore[no-untyped-def]

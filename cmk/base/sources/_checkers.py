@@ -204,7 +204,7 @@ class _Builder:
         datasource_program = self.host_config.datasource_program
         if datasource_program is not None:
             return DSProgramSource(
-                self.host_config,
+                self.host_config.hostname,
                 self.ipaddress,
                 main_data_source=main_data_source,
                 cmdline=core_config.translate_ds_program_source_cmdline(
@@ -214,6 +214,7 @@ class _Builder:
                 agent_simulator=self.agent_simulator,
                 translation=self.translation,
                 encoding_fallback=self.encoding_fallback,
+                check_interval=self.host_config.check_mk_check_interval,
             )
 
         connection_mode = self.host_config.agent_connection_mode()
@@ -241,7 +242,7 @@ class _Builder:
     def _get_special_agents(self) -> Sequence[Source]:
         return [
             SpecialAgentSource(
-                self.host_config,
+                self.host_config.hostname,
                 self.ipaddress,
                 agentname=agentname,
                 cmdline=core_config.make_special_agent_cmdline(
@@ -260,6 +261,7 @@ class _Builder:
                 agent_simulator=self.agent_simulator,
                 translation=self.translation,
                 encoding_fallback=self.encoding_fallback,
+                check_interval=self.host_config.check_mk_check_interval,
             )
             for agentname, params in self.host_config.special_agents
         ]

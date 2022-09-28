@@ -5,8 +5,6 @@
 
 # pylint: disable=protected-access
 
-import functools
-
 import pytest
 
 from tests.testlib.base import Scenario
@@ -102,9 +100,7 @@ class TestMakeHostSectionsHosts:
             lambda self, raw_data, *, selection: result.OK(
                 DummyHostSection(
                     sections={
-                        SectionName("section_name_%s" % self.host_config.hostname): [
-                            ["section_content"]
-                        ]
+                        SectionName("section_name_%s" % self.hostname): [["section_content"]]
                     },
                     cache_info={},
                     piggybacked_raw_data={},
@@ -177,32 +173,43 @@ class TestMakeHostSectionsHosts:
         assert section.sections[SectionName("section_name_%s" % hostname)] == [["section_content"]]
 
     @pytest.mark.parametrize(
-        "source",
+        "make_source",
         [
-            functools.partial(PiggybackSource, time_settings=()),
-            lambda hostname, ipaddress, simulation_mode, agent_simulator, translation, encoding_fallback: ProgramSource.ds(
+            lambda hostname, ipaddress: PiggybackSource(
+                HostConfig.make_host_config(hostname),
+                ipaddress,
+                simulation_mode=True,
+                agent_simulator=True,
+                time_settings=(),
+                translation={},
+                encoding_fallback="ascii",
+            ),
+            lambda hostname, ipaddress: ProgramSource.ds(
                 hostname,
                 ipaddress,
+                main_data_source=False,
                 cmdline="",
-                simulation_mode=simulation_mode,
-                agent_simulator=agent_simulator,
-                translation=translation,
-                encoding_fallback=encoding_fallback,
+                simulation_mode=True,
+                agent_simulator=True,
+                translation={},
+                encoding_fallback="ascii",
+                check_interval=0,
             ),
-            TCPSource,
+            lambda hostname, ipaddress: TCPSource(
+                HostConfig.make_host_config(hostname),
+                ipaddress,
+                main_data_source=True,
+                simulation_mode=True,
+                agent_simulator=True,
+                translation={},
+                encoding_fallback="ascii",
+            ),
         ],
     )
     def test_one_nonsnmp_source(  # type:ignore[no-untyped-def]
-        self, hostname, ipaddress, config_cache, host_config, source
+        self, hostname, ipaddress, config_cache, host_config, make_source
     ) -> None:
-        source = source(
-            host_config,
-            ipaddress,
-            simulation_mode=True,
-            agent_simulator=True,
-            translation={},
-            encoding_fallback="ascii",
-        )
+        source = make_source(hostname, ipaddress)
         assert source.source_type is SourceType.HOST
 
         host_sections = _collect_host_sections(
@@ -229,22 +236,18 @@ class TestMakeHostSectionsHosts:
         assert len(section.sections) == 1
         assert section.sections[SectionName("section_name_%s" % hostname)] == [["section_content"]]
 
-    def test_multiple_sources_from_the_same_host(
-        self,
-        hostname,
-        ipaddress,
-        config_cache,
-        host_config,
-    ):
+    @pytest.mark.usefixtures("config_cache")
+    def test_multiple_sources_from_the_same_host(self, hostname, ipaddress, host_config):
         sources = [
             ProgramSource.ds(
-                host_config,
+                hostname,
                 ipaddress,
                 cmdline="",
                 simulation_mode=True,
                 agent_simulator=True,
                 translation={},
                 encoding_fallback="ascii",
+                check_interval=0,
             ),
             TCPSource(
                 host_config,
@@ -292,13 +295,14 @@ class TestMakeHostSectionsHosts:
 
         sources = [
             ProgramSource.ds(
-                HostConfig.make_host_config(HostName(f"{hostname}0")),
+                HostName(f"{hostname}0"),
                 ipaddress,
                 cmdline="",
                 simulation_mode=True,
                 agent_simulator=True,
                 translation={},
                 encoding_fallback="ascii",
+                check_interval=0,
             ),
             TCPSource(
                 HostConfig.make_host_config(HostName(f"{hostname}1")),
@@ -341,8 +345,8 @@ class TestMakeHostSectionsHosts:
         }
 
         for source in sources:
-            assert host_sections[HostKey(source.host_config.hostname, SourceType.HOST)].sections[
-                SectionName(f"section_name_{source.host_config.hostname}")
+            assert host_sections[HostKey(source.hostname, SourceType.HOST)].sections[
+                SectionName(f"section_name_{source.hostname}")
             ] == [["section_content"]]
 
 
@@ -372,8 +376,8 @@ class TestMakeHostSectionsClusters:
             lambda self, *args, **kwargs: result.OK(
                 DummyHostSection(
                     sections={
-                        SectionName("section_name_%s" % self.host_config.hostname): [
-                            ["section_content_%s" % self.host_config.hostname]
+                        SectionName("section_name_%s" % self.hostname): [
+                            ["section_content_%s" % self.hostname]
                         ]
                     },
                     cache_info={},

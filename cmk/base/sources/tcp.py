@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import socket
-from typing import Optional
+from typing import Final, Optional
 
 from cmk.utils.translations import TranslationOptions
 from cmk.utils.type_defs import ExitSpec, HostAddress, SourceType
@@ -36,7 +36,7 @@ class TCPSource(AgentSource):
         encoding_fallback: str,
     ) -> None:
         super().__init__(
-            host_config,
+            host_config.hostname,
             ipaddress,
             source_type=SourceType.HOST,
             fetcher_type=FetcherType.TCP,
@@ -47,13 +47,15 @@ class TCPSource(AgentSource):
             agent_simulator=agent_simulator,
             translation=translation,
             encoding_fallback=encoding_fallback,
+            check_interval=host_config.check_mk_check_interval,
         )
+        self.host_config: Final = host_config
         self.port: Optional[int] = None
         self.timeout: Optional[float] = None
 
     def _make_file_cache(self) -> AgentFileCache:
         return AgentFileCacheFactory(
-            self.host_config.hostname,
+            self.hostname,
             base_path=self.file_cache_base_path,
             simulation=self.simulation_mode,
             use_only_cache=self.use_only_cache,
@@ -64,7 +66,7 @@ class TCPSource(AgentSource):
         return TCPFetcher(
             family=socket.AF_INET6 if self.host_config.is_ipv6_primary else socket.AF_INET,
             address=(self.ipaddress, self.port or self.host_config.agent_port),
-            host_name=self.host_config.hostname,
+            host_name=self.hostname,
             timeout=self.timeout or self.host_config.tcp_connect_timeout,
             encryption_settings=self.host_config.agent_encryption,
         )

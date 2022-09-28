@@ -1390,7 +1390,7 @@ class AutomationDiagHost(Automation):
             source.file_cache_max_age = config.max_cachefile_age()
             if isinstance(source, sources.programs.DSProgramSource) and cmd:
                 source = source.ds(
-                    host_config,
+                    host_config.hostname,
                     ipaddress,
                     cmdline=core_config.translate_ds_program_source_cmdline(
                         cmd,
@@ -1401,6 +1401,7 @@ class AutomationDiagHost(Automation):
                     agent_simulator=config.agent_simulator,
                     translation=config.get_piggyback_translations(host_config.hostname),
                     encoding_fallback=config.fallback_agent_output_encoding,
+                    check_interval=host_config.check_mk_check_interval,
                 )
             elif isinstance(source, sources.tcp.TCPSource):
                 source.port = agent_port

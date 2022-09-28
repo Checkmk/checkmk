@@ -7,7 +7,7 @@ import pytest
 
 from tests.testlib.base import Scenario
 
-from cmk.utils.type_defs import result, SectionName
+from cmk.utils.type_defs import HostName, result, SectionName
 
 from cmk.base import config
 from cmk.base.config import HostConfig
@@ -116,34 +116,64 @@ def test_host_config_creates_passing_source_sources(
 
 
 @pytest.mark.parametrize(
-    "source, kwargs",
+    "make_source",
     [
-        (SpecialAgentSource, {"agentname": None, "cmdline": "", "stdin": ""}),
-        (DSProgramSource, {"cmdline": ""}),
-        (PiggybackSource, {"time_settings": ()}),
-        (TCPSource, {}),
+        lambda hostname, ipaddress: SpecialAgentSource(
+            hostname,
+            ipaddress,
+            simulation_mode=True,
+            agent_simulator=True,
+            translation={},
+            encoding_fallback="ascii",
+            check_interval=0,
+            agentname="",
+            cmdline="",
+            stdin="",
+        ),
+        lambda hostname, ipaddress: DSProgramSource(
+            hostname,
+            ipaddress,
+            simulation_mode=True,
+            agent_simulator=True,
+            translation={},
+            encoding_fallback="ascii",
+            check_interval=0,
+            cmdline="",
+        ),
+        lambda hostname, ipaddress: PiggybackSource(
+            HostConfig.make_host_config(hostname),
+            ipaddress,
+            simulation_mode=True,
+            agent_simulator=True,
+            translation={},
+            encoding_fallback="ascii",
+            time_settings=(),
+        ),
+        lambda hostname, ipaddress: TCPSource(
+            HostConfig.make_host_config(hostname),
+            ipaddress,
+            simulation_mode=True,
+            agent_simulator=True,
+            translation={},
+            encoding_fallback="ascii",
+        ),
     ],
 )
 def test_data_source_preselected(  # type:ignore[no-untyped-def]
-    monkeypatch, source, kwargs
+    monkeypatch, make_source
 ) -> None:
-
     selected_sections = {SectionName("keep")}  # <- this is what we care about
-    kwargs["simulation_mode"] = True
-    kwargs["agent_simulator"] = True
-    kwargs["translation"] = {}
-    kwargs["encoding_fallback"] = "ascii"
 
     # a lot of hocus pocus to instantiate a source:
-    make_scenario("hostname", {}).apply(monkeypatch)
+    hostname = HostName("hostname")
+    make_scenario(hostname, {}).apply(monkeypatch)
     monkeypatch.setattr(config, "special_agent_info", {None: lambda *a: []})
-    source_inst = source(
-        HostConfig.make_host_config("hostname"),
+    source = make_source(
+        hostname,
         "127.0.0.1",
-        **kwargs,
     )
 
-    parse_result = source_inst.parse(
+    parse_result = source.parse(
         result.OK(
             b"<<<dismiss>>>\n"
             b"this is not\n"

@@ -6,13 +6,12 @@
 from typing import Optional
 
 from cmk.utils.translations import TranslationOptions
-from cmk.utils.type_defs import ExitSpec, HostAddress, SourceType
+from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, SourceType
 
 from cmk.core_helpers import FetcherType, ProgramFetcher
 from cmk.core_helpers.agent import AgentFileCache, AgentFileCacheFactory, AgentSummarizerDefault
 
 import cmk.base.config as config
-from cmk.base.config import HostConfig
 
 from .agent import AgentSource
 
@@ -20,7 +19,7 @@ from .agent import AgentSource
 class ProgramSource(AgentSource):
     def __init__(
         self,
-        host_config: HostConfig,
+        hostname: HostName,
         ipaddress: Optional[HostAddress],
         *,
         id_: str,
@@ -31,9 +30,10 @@ class ProgramSource(AgentSource):
         agent_simulator: bool,
         translation: TranslationOptions,
         encoding_fallback: str,
+        check_interval: int,
     ) -> None:
         super().__init__(
-            host_config,
+            hostname,
             ipaddress,
             source_type=SourceType.HOST,
             fetcher_type=FetcherType.PROGRAM,
@@ -47,13 +47,14 @@ class ProgramSource(AgentSource):
             agent_simulator=agent_simulator,
             translation=translation,
             encoding_fallback=encoding_fallback,
+            check_interval=check_interval,
         )
         self.cmdline = cmdline
         self.stdin = stdin
 
     @staticmethod
     def special_agent(
-        host_config: HostConfig,
+        hostname: HostName,
         ipaddress: Optional[HostAddress],
         *,
         main_data_source: bool = False,
@@ -64,9 +65,10 @@ class ProgramSource(AgentSource):
         agent_simulator: bool,
         translation: TranslationOptions,
         encoding_fallback: str,
+        check_interval: int,
     ) -> "SpecialAgentSource":
         return SpecialAgentSource(
-            host_config,
+            hostname,
             ipaddress,
             main_data_source=main_data_source,
             agentname=agentname,
@@ -76,11 +78,12 @@ class ProgramSource(AgentSource):
             agent_simulator=agent_simulator,
             translation=translation,
             encoding_fallback=encoding_fallback,
+            check_interval=check_interval,
         )
 
     @staticmethod
     def ds(
-        host_config: HostConfig,
+        hostname: HostName,
         ipaddress: HostAddress,
         *,
         main_data_source: bool = False,
@@ -89,9 +92,10 @@ class ProgramSource(AgentSource):
         agent_simulator: bool,
         translation: TranslationOptions,
         encoding_fallback: str,
+        check_interval: int,
     ) -> "DSProgramSource":
         return DSProgramSource(
-            host_config,
+            hostname,
             ipaddress,
             main_data_source=main_data_source,
             cmdline=cmdline,
@@ -99,11 +103,12 @@ class ProgramSource(AgentSource):
             agent_simulator=agent_simulator,
             translation=translation,
             encoding_fallback=encoding_fallback,
+            check_interval=check_interval,
         )
 
     def _make_file_cache(self) -> AgentFileCache:
         return AgentFileCacheFactory(
-            self.host_config.hostname,
+            self.hostname,
             base_path=self.file_cache_base_path,
             simulation=self.simulation_mode,
             max_age=self.file_cache_max_age,
@@ -130,7 +135,7 @@ class ProgramSource(AgentSource):
 class DSProgramSource(ProgramSource):
     def __init__(
         self,
-        host_config: HostConfig,
+        hostname: HostName,
         ipaddress: Optional[HostAddress],
         *,
         main_data_source: bool = False,
@@ -139,9 +144,10 @@ class DSProgramSource(ProgramSource):
         agent_simulator: bool,
         translation: TranslationOptions,
         encoding_fallback: str,
+        check_interval: int,
     ) -> None:
         super().__init__(
-            host_config,
+            hostname,
             ipaddress,
             id_="agent",
             main_data_source=main_data_source,
@@ -151,13 +157,14 @@ class DSProgramSource(ProgramSource):
             agent_simulator=agent_simulator,
             translation=translation,
             encoding_fallback=encoding_fallback,
+            check_interval=check_interval,
         )
 
 
 class SpecialAgentSource(ProgramSource):
     def __init__(
         self,
-        host_config: HostConfig,
+        hostname: HostName,
         ipaddress: Optional[HostAddress],
         *,
         main_data_source: bool = False,
@@ -168,9 +175,10 @@ class SpecialAgentSource(ProgramSource):
         agent_simulator: bool,
         translation: TranslationOptions,
         encoding_fallback: str,
+        check_interval: int,
     ) -> None:
         super().__init__(
-            host_config,
+            hostname,
             ipaddress,
             id_=f"special_{agentname}",
             main_data_source=main_data_source,
@@ -180,6 +188,7 @@ class SpecialAgentSource(ProgramSource):
             agent_simulator=agent_simulator,
             translation=translation,
             encoding_fallback=encoding_fallback,
+            check_interval=check_interval,
         )
         self.special_agent_id = agentname
         self.special_agent_plugin_file_name = "agent_%s" % agentname

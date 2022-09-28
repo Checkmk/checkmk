@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import socket
+
 import pytest
 
 from tests.testlib.base import Scenario
@@ -141,21 +143,28 @@ def test_host_config_creates_passing_source_sources(
             cmdline="",
         ),
         lambda hostname, ipaddress: PiggybackSource(
-            HostConfig.make_host_config(hostname),
+            hostname,
             ipaddress,
             simulation_mode=True,
             agent_simulator=True,
             translation={},
             encoding_fallback="ascii",
             time_settings=(),
+            check_interval=0,
+            is_piggyback_host=True,
         ),
         lambda hostname, ipaddress: TCPSource(
-            HostConfig.make_host_config(hostname),
+            hostname,
             ipaddress,
             simulation_mode=True,
             agent_simulator=True,
             translation={},
             encoding_fallback="ascii",
+            check_interval=0,
+            address_family=socket.AF_INET,
+            agent_port=0,
+            tcp_connect_timeout=0,
+            agent_encryption={},
         ),
     ],
 )

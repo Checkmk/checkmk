@@ -4,15 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import socket
-from typing import Final, Optional
+from typing import Final, Mapping, Optional
 
 from cmk.utils.translations import TranslationOptions
-from cmk.utils.type_defs import ExitSpec, HostAddress, SourceType
+from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, SourceType
 
 from cmk.core_helpers import FetcherType, TCPFetcher
 from cmk.core_helpers.agent import AgentFileCache, AgentFileCacheFactory, AgentSummarizerDefault
-
-from cmk.base.config import HostConfig
 
 from .agent import AgentSource
 
@@ -26,7 +24,7 @@ class TCPSource(AgentSource):
 
     def __init__(
         self,
-        host_config: HostConfig,
+        hostname: HostName,
         ipaddress: Optional[HostAddress],
         *,
         main_data_source: bool = False,
@@ -34,22 +32,32 @@ class TCPSource(AgentSource):
         agent_simulator: bool,
         translation: TranslationOptions,
         encoding_fallback: str,
+        check_interval: int,
+        address_family: socket.AddressFamily,
+        agent_port: int,
+        tcp_connect_timeout: float,
+        agent_encryption: Mapping[str, str],
     ) -> None:
         super().__init__(
-            host_config.hostname,
+            hostname,
             ipaddress,
             source_type=SourceType.HOST,
             fetcher_type=FetcherType.TCP,
-            description=TCPSource._make_description(ipaddress, host_config.agent_port),
+            description=TCPSource._make_description(ipaddress, agent_port),
             id_="agent",
             main_data_source=main_data_source,
             simulation_mode=simulation_mode,
             agent_simulator=agent_simulator,
             translation=translation,
             encoding_fallback=encoding_fallback,
-            check_interval=host_config.check_mk_check_interval,
+            check_interval=check_interval,
         )
-        self.host_config: Final = host_config
+        self.agent_port: Final = agent_port
+        self.address_family: Final = address_family
+        self.tcp_connect_timeout: Final = tcp_connect_timeout
+        self.agent_encryption: Final = agent_encryption
+
+        # TODO(ml): These two options ought to be static as well!
         self.port: Optional[int] = None
         self.timeout: Optional[float] = None
 
@@ -64,11 +72,11 @@ class TCPSource(AgentSource):
 
     def _make_fetcher(self) -> TCPFetcher:
         return TCPFetcher(
-            family=socket.AF_INET6 if self.host_config.is_ipv6_primary else socket.AF_INET,
-            address=(self.ipaddress, self.port or self.host_config.agent_port),
+            family=self.address_family,
+            address=(self.ipaddress, self.port or self.agent_port),
             host_name=self.hostname,
-            timeout=self.timeout or self.host_config.tcp_connect_timeout,
-            encryption_settings=self.host_config.agent_encryption,
+            timeout=self.timeout or self.tcp_connect_timeout,
+            encryption_settings=self.agent_encryption,
         )
 
     def _make_summarizer(self, *, exit_spec: ExitSpec) -> AgentSummarizerDefault:

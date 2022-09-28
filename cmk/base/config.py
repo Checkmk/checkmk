@@ -2805,7 +2805,7 @@ class HostConfig:
         return timeouts[0]
 
     @property
-    def agent_encryption(self) -> Dict[str, str]:
+    def agent_encryption(self) -> Mapping[str, str]:
         settings = self._config_cache.host_extra_conf(self.hostname, agent_encryption)
         if not settings:
             return {"use_regular": "disable", "use_realtime": "enforce"}

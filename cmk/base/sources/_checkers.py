@@ -124,7 +124,7 @@ class _Builder:
         if "no-piggyback" not in self.host_config.tags:
             self._add(
                 PiggybackSource(
-                    self.host_config,
+                    self.host_config.hostname,
                     self.ipaddress,
                     simulation_mode=self.simulation_mode,
                     agent_simulator=self.agent_simulator,
@@ -133,6 +133,8 @@ class _Builder:
                     ),
                     translation=self.translation,
                     encoding_fallback=self.encoding_fallback,
+                    check_interval=self.host_config.check_mk_check_interval,
+                    is_piggyback_host=self.host_config.is_piggyback_host,
                 )
             )
 
@@ -229,13 +231,18 @@ class _Builder:
             )
         if connection_mode == "pull-agent":
             return TCPSource(
-                self.host_config,
+                self.host_config.hostname,
                 self.ipaddress,
                 main_data_source=main_data_source,
                 simulation_mode=self.simulation_mode,
                 agent_simulator=self.agent_simulator,
                 translation=self.translation,
                 encoding_fallback=self.encoding_fallback,
+                check_interval=self.host_config.check_mk_check_interval,
+                address_family=self.host_config.default_address_family,
+                agent_port=self.host_config.agent_port,
+                tcp_connect_timeout=self.host_config.tcp_connect_timeout,
+                agent_encryption=self.host_config.agent_encryption,
             )
         raise NotImplementedError(f"connection mode {connection_mode!r}")
 

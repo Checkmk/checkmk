@@ -5,6 +5,8 @@
 
 # pylint: disable=protected-access
 
+import socket
+
 import pytest
 
 from tests.testlib.base import Scenario
@@ -176,13 +178,15 @@ class TestMakeHostSectionsHosts:
         "make_source",
         [
             lambda hostname, ipaddress: PiggybackSource(
-                HostConfig.make_host_config(hostname),
+                hostname,
                 ipaddress,
                 simulation_mode=True,
                 agent_simulator=True,
                 time_settings=(),
                 translation={},
                 encoding_fallback="ascii",
+                check_interval=0,
+                is_piggyback_host=True,
             ),
             lambda hostname, ipaddress: ProgramSource.ds(
                 hostname,
@@ -196,13 +200,18 @@ class TestMakeHostSectionsHosts:
                 check_interval=0,
             ),
             lambda hostname, ipaddress: TCPSource(
-                HostConfig.make_host_config(hostname),
+                hostname,
                 ipaddress,
                 main_data_source=True,
                 simulation_mode=True,
                 agent_simulator=True,
                 translation={},
                 encoding_fallback="ascii",
+                check_interval=0,
+                address_family=socket.AF_INET,
+                agent_port=0,
+                tcp_connect_timeout=0,
+                agent_encryption={},
             ),
         ],
     )
@@ -250,12 +259,17 @@ class TestMakeHostSectionsHosts:
                 check_interval=0,
             ),
             TCPSource(
-                host_config,
+                hostname,
                 ipaddress,
                 simulation_mode=True,
                 agent_simulator=True,
                 translation={},
                 encoding_fallback="ascii",
+                check_interval=0,
+                address_family=socket.AF_INET,
+                agent_port=0,
+                tcp_connect_timeout=0,
+                agent_encryption={},
             ),
         ]
 
@@ -305,20 +319,30 @@ class TestMakeHostSectionsHosts:
                 check_interval=0,
             ),
             TCPSource(
-                HostConfig.make_host_config(HostName(f"{hostname}1")),
+                HostName(f"{hostname}1"),
                 ipaddress,
                 simulation_mode=True,
                 agent_simulator=True,
                 translation={},
                 encoding_fallback="ascii",
+                check_interval=0,
+                address_family=socket.AF_INET,
+                agent_port=0,
+                tcp_connect_timeout=0,
+                agent_encryption={},
             ),
             TCPSource(
-                HostConfig.make_host_config(HostName(f"{hostname}2")),
+                HostName(f"{hostname}2"),
                 ipaddress,
                 simulation_mode=True,
                 agent_simulator=True,
                 translation={},
                 encoding_fallback="ascii",
+                check_interval=0,
+                address_family=socket.AF_INET,
+                agent_port=0,
+                tcp_connect_timeout=0,
+                agent_encryption={},
             ),
         ]
 

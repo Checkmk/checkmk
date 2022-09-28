@@ -14,15 +14,13 @@ from cmk.core_helpers import FetcherType, PiggybackFetcher
 from cmk.core_helpers.agent import AgentFileCache, NoCacheFactory
 from cmk.core_helpers.piggyback import PiggybackSummarizer
 
-from cmk.base.config import HostConfig
-
 from .agent import AgentSource
 
 
 class PiggybackSource(AgentSource):
     def __init__(
         self,
-        host_config: HostConfig,
+        hostname: HostName,
         ipaddress: Optional[HostAddress],
         *,
         simulation_mode: bool,
@@ -30,23 +28,26 @@ class PiggybackSource(AgentSource):
         time_settings: Sequence[Tuple[Optional[str], str, int]],
         translation: TranslationOptions,
         encoding_fallback: str,
+        check_interval: int,
+        is_piggyback_host: bool,
     ) -> None:
         super().__init__(
-            host_config.hostname,
+            hostname,
             ipaddress,
             source_type=SourceType.HOST,
             fetcher_type=FetcherType.PIGGYBACK,
-            description=PiggybackSource._make_description(host_config.hostname),
+            description=PiggybackSource._make_description(hostname),
             id_="piggyback",
             main_data_source=False,
             simulation_mode=simulation_mode,
             agent_simulator=agent_simulator,
             translation=translation,
             encoding_fallback=encoding_fallback,
-            check_interval=host_config.check_mk_check_interval,
+            check_interval=check_interval,
         )
         self.time_settings: Final = time_settings
-        self.host_config: Final = host_config
+        # Tag: 'Always use and expect piggback data'
+        self.is_piggyback_host: Final = is_piggyback_host
 
     def _make_file_cache(self) -> AgentFileCache:
         return NoCacheFactory(
@@ -69,8 +70,7 @@ class PiggybackSource(AgentSource):
             hostname=self.hostname,
             ipaddress=self.ipaddress,
             time_settings=self.time_settings,
-            # Tag: 'Always use and expect piggback data'
-            always=self.host_config.is_piggyback_host,
+            always=self.is_piggyback_host,
         )
 
     @staticmethod

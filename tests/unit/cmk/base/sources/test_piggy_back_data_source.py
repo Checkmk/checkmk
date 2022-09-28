@@ -18,24 +18,27 @@ from cmk.base.sources.piggyback import PiggybackSource
 
 
 @pytest.mark.parametrize("ipaddress", [None, HostAddress("127.0.0.1")])
-def test_attribute_defaults(monkeypatch: MonkeyPatch, ipaddress: HostAddress) -> None:
+def test_attribute_defaults(ipaddress: HostAddress, monkeypatch: MonkeyPatch) -> None:
     hostname = HostName("testhost")
+
+    # hocus pocus abracadabra: `exit_code_spec` thou gavest me 🪄✨
     ts = Scenario()
     ts.add_host(hostname)
     ts.apply(monkeypatch)
-
     host_config = HostConfig.make_host_config(hostname)
+
     source = PiggybackSource(
-        host_config,
+        hostname,
         ipaddress,
         simulation_mode=True,
         agent_simulator=True,
         time_settings=[],
         translation={},
         encoding_fallback="ascii",
+        check_interval=0,
+        is_piggyback_host=False,
     )
-    assert source.hostname == hostname
-    assert source.ipaddress == ipaddress
+
     assert source.description.startswith("Process piggyback data from")
     assert not source.summarize(
         result.OK(HostSections[AgentRawDataSection]()),

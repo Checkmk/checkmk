@@ -423,6 +423,8 @@ def _update_auth_options(  # type:ignore[no-untyped-def]
 
             if internal_auth_attrs.get("enforce_password_change"):
                 internal_attrs["serial"] = 1
+
+        internal_attrs["connector"] = "htpasswd"
     return internal_attrs
 
 

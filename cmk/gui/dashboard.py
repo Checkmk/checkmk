@@ -1761,7 +1761,7 @@ def _render_dashboard_buttons(dashboard_name: DashboardName, dashboard: Dashboar
 
 @cmk.gui.pages.register("create_dashboard")
 def page_create_dashboard() -> None:
-    visuals.page_create_visual("dashboards", visual_info_registry.keys())
+    visuals.page_create_visual("dashboards", list(visual_info_registry.keys()))
 
 
 # .

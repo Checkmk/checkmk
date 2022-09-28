@@ -5298,3 +5298,59 @@ def test_cleanup_contexts(  # type:ignore[no-untyped-def]
     context, single_infos, expected_context
 ) -> None:
     assert visuals.cleanup_context_filters(context, single_infos) == expected_context
+
+
+def test_get_context_specs_no_info_limit() -> None:
+    result = visuals.get_context_specs({"single_infos": ["host"], "context": {}}, info_handler=None)
+    assert [r[0] for r in result] == [
+        "host",
+        "service",
+        "hostgroup",
+        "servicegroup",
+        "log",
+        "comment",
+        "downtime",
+        "aggr",
+        "aggr_group",
+        "discovery",
+        "event",
+        "history",
+        "invbackplane",
+        "invchassis",
+        "invcontainer",
+        "invfan",
+        "invmodule",
+        "invother",
+        "invpsu",
+        "invsensor",
+        "invstack",
+        "invunknown",
+        "invinterface",
+        "invtunnels",
+        "invcmksites",
+        "invcmkversions",
+        "invdockercontainers",
+        "invdockerimages",
+        "invibmmqchannels",
+        "invibmmqmanagers",
+        "invibmmqqueues",
+        "invoradataguardstats",
+        "invorainstance",
+        "invorapga",
+        "invorarecoveryarea",
+        "invorasga",
+        "invorasystemparameter",
+        "invoratablespace",
+        "invkernelconfig",
+        "invswpac",
+    ]
+
+
+def test_get_context_specs_only_host_and_service_info() -> None:
+    result = visuals.get_context_specs(
+        {"single_infos": ["host"], "context": {}}, info_handler=lambda v: ["host", "service"]
+    )
+    assert [r[0] for r in result] == [
+        "host",
+        "service",
+    ]

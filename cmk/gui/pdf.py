@@ -452,8 +452,13 @@ class Document:
         self._canvas.rect(self._left, self._bottom, self._inner_width, self._inner_height, fill=0)
         self.restore_state()
 
-    def place_pil_image(  # type:ignore[no-untyped-def]
-        self, position: Position, pil: Image, width_mm: SizeMM, height_mm: SizeMM, resolution
+    def place_pil_image(
+        self,
+        position: Position,
+        pil: Image,
+        width_mm: SizeMM | None,
+        height_mm: SizeMM | None,
+        resolution: int | None,
     ) -> None:
         width, height = self.get_image_dimensions(pil, width_mm, height_mm, resolution)
         x, y = self.convert_position(position, width, height)
@@ -540,9 +545,14 @@ class Document:
         self._linepos -= margin * mm
         self.restore_state()
 
-    def add_pil_image(  # type:ignore[no-untyped-def]
-        self, pil: Image, width, height, resolution=None, border=True
-    ):
+    def add_pil_image(
+        self,
+        pil: Image,
+        width: SizeMM | None,
+        height: SizeMM | None,
+        resolution: SizeDPI | None = None,
+        border: bool = True,
+    ) -> None:
         width, height = self.get_image_dimensions(pil, width, height, resolution)
 
         self.advance(height)
@@ -948,9 +958,9 @@ class Document:
     def get_image_dimensions(
         self,
         pil: Image,
-        width_mm: SizeMM,
-        height_mm: SizeMM,
-        resolution_dpi: Optional[SizeDPI] = None,
+        width_mm: SizeMM | None,
+        height_mm: SizeMM | None,
+        resolution_dpi: SizeDPI | None = None,
     ) -> tuple[SizeInternal, SizeInternal]:
         # Get bounding box of image in order to get aspect (width / height)
         bbox = pil.getbbox()

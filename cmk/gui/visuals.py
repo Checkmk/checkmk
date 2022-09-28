@@ -91,6 +91,7 @@ from cmk.gui.type_defs import (
     FilterName,
     HTTPVariables,
     InfoName,
+    PermissionName,
     SingleInfos,
     TypedVisual,
     ViewSpec,
@@ -194,7 +195,7 @@ def _register_pre_21_plugin_api() -> None:
 
 
 # TODO: This has been obsoleted by pagetypes.py
-def declare_visual_permissions(what, what_plural):
+def declare_visual_permissions(what: VisualTypeName, what_plural: str) -> None:
     declare_permission(
         "general.edit_" + what,
         _("Customize %s and use them") % what_plural,
@@ -547,8 +548,8 @@ def load_visuals_of_a_user(
     return user_visuals
 
 
-def declare_visual_permission(what, name, visual):
-    permname = "%s.%s" % (what[:-1], name)
+def declare_visual_permission(what: VisualTypeName, name: str, visual: T) -> None:
+    permname = PermissionName("%s.%s" % (what[:-1], name))
     if visual["public"] and permname not in permission_registry:
         declare_permission(
             permname, visual["title"], visual["description"], ["admin", "user", "guest"]
@@ -557,7 +558,7 @@ def declare_visual_permission(what, name, visual):
 
 # Load all users visuals just in order to declare permissions of custom visuals
 # TODO: Use regular load logic here, e.g. _load_custom_user_visuals()
-def declare_custom_permissions(what):
+def declare_custom_permissions(what: VisualTypeName) -> None:
     for dirpath in cmk.utils.paths.profile_dir.iterdir():
         try:
             if dirpath.is_dir():
@@ -686,7 +687,7 @@ def page_list(  # pylint: disable=too-many-branches
     render_custom_buttons: Callable[[VisualName, Visual], None] | None = None,
     render_custom_columns: Callable[[Table, VisualName, Visual], None] | None = None,
     custom_page_menu_entries: Callable[[], Iterable[PageMenuEntry]] | None = None,
-    check_deletable_handler: Callable[[dict[Tuple[UserId, VisualName], Visual], UserId, str], None]
+    check_deletable_handler: Callable[[dict[Tuple[UserId, VisualName], Visual], UserId, str], bool]
     | None = None,
 ) -> None:
 
@@ -903,7 +904,9 @@ def _partition_visuals(
 #   '----------------------------------------------------------------------'
 
 
-def page_create_visual(what, info_keys, next_url=None):
+def page_create_visual(
+    what: VisualTypeName, info_keys: SingleInfos, next_url: str | None = None
+) -> None:
     visual_name = visual_type_registry[what]().title
     title = _("Create %s") % visual_name
     what_s = what[:-1]

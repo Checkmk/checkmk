@@ -491,10 +491,6 @@ class ServiceStatsDashlet(ABCFigureDashlet):
         return False
 
     @classmethod
-    def infos(cls) -> List[str]:
-        return ["host"]
-
-    @classmethod
     def initial_size(cls):
         return (30, 18)
 

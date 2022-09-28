@@ -1,0 +1,12 @@
+Title: Dashboard element "Service statistics": Fix "Service" filters
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 2.1.0p14
+Date: 1664348624
+
+For the dashboard element "Service statistics", "Service" context filters could not be applied from version 2.1.0 on.
+This is fixed: When editing the dashboard element "Service statistics", under "Context / Search Filters" both "Host" and "Service" filters can be chosen again.

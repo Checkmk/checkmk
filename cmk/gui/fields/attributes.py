@@ -569,6 +569,7 @@ class SNMPCommunity(BaseSchema):
     type = Constant(constant="v1_v2_community")
     community = String(
         description="SNMP community (SNMP Versions 1 and 2c)",
+        required=True,
     )
 
     @post_load

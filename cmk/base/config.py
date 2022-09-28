@@ -84,6 +84,7 @@ from cmk.utils.type_defs import (
     HostgroupName,
     HostKey,
     HostName,
+    IPMICredentials,
     Item,
     Labels,
     LabelSources,
@@ -223,7 +224,6 @@ ObjectAttributes = Dict[str, Any]
 GroupDefinitions = Dict[str, str]
 RecurringDowntime = Dict[str, Union[int, str]]  # TODO(sk): TypedDict here
 CheckInfo = Dict  # TODO: improve this type
-IPMICredentials = Dict[str, str]
 ManagementCredentials = Union[SNMPCredentials, IPMICredentials]
 
 
@@ -3148,6 +3148,15 @@ class HostConfig:
                 return credentials
 
         return default_value
+
+    @property
+    def ipmi_credentials(self) -> IPMICredentials:
+        credentials = self.management_credentials
+        if credentials is None:
+            return {}
+        # The cast is required because host_config.management_credentials
+        # has type `Union[None, str, Tuple[str, ...], Dict[str, str]]`
+        return cast(IPMICredentials, credentials)
 
     @property
     def management_snmp_config(self) -> SNMPHostConfig:

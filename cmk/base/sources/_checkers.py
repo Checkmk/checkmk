@@ -179,12 +179,14 @@ class _Builder:
         elif protocol == "ipmi":
             self._add(
                 IPMISource(
-                    self.host_config,
+                    self.host_config.hostname,
                     ip_address,
                     simulation_mode=self.simulation_mode,
                     agent_simulator=self.agent_simulator,
                     translation=self.translation,
                     encoding_fallback=self.encoding_fallback,
+                    check_interval=self.host_config.check_mk_check_interval,
+                    management_credentials=self.host_config.ipmi_credentials,
                 )
             )
         else:

@@ -84,6 +84,54 @@ Function readIniFile(path)
     Set parsed = Nothing
 End Function
 
+Function appendElement(array_, element)
+   Dim incremented_index
+
+   incremented_index = UBound(array_) + 1
+   ReDim Preserve array_(incremented_index)
+   array_(incremented_index) = element
+   appendElement = array_
+End Function
+
+Class connectionResponse
+   Private connectionState
+   Private connectionErrorLog
+   Private connectionDebugLog
+
+   Public Default Function Init(state, errorLog, debugLog)
+      connectionState = state
+      connectionErrorLog = errorLog
+      connectionDebugLog = debugLog
+
+      Set Init = Me
+   End Function
+
+   Public Property Get State
+      ' 0 - closed
+      ' 1 - open
+      ' 2 - connecting
+      ' 4 - executing a command
+      ' 8 - rows are being fetched
+      State = connectionState
+   End Property
+
+   Public Property Get logMessage
+      If connectionState = 1 Then
+         logMessage = ""
+         Exit Property
+      End If
+
+      Dim message
+      message = "INFO: " & Join(connectionDebugLog, "; ")
+      If UBound(connectionErrorLog) + 1 > 0 Then
+         message = message & " ;; " & "ERROR: " & Join(connectionErrorLog, "; ")
+      End If
+
+      logMessage = message
+   End Property
+
+End Class
+
 Class DbSession
    Private dbConnectionHandler
 
@@ -103,10 +151,15 @@ Class DbSession
    Public Function connect(instance, authenticationConfig, providers)
       On Error Resume Next
 
-      Dim connectionProvider
+      Dim connectionProvider, errorLog, debugLog
+
+      errorLog = Array()
+      debugLog = Array()
 
       For Each connectionProvider in providers
           dbConnectionHandler.Provider = connectionProvider
+
+          debugLog = appendElement(debugLog, "Connecting using provider " & connectionProvider)
 
           ' Note that these properties have to be set after setting the provider
 
@@ -127,11 +180,18 @@ Class DbSession
           End If
       Next
 
-      If dbConnectionHandler.State = 1 Then
-         connect = True
-      Else
-         connect = False
+      If Err.Number <> 0 Then
+         errorLog = appendElement(errorLog, Err.Description)
       End If
+
+      Dim errorObject
+      If dbConnectionHandler.Errors.Count > 0 Then
+         For Each errorObject in dbConnectionHandler.Errors
+            errorLog = appendElement(errorLog, errorObject.Description)
+         Next
+      End If
+
+      Set connect = (New connectionResponse)(dbConnectionHandler.State, errorLog, debugLog)
 
    End Function
 

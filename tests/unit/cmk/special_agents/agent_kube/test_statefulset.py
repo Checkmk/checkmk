@@ -9,7 +9,6 @@ from unittest.mock import MagicMock, Mock
 import pytest
 
 from tests.unit.cmk.special_agents.agent_kube.factory import (
-    api_to_agent_pod,
     api_to_agent_statefulset,
     APIPodFactory,
     APIStatefulSetFactory,
@@ -66,7 +65,7 @@ def test_write_statefulsets_api_sections_calls_write_sections_for_each_statefuls
 def test_statefulset_pod_resources_returns_all_pods(pod_number: int) -> None:
     statefulset = api_to_agent_statefulset(APIStatefulSetFactory.build())
     for _ in range(pod_number):
-        statefulset.add_pod(api_to_agent_pod(APIPodFactory.build()))
+        statefulset.add_pod(APIPodFactory.build())
     pod_resources = statefulset.pod_resources()
     assert sum(len(pods) for _, pods in pod_resources) == pod_number
 
@@ -74,7 +73,7 @@ def test_statefulset_pod_resources_returns_all_pods(pod_number: int) -> None:
 def test_statefulset_pod_resources_one_pod_per_phase() -> None:
     statefulset = api_to_agent_statefulset(APIStatefulSetFactory.build())
     for phase in api.Phase:
-        pod = api_to_agent_pod(APIPodFactory.build(status=PodStatusFactory.build(phase=phase)))
+        pod = APIPodFactory.build(status=PodStatusFactory.build(phase=phase))
         statefulset.add_pod(pod)
     pod_resources = statefulset.pod_resources()
     for _phase, pods in pod_resources:
@@ -87,7 +86,7 @@ def test_statefulset_pod_resources_one_pod_per_phase() -> None:
 def test_statefulset_pod_resources_pods_in_phase(phases: list[str]) -> None:
     statefulset = api_to_agent_statefulset(APIStatefulSetFactory.build())
     for phase in phases:
-        pod = api_to_agent_pod(APIPodFactory.build(status=PodStatusFactory.build(phase=phase)))
+        pod = APIPodFactory.build(status=PodStatusFactory.build(phase=phase))
         statefulset.add_pod(pod)
     pods = statefulset.pods(api.Phase(phases[0]))
     assert len(pods) == 1
@@ -99,7 +98,7 @@ def test_statefulset_pod_resources_pods_in_phase(phases: list[str]) -> None:
 def test_statefulset_pod_resources_pods_in_phase_no_phase_param(phases: list[str]) -> None:
     statefulset = api_to_agent_statefulset(APIStatefulSetFactory.build())
     for phase in phases:
-        pod = api_to_agent_pod(APIPodFactory.build(status=PodStatusFactory.build(phase=phase)))
+        pod = APIPodFactory.build(status=PodStatusFactory.build(phase=phase))
         statefulset.add_pod(pod)
     pods = statefulset.pods()
     assert len(pods) == len(phases)
@@ -113,7 +112,7 @@ def test_statefulset_memory_resources() -> None:
     container_spec = ContainerSpecFactory.build(resources=container_resources_requirements)
     api_pod = APIPodFactory.build(spec=PodSpecFactory.build(containers=[container_spec]))
     statefulset = api_to_agent_statefulset(APIStatefulSetFactory.build())
-    statefulset.add_pod(api_to_agent_pod(api_pod))
+    statefulset.add_pod(api_pod)
     memory_resources = statefulset.memory_resources()
     assert memory_resources.count_total == 1
     assert memory_resources.limit == 2.0 * 1024
@@ -128,7 +127,7 @@ def test_statefulset_cpu_resources() -> None:
     container_spec = ContainerSpecFactory.build(resources=container_resources_requirements)
     api_pod = APIPodFactory.build(spec=PodSpecFactory.build(containers=[container_spec]))
     statefulset = api_to_agent_statefulset(APIStatefulSetFactory.build())
-    statefulset.add_pod(api_to_agent_pod(api_pod))
+    statefulset.add_pod(api_pod)
     cpu_resources = statefulset.cpu_resources()
     assert cpu_resources.count_total == 1
     assert cpu_resources.limit == 2.0

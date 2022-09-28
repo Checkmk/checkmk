@@ -38,7 +38,7 @@ def test_deployment_pod_resources_one_pod_per_phase() -> None:
     # Assemble
     deployment = api_to_agent_deployment(APIDeploymentFactory.build())
     for phase in api.Phase:
-        pod = api_to_agent_pod(APIPodFactory.build(status=PodStatusFactory.build(phase=phase)))
+        pod = APIPodFactory.build(status=PodStatusFactory.build(phase=phase))
         deployment.add_pod(pod)
 
     # Act
@@ -69,7 +69,7 @@ def test_deployment_memory_resources() -> None:
     container_spec = ContainerSpecFactory.build(resources=container_resources_requirements)
     api_pod = APIPodFactory.build(spec=PodSpecFactory.build(containers=[container_spec]))
     deployment = api_to_agent_deployment(APIDeploymentFactory.build())
-    deployment.add_pod(api_to_agent_pod(api_pod))
+    deployment.add_pod(api_pod)
     memory_resources = deployment.memory_resources()
     assert memory_resources.count_total == 1
     assert memory_resources.limit == 2.0 * 1024
@@ -84,7 +84,7 @@ def test_deployment_cpu_resources() -> None:
     container_spec = ContainerSpecFactory.build(resources=container_resources_requirements)
     api_pod = APIPodFactory.build(spec=PodSpecFactory.build(containers=[container_spec]))
     deployment = api_to_agent_deployment(APIDeploymentFactory.build())
-    deployment.add_pod(api_to_agent_pod(api_pod))
+    deployment.add_pod(api_pod)
     cpu_resources = deployment.cpu_resources()
     assert cpu_resources.count_total == 1
     assert cpu_resources.limit == 2.0
@@ -96,7 +96,7 @@ def test_write_deployments_api_sections_registers_sections_to_be_written(
     write_sections_mock: MagicMock,
 ) -> None:
     deployment = api_to_agent_deployment(APIDeploymentFactory.build())
-    deployment.add_pod(api_to_agent_pod(APIPodFactory.build()))
+    deployment.add_pod(APIPodFactory.build())
     agent.write_deployments_api_sections(
         "cluster", agent.AnnotationNonPatternOption.ignore_all, [deployment], "host", Mock()
     )

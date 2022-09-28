@@ -10,7 +10,6 @@ import pytest
 
 from tests.unit.cmk.special_agents.agent_kube.factory import (
     api_to_agent_daemonset,
-    api_to_agent_pod,
     APIDaemonSetFactory,
     APIPodFactory,
     ContainerResourcesFactory,
@@ -27,7 +26,7 @@ def test_write_daemon_sets_api_sections_registers_sections_to_be_written(
     daemon_sets_api_sections: Sequence[str], write_sections_mock: MagicMock
 ) -> None:
     daemon_set = api_to_agent_daemonset(APIDaemonSetFactory.build())
-    pod = api_to_agent_pod(APIPodFactory.build())
+    pod = APIPodFactory.build()
     daemon_set.add_pod(pod)
     agent_kube.write_daemon_sets_api_sections(
         "cluster",
@@ -43,7 +42,7 @@ def test_write_daemon_sets_api_sections_maps_section_names_to_callables(
     daemon_sets_api_sections: Sequence[str], write_sections_mock: MagicMock
 ) -> None:
     daemon_set = api_to_agent_daemonset(APIDaemonSetFactory.build())
-    pod = api_to_agent_pod(APIPodFactory.build())
+    pod = APIPodFactory.build()
     daemon_set.add_pod(pod)
     agent_kube.write_daemon_sets_api_sections(
         "cluster", agent_kube.AnnotationNonPatternOption.ignore_all, [daemon_set], "host", Mock()
@@ -71,7 +70,7 @@ def test_write_daemon_sets_api_sections_calls_write_sections_for_each_daemon_set
 def test_daemon_set_pod_resources_returns_all_pods(pod_number: int) -> None:
     daemon_set = api_to_agent_daemonset(APIDaemonSetFactory.build())
     for _ in range(pod_number):
-        pod = api_to_agent_pod(APIPodFactory.build())
+        pod = APIPodFactory.build()
         daemon_set.add_pod(pod)
     resources = dict(daemon_set.pod_resources())
     pod_resources = section.PodResources(**resources)
@@ -81,7 +80,7 @@ def test_daemon_set_pod_resources_returns_all_pods(pod_number: int) -> None:
 def test_daemon_set_pod_resources_one_pod_per_phase() -> None:
     daemon_set = api_to_agent_daemonset(APIDaemonSetFactory.build())
     for phase in api.Phase:
-        pod = api_to_agent_pod(APIPodFactory.build(status=PodStatusFactory.build(phase=phase)))
+        pod = APIPodFactory.build(status=PodStatusFactory.build(phase=phase))
         daemon_set.add_pod(pod)
     resources = dict(daemon_set.pod_resources())
     pod_resources = section.PodResources(**resources)
@@ -93,7 +92,7 @@ def test_daemon_set_pod_resources_one_pod_per_phase() -> None:
 def test_daemon_set_pod_resources_pods_in_phase(phase: str) -> None:
     daemon_set = api_to_agent_daemonset(APIDaemonSetFactory.build())
     for _ in api.Phase:
-        pod = api_to_agent_pod(APIPodFactory.build(status=PodStatusFactory.build(phase=phase)))
+        pod = APIPodFactory.build(status=PodStatusFactory.build(phase=phase))
         daemon_set.add_pod(pod)
     pods = daemon_set.pods(api.Phase(phase))
     assert len(pods) == len(api.Phase)
@@ -103,7 +102,7 @@ def test_daemon_set_pod_resources_pods_in_phase(phase: str) -> None:
 def test_daemon_set_pod_resources_pods_in_phase_no_phase_param(phase: str) -> None:
     daemon_set = api_to_agent_daemonset(APIDaemonSetFactory.build())
     for _ in api.Phase:
-        pod = api_to_agent_pod(APIPodFactory.build(status=PodStatusFactory.build(phase=phase)))
+        pod = APIPodFactory.build(status=PodStatusFactory.build(phase=phase))
         daemon_set.add_pod(pod)
     pods = daemon_set.pods()
     assert len(pods) == len(api.Phase)
@@ -117,7 +116,7 @@ def test_daemonset_memory_resources() -> None:
     container_spec = ContainerSpecFactory.build(resources=container_resources_requirements)
     api_pod = APIPodFactory.build(spec=PodSpecFactory.build(containers=[container_spec]))
     daemonset = api_to_agent_daemonset(APIDaemonSetFactory.build())
-    daemonset.add_pod(api_to_agent_pod(api_pod))
+    daemonset.add_pod(api_pod)
     memory_resources = daemonset.memory_resources()
     assert memory_resources.count_total == 1
     assert memory_resources.limit == 2.0 * 1024
@@ -132,7 +131,7 @@ def test_daemonset_cpu_resources() -> None:
     container_spec = ContainerSpecFactory.build(resources=container_resources_requirements)
     api_pod = APIPodFactory.build(spec=PodSpecFactory.build(containers=[container_spec]))
     daemonset = api_to_agent_daemonset(APIDaemonSetFactory.build())
-    daemonset.add_pod(api_to_agent_pod(api_pod))
+    daemonset.add_pod(api_pod)
     cpu_resources = daemonset.cpu_resources()
     assert cpu_resources.count_total == 1
     assert cpu_resources.limit == 2.0

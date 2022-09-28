@@ -14,7 +14,6 @@ from tests.unit.cmk.special_agents.agent_kube.conftest import (
     NodeStatusFactory,
 )
 from tests.unit.cmk.special_agents.agent_kube.factory import (
-    api_to_agent_pod,
     APIPodFactory,
     ContainerResourcesFactory,
     ContainerSpecFactory,
@@ -33,7 +32,7 @@ from cmk.special_agents.utils_kubernetes.schemata import api, section
 def test_node_pod_resources_returns_all_node_pods(node_pods: int) -> None:
     node = api_to_agent_node(APINodeFactory.build())
     for _ in range(node_pods):
-        node.add_pod(api_to_agent_pod(APIPodFactory.build()))
+        node.add_pod(APIPodFactory.build())
     resources = dict(node.pod_resources())
     pod_resources = section.PodResources(**resources)
     assert sum(len(pods) for _, pods in pod_resources) == node_pods
@@ -42,7 +41,7 @@ def test_node_pod_resources_returns_all_node_pods(node_pods: int) -> None:
 def test_node_pod_resources_one_pod_per_phase() -> None:
     node = api_to_agent_node(APINodeFactory.build())
     for phase in api.Phase:
-        pod = api_to_agent_pod(APIPodFactory.build(status=PodStatusFactory.build(phase=phase)))
+        pod = APIPodFactory.build(status=PodStatusFactory.build(phase=phase))
         node.add_pod(pod)
     resources = dict(node.pod_resources())
     pod_resources = section.PodResources(**resources)
@@ -56,7 +55,7 @@ def test_node_pod_resources_pods_in_phase(
 ) -> None:
     node = api_to_agent_node(APINodeFactory.build())
     for _ in api.Phase:
-        pod = api_to_agent_pod(APIPodFactory.build(status=PodStatusFactory.build(phase=phase)))
+        pod = APIPodFactory.build(status=PodStatusFactory.build(phase=phase))
         node.add_pod(pod)
     pods = node.pods(api.Phase(phase))
     assert len(pods) == len(api.Phase)
@@ -66,7 +65,7 @@ def test_node_pod_resources_pods_in_phase(
 def test_node_pod_resources_pods_in_phase_no_phase_param(phase: str) -> None:
     node = api_to_agent_node(APINodeFactory.build())
     for _ in api.Phase:
-        pod = api_to_agent_pod(APIPodFactory.build(status=PodStatusFactory.build(phase=phase)))
+        pod = APIPodFactory.build(status=PodStatusFactory.build(phase=phase))
         node.add_pod(pod)
     pods = node.pods()
     assert len(pods) == len(api.Phase)
@@ -240,7 +239,7 @@ def test_node_memory_resources() -> None:
     container_spec = ContainerSpecFactory.build(resources=container_resources_requirements)
     api_pod = APIPodFactory.build(spec=PodSpecFactory.build(containers=[container_spec]))
     node = api_to_agent_node(APINodeFactory.build())
-    node.add_pod(api_to_agent_pod(api_pod))
+    node.add_pod(api_pod)
     memory_resources = node.memory_resources()
     assert memory_resources.count_total == 1
     assert memory_resources.limit == 2.0 * 1024
@@ -255,7 +254,7 @@ def test_node_cpu_resources() -> None:
     container_spec = ContainerSpecFactory.build(resources=container_resources_requirements)
     api_pod = APIPodFactory.build(spec=PodSpecFactory.build(containers=[container_spec]))
     node = api_to_agent_node(APINodeFactory.build())
-    node.add_pod(api_to_agent_pod(api_pod))
+    node.add_pod(api_pod)
     cpu_resources = node.cpu_resources()
     assert cpu_resources.count_total == 1
     assert cpu_resources.limit == 2.0
@@ -273,7 +272,7 @@ def test_node_container_count(
         c = ContainerStatusFactory.build(state=create_container_state(state=container_status_state))
         containers[c.name] = c
     api_pod = APIPodFactory.build(containers=containers)
-    node.add_pod(api_to_agent_pod(api_pod))
+    node.add_pod(api_pod)
     container_count = node.container_count()
     assert isinstance(container_count, section.ContainerCount)
     assert container_count.dict()[container_status_state.value] == pod_containers_count

@@ -357,9 +357,9 @@ def setup_logging(verbosity: int) -> None:
 
 class PodOwner(abc.ABC):
     def __init__(self) -> None:
-        self._pods: List[Pod] = []
+        self._pods: List[api.Pod] = []
 
-    def add_pod(self, pod: Pod) -> None:
+    def add_pod(self, pod: api.Pod) -> None:
         self._pods.append(pod)
 
 
@@ -537,10 +537,10 @@ class Deployment(PodNamespacedOwner):
 
         return f"{self.metadata.namespace}_{self.metadata.name}"
 
-    def pods(self, phase: Optional[api.Phase] = None) -> Sequence[Pod]:
+    def pods(self, phase: Optional[api.Phase] = None) -> Sequence[api.Pod]:
         if phase is None:
             return self._pods
-        return [pod for pod in self._pods if pod.phase == phase]
+        return [pod for pod in self._pods if pod.status.phase == phase]
 
     def info(
         self,
@@ -563,7 +563,7 @@ class Deployment(PodNamespacedOwner):
         )
 
     def pod_resources(self) -> section.PodResources:
-        return _pod_resources(self._pods)
+        return _pod_resources_from_api_pods(self._pods)
 
     def conditions(self) -> Optional[section.DeploymentConditions]:
         if not self.status.conditions:
@@ -571,10 +571,10 @@ class Deployment(PodNamespacedOwner):
         return section.DeploymentConditions(**self.status.conditions)
 
     def memory_resources(self) -> section.Resources:
-        return _collect_memory_resources(self._pods)
+        return _collect_memory_resources_from_api_pods(self._pods)
 
     def cpu_resources(self) -> section.Resources:
-        return _collect_cpu_resources(self._pods)
+        return _collect_cpu_resources_from_api_pods(self._pods)
 
     def replicas(self) -> section.DeploymentReplicas:
         return section.DeploymentReplicas(
@@ -587,15 +587,13 @@ class Deployment(PodNamespacedOwner):
         return section.UpdateStrategy(strategy=self.spec.strategy)
 
 
-def _thin_containers(pods: Collection[Pod]) -> section.ThinContainers:
+def _thin_containers(pods: Collection[api.Pod]) -> section.ThinContainers:
     container_images = set()
     container_names = []
     for pod in pods:
-        if containers := pod.container_statuses():
-            container_images.update(
-                {container.image for container in containers.containers.values()}
-            )
-            container_names.extend([container.name for container in containers.containers.values()])
+        if containers := pod.containers:
+            container_images.update({container.image for container in containers.values()})
+            container_names.extend([container.name for container in containers.values()])
     return section.ThinContainers(images=container_images, names=container_names)
 
 
@@ -619,19 +617,19 @@ class DaemonSet(PodNamespacedOwner):
 
         return f"{self.metadata.namespace}_{self.metadata.name}"
 
-    def pods(self, phase: Optional[api.Phase] = None) -> Sequence[Pod]:
+    def pods(self, phase: Optional[api.Phase] = None) -> Sequence[api.Pod]:
         if phase is None:
             return self._pods
-        return [pod for pod in self._pods if pod.phase == phase]
+        return [pod for pod in self._pods if pod.status.phase == phase]
 
     def pod_resources(self) -> section.PodResources:
-        return _pod_resources(self._pods)
+        return _pod_resources_from_api_pods(self._pods)
 
     def memory_resources(self) -> section.Resources:
-        return _collect_memory_resources(self._pods)
+        return _collect_memory_resources_from_api_pods(self._pods)
 
     def cpu_resources(self) -> section.Resources:
-        return _collect_cpu_resources(self._pods)
+        return _collect_cpu_resources_from_api_pods(self._pods)
 
     def replicas(self) -> section.DaemonSetReplicas:
         return section.DaemonSetReplicas(
@@ -685,19 +683,19 @@ class StatefulSet(PodNamespacedOwner):
             return self.metadata.name
         return f"{self.metadata.namespace}_{self.metadata.name}"
 
-    def pods(self, phase: Optional[api.Phase] = None) -> Sequence[Pod]:
+    def pods(self, phase: Optional[api.Phase] = None) -> Sequence[api.Pod]:
         if phase is None:
             return self._pods
-        return [pod for pod in self._pods if pod.phase == phase]
+        return [pod for pod in self._pods if pod.status.phase == phase]
 
     def pod_resources(self) -> section.PodResources:
-        return _pod_resources(self._pods)
+        return _pod_resources_from_api_pods(self._pods)
 
     def memory_resources(self) -> section.Resources:
-        return _collect_memory_resources(self._pods)
+        return _collect_memory_resources_from_api_pods(self._pods)
 
     def cpu_resources(self) -> section.Resources:
-        return _collect_cpu_resources(self._pods)
+        return _collect_cpu_resources_from_api_pods(self._pods)
 
     def replicas(self) -> section.StatefulSetReplicas:
         return section.StatefulSetReplicas(
@@ -752,13 +750,19 @@ class Node(PodOwner):
     def name(self) -> api.NodeName:
         return api.NodeName(self.metadata.name)
 
-    def pods(self, phase: Optional[api.Phase] = None) -> Sequence[Pod]:
+    def pods(self, phase: Optional[api.Phase] = None) -> Sequence[api.Pod]:
         if phase is None:
             return self._pods
-        return [pod for pod in self._pods if pod.phase == phase]
+        return [pod for pod in self._pods if pod.status.phase == phase]
 
     def pod_resources(self) -> section.PodResources:
-        return _pod_resources(self.pods())
+        return _pod_resources_from_api_pods(self._pods)
+
+    def memory_resources(self) -> section.Resources:
+        return _collect_memory_resources_from_api_pods(self._pods)
+
+    def cpu_resources(self) -> section.Resources:
+        return _collect_cpu_resources_from_api_pods(self._pods)
 
     def allocatable_pods(self) -> section.AllocatablePods:
         return section.AllocatablePods(
@@ -797,12 +801,6 @@ class Node(PodOwner):
             container.state.type.name for pod in self._pods for container in pod.containers.values()
         )
         return section.ContainerCount(**type_count)
-
-    def memory_resources(self) -> section.Resources:
-        return _collect_memory_resources(self._pods)
-
-    def cpu_resources(self) -> section.Resources:
-        return _collect_cpu_resources(self._pods)
 
     def allocatable_memory_resource(self) -> section.AllocatableResource:
         return section.AllocatableResource(
@@ -966,9 +964,9 @@ class Cluster:
                     raise ValueError(
                         f"Pod's ({api_pod.uid} {_nodes} {pod.node}) node is not present in the cluster"
                     )
-                _nodes[pod.node].add_pod(pod)
+                _nodes[pod.node].add_pod(api_pod)
             for pod_owner in _pod_owners_mapping.get(pod.uid, []):
-                pod_owner.add_pod(pod)
+                pod_owner.add_pod(api_pod)
                 pod._controllers.append(
                     section.Controller(
                         type_=section.ControllerType.from_str(pod_owner.type_),
@@ -2359,7 +2357,7 @@ def _names_of_running_pods(
     # api_to_agent_daemonset) this is currently not possible. If we improve
     # this function to use a PodOwner method instead, we can side-step these
     # issues.
-    return list(map(pod_lookup_from_agent_pod, kube_object.pods(phase=api.Phase.RUNNING)))
+    return list(map(pod_lookup_from_api_pod, kube_object.pods(phase=api.Phase.RUNNING)))
 
 
 def determine_pods_to_host(

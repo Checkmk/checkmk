@@ -76,10 +76,11 @@ def _parse_interface_status(carrier: str) -> InterfaceStatus:
 
 def _create_interface(raw_stats: Mapping[str, str]) -> Interface:
     multicast = float(raw_stats["multicast"])
+    name = raw_stats["name"]
     return Interface(
         index=raw_stats["ifindex"],
-        descr=raw_stats["name"],
-        alias=raw_stats["ifalias"],
+        descr=name,
+        alias=name,
         type=raw_stats["type"],
         speed=_parse_speed(raw_stats["speed"]),
         oper_status=_parse_interface_status(raw_stats["carrier"]).value,

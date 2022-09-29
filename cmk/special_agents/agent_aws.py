@@ -86,6 +86,7 @@ OverallTags = tuple[Sequence[str], Sequence[str]]
 RawTags = list[RawTag]
 Tags = list[Mapping[Literal["Key", "Value"], str]]
 
+Scope = Literal["REGIONAL", "CLOUDFRONT"]
 LoadBalancers = dict[str, list[tuple[str, Sequence[str]]]]
 Buckets = Sequence[Mapping[Literal["Name", "CreationDate"], str | datetime]]
 Results = dict[tuple[str, float, float], str]
@@ -360,17 +361,12 @@ def _describe_dynamodb_tables(
     return tables
 
 
-def _validate_wafv2_scope_and_region(scope: Literal["REGIONAL", "CLOUDFRONT"], region: str) -> str:
+def _validate_wafv2_scope_and_region(scope: Scope, region: str) -> str:
     """
     WAFs can either be deployed locally, for example in front of Application Load Balancers,
     or globally, in front of CloudFront. The global ones can only be queried from the region
     us-east-1.
     """
-
-    assert scope in ("REGIONAL", "CLOUDFRONT"), (
-        "The scope of WAFV2Limits / WAFV2Summary must be either REGIONAL or CLOUDFRONT, it is "
-        "used as the 'Scope' kwarg in the list_... operations of the wafv2 client"
-    )
 
     if scope == "CLOUDFRONT":
         assert region == "us-east-1", (
@@ -688,51 +684,22 @@ class AWSSection(DataCache):
 
     def run(self, use_cache: bool = False) -> AWSSectionResults:
         colleague_contents = self._get_colleague_contents()
-        assert isinstance(colleague_contents, AWSColleagueContents), (
-            "%s: Colleague contents must be of type 'AWSColleagueContents'" % self.name
-        )
-        assert isinstance(colleague_contents.cache_timestamp, float), (
-            "%s: Cache timestamp of colleague contents must be of type 'float'" % self.name
-        )
+
         raw_data = self.get_data(colleague_contents, use_cache=use_cache)
         raw_content = AWSRawContent(
             raw_data, self.cache_timestamp if use_cache else NOW.timestamp()
         )
 
-        assert isinstance(raw_content, AWSRawContent), (
-            "%s: Raw content must be of type 'AWSRawContent'" % self.name
-        )
-        assert isinstance(raw_content.cache_timestamp, float), (
-            "%s: Cache timestamp of raw content must be of type 'float'" % self.name
-        )
-
         computed_content = self._compute_content(raw_content, colleague_contents)
-        assert isinstance(computed_content, AWSComputedContent), (
-            "%s: Computed content must be of type 'AWSComputedContent'" % self.name
-        )
-        assert isinstance(computed_content.cache_timestamp, float), (
-            "%s: Cache timestamp of computed content must be of type 'float'" % self.name
-        )
 
         self._send(computed_content)
         created_results = self._create_results(computed_content)
-        assert isinstance(created_results, list), (
-            "%s: Created results must be fo type 'list'" % self.name
-        )
 
         final_results = []
         for result in created_results:
-            assert isinstance(result, AWSSectionResult), (
-                "%s: Result must be of type 'AWSSectionResult'" % self.name
-            )
-
             if not result.content:
                 logging.info("%s: Result is empty or None", self.name)
                 continue
-
-            assert isinstance(result.piggyback_hostname, str), (
-                "%s: Piggyback hostname of created result must be of type 'str'" % self.name
-            )
 
             # In the related check plugin aws.include we parse these results and
             # extend list of json-loaded results, except for labels sections.
@@ -836,11 +803,8 @@ class AWSSectionLimits(AWSSection):
     def _add_limit(
         self, piggyback_hostname: str, limit: AWSLimit, region: str | None = None
     ) -> None:
-        assert isinstance(limit, AWSLimit), "%s: Limit must be of type 'AWSLimit'" % self.name
         if region is None:
             region = self._region
-        else:
-            assert isinstance(region, str), "%s: Region for limit must be of type str" % self.name
 
         self._limits.setdefault(piggyback_hostname, []).append(
             AWSRegionLimit(
@@ -4358,7 +4322,7 @@ class WAFV2Limits(AWSSectionLimits):
         client: BaseClient,
         region: str,
         config: AWSConfig,
-        scope: Literal["REGIONAL", "CLOUDFRONT"],
+        scope: Scope,
         distributor: ResultDistributor | None = None,
         quota_client: BaseClient | None = None,
     ) -> None:
@@ -4460,7 +4424,7 @@ class WAFV2Summary(AWSSection):
         client: BaseClient,
         region: str,
         config: AWSConfig,
-        scope: Literal["REGIONAL", "CLOUDFRONT"],
+        scope: Scope,
         distributor: ResultDistributor | None = None,
     ) -> None:
         super().__init__(client, region, config, distributor=distributor)
@@ -5651,9 +5615,6 @@ class AWSSectionsGeneric(AWSSections):
         assert (
             s3_limits_distributor is not None
         ), "AWSSectionsGeneric.init_sections: Must provide s3_limits_distributor"
-        assert isinstance(
-            s3_limits_distributor, ResultDistributorS3Limits
-        ), "AWSSectionsGeneric.init_sections: s3_limits_distributor should be an instance of ResultDistributorS3Limits"
 
         cloudwatch_client = self._init_client("cloudwatch")
         ec2_client = self._init_client("ec2")

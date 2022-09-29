@@ -1,0 +1,12 @@
+Title: usp_modulys_battery: Fixed evaluation of levels for remaining capacity test
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1664456331
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p14
+
+Fixed a bug where the state for the remaining capacity test would not go to CRIT, because of a bad variable name.

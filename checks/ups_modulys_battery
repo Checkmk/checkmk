@@ -52,7 +52,7 @@ def check_ups_modulys_battery(item, params, info):
             yield 2, "battery needs to be replaced"
 
         # test 3: remaining capacity
-        if remaining_min < crit_left or capacity < crit_left:
+        if remaining_min < crit_left or capacity < crit_perc:
             status = 2
         elif remaining_min < warn_left or capacity < warn_perc:
             status = 1

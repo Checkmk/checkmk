@@ -37,7 +37,7 @@ from cmk.base.config import HostConfig
 from cmk.base.sources import make_cluster_sources, Source
 from cmk.base.sources.agent import AgentRawDataSection
 from cmk.base.sources.piggyback import PiggybackSource
-from cmk.base.sources.programs import ProgramSource
+from cmk.base.sources.programs import DSProgramSource
 from cmk.base.sources.snmp import SNMPSource
 from cmk.base.sources.tcp import TCPSource
 
@@ -191,7 +191,7 @@ class TestMakeHostSectionsHosts:
                 check_interval=0,
                 is_piggyback_host=True,
             ),
-            lambda hostname, ipaddress: ProgramSource.ds(
+            lambda hostname, ipaddress: DSProgramSource(
                 hostname,
                 ipaddress,
                 main_data_source=False,
@@ -252,7 +252,7 @@ class TestMakeHostSectionsHosts:
     @pytest.mark.usefixtures("config_cache")
     def test_multiple_sources_from_the_same_host(self, hostname, ipaddress, host_config):
         sources = [
-            ProgramSource.ds(
+            DSProgramSource(
                 hostname,
                 ipaddress,
                 cmdline="",
@@ -313,7 +313,7 @@ class TestMakeHostSectionsHosts:
         ts.apply(monkeypatch)
 
         sources = [
-            ProgramSource.ds(
+            DSProgramSource(
                 HostName(f"{hostname}0"),
                 ipaddress,
                 cmdline="",

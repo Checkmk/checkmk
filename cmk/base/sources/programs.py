@@ -52,64 +52,6 @@ class ProgramSource(AgentSource):
         self.stdin: Final = stdin
         self.is_cmc: Final = is_cmc
 
-    @staticmethod
-    def special_agent(
-        hostname: HostName,
-        ipaddress: Optional[HostAddress],
-        *,
-        main_data_source: bool = False,
-        agentname: str,
-        cmdline: str,
-        stdin: Optional[str],
-        simulation_mode: bool,
-        agent_simulator: bool,
-        translation: TranslationOptions,
-        encoding_fallback: str,
-        check_interval: int,
-        is_cmc: bool,
-    ) -> "SpecialAgentSource":
-        return SpecialAgentSource(
-            hostname,
-            ipaddress,
-            main_data_source=main_data_source,
-            agentname=agentname,
-            cmdline=cmdline,
-            stdin=stdin,
-            simulation_mode=simulation_mode,
-            agent_simulator=agent_simulator,
-            translation=translation,
-            encoding_fallback=encoding_fallback,
-            check_interval=check_interval,
-            is_cmc=is_cmc,
-        )
-
-    @staticmethod
-    def ds(
-        hostname: HostName,
-        ipaddress: HostAddress,
-        *,
-        main_data_source: bool = False,
-        cmdline: str,
-        simulation_mode: bool,
-        agent_simulator: bool,
-        translation: TranslationOptions,
-        encoding_fallback: str,
-        check_interval: int,
-        is_cmc: bool,
-    ) -> "DSProgramSource":
-        return DSProgramSource(
-            hostname,
-            ipaddress,
-            main_data_source=main_data_source,
-            cmdline=cmdline,
-            simulation_mode=simulation_mode,
-            agent_simulator=agent_simulator,
-            translation=translation,
-            encoding_fallback=encoding_fallback,
-            check_interval=check_interval,
-            is_cmc=is_cmc,
-        )
-
     def _make_file_cache(self) -> AgentFileCache:
         return AgentFileCacheFactory(
             self.hostname,

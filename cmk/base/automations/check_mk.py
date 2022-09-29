@@ -1389,7 +1389,7 @@ class AutomationDiagHost(Automation):
         ):
             source.file_cache_max_age = config.max_cachefile_age()
             if isinstance(source, sources.programs.DSProgramSource) and cmd:
-                source = source.ds(
+                source = sources.programs.DSProgramSource(
                     host_config.hostname,
                     ipaddress,
                     cmdline=core_config.translate_ds_program_source_cmdline(

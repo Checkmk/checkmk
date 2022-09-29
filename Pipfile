@@ -52,6 +52,7 @@ responses = "*"  # used for unit tests
 webtest = "*"  # used by WSGI based tests
 pre-commit = "*"  # used to fix / find issues before commiting changes
 flake8 = "*"
+autoflake = "*"  # used to remove unused import statements
 sphinx = "*"  # used for the plugin API documentation
 sphinx-autodoc-typehints = "*"  # used for the plugin API documentation
 sphinx-rtd-theme = "*"  # used for the plugin API documentation

@@ -35,6 +35,11 @@ repos:
                 )
     - repo: local
       hooks:
+          - id: remove-stale-imports
+            name: Remove stale imports
+            language: script
+            entry: scripts/run-autoflake
+            types: [file, python]
           - id: isort
             name: Run isort
             entry: scripts/run-isort

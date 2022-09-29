@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import socket
-from typing import Final, Mapping, Optional
+from typing import Final, Literal, Mapping, Optional
 
 from cmk.utils.translations import TranslationOptions
 from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, SourceType
@@ -27,6 +27,7 @@ class TCPSource(AgentSource):
         hostname: HostName,
         ipaddress: Optional[HostAddress],
         *,
+        id_: Literal["agent"],
         main_data_source: bool = False,
         simulation_mode: bool,
         agent_simulator: bool,
@@ -44,7 +45,7 @@ class TCPSource(AgentSource):
             source_type=SourceType.HOST,
             fetcher_type=FetcherType.TCP,
             description=TCPSource._make_description(ipaddress, agent_port),
-            id_="agent",
+            id_=id_,
             main_data_source=main_data_source,
             simulation_mode=simulation_mode,
             agent_simulator=agent_simulator,

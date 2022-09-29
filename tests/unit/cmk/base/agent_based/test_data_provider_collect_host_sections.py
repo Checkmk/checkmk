@@ -148,6 +148,7 @@ class TestMakeHostSectionsHosts:
                     SNMPSource.snmp(
                         hostname,
                         ipaddress,
+                        id_="snmp",
                         force_cache_refresh=False,
                         on_scan_error=OnError.RAISE,
                         simulation_mode=True,
@@ -183,6 +184,7 @@ class TestMakeHostSectionsHosts:
             lambda hostname, ipaddress: PiggybackSource(
                 hostname,
                 ipaddress,
+                id_="piggyback",
                 simulation_mode=True,
                 agent_simulator=True,
                 time_settings=(),
@@ -194,6 +196,7 @@ class TestMakeHostSectionsHosts:
             lambda hostname, ipaddress: DSProgramSource(
                 hostname,
                 ipaddress,
+                id_="agent",
                 main_data_source=False,
                 cmdline="",
                 simulation_mode=True,
@@ -206,6 +209,7 @@ class TestMakeHostSectionsHosts:
             lambda hostname, ipaddress: TCPSource(
                 hostname,
                 ipaddress,
+                id_="agent",
                 main_data_source=True,
                 simulation_mode=True,
                 agent_simulator=True,
@@ -255,6 +259,7 @@ class TestMakeHostSectionsHosts:
             DSProgramSource(
                 hostname,
                 ipaddress,
+                id_="agent",
                 cmdline="",
                 simulation_mode=True,
                 agent_simulator=True,
@@ -266,6 +271,7 @@ class TestMakeHostSectionsHosts:
             TCPSource(
                 hostname,
                 ipaddress,
+                id_="agent",
                 simulation_mode=True,
                 agent_simulator=True,
                 translation={},
@@ -316,6 +322,7 @@ class TestMakeHostSectionsHosts:
             DSProgramSource(
                 HostName(f"{hostname}0"),
                 ipaddress,
+                id_="agent",
                 cmdline="",
                 simulation_mode=True,
                 agent_simulator=True,
@@ -327,6 +334,7 @@ class TestMakeHostSectionsHosts:
             TCPSource(
                 HostName(f"{hostname}1"),
                 ipaddress,
+                id_="agent",
                 simulation_mode=True,
                 agent_simulator=True,
                 translation={},
@@ -340,6 +348,7 @@ class TestMakeHostSectionsHosts:
             TCPSource(
                 HostName(f"{hostname}2"),
                 ipaddress,
+                id_="agent",
                 simulation_mode=True,
                 agent_simulator=True,
                 translation={},

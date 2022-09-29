@@ -30,6 +30,7 @@ def test_attribute_defaults(ipaddress: HostAddress, monkeypatch: MonkeyPatch) ->
     source = PiggybackSource(
         hostname,
         ipaddress,
+        id_="piggyback",
         simulation_mode=True,
         agent_simulator=True,
         time_settings=[],

@@ -17,6 +17,7 @@ def test_attribute_defaults(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     source = TCPSource(
         hostname,
         ipaddress,
+        id_="agent",
         simulation_mode=True,
         agent_simulator=True,
         translation={},

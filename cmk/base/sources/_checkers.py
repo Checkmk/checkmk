@@ -230,6 +230,7 @@ class _Builder:
                 PiggybackSource(
                     self.host_config.hostname,
                     self.ipaddress,
+                    id_="piggyback",
                     simulation_mode=self.simulation_mode,
                     agent_simulator=self.agent_simulator,
                     time_settings=config.get_config_cache().get_piggybacked_hosts_time_settings(
@@ -266,6 +267,7 @@ class _Builder:
             SNMPSource.snmp(
                 self.host_config.hostname,
                 self.ipaddress,
+                id_="snmp",
                 on_scan_error=self.on_scan_error,
                 force_cache_refresh=self.force_snmp_cache_refresh,
                 simulation_mode=self.simulation_mode,
@@ -300,6 +302,7 @@ class _Builder:
                 SNMPSource.management_board(
                     self.host_config.hostname,
                     ip_address,
+                    id_="mgmt_snmp",
                     on_scan_error=self.on_scan_error,
                     force_cache_refresh=self.force_snmp_cache_refresh,
                     simulation_mode=self.simulation_mode,
@@ -319,6 +322,7 @@ class _Builder:
                 IPMISource(
                     self.host_config.hostname,
                     ip_address,
+                    id_="mgmt_ipmi",
                     simulation_mode=self.simulation_mode,
                     agent_simulator=self.agent_simulator,
                     translation=self.translation,
@@ -348,6 +352,7 @@ class _Builder:
             return DSProgramSource(
                 self.host_config.hostname,
                 self.ipaddress,
+                id_="agent",
                 main_data_source=main_data_source,
                 cmdline=core_config.translate_ds_program_source_cmdline(
                     datasource_program, self.host_config, self.ipaddress
@@ -365,6 +370,7 @@ class _Builder:
             return PushAgentSource(
                 self.host_config.hostname,
                 self.ipaddress,
+                id_="push-agent",
                 simulation_mode=self.simulation_mode,
                 agent_simulator=self.agent_simulator,
                 translation=self.translation,
@@ -375,6 +381,7 @@ class _Builder:
             return TCPSource(
                 self.host_config.hostname,
                 self.ipaddress,
+                id_="agent",
                 main_data_source=main_data_source,
                 simulation_mode=self.simulation_mode,
                 agent_simulator=self.agent_simulator,
@@ -393,6 +400,7 @@ class _Builder:
             SpecialAgentSource(
                 self.host_config.hostname,
                 self.ipaddress,
+                id_=f"special_{agentname}",
                 agentname=agentname,
                 cmdline=core_config.make_special_agent_cmdline(
                     self.host_config.hostname,

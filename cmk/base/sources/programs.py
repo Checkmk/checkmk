@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Final, Optional
+from typing import Final, Literal, Optional
 
 from cmk.utils.translations import TranslationOptions
 from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, SourceType
@@ -84,6 +84,7 @@ class DSProgramSource(ProgramSource):
         hostname: HostName,
         ipaddress: Optional[HostAddress],
         *,
+        id_: Literal["agent"],
         main_data_source: bool = False,
         cmdline: str,
         simulation_mode: bool,
@@ -96,7 +97,7 @@ class DSProgramSource(ProgramSource):
         super().__init__(
             hostname,
             ipaddress,
-            id_="agent",
+            id_=id_,
             main_data_source=main_data_source,
             cmdline=cmdline,
             stdin=None,
@@ -115,8 +116,9 @@ class SpecialAgentSource(ProgramSource):
         hostname: HostName,
         ipaddress: Optional[HostAddress],
         *,
-        main_data_source: bool = False,
+        id_: str,  # "special_{agentname}"
         agentname: str,
+        main_data_source: bool = False,
         cmdline: str,
         stdin: Optional[str],
         simulation_mode: bool,
@@ -129,7 +131,7 @@ class SpecialAgentSource(ProgramSource):
         super().__init__(
             hostname,
             ipaddress,
-            id_=f"special_{agentname}",
+            id_=id_,
             main_data_source=main_data_source,
             cmdline=cmdline,
             stdin=stdin,

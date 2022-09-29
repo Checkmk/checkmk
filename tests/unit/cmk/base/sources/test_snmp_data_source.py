@@ -30,6 +30,7 @@ def source_fixture():
     return SNMPSource.snmp(
         "hostname",
         "1.2.3.4",
+        id_="snmp",
         on_scan_error=OnError.RAISE,
         force_cache_refresh=False,
         simulation_mode=True,
@@ -98,7 +99,7 @@ class TestSNMPSummaryResult:
             "1.2.3.4",
             force_cache_refresh=False,
             source_type=SourceType.HOST,
-            id_="snmp_id",
+            id_="snmp",
             title="snmp title",
             on_scan_error=OnError.RAISE,
             simulation_mode=True,

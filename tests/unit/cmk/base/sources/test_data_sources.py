@@ -123,6 +123,7 @@ def test_host_config_creates_passing_source_sources(
         lambda hostname, ipaddress: SpecialAgentSource(
             hostname,
             ipaddress,
+            id_="special_veryspecial",
             simulation_mode=True,
             agent_simulator=True,
             translation={},
@@ -136,6 +137,7 @@ def test_host_config_creates_passing_source_sources(
         lambda hostname, ipaddress: DSProgramSource(
             hostname,
             ipaddress,
+            id_="agent",
             simulation_mode=True,
             agent_simulator=True,
             translation={},
@@ -147,6 +149,7 @@ def test_host_config_creates_passing_source_sources(
         lambda hostname, ipaddress: PiggybackSource(
             hostname,
             ipaddress,
+            id_="piggyback",
             simulation_mode=True,
             agent_simulator=True,
             translation={},
@@ -158,6 +161,7 @@ def test_host_config_creates_passing_source_sources(
         lambda hostname, ipaddress: TCPSource(
             hostname,
             ipaddress,
+            id_="agent",
             simulation_mode=True,
             agent_simulator=True,
             translation={},

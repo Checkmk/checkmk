@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Final, Mapping, Optional
+from typing import Final, Literal, Mapping, Optional
 
 from cmk.utils.exceptions import OnError
 from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, SectionName, SourceType
@@ -26,7 +26,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
         ipaddress: Optional[HostAddress],
         *,
         source_type: SourceType,
-        id_: str,
+        id_: Literal["snmp", "mgmt_snmp"],
         force_cache_refresh: bool,
         cache_dir: Optional[Path] = None,
         persisted_section_dir: Optional[Path] = None,
@@ -66,6 +66,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
         hostname: HostName,
         ipaddress: Optional[HostAddress],
         *,
+        id_: Literal["snmp"],
         on_scan_error: OnError,
         force_cache_refresh: bool,
         simulation_mode: bool,
@@ -79,7 +80,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             hostname,
             ipaddress,
             source_type=SourceType.HOST,
-            id_="snmp",
+            id_=id_,
             title="SNMP",
             on_scan_error=on_scan_error,
             force_cache_refresh=force_cache_refresh,
@@ -97,6 +98,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
         hostname: HostName,
         ipaddress: HostAddress,
         *,
+        id_: Literal["mgmt_snmp"],
         on_scan_error: OnError,
         force_cache_refresh: bool,
         simulation_mode: bool,
@@ -110,7 +112,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             hostname,
             ipaddress,
             source_type=SourceType.MANAGEMENT,
-            id_="mgmt_snmp",
+            id_=id_,
             title="Management board - SNMP",
             on_scan_error=on_scan_error,
             force_cache_refresh=force_cache_refresh,

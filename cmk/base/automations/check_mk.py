@@ -1392,6 +1392,7 @@ class AutomationDiagHost(Automation):
                 source = sources.programs.DSProgramSource(
                     host_config.hostname,
                     ipaddress,
+                    id_="agent",
                     cmdline=core_config.translate_ds_program_source_cmdline(
                         cmd,
                         host_config,

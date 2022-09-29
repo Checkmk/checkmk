@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Final, Optional
+from typing import Final, Literal, Optional
 
 from cmk.utils.exceptions import MKAgentError
 from cmk.utils.translations import TranslationOptions
@@ -22,6 +22,7 @@ class IPMISource(AgentSource):
         hostname: HostName,
         ipaddress: Optional[HostAddress],
         *,
+        id_: Literal["mgmt_ipmi"],
         simulation_mode: bool,
         agent_simulator: bool,
         translation: TranslationOptions,
@@ -35,7 +36,7 @@ class IPMISource(AgentSource):
             source_type=SourceType.MANAGEMENT,
             fetcher_type=FetcherType.IPMI,
             description=IPMISource._make_description(ipaddress, management_credentials),
-            id_="mgmt_ipmi",
+            id_=id_,
             main_data_source=False,
             simulation_mode=simulation_mode,
             agent_simulator=agent_simulator,

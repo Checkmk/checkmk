@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Final, Optional, Sequence, Tuple
+from typing import Final, Literal, Optional, Sequence, Tuple
 
 from cmk.utils.paths import tmp_dir
 from cmk.utils.translations import TranslationOptions
@@ -23,6 +23,7 @@ class PiggybackSource(AgentSource):
         hostname: HostName,
         ipaddress: Optional[HostAddress],
         *,
+        id_: Literal["piggyback"],
         simulation_mode: bool,
         agent_simulator: bool,
         time_settings: Sequence[Tuple[Optional[str], str, int]],
@@ -37,7 +38,7 @@ class PiggybackSource(AgentSource):
             source_type=SourceType.HOST,
             fetcher_type=FetcherType.PIGGYBACK,
             description=PiggybackSource._make_description(hostname),
-            id_="piggyback",
+            id_=id_,
             main_data_source=False,
             simulation_mode=simulation_mode,
             agent_simulator=agent_simulator,

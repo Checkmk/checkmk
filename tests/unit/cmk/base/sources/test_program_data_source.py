@@ -19,6 +19,7 @@ class TestDSProgramChecker:
         source = DSProgramSource(
             hostname,
             ipaddress,
+            id_="agent",
             cmdline="",
             simulation_mode=True,
             agent_simulator=True,

@@ -19,8 +19,7 @@ session is invalidated. The user can then login again from the same client or an
 import ast
 import hmac
 import secrets
-from contextlib import suppress
-from dataclasses import asdict, dataclass
+from dataclasses import asdict
 from datetime import datetime
 from hashlib import sha256
 from typing import Mapping
@@ -31,7 +30,6 @@ from cmk.utils.type_defs import UserId
 
 import cmk.gui.utils as utils
 from cmk.gui.config import active_config
-from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
@@ -40,17 +38,6 @@ from cmk.gui.type_defs import SessionInfo
 from cmk.gui.userdb.store import load_custom_attr, save_custom_attr
 
 auth_logger = gui_logger.getChild("auth")
-
-
-@dataclass
-class Session:
-    """Container object for encapsulating the session of the currently logged in user"""
-
-    user_id: UserId
-    session_info: SessionInfo
-
-
-active_user_session: Session = request_local_attr("session")
 
 
 def create_auth_session(username: UserId, session_id: str) -> None:
@@ -113,13 +100,12 @@ def _load_serial(username: UserId) -> int:
     return 0 if serial is None else serial
 
 
-def on_succeeded_login(username: UserId, now: datetime) -> str:
-    _ensure_user_can_init_session(username, now)
+def on_succeeded_login(username: UserId, now: datetime) -> None:
+    ensure_user_can_init_session(username, now)
     _reset_failed_logins(username)
-    return _initialize_session(username, now)
 
 
-def _ensure_user_can_init_session(username: UserId, now: datetime) -> None:
+def ensure_user_can_init_session(username: UserId, now: datetime) -> None:
     """When single user session mode is enabled, check that there is not another active session"""
     session_timeout = active_config.single_user_session
     if session_timeout is None:
@@ -153,9 +139,9 @@ def load_session_infos(username: UserId, lock: bool = False) -> dict[str, Sessio
 def _initialize_session(username: UserId, now: datetime) -> str:
     """Creates a new user login session (if single user session mode is enabled) and
     returns the session_id of the new session."""
-    session_infos = _cleanup_old_sessions(load_session_infos(username, lock=True), now)
+    session_infos = cleanup_old_sessions(load_session_infos(username, lock=True), now)
 
-    session_id = _create_session_id()
+    session_id = create_session_id()
     now_ts = int(now.timestamp())
     session_info = SessionInfo(
         session_id=session_id,
@@ -164,7 +150,6 @@ def _initialize_session(username: UserId, now: datetime) -> str:
         flashes=[],
     )
 
-    set_session(username, session_info)
     session_infos[session_id] = session_info
 
     # Save once right after initialization. It may be saved another time later, in case something
@@ -179,7 +164,7 @@ def _load_failed_logins(username: UserId) -> int:
     return 0 if num is None else num
 
 
-def _cleanup_old_sessions(
+def cleanup_old_sessions(
     session_infos: Mapping[str, SessionInfo], now: datetime
 ) -> dict[str, SessionInfo]:
     """Remove invalid / outdated sessions
@@ -199,19 +184,17 @@ def _cleanup_old_sessions(
     }
 
 
-def _create_session_id() -> str:
+def create_session_id() -> str:
     """Creates a random session id for the user and returns it."""
     return utils.gen_id()
-
-
-def set_session(user_id: UserId, session_info: SessionInfo) -> None:
-    request_local_attr().session = Session(user_id=user_id, session_info=session_info)
 
 
 def save_session_infos(username: UserId, session_infos: dict[str, SessionInfo]) -> None:
     """Saves the sessions for the current user"""
     save_custom_attr(
-        username, "session_info", repr({k: asdict(v) for k, v in session_infos.items()})
+        username,
+        "session_info",
+        repr({k: asdict(v) for k, v in session_infos.items() if not v.logged_out}),
     )
 
 
@@ -258,10 +241,3 @@ def is_valid_user_session(
 def refresh_session(session_info: SessionInfo, now: datetime) -> None:
     """Updates the current session of the user"""
     session_info.last_activity = int(now.timestamp())
-
-
-def invalidate_session(username: UserId, session_id: str) -> None:
-    session_infos = load_session_infos(username, lock=True)
-    with suppress(KeyError):
-        del session_infos[session_id]
-        save_session_infos(username, session_infos)

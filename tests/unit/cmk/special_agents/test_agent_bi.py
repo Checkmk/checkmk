@@ -19,7 +19,6 @@ from tests.testlib.users import create_and_destroy_user
 from tests.unit.cmk.gui.conftest import (  # noqa: F401 # pylint: disable=unused-import
     load_config,
     load_plugins,
-    request_context,
     ui_context,
 )
 

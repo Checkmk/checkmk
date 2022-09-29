@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+from typing import Generator
 
 import pytest
 
@@ -18,14 +19,14 @@ def fixture_transaction_ids() -> list[str]:
 
 @pytest.fixture(name="tm")
 @pytest.mark.usefixtures("request_context")
-def fixture_tm(transaction_ids: list[str]) -> TransactionManager:
+def fixture_tm(transaction_ids: list[str]) -> Generator[TransactionManager, None, None]:
     def transids(lock=False):
         return transaction_ids
 
     def save_transids(transids: list[str]) -> None:
         pass
 
-    return TransactionManager(transids, save_transids)
+    yield TransactionManager(transids, save_transids)
 
 
 @pytest.mark.usefixtures("request_context")

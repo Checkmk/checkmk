@@ -22,7 +22,6 @@ from cmk.gui.exceptions import MKGeneralException, MKUnauthenticatedException, M
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.logged_in import SuperUserContext
 from cmk.gui.plugins.metrics import artwork, html_render
 from cmk.gui.plugins.metrics.artwork import GraphArtwork, GraphDataRange, GraphRenderOptions
 from cmk.gui.plugins.metrics.graph_pdf import (
@@ -37,6 +36,7 @@ from cmk.gui.plugins.metrics.utils import (
     get_graph_data_from_livestatus,
     GraphRecipe,
 )
+from cmk.gui.session import SuperUserContext
 from cmk.gui.type_defs import CombinedGraphSpec, TemplateGraphSpec
 
 

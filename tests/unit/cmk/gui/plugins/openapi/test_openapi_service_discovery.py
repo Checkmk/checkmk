@@ -814,8 +814,7 @@ def test_openapi_discovery_fails_on_invalid_content_type(
     mock_try_discovery: MagicMock,
     mock_set_autochecks: MagicMock,
 ) -> None:
-    resp = aut_user_auth_wsgi_app.call_method(
-        "post",
+    resp = aut_user_auth_wsgi_app.post(
         f"{base}/domain-types/service_discovery_run/actions/start/invoke",
         params='{"mode": "foo", "host_name": "example.com"}',
         headers={"Accept": "application/json"},

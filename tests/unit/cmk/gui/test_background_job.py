@@ -29,7 +29,7 @@ from cmk.gui.background_job import (
 
 
 @pytest.fixture(autouse=True)
-def debug_logging():
+def debug_logging(load_config):
     cmk.gui.log.set_log_levels(
         {"cmk.web": logging.DEBUG, "cmk.web.background-job": cmk.utils.log.VERBOSE}
     )

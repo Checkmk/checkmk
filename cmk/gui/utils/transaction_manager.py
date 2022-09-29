@@ -10,7 +10,7 @@ import time
 from collections.abc import Callable
 from typing import Protocol
 
-from cmk.gui.ctx_stack import request_local_attr
+from cmk.gui.ctx_stack import session_attr
 from cmk.gui.http import request
 
 
@@ -38,6 +38,11 @@ class TransactionManager:
     def ignore(self) -> None:
         """Makes the GUI skip all transaction validation steps"""
         self._ignore_transids = True
+
+    def unignore(self) -> None:
+        # Not sure what this is all about, but some test apparently requires it to be false after
+        # the request is over, so we make it false after the request is over.
+        self._ignore_transids = False
 
     def get(self) -> str:
         """Returns a transaction ID that can be used during a subsequent action"""
@@ -142,4 +147,4 @@ class TransactionManager:
         self._writer(valid_ids)
 
 
-transactions: TransactionManager = request_local_attr("transactions")
+transactions: TransactionManager = session_attr(("user", "transactions"), TransactionManager)

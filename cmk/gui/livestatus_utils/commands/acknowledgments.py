@@ -59,19 +59,17 @@ def acknowledge_service_problem(  # type:ignore[no-untyped-def]
 
         >>> from cmk.gui.livestatus_utils.testing import simple_expect
         >>> from cmk.gui.utils.script_helpers import application_and_request_context
-        >>> from cmk.gui.logged_in import SuperUserContext
-        >>> from cmk.gui.config import load_config
+        >>> from cmk.gui.livestatus_utils.testing import mock_site
 
         >>> cmd = "COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;example.com;drain;1;0;0;;"
-        >>> with simple_expect() as live, SuperUserContext():
-        ...     load_config()
+        >>> with simple_expect() as live:
         ...     _ = live.expect_query("GET hosts\\nColumns: name\\nFilter: name = example.com")
         ...     _ = live.expect_query(cmd, match_type="ellipsis")
         ...     acknowledge_service_problem(live, 'example.com', 'drain')
 
         Not authenticated users can't call this function:
 
-            >>> with application_and_request_context():
+            >>> with mock_site(), application_and_request_context():
             ...     acknowledge_service_problem(live, 'example.com', 'drain')   # doctest: +ELLIPSIS
             Traceback (most recent call last):
             ...
@@ -208,19 +206,17 @@ def acknowledge_host_problem(  # type:ignore[no-untyped-def]
 
         >>> from cmk.gui.livestatus_utils.testing import simple_expect
         >>> from cmk.gui.utils.script_helpers import application_and_request_context
-        >>> from cmk.gui.logged_in import SuperUserContext
-        >>> from cmk.gui.config import load_config
+        >>> from cmk.gui.livestatus_utils.testing import mock_site
 
         >>> cmd = "COMMAND [...] ACKNOWLEDGE_HOST_PROBLEM;example.com;1;0;0;;"
-        >>> with simple_expect() as live, SuperUserContext():
-        ...     load_config()
+        >>> with simple_expect() as live:
         ...     _ = live.expect_query("GET hosts\\nColumns: name\\nFilter: name = example.com")
         ...     _ = live.expect_query(cmd, match_type="ellipsis")
         ...     acknowledge_host_problem(live, 'example.com')
 
         Not authenticated users can't call this function:
 
-            >>> with application_and_request_context():
+            >>> with mock_site(), application_and_request_context():
             ...     acknowledge_host_problem(live, 'example.com')   # doctest: +ELLIPSIS
             Traceback (most recent call last):
             ...

@@ -42,8 +42,8 @@ CheckCredentialsResult = UserId | None | Literal[False]
 
 
 def load_cached_profile(user_id: UserId) -> UserSpec | None:
-    usr = LoggedInUser(user_id) if user_id != user.id else user
-    return usr.load_file("cached_profile", None)
+    _user = LoggedInUser(user_id) if user_id != user.id else user
+    return _user.load_file("cached_profile", None)
 
 
 def save_cached_profile(user_id: UserId, cached_profile: UserSpec) -> None:

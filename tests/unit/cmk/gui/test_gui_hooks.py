@@ -2,9 +2,11 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import datetime
+from typing import Generator
 
 import pytest
+from flask import Flask
 
 from cmk.utils.exceptions import MKGeneralException
 
@@ -13,13 +15,35 @@ from cmk.gui.pages import Page, page_registry
 
 
 @pytest.fixture(autouse=True)
-def reset_hooks():
+def reset_hooks() -> Generator[None, None, None]:
     old_hooks = hooks.hooks
     try:
         hooks.hooks = {}
         yield
     finally:
         hooks.hooks = old_hooks
+
+
+def test_flask_request_memoize(flask_app: Flask) -> None:
+    @hooks.request_memoize()
+    def cached_function():
+        return datetime.datetime.now()
+
+    assert len(hooks.hooks) > 0
+
+    with flask_app.test_client(use_cookies=True) as client:
+        prev = cached_function()
+
+        # Only Checkmk and REST API Blueprint requests trigger the cache eviction.
+        resp = client.get("/")
+        assert resp.status_code == 404
+
+        assert prev == cached_function()
+
+        # After another request, the cache is evicted.
+        resp = client.get("/NO_SITE/check_mk/login.py")
+        assert resp.status_code == 200
+        assert prev != cached_function()
 
 
 def test_request_memoize() -> None:

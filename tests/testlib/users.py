@@ -14,7 +14,7 @@ from cmk.utils.crypto import PasswordHash
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.config as config
-from cmk.gui.logged_in import SuperUserContext
+from cmk.gui.session import SuperUserContext
 from cmk.gui.type_defs import UserObject, UserSpec
 from cmk.gui.watolib.users import delete_users, edit_users
 

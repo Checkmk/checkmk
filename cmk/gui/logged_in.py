@@ -6,13 +6,12 @@
 
 from __future__ import annotations
 
-import contextlib
 import errno
 import logging
 import os
 import time
-from collections.abc import Container, Iterator
-from typing import Any, ContextManager, Final
+from collections.abc import Container
+from typing import Any, Final
 
 from livestatus import SiteConfigurations, SiteId
 
@@ -25,7 +24,7 @@ import cmk.gui.permissions as permissions
 import cmk.gui.site_config as site_config
 from cmk.gui import hooks
 from cmk.gui.config import active_config
-from cmk.gui.ctx_stack import request_local_attr
+from cmk.gui.ctx_stack import session_attr
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.i18n import _
 from cmk.gui.utils.roles import may_with_roles, roles_of_user
@@ -63,6 +62,9 @@ class LoggedInUser:
         self._tree_states: dict = {}
         self._bi_assumptions: dict[tuple[str, str] | tuple[str, str, str], int] = {}
         self._tableoptions: dict[str, dict[str, Any]] = {}
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__} {self.id!r}>"
 
     @property
     def ident(self) -> UserId:
@@ -451,48 +453,6 @@ class LoggedInNobody(LoggedInUser):
         raise TypeError("The profiles of LoggedInNobody cannot be saved")
 
 
-def UserContext(
-    user_id: UserId,
-    *,
-    explicit_permissions: Container[str] = frozenset(),
-) -> ContextManager[None]:
-    """Execute a block of code as another user
-
-    After the block exits, the previous user will be replaced again.
-    """
-    return _UserContext(
-        LoggedInUser(
-            user_id,
-            explicitly_given_permissions=explicit_permissions,
-        )
-    )
-
-
-def SuperUserContext() -> ContextManager[None]:
-    """Execute a block code as the superuser
-
-    After the block exits, the previous user will be replaced again.
-
-    Returns:
-        The context manager.
-
-    """
-    return _UserContext(LoggedInSuperUser())
-
-
-@contextlib.contextmanager
-def _UserContext(user_obj: LoggedInUser) -> Iterator[None]:
-    """Managing authenticated user context
-
-    After the user has been authenticated, initialize the global user object."""
-    old_user = request_local_attr().user
-    try:
-        request_local_attr().user = user_obj
-        yield
-    finally:
-        request_local_attr().user = old_user
-
-
 def _confdir_for_user_id(user_id: UserId | None) -> str | None:
     if user_id is None:
         return None
@@ -508,4 +468,4 @@ def save_user_file(name: str, data: Any, user_id: UserId) -> None:
     store.save_object_to_file(path, data)
 
 
-user: LoggedInUser = request_local_attr("user")
+user: LoggedInUser = session_attr("user", LoggedInUser)

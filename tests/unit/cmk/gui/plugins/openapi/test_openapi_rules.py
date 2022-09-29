@@ -18,8 +18,6 @@ from cmk.utils import paths, version
 from cmk.utils.store import load_mk_file
 from cmk.utils.type_defs import UserId
 
-from cmk.gui.exceptions import MKAuthException
-
 
 @pytest.fixture(scope="function", name="new_rule")
 def new_rule_fixture(logged_in_admin_wsgi_app):
@@ -567,16 +565,15 @@ def test_user_needs_folder_permissions_to_move_rules(
     )
 
     wsgi_app.set_authorization(("Bearer", " ".join(with_user)))
-    with pytest.raises(MKAuthException):
-        wsgi_app.post(
-            url=base + f"/objects/rule/{resp.json['id']}/actions/move/invoke",
-            params=json.dumps({"position": "top_of_folder", "folder": "~" + dest_folder}),
-            headers={
-                "Accept": "application/json",
-                "Content-Type": "application/json",
-            },
-            status=401,
-        )
+    wsgi_app.post(
+        url=base + f"/objects/rule/{resp.json['id']}/actions/move/invoke",
+        params=json.dumps({"position": "top_of_folder", "folder": "~" + dest_folder}),
+        headers={
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+        },
+        status=401,
+    )
 
 
 def _make_folder_inaccessible(wsgi_app: WebTestAppForCMK, base: str, folder: str) -> None:

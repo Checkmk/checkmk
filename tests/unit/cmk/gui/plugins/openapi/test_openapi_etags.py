@@ -20,26 +20,25 @@ def etags_off_fixture(
 
 
 @pytest.mark.usefixtures("with_host")
-def test_openapi_etag_disabled(  # type:ignore[no-untyped-def]
-    etags_off, aut_user_auth_wsgi_app: WebTestAppForCMK
+def test_openapi_etag_disabled(
+    base: str, set_config: SetConfig, aut_user_auth_wsgi_app: WebTestAppForCMK
 ) -> None:
-    base = "/NO_SITE/check_mk/api/1.0"
+    with set_config(rest_api_etag_locking=False):
+        resp = aut_user_auth_wsgi_app.call_method(
+            "get",
+            base + "/objects/host_config/example.com",
+            headers={"Accept": "application/json"},
+            status=200,
+        )
 
-    resp = aut_user_auth_wsgi_app.call_method(
-        "get",
-        base + "/objects/host_config/example.com",
-        headers={"Accept": "application/json"},
-        status=200,
-    )
-
-    aut_user_auth_wsgi_app.follow_link(
-        resp,
-        ".../update",
-        headers={"Accept": "application/json"},
-        status=200,
-        params='{"attributes": {"ipaddress": "127.0.0.1"}}',
-        content_type="application/json",
-    )
+        aut_user_auth_wsgi_app.follow_link(
+            resp,
+            ".../update",
+            headers={"Accept": "application/json"},
+            status=200,
+            params='{"attributes": {"ipaddress": "127.0.0.1"}}',
+            content_type="application/json",
+        )
 
 
 @pytest.mark.usefixtures("with_host")

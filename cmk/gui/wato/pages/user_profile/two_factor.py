@@ -46,16 +46,15 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import Page, page_registry
 from cmk.gui.plugins.wato.utils.base_modes import redirect
+from cmk.gui.session import session, set_two_factor_completed
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import WebAuthnCredential
 from cmk.gui.userdb import (
-    active_user_session,
     is_two_factor_backup_code_valid,
     is_two_factor_login_enabled,
     load_two_factor_credentials,
     make_two_factor_backup_codes,
     save_two_factor_credentials,
-    set_two_factor_completed,
 )
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.theme import theme
@@ -391,7 +390,7 @@ class UserWebAuthnRegisterBegin(CBORPage):
             authenticator_attachment="cross-platform",
         )
 
-        active_user_session.session_info.webauthn_action_state = state
+        session.session_info.webauthn_action_state = state
         logger.debug("Registration data: %r", registration_data)
         return registration_data
 
@@ -412,7 +411,7 @@ class UserWebAuthnRegisterComplete(CBORPage):
 
         try:
             auth_data = make_fido2_server().register_complete(
-                active_user_session.session_info.webauthn_action_state, client_data, att_obj
+                session.session_info.webauthn_action_state, client_data, att_obj
             )
         except ValueError as e:
             if "Invalid origin in ClientData" in str(e):
@@ -542,7 +541,7 @@ class UserWebAuthnLoginBegin(CBORPage):
             user_verification="discouraged",
         )
 
-        active_user_session.session_info.webauthn_action_state = state
+        session.session_info.webauthn_action_state = state
         logger.debug("Authentication data: %r", auth_data)
         return auth_data
 
@@ -564,7 +563,7 @@ class UserWebAuthnLoginComplete(CBORPage):
         logger.debug("AuthenticatorData: %r", auth_data)
 
         make_fido2_server().authenticate_complete(
-            active_user_session.session_info.webauthn_action_state,
+            session.session_info.webauthn_action_state,
             [
                 AttestedCredentialData.unpack_from(v["credential_data"])[0]
                 for v in load_two_factor_credentials(user.id)["webauthn_credentials"].values()
@@ -574,6 +573,6 @@ class UserWebAuthnLoginComplete(CBORPage):
             auth_data,
             signature,
         )
-        active_user_session.session_info.webauthn_action_state = None
+        session.session_info.webauthn_action_state = None
         set_two_factor_completed()
         return {"status": "OK"}

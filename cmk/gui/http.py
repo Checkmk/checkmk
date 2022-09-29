@@ -9,9 +9,10 @@ import json
 import urllib.parse
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
-from typing import Any, overload, Protocol, TypeVar
+from typing import Any, cast, overload, Protocol, TypeVar
 
-import werkzeug
+import flask
+from flask import request as flask_request
 from pydantic import BaseModel
 from six import ensure_str
 from werkzeug.utils import get_content_type
@@ -267,7 +268,7 @@ class Request(
     LegacyVarsMixin,
     LegacyUploadMixin,
     LegacyDeprecatedMixin,
-    werkzeug.Request,
+    flask.Request,
 ):
     """Provides information about the users HTTP-request to the application
 
@@ -578,7 +579,7 @@ class Request(
         return request_
 
 
-class Response(werkzeug.Response):
+class Response(flask.Response):
     # NOTE: Currently we rely on a *relative* Location header in redirects!
     autocorrect_location_header = False
 
@@ -597,5 +598,5 @@ class Response(werkzeug.Response):
 
 
 # From request context
-request: Request = request_local_attr("request")
-response: Response = request_local_attr("response")
+request: Request = cast(Request, flask_request)
+response = request_local_attr("response", Response)

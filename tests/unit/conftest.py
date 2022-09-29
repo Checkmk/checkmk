@@ -5,11 +5,12 @@
 
 import copy
 import logging
+import os
 import shutil
 import socket
 from collections.abc import Iterable, Iterator, Mapping
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import Any, Generator, NamedTuple
 from unittest import mock
 
 import pytest
@@ -85,9 +86,14 @@ def fixture_edition(request: pytest.FixtureRequest) -> Iterable[cmk_version.Edit
     yield cmk_version.Edition[edition_short.upper()]
 
 
+@pytest.fixture(autouse=True, scope="session")
+def fixture_omd_site() -> Generator[None, None, None]:
+    os.environ["OMD_SITE"] = "NO_SITE"
+    yield
+
+
 @pytest.fixture(autouse=True)
 def patch_omd_site(monkeypatch):
-    monkeypatch.setenv("OMD_SITE", "NO_SITE")
     monkeypatch.setenv("OMD_ROOT", str(cmk.utils.paths.omd_root))
     omd_site.cache_clear()
 

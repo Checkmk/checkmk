@@ -50,4 +50,4 @@ class TimeoutManager:
         signal.alarm(0)
 
 
-timeout_manager: TimeoutManager = request_local_attr("timeout_manager")
+timeout_manager = request_local_attr("timeout_manager", TimeoutManager)

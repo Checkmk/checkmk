@@ -35,4 +35,4 @@ class UserErrors(Mapping[str | None, str]):
         return len(self._errors)
 
 
-user_errors: UserErrors = request_local_attr("user_errors")
+user_errors = request_local_attr("user_errors", UserErrors)

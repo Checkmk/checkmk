@@ -4,11 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
-import functools
+import abc
 import typing
-import wsgiref.util
 
-from cmk.gui import hooks
 from cmk.gui.wsgi.type_defs import WSGIResponse
 
 if typing.TYPE_CHECKING:
@@ -16,35 +14,21 @@ if typing.TYPE_CHECKING:
     from _typeshed.wsgi import StartResponse, WSGIApplication, WSGIEnvironment
 
 
-class CallHooks:
+class AbstractWSGIMiddleware(abc.ABC):
+    @typing.final
     def __init__(self, app: WSGIApplication) -> None:
         self.app = app
 
+    @typing.final
     def __call__(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
-        hooks.call("request-start")
-        response = self.app(environ, start_response)
-        hooks.call("request-end")
-        return response
+        return self.wsgi_app(environ, start_response)
+
+    @abc.abstractmethod
+    def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
+        raise NotImplementedError
 
 
-def apache_env(app: WSGIApplication) -> WSGIApplication:
-    """Add missing WSGI environment keys when a request comes from Apache."""
-
-    @functools.wraps(app)
-    def _add_apache_env(environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
-        if not environ.get("REQUEST_URI"):
-            environ["REQUEST_URI"] = wsgiref.util.request_uri(environ)
-
-        path_info = environ.get("PATH_INFO")
-        if not path_info or path_info == "/":
-            environ["PATH_INFO"] = environ["SCRIPT_NAME"]
-
-        return app(environ, start_response)
-
-    return _add_apache_env
-
-
-class OverrideRequestMethod:
+class OverrideRequestMethod(AbstractWSGIMiddleware):
     """Middleware to allow inflexible clients to override the HTTP request method.
 
     Common convention is to allow for an X-HTTP-Method-Override HTTP header to be set.
@@ -53,15 +37,14 @@ class OverrideRequestMethod:
     as this should be handled by other layers.
     """
 
-    def __init__(self, app: WSGIApplication) -> None:
-        self.app = app
-
-    def __call__(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
-        return self.wsgi_app(environ, start_response)
-
     def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         override = environ.get("HTTP_X_HTTP_METHOD_OVERRIDE")
         if override:
             if environ["REQUEST_METHOD"].lower() == "post":
                 environ["REQUEST_METHOD"] = override
+        return self.app(environ, start_response)
+
+
+class AuthenticationMiddleware(AbstractWSGIMiddleware):
+    def wsgi_app(self, environ: WSGIEnvironment, start_response: StartResponse) -> WSGIResponse:
         return self.app(environ, start_response)

@@ -70,17 +70,7 @@ from cmk.gui.type_defs import TwoFactorCredentials, Users, UserSpec
 from cmk.gui.userdb import user_attributes
 from cmk.gui.userdb.htpasswd import Htpasswd
 from cmk.gui.userdb.ldap_connector import MKLDAPException
-from cmk.gui.userdb.saml2.pages import AssertionConsumerService, Metadata, SingleSignOn
-from cmk.gui.userdb.session import (
-    active_user_session,
-    convert_session_info,
-    invalidate_session,
-    is_valid_user_session,
-    load_session_infos,
-    refresh_session,
-    save_session_infos,
-    set_session,
-)
+from cmk.gui.userdb.session import convert_session_info, is_valid_user_session, load_session_infos
 from cmk.gui.userdb.store import custom_attr_path, load_custom_attr, save_custom_attr
 from cmk.gui.utils.roles import roles_of_user
 from cmk.gui.utils.urls import makeuri_contextless
@@ -250,15 +240,6 @@ def disable_two_factor_authentication(user_id: UserId) -> None:
     save_two_factor_credentials(user_id, credentials)
 
 
-def is_two_factor_completed() -> bool:
-    """Whether or not the user has completed the 2FA challenge"""
-    return active_user_session.session_info.two_factor_completed
-
-
-def set_two_factor_completed() -> None:
-    active_user_session.session_info.two_factor_completed = True
-
-
 def load_two_factor_credentials(user_id: UserId, lock: bool = False) -> TwoFactorCredentials:
     cred = load_custom_attr(
         user_id=user_id, key="two_factor_credentials", parser=ast.literal_eval, lock=lock
@@ -270,7 +251,9 @@ def save_two_factor_credentials(user_id: UserId, credentials: TwoFactorCredentia
     save_custom_attr(user_id, "two_factor_credentials", repr(credentials))
 
 
-def make_two_factor_backup_codes() -> list[tuple[Password, PasswordHash]]:
+def make_two_factor_backup_codes(
+    *, rounds: int | None = None
+) -> list[tuple[Password, PasswordHash]]:
     """Creates a set of new two factor backup codes
 
     The codes are returned in plain form for displaying and in hashed+salted form for storage
@@ -366,12 +349,10 @@ class UserSelection(DropdownChoice[UserId]):
         def get_wato_users(nv: str | None) -> list[tuple[UserId | None, str]]:
             users = load_users()
             elements: list[tuple[UserId | None, str]] = sorted(
-                [
-                    (name, "{} - {}".format(name, us.get("alias", name)))
-                    for (name, us) in users.items()
-                    if (not only_contacts or us.get("contactgroups"))
-                    and (not only_automation or us.get("automation_secret"))
-                ]
+                (name, "{} - {}".format(name, us.get("alias", name)))
+                for (name, us) in users.items()
+                if (not only_contacts or us.get("contactgroups"))
+                and (not only_automation or us.get("automation_secret"))
             )
             if nv is not None:
                 elements.insert(0, (None, nv))
@@ -418,35 +399,15 @@ def on_failed_login(username: UserId, now: datetime) -> None:
         )
 
 
-def on_logout(username: UserId, session_id: str) -> None:
-    invalidate_session(username, session_id)
-
-
 def on_access(username: UserId, session_id: str, now: datetime) -> None:
     session_infos = load_session_infos(username)
     if not is_valid_user_session(username, session_infos, session_id):
         raise MKAuthException("Invalid user session")
 
-    # Check whether or not there is an idle timeout configured, delete cookie and
+    # Check whether there is an idle timeout configured, delete cookie and
     # require the user to renew the log when the timeout exceeded.
     session_info = session_infos[session_id]
     _check_login_timeout(username, now.timestamp() - session_info.last_activity)
-    set_session(username, session_info)
-
-
-def on_end_of_request(user_id: UserId, now: datetime) -> None:
-    if not active_user_session:
-        return  # Nothing to be done in case there is no session
-
-    assert user_id == active_user_session.user_id
-    session_infos = load_session_infos(user_id, lock=True)
-    if session_infos:
-        refresh_session(active_user_session.session_info, now)
-        session_infos[
-            active_user_session.session_info.session_id
-        ] = active_user_session.session_info
-
-    save_session_infos(user_id, session_infos)
 
 
 # .

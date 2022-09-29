@@ -8,8 +8,6 @@ from pytest_mock.plugin import MockerFixture
 
 from livestatus import SiteConfiguration, SiteId
 
-from cmk.utils.type_defs import UserId
-
 import cmk.gui.sites as sites
 import cmk.gui.user_sites as user_sites
 from cmk.gui.logged_in import user
@@ -74,7 +72,7 @@ def test_site_config_for_livestatus_tcp_tls(site_spec: SiteConfiguration, result
     assert sites._site_config_for_livestatus(SiteId("mysite"), site_spec) == result
 
 
-def test_sorted_sites(with_user_login: UserId, mocker: MockerFixture) -> None:
+def test_sorted_sites(mocker: MockerFixture) -> None:
     mocker.patch.object(
         user,
         "authorized_sites",

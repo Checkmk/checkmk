@@ -3,25 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from werkzeug.debug import DebuggedApplication
-
-import cmk.gui.log as log
-from cmk.gui.wsgi.applications.utils import load_gui_log_levels
-
-# Initialize logging as early as possible
-log.init_logging()
-log.set_log_levels(load_gui_log_levels())
-
-from cmk.gui import main_modules
-from cmk.gui.wsgi import make_app
-
-main_modules.load_plugins()
+from cmk.gui.wsgi.app import make_wsgi_app
 
 DEBUG = False
 
-GUI_APP = make_app()
-
 if DEBUG:
-    Application = DebuggedApplication(GUI_APP, evalex=True, pin_security=False)
+    Application = make_wsgi_app(debug=True)
 else:
-    Application = GUI_APP
+    Application = make_wsgi_app()
+    assert not Application.debug
+    assert not Application.testing

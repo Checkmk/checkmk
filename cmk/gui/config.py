@@ -16,14 +16,13 @@ from typing import Any, Final
 
 from livestatus import SiteConfiguration, SiteConfigurations
 
-import cmk.utils.paths
 import cmk.utils.tags
 import cmk.utils.version as cmk_version
 from cmk.utils.site import omd_site, url_prefix
 
 import cmk.gui.log as log
 import cmk.gui.utils as utils
-from cmk.gui.ctx_stack import request_local_attr
+from cmk.gui.ctx_stack import request_local_attr, set_global_var
 from cmk.gui.exceptions import MKConfigError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.config.base import CREConfig
@@ -83,7 +82,7 @@ class Config(CREConfig, CEEConfig, CMEConfig):
     tags: cmk.utils.tags.TagConfig = cmk.utils.tags.TagConfig()
 
 
-active_config: Config = request_local_attr("config")
+active_config = request_local_attr("config", Config)
 
 
 # .
@@ -167,8 +166,7 @@ def load_config() -> None:
     for br in builtin_role_ids:
         raw_config["roles"].setdefault(br, {})
 
-    request_local_attr().config = make_config_object(raw_config)
-
+    set_global_var("config", make_config_object(raw_config))
     execute_post_config_load_hooks()
 
 

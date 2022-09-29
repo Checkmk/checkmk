@@ -173,11 +173,11 @@ modes.register_general_option(
 def _handle_fetcher_options(options: Mapping[str, object]) -> None:
 
     if options.get("cache", False):
-        cmk.core_helpers.cache.FileCacheFactory.maybe = True
-        cmk.core_helpers.cache.FileCacheFactory.use_outdated = True
+        cmk.core_helpers.cache.FileCacheGlobals.maybe = True
+        cmk.core_helpers.cache.FileCacheGlobals.use_outdated = True
 
     if options.get("no-cache", False):
-        cmk.core_helpers.cache.FileCacheFactory.disabled = True
+        cmk.core_helpers.cache.FileCacheGlobals.disabled = True
 
     if options.get("no-tcp", False):
         sources.tcp.TCPSource.use_only_cache = True
@@ -1692,11 +1692,11 @@ _DiscoveryOptions = TypedDict(
 def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     _handle_fetcher_options(options)
     hostnames = modes.parse_hostname_list(args)
-    cmk.core_helpers.cache.FileCacheFactory.maybe = True
+    cmk.core_helpers.cache.FileCacheGlobals.maybe = True
     if not hostnames:
         # In case of discovery without host restriction, use the cache file
         # by default. Otherwise Checkmk would have to connect to ALL hosts.
-        cmk.core_helpers.cache.FileCacheFactory.use_outdated = True
+        cmk.core_helpers.cache.FileCacheGlobals.use_outdated = True
 
     selected_sections, run_plugin_names = _extract_plugin_selection(options, CheckPluginName)
     discovery.commandline_discovery(
@@ -1927,8 +1927,8 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     else:
         # No hosts specified: do all hosts and force caching
         hostnames = sorted(config_cache.all_active_hosts())
-        cmk.core_helpers.cache.FileCacheFactory.maybe = (
-            not cmk.core_helpers.cache.FileCacheFactory.disabled
+        cmk.core_helpers.cache.FileCacheGlobals.maybe = (
+            not cmk.core_helpers.cache.FileCacheGlobals.disabled
         )
         console.verbose("Doing HW/SW inventory on all hosts\n")
 

@@ -14,9 +14,9 @@ from cmk.snmplib.type_defs import SNMPHostConfig, SNMPRawData, SNMPRawDataSectio
 
 import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers import FetcherType, SNMPFetcher
-from cmk.core_helpers.cache import FileCache, SectionStore
+from cmk.core_helpers.cache import FileCacheGlobals, FileCacheMode, MaxAge, SectionStore
 from cmk.core_helpers.host_sections import HostSections
-from cmk.core_helpers.snmp import SectionMeta, SNMPFileCacheFactory, SNMPParser, SNMPSummarizer
+from cmk.core_helpers.snmp import SectionMeta, SNMPFileCache, SNMPParser, SNMPSummarizer
 
 from ._abstract import Source
 
@@ -136,13 +136,19 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             file_cache_max_age=file_cache_max_age,
         )
 
-    def _make_file_cache(self) -> FileCache[SNMPRawData]:
-        return SNMPFileCacheFactory(
+    def _make_file_cache(self) -> SNMPFileCache:
+        return SNMPFileCache(
             self.hostname,
             base_path=self.file_cache_base_path,
+            max_age=MaxAge.none() if self.force_cache_refresh else self.file_cache_max_age,
+            use_outdated=self.simulation_mode
+            or (False if self.force_cache_refresh else FileCacheGlobals.use_outdated),
             simulation=self.simulation_mode,
-            max_age=self.file_cache_max_age,
-        ).make(force_cache_refresh=self.force_cache_refresh)
+            use_only_cache=False,
+            file_cache_mode=FileCacheMode.DISABLED
+            if FileCacheGlobals.disabled
+            else FileCacheMode.READ_WRITE,
+        )
 
     def _make_fetcher(self) -> SNMPFetcher:
         return SNMPFetcher(

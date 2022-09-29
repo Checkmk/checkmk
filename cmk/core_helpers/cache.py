@@ -82,7 +82,7 @@ from .type_defs import AgentRawDataSection, Mode
 __all__ = [
     "ABCRawDataSection",
     "FileCache",
-    "FileCacheFactory",
+    "FileCacheGlobals",
     "PersistedSections",
     "SectionStore",
     "TRawDataSection",
@@ -460,42 +460,15 @@ class FileCache(Generic[TRawData], abc.ABC):
             raise MKGeneralException("Cannot write cache file %s: %s" % (path, e))
 
 
-class FileCacheFactory(Generic[TRawData], abc.ABC):
-    """Factory / configuration to FileCache."""
-
-    # TODO: Clean these options up! We need to change all call sites to use
-    #       a single Checkers() object during processing first. Then we
-    #       can change these class attributes to object attributes and finally
-    #       get rid of these otherwise useless "factory" classes.
-    #
+class FileCacheGlobals:
     # Set by the user via command line to prevent using cached information at all.
     disabled: bool = False
     # Set by the code in different situations where we recommend, but not enforce,
     # to use the cache. The user can always use "--cache" to override this.
     # It's used to 'transport' caching opt between modules, eg:
-    # - modes: FileCacheFactory.maybe = use_caches
-    # - discovery: use_caches = FileCacheFactory.maybe
+    # - modes: FileCacheGlobals.maybe = use_caches
+    # - discovery: use_caches = FileCacheGlobals.maybe
     maybe = False
     # Is set by the "--cache" command line. This makes the caching logic use
     # cache files that are even older than the max_cachefile_age of the host/mode.
     use_outdated = False
-
-    def __init__(
-        self,
-        hostname: HostName,
-        base_path: Union[Path, str],
-        *,
-        max_age: MaxAge,
-        simulation: bool = False,
-        use_only_cache: bool = False,
-    ):
-        super().__init__()
-        self.hostname: Final = hostname
-        self.base_path: Final = Path(base_path)
-        self.max_age: Final = max_age
-        self.simulation: Final = simulation
-        self.use_only_cache: Final = use_only_cache
-
-    @abc.abstractmethod
-    def make(self, *, force_cache_refresh: bool = False) -> FileCache[TRawData]:
-        raise NotImplementedError

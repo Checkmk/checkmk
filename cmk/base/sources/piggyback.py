@@ -12,7 +12,8 @@ from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, SourceType
 
 import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers import FetcherType, PiggybackFetcher
-from cmk.core_helpers.agent import AgentFileCache, NoCacheFactory
+from cmk.core_helpers.agent import AgentFileCache
+from cmk.core_helpers.cache import FileCacheGlobals, FileCacheMode
 from cmk.core_helpers.piggyback import PiggybackSummarizer
 
 from .agent import AgentSource
@@ -54,12 +55,15 @@ class PiggybackSource(AgentSource):
         self.is_piggyback_host: Final = is_piggyback_host
 
     def _make_file_cache(self) -> AgentFileCache:
-        return NoCacheFactory(
+        return AgentFileCache(
             self.hostname,
             base_path=self.file_cache_base_path,
-            simulation=False,  # TODO Quickfix for SUP-9912, should be handled in a better way
             max_age=self.file_cache_max_age,
-        ).make()
+            use_outdated=FileCacheGlobals.use_outdated,
+            simulation=False,  # TODO Quickfix for SUP-9912, should be handled in a better way
+            use_only_cache=False,
+            file_cache_mode=FileCacheMode.DISABLED,
+        )
 
     def _make_fetcher(self) -> PiggybackFetcher:
         return PiggybackFetcher(

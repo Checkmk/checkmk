@@ -11,14 +11,15 @@ from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, SourceType
 
 import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers import FetcherType, TCPFetcher
-from cmk.core_helpers.agent import AgentFileCache, AgentFileCacheFactory, AgentSummarizerDefault
+from cmk.core_helpers.agent import AgentFileCache, AgentSummarizerDefault
+from cmk.core_helpers.cache import FileCacheGlobals, FileCacheMode
 
 from .agent import AgentSource
 
 
 class TCPSource(AgentSource):
-    # TODO(ml): Global caching options usually go to the FileCacheFactory,
-    #           actually, the "factory" has no other purpose than to hold
+    # TODO(ml): Global caching options usually go to the FileCacheGlobals,
+    #           actually, the "class" has no other purpose than to hold
     #           all of this at one place.  Would it be possible to move this
     #           option there as well?
     use_only_cache = False
@@ -66,13 +67,17 @@ class TCPSource(AgentSource):
         self.timeout: Optional[float] = None
 
     def _make_file_cache(self) -> AgentFileCache:
-        return AgentFileCacheFactory(
+        return AgentFileCache(
             self.hostname,
             base_path=self.file_cache_base_path,
+            max_age=self.file_cache_max_age,
+            use_outdated=self.simulation_mode or FileCacheGlobals.use_outdated,
             simulation=self.simulation_mode,
             use_only_cache=self.use_only_cache,
-            max_age=self.file_cache_max_age,
-        ).make()
+            file_cache_mode=FileCacheMode.DISABLED
+            if FileCacheGlobals.disabled
+            else FileCacheMode.READ_WRITE,
+        )
 
     def _make_fetcher(self) -> TCPFetcher:
         return TCPFetcher(

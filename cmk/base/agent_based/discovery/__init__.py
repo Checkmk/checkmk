@@ -333,8 +333,8 @@ def automation_discovery(
         result.error_text = ""
         return result
 
-    cmk.core_helpers.cache.FileCacheFactory.use_outdated = True
-    cmk.core_helpers.cache.FileCacheFactory.maybe = use_cached_snmp_data
+    cmk.core_helpers.cache.FileCacheGlobals.use_outdated = True
+    cmk.core_helpers.cache.FileCacheGlobals.maybe = use_cached_snmp_data
 
     try:
         # in "refresh" mode we first need to remove all previously discovered
@@ -615,7 +615,7 @@ def _commandline_check_discovery(
                 config.snmp_without_sys_descr,
             ),
             file_cache_max_age=config.max_cachefile_age(
-                discovery=None if cmk.core_helpers.cache.FileCacheFactory.maybe else 0
+                discovery=None if cmk.core_helpers.cache.FileCacheGlobals.maybe else 0
             ),
         ),
         mode=Mode.DISCOVERY,
@@ -631,8 +631,8 @@ def _execute_check_discovery(
 ) -> ActiveCheckResult:
     # Note: '--cache' is set in core_cmc, nagios template or even on CL and means:
     # 1. use caches as default:
-    #    - Set FileCacheFactory.maybe = True (set max_cachefile_age, else 0)
-    #    - Set FileCacheFactory.use_outdated = True
+    #    - Set FileCacheGlobals.maybe = True (set max_cachefile_age, else 0)
+    #    - Set FileCacheGlobals.use_outdated = True
     # 2. Then these settings are used to read cache file or not
 
     config_cache = config.get_config_cache()
@@ -910,8 +910,8 @@ def discover_marked_hosts(
             config.get_config_cache().initialize()
 
             # reset these to their original value to create a correct config
-            cmk.core_helpers.cache.FileCacheFactory.use_outdated = False
-            cmk.core_helpers.cache.FileCacheFactory.maybe = True
+            cmk.core_helpers.cache.FileCacheGlobals.use_outdated = False
+            cmk.core_helpers.cache.FileCacheGlobals.maybe = True
             if config.monitoring_core == "cmc":
                 cmk.base.core.do_reload(
                     core,
@@ -1290,8 +1290,8 @@ def get_check_preview(
     ip_address = None if host_config.is_cluster else config.lookup_ip_address(host_config)
     host_attrs = get_host_attributes(host_name, config_cache)
 
-    cmk.core_helpers.cache.FileCacheFactory.use_outdated = True
-    cmk.core_helpers.cache.FileCacheFactory.maybe = use_cached_snmp_data
+    cmk.core_helpers.cache.FileCacheGlobals.use_outdated = True
+    cmk.core_helpers.cache.FileCacheGlobals.maybe = use_cached_snmp_data
 
     fetched = fetch_all(
         sources=make_sources(

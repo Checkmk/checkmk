@@ -41,19 +41,13 @@ from cmk.snmplib.type_defs import (
 
 from . import factory
 from ._base import Fetcher, Parser, Summarizer, verify_ipaddress
-from .cache import (
-    FileCache,
-    FileCacheFactory,
-    FileCacheMode,
-    MaxAge,
-    PersistedSections,
-    SectionStore,
-)
+from .cache import FileCache, PersistedSections, SectionStore
 from .host_sections import HostSections
 from .type_defs import Mode, SectionNameCollection
 
 __all__ = [
     "SNMPFetcher",
+    "SNMPFileCache",
     "SNMPParser",
     "SNMPPluginStore",
     "SNMPPluginStoreItem",
@@ -156,19 +150,6 @@ class SNMPFileCache(FileCache[SNMPRawData]):
 
     def make_path(self, mode: Mode) -> Path:
         return self.base_path / mode.name.lower() / self.hostname
-
-
-class SNMPFileCacheFactory(FileCacheFactory[SNMPRawData]):
-    def make(self, *, force_cache_refresh: bool = False) -> FileCache[SNMPRawData]:
-        return SNMPFileCache(
-            self.hostname,
-            base_path=self.base_path,
-            max_age=MaxAge.none() if force_cache_refresh else self.max_age,
-            use_outdated=self.simulation or (False if force_cache_refresh else self.disabled),
-            simulation=self.simulation,
-            use_only_cache=self.use_only_cache,
-            file_cache_mode=FileCacheMode.DISABLED if self.disabled else FileCacheMode.READ_WRITE,
-        )
 
 
 class SNMPFetcher(Fetcher[SNMPRawData]):

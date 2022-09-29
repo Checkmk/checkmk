@@ -1718,8 +1718,8 @@ class AutomationGetAgentOutput(Automation):
         try:
             ipaddress = config.lookup_ip_address(host_config)
             if ty == "agent":
-                cmk.core_helpers.cache.FileCacheFactory.maybe = (
-                    not cmk.core_helpers.cache.FileCacheFactory.disabled
+                cmk.core_helpers.cache.FileCacheGlobals.maybe = (
+                    not cmk.core_helpers.cache.FileCacheGlobals.disabled
                 )
                 for source in sources.make_non_cluster_sources(
                     host_config,

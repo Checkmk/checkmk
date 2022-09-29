@@ -10,7 +10,8 @@ from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, SourceType
 
 import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers import FetcherType, ProgramFetcher
-from cmk.core_helpers.agent import AgentFileCache, AgentFileCacheFactory, AgentSummarizerDefault
+from cmk.core_helpers.agent import AgentFileCache, AgentSummarizerDefault
+from cmk.core_helpers.cache import FileCacheGlobals, FileCacheMode
 
 from .agent import AgentSource
 
@@ -56,12 +57,17 @@ class ProgramSource(AgentSource):
         self.is_cmc: Final = is_cmc
 
     def _make_file_cache(self) -> AgentFileCache:
-        return AgentFileCacheFactory(
+        return AgentFileCache(
             self.hostname,
             base_path=self.file_cache_base_path,
-            simulation=self.simulation_mode,
             max_age=self.file_cache_max_age,
-        ).make()
+            use_outdated=self.simulation_mode or FileCacheGlobals.use_outdated,
+            simulation=self.simulation_mode,
+            use_only_cache=False,
+            file_cache_mode=FileCacheMode.DISABLED
+            if FileCacheGlobals.disabled
+            else FileCacheMode.READ_WRITE,
+        )
 
     def _make_fetcher(self) -> ProgramFetcher:
         return ProgramFetcher(

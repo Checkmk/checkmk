@@ -32,7 +32,7 @@ from cmk.utils.type_defs import AgentRawData, HostName, SectionName
 
 from ._base import Fetcher, Parser, Summarizer
 from ._markers import PiggybackMarker, SectionMarker
-from .cache import FileCache, FileCacheFactory, FileCacheMode, MaxAge, SectionStore
+from .cache import FileCache, SectionStore
 from .host_sections import HostSections
 from .type_defs import AgentRawDataSection, Mode, NO_SELECTION, SectionNameCollection
 
@@ -48,21 +48,6 @@ class AgentFileCache(FileCache[AgentRawData]):
 
     def make_path(self, mode: Mode) -> Path:
         return self.base_path / self.hostname
-
-
-class AgentFileCacheFactory(FileCacheFactory[AgentRawData]):
-    # force_cache_refresh is currently only used by SNMP. It's probably less irritating
-    # to implement it here anyway:
-    def make(self, *, force_cache_refresh: bool = False) -> AgentFileCache:
-        return AgentFileCache(
-            self.hostname,
-            base_path=self.base_path,
-            max_age=MaxAge.none() if force_cache_refresh else self.max_age,
-            use_outdated=self.simulation or (False if force_cache_refresh else self.use_outdated),
-            simulation=self.simulation,
-            use_only_cache=self.use_only_cache,
-            file_cache_mode=FileCacheMode.DISABLED if self.disabled else FileCacheMode.READ_WRITE,
-        )
 
 
 class NoFetcher(Fetcher[AgentRawData]):
@@ -86,21 +71,6 @@ class NoFetcher(Fetcher[AgentRawData]):
         raise TypeError(self)
 
 
-class NoCacheFactory(FileCacheFactory[AgentRawData]):
-    # force_cache_refresh is currently only used by SNMP. It's probably less irritating
-    # to implement it here anyway. At the time of this writing NoCache does nothing either way.
-    def make(self, *, force_cache_refresh: bool = False) -> AgentFileCache:
-        return AgentFileCache(
-            self.hostname,
-            base_path=self.base_path,
-            max_age=MaxAge.none() if force_cache_refresh else self.max_age,
-            use_outdated=self.simulation or (False if force_cache_refresh else self.use_outdated),
-            simulation=self.simulation,
-            use_only_cache=self.use_only_cache,
-            file_cache_mode=FileCacheMode.DISABLED,
-        )
-
-
 class PushAgentFileCache(FileCache[AgentRawData]):
     # TODO(ml): The only difference with `AgentFileCache` is `make_path()`.  Make
     #           them consistent/pass the path as an argument and nuke this class.
@@ -114,21 +84,6 @@ class PushAgentFileCache(FileCache[AgentRawData]):
 
     def make_path(self, mode: Mode) -> Path:
         return self.base_path / self.hostname / "agent_output"
-
-
-class PushAgentFileCacheFactory(FileCacheFactory[AgentRawData]):
-    # force_cache_refresh is currently only used by SNMP. It's probably less irritating
-    # to implement it here anyway:
-    def make(self, *, force_cache_refresh: bool = False) -> PushAgentFileCache:
-        return PushAgentFileCache(
-            self.hostname,
-            base_path=self.base_path,
-            max_age=MaxAge.none() if force_cache_refresh else self.max_age,
-            use_outdated=self.simulation or (False if force_cache_refresh else self.use_outdated),
-            simulation=self.simulation,
-            use_only_cache=self.use_only_cache,
-            file_cache_mode=FileCacheMode.DISABLED if self.disabled else FileCacheMode.READ,
-        )
 
 
 class SectionWithHeader(NamedTuple):

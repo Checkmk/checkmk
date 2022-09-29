@@ -29,12 +29,6 @@ def test_executables(site: Site, executable) -> None:  # type:ignore[no-untyped-
     assert p.exists(), f"path: '{p}' exe: '{executable}'"
 
 
-@pytest.mark.parametrize("test_file", EXPECTED_TEST_FILES)
-def test_files(site: Site, test_file) -> None:  # type:ignore[no-untyped-def]
-    p = Path(site.path(MSI_LOCATION)) / test_file
-    assert p.exists(), f"path: '{p}' file: '{test_file}'"
-
-
 def _get_msi_file_path_standard(site: Site) -> Path:
     return Path(site.path(MSI_LOCATION)) / msi_engine.AGENT_STANDARD_MSI_FILE
 

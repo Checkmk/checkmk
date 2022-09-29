@@ -261,19 +261,6 @@ def get_replication_paths() -> List[ReplicationPath]:
         ),
     ]
 
-    # TODO: Move this to CEE specific code again
-    if not cmk_version.is_raw_edition():
-        paths += [
-            ReplicationPath(
-                "dir",
-                "liveproxyd",
-                os.path.relpath(
-                    cmk.gui.watolib.utils.liveproxyd_config_dir(), cmk.utils.paths.omd_root
-                ),
-                [],
-            ),
-        ]
-
     # Include rule configuration into backup/restore/replication. Current
     # status is not backed up.
     if active_config.mkeventd_enabled:

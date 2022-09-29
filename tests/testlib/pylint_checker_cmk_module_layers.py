@@ -102,6 +102,41 @@ def _allow_default_plus_fetchers_and_snmplib(
     )
 
 
+def _allow_default_plus_fetchers_snmplib_and_bakery(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    """
+    Allow import of `cmk.core_helpers`, `cmk.snmplib` and `cmk.cee.bakery`.
+
+    The layering is such that `fetchers`, `snmplib` and `bakery` is between
+    `utils` and `base` so that importing `fetchers` in `utils` is
+    wrong but anywhere else is OK.
+    """
+    return any(
+        (
+            _is_default_allowed_import(imported=imported, component=component),
+            _in_component(imported, Component("cmk.core_helpers")),
+            _in_component(imported, Component("cmk.snmplib")),
+            _in_component(imported, Component("cmk.cee.bakery")),
+        )
+    )
+
+
+def _allow_default_plus_bakery(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    return any(
+        (
+            _is_default_allowed_import(imported=imported, component=component),
+            _in_component(imported, Component("cmk.cee.bakery")),
+        )
+    )
+
+
 def _allow_default_plus_gui_and_base(
     *,
     imported: ModuleName,
@@ -116,6 +151,27 @@ def _allow_default_plus_gui_and_base(
     return any(
         (
             _is_default_allowed_import(imported=imported, component=component),
+            _in_component(imported, Component("cmk.base")),
+            _in_component(imported, Component("cmk.gui")),
+        )
+    )
+
+
+def _allow_default_plus_gui_base_and_bakery(
+    *,
+    imported: ModuleName,
+    component: Component,
+) -> bool:
+    """
+    Allow import of `cmk.gui`, `cmk.base` and `cmk.cee.bakery`.
+
+    The `gui`, `base` and `bakery` are different components, but for specific cases, like `cmk_update_config`
+    and `post_rename_site` it is allowed to import both.
+    """
+    return any(
+        (
+            _is_default_allowed_import(imported=imported, component=component),
+            _in_component(imported, Component("cmk.cee.bakery")),
             _in_component(imported, Component("cmk.base")),
             _in_component(imported, Component("cmk.gui")),
         )
@@ -158,15 +214,16 @@ _COMPONENTS = (
     (Component("cmk.base.plugins.agent_based"), _is_allowed_for_agent_based_plugin),
     # importing config in ip_lookup repeatedly lead to import cycles. It's cleanup now.
     (Component("cmk.base.ip_lookup"), _is_default_allowed_import),
-    (Component("cmk.base"), _allow_default_plus_fetchers_and_snmplib),
+    (Component("cmk.base"), _allow_default_plus_fetchers_snmplib_and_bakery),
     (Component("cmk.core_helpers"), _allow_default_plus_fetchers_and_snmplib),
     (Component("cmk.snmplib"), _is_default_allowed_import),
-    (Component("cmk.gui"), _is_default_allowed_import),
+    (Component("cmk.gui"), _allow_default_plus_bakery),
     (Component("cmk.ec"), _is_default_allowed_import),
     (Component("cmk.notification_plugins"), _is_default_allowed_import),
     (Component("cmk.special_agents"), _is_default_allowed_import),
-    (Component("cmk.update_config"), _allow_default_plus_gui_and_base),
+    (Component("cmk.update_config"), _allow_default_plus_gui_base_and_bakery),
     (Component("cmk.utils"), _is_default_allowed_import),
+    (Component("cmk.cee.bakery"), _is_default_allowed_import),
     (Component("cmk.cee.dcd"), _is_default_allowed_import),
     (Component("cmk.cee.mknotifyd"), _is_default_allowed_import),
     (Component("cmk.cee.snmp_backend"), _is_default_allowed_import),

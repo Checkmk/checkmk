@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Final, Optional
 
 import cmk.utils.misc
+import cmk.utils.paths
 from cmk.utils.translations import TranslationOptions
 from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, SourceType
 
@@ -59,9 +60,6 @@ class AgentSource(Source[AgentRawData, AgentRawDataSection]):
             default_host_sections=HostSections[AgentRawDataSection](),
             id_=id_,
             cache_dir=Path(cmk.utils.paths.tcp_cache_dir) if main_data_source else None,
-            persisted_section_dir=(Path(cmk.utils.paths.var_dir) / "persisted")
-            if main_data_source
-            else None,
             simulation_mode=simulation_mode,
             file_cache_max_age=file_cache_max_age,
         )
@@ -72,12 +70,17 @@ class AgentSource(Source[AgentRawData, AgentRawDataSection]):
         self.encoding_fallback: Final = encoding_fallback
         self.agent_simulator: Final = agent_simulator
         self.check_interval: Final = check_interval
+        if self.main_data_source:
+            persisted_section_dir = Path(cmk.utils.paths.var_dir) / "persisted"
+        else:
+            persisted_section_dir = Path(cmk.utils.paths.var_dir) / "persisted_sections" / self.id
+        self.persisted_section_dir: Final[Path] = persisted_section_dir
 
     def _make_parser(self) -> AgentParser:
         return AgentParser(
             self.hostname,
             SectionStore[AgentRawDataSection](
-                self.persisted_sections_file_path,
+                self.persisted_section_dir / self.hostname,
                 logger=self._logger,
             ),
             check_interval=self.check_interval,

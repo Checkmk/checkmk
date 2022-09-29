@@ -6,6 +6,7 @@
 from pathlib import Path
 from typing import Final, Literal, Mapping, Optional
 
+import cmk.utils.paths
 from cmk.utils.exceptions import OnError
 from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, SectionName, SourceType
 
@@ -51,7 +52,6 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             default_host_sections=HostSections[SNMPRawDataSection](),
             id_=id_,
             cache_dir=cache_dir,
-            persisted_section_dir=persisted_section_dir,
             simulation_mode=simulation_mode,
             file_cache_max_age=file_cache_max_age,
         )
@@ -62,6 +62,9 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
         self.do_status_data_inventory: Final = do_status_data_inventory
         self.on_snmp_scan_error: Final = on_scan_error
         self.force_cache_refresh: Final = force_cache_refresh
+        if not persisted_section_dir:
+            persisted_section_dir = Path(cmk.utils.paths.var_dir) / "persisted_sections" / self.id
+        self.persisted_section_dir: Final[Path] = persisted_section_dir
 
     @classmethod
     def snmp(
@@ -145,7 +148,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             on_error=self.on_snmp_scan_error,
             missing_sys_description=self.missing_sys_description,
             do_status_data_inventory=self.do_status_data_inventory,
-            section_store_path=self.persisted_sections_file_path,
+            section_store_path=self.persisted_section_dir / self.hostname,
             snmp_config=self.snmp_config,
         )
 
@@ -153,7 +156,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
         return SNMPParser(
             self.hostname,
             SectionStore[SNMPRawDataSection](
-                self.persisted_sections_file_path,
+                self.persisted_section_dir / self.hostname,
                 logger=self._logger,
             ),
             check_intervals=self.check_intervals,

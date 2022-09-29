@@ -308,9 +308,6 @@ def test_start_cmkadmin_passsword(request, client) -> None:  # type:ignore[no-un
         },
     )
 
-    # htpasswd might not understand our 2b bcrypt hashes but would understand the 2y hashes...
-    assert _exec_run(c, ["sed", "-iE", r"s/\$2b\$/\$2y\$/g", "/omd/sites/cmk/etc/htpasswd"])[0] == 0
-
     assert (
         _exec_run(c, ["htpasswd", "-vb", "/omd/sites/cmk/etc/htpasswd", "cmkadmin", "blabla"])[0]
         == 0

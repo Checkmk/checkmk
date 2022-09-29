@@ -85,6 +85,7 @@ class Levels(NamedTuple):
 
 
 PodPhaseTimes = MutableMapping[str, float]
+ValueStore = MutableMapping[str, PodPhaseTimes]
 
 
 def _summary(resource: str, pod_count: int) -> str:
@@ -145,8 +146,12 @@ _DEFAULT_PARAMS = Params(pending="no_levels", free=("levels_perc", (10.0, 5.0)))
 _POD_RESOURCES_FIELDS = ("running", "pending", "succeeded", "failed", "unknown")
 
 
-def check_kube_pods(params: Params, section: PodResources, now: float) -> CheckResult:
-    value_store = get_value_store()
+def check_kube_pods(
+    params: Params,
+    section: PodResources,
+    now: float,
+    value_store: ValueStore,
+) -> CheckResult:
     old_resource_store = value_store.get("pending", {})
     # store currently pending pod_names and the timestamp we first saw them in pending state
     # this means if pods are no longer pending, they are removed from the value_store
@@ -209,13 +214,14 @@ def check_free_pods(
 
 def _check_kube_pod_resources(
     now: float,
+    value_store: ValueStore,
     params: Params,
     section_kube_pod_resources: Optional[PodResources],
     section_kube_allocatable_pods: Optional[AllocatablePods],
 ) -> CheckResult:
 
     assert section_kube_pod_resources is not None, "Missing Api data"
-    yield from check_kube_pods(params, section_kube_pod_resources, now)
+    yield from check_kube_pods(params, section_kube_pod_resources, now, value_store)
 
     if section_kube_allocatable_pods is None:
         return
@@ -240,7 +246,11 @@ def check_kube_pod_resources(
     section_kube_allocatable_pods: Optional[AllocatablePods],
 ) -> CheckResult:
     yield from _check_kube_pod_resources(
-        time.time(), params, section_kube_pod_resources, section_kube_allocatable_pods
+        time.time(),
+        get_value_store(),
+        params,
+        section_kube_pod_resources,
+        section_kube_allocatable_pods,
     )
 
 

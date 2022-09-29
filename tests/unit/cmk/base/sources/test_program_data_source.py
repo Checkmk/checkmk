@@ -23,6 +23,8 @@ class TestDSProgramChecker:
             ipaddress,
             id_="agent",
             cmdline="",
+            stdin=None,
+            main_data_source=False,
             simulation_mode=True,
             agent_simulator=True,
             translation={},

@@ -1376,8 +1376,15 @@ def _plugins_for_special_agents(host_config: HostConfig) -> Iterable[CheckPlugin
     except Exception:
         ipaddress = None
 
+    def special_to_agent_plugin_file_name(name: str) -> str:
+        prefix = "special_"
+        if name.startswith(prefix):
+            # expected
+            return f"agent_{name[len(prefix):]}"
+        return "agent_{name}"
+
     yield from (
-        s.special_agent_plugin_file_name
+        special_to_agent_plugin_file_name(s.id)
         for s in sources.make_non_cluster_sources(
             host_config,
             ipaddress,

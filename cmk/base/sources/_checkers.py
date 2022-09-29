@@ -363,6 +363,7 @@ class _Builder:
                 cmdline=core_config.translate_ds_program_source_cmdline(
                     datasource_program, self.host_config, self.ipaddress
                 ),
+                stdin=None,
                 simulation_mode=self.simulation_mode,
                 agent_simulator=self.agent_simulator,
                 translation=self.translation,
@@ -410,7 +411,6 @@ class _Builder:
                 self.host_config.hostname,
                 self.ipaddress,
                 id_=f"special_{agentname}",
-                agentname=agentname,
                 cmdline=core_config.make_special_agent_cmdline(
                     self.host_config.hostname,
                     self.ipaddress,
@@ -423,6 +423,7 @@ class _Builder:
                     agentname,
                     params,
                 ),
+                main_data_source=False,
                 simulation_mode=self.simulation_mode,
                 agent_simulator=self.agent_simulator,
                 translation=self.translation,

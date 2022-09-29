@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Final, Literal, Optional
+from typing import Final, Optional
 
 from cmk.utils.translations import TranslationOptions
 from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, SourceType
@@ -21,7 +21,7 @@ class ProgramSource(AgentSource):
         hostname: HostName,
         ipaddress: Optional[HostAddress],
         *,
-        id_: str,
+        id_: str,  # "agent" or "special_{agentname}"
         main_data_source: bool,
         cmdline: str,
         stdin: Optional[str],
@@ -82,72 +82,8 @@ class ProgramSource(AgentSource):
 
 
 class DSProgramSource(ProgramSource):
-    def __init__(
-        self,
-        hostname: HostName,
-        ipaddress: Optional[HostAddress],
-        *,
-        id_: Literal["agent"],
-        main_data_source: bool = False,
-        cmdline: str,
-        simulation_mode: bool,
-        agent_simulator: bool,
-        translation: TranslationOptions,
-        encoding_fallback: str,
-        check_interval: int,
-        file_cache_max_age: file_cache.MaxAge,
-        is_cmc: bool,
-    ) -> None:
-        super().__init__(
-            hostname,
-            ipaddress,
-            id_=id_,
-            main_data_source=main_data_source,
-            cmdline=cmdline,
-            stdin=None,
-            simulation_mode=simulation_mode,
-            agent_simulator=agent_simulator,
-            translation=translation,
-            encoding_fallback=encoding_fallback,
-            check_interval=check_interval,
-            is_cmc=is_cmc,
-            file_cache_max_age=file_cache_max_age,
-        )
+    pass
 
 
 class SpecialAgentSource(ProgramSource):
-    def __init__(
-        self,
-        hostname: HostName,
-        ipaddress: Optional[HostAddress],
-        *,
-        id_: str,  # "special_{agentname}"
-        agentname: str,
-        main_data_source: bool = False,
-        cmdline: str,
-        stdin: Optional[str],
-        simulation_mode: bool,
-        agent_simulator: bool,
-        translation: TranslationOptions,
-        encoding_fallback: str,
-        check_interval: int,
-        is_cmc: bool,
-        file_cache_max_age: file_cache.MaxAge,
-    ) -> None:
-        super().__init__(
-            hostname,
-            ipaddress,
-            id_=id_,
-            main_data_source=main_data_source,
-            cmdline=cmdline,
-            stdin=stdin,
-            simulation_mode=simulation_mode,
-            agent_simulator=agent_simulator,
-            translation=translation,
-            encoding_fallback=encoding_fallback,
-            check_interval=check_interval,
-            is_cmc=is_cmc,
-            file_cache_max_age=file_cache_max_age,
-        )
-        self.special_agent_id = agentname
-        self.special_agent_plugin_file_name = "agent_%s" % agentname
+    pass

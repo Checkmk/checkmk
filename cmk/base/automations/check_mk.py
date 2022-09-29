@@ -1398,6 +1398,8 @@ class AutomationDiagHost(Automation):
                         host_config,
                         ipaddress,
                     ),
+                    stdin=None,
+                    main_data_source=False,
                     simulation_mode=config.simulation_mode,
                     agent_simulator=config.agent_simulator,
                     translation=config.get_piggyback_translations(host_config.hostname),

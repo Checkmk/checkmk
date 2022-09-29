@@ -278,12 +278,6 @@ def _get_expected_paths(
         "var/check_mk/stored_passwords",
     ]
 
-    if with_local:
-        expected_paths += [
-            "local",
-            "var/check_mk/packages",
-        ]
-
     # The new sync directories create all needed files on the central site now
     expected_paths += [
         "etc/check_mk/apache.d",
@@ -322,6 +316,8 @@ def _get_expected_paths(
             "etc/check_mk/mkeventd.d/mkp",
             "etc/check_mk/mkeventd.d/mkp/rule_packs",
             "etc/check_mk/mkeventd.d/wato/rules.mk",
+            "local",
+            "var/check_mk/packages",
         ]
 
     # TODO: Shouldn't we clean up these subtle differences?
@@ -337,6 +333,12 @@ def _get_expected_paths(
             "etc/check_mk/multisite.d/wato/groups.mk",
             "etc/check_mk/multisite.d/wato/user_connections.mk",
         ]
+
+        if with_local:
+            expected_paths += [
+                "local",
+                "var/check_mk/packages",
+            ]
 
         expected_paths.remove("etc/check_mk/conf.d/wato/hosts.mk")
 
@@ -384,8 +386,6 @@ def _get_expected_paths(
             "local/share/check_mk/web/htdocs/themes/modern-dark",
             "local/share/check_mk/web/htdocs/themes/modern-dark/images",
         ]
-        if not with_local:
-            expected_paths += ["local"]
 
     return expected_paths
 

@@ -8,6 +8,7 @@ from typing import Any, Dict, Optional
 
 from cmk.utils.type_defs import HostAddress
 
+import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers import FetcherType
 
 import cmk.base.config as config
@@ -37,7 +38,7 @@ def _fixup_caching_info(source: Source) -> Source:
         # For TCP, we ensure updated caches by triggering the "Check_MK" service whenever the
         # user manually triggers "Check_MK Discovery", but then use cached data during the actual
         # discovery
-        source.file_cache_max_age = config.max_cachefile_age()
+        setattr(source, "file_cache_max_age", config.max_cachefile_age())
     return source
 
 
@@ -61,6 +62,7 @@ def fetchers(host_config: HostConfig) -> Dict[str, Any]:
                     host_config.hostname,
                     config.snmp_without_sys_descr,
                 ),
+                file_cache_max_age=file_cache.MaxAge.none(),
             )
         ]
     }

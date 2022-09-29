@@ -284,14 +284,13 @@ def _inventorize_host(
                 host_config.hostname,
                 config.snmp_without_sys_descr,
             ),
+            file_cache_max_age=host_config.max_cachefile_age,
         ),
-        file_cache_max_age=host_config.max_cachefile_age,
         mode=(Mode.INVENTORY if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS),
     )
     broker, results = make_broker(
         fetched=fetched,
         selected_sections=selected_sections,
-        file_cache_max_age=host_config.max_cachefile_age,
     )
 
     parsing_errors = broker.parsing_errors()

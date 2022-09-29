@@ -36,6 +36,8 @@ from cmk.utils.type_defs import (
     TimeperiodName,
 )
 
+import cmk.core_helpers.cache as file_cache
+
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 import cmk.base.core_config as core_config
@@ -1387,6 +1389,7 @@ def _plugins_for_special_agents(host_config: HostConfig) -> Iterable[CheckPlugin
                 host_config.hostname,
                 config.snmp_without_sys_descr,
             ),
+            file_cache_max_age=file_cache.MaxAge.none(),
         )
         if isinstance(s, sources.programs.SpecialAgentSource)
     )

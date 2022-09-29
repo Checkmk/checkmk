@@ -168,6 +168,7 @@ class _Builder:
         translation: TranslationOptions,
         encoding_fallback: str,
         missing_sys_description: bool,
+        file_cache_max_age: file_cache.MaxAge,
     ) -> None:
         super().__init__()
         self.host_config: Final = host_config
@@ -180,6 +181,7 @@ class _Builder:
         self.translation: Final = translation
         self.encoding_fallback: Final = encoding_fallback
         self.missing_sys_description: Final = missing_sys_description
+        self.file_cache_max_age: Final = file_cache_max_age
         self._elems: Dict[str, Source] = {}
 
         self._initialize()
@@ -240,6 +242,7 @@ class _Builder:
                     encoding_fallback=self.encoding_fallback,
                     check_interval=self.host_config.check_mk_check_interval,
                     is_piggyback_host=self.host_config.is_piggyback_host,
+                    file_cache_max_age=self.file_cache_max_age,
                 )
             )
 
@@ -282,6 +285,7 @@ class _Builder:
                 ),
                 snmp_config=self.host_config.snmp_config(self.ipaddress),
                 do_status_data_inventory=self.host_config.do_status_data_inventory,
+                file_cache_max_age=self.file_cache_max_age,
             )
         )
 
@@ -315,6 +319,7 @@ class _Builder:
                     ),
                     snmp_config=self.host_config.management_snmp_config,
                     do_status_data_inventory=self.host_config.do_status_data_inventory,
+                    file_cache_max_age=self.file_cache_max_age,
                 )
             )
         elif protocol == "ipmi":
@@ -329,6 +334,7 @@ class _Builder:
                     encoding_fallback=self.encoding_fallback,
                     check_interval=self.host_config.check_mk_check_interval,
                     management_credentials=self.host_config.ipmi_credentials,
+                    file_cache_max_age=self.file_cache_max_age,
                 )
             )
         else:
@@ -363,6 +369,7 @@ class _Builder:
                 encoding_fallback=self.encoding_fallback,
                 check_interval=self.host_config.check_mk_check_interval,
                 is_cmc=config.is_cmc(),
+                file_cache_max_age=self.file_cache_max_age,
             )
 
         connection_mode = self.host_config.agent_connection_mode()
@@ -376,6 +383,7 @@ class _Builder:
                 translation=self.translation,
                 encoding_fallback=self.encoding_fallback,
                 check_interval=self.host_config.check_mk_check_interval,
+                file_cache_max_age=self.file_cache_max_age,
             )
         if connection_mode == "pull-agent":
             return TCPSource(
@@ -392,6 +400,7 @@ class _Builder:
                 agent_port=self.host_config.agent_port,
                 tcp_connect_timeout=self.host_config.tcp_connect_timeout,
                 agent_encryption=self.host_config.agent_encryption,
+                file_cache_max_age=self.file_cache_max_age,
             )
         raise NotImplementedError(f"connection mode {connection_mode!r}")
 
@@ -420,6 +429,7 @@ class _Builder:
                 encoding_fallback=self.encoding_fallback,
                 check_interval=self.host_config.check_mk_check_interval,
                 is_cmc=config.is_cmc(),
+                file_cache_max_age=self.file_cache_max_age,
             )
             for agentname, params in self.host_config.special_agents
         ]
@@ -437,6 +447,7 @@ def make_non_cluster_sources(
     translation: TranslationOptions,
     encoding_fallback: str,
     missing_sys_description: bool,
+    file_cache_max_age: file_cache.MaxAge,
 ) -> Sequence[Source]:
     """Sequence of sources available for `host_config`."""
     return _Builder(
@@ -450,21 +461,19 @@ def make_non_cluster_sources(
         translation=translation,
         encoding_fallback=encoding_fallback,
         missing_sys_description=missing_sys_description,
+        file_cache_max_age=file_cache_max_age,
     ).sources
 
 
 def fetch_all(
     sources: Iterable[Source],
     *,
-    file_cache_max_age: file_cache.MaxAge,
     mode: Mode,
 ) -> Sequence[Tuple[Source, FetcherMessage]]:
     console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
     out: List[Tuple[Source, FetcherMessage]] = []
     for source in sources:
         console.vverbose("  Source: %s/%s\n" % (source.source_type, source.fetcher_type))
-
-        source.file_cache_max_age = file_cache_max_age
 
         with CPUTracker() as tracker:
             raw_data = source.fetch(mode)
@@ -490,6 +499,7 @@ def make_cluster_sources(
     translation: TranslationOptions,
     encoding_fallback: str,
     missing_sys_description: bool,
+    file_cache_max_age: file_cache.MaxAge,
 ) -> Sequence[Source]:
     """Abstract clusters/nodes/hosts"""
     assert host_config.nodes is not None
@@ -506,6 +516,7 @@ def make_cluster_sources(
             translation=translation,
             encoding_fallback=encoding_fallback,
             missing_sys_description=missing_sys_description,
+            file_cache_max_age=file_cache_max_age,
         )
     ]
 
@@ -523,6 +534,7 @@ def make_sources(
     translation: TranslationOptions,
     encoding_fallback: str,
     missing_sys_description: bool,
+    file_cache_max_age: file_cache.MaxAge,
 ) -> Sequence[Source]:
     return (
         make_non_cluster_sources(
@@ -536,6 +548,7 @@ def make_sources(
             translation=translation,
             encoding_fallback=encoding_fallback,
             missing_sys_description=missing_sys_description,
+            file_cache_max_age=file_cache_max_age,
         )
         if host_config.nodes is None
         else make_cluster_sources(
@@ -546,5 +559,6 @@ def make_sources(
             translation=translation,
             encoding_fallback=encoding_fallback,
             missing_sys_description=missing_sys_description,
+            file_cache_max_age=file_cache_max_age,
         )
     )

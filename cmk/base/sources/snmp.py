@@ -11,6 +11,7 @@ from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, SectionName, So
 
 from cmk.snmplib.type_defs import SNMPHostConfig, SNMPRawData, SNMPRawDataSection
 
+import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers import FetcherType, SNMPFetcher
 from cmk.core_helpers.cache import FileCache, SectionStore
 from cmk.core_helpers.host_sections import HostSections
@@ -38,6 +39,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
         check_intervals: Mapping[SectionName, Optional[int]],
         snmp_config: SNMPHostConfig,
         do_status_data_inventory: bool,
+        file_cache_max_age: file_cache.MaxAge,
     ):
         super().__init__(
             hostname,
@@ -51,6 +53,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             cache_dir=cache_dir,
             persisted_section_dir=persisted_section_dir,
             simulation_mode=simulation_mode,
+            file_cache_max_age=file_cache_max_age,
         )
         self.snmp_config: Final = snmp_config
         self.missing_sys_description: Final = missing_sys_description
@@ -75,6 +78,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
         check_intervals: Mapping[SectionName, Optional[int]],
         snmp_config: SNMPHostConfig,
         do_status_data_inventory: bool,
+        file_cache_max_age: file_cache.MaxAge,
     ) -> "SNMPSource":
         return cls(
             hostname,
@@ -90,6 +94,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             check_intervals=check_intervals,
             snmp_config=snmp_config,
             do_status_data_inventory=do_status_data_inventory,
+            file_cache_max_age=file_cache_max_age,
         )
 
     @classmethod
@@ -107,6 +112,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
         check_intervals: Mapping[SectionName, Optional[int]],
         snmp_config: SNMPHostConfig,
         do_status_data_inventory: bool,
+        file_cache_max_age: file_cache.MaxAge,
     ) -> "SNMPSource":
         return cls(
             hostname,
@@ -122,6 +128,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             check_intervals=check_intervals,
             snmp_config=snmp_config,
             do_status_data_inventory=do_status_data_inventory,
+            file_cache_max_age=file_cache_max_age,
         )
 
     def _make_file_cache(self) -> FileCache[SNMPRawData]:

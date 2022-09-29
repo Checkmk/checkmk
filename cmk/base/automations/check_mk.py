@@ -1386,8 +1386,8 @@ class AutomationDiagHost(Automation):
                 host_config.hostname,
                 config.snmp_without_sys_descr,
             ),
+            file_cache_max_age=config.max_cachefile_age(),
         ):
-            source.file_cache_max_age = config.max_cachefile_age()
             if isinstance(source, sources.programs.DSProgramSource) and cmd:
                 source = sources.programs.DSProgramSource(
                     host_config.hostname,
@@ -1404,6 +1404,7 @@ class AutomationDiagHost(Automation):
                     encoding_fallback=config.fallback_agent_output_encoding,
                     check_interval=host_config.check_mk_check_interval,
                     is_cmc=config.is_cmc(),
+                    file_cache_max_age=config.max_cachefile_age(),
                 )
             elif isinstance(source, sources.tcp.TCPSource):
                 source.port = agent_port
@@ -1729,8 +1730,8 @@ class AutomationGetAgentOutput(Automation):
                         host_config.hostname,
                         config.snmp_without_sys_descr,
                     ),
+                    file_cache_max_age=config.max_cachefile_age(),
                 ):
-                    source.file_cache_max_age = config.max_cachefile_age()
                     if not isinstance(source, sources.agent.AgentSource):
                         continue
 

@@ -133,7 +133,6 @@ class TestMakeHostSectionsHosts:
     ) -> None:
         host_sections = _collect_host_sections(
             fetched=(),
-            file_cache_max_age=file_cache.MaxAge.none(),
             selected_sections=NO_SELECTION,
         )[0]
         assert not host_sections
@@ -157,6 +156,7 @@ class TestMakeHostSectionsHosts:
                         check_intervals={},
                         snmp_config=host_config.snmp_config(ipaddress),
                         do_status_data_inventory=False,
+                        file_cache_max_age=file_cache.MaxAge.none(),
                     ),
                     FetcherMessage.from_raw_data(
                         result.OK(raw_data),
@@ -165,7 +165,6 @@ class TestMakeHostSectionsHosts:
                     ),
                 )
             ],
-            file_cache_max_age=file_cache.MaxAge.none(),
             selected_sections=NO_SELECTION,
         )[0]
         assert len(host_sections) == 1
@@ -192,6 +191,7 @@ class TestMakeHostSectionsHosts:
                 encoding_fallback="ascii",
                 check_interval=0,
                 is_piggyback_host=True,
+                file_cache_max_age=file_cache.MaxAge.none(),
             ),
             lambda hostname, ipaddress: DSProgramSource(
                 hostname,
@@ -205,6 +205,7 @@ class TestMakeHostSectionsHosts:
                 encoding_fallback="ascii",
                 check_interval=0,
                 is_cmc=False,
+                file_cache_max_age=file_cache.MaxAge.none(),
             ),
             lambda hostname, ipaddress: TCPSource(
                 hostname,
@@ -220,6 +221,7 @@ class TestMakeHostSectionsHosts:
                 agent_port=0,
                 tcp_connect_timeout=0,
                 agent_encryption={},
+                file_cache_max_age=file_cache.MaxAge.none(),
             ),
         ],
     )
@@ -240,7 +242,6 @@ class TestMakeHostSectionsHosts:
                     ),
                 )
             ],
-            file_cache_max_age=file_cache.MaxAge.none(),
             selected_sections=NO_SELECTION,
         )[0]
         assert len(host_sections) == 1
@@ -267,6 +268,7 @@ class TestMakeHostSectionsHosts:
                 encoding_fallback="ascii",
                 check_interval=0,
                 is_cmc=False,
+                file_cache_max_age=file_cache.MaxAge.none(),
             ),
             TCPSource(
                 hostname,
@@ -281,6 +283,7 @@ class TestMakeHostSectionsHosts:
                 agent_port=0,
                 tcp_connect_timeout=0,
                 agent_encryption={},
+                file_cache_max_age=file_cache.MaxAge.none(),
             ),
         ]
 
@@ -296,7 +299,6 @@ class TestMakeHostSectionsHosts:
                 )
                 for source in sources
             ],
-            file_cache_max_age=file_cache.MaxAge.none(),
             selected_sections=NO_SELECTION,
         )[0]
         assert len(host_sections) == 1
@@ -330,6 +332,7 @@ class TestMakeHostSectionsHosts:
                 encoding_fallback="ascii",
                 check_interval=0,
                 is_cmc=False,
+                file_cache_max_age=file_cache.MaxAge.none(),
             ),
             TCPSource(
                 HostName(f"{hostname}1"),
@@ -344,6 +347,7 @@ class TestMakeHostSectionsHosts:
                 agent_port=0,
                 tcp_connect_timeout=0,
                 agent_encryption={},
+                file_cache_max_age=file_cache.MaxAge.none(),
             ),
             TCPSource(
                 HostName(f"{hostname}2"),
@@ -358,6 +362,7 @@ class TestMakeHostSectionsHosts:
                 agent_port=0,
                 tcp_connect_timeout=0,
                 agent_encryption={},
+                file_cache_max_age=file_cache.MaxAge.none(),
             ),
         ]
 
@@ -373,7 +378,6 @@ class TestMakeHostSectionsHosts:
                 )
                 for source in sources
             ],
-            file_cache_max_age=file_cache.MaxAge.none(),
             selected_sections=NO_SELECTION,
         )[0]
 
@@ -471,6 +475,7 @@ class TestMakeHostSectionsClusters:
             translation={},
             encoding_fallback="ascii",
             missing_sys_description=True,
+            file_cache_max_age=file_cache.MaxAge.none(),
         )
 
         host_sections = _collect_host_sections(
@@ -485,7 +490,6 @@ class TestMakeHostSectionsClusters:
                 )
                 for source in sources
             ],
-            file_cache_max_age=file_cache.MaxAge.none(),
             selected_sections=NO_SELECTION,
         )[0]
         assert len(host_sections) == len(nodes)
@@ -549,6 +553,7 @@ def test_get_host_sections_cluster(monkeypatch, mocker) -> None:  # type:ignore[
         translation={},
         encoding_fallback="ascii",
         missing_sys_description=True,
+        file_cache_max_age=file_cache.MaxAge.none(),
     )
 
     host_sections = _collect_host_sections(
@@ -563,7 +568,6 @@ def test_get_host_sections_cluster(monkeypatch, mocker) -> None:  # type:ignore[
             )
             for source in sources
         ],
-        file_cache_max_age=host_config.max_cachefile_age,
         selected_sections=NO_SELECTION,
     )[0]
     assert len(host_sections) == len(hosts) == 3

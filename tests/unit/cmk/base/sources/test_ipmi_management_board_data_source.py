@@ -8,6 +8,7 @@ from tests.testlib.base import Scenario
 from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.type_defs import HostName, result, SourceType
 
+import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers.host_sections import HostSections
 
 import cmk.base.config as config
@@ -36,6 +37,7 @@ def test_attribute_defaults(monkeypatch) -> None:  # type:ignore[no-untyped-def]
         encoding_fallback="ascii",
         check_interval=0,
         management_credentials={},
+        file_cache_max_age=file_cache.MaxAge.none(),
     )
     assert source.description == "Management board - IPMI"
     assert source.source_type is SourceType.MANAGEMENT

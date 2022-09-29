@@ -15,6 +15,7 @@ from cmk.utils.type_defs import CheckPluginName, HostName, ParsedSectionName, re
 
 from cmk.snmplib.type_defs import SNMPBackendEnum, SNMPHostConfig
 
+import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers.host_sections import HostSections
 
 import cmk.base.config as config
@@ -54,6 +55,7 @@ def source_fixture():
             snmp_backend=SNMPBackendEnum.CLASSIC,
         ),
         do_status_data_inventory=False,
+        file_cache_max_age=file_cache.MaxAge.none(),
     )
 
 
@@ -123,6 +125,7 @@ class TestSNMPSummaryResult:
                 snmp_backend=SNMPBackendEnum.CLASSIC,
             ),
             do_status_data_inventory=False,
+            file_cache_max_age=file_cache.MaxAge.none(),
         )
 
     @pytest.mark.usefixtures("scenario")

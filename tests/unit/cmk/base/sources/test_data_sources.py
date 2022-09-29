@@ -11,6 +11,8 @@ from tests.testlib.base import Scenario
 
 from cmk.utils.type_defs import HostName, result, SectionName
 
+import cmk.core_helpers.cache as file_cache
+
 from cmk.base import config
 from cmk.base.config import HostConfig
 from cmk.base.sources import make_non_cluster_sources
@@ -113,6 +115,7 @@ def test_host_config_creates_passing_source_sources(
             translation={},
             encoding_fallback="ascii",
             missing_sys_description=False,
+            file_cache_max_age=file_cache.MaxAge.none(),
         )
     ] == sources
 
@@ -133,6 +136,7 @@ def test_host_config_creates_passing_source_sources(
             cmdline="",
             stdin="",
             is_cmc=False,
+            file_cache_max_age=file_cache.MaxAge.none(),
         ),
         lambda hostname, ipaddress: DSProgramSource(
             hostname,
@@ -145,6 +149,7 @@ def test_host_config_creates_passing_source_sources(
             check_interval=0,
             cmdline="",
             is_cmc=False,
+            file_cache_max_age=file_cache.MaxAge.none(),
         ),
         lambda hostname, ipaddress: PiggybackSource(
             hostname,
@@ -157,6 +162,7 @@ def test_host_config_creates_passing_source_sources(
             time_settings=(),
             check_interval=0,
             is_piggyback_host=True,
+            file_cache_max_age=file_cache.MaxAge.none(),
         ),
         lambda hostname, ipaddress: TCPSource(
             hostname,
@@ -171,6 +177,7 @@ def test_host_config_creates_passing_source_sources(
             agent_port=0,
             tcp_connect_timeout=0,
             agent_encryption={},
+            file_cache_max_age=file_cache.MaxAge.none(),
         ),
     ],
 )

@@ -9,6 +9,7 @@ from typing import Final, Literal, Mapping, Optional
 from cmk.utils.translations import TranslationOptions
 from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, SourceType
 
+import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers import FetcherType, TCPFetcher
 from cmk.core_helpers.agent import AgentFileCache, AgentFileCacheFactory, AgentSummarizerDefault
 
@@ -38,6 +39,7 @@ class TCPSource(AgentSource):
         agent_port: int,
         tcp_connect_timeout: float,
         agent_encryption: Mapping[str, str],
+        file_cache_max_age: file_cache.MaxAge,
     ) -> None:
         super().__init__(
             hostname,
@@ -52,6 +54,7 @@ class TCPSource(AgentSource):
             translation=translation,
             encoding_fallback=encoding_fallback,
             check_interval=check_interval,
+            file_cache_max_age=file_cache_max_age,
         )
         self.agent_port: Final = agent_port
         self.address_family: Final = address_family

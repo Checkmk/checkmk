@@ -190,14 +190,13 @@ def commandline_discovery(
                         host_config.hostname,
                         config.snmp_without_sys_descr,
                     ),
+                    file_cache_max_age=config.max_cachefile_age(),
                 ),
-                file_cache_max_age=config.max_cachefile_age(),
                 mode=mode,
             )
             parsed_sections_broker, _results = make_broker(
                 fetched=fetched,
                 selected_sections=selected_sections,
-                file_cache_max_age=config.max_cachefile_age(),
             )
             _commandline_discovery_on_host(
                 host_key=host_config.host_key,
@@ -364,14 +363,13 @@ def automation_discovery(
                     host_config.hostname,
                     config.snmp_without_sys_descr,
                 ),
+                file_cache_max_age=max_cachefile_age,
             ),
-            file_cache_max_age=max_cachefile_age,
             mode=Mode.DISCOVERY,
         )
         parsed_sections_broker, _source_results = make_broker(
             fetched=fetched,
             selected_sections=NO_SELECTION,
-            file_cache_max_age=max_cachefile_age,
         )
 
         if mode is not DiscoveryMode.REMOVE:
@@ -616,9 +614,9 @@ def _commandline_check_discovery(
                 host_config.hostname,
                 config.snmp_without_sys_descr,
             ),
-        ),
-        file_cache_max_age=config.max_cachefile_age(
-            discovery=None if cmk.core_helpers.cache.FileCacheFactory.maybe else 0
+            file_cache_max_age=config.max_cachefile_age(
+                discovery=None if cmk.core_helpers.cache.FileCacheFactory.maybe else 0
+            ),
         ),
         mode=Mode.DISCOVERY,
     )
@@ -646,9 +644,6 @@ def _execute_check_discovery(
     parsed_sections_broker, source_results = make_broker(
         fetched=fetched,
         selected_sections=NO_SELECTION,
-        file_cache_max_age=config.max_cachefile_age(
-            discovery=None if cmk.core_helpers.cache.FileCacheFactory.maybe else 0
-        ),
     )
 
     host_labels = analyse_host_labels(
@@ -1316,14 +1311,13 @@ def get_check_preview(
                 host_config.hostname,
                 config.snmp_without_sys_descr,
             ),
+            file_cache_max_age=max_cachefile_age,
         ),
-        file_cache_max_age=max_cachefile_age,
         mode=Mode.DISCOVERY,
     )
     parsed_sections_broker, _source_results = make_broker(
         fetched=fetched,
         selected_sections=NO_SELECTION,
-        file_cache_max_age=max_cachefile_age,
     )
 
     host_labels = analyse_host_labels(

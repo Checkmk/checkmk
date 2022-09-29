@@ -10,6 +10,7 @@ from cmk.utils.paths import tmp_dir
 from cmk.utils.translations import TranslationOptions
 from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, SourceType
 
+import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers import FetcherType, PiggybackFetcher
 from cmk.core_helpers.agent import AgentFileCache, NoCacheFactory
 from cmk.core_helpers.piggyback import PiggybackSummarizer
@@ -31,6 +32,7 @@ class PiggybackSource(AgentSource):
         encoding_fallback: str,
         check_interval: int,
         is_piggyback_host: bool,
+        file_cache_max_age: file_cache.MaxAge,
     ) -> None:
         super().__init__(
             hostname,
@@ -45,6 +47,7 @@ class PiggybackSource(AgentSource):
             translation=translation,
             encoding_fallback=encoding_fallback,
             check_interval=check_interval,
+            file_cache_max_age=file_cache_max_age,
         )
         self.time_settings: Final = time_settings
         # Tag: 'Always use and expect piggback data'

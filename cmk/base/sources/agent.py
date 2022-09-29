@@ -10,6 +10,7 @@ import cmk.utils.misc
 from cmk.utils.translations import TranslationOptions
 from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, SourceType
 
+import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers.agent import AgentParser, AgentRawDataSection
 from cmk.core_helpers.cache import SectionStore
 from cmk.core_helpers.controller import FetcherType
@@ -46,6 +47,7 @@ class AgentSource(Source[AgentRawData, AgentRawDataSection]):
         translation: TranslationOptions,
         encoding_fallback: str,
         check_interval: int,
+        file_cache_max_age: file_cache.MaxAge,
     ):
         super().__init__(
             hostname,
@@ -61,6 +63,7 @@ class AgentSource(Source[AgentRawData, AgentRawDataSection]):
             if main_data_source
             else None,
             simulation_mode=simulation_mode,
+            file_cache_max_age=file_cache_max_age,
         )
         # TODO: We should cleanup these old directories one day.
         #       Then we can remove this special case

@@ -8,6 +8,7 @@ from typing import Final, Literal, Optional
 from cmk.utils.translations import TranslationOptions
 from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, SourceType
 
+import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers import FetcherType, ProgramFetcher
 from cmk.core_helpers.agent import AgentFileCache, AgentFileCacheFactory, AgentSummarizerDefault
 
@@ -30,6 +31,7 @@ class ProgramSource(AgentSource):
         encoding_fallback: str,
         check_interval: int,
         is_cmc: bool,
+        file_cache_max_age: file_cache.MaxAge,
     ) -> None:
         super().__init__(
             hostname,
@@ -47,6 +49,7 @@ class ProgramSource(AgentSource):
             translation=translation,
             encoding_fallback=encoding_fallback,
             check_interval=check_interval,
+            file_cache_max_age=file_cache_max_age,
         )
         self.cmdline: Final = cmdline
         self.stdin: Final = stdin
@@ -92,6 +95,7 @@ class DSProgramSource(ProgramSource):
         translation: TranslationOptions,
         encoding_fallback: str,
         check_interval: int,
+        file_cache_max_age: file_cache.MaxAge,
         is_cmc: bool,
     ) -> None:
         super().__init__(
@@ -107,6 +111,7 @@ class DSProgramSource(ProgramSource):
             encoding_fallback=encoding_fallback,
             check_interval=check_interval,
             is_cmc=is_cmc,
+            file_cache_max_age=file_cache_max_age,
         )
 
 
@@ -127,6 +132,7 @@ class SpecialAgentSource(ProgramSource):
         encoding_fallback: str,
         check_interval: int,
         is_cmc: bool,
+        file_cache_max_age: file_cache.MaxAge,
     ) -> None:
         super().__init__(
             hostname,
@@ -141,6 +147,7 @@ class SpecialAgentSource(ProgramSource):
             encoding_fallback=encoding_fallback,
             check_interval=check_interval,
             is_cmc=is_cmc,
+            file_cache_max_age=file_cache_max_age,
         )
         self.special_agent_id = agentname
         self.special_agent_plugin_file_name = "agent_%s" % agentname

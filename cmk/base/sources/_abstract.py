@@ -51,6 +51,7 @@ class Source(Generic[TRawData, TRawDataSection], abc.ABC):
         default_host_sections: HostSections[TRawDataSection],
         id_: str,
         simulation_mode: bool,
+        file_cache_max_age: file_cache.MaxAge,
         cache_dir: Optional[Path] = None,
         persisted_section_dir: Optional[Path] = None,
     ) -> None:
@@ -68,8 +69,8 @@ class Source(Generic[TRawData, TRawDataSection], abc.ABC):
         if not persisted_section_dir:
             persisted_section_dir = Path(cmk.utils.paths.var_dir) / "persisted_sections" / self.id
 
+        self.file_cache_max_age: Final = file_cache_max_age
         self.file_cache_base_path: Final = cache_dir
-        self.file_cache_max_age: file_cache.MaxAge = file_cache.MaxAge.none()
         self.persisted_sections_file_path: Final = persisted_section_dir / self.hostname
 
         self._logger: Final = logging.getLogger("cmk.base.data_source.%s" % id_)

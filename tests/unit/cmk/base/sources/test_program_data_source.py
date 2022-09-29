@@ -9,6 +9,8 @@ import pytest
 
 from cmk.utils.type_defs import HostAddress, HostName
 
+import cmk.core_helpers.cache as file_cache
+
 from cmk.base.sources.programs import DSProgramSource
 
 
@@ -27,6 +29,7 @@ class TestDSProgramChecker:
             encoding_fallback="ascii",
             check_interval=0,
             is_cmc=False,
+            file_cache_max_age=file_cache.MaxAge.none(),
         )
         # Only check the computed attributes.
         assert source.description == "Program: "

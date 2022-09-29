@@ -10,6 +10,7 @@ from tests.testlib.base import Scenario
 
 from cmk.utils.type_defs import HostAddress, HostName, result
 
+import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers.agent import AgentRawDataSection
 from cmk.core_helpers.host_sections import HostSections
 
@@ -38,6 +39,7 @@ def test_attribute_defaults(ipaddress: HostAddress, monkeypatch: MonkeyPatch) ->
         encoding_fallback="ascii",
         check_interval=0,
         is_piggyback_host=False,
+        file_cache_max_age=file_cache.MaxAge.none(),
     )
 
     assert source.description.startswith("Process piggyback data from")

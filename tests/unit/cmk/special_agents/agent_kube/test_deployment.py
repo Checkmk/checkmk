@@ -8,7 +8,10 @@ from unittest.mock import MagicMock, Mock
 import pytest
 from pydantic_factories import ModelFactory
 
-from tests.unit.cmk.special_agents.agent_kube.factory import APIDeploymentFactory
+from tests.unit.cmk.special_agents.agent_kube.factory import (
+    api_to_agent_deployment,
+    APIDeploymentFactory,
+)
 
 from cmk.special_agents import agent_kube as agent
 from cmk.special_agents.utils_kubernetes.schemata import api, section
@@ -53,22 +56,19 @@ def test_deployment_conditions() -> None:
     api_deployment.status.conditions = {
         condition: DeploymentConditionFactory.build() for condition in deployment_conditions
     }
-    deployment = agent.Deployment(
-        api_deployment.metadata, api_deployment.spec, api_deployment.status
-    )
+    deployment = api_to_agent_deployment(api_deployment)
     conditions = deployment.conditions()
     assert conditions is not None
     assert all(condition_details is not None for _, condition_details in conditions)
 
 
 def test_deployment_memory_resources(
-    new_deployment: Callable[[], agent.Deployment],
     new_pod: Callable[[], agent.Pod],
     pod_containers_count: int,
     container_limit_memory: float,
     container_request_memory: float,
 ) -> None:
-    deployment = new_deployment()
+    deployment = api_to_agent_deployment(APIDeploymentFactory.build())
     deployment.add_pod(new_pod())
     memory_resources = deployment.memory_resources()
     assert memory_resources.count_total == pod_containers_count
@@ -77,13 +77,12 @@ def test_deployment_memory_resources(
 
 
 def test_deployment_cpu_resources(
-    new_deployment: Callable[[], agent.Deployment],
     new_pod: Callable[[], agent.Pod],
     pod_containers_count: int,
     container_limit_cpu: float,
     container_request_cpu: float,
 ) -> None:
-    deployment = new_deployment()
+    deployment = api_to_agent_deployment(APIDeploymentFactory.build())
     deployment.add_pod(new_pod())
     cpu_resources = deployment.cpu_resources()
     assert cpu_resources.count_total == pod_containers_count

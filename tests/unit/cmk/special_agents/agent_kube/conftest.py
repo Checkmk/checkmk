@@ -503,26 +503,16 @@ def deployment_pods() -> int:
 
 
 @pytest.fixture
-def new_deployment() -> Callable[[], agent_kube.Deployment]:
-    api_deployment = DeploymentFactory.build()
-
-    def _new_deployment() -> agent_kube.Deployment:
-        return agent_kube.Deployment(
-            metadata=api_deployment.metadata,
-            spec=api_deployment.spec,
-            status=api_deployment.status,
-        )
-
-    return _new_deployment
-
-
-@pytest.fixture
 def deployment(
-    new_deployment: Callable[[], agent_kube.Deployment],
     deployment_pods: int,
     new_pod: Callable[[], agent_kube.Pod],
 ) -> agent_kube.Deployment:
-    deployment = new_deployment()
+    api_deployment = DeploymentFactory.build()
+    deployment = agent_kube.Deployment(
+        metadata=api_deployment.metadata,
+        spec=api_deployment.spec,
+        status=api_deployment.status,
+    )
     for _ in range(deployment_pods):
         deployment.add_pod(new_pod())
     return deployment

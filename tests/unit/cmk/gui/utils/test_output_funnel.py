@@ -11,7 +11,7 @@ from cmk.gui.http import Response
 from cmk.gui.utils.output_funnel import OutputFunnel
 
 
-def written(funnel) -> bytes:  # type:ignore[no-untyped-def]
+def written(funnel: OutputFunnel) -> bytes:
     return funnel._response_stack[-1].get_data()
 
 

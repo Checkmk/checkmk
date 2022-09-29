@@ -9,25 +9,25 @@ from unittest.mock import MagicMock, Mock
 import pytest
 
 from cmk.special_agents import agent_kube
-from cmk.special_agents.utils_kubernetes.schemata import section
+from cmk.special_agents.utils_kubernetes.schemata import api, section
 
 
-def test_write_statefulsets_api_sections_registers_sections_to_be_written(  # type:ignore[no-untyped-def]
+def test_write_statefulsets_api_sections_registers_sections_to_be_written(
     statefulset: agent_kube.StatefulSet,
     statefulsets_api_sections: Sequence[str],
     write_sections_mock: MagicMock,
-):
+) -> None:
     agent_kube.write_statefulsets_api_sections(
         "cluster", agent_kube.AnnotationNonPatternOption.ignore_all, [statefulset], "host", Mock()
     )
     assert list(write_sections_mock.call_args[0][0]) == statefulsets_api_sections
 
 
-def test_write_statefulsets_api_sections_maps_section_names_to_callables(  # type:ignore[no-untyped-def]
+def test_write_statefulsets_api_sections_maps_section_names_to_callables(
     statefulset: agent_kube.StatefulSet,
     statefulsets_api_sections: Sequence[str],
     write_sections_mock: MagicMock,
-):
+) -> None:
     agent_kube.write_statefulsets_api_sections(
         "cluster", agent_kube.AnnotationNonPatternOption.ignore_all, [statefulset], "host", Mock()
     )
@@ -37,9 +37,9 @@ def test_write_statefulsets_api_sections_maps_section_names_to_callables(  # typ
     )
 
 
-def test_write_statefulsets_api_sections_calls_write_sections_for_each_statefulset(  # type:ignore[no-untyped-def]
+def test_write_statefulsets_api_sections_calls_write_sections_for_each_statefulset(
     new_statefulset: Callable[[], agent_kube.StatefulSet], write_sections_mock: MagicMock
-):
+) -> None:
     agent_kube.write_statefulsets_api_sections(
         "cluster",
         agent_kube.AnnotationNonPatternOption.ignore_all,
@@ -51,9 +51,9 @@ def test_write_statefulsets_api_sections_calls_write_sections_for_each_statefuls
 
 
 @pytest.mark.parametrize("statefulset_pods", [0, 10, 20])
-def test_statefulset_pod_resources_returns_all_pods(  # type:ignore[no-untyped-def]
+def test_statefulset_pod_resources_returns_all_pods(
     statefulset: agent_kube.StatefulSet, statefulset_pods: int
-):
+) -> None:
     resources = dict(statefulset.pod_resources())
     pod_resources = section.PodResources(**resources)
     assert sum(len(pods) for _, pods in pod_resources) == statefulset_pods
@@ -69,9 +69,9 @@ def test_statefulset_pod_resources_one_pod_per_phase(statefulset: agent_kube.Sta
 @pytest.mark.parametrize(
     "phases", [["running"], ["pending"], ["succeeded"], ["failed"], ["unknown"]]
 )
-def test_statefulset_pod_resources_pods_in_phase(  # type:ignore[no-untyped-def]
-    statefulset: agent_kube.StatefulSet, phases, statefulset_pods: int
-):
+def test_statefulset_pod_resources_pods_in_phase(
+    statefulset: agent_kube.StatefulSet, phases: list[api.Phase | None], statefulset_pods: int
+) -> None:
     pods = statefulset.pods(phases[0])
     assert len(pods) == statefulset_pods
 
@@ -79,20 +79,20 @@ def test_statefulset_pod_resources_pods_in_phase(  # type:ignore[no-untyped-def]
 @pytest.mark.parametrize(
     "phases", [["running"], ["pending"], ["succeeded"], ["failed"], ["unknown"]]
 )
-def test_statefulset_pod_resources_pods_in_phase_no_phase_param(  # type:ignore[no-untyped-def]
-    statefulset: agent_kube.StatefulSet, phases, statefulset_pods: int
-):
+def test_statefulset_pod_resources_pods_in_phase_no_phase_param(
+    statefulset: agent_kube.StatefulSet, phases: list[str], statefulset_pods: int
+) -> None:
     pods = statefulset.pods()
     assert len(pods) == statefulset_pods
 
 
-def test_statefulset_memory_resources(  # type:ignore[no-untyped-def]
+def test_statefulset_memory_resources(
     new_statefulset: Callable[[], agent_kube.StatefulSet],
     new_pod: Callable[[], agent_kube.Pod],
     pod_containers_count: int,
     container_limit_memory: float,
     container_request_memory: float,
-):
+) -> None:
     statefulset = new_statefulset()
     statefulset.add_pod(new_pod())
     memory_resources = statefulset.memory_resources()
@@ -101,13 +101,13 @@ def test_statefulset_memory_resources(  # type:ignore[no-untyped-def]
     assert memory_resources.request == pod_containers_count * container_request_memory
 
 
-def test_statefulset_cpu_resources(  # type:ignore[no-untyped-def]
+def test_statefulset_cpu_resources(
     new_statefulset: Callable[[], agent_kube.StatefulSet],
     new_pod: Callable[[], agent_kube.Pod],
     pod_containers_count: int,
     container_limit_cpu: float,
     container_request_cpu: float,
-):
+) -> None:
     statefulset = new_statefulset()
     statefulset.add_pod(new_pod())
     cpu_resources = statefulset.cpu_resources()

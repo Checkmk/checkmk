@@ -24,9 +24,9 @@ def test_pod_deployment_controller_name(pod: agent.Pod, deployment: agent.Deploy
 
 
 @pytest.mark.parametrize("deployment_pods", [0, 10, 20])
-def test_deployment_pod_resources_returns_all_pods(  # type:ignore[no-untyped-def]
+def test_deployment_pod_resources_returns_all_pods(
     deployment: agent.Deployment, deployment_pods: int
-):
+) -> None:
     pod_resources = deployment.pod_resources()
     assert sum(len(pods) for _, pods in pod_resources) == deployment_pods
 
@@ -45,9 +45,9 @@ def test_deployment_pod_resources_pods_in_phase(
     assert len(deployment.pods()) == deployment_pods
 
 
-def test_deployment_conditions(  # type:ignore[no-untyped-def]
+def test_deployment_conditions(
     api_deployment: api.Deployment,
-):
+) -> None:
     deployment_conditions = ["available", "progressing", "replicafailure"]
     api_deployment.status.conditions = {
         condition: DeploymentConditionFactory.build() for condition in deployment_conditions
@@ -60,13 +60,13 @@ def test_deployment_conditions(  # type:ignore[no-untyped-def]
     assert all(condition_details is not None for _, condition_details in conditions)
 
 
-def test_deployment_memory_resources(  # type:ignore[no-untyped-def]
+def test_deployment_memory_resources(
     new_deployment: Callable[[], agent.Deployment],
     new_pod: Callable[[], agent.Pod],
     pod_containers_count: int,
     container_limit_memory: float,
     container_request_memory: float,
-):
+) -> None:
     deployment = new_deployment()
     deployment.add_pod(new_pod())
     memory_resources = deployment.memory_resources()
@@ -75,13 +75,13 @@ def test_deployment_memory_resources(  # type:ignore[no-untyped-def]
     assert memory_resources.request == pod_containers_count * container_request_memory
 
 
-def test_deployment_cpu_resources(  # type:ignore[no-untyped-def]
+def test_deployment_cpu_resources(
     new_deployment: Callable[[], agent.Deployment],
     new_pod: Callable[[], agent.Pod],
     pod_containers_count: int,
     container_limit_cpu: float,
     container_request_cpu: float,
-):
+) -> None:
     deployment = new_deployment()
     deployment.add_pod(new_pod())
     cpu_resources = deployment.cpu_resources()
@@ -90,11 +90,11 @@ def test_deployment_cpu_resources(  # type:ignore[no-untyped-def]
     assert cpu_resources.request == pod_containers_count * container_request_cpu
 
 
-def test_write_deployments_api_sections_registers_sections_to_be_written(  # type:ignore[no-untyped-def]
+def test_write_deployments_api_sections_registers_sections_to_be_written(
     deployment: agent.Deployment,
     deployments_api_sections: Sequence[str],
     write_sections_mock: MagicMock,
-):
+) -> None:
     agent.write_deployments_api_sections(
         "cluster", agent.AnnotationNonPatternOption.ignore_all, [deployment], "host", Mock()
     )

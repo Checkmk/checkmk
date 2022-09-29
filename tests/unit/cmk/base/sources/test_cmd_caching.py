@@ -97,7 +97,7 @@ def _patch_data_source(mocker, **kwargs):
             )
 
         elif isinstance(self, SNMPSource):
-            assert self._on_snmp_scan_error == defaults["on_error"]
+            assert self.on_snmp_scan_error == defaults["on_error"]
 
         result = callback(self, *args, **kwargs)
         if result.is_error():

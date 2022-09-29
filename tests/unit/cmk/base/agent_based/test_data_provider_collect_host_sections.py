@@ -146,7 +146,7 @@ class TestMakeHostSectionsHosts:
             fetched=[
                 (
                     SNMPSource.snmp(
-                        host_config,
+                        hostname,
                         ipaddress,
                         force_cache_refresh=False,
                         on_scan_error=OnError.RAISE,
@@ -154,6 +154,8 @@ class TestMakeHostSectionsHosts:
                         missing_sys_description=False,
                         sections={},
                         check_intervals={},
+                        snmp_config=host_config.snmp_config(ipaddress),
+                        do_status_data_inventory=False,
                     ),
                     FetcherMessage.from_raw_data(
                         result.OK(raw_data),

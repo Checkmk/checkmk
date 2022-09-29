@@ -264,7 +264,7 @@ class _Builder:
         self._initialize_snmp_plugin_store()
         self._add(
             SNMPSource.snmp(
-                self.host_config,
+                self.host_config.hostname,
                 self.ipaddress,
                 on_scan_error=self.on_scan_error,
                 force_cache_refresh=self.force_snmp_cache_refresh,
@@ -278,6 +278,8 @@ class _Builder:
                     self.host_config,
                     selected_sections=self.selected_sections,
                 ),
+                snmp_config=self.host_config.snmp_config(self.ipaddress),
+                do_status_data_inventory=self.host_config.do_status_data_inventory,
             )
         )
 
@@ -296,7 +298,7 @@ class _Builder:
         if protocol == "snmp":
             self._add(
                 SNMPSource.management_board(
-                    self.host_config,
+                    self.host_config.hostname,
                     ip_address,
                     on_scan_error=self.on_scan_error,
                     force_cache_refresh=self.force_snmp_cache_refresh,
@@ -308,6 +310,8 @@ class _Builder:
                     check_intervals=make_check_intervals(
                         self.host_config, selected_sections=self.selected_sections
                     ),
+                    snmp_config=self.host_config.management_snmp_config,
+                    do_status_data_inventory=self.host_config.do_status_data_inventory,
                 )
             )
         elif protocol == "ipmi":

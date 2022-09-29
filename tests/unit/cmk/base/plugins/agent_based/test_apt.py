@@ -3,12 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional
+from collections.abc import Mapping, Sequence
+from typing import Any, Optional
 
 import pytest
 
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.apt import _data_is_valid, parse_apt, Section
+from cmk.base.plugins.agent_based.apt import (
+    _data_is_valid,
+    check_apt,
+    discover_apt,
+    parse_apt,
+    Section,
+)
 
 _SECTION_UPDATES_AV = [
     ["Remv default-java-plugin [2:1.8-58]"],
@@ -65,6 +73,12 @@ _SECTION_UBUNTU_PRO_ADVERTISEMENT = [
     ["Learn more about Ubuntu Pro at https://ubuntu.com/pro"],
     ["Inst base-files [9.9+deb9u9] (9.9+deb9u11 Debian:9.11/oldstable [amd64])"],
 ]
+
+DEFAULT_PARAMS = {
+    "normal": 1,
+    "removals": 1,
+    "security": 2,
+}
 
 
 @pytest.mark.parametrize(
@@ -201,3 +215,122 @@ def test_parse_apt(
     expected_result: Optional[Section],
 ) -> None:
     assert parse_apt(string_table) == expected_result
+
+
+def test_apt_discovery() -> None:
+    assert list(discover_apt(Section([], [], []))) == [Service()]
+
+
+@pytest.mark.parametrize(
+    "params, section, expected_result",
+    [
+        pytest.param(
+            DEFAULT_PARAMS,
+            Section([], [], []),
+            [Result(state=State.OK, summary="No updates pending for installation")],
+            id="Nothing pending for installation.",
+        ),
+        pytest.param(
+            DEFAULT_PARAMS,
+            Section([], [], [], no_esm_support=True),
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="System could receive security updates, but needs extended support license",
+                ),
+            ],
+            id="The system has no esm support and there are no updates.",
+        ),
+        pytest.param(
+            DEFAULT_PARAMS,
+            Section(["base-files"], [], []),
+            [
+                Result(state=State.WARN, summary="1 normal updates"),
+                Metric("normal_updates", 1.0),
+                Result(state=State.OK, summary="0 security updates"),
+                Metric("security_updates", 0.0),
+            ],
+            id="Only normal updates are available.",
+        ),
+        pytest.param(
+            DEFAULT_PARAMS,
+            Section([], [], ["base-files"]),
+            [
+                Result(state=State.OK, summary="0 normal updates"),
+                Metric("normal_updates", 0.0),
+                Result(state=State.CRIT, summary="1 security updates (base-files)"),
+                Metric("security_updates", 1.0),
+            ],
+            id="Only security updates are available.",
+        ),
+        pytest.param(
+            DEFAULT_PARAMS,
+            Section([], ["base-files"], []),
+            [
+                Result(state=State.OK, summary="0 normal updates"),
+                Metric("normal_updates", 0.0),
+                Result(state=State.WARN, summary="1 auto removals (base-files)"),
+                Metric("removals", 1.0),
+                Result(state=State.OK, summary="0 security updates"),
+                Metric("security_updates", 0.0),
+            ],
+            id="Only auto-removals updates are available.",
+        ),
+        pytest.param(
+            DEFAULT_PARAMS,
+            Section(["normal-update"], ["auto-removal-update"], ["security-update"]),
+            [
+                Result(state=State.WARN, summary="1 normal updates"),
+                Metric("normal_updates", 1.0),
+                Result(state=State.WARN, summary="1 auto removals (auto-removal-update)"),
+                Metric("removals", 1.0),
+                Result(state=State.CRIT, summary="1 security updates (security-update)"),
+                Metric("security_updates", 1.0),
+            ],
+            id="Everything can be updated",
+        ),
+        pytest.param(
+            DEFAULT_PARAMS,
+            Section(
+                ["normal-update"],
+                ["auto-removal-update"],
+                ["security-update"],
+                no_esm_support=True,
+            ),
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="System could receive security updates, but needs extended support license",
+                ),
+            ],
+            id="Updates are available, but no esm support",
+        ),
+        pytest.param(
+            {"normal": 0, "removals": 2, "security": 1},
+            Section(["normal-update"], ["auto-removal-update"], ["security-update"]),
+            [
+                Result(state=State.OK, summary="1 normal updates"),
+                Metric("normal_updates", 1.0),
+                Result(state=State.CRIT, summary="1 auto removals (auto-removal-update)"),
+                Metric("removals", 1.0),
+                Result(state=State.WARN, summary="1 security updates (security-update)"),
+                Metric("security_updates", 1.0),
+            ],
+            id="Changed severity",
+        ),
+    ],
+)
+def test_check_apt(
+    params: Mapping[str, Any],
+    section: Section,
+    expected_result: Sequence[Result | Metric],
+) -> None:
+    assert (
+        list(
+            check_apt(
+                params=params,
+                section=section,
+            )
+        )
+        == expected_result
+    )

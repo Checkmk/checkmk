@@ -2190,7 +2190,9 @@ class EditDashletPage(Page):
                     # The returned dashlet must be equal to the parameter! It is not replaced/re-added
                     # to the dashboard object. FIXME TODO: Clean this up!
                     # We have to trust from_html_vars and validate_value for now
-                    new_dashlet_spec = handle_input_func(self._ident, new_dashlet_spec)
+                    new_dashlet_spec = handle_input_func(
+                        self._ident, dashlet_spec, new_dashlet_spec
+                    )
 
                 if mode == "add":
                     self._dashboard["dashlets"].append(new_dashlet_spec)

@@ -127,7 +127,7 @@ class ViewDashlet(ABCViewDashlet[ViewDashletConfig]):
         cls,
     ) -> tuple[
         Callable[[ViewDashletConfig], None],
-        Callable[[DashletId, ViewDashletConfig], ViewDashletConfig],
+        Callable[[DashletId, ViewDashletConfig, ViewDashletConfig], ViewDashletConfig],
     ]:
         def _render_input(dashlet: ViewDashletConfig) -> None:
             # TODO: Don't modify the self._dashlet data structure here!
@@ -137,10 +137,20 @@ class ViewDashlet(ABCViewDashlet[ViewDashletConfig]):
             # it
             views.render_view_config(dashlet)  # type: ignore[arg-type]
 
-        def _handle_input(ident: DashletId, dashlet: ViewDashletConfig) -> ViewDashletConfig:
+        def _handle_input(
+            ident: DashletId, old_dashlet: ViewDashletConfig, dashlet: ViewDashletConfig
+        ) -> ViewDashletConfig:
             dashlet["name"] = "dashlet_%d" % ident
             dashlet.setdefault("title", _("View"))
-            return views.create_view_from_valuespec(dashlet, dashlet)
+
+            # The view dashlet editor does not provide a configuration for the general visual
+            # settings as defined in visuals._vs_general. They have no effect on the dashlets, but
+            # let's apply them here for consistency.
+            dashlet.setdefault("sort_index", 99)
+            dashlet.setdefault("add_context_to_title", True)
+            dashlet.setdefault("is_show_more", False)
+
+            return views.create_view_from_valuespec(old_dashlet, dashlet)
 
         return _render_input, _handle_input
 

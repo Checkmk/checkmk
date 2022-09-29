@@ -751,7 +751,7 @@ def view_editor_options():
     ]
 
 
-def view_editor_general_properties(ds_name):
+def view_editor_general_properties(ds_name: str) -> Dictionary:
     return Dictionary(
         title=_("View Properties"),
         render="form",

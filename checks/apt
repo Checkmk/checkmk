@@ -25,6 +25,10 @@
 # Inst default-jre [2:1.8-58] (2:1.8-58+deb9u1 Debian:9.11/oldstable [amd64]) []
 # Inst default-jre-headless [2:1.8-58] (2:1.8-58+deb9u1 Debian:9.11/oldstable [amd64])
 
+from collections.abc import Mapping, Sequence
+from typing import Any
+
+from cmk.base.plugins.agent_based.apt import Section
 from cmk.base.plugins.agent_based.utils.apt import NOTHING_PENDING_FOR_INSTALLATION
 
 factory_settings["apt_default_levels"] = {
@@ -34,23 +38,23 @@ factory_settings["apt_default_levels"] = {
 }
 
 
-def inventory_apt(section):
+def inventory_apt(section: Section):
     yield None, {}
 
 
-def _format(action, packages, verbose=False):
-    message = "%d %s" % (len(packages), action)
+def _format(action: str, packages: Sequence[str], verbose=False):
+    summary = f"{len(packages)} {action}"
     if verbose and packages:
-        message += " (%s)" % (
+        summary += " (%s)" % (
             ", ".join(
                 packages,
             )
         )
 
-    return message
+    return summary
 
 
-def check_apt(_no_item, params, section):
+def check_apt(_no_item: str, params: Mapping[str, Any], section: Section):
     if not any(section):
         yield 0, NOTHING_PENDING_FOR_INSTALLATION
         return

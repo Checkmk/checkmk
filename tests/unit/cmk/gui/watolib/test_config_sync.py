@@ -287,12 +287,6 @@ def _get_expected_paths(user_id, is_pre_17_site, with_local):
         "var/check_mk/stored_passwords",
     ]
 
-    if with_local:
-        expected_paths += [
-            "local",
-            "var/check_mk/packages",
-        ]
-
     # The new sync directories create all needed files on the central site now
     if not is_pre_17_site:
         expected_paths += [
@@ -320,9 +314,6 @@ def _get_expected_paths(user_id, is_pre_17_site, with_local):
         if not cmk_version.is_raw_edition():
             expected_paths += ["etc/check_mk/dcd.d/wato/distributed.mk"]
 
-        if not cmk_version.is_managed_edition():
-            expected_paths += ["etc/omd/site.conf"]
-
     # TODO: The second condition should not be needed. Seems to be a subtle difference between the
     # CME and CRE/CEE snapshot logic
     if not cmk_version.is_managed_edition():
@@ -331,6 +322,17 @@ def _get_expected_paths(user_id, is_pre_17_site, with_local):
             "etc/check_mk/mkeventd.d/mkp/rule_packs",
             "etc/check_mk/mkeventd.d/wato/rules.mk",
         ]
+        if not is_pre_17_site:
+            expected_paths += [
+                "local",
+                "var/check_mk/packages",
+            ]
+        else:
+            if with_local:
+                expected_paths += [
+                    "local",
+                    "var/check_mk/packages",
+                ]
 
     # The paths are registered once the enterprise plugins are available, independent of the
     # cmk_version.edition().short value.
@@ -357,6 +359,12 @@ def _get_expected_paths(user_id, is_pre_17_site, with_local):
             "etc/check_mk/multisite.d/wato/groups.mk",
             "etc/check_mk/multisite.d/wato/user_connections.mk",
         ]
+
+        if with_local:
+            expected_paths += [
+                "local",
+                "var/check_mk/packages",
+            ]
 
         expected_paths.remove("etc/check_mk/conf.d/wato/hosts.mk")
 

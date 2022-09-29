@@ -1,0 +1,19 @@
+Title: Activate Changes does not respect site-specific synchronisation settings
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1664464379
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p17
+
+It is possible to configure whether local extensions (MKPs) and Event Console
+rules should be synchronised between the central and the remote sites in a
+distributed monitoring set-up (configurable via Setup -> General -> Distributed
+monitoring).
+
+The site synchronisation between the central and any remote sites sporadically
+ignored the respective site synchronisation settings. This has been fixed.
+

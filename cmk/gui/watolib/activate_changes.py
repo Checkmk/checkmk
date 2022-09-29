@@ -1702,7 +1702,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         5. Raise when something failed on the remote site while applying the sent files
         """
         self._set_sync_state(_("Fetching sync state"))
-        self._logger.debug("Starting config sync with >1.7 site")
+        self._logger.debug("Starting config sync")
         replication_paths = self._snapshot_settings.snapshot_components
         remote_file_infos, remote_config_generation = self._get_config_sync_state(replication_paths)
         self._logger.debug("Received %d file infos from remote", len(remote_file_infos))

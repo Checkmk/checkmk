@@ -1,0 +1,13 @@
+Title: Fix async checks blocked by realtime checks
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1664439373
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p14
+
+When realtime checks were configured, async checks were not executed.
+

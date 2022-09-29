@@ -287,7 +287,9 @@ pub fn register_host_name(
         &HostNameRegistration {
             host_name: &config.host_name,
         },
-    )
+    )?;
+    println!("Registration complete.");
+    Ok(())
 }
 
 pub fn register_agent_labels(
@@ -304,7 +306,9 @@ pub fn register_agent_labels(
         &AgentLabelsRegistration {
             agent_labels: &config.agent_labels,
         },
-    )
+    )?;
+    println!("Registration complete. It may take few minutes until the newly created host and its services are visible in the site.");
+    Ok(())
 }
 
 pub fn proxy_register(config: &config::RegistrationConfigHostName) -> AnyhowResult<()> {

@@ -677,7 +677,14 @@ class Endpoint:
                     fields=messages,
                 )
 
-            if self.method in ("post", "put") and request.get_data(cache=True):
+            if self.request_schema and not request.content_type:
+                return problem(
+                    status=415,
+                    detail="Please specify a content type.",
+                    title="Missing content type.",
+                )
+
+            if self.request_schema and self.method in ("post", "put"):
                 try:
                     self._is_expected_content_type(request.content_type)
                 except ValueError as exc:
@@ -718,6 +725,7 @@ class Endpoint:
                 return problem(
                     status=406, title="Not Acceptable", detail="Please specify an Accept Header."
                 )
+
             if not request.accept_mimetypes.best_match([self.content_type]):
                 return problem(
                     status=406,

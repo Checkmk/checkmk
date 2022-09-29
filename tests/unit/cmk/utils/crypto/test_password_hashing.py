@@ -18,7 +18,7 @@ def reduce_rounds(monkeypatch: MonkeyPatch) -> None:
 @pytest.mark.parametrize("password", ["", "blä", "😀", "😀" * 18, "a" * 72])
 def test_hash_verify_roundtrip(password: str) -> None:
     pw_hash = ph.hash_password(password)
-    assert pw_hash.startswith("$2b$04$")  # bcrypt 4 rounds
+    assert pw_hash.startswith("$2y$04$")  # bcrypt 4 rounds
     ph.verify(password, pw_hash)
 
 
@@ -44,6 +44,7 @@ def test_bcrypt_too_long(password: str) -> None:
     [
         "$5$rounds=1000$.J4mcfJGFGgWJA7R$bDhUCLMe2v1.L3oWclfsVYMyOhsS/6RmyzqFRyCgDi/",  # sha256_crypt
         "$2b$04$5LiM0CX3wUoO55cGCwrkDeZIU5zyBqPDZfV9zU4Q2WH/Lkkn2lypa",  # bcrypt
+        "$2y$04$5LiM0CX3wUoO55cGCwrkDeZIU5zyBqPDZfV9zU4Q2WH/Lkkn2lypa",  # also bcrypt but apache ident...
         # the deprecated 2y label is used by `htpasswd -B`
         "$2y$04$gJMIcys.lfgVjCJHje1nkOs4e7klgmoxWWEbaJK6p.jtww7BxDX1K",  # bcrypt
         # legacy hashes we currently allow
@@ -94,6 +95,7 @@ def test_verify_invalid_hash_failure(password: str, password_hash: str) -> None:
         ("foo\0bar", "$5$rounds=1000$.J4mcfJGFGgWJA7R$bDhUCLMe2v1.L3oWclfsVYMyOhsS/6RmyzqFRyCgDi/"),
         # NUL in hash
         ("foobar", "$2b$04$5LiM0CX3wUoO55cGCwrkDeZIU5zyBqPDZfV9zU4Q2WH/Lkkn2ly\0a"),
+        ("foobar", "$2y$04$5LiM0CX3wUoO55cGCwrkDeZIU5zyBqPDZfV9zU4Q2WH/Lkkn2ly\0a"),
         ("foobar", "$5$rounds=1000$.J4mcfJGFGgWJA7R$bDhUCLMe2v1.L3oWclfsVYMyOhsS/6RmyzqFRyCg\0i/"),
     ],
 )
@@ -123,6 +125,7 @@ def test_verify_sha256_omit_rounds(pw_hash: str) -> None:
     [
         ("foobar", "$2b$03$5LiM0CX3wUoO55cGCwrkDeZIU5zyBqPDZfV9zU4Q2WH/Lkkn2lypa"),
         ("foobar", "$2b$32$5LiM0CX3wUoO55cGCwrkDeZIU5zyBqPDZfV9zU4Q2WH/Lkkn2lypa"),
+        ("foobar", "$2y$32$5LiM0CX3wUoO55cGCwrkDeZIU5zyBqPDZfV9zU4Q2WH/Lkkn2lypa"),
         ("foobar", "$5$rounds=999$H2kwlVdGl9PLMISm$RrQUaIqzFzHmW7SjvCRGV4LsHM2WBT4B0OaGm7TIFI9"),
         (
             "foobar",

@@ -55,7 +55,9 @@ def hash_password(password: str) -> str:
     :raise: ValueError if the input password contains null bytes.
     """
     try:
-        return passlib_hash.bcrypt.using(rounds=BCRYPT_ROUNDS, truncate_error=True).hash(password)
+        return passlib_hash.bcrypt.using(
+            rounds=BCRYPT_ROUNDS, truncate_error=True, ident="2y"
+        ).hash(password)
     except passlib.exc.PasswordTruncateError as e:
         raise PasswordTooLongError(e)
 

@@ -5,11 +5,7 @@
 import json
 from typing import Sequence
 
-from tests.unit.cmk.special_agents.agent_kube.factory import (
-    api_to_agent_pod,
-    APIPodFactory,
-    PerformancePodFactory,
-)
+from tests.unit.cmk.special_agents.agent_kube.factory import PerformancePodFactory
 
 from cmk.special_agents.agent_kube import (
     ContainerMetricsStore,
@@ -17,10 +13,7 @@ from cmk.special_agents.agent_kube import (
     CounterMetric,
     determine_rate_metrics,
     kube_object_performance_sections,
-    map_lookup_name_to_piggyback_host_name,
     MetricName,
-    pod_lookup_from_agent_pod,
-    PodLookupName,
 )
 from cmk.special_agents.utils_kubernetes.schemata.section import PerformanceUsage
 
@@ -72,17 +65,6 @@ def test_determine_rate_metrics_for_containers_with_same_timestamp() -> None:
         {current_containers.name: current_containers}, {old_containers.name: old_containers}
     )
     assert len(containers_rate_metrics) == 0
-
-
-def test_map_lookup_name_to_piggyback_host_name() -> None:
-    """Test that the namespace_name lookup name is used to find the piggyback host name"""
-    pod = api_to_agent_pod(APIPodFactory.build())
-    pod_namespaced_name = PodLookupName(f"{pod.metadata.namespace}_{pod.metadata.name}")
-    lookup_name_piggyback_mappings = map_lookup_name_to_piggyback_host_name(
-        [pod], pod_lookup_from_agent_pod
-    )
-    assert pod_namespaced_name in lookup_name_piggyback_mappings
-    assert lookup_name_piggyback_mappings[pod_namespaced_name] == pod.name(prepend_namespace=True)
 
 
 def test_kube_object_performance_sections() -> None:

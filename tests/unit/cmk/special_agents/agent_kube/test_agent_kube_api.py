@@ -85,8 +85,8 @@ def test_pod_node_allocation_within_cluster(  # type:ignore[no-untyped-def]
         deployments=[],
         cluster_details=ClusterDetailsFactory.build(),
     )
-    assert len(cluster.nodes()) == 1
-    assert len(cluster.nodes()[0].pods()) == 1
+    assert len(cluster.nodes) == 1
+    assert len(cluster.nodes[0].pods()) == 1
 
 
 def test_pod_deployment_allocation_within_cluster(  # type:ignore[no-untyped-def]
@@ -108,7 +108,7 @@ def test_pod_deployment_allocation_within_cluster(  # type:ignore[no-untyped-def
         deployments=[deployment],
         cluster_details=ClusterDetailsFactory.build(),
     )
-    assert len(cluster.deployments()) == 1
+    assert len(cluster.deployments) == 1
 
 
 ONE_KiB = 1024

@@ -207,7 +207,7 @@ def test_daemon_sets_returns_daemon_sets_of_cluster(cluster_daemon_sets: int) ->
         api_to_agent_daemonset(d) for d in APIDaemonSetFactory.batch(size=cluster_daemon_sets)
     ]
     cluster = _cluster_builder_from_agents(daemonsets=daemonsets)
-    daemon_sets = cluster.daemon_sets()
+    daemon_sets = cluster.daemonsets
     assert len(daemon_sets) == cluster_daemon_sets
 
 
@@ -217,7 +217,7 @@ def test_statefulsets_returns_statefulsets_of_cluster(cluster_statefulsets: int)
         api_to_agent_statefulset(s) for s in APIStatefulSetFactory.batch(size=cluster_statefulsets)
     ]
     cluster = _cluster_builder_from_agents(statefulsets=agent_statefulsets)
-    statefulsets = cluster.statefulsets()
+    statefulsets = cluster.statefulsets
     assert len(statefulsets) == cluster_statefulsets
 
 

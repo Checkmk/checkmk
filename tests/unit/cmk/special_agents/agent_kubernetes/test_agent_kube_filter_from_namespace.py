@@ -5,7 +5,6 @@
 
 from tests.unit.cmk.special_agents.agent_kube.factory import (
     api_to_agent_deployment,
-    api_to_agent_pod,
     APIDeploymentFactory,
     APIPodFactory,
     MetaDataFactory,
@@ -18,15 +17,11 @@ from cmk.special_agents.utils_kubernetes.schemata import api
 def test_filter_pods_from_namespaces() -> None:
     # Arrange
     pods = [
-        api_to_agent_pod(
-            APIPodFactory.build(
-                metadata=MetaDataFactory.build(name="one", namespace=api.NamespaceName("default")),
-            )
+        APIPodFactory.build(
+            metadata=MetaDataFactory.build(name="one", namespace=api.NamespaceName("default")),
         ),
-        api_to_agent_pod(
-            APIPodFactory.build(
-                metadata=MetaDataFactory.build(name="two", namespace=api.NamespaceName("standard"))
-            )
+        APIPodFactory.build(
+            metadata=MetaDataFactory.build(name="two", namespace=api.NamespaceName("standard"))
         ),
     ]
 
@@ -35,7 +30,7 @@ def test_filter_pods_from_namespaces() -> None:
 
     # Assert
     assert len(filtered_pods) == 1
-    assert filtered_pods[0].name() == "one"
+    assert filtered_pods[0].metadata.name == "one"
 
 
 def test_filter_deployments_from_monitored_namespaces() -> None:

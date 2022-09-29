@@ -887,7 +887,18 @@ def any_match_from_list_of_infix_patterns(infix_patterns: Sequence[str], string:
     return any(re.search(pattern, string) for pattern in infix_patterns)
 
 
+@dataclass
 class Cluster:
+    cluster_details: api.ClusterDetails
+    excluded_node_roles: Sequence[str]
+    daemonsets: Sequence[DaemonSet]
+    statefulsets: Sequence[StatefulSet]
+    deployments: Sequence[Deployment]
+    pods: Mapping[api.PodUID, Pod]
+    nodes: Sequence[Node]
+    cluster_aggregation_pods: Sequence[api.Pod]
+    cluster_aggregation_nodes: Sequence[Node]
+
     @classmethod
     def from_api_resources(
         cls,
@@ -991,36 +1002,13 @@ class Cluster:
         )
         LOGGER.debug(
             "Cluster composition: Nodes (%s), Deployments (%s), DaemonSets (%s), StatefulSets (%s), Pods (%s)",
-            len(cluster.nodes()),
-            len(cluster.deployments()),
-            len(cluster.daemon_sets()),
-            len(cluster.statefulsets()),
-            len(cluster.pods()),
+            len(cluster.nodes),
+            len(cluster.deployments),
+            len(cluster.daemonsets),
+            len(cluster.statefulsets),
+            len(cluster.pods),
         )
         return cluster
-
-    def __init__(
-        self,
-        *,
-        cluster_details: api.ClusterDetails,
-        excluded_node_roles: Sequence[str],
-        daemonsets: Sequence[DaemonSet],
-        statefulsets: Sequence[StatefulSet],
-        deployments: Sequence[Deployment],
-        pods: Mapping[api.PodUID, Pod],
-        nodes: Sequence[Node],
-        cluster_aggregation_pods: Sequence[api.Pod],
-        cluster_aggregation_nodes: Sequence[Node],
-    ) -> None:
-        self._cluster_details: api.ClusterDetails = cluster_details
-        self._excluded_node_roles: Sequence[str] = excluded_node_roles
-        self._daemon_sets: Sequence[DaemonSet] = daemonsets
-        self._statefulsets: Sequence[StatefulSet] = statefulsets
-        self._deployments: Sequence[Deployment] = deployments
-        self._nodes: Sequence[Node] = nodes
-        self._pods: Mapping[api.PodUID, Pod] = pods
-        self.cluster_aggregation_pods: Sequence[api.Pod] = cluster_aggregation_pods
-        self._cluster_aggregation_nodes: Sequence[Node] = cluster_aggregation_nodes
 
     def pod_resources(self) -> section.PodResources:
         return _pod_resources_from_api_pods(self.cluster_aggregation_pods)
@@ -1028,39 +1016,21 @@ class Cluster:
     def allocatable_pods(self) -> section.AllocatablePods:
         return section.AllocatablePods(
             capacity=sum(
-                node.resources["capacity"].pods for node in self._cluster_aggregation_nodes
+                node.resources["capacity"].pods for node in self.cluster_aggregation_nodes
             ),
             allocatable=sum(
-                node.resources["allocatable"].pods for node in self._cluster_aggregation_nodes
+                node.resources["allocatable"].pods for node in self.cluster_aggregation_nodes
             ),
         )
 
     def namespaces(self) -> Set[api.NamespaceName]:
         namespaces: Set[api.NamespaceName] = set()
-        namespaces.update(api.NamespaceName(pod.metadata.namespace) for pod in self._pods.values())
+        namespaces.update(api.NamespaceName(pod.metadata.namespace) for pod in self.pods.values())
         return namespaces
-
-    def pods(self, phase: Optional[api.Phase] = None) -> Collection[Pod]:
-        pods = self._pods.values()
-        if phase is None:
-            return pods
-        return [pod for pod in pods if pod.phase == phase]
-
-    def nodes(self) -> Sequence[Node]:
-        return self._nodes
-
-    def daemon_sets(self) -> Sequence[DaemonSet]:
-        return self._daemon_sets
-
-    def statefulsets(self) -> Sequence[StatefulSet]:
-        return self._statefulsets
-
-    def deployments(self) -> Sequence[Deployment]:
-        return self._deployments
 
     def node_count(self) -> section.NodeCount:
         node_count = section.NodeCount()
-        for node in self._nodes:
+        for node in self.nodes:
             ready = (
                 conditions := node.conditions()
             ) is not None and conditions.ready.status == api.NodeConditionStatus.TRUE
@@ -1076,9 +1046,6 @@ class Cluster:
                     node_count.worker.not_ready += 1
         return node_count
 
-    def cluster_details(self) -> section.ClusterDetails:
-        return section.ClusterDetails(api_health=self._cluster_details.api_health)
-
     def memory_resources(self) -> section.Resources:
         return _collect_memory_resources_from_api_pods(self.cluster_aggregation_pods)
 
@@ -1089,23 +1056,21 @@ class Cluster:
         return section.AllocatableResource(
             context="cluster",
             value=sum(
-                node.resources["allocatable"].memory for node in self._cluster_aggregation_nodes
+                node.resources["allocatable"].memory for node in self.cluster_aggregation_nodes
             ),
         )
 
     def allocatable_cpu_resource(self) -> section.AllocatableResource:
         return section.AllocatableResource(
             context="cluster",
-            value=sum(
-                node.resources["allocatable"].cpu for node in self._cluster_aggregation_nodes
-            ),
+            value=sum(node.resources["allocatable"].cpu for node in self.cluster_aggregation_nodes),
         )
 
     def version(self) -> api.GitVersion:
-        return self._cluster_details.version
+        return self.cluster_details.version
 
     def node_collector_daemons(self) -> section.CollectorDaemons:
-        return _node_collector_daemons(self.daemon_sets())
+        return _node_collector_daemons(self.daemonsets)
 
 
 def _node_collector_daemons(daemonsets: Iterable[DaemonSet]) -> section.CollectorDaemons:
@@ -1412,7 +1377,7 @@ def filter_pods_by_cron_job(pods: Sequence[api.Pod], cron_job: api.CronJob) -> S
     return [pod for pod in pods if pod.uid in cron_job.pod_uids]
 
 
-def filter_pods_by_phase(pods: Sequence[api.Pod], phase: api.Phase) -> Sequence[api.Pod]:
+def filter_pods_by_phase(pods: Iterable[api.Pod], phase: api.Phase) -> Sequence[api.Pod]:
     return [pod for pod in pods if pod.status.phase == phase]
 
 
@@ -1481,7 +1446,9 @@ def write_cluster_api_sections(cluster_name: str, cluster: Cluster) -> None:
         "kube_pod_resources_v1": cluster.pod_resources,
         "kube_allocatable_pods_v1": cluster.allocatable_pods,
         "kube_node_count_v1": cluster.node_count,
-        "kube_cluster_details_v1": cluster.cluster_details,
+        "kube_cluster_details_v1": lambda: section.ClusterDetails.parse_obj(
+            cluster.cluster_details
+        ),
         "kube_memory_resources_v1": cluster.memory_resources,
         "kube_cpu_resources_v1": cluster.cpu_resources,
         "kube_allocatable_memory_resource_v1": cluster.allocatable_memory_resource,
@@ -1747,7 +1714,7 @@ def write_machine_sections(
     piggyback_formatter_node: ObjectSpecificPBFormatter,
 ) -> None:
     # make sure we only print sections for nodes currently visible via Kubernetes api:
-    for node in cluster.nodes():
+    for node in cluster.nodes:
         if sections := machine_sections.get(str(node.name)):
             with ConditionalPiggybackSection(piggyback_formatter_node(node.name)):
                 sys.stdout.write(sections)
@@ -1965,14 +1932,6 @@ def request_cluster_collector(
         ) from e
 
     return json.loads(cluster_resp.content.decode("utf-8"))
-
-
-def map_lookup_name_to_piggyback_host_name(
-    api_pods: Sequence[Pod], pod_lookup: Callable[[Pod], PodLookupName]
-) -> Mapping[PodLookupName, PodNamespacedName]:
-    return {
-        pod_lookup(pod): PodNamespacedName(pod.name(prepend_namespace=True)) for pod in api_pods
-    }
 
 
 def make_api_client(arguments: argparse.Namespace) -> client.ApiClient:
@@ -2199,7 +2158,9 @@ def pod_lookup_from_metric(metric: Mapping[str, str]) -> PodLookupName:
     return lookup_name(metric["namespace"], metric["pod_name"])
 
 
-def pods_from_namespaces(pods: Iterable[Pod], namespaces: Set[api.NamespaceName]) -> Sequence[Pod]:
+def pods_from_namespaces(
+    pods: Iterable[api.Pod], namespaces: Set[api.NamespaceName]
+) -> Sequence[api.Pod]:
     return [pod for pod in pods if pod.metadata.namespace in namespaces]
 
 
@@ -2400,13 +2361,14 @@ def determine_pods_to_host(
     piggybacks: list[Piggyback] = []
     if MonitoredObject.pods in monitored_objects:
         running_pods = pods_from_namespaces(
-            cluster.pods(phase=api.Phase.RUNNING), monitored_namespaces
+            filter_pods_by_phase(api_pods, api.Phase.RUNNING), monitored_namespaces
         )
-        lookup_name_piggyback_mappings = map_lookup_name_to_piggyback_host_name(
-            running_pods, pod_lookup_from_agent_pod
-        )
+        lookup_name_piggyback_mappings = {
+            pod_lookup_from_api_pod(pod): pod_name(pod, prepend_namespace=True) for pod in api_pods
+        }
+
         monitored_running_pods = monitored_pods.intersection(
-            {pod_lookup_from_agent_pod(pod) for pod in running_pods}
+            {pod_lookup_from_api_pod(pod) for pod in running_pods}
         )
 
         piggybacks.extend(
@@ -2425,16 +2387,15 @@ def determine_pods_to_host(
                 piggyback=piggyback_formatter_node(node.name),
                 pod_names=names,
             )
-            for node in cluster.nodes()
+            for node in cluster.nodes
             if (names := _names_of_running_pods(node))
         )
-
     name_type_objects: Sequence[
-        tuple[str, MonitoredObject, Callable[[], Sequence[Deployment | DaemonSet | StatefulSet]]]
+        tuple[str, MonitoredObject, Sequence[Deployment | DaemonSet | StatefulSet]]
     ] = [
         ("deployment", MonitoredObject.deployments, cluster.deployments),
         ("statefulset", MonitoredObject.statefulsets, cluster.statefulsets),
-        ("daemonset", MonitoredObject.daemonsets, cluster.daemon_sets),
+        ("daemonset", MonitoredObject.daemonsets, cluster.daemonsets),
     ]
     for object_type_name, object_type, objects in name_type_objects:
         if object_type in monitored_objects:
@@ -2446,7 +2407,7 @@ def determine_pods_to_host(
                     ),
                     pod_names=names,
                 )
-                for k in kube_objects_from_namespaces(objects(), monitored_namespaces)
+                for k in kube_objects_from_namespaces(objects, monitored_namespaces)
                 if (names := _names_of_running_pods(k))
             )
     cluster_pods = list(
@@ -2813,7 +2774,7 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
                 write_nodes_api_sections(
                     arguments.cluster,
                     arguments.annotation_key_pattern,
-                    cluster.nodes(),
+                    cluster.nodes,
                     kubernetes_cluster_hostname=arguments.kubernetes_cluster_hostname,
                     piggyback_formatter=piggyback_formatter_node,
                 )
@@ -2823,7 +2784,7 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
                 write_deployments_api_sections(
                     arguments.cluster,
                     arguments.annotation_key_pattern,
-                    kube_objects_from_namespaces(cluster.deployments(), monitored_namespace_names),
+                    kube_objects_from_namespaces(cluster.deployments, monitored_namespace_names),
                     kubernetes_cluster_hostname=arguments.kubernetes_cluster_hostname,
                     piggyback_formatter=functools.partial(piggyback_formatter, "deployment"),
                 )
@@ -2862,7 +2823,7 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
                 write_daemon_sets_api_sections(
                     arguments.cluster,
                     arguments.annotation_key_pattern,
-                    kube_objects_from_namespaces(cluster.daemon_sets(), monitored_namespace_names),
+                    kube_objects_from_namespaces(cluster.daemonsets, monitored_namespace_names),
                     kubernetes_cluster_hostname=arguments.kubernetes_cluster_hostname,
                     piggyback_formatter=functools.partial(piggyback_formatter, "daemonset"),
                 )
@@ -2872,14 +2833,14 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
                 write_statefulsets_api_sections(
                     arguments.cluster,
                     arguments.annotation_key_pattern,
-                    kube_objects_from_namespaces(cluster.statefulsets(), monitored_namespace_names),
+                    kube_objects_from_namespaces(cluster.statefulsets, monitored_namespace_names),
                     kubernetes_cluster_hostname=arguments.kubernetes_cluster_hostname,
                     piggyback_formatter=functools.partial(piggyback_formatter, "statefulset"),
                 )
 
             monitored_pods: Set[PodLookupName] = {
-                pod_lookup_from_agent_pod(pod)
-                for pod in pods_from_namespaces(cluster.pods(), monitored_namespace_names)
+                pod_lookup_from_api_pod(pod)
+                for pod in pods_from_namespaces(api_data.pods, monitored_namespace_names)
             }
 
             # TODO: Currently there is no possibility for the user to specify whether to monitor CronJobs or not
@@ -2917,7 +2878,7 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
                     arguments.annotation_key_pattern,
                     [
                         pod
-                        for pod in cluster.pods()
+                        for pod in cluster.pods.values()
                         if pod_lookup_from_agent_pod(pod) in monitored_pods
                         and pod_lookup_from_agent_pod(pod)
                         not in [

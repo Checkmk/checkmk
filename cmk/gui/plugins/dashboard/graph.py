@@ -144,6 +144,9 @@ class ABCGraphDashlet(Dashlet[T], Generic[T, T_Ident]):
     def has_context(cls) -> bool:
         return True
 
+    def infos(self) -> SingleInfos:
+        return ["host", "service"]
+
     @classmethod
     def vs_parameters(cls) -> ValueSpec:
         return Dictionary(
@@ -346,9 +349,6 @@ class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateG
     @classmethod
     def sort_index(cls) -> int:
         return 20
-
-    def infos(self) -> SingleInfos:
-        return ["host", "service"]
 
     @classmethod
     def single_infos(cls) -> SingleInfos:

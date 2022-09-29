@@ -59,7 +59,6 @@ class AgentSource(Source[AgentRawData, AgentRawDataSection]):
             default_raw_data=AgentRawData(b""),
             default_host_sections=HostSections[AgentRawDataSection](),
             id_=id_,
-            cache_dir=Path(cmk.utils.paths.tcp_cache_dir) if main_data_source else None,
             simulation_mode=simulation_mode,
             file_cache_max_age=file_cache_max_age,
         )
@@ -75,6 +74,11 @@ class AgentSource(Source[AgentRawData, AgentRawDataSection]):
         else:
             persisted_section_dir = Path(cmk.utils.paths.var_dir) / "persisted_sections" / self.id
         self.persisted_section_dir: Final[Path] = persisted_section_dir
+        if self.main_data_source:
+            cache_dir = Path(cmk.utils.paths.tcp_cache_dir)
+        else:
+            cache_dir = Path(cmk.utils.paths.data_source_cache_dir) / self.id
+        self.file_cache_base_path: Final[Path] = cache_dir
 
     def _make_parser(self) -> AgentParser:
         return AgentParser(

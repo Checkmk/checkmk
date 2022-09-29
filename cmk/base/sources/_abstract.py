@@ -6,7 +6,6 @@
 import abc
 import logging
 from functools import partial
-from pathlib import Path
 from typing import Callable, final, Final, Generic, Optional, Sequence
 
 import cmk.utils
@@ -52,7 +51,6 @@ class Source(Generic[TRawData, TRawDataSection], abc.ABC):
         id_: str,
         simulation_mode: bool,
         file_cache_max_age: file_cache.MaxAge,
-        cache_dir: Optional[Path] = None,
     ) -> None:
         self.hostname: Final = hostname
         self.ipaddress: Final = ipaddress
@@ -63,10 +61,7 @@ class Source(Generic[TRawData, TRawDataSection], abc.ABC):
         self.default_host_sections: Final = default_host_sections
         self.id: Final = id_
         self.simulation_mode: Final = simulation_mode
-        if not cache_dir:
-            cache_dir = Path(cmk.utils.paths.data_source_cache_dir) / self.id
         self.file_cache_max_age: Final = file_cache_max_age
-        self.file_cache_base_path: Final = cache_dir
 
         self._logger: Final = logging.getLogger("cmk.base.data_source.%s" % id_)
 

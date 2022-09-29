@@ -51,7 +51,6 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             default_raw_data={},
             default_host_sections=HostSections[SNMPRawDataSection](),
             id_=id_,
-            cache_dir=cache_dir,
             simulation_mode=simulation_mode,
             file_cache_max_age=file_cache_max_age,
         )
@@ -65,6 +64,9 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
         if not persisted_section_dir:
             persisted_section_dir = Path(cmk.utils.paths.var_dir) / "persisted_sections" / self.id
         self.persisted_section_dir: Final[Path] = persisted_section_dir
+        if not cache_dir:
+            cache_dir = Path(cmk.utils.paths.data_source_cache_dir) / self.id
+        self.file_cache_base_path: Final[Path] = cache_dir
 
     @classmethod
     def snmp(

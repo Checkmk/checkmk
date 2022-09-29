@@ -54,7 +54,7 @@ if version.is_plus_edition():
 else:
 
     class PushAgentSource:  # type: ignore[no-redef]
-        def __init__(self, host_name, *a, **kw) -> None:  # type:ignore[no-untyped-def]
+        def __init__(self, host_name: HostName, *args: object, **kw: object) -> None:
             raise NotImplementedError(
                 f"[{host_name}]: connection mode 'push-agent' not available on "
                 f"{version.edition().title}"
@@ -363,12 +363,13 @@ class _Builder:
         connection_mode = self.host_config.agent_connection_mode()
         if connection_mode == "push-agent":
             return PushAgentSource(
-                self.host_config,
+                self.host_config.hostname,
                 self.ipaddress,
                 simulation_mode=self.simulation_mode,
                 agent_simulator=self.agent_simulator,
                 translation=self.translation,
                 encoding_fallback=self.encoding_fallback,
+                check_interval=self.host_config.check_mk_check_interval,
             )
         if connection_mode == "pull-agent":
             return TCPSource(

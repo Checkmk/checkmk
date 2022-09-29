@@ -46,6 +46,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.licensing import save_extensions
 from cmk.utils.licensing.export import LicenseUsageExtensions
 from cmk.utils.site import omd_site
+from cmk.utils.type_defs import UserId
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
@@ -58,6 +59,7 @@ import cmk.gui.watolib.config_domain_name as config_domain_name
 import cmk.gui.watolib.git
 import cmk.gui.watolib.sidebar_reload
 import cmk.gui.watolib.utils
+from cmk.gui import userdb
 from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundProcessInterface,
@@ -1685,7 +1687,11 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
         self._set_sync_state(_("Computing differences"))
         to_sync_new, to_sync_changed, to_delete = get_file_names_to_sync(
-            self._logger, central_file_infos, remote_file_infos, self._file_filter_func
+            self._site_id,
+            self._logger,
+            central_file_infos,
+            remote_file_infos,
+            self._file_filter_func,
         )
 
         self._logger.debug("New files to be synchronized: %r", to_sync_new)
@@ -2167,6 +2173,7 @@ def _get_replication_components(site_config: SiteConfiguration) -> List[Replicat
 
 
 def get_file_names_to_sync(
+    site_id: SiteId,
     site_logger: logging.Logger,
     central_file_infos: "Dict[str, ConfigSyncFileInfo]",
     remote_file_infos: "Dict[str, ConfigSyncFileInfo]",
@@ -2183,7 +2190,13 @@ def get_file_names_to_sync(
 
     # New files
     central_files = set(central_file_infos.keys())
-    remote_files = set(remote_file_infos.keys())
+    remote_files_set = set(remote_file_infos.keys())
+    remote_site_config = get_site_config(site_id)
+    remote_files = (
+        _filter_remote_files(remote_files_set)
+        if remote_site_config.get("user_sync")
+        else remote_files_set
+    )
     to_sync_new = list(central_files - remote_files)
 
     # Add differing files
@@ -2206,6 +2219,38 @@ def get_file_names_to_sync(
         to_sync_changed = list(filterfalse(file_filter_func, to_sync_changed))
         to_delete = list(filterfalse(file_filter_func, to_delete))
     return to_sync_new, to_sync_changed, to_delete
+
+
+def _filter_remote_files(remote_files: set[str]) -> set[str]:
+    """
+    Exclude the remote files of users not known to the central site from
+    removal.
+
+    This is important if a remote site uses LDAP connectors that the central
+    site does not use. The central site would not know about the users on the
+    remote site and would delete the unknown users on every sync.
+    """
+    remote_files_to_keep: set[str] = set()
+    users_known_to_central: dict[UserId, bool] = {}
+    for file in remote_files:
+        if not file.startswith("var/check_mk/web"):
+            remote_files_to_keep.add(file)
+            continue
+
+        file_parts = file.split("/")
+        if len(file_parts) == 4:
+            remote_files_to_keep.add(file)
+            continue
+
+        user_id = UserId(file_parts[3])
+
+        if user_id not in users_known_to_central:
+            users_known_to_central[user_id] = userdb.user_exists(user_id)
+
+        if users_known_to_central[user_id]:
+            remote_files_to_keep.add(file)
+
+    return remote_files_to_keep
 
 
 def _get_sync_archive(to_sync: List[str], base_dir: Path) -> bytes:

@@ -8,6 +8,8 @@ from unittest.mock import MagicMock, Mock
 import pytest
 from pydantic_factories import ModelFactory
 
+from tests.unit.cmk.special_agents.agent_kube.factory import APIDeploymentFactory
+
 from cmk.special_agents import agent_kube as agent
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 
@@ -45,9 +47,8 @@ def test_deployment_pod_resources_pods_in_phase(
     assert len(deployment.pods()) == deployment_pods
 
 
-def test_deployment_conditions(
-    api_deployment: api.Deployment,
-) -> None:
+def test_deployment_conditions() -> None:
+    api_deployment = APIDeploymentFactory.build()
     deployment_conditions = ["available", "progressing", "replicafailure"]
     api_deployment.status.conditions = {
         condition: DeploymentConditionFactory.build() for condition in deployment_conditions

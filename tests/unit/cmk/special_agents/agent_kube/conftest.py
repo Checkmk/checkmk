@@ -175,6 +175,10 @@ class ClusterDetailsFactory(ModelFactory):
 
 
 # Deployment Factories
+class DeploymentFactory(ModelFactory):
+    __model__ = api.Deployment
+
+
 class DeploymentSpecFactory(ModelFactory):
     __model__ = api.DeploymentSpec
 
@@ -499,29 +503,9 @@ def deployment_pods() -> int:
 
 
 @pytest.fixture
-def deployment_spec() -> api.DeploymentSpec:
-    return DeploymentSpecFactory.build()
+def new_deployment() -> Callable[[], agent_kube.Deployment]:
+    api_deployment = DeploymentFactory.build()
 
-
-@pytest.fixture
-def deployment_status() -> api.DeploymentStatus:
-    return DeploymentStatusFactory.build()
-
-
-@pytest.fixture
-def api_deployment(
-    deployment_spec: api.DeploymentSpec, deployment_status: api.DeploymentStatus
-) -> api.Deployment:
-    class DeploymentFactory(ModelFactory):
-        __model__ = api.Deployment
-
-    return DeploymentFactory.build(spec=deployment_spec, status=deployment_status)
-
-
-@pytest.fixture
-def new_deployment(
-    api_deployment: api.Deployment,
-) -> Callable[[], agent_kube.Deployment]:
     def _new_deployment() -> agent_kube.Deployment:
         return agent_kube.Deployment(
             metadata=api_deployment.metadata,

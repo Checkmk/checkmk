@@ -941,7 +941,8 @@ def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None
                 },
             )
 
-            do_backup(config, job, target, state)
+            do_site_backup(job, target, state)
+            complete_backup(job, target, state)
             success = True
 
         except MKGeneralException as e:
@@ -964,16 +965,6 @@ def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None
                     "success": success,
                 },
             )
-
-
-def do_backup(
-    config: Config,
-    job: Job,
-    target: BackupTarget,
-    state: State,
-) -> None:
-    do_site_backup(job, target, state)
-    complete_backup(config, job, target, state)
 
 
 def do_site_backup(
@@ -1125,7 +1116,7 @@ def verify_backup_files(
             )
 
 
-def complete_backup(config: Config, job: Job, target: BackupTarget, state: State) -> None:
+def complete_backup(job: Job, target: BackupTarget, state: State) -> None:
     info = create_backup_info(target, job)
     save_backup_info(info, target)
 
@@ -1262,7 +1253,8 @@ def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: C
                 },
             )
 
-            do_restore(info, target, state)
+            do_site_restore(info, target, state)
+            complete_restore(state)
             success = True
 
         except MKGeneralException as e:
@@ -1285,15 +1277,6 @@ def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: C
                     "success": success,
                 },
             )
-
-
-def do_restore(
-    info: BackupInfo,
-    target: RestoreTarget,
-    state: State,
-) -> None:
-    do_site_restore(info, target, state)
-    complete_restore(state)
 
 
 def do_site_restore(

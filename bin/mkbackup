@@ -657,11 +657,18 @@ class BackupTarget:
 
     @property
     def base_path(self) -> str:
-        return "%s-incomplete" % job_backup_path(self.config, self.job)
+        return "%s-incomplete" % self._job_backup_path()
 
     @property
     def target_id(self) -> str:
         return self.job.config["target"]
+
+    @property
+    def completed_path(self) -> str:
+        return "%s-complete" % self._job_backup_path()
+
+    def _job_backup_path(self) -> str:
+        return "{}/{}".format(target_path(self.job.config["target"], self.config), self.job.id)
 
 
 @dataclass(frozen=True)
@@ -1030,14 +1037,6 @@ def site_backup_archive_path(site_id: str, target: Target, job_config: JobConfig
     return f"{target.base_path}/site-{site_id}{archive_suffix(job_config)}"
 
 
-def job_backup_path_complete(config: Config, job: Job) -> str:
-    return "%s-complete" % job_backup_path(config, job)
-
-
-def job_backup_path(config: Config, job: Job) -> str:
-    return "{}/{}".format(target_path(job.config["target"], config), job.id)
-
-
 def archive_suffix(config: JobConfig) -> str:
     suffix = ".tar"
     if config["compress"]:
@@ -1142,14 +1141,11 @@ def complete_backup(config: Config, job: Job, target: BackupTarget, state: State
     # Now we can be sure this new backup is a good one. Remove eventual old
     # backup and move from "incomplete" to "complete".
 
-    if os.path.exists(job_backup_path_complete(config, job)):
+    if os.path.exists(target.completed_path):
         log("Cleaning up previously completed backup")
-        shutil.rmtree(job_backup_path_complete(config, job))
+        shutil.rmtree(target.completed_path)
 
-    os.rename(
-        target.base_path,
-        job_backup_path_complete(config, job),
-    )
+    os.rename(target.base_path, target.completed_path)
 
     state_content = state.load()
     duration = time.time() - state_content["started"]

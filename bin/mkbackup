@@ -2152,11 +2152,8 @@ opt_verbose = 0
 opt_debug = False
 
 
-def main() -> None:
-    global opt_debug, opt_verbose
-    register_signal_handlers()
-    init_logging()
-
+def parse_arguments():
+    global opt_verbose, opt_debug
     short_options = "h"
     long_options = ["help", "version", "verbose", "debug"]
 
@@ -2186,13 +2183,6 @@ def main() -> None:
     except KeyError:
         usage("Invalid operation mode")
 
-    try:
-        config = load_config()
-    except OSError:
-        if opt_debug:
-            raise
-        raise MKGeneralException("mkbackup is not configured yet.")
-
     # Load the mode specific options
     try:
         mode_opts, mode_args = getopt.getopt(args, "", list(mode_options(mode).keys()))
@@ -2203,9 +2193,21 @@ def main() -> None:
     if len(mode_args) != len(mode.args):
         usage("Invalid number of arguments for this mode")
 
+    return mode, mode_args, mode_opts, opts
+
+
+def main() -> None:
+    register_signal_handlers()
+    init_logging()
+    mode, mode_args, mode_opts, opts = parse_arguments()
+    try:
+        config = load_config()
+    except OSError:
+        if opt_debug:
+            raise
+        raise MKGeneralException("mkbackup is not configured yet.")
     # Ensure the backup lock path exists and has correct permissions
     makedirs(str(mkbackup_lock_dir), group="omd", mode=0o770)
-
     opt_dict = {k.lstrip("-"): v for k, v in opts + mode_opts}
     mode.runner(mode_args, opt_dict, config)
 

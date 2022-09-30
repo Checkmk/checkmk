@@ -68,7 +68,7 @@ def test_openapi_customer(
         "disable_login": False,
         "pager_address": "",
         "roles": [],
-        "enforce_password_change": False,
+        "auth_option": {"enforce_password_change": False, "auth_type": "password"},
         "interface_options": {
             "interface_theme": "default",
             "mega_menu_icons": "topic",
@@ -176,7 +176,7 @@ def test_openapi_user_minimal_password_settings(
         )
     extensions = resp.json_body["extensions"]
     assert extensions["customer"] == "provider"
-    assert extensions["enforce_password_change"] is True
+    assert extensions["auth_option"]["enforce_password_change"] is True
     assert "last_pw_change" not in extensions
     assert "password" not in extensions
 
@@ -203,7 +203,7 @@ def test_openapi_user_minimal_password_settings(
         )
 
     extensions = resp.json_body["extensions"]
-    assert extensions["enforce_password_change"] is True
+    assert extensions["auth_option"]["enforce_password_change"] is True
     assert extensions["idle_timeout"]["option"] == "disable"
     assert extensions["roles"] == ["user"]
 
@@ -403,7 +403,7 @@ def test_update_user_auth_options(
     )
 
     user_data = resp.json["extensions"]
-    user_data.pop("enforce_password_change", None)
+    user_data.pop("auth_option", None)
 
     if test_data is not None:
         user_data.update(test_data)
@@ -452,7 +452,7 @@ def test_openapi_user_edit_auth(
         )
     extensions = resp.json_body["extensions"]
     assert extensions["customer"] == "provider"
-    assert extensions["enforce_password_change"] is False
+    assert extensions["auth_option"]["enforce_password_change"] is False
 
     edit_details = {
         "auth_option": {"auth_type": "automation", "secret": "QWXWBFUCSUOXNCPJUMS@"},
@@ -736,7 +736,7 @@ def test_global_full_configuration(
         "customer": "global",
         "idle_timeout": {"option": "global"},
         "disable_notifications": {},
-        "enforce_password_change": False,
+        "auth_option": {"enforce_password_change": False, "auth_type": "password"},
         "interface_options": {
             "interface_theme": "default",
             "mega_menu_icons": "topic",
@@ -851,7 +851,7 @@ def test_openapi_user_update_contact_options(
         "language": "en",
         "customer": "global",
         "disable_notifications": {},
-        "enforce_password_change": False,
+        "auth_option": {"enforce_password_change": False, "auth_type": "password"},
         "interface_options": {
             "interface_theme": "default",
             "mega_menu_icons": "topic",
@@ -978,7 +978,7 @@ def test_user_enforce_password_change_option(
         status=200,
         content_type="application/json",
     )
-    assert resp.json["extensions"]["enforce_password_change"] is True
+    assert resp.json["extensions"]["auth_option"]["enforce_password_change"] is True
 
     edit_details = {
         "auth_option": {
@@ -994,7 +994,47 @@ def test_user_enforce_password_change_option(
         status=200,
         content_type="application/json",
     )
-    assert update_resp.json_body["extensions"]["enforce_password_change"] is False
+    assert update_resp.json_body["extensions"]["auth_option"]["enforce_password_change"] is False
+
+
+@managedtest
+def test_response_schema_compatible_with_request_schema(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch
+) -> None:
+
+    monkeypatch.setattr(
+        "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
+    )
+
+    user_detail = {
+        "username": "cmkuser",
+        "fullname": "Mathias Kettner",
+        "customer": "global",
+        "auth_option": {
+            "auth_type": "password",
+            "password": "password",
+            "enforce_password_change": True,
+        },
+    }
+
+    base = "/NO_SITE/check_mk/api/1.0"
+    resp = aut_user_auth_wsgi_app.call_method(
+        "post",
+        base + "/domain-types/user_config/collections/all",
+        params=json.dumps(user_detail),
+        headers={"Accept": "application/json"},
+        status=200,
+        content_type="application/json",
+    )
+
+    aut_user_auth_wsgi_app.call_method(
+        "put",
+        base + "/objects/user_config/cmkuser",
+        params=json.dumps(resp.json["extensions"]),
+        headers={"Accept": "application/json"},
+        status=200,
+        content_type="application/json",
+    )
 
 
 @managedtest

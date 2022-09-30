@@ -159,12 +159,7 @@ class CMKOpenApiSession(requests.Session):
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
 
-        # Workaround a bug in the API endpoint (See CMK-11027)
-        user = response.json()["extensions"]
-        if "enforce_password_change" in user:
-            del user["enforce_password_change"]
-
-        return user, response.headers["Etag"]
+        return response.json()["extensions"], response.headers["Etag"]
 
     def edit_user(self, username: str, user_spec: Mapping[str, Any], etag: str) -> None:
         print(user_spec)

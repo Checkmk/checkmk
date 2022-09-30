@@ -476,23 +476,6 @@ def new_statefulset(  # type:ignore[no-untyped-def]
 
 
 @pytest.fixture
-def statefulset_pods() -> int:
-    return len(api.Phase)
-
-
-@pytest.fixture
-def statefulset(
-    new_statefulset: Callable[[], agent_kube.StatefulSet],
-    statefulset_pods: int,
-    new_pod: Callable[[], agent_kube.Pod],
-) -> agent_kube.StatefulSet:
-    statefulset = new_statefulset()
-    for _ in range(statefulset_pods):
-        statefulset.add_pod(new_pod())
-    return statefulset
-
-
-@pytest.fixture
 def cluster_nodes() -> int:
     return 3
 

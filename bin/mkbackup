@@ -64,6 +64,11 @@ def dump_privatekey_pem(pkey: crypto.PKey) -> bytes:
     return crypto.dump_privatekey(crypto.FILETYPE_PEM, pkey)
 
 
+#########################################
+# Schemas to share with CMA Backup tool #
+# DO NOT CHANGE!                        #
+#########################################
+
 TargetId = NewType("TargetId", str)
 
 
@@ -85,6 +90,39 @@ class JobConfig(TypedDict):
     schedule: ScheduleConfig | None
     no_history: bool
     without_sites: bool
+
+
+class BackupInfo(TypedDict):
+    config: JobConfig
+    files: Sequence[tuple[str, int, str]]
+    finished: float
+    hostname: str
+    job_id: str
+    site_id: str
+    site_version: str
+    size: int
+    type: str
+    backup_id: str | None
+
+
+#########################################################
+# Lock files are shared with cma backup tool            #
+# We want to avoid running two backups at the same time #
+#########################################################
+
+
+def local_lock_file_path(site_name: str) -> Path:
+    return mkbackup_lock_dir / Path(f"mkbackup-{site_name}.lock")
+
+
+def get_needed_lock_files(opts: Mapping[str, str], job_config: JobConfig) -> Sequence[Path]:
+    site_id = current_site_id()
+    return [local_lock_file_path(site_id)]
+
+
+######################
+# End of shared code #
+######################
 
 
 @dataclass
@@ -120,19 +158,6 @@ class RestoreTarget:
 
 
 Target = BackupTarget | RestoreTarget
-
-
-class BackupInfo(TypedDict):
-    config: JobConfig
-    files: Sequence[tuple[str, int, str]]
-    finished: float
-    hostname: str
-    job_id: str
-    site_id: str
-    site_version: str
-    size: int
-    type: str
-    backup_id: str | None
 
 
 g_state: dict[str, Any] | None = None
@@ -264,10 +289,6 @@ def site_config_path() -> str:
     return "%s/etc/check_mk/backup.mk" % os.environ["OMD_ROOT"]
 
 
-def local_lock_file_path(site_name: str) -> Path:
-    return mkbackup_lock_dir / Path(f"mkbackup-{site_name}.lock")
-
-
 def _ensure_lock_file(lock_file_path: Path) -> None:
     # Create the file (but ensure that the target file always has the
     # correct permissions). The current lock implementation assumes the file is
@@ -396,11 +417,6 @@ def makedir(
 # Wenn als Site-User ausgeführt:
 # - TargetIds aus System-Konfiguration laden
 # - Site-Konfiguration laden
-
-
-def get_needed_lock_files(opts: Mapping[str, str], job_config: JobConfig) -> Sequence[Path]:
-    site_id = current_site_id()
-    return [local_lock_file_path(site_id)]
 
 
 def load_config() -> Config:

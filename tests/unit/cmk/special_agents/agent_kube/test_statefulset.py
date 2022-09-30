@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Callable, Sequence
+from typing import Sequence
 from unittest.mock import MagicMock, Mock
 
 import pytest
@@ -13,6 +13,9 @@ from tests.unit.cmk.special_agents.agent_kube.factory import (
     api_to_agent_statefulset,
     APIPodFactory,
     APIStatefulSetFactory,
+    ContainerResourcesFactory,
+    ContainerSpecFactory,
+    PodSpecFactory,
     PodStatusFactory,
 )
 
@@ -102,29 +105,31 @@ def test_statefulset_pod_resources_pods_in_phase_no_phase_param(phases: list[str
     assert len(pods) == len(phases)
 
 
-def test_statefulset_memory_resources(
-    new_pod: Callable[[], agent_kube.Pod],
-    pod_containers_count: int,
-    container_limit_memory: float,
-    container_request_memory: float,
-) -> None:
+def test_statefulset_memory_resources() -> None:
+    container_resources_requirements = ContainerResourcesFactory.build(
+        limits=api.ResourcesRequirements(memory=2.0 * 1024),
+        requests=api.ResourcesRequirements(memory=1.0 * 1024),
+    )
+    container_spec = ContainerSpecFactory.build(resources=container_resources_requirements)
+    api_pod = APIPodFactory.build(spec=PodSpecFactory.build(containers=[container_spec]))
     statefulset = api_to_agent_statefulset(APIStatefulSetFactory.build())
-    statefulset.add_pod(new_pod())
+    statefulset.add_pod(api_to_agent_pod(api_pod))
     memory_resources = statefulset.memory_resources()
-    assert memory_resources.count_total == pod_containers_count
-    assert memory_resources.limit == pod_containers_count * container_limit_memory
-    assert memory_resources.request == pod_containers_count * container_request_memory
+    assert memory_resources.count_total == 1
+    assert memory_resources.limit == 2.0 * 1024
+    assert memory_resources.request == 1.0 * 1024
 
 
-def test_statefulset_cpu_resources(
-    new_pod: Callable[[], agent_kube.Pod],
-    pod_containers_count: int,
-    container_limit_cpu: float,
-    container_request_cpu: float,
-) -> None:
+def test_statefulset_cpu_resources() -> None:
+    container_resources_requirements = ContainerResourcesFactory.build(
+        limits=api.ResourcesRequirements(cpu=2.0),
+        requests=api.ResourcesRequirements(cpu=1.0),
+    )
+    container_spec = ContainerSpecFactory.build(resources=container_resources_requirements)
+    api_pod = APIPodFactory.build(spec=PodSpecFactory.build(containers=[container_spec]))
     statefulset = api_to_agent_statefulset(APIStatefulSetFactory.build())
-    statefulset.add_pod(new_pod())
+    statefulset.add_pod(api_to_agent_pod(api_pod))
     cpu_resources = statefulset.cpu_resources()
-    assert cpu_resources.count_total == pod_containers_count
-    assert cpu_resources.limit == pod_containers_count * container_limit_cpu
-    assert cpu_resources.request == pod_containers_count * container_request_cpu
+    assert cpu_resources.count_total == 1
+    assert cpu_resources.limit == 2.0
+    assert cpu_resources.request == 1.0

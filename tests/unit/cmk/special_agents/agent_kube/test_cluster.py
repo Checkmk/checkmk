@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Callable, Iterable, Mapping, NoReturn, Sequence, Tuple
+from typing import Iterable, Mapping, NoReturn, Sequence, Tuple
 
 import pytest
 from pydantic_factories import ModelFactory
@@ -17,13 +17,14 @@ from .conftest import (
     APINodeFactory,
     APIPodFactory,
     ClusterDetailsFactory,
+    ContainerSpecFactory,
     NodeMetaDataFactory,
     NodeResourcesFactory,
     ONE_GiB,
     PodSpecFactory,
     PodStatusFactory,
 )
-from .factory import api_to_agent_daemonset, APIDaemonSetFactory, MetaDataFactory
+from .factory import api_to_agent_daemonset, api_to_agent_pod, APIDaemonSetFactory, MetaDataFactory
 
 
 class PerformanceMetricFactory(ModelFactory):
@@ -55,14 +56,16 @@ def test_cluster_namespaces(pod_metadata: api.MetaData[str]) -> None:
 
 
 @pytest.mark.parametrize("cluster_pods", [0, 10, 20])
-def test_cluster_resources(  # type:ignore[no-untyped-def]
-    cluster_pods: int,
-    new_pod: Callable[[], agent.Pod],
-    pod_containers_count: int,
-):
+def test_cluster_resources(cluster_pods: int) -> None:
+    pod_containers_count = 2
     cluster = agent.Cluster(cluster_details=ClusterDetailsFactory.build(), excluded_node_roles=[])
     for _ in range(cluster_pods):
-        cluster.add_pod(new_pod())
+        api_pod = APIPodFactory.build(
+            spec=PodSpecFactory.build(
+                node=None, containers=ContainerSpecFactory.batch(pod_containers_count)
+            )
+        )
+        cluster.add_pod(api_to_agent_pod(api_pod))
     assert cluster.memory_resources().count_total == cluster_pods * pod_containers_count
     assert cluster.cpu_resources().count_total == cluster_pods * pod_containers_count
     assert sum(len(pods) for _phase, pods in cluster.pod_resources()) == cluster_pods

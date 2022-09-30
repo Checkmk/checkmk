@@ -15,7 +15,7 @@
 import itertools
 import unittest
 import uuid
-from typing import Callable, Dict, Iterator, Mapping, Sequence, Type
+from typing import Callable, Dict, Mapping, Sequence
 
 import pytest
 import pytest_mock
@@ -24,6 +24,7 @@ from pydantic_factories import ModelFactory, Use
 # pylint: disable=comparison-with-callable,redefined-outer-name
 from tests.unit.cmk.special_agents.agent_kube.factory import (
     api_to_agent_daemonset,
+    api_to_agent_pod,
     api_to_agent_statefulset,
     APIDaemonSetFactory,
     APIStatefulSetFactory,
@@ -237,63 +238,6 @@ def container_status(  # type:ignore[no-untyped-def]
     return _container_status
 
 
-# Container Fixtures
-@pytest.fixture
-def pod_containers_count() -> int:
-    return 1
-
-
-@pytest.fixture
-def container_limit_cpu() -> float:
-    return 2.0
-
-
-@pytest.fixture
-def container_request_cpu() -> float:
-    return 1.0
-
-
-@pytest.fixture
-def container_limit_memory() -> float:
-    return 2.0 * ONE_MiB
-
-
-@pytest.fixture
-def container_request_memory() -> float:
-    return 1.0 * ONE_MiB
-
-
-@pytest.fixture
-def container_resources_requirements(
-    container_request_cpu: float,
-    container_limit_cpu: float,
-    container_request_memory: float,
-    container_limit_memory: float,
-) -> api.ContainerResources:
-    return api.ContainerResources(
-        limits=api.ResourcesRequirements(
-            memory=container_limit_memory,
-            cpu=container_limit_cpu,
-        ),
-        requests=api.ResourcesRequirements(
-            memory=container_request_memory,
-            cpu=container_request_cpu,
-        ),
-    )
-
-
-@pytest.fixture
-def container_spec(container_resources_requirements: api.ContainerResources) -> api.ContainerSpec:
-    return ContainerSpecFactory.build(resources=container_resources_requirements)
-
-
-@pytest.fixture
-def pod_spec(container_spec: api.ContainerSpec, pod_containers_count: int) -> api.PodSpec:
-    return PodSpecFactory.build(
-        node=None, containers=[container_spec for _ in range(pod_containers_count)]
-    )
-
-
 @pytest.fixture
 def node_allocatable_cpu() -> float:
     return 6.0
@@ -368,57 +312,16 @@ def api_to_agent_node(node: api.Node) -> agent_kube.Node:
 
 
 @pytest.fixture
-def node(
-    new_node: Callable[[], agent_kube.Node], node_pods: int, new_pod: Callable[[], agent_kube.Pod]
-) -> agent_kube.Node:
+def node(new_node: Callable[[], agent_kube.Node], node_pods: int) -> agent_kube.Node:
     node = new_node()
     for _ in range(node_pods):
-        node.add_pod(new_pod())
+        node.add_pod(api_to_agent_pod(APIPodFactory.build()))
     return node
 
 
 @pytest.fixture
 def pod_metadata() -> api.MetaData[str]:
     return MetaDataFactory.build()
-
-
-@pytest.fixture
-def phases() -> Type[api.Phase]:
-    return api.Phase
-
-
-@pytest.fixture
-def phase_generator(phases: Type[api.Phase]) -> Callable[[], Iterator[api.Phase]]:
-    def _phase_generator() -> Iterator[api.Phase]:
-        yield from itertools.cycle(phases)
-
-    return _phase_generator
-
-
-@pytest.fixture
-def new_pod(
-    pod_metadata: api.MetaData[str],
-    phase_generator: Callable[[], Iterator[api.Phase]],
-    pod_spec: api.PodSpec,
-    container_status: Callable[[], api.ContainerStatus],
-    pod_containers_count: int,
-) -> Callable[[], agent_kube.Pod]:
-    phases = phase_generator()
-    containers = [container_status() for _ in range(pod_containers_count)]
-
-    def _new_pod() -> agent_kube.Pod:
-        pod_status = PodStatusFactory.build()
-        pod_status.phase = next(phases)
-        return agent_kube.Pod(
-            uid=api.PodUID(str(uuid.uuid4())),
-            metadata=pod_metadata,
-            status=pod_status,
-            spec=pod_spec,
-            containers={container.name: container for container in containers},
-            init_containers={},
-        )
-
-    return _new_pod
 
 
 @pytest.fixture

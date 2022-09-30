@@ -10,6 +10,43 @@ from pydantic_factories import ModelFactory
 from cmk.special_agents import agent_kube as agent
 from cmk.special_agents.utils_kubernetes.schemata import api
 
+
+# Container related Factories
+class ContainerRunningStateFactory(ModelFactory):
+    __model__ = api.ContainerRunningState
+
+
+class ContainerWaitingStateFactory(ModelFactory):
+    __model__ = api.ContainerWaitingState
+
+
+class ContainerTerminatedStateFactory(ModelFactory):
+    __model__ = api.ContainerTerminatedState
+
+
+def create_container_state(
+    state: api.ContainerStateType, **kwargs: dict[str, object]
+) -> api.ContainerState:
+    state_factory = {
+        api.ContainerStateType.running: ContainerRunningStateFactory.build,
+        api.ContainerStateType.waiting: ContainerWaitingStateFactory.build,
+        api.ContainerStateType.terminated: ContainerTerminatedStateFactory.build,
+    }[state]
+    return state_factory()
+
+
+class ContainerStatusFactory(ModelFactory):
+    __model__ = api.ContainerStatus
+
+
+class ContainerSpecFactory(ModelFactory):
+    __model__ = api.ContainerSpec
+
+
+class ContainerResourcesFactory(ModelFactory):
+    __model__ = api.ContainerResources
+
+
 # General Factories
 
 

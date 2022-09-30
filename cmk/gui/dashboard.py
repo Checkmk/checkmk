@@ -79,9 +79,7 @@ from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
 )
-
-# Can be used by plugins
-from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=unused-import
+from cmk.gui.plugins.dashboard.utils import (
     ABCFigureDashlet,
     ABCGraphDashletConfig,
     builtin_dashboards,
@@ -98,12 +96,9 @@ from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=un
     DashletInputFunc,
     DashletRefreshAction,
     DashletRefreshInterval,
-    DashletSize,
-    DashletTypeName,
     get_all_dashboards,
     get_permitted_dashboards,
     GROW,
-    IFrameDashlet,
     LinkedViewDashletConfig,
     MAX,
     save_all_dashboards,
@@ -121,11 +116,6 @@ from cmk.gui.valuespec import Checkbox, Dictionary, DropdownChoice, TextInput, T
 from cmk.gui.views import ABCAjaxInitialFilters, view_choices
 from cmk.gui.views.datasource_selection import show_create_view_dialog
 from cmk.gui.watolib.activate_changes import get_pending_changes_tooltip, has_pending_changes
-
-loaded_with_language: Union[None, bool, str] = False
-
-# These settings might go into the config module, sometime in future,
-# in order to allow the user to customize this.
 
 dashlet_padding = (
     26,

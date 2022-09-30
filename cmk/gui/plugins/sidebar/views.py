@@ -95,7 +95,9 @@ def get_view_menu_items(include_reports: bool) -> List[TopicMenuTopic]:
 
     if reporting and include_reports:
         reporting.load_reports()
-        visuals_to_show += [("reports", e) for e in reporting.permitted_reports().items()]
+        visuals_to_show += [
+            ("reports", (k, dict(v))) for k, v in reporting.permitted_reports().items()
+        ]
 
     return make_topic_menu(visuals_to_show)
 

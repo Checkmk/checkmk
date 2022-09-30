@@ -47,118 +47,9 @@ VERSION = "2.2.0i1"
 # Some typed wrappers around OpenSSL.crypto, there are only Python 2 interface
 # files available... :-/
 
-
-def load_certificate_pem(buf: bytes) -> crypto.X509:
-    return crypto.load_certificate(crypto.FILETYPE_PEM, buf)
-
-
-def dump_publickey_pem(pkey: crypto.PKey) -> bytes:
-    return crypto.dump_publickey(crypto.FILETYPE_PEM, pkey)
-
-
-def load_privatekey_pem(buf: bytes, passphrase: bytes) -> crypto.PKey:
-    return crypto.load_privatekey(crypto.FILETYPE_PEM, buf, passphrase)
-
-
-def dump_privatekey_pem(pkey: crypto.PKey) -> bytes:
-    return crypto.dump_privatekey(crypto.FILETYPE_PEM, pkey)
-
-
-#########################################
-# Schemas to share with CMA Backup tool #
-# DO NOT CHANGE!                        #
-#########################################
-
-TargetId = NewType("TargetId", str)
-
-
-class Config(TypedDict):
-    targets: dict[str, Any]
-    jobs: dict[str, Any]
-
-
-class ScheduleConfig(TypedDict):
-    disabled: bool
-    period: str
-    timeofday: Sequence[tuple[int, int]]
-
-
-class JobConfig(TypedDict):
-    encrypt: str | None
-    target: TargetId
-    compress: bool
-    schedule: ScheduleConfig | None
-    no_history: bool
-    without_sites: bool
-
-
-class BackupInfo(TypedDict):
-    config: JobConfig
-    files: Sequence[tuple[str, int, str]]
-    finished: float
-    hostname: str
-    job_id: str
-    site_id: str
-    site_version: str
-    size: int
-    type: str
-    backup_id: str | None
-
-
-#########################################################
-# Lock files are shared with cma backup tool            #
-# We want to avoid running two backups at the same time #
-#########################################################
-
-
-def local_lock_file_path(site_name: str) -> Path:
-    return mkbackup_lock_dir / Path(f"mkbackup-{site_name}.lock")
-
-
-def get_needed_lock_files(opts: Mapping[str, str], job_config: JobConfig) -> Sequence[Path]:
-    site_id = current_site_id()
-    return [local_lock_file_path(site_id)]
-
-
-######################
-# End of shared code #
-######################
-
-
-@dataclass
-class Job:
-    config: JobConfig
-    local_id: str
-    id: str
-
-
-@dataclass(frozen=True)
-class BackupTarget:
-    config: Config
-    job: Job
-
-    @property
-    def base_path(self) -> str:
-        return job_backup_path_during_backup(self.config, self.job)
-
-    @property
-    def target_id(self) -> str:
-        return self.job.config["target"]
-
-
-@dataclass(frozen=True)
-class RestoreTarget:
-    target_id: TargetId
-    backup_id: str
-    config: Config
-
-    @property
-    def base_path(self) -> str:
-        return f"{target_path(self.target_id, self.config)}/{self.backup_id}"
-
-
-Target = BackupTarget | RestoreTarget
-
+################
+# Utility Code #
+################
 
 g_state: dict[str, Any] | None = None
 
@@ -188,18 +79,6 @@ class State:
     def load(self) -> dict[str, Any]:
         return _load_state(self.path)
 
-    @classmethod
-    def for_backup(cls, job: Job) -> "State":
-        path = Path(os.environ["OMD_ROOT"]) / "var" / "check_mk" / "backup"
-        name = f"{job.local_id}.state"
-        return cls(path / name)
-
-    @classmethod
-    def for_restore(cls) -> "State":
-        path = Path("tmp")
-        name = f"restore-{current_site_id()}.state"
-        return cls(path / name)
-
 
 def _load_state(path: Path) -> dict[str, Any]:
     global g_state
@@ -207,6 +86,12 @@ def _load_state(path: Path) -> dict[str, Any]:
         g_state = json.loads(path.read_text())
 
     return g_state
+
+
+def add_output(s: str, state: State) -> None:
+    state_content = state.load()
+    state_content["output"] += s
+    state.save(state_content, update=False)
 
 
 # Is used to duplicate output from stdout/stderr to a the job log. This
@@ -272,21 +157,20 @@ def hostname() -> str:
     return socket.gethostname()
 
 
-def current_site_id() -> str:
-    return os.environ["OMD_SITE"]
+def load_certificate_pem(buf: bytes) -> crypto.X509:
+    return crypto.load_certificate(crypto.FILETYPE_PEM, buf)
 
 
-def site_version(site_id: str) -> str:
-    linkpath = os.readlink("/omd/sites/%s/version" % site_id)
-    return linkpath.split("/")[-1]
+def dump_publickey_pem(pkey: crypto.PKey) -> bytes:
+    return crypto.dump_publickey(crypto.FILETYPE_PEM, pkey)
 
 
-def system_config_path() -> str:
-    return "/etc/cma/backup.conf"
+def load_privatekey_pem(buf: bytes, passphrase: bytes) -> crypto.PKey:
+    return crypto.load_privatekey(crypto.FILETYPE_PEM, buf, passphrase)
 
 
-def site_config_path() -> str:
-    return "%s/etc/check_mk/backup.mk" % os.environ["OMD_ROOT"]
+def dump_privatekey_pem(pkey: crypto.PKey) -> bytes:
+    return crypto.dump_privatekey(crypto.FILETYPE_PEM, pkey)
 
 
 def _ensure_lock_file(lock_file_path: Path) -> None:
@@ -412,325 +296,12 @@ def makedir(
     set_permissions(path=path, uid=uid, gid=gid, mode=mode)
 
 
-# Wenn als root ausgeführt:
-# - System-Konfiguration laden
-# Wenn als Site-User ausgeführt:
-# - TargetIds aus System-Konfiguration laden
-# - Site-Konfiguration laden
-
-
-def load_config() -> Config:
-    def load_file(path: str) -> Any:
-        with Path(path).open("r", encoding="utf-8") as f:
-            return ast.literal_eval(f.read())
-
-    config = load_file(site_config_path())
-
-    try:
-        system_targets = load_file(system_config_path())["targets"]
-
-        # only load non conflicting targets
-        for target_ident, target_config in system_targets.items():
-            if target_ident not in config["targets"]:
-                config["targets"][target_ident] = target_config
-
-    except OSError:
-        # Not existing system wide config is OK. In this case there
-        # are only backup targets from site config available.
-        pass
-
-    return config
-
-
-# TODO: Duplicate code with htdocs/backup.py
-def load_backup_info(path: str) -> BackupInfo:
-    with open(path) as f:
-        info = json.load(f)
-
-    # Load the backup_id from the second right path component. This is the
-    # base directory of the mkbackup.info file. The user might have moved
-    # the directory, e.g. for having multiple backups. Allow that.
-    # Maybe we need to changed this later when we allow multiple generations
-    # of backups.
-    info["backup_id"] = os.path.basename(os.path.dirname(path))
-
-    return info
-
-
-def save_backup_info(info: BackupInfo, target: Target) -> None:
-    with open(backup_info_path(target), "w") as f:
-        json.dump(info, f, sort_keys=True, indent=4, separators=(",", ": "))
-
-
-def create_backup_info(config: Config, job: Job) -> BackupInfo:
-    files = get_files_for_backup_info(config, job)
-
-    info: BackupInfo = {
-        "type": "Check_MK",
-        "job_id": job.local_id,
-        "config": job.config,
-        "hostname": hostname(),
-        "files": files,
-        "finished": time.time(),
-        "size": sum(f[1] for f in files),
-        "site_id": current_site_id(),
-        "site_version": site_version(current_site_id()),
-        "backup_id": None,
-    }
-
-    return info
-
-
-def get_files_for_backup_info(config: Config, job: Job) -> list[tuple[str, int, str]]:
-    backup_path = job_backup_path_during_backup(config, job)
-    dir_entries: list[str] = os.listdir(backup_path)
-    files = []
-    for f in sorted(dir_entries):
-        files.append(
-            (f, os.path.getsize(backup_path + "/" + f), file_checksum(backup_path + "/" + f))
-        )
-    return files
-
-
 def file_checksum(path: str) -> str:
     hash_md5 = md5(usedforsecurity=False)  # pylint: disable=unexpected-keyword-arg
     with open(path, "rb") as f:
         for chunk in iter(lambda: f.read(4096), b""):
             hash_md5.update(chunk)
     return hash_md5.hexdigest()
-
-
-#   List: Alle Backups auflisten
-#       Als Site-Nutzer sieht man nur die Site-Backups (auch die, die
-#       durch die Systembackups erstellt wurden)
-#   - Job-ID
-#
-#   Beispielbefehle:
-#     # listet alle Backups auf die man sehen darf
-#     mkbackup list nfs
-#
-#     # listet alle Backups auf die man sehen darf die zu diesem Job gehören
-#     mkbackup list nfs --job=xxx
-#
-#   Restore:
-#   - Job-ID
-#   - Backup-ID
-#     - Als Site-Nutzer muss man die Backup-ID eines Site-Backups angeben
-#
-#   Beispielbefehle:
-#     # listet alle Backups auf die man sehen darf
-#     mkbackup restore nfs backup-id-20
-#
-#   Show: Zeigt Metainfos zu einem Backup an
-#   - Job-ID
-#   - Backup-ID
-#
-#   Beispielbefehle:
-#     mkbackup show nfs backup-id-20
-
-
-class Arg(NamedTuple):
-    id: str
-    description: str
-
-
-class Opt(NamedTuple):
-    description: str
-
-
-class Mode(NamedTuple):
-    description: str
-    args: list[Arg]
-    opts: dict[str, Opt]
-    runner: Callable[[list[str], dict[str, str], Config], None]
-
-
-modes = {
-    "backup": Mode(
-        description=(
-            "Starts creating a new backup. When executed as Check_MK site user, a backup of the "
-            "current site is executed to the target of the given backup job."
-        ),
-        args=[
-            Arg(
-                id="Job-ID",
-                description="The ID of the backup job to work with",
-            ),
-        ],
-        opts={
-            "background": Opt(description="Fork and execute the program in the background."),
-        },
-        runner=lambda args, opts, config: mode_backup(args[0], opts=opts, config=config),
-    ),
-    "restore": Mode(
-        description=(
-            "Starts the restore of a backup. In case you want to restore an encrypted backup, "
-            "you have to provide the passphrase of the used backup key via the environment "
-            "variable 'MKBACKUP_PASSPHRASE'. For example: MKBACKUP_PASSPHRASE='secret' mkbackup "
-            "restore ARGS."
-        ),
-        args=[
-            Arg(
-                id="Target-ID",
-                description="The ID of the backup target to work with",
-            ),
-            Arg(
-                id="Backup-ID",
-                description="The ID of the backup to restore",
-            ),
-        ],
-        opts={
-            "background": Opt(description="Fork and execute the program in the background."),
-            "no-verify": Opt(
-                description="Disable verification of the backup files to restore from."
-            ),
-            "no-reboot": Opt(description="Don't trigger a system reboot after succeeded restore."),
-        },
-        runner=lambda args, opts, config: mode_restore(args[0], args[1], opts=opts, config=config),
-    ),
-    "jobs": Mode(
-        description="Lists all configured backup jobs of the current user context.",
-        args=[],
-        opts={},
-        runner=lambda args, opts, config: mode_jobs(opts=opts, config=config),
-    ),
-    "targets": Mode(
-        description="Lists all configured backup targets of the current user context.",
-        args=[],
-        opts={},
-        runner=lambda args, opts, config: mode_targets(opts=opts, config=config),
-    ),
-    "list": Mode(
-        description="Output the list of all backups found on the given backup target",
-        args=[
-            Arg(
-                id="Target-ID",
-                description="The ID of the backup target to work with",
-            ),
-        ],
-        opts={},
-        runner=lambda args, opts, config: mode_list(args[0], opts=opts, config=config),
-    ),
-}
-
-
-def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None:
-    job = load_job(local_job_id, config)
-    target = BackupTarget(config, job)
-    state = State.for_backup(job)
-
-    with ExitStack() as stack:
-        for cm in [
-            acquire_single_lock(lock_file_path)
-            for lock_file_path in get_needed_lock_files(opts, job.config)
-        ]:
-            stack.enter_context(cm)
-        target_ident = job.config["target"]
-        verify_target_is_ready(target_ident, config)
-
-        init_new_run(state)
-        save_next_run(job, state)
-
-        if "background" in opts:
-            daemon.daemonize()
-            state.save({"pid": os.getpid()})
-
-        start_logging(state)
-        log(f"--- Starting backup ({job.id} to {target_ident}) ---")
-
-        success = False
-        try:
-            cleanup_previous_incomplete_backup(config, job)
-
-            state.save(
-                {
-                    "state": "running",
-                },
-            )
-
-            do_backup(config, job, target, state)
-            success = True
-
-        except MKGeneralException as e:
-            sys.stderr.write("%s\n" % e)
-            if opt_debug:
-                raise
-
-        except Exception:
-            if opt_debug:
-                raise
-            sys.stderr.write("An exception occured:\n")
-            sys.stderr.write(traceback.format_exc())
-
-        finally:
-            stop_logging()
-            state.save(
-                {
-                    "state": "finished",
-                    "finished": time.time(),
-                    "success": success,
-                },
-            )
-
-
-def do_backup(
-    config: Config,
-    job: Job,
-    target: BackupTarget,
-    state: State,
-) -> None:
-    do_site_backup(job, target, state)
-    complete_backup(config, job, target, state)
-
-
-def do_site_backup(
-    job: Job,
-    target: BackupTarget,
-    state: State,
-    site: str | None = None,
-    try_stop: bool = True,
-) -> None:  # pylint: disable=too-many-branches
-    cmd = ["omd", "backup"]
-
-    if not job.config["compress"]:
-        cmd.append("--no-compression")
-
-    if job.config.get("no_history", False):
-        cmd.append("--no-past")
-
-    site = current_site_id()
-    cmd.append("-")
-
-    backup_path = site_backup_archive_path(site, target, job.config)
-
-    # Create missing directories. Ensure group permissions and mode.
-    makedirs(os.path.dirname(backup_path), group="omd", mode=0o775)
-
-    verbose("Command: %s" % " ".join(cmd))
-    with subprocess.Popen(
-        cmd,
-        close_fds=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        stdin=subprocess.DEVNULL,
-    ) as p:
-        assert p.stdout is not None
-        assert p.stderr is not None
-
-        with open(backup_path, "wb") as backup_file:
-            s = BackupStream(
-                stream=p.stdout,
-                is_alive=lambda: p.poll() is None,
-                key_ident=job.config["encrypt"],
-                state=state,
-            )
-            for chunk in s.process():
-                backup_file.write(chunk)
-
-        err = p.stderr.read().decode()
-
-    if p.returncode != 0:
-        raise MKGeneralException("Site backup failed: %s" % err)
 
 
 # Using RSA directly to encrypt the whole backup is a bad idea. So we use the RSA
@@ -1011,6 +582,444 @@ class RestoreStream(MKBackupStream):
         return cipher_rsa.decrypt(encrypted_secret_key)
 
 
+#########################################
+# Schemas to share with CMA Backup tool #
+# DO NOT CHANGE!                        #
+#########################################
+
+TargetId = NewType("TargetId", str)
+
+
+class Config(TypedDict):
+    targets: dict[str, Any]
+    jobs: dict[str, Any]
+
+
+class ScheduleConfig(TypedDict):
+    disabled: bool
+    period: str
+    timeofday: Sequence[tuple[int, int]]
+
+
+class JobConfig(TypedDict):
+    encrypt: str | None
+    target: TargetId
+    compress: bool
+    schedule: ScheduleConfig | None
+    no_history: bool
+    without_sites: bool
+
+
+class BackupInfo(TypedDict):
+    config: JobConfig
+    files: Sequence[tuple[str, int, str]]
+    finished: float
+    hostname: str
+    job_id: str
+    site_id: str
+    site_version: str
+    size: int
+    type: str
+    backup_id: str | None
+
+
+#########################################################
+# Lock files are shared with cma backup tool            #
+# We want to avoid running two backups at the same time #
+#########################################################
+
+
+def local_lock_file_path(site_name: str) -> Path:
+    return mkbackup_lock_dir / Path(f"mkbackup-{site_name}.lock")
+
+
+def get_needed_lock_files(opts: Mapping[str, str], job_config: JobConfig) -> Sequence[Path]:
+    site_id = current_site_id()
+    return [local_lock_file_path(site_id)]
+
+
+######################
+# End of shared code #
+######################
+
+
+@dataclass
+class Job:
+    config: JobConfig
+    local_id: str
+    id: str
+
+
+@dataclass(frozen=True)
+class BackupTarget:
+    config: Config
+    job: Job
+
+    @property
+    def base_path(self) -> str:
+        return job_backup_path_during_backup(self.config, self.job)
+
+    @property
+    def target_id(self) -> str:
+        return self.job.config["target"]
+
+
+@dataclass(frozen=True)
+class RestoreTarget:
+    target_id: TargetId
+    backup_id: str
+    config: Config
+
+    @property
+    def base_path(self) -> str:
+        return f"{target_path(self.target_id, self.config)}/{self.backup_id}"
+
+
+Target = BackupTarget | RestoreTarget
+
+
+def backup_state(job: Job) -> State:
+    path = Path(os.environ["OMD_ROOT"]) / "var" / "check_mk" / "backup"
+    name = f"{job.local_id}.state"
+    return State(path / name)
+
+
+def restore_state() -> State:
+    path = Path("tmp")
+    name = f"restore-{current_site_id()}.state"
+    return State(path / name)
+
+
+def current_site_id() -> str:
+    return os.environ["OMD_SITE"]
+
+
+def site_version(site_id: str) -> str:
+    linkpath = os.readlink("/omd/sites/%s/version" % site_id)
+    return linkpath.split("/")[-1]
+
+
+def system_config_path() -> str:
+    return "/etc/cma/backup.conf"
+
+
+def site_config_path() -> str:
+    return "%s/etc/check_mk/backup.mk" % os.environ["OMD_ROOT"]
+
+
+# Wenn als root ausgeführt:
+# - System-Konfiguration laden
+# Wenn als Site-User ausgeführt:
+# - TargetIds aus System-Konfiguration laden
+# - Site-Konfiguration laden
+
+
+def load_config() -> Config:
+    def load_file(path: str) -> Any:
+        with Path(path).open("r", encoding="utf-8") as f:
+            return ast.literal_eval(f.read())
+
+    config = load_file(site_config_path())
+
+    try:
+        system_targets = load_file(system_config_path())["targets"]
+
+        # only load non conflicting targets
+        for target_ident, target_config in system_targets.items():
+            if target_ident not in config["targets"]:
+                config["targets"][target_ident] = target_config
+
+    except OSError:
+        # Not existing system wide config is OK. In this case there
+        # are only backup targets from site config available.
+        pass
+
+    return config
+
+
+# TODO: Duplicate code with htdocs/backup.py
+def load_backup_info(path: str) -> BackupInfo:
+    with open(path) as f:
+        info = json.load(f)
+
+    # Load the backup_id from the second right path component. This is the
+    # base directory of the mkbackup.info file. The user might have moved
+    # the directory, e.g. for having multiple backups. Allow that.
+    # Maybe we need to changed this later when we allow multiple generations
+    # of backups.
+    info["backup_id"] = os.path.basename(os.path.dirname(path))
+
+    return info
+
+
+def save_backup_info(info: BackupInfo, target: Target) -> None:
+    with open(backup_info_path(target), "w") as f:
+        json.dump(info, f, sort_keys=True, indent=4, separators=(",", ": "))
+
+
+def create_backup_info(config: Config, job: Job) -> BackupInfo:
+    files = get_files_for_backup_info(config, job)
+
+    info: BackupInfo = {
+        "type": "Check_MK",
+        "job_id": job.local_id,
+        "config": job.config,
+        "hostname": hostname(),
+        "files": files,
+        "finished": time.time(),
+        "size": sum(f[1] for f in files),
+        "site_id": current_site_id(),
+        "site_version": site_version(current_site_id()),
+        "backup_id": None,
+    }
+
+    return info
+
+
+def get_files_for_backup_info(config: Config, job: Job) -> list[tuple[str, int, str]]:
+    backup_path = job_backup_path_during_backup(config, job)
+    dir_entries: list[str] = os.listdir(backup_path)
+    files = []
+    for f in sorted(dir_entries):
+        files.append(
+            (f, os.path.getsize(backup_path + "/" + f), file_checksum(backup_path + "/" + f))
+        )
+    return files
+
+
+#   List: Alle Backups auflisten
+#       Als Site-Nutzer sieht man nur die Site-Backups (auch die, die
+#       durch die Systembackups erstellt wurden)
+#   - Job-ID
+#
+#   Beispielbefehle:
+#     # listet alle Backups auf die man sehen darf
+#     mkbackup list nfs
+#
+#     # listet alle Backups auf die man sehen darf die zu diesem Job gehören
+#     mkbackup list nfs --job=xxx
+#
+#   Restore:
+#   - Job-ID
+#   - Backup-ID
+#     - Als Site-Nutzer muss man die Backup-ID eines Site-Backups angeben
+#
+#   Beispielbefehle:
+#     # listet alle Backups auf die man sehen darf
+#     mkbackup restore nfs backup-id-20
+#
+#   Show: Zeigt Metainfos zu einem Backup an
+#   - Job-ID
+#   - Backup-ID
+#
+#   Beispielbefehle:
+#     mkbackup show nfs backup-id-20
+
+
+class Arg(NamedTuple):
+    id: str
+    description: str
+
+
+class Opt(NamedTuple):
+    description: str
+
+
+class Mode(NamedTuple):
+    description: str
+    args: list[Arg]
+    opts: dict[str, Opt]
+    runner: Callable[[list[str], dict[str, str], Config], None]
+
+
+modes = {
+    "backup": Mode(
+        description=(
+            "Starts creating a new backup. When executed as Check_MK site user, a backup of the "
+            "current site is executed to the target of the given backup job."
+        ),
+        args=[
+            Arg(
+                id="Job-ID",
+                description="The ID of the backup job to work with",
+            ),
+        ],
+        opts={
+            "background": Opt(description="Fork and execute the program in the background."),
+        },
+        runner=lambda args, opts, config: mode_backup(args[0], opts=opts, config=config),
+    ),
+    "restore": Mode(
+        description=(
+            "Starts the restore of a backup. In case you want to restore an encrypted backup, "
+            "you have to provide the passphrase of the used backup key via the environment "
+            "variable 'MKBACKUP_PASSPHRASE'. For example: MKBACKUP_PASSPHRASE='secret' mkbackup "
+            "restore ARGS."
+        ),
+        args=[
+            Arg(
+                id="Target-ID",
+                description="The ID of the backup target to work with",
+            ),
+            Arg(
+                id="Backup-ID",
+                description="The ID of the backup to restore",
+            ),
+        ],
+        opts={
+            "background": Opt(description="Fork and execute the program in the background."),
+            "no-verify": Opt(
+                description="Disable verification of the backup files to restore from."
+            ),
+            "no-reboot": Opt(description="Don't trigger a system reboot after succeeded restore."),
+        },
+        runner=lambda args, opts, config: mode_restore(args[0], args[1], opts=opts, config=config),
+    ),
+    "jobs": Mode(
+        description="Lists all configured backup jobs of the current user context.",
+        args=[],
+        opts={},
+        runner=lambda args, opts, config: mode_jobs(opts=opts, config=config),
+    ),
+    "targets": Mode(
+        description="Lists all configured backup targets of the current user context.",
+        args=[],
+        opts={},
+        runner=lambda args, opts, config: mode_targets(opts=opts, config=config),
+    ),
+    "list": Mode(
+        description="Output the list of all backups found on the given backup target",
+        args=[
+            Arg(
+                id="Target-ID",
+                description="The ID of the backup target to work with",
+            ),
+        ],
+        opts={},
+        runner=lambda args, opts, config: mode_list(args[0], opts=opts, config=config),
+    ),
+}
+
+
+def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None:
+    job = load_job(local_job_id, config)
+    target = BackupTarget(config, job)
+    state = backup_state(job)
+
+    with ExitStack() as stack:
+        for cm in [
+            acquire_single_lock(lock_file_path)
+            for lock_file_path in get_needed_lock_files(opts, job.config)
+        ]:
+            stack.enter_context(cm)
+        target_ident = job.config["target"]
+        verify_target_is_ready(target_ident, config)
+
+        init_new_run(state)
+        save_next_run(job, state)
+
+        if "background" in opts:
+            daemon.daemonize()
+            state.save({"pid": os.getpid()})
+
+        start_logging(state)
+        log(f"--- Starting backup ({job.id} to {target_ident}) ---")
+
+        success = False
+        try:
+            cleanup_previous_incomplete_backup(config, job)
+
+            state.save(
+                {
+                    "state": "running",
+                },
+            )
+
+            do_backup(config, job, target, state)
+            success = True
+
+        except MKGeneralException as e:
+            sys.stderr.write("%s\n" % e)
+            if opt_debug:
+                raise
+
+        except Exception:
+            if opt_debug:
+                raise
+            sys.stderr.write("An exception occured:\n")
+            sys.stderr.write(traceback.format_exc())
+
+        finally:
+            stop_logging()
+            state.save(
+                {
+                    "state": "finished",
+                    "finished": time.time(),
+                    "success": success,
+                },
+            )
+
+
+def do_backup(
+    config: Config,
+    job: Job,
+    target: BackupTarget,
+    state: State,
+) -> None:
+    do_site_backup(job, target, state)
+    complete_backup(config, job, target, state)
+
+
+def do_site_backup(
+    job: Job,
+    target: BackupTarget,
+    state: State,
+    site: str | None = None,
+    try_stop: bool = True,
+) -> None:  # pylint: disable=too-many-branches
+    cmd = ["omd", "backup"]
+
+    if not job.config["compress"]:
+        cmd.append("--no-compression")
+
+    if job.config.get("no_history", False):
+        cmd.append("--no-past")
+
+    site = current_site_id()
+    cmd.append("-")
+
+    backup_path = site_backup_archive_path(site, target, job.config)
+
+    # Create missing directories. Ensure group permissions and mode.
+    makedirs(os.path.dirname(backup_path), group="omd", mode=0o775)
+
+    verbose("Command: %s" % " ".join(cmd))
+    with subprocess.Popen(
+        cmd,
+        close_fds=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        stdin=subprocess.DEVNULL,
+    ) as p:
+        assert p.stdout is not None
+        assert p.stderr is not None
+
+        with open(backup_path, "wb") as backup_file:
+            s = BackupStream(
+                stream=p.stdout,
+                is_alive=lambda: p.poll() is None,
+                key_ident=job.config["encrypt"],
+                state=state,
+            )
+            for chunk in s.process():
+                backup_file.write(chunk)
+
+        err = p.stderr.read().decode()
+
+    if p.returncode != 0:
+        raise MKGeneralException("Site backup failed: %s" % err)
+
+
 # Returns the base path for the backup to work with. In backup mode, this is
 # the directory of the target+job. In restore mode it is the target+backup path.
 def backup_info_path(target: Target) -> str:
@@ -1226,16 +1235,10 @@ def cleanup_backup_job_states() -> None:
             os.unlink(f)
 
 
-def add_output(s: str, state: State) -> None:
-    state_content = state.load()
-    state_content["output"] += s
-    state.save(state_content, update=False)
-
-
 def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: Config) -> None:
     target = RestoreTarget(TargetId(target_id), backup_id, config)
     info = load_backup_info(backup_info_path(target))
-    state = State.for_restore()
+    state = restore_state()
 
     with ExitStack() as stack:
         for cm in [

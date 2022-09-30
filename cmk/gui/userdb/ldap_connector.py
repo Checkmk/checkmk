@@ -38,7 +38,7 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Callable, Dict, IO, Iterator, List, Literal, Optional, Sequence, Set
+from typing import Callable, Dict, IO, Iterator, List, Literal, Sequence
 from typing import Tuple as _Tuple
 from typing import Type, Union
 
@@ -165,7 +165,7 @@ GroupMemberships = Dict[DistinguishedName, Dict[str, Union[str, List[str]]]]
 class LDAPUserConnector(UserConnector):
     # TODO: Move this to another place. We should have some managing object for this
     # stores the ldap connection suffixes of all connections
-    connection_suffixes: Dict[str, str] = {}
+    connection_suffixes: dict[str, str] = {}
 
     @classmethod
     def migrate_config(cls, cfg):
@@ -217,7 +217,7 @@ class LDAPUserConnector(UserConnector):
     def __init__(self, cfg) -> None:  # type:ignore[no-untyped-def]
         super().__init__(self.migrate_config(cfg))
 
-        self._ldap_obj: Optional[ldap.ldapobject.ReconnectLDAPObject] = None
+        self._ldap_obj: ldap.ldapobject.ReconnectLDAPObject | None = None
         self._ldap_obj_config = None
         self._logger = log.logger.getChild("ldap.Connection(%s)" % self.id())
 
@@ -258,7 +258,7 @@ class LDAPUserConnector(UserConnector):
                 os.environ["GNUTLS_DEBUG_LEVEL"] = "99"
                 ldap.set_option(ldap.OPT_DEBUG_LEVEL, 4095)
                 trace_level = 2
-                trace_file: Optional[IO[str]] = sys.stderr
+                trace_file: IO[str] | None = sys.stderr
             else:
                 trace_level = 0
                 trace_file = None
@@ -391,7 +391,7 @@ class LDAPUserConnector(UserConnector):
             self._logger.info("  DISCOVERY: Try to use domain DNS name %r as server" % domain)
             return domain
 
-    def _get_nearest_dc_from_cache(self) -> Optional[str]:
+    def _get_nearest_dc_from_cache(self) -> str | None:
         try:
             return self._nearest_dc_cache_filepath().open(encoding="utf-8").read()
         except IOError:
@@ -558,9 +558,9 @@ class LDAPUserConnector(UserConnector):
                 )
             LDAPUserConnector.connection_suffixes[suffix] = self.id()
 
-    def needed_attributes(self) -> List[str]:
+    def needed_attributes(self) -> list[str]:
         """Returns a list of all needed LDAP attributes of all enabled plugins"""
-        attrs: Set[str] = set()
+        attrs: set[str] = set()
         for _key, params, plugin in self.active_sync_plugins():
             attrs.update(plugin.needed_attributes(self, params or {}))
         return list(attrs)
@@ -917,7 +917,7 @@ class LDAPUserConnector(UserConnector):
         return [m.lower() for m in list(group[0][1].values())[0]]
 
     def get_group_memberships(
-        self, filters: List[str], filt_attr: str = "cn", nested: bool = False
+        self, filters: list[str], filt_attr: str = "cn", nested: bool = False
     ) -> GroupMemberships:
         cache_key = (tuple(filters), nested, filt_attr)
         if cache_key in self._group_search_cache:
@@ -939,7 +939,7 @@ class LDAPUserConnector(UserConnector):
     # In OpenLDAP the distinguishedname is no user attribute, therefor it can not be used
     # as filter expression. We have to do one ldap query per group. Maybe, in the future,
     # we change the role sync plugin parameters to snapins to make this part a little easier.
-    def _get_direct_group_memberships(self, filters: List[str], filt_attr: str) -> GroupMemberships:
+    def _get_direct_group_memberships(self, filters: list[str], filt_attr: str) -> GroupMemberships:
         groups: GroupMemberships = {}
         filt = self.ldap_filter("groups")
         member_attr = self._member_attr()
@@ -994,7 +994,7 @@ class LDAPUserConnector(UserConnector):
     # memberof filter to get all group memberships of that group. We need one query for each group.
     def _get_nested_group_memberships(  # pylint: disable=too-many-branches
         self,
-        filters: List[str],
+        filters: list[str],
         filt_attr: str,
     ) -> GroupMemberships:
         groups: GroupMemberships = {}
@@ -1183,7 +1183,7 @@ class LDAPUserConnector(UserConnector):
         self._default_bind(self._ldap_obj)
         return result
 
-    def _connection_id_of_user(self, user_id: UserId) -> Optional[str]:
+    def _connection_id_of_user(self, user_id: UserId) -> str | None:
         user = load_cached_profile(user_id)
         if user is None:
             return None
@@ -1212,13 +1212,13 @@ class LDAPUserConnector(UserConnector):
 
     def _add_suffix(self, username):
         suffix = self._get_suffix()
-        return "%s@%s" % (username, suffix)
+        return "{}@{}".format(username, suffix)
 
     def do_sync(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branches
         self,
         *,
         add_to_changelog: bool,
-        only_username: Optional[UserId],
+        only_username: UserId | None,
         load_users_func: Callable[[bool], Users],
         save_users_func: Callable[[Users, datetime], None],
     ):
@@ -1267,14 +1267,14 @@ class LDAPUserConnector(UserConnector):
 
         has_changed_passwords = False
         profiles_to_synchronize = {}
-        all_active_connections: List[str] = [connection[0] for connection in active_connections()]
+        all_active_connections: list[str] = [connection[0] for connection in active_connections()]
         for user_id, ldap_user in ldap_users.items():
             mode_create, user = load_user(user_id)
             user_connection_id = user.get("connector")
 
             # Change user connector if the current one of an existing user is
             # disabled or not known any more
-            is_known_connection: Optional[UserConnector] = get_connection(user_connection_id)
+            is_known_connection: UserConnector | None = get_connection(user_connection_id)
             if not mode_create and (
                 not is_known_connection
                 or (is_known_connection and user_connection_id not in all_active_connections)
@@ -1435,7 +1435,7 @@ class LDAPUserConnector(UserConnector):
 
     # Calculates the attributes of the users which are locked for users managed
     # by this connector
-    def locked_attributes(self) -> List[str]:
+    def locked_attributes(self) -> list[str]:
         locked = {"password"}  # This attributes are locked in all cases!
         for _key, params, plugin in self.active_sync_plugins():
             locked.update(plugin.lock_attributes(params))
@@ -1443,16 +1443,16 @@ class LDAPUserConnector(UserConnector):
 
     # Calculates the attributes added in this connector which shal be written to
     # the multisites users.mk
-    def multisite_attributes(self) -> List[str]:
-        attrs: Set[str] = set()
+    def multisite_attributes(self) -> list[str]:
+        attrs: set[str] = set()
         for _key, _params, plugin in self.active_sync_plugins():
             attrs.update(plugin.multisite_attributes)
         return list(attrs)
 
     # Calculates the attributes added in this connector which shal NOT be written to
     # the check_mks contacts.mk
-    def non_contact_attributes(self) -> List[str]:
-        attrs: Set[str] = set()
+    def non_contact_attributes(self) -> list[str]:
+        attrs: set[str] = set()
         for _key, _params, plugin in self.active_sync_plugins():
             attrs.update(plugin.non_contact_attributes)
         return list(attrs)
@@ -1515,14 +1515,14 @@ class LDAPAttributePlugin(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def lock_attributes(self, params: Dict) -> List[str]:
+    def lock_attributes(self, params: dict) -> list[str]:
         """List of user attributes to lock
 
         Normally the attributes that are modified by the sync_func()"""
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def needed_attributes(self, connection: LDAPUserConnector, params: Dict) -> List[str]:
+    def needed_attributes(self, connection: LDAPUserConnector, params: dict) -> list[str]:
         """Gathers the LDAP user attributes that are needed by this plugin"""
         raise NotImplementedError()
 
@@ -1531,7 +1531,7 @@ class LDAPAttributePlugin(abc.ABC):
         self,
         connection: LDAPUserConnector,
         plugin: str,
-        params: Dict,
+        params: dict,
         user_id: str,
         ldap_user: dict,
         user: dict,
@@ -1539,7 +1539,7 @@ class LDAPAttributePlugin(abc.ABC):
         """Executed during user synchronization to modify the "user" structure"""
         raise NotImplementedError()
 
-    def parameters(self, connection: LDAPUserConnector) -> Union[FixedValue, Dictionary]:
+    def parameters(self, connection: LDAPUserConnector) -> FixedValue | Dictionary:
         return FixedValue(
             title=self.title,
             help=self.help,
@@ -1555,7 +1555,7 @@ class LDAPAttributePlugin(abc.ABC):
     # )))
 
     @property
-    def multisite_attributes(self) -> List[str]:
+    def multisite_attributes(self) -> list[str]:
         """When a plugin introduces new user attributes, it should declare the output target for
         this attribute. It can either be written to the multisites users.mk or the check_mk
         contacts.mk to be forwarded to nagios. Undeclared attributes are stored in the check_mk
@@ -1563,7 +1563,7 @@ class LDAPAttributePlugin(abc.ABC):
         return []
 
     @property
-    def non_contact_attributes(self) -> List[str]:
+    def non_contact_attributes(self) -> list[str]:
         """When a plugin introduces new user attributes, it should declare the output target for
         this attribute. It can either be written to the multisites users.mk or the check_mk
         contacts.mk to be forwarded to nagios. Undeclared attributes are stored in the check_mk
@@ -1794,7 +1794,7 @@ class LDAPAttributePluginMail(LDAPBuiltinAttributePlugin):
         self,
         connection: LDAPUserConnector,
         plugin: str,
-        params: Dict,
+        params: dict,
         user_id: str,
         ldap_user: dict,
         user: dict,
@@ -1863,7 +1863,7 @@ class LDAPAttributePluginAlias(LDAPBuiltinAttributePlugin):
         self,
         connection: LDAPUserConnector,
         plugin: str,
-        params: Dict,
+        params: dict,
         user_id: str,
         ldap_user: dict,
         user: dict,
@@ -1932,11 +1932,11 @@ class LDAPAttributePluginAuthExpire(LDAPBuiltinAttributePlugin):
         return ["locked"]
 
     @property
-    def multisite_attributes(self) -> List[str]:
+    def multisite_attributes(self) -> list[str]:
         return ["ldap_pw_last_changed"]
 
     @property
-    def non_contact_attributes(self) -> List[str]:
+    def non_contact_attributes(self) -> list[str]:
         return ["ldap_pw_last_changed"]
 
     def needed_attributes(self, connection, params):
@@ -1951,7 +1951,7 @@ class LDAPAttributePluginAuthExpire(LDAPBuiltinAttributePlugin):
         self,
         connection: LDAPUserConnector,
         plugin: str,
-        params: Dict,
+        params: dict,
         user_id: str,
         ldap_user: dict,
         user: dict,
@@ -2061,7 +2061,7 @@ class LDAPAttributePluginPager(LDAPBuiltinAttributePlugin):
         self,
         connection: LDAPUserConnector,
         plugin: str,
-        params: Dict,
+        params: dict,
         user_id: str,
         ldap_user: dict,
         user: dict,
@@ -2130,7 +2130,7 @@ class LDAPAttributePluginGroupsToContactgroups(LDAPBuiltinAttributePlugin):
         self,
         connection: LDAPUserConnector,
         plugin: str,
-        params: Dict,
+        params: dict,
         user_id: str,
         ldap_user: dict,
         user: dict,
@@ -2202,7 +2202,7 @@ class LDAPAttributePluginGroupAttributes(LDAPBuiltinAttributePlugin):
         self,
         connection: LDAPUserConnector,
         plugin: str,
-        params: Dict,
+        params: dict,
         user_id: str,
         ldap_user: dict,
         user: dict,
@@ -2335,7 +2335,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
         self,
         connection: LDAPUserConnector,
         plugin: str,
-        params: Dict,
+        params: dict,
         user_id: str,
         ldap_user: dict,
         user: dict,
@@ -2394,7 +2394,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
         return ldap_groups
 
     def _get_groups_to_fetch(self, connection, params):
-        groups_to_fetch: Dict[str, List[str]] = {}
+        groups_to_fetch: dict[str, list[str]] = {}
         for group_specs in params.values():
             if isinstance(group_specs, list):
                 for group_spec in group_specs:
@@ -2426,7 +2426,7 @@ class LDAPAttributePluginGroupsToRoles(LDAPBuiltinAttributePlugin):
         )
 
     def _list_roles_with_group_dn(self):
-        elements: List[DictionaryEntry] = []
+        elements: list[DictionaryEntry] = []
         for role_id, role in load_roles().items():
             elements.append(
                 (

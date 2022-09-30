@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # TODO: Rework connection management and multiplexing
+from __future__ import annotations
 
 import ast
 import copy
@@ -16,20 +17,7 @@ from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from logging import Logger
 from pathlib import Path
-from typing import (
-    Any,
-    Callable,
-    cast,
-    Dict,
-    Iterable,
-    List,
-    Literal,
-    Mapping,
-    Optional,
-    Tuple,
-    TypeVar,
-    Union,
-)
+from typing import Any, Callable, cast, Iterable, Literal, Mapping, Optional, TypeVar
 
 from six import ensure_str
 
@@ -109,24 +97,24 @@ def sync_possible() -> bool:
     return any(connection.type() == "ldap" for _connection_id, connection in active_connections())
 
 
-def locked_attributes(connection_id: Optional[str]) -> List[str]:
+def locked_attributes(connection_id: str | None) -> list[str]:
     """Returns a list of connection specific locked attributes"""
     return _get_attributes(connection_id, lambda c: c.locked_attributes())
 
 
-def multisite_attributes(connection_id: Optional[str]) -> List[str]:
+def multisite_attributes(connection_id: str | None) -> list[str]:
     """Returns a list of connection specific multisite attributes"""
     return _get_attributes(connection_id, lambda c: c.multisite_attributes())
 
 
-def non_contact_attributes(connection_id: Optional[str]) -> List[str]:
+def non_contact_attributes(connection_id: str | None) -> list[str]:
     """Returns a list of connection specific non contact attributes"""
     return _get_attributes(connection_id, lambda c: c.non_contact_attributes())
 
 
 def _get_attributes(
-    connection_id: Optional[str], selector: Callable[[UserConnector], List[str]]
-) -> List[str]:
+    connection_id: str | None, selector: Callable[[UserConnector], list[str]]
+) -> list[str]:
     connection = get_connection(connection_id)
     return selector(connection) if connection else []
 
@@ -224,7 +212,7 @@ def _save_failed_logins(username: UserId, count: int) -> None:
 
 # userdb.need_to_change_pw returns either None or the reason description why the
 # password needs to be changed
-def need_to_change_pw(username: UserId, now: datetime) -> Optional[str]:
+def need_to_change_pw(username: UserId, now: datetime) -> str | None:
     if not _is_local_user(username):
         return None
     if load_custom_attr(user_id=username, key="enforce_pw_change", parser=utils.saveint) == 1:
@@ -276,7 +264,7 @@ def save_two_factor_credentials(user_id: UserId, credentials: TwoFactorCredentia
     save_custom_attr(user_id, "two_factor_credentials", repr(credentials))
 
 
-def make_two_factor_backup_codes() -> list[Tuple[str, str]]:
+def make_two_factor_backup_codes() -> list[tuple[str, str]]:
     """Creates a set of new two factor backup codes
 
     The codes are returned in plain form for displaying and in hashed+salted form for storage
@@ -350,10 +338,10 @@ class UserSelection(DropdownChoice[UserId]):
         self,
         only_contacts: bool = False,
         only_automation: bool = False,
-        none: Optional[str] = None,
+        none: str | None = None,
         # ValueSpec
-        title: Optional[str] = None,
-        help: Optional[ValueSpecHelp] = None,
+        title: str | None = None,
+        help: ValueSpecHelp | None = None,
         default_value: ValueSpecDefault[UserId] = DEF_VALUE,
     ) -> None:
         super().__init__(
@@ -367,11 +355,11 @@ class UserSelection(DropdownChoice[UserId]):
         )
 
     def _generate_wato_users_elements_function(  # type:ignore[no-untyped-def]
-        self, none_value: Optional[str], only_contacts: bool = False, only_automation: bool = False
+        self, none_value: str | None, only_contacts: bool = False, only_automation: bool = False
     ):
-        def get_wato_users(nv: Optional[str]) -> List[Tuple[Optional[UserId], str]]:
+        def get_wato_users(nv: str | None) -> list[tuple[UserId | None, str]]:
             users = load_users()
-            elements: List[Tuple[Optional[UserId], str]] = sorted(
+            elements: list[tuple[UserId | None, str]] = sorted(
                 [
                     (name, "%s - %s" % (name, us.get("alias", name)))
                     for (name, us) in users.items()
@@ -495,7 +483,7 @@ session: Session = request_local_attr("session")
 
 
 def _is_valid_user_session(
-    username: UserId, session_infos: Dict[str, SessionInfo], session_id: str
+    username: UserId, session_infos: dict[str, SessionInfo], session_id: str
 ) -> bool:
     """Return True in case this request is done with a currently valid user session"""
     if not session_infos:
@@ -554,7 +542,7 @@ def _set_session(user_id: UserId, session_info: SessionInfo) -> None:
 
 def _cleanup_old_sessions(
     session_infos: Mapping[str, SessionInfo], now: datetime
-) -> Dict[str, SessionInfo]:
+) -> dict[str, SessionInfo]:
     """Remove invalid / outdated sessions
 
     In single user session mode all sessions are removed. In regular mode, the sessions are limited
@@ -589,14 +577,14 @@ def _invalidate_session(username: UserId, session_id: str) -> None:
         _save_session_infos(username, session_infos)
 
 
-def _save_session_infos(username: UserId, session_infos: Dict[str, SessionInfo]) -> None:
+def _save_session_infos(username: UserId, session_infos: dict[str, SessionInfo]) -> None:
     """Saves the sessions for the current user"""
     save_custom_attr(
         username, "session_info", repr({k: asdict(v) for k, v in session_infos.items()})
     )
 
 
-def _load_session_infos(username: UserId, lock: bool = False) -> Dict[str, SessionInfo]:
+def _load_session_infos(username: UserId, lock: bool = False) -> dict[str, SessionInfo]:
     """Returns the stored sessions of the given user"""
     return (
         load_custom_attr(
@@ -606,7 +594,7 @@ def _load_session_infos(username: UserId, lock: bool = False) -> Dict[str, Sessi
     )
 
 
-def _convert_session_info(value: str) -> Dict[str, SessionInfo]:
+def _convert_session_info(value: str) -> dict[str, SessionInfo]:
     if value == "":
         return {}
 
@@ -652,7 +640,7 @@ class GenericUserAttribute(UserAttribute):
         show_in_table: bool,
         add_custom_macro: bool,
         domain: str,
-        permission: Optional[str],
+        permission: str | None,
         from_config: bool,
     ) -> None:
         super().__init__()
@@ -682,7 +670,7 @@ class GenericUserAttribute(UserAttribute):
         return self._domain
 
 
-def load_contacts() -> Dict[str, Any]:
+def load_contacts() -> dict[str, Any]:
     return store.load_from_mk_file(_contacts_filepath(), "contacts", {})
 
 
@@ -798,7 +786,7 @@ def load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branche
             if user_id in result:
                 result[user_id]["serial"] = utils.saveint(serial)
 
-    attributes: List[Tuple[str, Callable]] = [
+    attributes: list[tuple[str, Callable]] = [
         ("num_failed_logins", utils.saveint),
         ("last_pw_change", utils.saveint),
         ("enforce_pw_change", lambda x: bool(utils.saveint(x))),
@@ -827,7 +815,7 @@ def load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branche
             try:
                 user_secret_path = Path(directory) / uid / "automation.secret"
                 with user_secret_path.open(encoding="utf-8") as f:
-                    secret: Optional[str] = f.read().strip()
+                    secret: str | None = f.read().strip()
             except IOError:
                 secret = None
 
@@ -856,7 +844,7 @@ def load_custom_attr(
     key: str,
     parser: Callable[[str], T],
     lock: bool = False,
-) -> Optional[T]:
+) -> T | None:
     result = store.load_text_from_file(Path(custom_attr_path(user_id, key)), lock=lock)
     return None if result == "" else parser(result.strip())
 
@@ -874,7 +862,7 @@ def remove_custom_attr(userid: UserId, key: str) -> None:
         pass  # Ignore non existing files
 
 
-def get_online_user_ids(now: datetime) -> List[UserId]:
+def get_online_user_ids(now: datetime) -> list[UserId]:
     online_threshold = now.timestamp() - active_config.user_online_maxage
     return [
         user_id
@@ -887,7 +875,7 @@ def get_last_activity(user: UserSpec) -> int:
     return max([s.last_activity for s in user.get("session_info", {}).values()] + [0])
 
 
-def split_dict(d: Mapping[str, Any], keylist: List[str], positive: bool) -> Dict[str, Any]:
+def split_dict(d: Mapping[str, Any], keylist: list[str], positive: bool) -> dict[str, Any]:
     return {k: v for k, v in d.items() if (k in keylist) == positive}
 
 
@@ -1020,7 +1008,7 @@ def _cleanup_old_user_profiles(updated_profiles: Users) -> None:
 
 
 def write_contacts_and_users_file(
-    profiles: Users, custom_default_config_dir: Optional[str] = None
+    profiles: Users, custom_default_config_dir: str | None = None
 ) -> None:
     non_contact_keys = _non_contact_keys()
     multisite_keys = _multisite_keys()
@@ -1033,8 +1021,8 @@ def write_contacts_and_users_file(
         check_mk_config_dir = "%s/conf.d/wato" % cmk.utils.paths.default_config_dir
         multisite_config_dir = "%s/multisite.d/wato" % cmk.utils.paths.default_config_dir
 
-    non_contact_attributes_cache: Dict[Optional[str], List[str]] = {}
-    multisite_attributes_cache: Dict[Optional[str], List[str]] = {}
+    non_contact_attributes_cache: dict[str | None, list[str]] = {}
+    multisite_attributes_cache: dict[str | None, list[str]] = {}
     for user_settings in updated_profiles.values():
         connector = cast(Optional[str], user_settings.get("connector"))
         if connector not in non_contact_attributes_cache:
@@ -1078,14 +1066,14 @@ def write_contacts_and_users_file(
 
     # GUI specific user configuration
     store.save_to_mk_file(
-        "%s/%s" % (multisite_config_dir, "users.mk"),
+        "{}/{}".format(multisite_config_dir, "users.mk"),
         "multisite_users",
         users,
         pprint_value=active_config.wato_pprint_config,
     )
 
 
-def _non_contact_keys() -> List[str]:
+def _non_contact_keys() -> list[str]:
     """User attributes not to put into contact definitions for Check_MK"""
     return [
         "automation_secret",
@@ -1104,7 +1092,7 @@ def _non_contact_keys() -> List[str]:
     ] + _get_multisite_custom_variable_names()
 
 
-def _multisite_keys() -> List[str]:
+def _multisite_keys() -> list[str]:
     """User attributes to put into multisite configuration"""
     multisite_variables = [
         var
@@ -1121,7 +1109,7 @@ def _multisite_keys() -> List[str]:
     ] + multisite_variables
 
 
-def _get_multisite_custom_variable_names() -> List[str]:
+def _get_multisite_custom_variable_names() -> list[str]:
     return [name for name, attr in get_user_attributes() if attr.domain() == "multisite"]  #
 
 
@@ -1161,7 +1149,7 @@ def create_cmk_automation_user(now: datetime) -> None:
 
 
 def _save_cached_profile(
-    user_id: UserId, user: UserSpec, multisite_keys: List[str], non_contact_keys: List[str]
+    user_id: UserId, user: UserSpec, multisite_keys: list[str], non_contact_keys: list[str]
 ) -> None:
     # Only save contact AND multisite attributes to the profile. Not the
     # infos that are stored in the custom attribute files.
@@ -1174,11 +1162,11 @@ def _save_cached_profile(
     save_cached_profile(user_id, cache)
 
 
-def contactgroups_of_user(user_id: UserId) -> List[ContactgroupName]:
+def contactgroups_of_user(user_id: UserId) -> list[ContactgroupName]:
     return load_user(user_id).get("contactgroups", [])
 
 
-def _convert_idle_timeout(value: str) -> Union[int, bool, None]:
+def _convert_idle_timeout(value: str) -> int | bool | None:
     try:
         return False if value == "False" else int(value)  # disabled or set
     except ValueError:
@@ -1256,9 +1244,7 @@ def _clear_config_based_user_attributes() -> None:
 #   +----------------------------------------------------------------------+
 
 
-def check_credentials(
-    username: UserId, password: str, now: datetime
-) -> Union[UserId, Literal[False]]:
+def check_credentials(username: UserId, password: str, now: datetime) -> UserId | Literal[False]:
     """Verify the credentials given by a user using all auth connections"""
     for connection_id, connection in active_connections():
         # None        -> User unknown, means continue with other connectors

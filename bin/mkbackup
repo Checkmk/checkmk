@@ -90,8 +90,8 @@ class JobConfig(TypedDict):
 @dataclass
 class Job:
     config: JobConfig
-    local_id: str | None
-    id: str | None
+    local_id: str
+    id: str
 
 
 @dataclass(frozen=True)
@@ -127,7 +127,7 @@ class BackupInfo(TypedDict):
     files: Sequence[tuple[str, int, str]]
     finished: float
     hostname: str
-    job_id: str | None
+    job_id: str
     site_id: str
     site_version: str
     size: int
@@ -141,8 +141,8 @@ g_state: dict[str, Any] | None = None
 # The state file is in JSON format because it is 1:1 transfered
 # to the Checkmk server through the Checkmk agent.
 class State:
-    def __init__(self, job: Job) -> None:
-        self.path = _state_path(job)
+    def __init__(self, path: Path) -> None:
+        self.path = path
 
     def save(self, new_attrs: Mapping[str, Any], update: bool = True) -> None:
         if update:
@@ -163,6 +163,18 @@ class State:
     def load(self) -> dict[str, Any]:
         return _load_state(self.path)
 
+    @classmethod
+    def for_backup(cls, job: Job) -> "State":
+        path = Path(os.environ["OMD_ROOT"]) / "var" / "check_mk" / "backup"
+        name = f"{job.local_id}.state"
+        return cls(path / name)
+
+    @classmethod
+    def for_restore(cls) -> "State":
+        path = Path("tmp")
+        name = f"restore-{current_site_id()}.state"
+        return cls(path / name)
+
 
 def _load_state(path: Path) -> dict[str, Any]:
     global g_state
@@ -170,24 +182,6 @@ def _load_state(path: Path) -> dict[str, Any]:
         g_state = json.loads(path.read_text())
 
     return g_state
-
-
-def _state_path(job: Job) -> Path:
-    if job.id:
-        # backup as site user
-        path = "%s/var/check_mk/backup" % os.environ["OMD_ROOT"]
-    else:
-        # restore as site user
-        path = "/tmp"
-
-    if job.id:
-        # backup
-        name = job.local_id
-    else:
-        # restore
-        name = "restore-%s" % current_site_id()
-
-    return Path(path, f"{name}.state")
 
 
 # Is used to duplicate output from stdout/stderr to a the job log. This
@@ -607,7 +601,7 @@ modes = {
 def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None:
     job = load_job(local_job_id, config)
     target = BackupTarget(config, job)
-    state = State(job)
+    state = State.for_backup(job)
 
     with ExitStack() as stack:
         for cm in [
@@ -1032,12 +1026,12 @@ def archive_suffix(config: JobConfig) -> str:
     return suffix
 
 
-def needed_backup_archive_files(info: BackupInfo, job_config: JobConfig) -> Sequence[str]:
+def needed_backup_archive_files(info: BackupInfo) -> Sequence[str]:
     # Care about restore from a backup made in a site with another site_id
     site = info.get("site_id", current_site_id())
     needed_files = ["site-%s" % site]
 
-    return [f + archive_suffix(job_config) for f in needed_files]
+    return [f + archive_suffix(info["config"]) for f in needed_files]
 
 
 def target_cfg(target_ident: str, config: Config) -> Mapping[str, Any]:
@@ -1076,9 +1070,9 @@ def verify_backup_exists(target: Target) -> None:
         )
 
 
-def verify_backup_consistency(info: BackupInfo, job_config: JobConfig, target: Target) -> None:
+def verify_backup_consistency(info: BackupInfo, target: Target) -> None:
     log("Verifying backup consistency")
-    needed_files = needed_backup_archive_files(info, job_config)
+    needed_files = needed_backup_archive_files(info)
     optional_files = [entry[0] for entry in info["files"] if entry[0] not in needed_files]
 
     verify_backup_files(info, needed_files, needed=True, target=target)
@@ -1122,7 +1116,7 @@ def complete_backup(config: Config, job: Job, target: BackupTarget, state: State
         },
     )
 
-    verify_backup_consistency(info, job.config, target=target)
+    verify_backup_consistency(info, target=target)
 
     # Now we can be sure this new backup is a good one. Remove eventual old
     # backup and move from "incomplete" to "complete".
@@ -1225,13 +1219,12 @@ def add_output(s: str, state: State) -> None:
 def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: Config) -> None:
     target = RestoreTarget(TargetId(target_id), backup_id, config)
     info = load_backup_info(backup_info_path(target))
-    job = Job(config=info["config"], local_id=info["job_id"], id=None)
-    state = State(job)
+    state = State.for_restore()
 
     with ExitStack() as stack:
         for cm in [
             acquire_single_lock(lock_file_path)
-            for lock_file_path in get_needed_lock_files(opts, job.config)
+            for lock_file_path in get_needed_lock_files(opts, info["config"])
         ]:
             stack.enter_context(cm)
 
@@ -1239,7 +1232,7 @@ def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: C
         verify_backup_exists(target)
 
         if "no-verify" not in opts:
-            verify_backup_consistency(info, job.config, target)
+            verify_backup_consistency(info, target)
 
         init_new_run(state)
 
@@ -1259,7 +1252,7 @@ def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: C
                 },
             )
 
-            do_restore(info, job, target, state)
+            do_restore(info, target, state)
             success = True
 
         except MKGeneralException as e:
@@ -1286,17 +1279,15 @@ def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: C
 
 def do_restore(
     info: BackupInfo,
-    job: Job,
     target: RestoreTarget,
     state: State,
 ) -> None:
-    do_site_restore(info, job, target, state)
+    do_site_restore(info, target, state)
     complete_restore(state)
 
 
 def do_site_restore(
     info: BackupInfo,
-    job: Job,
     target: RestoreTarget,
     state: State,
 ) -> None:
@@ -1307,7 +1298,7 @@ def do_site_restore(
 
     cmd.append("-")
 
-    backup_path = site_backup_archive_path(site, target, job.config)
+    backup_path = site_backup_archive_path(site, target, info["config"])
 
     with subprocess.Popen(cmd, close_fds=True, stderr=subprocess.PIPE, stdin=subprocess.PIPE) as p:
         assert p.stdin is not None
@@ -1317,7 +1308,7 @@ def do_site_restore(
             s = RestoreStream(
                 stream=backup_file,
                 is_alive=lambda: False,
-                key_ident=job.config["encrypt"],
+                key_ident=info["config"]["encrypt"],
                 state=state,
             )
             try:

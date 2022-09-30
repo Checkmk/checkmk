@@ -20,7 +20,12 @@ import pytest
 from pydantic_factories import ModelFactory, Use
 
 # pylint: disable=comparison-with-callable,redefined-outer-name
-from tests.unit.cmk.special_agents.agent_kube.factory import MetaDataFactory, NodeMetaDataFactory
+from tests.unit.cmk.special_agents.agent_kube.factory import (
+    api_to_agent_statefulset,
+    APIStatefulSetFactory,
+    MetaDataFactory,
+    NodeMetaDataFactory,
+)
 
 from cmk.special_agents import agent_kube
 from cmk.special_agents.utils_kubernetes.schemata import api
@@ -457,25 +462,6 @@ def daemon_set(
 
 
 @pytest.fixture
-def statefulset_spec() -> api.StatefulSetSpec:
-    return StatefulSetSpecFactory.build()
-
-
-@pytest.fixture
-def new_statefulset(  # type:ignore[no-untyped-def]
-    statefulset_spec,
-) -> Callable[[], agent_kube.StatefulSet]:
-    def _new_statefulset() -> agent_kube.StatefulSet:
-        return agent_kube.StatefulSet(
-            metadata=MetaDataFactory.build(),
-            spec=statefulset_spec,
-            status=StatefulSetStatusFactory.build(),
-        )
-
-    return _new_statefulset
-
-
-@pytest.fixture
 def cluster_nodes() -> int:
     return 3
 
@@ -499,7 +485,6 @@ def cluster_details() -> api.ClusterDetails:
 def cluster(
     new_node: Callable[[], agent_kube.Node],
     new_daemon_set: Callable[[], agent_kube.DaemonSet],
-    new_statefulset: Callable[[], agent_kube.StatefulSet],
     cluster_nodes: int,
     cluster_daemon_sets: int,
     cluster_statefulsets: int,
@@ -511,7 +496,8 @@ def cluster(
     for _ in range(cluster_daemon_sets):
         cluster.add_daemon_set(new_daemon_set())
     for _ in range(cluster_statefulsets):
-        cluster.add_statefulset(new_statefulset())
+        statefulset = api_to_agent_statefulset(APIStatefulSetFactory.build())
+        cluster.add_statefulset(statefulset)
     return cluster
 
 

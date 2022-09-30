@@ -103,13 +103,12 @@ def test_statefulset_pod_resources_pods_in_phase_no_phase_param(phases: list[str
 
 
 def test_statefulset_memory_resources(
-    new_statefulset: Callable[[], agent_kube.StatefulSet],
     new_pod: Callable[[], agent_kube.Pod],
     pod_containers_count: int,
     container_limit_memory: float,
     container_request_memory: float,
 ) -> None:
-    statefulset = new_statefulset()
+    statefulset = api_to_agent_statefulset(APIStatefulSetFactory.build())
     statefulset.add_pod(new_pod())
     memory_resources = statefulset.memory_resources()
     assert memory_resources.count_total == pod_containers_count
@@ -118,13 +117,12 @@ def test_statefulset_memory_resources(
 
 
 def test_statefulset_cpu_resources(
-    new_statefulset: Callable[[], agent_kube.StatefulSet],
     new_pod: Callable[[], agent_kube.Pod],
     pod_containers_count: int,
     container_limit_cpu: float,
     container_request_cpu: float,
 ) -> None:
-    statefulset = new_statefulset()
+    statefulset = api_to_agent_statefulset(APIStatefulSetFactory.build())
     statefulset.add_pod(new_pod())
     cpu_resources = statefulset.cpu_resources()
     assert cpu_resources.count_total == pod_containers_count

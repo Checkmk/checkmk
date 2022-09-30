@@ -262,8 +262,8 @@ def is_cma() -> bool:
     return os.path.exists("/etc/cma/cma.conf")
 
 
-def current_site_id() -> str | None:
-    return os.environ.get("OMD_SITE")
+def current_site_id() -> str:
+    return os.environ["OMD_SITE"]
 
 
 def site_version(site_id: str) -> str:
@@ -276,8 +276,6 @@ def system_config_path() -> str:
 
 
 def site_config_path() -> str:
-    if not current_site_id():
-        raise Exception("Not executed in OMD environment!")
     return "%s/etc/check_mk/backup.mk" % os.environ["OMD_ROOT"]
 
 
@@ -436,15 +434,8 @@ def makedir(
 
 
 def get_needed_lock_files(opts: Mapping[str, str], job_config: JobConfig) -> Sequence[Path]:
-    if not is_root():
-        site_id = current_site_id()
-        assert site_id
-        return [local_lock_file_path(site_id)]
-
-    lock_files = [global_lock_file_path()]
-    if not exclude_sites(opts, job_config=job_config):
-        lock_files += [local_lock_file_path(site) for site in existing_sites()]
-    return lock_files
+    site_id = current_site_id()
+    return [local_lock_file_path(site_id)]
 
 
 def load_config() -> Config:
@@ -847,8 +838,6 @@ def do_site_backup(
     # "omd backup".
     if site is None:
         site = current_site_id()
-        if site is None:
-            raise MKGeneralException("Running outsite of site context")
     else:
         if not is_root():
             raise MKGeneralException(
@@ -1710,8 +1699,6 @@ def do_site_restore(
     if site is None:
         # Care about restore from a backup made in a site with another site_id
         site = info.get("site_id", current_site_id())
-        if site is None:
-            raise MKGeneralException("Running outsite of site context and no site_id configured")
     else:
         if not is_root():
             raise MKGeneralException(
@@ -1729,6 +1716,8 @@ def do_site_restore(
                 gid=grp.getgrnam(site).gr_gid,
                 mode=0o775,
             )
+    if site is None:
+        raise MKGeneralException("now we know why mypy is unhappy. Will be removed in next commit")
 
     cmd.append("-")
 
@@ -2206,6 +2195,10 @@ def main() -> None:
         if opt_debug:
             raise
         raise MKGeneralException("mkbackup is not configured yet.")
+    try:
+        current_site_id()
+    except KeyError:
+        raise MKGeneralException("Running outside of site context.")
     # Ensure the backup lock path exists and has correct permissions
     makedirs(str(mkbackup_lock_dir), group="omd", mode=0o770)
     opt_dict = {k.lstrip("-"): v for k, v in opts + mode_opts}

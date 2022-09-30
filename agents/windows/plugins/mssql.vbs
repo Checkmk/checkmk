@@ -596,6 +596,8 @@ For Each instance_id In instances.Keys: Do ' Continue trick
         Set AUTH = CFG("auth")
     End If
 
+    Dim sqlString
+
     ' Try to connect to the instance and catch the error when not able to connect
     ' Then add the instance to the agent output and skip over to the next instance
     ' in case the connection could not be established.
@@ -656,9 +658,10 @@ For Each instance_id In instances.Keys: Do ' Continue trick
     End If
 
     ' add detailed information about version and patchrelease
-    RS.Open "SELECT SERVERPROPERTY('productversion') as prodversion," & _
-            "SERVERPROPERTY ('productlevel') as prodlevel," & _
-            "SERVERPROPERTY ('edition') as prodedition", CONN
+    sqlString = "SELECT SERVERPROPERTY('productversion') as prodversion, " & _
+                "  SERVERPROPERTY ('productlevel') as prodlevel, " & _
+                "  SERVERPROPERTY ('edition') as prodedition"
+    RS.Open sqlString, CONN
     addOutput("MSSQL_" & instance_id & "|details|" & RS("prodversion") & "|" & _
                RS("prodlevel") & "|" & RS("prodedition"))
     RS.Close
@@ -669,9 +672,10 @@ For Each instance_id In instances.Keys: Do ' Continue trick
     addOutput("None|utc_time|None|" & RS("utc_date"))
     RS.Close
 
-    RS.Open "SELECT counter_name, object_name, instance_name, cntr_value " & _
-            "FROM sys.dm_os_performance_counters " & _
-            "WHERE object_name NOT LIKE '%Deprecated%'", CONN
+    sqlString = "SELECT counter_name, object_name, instance_name, cntr_value " & _
+                " FROM sys.dm_os_performance_counters " & _
+                " WHERE object_name NOT LIKE '%Deprecated%'"
+    RS.Open sqlString, CONN
 
     errMsg = checkConnErrors(CONN)
     If Not errMsg = "" Then
@@ -693,9 +697,10 @@ For Each instance_id In instances.Keys: Do ' Continue trick
     RS.Close
 
     addOutput(sections("blocked_sessions"))
-    RS.Open "SELECT session_id, wait_duration_ms, wait_type, blocking_session_id " & _
-            "FROM sys.dm_os_waiting_tasks " & _
-            "WHERE blocking_session_id <> 0 ", CONN
+    sqlString = "SELECT session_id, wait_duration_ms, wait_type, blocking_session_id " & _
+                " FROM sys.dm_os_waiting_tasks " & _
+                " WHERE blocking_session_id <> 0 "
+    RS.Open sqlString, CONN
 
     errMsg = checkConnErrors(CONN)
     If Not errMsg = "" Then
@@ -785,28 +790,29 @@ For Each instance_id In instances.Keys: Do ' Continue trick
     ' which have at least one backup
     Dim lastBackupDate, backup_type, is_primary_replica, replica_id, backup_machine_name, backup_database, found_db_backups
     addOutput(sections("backup"))
+    sqlString = "DECLARE @HADRStatus sql_variant; DECLARE @SQLCommand nvarchar(max); " & _
+                "SET @HADRStatus = (SELECT SERVERPROPERTY ('IsHadrEnabled')); " & _
+                "IF (@HADRStatus IS NULL or @HADRStatus <> 1) " & _
+                "BEGIN " & _
+                    "SET @SQLCommand = 'SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, ''19700101'', MAX(backup_finish_date)), ''19700101''), 120) AS last_backup_date, " & _
+                    "type, machine_name, ''True'' as is_primary_replica, ''1'' as is_local, '''' as replica_id,database_name FROM msdb.dbo.backupset " & _
+                    "WHERE  machine_name = SERVERPROPERTY(''Machinename'') " & _
+                    "GROUP BY type, machine_name,database_name ' " & _
+                "END " & _
+                "ELSE " & _
+                "BEGIN " & _
+                    "SET @SQLCommand = 'SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, ''19700101'', MAX(b.backup_finish_date)), ''19700101''), 120) AS last_backup_date,  " & _
+                    "b.type, b.machine_name, isnull(rep.is_primary_replica,0) as is_primary_replica, rep.is_local, isnull(convert(varchar(40), rep.replica_id), '''') AS replica_id,database_name  " & _
+                    "FROM msdb.dbo.backupset b  " & _
+                    "LEFT OUTER JOIN sys.databases db ON b.database_name = db.name  " & _
+                    "LEFT OUTER JOIN sys.dm_hadr_database_replica_states rep ON db.database_id = rep.database_id  " & _
+                    "WHERE (rep.is_local is null or rep.is_local = 1)  " & _
+                    "AND (rep.is_primary_replica is null or rep.is_primary_replica = ''True'') and machine_name = SERVERPROPERTY(''Machinename'') " & _
+                    "GROUP BY type, rep.replica_id, rep.is_primary_replica, rep.is_local, b.database_name, b.machine_name, rep.synchronization_state, rep.synchronization_health' " & _
+                "END " & _
+                "EXEC (@SQLCommand)"
     RS.Open "USE [master]", CONN
-    RS.Open "DECLARE @HADRStatus sql_variant; DECLARE @SQLCommand nvarchar(max); " & _
-            "SET @HADRStatus = (SELECT SERVERPROPERTY ('IsHadrEnabled')); " & _
-            "IF (@HADRStatus IS NULL or @HADRStatus <> 1) " & _
-            "BEGIN " & _
-                "SET @SQLCommand = 'SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, ''19700101'', MAX(backup_finish_date)), ''19700101''), 120) AS last_backup_date, " & _
-                "type, machine_name, ''True'' as is_primary_replica, ''1'' as is_local, '''' as replica_id,database_name FROM msdb.dbo.backupset " & _
-                "WHERE  machine_name = SERVERPROPERTY(''Machinename'') " & _
-                "GROUP BY type, machine_name,database_name ' " & _
-            "END " & _
-            "ELSE " & _
-            "BEGIN " & _
-                "SET @SQLCommand = 'SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, ''19700101'', MAX(b.backup_finish_date)), ''19700101''), 120) AS last_backup_date,  " & _
-                "b.type, b.machine_name, isnull(rep.is_primary_replica,0) as is_primary_replica, rep.is_local, isnull(convert(varchar(40), rep.replica_id), '''') AS replica_id,database_name  " & _
-                "FROM msdb.dbo.backupset b  " & _
-                "LEFT OUTER JOIN sys.databases db ON b.database_name = db.name  " & _
-                "LEFT OUTER JOIN sys.dm_hadr_database_replica_states rep ON db.database_id = rep.database_id  " & _
-                "WHERE (rep.is_local is null or rep.is_local = 1)  " & _
-                "AND (rep.is_primary_replica is null or rep.is_primary_replica = ''True'') and machine_name = SERVERPROPERTY(''Machinename'') " & _
-                "GROUP BY type, rep.replica_id, rep.is_primary_replica, rep.is_local, b.database_name, b.machine_name, rep.synchronization_state, rep.synchronization_health' " & _
-            "END " & _
-            "EXEC (@SQLCommand)", CONN
+    RS.Open sqlString, CONN
 
     ' It's easier to go to each line and take a look to which DB a backup
     ' belongs to than go to every line for each DB as the list of DBs is
@@ -856,14 +862,15 @@ For Each instance_id In instances.Keys: Do ' Continue trick
 
     ' Loop all databases to get the size of the transaction log
     addOutput(sections("transactionlogs"))
-    For Each dbName in dbNames.Keys
-        RS.Open "USE [" & dbName & "];", CONN
-        RS.Open "SELECT name, physical_name," &_
+    sqlString = "SELECT name, physical_name," &_
                 "  cast(max_size/128 as bigint) as MaxSize," &_
                 "  cast(size/128 as bigint) as AllocatedSize," &_
                 "  cast(FILEPROPERTY (name, 'spaceused')/128 as bigint) as UsedSize," &_
                 "  case when max_size = '-1' then '1' else '0' end as Unlimited" &_
-                " FROM sys.database_files WHERE type_desc = 'LOG'", CONN
+                " FROM sys.database_files WHERE type_desc = 'LOG'"
+    For Each dbName in dbNames.Keys
+        RS.Open "USE [" & dbName & "];", CONN
+        RS.Open sqlString, CONN
 
         errMsg = checkConnErrors(CONN)
         If Not errMsg = "" Then
@@ -883,14 +890,15 @@ For Each instance_id In instances.Keys: Do ' Continue trick
 
     ' Loop all databases to get the size of the transaction log
     addOutput(sections("datafiles"))
-    For Each dbName in dbNames.Keys
-        RS.Open "USE [" & dbName & "];", CONN
-        RS.Open "SELECT name, physical_name," &_
+    sqlString = "SELECT name, physical_name," &_
                 "  cast(max_size/128 as bigint) as MaxSize," &_
                 "  cast(size/128 as bigint) as AllocatedSize," &_
                 "  cast(FILEPROPERTY (name, 'spaceused')/128 as bigint) as UsedSize," &_
                 "  case when max_size = '-1' then '1' else '0' end as Unlimited" &_
-                " FROM sys.database_files WHERE type_desc = 'ROWS'", CONN
+                " FROM sys.database_files WHERE type_desc = 'ROWS'"
+    For Each dbName in dbNames.Keys
+        RS.Open "USE [" & dbName & "];", CONN
+        RS.Open sqlString, CONN
 
         If Not errMsg = "" Then
             addOutput(instance_id &  "|" & Replace(dbName, " ", "_") & _
@@ -909,12 +917,13 @@ For Each instance_id In instances.Keys: Do ' Continue trick
 
     ' Database properties, full list at https://msdn.microsoft.com/en-us/library/ms186823.aspx
     addOutput(sections("databases"))
-    RS.Open "SELECT name, " & _
-            "DATABASEPROPERTYEX(name, 'Status') AS Status, " & _
-            "DATABASEPROPERTYEX(name, 'Recovery') AS Recovery, " & _
-            "DATABASEPROPERTYEX(name, 'IsAutoClose') AS auto_close, " & _
-            "DATABASEPROPERTYEX(name, 'IsAutoShrink') AS auto_shrink " & _
-            "FROM master.dbo.sysdatabases", CONN
+    sqlString = "SELECT name, " & _
+                "  DATABASEPROPERTYEX(name, 'Status') AS Status, " & _
+                "  DATABASEPROPERTYEX(name, 'Recovery') AS Recovery, " & _
+                "  DATABASEPROPERTYEX(name, 'IsAutoClose') AS auto_close, " & _
+                "  DATABASEPROPERTYEX(name, 'IsAutoShrink') AS auto_shrink " & _
+                " FROM master.dbo.sysdatabases"
+    RS.Open sqlString, CONN
 
     errMsg = checkConnErrors(CONN)
     If Not errMsg = "" Then
@@ -969,9 +978,10 @@ For Each instance_id In instances.Keys: Do ' Continue trick
     addOutput(sections("connections"))
     Dim connection_count, database_name
 
-    RS.Open "SELECT name AS DBName, ISNULL((SELECT  COUNT(dbid) AS NumberOfConnections FROM " &_
-    "sys.sysprocesses WHERE dbid > 0 AND name = DB_NAME(dbid) GROUP BY dbid ),0) AS NumberOfConnections " &_
-    "FROM sys.databases", CONN
+    sqlString = "SELECT name AS DBName, ISNULL((SELECT  COUNT(dbid) AS NumberOfConnections FROM " &_
+                " sys.sysprocesses WHERE dbid > 0 AND name = DB_NAME(dbid) GROUP BY dbid ),0) AS NumberOfConnections " &_
+                " FROM sys.databases"
+    RS.Open sqlString, CONN
 
     errMsg = checkConnErrors(CONN)
     If Not errMsg = "" Then
@@ -988,28 +998,29 @@ For Each instance_id In instances.Keys: Do ' Continue trick
     End If
 
     addOutput(sections("jobs"))
+    sqlString = "SELECT " &_
+                "   sj.job_id " &_
+                "  ,sj.name AS job_name " &_
+                "  ,sj.enabled AS job_enabled " &_
+                "  ,CAST(sjs.next_run_date AS VARCHAR(8)) AS next_run_date " &_
+                "  ,CAST(sjs.next_run_time AS VARCHAR(6)) AS next_run_time " &_
+                "  ,sjserver.last_run_outcome " &_
+                "  ,sjserver.last_outcome_message " &_
+                "  ,CAST(sjserver.last_run_date AS VARCHAR(8)) AS last_run_date " &_
+                "  ,CAST(sjserver.last_run_time AS VARCHAR(6)) AS last_run_time " &_
+                "  ,sjserver.last_run_duration " &_
+                "  ,ss.enabled AS schedule_enabled " &_
+                "  ,CONVERT(VARCHAR, CURRENT_TIMESTAMP, 20) AS server_current_time " &_
+                " FROM dbo.sysjobs sj " &_
+                " LEFT JOIN dbo.sysjobschedules sjs ON sj.job_id = sjs.job_id " &_
+                " LEFT JOIN dbo.sysjobservers sjserver ON sj.job_id = sjserver.job_id " &_
+                " LEFT JOIN dbo.sysschedules ss ON sjs.schedule_id = ss.schedule_id " &_
+                " ORDER BY sj.name " &_
+                "          ,sjs.next_run_date ASC " &_
+                "          ,sjs.next_run_time ASC " &_
+                "; "
     RS.Open "USE [msdb];", CONN
-    RS.Open "SELECT  " &_
-            "    sj.job_id " &_
-            "   ,sj.name AS job_name " &_
-            "   ,sj.enabled AS job_enabled " &_
-            "   ,CAST(sjs.next_run_date AS VARCHAR(8)) AS next_run_date " &_
-            "   ,CAST(sjs.next_run_time AS VARCHAR(6)) AS next_run_time " &_
-            "   ,sjserver.last_run_outcome " &_
-            "   ,sjserver.last_outcome_message " &_
-            "   ,CAST(sjserver.last_run_date AS VARCHAR(8)) AS last_run_date " &_
-            "   ,CAST(sjserver.last_run_time AS VARCHAR(6)) AS last_run_time " &_
-            "   ,sjserver.last_run_duration " &_
-            "   ,ss.enabled AS schedule_enabled " &_
-            "   ,CONVERT(VARCHAR, CURRENT_TIMESTAMP, 20) AS server_current_time " &_
-            " FROM dbo.sysjobs sj " &_
-            " LEFT JOIN dbo.sysjobschedules sjs ON sj.job_id = sjs.job_id " &_
-            " LEFT JOIN dbo.sysjobservers sjserver ON sj.job_id = sjserver.job_id " &_
-            " LEFT JOIN dbo.sysschedules ss ON sjs.schedule_id = ss.schedule_id " &_
-            " ORDER BY sj.name " &_
-            "          ,sjs.next_run_date ASC " &_
-            "          ,sjs.next_run_time ASC " &_
-            "; ", CONN
+    RS.Open sqlString, CONN
 
     errMsg = checkConnErrors(CONN)
     If Not errMsg = "" Then
@@ -1024,23 +1035,24 @@ For Each instance_id In instances.Keys: Do ' Continue trick
     End If
 
     addOutput(sections("mirroring"))
+    sqlString = "SELECT @@SERVERNAME as server_name, " &_
+                "  DB_NAME(database_id) AS [database_name], " &_
+                "  mirroring_state, " &_
+                "  mirroring_state_desc, " &_
+                "  mirroring_role, " &_
+                "  mirroring_role_desc, " &_
+                "  mirroring_safety_level, " &_
+                "  mirroring_safety_level_desc, " &_
+                "  mirroring_partner_name, " &_
+                "  mirroring_partner_instance, " &_
+                "  mirroring_witness_name, " &_
+                "  mirroring_witness_state, " &_
+                "  mirroring_witness_state_desc " &_
+                " FROM sys.database_mirroring " &_
+                " WHERE mirroring_state IS NOT NULL " &_
+                "; "
     RS.Open "USE [master];", CONN
-    RS.Open "SELECT @@SERVERNAME as server_name, " &_
-            "       DB_NAME(database_id) AS [database_name], " &_
-            "       mirroring_state, " &_
-            "       mirroring_state_desc, " &_
-            "       mirroring_role, " &_
-            "       mirroring_role_desc, " &_
-            "       mirroring_safety_level, " &_
-            "       mirroring_safety_level_desc, " &_
-            "       mirroring_partner_name, " &_
-            "       mirroring_partner_instance, " &_
-            "       mirroring_witness_name, " &_
-            "       mirroring_witness_state, " &_
-            "       mirroring_witness_state_desc " &_
-            "  FROM sys.database_mirroring " &_
-            "  WHERE mirroring_state IS NOT NULL " &_
-            "; ", CONN
+    RS.Open sqlString, CONN
 
     errMsg = checkConnErrors(CONN)
     If Not errMsg = "" Then
@@ -1055,14 +1067,15 @@ For Each instance_id In instances.Keys: Do ' Continue trick
     End If
 
     addOutput(sections("availability_groups"))
-    RS.Open "SELECT " &_
-            "       GroupsName.name, " &_
-            "       Groups.primary_replica, " &_
-            "       Groups.synchronization_health, " &_
-            "       Groups.synchronization_health_desc, " &_
-            "       Groups.primary_recovery_health_desc " &_
-            "       FROM sys.dm_hadr_availability_group_states Groups " &_
-            "       INNER JOIN master.sys.availability_groups GroupsName ON Groups.group_id = GroupsName.group_id ", CONN
+    sqlString = "SELECT " &_
+                "  GroupsName.name, " &_
+                "  Groups.primary_replica, " &_
+                "  Groups.synchronization_health, " &_
+                "  Groups.synchronization_health_desc, " &_
+                "  Groups.primary_recovery_health_desc " &_
+                " FROM sys.dm_hadr_availability_group_states Groups " &_
+                " INNER JOIN master.sys.availability_groups GroupsName ON Groups.group_id = GroupsName.group_id "
+    RS.Open sqlString, CONN
 
     errMsg = checkConnErrors(CONN)
     If Not errMsg = "" Then
@@ -1087,3 +1100,4 @@ Set RS = nothing
 Set CONN = nothing
 Set FSO = nothing
 Set SHO = nothing
+Set sqlString = Nothing

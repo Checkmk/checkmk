@@ -477,20 +477,16 @@ def cluster_statefulsets() -> int:
 
 
 @pytest.fixture
-def cluster_details() -> api.ClusterDetails:
-    return ClusterDetailsFactory.build()
-
-
-@pytest.fixture
 def cluster(
     new_node: Callable[[], agent_kube.Node],
     new_daemon_set: Callable[[], agent_kube.DaemonSet],
     cluster_nodes: int,
     cluster_daemon_sets: int,
     cluster_statefulsets: int,
-    cluster_details: api.ClusterDetails,
 ) -> agent_kube.Cluster:
-    cluster = agent_kube.Cluster(excluded_node_roles=[], cluster_details=cluster_details)
+    cluster = agent_kube.Cluster(
+        excluded_node_roles=[], cluster_details=ClusterDetailsFactory.build()
+    )
     for _ in range(cluster_nodes):
         cluster.add_node(new_node())
     for _ in range(cluster_daemon_sets):

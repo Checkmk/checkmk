@@ -16,6 +16,7 @@ from .conftest import (
     api_to_agent_cluster,
     APINodeFactory,
     APIPodFactory,
+    ClusterDetailsFactory,
     NodeMetaDataFactory,
     NodeResourcesFactory,
     ONE_GiB,
@@ -37,10 +38,8 @@ class PerformanceContainerFactory(ModelFactory):
     __model__ = agent.PerformanceContainer
 
 
-def test_cluster_namespaces(
-    cluster_details: api.ClusterDetails, pod_metadata: api.MetaData[str]
-) -> None:
-    cluster = agent.Cluster(cluster_details=cluster_details, excluded_node_roles=[])
+def test_cluster_namespaces(pod_metadata: api.MetaData[str]) -> None:
+    cluster = agent.Cluster(cluster_details=ClusterDetailsFactory.build(), excluded_node_roles=[])
     api_pod = APIPodFactory.build(metadata=pod_metadata)
     cluster.add_pod(
         agent.Pod(
@@ -57,12 +56,11 @@ def test_cluster_namespaces(
 
 @pytest.mark.parametrize("cluster_pods", [0, 10, 20])
 def test_cluster_resources(  # type:ignore[no-untyped-def]
-    cluster_details: api.ClusterDetails,
     cluster_pods: int,
     new_pod: Callable[[], agent.Pod],
     pod_containers_count: int,
 ):
-    cluster = agent.Cluster(cluster_details=cluster_details, excluded_node_roles=[])
+    cluster = agent.Cluster(cluster_details=ClusterDetailsFactory.build(), excluded_node_roles=[])
     for _ in range(cluster_pods):
         cluster.add_pod(new_pod())
     assert cluster.memory_resources().count_total == cluster_pods * pod_containers_count
@@ -116,8 +114,8 @@ def test_node_count_returns_number_of_nodes_ready_not_ready(  # type:ignore[no-u
 
 
 @pytest.mark.parametrize("node_is_control_plane", [True])
-def test_node_control_plane_count(cluster_details: api.ClusterDetails, node: agent.Node) -> None:
-    cluster = agent.Cluster(cluster_details=cluster_details, excluded_node_roles=[])
+def test_node_control_plane_count(node: agent.Node) -> None:
+    cluster = agent.Cluster(cluster_details=ClusterDetailsFactory.build(), excluded_node_roles=[])
     cluster.add_node(node)
     node_count = cluster.node_count()
     assert node_count.worker.total == 0
@@ -127,10 +125,8 @@ def test_node_control_plane_count(cluster_details: api.ClusterDetails, node: age
 
 @pytest.mark.parametrize("node_is_control_plane", [True])
 @pytest.mark.parametrize("node_condition_status", [api.ConditionStatus.FALSE])
-def test_node_control_plane_not_ready_count(
-    cluster_details: api.ClusterDetails, node: agent.Node
-) -> None:
-    cluster = agent.Cluster(cluster_details=cluster_details, excluded_node_roles=[])
+def test_node_control_plane_not_ready_count(node: agent.Node) -> None:
+    cluster = agent.Cluster(cluster_details=ClusterDetailsFactory.build(), excluded_node_roles=[])
     cluster.add_node(node)
     node_count = cluster.node_count()
     assert node_count.control_plane.not_ready == 1

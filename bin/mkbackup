@@ -657,7 +657,7 @@ class BackupTarget:
 
     @property
     def base_path(self) -> str:
-        return job_backup_path_during_backup(self.config, self.job)
+        return "%s-incomplete" % job_backup_path(self.config, self.job)
 
     @property
     def target_id(self) -> str:
@@ -757,8 +757,8 @@ def save_backup_info(info: BackupInfo, target: Target) -> None:
         json.dump(info, f, sort_keys=True, indent=4, separators=(",", ": "))
 
 
-def create_backup_info(config: Config, job: Job) -> BackupInfo:
-    files = get_files_for_backup_info(config, job)
+def create_backup_info(target: BackupTarget, job: Job) -> BackupInfo:
+    files = get_files_for_backup_info(target, job)
 
     info: BackupInfo = {
         "type": "Check_MK",
@@ -776,8 +776,8 @@ def create_backup_info(config: Config, job: Job) -> BackupInfo:
     return info
 
 
-def get_files_for_backup_info(config: Config, job: Job) -> list[tuple[str, int, str]]:
-    backup_path = job_backup_path_during_backup(config, job)
+def get_files_for_backup_info(target: BackupTarget, job: Job) -> list[tuple[str, int, str]]:
+    backup_path = target.base_path
     dir_entries: list[str] = os.listdir(backup_path)
     files = []
     for f in sorted(dir_entries):
@@ -927,7 +927,7 @@ def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None
 
         success = False
         try:
-            cleanup_previous_incomplete_backup(config, job)
+            cleanup_previous_incomplete_backup(target)
 
             state.save(
                 {
@@ -1030,10 +1030,6 @@ def site_backup_archive_path(site_id: str, target: Target, job_config: JobConfig
     return f"{target.base_path}/site-{site_id}{archive_suffix(job_config)}"
 
 
-def job_backup_path_during_backup(config: Config, job: Job) -> str:
-    return "%s-incomplete" % job_backup_path(config, job)
-
-
 def job_backup_path_complete(config: Config, job: Job) -> str:
     return "%s-complete" % job_backup_path(config, job)
 
@@ -1132,7 +1128,7 @@ def verify_backup_files(
 
 
 def complete_backup(config: Config, job: Job, target: BackupTarget, state: State) -> None:
-    info = create_backup_info(config, job)
+    info = create_backup_info(target, job)
     save_backup_info(info, target)
 
     state.save(
@@ -1151,7 +1147,7 @@ def complete_backup(config: Config, job: Job, target: BackupTarget, state: State
         shutil.rmtree(job_backup_path_complete(config, job))
 
     os.rename(
-        job_backup_path_during_backup(config, job),
+        target.base_path,
         job_backup_path_complete(config, job),
     )
 
@@ -1168,11 +1164,11 @@ def complete_backup(config: Config, job: Job, target: BackupTarget, state: State
     )
 
 
-def cleanup_previous_incomplete_backup(config: Config, job: Job) -> None:
-    if os.path.exists(job_backup_path_during_backup(config, job)):
+def cleanup_previous_incomplete_backup(target: BackupTarget) -> None:
+    if os.path.exists(target.base_path):
         log("Found previous incomplete backup. Cleaning up those files.")
         try:
-            shutil.rmtree(job_backup_path_during_backup(config, job))
+            shutil.rmtree(target.base_path)
         except OSError as e:
             if e.errno == errno.EACCES:
                 raise MKGeneralException("Failed to write the backup directory: %s" % e)

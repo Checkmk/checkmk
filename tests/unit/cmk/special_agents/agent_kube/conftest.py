@@ -13,10 +13,12 @@
 
 
 import itertools
+import unittest
 import uuid
 from typing import Callable, Dict, Iterator, Mapping, Sequence, Type
 
 import pytest
+import pytest_mock
 from pydantic_factories import ModelFactory, Use
 
 # pylint: disable=comparison-with-callable,redefined-outer-name
@@ -445,23 +447,6 @@ def new_daemon_set(daemonset_spec: api.DaemonSetSpec) -> Callable[[], agent_kube
 
 
 @pytest.fixture
-def daemon_set_pods() -> int:
-    return len(api.Phase)
-
-
-@pytest.fixture
-def daemon_set(
-    new_daemon_set: Callable[[], agent_kube.DaemonSet],
-    daemon_set_pods: int,
-    new_pod: Callable[[], agent_kube.Pod],
-) -> agent_kube.DaemonSet:
-    daemon_set = new_daemon_set()
-    for _ in range(daemon_set_pods):
-        daemon_set.add_pod(new_pod())
-    return daemon_set
-
-
-@pytest.fixture
 def cluster_nodes() -> int:
     return 3
 
@@ -588,5 +573,5 @@ def statefulsets_api_sections() -> Sequence[str]:
 
 
 @pytest.fixture
-def write_sections_mock(mocker):
+def write_sections_mock(mocker: pytest_mock.MockFixture) -> unittest.mock.MagicMock:
     return mocker.patch("cmk.special_agents.agent_kube._write_sections")

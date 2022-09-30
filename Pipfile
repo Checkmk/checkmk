@@ -176,6 +176,7 @@ grpcio = "==1.46.3"  # newer versions (1.47) caused problems in Centos7 and SLES
 google-api-python-client = "==2.53.0"  # use rest api to query big query for gcp cost monitoring
 setproctitle = "==1.2.3"  # used by mkbench/dcd/liveproxyd
 black = {version = "==22.6.0", extras = ["d"]}  # used in our CI, the LSP-integration and in the OpenAPI part, "d" for broken black packaging only, see https://github.com/psf/black/issues/690
+fsspec = {version = "==2022.8.2"}  # filesystem abstraction for backups, supports object storage like S3 or GCS.
 
 [requires]
 # As pipenv {sync,lock} does currently not support env variable expansion in and out Pipfile.lock,

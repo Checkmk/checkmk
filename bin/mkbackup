@@ -295,7 +295,7 @@ def makedir(
     set_permissions(path=path, uid=uid, gid=gid, mode=mode)
 
 
-def file_checksum(path: str) -> str:
+def file_checksum(path: Path) -> str:
     hash_md5 = md5(usedforsecurity=False)  # pylint: disable=unexpected-keyword-arg
     with open(path, "rb") as f:
         for chunk in iter(lambda: f.read(4096), b""):
@@ -655,19 +655,16 @@ class BackupTarget:
     job: Job
 
     @property
-    def base_path(self) -> str:
-        return "%s-incomplete" % self._job_backup_path()
+    def base_path(self) -> Path:
+        return target_path(self.job.config["target"], self.config) / f"{self.job.id}-incomplete"
 
     @property
     def target_id(self) -> str:
         return self.job.config["target"]
 
     @property
-    def completed_path(self) -> str:
-        return "%s-complete" % self._job_backup_path()
-
-    def _job_backup_path(self) -> str:
-        return "{}/{}".format(target_path(self.job.config["target"], self.config), self.job.id)
+    def completed_path(self) -> Path:
+        return target_path(self.job.config["target"], self.config) / f"{self.job.id}-complete"
 
 
 @dataclass(frozen=True)
@@ -677,8 +674,8 @@ class RestoreTarget:
     config: Config
 
     @property
-    def base_path(self) -> str:
-        return f"{target_path(self.target_id, self.config)}/{self.backup_id}"
+    def base_path(self) -> Path:
+        return target_path(self.target_id, self.config) / self.backup_id
 
 
 Target = BackupTarget | RestoreTarget
@@ -705,12 +702,12 @@ def site_version(site_id: str) -> str:
     return linkpath.split("/")[-1]
 
 
-def system_config_path() -> str:
-    return "/etc/cma/backup.conf"
+def system_config_path() -> Path:
+    return Path("/etc/cma/backup.conf")
 
 
-def site_config_path() -> str:
-    return "%s/etc/check_mk/backup.mk" % os.environ["OMD_ROOT"]
+def site_config_path() -> Path:
+    return Path(os.environ["OMD_ROOT"]) / "etc" / "check_mk" / "backup.mk"
 
 
 # Wenn als root ausgeführt:
@@ -721,8 +718,8 @@ def site_config_path() -> str:
 
 
 def load_config() -> Config:
-    def load_file(path: str) -> Any:
-        with Path(path).open("r", encoding="utf-8") as f:
+    def load_file(path: Path) -> Any:
+        with path.open("r", encoding="utf-8") as f:
             return ast.literal_eval(f.read())
 
     config = load_file(site_config_path())
@@ -787,9 +784,7 @@ def get_files_for_backup_info(target: BackupTarget, job: Job) -> list[tuple[str,
     dir_entries: list[str] = os.listdir(backup_path)
     files = []
     for f in sorted(dir_entries):
-        files.append(
-            (f, os.path.getsize(backup_path + "/" + f), file_checksum(backup_path + "/" + f))
-        )
+        files.append((f, os.path.getsize(backup_path / f), file_checksum(backup_path / f)))
     return files
 
 
@@ -1023,8 +1018,8 @@ def backup_info_path(target: Target) -> str:
     return f"{target.base_path}/mkbackup.info"
 
 
-def site_backup_archive_path(site_id: str, target: Target, job_config: JobConfig) -> str:
-    return f"{target.base_path}/site-{site_id}{archive_suffix(job_config)}"
+def site_backup_archive_path(site_id: str, target: Target, job_config: JobConfig) -> Path:
+    return target.base_path / f"site-{site_id}{archive_suffix(job_config)}"
 
 
 def archive_suffix(config: JobConfig) -> str:
@@ -1048,12 +1043,12 @@ def target_cfg(target_ident: str, config: Config) -> Mapping[str, Any]:
     return config["targets"][target_ident]
 
 
-def target_path(target_ident: str, config: Config) -> str:
+def target_path(target_ident: str, config: Config) -> Path:
     cfg = target_cfg(target_ident, config)
     if cfg["remote"][0] != "local":
         raise NotImplementedError()
 
-    return cfg["remote"][1]["path"]
+    return Path(cfg["remote"][1]["path"])
 
 
 # TODO: Duplicate code with htdocs/backup.py
@@ -1106,7 +1101,7 @@ def verify_backup_files(
                 )
             continue  # missing optional files are OK
 
-        archive_path = f"{target.base_path}/{archive_file}"
+        archive_path = target.base_path / archive_file
         this_checksum = file_checksum(archive_path)
         if this_checksum != checksum:
             raise MKGeneralException(

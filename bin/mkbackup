@@ -6,7 +6,6 @@
 import ast
 import errno
 import fcntl
-import fnmatch
 import getopt
 import glob
 import grp
@@ -19,10 +18,8 @@ import signal
 import socket
 import subprocess
 import sys
-import syslog
 import tempfile
 import textwrap
-import threading
 import time
 import traceback
 from collections.abc import Callable, Generator, Iterator, Mapping, Sequence
@@ -30,14 +27,12 @@ from contextlib import contextmanager, ExitStack
 from dataclasses import dataclass
 from hashlib import md5
 from pathlib import Path
-from tarfile import ReadError, TarFile
 from typing import Any, IO, NamedTuple, NewType, NoReturn, TypedDict
 
 from Cryptodome.Cipher import AES, PKCS1_OAEP
 from Cryptodome.Cipher._mode_cbc import CbcMode
 from Cryptodome.PublicKey import RSA
 from OpenSSL import crypto
-from semver import VersionInfo  # type: ignore[import]
 from six import ensure_str
 
 import cmk.utils.daemon as daemon
@@ -164,25 +159,19 @@ def _load_state(path: Path) -> dict[str, Any]:
 
 
 def _state_path(job: Job) -> Path:
-    if is_root():
-        path = "/var/lib/mkbackup"
+    if job.id:
+        # backup as site user
+        path = "%s/var/check_mk/backup" % os.environ["OMD_ROOT"]
     else:
-        if job.id:
-            # backup as site user
-            path = "%s/var/check_mk/backup" % os.environ["OMD_ROOT"]
-        else:
-            # restore as site user
-            path = "/tmp"
+        # restore as site user
+        path = "/tmp"
 
     if job.id:
         # backup
         name = job.local_id
     else:
         # restore
-        if is_root():
-            name = "restore"
-        else:
-            name = "restore-%s" % current_site_id()
+        name = "restore-%s" % current_site_id()
 
     return Path(path, f"{name}.state")
 
@@ -238,8 +227,6 @@ def stop_logging() -> None:
 def log(s: str) -> None:
     msg = "{} {}\n".format(time.strftime("%Y-%m-%d %H:%M:%S"), s)
     sys.stdout.write(msg)
-    if is_cma():
-        syslog.syslog(s)
 
 
 def verbose(s):
@@ -250,16 +237,6 @@ def verbose(s):
 
 def hostname() -> str:
     return socket.gethostname()
-
-
-def is_root() -> bool:
-    # type () -> bool
-    return os.getuid() == 0
-
-
-def is_cma() -> bool:
-    # type () -> bool
-    return os.path.exists("/etc/cma/cma.conf")
 
 
 def current_site_id() -> str:
@@ -277,26 +254,6 @@ def system_config_path() -> str:
 
 def site_config_path() -> str:
     return "%s/etc/check_mk/backup.mk" % os.environ["OMD_ROOT"]
-
-
-def verify_compatible_cma_version() -> None:
-    if not is_cma():
-        return
-
-    minimal_cma_version = VersionInfo(major=1, minor=4, patch=16)
-    with open("/usr/share/cma/version") as f:
-        current_cma_version = VersionInfo.parse(f.read().strip())
-
-    if current_cma_version < minimal_cma_version:
-        raise MKGeneralException(
-            f"The Checkmk backup of your version ({VERSION}) "
-            f"is not compatible with your Checkmk Appliance firmware ({current_cma_version}). Please update your "
-            f"appliance to {minimal_cma_version} or newer to make the backup work again."
-        )
-
-
-def global_lock_file_path() -> Path:
-    return mkbackup_lock_dir / Path("mkbackup.lock")
 
 
 def local_lock_file_path(site_name: str) -> Path:
@@ -443,23 +400,20 @@ def load_config() -> Config:
         with Path(path).open("r", encoding="utf-8") as f:
             return ast.literal_eval(f.read())
 
-    if is_root():
-        config = load_file(system_config_path())
-    else:
-        config = load_file(site_config_path())
+    config = load_file(site_config_path())
 
-        try:
-            system_targets = load_file(system_config_path())["targets"]
+    try:
+        system_targets = load_file(system_config_path())["targets"]
 
-            # only load non conflicting targets
-            for target_ident, target_config in system_targets.items():
-                if target_ident not in config["targets"]:
-                    config["targets"][target_ident] = target_config
+        # only load non conflicting targets
+        for target_ident, target_config in system_targets.items():
+            if target_ident not in config["targets"]:
+                config["targets"][target_ident] = target_config
 
-        except OSError:
-            # Not existing system wide config is OK. In this case there
-            # are only backup targets from site config available.
-            pass
+    except OSError:
+        # Not existing system wide config is OK. In this case there
+        # are only backup targets from site config available.
+        pass
 
     return config
 
@@ -479,10 +433,6 @@ def load_backup_info(path: str) -> Mapping[str, Any]:
     return info
 
 
-def get_site_ids_of_backup(info: Mapping[str, Any]) -> list[str]:
-    return [f[0].split(".", 1)[0][5:] for f in info["files"] if f[0].startswith("site-")]
-
-
 def save_backup_info(info: Mapping[str, Any], target: Target) -> None:
     with open(backup_info_path(target), "w") as f:
         json.dump(info, f, sort_keys=True, indent=4, separators=(",", ": "))
@@ -492,7 +442,7 @@ def create_backup_info(config: Config, job: Job) -> Mapping[str, Any]:
     files = get_files_for_backup_info(config, job)
 
     info = {
-        "type": "Check_MK" if not is_root() else "Appliance",
+        "type": "Check_MK",
         "job_id": job.local_id,
         "config": job.config,
         "hostname": hostname(),
@@ -501,10 +451,7 @@ def create_backup_info(config: Config, job: Job) -> Mapping[str, Any]:
         "size": sum(f[1] for f in files),
     }
 
-    if not is_root():
-        add_site_info_to_backup_info(info)
-    else:
-        add_system_info_to_backup_info(info)
+    add_site_info_to_backup_info(info)
 
     return info
 
@@ -512,29 +459,6 @@ def create_backup_info(config: Config, job: Job) -> Mapping[str, Any]:
 def add_site_info_to_backup_info(info: dict[str, Any]) -> None:
     info["site_id"] = current_site_id()
     info["site_version"] = site_version(info["site_id"])
-
-
-def add_system_info_to_backup_info(info: dict[str, Any]) -> None:
-    import cma  # type: ignore[import] # pylint: disable=import-error,import-outside-toplevel
-
-    cma.load_config()
-    info["cma_version"] = cma.version()
-
-    if not cma.is_clustered():
-        return
-
-    cluster_cfg = cma.cfg("cluster")
-
-    if cluster_cfg:
-        partner_name = cma.other_node_name(cluster_cfg)
-    else:
-        partner_name = None
-
-    info["cma_cluster"] = {
-        "clustered": True,
-        "partner_name": partner_name,
-        "is_inactive": is_inactive_cluster_node(),
-    }
 
 
 def get_files_for_backup_info(config: Config, job: Job) -> list[tuple[str, int, str]]:
@@ -554,67 +478,6 @@ def file_checksum(path: str) -> str:
         for chunk in iter(lambda: f.read(4096), b""):
             hash_md5.update(chunk)
     return hash_md5.hexdigest()
-
-
-# Wrapper to workaround different issues during system restore and improved logging
-class MKTarFile(TarFile):
-    def _extract_member(self, tarinfo, targetpath, set_attrs=True, numeric_owner=False):
-        verbose("Extracting %s" % targetpath)
-        super()._extract_member(tarinfo, targetpath, set_attrs, numeric_owner)
-
-    def makedir(self, tarinfo, targetpath):
-        if os.path.lexists(targetpath):
-            if os.path.islink(targetpath) != (tarinfo.islnk() or tarinfo.issym()):
-                os.remove(targetpath)
-
-            elif not os.path.isdir(targetpath):
-                os.remove(targetpath)
-
-        super().makedir(tarinfo, targetpath)
-
-    def makelink(self, tarinfo, targetpath):
-        if os.path.lexists(targetpath) and not os.path.islink(targetpath):
-            if os.path.isdir(targetpath):
-                shutil.rmtree(targetpath)
-            else:
-                os.remove(targetpath)
-
-        super().makelink(tarinfo, targetpath)
-
-    def makefile(self, tarinfo, targetpath):
-        if os.path.lexists(targetpath):
-            was_link = tarinfo.islnk() or tarinfo.issym()
-            if os.path.islink(targetpath) and not was_link:
-                os.remove(targetpath)
-
-            elif os.path.isdir(targetpath):
-                shutil.rmtree(targetpath)
-
-        try:
-            super().makefile(tarinfo, targetpath)
-        except OSError as e:
-            if e.errno == errno.EISDIR:
-                # Handle "IOError: [Errno 21] Is a directory"
-                # Happens e.g. when a dir is being replaced by a file during restore
-                if os.path.islink(targetpath):
-                    os.remove(targetpath)
-                else:
-                    shutil.rmtree(targetpath)
-                super().makefile(tarinfo, targetpath)
-
-            elif e.errno == errno.ETXTBSY:
-                # Fix "IOError: [Errno 26] Text file busy" when replacing a file
-                os.remove(targetpath)
-                super().makefile(tarinfo, targetpath)
-            else:
-                raise
-
-    def makefifo(self, tarinfo, targetpath):
-        if os.path.exists(targetpath) and targetpath in ["/rw/var/spool/nullmailer/trigger"]:
-            verbose("Cleaning up %s" % targetpath)
-            os.remove(targetpath)
-
-        super().makefifo(tarinfo, targetpath)
 
 
 #   List: Alle Backups auflisten
@@ -659,7 +522,6 @@ class Mode(NamedTuple):
     description: str
     args: list[Arg]
     opts: dict[str, Opt]
-    root_opts: dict[str, Opt]
     runner: Callable[[list[str], dict[str, str], Config], None]
 
 
@@ -667,8 +529,7 @@ modes = {
     "backup": Mode(
         description=(
             "Starts creating a new backup. When executed as Check_MK site user, a backup of the "
-            "current site is executed to the target of the given backup job. When executed as "
-            "root user on the Check_MK Appliance, a backup of the whole system is created."
+            "current site is executed to the target of the given backup job."
         ),
         args=[
             Arg(
@@ -678,9 +539,6 @@ modes = {
         ],
         opts={
             "background": Opt(description="Fork and execute the program in the background."),
-        },
-        root_opts={
-            "without-sites": Opt(description="Exclude the Check_MK site files during backup."),
         },
         runner=lambda args, opts, config: mode_backup(args[0], opts=opts, config=config),
     ),
@@ -708,21 +566,18 @@ modes = {
             ),
             "no-reboot": Opt(description="Don't trigger a system reboot after succeeded restore."),
         },
-        root_opts={},
         runner=lambda args, opts, config: mode_restore(args[0], args[1], opts=opts, config=config),
     ),
     "jobs": Mode(
         description="Lists all configured backup jobs of the current user context.",
         args=[],
         opts={},
-        root_opts={},
         runner=lambda args, opts, config: mode_jobs(opts=opts, config=config),
     ),
     "targets": Mode(
         description="Lists all configured backup targets of the current user context.",
         args=[],
         opts={},
-        root_opts={},
         runner=lambda args, opts, config: mode_targets(opts=opts, config=config),
     ),
     "list": Mode(
@@ -734,14 +589,12 @@ modes = {
             ),
         ],
         opts={},
-        root_opts={},
         runner=lambda args, opts, config: mode_list(args[0], opts=opts, config=config),
     ),
 }
 
 
 def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None:
-    verify_compatible_cma_version()
     job = load_job(local_job_id, config)
     target = BackupTarget(config, job)
     state = State(job)
@@ -807,12 +660,7 @@ def do_backup(
     target: BackupTarget,
     state: State,
 ) -> None:
-    if not is_root():
-        do_site_backup(config, job, target, state)
-    elif is_cma():
-        do_system_backup(opts, config, job, target, state)
-    else:
-        raise MKGeneralException("System backup not supported.")
+    do_site_backup(config, job, target, state)
     complete_backup(config, job, target, state)
 
 
@@ -832,19 +680,7 @@ def do_site_backup(
     if job.config.get("no_history", False):
         cmd.append("--no-past")
 
-    # When executed as site user, "omd backup" is executed without the site
-    # name and always performing backup for the current site. When executed
-    # as root, the site argument has to be given and must be handed over to
-    # "omd backup".
-    if site is None:
-        site = current_site_id()
-    else:
-        if not is_root():
-            raise MKGeneralException(
-                "Requested backup of site %s, " "but not running as root." % site
-            )
-        cmd.append(site)
-
+    site = current_site_id()
     cmd.append("-")
 
     backup_path = site_backup_archive_path(site, target, job.config)
@@ -877,47 +713,6 @@ def do_site_backup(
 
     if p.returncode != 0:
         raise MKGeneralException("Site backup failed: %s" % err)
-
-
-def start_site(site: str) -> None:
-    start_stop_site(site, "start", 0)
-
-
-def stop_site(site: str) -> None:
-    start_stop_site(site, "stop", 1)
-
-
-def start_stop_site(site: str, command: str, expected_return_code: int) -> None:
-    site_arg = [site] if is_root() else []
-    omd_command(["omd", command] + site_arg)
-    for _c in range(5):
-        if (
-            subprocess.call(
-                ["omd", "status", "--bare"] + site_arg,
-                stdout=subprocess.DEVNULL,
-            )
-            == expected_return_code
-        ):
-            return
-    raise MKGeneralException("Failed to %s site" % command)
-
-
-def omd_command(cmd: list[str]) -> None:
-    verbose("Command: %s" % " ".join(cmd))
-    completed_process = subprocess.run(
-        cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        stdin=subprocess.DEVNULL,
-        close_fds=True,
-        encoding="utf-8",
-        check=False,
-    )
-    verbose(completed_process.stdout)
-    if completed_process.returncode != 0:
-        raise MKGeneralException(
-            "Failed to run <tt>{}</tt>: {}".format(" ".join(cmd), completed_process.stdout)
-        )
 
 
 # Using RSA directly to encrypt the whole backup is a bad idea. So we use the RSA
@@ -1011,10 +806,7 @@ class MKBackupStream:
 
     # TODO: The return type is a bit questionable...
     def _load_backup_keys(self) -> dict[str, dict[str, bytes]]:
-        if is_root():
-            path = Path("/etc/cma/backup_keys.conf")
-        else:
-            path = Path(os.environ["OMD_ROOT"], "etc/check_mk/backup_keys.mk")
+        path = Path(os.environ["OMD_ROOT"], "etc/check_mk/backup_keys.mk")
 
         variables: dict[str, dict[str, Any]] = {"keys": {}}
         if path.exists():
@@ -1211,14 +1003,6 @@ def site_backup_archive_path(site_id: str, target: Target, job_config: JobConfig
     return f"{target.base_path}/site-{site_id}{archive_suffix(job_config)}"
 
 
-def system_backup_archive_path(target: Target, job_config: JobConfig) -> str:
-    return f"{target.base_path}/system{archive_suffix(job_config)}"
-
-
-def system_data_backup_archive_path(target: Target, job_config: JobConfig) -> str:
-    return f"{target.base_path}/system-data{archive_suffix(job_config)}"
-
-
 def job_backup_path_during_backup(config: Config, job: Job) -> str:
     return "%s-incomplete" % job_backup_path(config, job)
 
@@ -1241,18 +1025,9 @@ def archive_suffix(config: JobConfig) -> str:
 
 
 def needed_backup_archive_files(info: Mapping[str, Any], job_config: JobConfig) -> Sequence[str]:
-    if is_root():
-        needed_files = ["system"]
-
-        if not is_inactive_cluster_backup(info):
-            needed_files.append("system-data")
-
-        # Sites may have been deleted or new sites added. Site files archives are optional.
-        # needed_files += [ "site-%s" % s for s in existing_sites() ]
-    else:
-        # Care about restore from a backup made in a site with another site_id
-        site = info.get("site_id", current_site_id())
-        needed_files = ["site-%s" % site]
+    # Care about restore from a backup made in a site with another site_id
+    site = info.get("site_id", current_site_id())
+    needed_files = ["site-%s" % site]
 
     return [f + archive_suffix(job_config) for f in needed_files]
 
@@ -1331,142 +1106,6 @@ def verify_backup_files(
             )
 
 
-def do_system_backup(
-    opts: Mapping[str, str],
-    config: Config,
-    job: Job,
-    target: BackupTarget,
-    state: State,
-) -> None:
-    # Create missing directories. Ensure group permissions and mode.
-    try:
-        makedirs(
-            os.path.dirname(system_backup_archive_path(target, job.config)),
-            group="omd",
-            mode=0o775,
-        )
-    except OSError as e:
-        if e.errno == errno.EACCES:
-            raise MKGeneralException("Failed to create the backup directory: %s" % e)
-        raise
-
-    # Perform backup of the /rw volume on all devices
-    log("Performing system backup (system%s)" % archive_suffix(job.config))
-    perform_backup(
-        backup_archive_path=system_backup_archive_path(target, job.config),
-        base_path="/rw",
-        exclude_patterns=["mnt/*/*"],
-        job=job,
-        state=state,
-    )
-
-    # The data volume (/omd) is not backed up on slave cluster nodes
-    if is_inactive_cluster_node():
-        log("Skipping system data backup (inactive cluster node)")
-        log("Skipping site backup (inactive cluster node)")
-        return
-
-    log("Performing system data backup (system-data%s)" % archive_suffix(job.config))
-    perform_backup(
-        backup_archive_path=system_data_backup_archive_path(target, job.config),
-        base_path="/omd",
-        exclude_patterns=["sites/*"],
-        job=job,
-        state=state,
-    )
-
-    # Now run the site backup for all sites
-    if not exclude_sites(opts, job.config):
-        for site_id in existing_sites():
-            log("Performing site backup: %s" % site_id)
-            do_site_backup(site=site_id, config=config, job=job, target=target, state=state)
-    else:
-        log("Skipping site backup (disabled)")
-
-
-def perform_backup(
-    backup_archive_path: str,
-    base_path: str,
-    exclude_patterns: list[str],
-    job: Job,
-    state: State,
-) -> None:
-    with open(backup_archive_path, "wb") as backup_file:
-        pipein_fd, pipeout_fd = os.pipe()
-
-        # Write to buffer in dedicated thread
-        t = threading.Thread(
-            target=lambda: write_to_tarfile_threaded(pipeout_fd, base_path, exclude_patterns, job)
-        )
-        t.daemon = True
-        t.start()
-
-        # Process backup stream and write to destination file
-        with open(pipein_fd, "rb") as pipein:
-            s = BackupStream(
-                stream=pipein, is_alive=t.is_alive, key_ident=job.config["encrypt"], state=state
-            )
-            for chunk in s.process():
-                backup_file.write(chunk)
-
-
-def write_to_tarfile_threaded(
-    pipeout_fd: int, base_path: str, exclude_patterns: list[str], job: Job
-) -> None:
-    with open(pipeout_fd, "wb") as pipeout:
-        backup_files_to_tarfile(pipeout, base_path, exclude_patterns, job=job)
-
-
-# Whether or not the data filesystem is mounted (-> on active cluster nodes)
-def is_inactive_cluster_node() -> bool:
-    import cma  # type: ignore[import] # pylint: disable=import-error,import-outside-toplevel
-
-    cma.load_config()
-    return cma.inactive_cluster_node()
-
-
-def is_cluster_backup(info) -> bool:  # type:ignore[no-untyped-def]
-    return info.get("cma_cluster", {}).get("clustered", False)
-
-
-def is_inactive_cluster_backup(info) -> bool:  # type:ignore[no-untyped-def]
-    return "cma_cluster" in info and info["cma_cluster"]["is_inactive"]
-
-
-def existing_sites() -> Sequence[str]:
-    return sorted(
-        s for s in os.listdir("/omd/sites") if os.path.isdir(os.path.join("/omd/sites/", s))
-    )
-
-
-def exclude_sites(opts: Mapping[str, str], job_config: JobConfig) -> bool:
-    return "without-sites" in opts or job_config.get("without_sites", False)
-
-
-def backup_files_to_tarfile(
-    fobj: IO[bytes], base_path: str, exclude_patterns: list[str], job: Job
-) -> None:
-    def filter_files(tarinfo: Any) -> Any | None:
-        # patterns are relative to base_path, tarinfo.name is full path without leading slash.
-        matches_exclude = any(
-            fnmatch.fnmatch(tarinfo.name[len(base_path.rstrip("/")) :], glob_pattern)
-            for glob_pattern in exclude_patterns
-        )
-        return None if matches_exclude else tarinfo
-
-    tar_mode = "w|gz" if job.config["compress"] else "w|"
-    try:
-        with TarFile.open(fileobj=fobj, mode=tar_mode) as tar:
-            # Don't add base path itself
-            for f in os.listdir(base_path):
-                tar.add(base_path + "/" + f, filter=filter_files)
-    except OSError as e:
-        if not opt_debug and e.errno == errno.ESPIPE:
-            log("Failed to init backup to tarfile: %s" % e)
-            return
-        raise
-
-
 def complete_backup(config: Config, job: Job, target: BackupTarget, state: State) -> None:
     info = create_backup_info(config, job)
     save_backup_info(info, target)
@@ -1526,22 +1165,8 @@ def load_job(local_job_id: str, config: Config) -> Job:
 
 
 def globalize_job_id(local_job_id: str) -> str:
-    parts = []
-    site = current_site_id()
-
-    if site:
-        parts.append("Check_MK")
-    else:
-        parts.append("Check_MK_Appliance")
-
-    parts.append(hostname())
-
-    if site:
-        parts.append(site)
-
-    parts.append(local_job_id)
-
-    return "-".join([p.replace("-", "+") for p in parts])
+    parts = ["Check_MK", hostname(), current_site_id(), local_job_id]
+    return "-".join(p.replace("-", "+") for p in parts)
 
 
 def init_new_run(state: State) -> None:
@@ -1576,10 +1201,7 @@ def save_next_run(job: Job, state: State) -> None:
 
 
 def cleanup_backup_job_states() -> None:
-    if is_root():
-        path = "/var/lib/mkbackup"
-    else:
-        path = "%s/var/check_mk/backup" % os.environ["OMD_ROOT"]
+    path = "%s/var/check_mk/backup" % os.environ["OMD_ROOT"]
 
     for f in glob.glob("%s/*.state" % path):
         if os.path.basename(f) != "restore.state" and not os.path.basename(f).startswith(
@@ -1600,7 +1222,6 @@ def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: C
     job = Job(config=info["config"], local_id=info["job_id"], id=None)
     state = State(job)
 
-    verify_compatible_cma_version()
     with ExitStack() as stack:
         for cm in [
             acquire_single_lock(lock_file_path)
@@ -1665,21 +1286,8 @@ def do_restore(
     target: RestoreTarget,
     state: State,
 ) -> None:
-    if not is_root():
-        do_site_restore(info, config, job, target, state)
-    elif is_cma():
-        do_system_restore(opts, info, config, job, target, state)
-    else:
-        raise MKGeneralException("System backup not supported.")
+    do_site_restore(info, config, job, target, state)
     complete_restore(state)
-
-    if "no-reboot" not in opts and is_root():
-        log("--- Rebooting device now ---")
-        do_system_restart()
-
-
-def do_system_restart() -> None:
-    os.system("reboot")
 
 
 def do_site_restore(
@@ -1688,36 +1296,11 @@ def do_site_restore(
     job: Job,
     target: RestoreTarget,
     state: State,
-    site: str | None = None,
 ) -> None:
     cmd = ["omd", "restore", "--kill"]
 
-    # When executed as site user, "omd restore" is executed without the site
-    # name and always performing restore for the current site. When executed
-    # as root, the site argument has to be given and must be handed over to
-    # "omd restore".
-    if site is None:
-        # Care about restore from a backup made in a site with another site_id
-        site = info.get("site_id", current_site_id())
-    else:
-        if not is_root():
-            raise MKGeneralException(
-                "Requested restore of site %s, " "but not running as root." % site
-            )
-        cmd.append("--reuse")
-        cmd.append(site)
-
-        omd_root = "/omd/sites/%s" % site
-        if not os.path.exists(omd_root):
-            os.mkdir(omd_root)
-            set_permissions(
-                path=omd_root,
-                uid=pwd.getpwnam(site).pw_uid,
-                gid=grp.getgrnam(site).gr_gid,
-                mode=0o775,
-            )
-    if site is None:
-        raise MKGeneralException("now we know why mypy is unhappy. Will be removed in next commit")
+    # TODO use backup from different site
+    site = info.get("site_id", current_site_id())
 
     cmd.append("-")
 
@@ -1746,269 +1329,8 @@ def do_site_restore(
         log(stderr.decode(encoding="utf-8", errors="strict"))
         raise MKGeneralException("Site restore failed")
 
-    if not is_root():
-        site_arg = [site] if is_root() and site is not None else []
-        if subprocess.call(["omd", "start"] + site_arg) != 0:
-            raise MKGeneralException("Failed to start the site after restore")
-
-
-def do_system_restore(
-    opts: Mapping[str, str],
-    info: Mapping[str, Any],
-    config: Config,
-    job: Job,
-    target: RestoreTarget,
-    state: State,
-) -> None:
-    verify_cma_version_compatible(info)
-    prepare_system_restore()
-    prepare_cluster_environment(info)
-
-    # Perform restore of the /rw volume
-    log("Performing system restore (system%s)" % archive_suffix(job.config))
-    system_rw_files_before = get_system_rw_files()
-    system_rw_files_restored = do_system_rw_restore(target, job, state)
-    cleanup_system_rw_files(system_rw_files_before, system_rw_files_restored)
-    log("Finished system restore")
-
-    if is_cluster_backup(info):
-        setup_cluster_environment(info)
-    else:
-        setup_standalone_environment()
-
-    # In case this backup was taken from an inactive cluster node, the restore is complete
-    if is_inactive_cluster_backup(info):
-        log("Skipping system data restore (inactive cluster node)")
-        log("Skipping site restore (inactive cluster node)")
-        return
-
-    verify_data_volume_is_mounted()
-
-    log("Performing system data restore (system-data%s)" % archive_suffix(job.config))
-    cleanup_directory_contents("/omd", excludes=["/omd/lost+found"])
-    do_system_data_restore(target, job, state)
-    fix_linux_capabilities()
-    log("Finished system data restore")
-
-    if exclude_sites(opts, job.config):
-        log("Skipping site restore (disabled)")
-        return
-
-    # Now run the site restore for all sites found in the backup
-    for site_id in get_site_ids_of_backup(info):
-        log("Performing site restore: %s" % site_id)
-        do_site_restore(info, site=site_id, config=config, job=job, target=target, state=state)
-    log("Finished site restore")
-
-
-def verify_data_volume_is_mounted() -> None:
-    import cma  # type: ignore[import] # pylint: disable=import-error,import-outside-toplevel
-
-    count = 0
-    is_mounted = cma.is_mounted("/omd")
-    while count < 10 and not is_mounted:
-        time.sleep(1)
-        count += 1
-        is_mounted = cma.is_mounted("/omd")
-
-    if not is_mounted:
-        raise MKGeneralException("The data volume is not mounted")
-
-
-def prepare_cluster_environment(info: Mapping[str, Any]) -> None:
-    import cma  # type: ignore[import] # pylint: disable=import-error,import-outside-toplevel
-
-    cma.load_config()
-
-    if cma.is_cluster_configured() and not is_cluster_backup(info):
-        # Is it currently set-up as cluster node and backup is not clustered: Erase drbd metadata
-        log("Erasing DRBD metadata (will restore non-cluster backup)")
-        if os.system("yes yes | drbdadm wipe-md omd >/dev/null") >> 8 != 0:
-            raise MKGeneralException("Failed to erase DRBD metadata")
-
-    if is_cluster_backup(info) and cma.is_mounted("/omd"):
-        log("Unmounting the data volume")
-        if not cma.execute("umount -f /omd"):
-            raise MKGeneralException("Failed to free the data volume")
-
-
-def setup_cluster_environment(info: Mapping[str, Any]) -> None:
-    log("Setting up cluster environment")
-
-    import cma  # type: ignore[import] # pylint: disable=import-error,import-outside-toplevel
-
-    cma.load_config()
-
-    # To be able to start the DRBD volume we need to have the IP
-    # addresses configured in the DRBD config active. Simply activate
-    # all IP addresses of the host on the primary network interface.
-    # This will be cleaned up by reboot.
-    enable_drbd_ip_addresses()
-
-    cma.initialize_drbd()
-
-    if not is_inactive_cluster_backup(info):
-        cma.drbd_make_primary()
-        cma.execute("mount /dev/drbd/by-res/omd /omd")
-
-
-def setup_standalone_environment() -> None:
-    log("Setting up standalone device environment")
-    os.system("mount /omd")
-
-
-def enable_drbd_ip_addresses() -> None:
-    # These modules are only available when mkbackup is executed on OS level on the appliance
-    import cma  # type: ignore[import] # pylint: disable=import-error,import-outside-toplevel
-    import cma_net  # type: ignore[import] # pylint: disable=import-error,import-outside-toplevel
-
-    cma.load_config()
-    cma_net.load_config()
-
-    drbd_if = cma.cfg("cluster")["drbd_if"]
-    config = cma_net.current_interface_config(drbd_if)
-    if cma_net.is_vlan_config(config):
-        return
-    if cma_net.is_vlan_interface(drbd_if):
-        config = config["ip"]
-
-    address, netmask = config["ipaddress"], config["netmask"]
-
-    log(f"Enabling DRBD network address ({drbd_if}: {address}/{netmask})")
-
-    subprocess.call(
-        [
-            "ip",
-            "a",
-            "a",
-            f"{address}/{netmask}",
-            "dev",
-            cma_net.get_simple_interface_name(),
-        ]
-    )
-
-
-def verify_cma_version_compatible(info: Mapping[str, Any]) -> None:
-    # These modules are only available when mkbackup is executed on OS level on the appliance
-    import cma  # type: ignore[import] # pylint: disable=import-error,import-outside-toplevel
-
-    if info["cma_version"] != cma.version():
-        raise MKGeneralException(
-            "The backup can not be restored because the version of the "
-            "backup (%s) and the currently installed firmware (%s) are not the same. You "
-            "have to install the exact same version to be able to restore the backup."
-            % (info["cma_version"], cma.version())
-        )
-
-
-def get_system_rw_files() -> Sequence[str]:
-    files = []
-    for base_dir, _unused_dir_names, file_names in os.walk("/rw"):
-        for name in file_names:
-            files.append(f"{base_dir}/{name}")
-    return files
-
-
-def fix_linux_capabilities() -> None:
-    """Make the restored Checkmk versions work again
-
-    Checkmk uses capabilities since #7344. These need to be setup explicitly,
-    because the information are not backed up before by our TarFile mechanism.
-    We could make the tarfile keep these information by extending the
-    pax_headers manually (set the attribute SCHILY.xattr.security.capability),
-    but it is easier to simply re-execute the post-install script of each Checkmk
-    version.
-    """
-    import cma  # type: ignore[import] # pylint: disable=import-error,import-outside-toplevel
-
-    for version in cma.compatible_omd_versions():
-        cma.execute_post_install(version)
-
-
-def cleanup_system_rw_files(files_before: Sequence[str], files_restored: Sequence[str]) -> None:
-    for path in files_before:
-        if path not in files_restored:
-            if (
-                path.startswith("/rw/var/lib/mkbackup/restore.state_tmp")
-                or path == "/rw/var/lib/mkbackup/restore.state"
-            ):
-                continue
-
-            if os.path.lexists(path):
-                log("Cleaning up %s" % path)
-                if not os.path.islink(path) and os.path.isdir(path):
-                    shutil.rmtree(path)
-                else:
-                    os.remove(path)
-
-
-def prepare_system_restore() -> None:
-    import cma  # type: ignore[import] # pylint: disable=import-error,import-outside-toplevel
-
-    log("Cleaning up Check_MK processess and temporary filesystems")
-    cma.free_omd_ressources(graceful=False)
-
-    log("Cleaning up (eventual running) cluster processess")
-    cma.cleanup_cluster_processes(graceful=False)
-
-    log("Cleaning up system processess")
-    cleanup_system_processes()
-
-
-def cleanup_directory_contents(base_path: str, excludes: Sequence[str] | None = None) -> None:
-    for name in os.listdir(base_path):
-        path = base_path + "/" + name
-        if not excludes or path not in excludes:
-            log("Cleaning up %s" % path)
-            if not os.path.islink(path) and os.path.isdir(path):
-                shutil.rmtree(path)
-            else:
-                os.remove(path)
-
-
-def cleanup_system_processes() -> None:
-    os.system("/etc/init.d/nullmailer stop")
-
-
-def do_system_rw_restore(target: Target, job: Job, state: State) -> Sequence[str]:
-    return restore_system_backup(system_backup_archive_path(target, job.config), job, state)
-
-
-def do_system_data_restore(target: Target, job: Job, state: State) -> Sequence[str]:
-    return restore_system_backup(system_data_backup_archive_path(target, job.config), job, state)
-
-
-def restore_system_backup(backup_path: str, job: Job, state: State) -> Sequence[str]:
-    with open(backup_path, "rb") as backup_file:
-        s = RestoreStream(
-            stream=backup_file, is_alive=lambda: False, key_ident=job.config["encrypt"], state=state
-        )
-
-        pipein_fd, pipeout_fd = os.pipe()
-
-        # Write to buffer in dedicated thread
-        t = threading.Thread(target=lambda: read_from_tarfile_threaded(s, pipeout_fd))
-        t.daemon = True
-        t.start()
-
-        try:
-            with open(pipein_fd, "rb") as pipein:
-                with MKTarFile.open(fileobj=pipein, mode="r|*") as tar:
-                    tar.extractall("/")
-                    return ["/%s" % name for name in tar.getnames()]
-        except ReadError:
-            if opt_debug:
-                raise
-            raise MKGeneralException("Failed to read data from backup")
-
-
-def read_from_tarfile_threaded(s: RestoreStream, pipeout_fd: int) -> None:
-    try:
-        with open(pipeout_fd, "wb") as pipeout:
-            for chunk in s.process():
-                pipeout.write(chunk)
-    except OSError as e:
-        log("Error while sending data to restore process: %s" % e)
+    if subprocess.call(["omd", "start"]) != 0:
+        raise MKGeneralException("Failed to start the site after restore")
 
 
 def complete_restore(state: State) -> None:
@@ -2119,8 +1441,6 @@ def usage(error: str | None = None) -> NoReturn:
 def mode_options(mode: Mode) -> dict[str, Opt]:
     opts = {}
     opts.update(mode.opts)
-    if is_root():
-        opts.update(mode.root_opts)
     return opts
 
 
@@ -2130,11 +1450,6 @@ def interrupt_handler(signum: int, frame: Any) -> NoReturn:
 
 def register_signal_handlers() -> None:
     signal.signal(signal.SIGTERM, interrupt_handler)
-
-
-def init_logging() -> None:
-    if is_cma():
-        syslog.openlog("mkbackup")
 
 
 opt_verbose = 0
@@ -2187,7 +1502,6 @@ def parse_arguments():
 
 def main() -> None:
     register_signal_handlers()
-    init_logging()
     mode, mode_args, mode_opts, opts = parse_arguments()
     try:
         config = load_config()

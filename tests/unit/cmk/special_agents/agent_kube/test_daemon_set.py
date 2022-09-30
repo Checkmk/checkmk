@@ -52,12 +52,12 @@ def test_write_daemon_sets_api_sections_maps_section_names_to_callables(
 
 
 def test_write_daemon_sets_api_sections_calls_write_sections_for_each_daemon_set(
-    new_daemon_set: Callable[[], agent_kube.DaemonSet], write_sections_mock: MagicMock
+    write_sections_mock: MagicMock,
 ) -> None:
     agent_kube.write_daemon_sets_api_sections(
         "cluster",
         agent_kube.AnnotationNonPatternOption.ignore_all,
-        [new_daemon_set() for _ in range(3)],
+        [api_to_agent_daemonset(APIDaemonSetFactory.build()) for _ in range(3)],
         "host",
         Mock(),
     )
@@ -107,13 +107,12 @@ def test_daemon_set_pod_resources_pods_in_phase_no_phase_param(phase: str) -> No
 
 
 def test_daemon_set_memory_resources(
-    new_daemon_set: Callable[[], agent_kube.DaemonSet],
     new_pod: Callable[[], agent_kube.Pod],
     pod_containers_count: int,
     container_limit_memory: float,
     container_request_memory: float,
 ) -> None:
-    daemon_set = new_daemon_set()
+    daemon_set = api_to_agent_daemonset(APIDaemonSetFactory.build())
     daemon_set.add_pod(new_pod())
     memory_resources = daemon_set.memory_resources()
     assert memory_resources.count_total == pod_containers_count
@@ -122,13 +121,12 @@ def test_daemon_set_memory_resources(
 
 
 def test_daemon_set_cpu_resources(
-    new_daemon_set: Callable[[], agent_kube.DaemonSet],
     new_pod: Callable[[], agent_kube.Pod],
     pod_containers_count: int,
     container_limit_cpu: float,
     container_request_cpu: float,
 ) -> None:
-    daemon_set = new_daemon_set()
+    daemon_set = api_to_agent_daemonset(APIDaemonSetFactory.build())
     daemon_set.add_pod(new_pod())
     cpu_resources = daemon_set.cpu_resources()
     assert cpu_resources.count_total == pod_containers_count

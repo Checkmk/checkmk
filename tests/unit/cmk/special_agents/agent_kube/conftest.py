@@ -422,11 +422,6 @@ def new_pod(
 
 
 @pytest.fixture
-def pod(new_pod: Callable[[], agent_kube.Pod]) -> agent_kube.Pod:
-    return new_pod()
-
-
-@pytest.fixture
 def node_pods() -> int:
     return len(api.Phase)
 

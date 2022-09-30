@@ -23,7 +23,8 @@ class DeploymentConditionFactory(ModelFactory):
     __model__ = api.DeploymentCondition
 
 
-def test_pod_deployment_controller_name(pod: agent.Pod) -> None:
+def test_pod_deployment_controller_name() -> None:
+    pod = api_to_agent_pod(APIPodFactory.build())
     pod._controllers.append(section.Controller(type_=section.ControllerType.deployment, name="hi"))
     pod_info = pod.info("cluster", "host", agent.AnnotationNonPatternOption.ignore_all)
     assert len(pod_info.controllers) == 1

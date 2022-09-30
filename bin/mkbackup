@@ -688,7 +688,7 @@ def backup_state(job: Job) -> State:
 
 
 def restore_state() -> State:
-    path = Path("tmp")
+    path = Path("/tmp")
     name = f"restore-{current_site_id()}.state"
     return State(path / name)
 
@@ -1480,13 +1480,13 @@ def parse_arguments():
 
 def main() -> None:
     register_signal_handlers()
-    mode, mode_args, mode_opts, opts = parse_arguments()
     try:
         config = load_config()
     except OSError:
         if opt_debug:
             raise
         raise MKGeneralException("mkbackup is not configured yet.")
+    mode, mode_args, mode_opts, opts = parse_arguments()
     try:
         current_site_id()
     except KeyError:

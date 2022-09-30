@@ -28,8 +28,6 @@ from cmk.gui.userdb import htpasswd
 from cmk.gui.watolib.custom_attributes import load_custom_attrs_from_mk_file
 from cmk.gui.watolib.users import delete_users, edit_users
 
-from .host_config import _except_keys
-
 TIMESTAMP_RANGE = Tuple[float, float]
 
 
@@ -178,9 +176,6 @@ def edit_user(params: Mapping[str, Any]) -> Response:
     api_attrs = params["body"]
     internal_attrs = _api_to_internal_format(_load_user(username), api_attrs)
 
-    if api_attrs.get("auth_option"):
-        internal_attrs["serial"] = internal_attrs.get("serial", 0) + 1
-
     edit_users(
         {
             username: {
@@ -205,7 +200,7 @@ def serialize_user(user_id, attributes):
         domain_type="user_config",
         identifier=user_id,
         title=attributes["fullname"],
-        extensions=_except_keys(attributes, ["auth_option"]),
+        extensions=attributes,
     )
 
 
@@ -281,7 +276,10 @@ def _internal_to_api_format(internal_attrs: UserSpec) -> dict[str, Any]:
         api_attrs["pager_address"] = internal_attrs["pager"]
 
     if "enforce_pw_change" in internal_attrs:
-        api_attrs["enforce_password_change"] = internal_attrs["enforce_pw_change"]
+        api_attrs["auth_option"] = {
+            "enforce_password_change": internal_attrs["enforce_pw_change"],
+            "auth_type": "password",
+        }
 
     api_attrs.update(
         {
@@ -415,6 +413,7 @@ def _update_auth_options(  # type:ignore[no-untyped-def]
     if auth_options.get("auth_type") == "remove":
         internal_attrs.pop("automation_secret", None)
         internal_attrs.pop("password", None)
+        internal_attrs["serial"] = 1
     else:
         internal_auth_attrs = _auth_options_to_internal_format(auth_options, new_user)
         if internal_auth_attrs:
@@ -424,6 +423,9 @@ def _update_auth_options(  # type:ignore[no-untyped-def]
             internal_attrs.update(internal_auth_attrs)
 
             if internal_auth_attrs.get("enforce_password_change"):
+                internal_attrs["serial"] = 1
+
+            if "password" in auth_options or "secret" in auth_options:
                 internal_attrs["serial"] = 1
 
         internal_attrs["connector"] = "htpasswd"

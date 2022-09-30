@@ -647,6 +647,19 @@ class DiscoveryBackgroundJobStatusObject(DomainObject):
     )
 
 
+class AuthOption(BaseSchema):
+    auth_type = fields.String(
+        required=False,
+        example="password",
+    )
+    enforce_password_change = fields.Boolean(
+        required=False,
+        description="If set to True, the user will be forced to change his password on the next "
+        "login or access. Defaults to False",
+        example=False,
+    )
+
+
 class BaseUserAttributes(BaseSchema):
     fullname = fields.String(required=True, description="The alias or full name of the user.")
     customer = gui_fields.customer_field(
@@ -694,10 +707,11 @@ class BaseUserAttributes(BaseSchema):
         required=False,
         description="The language used by the user in the user interface",
     )
-    enforce_password_change = fields.Boolean(
+    auth_option = fields.Nested(
+        AuthOption,
         required=False,
-        description="This field indicates if the user is forced to change the password on the "
-        "next login or access.",
+        description="Enforce password change attribute for the user",
+        example={"auth_type": "password", "enforce_password_change": False},
     )
     interface_options = fields.Nested(
         ConcreteUserInterfaceAttributes,

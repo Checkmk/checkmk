@@ -33,7 +33,6 @@ from Cryptodome.Cipher import AES, PKCS1_OAEP
 from Cryptodome.Cipher._mode_cbc import CbcMode
 from Cryptodome.PublicKey import RSA
 from OpenSSL import crypto
-from six import ensure_str
 
 import cmk.utils.daemon as daemon
 import cmk.utils.render as render
@@ -1384,9 +1383,7 @@ def mode_jobs(opts: Mapping[str, str], config: Config) -> None:
     sys.stdout.write(fmt % ("Job-ID", "Title"))
     sys.stdout.write("%s\n" % ("-" * 60))
     for job_id, job_cfg in sorted(config["jobs"].items(), key=lambda x_y: x_y[0]):
-        sys.stdout.write(
-            ensure_str(fmt % (job_id, job_cfg["title"]))  # pylint: disable= six-ensure-str-bin-call
-        )
+        sys.stdout.write(fmt % (job_id, job_cfg["title"]))
 
 
 def mode_targets(opts: dict[str, str], config: Config) -> None:
@@ -1394,9 +1391,7 @@ def mode_targets(opts: dict[str, str], config: Config) -> None:
     sys.stdout.write(fmt % ("Target-ID", "Title"))
     sys.stdout.write("%s\n" % ("-" * 60))
     for job_id, job_cfg in sorted(config["targets"].items(), key=lambda x_y1: x_y1[0]):
-        sys.stdout.write(
-            ensure_str(fmt % (job_id, job_cfg["title"]))  # pylint: disable= six-ensure-str-bin-call
-        )
+        sys.stdout.write(fmt % (job_id, job_cfg["title"]))
 
 
 def usage(error: str | None = None) -> NoReturn:

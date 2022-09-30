@@ -1,0 +1,12 @@
+Title: Fix exception on export of BI views with output format python
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1664542870
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p14
+
+If BI views were exportet with "output_format=python" the error "Exception:
+Painter 'aggr_treestate' returned invalid result" occurred.

@@ -2305,6 +2305,7 @@ class Cell:
                 "csv",
                 "json_export",
                 "json",
+                "python",
             ]
             if (
                 request.var("output_format") in output_formats

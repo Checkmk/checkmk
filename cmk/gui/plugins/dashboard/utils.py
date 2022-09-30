@@ -180,8 +180,6 @@ DashletInputFunc = Callable[[DashletConfig], None]
 DashletHandleInputFunc = Callable[[DashletId, DashletConfig, DashletConfig], DashletConfig]
 
 builtin_dashboards: Dict[DashboardName, DashboardConfig] = {}
-# Keep this for legacy reasons until we drop the legacy plugin mechanic
-dashlet_types: Dict[DashletTypeName, dict[str, Any]] = {}
 
 # Declare constants to be used in the definitions of the dashboards
 GROW = 0

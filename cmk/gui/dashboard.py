@@ -11,7 +11,6 @@ import time
 from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import (
-    Any,
     Callable,
     cast,
     Dict,
@@ -92,7 +91,6 @@ from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=un
     DashboardName,
     Dashlet,
     dashlet_registry,
-    dashlet_types,
     dashlet_vs_general_settings,
     DashletConfig,
     DashletHandleInputFunc,
@@ -119,16 +117,7 @@ from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
-from cmk.gui.valuespec import (
-    Checkbox,
-    Dictionary,
-    DictionaryEntry,
-    DropdownChoice,
-    TextInput,
-    Transform,
-    ValueSpec,
-    ValueSpecValidateFunc,
-)
+from cmk.gui.valuespec import Checkbox, Dictionary, DropdownChoice, TextInput, Transform, ValueSpec
 from cmk.gui.views import ABCAjaxInitialFilters, view_choices
 from cmk.gui.views.datasource_selection import show_create_view_dialog
 from cmk.gui.watolib.activate_changes import get_pending_changes_tooltip, has_pending_changes
@@ -319,8 +308,6 @@ def load_plugins() -> None:
     # just may add custom dashboards by adding to builtin_dashboards.
     utils.load_web_plugins("dashboard", globals())
 
-    _transform_old_dict_based_dashlets()
-
     visuals.declare_visual_permissions("dashboards", _("dashboards"))
 
     # Declare permissions for all dashboards
@@ -370,164 +357,11 @@ def _register_pre_21_plugin_api() -> None:
         "builtin_dashboards",
         "Dashlet",
         "dashlet_registry",
-        "dashlet_types",
         "GROW",
         "IFrameDashlet",
         "MAX",
     ):
         api_module.__dict__[name] = plugin_utils.__dict__[name]
-
-
-class LegacyDashlet(IFrameDashlet[DashletConfig]):
-    """Helper to be able to handle pre 1.6 dashlet_type declared dashlets"""
-
-    _type_name: DashletTypeName = ""
-    _spec: dict[str, Any] = {}
-
-    @classmethod
-    def type_name(cls) -> str:
-        return cls._type_name
-
-    @classmethod
-    def title(cls) -> str:
-        return cls._spec["title"]
-
-    @classmethod
-    def description(cls) -> str:
-        return cls._spec["description"]
-
-    @classmethod
-    def sort_index(cls) -> int:
-        return cls._spec["sort_index"]
-
-    @classmethod
-    def single_infos(cls) -> SingleInfos:
-        return cls._spec.get("single_infos", [])
-
-    @classmethod
-    def is_selectable(cls) -> bool:
-        return cls._spec.get("selectable", True)
-
-    @classmethod
-    def is_resizable(cls) -> bool:
-        return cls._spec.get("resizable", True)
-
-    @classmethod
-    def is_iframe_dashlet(cls) -> bool:
-        return "iframe_render" in cls._spec or "iframe_urlfunc" in cls._spec
-
-    @classmethod
-    def initial_size(cls) -> DashletSize:
-        return cls._spec.get("size", Dashlet.minimum_size)
-
-    @classmethod
-    def vs_parameters(
-        cls,
-    ) -> Union[
-        None, List[DictionaryEntry], ValueSpec, Tuple[DashletInputFunc, DashletHandleInputFunc]
-    ]:
-        return cls._spec.get("parameters", None)
-
-    @classmethod
-    def opt_parameters(cls) -> Union[bool, List[str]]:
-        """List of optional parameters in case vs_parameters() returns a list"""
-        return cls._spec.get("opt_params", False)
-
-    @classmethod
-    def validate_parameters_func(cls) -> Optional[ValueSpecValidateFunc[Any]]:
-        """Optional validation function in case vs_parameters() returns a list"""
-        return cls._spec.get("validate_params")
-
-    @classmethod
-    def initial_refresh_interval(cls) -> DashletRefreshInterval:
-        return cls._spec.get("refresh", False)
-
-    @classmethod
-    def allowed_roles(cls) -> List[str]:
-        return cls._spec.get("allowed", builtin_role_ids)
-
-    @classmethod
-    def styles(cls) -> Optional[str]:
-        return cls._spec.get("styles")
-
-    @classmethod
-    def script(cls) -> Optional[str]:
-        return cls._spec.get("script")
-
-    @classmethod
-    def add_url(cls) -> str:
-        if "add_urlfunc" in cls._spec:
-            return cls._spec["add_urlfunc"]()
-        return super().add_url()
-
-    def infos(self) -> SingleInfos:
-        return self._spec.get("infos", [])
-
-    def default_display_title(self) -> str:
-        return self._spec.get("title_func", lambda _arg: self.title)(self._dashlet_spec)
-
-    def on_resize(self) -> Optional[str]:
-        on_resize_func = self._spec.get("on_resize")
-        if on_resize_func:
-            return on_resize_func(self._dashlet_id, self._dashlet_spec)
-        return None
-
-    def on_refresh(self) -> Optional[str]:
-        on_refresh_func = self._spec.get("on_refresh")
-        if on_refresh_func:
-            return on_refresh_func(self._dashlet_id, self._dashlet_spec)
-        return None
-
-    def update(self) -> None:
-        if self.is_iframe_dashlet():
-            self._spec["iframe_render"](self._dashlet_id, self._dashlet_spec)
-        else:
-            self._spec["render"](self._dashlet_id, self._dashlet_spec)
-
-    def show(self) -> None:
-        if "render" in self._spec:
-            self._spec["render"](self._dashlet_id, self._dashlet_spec)
-
-        elif self.is_iframe_dashlet():
-            self._show_initial_iframe_container()
-
-    def _get_iframe_url(self) -> Optional[str]:
-        if not self.is_iframe_dashlet():
-            return None
-
-        if "iframe_urlfunc" in self._spec:
-            # Optional way to render a dynamic iframe URL
-            url = self._spec["iframe_urlfunc"](self._dashlet_spec)
-            return url
-
-        return super()._get_iframe_url()
-
-
-# Pre Checkmk 1.6 the dashlets were declared with dictionaries like this:
-#
-# dashlet_types["hoststats"] = {
-#     "title"       : _("Host statistics"),
-#     "sort_index"  : 45,
-#     "description" : _("Displays statistics about host states as globe and a table."),
-#     "render"      : dashlet_hoststats,
-#     "refresh"     : 60,
-#     "allowed"     : builtin_role_ids,
-#     "size"        : (30, 18),
-#     "resizable"   : False,
-# }
-#
-# Convert it to objects to be compatible
-# TODO: Deprecate this one day.
-def _transform_old_dict_based_dashlets() -> None:
-    for dashlet_type_id, dashlet_spec in dashlet_types.items():
-
-        @dashlet_registry.register
-        class LegacyDashletType(LegacyDashlet):
-            _type_name = dashlet_type_id
-            _spec = dashlet_spec
-
-        # help pylint
-        _it_is_really_used = LegacyDashletType  # noqa: F841
 
 
 # HTML page handler for generating the (a) dashboard. The name

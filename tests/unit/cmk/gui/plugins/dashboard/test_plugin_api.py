@@ -12,7 +12,6 @@ def test_pre_21_plugin_api_names() -> None:
         "builtin_dashboards",
         "Dashlet",
         "dashlet_registry",
-        "dashlet_types",
         "GROW",
         "IFrameDashlet",
         "MAX",

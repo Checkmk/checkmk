@@ -498,27 +498,6 @@ def cluster_nodes() -> int:
 
 
 @pytest.fixture
-def deployment_pods() -> int:
-    return len(api.Phase)
-
-
-@pytest.fixture
-def deployment(
-    deployment_pods: int,
-    new_pod: Callable[[], agent_kube.Pod],
-) -> agent_kube.Deployment:
-    api_deployment = DeploymentFactory.build()
-    deployment = agent_kube.Deployment(
-        metadata=api_deployment.metadata,
-        spec=api_deployment.spec,
-        status=api_deployment.status,
-    )
-    for _ in range(deployment_pods):
-        deployment.add_pod(new_pod())
-    return deployment
-
-
-@pytest.fixture
 def cluster_daemon_sets() -> int:
     return 6
 

@@ -5,12 +5,14 @@
 from typing import Callable, Sequence
 from unittest.mock import MagicMock, Mock
 
-import pytest
 from pydantic_factories import ModelFactory
 
 from tests.unit.cmk.special_agents.agent_kube.factory import (
     api_to_agent_deployment,
+    api_to_agent_pod,
     APIDeploymentFactory,
+    APIPodFactory,
+    PodStatusFactory,
 )
 
 from cmk.special_agents import agent_kube as agent
@@ -28,26 +30,19 @@ def test_pod_deployment_controller_name(pod: agent.Pod) -> None:
     assert pod_info.controllers[0].name == "hi"
 
 
-@pytest.mark.parametrize("deployment_pods", [0, 10, 20])
-def test_deployment_pod_resources_returns_all_pods(
-    deployment: agent.Deployment, deployment_pods: int
-) -> None:
+def test_deployment_pod_resources_one_pod_per_phase() -> None:
+    # Assemble
+    deployment = api_to_agent_deployment(APIDeploymentFactory.build())
+    for phase in api.Phase:
+        pod = api_to_agent_pod(APIPodFactory.build(status=PodStatusFactory.build(phase=phase)))
+        deployment.add_pod(pod)
+
+    # Act
     pod_resources = deployment.pod_resources()
-    assert sum(len(pods) for _, pods in pod_resources) == deployment_pods
 
-
-def test_deployment_pod_resources_one_pod_per_phase(deployment: agent.Deployment) -> None:
-    for _phase, pods in deployment.pod_resources():
+    # Assert
+    for _phase, pods in pod_resources:
         assert len(pods) == 1
-
-
-@pytest.mark.parametrize(
-    "phases", [["running"], ["pending"], ["succeeded"], ["failed"], ["unknown"]]
-)
-def test_deployment_pod_resources_pods_in_phase(
-    deployment: agent.Deployment, deployment_pods: int
-) -> None:
-    assert len(deployment.pods()) == deployment_pods
 
 
 def test_deployment_conditions() -> None:
@@ -91,10 +86,11 @@ def test_deployment_cpu_resources(
 
 
 def test_write_deployments_api_sections_registers_sections_to_be_written(
-    deployment: agent.Deployment,
     deployments_api_sections: Sequence[str],
     write_sections_mock: MagicMock,
 ) -> None:
+    deployment = api_to_agent_deployment(APIDeploymentFactory.build())
+    deployment.add_pod(api_to_agent_pod(APIPodFactory.build()))
     agent.write_deployments_api_sections(
         "cluster", agent.AnnotationNonPatternOption.ignore_all, [deployment], "host", Mock()
     )

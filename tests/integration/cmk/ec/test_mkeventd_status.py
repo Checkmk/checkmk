@@ -10,8 +10,9 @@ import pytest
 from tests.testlib.site import Site
 
 
+@pytest.mark.usefixtures("ec")
 @pytest.mark.skip("needs to be analyzed later...")
-def test_command_reload(site: Site, ec) -> None:  # type:ignore[no-untyped-def]
+def test_command_reload(site: Site) -> None:
     live = site.live
 
     old_t = live.query_value("GET eventconsolestatus\nColumns: status_config_load_time\n")

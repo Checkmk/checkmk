@@ -320,11 +320,6 @@ def node(new_node: Callable[[], agent_kube.Node], node_pods: int) -> agent_kube.
 
 
 @pytest.fixture
-def pod_metadata() -> api.MetaData[str]:
-    return MetaDataFactory.build()
-
-
-@pytest.fixture
 def node_pods() -> int:
     return len(api.Phase)
 

@@ -14,10 +14,12 @@ from cmk.special_agents.utils_kubernetes.transform_any import parse_labels
 
 from .conftest import (
     api_to_agent_cluster,
+    api_to_agent_node,
     APINodeFactory,
     APIPodFactory,
     ClusterDetailsFactory,
     ContainerSpecFactory,
+    node_status,
     NodeMetaDataFactory,
     NodeResourcesFactory,
     ONE_GiB,
@@ -117,21 +119,26 @@ def test_node_count_returns_number_of_nodes_ready_not_ready(  # type:ignore[no-u
     assert node_count.worker.ready + node_count.worker.not_ready == cluster_nodes
 
 
-@pytest.mark.parametrize("node_is_control_plane", [True])
-def test_node_control_plane_count(node: agent.Node) -> None:
+def test_node_control_plane_count() -> None:
     cluster = agent.Cluster(cluster_details=ClusterDetailsFactory.build(), excluded_node_roles=[])
-    cluster.add_node(node)
+    api_node = APINodeFactory.build(
+        roles=["master"],
+        status=node_status(api.NodeConditionStatus.TRUE),
+    )
+    cluster.add_node(api_to_agent_node(api_node))
     node_count = cluster.node_count()
     assert node_count.worker.total == 0
     assert node_count.control_plane.total == 1
     assert node_count.control_plane.ready == 1
 
 
-@pytest.mark.parametrize("node_is_control_plane", [True])
-@pytest.mark.parametrize("node_condition_status", [api.ConditionStatus.FALSE])
-def test_node_control_plane_not_ready_count(node: agent.Node) -> None:
+def test_node_control_plane_not_ready_count() -> None:
     cluster = agent.Cluster(cluster_details=ClusterDetailsFactory.build(), excluded_node_roles=[])
-    cluster.add_node(node)
+    api_node = APINodeFactory.build(
+        roles=["master"],
+        status=node_status(api.NodeConditionStatus.FALSE),
+    )
+    cluster.add_node(api_to_agent_node(api_node))
     node_count = cluster.node_count()
     assert node_count.control_plane.not_ready == 1
 

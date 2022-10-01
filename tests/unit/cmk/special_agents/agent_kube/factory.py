@@ -156,3 +156,7 @@ class PerformancePodFactory(ModelFactory):
 
 class NodeMetaDataFactory(ModelFactory):
     __model__ = api.MetaDataNoNamespace[api.NodeName]
+
+
+class NodeResourcesFactory(ModelFactory):
+    __model__ = api.NodeResources

@@ -24,7 +24,6 @@ from pydantic_factories import ModelFactory, Use
 # pylint: disable=comparison-with-callable,redefined-outer-name
 from tests.unit.cmk.special_agents.agent_kube.factory import (
     api_to_agent_daemonset,
-    api_to_agent_pod,
     api_to_agent_statefulset,
     APIDaemonSetFactory,
     APIStatefulSetFactory,
@@ -137,12 +136,6 @@ class NodeStatusFactory(ModelFactory):
     )
 
 
-@pytest.fixture
-def node_condition_status() -> api.NodeConditionStatus:
-    return api.NodeConditionStatus.TRUE
-
-
-@pytest.fixture
 def node_status(node_condition_status: api.NodeConditionStatus) -> api.NodeStatus:
     return NodeStatusFactory.build(
         conditions=NodeConditionFactory.batch(
@@ -286,13 +279,12 @@ def node_resources_builder(
 @pytest.fixture
 def new_node(
     node_resources_builder: Callable[[], Dict[str, api.NodeResources]],
-    node_status: api.NodeStatus,
     node_is_control_plane: bool,
 ) -> Callable[[], agent_kube.Node]:
     def _new_node() -> agent_kube.Node:
         return agent_kube.Node(
             metadata=NodeMetaDataFactory.build(),
-            status=node_status,
+            status=node_status(api.NodeConditionStatus.TRUE),
             resources=node_resources_builder(),
             roles=["control_plane"] if node_is_control_plane else [],
             kubelet_info=KubeletInfoFactory.build(),
@@ -306,17 +298,9 @@ def api_to_agent_node(node: api.Node) -> agent_kube.Node:
         metadata=node.metadata,
         status=node.status,
         resources=node.resources,
-        roles=["worker"],
+        roles=node.roles,
         kubelet_info=node.kubelet_info,
     )
-
-
-@pytest.fixture
-def node(new_node: Callable[[], agent_kube.Node], node_pods: int) -> agent_kube.Node:
-    node = new_node()
-    for _ in range(node_pods):
-        node.add_pod(api_to_agent_pod(APIPodFactory.build()))
-    return node
 
 
 @pytest.fixture

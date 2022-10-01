@@ -74,22 +74,35 @@ def test_cluster_resources(cluster_pods: int) -> None:
     assert sum(len(pods) for _phase, pods in cluster.pod_resources()) == cluster_pods
 
 
-def test_cluster_allocatable_memory_resource(  # type:ignore[no-untyped-def]
-    node_allocatable_memory: float, cluster_nodes: int, cluster: agent.Cluster
-):
-    expected = section.AllocatableResource(
-        context="cluster", value=node_allocatable_memory * cluster_nodes
-    )
+def test_cluster_allocatable_memory_resource() -> None:
+    memory = 2.0 * 1024
+    resources = {
+        "capacity": NodeResourcesFactory.build(),
+        "allocatable": NodeResourcesFactory.build(memory=memory),
+    }
+    cluster = agent.Cluster(cluster_details=ClusterDetailsFactory.build(), excluded_node_roles=[])
+    for _ in range(3):
+        node = api_to_agent_node(APINodeFactory.build(resources=resources))
+        cluster.add_node(node)
+
+    expected = section.AllocatableResource(context="cluster", value=memory * 3)
     actual = cluster.allocatable_memory_resource()
     assert actual == expected
 
 
-def test_cluster_allocatable_cpu_resource(  # type:ignore[no-untyped-def]
-    node_allocatable_cpu: float, cluster_nodes: int, cluster: agent.Cluster
-):
-    expected = section.AllocatableResource(
-        context="cluster", value=node_allocatable_cpu * cluster_nodes
-    )
+def test_cluster_allocatable_cpu_resource():
+    cpu = 2.0
+    number_nodes = 3
+    resources = {
+        "capacity": NodeResourcesFactory.build(),
+        "allocatable": NodeResourcesFactory.build(cpu=cpu),
+    }
+    cluster = agent.Cluster(cluster_details=ClusterDetailsFactory.build(), excluded_node_roles=[])
+    for _ in range(number_nodes):
+        node = api_to_agent_node(APINodeFactory.build(resources=resources))
+        cluster.add_node(node)
+
+    expected = section.AllocatableResource(context="cluster", value=cpu * number_nodes)
     actual = cluster.allocatable_cpu_resource()
     assert actual == expected
 

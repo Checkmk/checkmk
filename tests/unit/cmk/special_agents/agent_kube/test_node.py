@@ -2,7 +2,7 @@
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Callable, Sequence
+from typing import Sequence
 from unittest.mock import Mock
 
 import pytest
@@ -133,12 +133,12 @@ def test_write_nodes_api_sections_maps_section_names_to_callables(  # type:ignor
 
 
 def test_write_nodes_api_sections_calls_write_sections_for_each_node(  # type:ignore[no-untyped-def]
-    new_node: Callable[[], agent.Node], cluster_nodes: int, write_sections_mock
+    cluster_nodes: int, write_sections_mock
 ):
     agent.write_nodes_api_sections(
         "cluster",
         agent.AnnotationNonPatternOption.ignore_all,
-        [new_node() for _ in range(cluster_nodes)],
+        [api_to_agent_node(APINodeFactory.build()) for _ in range(cluster_nodes)],
         "host",
         Mock(),
     )
@@ -264,12 +264,10 @@ def test_node_cpu_resources() -> None:
 
 @pytest.mark.parametrize("pod_containers_count", [0, 5, 10])
 @pytest.mark.parametrize("container_status_state", list(api.ContainerStateType))
-def test_node_container_count(  # type:ignore[no-untyped-def]
-    container_status_state: api.ContainerStateType,
-    new_node: Callable[[], agent.Node],
-    pod_containers_count: int,
-):
-    node = new_node()
+def test_node_container_count(
+    container_status_state: api.ContainerStateType, pod_containers_count: int
+) -> None:
+    node = api_to_agent_node(APINodeFactory.build())
     containers = {}
     for _ in range(pod_containers_count):
         c = ContainerStatusFactory.build(state=create_container_state(state=container_status_state))

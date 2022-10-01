@@ -15,7 +15,7 @@
 import itertools
 import unittest
 import uuid
-from typing import Callable, Dict, Mapping, Sequence
+from typing import Callable, Mapping, Sequence
 
 import pytest
 import pytest_mock
@@ -231,68 +231,6 @@ def container_status(  # type:ignore[no-untyped-def]
     return _container_status
 
 
-@pytest.fixture
-def node_allocatable_cpu() -> float:
-    return 6.0
-
-
-@pytest.fixture
-def node_allocatable_memory() -> float:
-    return 7.0 * ONE_GiB
-
-
-@pytest.fixture
-def node_allocatable_pods() -> int:
-    return 1
-
-
-@pytest.fixture
-def node_capacity_pods() -> int:
-    return 1
-
-
-@pytest.fixture
-def node_is_control_plane() -> bool:
-    return False
-
-
-@pytest.fixture
-def node_resources_builder(
-    node_allocatable_cpu: float,
-    node_allocatable_memory: float,
-    node_allocatable_pods: int,
-    node_capacity_pods: int,
-) -> Callable[[], Dict[str, api.NodeResources]]:
-    def _node_resources_builder() -> Dict[str, api.NodeResources]:
-        return {
-            "capacity": NodeResourcesFactory.build(pods=node_capacity_pods),
-            "allocatable": NodeResourcesFactory().build(
-                cpu=node_allocatable_cpu,
-                memory=node_allocatable_memory,
-                pods=node_allocatable_pods,
-            ),
-        }
-
-    return _node_resources_builder
-
-
-@pytest.fixture
-def new_node(
-    node_resources_builder: Callable[[], Dict[str, api.NodeResources]],
-    node_is_control_plane: bool,
-) -> Callable[[], agent_kube.Node]:
-    def _new_node() -> agent_kube.Node:
-        return agent_kube.Node(
-            metadata=NodeMetaDataFactory.build(),
-            status=node_status(api.NodeConditionStatus.TRUE),
-            resources=node_resources_builder(),
-            roles=["control_plane"] if node_is_control_plane else [],
-            kubelet_info=KubeletInfoFactory.build(),
-        )
-
-    return _new_node
-
-
 def api_to_agent_node(node: api.Node) -> agent_kube.Node:
     return agent_kube.Node(
         metadata=node.metadata,
@@ -325,7 +263,6 @@ def cluster_statefulsets() -> int:
 
 @pytest.fixture
 def cluster(
-    new_node: Callable[[], agent_kube.Node],
     cluster_nodes: int,
     cluster_daemon_sets: int,
     cluster_statefulsets: int,
@@ -334,7 +271,8 @@ def cluster(
         excluded_node_roles=[], cluster_details=ClusterDetailsFactory.build()
     )
     for _ in range(cluster_nodes):
-        cluster.add_node(new_node())
+        node = api_to_agent_node(APINodeFactory.build())
+        cluster.add_node(node)
     for _ in range(cluster_daemon_sets):
         daemonset = api_to_agent_daemonset(APIDaemonSetFactory.build())
         cluster.add_daemon_set(daemonset)

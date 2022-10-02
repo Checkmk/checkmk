@@ -4,13 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Any, List, Optional, TypedDict
+from typing import Any, List, Literal, Optional, Sequence, TypedDict
 
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.plugins.metrics import artwork
 from cmk.gui.plugins.metrics.utils import metric_info, unit_info
+from cmk.gui.type_defs import GraphTitleFormat
 from cmk.gui.valuespec import (
     CascadingDropdown,
     CascadingDropdownChoiceValue,
@@ -27,16 +28,34 @@ from cmk.gui.valuespec import (
 )
 
 
-def migrate_graph_render_options_title_format(p) -> List[str]:  # type:ignore[no-untyped-def]
+def migrate_graph_render_options_title_format(
+    p: Literal["plain"]
+    | Literal["add_host_name"]
+    | Literal["add_host_alias"]
+    | tuple[
+        Literal["add_title_infos"],
+        list[
+            Literal["add_host_name"]
+            | Literal["add_host_alias"]
+            | Literal["add_service_description"]
+        ],
+    ]
+    | Sequence[GraphTitleFormat],
+) -> Sequence[GraphTitleFormat]:
     # ->1.5.0i2 pnp_graph reportlet
-    if p in ("add_host_name", "add_host_alias"):
-        p = ("add_title_infos", [p])
+    if p == "add_host_name":
+        return ["plain", "add_host_name"]
+    if p == "add_host_alias":
+        return ["plain", "add_host_alias"]
+
     #   1.5.0i2->2.0.0i1 title format DropdownChoice to ListChoice
     if p == "plain":
         return ["plain"]
+
     if isinstance(p, tuple):
         if p[0] == "add_title_infos":
-            return ["plain"] + p[1]
+            infos: Sequence[GraphTitleFormat] = ["plain"] + p[1]
+            return infos
         if p[0] == "plain":
             return ["plain"]
 

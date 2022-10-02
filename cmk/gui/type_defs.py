@@ -450,6 +450,7 @@ class _UnitInfoRequired(TypedDict):
     js_render: str
 
 
+GraphTitleFormat = Literal["plain", "add_host_name", "add_host_alias", "add_service_description"]
 GraphUnitRenderFunc = Callable[[list[float]], tuple[str, list[str]]]
 
 

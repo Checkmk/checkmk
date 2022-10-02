@@ -9,8 +9,10 @@
 #include "test-utf-names.h"
 #include "test_tools.h"
 
+using namespace std::string_literals;
+
 namespace cma::tools {
-TEST(CmaTools, All) {
+TEST(CmaTools, CheckArgvForValue) {
     const wchar_t *t[] = {L"a.exe", L"b", L"c"};
     EXPECT_FALSE(CheckArgvForValue(0, t, 0, "a.exe"))
         << "argc == 0 always returns false";
@@ -132,290 +134,135 @@ TEST(CmaTools, Trimmer) {
     }
 }
 
-TEST(CmaTools, Misc) {
-    using namespace std;
-    using namespace cma::tools;
+struct SplitTest {
+    std::string in;
+    std::string delim;
+    std::vector<std::string> expected;
+    std::optional<int> count;
+};
 
-    {
-        string a_in = "";
-        string a_delim = "";
-        auto res = SplitString(a_in, a_delim);
-        EXPECT_EQ(res.size(), 0);
-    }
+std::vector<std::string> SplitStringCall(const SplitTest &t) {
+    return t.count.has_value() ? SplitString(t.in, t.delim, *t.count)
+                               : SplitString(t.in, t.delim);
+}
 
-    {
-        string a_in = "";
-        string a_delim = "a";
-        auto res = SplitString(a_in, a_delim);
-        EXPECT_EQ(res.size(), 0);
-    }
+std::vector<std::wstring> SplitStringCallWide(const SplitTest &t) {
+    return t.count.has_value()
+               ? SplitString(wtools::ConvertToUTF16(t.in),
+                             wtools::ConvertToUTF16(t.delim), *t.count)
+               : SplitString(wtools::ConvertToUTF16(t.in),
+                             wtools::ConvertToUTF16(t.delim));
+}
 
-    {
-        string a_in = "abs";
-        string a_delim = "";
-        auto res = SplitString(a_in, a_delim);
-        EXPECT_EQ(res.size(), 1);
-        EXPECT_EQ(res[0], "abs");
-    }
+std::vector<std::wstring> ToUtf16(const std::vector<std::string> &strings) {
+    std::vector<std::wstring> wstrings;
+    std::ranges::transform(
+        strings, std::back_inserter(wstrings),
+        [](const auto &s) { return wtools::ConvertToUTF16(s); });
+    return wstrings;
+}
 
-    {
-        string a_in = "abs\n";
-        string a_delim = "\n";
-        auto res = SplitString(a_in, a_delim);
-        EXPECT_EQ(res.size(), 1);
-        EXPECT_EQ(res[0], "abs");
-    }
-
-    {
-        string a_in = "abs\nbda";
-        string a_delim = "\n";
-        auto res = SplitString(a_in, a_delim);
-        EXPECT_EQ(res.size(), 2);
-        EXPECT_EQ(res[0], "abs");
-        EXPECT_EQ(res[1], "bda");
-    }
-    {
-        string a_in = "abs\n\nbda";
-        string a_delim = "\n";
-
-        auto res = SplitString(a_in, a_delim);
-        EXPECT_EQ(res.size(), 3);
-        EXPECT_EQ(res[0], "abs");
-        EXPECT_EQ(res[1], "");
-        EXPECT_EQ(res[2], "bda");
-    }
-
-    {
-        string a_in = "abs\nbda";
-        string a_delim = "\n";
-        auto res = SplitString(a_in, a_delim, 1);
-        EXPECT_EQ(res.size(), 2);
-        EXPECT_EQ(res[0], "abs");
-        EXPECT_EQ(res[1], "bda");
-    }
-
-    {
-        string a_in = "abs\nbda";
-        string a_delim = "\n";
-        auto res = SplitString(a_in, a_delim, 2);
-        EXPECT_EQ(res.size(), 2);
-        EXPECT_EQ(res[0], "abs");
-        EXPECT_EQ(res[1], "bda");
-    }
-
-    {
-        string a_in = "abs\n\nbda";
-        string a_delim = "\n";
-
-        auto res = SplitString(a_in, a_delim, 1);
-        EXPECT_EQ(res.size(), 2);
-        EXPECT_EQ(res[0], "abs");
-        EXPECT_EQ(res[1], "\nbda");
-    }
-
-    {
-        wstring a_in = L"";
-        wstring a_delim = L"";
-        auto res = SplitString(a_in, a_delim);
-        EXPECT_EQ(res.size(), 0);
-    }
-
-    {
-        wstring a_in = L"";
-        wstring a_delim = L"a";
-        auto res = SplitString(a_in, a_delim);
-        EXPECT_EQ(res.size(), 0);
-    }
-
-    {
-        wstring a_in = L"abs";
-        wstring a_delim = L"";
-        auto res = SplitString(a_in, a_delim);
-        EXPECT_EQ(res.size(), 1);
-        EXPECT_EQ(res[0], L"abs");
-    }
-
-    {
-        wstring a_in = L"abs\n";
-        wstring a_delim = L"\n";
-        auto res = SplitString(a_in, a_delim);
-        EXPECT_EQ(res.size(), 1);
-        EXPECT_EQ(res[0], L"abs");
-    }
-
-    {
-        wstring a_in = L"abs\nbda";
-        wstring a_delim = L"\n";
-        auto res = SplitString(a_in, a_delim);
-        EXPECT_EQ(res.size(), 2);
-        EXPECT_EQ(res[0], L"abs");
-        EXPECT_EQ(res[1], L"bda");
-    }
-    {
-        wstring a_in = L"abs\n\nbda";
-        wstring a_delim = L"\n";
-
-        auto res = SplitString(a_in, a_delim);
-        EXPECT_EQ(res.size(), 3);
-        EXPECT_EQ(res[0], L"abs");
-        EXPECT_EQ(res[1], L"");
-        EXPECT_EQ(res[2], L"bda");
-    }
-
-    {
-        wstring a_in = L"abs\nbda";
-        wstring a_delim = L"\n";
-        auto res = SplitString(a_in, a_delim, 1);
-        EXPECT_EQ(res.size(), 2);
-        EXPECT_EQ(res[0], L"abs");
-        EXPECT_EQ(res[1], L"bda");
-    }
-
-    {
-        wstring a_in = L"abs\nbda";
-        wstring a_delim = L"\n";
-        auto res = SplitString(a_in, a_delim, 2);
-        EXPECT_EQ(res.size(), 2);
-        EXPECT_EQ(res[0], L"abs");
-        EXPECT_EQ(res[1], L"bda");
-    }
-
-    {
-        wstring a_in = L"abs\n\nbda";
-        wstring a_delim = L"\n";
-
-        auto res = SplitString(a_in, a_delim, 1);
-        EXPECT_EQ(res.size(), 2);
-        EXPECT_EQ(res[0], L"abs");
-        EXPECT_EQ(res[1], L"\nbda");
+TEST(CmaTools, SplitString) {
+    std::vector<SplitTest> tests = {
+        {"", "", {}, std::nullopt},
+        {"", "a", {}, std::nullopt},
+        {"abs\nbda", "\n", {"abs", "bda"}, std::nullopt},
+        {"abs\n\nbda", "\n", {"abs", "", "bda"}, std::nullopt},
+        {"abs\nbda", "\n", {"abs", "bda"}, 1},
+        {"abs\nbda", "\n", {"abs", "bda"}, 2},
+        {"abs\n\nbda", "\n", {"abs", "\nbda"}, 1},
+    };
+    for (const auto &t : tests) {
+        EXPECT_EQ(SplitStringCall(t), t.expected);
+        EXPECT_EQ(SplitStringCallWide(t), ToUtf16(t.expected));
     }
 }
 
-TEST(Misc, JoinVectorTest) {
-    using namespace std;
-    {
-        vector<wstring> vws = {L"a", L"", L"c"};
-        auto ret = JoinVector(vws, L".");
-        EXPECT_EQ(ret, L"a..c");
-        vector<wstring> vws_empty;
-        ret = JoinVector({}, L".");
-        EXPECT_EQ(ret, L"");
-    }
-    {
-        vector<string> vws = {"a", "", "c"};
-        auto ret = JoinVector(vws, ".");
-        EXPECT_EQ(ret, "a..c");
-        vector<wstring> vws_empty;
-        ret = JoinVector({}, ".");
-        EXPECT_EQ(ret, "");
-    }
-    { EXPECT_EQ(cma::tools::RemoveQuotes("''"), ""); }
+TEST(CmaTools, JoinVector) {
+    EXPECT_EQ(JoinVector({L"a", L"", L"c"}, L"."), L"a..c");
+    EXPECT_EQ(JoinVector({}, L"."), L"");
+    EXPECT_EQ(JoinVector({"a", "", "c"}, "."), "a..c");
+    EXPECT_EQ(JoinVector({}, "."), "");
 }
 
-TEST(Misc, RemoveQuotes) {
-    //
-    EXPECT_EQ(cma::tools::RemoveQuotes(R"(")"), "\"");
-    EXPECT_EQ(cma::tools::RemoveQuotes(R"("''")"), "''");
-    EXPECT_EQ(cma::tools::RemoveQuotes(R"("aa")"), "aa");
-    EXPECT_EQ(cma::tools::RemoveQuotes(R"("__')"), "__");
-    EXPECT_EQ(cma::tools::RemoveQuotes(R"('__")"), "__");
-    EXPECT_EQ(cma::tools::RemoveQuotes(R"('__')"), "__");
-    EXPECT_EQ(cma::tools::RemoveQuotes(R"("aa")"), "aa");
-
-    //
-    EXPECT_EQ(cma::tools::RemoveQuotes(LR"(")"), L"\"");
-    EXPECT_EQ(cma::tools::RemoveQuotes(LR"("''")"), L"''");
-    EXPECT_EQ(cma::tools::RemoveQuotes(LR"("aa")"), L"aa");
-    EXPECT_EQ(cma::tools::RemoveQuotes(LR"("__')"), L"__");
-    EXPECT_EQ(cma::tools::RemoveQuotes(LR"('__")"), L"__");
-    EXPECT_EQ(cma::tools::RemoveQuotes(LR"('__')"), L"__");
-    EXPECT_EQ(cma::tools::RemoveQuotes(LR"("aa")"), L"aa");
-}
-
-TEST(Misc, LowerUpper) {
-    {
-        std::wstring w = test_cyrillic;
-        cma::tools::WideUpper(w);
-        std::wstring w_u = test_cyrillic_upper;
-        EXPECT_EQ(w, w_u);
-    }
-    {
-        std::wstring w = L"";
-        cma::tools::WideUpper(w);
-        EXPECT_EQ(w, L"");
-    }
-
-    {
-        std::wstring w = test_cyrillic;
-        cma::tools::WideLower(w);
-        std::wstring w_l = test_cyrillic_lower;
-        EXPECT_EQ(w, w_l);
-    }
-    {
-        std::wstring w = L"";
-        cma::tools::WideLower(w);
-        EXPECT_EQ(w, L"");
+TEST(CmaTools, RemoveQuotes) {
+    std::vector<std::pair<std::string, std::string>> tests = {
+        {R"('')", ""},     {R"(")", "\""},    {R"("''")", "''"},
+        {R"("aa")", "aa"}, {R"("__')", "__"}, {R"('__")", "__"},
+        {R"('__')", "__"}, {R"("aa")", "aa"},
+    };
+    for (const auto &[value, expected] : tests) {
+        EXPECT_EQ(RemoveQuotes(value), expected);
+        EXPECT_EQ(RemoveQuotes(wtools::ConvertToUTF16(value)),
+                  wtools::ConvertToUTF16(expected));
     }
 }
 
-TEST(Misc, LessTest) {
-    {
-        EXPECT_TRUE(false == IsLess("a", ""));
-        EXPECT_TRUE(false == IsLess("aa", "a"));
+TEST(CmaTools, WideUpper) {
+    std::wstring w = test_cyrillic;
+    WideUpper(w);
+    EXPECT_EQ(w, test_cyrillic_upper);
 
-        EXPECT_TRUE(true == IsLess("a", "b"));
-        EXPECT_TRUE(false == IsLess("b", "a"));
+    std::wstring nothing = L"";
+    WideUpper(nothing);
+    EXPECT_EQ(nothing, L"");
+}
 
-        EXPECT_TRUE(false == IsLess("b", "b"));
+TEST(CmaTools, WideLower) {
+    std::wstring w = test_cyrillic;
+    WideLower(w);
+    EXPECT_EQ(w, test_cyrillic_lower);
 
-        EXPECT_TRUE(true == IsLess("a", "aa"));
-        EXPECT_TRUE(true == IsLess("aa", "AAa"));
+    std::wstring nothing = L"";
+    WideLower(w);
+    EXPECT_EQ(nothing, L"");
+}
 
-        EXPECT_TRUE(false == IsLess("b", "A"));
-
-        EXPECT_TRUE(false == IsLess("b", "B"));
-    }
-
-    {
-        EXPECT_TRUE(false == IsEqual("a", ""));
-        EXPECT_TRUE(false == IsEqual("aa", "a"));
-        EXPECT_TRUE(false == IsEqual("a", "b"));
-        EXPECT_TRUE(false == IsEqual("b", "a"));
-        EXPECT_TRUE(true == IsEqual("b", "b"));
-        EXPECT_TRUE(false == IsEqual("a", "aa"));
-        EXPECT_TRUE(false == IsEqual("aa", "AAa"));
-        EXPECT_TRUE(false == IsEqual("b", "A"));
-        EXPECT_TRUE(true == IsEqual("b", "B"));
-    }
+TEST(CmaTools, IsLess) {
+    EXPECT_FALSE(IsLess("a", ""));
+    EXPECT_FALSE(IsLess("aa", "a"));
+    EXPECT_TRUE(IsLess("a", "b"));
+    EXPECT_FALSE(IsLess("b", "a"));
+    EXPECT_FALSE(IsLess("b", "b"));
+    EXPECT_TRUE(IsLess("a", "aa"));
+    EXPECT_TRUE(IsLess("aa", "AAa"));
+    EXPECT_FALSE(IsLess("b", "A"));
+    EXPECT_FALSE(IsLess("b", "B"));
+    EXPECT_FALSE(IsEqual("a", ""));
+    EXPECT_FALSE(IsEqual("aa", "a"));
+    EXPECT_FALSE(IsEqual("a", "b"));
+    EXPECT_FALSE(IsEqual("b", "a"));
+    EXPECT_TRUE(IsEqual("b", "b"));
+    EXPECT_FALSE(IsEqual("a", "aa"));
+    EXPECT_FALSE(IsEqual("aa", "AAa"));
+    EXPECT_FALSE(IsEqual("b", "A"));
+    EXPECT_TRUE(IsEqual("b", "B"));
 }
 
 TEST(CmaTools, StringCache) {
-    {
-        tools::StringSet cache;
-        ASSERT_TRUE(cache.size() == 0);
-        EXPECT_TRUE(tools::AddUniqStringToSetIgnoreCase(cache, "aAaaa"));
-        ASSERT_TRUE(cache.size() == 1);
-        EXPECT_FALSE(tools::AddUniqStringToSetIgnoreCase(cache, "AAaaa"));
-        ASSERT_TRUE(cache.size() == 1);
+    tools::StringSet cache;
+    EXPECT_TRUE(tools::AddUniqStringToSetIgnoreCase(cache, "aAaaa"));
+    ASSERT_TRUE(cache.size() == 1);
+    EXPECT_FALSE(tools::AddUniqStringToSetIgnoreCase(cache, "AAaaa"));
+    ASSERT_TRUE(cache.size() == 1);
 
-        EXPECT_TRUE(tools::AddUniqStringToSetIgnoreCase(cache, "bcd"));
-        ASSERT_TRUE(cache.size() == 2);
-        EXPECT_TRUE(tools::AddUniqStringToSetIgnoreCase(cache, "bcd-1"));
-        ASSERT_TRUE(cache.size() == 3);
-        EXPECT_FALSE(tools::AddUniqStringToSetIgnoreCase(cache, "AAaaa"));
-        ASSERT_TRUE(cache.size() == 3);
+    EXPECT_TRUE(tools::AddUniqStringToSetIgnoreCase(cache, "bcd"));
+    ASSERT_TRUE(cache.size() == 2);
+    EXPECT_TRUE(tools::AddUniqStringToSetIgnoreCase(cache, "bcd-1"));
+    ASSERT_TRUE(cache.size() == 3);
+    EXPECT_FALSE(tools::AddUniqStringToSetIgnoreCase(cache, "AAaaa"));
+    ASSERT_TRUE(cache.size() == 3);
 
-        EXPECT_FALSE(tools::AddUniqStringToSetAsIs(cache, "AAAAA"));
-        ASSERT_TRUE(cache.size() == 3);
-        EXPECT_TRUE(tools::AddUniqStringToSetAsIs(cache, "AAaaA"));
-        ASSERT_TRUE(cache.size() == 4);
-    }
+    EXPECT_FALSE(tools::AddUniqStringToSetAsIs(cache, "AAAAA"));
+    ASSERT_TRUE(cache.size() == 3);
+    EXPECT_TRUE(tools::AddUniqStringToSetAsIs(cache, "AAaaA"));
+    ASSERT_TRUE(cache.size() == 4);
 }
 
 namespace win {
-TEST(Misc, WithEnv) {
-    std::string env_var_name = "XxYyZz_1";
-    std::string env_var_value = "aaa";
+TEST(CmaToolsWin, WithEnv) {
+    const std::string env_var_name = "XxYyZz_1";
+    const std::string env_var_value = "aaa";
     EXPECT_EQ(GetEnv(env_var_name), "");
     {
         WithEnv with_env(env_var_name, env_var_value);

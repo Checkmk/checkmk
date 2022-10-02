@@ -19,8 +19,7 @@ from cmk.gui.plugins.metrics.utils import (
     parse_color,
     RGBColor,
 )
-
-SizeMM = float
+from cmk.gui.type_defs import SizeMM
 
 
 def render_graph_pdf(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branches

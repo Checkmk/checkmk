@@ -38,16 +38,14 @@ import cmk.utils.version as cmk_version
 from cmk.gui.exceptions import MKInternalError
 from cmk.gui.http import response
 from cmk.gui.i18n import _
-from cmk.gui.type_defs import RGBColor
+from cmk.gui.type_defs import RGBColor, RowShading, SizeMM, SizePT
 
 RawIconColumn = tuple[Literal["icon"], str]
 RawRendererColumn = tuple[Literal["object"], "CellRenderer"]
 RawTableColumn = tuple[str, Union[str, RawIconColumn, RawRendererColumn]]
 RawTableRow = list[RawTableColumn]
 RawTableRows = list[RawTableRow]
-SizePT = float
 SizeInternal = float
-SizeMM = float
 SizeDPI = int
 Align = Literal["left", "right", "center"]
 VerticalAlign = Literal["bottom", "middle"]
@@ -57,13 +55,6 @@ Position = Union[
     tuple[Literal["nw", "ne", "sw", "se"], tuple[SizeMM, SizeMM]],
     Literal["c"],
 ]
-
-
-class RowShading(TypedDict):
-    enabled: bool
-    odd: RGBColor
-    even: RGBColor
-    heading: RGBColor
 
 
 @overload

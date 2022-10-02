@@ -29,6 +29,8 @@ from cmk.utils.type_defs import (
 from cmk.gui.exceptions import FinalizeRequest
 from cmk.gui.utils.speaklater import LazyString
 
+SizePT = float
+SizeMM = float
 HTTPVariables = list[tuple[str, int | str | None]]
 LivestatusQuery = str
 PermissionName = str
@@ -492,6 +494,13 @@ PerfometerSpec = dict[str, Any]
 PerfdataTuple = tuple[str, float, str, float | None, float | None, float | None, float | None]
 Perfdata = list[PerfdataTuple]
 RGBColor = tuple[float, float, float]  # (1.5, 0.0, 0.5)
+
+
+class RowShading(TypedDict):
+    enabled: bool
+    odd: RGBColor
+    even: RGBColor
+    heading: RGBColor
 
 
 class GraphSpec(TypedDict):

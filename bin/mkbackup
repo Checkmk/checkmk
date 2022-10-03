@@ -650,7 +650,7 @@ class Job:
 
 
 @dataclass(frozen=True)
-class BackupTarget:
+class BackupAction:
     config: Config
     job: Job
 
@@ -668,7 +668,7 @@ class BackupTarget:
 
 
 @dataclass(frozen=True)
-class RestoreTarget:
+class RestoreAction:
     target_id: TargetId
     backup_id: str
     config: Config
@@ -678,7 +678,7 @@ class RestoreTarget:
         return target_path(self.target_id, self.config) / self.backup_id
 
 
-Target = BackupTarget | RestoreTarget
+Action = BackupAction | RestoreAction
 
 
 def backup_state(job: Job) -> State:
@@ -755,13 +755,13 @@ def load_backup_info(path: str) -> BackupInfo:
     return info
 
 
-def save_backup_info(info: BackupInfo, target: Target) -> None:
-    with open(backup_info_path(target), "w") as f:
+def save_backup_info(info: BackupInfo, action: Action) -> None:
+    with open(backup_info_path(action), "w") as f:
         json.dump(info, f, sort_keys=True, indent=4, separators=(",", ": "))
 
 
-def create_backup_info(target: BackupTarget, job: Job) -> BackupInfo:
-    files = get_files_for_backup_info(target, job)
+def create_backup_info(action: BackupAction, job: Job) -> BackupInfo:
+    files = get_files_for_backup_info(action, job)
 
     info: BackupInfo = {
         "type": "Check_MK",
@@ -779,8 +779,8 @@ def create_backup_info(target: BackupTarget, job: Job) -> BackupInfo:
     return info
 
 
-def get_files_for_backup_info(target: BackupTarget, job: Job) -> list[tuple[str, int, str]]:
-    backup_path = target.base_path
+def get_files_for_backup_info(action: BackupAction, job: Job) -> list[tuple[str, int, str]]:
+    backup_path = action.base_path
     dir_entries: list[str] = os.listdir(backup_path)
     files = []
     for f in sorted(dir_entries):
@@ -904,7 +904,7 @@ modes = {
 
 def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None:
     job = load_job(local_job_id, config)
-    target = BackupTarget(config, job)
+    action = BackupAction(config, job)
     state = backup_state(job)
 
     with ExitStack() as stack:
@@ -928,7 +928,7 @@ def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None
 
         success = False
         try:
-            cleanup_previous_incomplete_backup(target)
+            cleanup_previous_incomplete_backup(action)
 
             state.save(
                 {
@@ -936,8 +936,8 @@ def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None
                 },
             )
 
-            do_site_backup(job, target, state)
-            complete_backup(job, target, state)
+            do_site_backup(job, action, state)
+            complete_backup(job, action, state)
             success = True
 
         except MKGeneralException as e:
@@ -964,7 +964,7 @@ def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None
 
 def do_site_backup(
     job: Job,
-    target: BackupTarget,
+    action: BackupAction,
     state: State,
     site: str | None = None,
     try_stop: bool = True,
@@ -980,7 +980,7 @@ def do_site_backup(
     site = current_site_id()
     cmd.append("-")
 
-    backup_path = site_backup_archive_path(site, target, job.config)
+    backup_path = site_backup_archive_path(site, action, job.config)
 
     # Create missing directories. Ensure group permissions and mode.
     makedirs(os.path.dirname(backup_path), group="omd", mode=0o775)
@@ -1014,12 +1014,12 @@ def do_site_backup(
 
 # Returns the base path for the backup to work with. In backup mode, this is
 # the directory of the target+job. In restore mode it is the target+backup path.
-def backup_info_path(target: Target) -> str:
-    return f"{target.base_path}/mkbackup.info"
+def backup_info_path(action: Action) -> str:
+    return f"{action.base_path}/mkbackup.info"
 
 
-def site_backup_archive_path(site_id: str, target: Target, job_config: JobConfig) -> Path:
-    return target.base_path / f"site-{site_id}{archive_suffix(job_config)}"
+def site_backup_archive_path(site_id: str, action: Action, job_config: JobConfig) -> Path:
+    return action.base_path / f"site-{site_id}{archive_suffix(job_config)}"
 
 
 def archive_suffix(config: JobConfig) -> str:
@@ -1067,25 +1067,25 @@ def verify_target_is_ready(target_ident: str, config: Config) -> None:
         )
 
 
-def verify_backup_exists(target: Target) -> None:
-    if not os.path.exists(target.base_path) or not os.path.exists(backup_info_path(target)):
+def verify_backup_exists(action: Action) -> None:
+    if not os.path.exists(action.base_path) or not os.path.exists(backup_info_path(action)):
         raise MKGeneralException(
-            f'This backup does not exist (Use "mkbackup list {target.target_id}" to '
+            f'This backup does not exist (Use "mkbackup list {action.target_id}" to '
             "show a list of available backups)."
         )
 
 
-def verify_backup_consistency(info: BackupInfo, target: Target) -> None:
+def verify_backup_consistency(info: BackupInfo, action: Action) -> None:
     log("Verifying backup consistency")
     needed_files = needed_backup_archive_files(info)
     optional_files = [entry[0] for entry in info["files"] if entry[0] not in needed_files]
 
-    verify_backup_files(info, needed_files, needed=True, target=target)
-    verify_backup_files(info, optional_files, needed=False, target=target)
+    verify_backup_files(info, needed_files, needed=True, action=action)
+    verify_backup_files(info, optional_files, needed=False, action=action)
 
 
 def verify_backup_files(
-    info: BackupInfo, files: Sequence[str], needed: bool, target: Target
+    info: BackupInfo, files: Sequence[str], needed: bool, action: Action
 ) -> None:
     for archive_file in files:
         size, checksum = None, None
@@ -1101,7 +1101,7 @@ def verify_backup_files(
                 )
             continue  # missing optional files are OK
 
-        archive_path = target.base_path / archive_file
+        archive_path = action.base_path / archive_file
         this_checksum = file_checksum(archive_path)
         if this_checksum != checksum:
             raise MKGeneralException(
@@ -1111,9 +1111,9 @@ def verify_backup_files(
             )
 
 
-def complete_backup(job: Job, target: BackupTarget, state: State) -> None:
-    info = create_backup_info(target, job)
-    save_backup_info(info, target)
+def complete_backup(job: Job, action: BackupAction, state: State) -> None:
+    info = create_backup_info(action, job)
+    save_backup_info(info, action)
 
     state.save(
         {
@@ -1121,16 +1121,16 @@ def complete_backup(job: Job, target: BackupTarget, state: State) -> None:
         },
     )
 
-    verify_backup_consistency(info, target=target)
+    verify_backup_consistency(info, action=action)
 
     # Now we can be sure this new backup is a good one. Remove eventual old
     # backup and move from "incomplete" to "complete".
 
-    if os.path.exists(target.completed_path):
+    if os.path.exists(action.completed_path):
         log("Cleaning up previously completed backup")
-        shutil.rmtree(target.completed_path)
+        shutil.rmtree(action.completed_path)
 
-    os.rename(target.base_path, target.completed_path)
+    os.rename(action.base_path, action.completed_path)
 
     state_content = state.load()
     duration = time.time() - state_content["started"]
@@ -1145,11 +1145,11 @@ def complete_backup(job: Job, target: BackupTarget, state: State) -> None:
     )
 
 
-def cleanup_previous_incomplete_backup(target: BackupTarget) -> None:
-    if os.path.exists(target.base_path):
+def cleanup_previous_incomplete_backup(action: BackupAction) -> None:
+    if os.path.exists(action.base_path):
         log("Found previous incomplete backup. Cleaning up those files.")
         try:
-            shutil.rmtree(target.base_path)
+            shutil.rmtree(action.base_path)
         except OSError as e:
             if e.errno == errno.EACCES:
                 raise MKGeneralException("Failed to write the backup directory: %s" % e)
@@ -1213,8 +1213,8 @@ def cleanup_backup_job_states() -> None:
 
 
 def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: Config) -> None:
-    target = RestoreTarget(TargetId(target_id), backup_id, config)
-    info = load_backup_info(backup_info_path(target))
+    action = RestoreAction(TargetId(target_id), backup_id, config)
+    info = load_backup_info(backup_info_path(action))
     state = restore_state()
 
     with ExitStack() as stack:
@@ -1225,10 +1225,10 @@ def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: C
             stack.enter_context(cm)
 
         verify_target_is_ready(target_id, config)
-        verify_backup_exists(target)
+        verify_backup_exists(action)
 
         if "no-verify" not in opts:
-            verify_backup_consistency(info, target)
+            verify_backup_consistency(info, action)
 
         init_new_run(state)
 
@@ -1248,7 +1248,7 @@ def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: C
                 },
             )
 
-            do_site_restore(info, target, state)
+            do_site_restore(info, action, state)
             complete_restore(state)
             success = True
 
@@ -1276,17 +1276,14 @@ def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: C
 
 def do_site_restore(
     info: BackupInfo,
-    target: RestoreTarget,
+    action: RestoreAction,
     state: State,
 ) -> None:
     cmd = ["omd", "restore", "--kill"]
 
-    # TODO use backup from different site
-    site = info.get("site_id", current_site_id())
-
     cmd.append("-")
 
-    backup_path = site_backup_archive_path(site, target, info["config"])
+    backup_path = action.base_path / info["files"][0][0]
 
     with subprocess.Popen(cmd, close_fds=True, stderr=subprocess.PIPE, stdin=subprocess.PIPE) as p:
         assert p.stdin is not None

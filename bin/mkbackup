@@ -755,18 +755,18 @@ def load_backup_info(path: str) -> BackupInfo:
     return info
 
 
-def save_backup_info(info: BackupInfo, action: Action) -> None:
+def save_backup_info(info: BackupInfo, action: BackupAction) -> None:
     with open(backup_info_path(action), "w") as f:
         json.dump(info, f, sort_keys=True, indent=4, separators=(",", ": "))
 
 
-def create_backup_info(action: BackupAction, job: Job) -> BackupInfo:
-    files = get_files_for_backup_info(action, job)
+def create_backup_info(action: BackupAction) -> BackupInfo:
+    files = get_files_for_backup_info(action)
 
     info: BackupInfo = {
         "type": "Check_MK",
-        "job_id": job.local_id,
-        "config": job.config,
+        "job_id": action.job.local_id,
+        "config": action.job.config,
         "hostname": hostname(),
         "files": files,
         "finished": time.time(),
@@ -779,7 +779,7 @@ def create_backup_info(action: BackupAction, job: Job) -> BackupInfo:
     return info
 
 
-def get_files_for_backup_info(action: BackupAction, job: Job) -> list[tuple[str, int, str]]:
+def get_files_for_backup_info(action: BackupAction) -> list[tuple[str, int, str]]:
     backup_path = action.base_path
     dir_entries: list[str] = os.listdir(backup_path)
     files = []
@@ -936,8 +936,8 @@ def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None
                 },
             )
 
-            do_site_backup(job, action, state)
-            complete_backup(job, action, state)
+            do_site_backup(action, state)
+            complete_backup(action, state)
             success = True
 
         except MKGeneralException as e:
@@ -963,7 +963,6 @@ def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None
 
 
 def do_site_backup(
-    job: Job,
     action: BackupAction,
     state: State,
     site: str | None = None,
@@ -971,16 +970,16 @@ def do_site_backup(
 ) -> None:  # pylint: disable=too-many-branches
     cmd = ["omd", "backup"]
 
-    if not job.config["compress"]:
+    if not action.job.config["compress"]:
         cmd.append("--no-compression")
 
-    if job.config.get("no_history", False):
+    if action.job.config.get("no_history", False):
         cmd.append("--no-past")
 
     site = current_site_id()
     cmd.append("-")
 
-    backup_path = site_backup_archive_path(site, action, job.config)
+    backup_path = site_backup_archive_path(site, action, action.job.config)
 
     # Create missing directories. Ensure group permissions and mode.
     makedirs(os.path.dirname(backup_path), group="omd", mode=0o775)
@@ -1000,7 +999,7 @@ def do_site_backup(
             s = BackupStream(
                 stream=p.stdout,
                 is_alive=lambda: p.poll() is None,
-                key_ident=job.config["encrypt"],
+                key_ident=action.job.config["encrypt"],
                 state=state,
             )
             for chunk in s.process():
@@ -1111,8 +1110,8 @@ def verify_backup_files(
             )
 
 
-def complete_backup(job: Job, action: BackupAction, state: State) -> None:
-    info = create_backup_info(action, job)
+def complete_backup(action: BackupAction, state: State) -> None:
+    info = create_backup_info(action)
     save_backup_info(info, action)
 
     state.save(

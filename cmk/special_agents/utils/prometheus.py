@@ -6,9 +6,70 @@
 Common functions used in Prometheus related Special agents
 """
 
+from typing import Literal, TypedDict
+
 from cmk.utils import password_store
 
 from cmk.special_agents.utils.request_helper import create_api_connect_session, parse_api_url
+
+ConnectionSetting = TypedDict(
+    "ConnectionSetting",
+    {
+        "url_address": str,
+        "port": int | None,
+        "path-prefix": str | None,
+    },
+    total=False,
+)
+
+
+class ConnectionConfig(TypedDict):
+    # This would be the correct typing:
+    # URLSetting = TypedDict(
+    #     "URLSetting",
+    #     {
+    #         "url_address": str,
+    #     },
+    # )
+
+    # HostSetting = TypedDict(
+    #     "HostSetting",
+    #     {
+    #         "port": int | None,
+    #         "path-prefix": str | None,
+    #     },
+    # )
+
+    # URLConnection = tuple[Literal["url_custom"], URLSetting]
+    # HostConnection = tuple[Literal["ip_address", "host_name"], HostSetting]
+    # connection: URLConnection | HostConnection
+    # However, it causes mypy to crash.
+
+    connection: tuple[Literal["url_custom", "ip_address", "host_name"], ConnectionSetting]
+    host_address: str | None
+    host_name: str | None
+
+
+def _get_api_url(config: ConnectionConfig) -> str:
+    match config["connection"]:
+        case "url_custom", settings:
+            address = settings["url_address"]
+        case "ip_address", settings:
+            address = config["host_address"]
+        case "host_name", settings:
+            address = config["host_name"]
+
+    port = settings.get("port")
+    url_prefix = settings.get("path-prefix")
+    protocol = config.get("protocol")
+
+    return parse_api_url(
+        server_address=address,
+        api_path="api/v1/",
+        protocol=protocol,
+        port=port,
+        url_prefix=url_prefix,
+    )
 
 
 def extract_connection_args(config):
@@ -30,25 +91,7 @@ def extract_connection_args(config):
         else:
             connection_args.update({"token": password_store.extract(auth_info["token"])})
 
-    connect_type, connect_settings = config["connection"]
-
-    protocol = config.get("protocol")
-    if connect_type == "url_custom":
-        address = connect_settings["url_address"]
-    else:
-        address = config["host_address"] if connect_type == "ip_address" else config["host_name"]
-
-    port = connect_settings.get("port")
-    url_prefix = connect_settings.get("path-prefix")
-
-    connection_args["api_url"] = parse_api_url(
-        server_address=address,
-        api_path="api/v1/",
-        protocol=protocol,
-        port=port,
-        url_prefix=url_prefix,
-    )
-
+    connection_args["api_url"] = _get_api_url(config)
     return connection_args
 
 

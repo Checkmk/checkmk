@@ -27,7 +27,7 @@ from contextlib import contextmanager, ExitStack
 from dataclasses import dataclass
 from hashlib import md5
 from pathlib import Path
-from typing import Any, IO, NamedTuple, NewType, NoReturn, TypedDict
+from typing import Any, IO, Literal, NamedTuple, NewType, NoReturn, TypedDict
 
 from Cryptodome.Cipher import AES, PKCS1_OAEP
 from Cryptodome.Cipher._mode_cbc import CbcMode
@@ -589,11 +589,6 @@ class RestoreStream(MKBackupStream):
 TargetId = NewType("TargetId", str)
 
 
-class Config(TypedDict):
-    targets: dict[str, Any]
-    jobs: dict[str, Any]
-
-
 class ScheduleConfig(TypedDict):
     disabled: bool
     period: str
@@ -601,12 +596,31 @@ class ScheduleConfig(TypedDict):
 
 
 class JobConfig(TypedDict):
+    title: str
     encrypt: str | None
     target: TargetId
     compress: bool
     schedule: ScheduleConfig | None
     no_history: bool
     without_sites: bool
+
+
+class LocalTargetParams(TypedDict):
+    path: str
+    is_mountpoint: bool
+
+
+LocalTargetConfig = tuple[Literal["local"], LocalTargetParams]
+
+
+class TargetConfig(TypedDict):
+    title: str
+    remote: LocalTargetConfig
+
+
+class Config(TypedDict):
+    targets: dict[str, TargetConfig]
+    jobs: dict[str, JobConfig]
 
 
 class BackupInfo(TypedDict):

@@ -8,11 +8,7 @@ Common functions used in Prometheus related Special agents
 
 from cmk.utils import password_store
 
-from cmk.special_agents.utils.request_helper import (
-    create_api_connect_session,
-    parse_api_custom_url,
-    parse_api_url,
-)
+from cmk.special_agents.utils.request_helper import create_api_connect_session, parse_api_url
 
 
 def extract_connection_args(config):
@@ -38,24 +34,19 @@ def extract_connection_args(config):
 
     protocol = config.get("protocol")
     if connect_type == "url_custom":
-        connection_args["api_url"] = parse_api_custom_url(
-            url_custom=connect_settings["url_address"],
-            api_path="api/v1/",
-            protocol=protocol,
-        )
-        return connection_args
-
-    address = config["host_address"] if connect_type == "ip_address" else config["host_name"]
-
-    if "path-prefix" in connect_settings:
-        address = f"{connect_settings['path-prefix']}{address}"
+        address = connect_settings["url_address"]
+    else:
+        address = config["host_address"] if connect_type == "ip_address" else config["host_name"]
 
     port = connect_settings.get("port")
+    url_prefix = connect_settings.get("path-prefix")
+
     connection_args["api_url"] = parse_api_url(
         server_address=address,
         api_path="api/v1/",
         protocol=protocol,
         port=port,
+        url_prefix=url_prefix,
     )
 
     return connection_args

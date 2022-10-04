@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import ast
 import contextlib
 import copy
@@ -186,11 +188,11 @@ class DiscoveryCheckParameters(NamedTuple):
     rediscovery: dict[str, Any]  # TODO: improve this
 
     @classmethod
-    def commandline_only_defaults(cls) -> "DiscoveryCheckParameters":
+    def commandline_only_defaults(cls) -> DiscoveryCheckParameters:
         return cls.default()._replace(commandline_only=True)
 
     @classmethod
-    def default(cls) -> "DiscoveryCheckParameters":
+    def default(cls) -> DiscoveryCheckParameters:
         """Support legacy single value global configurations. Otherwise return the defaults"""
         return cls(
             commandline_only=inventory_check_interval is None,
@@ -387,7 +389,7 @@ class SetFolderPathAbstract:
 
 
 class SetFolderPathList(SetFolderPathAbstract, list):
-    def __iadd__(self, new_hosts: Iterable[str]) -> "SetFolderPathList":
+    def __iadd__(self, new_hosts: Iterable[str]) -> SetFolderPathList:
         assert isinstance(new_hosts, list)
         self._set_folder_paths(new_hosts)
         super().__iadd__(new_hosts)
@@ -398,7 +400,7 @@ class SetFolderPathList(SetFolderPathAbstract, list):
         super().extend(new_hosts)
 
     # Probably unused
-    def __add__(self, new_hosts: Iterable[str]) -> "SetFolderPathList":
+    def __add__(self, new_hosts: Iterable[str]) -> SetFolderPathList:
         assert isinstance(new_hosts, list)
         self._set_folder_paths(new_hosts)
         return SetFolderPathList(super().__add__(new_hosts))
@@ -686,7 +688,7 @@ def all_nonfunction_vars() -> Set[str]:
     }
 
 
-def save_packed_config(config_path: ConfigPath, config_cache: "ConfigCache") -> None:
+def save_packed_config(config_path: ConfigPath, config_cache: ConfigCache) -> None:
     """Create and store a precompiled configuration for Checkmk helper processes"""
     PackedConfigStore.from_serial(config_path).write(PackedConfigGenerator(config_cache).generate())
 
@@ -719,7 +721,7 @@ class PackedConfigGenerator:
         "extra_nagios_conf",
     ]
 
-    def __init__(self, config_cache: "ConfigCache") -> None:
+    def __init__(self, config_cache: ConfigCache) -> None:
         self._config_cache = config_cache
 
     def generate(self) -> Mapping[str, Any]:
@@ -820,7 +822,7 @@ class PackedConfigStore:
         self.path: Final = path
 
     @classmethod
-    def from_serial(cls, config_path: ConfigPath) -> "PackedConfigStore":
+    def from_serial(cls, config_path: ConfigPath) -> PackedConfigStore:
         return cls(cls.make_packed_config_store_path(config_path))
 
     @classmethod
@@ -920,7 +922,7 @@ def _get_shadow_hosts() -> ShadowHosts:
 
 
 def _filter_active_hosts(
-    config_cache: "ConfigCache", hostlist: Iterable[HostName], keep_offline_hosts: bool = False
+    config_cache: ConfigCache, hostlist: Iterable[HostName], keep_offline_hosts: bool = False
 ) -> List[HostName]:
     """Returns a set of active hosts for this site"""
     if only_hosts is None:
@@ -950,7 +952,7 @@ def _filter_active_hosts(
     ]
 
 
-def _host_is_member_of_site(config_cache: "ConfigCache", hostname: HostName, site: str) -> bool:
+def _host_is_member_of_site(config_cache: ConfigCache, hostname: HostName, site: str) -> bool:
     # hosts without a site: tag belong to all sites
     return (
         config_cache.tags_of_host(hostname).get("site", distributed_wato_site)
@@ -1332,7 +1334,7 @@ def service_depends_on(hostname: HostName, servicedesc: ServiceName) -> List[Ser
             depname, tags, hostlist, patternlist = entry
         else:
             raise MKGeneralException(
-                "Invalid entry '%r' in service dependencies: " "must have 3 or 4 entries" % entry
+                "Invalid entry '%r' in service dependencies: must have 3 or 4 entries" % entry
             )
 
         if tuple_rulesets.hosttags_match_taglist(
@@ -1876,7 +1878,7 @@ class _PYCHeader:
         self.f_size = f_size
 
     @classmethod
-    def from_file(cls, path: str) -> "_PYCHeader":
+    def from_file(cls, path: str) -> _PYCHeader:
         with open(path, "rb") as handle:
             raw_bytes = handle.read(cls.SIZE)
         return cls(*struct.unpack("4s3I", raw_bytes))
@@ -2372,7 +2374,7 @@ def _get_configured_parameters(
 
 
 def _get_checkgroup_parameters(
-    config_cache: "ConfigCache",
+    config_cache: ConfigCache,
     host: HostName,
     checkgroup: RulesetName,
     item: Item,
@@ -2418,7 +2420,7 @@ def _get_checkgroup_parameters(
 
 
 class HostConfig:
-    def __init__(self, config_cache: "ConfigCache", hostname: HostName) -> None:
+    def __init__(self, config_cache: ConfigCache, hostname: HostName) -> None:
         super().__init__()
         self.hostname = hostname
 
@@ -2490,7 +2492,7 @@ class HostConfig:
         return get_config_cache().get_host_config(hostname).snmp_config(address)
 
     @staticmethod
-    def make_host_config(hostname: HostName) -> "HostConfig":
+    def make_host_config(hostname: HostName) -> HostConfig:
         return get_config_cache().get_host_config(hostname)
 
     @property
@@ -4146,7 +4148,7 @@ class CEEConfigCache(ConfigCache):
         # contravariance is not a problem here.
         self._host_configs: Dict[HostName, "CEEHostConfig"] = {}  # type: ignore[assignment]
 
-    def get_host_config(self, hostname: HostName) -> "CEEHostConfig":
+    def get_host_config(self, hostname: HostName) -> CEEHostConfig:
         """Returns a HostConfig instance for the given host
 
         It lazy initializes the host config object and caches the objects during the livetime

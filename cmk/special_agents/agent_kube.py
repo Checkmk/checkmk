@@ -434,8 +434,9 @@ class Deployment(PodOwner):
             return None
         return section.DeploymentConditions(**self.status.conditions)
 
-    def strategy(self) -> section.UpdateStrategy:
-        return section.UpdateStrategy(strategy=self.spec.strategy)
+
+def controller_strategy(controller: Deployment | DaemonSet | StatefulSet) -> section.UpdateStrategy:
+    return section.UpdateStrategy.parse_obj(controller.spec.strategy)
 
 
 def deployment_replicas(deployment_status: api.DeploymentStatus) -> section.DeploymentReplicas:
@@ -469,9 +470,6 @@ class DaemonSet(PodOwner):
         self.spec = spec
         self._status = status
         self.type_: str = "daemonset"
-
-    def strategy(self) -> section.UpdateStrategy:
-        return section.UpdateStrategy(strategy=self.spec.strategy)
 
 
 def daemonset_replicas(
@@ -519,9 +517,6 @@ class StatefulSet(PodOwner):
         self.spec = spec
         self._status = status
         self.type_: str = "statefulset"
-
-    def strategy(self) -> section.UpdateStrategy:
-        return section.UpdateStrategy(strategy=self.spec.strategy)
 
 
 def statefulset_replicas(statefulset: StatefulSet) -> section.StatefulSetReplicas:
@@ -1382,7 +1377,7 @@ def write_deployments_api_sections(
             ),
             "kube_deployment_conditions_v1": cluster_deployment.conditions,
             "kube_cpu_resources_v1": cluster_deployment.cpu_resources,
-            "kube_update_strategy_v1": cluster_deployment.strategy,
+            "kube_update_strategy_v1": lambda: controller_strategy(cluster_deployment),
             "kube_deployment_replicas_v1": lambda: deployment_replicas(cluster_deployment.status),
         }
         _write_sections(sections)
@@ -1418,7 +1413,7 @@ def write_daemon_sets_api_sections(
                 kubernetes_cluster_hostname,
                 annotation_key_pattern,
             ),
-            "kube_update_strategy_v1": cluster_daemon_set.strategy,
+            "kube_update_strategy_v1": lambda: controller_strategy(cluster_daemon_set),
             "kube_daemonset_replicas_v1": lambda: daemonset_replicas(cluster_daemon_set),
         }
         _write_sections(sections)
@@ -1450,7 +1445,7 @@ def write_statefulsets_api_sections(
                 kubernetes_cluster_hostname,
                 annotation_key_pattern,
             ),
-            "kube_update_strategy_v1": cluster_statefulset.strategy,
+            "kube_update_strategy_v1": lambda: controller_strategy(cluster_statefulset),
             "kube_statefulset_replicas_v1": lambda: statefulset_replicas(cluster_statefulset),
         }
         _write_sections(sections)

@@ -26,6 +26,22 @@ from cmk.special_agents import agent_kube as agent
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 
 
+def nodes_api_sections() -> Sequence[str]:
+    return [
+        "kube_node_container_count_v1",
+        "kube_node_kubelet_v1",
+        "kube_pod_resources_v1",
+        "kube_allocatable_pods_v1",
+        "kube_node_info_v1",
+        "kube_cpu_resources_v1",
+        "kube_memory_resources_v1",
+        "kube_allocatable_cpu_resource_v1",
+        "kube_allocatable_memory_resource_v1",
+        "kube_node_conditions_v1",
+        "kube_node_custom_conditions_v1",
+    ]
+
+
 @pytest.mark.parametrize("node_pods", [0, 10, 20])
 def test_node_pod_resources_returns_all_node_pods(node_pods: int) -> None:
     node = api_to_agent_node(
@@ -110,17 +126,17 @@ def test_node_alloctable_pods() -> None:
 
 
 def test_write_nodes_api_sections_registers_sections_to_be_written(  # type:ignore[no-untyped-def]
-    nodes_api_sections: Sequence[str], write_sections_mock
+    write_sections_mock,
 ) -> None:
     node = api_to_agent_node(APINodeFactory.build())
     agent.write_nodes_api_sections(
         "cluster", agent.AnnotationNonPatternOption.ignore_all, [node], "host", Mock()
     )
-    assert list(write_sections_mock.call_args[0][0]) == nodes_api_sections
+    assert list(write_sections_mock.call_args[0][0]) == nodes_api_sections()
 
 
 def test_write_nodes_api_sections_maps_section_names_to_callables(  # type:ignore[no-untyped-def]
-    nodes_api_sections: Sequence[str], write_sections_mock
+    write_sections_mock,
 ):
     node = api_to_agent_node(APINodeFactory.build())
     agent.write_nodes_api_sections(
@@ -128,7 +144,7 @@ def test_write_nodes_api_sections_maps_section_names_to_callables(  # type:ignor
     )
     assert all(
         callable(write_sections_mock.call_args[0][0][section_name])
-        for section_name in nodes_api_sections
+        for section_name in nodes_api_sections()
     )
 
 

@@ -22,19 +22,28 @@ from cmk.special_agents import agent_kube
 from cmk.special_agents.utils_kubernetes.schemata import api
 
 
+def statefulsets_api_sections() -> Sequence[str]:
+    return [
+        "kube_pod_resources_v1",
+        "kube_memory_resources_v1",
+        "kube_cpu_resources_v1",
+        "kube_statefulset_info_v1",
+        "kube_update_strategy_v1",
+        "kube_statefulset_replicas_v1",
+    ]
+
+
 def test_write_statefulsets_api_sections_registers_sections_to_be_written(
-    statefulsets_api_sections: Sequence[str],
     write_sections_mock: MagicMock,
 ) -> None:
     statefulset = api_to_agent_statefulset(APIStatefulSetFactory.build())
     agent_kube.write_statefulsets_api_sections(
         "cluster", agent_kube.AnnotationNonPatternOption.ignore_all, [statefulset], "host", Mock()
     )
-    assert list(write_sections_mock.call_args[0][0]) == statefulsets_api_sections
+    assert list(write_sections_mock.call_args[0][0]) == statefulsets_api_sections()
 
 
 def test_write_statefulsets_api_sections_maps_section_names_to_callables(
-    statefulsets_api_sections: Sequence[str],
     write_sections_mock: MagicMock,
 ) -> None:
     statefulset = api_to_agent_statefulset(APIStatefulSetFactory.build())
@@ -43,7 +52,7 @@ def test_write_statefulsets_api_sections_maps_section_names_to_callables(
     )
     assert all(
         callable(write_sections_mock.call_args[0][0][section_name])
-        for section_name in statefulsets_api_sections
+        for section_name in statefulsets_api_sections()
     )
 
 

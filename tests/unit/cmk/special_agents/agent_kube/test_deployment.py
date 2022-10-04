@@ -26,6 +26,18 @@ class DeploymentConditionFactory(ModelFactory):
     __model__ = api.DeploymentCondition
 
 
+def deployments_api_sections() -> Sequence[str]:
+    return [
+        "kube_pod_resources_v1",
+        "kube_memory_resources_v1",
+        "kube_deployment_info_v1",
+        "kube_deployment_conditions_v1",
+        "kube_cpu_resources_v1",
+        "kube_update_strategy_v1",
+        "kube_deployment_replicas_v1",
+    ]
+
+
 def test_pod_deployment_controller_name() -> None:
     pod = api_to_agent_pod(
         APIPodFactory.build(),
@@ -97,11 +109,10 @@ def test_deployment_cpu_resources() -> None:
 
 
 def test_write_deployments_api_sections_registers_sections_to_be_written(
-    deployments_api_sections: Sequence[str],
     write_sections_mock: MagicMock,
 ) -> None:
     deployment = api_to_agent_deployment(APIDeploymentFactory.build(), pods=[APIPodFactory.build()])
     agent.write_deployments_api_sections(
         "cluster", agent.AnnotationNonPatternOption.ignore_all, [deployment], "host", Mock()
     )
-    assert list(write_sections_mock.call_args[0][0]) == deployments_api_sections
+    assert list(write_sections_mock.call_args[0][0]) == deployments_api_sections()

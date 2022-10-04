@@ -44,6 +44,21 @@ class PerformanceContainerFactory(ModelFactory):
     __model__ = agent.PerformanceContainer
 
 
+def cluster_api_sections() -> Sequence[str]:
+    return [
+        "kube_pod_resources_v1",
+        "kube_allocatable_pods_v1",
+        "kube_node_count_v1",
+        "kube_cluster_details_v1",
+        "kube_memory_resources_v1",
+        "kube_cpu_resources_v1",
+        "kube_allocatable_memory_resource_v1",
+        "kube_allocatable_cpu_resource_v1",
+        "kube_cluster_info_v1",
+        "kube_collector_daemons_v1",
+    ]
+
+
 def _cluster_builder_from_agents(
     *,
     cluster_details: api.ClusterDetails | None = None,
@@ -129,21 +144,21 @@ def test_cluster_allocatable_cpu_resource():
 
 
 def test_write_cluster_api_sections_registers_sections_to_be_written(  # type:ignore[no-untyped-def]
-    cluster_api_sections: Sequence[str], write_sections_mock
+    write_sections_mock,
 ):
     cluster = _cluster_builder_from_agents()
     agent.write_cluster_api_sections("cluster", cluster)
-    assert list(write_sections_mock.call_args[0][0]) == cluster_api_sections
+    assert list(write_sections_mock.call_args[0][0]) == cluster_api_sections()
 
 
 def test_write_cluster_api_sections_maps_section_names_to_callables(  # type:ignore[no-untyped-def]
-    cluster_api_sections: Sequence[str], write_sections_mock
+    write_sections_mock,
 ):
     cluster = _cluster_builder_from_agents()
     agent.write_cluster_api_sections("cluster", cluster)
     assert all(
         callable(write_sections_mock.call_args[0][0][section_name])
-        for section_name in cluster_api_sections
+        for section_name in cluster_api_sections()
     )
 
 

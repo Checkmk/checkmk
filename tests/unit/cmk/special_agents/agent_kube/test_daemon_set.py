@@ -22,8 +22,19 @@ from cmk.special_agents import agent_kube
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 
 
+def daemon_sets_api_sections() -> Sequence[str]:
+    return [
+        "kube_pod_resources_v1",
+        "kube_memory_resources_v1",
+        "kube_cpu_resources_v1",
+        "kube_daemonset_info_v1",
+        "kube_update_strategy_v1",
+        "kube_daemonset_replicas_v1",
+    ]
+
+
 def test_write_daemon_sets_api_sections_registers_sections_to_be_written(
-    daemon_sets_api_sections: Sequence[str], write_sections_mock: MagicMock
+    write_sections_mock: MagicMock,
 ) -> None:
     daemon_set = api_to_agent_daemonset(APIDaemonSetFactory.build(), pods=[APIPodFactory.build()])
     agent_kube.write_daemon_sets_api_sections(
@@ -33,11 +44,11 @@ def test_write_daemon_sets_api_sections_registers_sections_to_be_written(
         "host",
         Mock(),
     )
-    assert list(write_sections_mock.call_args[0][0]) == daemon_sets_api_sections
+    assert list(write_sections_mock.call_args[0][0]) == daemon_sets_api_sections()
 
 
 def test_write_daemon_sets_api_sections_maps_section_names_to_callables(
-    daemon_sets_api_sections: Sequence[str], write_sections_mock: MagicMock
+    write_sections_mock: MagicMock,
 ) -> None:
     daemon_set = api_to_agent_daemonset(APIDaemonSetFactory.build(), pods=[APIPodFactory.build()])
     agent_kube.write_daemon_sets_api_sections(
@@ -45,7 +56,7 @@ def test_write_daemon_sets_api_sections_maps_section_names_to_callables(
     )
     assert all(
         callable(write_sections_mock.call_args[0][0][section_name])
-        for section_name in daemon_sets_api_sections
+        for section_name in daemon_sets_api_sections()
     )
 
 

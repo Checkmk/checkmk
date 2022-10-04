@@ -12,11 +12,10 @@ from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, SectionName, So
 
 from cmk.snmplib.type_defs import SNMPHostConfig, SNMPRawData, SNMPRawDataSection
 
-import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers import FetcherType, SNMPFetcher
-from cmk.core_helpers.cache import FileCacheGlobals, FileCacheMode, MaxAge, SectionStore
+from cmk.core_helpers.cache import FileCache, SectionStore
 from cmk.core_helpers.host_sections import HostSections
-from cmk.core_helpers.snmp import SectionMeta, SNMPFileCache, SNMPParser, SNMPSummarizer
+from cmk.core_helpers.snmp import SectionMeta, SNMPParser, SNMPSummarizer
 
 from ._abstract import Source
 
@@ -29,18 +28,15 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
         *,
         source_type: SourceType,
         id_: Literal["snmp", "mgmt_snmp"],
-        force_cache_refresh: bool,
-        cache_dir: Optional[Path] = None,
         persisted_section_dir: Optional[Path] = None,
         title: str,
         on_scan_error: OnError,
-        simulation_mode: bool,
         missing_sys_description: bool,
         sections: Mapping[SectionName, SectionMeta],
         check_intervals: Mapping[SectionName, Optional[int]],
         snmp_config: SNMPHostConfig,
         do_status_data_inventory: bool,
-        file_cache_max_age: file_cache.MaxAge,
+        cache: FileCache[SNMPRawData],
     ):
         super().__init__(
             hostname,
@@ -51,8 +47,6 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             default_raw_data={},
             default_host_sections=HostSections[SNMPRawDataSection](),
             id_=id_,
-            simulation_mode=simulation_mode,
-            file_cache_max_age=file_cache_max_age,
         )
         self.snmp_config: Final = snmp_config
         self.missing_sys_description: Final = missing_sys_description
@@ -60,13 +54,10 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
         self.check_intervals: Final = check_intervals
         self.do_status_data_inventory: Final = do_status_data_inventory
         self.on_snmp_scan_error: Final = on_scan_error
-        self.force_cache_refresh: Final = force_cache_refresh
         if not persisted_section_dir:
             persisted_section_dir = Path(cmk.utils.paths.var_dir) / "persisted_sections" / self.id
         self.persisted_section_dir: Final[Path] = persisted_section_dir
-        if not cache_dir:
-            cache_dir = Path(cmk.utils.paths.data_source_cache_dir) / self.id
-        self.file_cache_base_path: Final[Path] = cache_dir
+        self.cache: Final = cache
 
     @classmethod
     def snmp(
@@ -76,14 +67,12 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
         *,
         id_: Literal["snmp"],
         on_scan_error: OnError,
-        force_cache_refresh: bool,
-        simulation_mode: bool,
         missing_sys_description: bool,
         sections: Mapping[SectionName, SectionMeta],
         check_intervals: Mapping[SectionName, Optional[int]],
         snmp_config: SNMPHostConfig,
         do_status_data_inventory: bool,
-        file_cache_max_age: file_cache.MaxAge,
+        cache: FileCache[SNMPRawData],
     ) -> "SNMPSource":
         return cls(
             hostname,
@@ -92,14 +81,12 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             id_=id_,
             title="SNMP",
             on_scan_error=on_scan_error,
-            force_cache_refresh=force_cache_refresh,
-            simulation_mode=simulation_mode,
             missing_sys_description=missing_sys_description,
             sections=sections,
             check_intervals=check_intervals,
             snmp_config=snmp_config,
             do_status_data_inventory=do_status_data_inventory,
-            file_cache_max_age=file_cache_max_age,
+            cache=cache,
         )
 
     @classmethod
@@ -110,14 +97,12 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
         *,
         id_: Literal["mgmt_snmp"],
         on_scan_error: OnError,
-        force_cache_refresh: bool,
-        simulation_mode: bool,
         missing_sys_description: bool,
         sections: Mapping[SectionName, SectionMeta],
         check_intervals: Mapping[SectionName, Optional[int]],
         snmp_config: SNMPHostConfig,
         do_status_data_inventory: bool,
-        file_cache_max_age: file_cache.MaxAge,
+        cache: FileCache[SNMPRawData],
     ) -> "SNMPSource":
         return cls(
             hostname,
@@ -126,29 +111,16 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             id_=id_,
             title="Management board - SNMP",
             on_scan_error=on_scan_error,
-            force_cache_refresh=force_cache_refresh,
-            simulation_mode=simulation_mode,
             missing_sys_description=missing_sys_description,
             sections=sections,
             check_intervals=check_intervals,
             snmp_config=snmp_config,
             do_status_data_inventory=do_status_data_inventory,
-            file_cache_max_age=file_cache_max_age,
+            cache=cache,
         )
 
-    def _make_file_cache(self) -> SNMPFileCache:
-        return SNMPFileCache(
-            self.hostname,
-            base_path=self.file_cache_base_path,
-            max_age=MaxAge.none() if self.force_cache_refresh else self.file_cache_max_age,
-            use_outdated=self.simulation_mode
-            or (False if self.force_cache_refresh else FileCacheGlobals.use_outdated),
-            simulation=self.simulation_mode,
-            use_only_cache=False,
-            file_cache_mode=FileCacheMode.DISABLED
-            if FileCacheGlobals.disabled
-            else FileCacheMode.READ_WRITE,
-        )
+    def _make_file_cache(self) -> FileCache[SNMPRawData]:
+        return self.cache
 
     def _make_fetcher(self) -> SNMPFetcher:
         return SNMPFetcher(

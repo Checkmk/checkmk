@@ -7,6 +7,7 @@
 # - Discovery works.
 # - Checking doesn't work - as it was before. Maybe we can handle this in the future.
 
+from pathlib import Path
 from typing import (
     Callable,
     Dict,
@@ -20,6 +21,7 @@ from typing import (
     Tuple,
 )
 
+import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils import version
 from cmk.utils.cpu_tracking import CPUTracker
@@ -30,9 +32,15 @@ from cmk.utils.type_defs import HostAddress, HostName, SectionName
 
 from cmk.snmplib.type_defs import BackendSNMPTree, SNMPDetectSpec
 
-import cmk.core_helpers.cache as file_cache
+from cmk.core_helpers.cache import FileCacheGlobals, FileCacheMode, MaxAge
 from cmk.core_helpers.protocol import FetcherMessage
-from cmk.core_helpers.snmp import SectionMeta, SNMPFetcher, SNMPPluginStore, SNMPPluginStoreItem
+from cmk.core_helpers.snmp import (
+    SectionMeta,
+    SNMPFetcher,
+    SNMPFileCache,
+    SNMPPluginStore,
+    SNMPPluginStoreItem,
+)
 from cmk.core_helpers.type_defs import NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -168,7 +176,7 @@ class _Builder:
         translation: TranslationOptions,
         encoding_fallback: str,
         missing_sys_description: bool,
-        file_cache_max_age: file_cache.MaxAge,
+        file_cache_max_age: MaxAge,
     ) -> None:
         super().__init__()
         self.host_config: Final = host_config
@@ -266,14 +274,25 @@ class _Builder:
         if not self.host_config.is_snmp_host:
             return
         self._initialize_snmp_plugin_store()
+        id_: Final = "snmp"
+        cache = SNMPFileCache(
+            self.host_config.hostname,
+            base_path=Path(cmk.utils.paths.data_source_cache_dir) / id_,
+            max_age=MaxAge.none() if self.force_snmp_cache_refresh else self.file_cache_max_age,
+            use_outdated=self.simulation_mode
+            or (False if self.force_snmp_cache_refresh else FileCacheGlobals.use_outdated),
+            simulation=self.simulation_mode,
+            use_only_cache=False,
+            file_cache_mode=FileCacheMode.DISABLED
+            if FileCacheGlobals.disabled
+            else FileCacheMode.READ_WRITE,
+        )
         self._add(
             SNMPSource.snmp(
                 self.host_config.hostname,
                 self.ipaddress,
-                id_="snmp",
+                id_=id_,
                 on_scan_error=self.on_scan_error,
-                force_cache_refresh=self.force_snmp_cache_refresh,
-                simulation_mode=self.simulation_mode,
                 missing_sys_description=self.missing_sys_description,
                 sections=make_sections(
                     self.host_config,
@@ -285,7 +304,7 @@ class _Builder:
                 ),
                 snmp_config=self.host_config.snmp_config(self.ipaddress),
                 do_status_data_inventory=self.host_config.do_status_data_inventory,
-                file_cache_max_age=self.file_cache_max_age,
+                cache=cache,
             )
         )
 
@@ -302,14 +321,25 @@ class _Builder:
             # See above.
             return
         if protocol == "snmp":
+            id_: Final = "mgmt_snmp"
+            cache = SNMPFileCache(
+                self.host_config.hostname,
+                base_path=Path(cmk.utils.paths.data_source_cache_dir) / id_,
+                max_age=MaxAge.none() if self.force_snmp_cache_refresh else self.file_cache_max_age,
+                use_outdated=self.simulation_mode
+                or (False if self.force_snmp_cache_refresh else FileCacheGlobals.use_outdated),
+                simulation=self.simulation_mode,
+                use_only_cache=False,
+                file_cache_mode=FileCacheMode.DISABLED
+                if FileCacheGlobals.disabled
+                else FileCacheMode.READ_WRITE,
+            )
             self._add(
                 SNMPSource.management_board(
                     self.host_config.hostname,
                     ip_address,
-                    id_="mgmt_snmp",
+                    id_=id_,
                     on_scan_error=self.on_scan_error,
-                    force_cache_refresh=self.force_snmp_cache_refresh,
-                    simulation_mode=self.simulation_mode,
                     missing_sys_description=self.missing_sys_description,
                     sections=make_sections(
                         self.host_config, selected_sections=self.selected_sections
@@ -319,7 +349,7 @@ class _Builder:
                     ),
                     snmp_config=self.host_config.management_snmp_config,
                     do_status_data_inventory=self.host_config.do_status_data_inventory,
-                    file_cache_max_age=self.file_cache_max_age,
+                    cache=cache,
                 )
             )
         elif protocol == "ipmi":
@@ -448,7 +478,7 @@ def make_non_cluster_sources(
     translation: TranslationOptions,
     encoding_fallback: str,
     missing_sys_description: bool,
-    file_cache_max_age: file_cache.MaxAge,
+    file_cache_max_age: MaxAge,
 ) -> Sequence[Source]:
     """Sequence of sources available for `host_config`."""
     return _Builder(
@@ -500,7 +530,7 @@ def make_cluster_sources(
     translation: TranslationOptions,
     encoding_fallback: str,
     missing_sys_description: bool,
-    file_cache_max_age: file_cache.MaxAge,
+    file_cache_max_age: MaxAge,
 ) -> Sequence[Source]:
     """Abstract clusters/nodes/hosts"""
     assert host_config.nodes is not None
@@ -535,7 +565,7 @@ def make_sources(
     translation: TranslationOptions,
     encoding_fallback: str,
     missing_sys_description: bool,
-    file_cache_max_age: file_cache.MaxAge,
+    file_cache_max_age: MaxAge,
 ) -> Sequence[Source]:
     return (
         make_non_cluster_sources(

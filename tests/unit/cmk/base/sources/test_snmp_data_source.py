@@ -5,6 +5,9 @@
 
 # pylint: disable=protected-access
 
+import os
+from pathlib import Path
+
 import pytest
 
 from tests.testlib.base import Scenario
@@ -15,8 +18,9 @@ from cmk.utils.type_defs import CheckPluginName, HostName, ParsedSectionName, re
 
 from cmk.snmplib.type_defs import SNMPBackendEnum, SNMPHostConfig
 
-import cmk.core_helpers.cache as file_cache
+from cmk.core_helpers.cache import FileCacheMode, MaxAge
 from cmk.core_helpers.host_sections import HostSections
+from cmk.core_helpers.snmp import SNMPFileCache
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
@@ -28,18 +32,17 @@ from cmk.base.sources.snmp import SNMPSource
 
 @pytest.fixture(name="source")
 def source_fixture():
+    hostname = HostName("hostname")
     return SNMPSource.snmp(
-        "hostname",
+        hostname,
         "1.2.3.4",
         id_="snmp",
         on_scan_error=OnError.RAISE,
-        force_cache_refresh=False,
-        simulation_mode=True,
         missing_sys_description=False,
         sections={},
         check_intervals={},
         snmp_config=SNMPHostConfig(
-            hostname="hostname",
+            hostname=hostname,
             ipaddress="1.2.3.4",
             is_ipv6_primary=False,
             credentials=(),
@@ -55,7 +58,15 @@ def source_fixture():
             snmp_backend=SNMPBackendEnum.CLASSIC,
         ),
         do_status_data_inventory=False,
-        file_cache_max_age=file_cache.MaxAge.none(),
+        cache=SNMPFileCache(
+            hostname=hostname,
+            base_path=Path(os.devnull),
+            max_age=MaxAge.none(),
+            use_outdated=True,
+            simulation=True,
+            use_only_cache=True,
+            file_cache_mode=FileCacheMode.DISABLED,
+        ),
     )
 
 
@@ -99,12 +110,10 @@ class TestSNMPSummaryResult:
         return SNMPSource(
             hostname,
             "1.2.3.4",
-            force_cache_refresh=False,
             source_type=SourceType.HOST,
             id_="snmp",
             title="snmp title",
             on_scan_error=OnError.RAISE,
-            simulation_mode=True,
             missing_sys_description=False,
             sections={},
             check_intervals={},
@@ -125,7 +134,15 @@ class TestSNMPSummaryResult:
                 snmp_backend=SNMPBackendEnum.CLASSIC,
             ),
             do_status_data_inventory=False,
-            file_cache_max_age=file_cache.MaxAge.none(),
+            cache=SNMPFileCache(
+                hostname=hostname,
+                base_path=Path(os.devnull),
+                max_age=MaxAge.none(),
+                use_outdated=True,
+                simulation=True,
+                use_only_cache=True,
+                file_cache_mode=FileCacheMode.DISABLED,
+            ),
         )
 
     @pytest.mark.usefixtures("scenario")

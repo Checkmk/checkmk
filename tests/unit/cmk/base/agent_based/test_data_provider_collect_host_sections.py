@@ -5,7 +5,9 @@
 
 # pylint: disable=protected-access
 
+import os
 import socket
+from pathlib import Path
 
 import pytest
 
@@ -18,7 +20,6 @@ from cmk.utils.type_defs import AgentRawData, HostKey, HostName, result, Section
 
 from cmk.snmplib.type_defs import SNMPRawData
 
-import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers import (
     FetcherType,
     IPMIFetcher,
@@ -27,8 +28,10 @@ from cmk.core_helpers import (
     SNMPFetcher,
     TCPFetcher,
 )
+from cmk.core_helpers.cache import FileCacheMode, MaxAge
 from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.protocol import FetcherMessage
+from cmk.core_helpers.snmp import SNMPFileCache
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION
 
 import cmk.base.config as config
@@ -148,15 +151,21 @@ class TestMakeHostSectionsHosts:
                         hostname,
                         ipaddress,
                         id_="snmp",
-                        force_cache_refresh=False,
                         on_scan_error=OnError.RAISE,
-                        simulation_mode=True,
                         missing_sys_description=False,
                         sections={},
                         check_intervals={},
                         snmp_config=host_config.snmp_config(ipaddress),
                         do_status_data_inventory=False,
-                        file_cache_max_age=file_cache.MaxAge.none(),
+                        cache=SNMPFileCache(
+                            hostname=hostname,
+                            base_path=Path(os.devnull),
+                            max_age=MaxAge.none(),
+                            use_outdated=True,
+                            simulation=True,
+                            use_only_cache=True,
+                            file_cache_mode=FileCacheMode.DISABLED,
+                        ),
                     ),
                     FetcherMessage.from_raw_data(
                         result.OK(raw_data),
@@ -191,7 +200,7 @@ class TestMakeHostSectionsHosts:
                 encoding_fallback="ascii",
                 check_interval=0,
                 is_piggyback_host=True,
-                file_cache_max_age=file_cache.MaxAge.none(),
+                file_cache_max_age=MaxAge.none(),
             ),
             lambda hostname, ipaddress: DSProgramSource(
                 hostname,
@@ -206,7 +215,7 @@ class TestMakeHostSectionsHosts:
                 encoding_fallback="ascii",
                 check_interval=0,
                 is_cmc=False,
-                file_cache_max_age=file_cache.MaxAge.none(),
+                file_cache_max_age=MaxAge.none(),
             ),
             lambda hostname, ipaddress: TCPSource(
                 hostname,
@@ -222,7 +231,7 @@ class TestMakeHostSectionsHosts:
                 agent_port=0,
                 tcp_connect_timeout=0,
                 agent_encryption={},
-                file_cache_max_age=file_cache.MaxAge.none(),
+                file_cache_max_age=MaxAge.none(),
             ),
         ],
     )
@@ -271,7 +280,7 @@ class TestMakeHostSectionsHosts:
                 encoding_fallback="ascii",
                 check_interval=0,
                 is_cmc=False,
-                file_cache_max_age=file_cache.MaxAge.none(),
+                file_cache_max_age=MaxAge.none(),
             ),
             TCPSource(
                 hostname,
@@ -286,7 +295,7 @@ class TestMakeHostSectionsHosts:
                 agent_port=0,
                 tcp_connect_timeout=0,
                 agent_encryption={},
-                file_cache_max_age=file_cache.MaxAge.none(),
+                file_cache_max_age=MaxAge.none(),
             ),
         ]
 
@@ -337,7 +346,7 @@ class TestMakeHostSectionsHosts:
                 encoding_fallback="ascii",
                 check_interval=0,
                 is_cmc=False,
-                file_cache_max_age=file_cache.MaxAge.none(),
+                file_cache_max_age=MaxAge.none(),
             ),
             TCPSource(
                 HostName(f"{hostname}1"),
@@ -352,7 +361,7 @@ class TestMakeHostSectionsHosts:
                 agent_port=0,
                 tcp_connect_timeout=0,
                 agent_encryption={},
-                file_cache_max_age=file_cache.MaxAge.none(),
+                file_cache_max_age=MaxAge.none(),
             ),
             TCPSource(
                 HostName(f"{hostname}2"),
@@ -367,7 +376,7 @@ class TestMakeHostSectionsHosts:
                 agent_port=0,
                 tcp_connect_timeout=0,
                 agent_encryption={},
-                file_cache_max_age=file_cache.MaxAge.none(),
+                file_cache_max_age=MaxAge.none(),
             ),
         ]
 
@@ -480,7 +489,7 @@ class TestMakeHostSectionsClusters:
             translation={},
             encoding_fallback="ascii",
             missing_sys_description=True,
-            file_cache_max_age=file_cache.MaxAge.none(),
+            file_cache_max_age=MaxAge.none(),
         )
 
         host_sections = _collect_host_sections(
@@ -558,7 +567,7 @@ def test_get_host_sections_cluster(monkeypatch, mocker) -> None:  # type:ignore[
         translation={},
         encoding_fallback="ascii",
         missing_sys_description=True,
-        file_cache_max_age=file_cache.MaxAge.none(),
+        file_cache_max_age=MaxAge.none(),
     )
 
     host_sections = _collect_host_sections(

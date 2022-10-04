@@ -59,8 +59,6 @@ class AgentSource(Source[AgentRawData, AgentRawDataSection]):
             default_raw_data=AgentRawData(b""),
             default_host_sections=HostSections[AgentRawDataSection](),
             id_=id_,
-            simulation_mode=simulation_mode,
-            file_cache_max_age=file_cache_max_age,
         )
         # TODO: We should cleanup these old directories one day.
         #       Then we can remove this special case
@@ -79,6 +77,8 @@ class AgentSource(Source[AgentRawData, AgentRawDataSection]):
         else:
             cache_dir = Path(cmk.utils.paths.data_source_cache_dir) / self.id
         self.file_cache_base_path: Final[Path] = cache_dir
+        self.simulation_mode: Final = simulation_mode
+        self.file_cache_max_age: Final = file_cache_max_age
 
     def _make_parser(self) -> AgentParser:
         return AgentParser(

@@ -18,7 +18,6 @@ from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, result, SourceT
 
 from cmk.snmplib.type_defs import TRawData
 
-import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers import Fetcher, get_raw_data, Parser, Summarizer
 from cmk.core_helpers.cache import FileCache
 from cmk.core_helpers.controller import FetcherType
@@ -49,8 +48,6 @@ class Source(Generic[TRawData, TRawDataSection], abc.ABC):
         default_raw_data: TRawData,
         default_host_sections: HostSections[TRawDataSection],
         id_: str,
-        simulation_mode: bool,
-        file_cache_max_age: file_cache.MaxAge,
     ) -> None:
         self.hostname: Final = hostname
         self.ipaddress: Final = ipaddress
@@ -60,8 +57,6 @@ class Source(Generic[TRawData, TRawDataSection], abc.ABC):
         self.default_raw_data: Final = default_raw_data
         self.default_host_sections: Final = default_host_sections
         self.id: Final = id_
-        self.simulation_mode: Final = simulation_mode
-        self.file_cache_max_age: Final = file_cache_max_age
 
         self._logger: Final = logging.getLogger("cmk.base.data_source.%s" % id_)
 

@@ -7,8 +7,6 @@
 ####################################################################################
 # NOTE: This is considered as a workaround file and is intended to removed
 # in the future.
-# Existing factories should be moved to factory.py. Fixtures should be refactored
-# to delegate the build logic directly into the test.
 ####################################################################################
 
 
@@ -17,37 +15,8 @@ from typing import Sequence
 
 import pytest
 import pytest_mock
-from pydantic_factories import ModelFactory
-
-from cmk.special_agents.utils_kubernetes.schemata import api
 
 # pylint: disable=comparison-with-callable,redefined-outer-name
-
-
-ONE_KiB = 1024
-ONE_MiB = 1024 * ONE_KiB
-ONE_GiB = 1024 * ONE_MiB
-
-
-# Container Factories
-class ContainerRunningStateFactory(ModelFactory):
-    __model__ = api.ContainerRunningState
-
-
-class ContainerWaitingStateFactory(ModelFactory):
-    __model__ = api.ContainerWaitingState
-
-
-class ContainerTerminatedStateFactory(ModelFactory):
-    __model__ = api.ContainerTerminatedState
-
-
-class ContainerStatusFactory(ModelFactory):
-    __model__ = api.ContainerStatus
-
-
-class ContainerSpecFactory(ModelFactory):
-    __model__ = api.ContainerSpec
 
 
 @pytest.fixture

@@ -12,7 +12,6 @@ from cmk.special_agents import agent_kube as agent
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 from cmk.special_agents.utils_kubernetes.transform_any import parse_labels
 
-from .conftest import ContainerSpecFactory, ONE_GiB
 from .factory import (
     api_to_agent_cluster,
     api_to_agent_daemonset,
@@ -23,6 +22,7 @@ from .factory import (
     APIPodFactory,
     APIStatefulSetFactory,
     ClusterDetailsFactory,
+    ContainerSpecFactory,
     MetaDataFactory,
     node_status,
     NodeMetaDataFactory,
@@ -236,17 +236,18 @@ def test_cluster_allocatable_memory_resource_exclude_roles(  # type:ignore[no-un
     excluded_node_roles: Sequence[str],
     expected_control_nodes: int,
 ):
+    memory = 7.0 * 1024**3
     counted_nodes = (
         cluster_nodes - expected_control_nodes
         if "control-plane" in excluded_node_roles
         else cluster_nodes
     )
-    expected = section.AllocatableResource(context="cluster", value=7.0 * ONE_GiB * counted_nodes)
+    expected = section.AllocatableResource(context="cluster", value=memory * counted_nodes)
     cluster = api_to_agent_cluster(
         excluded_node_roles=excluded_node_roles,
         nodes=[
             APINodeFactory.build(
-                resources={"allocatable": NodeResourcesFactory.build(memory=7.0 * ONE_GiB)},
+                resources={"allocatable": NodeResourcesFactory.build(memory=memory)},
                 roles=roles,
             )
             for roles in api_node_roles_per_node

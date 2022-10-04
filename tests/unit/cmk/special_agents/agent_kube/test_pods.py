@@ -180,7 +180,7 @@ def test_pod_info() -> None:
         host_network=None,
         dns_policy="ClusterFirst",
         restart_policy="Always",
-        controllers=[section.Controller(type_="CronJob", name="namespace-name_cronjob-name")],
+        controllers=[section.Controller(type_="CronJob", name="cronjob-name")],
         cluster="cluster-name",
         uid="pod-uid",
         kubernetes_cluster_hostname="host",

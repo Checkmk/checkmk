@@ -2664,7 +2664,7 @@ def pod_info(
         controllers=[
             section.Controller(
                 type_=c.type_,
-                name=controller_namespaced_name(c),
+                name=c.name,
             )
             for c in pod.controllers
         ],

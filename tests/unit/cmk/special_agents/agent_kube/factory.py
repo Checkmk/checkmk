@@ -170,3 +170,30 @@ class NodeMetaDataFactory(ModelFactory):
 
 class NodeResourcesFactory(ModelFactory):
     __model__ = api.NodeResources
+
+
+# Cluster related Factories
+
+
+class ClusterDetailsFactory(ModelFactory):
+    __model__ = api.ClusterDetails
+
+
+def api_to_agent_cluster(
+    excluded_node_roles: Sequence[str] = ("control_plane", "master"),
+    pods: Sequence[api.Pod] = (),
+    nodes: Sequence[api.Node] = (),
+    statefulsets: Sequence[api.StatefulSet] = (),
+    deployments: Sequence[api.Deployment] = (),
+    daemon_sets: Sequence[api.DaemonSet] = (),
+    cluster_details: api.ClusterDetails = ClusterDetailsFactory.build(),
+) -> agent.Cluster:
+    return agent.Cluster.from_api_resources(
+        excluded_node_roles=excluded_node_roles or [],
+        pods=pods,
+        nodes=nodes,
+        statefulsets=statefulsets,
+        deployments=deployments,
+        daemon_sets=daemon_sets,
+        cluster_details=cluster_details,
+    )

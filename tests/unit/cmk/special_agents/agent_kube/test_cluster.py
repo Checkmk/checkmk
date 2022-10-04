@@ -13,11 +13,9 @@ from cmk.special_agents.utils_kubernetes.schemata import api, section
 from cmk.special_agents.utils_kubernetes.transform_any import parse_labels
 
 from .conftest import (
-    api_to_agent_cluster,
     api_to_agent_node,
     APINodeFactory,
     APIPodFactory,
-    ClusterDetailsFactory,
     ContainerSpecFactory,
     node_status,
     NodeMetaDataFactory,
@@ -27,10 +25,12 @@ from .conftest import (
     PodStatusFactory,
 )
 from .factory import (
+    api_to_agent_cluster,
     api_to_agent_daemonset,
     api_to_agent_statefulset,
     APIDaemonSetFactory,
     APIStatefulSetFactory,
+    ClusterDetailsFactory,
     MetaDataFactory,
 )
 

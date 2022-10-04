@@ -409,30 +409,34 @@ class Deployment(PodOwner):
         self.status = status
         self.type_: str = "deployment"
 
-    def info(
-        self,
-        cluster_name: str,
-        kubernetes_cluster_hostname: str,
-        annotation_key_pattern: AnnotationOption,
-    ) -> section.DeploymentInfo:
-        return section.DeploymentInfo(
-            name=self.metadata.name,
-            namespace=self.metadata.namespace,
-            creation_timestamp=self.metadata.creation_timestamp,
-            labels=self.metadata.labels,
-            annotations=filter_annotations_by_key_pattern(
-                self.metadata.annotations, annotation_key_pattern
-            ),
-            selector=self.spec.selector,
-            containers=_thin_containers(self.pods),
-            cluster=cluster_name,
-            kubernetes_cluster_hostname=kubernetes_cluster_hostname,
-        )
 
-    def conditions(self) -> Optional[section.DeploymentConditions]:
-        if not self.status.conditions:
-            return None
-        return section.DeploymentConditions(**self.status.conditions)
+def deployment_info(
+    deployment: Deployment,
+    cluster_name: str,
+    kubernetes_cluster_hostname: str,
+    annotation_key_pattern: AnnotationOption,
+) -> section.DeploymentInfo:
+    return section.DeploymentInfo(
+        name=deployment.metadata.name,
+        namespace=deployment.metadata.namespace,
+        creation_timestamp=deployment.metadata.creation_timestamp,
+        labels=deployment.metadata.labels,
+        annotations=filter_annotations_by_key_pattern(
+            deployment.metadata.annotations, annotation_key_pattern
+        ),
+        selector=deployment.spec.selector,
+        containers=_thin_containers(deployment.pods),
+        cluster=cluster_name,
+        kubernetes_cluster_hostname=kubernetes_cluster_hostname,
+    )
+
+
+def deployment_conditions(
+    deployment_status: api.DeploymentStatus,
+) -> Optional[section.DeploymentConditions]:
+    if not deployment_status.conditions:
+        return None
+    return section.DeploymentConditions(**deployment_status.conditions)
 
 
 def controller_strategy(controller: Deployment | DaemonSet | StatefulSet) -> section.UpdateStrategy:
@@ -1372,10 +1376,15 @@ def write_deployments_api_sections(
         sections = {
             "kube_pod_resources_v1": cluster_deployment.pod_resources,
             "kube_memory_resources_v1": cluster_deployment.memory_resources,
-            "kube_deployment_info_v1": lambda: cluster_deployment.info(
-                cluster_name, kubernetes_cluster_hostname, annotation_key_pattern
+            "kube_deployment_info_v1": lambda: deployment_info(
+                cluster_deployment,
+                cluster_name,
+                kubernetes_cluster_hostname,
+                annotation_key_pattern,
             ),
-            "kube_deployment_conditions_v1": cluster_deployment.conditions,
+            "kube_deployment_conditions_v1": lambda: deployment_conditions(
+                cluster_deployment.status
+            ),
             "kube_cpu_resources_v1": cluster_deployment.cpu_resources,
             "kube_update_strategy_v1": lambda: controller_strategy(cluster_deployment),
             "kube_deployment_replicas_v1": lambda: deployment_replicas(cluster_deployment.status),

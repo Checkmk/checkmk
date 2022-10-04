@@ -12,6 +12,7 @@ from tests.unit.cmk.special_agents.agent_kube.factory import (
     APIControllerFactory,
     APIDeploymentFactory,
     APIPodFactory,
+    DeploymentStatusFactory,
 )
 
 from cmk.special_agents import agent_kube as agent
@@ -42,13 +43,13 @@ def test_pod_deployment_controller_name() -> None:
 
 
 def test_deployment_conditions() -> None:
-    api_deployment = APIDeploymentFactory.build()
-    deployment_conditions = ["available", "progressing", "replicafailure"]
-    api_deployment.status.conditions = {
-        condition: DeploymentConditionFactory.build() for condition in deployment_conditions
-    }
-    deployment = api_to_agent_deployment(api_deployment)
-    conditions = deployment.conditions()
+    api_deployment_status = DeploymentStatusFactory.build(
+        conditions={
+            condition: DeploymentConditionFactory.build()
+            for condition in ["available", "progressing", "replicafailure"]
+        }
+    )
+    conditions = agent.deployment_conditions(api_deployment_status)
     assert conditions is not None
     assert all(condition_details is not None for _, condition_details in conditions)
 

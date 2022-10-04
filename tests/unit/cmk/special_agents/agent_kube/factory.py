@@ -80,6 +80,10 @@ def pod_phase_generator() -> Iterator[api.Phase]:
 # Deployment related Factories
 
 
+class DeploymentStatusFactory(ModelFactory):
+    __model__ = api.DeploymentStatus
+
+
 class APIDeploymentFactory(ModelFactory):
     __model__ = api.Deployment
 

@@ -15,9 +15,7 @@ import unittest
 import pytest
 import pytest_mock
 
-# pylint: disable=comparison-with-callable,redefined-outer-name
 
-
-@pytest.fixture
-def write_sections_mock(mocker: pytest_mock.MockFixture) -> unittest.mock.MagicMock:
+@pytest.fixture(name="write_sections_mock")
+def fixture_write_sections_mock(mocker: pytest_mock.MockFixture) -> unittest.mock.MagicMock:
     return mocker.patch("cmk.special_agents.agent_kube._write_sections")

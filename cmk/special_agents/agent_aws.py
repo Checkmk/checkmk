@@ -89,7 +89,7 @@ Tags = list[Mapping[Literal["Key", "Value"], str]]
 Scope = Literal["REGIONAL", "CLOUDFRONT"]
 LoadBalancers = dict[str, list[tuple[str, Sequence[str]]]]
 Buckets = Sequence[Mapping[Literal["Name", "CreationDate"], str | datetime]]
-Results = dict[tuple[str, float, float], str]
+Results = dict[tuple[str, float, float], Sequence["AWSSectionResult"]]
 
 T = TypeVar("T")
 

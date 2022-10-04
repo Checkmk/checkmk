@@ -180,7 +180,7 @@ def _handle_fetcher_options(options: Mapping[str, object]) -> None:
         cmk.core_helpers.cache.FileCacheGlobals.disabled = True
 
     if options.get("no-tcp", False):
-        sources.tcp.TCPSource.use_only_cache = True
+        cmk.core_helpers.cache.FileCacheGlobals.tcp_use_only_cache = True
 
     if options.get("usewalk", False):
         snmp_factory.force_stored_walks()

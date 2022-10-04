@@ -472,3 +472,6 @@ class FileCacheGlobals:
     # Is set by the "--cache" command line. This makes the caching logic use
     # cache files that are even older than the max_cachefile_age of the host/mode.
     use_outdated = False
+    # Set by the --no-tcp option from discovery, inventory, inventory as check,
+    # and dump agent.
+    tcp_use_only_cache = False

@@ -18,12 +18,6 @@ from .agent import AgentSource
 
 
 class TCPSource(AgentSource):
-    # TODO(ml): Global caching options usually go to the FileCacheGlobals,
-    #           actually, the "class" has no other purpose than to hold
-    #           all of this at one place.  Would it be possible to move this
-    #           option there as well?
-    use_only_cache = False
-
     def __init__(
         self,
         hostname: HostName,
@@ -73,7 +67,7 @@ class TCPSource(AgentSource):
             max_age=self.file_cache_max_age,
             use_outdated=self.simulation_mode or FileCacheGlobals.use_outdated,
             simulation=self.simulation_mode,
-            use_only_cache=self.use_only_cache,
+            use_only_cache=FileCacheGlobals.tcp_use_only_cache,
             file_cache_mode=FileCacheMode.DISABLED
             if FileCacheGlobals.disabled
             else FileCacheMode.READ_WRITE,

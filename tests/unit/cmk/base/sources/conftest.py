@@ -12,7 +12,6 @@ from cmk.core_helpers.cache import FileCacheGlobals
 from cmk.base.sources import Source
 from cmk.base.sources.agent import AgentSource
 from cmk.base.sources.snmp import SNMPSource
-from cmk.base.sources.tcp import TCPSource
 
 
 @pytest.fixture(autouse=True)
@@ -34,4 +33,4 @@ def reset_mutable_global_state():
     reset(FileCacheGlobals, "maybe", False)
     reset(FileCacheGlobals, "use_outdated", False)
     reset(Source, "use_outdated_persisted_sections", False)
-    reset(TCPSource, "use_only_cache", False)
+    reset(FileCacheGlobals, "tcp_use_only_cache", False)

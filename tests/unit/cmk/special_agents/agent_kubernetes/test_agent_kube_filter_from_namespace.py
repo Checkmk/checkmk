@@ -52,4 +52,4 @@ def test_filter_deployments_from_monitored_namespaces() -> None:
     filtered_deployments = kube_objects_from_namespaces(deployments, {api.NamespaceName("default")})
 
     # Assert
-    assert [deployment.namespace for deployment in filtered_deployments] == ["default"]
+    assert [deployment.metadata.namespace for deployment in filtered_deployments] == ["default"]

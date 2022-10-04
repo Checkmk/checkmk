@@ -368,13 +368,6 @@ class PodOwner(abc.ABC):
         return _collect_cpu_resources_from_api_pods(self.pods)
 
 
-class PodNamespacedOwner(PodOwner, abc.ABC):
-    @property
-    @abc.abstractmethod
-    def namespace(self) -> Optional[api.NamespaceName]:
-        raise NotImplementedError()
-
-
 def aggregate_resources(
     resource_type: Literal["memory", "cpu"], containers: Collection[api.ContainerSpec]
 ) -> section.Resources:
@@ -402,7 +395,7 @@ def aggregate_resources(
 
 
 # TODO: addition of test framework for output sections
-class Deployment(PodNamespacedOwner):
+class Deployment(PodOwner):
     def __init__(
         self,
         metadata: api.MetaData[str],
@@ -416,16 +409,6 @@ class Deployment(PodNamespacedOwner):
         self.status = status
         self.type_: str = "deployment"
 
-    @property
-    def namespace(self) -> Optional[api.NamespaceName]:
-        return self.metadata.namespace
-
-    def name(self, prepend_namespace: bool = False) -> str:
-        if not prepend_namespace:
-            return self.metadata.name
-
-        return f"{self.metadata.namespace}_{self.metadata.name}"
-
     def info(
         self,
         cluster_name: str,
@@ -433,7 +416,7 @@ class Deployment(PodNamespacedOwner):
         annotation_key_pattern: AnnotationOption,
     ) -> section.DeploymentInfo:
         return section.DeploymentInfo(
-            name=self.name(),
+            name=self.metadata.name,
             namespace=self.metadata.namespace,
             creation_timestamp=self.metadata.creation_timestamp,
             labels=self.metadata.labels,
@@ -472,7 +455,7 @@ def _thin_containers(pods: Collection[api.Pod]) -> section.ThinContainers:
     return section.ThinContainers(images=container_images, names=container_names)
 
 
-class DaemonSet(PodNamespacedOwner):
+class DaemonSet(PodOwner):
     def __init__(
         self,
         metadata: api.MetaData[str],
@@ -485,16 +468,6 @@ class DaemonSet(PodNamespacedOwner):
         self.spec = spec
         self._status = status
         self.type_: str = "daemonset"
-
-    @property
-    def namespace(self) -> Optional[api.NamespaceName]:
-        return self.metadata.namespace
-
-    def name(self, prepend_namespace: bool = False) -> str:
-        if not prepend_namespace:
-            return self.metadata.name
-
-        return f"{self.metadata.namespace}_{self.metadata.name}"
 
     def replicas(self) -> section.DaemonSetReplicas:
         return section.DaemonSetReplicas(
@@ -529,7 +502,7 @@ def daemonset_info(
     )
 
 
-class StatefulSet(PodNamespacedOwner):
+class StatefulSet(PodOwner):
     def __init__(
         self,
         metadata: api.MetaData[str],
@@ -542,15 +515,6 @@ class StatefulSet(PodNamespacedOwner):
         self.spec = spec
         self._status = status
         self.type_: str = "statefulset"
-
-    @property
-    def namespace(self) -> Optional[api.NamespaceName]:
-        return self.metadata.namespace
-
-    def name(self, prepend_namespace: bool = False) -> str:
-        if not prepend_namespace:
-            return self.metadata.name
-        return f"{self.metadata.namespace}_{self.metadata.name}"
 
     def replicas(self) -> section.StatefulSetReplicas:
         return section.StatefulSetReplicas(
@@ -570,7 +534,7 @@ def statefulset_info(
     annotation_key_pattern: AnnotationOption,
 ) -> section.StatefulSetInfo:
     return section.StatefulSetInfo(
-        name=statefulset.name(),
+        name=statefulset.metadata.name,
         namespace=statefulset.metadata.namespace,
         creation_timestamp=statefulset.metadata.creation_timestamp,
         labels=statefulset.metadata.labels,
@@ -601,10 +565,6 @@ class Node(PodOwner):
         self.control_plane = "master" in roles or "control_plane" in roles
         self.roles = roles
         self.kubelet_info = kubelet_info
-
-    @property
-    def name(self) -> api.NodeName:
-        return api.NodeName(self.metadata.name)
 
     def allocatable_pods(self) -> section.AllocatablePods:
         return section.AllocatablePods(
@@ -1395,7 +1355,7 @@ def write_nodes_api_sections(
         _write_sections(sections)
 
     for node in api_nodes:
-        with ConditionalPiggybackSection(piggyback_formatter(node.name)):
+        with ConditionalPiggybackSection(piggyback_formatter(node.metadata.name)):
             output_sections(node)
 
 
@@ -1424,9 +1384,13 @@ def write_deployments_api_sections(
 
     for deployment in api_deployments:
         with ConditionalPiggybackSection(
-            piggyback_formatter(deployment.name(prepend_namespace=True))
+            piggyback_formatter(namespaced_name_from_metadata(deployment.metadata))
         ):
             output_sections(deployment)
+
+
+def namespaced_name_from_metadata(metadata: api.MetaData[str]) -> str:
+    return f"{metadata.namespace}_{metadata.name}"
 
 
 def write_daemon_sets_api_sections(
@@ -1456,7 +1420,7 @@ def write_daemon_sets_api_sections(
 
     for daemon_set in api_daemon_sets:
         with ConditionalPiggybackSection(
-            piggyback_formatter(daemon_set.name(prepend_namespace=True))
+            piggyback_formatter(namespaced_name_from_metadata(daemon_set.metadata))
         ):
             output_sections(daemon_set)
 
@@ -1488,7 +1452,7 @@ def write_statefulsets_api_sections(
 
     for statefulset in api_statefulsets:
         with ConditionalPiggybackSection(
-            piggyback_formatter(statefulset.name(prepend_namespace=True))
+            piggyback_formatter(namespaced_name_from_metadata(statefulset.metadata))
         ):
             output_sections(statefulset)
 
@@ -1500,8 +1464,8 @@ def write_machine_sections(
 ) -> None:
     # make sure we only print sections for nodes currently visible via Kubernetes api:
     for node in cluster.nodes:
-        if sections := machine_sections.get(str(node.name)):
-            with ConditionalPiggybackSection(piggyback_formatter_node(node.name)):
+        if sections := machine_sections.get(str(node.metadata.name)):
+            with ConditionalPiggybackSection(piggyback_formatter_node(node.metadata.name)):
                 sys.stdout.write(sections)
 
 
@@ -1914,7 +1878,7 @@ KubeNamespacedObj = TypeVar("KubeNamespacedObj", bound=Union[DaemonSet, Deployme
 def kube_objects_from_namespaces(
     kube_objects: Sequence[KubeNamespacedObj], namespaces: Set[api.NamespaceName]
 ) -> Sequence[KubeNamespacedObj]:
-    return [kube_obj for kube_obj in kube_objects if kube_obj.namespace in namespaces]
+    return [kube_obj for kube_obj in kube_objects if kube_obj.metadata.namespace in namespaces]
 
 
 def namespaces_from_namespacenames(
@@ -2135,7 +2099,7 @@ def determine_pods_to_host(
     if MonitoredObject.nodes in monitored_objects:
         piggybacks.extend(
             Piggyback(
-                piggyback=piggyback_formatter_node(node.name),
+                piggyback=piggyback_formatter_node(node.metadata.name),
                 pod_names=names,
             )
             for node in cluster.nodes
@@ -2154,7 +2118,7 @@ def determine_pods_to_host(
                 Piggyback(
                     piggyback=piggyback_formatter(
                         object_type=object_type_name,
-                        namespaced_name=k.name(prepend_namespace=True),
+                        namespaced_name=namespaced_name_from_metadata(k.metadata),
                     ),
                     pod_names=names,
                 )

@@ -93,15 +93,6 @@ class APIPodFactory(ModelFactory):
     containers = _containers
 
 
-# Node Factories
-class KubeletInfoFactory(ModelFactory):
-    __model__ = api.KubeletInfo
-
-
-class NodeResourcesFactory(ModelFactory):
-    __model__ = api.NodeResources
-
-
 @pytest.fixture
 def nodes_api_sections() -> Sequence[str]:
     return [

@@ -12,19 +12,17 @@
 ####################################################################################
 
 
-import itertools
 import unittest
-import uuid
-from typing import Mapping, Sequence
+from typing import Sequence
 
 import pytest
 import pytest_mock
-from pydantic_factories import ModelFactory, Use
-
-# pylint: disable=comparison-with-callable,redefined-outer-name
-from tests.unit.cmk.special_agents.agent_kube.factory import MetaDataFactory
+from pydantic_factories import ModelFactory
 
 from cmk.special_agents.utils_kubernetes.schemata import api
+
+# pylint: disable=comparison-with-callable,redefined-outer-name
+
 
 ONE_KiB = 1024
 ONE_MiB = 1024 * ONE_KiB
@@ -50,47 +48,6 @@ class ContainerStatusFactory(ModelFactory):
 
 class ContainerSpecFactory(ModelFactory):
     __model__ = api.ContainerSpec
-
-
-# Pod Factories
-
-
-class PodStatusFactory(ModelFactory):
-    __model__ = api.PodStatus
-
-    phase = Use(next, itertools.cycle(api.Phase))
-
-
-class PodSpecFactory(ModelFactory):
-    __model__ = api.PodSpec
-
-
-containers_count = 1
-
-
-class APIPodFactory(ModelFactory):
-    __model__ = api.Pod
-
-    @staticmethod
-    def _uid() -> api.PodUID:
-        return api.PodUID(str(uuid.uuid4()))
-
-    @staticmethod
-    def _spec() -> api.PodSpec:
-        return PodSpecFactory.build(containers=ContainerSpecFactory.batch(containers_count))
-
-    @staticmethod
-    def _containers() -> Mapping[str, api.ContainerStatus]:
-        return {
-            container.name: container
-            for container in ContainerStatusFactory.batch(containers_count)
-        }
-
-    uid = _uid
-    metadata = MetaDataFactory.build
-    status = PodStatusFactory.build
-    spec = _spec
-    containers = _containers
 
 
 @pytest.fixture

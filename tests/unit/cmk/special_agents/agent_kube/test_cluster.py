@@ -12,7 +12,7 @@ from cmk.special_agents import agent_kube as agent
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 from cmk.special_agents.utils_kubernetes.transform_any import parse_labels
 
-from .conftest import APIPodFactory, ContainerSpecFactory, ONE_GiB, PodSpecFactory, PodStatusFactory
+from .conftest import ContainerSpecFactory, ONE_GiB
 from .factory import (
     api_to_agent_cluster,
     api_to_agent_daemonset,
@@ -20,12 +20,15 @@ from .factory import (
     api_to_agent_statefulset,
     APIDaemonSetFactory,
     APINodeFactory,
+    APIPodFactory,
     APIStatefulSetFactory,
     ClusterDetailsFactory,
     MetaDataFactory,
     node_status,
     NodeMetaDataFactory,
     NodeResourcesFactory,
+    PodSpecFactory,
+    PodStatusFactory,
 )
 
 

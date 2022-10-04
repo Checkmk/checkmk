@@ -5,7 +5,7 @@
 import itertools
 from typing import Iterator, Sequence
 
-from pydantic_factories import ModelFactory
+from pydantic_factories import ModelFactory, Use
 
 from cmk.special_agents import agent_kube as agent
 from cmk.special_agents.utils_kubernetes.schemata import api
@@ -170,6 +170,54 @@ class NodeMetaDataFactory(ModelFactory):
 
 class NodeResourcesFactory(ModelFactory):
     __model__ = api.NodeResources
+
+
+class APINodeFactory(ModelFactory):
+    __model__ = api.Node
+
+
+NPD_NODE_CONDITION_TYPES = [
+    "KernelDeadlock",
+    "ReadonlyFilesystem",
+    "FrequentKubeletRestart",
+    "FrequentDockerRestart",
+    "FrequentContainerdRestart",
+]
+
+
+class NodeConditionFactory(ModelFactory):
+    __model__ = api.NodeCondition
+
+    type_ = Use(next, itertools.cycle(agent.NATIVE_NODE_CONDITION_TYPES + NPD_NODE_CONDITION_TYPES))
+
+
+class NodeStatusFactory(ModelFactory):
+    __model__ = api.NodeStatus
+
+    conditions = Use(
+        NodeConditionFactory.batch,
+        size=len(agent.NATIVE_NODE_CONDITION_TYPES) + len(NPD_NODE_CONDITION_TYPES),
+    )
+
+
+def node_status(node_condition_status: api.NodeConditionStatus) -> api.NodeStatus:
+    return NodeStatusFactory.build(
+        conditions=NodeConditionFactory.batch(
+            len(agent.NATIVE_NODE_CONDITION_TYPES) + len(NPD_NODE_CONDITION_TYPES),
+            status=node_condition_status,
+        )
+    )
+
+
+def api_to_agent_node(node: api.Node, pods: Sequence[api.Pod] = ()) -> agent.Node:
+    return agent.Node(
+        metadata=node.metadata,
+        status=node.status,
+        resources=node.resources,
+        roles=node.roles,
+        kubelet_info=node.kubelet_info,
+        pods=pods,
+    )
 
 
 # Cluster related Factories

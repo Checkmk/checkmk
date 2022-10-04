@@ -22,9 +22,8 @@ import pytest_mock
 from pydantic_factories import ModelFactory, Use
 
 # pylint: disable=comparison-with-callable,redefined-outer-name
-from tests.unit.cmk.special_agents.agent_kube.factory import MetaDataFactory, NodeMetaDataFactory
+from tests.unit.cmk.special_agents.agent_kube.factory import MetaDataFactory
 
-from cmk.special_agents import agent_kube
 from cmk.special_agents.utils_kubernetes.schemata import api
 
 ONE_KiB = 1024
@@ -101,69 +100,6 @@ class KubeletInfoFactory(ModelFactory):
 
 class NodeResourcesFactory(ModelFactory):
     __model__ = api.NodeResources
-
-
-NPD_NODE_CONDITION_TYPES = [
-    "KernelDeadlock",
-    "ReadonlyFilesystem",
-    "FrequentKubeletRestart",
-    "FrequentDockerRestart",
-    "FrequentContainerdRestart",
-]
-
-
-class NodeConditionFactory(ModelFactory):
-    __model__ = api.NodeCondition
-
-    type_ = Use(
-        next, itertools.cycle(agent_kube.NATIVE_NODE_CONDITION_TYPES + NPD_NODE_CONDITION_TYPES)
-    )
-
-
-class NodeStatusFactory(ModelFactory):
-    __model__ = api.NodeStatus
-
-    conditions = Use(
-        NodeConditionFactory.batch,
-        size=len(agent_kube.NATIVE_NODE_CONDITION_TYPES) + len(NPD_NODE_CONDITION_TYPES),
-    )
-
-
-def node_status(node_condition_status: api.NodeConditionStatus) -> api.NodeStatus:
-    return NodeStatusFactory.build(
-        conditions=NodeConditionFactory.batch(
-            len(agent_kube.NATIVE_NODE_CONDITION_TYPES) + len(NPD_NODE_CONDITION_TYPES),
-            status=node_condition_status,
-        )
-    )
-
-
-class APINodeFactory(ModelFactory):
-    __model__ = api.Node
-
-    @staticmethod
-    def _resources() -> dict[str, api.NodeResources]:
-        return {
-            "capacity": NodeResourcesFactory.build(),
-            "allocatable": NodeResourcesFactory.build(),
-        }
-
-    metadata = NodeMetaDataFactory.build
-    status = NodeStatusFactory.build
-    control_plane = False
-    resources = _resources
-    kubelet_info = KubeletInfoFactory.build
-
-
-def api_to_agent_node(node: api.Node, pods: Sequence[api.Pod] = ()) -> agent_kube.Node:
-    return agent_kube.Node(
-        metadata=node.metadata,
-        status=node.status,
-        resources=node.resources,
-        roles=node.roles,
-        kubelet_info=node.kubelet_info,
-        pods=pods,
-    )
 
 
 @pytest.fixture

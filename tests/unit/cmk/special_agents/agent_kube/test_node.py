@@ -7,19 +7,17 @@ from unittest.mock import Mock
 
 import pytest
 
-from tests.unit.cmk.special_agents.agent_kube.conftest import (
+from tests.unit.cmk.special_agents.agent_kube.factory import (
     api_to_agent_node,
     APINodeFactory,
-    node_status,
-    NodeStatusFactory,
-)
-from tests.unit.cmk.special_agents.agent_kube.factory import (
     APIPodFactory,
     ContainerResourcesFactory,
     ContainerSpecFactory,
     ContainerStatusFactory,
     create_container_state,
+    node_status,
     NodeResourcesFactory,
+    NodeStatusFactory,
     PodSpecFactory,
     PodStatusFactory,
 )

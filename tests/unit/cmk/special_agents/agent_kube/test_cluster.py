@@ -12,26 +12,20 @@ from cmk.special_agents import agent_kube as agent
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 from cmk.special_agents.utils_kubernetes.transform_any import parse_labels
 
-from .conftest import (
-    api_to_agent_node,
-    APINodeFactory,
-    APIPodFactory,
-    ContainerSpecFactory,
-    node_status,
-    NodeMetaDataFactory,
-    NodeResourcesFactory,
-    ONE_GiB,
-    PodSpecFactory,
-    PodStatusFactory,
-)
+from .conftest import APIPodFactory, ContainerSpecFactory, ONE_GiB, PodSpecFactory, PodStatusFactory
 from .factory import (
     api_to_agent_cluster,
     api_to_agent_daemonset,
+    api_to_agent_node,
     api_to_agent_statefulset,
     APIDaemonSetFactory,
+    APINodeFactory,
     APIStatefulSetFactory,
     ClusterDetailsFactory,
     MetaDataFactory,
+    node_status,
+    NodeMetaDataFactory,
+    NodeResourcesFactory,
 )
 
 
@@ -152,7 +146,12 @@ def test_write_cluster_api_sections_maps_section_names_to_callables(  # type:ign
 
 @pytest.mark.parametrize("cluster_nodes", [0, 10, 20])
 def test_node_count_returns_number_of_nodes_ready_not_ready(cluster_nodes: int) -> None:
-    nodes = [api_to_agent_node(node) for node in APINodeFactory.batch(size=cluster_nodes)]
+    nodes = [
+        api_to_agent_node(node)
+        for node in APINodeFactory.batch(
+            size=cluster_nodes, status=node_status(api.NodeConditionStatus.TRUE)
+        )
+    ]
     cluster = _cluster_builder_from_agents(nodes=nodes)
     node_count = cluster.node_count()
     assert node_count.worker.ready + node_count.worker.not_ready == cluster_nodes

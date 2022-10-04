@@ -1,0 +1,11 @@
+Title: VMWare UAG (Photon OS) is using UCD SNMP now
+Level: 1
+Component: checks
+Compatible: compat
+Edition: cre
+Version: 2.1.0p14
+Date: 1587027448
+Class: feature
+
+VMWare's Unified Access Gateway is using Photon OS which supports the UCD SNMP implementation. 
+Therefore the checks ucd_cpu_util and ucd_mem will now be triggered in case of a walk from VMWare's UAG.

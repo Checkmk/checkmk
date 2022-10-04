@@ -1,0 +1,15 @@
+---
+- name: hello world
+  hosts: 127.0.0.1
+  connection: local
+
+  vars:
+    checkmk_server_sites:
+      - name: test
+        version: "{{ checkmk_server_version }}"
+        state: started
+        admin_pw: test
+
+
+  roles:
+    - tribe29.checkmk.server

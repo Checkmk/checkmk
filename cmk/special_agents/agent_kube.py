@@ -358,6 +358,15 @@ class PodOwner(abc.ABC):
     def __init__(self, pods: Sequence[api.Pod]) -> None:
         self.pods: Sequence[api.Pod] = pods
 
+    def pod_resources(self) -> section.PodResources:
+        return _pod_resources_from_api_pods(self.pods)
+
+    def memory_resources(self) -> section.Resources:
+        return _collect_memory_resources_from_api_pods(self.pods)
+
+    def cpu_resources(self) -> section.Resources:
+        return _collect_cpu_resources_from_api_pods(self.pods)
+
 
 class PodNamespacedOwner(PodOwner, abc.ABC):
     @property
@@ -437,19 +446,10 @@ class Deployment(PodNamespacedOwner):
             kubernetes_cluster_hostname=kubernetes_cluster_hostname,
         )
 
-    def pod_resources(self) -> section.PodResources:
-        return _pod_resources_from_api_pods(self.pods)
-
     def conditions(self) -> Optional[section.DeploymentConditions]:
         if not self.status.conditions:
             return None
         return section.DeploymentConditions(**self.status.conditions)
-
-    def memory_resources(self) -> section.Resources:
-        return _collect_memory_resources_from_api_pods(self.pods)
-
-    def cpu_resources(self) -> section.Resources:
-        return _collect_cpu_resources_from_api_pods(self.pods)
 
     def replicas(self) -> section.DeploymentReplicas:
         return section.DeploymentReplicas(
@@ -495,15 +495,6 @@ class DaemonSet(PodNamespacedOwner):
             return self.metadata.name
 
         return f"{self.metadata.namespace}_{self.metadata.name}"
-
-    def pod_resources(self) -> section.PodResources:
-        return _pod_resources_from_api_pods(self.pods)
-
-    def memory_resources(self) -> section.Resources:
-        return _collect_memory_resources_from_api_pods(self.pods)
-
-    def cpu_resources(self) -> section.Resources:
-        return _collect_cpu_resources_from_api_pods(self.pods)
 
     def replicas(self) -> section.DaemonSetReplicas:
         return section.DaemonSetReplicas(
@@ -561,15 +552,6 @@ class StatefulSet(PodNamespacedOwner):
             return self.metadata.name
         return f"{self.metadata.namespace}_{self.metadata.name}"
 
-    def pod_resources(self) -> section.PodResources:
-        return _pod_resources_from_api_pods(self.pods)
-
-    def memory_resources(self) -> section.Resources:
-        return _collect_memory_resources_from_api_pods(self.pods)
-
-    def cpu_resources(self) -> section.Resources:
-        return _collect_cpu_resources_from_api_pods(self.pods)
-
     def replicas(self) -> section.StatefulSetReplicas:
         return section.StatefulSetReplicas(
             desired=self.spec.replicas,
@@ -623,15 +605,6 @@ class Node(PodOwner):
     @property
     def name(self) -> api.NodeName:
         return api.NodeName(self.metadata.name)
-
-    def pod_resources(self) -> section.PodResources:
-        return _pod_resources_from_api_pods(self.pods)
-
-    def memory_resources(self) -> section.Resources:
-        return _collect_memory_resources_from_api_pods(self.pods)
-
-    def cpu_resources(self) -> section.Resources:
-        return _collect_cpu_resources_from_api_pods(self.pods)
 
     def allocatable_pods(self) -> section.AllocatablePods:
         return section.AllocatablePods(

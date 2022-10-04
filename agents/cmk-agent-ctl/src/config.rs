@@ -51,32 +51,6 @@ pub trait TOMLLoader: DeserializeOwned {
     }
 }
 
-#[derive(Deserialize)]
-pub struct RegistrationPreset {
-    #[serde(default)]
-    site_spec: Option<site_spec::PresetSiteSpec>,
-
-    #[serde(default)]
-    credentials: Option<types::OptPwdCredentials>,
-
-    #[serde(default)]
-    root_certificate: Option<String>,
-
-    #[serde(default)]
-    host_name: Option<String>,
-
-    #[serde(default)]
-    agent_labels: Option<types::AgentLabels>,
-}
-
-impl JSONLoader for RegistrationPreset {}
-
-#[derive(Debug, PartialEq)]
-pub enum HostRegistrationData {
-    Name(String),
-    Labels(types::AgentLabels),
-}
-
 pub struct RegistrationConfig {
     pub coordinates: site_spec::Coordinates,
     pub opt_pwd_credentials: types::OptPwdCredentials,
@@ -166,6 +140,32 @@ impl RegistrationConfig {
         Ok(agent_labels)
     }
 }
+
+#[derive(Debug, PartialEq)]
+pub enum HostRegistrationData {
+    Name(String),
+    Labels(types::AgentLabels),
+}
+
+#[derive(Deserialize)]
+pub struct RegistrationPreset {
+    #[serde(default)]
+    site_spec: Option<site_spec::PresetSiteSpec>,
+
+    #[serde(default)]
+    credentials: Option<types::OptPwdCredentials>,
+
+    #[serde(default)]
+    root_certificate: Option<String>,
+
+    #[serde(default)]
+    host_name: Option<String>,
+
+    #[serde(default)]
+    agent_labels: Option<types::AgentLabels>,
+}
+
+impl JSONLoader for RegistrationPreset {}
 
 #[derive(Deserialize, Clone)]
 pub struct RuntimeConfig {

@@ -15,7 +15,7 @@
 import itertools
 import unittest
 import uuid
-from typing import Callable, Mapping, Sequence
+from typing import Mapping, Sequence
 
 import pytest
 import pytest_mock
@@ -195,33 +195,6 @@ class DaemonSetStatusFactory(ModelFactory):
 
 class StatefulSetStatusFactory(ModelFactory):
     __model__ = api.StatefulSetStatus
-
-
-# Container Status Fixtures
-@pytest.fixture
-def container_status_state() -> api.ContainerStateType:
-    return api.ContainerStateType.running
-
-
-@pytest.fixture
-def container_state(container_status_state) -> api.ContainerState:  # type:ignore[no-untyped-def]
-    if container_status_state == api.ContainerStateType.running:
-        return ContainerRunningStateFactory.build()
-    if container_status_state == api.ContainerStateType.waiting:
-        return ContainerWaitingStateFactory.build()
-    if container_status_state == api.ContainerStateType.terminated:
-        return ContainerTerminatedStateFactory.build()
-    raise ValueError(f"Unknown container state: {container_status_state}")
-
-
-@pytest.fixture
-def container_status(  # type:ignore[no-untyped-def]
-    container_state,
-) -> Callable[[], api.ContainerStatus]:
-    def _container_status() -> api.ContainerStatus:
-        return ContainerStatusFactory.build(state=container_state)
-
-    return _container_status
 
 
 def api_to_agent_node(node: api.Node, pods: Sequence[api.Pod] = ()) -> agent_kube.Node:

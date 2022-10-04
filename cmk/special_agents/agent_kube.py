@@ -434,15 +434,16 @@ class Deployment(PodOwner):
             return None
         return section.DeploymentConditions(**self.status.conditions)
 
-    def replicas(self) -> section.DeploymentReplicas:
-        return section.DeploymentReplicas(
-            desired=self.status.replicas.replicas,
-            ready=self.status.replicas.ready,
-            updated=self.status.replicas.updated,
-        )
-
     def strategy(self) -> section.UpdateStrategy:
         return section.UpdateStrategy(strategy=self.spec.strategy)
+
+
+def deployment_replicas(deployment_status: api.DeploymentStatus) -> section.DeploymentReplicas:
+    return section.DeploymentReplicas(
+        desired=deployment_status.replicas.replicas,
+        ready=deployment_status.replicas.ready,
+        updated=deployment_status.replicas.updated,
+    )
 
 
 def _thin_containers(pods: Collection[api.Pod]) -> section.ThinContainers:
@@ -469,16 +470,19 @@ class DaemonSet(PodOwner):
         self._status = status
         self.type_: str = "daemonset"
 
-    def replicas(self) -> section.DaemonSetReplicas:
-        return section.DaemonSetReplicas(
-            desired=self._status.desired_number_scheduled,
-            updated=self._status.updated_number_scheduled,
-            misscheduled=self._status.number_misscheduled,
-            ready=self._status.number_ready,
-        )
-
     def strategy(self) -> section.UpdateStrategy:
         return section.UpdateStrategy(strategy=self.spec.strategy)
+
+
+def daemonset_replicas(
+    daemonset: DaemonSet,
+) -> section.DaemonSetReplicas:
+    return section.DaemonSetReplicas(
+        desired=daemonset._status.desired_number_scheduled,
+        updated=daemonset._status.updated_number_scheduled,
+        misscheduled=daemonset._status.number_misscheduled,
+        ready=daemonset._status.number_ready,
+    )
 
 
 def daemonset_info(
@@ -516,15 +520,16 @@ class StatefulSet(PodOwner):
         self._status = status
         self.type_: str = "statefulset"
 
-    def replicas(self) -> section.StatefulSetReplicas:
-        return section.StatefulSetReplicas(
-            desired=self.spec.replicas,
-            ready=self._status.ready_replicas,
-            updated=self._status.updated_replicas,
-        )
-
     def strategy(self) -> section.UpdateStrategy:
         return section.UpdateStrategy(strategy=self.spec.strategy)
+
+
+def statefulset_replicas(statefulset: StatefulSet) -> section.StatefulSetReplicas:
+    return section.StatefulSetReplicas(
+        desired=statefulset.spec.replicas,
+        ready=statefulset._status.ready_replicas,
+        updated=statefulset._status.updated_replicas,
+    )
 
 
 def statefulset_info(
@@ -1378,7 +1383,7 @@ def write_deployments_api_sections(
             "kube_deployment_conditions_v1": cluster_deployment.conditions,
             "kube_cpu_resources_v1": cluster_deployment.cpu_resources,
             "kube_update_strategy_v1": cluster_deployment.strategy,
-            "kube_deployment_replicas_v1": cluster_deployment.replicas,
+            "kube_deployment_replicas_v1": lambda: deployment_replicas(cluster_deployment.status),
         }
         _write_sections(sections)
 
@@ -1414,7 +1419,7 @@ def write_daemon_sets_api_sections(
                 annotation_key_pattern,
             ),
             "kube_update_strategy_v1": cluster_daemon_set.strategy,
-            "kube_daemonset_replicas_v1": cluster_daemon_set.replicas,
+            "kube_daemonset_replicas_v1": lambda: daemonset_replicas(cluster_daemon_set),
         }
         _write_sections(sections)
 
@@ -1446,7 +1451,7 @@ def write_statefulsets_api_sections(
                 annotation_key_pattern,
             ),
             "kube_update_strategy_v1": cluster_statefulset.strategy,
-            "kube_statefulset_replicas_v1": cluster_statefulset.replicas,
+            "kube_statefulset_replicas_v1": lambda: statefulset_replicas(cluster_statefulset),
         }
         _write_sections(sections)
 

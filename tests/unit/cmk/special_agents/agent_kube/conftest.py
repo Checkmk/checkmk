@@ -155,46 +155,9 @@ class APINodeFactory(ModelFactory):
     kubelet_info = KubeletInfoFactory.build
 
 
-# DaemonSet Factories
-class DaemonSetSpecFactory(ModelFactory):
-    __model__ = api.DaemonSetSpec
-
-
-# StatefulSet Factories
-class StatefulSetSpecFactory(ModelFactory):
-    __model__ = api.StatefulSetSpec
-
-
 # Cluster Factories
 class ClusterDetailsFactory(ModelFactory):
     __model__ = api.ClusterDetails
-
-
-# Deployment Factories
-class DeploymentFactory(ModelFactory):
-    __model__ = api.Deployment
-
-
-class DeploymentSpecFactory(ModelFactory):
-    __model__ = api.DeploymentSpec
-
-
-class DeploymentStatusFactory(ModelFactory):
-    __model__ = api.DeploymentStatus
-
-
-# DaemonSet Factories
-
-
-class DaemonSetStatusFactory(ModelFactory):
-    __model__ = api.DaemonSetStatus
-
-
-# StatefulSet Factories
-
-
-class StatefulSetStatusFactory(ModelFactory):
-    __model__ = api.StatefulSetStatus
 
 
 def api_to_agent_node(node: api.Node, pods: Sequence[api.Pod] = ()) -> agent_kube.Node:

@@ -3,19 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import ast
-import json
 import logging
 import os
 import re
 import urllib.parse
-from collections.abc import Container, Iterable, Mapping
-from typing import Any, Collection
+from collections.abc import Container
+from typing import Collection
 
 import requests
 from bs4 import BeautifulSoup  # type: ignore[import]
-
-from cmk.utils.type_defs import RulesetName
 
 
 class APIError(Exception):
@@ -222,63 +218,3 @@ class CMKWebSession:
     def logout(self) -> None:
         r = self.get("logout.py", allow_redirect_to_login=True)
         assert 'action="login.py"' in r.text
-
-    #
-    # Web-API for managing hosts, services etc.
-    #
-
-    def _automation_credentials(self) -> dict[str, Any]:
-        return {
-            "_username": "automation",
-            "_secret": self.site.get_automation_secret(),
-        }
-
-    def _api_request(
-        self,
-        url: object,
-        data: dict[str, object],
-        expect_error: bool = False,
-        output_format: str = "json",
-    ) -> Mapping[str, object]:
-        data.update(self._automation_credentials())
-
-        req = self.post(url, data=data)
-
-        if output_format == "json":
-            try:
-                response = json.loads(req.text)
-            except json.JSONDecodeError:
-                raise APIError(f"invalid json: {req.text}")
-        elif output_format == "python":
-            response = ast.literal_eval(req.text)
-        else:
-            raise NotImplementedError()
-
-        assert req.headers["access-control-allow-origin"] == "*"
-
-        if not expect_error:
-            assert response["result_code"] == 0, "An error occured: %r" % response
-        else:
-            raise APIError(response["result"])
-
-        return response["result"]
-
-    def set_ruleset(
-        self,
-        ruleset_name: RulesetName,
-        ruleset_spec: Iterable[tuple[str, RulesetName]] | Mapping[str, RulesetName],
-    ) -> None:
-        request = {
-            "ruleset_name": ruleset_name,
-        }
-        request.update(ruleset_spec)
-
-        result = self._api_request(
-            "webapi.py?action=set_ruleset&output_format=python&request_format=python",
-            {
-                "request": str(request),
-            },
-            output_format="python",
-        )
-
-        assert result is None

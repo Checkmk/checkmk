@@ -389,7 +389,7 @@ class SetFolderPathAbstract:
 
 
 class SetFolderPathList(SetFolderPathAbstract, list):
-    def __iadd__(self, new_hosts: Iterable[str]) -> SetFolderPathList:
+    def __iadd__(self, new_hosts: Iterable[str]) -> SetFolderPathList:  # type: ignore[override]
         assert isinstance(new_hosts, list)
         self._set_folder_paths(new_hosts)
         super().__iadd__(new_hosts)
@@ -400,7 +400,7 @@ class SetFolderPathList(SetFolderPathAbstract, list):
         super().extend(new_hosts)
 
     # Probably unused
-    def __add__(self, new_hosts: Iterable[str]) -> SetFolderPathList:
+    def __add__(self, new_hosts: Iterable[str]) -> SetFolderPathList:  # type: ignore[override]
         assert isinstance(new_hosts, list)
         self._set_folder_paths(new_hosts)
         return SetFolderPathList(super().__add__(new_hosts))

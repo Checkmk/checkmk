@@ -178,31 +178,18 @@ def user_from_bearer_header(auth_header: str) -> Tuple[UserId, str]:
     return UserId(user_id), secret
 
 
-class Authenticate:
-    """Wrap an Endpoint so it will be authenticated
+class EndpointAdapter:
+    """Wrap an Endpoint
 
-    This is not very memory efficient as it wraps every individual endpoint in its own
-    authenticator, even though this does not need to be. This has to be done this way right now,
-    because we have multiple endpoints without authentication in this app. A refactoring to lower
-    the memory foot-print of this is feasible and should be done if a good way has been found.
+    Makes a "real" WSGI application out of an endpoint. Should be refactored away.
     """
-    def __init__(self, func):
-        self.func = func
+    def __init__(self, endpoint):
+        self.endpoint = endpoint
 
     def __call__(self, environ, start_response):
         path_args = environ[ARGS_KEY]
-
-        try:
-            rfc7662 = _verify_user(environ)
-        except MKException as exc:
-            return problem(
-                status=401,
-                title=str(exc),
-            )(environ, start_response)
-
-        with set_user_context(rfc7662['sub'], rfc7662):
-            wsgi_app = self.func(ParameterDict(path_args))
-            return wsgi_app(environ, start_response)
+        wsgi_app = self.endpoint.wrapped(ParameterDict(path_args))
+        return wsgi_app(environ, start_response)
 
 
 @functools.lru_cache
@@ -359,9 +346,11 @@ class CheckmkRESTAPI:
                 _ = endpoint.to_operation_dict()
 
             rules.append(
-                Rule(endpoint.default_path,
-                     methods=[endpoint.method],
-                     endpoint=Authenticate(endpoint.wrapped)))
+                Rule(
+                    endpoint.default_path,
+                    methods=[endpoint.method],
+                    endpoint=EndpointAdapter(endpoint),
+                ))
 
         swagger_ui = ServeSwaggerUI(prefix="/[^/]+/check_mk/api/[^/]+/ui")
 
@@ -397,7 +386,18 @@ class CheckmkRESTAPI:
             # This is an implicit dependency, as we only know the args at runtime, but the
             # function at setup-time.
             environ[ARGS_KEY] = path_args
-            return wsgi_app(environ, start_response)
+
+            # Authenticate the user for all endpoints and sub-applications.
+            try:
+                rfc7662 = _verify_user(environ)
+            except MKException as exc:
+                return problem(
+                    status=401,
+                    title=str(exc),
+                )(environ, start_response)
+
+            with set_user_context(rfc7662["sub"], rfc7662):
+                return wsgi_app(environ, start_response)
         except ProblemException as exc:
             return exc(environ, start_response)
         except HTTPException as exc:

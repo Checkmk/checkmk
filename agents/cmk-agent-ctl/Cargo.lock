@@ -354,6 +354,7 @@ dependencies = [
  "http",
  "ipnet",
  "is_elevated",
+ "lazy_static",
  "log",
  "mail_slot",
  "nix",

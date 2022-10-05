@@ -19,7 +19,7 @@ pub mod site_spec;
 mod tls_server;
 pub mod types;
 use anyhow::{anyhow, Context, Result as AnyhowResult};
-use config::{JSONLoader, TOMLLoader};
+use config::TOMLLoader;
 use log::info;
 use modes::daemon::daemon;
 use modes::delete_connection::{delete, delete_all};
@@ -37,7 +37,6 @@ pub use misc::validate_elevation;
 pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> AnyhowResult<()> {
     agent_socket_operational(&args)?;
 
-    let registration_preset = config::RegistrationPreset::load(&paths.registration_preset_path)?;
     let runtime_config = config::RuntimeConfig::load(&paths.config_path)?;
     let mut registry = config::Registry::from_file(&paths.registry_path).with_context(|| {
         format!(
@@ -59,11 +58,7 @@ pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> Anyhow
     match args {
         cli::Args::RegisterHostName(reg_args) => {
             registration::register_host_name(
-                &config::RegistrationConfigHostName::new(
-                    runtime_config,
-                    registration_preset,
-                    reg_args,
-                )?,
+                &config::RegistrationConfigHostName::new(runtime_config, reg_args)?,
                 &mut registry,
             )?;
             legacy_pull_marker.remove().context(
@@ -72,24 +67,16 @@ pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> Anyhow
         }
         cli::Args::RegisterAgentLabels(reg_args) => {
             registration::register_agent_labels(
-                &config::RegistrationConfigAgentLabels::new(
-                    runtime_config,
-                    registration_preset,
-                    reg_args,
-                )?,
+                &config::RegistrationConfigAgentLabels::new(runtime_config, reg_args)?,
                 &mut registry,
             )?;
             legacy_pull_marker.remove().context(
                 "Registration successful, but could not delete marker for legacy pull mode",
             )
         }
-        cli::Args::ProxyRegister(proxy_reg_args) => {
-            registration::proxy_register(&config::RegistrationConfigHostName::new(
-                runtime_config,
-                registration_preset,
-                proxy_reg_args,
-            )?)
-        }
+        cli::Args::ProxyRegister(proxy_reg_args) => registration::proxy_register(
+            &config::RegistrationConfigHostName::new(runtime_config, proxy_reg_args)?,
+        ),
         cli::Args::Import(import_args) => {
             import(&mut registry, &import_args)?;
             legacy_pull_marker

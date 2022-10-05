@@ -46,18 +46,18 @@ pub struct ClientOpts {
 pub struct RegistrationArgsConnection {
     /// Address of the Checkmk site in the format "<server>" or "<server>:<port>"
     #[structopt(long = "server", short = "s", requires = "site", parse(try_from_str))]
-    pub server_spec: Option<site_spec::ServerSpec>,
+    pub server_spec: site_spec::ServerSpec,
 
     /// Name of the Checkmk site
-    #[structopt(long, short = "i", requires = "server", parse(from_str))]
-    pub site: Option<String>,
+    #[structopt(long, short = "i", parse(from_str))]
+    pub site: String,
 
     /// API user to use for registration
     #[structopt(long, short = "U", parse(from_str))]
-    pub user: Option<String>,
+    pub user: String,
 
     /// Password for API user. Can also be entered interactively.
-    #[structopt(long, short = "P", requires = "user", parse(from_str))]
+    #[structopt(long, short = "P", parse(from_str))]
     pub password: Option<String>,
 
     /// Blindly trust the server certificate of the Checkmk site
@@ -80,7 +80,7 @@ pub struct RegistrationArgsHostName {
     /// Name of this host in the monitoring site
     // We are consistent with agent updater, which uses "hostname", not "host-name".
     #[structopt(long, short = "H", long = "hostname", parse(from_str))]
-    pub host_name: Option<String>,
+    pub host_name: String,
 }
 
 #[derive(StructOpt)]

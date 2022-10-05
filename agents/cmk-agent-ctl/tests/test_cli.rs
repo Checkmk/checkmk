@@ -30,6 +30,17 @@ fn supported_modes() -> Vec<&'static str> {
     ]
 }
 
+lazy_static::lazy_static! {
+    static ref REQUIRED_ARGUMENTS: std::collections::HashMap<&'static str, Vec<&'static str>> = {
+        std::collections::HashMap::from([
+            ("delete", vec!["some-connection"]),
+            ("register", vec!["-s", "server", "-i", "site", "-U", "user", "-H", "host"]),
+            ("proxy-register", vec!["-s", "server", "-i", "site", "-U", "user", "-H", "host"]),
+            ("register-new", vec!["-s", "server", "-i", "site", "-U", "user"]),
+        ])
+    };
+}
+
 fn test_supported_modes(help_stdout: String) -> bool {
     let mut n_modes_found = 0;
     for line in help_stdout.split('\n') {
@@ -114,11 +125,10 @@ fn test_fail_become_user() {
             continue;
         }
         let mut cmd = Command::cargo_bin(BINARY).unwrap();
-        let mut cmd = cmd.arg(mode);
-        if mode == "delete" {
-            cmd = cmd.arg("some-connection");
-        }
-        let err = cmd.unwrap_err();
+        let err = cmd
+            .arg(mode)
+            .args(REQUIRED_ARGUMENTS.get(mode).unwrap_or(&vec![]))
+            .unwrap_err();
         let output = err.as_output().unwrap();
         assert_eq!(output.status.code(), Some(1));
         assert_eq!(output.stdout, b"");
@@ -135,15 +145,12 @@ fn test_fail_socket_missing() {
 
     for mode in supported_modes() {
         let mut cmd = Command::cargo_bin(BINARY).unwrap();
-        let mut cmd = cmd
+        let output_res = cmd
             .timeout(std::time::Duration::from_secs(1))
             .env("DEBUG_HOME_DIR", "whatever")
-            .arg(mode);
-        if mode == "delete" {
-            cmd = cmd.arg("some-connection");
-        };
-
-        let output_res = cmd.ok();
+            .arg(mode)
+            .args(REQUIRED_ARGUMENTS.get(mode).unwrap_or(&vec![]))
+            .ok();
 
         match mode {
             // these commands are expected to fail due to missing socket

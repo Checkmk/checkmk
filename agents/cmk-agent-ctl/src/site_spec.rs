@@ -47,14 +47,6 @@ impl FromStr for ServerSpec {
     }
 }
 
-#[derive(serde::Deserialize)]
-pub struct PresetSiteSpec {
-    #[serde(flatten)]
-    pub server_spec: ServerSpec,
-
-    pub site: String,
-}
-
 #[derive(
     PartialEq,
     std::cmp::Eq,

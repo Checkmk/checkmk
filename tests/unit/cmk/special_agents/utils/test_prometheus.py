@@ -101,7 +101,8 @@ from cmk.special_agents.utils.prometheus import extract_connection_args
                     "ip_address",
                     {
                         "port": 9876,
-                        "path-prefix": "somewhere.",
+                        "path_prefix": "somewhere.",
+                        "base_prefix": "later",
                     },
                 ),
                 "auth_basic": (
@@ -119,7 +120,7 @@ from cmk.special_agents.utils.prometheus import extract_connection_args
                 "host_name": "prometheus",
             },
             {
-                "api_url": "https://somewhere.1.2.3.4:9876/api/v1/",
+                "api_url": "https://later1.2.3.4:9876/somewhere./api/v1/",
                 "token": "very_secret",
                 "verify-cert": True,
             },

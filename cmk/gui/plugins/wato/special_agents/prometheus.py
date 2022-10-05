@@ -8,7 +8,6 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.utils import MetricName
 from cmk.gui.plugins.wato.special_agents.common import (
     api_request_authentication,
-    api_request_connection_elements,
     filter_kubernetes_namespace_element,
     RulespecGroupVMCloudContainer,
     ssl_verification,
@@ -20,8 +19,10 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     Float,
     Hostname,
+    Integer,
     ListChoice,
     ListOf,
+    Migrate,
     TextInput,
     Tuple,
 )
@@ -30,6 +31,50 @@ from cmk.gui.valuespec import (
 def _check_not_empty_exporter_dict(value, _varprefix):
     if not value:
         raise MKUserError("dict_selection", _("Please select at least one element"))
+
+
+def _rename_path_prefix_key(connection_elements: dict[str, object]) -> dict[str, object]:
+    if (prefix := connection_elements.get("path-prefix")) is not None:
+        connection_elements["base_prefix"] = prefix
+    return connection_elements
+
+
+def _valuespec_connection_elements() -> Migrate:
+    return Migrate(
+        valuespec=Dictionary(
+            elements=[
+                ("port", Integer(title=_("Port"), default_value=6443)),
+                (
+                    "path_prefix",
+                    TextInput(
+                        title=_("Custom path prefix"),
+                        help=_(
+                            "Specifies a URL path prefix, which is prepended to API calls "
+                            "to the Prometheus API. If this option is not relevant for "
+                            "your installation, please leave it unchecked."
+                        ),
+                        allow_empty=False,
+                    ),
+                ),
+                (
+                    "base_prefix",
+                    TextInput(
+                        title=_("Custom URL base prefix"),
+                        help=_(
+                            "Specifies a prefix, which is prepended to the hostname "
+                            "or base address. This is an exotic option, which is "
+                            "kept for legacy reasons. Consider using a custom URL instead. "
+                            "If this option is not relevant for your installation, "
+                            "please leave it unchecked."
+                        ),
+                        allow_empty=False,
+                    ),
+                ),
+            ],
+            show_more_keys=["base_prefix"],
+        ),
+        migrate=_rename_path_prefix_key,
+    )
 
 
 def _valuespec_generic_metrics_prometheus() -> Dictionary:
@@ -57,34 +102,8 @@ def _valuespec_generic_metrics_prometheus() -> Dictionary:
                 "connection",
                 CascadingDropdown(
                     choices=[
-                        (
-                            "ip_address",
-                            _("IP Address"),
-                            Dictionary(
-                                elements=api_request_connection_elements(
-                                    help_text=_(
-                                        "Specifies a URL path prefix, which is prepended to API calls "
-                                        "to the Prometheus API. If this option is not relevant for "
-                                        "your installation, please leave it unchecked."
-                                    ),
-                                    default_port=6443,
-                                ),
-                            ),
-                        ),
-                        (
-                            "host_name",
-                            _("Host name"),
-                            Dictionary(
-                                elements=api_request_connection_elements(
-                                    help_text=_(
-                                        "Specifies a URL path prefix, which is prepended to API calls "
-                                        "to the Prometheus API. If this option is not relevant for "
-                                        "your installation, please leave it unchecked."
-                                    ),
-                                    default_port=6443,
-                                ),
-                            ),
-                        ),
+                        ("ip_address", _("IP Address"), _valuespec_connection_elements()),
+                        ("host_name", _("Host name"), _valuespec_connection_elements()),
                         (
                             "url_custom",
                             _("Custom URL"),

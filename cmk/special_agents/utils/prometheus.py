@@ -12,39 +12,29 @@ from cmk.utils import password_store
 
 from cmk.special_agents.utils.request_helper import create_api_connect_session, parse_api_url
 
-ConnectionSetting = TypedDict(
-    "ConnectionSetting",
-    {
-        "url_address": str,
-        "port": int | None,
-        "path-prefix": str | None,
-    },
-    total=False,
-)
+
+class ConnectionSetting(TypedDict, total=False):
+    url_address: str
+    port: int
+    path_prefix: str
+    base_prefix: str
 
 
 class ConnectionConfig(TypedDict):
-    # This would be the correct typing:
-    # URLSetting = TypedDict(
-    #     "URLSetting",
-    #     {
-    #         "url_address": str,
-    #     },
-    # )
-
-    # HostSetting = TypedDict(
-    #     "HostSetting",
-    #     {
-    #         "port": int | None,
-    #         "path-prefix": str | None,
-    #     },
-    # )
-
+    # The correct typing causes mypy to crash, but it would be:
+    # class URLSetting(TypedDict):
+    #     url_address: str
+    #
+    #
+    # class HostSetting(TypedDict):
+    #     port: int
+    #     path_prefix: str
+    #     base_prefix: str
+    #
+    #
     # URLConnection = tuple[Literal["url_custom"], URLSetting]
     # HostConnection = tuple[Literal["ip_address", "host_name"], HostSetting]
     # connection: URLConnection | HostConnection
-    # However, it causes mypy to crash.
-
     connection: tuple[Literal["url_custom", "ip_address", "host_name"], ConnectionSetting]
     host_address: str | None
     host_name: str | None
@@ -60,7 +50,8 @@ def _get_api_url(config: ConnectionConfig) -> str:
             address = config["host_name"]
 
     port = settings.get("port")
-    url_prefix = settings.get("path-prefix")
+    path_prefix = settings.get("path_prefix")
+    base_prefix = settings.get("base_prefix")
     protocol = config.get("protocol")
 
     return parse_api_url(
@@ -68,7 +59,8 @@ def _get_api_url(config: ConnectionConfig) -> str:
         api_path="api/v1/",
         protocol=protocol,
         port=port,
-        url_prefix=url_prefix,
+        url_prefix=base_prefix,
+        path_prefix=path_prefix,
     )
 
 

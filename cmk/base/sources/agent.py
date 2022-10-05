@@ -9,7 +9,6 @@ from typing import Final, Optional
 from cmk.utils.translations import TranslationOptions
 from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, SourceType
 
-import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers.agent import AgentParser, AgentRawDataSection
 from cmk.core_helpers.cache import SectionStore
 from cmk.core_helpers.controller import FetcherType
@@ -31,13 +30,10 @@ class AgentSource(Source[AgentRawData, AgentRawDataSection]):
         fetcher_type: FetcherType,
         id_: str,
         persisted_section_dir: Path,
-        cache_dir: Path,
-        simulation_mode: bool,
         agent_simulator: bool,
         translation: TranslationOptions,
         encoding_fallback: str,
         check_interval: int,
-        file_cache_max_age: file_cache.MaxAge,
     ):
         super().__init__(
             hostname,
@@ -51,10 +47,6 @@ class AgentSource(Source[AgentRawData, AgentRawDataSection]):
         self.agent_simulator: Final = agent_simulator
         self.check_interval: Final = check_interval
         self.persisted_section_dir: Final = persisted_section_dir
-
-        self.file_cache_base_path: Final = cache_dir
-        self.simulation_mode: Final = simulation_mode
-        self.file_cache_max_age: Final = file_cache_max_age
 
     def _make_parser(self) -> AgentParser:
         return AgentParser(

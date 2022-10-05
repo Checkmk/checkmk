@@ -43,14 +43,15 @@ class IPMISource(AgentSource):
             fetcher_type=FetcherType.IPMI,
             id_=id_,
             persisted_section_dir=persisted_section_dir,
-            cache_dir=cache_dir,
-            simulation_mode=simulation_mode,
             agent_simulator=agent_simulator,
             translation=translation,
             encoding_fallback=encoding_fallback,
             check_interval=check_interval,
-            file_cache_max_age=file_cache_max_age,
         )
+        self.file_cache_base_path: Final = cache_dir
+        self.simulation_mode: Final = simulation_mode
+        self.file_cache_max_age: Final = file_cache_max_age
+
         self.credentials: Final = management_credentials
 
     def _make_file_cache(self) -> AgentFileCache:

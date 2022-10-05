@@ -43,14 +43,15 @@ class PiggybackSource(AgentSource):
             fetcher_type=FetcherType.PIGGYBACK,
             id_=id_,
             persisted_section_dir=persisted_section_dir,
-            cache_dir=cache_dir,
-            simulation_mode=simulation_mode,
             agent_simulator=agent_simulator,
             translation=translation,
             encoding_fallback=encoding_fallback,
             check_interval=check_interval,
-            file_cache_max_age=file_cache_max_age,
         )
+        self.file_cache_base_path: Final = cache_dir
+        self.simulation_mode: Final = simulation_mode
+        self.file_cache_max_age: Final = file_cache_max_age
+
         self.time_settings: Final = time_settings
         # Tag: 'Always use and expect piggback data'
         self.is_piggyback_host: Final = is_piggyback_host

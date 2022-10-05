@@ -593,8 +593,8 @@ class EventServer(ECServerThread):
                 self._syslog_tcp.listen(20)
                 os.close(endpoint.value)
                 self._logger.info(
-                    "Opened builtin syslog-tcp server on inherited filedescriptor %d"
-                    % endpoint.value
+                    "Opened builtin syslog-tcp server on inherited filedescriptor %d",
+                    endpoint.value,
                 )
             if isinstance(endpoint, PortNumber):
                 self._syslog_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -696,8 +696,8 @@ class EventServer(ECServerThread):
                 # where host can be the domain name or an IPv4 address.
                 if not (
                     isinstance(address, tuple)
-                    and isinstance(address[0], str)  #
-                    and isinstance(address[1], int)  #
+                    and isinstance(address[0], str)
+                    and isinstance(address[1], int)
                 ):
                     raise ValueError(
                         f"Invalid remote address '{address!r}' for syslog socket (TCP)"
@@ -781,8 +781,8 @@ class EventServer(ECServerThread):
                 # where host can be the domain name or an IPv4 address.
                 if not (
                     isinstance(address, tuple)
-                    and isinstance(address[0], str)  #
-                    and isinstance(address[1], int)  #
+                    and isinstance(address[0], str)
+                    and isinstance(address[1], int)
                 ):
                     raise ValueError(
                         f"Invalid remote address '{address!r}' for syslog socket (UDP)"
@@ -797,11 +797,11 @@ class EventServer(ECServerThread):
                     # where host can be the domain name or an IPv4 address.
                     if not (
                         isinstance(address, tuple)
-                        and isinstance(address[0], str)  #
-                        and isinstance(address[1], int)  #
+                        and isinstance(address[0], str)
+                        and isinstance(address[1], int)
                     ):
                         raise ValueError(f"Invalid remote address '{address!r}' for SNMP trap")
-                    addr: tuple[str, int] = address  # for mypy's sake (bug!)
+                    addr = address
                     self.process_raw_data(
                         lambda: self._snmp_trap_engine.process_snmptrap(message, addr)
                     )
@@ -892,8 +892,9 @@ class EventServer(ECServerThread):
                 # will never reach its count. Better delete it.
                 if not rule:
                     self._logger.info(
-                        "Deleting orphaned event %d created by obsolete rule %s"
-                        % (event["id"], event["rule_id"])
+                        "Deleting orphaned event %d created by obsolete rule %s",
+                        event["id"],
+                        event["rule_id"],
                     )
                     event["phase"] = "closed"
                     self._history.add(event, "ORPHANED")
@@ -926,8 +927,11 @@ class EventServer(ECServerThread):
                         if new_tokens:
                             if self.settings.options.debug:
                                 self._logger.info(
-                                    "Rule %s/%s, event %d: got %d new tokens"
-                                    % (rule["pack"], rule["id"], event["id"], new_tokens)
+                                    "Rule %s/%s, event %d: got %d new tokens",
+                                    rule["pack"],
+                                    rule["id"],
+                                    event["id"],
+                                    new_tokens,
                                 )
                             event["count"] = max(0, event["count"] - new_tokens)
                             event["last_token"] = (
@@ -935,8 +939,10 @@ class EventServer(ECServerThread):
                             )  # not now! would be unfair
                             if event["count"] == 0:
                                 self._logger.info(
-                                    "Rule %s/%s, event %d: again without allowed rate, dropping event"
-                                    % (rule["pack"], rule["id"], event["id"])
+                                    "Rule %s/%s, event %d: again without allowed rate, dropping event",
+                                    rule["pack"],
+                                    rule["id"],
+                                    event["id"],
                                 )
                                 event["phase"] = "closed"
                                 self._history.add(event, "COUNTFAILED")
@@ -946,14 +952,12 @@ class EventServer(ECServerThread):
                         if event["first"] + count["period"] <= now:  # End of period reached
                             self._logger.info(
                                 "Rule %s/%s: reached only %d out of %d events within %d seconds. "
-                                "Resetting to zero."
-                                % (
-                                    rule["pack"],
-                                    rule["id"],
-                                    event["count"],
-                                    count["count"],
-                                    count["period"],
-                                )
+                                "Resetting to zero.",
+                                rule["pack"],
+                                rule["id"],
+                                event["count"],
+                                count["count"],
+                                count["period"],
                             )
                             event["phase"] = "closed"
                             self._history.add(event, "COUNTFAILED")
@@ -964,8 +968,9 @@ class EventServer(ECServerThread):
                 delay_until = event.get("delay_until", 0)  # should always be present
                 if now >= delay_until:
                     self._logger.info(
-                        "Delayed event %d of rule %s is now activated."
-                        % (event["id"], event["rule_id"])
+                        "Delayed event %d of rule %s is now activated.",
+                        event["id"],
+                        event["rule_id"],
                     )
                     event["phase"] = "open"
                     self._history.add(event, "DELAYOVER")
@@ -997,8 +1002,9 @@ class EventServer(ECServerThread):
                     event["phase"] = "closed"
                     events_to_delete.append(nr)
                     self._logger.info(
-                        "Livetime of event %d (rule %s) exceeded. Deleting event."
-                        % (event["id"], event["rule_id"])
+                        "Livetime of event %d (rule %s) exceeded. Deleting event.",
+                        event["id"],
+                        event["rule_id"],
                     )
                     self._history.add(event, "EXPIRED")
 
@@ -1061,8 +1067,11 @@ class EventServer(ECServerThread):
                         else:  # yes -> everything is fine. Just log.
                             self._logger.info(
                                 "Rule %s/%s has reached %d occurrences (%d required). "
-                                "Starting next period."
-                                % (rule["pack"], rule["id"], event["count"], expected_count)
+                                "Starting next period.",
+                                rule["pack"],
+                                rule["id"],
+                                event["count"],
+                                expected_count,
                             )
                             self._history.add(event, "COUNTREACHED")
                         # Counting event is no longer needed.
@@ -1241,8 +1250,10 @@ class EventServer(ECServerThread):
                         rule["disabled"] = True
                         count_disabled += 1
                         self._logger.exception(
-                            "Ignoring rule '%s/%s' because of an invalid regex (%s)."
-                            % (rule["pack"], rule["id"], e)
+                            "Ignoring rule '%s/%s' because of an invalid regex (%s).",
+                            rule["pack"],
+                            rule["id"],
+                            e,
                         )
 
                     if self._config["rule_optimizer"]:
@@ -1260,8 +1271,10 @@ class EventServer(ECServerThread):
         )
         if self._config["rule_optimizer"]:
             self._logger.info(
-                "Rule hash: %d rules - %d hashed, %d unspecific"
-                % (len(self._rules), len(self._rules) - count_unspecific, count_unspecific)
+                "Rule hash: %d rules - %d hashed, %d unspecific",
+                len(self._rules),
+                len(self._rules) - count_unspecific,
+                count_unspecific,
             )
             for facility in list(range(23)) + [31]:
                 if facility in self._rule_hash:
@@ -1332,13 +1345,11 @@ class EventServer(ECServerThread):
         entries.reverse()
         for count, (facility, priority) in entries[:20]:
             self._logger.info(
-                "  %s/%s - %d (%.2f%%)"
-                % (
-                    SyslogFacility(facility),
-                    SyslogPriority(priority),
-                    count,
-                    (100.0 * count / float(total_count)),
-                )
+                "  %s/%s - %d (%.2f%%)",
+                SyslogFacility(facility),
+                SyslogPriority(priority),
+                count,
+                (100.0 * count / float(total_count)),
             )
 
     def process_line(self, line: str, address: tuple[str, int] | None) -> None:
@@ -1380,14 +1391,12 @@ class EventServer(ECServerThread):
                 self._event_status.count_rule_match(rule["id"])
                 if self._config["log_rulehits"]:
                     self._logger.info(
-                        "Rule '%s/%s' hit by message %s/%s - '%s'."
-                        % (
-                            rule["pack"],
-                            rule["id"],
-                            SyslogFacility(event["facility"]),
-                            SyslogPriority(event["priority"]),
-                            event["text"],
-                        )
+                        "Rule '%s/%s' hit by message %s/%s - '%s'.",
+                        rule["pack"],
+                        rule["id"],
+                        SyslogFacility(event["facility"]),
+                        SyslogPriority(event["priority"]),
+                        event["text"],
                     )
 
                 if rule.get("drop"):
@@ -1666,7 +1675,7 @@ class EventServer(ECServerThread):
                     (
                         "%s %s %s%s: %s\n"
                         % (
-                            time.strftime("%b %d %H:%M:%S", time.localtime(event["time"])),  #
+                            time.strftime("%b %d %H:%M:%S", time.localtime(event["time"])),
                             event["host"],
                             event["application"],
                             f'[{event["pid"]}]' if event["pid"] else "",
@@ -1709,7 +1718,8 @@ class EventServer(ECServerThread):
         self._logger.log(
             VERBOSE,
             "Checking limit for message from %s (rule '%s')",
-            (event["host"], event["rule_id"]),
+            event["host"],
+            event["rule_id"],
         )
 
         core_host = event["core_host"]
@@ -2056,8 +2066,9 @@ class RuleMatcher:
         if match(rule.get("match_host"), event["host"], complete=True) is False:
             if self._debug_rules:
                 self._logger.info(
-                    "  did not match because of wrong host '%s' (need '%s')"
-                    % (event["host"], format_pattern(rule.get("match_host")))
+                    "  did not match because of wrong host '%s' (need '%s')",
+                    event["host"],
+                    format_pattern(rule.get("match_host")),
                 )
             return False
         return True
@@ -2066,8 +2077,9 @@ class RuleMatcher:
         if not match_ipv4_network(rule.get("match_ipaddress", "0.0.0.0/0"), event["ipaddress"]):
             if self._debug_rules:
                 self._logger.info(
-                    "  did not match because of wrong source IP address '%s' (need '%s')"
-                    % (event["ipaddress"], rule.get("match_ipaddress"))
+                    "  did not match because of wrong source IP address '%s' (need '%s')",
+                    event["ipaddress"],
+                    rule.get("match_ipaddress"),
                 )
             return False
         return True
@@ -2088,8 +2100,10 @@ class RuleMatcher:
             if p < sl_from or p > sl_to:
                 if self._debug_rules:
                     self._logger.info(
-                        "  did not match because of wrong service level %d (need %d..%d)"
-                        % (p, sl_from, sl_to),
+                        "  did not match because of wrong service level %d (need %d..%d)",
+                        p,
+                        sl_from,
+                        sl_to,
                     )
                 return False
         return True
@@ -2098,8 +2112,8 @@ class RuleMatcher:
         if "match_timeperiod" in rule and not self._time_periods.active(rule["match_timeperiod"]):
             if self._debug_rules:
                 self._logger.info(
-                    "  did not match, because time period %s is not active"
-                    % rule["match_timeperiod"]
+                    "  did not match, because time period %s is not active",
+                    rule["match_timeperiod"],
                 )
             return False
         return True
@@ -2285,7 +2299,7 @@ class StatusTable:
     def _build_result_row(
         self, row: list[Any], requested_column_indexes: list[int | None]
     ) -> list[Any]:
-        return [(None if index is None else row[index]) for index in requested_column_indexes]  #
+        return [(None if index is None else row[index]) for index in requested_column_indexes]
 
 
 class StatusTableEvents(StatusTable):
@@ -2549,8 +2563,9 @@ class StatusServer(ECServerThread):
                             client_socket.close()
                             client_socket = None
                             self._logger.info(
-                                "Denying access to status socket from %s (allowed is only %s)"
-                                % (addr_info[0], ", ".join(self._tcp_access_list))
+                                "Denying access to status socket from %s (allowed is only %s)",
+                                addr_info[0],
+                                ", ".join(self._tcp_access_list),
                             )
                             continue
                     else:
@@ -2813,8 +2828,9 @@ class StatusServer(ECServerThread):
             last_update = int(argument)
             if self.settings.options.debug:
                 self._logger.info(
-                    "Replication: sync request from %s, last update %d seconds ago"
-                    % (client_ip, time.time() - last_update)
+                    "Replication: sync request from %s, last update %d seconds ago",
+                    client_ip,
+                    time.time() - last_update,
                 )
 
         except Exception:
@@ -3027,8 +3043,10 @@ class EventStatus:
         next_start = self.next_interval_start(interval, current_start)
         self._interval_starts[rule_id] = next_start
         self._logger.debug(
-            "Rule %s: next interval starts %s (i.e. now + %.2f sec)"
-            % (rule_id, next_start, time.time() - next_start)
+            "Rule %s: next interval starts %s (i.e. now + %.2f sec)",
+            rule_id,
+            next_start,
+            time.time() - next_start,
         )
 
     def pack_status(self) -> dict[str, Any]:
@@ -3276,8 +3294,10 @@ class EventStatus:
         if event["host"] != host:
             if debug:
                 self._logger.info(
-                    "Do not cancel event %d: host is not the same (%s != %s)"
-                    % (event["id"], event["host"], host)
+                    "Do not cancel event %d: host is not the same (%s != %s)",
+                    event["id"],
+                    event["host"],
+                    host,
                 )
             return False
 
@@ -3290,15 +3310,19 @@ class EventStatus:
             if event["application"] != application:
                 if debug:
                     self._logger.info(
-                        "Do not cancel event %d: application is not the same (%s != %s)"
-                        % (event["id"], event["application"], application)
+                        "Do not cancel event %d: application is not the same (%s != %s)",
+                        event["id"],
+                        event["application"],
+                        application,
                     )
                 return False
 
         if event["facility"] != new_event["facility"] and debug:
             self._logger.info(
-                "Do not cancel event %d: syslog facility is not the same (%d != %d)"
-                % (event["id"], event["facility"], new_event["facility"])
+                "Do not cancel event %d: syslog facility is not the same (%d != %d)",
+                event["id"],
+                event["facility"],
+                new_event["facility"],
             )
 
         # Make sure, that the matching groups are the same. If the OK match
@@ -3311,8 +3335,11 @@ class EventStatus:
                 if debug:
                     self._logger.info(
                         "Do not cancel event %d: match group number "
-                        "%d does not match (%s != %s)"
-                        % (event["id"], nr + 1, prev_group, cur_group)
+                        "%d does not match (%s != %s)",
+                        event["id"],
+                        nr + 1,
+                        prev_group,
+                        cur_group,
                     )
                 return False
 
@@ -3330,8 +3357,11 @@ class EventStatus:
                 if debug:
                     self._logger.info(
                         "Do not cancel event %d: syslog application match group number "
-                        "%d does not match (%s != %s)"
-                        % (event["id"], nr + 1, prev_group, cur_group)
+                        "%d does not match (%s != %s)",
+                        event["id"],
+                        nr + 1,
+                        prev_group,
+                        cur_group,
                     )
                 return False
 
@@ -3563,13 +3593,13 @@ def replication_pull(  # pylint: disable=too-many-branches
                         if offline < repl_settings["takeover"]:
                             if repl_settings.get("logging"):
                                 logger.warning(
-                                    "Replication: no takeover yet, still %d seconds to wait"
-                                    % (repl_settings["takeover"] - offline)
+                                    "Replication: no takeover yet, still %d seconds to wait",
+                                    repl_settings["takeover"] - offline,
                                 )
                         else:
                             logger.info(
-                                "Replication: master not reached for %d seconds, taking over!"
-                                % offline
+                                "Replication: master not reached for %d seconds, taking over!",
+                                offline,
                             )
                             slave_status["mode"] = "takeover"
 
@@ -3621,8 +3651,10 @@ def load_master_config(settings: Settings, config: ConfigFromWATO, logger: Logge
         config["rule_packs"] = master_config.get("rule_packs", [])
         config["actions"] = master_config["actions"]
         logger.info(
-            "Replication: restored %d rule packs and %d actions from %s"
-            % (len(config["rule_packs"]), len(config["actions"]), path)
+            "Replication: restored %d rule packs and %d actions from %s",
+            len(config["rule_packs"]),
+            len(config["actions"]),
+            path,
         )
     except Exception:
         if is_replication_slave(config):

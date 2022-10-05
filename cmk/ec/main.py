@@ -146,7 +146,8 @@ class SyslogFacility:
         21: "local5",
         22: "local6",
         23: "local7",
-        31: "snmptrap",  # HACK!
+        30: "logfile",  # HACK because the RFC says that facilities MUST be in the range 0-23
+        31: "snmptrap",  # everything above that is for internal use. see: https://datatracker.ietf.org/doc/html/rfc5424#section-6.2.1
     }
 
     def __init__(self, value: int) -> None:

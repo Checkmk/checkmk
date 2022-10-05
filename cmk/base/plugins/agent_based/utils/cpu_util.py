@@ -3,9 +3,11 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from __future__ import annotations
+
 from typing import Any, List, Mapping, MutableMapping, NamedTuple, Optional, Tuple
 
-from ..agent_based_api.v1 import (
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,
     check_levels_predictive,
     get_average,
@@ -14,7 +16,7 @@ from ..agent_based_api.v1 import (
     regex,
     render,
 )
-from ..agent_based_api.v1.type_defs import CheckResult
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 
 
 class CPUInfo(
@@ -35,6 +37,7 @@ class CPUInfo(
         ],
     )
 ):
+
     """Handle CPU measurements
 
     name: name of core
@@ -50,11 +53,13 @@ class CPUInfo(
     guest_nice: time spent in niced guest OK, also counted in 1 (nice)
     """
 
-    def __new__(cls, name: str, *values: float) -> "CPUInfo":
+    def __new__(cls, name: str, *values: float | int | str | None) -> "CPUInfo":
         # we can assume we have at least one value
         caster = int if values and isinstance(values[0], int) else float
         fillup = (caster(0) for _ in range(10 - len(values)))
-        return super().__new__(cls, name, *(caster(v) for v in values), *fillup)
+        return super().__new__(
+            cls, name, *(caster(v) if v is not None else caster(0) for v in values), *fillup
+        )
 
     @property
     def util_total(self) -> float:

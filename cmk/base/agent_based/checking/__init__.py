@@ -193,8 +193,8 @@ def _commandline_checking(
                 host_config.hostname,
                 config.snmp_without_sys_descr,
             ),
+            file_cache_max_age=host_config.max_cachefile_age,
         ),
-        file_cache_max_age=host_config.max_cachefile_age,
         mode=Mode.CHECKING if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS,
     )
     return _execute_checkmk_checks(
@@ -228,7 +228,6 @@ def _execute_checkmk_checks(
     broker, source_results = make_broker(
         fetched=fetched,
         selected_sections=selected_sections,
-        file_cache_max_age=host_config.max_cachefile_age,
     )
     with CPUTracker() as tracker:
         service_results = check_host_services(

@@ -5,7 +5,7 @@
 
 
 import json
-from typing import List, Optional, Sequence
+from typing import List, Literal, Mapping, Optional, Sequence
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
@@ -67,20 +67,26 @@ def discover(
 
 
 def _component_check(  # type:ignore[no-untyped-def]
-    component: str, component_log: Optional[CollectorHandlerLog]
-):
+    params: Mapping[str, int],
+    component: Literal["container_metrics", "machine_metrics"],
+    component_log: Optional[CollectorHandlerLog],
+) -> CheckResult:
+    component_name = {
+        "container_metrics": "Container Metrics",
+        "machine_metrics": "Machine Metrics",
+    }[component]
     if component_log is None:
         return
 
     if component_log.status == CollectorState.OK:
-        yield Result(state=State.OK, summary=f"{component}: OK")
+        yield Result(state=State.OK, summary=f"{component_name}: OK")
         return
 
-    component_message = f"{component}: {component_log.title}"
+    component_message = f"{component_name}: {component_log.title}"
     # adding a whitespace, because for an URL the icon swallows the ')'
     detail_message = f"({component_log.detail} )" if component_log.detail else ""
     yield Result(
-        state=State.OK,
+        state=State(params.get(component, 2)),
         summary=component_message,
         details=f"{component_message}{detail_message}",
     )
@@ -152,6 +158,7 @@ def _check_collector_daemons(collector_daemons: CollectorDaemons) -> CheckResult
 
 
 def check(
+    params: Mapping[str, int],
     section_kube_collector_metadata: Optional[CollectorComponentsMetadata],
     section_kube_collector_processing_logs: Optional[CollectorProcessingLogs],
     section_kube_collector_daemons: Optional[CollectorDaemons],
@@ -185,10 +192,10 @@ def check(
 
     if section_kube_collector_processing_logs is not None:
         yield from _component_check(
-            "Container Metrics", section_kube_collector_processing_logs.container
+            {}, "container_metrics", section_kube_collector_processing_logs.container
         )
         yield from _component_check(
-            "Machine Metrics", section_kube_collector_processing_logs.machine
+            params, "machine_metrics", section_kube_collector_processing_logs.machine
         )
 
     if section_kube_collector_metadata.nodes:
@@ -213,4 +220,6 @@ register.check_plugin(
     ],
     discovery_function=discover,
     check_function=check,
+    check_ruleset_name="kube_collector_info",
+    check_default_parameters={"machine_metrics": 2},
 )

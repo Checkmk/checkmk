@@ -236,6 +236,12 @@ metric_info["time_offset"] = {
     "color": "#9a52bf",
 }
 
+metric_info["last_sync_time"] = {
+    "title": _("Time since last sync"),
+    "unit": "s",
+    "color": "41/b",
+}
+
 metric_info["jitter"] = {
     "title": _("Time dispersion (jitter)"),
     "unit": "s",

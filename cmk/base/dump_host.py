@@ -12,6 +12,8 @@ import cmk.utils.tty as tty
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import HostName
 
+import cmk.core_helpers.cache as file_cache
+
 import cmk.base.check_table as check_table
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
@@ -111,6 +113,7 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
                 host_config.hostname,
                 config.snmp_without_sys_descr,
             ),
+            file_cache_max_age=file_cache.MaxAge.none(),
         )
     ]
 

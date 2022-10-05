@@ -261,19 +261,6 @@ def get_replication_paths() -> List[ReplicationPath]:
         ),
     ]
 
-    # TODO: Move this to CEE specific code again
-    if not cmk_version.is_raw_edition():
-        paths += [
-            ReplicationPath(
-                "dir",
-                "liveproxyd",
-                os.path.relpath(
-                    cmk.gui.watolib.utils.liveproxyd_config_dir(), cmk.utils.paths.omd_root
-                ),
-                [],
-            ),
-        ]
-
     # Include rule configuration into backup/restore/replication. Current
     # status is not backed up.
     if active_config.mkeventd_enabled:
@@ -283,25 +270,7 @@ def get_replication_paths() -> List[ReplicationPath]:
         _mkp_rule_pack_dir = str(ec.mkp_rule_pack_dir().relative_to(cmk.utils.paths.omd_root))
         paths.append(ReplicationPath("dir", "mkeventd_mkp", _mkp_rule_pack_dir, []))
 
-    # There are some edition specific paths available during unit tests when testing other
-    # editions. Filter them out there, even when they are registered.
-    filtered = _replication_paths[:]
-    if not cmk_version.is_managed_edition():
-        filtered = [
-            p
-            for p in filtered
-            if p.ident
-            not in {
-                "customer_multisite",
-                "customer_check_mk",
-                "customer_gui_design",
-                "gui_logo",
-                "gui_logo_facelift",
-                "gui_logo_dark",
-            }
-        ]
-
-    return paths + filtered
+    return paths + _replication_paths
 
 
 # If the site is not up-to-date, synchronize it first.

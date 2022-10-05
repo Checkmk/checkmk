@@ -173,14 +173,14 @@ modes.register_general_option(
 def _handle_fetcher_options(options: Mapping[str, object]) -> None:
 
     if options.get("cache", False):
-        cmk.core_helpers.cache.FileCacheFactory.maybe = True
-        cmk.core_helpers.cache.FileCacheFactory.use_outdated = True
+        cmk.core_helpers.cache.FileCacheGlobals.maybe = True
+        cmk.core_helpers.cache.FileCacheGlobals.use_outdated = True
 
     if options.get("no-cache", False):
-        cmk.core_helpers.cache.FileCacheFactory.disabled = True
+        cmk.core_helpers.cache.FileCacheGlobals.disabled = True
 
     if options.get("no-tcp", False):
-        sources.tcp.TCPSource.use_only_cache = True
+        cmk.core_helpers.cache.FileCacheGlobals.tcp_use_only_cache = True
 
     if options.get("usewalk", False):
         snmp_factory.force_stored_walks()
@@ -438,14 +438,17 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
                 host_config.hostname,
                 config.snmp_without_sys_descr,
             ),
+            file_cache_max_age=config.max_cachefile_age(),
         ):
-            source.file_cache_max_age = config.max_cachefile_age()
             if not isinstance(source, sources.agent.AgentSource):
                 continue
 
             raw_data = source.fetch(FetchMode.CHECKING)
             host_sections = source.parse(raw_data, selection=NO_SELECTION)
-            source_results = source.summarize(host_sections)
+            source_results = source.summarize(
+                host_sections,
+                exit_spec_cb=host_config.exit_code_spec,
+            )
             if any(r.state != 0 for r in source_results):
                 console.error(
                     "ERROR [%s]: %s\n",
@@ -1645,7 +1648,7 @@ def _extract_plugin_selection(
     if type_ is CheckPluginName:
         check_plugin_names = {CheckPluginName(p) for p in detect_plugins}
         return (
-            set(
+            frozenset(
                 agent_based_register.get_relevant_raw_sections(
                     check_plugin_names=check_plugin_names,
                     inventory_plugin_names=(),
@@ -1657,7 +1660,7 @@ def _extract_plugin_selection(
     if type_ is InventoryPluginName:
         inventory_plugin_names = {InventoryPluginName(p) for p in detect_plugins}
         return (
-            set(
+            frozenset(
                 agent_based_register.get_relevant_raw_sections(
                     check_plugin_names=(),
                     inventory_plugin_names=inventory_plugin_names,
@@ -1676,9 +1679,9 @@ _DiscoveryOptions = TypedDict(
         "no-cache": Literal[True],
         "no-tcp": Literal[True],
         "usewalk": Literal[True],
-        "detect-sections": set[SectionName],
-        "plugins": set[CheckPluginName],
-        "detect-plugins": set[str],
+        "detect-sections": frozenset[SectionName],
+        "plugins": frozenset[CheckPluginName],
+        "detect-plugins": frozenset[str],
         "discover": int,
         "only-host-labels": bool,
     },
@@ -1689,11 +1692,11 @@ _DiscoveryOptions = TypedDict(
 def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     _handle_fetcher_options(options)
     hostnames = modes.parse_hostname_list(args)
-    cmk.core_helpers.cache.FileCacheFactory.maybe = True
+    cmk.core_helpers.cache.FileCacheGlobals.maybe = True
     if not hostnames:
         # In case of discovery without host restriction, use the cache file
         # by default. Otherwise Checkmk would have to connect to ALL hosts.
-        cmk.core_helpers.cache.FileCacheFactory.use_outdated = True
+        cmk.core_helpers.cache.FileCacheGlobals.use_outdated = True
 
     selected_sections, run_plugin_names = _extract_plugin_selection(options, CheckPluginName)
     discovery.commandline_discovery(
@@ -1766,9 +1769,9 @@ _CheckingOptions = TypedDict(
         "usewalk": Literal[True],
         "no-submit": bool,
         "perfdata": bool,
-        "detect-sections": set[SectionName],
-        "plugins": set[CheckPluginName],
-        "detect-plugins": set[str],
+        "detect-sections": frozenset[SectionName],
+        "plugins": frozenset[CheckPluginName],
+        "detect-plugins": frozenset[str],
     },
     total=False,
 )
@@ -1905,9 +1908,9 @@ _InventoryOptions = TypedDict(
         "no-tcp": Literal[True],
         "usewalk": Literal[True],
         "force": bool,
-        "detect-sections": set[SectionName],
-        "plugins": set[InventoryPluginName],
-        "detect-plugins": set[str],
+        "detect-sections": frozenset[SectionName],
+        "plugins": frozenset[InventoryPluginName],
+        "detect-plugins": frozenset[str],
     },
     total=False,
 )
@@ -1924,8 +1927,8 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     else:
         # No hosts specified: do all hosts and force caching
         hostnames = sorted(config_cache.all_active_hosts())
-        cmk.core_helpers.cache.FileCacheFactory.maybe = (
-            not cmk.core_helpers.cache.FileCacheFactory.disabled
+        cmk.core_helpers.cache.FileCacheGlobals.maybe = (
+            not cmk.core_helpers.cache.FileCacheGlobals.disabled
         )
         console.verbose("Doing HW/SW inventory on all hosts\n")
 

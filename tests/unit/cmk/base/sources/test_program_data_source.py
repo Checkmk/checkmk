@@ -3,161 +3,36 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from pathlib import Path
-from typing import Any, Dict, NamedTuple, Optional, Sequence, Tuple
+from __future__ import annotations
 
 import pytest
 
-from tests.testlib.base import Scenario
+from cmk.utils.type_defs import HostAddress, HostName
 
-import cmk.utils.paths
-from cmk.utils.type_defs import HostName
+import cmk.core_helpers.cache as file_cache
 
-import cmk.base.config as config
-from cmk.base.sources.programs import DSProgramSource, SpecialAgentSource
-
-
-# The types between core config and the argument thingies is not shared due to
-# a layering violation. Test whether a different type is still handled as valid
-# SpecialAgentConfiguration.
-class TestSpecialAgentConfiguration(NamedTuple):
-    args: Sequence[str]
-    stdin: Optional[str]
-
-
-fun_args_stdin: Tuple[Tuple[config.SpecialAgentInfoFunctionResult, Tuple[str, Optional[str]]]] = (
-    ("arg0 arg1", "arg0 arg1", None),
-    (["arg0", "arg1"], "'arg0' 'arg1'", None),
-    (TestSpecialAgentConfiguration(["arg0"], None), "'arg0'", None),
-    (TestSpecialAgentConfiguration(["arg0", "arg1"], None), "'arg0' 'arg1'", None),
-    (TestSpecialAgentConfiguration(["list0", "list1"], None), "'list0' 'list1'", None),
-    (
-        TestSpecialAgentConfiguration(["arg0", "arg1"], "stdin_blob"),
-        "'arg0' 'arg1'",
-        "stdin_blob",
-    ),
-    (
-        TestSpecialAgentConfiguration(["list0", "list1"], "stdin_blob"),
-        "'list0' 'list1'",
-        "stdin_blob",
-    ),
-)  # type: ignore[assignment]
+from cmk.base.sources.programs import DSProgramSource
 
 
 class TestDSProgramChecker:
     @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
-    def test_attribute_defaults(  # type:ignore[no-untyped-def]
-        self, ipaddress, monkeypatch
-    ) -> None:
-        template = ""
+    def test_attribute_defaults(self, ipaddress: HostAddress | None) -> None:
         hostname = HostName("testhost")
-        ts = Scenario()
-        ts.add_host(hostname)
-        ts.apply(monkeypatch)
-
         source = DSProgramSource(
-            config.HostConfig.make_host_config(hostname),
+            hostname,
             ipaddress,
-            template=template,
+            id_="agent",
+            cmdline="",
+            stdin=None,
+            main_data_source=False,
             simulation_mode=True,
             agent_simulator=True,
             translation={},
             encoding_fallback="ascii",
+            check_interval=0,
+            is_cmc=False,
+            file_cache_max_age=file_cache.MaxAge.none(),
         )
-        assert source.host_config.hostname == hostname
-        assert source.ipaddress == ipaddress
-        assert source.cmdline == ""
-        assert source.stdin is None
+        # Only check the computed attributes.
         assert source.description == "Program: "
         assert source.id == "agent"
-
-    @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
-    def test_template_translation(  # type:ignore[no-untyped-def]
-        self, ipaddress, monkeypatch
-    ) -> None:
-        template = "<NOTHING>x<IP>x<HOST>x<host>x<ip>x"
-        hostname = HostName("testhost")
-        ts = Scenario()
-        ts.add_host(hostname)
-        ts.apply(monkeypatch)
-        source = DSProgramSource(
-            config.HostConfig.make_host_config(hostname),
-            ipaddress,
-            template=template,
-            simulation_mode=True,
-            agent_simulator=True,
-            translation={},
-            encoding_fallback="ascii",
-        )
-
-        assert source.cmdline == "<NOTHING>x%sx%sx<host>x<ip>x" % (
-            ipaddress if ipaddress is not None else "",
-            hostname,
-        )
-
-
-class TestSpecialAgentChecker:
-    @pytest.fixture(autouse=True)
-    def agent_dir(self, monkeypatch):
-        dir_ = Path("/tmp")
-        monkeypatch.setattr(cmk.utils.paths, "local_agents_dir", dir_)
-        monkeypatch.setattr(cmk.utils.paths, "agents_dir", dir_)
-        return dir_
-
-    @pytest.fixture
-    def special_agent_id(self):
-        return "my_id"
-
-    @pytest.fixture(params=fun_args_stdin)
-    def patch_config(self, special_agent_id, monkeypatch, request):
-        fun, args, stdin = request.param
-        monkeypatch.setitem(
-            config.special_agent_info,
-            special_agent_id,
-            lambda a, b, c: fun,
-        )
-        return args, stdin
-
-    @pytest.fixture
-    def expected_args(self, patch_config):
-        return patch_config[0]
-
-    @pytest.fixture
-    def expected_stdin(self, patch_config):
-        return patch_config[1]
-
-    @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
-    def test_attribute_defaults(
-        self,
-        special_agent_id,
-        ipaddress,
-        agent_dir,
-        expected_args,
-        expected_stdin,
-        monkeypatch,
-    ):
-        hostname = HostName("testhost")
-        params: Dict[Any, Any] = {}
-        ts = Scenario()
-        ts.add_host(hostname)
-        ts.apply(monkeypatch)
-
-        # end of setup
-
-        source = SpecialAgentSource(
-            config.HostConfig.make_host_config(hostname),
-            ipaddress,
-            special_agent_id=special_agent_id,
-            params=params,
-            simulation_mode=True,
-            agent_simulator=True,
-            translation={},
-            encoding_fallback="ascii",
-        )
-        assert source.host_config.hostname == hostname
-        assert source.ipaddress == ipaddress
-        assert source.cmdline == (  #
-            str(agent_dir / "special" / ("agent_%s" % special_agent_id)) + " " + expected_args
-        )
-        assert source.stdin == expected_stdin
-        assert source.id == "special_%s" % special_agent_id

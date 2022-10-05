@@ -3,14 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from pathlib import Path
+
 import pytest
 from pytest_mock import MockerFixture
 
+from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+
 import cmk.utils.version as cmk_version
+from cmk.utils.type_defs import UserId
 
 
 @pytest.mark.skipif(cmk_version.is_raw_edition(), reason="No agent deployment in raw edition")
-def test_deploy_agent(wsgi_app) -> None:  # type:ignore[no-untyped-def]
+def test_deploy_agent(wsgi_app: WebTestAppForCMK) -> None:
     response = wsgi_app.get("/NO_SITE/check_mk/deploy_agent.py")
     assert response.text.startswith("ERROR: Missing or invalid")
 
@@ -18,9 +23,12 @@ def test_deploy_agent(wsgi_app) -> None:  # type:ignore[no-untyped-def]
     assert response.text.startswith("ERROR: Missing host")
 
 
-def test_download_agent_shipped_with_checkmk(  # type:ignore[no-untyped-def]
-    wsgi_app, with_automation_user, mocker: MockerFixture, tmp_path
-):
+def test_download_agent_shipped_with_checkmk(
+    wsgi_app: WebTestAppForCMK,
+    with_automation_user: tuple[UserId, str],
+    mocker: MockerFixture,
+    tmp_path: Path,
+) -> None:
     agent_bin_data = bytes.fromhex("01 02 03 04 05")
     mocked_agent_path = tmp_path / "agent_bin_mock.bin"
     with open(mocked_agent_path, "wb") as fo:

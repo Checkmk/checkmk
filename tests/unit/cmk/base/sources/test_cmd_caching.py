@@ -29,7 +29,6 @@ import cmk.base.modes.check_mk
 from cmk.base.sources import Source
 from cmk.base.sources.agent import AgentSource
 from cmk.base.sources.snmp import SNMPSource
-from cmk.base.sources.tcp import TCPSource
 from cmk.base.submitters import get_submitter
 
 
@@ -89,15 +88,13 @@ def _patch_data_source(mocker, **kwargs):
         assert file_cache.use_outdated == defaults["use_outdated"]
         assert file_cache.max_age == defaults["max_age"]
 
-        if isinstance(self, TCPSource):
-            assert self.use_only_cache == defaults["use_only_cache"]
         if isinstance(self, AgentSource):
             assert (
                 self.use_outdated_persisted_sections == defaults["use_outdated_persisted_sections"]
             )
 
         elif isinstance(self, SNMPSource):
-            assert self._on_snmp_scan_error == defaults["on_error"]
+            assert self.on_snmp_scan_error == defaults["on_error"]
 
         result = callback(self, *args, **kwargs)
         if result.is_error():
@@ -413,7 +410,7 @@ def test_mode_dump_agent_explicit_host_no_cache(  # type:ignore[no-untyped-def]
             "@noscan",
             {
                 "disabled": False,
-                "use_only_chache": True,  # TCP
+                "use_only_cache": True,  # TCP
                 "max_age": config.max_cachefile_age(),
                 "use_outdated": True,
             },
@@ -422,7 +419,7 @@ def test_mode_dump_agent_explicit_host_no_cache(  # type:ignore[no-untyped-def]
             "@scan",
             {
                 "disabled": False,  # TCP
-                "use_only_chache": True,  # TCP
+                "use_only_cache": True,  # TCP
                 "max_age": config.max_cachefile_age(),
                 "use_outdated": True,
             },

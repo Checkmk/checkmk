@@ -17,7 +17,6 @@ __all__ = [
     "AgentConfig",
     "AgentHash",
     "AgentPackagePlatform",
-    "BakeryOpSys",
     "BakeryTargetVanilla",
     "BakeryTargetFolder",
     "BakeryTargetHost",
@@ -47,11 +46,6 @@ class AgentPackagePlatform(enum.Enum):
             AgentPackagePlatform.SOLARIS_TGZ,
             AgentPackagePlatform.AIX_TGZ,
         )
-
-
-# TODO(au): Replace usage with AgentPackagePlatform
-# But we need complete typing in cmk.gui.cee.agent_bakery first before we can safely do this.
-BakeryOpSys = NewType("BakeryOpSys", str)
 
 
 class BakeryTargetVanilla:

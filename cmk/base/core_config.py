@@ -36,6 +36,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
+from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.type_defs import (
     CheckPluginName,
@@ -628,6 +629,55 @@ def commandline_arguments(
     return _prepare_check_command(args, hostname, description)
 
 
+def make_special_agent_cmdline(
+    hostname: HostName,
+    ipaddress: Optional[HostAddress],
+    agentname: str,
+    params: Dict,
+) -> str:
+    def _make_source_path(agentname: str) -> Path:
+        file_name = "agent_%s" % agentname
+        local_path = cmk.utils.paths.local_agents_dir / "special" / file_name
+        if local_path.exists():
+            return local_path
+        return Path(cmk.utils.paths.agents_dir) / "special" / file_name
+
+    def _make_source_args(
+        hostname: HostName,
+        ipaddress: Optional[HostAddress],
+        agentname: str,
+        params: Dict,
+    ) -> str:
+        info_func = config.special_agent_info[agentname]
+        # TODO: CMK-3812 (see above)
+        agent_configuration = info_func(params, hostname, ipaddress)
+        return commandline_arguments(hostname, None, agent_configuration)
+
+    path = _make_source_path(agentname)
+    args = _make_source_args(
+        hostname,
+        ipaddress,
+        agentname,
+        params,
+    )
+    return "%s %s" % (path, args)
+
+
+def make_special_agent_stdin(
+    hostname: HostName,
+    ipaddress: Optional[HostAddress],
+    agentname: str,
+    params: Dict,
+) -> Optional[str]:
+    info_func = config.special_agent_info[agentname]
+    # TODO: We call a user supplied function here.
+    # If this crashes during config generation, it can get quite ugly.
+    # We should really wrap this and implement proper sanitation and exception handling.
+    # Deal with this when modernizing the API (CMK-3812).
+    agent_configuration = info_func(params, hostname, ipaddress)
+    return getattr(agent_configuration, "stdin", None)
+
+
 # .
 #   .--ServiceAttrs.-------------------------------------------------------.
 #   |     ____                  _             _   _   _                    |
@@ -987,3 +1037,48 @@ def replace_macros(s: str, macros: ObjectMacros) -> str:
                     raise
 
     return s
+
+
+def translate_ds_program_source_cmdline(
+    template: str,
+    host_config: HostConfig,
+    ipaddress: Optional[HostAddress],
+) -> str:
+    def _translate_host_macros(cmd: str, host_config: HostConfig) -> str:
+        config_cache = config.get_config_cache()
+        attrs = get_host_attributes(host_config.hostname, config_cache)
+        if host_config.is_cluster:
+            parents_list = get_cluster_nodes_for_config(
+                config_cache,
+                host_config,
+            )
+            attrs.setdefault("alias", "cluster of %s" % ", ".join(parents_list))
+            attrs.update(
+                get_cluster_attributes(
+                    config_cache,
+                    host_config,
+                    parents_list,
+                )
+            )
+
+        macros = get_host_macros_from_attributes(host_config.hostname, attrs)
+        return replace_macros(cmd, macros)
+
+    def _translate_legacy_macros(
+        cmd: str,
+        hostname: HostName,
+        ipaddress: Optional[HostAddress],
+    ) -> str:
+        # Make "legacy" translation. The users should use the $...$ macros in future
+        return replace_macros_in_str(
+            cmd,
+            {
+                "<IP>": ipaddress or "",
+                "<HOST>": hostname,
+            },
+        )
+
+    return _translate_host_macros(
+        _translate_legacy_macros(template, host_config.hostname, ipaddress),
+        host_config,
+    )

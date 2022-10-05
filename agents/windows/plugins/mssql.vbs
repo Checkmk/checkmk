@@ -84,6 +84,286 @@ Function readIniFile(path)
     Set parsed = Nothing
 End Function
 
+Function appendElement(array_, element)
+   Dim incremented_index
+
+   incremented_index = UBound(array_) + 1
+   ReDim Preserve array_(incremented_index)
+   array_(incremented_index) = element
+   appendElement = array_
+End Function
+
+Function sanitiseString(valueString)
+   If IsNull(valueString) Then
+      sanitiseString = ""
+      Exit Function
+   End If
+
+   sanitiseString = valueString
+End Function
+
+Function isInList(list, element)
+   Dim value
+   For Each value in list
+      If value = element Then
+         isInList = True
+         Exit Function
+      End If
+   Next
+   isInList = False
+End Function
+
+Class connectionResponse
+   Private connectionState
+   Private connectionErrorLog
+   Private connectionDebugLog
+
+   Public Default Function Init(state, errorLog, debugLog)
+      connectionState = state
+      connectionErrorLog = errorLog
+      connectionDebugLog = debugLog
+
+      Set Init = Me
+   End Function
+
+   Public Property Get State
+      ' 0 - closed
+      ' 1 - open
+      ' 2 - connecting
+      ' 4 - executing a command
+      ' 8 - rows are being fetched
+      State = connectionState
+   End Property
+
+   Public Property Get logMessage
+      If connectionState = 1 Then
+         logMessage = ""
+         Exit Property
+      End If
+
+      Dim message
+      message = "INFO: " & Join(connectionDebugLog, "; ")
+      If UBound(connectionErrorLog) + 1 > 0 Then
+         message = message & " ;; " & "ERROR: " & Join(connectionErrorLog, "; ")
+      End If
+
+      logMessage = message
+   End Property
+
+End Class
+
+Class errorResponse
+   Private queryErrors
+
+   Public Default Function Init(connectionHandler)
+      queryErrors = Array()
+
+      Dim error_, index
+      For Each error_ in connectionHandler.Errors
+         index = UBound(queryErrors) + 1
+         ReDim Preserve queryErrors(index) ' resize and keep existing elements
+         Set queryErrors(index) = error_
+      Next
+
+      Set Init = Me
+   End Function
+
+   Public Property Get errorMessage
+       Dim errorText, errorObject
+       errorText = "ERROR: "
+       For Each errorObject in queryErrors
+           errorText = errorText & errorObject.Description & " (SQLState: " & _
+                       errorObject.SQLState & "/NativeError: " & errorObject.NativeError & "). "
+       Next
+       errorMessage = errorText
+   End Property
+
+   Public Property Get hasError
+      hasError = True
+   End Property
+
+End Class
+
+Class queryResponse
+   Private queryRows
+
+   Public Default Function Init(recordHandler)
+      queryRows = Array()
+
+      Dim row, field_, index
+
+      Do Until recordHandler Is Nothing
+         Do Until recordHandler.EOF
+            Set row = CreateObject("Scripting.Dictionary")
+            For Each field_ in recordHandler.Fields
+               row.Add field_.Name, sanitiseString(field_.value)
+            Next
+            index = UBound(queryRows) + 1
+            ReDim Preserve queryRows(index) ' resize and keep existing elements
+            Set queryRows(index) = row
+            recordHandler.MoveNext
+         Loop
+         Set recordHandler = RecordHandler.NextRecordSet
+      Loop
+
+      Set Init = Me
+   End Function
+
+   Public Property Get Rows
+      Rows = queryRows
+   End Property
+
+   Public Property Get hasError
+      hasError = False
+   End Property
+
+End Class
+
+Class DbSession
+   Private dbConnectionHandler
+
+   Public Default Function Init(timeouts)
+      Set dbConnectionHandler = CreateObject("ADODB.Connection")
+
+      If timeouts.Exists("timeout_connection") Then
+          dbConnectionHandler.ConnectionTimeout = CInt(timeouts("timeout_connection"))
+      End If
+      If timeouts.Exists("timeout_command") Then
+          dbConnectionHandler.CommandTimeout = CInt(timeouts("timeout_command"))
+      End If
+
+      Set Init = Me
+   End Function
+
+   Public Function connect(instance, authenticationConfig, providers)
+      On Error Resume Next
+
+      Dim connectionProvider, errorLog, debugLog
+
+      errorLog = Array()
+      debugLog = Array()
+
+      For Each connectionProvider in providers
+          dbConnectionHandler.Provider = connectionProvider
+
+          debugLog = appendElement(debugLog, "Connecting using provider " & connectionProvider)
+
+          ' Note that these properties have to be set after setting the provider
+
+          If Not authenticationConfig.Exists("type") or authenticationConfig("type") = "system" Then
+              dbConnectionHandler.Properties("Integrated Security").Value = "SSPI"
+          Else
+              dbConnectionHandler.Properties("User ID").Value = authenticationConfig("username")
+              dbConnectionHandler.Properties("Password").Value = authenticationConfig("password")
+          End If
+
+          dbConnectionHandler.Properties("Data Source").Value = instance
+
+          dbConnectionHandler.Open
+
+          ' 1 = connected
+          If dbConnectionHandler.State = 1 Then
+              Exit For
+          End If
+      Next
+
+      If Err.Number <> 0 Then
+         errorLog = appendElement(errorLog, Err.Description)
+      End If
+
+      Dim errorObject
+      If dbConnectionHandler.Errors.Count > 0 Then
+         For Each errorObject in dbConnectionHandler.Errors
+            errorLog = appendElement(errorLog, errorObject.Description)
+         Next
+      End If
+
+      Set connect = (New connectionResponse)(dbConnectionHandler.State, errorLog, debugLog)
+
+   End Function
+
+   Public Function querySystem(sqlString)
+      ' System wide queries
+      On Error Resume Next
+      Dim dbRecordHandler
+
+      Set dbRecordHandler = CreateObject("ADODB.Recordset")
+
+      dbRecordHandler.Open sqlString, dbConnectionHandler
+
+      Set querySystem = constructQueryResponse(dbRecordHandler)
+
+      dbRecordHandler.Close
+      Set dbRecordHandler = Nothing
+   End Function
+
+   Public Function queryDatabase(databaseName, sqlString)
+      ' Database specific queries
+      On Error Resume Next
+      Dim dbRecordHandler
+
+      Set dbRecordHandler = CreateObject("ADODB.Recordset")
+
+      dbRecordHandler.Open "USE [" & databaseName & "]", dbConnectionHandler
+      If hasErrors() Then
+         ' If the database returns an error while attempting to swtich to it,
+         ' e.g. due to access reasons, it does not make sense to proceed
+         Set queryDatabase = (New errorResponse)(dbConnectionHandler)
+         If dbRecordHandler.State <> 0 Then
+            dbRecordHandler.Close
+         End If
+         Set dbRecordHandler = Nothing
+         Exit Function
+      End If
+
+      dbRecordHandler.Open sqlString, dbConnectionHandler
+
+      Set queryDatabase = constructQueryResponse(dbRecordHandler)
+
+      dbRecordHandler.Close
+      Set dbRecordHandler = Nothing
+   End Function
+
+   Private Function constructQueryResponse(dbRecordHandler)
+      If hasErrors() Then
+         Set constructQueryResponse = (New errorResponse)(dbConnectionHandler)
+      Else
+         Set constructQueryResponse = (New queryResponse)(dbRecordHandler)
+      End If
+   End Function
+
+   Private Function hasErrors( )
+      If dbConnectionHandler.Errors.Count = 0 Then
+         hasErrors = False
+         Exit Function
+      End If
+
+      Dim knownWarnings, warning, error_
+      knownWarnings = Array(5701) ' Infotext that says it has been successfully switched to a different DB
+      For Each error_ in dbConnectionHandler.Errors
+         If Not isInList(knownWarnings, error_.NativeError) Then
+            ' Errors may not be real errors, but warnings or other informational
+            ' text disguised as errors
+            hasErrors = True
+            Exit Function
+         End If
+      Next
+      hasErrors = False
+   End Function
+
+   Public Function terminateConnection( )
+      If dbConnectionHandler.State <> 0 Then
+         dbConnectionHandler.Close
+      End If
+   End Function
+
+   Public Function terminateSession( )
+      terminateConnection
+      Set dbConnectionHandler = Nothing
+   End Function
+
+End Class
+
 Set registry = GetObject("winmgmts:{impersonationLevel=impersonate}!\\.\root\default:StdRegProv")
 Set sources = CreateObject("Scripting.Dictionary")
 
@@ -259,34 +539,13 @@ Set service  = Nothing
 Set WMI      = Nothing
 Set registry = Nothing
 
-Dim CONN, RS, CFG, AUTH
-
-' Function to check for any connection errors and return those concatenated, if any
-Function checkConnErrors(conn)
-    Dim error_msg, errObj
-    error_msg = ""
-    If conn.Errors.Count > 0 Then
-        error_msg = "ERROR: "
-        For Each errObj in conn.Errors
-            error_msg = error_msg & errObj.Description & " (SQLState: " & _
-                        errObj.SQLState & "/NativeError: " & errObj.NativeError & "). "
-        Next
-    End If
-    Err.Clear
-    checkConnErrors = error_msg
-End Function
+Dim CFG, AUTH, DATABASE_CONNECTION_PROVIDERS
 
 ' Initialize database connection objects
-Set CONN      = CreateObject("ADODB.Connection")
-Set RS        = CreateObject("ADODB.Recordset")
+DATABASE_CONNECTION_PROVIDERS = Array("msoledbsql", "sqloledb", "sqlncli11")
 
-If TIMEOUTS.Exists("timeout_connection") Then
-    CONN.ConnectionTimeout = CInt(TIMEOUTS("timeout_connection"))
-End If
-If TIMEOUTS.Exists("timeout_command") Then
-    CONN.CommandTimeout = CInt(TIMEOUTS("timeout_command"))
-End If
-
+Dim databaseSession
+Set databaseSession = (New DbSession)(TIMEOUTS)
 
 ' Loop all found server instances and connect to them
 ' In my tests only the connect using the "named instance" string worked
@@ -316,188 +575,133 @@ For Each instance_id In instances.Keys: Do ' Continue trick
         Set AUTH = CFG("auth")
     End If
 
+    Dim connectionState, databaseResponse, record, sqlString
+
     ' Try to connect to the instance and catch the error when not able to connect
     ' Then add the instance to the agent output and skip over to the next instance
     ' in case the connection could not be established.
     On Error Resume Next
 
-    Dim connProv, errMsg
-    errMsg = ""
-
-    For Each connProv in Array("msoledbsql", "sqloledb", "sqlncli11")
-
-        CONN.Provider = connProv
-
-        ' At this place one could implement other authentication mechanism
-        ' Note that these properties have to be set after setting CONN.Provider
-        If Not AUTH.Exists("type") or AUTH("type") = "system" Then
-            CONN.Properties("Integrated Security").Value = "SSPI"
-        Else
-            CONN.Properties("User ID").Value = AUTH("username")
-            CONN.Properties("Password").Value = AUTH("password")
-        End If
-
-        CONN.Properties("Data Source").Value = sources(instance_id)
-
-        CONN.Open
-
-        ' Note that the user will only see this message in case no connection can be established
-        errMsg = errMsg & "Connecting using provider " & connProv & ". "
-
-        ' If the provider is invalid, errors end up in Err, not in CONN.Errors
-        if Err.Number <> 0 Then
-            errMsg = errMsg & "ERROR: " & Err.Description
-            If Right(errMsg, 1) <> "." Then
-            	errMsg = errMsg & "."
-            End If
-            errMsg = errMsg & " "
-        End If
-
-        ' Collect errors which occurred during connecting. Hopefully there is only one
-        ' error in the list of errors.
-        errMsg = errMsg & checkConnErrors(CONN)
-
-        ' In case the connection is still closed, we try with the next provider
-        ' 0 - closed
-        ' 1 - open
-        ' 2 - connecting
-        ' 4 - executing a command
-        ' 8 - rows are being fetched
-        If CONN.State = 1 Then
-            Exit For
-        End If
-    Next
+    Set connectionState = databaseSession.connect(sources(instance_id), AUTH, DATABASE_CONNECTION_PROVIDERS)
 
     addOutput(sections("instance"))
-    addOutput("MSSQL_" & instance_id & "|state|" & CONN.State & "|" & errMsg)
+    addOutput("MSSQL_" & instance_id & "|state|" & connectionState.State & "|" & connectionState.logMessage)
 
-    If CONN.State = 0 Then
+    ' 0 = closed
+    If connectionState.State = 0 Then
         Exit Do
     End If
 
     ' add detailed information about version and patchrelease
-    RS.Open "SELECT SERVERPROPERTY('productversion') as prodversion," & _
-            "SERVERPROPERTY ('productlevel') as prodlevel," & _
-            "SERVERPROPERTY ('edition') as prodedition", CONN
-    addOutput("MSSQL_" & instance_id & "|details|" & RS("prodversion") & "|" & _
-               RS("prodlevel") & "|" & RS("prodedition"))
-    RS.Close
+    sqlString = "SELECT SERVERPROPERTY('productversion') as prodversion, " & _
+                "  SERVERPROPERTY ('productlevel') as prodlevel, " & _
+                "  SERVERPROPERTY ('edition') as prodedition"
+    Set databaseResponse = databaseSession.querySystem(sqlString)
+    If databaseResponse.hasError Then
+       addOutput("||||" & databaseResponse.errorMessage)
+    Else
+       For Each record in databaseResponse.Rows
+          addOutput("MSSQL_" & instance_id & "|details|" & record("prodversion") & "|" & _
+                    record("prodlevel") & "|" & record("prodedition"))
+       Next
+    End If
 
     ' Get counter data for the whole instance
     addOutput(sections("counters"))
-    RS.Open "SELECT CONVERT(varchar, GETUTCDATE(), 20) as utc_date", CONN
-    addOutput("None|utc_time|None|" & RS("utc_date"))
-    RS.Close
+    Set databaseResponse = databaseSession.querySystem("SELECT CONVERT(varchar, GETUTCDATE(), 20) as utc_date")
+    If databaseResponse.hasError Then
+       addOutput("||" & instance_id & "|" & databaseResponse.errorMessage)
+    Else
+       For Each record in databaseResponse.Rows
+          addOutput("None|utc_time|None|" & record("utc_date"))
+       Next
+    End If
 
-    RS.Open "SELECT counter_name, object_name, instance_name, cntr_value " & _
-            "FROM sys.dm_os_performance_counters " & _
-            "WHERE object_name NOT LIKE '%Deprecated%'", CONN
+    sqlString = "SELECT counter_name, object_name, instance_name, cntr_value " & _
+                " FROM sys.dm_os_performance_counters " & _
+                " WHERE object_name NOT LIKE '%Deprecated%'"
+    Set databaseResponse = databaseSession.querySystem(sqlString)
 
-    errMsg = checkConnErrors(CONN)
-    If Not errMsg = "" Then
-        addOutput("||" & instance_id & "|" & errMsg)
+    If databaseResponse.hasError Then
+        addOutput("||" & instance_id & "|" & databaseResponse.errorMessage)
     Else
         Dim objectName, counterName, counters_inst_name, value
-        Do While NOT RS.Eof
-            objectName   = Replace(Replace(Trim(RS("object_name")), " ", "_"), "$", "_")
-            counterName  = LCase(Replace(Trim(RS("counter_name")), " ", "_"))
-            counters_inst_name = Replace(Trim(RS("instance_name")), " ", "_")
+        For Each record in databaseResponse.Rows
+            objectName   = Replace(Replace(Trim(record("object_name")), " ", "_"), "$", "_")
+            counterName  = LCase(Replace(Trim(record("counter_name")), " ", "_"))
+            counters_inst_name = Replace(Trim(record("instance_name")), " ", "_")
             If counters_inst_name = "" Then
                 counters_inst_name = "None"
             End If
-            value = Trim(RS("cntr_value"))
+            value = Trim(record("cntr_value"))
             addOutput( objectName & "|" & counterName & "|" & counters_inst_name & "|" & value )
-            RS.MoveNext
-        Loop
+        Next
     End If
-    RS.Close
 
     addOutput(sections("blocked_sessions"))
-    RS.Open "SELECT session_id, wait_duration_ms, wait_type, blocking_session_id " & _
-            "FROM sys.dm_os_waiting_tasks " & _
-            "WHERE blocking_session_id <> 0 ", CONN
+    sqlString = "SELECT session_id, wait_duration_ms, wait_type, blocking_session_id " & _
+                " FROM sys.dm_os_waiting_tasks " & _
+                " WHERE blocking_session_id <> 0 "
+    Set databaseResponse = databaseSession.querySystem(sqlString)
 
-    errMsg = checkConnErrors(CONN)
-    If Not errMsg = "" Then
-        addOutput(instance_id & "|" & errMsg)
-    ElseIf Not RS.Eof Then
+    If databaseResponse.hasError Then
+        addOutput(instance_id & "|" & databaseResponse.errorMessage)
+    Elseif UBound(databaseResponse.Rows) + 1 > 0 Then
         Dim session_id, wait_duration_ms, wait_type, blocking_session_id
-        Do While NOT RS.Eof
-            session_id = Trim(RS("session_id"))
-            wait_duration_ms = Trim(RS("wait_duration_ms"))
-            wait_type = Trim(RS("wait_type"))
-            blocking_session_id = Trim(RS("blocking_session_id"))
+        For Each record in databaseResponse.Rows
+            session_id = Trim(record("session_id"))
+            wait_duration_ms = Trim(record("wait_duration_ms"))
+            wait_type = Trim(record("wait_type"))
+            blocking_session_id = Trim(record("blocking_session_id"))
             addOutput(instance_id & "|" & session_id & "|" & wait_duration_ms & "|" & wait_type & "|" & blocking_session_id)
-            RS.MoveNext
-        Loop
+        Next
     Else
         addOutput(instance_id & "|No blocking sessions")
     End If
-    RS.Close
 
     ' First only read all databases in this instance and save it to the db names dict
-    RS.Open "SELECT NAME AS DATABASE_NAME FROM sys.databases", CONN
+    Set databaseResponse = databaseSession.querySystem("SELECT NAME AS DATABASE_NAME FROM sys.databases")
 
-    errMsg = checkConnErrors(CONN)
-    If Not errMsg = "" Then
-        ' Achtung, am Besten "databases" hier hin vorziehen, denn dann wird die Prozedur
-        ' hier nicht benoetigt und man kann direkt ein "exit do"bei Fehlern machen
-        ' addOutput("||" & instance_id & "||" & errMsg)
-    Else
-        Dim x, dbName, dbNames
-        Set dbNames = CreateObject("Scripting.Dictionary")
-        Do While NOT RS.Eof
-           dbName = RS("DATABASE_NAME")
+    Dim dbName, dbNames
+    Set dbNames = CreateObject("Scripting.Dictionary")
+    If Not databaseResponse.hasError then
+        For Each record in databaseResponse.Rows
+           dbName = record("DATABASE_NAME")
            dbNames.add dbName, ""
-           RS.MoveNext
-        Loop
+        Next
     End If
-    RS.Close
 
     ' Now gather the db size and unallocated space
     addOutput(sections("tablespaces"))
     Dim dbSize, unallocated, reserved, data, indexSize, unused
     For Each dbName in dbNames.Keys
-        ' Switch to other database and then ask for stats
-        RS.Open "USE [" & dbName & "]", CONN
-        ' sp_spaceused is a stored procedure which returns two selects
-        ' which need to be looped
-        RS.Open "EXEC sp_spaceused", CONN
+        Set databaseResponse = databaseSession.queryDatabase(dbName, "EXEC sp_spaceused")
 
-        errMsg = checkConnErrors(CONN)
-        If Not errMsg = "" Then
+        If databaseResponse.hasError Then
             addOutput("MSSQL_" & instance_id &  " " & Replace(dbName, " ", "_") & _
-                      " - - - - - - - - - - - - " & errMsg)
+                      " - - - - - - - - - - - - " & databaseResponse.errorMessage)
         Else
-            i = 0
-            Do Until RS Is Nothing
-                Do While NOT RS.Eof
-                    'For Each x in RS.fields
-                    '    wscript.echo x.name & " " & x.value
-                    'Next
-                    If i = 0 Then
-                        ' Size of the current database in megabytes. database_size includes both data and log files.
-                        dbSize      = Trim(RS("database_size"))
-                        ' Space in the database that has not been reserved for database objects.
-                        unallocated = Trim(RS("unallocated space"))
-                    Elseif i = 1 Then
-                        ' Total amount of space allocated by objects in the database.
-                        reserved    = Trim(RS("reserved"))
-                        ' Total amount of space used by data.
-                        data        = Trim(RS("data"))
-                        ' Total amount of space used by indexes.
-                        indexSize   = Trim(RS("index_size"))
-                        ' Total amount of space reserved for objects in the database, but not yet used.
-                        unused      = Trim(RS("unused"))
-                        End If
-                    RS.MoveNext
-                Loop
-                Set RS = RS.NextRecordset
-                i = i + 1
-            Loop
-            addOutput("MSSQL_" & instance_id & " " & Replace(dbName, " ", "_") & " " & dbSize & " " & _
-                unallocated & " " & reserved & " " & data & " " & indexSize & " " & unused)
-            Set RS = CreateObject("ADODB.Recordset")
+           i = 0
+           For Each record in databaseResponse.Rows
+              If i = 0 Then
+                  ' Size of the current database in megabytes. database_size includes both data and log files.
+                  dbSize      = Trim(record("database_size"))
+                  ' Space in the database that has not been reserved for database objects.
+                  unallocated = Trim(record("unallocated space"))
+              Elseif i = 1 Then
+                  ' Total amount of space allocated by objects in the database.
+                  reserved    = Trim(record("reserved"))
+                  ' Total amount of space used by data.
+                  data        = Trim(record("data"))
+                  ' Total amount of space used by indexes.
+                  indexSize   = Trim(record("index_size"))
+                  ' Total amount of space reserved for objects in the database, but not yet used.
+                  unused      = Trim(record("unused"))
+              End If
+              i = i + 1
+           Next
+           addOutput("MSSQL_" & instance_id & " " & Replace(dbName, " ", "_") & " " & dbSize & " " & _
+               unallocated & " " & reserved & " " & data & " " & indexSize & " " & unused)
         End If
     Next
 
@@ -505,68 +709,67 @@ For Each instance_id In instances.Keys: Do ' Continue trick
     ' which have at least one backup
     Dim lastBackupDate, backup_type, is_primary_replica, replica_id, backup_machine_name, backup_database, found_db_backups
     addOutput(sections("backup"))
-    RS.Open "USE [master]", CONN
-    RS.Open "DECLARE @HADRStatus sql_variant; DECLARE @SQLCommand nvarchar(max); " & _
-            "SET @HADRStatus = (SELECT SERVERPROPERTY ('IsHadrEnabled')); " & _
-            "IF (@HADRStatus IS NULL or @HADRStatus <> 1) " & _
-            "BEGIN " & _
-                "SET @SQLCommand = 'SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, ''19700101'', MAX(backup_finish_date)), ''19700101''), 120) AS last_backup_date, " & _
-                "type, machine_name, ''True'' as is_primary_replica, ''1'' as is_local, '''' as replica_id,database_name FROM msdb.dbo.backupset " & _
-                "WHERE  machine_name = SERVERPROPERTY(''Machinename'') " & _
-                "GROUP BY type, machine_name,database_name ' " & _
-            "END " & _
-            "ELSE " & _
-            "BEGIN " & _
-                "SET @SQLCommand = 'SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, ''19700101'', MAX(b.backup_finish_date)), ''19700101''), 120) AS last_backup_date,  " & _
-                "b.type, b.machine_name, isnull(rep.is_primary_replica,0) as is_primary_replica, rep.is_local, isnull(convert(varchar(40), rep.replica_id), '''') AS replica_id,database_name  " & _
-                "FROM msdb.dbo.backupset b  " & _
-                "LEFT OUTER JOIN sys.databases db ON b.database_name = db.name  " & _
-                "LEFT OUTER JOIN sys.dm_hadr_database_replica_states rep ON db.database_id = rep.database_id  " & _
-                "WHERE (rep.is_local is null or rep.is_local = 1)  " & _
-                "AND (rep.is_primary_replica is null or rep.is_primary_replica = ''True'') and machine_name = SERVERPROPERTY(''Machinename'') " & _
-                "GROUP BY type, rep.replica_id, rep.is_primary_replica, rep.is_local, b.database_name, b.machine_name, rep.synchronization_state, rep.synchronization_health' " & _
-            "END " & _
-            "EXEC (@SQLCommand)", CONN
+    sqlString = "DECLARE @HADRStatus sql_variant; DECLARE @SQLCommand nvarchar(max); " & _
+                "SET @HADRStatus = (SELECT SERVERPROPERTY ('IsHadrEnabled')); " & _
+                "IF (@HADRStatus IS NULL or @HADRStatus <> 1) " & _
+                "BEGIN " & _
+                    "SET @SQLCommand = 'SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, ''19700101'', MAX(backup_finish_date)), ''19700101''), 120) AS last_backup_date, " & _
+                    "type, machine_name, ''True'' as is_primary_replica, ''1'' as is_local, '''' as replica_id,database_name FROM msdb.dbo.backupset " & _
+                    "WHERE  machine_name = SERVERPROPERTY(''Machinename'') " & _
+                    "GROUP BY type, machine_name,database_name ' " & _
+                "END " & _
+                "ELSE " & _
+                "BEGIN " & _
+                    "SET @SQLCommand = 'SELECT CONVERT(VARCHAR, DATEADD(s, DATEDIFF(s, ''19700101'', MAX(b.backup_finish_date)), ''19700101''), 120) AS last_backup_date,  " & _
+                    "b.type, b.machine_name, isnull(rep.is_primary_replica,0) as is_primary_replica, rep.is_local, isnull(convert(varchar(40), rep.replica_id), '''') AS replica_id,database_name  " & _
+                    "FROM msdb.dbo.backupset b  " & _
+                    "LEFT OUTER JOIN sys.databases db ON b.database_name = db.name  " & _
+                    "LEFT OUTER JOIN sys.dm_hadr_database_replica_states rep ON db.database_id = rep.database_id  " & _
+                    "WHERE (rep.is_local is null or rep.is_local = 1)  " & _
+                    "AND (rep.is_primary_replica is null or rep.is_primary_replica = ''True'') and machine_name = SERVERPROPERTY(''Machinename'') " & _
+                    "GROUP BY type, rep.replica_id, rep.is_primary_replica, rep.is_local, b.database_name, b.machine_name, rep.synchronization_state, rep.synchronization_health' " & _
+                "END " & _
+                "EXEC (@SQLCommand)"
+    Set databaseResponse = databaseSession.queryDatabase("master", sqlString)
 
-    ' It's easier to go to each line and take a look to which DB a backup
-    ' belongs to than go to every line for each DB as the list of DBs is
-    ' most likely shorter than the list of found backups. We track the DB
-    ' for which we found a backup to execute the last backup section below.
     Set found_db_backups = CreateObject("Scripting.Dictionary")
-    Do While Not RS.Eof
-        backup_database = Trim(RS("database_name"))
-        if dbNames.Exists(backup_database) Then
-            backup_database = Replace(backup_database, " ", "_")
-            found_db_backups.add backup_database, ""
+    If Not databaseResponse.hasError Then
+       ' It's easier to go to each line and take a look to which DB a backup
+       ' belongs to than go to every line for each DB as the list of DBs is
+       ' most likely shorter than the list of found backups. We track the DB
+       ' for which we found a backup to execute the last backup section below.
+       For Each record in databaseResponse.Rows
+           backup_database = Trim(record("database_name"))
+           If dbNames.Exists(backup_database) Then
+               backup_database = Replace(backup_database, " ", "_")
+               found_db_backups.add backup_database, ""
 
-            lastBackupDate = Trim(RS("last_backup_date"))
-            backup_type = Trim(RS("type"))
-            If backup_type = "" Then
-                backup_type = "-"
-            End If
+               lastBackupDate = Trim(record("last_backup_date"))
+               backup_type = Trim(record("type"))
+               If backup_type = "" Then
+                   backup_type = "-"
+               End If
 
-            replica_id = Trim(RS("replica_id"))
-            is_primary_replica = Trim(RS("is_primary_replica"))
-            backup_machine_name = Trim(RS("machine_name"))
+               replica_id = Trim(record("replica_id"))
+               is_primary_replica = Trim(record("is_primary_replica"))
+               backup_machine_name = Trim(record("machine_name"))
 
-            If lastBackupDate <> "" and (replica_id = "" or is_primary_replica = "True") Then
-                addOutput("MSSQL_" & instance_id & "|" & backup_database & _
-                          "|" & Replace(lastBackupDate, " ", "|") & "|" & backup_type)
-            End If
-        End If
-        RS.MoveNext
-    Loop
-    RS.Close
+               If lastBackupDate <> "" and (replica_id = "" or is_primary_replica = "True") Then
+                   addOutput("MSSQL_" & instance_id & "|" & backup_database & _
+                             "|" & Replace(lastBackupDate, " ", "|") & "|" & backup_type)
+               End If
+           End If
+       Next
+    End If
 
     ' Since the data is only fetched one time and we may run into an error, we
     ' need to take care, that every DB gets the error message or the hint that
     ' no backup has been found if the RS has been empty or simply no backup for
     ' a DB exists.
-    errMsg = checkConnErrors(CONN)
     For Each dbName in DbNames.Keys
         backup_database = Replace(dbName, " ", "_")
-        If Not errMsg = "" Then
-            addOutput("MSSQL_" & instance_id & "|" & backup_database & "|-|-|-|" & errMsg)
+        If databaseResponse.hasError Then
+            addOutput("MSSQL_" & instance_id & "|" & backup_database & "|-|-|-|" & databaseResponse.errorMessage)
         End If
         If Not found_db_backups.Exists(backup_database) Then
             addOutput("MSSQL_" & instance_id & "|" & backup_database & "|-|-|-|no backup found")
@@ -576,234 +779,229 @@ For Each instance_id In instances.Keys: Do ' Continue trick
 
     ' Loop all databases to get the size of the transaction log
     addOutput(sections("transactionlogs"))
-    For Each dbName in dbNames.Keys
-        RS.Open "USE [" & dbName & "];", CONN
-        RS.Open "SELECT name, physical_name," &_
+    sqlString = "SELECT name, physical_name," &_
                 "  cast(max_size/128 as bigint) as MaxSize," &_
                 "  cast(size/128 as bigint) as AllocatedSize," &_
                 "  cast(FILEPROPERTY (name, 'spaceused')/128 as bigint) as UsedSize," &_
                 "  case when max_size = '-1' then '1' else '0' end as Unlimited" &_
-                " FROM sys.database_files WHERE type_desc = 'LOG'", CONN
+                " FROM sys.database_files WHERE type_desc = 'LOG'"
+    For Each dbName in dbNames.Keys
+       Set databaseResponse = databaseSession.queryDatabase(dbName, sqlString)
 
-        errMsg = checkConnErrors(CONN)
-        If Not errMsg = "" Then
+        If databaseResponse.hasError Then
             addOutput(instance_id &  "|" & Replace(dbName, " ", "_") & _
-                      "|-|-|-|-|-|-|" & errMsg)
+                      "|-|-|-|-|-|-|" & databaseResponse.errorMessage)
         Else
-            Do While Not RS.Eof
-                addOutput(instance_id & "|" & Replace(dbName, " ", "_") & "|" & Replace(RS("name"), " ", "_") & _
-                          "|" & Replace(RS("physical_name"), " ", "_") & "|" & _
-                          RS("MaxSize") & "|" & RS("AllocatedSize") & "|" & RS("UsedSize")) & _
-                          "|" & RS("Unlimited")
-                RS.MoveNext
-            Loop
-            RS.Close
+           For Each record in databaseResponse.Rows
+                addOutput(instance_id & "|" & Replace(dbName, " ", "_") & "|" & Replace(record("name"), " ", "_") & _
+                          "|" & Replace(record("physical_name"), " ", "_") & "|" & _
+                          record("MaxSize") & "|" & record("AllocatedSize") & "|" & record("UsedSize")) & _
+                          "|" & record("Unlimited")
+           Next
         End If
     Next
 
     ' Loop all databases to get the size of the transaction log
     addOutput(sections("datafiles"))
-    For Each dbName in dbNames.Keys
-        RS.Open "USE [" & dbName & "];", CONN
-        RS.Open "SELECT name, physical_name," &_
+    sqlString = "SELECT name, physical_name," &_
                 "  cast(max_size/128 as bigint) as MaxSize," &_
                 "  cast(size/128 as bigint) as AllocatedSize," &_
                 "  cast(FILEPROPERTY (name, 'spaceused')/128 as bigint) as UsedSize," &_
                 "  case when max_size = '-1' then '1' else '0' end as Unlimited" &_
-                " FROM sys.database_files WHERE type_desc = 'ROWS'", CONN
+                " FROM sys.database_files WHERE type_desc = 'ROWS'"
+    For Each dbName in dbNames.Keys
+       Set databaseResponse = databaseSession.queryDatabase(dbName, sqlString)
 
-        If Not errMsg = "" Then
+        If databaseResponse.hasError Then
             addOutput(instance_id &  "|" & Replace(dbName, " ", "_") & _
-                      "|-|-|-|-|-|-|" & errMsg)
+                      "|-|-|-|-|-|-|" & databaseResponse.errorMessage)
         Else
-            Do While Not RS.Eof
-                addOutput(instance_id & "|" & Replace(dbName, " ", "_") & "|" & Replace(RS("name"), " ", "_") & _
-                          "|" & Replace(RS("physical_name"), " ", "_") & "|" & _
-                          RS("MaxSize") & "|" & RS("AllocatedSize") & "|" & RS("UsedSize")) & _
-                          "|" & RS("Unlimited")
-                RS.MoveNext
-            Loop
-            RS.Close
+           For Each record in databaseResponse.Rows
+                addOutput(instance_id & "|" & Replace(dbName, " ", "_") & "|" & Replace(record("name"), " ", "_") & _
+                          "|" & Replace(record("physical_name"), " ", "_") & "|" & _
+                          record("MaxSize") & "|" & record("AllocatedSize") & "|" & record("UsedSize")) & _
+                          "|" & record("Unlimited")
+           Next
         End If
     Next
 
     ' Database properties, full list at https://msdn.microsoft.com/en-us/library/ms186823.aspx
     addOutput(sections("databases"))
-    RS.Open "SELECT name, " & _
-            "DATABASEPROPERTYEX(name, 'Status') AS Status, " & _
-            "DATABASEPROPERTYEX(name, 'Recovery') AS Recovery, " & _
-            "DATABASEPROPERTYEX(name, 'IsAutoClose') AS auto_close, " & _
-            "DATABASEPROPERTYEX(name, 'IsAutoShrink') AS auto_shrink " & _
-            "FROM master.dbo.sysdatabases", CONN
-
-    errMsg = checkConnErrors(CONN)
-    If Not errMsg = "" Then
+    sqlString = "SELECT name, " & _
+                "  DATABASEPROPERTYEX(name, 'Status') AS Status, " & _
+                "  DATABASEPROPERTYEX(name, 'Recovery') AS Recovery, " & _
+                "  DATABASEPROPERTYEX(name, 'IsAutoClose') AS auto_close, " & _
+                "  DATABASEPROPERTYEX(name, 'IsAutoShrink') AS auto_shrink " & _
+                " FROM master.dbo.sysdatabases"
+    Set databaseResponse = databaseSession.querySystem(sqlString)
+    If databaseResponse.hasError Then
         For Each dbName in dbNames.Keys
-            addOutput(instance_id & "|" & Replace(dbName, " ", "_") & "|" & errMsg & "|-|-|-")
+            addOutput(instance_id & "|" & Replace(dbName, " ", "_") & "|" & databaseResponse.errorMessage & "|-|-|-")
         Next
     Else
-        Do While Not RS.Eof
+       For Each record in databaseResponse.Rows
             ' instance db_name status recovery auto_close auto_shrink
-            addOutput(instance_id & "|" & Replace(Trim(RS("name")), " ", "_") & "|" & Trim(RS("Status")) & _
-                      "|" & Trim(RS("Recovery")) & "|" & Trim(RS("auto_close")) & "|" & Trim(RS("auto_shrink")) )
-            RS.MoveNext
-        Loop
-        RS.Close
+            addOutput(instance_id & "|" & Replace(Trim(record("name")), " ", "_") & "|" & Trim(record("Status")) & _
+                      "|" & Trim(record("Recovery")) & "|" & Trim(record("auto_close")) & "|" & Trim(record("auto_shrink")) )
+        Next
     End If
 
     addOutput(sections("clusters"))
     Dim active_node, nodes
     For Each dbName in dbNames.Keys : Do
-        RS.Open "USE [" & dbName & "];", CONN
+       Set databaseResponse = databaseSession.queryDatabase(dbName, "SELECT SERVERPROPERTY('IsClustered') AS is_clustered")
+       If databaseResponse.hasError Then
+          addOutput(instance_id & "|" & Replace(dbName, " ", "_") & "|||" & databaseResponse.errorMessage)
+          Exit Do
+       End If
 
-        ' Skip non cluster instances
-        RS.Open "SELECT SERVERPROPERTY('IsClustered') AS is_clustered", CONN
-        If RS("is_clustered") = 0 Then
-            RS.Close
-            Exit Do
-        End If
-        RS.Close
+       ' Skip non cluster instances
+       For Each record in databaseResponse.Rows
+          If record("is_clustered") = 0 Then
+             Exit Do
+          End If
+       Next
 
-        nodes = ""
-        RS.Open "SELECT nodename FROM sys.dm_os_cluster_nodes", CONN
-        Do While Not RS.Eof
-            If nodes <> "" Then
-                nodes = nodes & ","
-            End If
-            nodes = nodes & RS("nodename")
-            RS.MoveNext
-        Loop
-        RS.Close
+       Set databaseResponse = databaseSession.queryDatabase(dbName, "SELECT nodename FROM sys.dm_os_cluster_nodes")
+       If databaseResponse.hasError Then
+          addOutput(instance_id & "|" & Replace(dbName, " ", "_") & "|||" & databaseResponse.errorMessage)
+          Exit Do
+       End If
 
-        active_node = "-"
-        RS.Open "SELECT SERVERPROPERTY('ComputerNamePhysicalNetBIOS') AS active_node", CONN
-        Do While Not RS.Eof
-            active_node = RS("active_node")
-            RS.MoveNext
-        Loop
-        RS.Close
+       nodes = ""
+       For Each record in databaseResponse.Rows
+           If nodes <> "" Then
+               nodes = nodes & ","
+           End If
+           nodes = nodes & record("nodename")
+       Next
 
-        addOutput(instance_id & "|" & Replace(dbName, " ", "_") & "|" & active_node & "|" & nodes)
+       Set databaseResponse = databaseSession.queryDatabase(dbName, "SELECT SERVERPROPERTY('ComputerNamePhysicalNetBIOS') AS active_node")
+       If databaseResponse.hasError Then
+          addOutput(instance_id & "|" & Replace(dbName, " ", "_") & "|||" & databaseResponse.errorMessage)
+          Exit Do
+       End If
+
+       active_node = "-"
+       For Each record in databaseResponse.Rows
+           active_node = record("active_node")
+       Next
+
+       addOutput(instance_id & "|" & Replace(dbName, " ", "_") & "|" & active_node & "|" & nodes)
     Loop While False: Next
 
     addOutput(sections("connections"))
     Dim connection_count, database_name
 
-    RS.Open "SELECT name AS DBName, ISNULL((SELECT  COUNT(dbid) AS NumberOfConnections FROM " &_
-    "sys.sysprocesses WHERE dbid > 0 AND name = DB_NAME(dbid) GROUP BY dbid ),0) AS NumberOfConnections " &_
-    "FROM sys.databases", CONN
+    sqlString = "SELECT name AS DBName, ISNULL((SELECT  COUNT(dbid) AS NumberOfConnections FROM " &_
+                " sys.sysprocesses WHERE dbid > 0 AND name = DB_NAME(dbid) GROUP BY dbid ),0) AS NumberOfConnections " &_
+                " FROM sys.databases"
+    Set databaseResponse = databaseSession.querySystem(sqlString)
 
-    errMsg = checkConnErrors(CONN)
-    If Not errMsg = "" Then
-        addOutput(instance_id & " " & errMsg)
+    If databaseResponse.hasError Then
+        addOutput(instance_id & " " & databaseResponse.errorMessage)
     Else
-        Do While Not RS.Eof
-            database_name = RS("DBName")
-            connection_count = RS("NumberOfConnections")
+       For Each record in databaseResponse.Rows
+           database_name = record("DBName")
+           connection_count = record("NumberOfConnections")
 
-            addOutput(instance_id & " " & Replace(database_name, " ", "_") & " " & connection_count)
-            RS.MoveNext
-        Loop
-        RS.Close
+           addOutput(instance_id & " " & Replace(database_name, " ", "_") & " " & connection_count)
+       Next
     End If
 
     addOutput(sections("jobs"))
-    RS.Open "USE [msdb];", CONN
-    RS.Open "SELECT  " &_
-            "    sj.job_id " &_
-            "   ,sj.name AS job_name " &_
-            "   ,sj.enabled AS job_enabled " &_
-            "   ,CAST(sjs.next_run_date AS VARCHAR(8)) AS next_run_date " &_
-            "   ,CAST(sjs.next_run_time AS VARCHAR(6)) AS next_run_time " &_
-            "   ,sjserver.last_run_outcome " &_
-            "   ,sjserver.last_outcome_message " &_
-            "   ,CAST(sjserver.last_run_date AS VARCHAR(8)) AS last_run_date " &_
-            "   ,CAST(sjserver.last_run_time AS VARCHAR(6)) AS last_run_time " &_
-            "   ,sjserver.last_run_duration " &_
-            "   ,ss.enabled AS schedule_enabled " &_
-            "   ,CONVERT(VARCHAR, CURRENT_TIMESTAMP, 20) AS server_current_time " &_
-            " FROM dbo.sysjobs sj " &_
-            " LEFT JOIN dbo.sysjobschedules sjs ON sj.job_id = sjs.job_id " &_
-            " LEFT JOIN dbo.sysjobservers sjserver ON sj.job_id = sjserver.job_id " &_
-            " LEFT JOIN dbo.sysschedules ss ON sjs.schedule_id = ss.schedule_id " &_
-            " ORDER BY sj.name " &_
-            "          ,sjs.next_run_date ASC " &_
-            "          ,sjs.next_run_time ASC " &_
-            "; ", CONN
+    sqlString = "SELECT " &_
+                "   sj.job_id " &_
+                "  ,sj.name AS job_name " &_
+                "  ,sj.enabled AS job_enabled " &_
+                "  ,CAST(sjs.next_run_date AS VARCHAR(8)) AS next_run_date " &_
+                "  ,CAST(sjs.next_run_time AS VARCHAR(6)) AS next_run_time " &_
+                "  ,sjserver.last_run_outcome " &_
+                "  ,sjserver.last_outcome_message " &_
+                "  ,CAST(sjserver.last_run_date AS VARCHAR(8)) AS last_run_date " &_
+                "  ,CAST(sjserver.last_run_time AS VARCHAR(6)) AS last_run_time " &_
+                "  ,sjserver.last_run_duration " &_
+                "  ,ss.enabled AS schedule_enabled " &_
+                "  ,CONVERT(VARCHAR, CURRENT_TIMESTAMP, 20) AS server_current_time " &_
+                " FROM dbo.sysjobs sj " &_
+                " LEFT JOIN dbo.sysjobschedules sjs ON sj.job_id = sjs.job_id " &_
+                " LEFT JOIN dbo.sysjobservers sjserver ON sj.job_id = sjserver.job_id " &_
+                " LEFT JOIN dbo.sysschedules ss ON sjs.schedule_id = ss.schedule_id " &_
+                " ORDER BY sj.name " &_
+                "          ,sjs.next_run_date ASC " &_
+                "          ,sjs.next_run_time ASC " &_
+                "; "
+    Set databaseResponse = databaseSession.queryDatabase("msdb", sqlString)
 
-    errMsg = checkConnErrors(CONN)
-    If Not errMsg = "" Then
-        addOutput(instance_id & " " & errMsg)
+    If databaseResponse.hasError Then
+        addOutput(instance_id & " " & databaseResponse.errorMessage)
     Else
-        Do While Not RS.Eof
-            'See following documentation for use of parameters and the GetString method:
-            'https://docs.microsoft.com/en-us/sql/ado/reference/ado-api/getstring-method-ado?view=sql-server-ver15
-            addOutput(instance_id & vbCrLf & RS.GetString(2,,vbTab,vbCrLf,""))
-        Loop
-        RS.Close
+       addOutput(instance_id)
+       For Each record in databaseResponse.rows
+           addOutput(Join(record.Items, vbTab))
+       Next
     End If
 
     addOutput(sections("mirroring"))
-    RS.Open "USE [master];", CONN
-    RS.Open "SELECT @@SERVERNAME as server_name, " &_
-            "       DB_NAME(database_id) AS [database_name], " &_
-            "       mirroring_state, " &_
-            "       mirroring_state_desc, " &_
-            "       mirroring_role, " &_
-            "       mirroring_role_desc, " &_
-            "       mirroring_safety_level, " &_
-            "       mirroring_safety_level_desc, " &_
-            "       mirroring_partner_name, " &_
-            "       mirroring_partner_instance, " &_
-            "       mirroring_witness_name, " &_
-            "       mirroring_witness_state, " &_
-            "       mirroring_witness_state_desc " &_
-            "  FROM sys.database_mirroring " &_
-            "  WHERE mirroring_state IS NOT NULL " &_
-            "; ", CONN
+    sqlString = "SELECT @@SERVERNAME as server_name, " &_
+                "  DB_NAME(database_id) AS [database_name], " &_
+                "  mirroring_state, " &_
+                "  mirroring_state_desc, " &_
+                "  mirroring_role, " &_
+                "  mirroring_role_desc, " &_
+                "  mirroring_safety_level, " &_
+                "  mirroring_safety_level_desc, " &_
+                "  mirroring_partner_name, " &_
+                "  mirroring_partner_instance, " &_
+                "  mirroring_witness_name, " &_
+                "  mirroring_witness_state, " &_
+                "  mirroring_witness_state_desc " &_
+                " FROM sys.database_mirroring " &_
+                " WHERE mirroring_state IS NOT NULL " &_
+                "; "
+    Set databaseResponse = databaseSession.queryDatabase("master", sqlString)
 
-    errMsg = checkConnErrors(CONN)
-    If Not errMsg = "" Then
-        addOutput(instance_id & " " & errMsg)
+    If databaseResponse.hasError Then
+        addOutput(instance_id & " " & databaseResponse.errorMessage)
     Else
-        Do While Not RS.Eof
-            'See following documentation for use of parameters and the GetString method:
-            'https://docs.microsoft.com/en-us/sql/ado/reference/ado-api/getstring-method-ado?view=sql-server-ver15
-            addOutput(instance_id & vbCrLf & RS.GetString(2,,vbTab,vbCrLf,""))
-        Loop
-        RS.Close
+       addOutput(instance_id)
+       For Each record in databaseResponse.Rows
+           addOutput(Join(record.Items, vbTab))
+       Next
     End If
 
     addOutput(sections("availability_groups"))
-    RS.Open "SELECT " &_
-            "       GroupsName.name, " &_
-            "       Groups.primary_replica, " &_
-            "       Groups.synchronization_health, " &_
-            "       Groups.synchronization_health_desc, " &_
-            "       Groups.primary_recovery_health_desc " &_
-            "       FROM sys.dm_hadr_availability_group_states Groups " &_
-            "       INNER JOIN master.sys.availability_groups GroupsName ON Groups.group_id = GroupsName.group_id ", CONN
+    sqlString = "SELECT " &_
+                "  GroupsName.name, " &_
+                "  Groups.primary_replica, " &_
+                "  Groups.synchronization_health, " &_
+                "  Groups.synchronization_health_desc, " &_
+                "  Groups.primary_recovery_health_desc " &_
+                " FROM sys.dm_hadr_availability_group_states Groups " &_
+                " INNER JOIN master.sys.availability_groups GroupsName ON Groups.group_id = GroupsName.group_id "
+    Set databaseResponse = databaseSession.querySystem(sqlString)
 
-    errMsg = checkConnErrors(CONN)
-    If Not errMsg = "" Then
-        addOutput(instance_id & " " & errMsg)
+    If databaseResponse.hasError Then
+        addOutput(instance_id & " " & databaseResponse.errorMessage)
     Else
-        Do While Not RS.Eof
-            'See following documentation for use of parameters and the GetString method:
-            'https://docs.microsoft.com/en-us/sql/ado/reference/ado-api/getstring-method-ado?view=sql-server-ver15
-            addOutput(RS.GetString(2,,vbTab,vbCrLf,""))
-        Loop
-        RS.Close
+       For Each record in databaseResponse.Rows
+           addOutput(Join(record.Items, vbTab) & vbCrLf)
+       Next
     End If
 
-    CONN.Close
+    databaseSession.terminateConnection
 
 Loop While False: Next
+
+databaseSession.terminateSession
 
 Set sources = nothing
 Set instances = nothing
 Set sections = nothing
-Set RS = nothing
-Set CONN = nothing
 Set FSO = nothing
 Set SHO = nothing
+Set DATABASE_CONNECTION_PROVIDERS = Nothing
+Set databaseSession = Nothing
+Set databaseResponse = Nothing
+Set record = Nothing
+Set sqlString = Nothing

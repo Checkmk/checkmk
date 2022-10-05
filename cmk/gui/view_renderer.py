@@ -90,14 +90,14 @@ class ABCViewRenderer(abc.ABC):
         self._menu_topics[dropdown].append(topic)
 
     @abc.abstractmethod
-    def render(  # type:ignore[no-untyped-def]
+    def render(
         self,
         rows: Rows,
         show_checkboxes: bool,
         num_columns: int,
         show_filters: List[Filter],
         unfiltered_amount_of_rows: int,
-    ):
+    ) -> None:
         raise NotImplementedError()
 
 

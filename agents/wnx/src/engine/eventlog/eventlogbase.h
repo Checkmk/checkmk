@@ -6,8 +6,6 @@
 #ifndef EventLogBase_h
 #define EventLogBase_h
 
-#include <fmt/format.h>
-
 #include <ctime>
 #include <functional>
 #include <memory>
@@ -47,68 +45,11 @@ public:
     [[nodiscard]] virtual std::wstring makeMessage() const = 0;
 
     [[nodiscard]] std::string stringize(cfg::EventLevels required,
-                                        bool hide_trash) const {
-        // convert UNIX timestamp to local time
-        auto ch = getEventSymbol(required);
-        if (hide_trash && ch == '.') {
-            return {};
-        }
+                                        bool hide_trash) const;
 
-        auto time_generated = timeGenerated();
-        const auto *t = ::localtime(&time_generated);
-        char timestamp[64];
-        ::strftime(timestamp, sizeof(timestamp), "%b %d %H:%M:%S", t);
-
-        // source is the application that produced the event
-        std::string source_name = wtools::ToUtf8(source());
-        std::ranges::replace(source_name, ' ', '_');
-
-        return fmt::format("{} {} {}.{} {} {}\n",
-                           ch,                 // char symbol
-                           timestamp,          //
-                           eventQualifiers(),  //
-                           eventId(),          //
-                           source_name,        //
-                           wtools::ToUtf8(makeMessage()));
-    }
-
-    // for output in port
-    [[nodiscard]] char getEventSymbol(cfg::EventLevels required) const {
-        switch (eventLevel()) {
-            case Level::error:
-                return 'C';
-            case Level::warning:
-                return 'W';
-            case Level::information:
-            case Level::audit_success:
-            case Level::success:
-                return (required == cfg::EventLevels::kAll)
-                           ? 'O'
-                           : '.';  // potential drop of context
-            case Level::audit_failure:
-                return 'C';
-            default:
-                return 'u';
-        }
-    }
-
-    // decode windows level to universal
-    [[nodiscard]] cfg::EventLevels calcEventLevel() const {
-        switch (eventLevel()) {
-            case Level::error:
-                return cfg::EventLevels::kCrit;
-            case Level::warning:
-                return cfg::EventLevels::kWarn;
-            case Level::information:
-            case Level::audit_success:
-            case Level::success:
-                return cfg::EventLevels::kAll;
-            case Level::audit_failure:
-                return cfg::EventLevels::kCrit;
-            default:
-                return cfg::EventLevels::kWarn;
-        }
-    }
+    [[nodiscard]] char getEventSymbol(cfg::EventLevels required) const;
+    /// decode windows level to universal
+    [[nodiscard]] cfg::EventLevels calcEventLevel() const;
 };
 
 class EventLogBase {

@@ -95,19 +95,18 @@ class FakeELBv2Client:
 def get_elbv2_sections():
     def _create_elbv2_sections(names, tags):
         region = "region"
-        config = AWSConfig("hostname", [], (None, None))
+        config = AWSConfig("hostname", [], ([], []))
         config.add_single_service_config("elbv2_names", names)
         config.add_service_tags("elbv2_tags", tags)
 
         fake_elbv2_client = FakeELBv2Client()
         fake_cloudwatch_client = FakeCloudwatchClient()
 
-        elbv2_limits_distributor = ResultDistributor()
-        elbv2_summary_distributor = ResultDistributor()
+        distributor = ResultDistributor()
 
-        elbv2_limits = ELBv2Limits(fake_elbv2_client, region, config, elbv2_limits_distributor)
+        elbv2_limits = ELBv2Limits(fake_elbv2_client, region, config, distributor)
         elbv2_summary = ELBSummaryGeneric(
-            fake_elbv2_client, region, config, elbv2_summary_distributor, resource="elbv2"
+            fake_elbv2_client, region, config, distributor, resource="elbv2"
         )
         elbv2_labels = ELBLabelsGeneric(fake_elbv2_client, region, config, resource="elbv2")
         elbv2_target_groups = ELBv2TargetGroups(fake_elbv2_client, region, config)
@@ -120,13 +119,13 @@ def get_elbv2_sections():
         )
         elbv2_network = ELBv2Network(fake_cloudwatch_client, region, config)
 
-        elbv2_limits_distributor.add(elbv2_summary)
-        elbv2_summary_distributor.add(elbv2_labels)
-        elbv2_summary_distributor.add(elbv2_target_groups)
-        elbv2_summary_distributor.add(elbv2_application)
-        elbv2_summary_distributor.add(elbv2_application_target_groups_http)
-        elbv2_summary_distributor.add(elbv2_application_target_groups_lambda)
-        elbv2_summary_distributor.add(elbv2_network)
+        distributor.add(elbv2_limits.name, elbv2_summary)
+        distributor.add(elbv2_summary.name, elbv2_labels)
+        distributor.add(elbv2_summary.name, elbv2_target_groups)
+        distributor.add(elbv2_summary.name, elbv2_application)
+        distributor.add(elbv2_summary.name, elbv2_application_target_groups_http)
+        distributor.add(elbv2_summary.name, elbv2_application_target_groups_lambda)
+        distributor.add(elbv2_summary.name, elbv2_network)
         return {
             "elbv2_limits": elbv2_limits,
             "elbv2_summary": elbv2_summary,

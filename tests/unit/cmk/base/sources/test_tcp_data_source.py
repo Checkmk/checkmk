@@ -6,30 +6,30 @@
 import socket
 from pathlib import Path
 
-from tests.testlib.base import Scenario
-
 from cmk.utils.type_defs import HostName
 
-from cmk.base.config import HostConfig
+import cmk.core_helpers.cache as file_cache
+
 from cmk.base.sources.tcp import TCPSource
 
 
 def test_attribute_defaults(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     ipaddress = "1.2.3.4"
     hostname = HostName("testhost")
-
-    ts = Scenario()
-    ts.add_host(hostname)
-    ts.apply(monkeypatch)
-
-    host_config = HostConfig.make_host_config(hostname)
     source = TCPSource(
-        host_config,
+        hostname,
         ipaddress,
+        id_="agent",
         simulation_mode=True,
         agent_simulator=True,
         translation={},
         encoding_fallback="ascii",
+        check_interval=0,
+        address_family=socket.AF_INET,
+        agent_port=6556,
+        tcp_connect_timeout=5.0,
+        agent_encryption={"use_realtime": "enforce", "use_regular": "disable"},
+        file_cache_max_age=file_cache.MaxAge.none(),
     )
     monkeypatch.setattr(source, "file_cache_base_path", Path("/my/path/"))
     assert source.fetcher_configuration == {

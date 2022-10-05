@@ -18813,15 +18813,6 @@ msgid ""
 "credentials."
 msgstr ""
 
-#, python-format
-msgid ""
-"For the initial login into the remote site %s we need once your "
-"administration login for the Multsite GUI on that site. Your credentials "
-"will only be used for the initial handshake and not be stored. If the login "
-"is successful then both side will exchange a login secret which is used for "
-"the further remote calls."
-msgstr ""
-
 msgid ""
 "For these hosts there is a new agent available that is not yet installed. "
 "This simply means that the target agent configuration hash does not match "
@@ -21398,6 +21389,10 @@ msgstr ""
 msgid "Host to use for connecting to Cisco Prime"
 msgstr "TCP port pentru conexiunile la agentul Check_MK"
 
+#, python-format
+msgid "Host uses xinetd or systemd %s"
+msgstr ""
+
 msgid "Host&nbsp;status"
 msgstr ""
 
@@ -22147,9 +22142,10 @@ msgid ""
 msgstr ""
 
 msgid ""
-"If a select is set to <i>don't change</i> then currenty not all selected "
-"hosts share the same setting for this attribute. If you leave that "
-"selection, all hosts will keep their individual settings."
+"If a selection is set to <i>This value differs between the selected hosts.</"
+"i> then currenty not all selected hosts share the same setting for this "
+"attribute. If you keep that selection, all hosts will keep their individual "
+"settings."
 msgstr ""
 
 msgid ""
@@ -23288,7 +23284,8 @@ msgstr ""
 
 msgid ""
 "In case you want to <i>unset</i> attributes on multiple hosts, you need to "
-"use the <i>bulk cleanup</i> action instead of bulk edit."
+"use the <i>Remove explicit attribute settings</i> option instead of bulk "
+"edit."
 msgstr ""
 
 msgid ""
@@ -32712,6 +32709,15 @@ msgstr "2 ore"
 msgid "One line of text"
 msgstr ""
 
+#, python-format
+msgid ""
+"One manual login as administrator to the Multisite GUI of the remote site "
+"\"%s\" is required to initialize the connection. The credentials will only "
+"be used for the initial handshake and not be stored. If the login is "
+"successful then both sides will exchange a login secret which will be used "
+"for subsequent remote calls."
+msgstr ""
+
 #, fuzzy
 msgid "One match without arguments"
 msgstr "fara argumente"
@@ -37244,9 +37250,6 @@ msgstr ", rulează pe %s"
 msgid "Renaming of %s -> %s"
 msgstr ""
 
-msgid "Render URL contents in own frame"
-msgstr ""
-
 msgid "Render an error message into the document"
 msgstr ""
 
@@ -37257,9 +37260,6 @@ msgid "Render gray background color behind the elements content."
 msgstr ""
 
 msgid "Render horizontal rules between rows"
-msgstr ""
-
-msgid "Render in iframe"
 msgstr ""
 
 msgid "Render the titlebar including title and link above the element."
@@ -46140,6 +46140,9 @@ msgstr ""
 msgid ""
 "The interval the connection will be executed to poll the data source and "
 "update the configuration."
+msgstr ""
+
+msgid "The interval the plugin is triggered by check-mk-agent-async.service"
 msgstr ""
 
 msgid ""
@@ -57854,9 +57857,6 @@ msgstr ""
 msgid "You need to set the \"%s\" parameter."
 msgstr ""
 
-msgid "You need to specify a URL in the element properties"
-msgstr ""
-
 msgid "You need to specify a backup job."
 msgstr ""
 
@@ -59835,6 +59835,10 @@ msgstr ""
 msgid "sysoper"
 msgstr ""
 
+#, fuzzy
+msgid "systemd"
+msgstr "Spațiu liber exact"
+
 msgid "tasks"
 msgstr ""
 
@@ -60069,6 +60073,9 @@ msgid "worst state"
 msgstr ""
 
 msgid "wrap"
+msgstr ""
+
+msgid "xinetd"
 msgstr ""
 
 msgid "y"

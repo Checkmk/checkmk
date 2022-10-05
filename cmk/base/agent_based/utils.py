@@ -8,6 +8,8 @@ from typing import Dict, Iterable, Mapping, Optional, Sequence
 from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.type_defs import HostKey, ParsedSectionName, ServiceState
 
+from cmk.base.config import HostConfig
+
 from .data_provider import ParsedSectionContent, ParsedSectionsBroker, SourceResults
 
 _SectionKwargs = Mapping[str, ParsedSectionContent]
@@ -69,7 +71,8 @@ def check_sources(
     override_non_ok_state: Optional[ServiceState] = None,
 ) -> Iterable[ActiveCheckResult]:
     for source, host_sections in source_results:
-        subresults = source.summarize(host_sections)
+        host_config = HostConfig.make_host_config(source.hostname)
+        subresults = source.summarize(host_sections, exit_spec_cb=host_config.exit_code_spec)
         if include_ok_results or any(s.state != 0 for s in subresults):
             yield from (
                 ActiveCheckResult(

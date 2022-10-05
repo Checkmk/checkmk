@@ -329,10 +329,12 @@ class Phase(str, enum.Enum):
     UNKNOWN = "unknown"
 
 
-class PodLifeCycle(Section):
-    """section: kube_pod_lifecycle_v1"""
-
+class BasePodLifeCycle(BaseModel):
     phase: Phase
+
+
+class PodLifeCycle(Section, BasePodLifeCycle):
+    """section: kube_pod_lifecycle_v1"""
 
 
 class ReadyCount(BaseModel):
@@ -857,6 +859,54 @@ class CronJobInfo(Section):
     kubernetes_cluster_hostname: str
 
 
+class JobConditionType(enum.Enum):
+    COMPLETE = "Complete"
+    FAILED = "Failed"
+    SUSPENDED = "Suspended"
+
+
+class JobCondition(BaseModel):
+    """
+    Remember: on job status level, conditions is a list of conditions
+    Scenarios:
+        * Job fails: type="Failed" & status is true
+        * Job suspended: type="Suspended" & status is true
+        * Job resumes: one of the status will become false
+        * Job completed: type="Complete" status true
+    """
+
+    type_: JobConditionType
+    status: ConditionStatus
+
+
+class JobPod(BaseModel):
+    init_containers: Mapping[str, ContainerStatus]
+    containers: Mapping[str, ContainerStatus]
+    lifecycle: BasePodLifeCycle
+
+
+class JobStatus(BaseModel):
+    conditions: Sequence[JobCondition]
+    start_time: Timestamp | None
+    completion_time: Timestamp | None
+
+
+class CronJobStatus(Section):
+    """section: kube_cron_job_status_v1"""
+
+    active_jobs_count: int | None
+    last_duration: float | None
+    last_successful_time: Timestamp | None
+    last_schedule_time: Timestamp | None
+
+
+class CronJobLatestJob(Section):
+    """section: kube_cron_job_latest_job_v1"""
+
+    status: JobStatus
+    pods: Sequence[JobPod]
+
+
 class IdentificationError(BaseModel):
     """Errors due to incorrect labels set by the user."""
 
@@ -898,3 +948,45 @@ def check_with_time(
         yield from check_function(time.time(), section)
 
     return check_function_with_time
+
+
+def pod_status_message(
+    pod_containers: Sequence[ContainerStatus],
+    pod_init_containers: Sequence[ContainerStatus],
+    section_kube_pod_lifecycle: PodLifeCycle | BasePodLifeCycle,
+) -> str:
+    if init_container_message := _pod_container_message(pod_init_containers):
+        return f"Init:{init_container_message}"
+    if container_message := _pod_container_message(pod_containers):
+        return container_message
+    return section_kube_pod_lifecycle.phase.title()
+
+
+def _pod_container_message(pod_containers: Sequence[ContainerStatus]) -> Optional[str]:
+    containers = erroneous_or_incomplete_containers(pod_containers)
+    for container in containers:
+        if (
+            isinstance(container.state, ContainerWaitingState)
+            and container.state.reason != "ContainerCreating"
+        ):
+            return container.state.reason
+    for container in containers:
+        if (
+            isinstance(container.state, ContainerTerminatedState)
+            and container.state.reason is not None
+        ):
+            return container.state.reason
+    return None
+
+
+def erroneous_or_incomplete_containers(
+    containers: Sequence[ContainerStatus],
+) -> Sequence[ContainerStatus]:
+    return [
+        container
+        for container in containers
+        if not isinstance(container.state, ContainerRunningState)
+        and not (
+            isinstance(container.state, ContainerTerminatedState) and container.state.exit_code == 0
+        )
+    ]

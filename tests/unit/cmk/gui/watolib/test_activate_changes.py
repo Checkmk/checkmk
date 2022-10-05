@@ -7,6 +7,7 @@ import io
 import logging
 import tarfile
 from pathlib import Path
+from typing import List
 
 import pytest
 from werkzeug import datastructures as werkzeug_datastructures
@@ -34,7 +35,7 @@ def restore_orig_replication_paths():
     activate_changes._replication_paths = _orig_paths
 
 
-def _expected_replication_paths():
+def _expected_replication_paths(edition: cmk_version.Edition) -> List[ReplicationPath]:
     expected = [
         ReplicationPath("dir", "check_mk", "etc/check_mk/conf.d/wato/", []),
         ReplicationPath("dir", "multisite", "etc/check_mk/multisite.d/wato/", []),
@@ -59,9 +60,11 @@ def _expected_replication_paths():
         ),
     ]
 
-    if not cmk_version.is_raw_edition():
+    if edition is not cmk_version.Edition.CRE:
         expected += [
             ReplicationPath("dir", "liveproxyd", "etc/check_mk/liveproxyd.d/wato/", []),
+            ReplicationPath("dir", "dcd", "etc/check_mk/dcd.d/wato/", []),
+            ReplicationPath("dir", "mknotify", "etc/check_mk/mknotifyd.d/wato", []),
         ]
 
     expected += [
@@ -70,7 +73,7 @@ def _expected_replication_paths():
         ReplicationPath("file", "diskspace", "etc/diskspace.conf", []),
     ]
 
-    if cmk_version.is_managed_edition():
+    if edition is cmk_version.Edition.CME:
         expected += [
             ReplicationPath(
                 ty="file",
@@ -115,12 +118,55 @@ def _expected_replication_paths():
     # We cannot fix that in the short (or even mid) term because the
     # precondition is a more cleanly separated structure.
 
-    if testlib.is_enterprise_repo():
+    if testlib.is_enterprise_repo() and edition is cmk_version.Edition.CRE:
         # CEE paths are added when the CEE plugins for WATO are available, i.e.
         # when the "enterprise/" path is present.
         expected += [
             ReplicationPath("dir", "dcd", "etc/check_mk/dcd.d/wato/", []),
             ReplicationPath("dir", "mknotify", "etc/check_mk/mknotifyd.d/wato", []),
+            ReplicationPath("dir", "liveproxyd", "etc/check_mk/liveproxyd.d/wato/", []),
+        ]
+
+    if testlib.is_managed_repo() and edition is not cmk_version.Edition.CME:
+        # CME paths are added when the CME plugins for WATO are available, i.e.
+        # when the "managed/" path is present.
+        expected += [
+            ReplicationPath(
+                ty="file",
+                ident="customer_check_mk",
+                site_path="etc/check_mk/conf.d/customer.mk",
+                excludes=[],
+            ),
+            ReplicationPath(
+                ty="file",
+                ident="customer_gui_design",
+                site_path="etc/check_mk/multisite.d/zzz_customer_gui_design.mk",
+                excludes=[],
+            ),
+            ReplicationPath(
+                ty="file",
+                ident="customer_multisite",
+                site_path="etc/check_mk/multisite.d/customer.mk",
+                excludes=[],
+            ),
+            ReplicationPath(
+                ty="file",
+                ident="gui_logo",
+                site_path="local/share/check_mk/web/htdocs/themes/classic/images/sidebar_top.png",
+                excludes=[],
+            ),
+            ReplicationPath(
+                ty="file",
+                ident="gui_logo_dark",
+                site_path="local/share/check_mk/web/htdocs/themes/modern-dark/images/mk-logo.png",
+                excludes=[],
+            ),
+            ReplicationPath(
+                ty="file",
+                ident="gui_logo_facelift",
+                site_path="local/share/check_mk/web/htdocs/themes/facelift/images/mk-logo.png",
+                excludes=[],
+            ),
         ]
 
     return expected
@@ -129,7 +175,7 @@ def _expected_replication_paths():
 def test_get_replication_paths_defaults(  # type:ignore[no-untyped-def]
     edition, monkeypatch
 ) -> None:
-    expected = _expected_replication_paths()
+    expected = _expected_replication_paths(edition)
     assert sorted(activate_changes.get_replication_paths()) == sorted(expected)
 
 
@@ -144,7 +190,7 @@ def test_get_replication_components(edition, monkeypatch, replicate_ec, replicat
     if replicate_mkps is not None:
         partial_site_config["replicate_mkps"] = replicate_mkps
 
-    expected = _expected_replication_paths()
+    expected = _expected_replication_paths(edition)
 
     if not replicate_ec:
         expected = [e for e in expected if e.ident not in ["mkeventd", "mkeventd_mkp"]]

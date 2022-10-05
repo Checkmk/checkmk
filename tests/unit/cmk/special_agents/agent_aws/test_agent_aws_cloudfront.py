@@ -216,7 +216,7 @@ def get_cloudfront_sections():
         names, tags, assign_to_domain_host: bool
     ):
         region = "us-east-1"
-        config = AWSConfig("hostname", [], (None, None))
+        config = AWSConfig("hostname", [], ([], []))
         config.add_single_service_config("cloudfront_names", names)
         config.add_service_tags("cloudfront_tags", tags)
 
@@ -224,20 +224,20 @@ def get_cloudfront_sections():
         fake_cloudwatch_client = FakeCloudwatchClient()
         fake_tagging_client = FakeTaggingClient()
 
-        cloudfront_summary_distributor = ResultDistributor()
+        distributor = ResultDistributor()
 
         cloudfront_summary = CloudFrontSummary(
             fake_cloudfront_client,
             fake_tagging_client,
             region,
             config,
-            cloudfront_summary_distributor,
+            distributor,
         )
         host_assignment: Literal["domain_host", "aws_host"] = (
             "domain_host" if assign_to_domain_host else "aws_host"
         )
         cloudfront = CloudFront(fake_cloudwatch_client, region, config, host_assignment)
-        cloudfront_summary_distributor.add(cloudfront)
+        distributor.add(cloudfront_summary.name, cloudfront)
 
         return cloudfront_summary, cloudfront
 

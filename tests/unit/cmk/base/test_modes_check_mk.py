@@ -9,7 +9,7 @@ from tests.testlib.base import Scenario
 
 from cmk.utils.type_defs import result
 
-from cmk.core_helpers.cache import FileCacheFactory
+from cmk.core_helpers.cache import FileCacheGlobals
 
 import cmk.base.modes.check_mk as check_mk
 from cmk.base.sources.tcp import TCPSource
@@ -43,7 +43,7 @@ class TestModeDumpAgent:
     @pytest.mark.usefixtures("scenario")
     @pytest.mark.usefixtures("patch_fetch")
     def test_success(self, hostname, raw_data, capsys) -> None:  # type:ignore[no-untyped-def]
-        assert FileCacheFactory.disabled is False
+        assert FileCacheGlobals.disabled is False
 
         check_mk.mode_dump_agent({}, hostname)
         assert capsys.readouterr().out == raw_data.decode()

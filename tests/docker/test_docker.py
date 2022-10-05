@@ -9,11 +9,14 @@ import logging
 import os
 import re
 import subprocess
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
 import requests
 import requests.exceptions
+from docker.models.containers import Container  # type: ignore[import]
+from docker.models.images import Image  # type: ignore[import]
 
 import tests.testlib as testlib
 from tests.testlib.utils import (
@@ -31,7 +34,7 @@ branch_name = os.environ.get("BRANCH", "master")
 logger = logging.getLogger()
 
 
-def build_version():
+def build_version() -> testlib.CMKVersion:
     return testlib.CMKVersion(
         version_spec=os.environ.get("VERSION", testlib.CMKVersion.DAILY),
         edition=os.environ.get("EDITION", testlib.CMKVersion.CEE),
@@ -40,28 +43,28 @@ def build_version():
 
 
 @pytest.fixture(scope="session")
-def version():
+def version() -> testlib.CMKVersion:
     return build_version()
 
 
 @pytest.fixture()
-def client():
+def client() -> docker.DockerClient:
     return docker.DockerClient()
 
 
-def _image_name(version):
-    return "docker-tests/check-mk-%s-%s-%s" % (version.edition(), branch_name, version.version)
+def _image_name(version: testlib.CMKVersion) -> str:
+    return f"docker-tests/check-mk-{version.edition()}-{branch_name}-{version.version}"
 
 
 def _package_name(version: testlib.CMKVersion) -> str:
     return f"check-mk-{version.edition()}-{version.version}_0.buster_amd64.deb"
 
 
-def _prepare_build():
+def _prepare_build() -> None:
     assert subprocess.run(["make", "needed-packages"], cwd=build_path, check=False).returncode == 0
 
 
-def _prepare_package(version: testlib.CMKVersion):  # type:ignore[no-untyped-def]
+def _prepare_package(version: testlib.CMKVersion) -> None:
     """On Jenkins copies a previously built package to the build path."""
     if "WORKSPACE" not in os.environ:
         logger.info("Not executed on CI: Do not prepare a Checkmk .deb in %s", build_path)
@@ -94,7 +97,7 @@ def _cleanup_old_packages() -> None:
         p.unlink()
 
 
-def resolve_image_alias(alias):
+def resolve_image_alias(alias: str) -> str:
     """Resolves given "Docker image alias" using the common `resolve.sh` and returns an image
     name which can be used with `docker run`
     >>> image = resolve_image_alias("IMAGE_CMK_BASE")
@@ -102,11 +105,16 @@ def resolve_image_alias(alias):
     """
     return subprocess.check_output(
         [os.path.join(cmk_path(), "buildscripts/docker_image_aliases/resolve.sh"), alias],
-        universal_newlines=True,
+        text=True,
     ).split("\n", maxsplit=1)[0]
 
 
-def _build(request, client, version, prepare_package=True):
+def _build(
+    request: pytest.FixtureRequest,
+    client: docker.DockerClient,
+    version: testlib.CMKVersion,
+    prepare_package: bool = True,
+) -> tuple[Image, Mapping[str, str]]:
     _prepare_build()
 
     if prepare_package:
@@ -124,6 +132,8 @@ def _build(request, client, version, prepare_package=True):
 
     logger.info("Building docker image (or reuse existing): %s", _image_name(version))
     try:
+        image: Image
+        build_logs: Mapping[str, str]
         image, build_logs = client.images.build(
             path=build_path,
             tag=_image_name(version),
@@ -206,7 +216,7 @@ def _build(request, client, version, prepare_package=True):
     return image, build_logs
 
 
-def _pull(client, version):
+def _pull(client: docker.DockerClient, version: testlib.CMKVersion) -> Image:
     if version.edition() != "raw":
         raise Exception("Can only fetch raw edition at the moment")
 
@@ -214,7 +224,19 @@ def _pull(client, version):
     return client.images.pull("checkmk/check-mk-raw", tag=version.version)
 
 
-def _start(request, client, version=None, is_update=False, **kwargs):
+def _start(
+    request: pytest.FixtureRequest,
+    client: docker.DockerClient,
+    version: testlib.CMKVersion | None = None,
+    is_update: bool = False,
+    # former kwargs
+    environment: dict[str, str] | None = None,
+    hostname: str | None = None,
+    ports: dict[str, tuple[str, int]] | None = None,
+    name: str | None = None,
+    volumes: list[str] | None = None,
+    volumes_from: list[str] | None = None,
+) -> Container:
     if version is None:
         version = build_version()
 
@@ -232,11 +254,20 @@ def _start(request, client, version=None, is_update=False, **kwargs):
             "fix this, then restart your computer and try again."
         ) from e
 
+    kwargs_with_none = {
+        "environment": environment,
+        "hostname": hostname,
+        "ports": ports,
+        "name": name,
+        "volumes": volumes,
+        "volumes_from": volumes_from,
+    }
+    kwargs = {key: value for key, value in kwargs_with_none.items() if value is not None}
     c = client.containers.run(image=_image.id, detach=True, **kwargs)
     logger.info("Starting container %s from image %s", c.short_id, _image.short_id)
 
     try:
-        site_id = kwargs.get("environment", {}).get("CMK_SITE_ID", "cmk")
+        site_id = (environment or {}).get("CMK_SITE_ID", "cmk")
 
         request.addfinalizer(lambda: c.remove(force=True))
 
@@ -265,12 +296,19 @@ def _start(request, client, version=None, is_update=False, **kwargs):
     return c
 
 
-def _exec_run(c, *args, **kwargs):
-    exit_code, output = c.exec_run(*args, **kwargs)
+def _exec_run(
+    c: Container,
+    cmd: str | list[str],
+    user: str = "",
+    workdir: str | None = None,
+) -> tuple[int, str]:
+    exit_code, output = c.exec_run(cmd, user=user, workdir=workdir)
     return exit_code, output.decode("utf-8")
 
 
-def test_start_simple(request, client, version) -> None:  # type:ignore[no-untyped-def]
+def test_start_simple(
+    request: pytest.FixtureRequest, client: docker.DockerClient, version: testlib.CMKVersion
+) -> None:
     c = _start(request, client)
 
     cmds = [p[-1] for p in c.top()["Processes"]]
@@ -299,7 +337,9 @@ def test_start_simple(request, client, version) -> None:  # type:ignore[no-untyp
     assert exit_code == 0
 
 
-def test_start_cmkadmin_passsword(request, client) -> None:  # type:ignore[no-untyped-def]
+def test_start_cmkadmin_passsword(
+    request: pytest.FixtureRequest, client: docker.DockerClient
+) -> None:
     c = _start(
         request,
         client,
@@ -318,7 +358,7 @@ def test_start_cmkadmin_passsword(request, client) -> None:  # type:ignore[no-un
     )
 
 
-def test_start_custom_site_id(request, client) -> None:  # type:ignore[no-untyped-def]
+def test_start_custom_site_id(request: pytest.FixtureRequest, client: docker.DockerClient) -> None:
     c = _start(
         request,
         client,
@@ -330,7 +370,9 @@ def test_start_custom_site_id(request, client) -> None:  # type:ignore[no-untype
     assert _exec_run(c, ["omd", "status"], user="xyz")[0] == 0
 
 
-def test_start_enable_livestatus(request, client) -> None:  # type:ignore[no-untyped-def]
+def test_start_enable_livestatus(
+    request: pytest.FixtureRequest, client: docker.DockerClient
+) -> None:
     c = _start(
         request,
         client,
@@ -344,7 +386,9 @@ def test_start_enable_livestatus(request, client) -> None:  # type:ignore[no-unt
     assert output == "on\n"
 
 
-def test_start_execute_custom_command(request, client) -> None:  # type:ignore[no-untyped-def]
+def test_start_execute_custom_command(
+    request: pytest.FixtureRequest, client: docker.DockerClient
+) -> None:
     c = _start(request, client)
 
     exit_code, output = _exec_run(c, ["echo", "1"], user="cmk")
@@ -352,7 +396,9 @@ def test_start_execute_custom_command(request, client) -> None:  # type:ignore[n
     assert output == "1\n"
 
 
-def test_start_with_custom_command(request, client, version) -> None:  # type:ignore[no-untyped-def]
+def test_start_with_custom_command(
+    request: pytest.FixtureRequest, client: docker.DockerClient, version: testlib.CMKVersion
+) -> None:
     image, _build_logs = _build(request, client, version)
     output = client.containers.run(
         image=image.id, detach=False, command=["bash", "-c", "echo 1"]
@@ -363,7 +409,9 @@ def test_start_with_custom_command(request, client, version) -> None:  # type:ig
 
 
 # Test that the local deb package is used by making the build fail because of an empty file
-def test_build_using_local_deb(request, client, version) -> None:  # type:ignore[no-untyped-def]
+def test_build_using_local_deb(
+    request: pytest.FixtureRequest, client: docker.DockerClient, version: testlib.CMKVersion
+) -> None:
     package_path = Path(build_path, _package_name(version))
     package_path.write_bytes(b"")
     with pytest.raises(docker.errors.BuildError):
@@ -374,8 +422,8 @@ def test_build_using_local_deb(request, client, version) -> None:  # type:ignore
 
 # Test that the deb package from the download server is used.
 # Works only with daily enterprise builds.
-def test_build_using_package_from_download_server(  # type:ignore[no-untyped-def]
-    request, client, version
+def test_build_using_package_from_download_server(
+    request: pytest.FixtureRequest, client: docker.DockerClient, version: testlib.CMKVersion
 ) -> None:
     if not (
         version.edition() == "enterprise" and re.match(r"^\d\d\d\d\.\d\d\.\d\d$", version.version)
@@ -389,8 +437,8 @@ def test_build_using_package_from_download_server(  # type:ignore[no-untyped-def
 
 
 # Test that the local GPG file is used by making the build fail because of an empty file
-def test_build_using_local_gpg_pubkey(  # type:ignore[no-untyped-def]
-    request, client, version
+def test_build_using_local_gpg_pubkey(
+    request: pytest.FixtureRequest, client: docker.DockerClient, version: testlib.CMKVersion
 ) -> None:
     pkg_path = os.path.join(build_path, "Check_MK-pubkey.gpg")
     pkg_path_sav = os.path.join(build_path, "Check_MK-pubkey.gpg.sav")
@@ -407,7 +455,7 @@ def test_build_using_local_gpg_pubkey(  # type:ignore[no-untyped-def]
         os.rename(pkg_path_sav, pkg_path)
 
 
-def test_start_enable_mail(request, client) -> None:  # type:ignore[no-untyped-def]
+def test_start_enable_mail(request: pytest.FixtureRequest, client: docker.DockerClient) -> None:
     c = _start(
         request,
         client,
@@ -430,7 +478,9 @@ def test_start_enable_mail(request, client) -> None:  # type:ignore[no-untyped-d
     )
 
 
-def test_http_access_base_redirects_work(request, client) -> None:  # type:ignore[no-untyped-def]
+def test_http_access_base_redirects_work(
+    request: pytest.FixtureRequest, client: docker.DockerClient
+) -> None:
     c = _start(request, client)
 
     assert (
@@ -453,7 +503,9 @@ def test_http_access_base_redirects_work(request, client) -> None:  # type:ignor
 
 # Would like to test this from the outside of the container, but this is not possible
 # because most of our systems already have something listening on port 80
-def test_redirects_work_with_standard_port(request, client) -> None:  # type:ignore[no-untyped-def]
+def test_redirects_work_with_standard_port(
+    request: pytest.FixtureRequest, client: docker.DockerClient
+) -> None:
     c = _start(request, client)
 
     # Use no explicit port
@@ -510,7 +562,9 @@ def test_redirects_work_with_standard_port(request, client) -> None:  # type:ign
     )
 
 
-def test_redirects_work_with_custom_port(request, client) -> None:  # type:ignore[no-untyped-def]
+def test_redirects_work_with_custom_port(
+    request: pytest.FixtureRequest, client: docker.DockerClient
+) -> None:
     # Use some free address port to be able to bind to. For the moment there is no
     # conflict with others, since this test is executed only once at the same time.
     # TODO: We'll have to use some branch specific port in the future.
@@ -553,7 +607,9 @@ def test_redirects_work_with_custom_port(request, client) -> None:  # type:ignor
     assert response.headers["Location"] == "http://%s/cmk/" % address[0]
 
 
-def test_http_access_login_screen(request, client) -> None:  # type:ignore[no-untyped-def]
+def test_http_access_login_screen(
+    request: pytest.FixtureRequest, client: docker.DockerClient
+) -> None:
     c = _start(request, client)
 
     assert (
@@ -572,7 +628,7 @@ def test_http_access_login_screen(request, client) -> None:  # type:ignore[no-un
     )
 
 
-def test_container_agent(request, client) -> None:  # type:ignore[no-untyped-def]
+def test_container_agent(request: pytest.FixtureRequest, client: docker.DockerClient) -> None:
     c = _start(request, client)
     # Is the agent installed and executable?
     assert _exec_run(c, ["check_mk_agent"])[-1].startswith("<<<check_mk>>>\n")
@@ -581,7 +637,9 @@ def test_container_agent(request, client) -> None:  # type:ignore[no-untyped-def
     assert ":::6556" in _exec_run(c, ["netstat", "-tln"])[-1]
 
 
-def test_update(request, client, version) -> None:  # type:ignore[no-untyped-def]
+def test_update(
+    request: pytest.FixtureRequest, client: docker.DockerClient, version: testlib.CMKVersion
+) -> None:
     container_name = "%s-monitoring" % branch_name
 
     # Pick a random old version that we can use to the setup the initial site with

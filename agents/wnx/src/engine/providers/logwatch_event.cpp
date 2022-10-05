@@ -204,7 +204,7 @@ void LogWatchEvent::loadSectionParameters() {
         GetVal(cfg::groups::kLogWatchEvent, cfg::vars::kLogWatchEventTimeout,
                cfg::logwatch::kTimeout);
 
-    if (evl::g_evt.theModule() == nullptr || evl::g_evt.openLog == nullptr) {
+    if (!evl::IsEvtApiAvailable()) {
         XLOG::d(
             "Vista API requested in config, but support in OS is absent. Disabling...");
         evl_type_ = EvlType::classic;

@@ -20,7 +20,12 @@ import pytest
 from pydantic_factories import ModelFactory, Use
 
 # pylint: disable=comparison-with-callable,redefined-outer-name
-from tests.unit.cmk.special_agents.agent_kube.factory import MetaDataFactory, NodeMetaDataFactory
+from tests.unit.cmk.special_agents.agent_kube.factory import (
+    api_to_agent_statefulset,
+    APIStatefulSetFactory,
+    MetaDataFactory,
+    NodeMetaDataFactory,
+)
 
 from cmk.special_agents import agent_kube
 from cmk.special_agents.utils_kubernetes.schemata import api
@@ -175,6 +180,10 @@ class ClusterDetailsFactory(ModelFactory):
 
 
 # Deployment Factories
+class DeploymentFactory(ModelFactory):
+    __model__ = api.Deployment
+
+
 class DeploymentSpecFactory(ModelFactory):
     __model__ = api.DeploymentSpec
 
@@ -453,95 +462,8 @@ def daemon_set(
 
 
 @pytest.fixture
-def statefulset_spec() -> api.StatefulSetSpec:
-    return StatefulSetSpecFactory.build()
-
-
-@pytest.fixture
-def new_statefulset(  # type:ignore[no-untyped-def]
-    statefulset_spec,
-) -> Callable[[], agent_kube.StatefulSet]:
-    def _new_statefulset() -> agent_kube.StatefulSet:
-        return agent_kube.StatefulSet(
-            metadata=MetaDataFactory.build(),
-            spec=statefulset_spec,
-            status=StatefulSetStatusFactory.build(),
-        )
-
-    return _new_statefulset
-
-
-@pytest.fixture
-def statefulset_pods() -> int:
-    return len(api.Phase)
-
-
-@pytest.fixture
-def statefulset(
-    new_statefulset: Callable[[], agent_kube.StatefulSet],
-    statefulset_pods: int,
-    new_pod: Callable[[], agent_kube.Pod],
-) -> agent_kube.StatefulSet:
-    statefulset = new_statefulset()
-    for _ in range(statefulset_pods):
-        statefulset.add_pod(new_pod())
-    return statefulset
-
-
-@pytest.fixture
 def cluster_nodes() -> int:
     return 3
-
-
-@pytest.fixture
-def deployment_pods() -> int:
-    return len(api.Phase)
-
-
-@pytest.fixture
-def deployment_spec() -> api.DeploymentSpec:
-    return DeploymentSpecFactory.build()
-
-
-@pytest.fixture
-def deployment_status() -> api.DeploymentStatus:
-    return DeploymentStatusFactory.build()
-
-
-@pytest.fixture
-def api_deployment(
-    deployment_spec: api.DeploymentSpec, deployment_status: api.DeploymentStatus
-) -> api.Deployment:
-    class DeploymentFactory(ModelFactory):
-        __model__ = api.Deployment
-
-    return DeploymentFactory.build(spec=deployment_spec, status=deployment_status)
-
-
-@pytest.fixture
-def new_deployment(
-    api_deployment: api.Deployment,
-) -> Callable[[], agent_kube.Deployment]:
-    def _new_deployment() -> agent_kube.Deployment:
-        return agent_kube.Deployment(
-            metadata=api_deployment.metadata,
-            spec=api_deployment.spec,
-            status=api_deployment.status,
-        )
-
-    return _new_deployment
-
-
-@pytest.fixture
-def deployment(
-    new_deployment: Callable[[], agent_kube.Deployment],
-    deployment_pods: int,
-    new_pod: Callable[[], agent_kube.Pod],
-) -> agent_kube.Deployment:
-    deployment = new_deployment()
-    for _ in range(deployment_pods):
-        deployment.add_pod(new_pod())
-    return deployment
 
 
 @pytest.fixture
@@ -555,27 +477,23 @@ def cluster_statefulsets() -> int:
 
 
 @pytest.fixture
-def cluster_details() -> api.ClusterDetails:
-    return ClusterDetailsFactory.build()
-
-
-@pytest.fixture
 def cluster(
     new_node: Callable[[], agent_kube.Node],
     new_daemon_set: Callable[[], agent_kube.DaemonSet],
-    new_statefulset: Callable[[], agent_kube.StatefulSet],
     cluster_nodes: int,
     cluster_daemon_sets: int,
     cluster_statefulsets: int,
-    cluster_details: api.ClusterDetails,
 ) -> agent_kube.Cluster:
-    cluster = agent_kube.Cluster(excluded_node_roles=[], cluster_details=cluster_details)
+    cluster = agent_kube.Cluster(
+        excluded_node_roles=[], cluster_details=ClusterDetailsFactory.build()
+    )
     for _ in range(cluster_nodes):
         cluster.add_node(new_node())
     for _ in range(cluster_daemon_sets):
         cluster.add_daemon_set(new_daemon_set())
     for _ in range(cluster_statefulsets):
-        cluster.add_statefulset(new_statefulset())
+        statefulset = api_to_agent_statefulset(APIStatefulSetFactory.build())
+        cluster.add_statefulset(statefulset)
     return cluster
 
 

@@ -43,6 +43,10 @@ class CollectorDaemonsFactory(ModelFactory):
     __allow_none_optionals__ = False
 
 
+class CollectorHandlerLogFactory(ModelFactory):
+    __model__ = CollectorHandlerLog
+
+
 def test_parse_collector_metadata() -> None:
     string_table_element = json.dumps(
         {
@@ -172,6 +176,7 @@ def test_check_all_ok_sections() -> None:
     # Act
     check_result = list(
         kube_collector_info.check(
+            {},
             collector_metadata,
             collector_processing_logs,
             collector_daemons,
@@ -206,6 +211,7 @@ def test_check_with_no_collector_components_section() -> None:
     # Act
     check_result = list(
         kube_collector_info.check(
+            {},
             collector_metadata,
             None,
             collector_daemons,
@@ -218,6 +224,43 @@ def test_check_with_no_collector_components_section() -> None:
         "Cluster collector version:"
     )
     assert len(check_result) == 4
+
+
+def test_check_with_no_machine_component_with_params() -> None:
+    # Arrange
+    collector_metadata = CollectorComponentsMetadata(
+        processing_log=CollectorHandlerLogFactory.build(status=CollectorState.OK),
+        cluster_collector=ClusterCollectorMetadataFactory.build(),
+        nodes=NodeMetadataFactory.batch(1),
+    )
+    collector_processing_logs = CollectorProcessingLogs(
+        container=CollectorHandlerLogFactory.build(status=CollectorState.OK),
+        machine=CollectorHandlerLog(status=CollectorState.ERROR, title="title", detail="OK"),
+    )
+    collector_daemons = CollectorDaemonsFactory.build(
+        errors=IdentificationError(
+            duplicate_machine_collector=False,
+            duplicate_container_collector=False,
+            unknown_collector=False,
+        )
+    )
+
+    # Act
+    check_result = list(
+        kube_collector_info.check(
+            {"machine_metrics": 0},
+            collector_metadata,
+            collector_processing_logs,
+            collector_daemons,
+        )
+    )
+
+    # Assert
+    assert [
+        r.state
+        for r in check_result
+        if isinstance(r, Result) and r.summary.startswith("Machine Metrics")
+    ] == [State.OK]
 
 
 def test_check_with_errored_handled_metadata_section() -> None:
@@ -242,6 +285,7 @@ def test_check_with_errored_handled_metadata_section() -> None:
     # Act
     check_result = list(
         kube_collector_info.check(
+            {},
             collector_metadata,
             None,
             collector_daemons,
@@ -263,13 +307,14 @@ def test_check_with_errored_handled_component_section() -> None:
     # Act
     result = list(
         kube_collector_info._component_check(
-            "Container Metrics", collector_processing_logs.container
+            {}, "container_metrics", collector_processing_logs.container
         )
     )
 
     # Assert
     assert len(result) == 1
-    assert result[0].state == State.OK
+    assert isinstance(result[0], Result)
+    assert result[0].state == State.CRIT
     assert result[0].summary.startswith("Container Metrics: ")
 
 
@@ -298,6 +343,7 @@ def test_check_api_daemonsets_not_found() -> None:
     # Act
     check_result = list(
         kube_collector_info.check(
+            {},
             collector_metadata,
             collector_processing_logs,
             collector_daemons,
@@ -340,6 +386,7 @@ def test_check_api_daemonsets_multiple_with_same_label() -> None:
     # Act
     check_result = list(
         kube_collector_info.check(
+            {},
             collector_metadata,
             collector_processing_logs,
             collector_daemons,

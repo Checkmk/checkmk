@@ -65,27 +65,25 @@ class FakeEC2Client:
 def get_ebs_sections():
     def _create_ebs_sections(names, tags):
         region = "region"
-        config = AWSConfig("hostname", [], (None, None))
+        config = AWSConfig("hostname", [], ([], []))
         config.add_single_service_config("ebs_names", names)
         config.add_service_tags("ebs_tags", tags)
         config.add_single_service_config("ec2_names", None)
-        config.add_service_tags("ec2_tags", (None, None))
+        config.add_service_tags("ec2_tags", ([], []))
 
         fake_ec2_client = FakeEC2Client()
         fake_cloudwatch_client = FakeCloudwatchClient()
 
-        ec2_summary_distributor = ResultDistributor()
-        ebs_limits_distributor = ResultDistributor()
-        ebs_summary_distributor = ResultDistributor()
+        distributor = ResultDistributor()
 
-        ec2_summary = EC2Summary(fake_ec2_client, region, config, ec2_summary_distributor)
-        ebs_limits = EBSLimits(fake_ec2_client, region, config, ebs_limits_distributor)
-        ebs_summary = EBSSummary(fake_ec2_client, region, config, ebs_summary_distributor)
+        ec2_summary = EC2Summary(fake_ec2_client, region, config, distributor)
+        ebs_limits = EBSLimits(fake_ec2_client, region, config, distributor)
+        ebs_summary = EBSSummary(fake_ec2_client, region, config, distributor)
         ebs = EBS(fake_cloudwatch_client, region, config)
 
-        ec2_summary_distributor.add(ebs_summary)
-        ebs_limits_distributor.add(ebs_summary)
-        ebs_summary_distributor.add(ebs)
+        distributor.add(ec2_summary.name, ebs_summary)
+        distributor.add(ebs_limits.name, ebs_summary)
+        distributor.add(ebs_summary.name, ebs)
         return ec2_summary, ebs_limits, ebs_summary, ebs
 
     return _create_ebs_sections

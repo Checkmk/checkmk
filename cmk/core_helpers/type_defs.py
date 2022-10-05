@@ -5,7 +5,7 @@
 """Package containing the fetchers to the data sources."""
 
 import enum
-from typing import Final, Sequence, Set, Union
+from typing import Final, FrozenSet, Sequence, Union
 
 from cmk.utils.type_defs import SectionName
 
@@ -53,7 +53,7 @@ class SelectionType(enum.Enum):
     NONE = enum.auto()
 
 
-SectionNameCollection = Union[SelectionType, Set[SectionName]]
+SectionNameCollection = Union[SelectionType, FrozenSet[SectionName]]
 # If preselected sections are given, we assume that we are interested in these
 # and only these sections, so we may omit others and in the SNMP case
 # must try to fetch them (regardles of detection).

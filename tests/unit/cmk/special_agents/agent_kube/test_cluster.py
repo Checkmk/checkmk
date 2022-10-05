@@ -3,14 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import io
-from contextlib import redirect_stdout
-from typing import Callable, Iterable, Mapping, Sequence, Tuple
+from typing import Callable, Iterable, Mapping, NoReturn, Sequence, Tuple
 
 import pytest
 from pydantic_factories import ModelFactory
-
-from cmk.base.plugins.agent_based.utils import kube_resources
 
 from cmk.special_agents import agent_kube as agent
 from cmk.special_agents.utils_kubernetes.schemata import api, section
@@ -20,6 +16,7 @@ from .conftest import (
     api_to_agent_cluster,
     APINodeFactory,
     APIPodFactory,
+    ClusterDetailsFactory,
     NodeMetaDataFactory,
     NodeResourcesFactory,
     ONE_GiB,
@@ -41,10 +38,8 @@ class PerformanceContainerFactory(ModelFactory):
     __model__ = agent.PerformanceContainer
 
 
-def test_cluster_namespaces(
-    cluster_details: api.ClusterDetails, pod_metadata: api.MetaData[str]
-) -> None:
-    cluster = agent.Cluster(cluster_details=cluster_details, excluded_node_roles=[])
+def test_cluster_namespaces(pod_metadata: api.MetaData[str]) -> None:
+    cluster = agent.Cluster(cluster_details=ClusterDetailsFactory.build(), excluded_node_roles=[])
     api_pod = APIPodFactory.build(metadata=pod_metadata)
     cluster.add_pod(
         agent.Pod(
@@ -61,12 +56,11 @@ def test_cluster_namespaces(
 
 @pytest.mark.parametrize("cluster_pods", [0, 10, 20])
 def test_cluster_resources(  # type:ignore[no-untyped-def]
-    cluster_details: api.ClusterDetails,
     cluster_pods: int,
     new_pod: Callable[[], agent.Pod],
     pod_containers_count: int,
 ):
-    cluster = agent.Cluster(cluster_details=cluster_details, excluded_node_roles=[])
+    cluster = agent.Cluster(cluster_details=ClusterDetailsFactory.build(), excluded_node_roles=[])
     for _ in range(cluster_pods):
         cluster.add_pod(new_pod())
     assert cluster.memory_resources().count_total == cluster_pods * pod_containers_count
@@ -120,8 +114,8 @@ def test_node_count_returns_number_of_nodes_ready_not_ready(  # type:ignore[no-u
 
 
 @pytest.mark.parametrize("node_is_control_plane", [True])
-def test_node_control_plane_count(cluster_details: api.ClusterDetails, node: agent.Node) -> None:
-    cluster = agent.Cluster(cluster_details=cluster_details, excluded_node_roles=[])
+def test_node_control_plane_count(node: agent.Node) -> None:
+    cluster = agent.Cluster(cluster_details=ClusterDetailsFactory.build(), excluded_node_roles=[])
     cluster.add_node(node)
     node_count = cluster.node_count()
     assert node_count.worker.total == 0
@@ -131,10 +125,8 @@ def test_node_control_plane_count(cluster_details: api.ClusterDetails, node: age
 
 @pytest.mark.parametrize("node_is_control_plane", [True])
 @pytest.mark.parametrize("node_condition_status", [api.ConditionStatus.FALSE])
-def test_node_control_plane_not_ready_count(
-    cluster_details: api.ClusterDetails, node: agent.Node
-) -> None:
-    cluster = agent.Cluster(cluster_details=cluster_details, excluded_node_roles=[])
+def test_node_control_plane_not_ready_count(node: agent.Node) -> None:
+    cluster = agent.Cluster(cluster_details=ClusterDetailsFactory.build(), excluded_node_roles=[])
     cluster.add_node(node)
     node_count = cluster.node_count()
     assert node_count.control_plane.not_ready == 1
@@ -369,11 +361,11 @@ def test_cluster_allocatable_pods(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_write_kube_object_performance_section_cluster(  # type:ignore[no-untyped-def]
+def test_create_correct_number_pod_names_for_cluster_host(
     phase_all_pods: api.Phase,
     excluded_node_role: str,
     node_podcount_roles: Sequence[Tuple[str, int, Sequence[str]]],
-):
+) -> None:
     # Initialize API data
     pods = [
         pod
@@ -397,45 +389,30 @@ def test_write_kube_object_performance_section_cluster(  # type:ignore[no-untype
         nodes=nodes,
     )
 
-    # Initialize cluster collector data
-    container_count = 3  # this count may differ from the one used to generate API data
-    performance_pods = {
-        agent.pod_lookup_from_api_pod(pod): agent.PerformancePod(
-            lookup_name=agent.pod_lookup_from_api_pod(pod),
-            containers=PerformanceContainerFactory.batch(
-                container_count,
-                metrics={
-                    "memory_working_set_bytes": PerformanceMetricFactory.build(value=1.0 * ONE_GiB),
-                },
-                rate_metrics={"cpu_usage_seconds_total": RateMetricFactory.build(rate=1.0)},
-            ),
-        )
-        for pod in pods
-    }
+    def _raise_error() -> NoReturn:
+        raise ValueError()
 
-    # Write Cluster performance sections to output by capturing stdout
-    with io.StringIO() as buf, redirect_stdout(buf):
-        agent.write_kube_object_performance_section_cluster(cluster, performance_pods)
-        output = buf.getvalue().splitlines()
+    cluster_pods = agent.determine_pods_to_host(
+        monitored_objects=[],
+        monitored_pods=set(),
+        cluster=cluster,
+        monitored_namespaces=set(),
+        api_pods=pods,
+        resource_quotas=[],
+        monitored_api_namespaces=[],
+        api_cron_jobs=[],
+        # This test is not supposed to generate any PiggyBack host:
+        piggyback_formatter=_raise_error,  # type: ignore[arg-type]
+        piggyback_formatter_node=_raise_error,  # type: ignore[arg-type]
+    ).cluster_pods
 
-    # Check correctness
     total = (
         sum(count for _, count, roles in node_podcount_roles if excluded_node_role not in roles)
         if phase_all_pods == api.Phase.RUNNING
         else 0
     )
-    if total == 0:
-        # If there are no running pods on non-filtered nodes, no sections should be produced
-        assert "<<<kube_performance_cpu_v1:sep(0)>>>" not in output
-        assert "<<<kube_performance_memory_v1:sep(0)>>>" not in output
-    else:
-        for current_row, next_row in zip(output[:-1], output[1:]):
-            if current_row == "<<<kube_performance_cpu_v1:sep(0)>>>":
-                cpu_section = kube_resources.parse_performance_usage([[next_row]])
-            elif current_row == "<<<kube_performance_memory_v1:sep(0)>>>":
-                memory_section = kube_resources.parse_performance_usage([[next_row]])
-        assert cpu_section.resource.usage == total * container_count * 1.0
-        assert memory_section.resource.usage == total * container_count * 1.0 * ONE_GiB
+
+    assert len(cluster_pods) == total
 
 
 @pytest.mark.parametrize(

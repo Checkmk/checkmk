@@ -11,7 +11,7 @@ import pytest
 import responses
 from pytest_mock import MockerFixture
 
-from tests.testlib.utils import is_enterprise_repo
+from tests.testlib.utils import is_enterprise_repo, is_managed_repo
 
 from livestatus import SiteId
 
@@ -248,7 +248,9 @@ def _generate_sync_snapshot(
     return snapshot_settings
 
 
-def _get_expected_paths(user_id: UserId, with_local: bool) -> list[str]:
+def _get_expected_paths(
+    user_id: UserId, with_local: bool, edition: cmk_version.Edition
+) -> list[str]:
     expected_paths = [
         "etc",
         "var",
@@ -299,15 +301,23 @@ def _get_expected_paths(user_id: UserId, with_local: bool) -> list[str]:
         "etc/omd/sitespecific.mk",
     ]
 
-    if not cmk_version.is_raw_edition():
-        expected_paths += ["etc/check_mk/dcd.d/wato/distributed.mk"]
+    if edition is not cmk_version.Edition.CRE:
+        expected_paths += [
+            "etc/check_mk/dcd.d/wato/distributed.mk",
+            "etc/check_mk/dcd.d",
+            "etc/check_mk/dcd.d/wato",
+            "etc/check_mk/dcd.d/wato/sitespecific.mk",
+            "etc/check_mk/mknotifyd.d",
+            "etc/check_mk/mknotifyd.d/wato",
+            "etc/check_mk/mknotifyd.d/wato/sitespecific.mk",
+        ]
 
-    if not cmk_version.is_managed_edition():
+    if edition is not cmk_version.Edition.CME:
         expected_paths += ["etc/omd/site.conf"]
 
     # TODO: The second condition should not be needed. Seems to be a subtle difference between the
     # CME and CRE/CEE snapshot logic
-    if not cmk_version.is_managed_edition():
+    if edition is not cmk_version.Edition.CME:
         expected_paths += [
             "etc/check_mk/mkeventd.d/mkp",
             "etc/check_mk/mkeventd.d/mkp/rule_packs",
@@ -315,7 +325,7 @@ def _get_expected_paths(user_id: UserId, with_local: bool) -> list[str]:
         ]
 
     # TODO: Shouldn't we clean up these subtle differences?
-    if cmk_version.is_managed_edition():
+    if edition is cmk_version.Edition.CME:
         expected_paths += [
             "etc/check_mk/conf.d/customer.mk",
             "etc/check_mk/conf.d/wato/groups.mk",
@@ -332,7 +342,7 @@ def _get_expected_paths(user_id: UserId, with_local: bool) -> list[str]:
 
     # TODO: The second condition should not be needed. Seems to be a subtle difference between the
     # CME and CRE/CEE snapshot logic
-    if not cmk_version.is_raw_edition() and not cmk_version.is_managed_edition():
+    if edition not in (cmk_version.Edition.CRE, cmk_version.Edition.CME):
         expected_paths += [
             "etc/check_mk/liveproxyd.d",
             "etc/check_mk/liveproxyd.d/wato",
@@ -343,17 +353,39 @@ def _get_expected_paths(user_id: UserId, with_local: bool) -> list[str]:
     # We cannot fix that in the short (or even mid) term because the
     # precondition is a more cleanly separated structure.
 
-    if is_enterprise_repo():
+    if is_enterprise_repo() and edition is cmk_version.Edition.CRE:
         # CEE paths are added when the CEE plugins for WATO are available, i.e.
         # when the "enterprise/" path is present.
         expected_paths += [
             "etc/check_mk/dcd.d",
             "etc/check_mk/dcd.d/wato",
             "etc/check_mk/dcd.d/wato/sitespecific.mk",
+            "etc/check_mk/dcd.d/wato/distributed.mk",
             "etc/check_mk/mknotifyd.d",
             "etc/check_mk/mknotifyd.d/wato",
             "etc/check_mk/mknotifyd.d/wato/sitespecific.mk",
+            "etc/check_mk/liveproxyd.d",
+            "etc/check_mk/liveproxyd.d/wato",
         ]
+
+    if is_managed_repo() and edition is not cmk_version.Edition.CME:
+        # CME paths are added when the CME plugins for WATO are available, i.e.
+        # when the "managed/" path is present.
+        expected_paths += [
+            "local/share",
+            "local/share/check_mk",
+            "local/share/check_mk/web",
+            "local/share/check_mk/web/htdocs",
+            "local/share/check_mk/web/htdocs/themes",
+            "local/share/check_mk/web/htdocs/themes/classic",
+            "local/share/check_mk/web/htdocs/themes/classic/images",
+            "local/share/check_mk/web/htdocs/themes/facelift",
+            "local/share/check_mk/web/htdocs/themes/facelift/images",
+            "local/share/check_mk/web/htdocs/themes/modern-dark",
+            "local/share/check_mk/web/htdocs/themes/modern-dark/images",
+        ]
+        if not with_local:
+            expected_paths += ["local"]
 
     return expected_paths
 
@@ -374,10 +406,6 @@ def test_generate_snapshot(
     )
 
     activation_manager = _get_activation_manager(monkeypatch, remote_site)
-    monkeypatch.setattr(cmk_version, "is_raw_edition", lambda: edition is cmk_version.Edition.CRE)
-    monkeypatch.setattr(
-        cmk_version, "is_managed_edition", lambda: edition is cmk_version.Edition.CME
-    )
 
     snapshot_settings = _create_sync_snapshot(
         activation_manager,
@@ -391,6 +419,7 @@ def test_generate_snapshot(
     expected_paths = _get_expected_paths(
         user_id=with_user_login,
         with_local=active_config.sites[remote_site].get("replicate_mkps", False),
+        edition=edition,
     )
 
     work_dir = Path(snapshot_settings.work_dir)

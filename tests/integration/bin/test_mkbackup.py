@@ -213,7 +213,7 @@ def _execute_restore(  # type:ignore[no-untyped-def]
 #   '----------------------------------------------------------------------'
 
 
-def test_mkbackup_help(site: Site) -> None:
+def test_mkbackup_help(site: Site, test_cfg: None) -> None:
     p = site.execute(["mkbackup"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8")
     stdout, stderr = p.communicate()
     assert stderr == "ERROR: Missing operation mode\n"

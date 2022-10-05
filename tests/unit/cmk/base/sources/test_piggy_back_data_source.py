@@ -10,6 +10,7 @@ from tests.testlib.base import Scenario
 
 from cmk.utils.type_defs import HostAddress, HostName, result
 
+import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers.agent import AgentRawDataSection
 from cmk.core_helpers.host_sections import HostSections
 
@@ -18,23 +19,32 @@ from cmk.base.sources.piggyback import PiggybackSource
 
 
 @pytest.mark.parametrize("ipaddress", [None, HostAddress("127.0.0.1")])
-def test_attribute_defaults(monkeypatch: MonkeyPatch, ipaddress: HostAddress) -> None:
+def test_attribute_defaults(ipaddress: HostAddress, monkeypatch: MonkeyPatch) -> None:
     hostname = HostName("testhost")
+
+    # hocus pocus abracadabra: `exit_code_spec` thou gavest me 🪄✨
     ts = Scenario()
     ts.add_host(hostname)
     ts.apply(monkeypatch)
+    host_config = HostConfig.make_host_config(hostname)
 
     source = PiggybackSource(
-        HostConfig.make_host_config(hostname),
+        hostname,
         ipaddress,
+        id_="piggyback",
         simulation_mode=True,
         agent_simulator=True,
         time_settings=[],
         translation={},
         encoding_fallback="ascii",
+        check_interval=0,
+        is_piggyback_host=False,
+        file_cache_max_age=file_cache.MaxAge.none(),
     )
-    assert source.host_config.hostname == hostname
-    assert source.ipaddress == ipaddress
+
     assert source.description.startswith("Process piggyback data from")
-    assert not source.summarize(result.OK(HostSections[AgentRawDataSection]()))
+    assert not source.summarize(
+        result.OK(HostSections[AgentRawDataSection]()),
+        exit_spec_cb=host_config.exit_code_spec,
+    )
     assert source.id == "piggyback"

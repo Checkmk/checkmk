@@ -253,9 +253,6 @@ class ServiceStatsDashlet(ABCFigureDashlet[StatsDashletConfig]):
     def is_resizable(cls) -> bool:
         return False
 
-    def infos(self) -> SingleInfos:
-        return ["host"]
-
     @classmethod
     def initial_size(cls):
         return (30, 18)

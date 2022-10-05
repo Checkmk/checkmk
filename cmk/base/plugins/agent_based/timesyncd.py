@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import re
-import time
 from dataclasses import dataclass
 from typing import Any, Iterable, Mapping, Sequence, Tuple, TypedDict
+
+from typing_extensions import NotRequired
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -24,15 +25,13 @@ class CheckParams(TypedDict):
     stratum_level: int
     quality_levels: Tuple[float, float]
     alert_delay: Tuple[int, int]
-    last_synchronized: Tuple[int, int]
+    last_synchronized: NotRequired[Tuple[int, int]]
 
 
-# last_synchronized default values increased since a few systems required longer time
 default_check_parameters = CheckParams(
     stratum_level=10,
     quality_levels=(200.0, 500.0),
     alert_delay=(300, 3600),
-    last_synchronized=(7500, 10800),
 )
 
 
@@ -153,22 +152,14 @@ def check_timesyncd(params: Mapping[str, Any], section: Section) -> CheckResult:
         )
 
     synctime = section.get("synctime")
-    # either set the sync time, and yield nothing OR
-    # check for how long we've been seeing None as sync time
+    levels_upper = (
+        params.get("alert_delay") if synctime is None else params.get("last_synchronized")
+    )
     yield from tolerance_check(
-        set_sync_time=synctime,
-        levels_upper=params.get("alert_delay"),
-        now=time.time(),
+        sync_time=synctime,
+        levels_upper=levels_upper,
         value_store=get_value_store(),
     )
-    if synctime is not None:
-        # now we have set it, but not yet checked it. Check it!
-        yield from tolerance_check(
-            set_sync_time=None,  # use the time we just set.
-            levels_upper=params.get("last_synchronized"),
-            now=time.time(),
-            value_store=get_value_store(),
-        )
 
     server = section.get("server")
     if server is None or server == "null":
@@ -189,7 +180,7 @@ def check_timesyncd(params: Mapping[str, Any], section: Section) -> CheckResult:
             value=jitter,
             metric_name="jitter",
             levels_upper=levels,
-            render_func=render.datetime,
+            render_func=render.timespan,
             label="Jitter",
         )
 

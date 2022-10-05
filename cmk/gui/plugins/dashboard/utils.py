@@ -177,11 +177,9 @@ DashletRefreshAction = Optional[str]
 DashletSize = Tuple[int, int]
 DashletPosition = Tuple[int, int]
 DashletInputFunc = Callable[[DashletConfig], None]
-DashletHandleInputFunc = Callable[[DashletId, DashletConfig], DashletConfig]
+DashletHandleInputFunc = Callable[[DashletId, DashletConfig, DashletConfig], DashletConfig]
 
 builtin_dashboards: Dict[DashboardName, DashboardConfig] = {}
-# Keep this for legacy reasons until we drop the legacy plugin mechanic
-dashlet_types: Dict[DashletTypeName, dict[str, Any]] = {}
 
 # Declare constants to be used in the definitions of the dashboards
 GROW = 0
@@ -309,7 +307,7 @@ class Dashlet(abc.ABC, Generic[T]):
     def vs_parameters(
         cls,
     ) -> None | list[DictionaryEntry] | ValueSpec | tuple[
-        Callable[[T], None], Callable[[DashletId, T], T]
+        Callable[[T], None], Callable[[DashletId, T, T], T]
     ]:
         """Returns a valuespec instance in case the dashlet has parameters, otherwise None"""
         # For legacy reasons this may also return a list of Dashboard() elements. (TODO: Clean this up)

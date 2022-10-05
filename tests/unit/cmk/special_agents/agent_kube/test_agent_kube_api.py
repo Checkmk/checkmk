@@ -73,7 +73,7 @@ def api_pod(node_name):
 
 
 def test_pod_node_allocation_within_cluster(  # type:ignore[no-untyped-def]
-    api_node: api.Node, api_pod: api.Pod, cluster_details: api.ClusterDetails
+    api_node: api.Node, api_pod: api.Pod
 ):
     """Test pod is correctly allocated to node within cluster"""
     cluster = Cluster.from_api_resources(
@@ -83,7 +83,7 @@ def test_pod_node_allocation_within_cluster(  # type:ignore[no-untyped-def]
         statefulsets=[],
         daemon_sets=[],
         deployments=[],
-        cluster_details=cluster_details,
+        cluster_details=ClusterDetailsFactory.build(),
     )
     assert len(cluster.nodes()) == 1
     assert len(cluster.nodes()[0].pods()) == 1

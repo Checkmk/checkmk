@@ -1,0 +1,15 @@
+Title: Fix pending change info on user synchronization
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1664347358
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+If a password of a LDAP user was changed in a distributed setup, the "Activate
+pending changes" page could have shown a change like "Password changed (sync
+failed: Working outside of request context.)".
+

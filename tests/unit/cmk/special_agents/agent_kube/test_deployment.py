@@ -5,69 +5,65 @@
 from typing import Callable, Sequence
 from unittest.mock import MagicMock, Mock
 
-import pytest
 from pydantic_factories import ModelFactory
 
+from tests.unit.cmk.special_agents.agent_kube.factory import (
+    api_to_agent_deployment,
+    api_to_agent_pod,
+    APIDeploymentFactory,
+    APIPodFactory,
+    PodStatusFactory,
+)
+
 from cmk.special_agents import agent_kube as agent
-from cmk.special_agents.utils_kubernetes.schemata import api
+from cmk.special_agents.utils_kubernetes.schemata import api, section
 
 
 class DeploymentConditionFactory(ModelFactory):
     __model__ = api.DeploymentCondition
 
 
-def test_pod_deployment_controller_name(pod: agent.Pod, deployment: agent.Deployment) -> None:
-    pod.add_controller(deployment)
+def test_pod_deployment_controller_name(pod: agent.Pod) -> None:
+    pod._controllers.append(section.Controller(type_=section.ControllerType.deployment, name="hi"))
     pod_info = pod.info("cluster", "host", agent.AnnotationNonPatternOption.ignore_all)
     assert len(pod_info.controllers) == 1
-    assert pod_info.controllers[0].name == deployment.name()
+    assert pod_info.controllers[0].name == "hi"
 
 
-@pytest.mark.parametrize("deployment_pods", [0, 10, 20])
-def test_deployment_pod_resources_returns_all_pods(  # type:ignore[no-untyped-def]
-    deployment: agent.Deployment, deployment_pods: int
-):
+def test_deployment_pod_resources_one_pod_per_phase() -> None:
+    # Assemble
+    deployment = api_to_agent_deployment(APIDeploymentFactory.build())
+    for phase in api.Phase:
+        pod = api_to_agent_pod(APIPodFactory.build(status=PodStatusFactory.build(phase=phase)))
+        deployment.add_pod(pod)
+
+    # Act
     pod_resources = deployment.pod_resources()
-    assert sum(len(pods) for _, pods in pod_resources) == deployment_pods
 
-
-def test_deployment_pod_resources_one_pod_per_phase(deployment: agent.Deployment) -> None:
-    for _phase, pods in deployment.pod_resources():
+    # Assert
+    for _phase, pods in pod_resources:
         assert len(pods) == 1
 
 
-@pytest.mark.parametrize(
-    "phases", [["running"], ["pending"], ["succeeded"], ["failed"], ["unknown"]]
-)
-def test_deployment_pod_resources_pods_in_phase(
-    deployment: agent.Deployment, deployment_pods: int
-) -> None:
-    assert len(deployment.pods()) == deployment_pods
-
-
-def test_deployment_conditions(  # type:ignore[no-untyped-def]
-    api_deployment: api.Deployment,
-):
+def test_deployment_conditions() -> None:
+    api_deployment = APIDeploymentFactory.build()
     deployment_conditions = ["available", "progressing", "replicafailure"]
     api_deployment.status.conditions = {
         condition: DeploymentConditionFactory.build() for condition in deployment_conditions
     }
-    deployment = agent.Deployment(
-        api_deployment.metadata, api_deployment.spec, api_deployment.status
-    )
+    deployment = api_to_agent_deployment(api_deployment)
     conditions = deployment.conditions()
     assert conditions is not None
     assert all(condition_details is not None for _, condition_details in conditions)
 
 
-def test_deployment_memory_resources(  # type:ignore[no-untyped-def]
-    new_deployment: Callable[[], agent.Deployment],
+def test_deployment_memory_resources(
     new_pod: Callable[[], agent.Pod],
     pod_containers_count: int,
     container_limit_memory: float,
     container_request_memory: float,
-):
-    deployment = new_deployment()
+) -> None:
+    deployment = api_to_agent_deployment(APIDeploymentFactory.build())
     deployment.add_pod(new_pod())
     memory_resources = deployment.memory_resources()
     assert memory_resources.count_total == pod_containers_count
@@ -75,14 +71,13 @@ def test_deployment_memory_resources(  # type:ignore[no-untyped-def]
     assert memory_resources.request == pod_containers_count * container_request_memory
 
 
-def test_deployment_cpu_resources(  # type:ignore[no-untyped-def]
-    new_deployment: Callable[[], agent.Deployment],
+def test_deployment_cpu_resources(
     new_pod: Callable[[], agent.Pod],
     pod_containers_count: int,
     container_limit_cpu: float,
     container_request_cpu: float,
-):
-    deployment = new_deployment()
+) -> None:
+    deployment = api_to_agent_deployment(APIDeploymentFactory.build())
     deployment.add_pod(new_pod())
     cpu_resources = deployment.cpu_resources()
     assert cpu_resources.count_total == pod_containers_count
@@ -90,11 +85,12 @@ def test_deployment_cpu_resources(  # type:ignore[no-untyped-def]
     assert cpu_resources.request == pod_containers_count * container_request_cpu
 
 
-def test_write_deployments_api_sections_registers_sections_to_be_written(  # type:ignore[no-untyped-def]
-    deployment: agent.Deployment,
+def test_write_deployments_api_sections_registers_sections_to_be_written(
     deployments_api_sections: Sequence[str],
     write_sections_mock: MagicMock,
-):
+) -> None:
+    deployment = api_to_agent_deployment(APIDeploymentFactory.build())
+    deployment.add_pod(api_to_agent_pod(APIPodFactory.build()))
     agent.write_deployments_api_sections(
         "cluster", agent.AnnotationNonPatternOption.ignore_all, [deployment], "host", Mock()
     )

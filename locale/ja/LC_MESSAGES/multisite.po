@@ -18586,19 +18586,6 @@ msgstr ""
 "ライセンス使用状況レポートを送信するには、カスタマーポータルの資格情報を追加"
 "する必要があります。"
 
-#, python-format
-msgid ""
-"For the initial login into the remote site %s we need once your "
-"administration login for the Multsite GUI on that site. Your credentials "
-"will only be used for the initial handshake and not be stored. If the login "
-"is successful then both side will exchange a login secret which is used for "
-"the further remote calls."
-msgstr ""
-"リモートサイト%sへの最初のログインには、そのサイトのMultsite GUIへの管理ログ"
-"インが必要です。資格情報は最初のハンドシェイクにのみ使用され、保存されませ"
-"ん。ログインが成功すると、双方がログインシークレットを交換します。このシーク"
-"レットは、以降のリモート呼び出しに使用されます。"
-
 msgid ""
 "For these hosts there is a new agent available that is not yet installed. "
 "This simply means that the target agent configuration hash does not match "
@@ -21265,6 +21252,10 @@ msgstr "ホストタグ(タイトル付き)"
 msgid "Host to use for connecting to Cisco Prime"
 msgstr "Cisco Primeへの接続に使用するホスト"
 
+#, python-format
+msgid "Host uses xinetd or systemd %s"
+msgstr ""
+
 msgid "Host&nbsp;status"
 msgstr "ホスト&nbsp; ステータス"
 
@@ -22028,9 +22019,10 @@ msgstr ""
 "す。"
 
 msgid ""
-"If a select is set to <i>don't change</i> then currenty not all selected "
-"hosts share the same setting for this attribute. If you leave that "
-"selection, all hosts will keep their individual settings."
+"If a selection is set to <i>This value differs between the selected hosts.</"
+"i> then currenty not all selected hosts share the same setting for this "
+"attribute. If you keep that selection, all hosts will keep their individual "
+"settings."
 msgstr ""
 
 msgid ""
@@ -23542,9 +23534,11 @@ msgstr ""
 "ます。Check_MKs DNSキャッシュは照会されません。これは、動的IPアドレスを持つホ"
 "ストにのみ使用してください。"
 
+#, fuzzy
 msgid ""
 "In case you want to <i>unset</i> attributes on multiple hosts, you need to "
-"use the <i>bulk cleanup</i> action instead of bulk edit."
+"use the <i>Remove explicit attribute settings</i> option instead of bulk "
+"edit."
 msgstr ""
 "複数のホストで属性を<i>設定解除</i>する場合は、一括編集の代わりに<i>一括ク"
 "リーンアップ</i>アクションを使用する必要があります。"
@@ -32454,6 +32448,19 @@ msgstr "一時間"
 msgid "One line of text"
 msgstr "1行のテキスト"
 
+#, fuzzy, python-format
+msgid ""
+"One manual login as administrator to the Multisite GUI of the remote site "
+"\"%s\" is required to initialize the connection. The credentials will only "
+"be used for the initial handshake and not be stored. If the login is "
+"successful then both sides will exchange a login secret which will be used "
+"for subsequent remote calls."
+msgstr ""
+"リモートサイト%sへの最初のログインには、そのサイトのMultsite GUIへの管理ログ"
+"インが必要です。資格情報は最初のハンドシェイクにのみ使用され、保存されませ"
+"ん。ログインが成功すると、双方がログインシークレットを交換します。このシーク"
+"レットは、以降のリモート呼び出しに使用されます。"
+
 msgid "One match without arguments"
 msgstr "引数なしの1つの一致"
 
@@ -36866,9 +36873,6 @@ msgstr "%s の名前変更"
 msgid "Renaming of %s -> %s"
 msgstr "%sの名前変更 -> %s"
 
-msgid "Render URL contents in own frame"
-msgstr "URLコンテンツを独自のフレームでレンダリングする"
-
 msgid "Render an error message into the document"
 msgstr "エラーメッセージをドキュメントにレンダリングします"
 
@@ -36880,9 +36884,6 @@ msgstr "要素のコンテンツのバックグラウンドに灰色の背景色
 
 msgid "Render horizontal rules between rows"
 msgstr "行間の水平ルールをレンダリングする"
-
-msgid "Render in iframe"
-msgstr "iframeでレンダリング"
 
 msgid "Render the titlebar including title and link above the element."
 msgstr "要素の上にタイトルとリンクを含むタイトルバーをレンダリングします。"
@@ -45924,6 +45925,9 @@ msgid ""
 "The interval the connection will be executed to poll the data source and "
 "update the configuration."
 msgstr "データソースをポーリングして構成を更新するために接続が実行される間隔。"
+
+msgid "The interval the plugin is triggered by check-mk-agent-async.service"
+msgstr ""
 
 msgid ""
 "The item name. The meaning of this depends on the proxied device: - Wagner "
@@ -59045,9 +59049,6 @@ msgstr "アイコンを選択する必要があります。"
 msgid "You need to set the \"%s\" parameter."
 msgstr "[%s]パラメータを設定する必要があります。"
 
-msgid "You need to specify a URL in the element properties"
-msgstr "エレメントのプロパティでURLを指定する必要があります"
-
 msgid "You need to specify a backup job."
 msgstr "バックアップジョブを指定する必要があります。"
 
@@ -60946,6 +60947,10 @@ msgstr "sysdg"
 msgid "sysoper"
 msgstr "sysoper"
 
+#, fuzzy
+msgid "systemd"
+msgstr "システム"
+
 msgid "tasks"
 msgstr "タスク"
 
@@ -61177,6 +61182,9 @@ msgstr "最悪の状態"
 msgid "wrap"
 msgstr "ラップ"
 
+msgid "xinetd"
+msgstr ""
+
 msgid "y"
 msgstr "y"
 
@@ -61202,6 +61210,15 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Render URL contents in own frame"
+#~ msgstr "URLコンテンツを独自のフレームでレンダリングする"
+
+#~ msgid "Render in iframe"
+#~ msgstr "iframeでレンダリング"
+
+#~ msgid "You need to specify a URL in the element properties"
+#~ msgstr "エレメントのプロパティでURLを指定する必要があります"
 
 #, python-format
 #~ msgid ""

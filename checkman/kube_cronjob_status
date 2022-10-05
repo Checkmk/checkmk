@@ -1,0 +1,26 @@
+title: Kubernetes: CronJob Status
+agents: kubernetes
+catalog: containerization/kubernetes
+license: GPLv2
+distribution: check_mk
+description:
+ This check displays status information related to the cronjob. This includes the following:
+    * status of the last job
+    * time since last successful schedule and last successful completion
+    * duration of the last completed job
+    * number of active jobs
+
+ The status of the latest job is either determined through the job's conditions or the associated
+ pod. The status can be COMPLETED, RUNNING, PENDING or FAILED. A reason message is included in
+ case the job is FAILED. The user can configure a time threshold for how long the job is allowed
+ to be in a PENDING state before the check display a WARN or CRIT state.
+
+ This check will treat jobs as if they run in a non-concurrent manner. This might influence the runtime
+ duration metric if your cronjob is allowed concurrent job executions.
+
+ The Kubernetes Job Controller allows jobs to have only one pod. This is also an additional assumption
+ made by this check. The check result will be ignored if the latest job does not adhere to this.
+
+ The check requires that the special agent kube is configured.
+discovery:
+ One service is created for each cronjob.

@@ -27,11 +27,13 @@ import os
 import re
 import sys
 import tempfile
+from dataclasses import dataclass
 from pathlib import Path
 from typing import (
     Any,
     Callable,
     Collection,
+    Container,
     DefaultDict,
     Dict,
     Iterable,
@@ -74,10 +76,8 @@ AGENT_TMP_PATH = Path(
     cmk.utils.paths.tmp_dir if os.environ.get("OMD_SITE") else tempfile.gettempdir(), "agent_kube"
 )
 
-
 SectionName = NewType("SectionName", str)
 SectionJson = NewType("SectionJson", str)
-
 
 NATIVE_NODE_CONDITION_TYPES = [
     "Ready",
@@ -386,7 +386,7 @@ class Pod:
         self.status = status
         self.containers = containers
         self.init_containers = init_containers
-        self._controllers: List[Union[Deployment, DaemonSet, StatefulSet]] = []
+        self._controllers: list[section.Controller] = []
 
     @property
     def phase(self) -> api.Phase:
@@ -412,15 +412,6 @@ class Pod:
         kubernetes_cluster_hostname: str,
         annotation_key_pattern: AnnotationOption,
     ) -> section.PodInfo:
-        controllers = []
-        for controller in self._controllers:
-            controllers.append(
-                section.Controller(
-                    type_=section.ControllerType.from_str(controller.type_),
-                    name=controller.name(),
-                )
-            )
-
         return section.PodInfo(
             namespace=self.metadata.namespace,
             name=self.metadata.name,
@@ -437,7 +428,7 @@ class Pod:
             qos_class=self.status.qos_class,
             restart_policy=self.spec.restart_policy,
             uid=self.uid,
-            controllers=controllers,
+            controllers=self._controllers,
             cluster=cluster_name,
             kubernetes_cluster_hostname=kubernetes_cluster_hostname,
         )
@@ -495,15 +486,6 @@ class Pod:
             return None
         return section.StartTime(start_time=self.status.start_time)
 
-    def add_controller(self, controller: Union[Deployment, DaemonSet, StatefulSet]) -> None:
-        """Add a handling controller of the pod
-
-        Kubernetes control objects manage pods based on their labels. As the API does not
-        provide any information regarding these control objects from the pod's perspective
-        this double linking is done here
-        """
-        self._controllers.append(controller)
-
 
 def aggregate_resources(
     resource_type: Literal["memory", "cpu"], containers: Collection[api.ContainerSpec]
@@ -548,10 +530,6 @@ class Deployment(PodNamespacedOwner):
     @property
     def namespace(self) -> Optional[api.NamespaceName]:
         return self.metadata.namespace
-
-    def add_pod(self, pod: Pod) -> None:
-        super().add_pod(pod)
-        pod.add_controller(self)
 
     def name(self, prepend_namespace: bool = False) -> str:
         if not prepend_namespace:
@@ -646,10 +624,6 @@ class DaemonSet(PodNamespacedOwner):
             return self._pods
         return [pod for pod in self._pods if pod.phase == phase]
 
-    def add_pod(self, pod: Pod) -> None:
-        super().add_pod(pod)
-        pod.add_controller(self)
-
     def pod_resources(self) -> section.PodResources:
         return _pod_resources(self._pods)
 
@@ -715,10 +689,6 @@ class StatefulSet(PodNamespacedOwner):
         if phase is None:
             return self._pods
         return [pod for pod in self._pods if pod.phase == phase]
-
-    def add_pod(self, pod: Pod) -> None:
-        super().add_pod(pod)
-        pod.add_controller(self)
 
     def pod_resources(self) -> section.PodResources:
         return _pod_resources(self._pods)
@@ -924,11 +894,11 @@ class Cluster:
 
         LOGGER.debug("Constructing k8s objects based on collected API data")
 
-        _pod_owners_mapping: Dict[str, List[PodOwner]] = {}
+        _pod_owners_mapping: Dict[str, List[Deployment | StatefulSet | DaemonSet]] = {}
         _nodes: Dict[api.NodeName, Node] = {}
 
         def _register_owner_for_pods(
-            pod_controller: PodOwner, pod_uids: Sequence[api.PodUID]
+            pod_controller: Deployment | StatefulSet | DaemonSet, pod_uids: Sequence[api.PodUID]
         ) -> None:
             for pod_uid in pod_uids:
                 _pod_owners_mapping.setdefault(pod_uid, []).append(pod_controller)
@@ -999,6 +969,12 @@ class Cluster:
                 _nodes[pod.node].add_pod(pod)
             for pod_owner in _pod_owners_mapping.get(pod.uid, []):
                 pod_owner.add_pod(pod)
+                pod._controllers.append(
+                    section.Controller(
+                        type_=section.ControllerType.from_str(pod_owner.type_),
+                        name=pod_owner.name(),
+                    )
+                )
 
         LOGGER.debug(
             "Cluster composition: Nodes (%s), Deployments (%s), DaemonSets (%s), StatefulSets (%s), Pods (%s)",
@@ -1202,7 +1178,6 @@ def cron_job_info(
     kubernetes_cluster_hostname: str,
     annotation_key_pattern: AnnotationOption,
 ) -> section.CronJobInfo:
-
     return section.CronJobInfo(
         name=cron_job.metadata.name,
         namespace=cron_job.metadata.namespace,
@@ -1218,6 +1193,55 @@ def cron_job_info(
         suspend=cron_job.spec.suspend,
         cluster=cluster_name,
         kubernetes_cluster_hostname=kubernetes_cluster_hostname,
+    )
+
+
+def cron_job_status(
+    status: api.CronJobStatus,
+    timestamp_sorted_jobs: Sequence[api.Job],
+) -> section.CronJobStatus:
+    return section.CronJobStatus(
+        active_jobs_count=len(status.active) if status.active else None,
+        last_duration=_calculate_job_duration(last_completed_job)
+        if (last_completed_job := _retrieve_last_completed_job(timestamp_sorted_jobs)) is not None
+        else None,
+        last_successful_time=status.last_successful_time,
+        last_schedule_time=status.last_schedule_time,
+    )
+
+
+def _retrieve_last_completed_job(jobs: Sequence[api.Job]) -> api.Job | None:
+    for job in jobs:
+        if job.status.completion_time is not None:
+            return job
+    return None
+
+
+def _calculate_job_duration(job: api.Job) -> float | None:
+    if job.status.completion_time is None or job.status.start_time is None:
+        return None
+
+    return job.status.completion_time - job.status.start_time
+
+
+def cron_job_latest_job(
+    job: api.Job, pods: Mapping[api.PodUID, api.Pod]
+) -> section.CronJobLatestJob:
+    return section.CronJobLatestJob(
+        status=section.JobStatus(
+            conditions=job.status.conditions,
+            start_time=job.status.start_time,
+            completion_time=job.status.completion_time,
+        ),
+        pods=[
+            section.JobPod(
+                init_containers=pod.init_containers,
+                containers=pod.containers,
+                lifecycle=pod_lifecycle_phase(pod.status),
+            )
+            for pod_uid in job.pod_uids
+            if (pod := pods.get(pod_uid)) is not None
+        ],
     )
 
 
@@ -1443,7 +1467,7 @@ def namespace_name(namespace: api.Namespace) -> api.NamespaceName:
 
 def cron_job_namespaced_name(cron_job: api.CronJob) -> str:
     """The name of the cron job appended to the namespace
-    >>> cron_job_namespaced_name(api.CronJob(uid="cron_job_uid", metadata=api.MetaData(namespace="bar", name="foo", creation_timestamp=0.0, labels={}, annotations={}), pod_uids=[], spec=api.CronJobSpec(concurrency_policy=api.ConcurrencyPolicy.Forbid, schedule="0 0 0 0 0", suspend=False, successful_jobs_history_limit=0, failed_jobs_history_limit=0)))
+    >>> cron_job_namespaced_name(api.CronJob(uid="cron_job_uid", job_uids=[], metadata=api.MetaData(namespace="bar", name="foo", creation_timestamp=0.0, labels={}, annotations={}), pod_uids=[], spec=api.CronJobSpec(concurrency_policy=api.ConcurrencyPolicy.Forbid, schedule="0 0 0 0 0", suspend=False, successful_jobs_history_limit=0, failed_jobs_history_limit=0), status=api.CronJobStatus(active=None, last_schedule_time=None, last_successful_time=None)))
     'bar_foo'
     """
     return f"{cron_job.metadata.namespace}_{cron_job.metadata.name}"
@@ -1483,24 +1507,33 @@ def write_cronjobs_api_sections(
     annotation_key_pattern: AnnotationOption,
     api_cron_jobs: Sequence[api.CronJob],
     api_cron_job_pods: Sequence[api.Pod],
+    api_jobs: Mapping[api.JobUID, api.Job],
     kubernetes_cluster_hostname: str,
     piggyback_formatter: ObjectSpecificPBFormatter,
 ) -> None:
     def output_cronjob_sections(
         cron_job: api.CronJob,
-        api_cron_job_pods: Sequence[api.Pod],
+        cron_job_pods: Sequence[api.Pod],
     ) -> None:
+        jobs = [api_jobs[uid] for uid in cron_job.job_uids]
+        timestamp_sorted_jobs = sorted(jobs, key=lambda job: job.metadata.creation_timestamp)
         sections = {
             "kube_cron_job_info_v1": lambda: cron_job_info(
                 cron_job, cluster_name, kubernetes_cluster_hostname, annotation_key_pattern
             ),
-            "kube_pod_resources_v1": lambda: _pod_resources_from_api_pods(api_cron_job_pods),
+            "kube_cron_job_status_v1": lambda: cron_job_status(
+                cron_job.status, timestamp_sorted_jobs
+            ),
+            "kube_cron_job_latest_job_v1": lambda: cron_job_latest_job(
+                timestamp_sorted_jobs[-1], {pod.uid: pod for pod in cron_job_pods}
+            )
+            if len(timestamp_sorted_jobs) > 0
+            else None,
+            "kube_pod_resources_v1": lambda: _pod_resources_from_api_pods(cron_job_pods),
             "kube_memory_resources_v1": lambda: _collect_memory_resources_from_api_pods(
-                api_cron_job_pods
+                cron_job_pods
             ),
-            "kube_cpu_resources_v1": lambda: _collect_cpu_resources_from_api_pods(
-                api_cron_job_pods
-            ),
+            "kube_cpu_resources_v1": lambda: _collect_cpu_resources_from_api_pods(cron_job_pods),
         }
         _write_sections(sections)
 
@@ -1760,8 +1793,8 @@ def pod_api_based_checkmk_sections(
 
 
 def filter_outdated_and_non_monitored_pods(
-    performance_pods: Sequence[PerformancePod],
-    lookup_name_to_piggyback_mappings: Set[PodLookupName],
+    performance_pods: Iterable[PerformancePod],
+    lookup_name_to_piggyback_mappings: Container[PodLookupName],
 ) -> Sequence[PerformancePod]:
     """Filter out all performance data based pods that are not in the API data based lookup table
 
@@ -1791,80 +1824,6 @@ def filter_outdated_and_non_monitored_pods(
         ", ".join(outdated_and_non_monitored_pods),
     )
     return current_pods
-
-
-def _write_object_sections(containers: Collection[PerformanceContainer]) -> None:
-    # Memory section
-    with SectionWriter("kube_performance_memory_v1") as writer:
-        memory_section: section.Section = section.PerformanceUsage(
-            resource=section.Memory(
-                usage=_aggregate_metric(containers, MetricName("memory_working_set_bytes"))
-            ),
-        )
-        writer.append(memory_section.json())
-
-    # CPU section
-    with SectionWriter("kube_performance_cpu_v1") as writer:
-        cpu_section: section.Section = section.PerformanceUsage(
-            resource=section.Cpu(
-                usage=_aggregate_rate_metric(containers, MetricName("cpu_usage_seconds_total")),
-            ),
-        )
-        writer.append(cpu_section.json())
-
-
-def filter_associating_performance_pods_from_agent_pods(
-    performance_pods: Mapping[PodLookupName, PerformancePod], pods: Collection[Pod]
-) -> Sequence[PerformancePod]:
-    selected_pods = []
-    # the containers with "POD" in their cAdvisor generated name represent the container's
-    # respective parent cgroup. A multitude of memory calculation references omit these for
-    # container level calculations. We keep them as we calculate values at least on the pod level.
-    for pod in pods:
-        # Some pods which are running according to the Kubernetes API might not yet be
-        # included in the performance data due to various reasons (e.g. pod just started)
-        if (pod_lookup := pod_lookup_from_agent_pod(pod)) not in performance_pods:
-            # TODO: include logging without adding false positives
-            continue
-        selected_pods.append(performance_pods[pod_lookup])
-    return selected_pods
-
-
-def filter_associating_performance_pods_from_api_pods(
-    api_pods: Sequence[api.Pod], performance_pods: Mapping[PodLookupName, PerformancePod]
-) -> Sequence[PerformancePod]:
-    selected_pods = []
-    for pod in api_pods:
-        if (pod_lookup := pod_lookup_from_api_pod(pod)) not in performance_pods:
-            continue
-        selected_pods.append(performance_pods[pod_lookup])
-
-    return selected_pods
-
-
-def write_kube_object_performance_section(
-    kube_obj: Union[Node, Deployment, DaemonSet, StatefulSet],
-    performance_pods: Mapping[PodLookupName, PerformancePod],
-    piggyback_name: str,
-) -> None:
-    """Write Node, Deployment, DaemonSet, StatefulSet sections based on collected performance metrics"""
-
-    if not (pods := kube_obj.pods(phase=api.Phase.RUNNING)):
-        return
-
-    if not (
-        kube_obj_performance_pods := filter_associating_performance_pods_from_agent_pods(
-            performance_pods, pods
-        )
-    ):
-        return
-
-    with ConditionalPiggybackSection(piggyback_name):
-        for section_name, section_json in kube_object_performance_sections(
-            kube_obj_performance_pods
-        ):
-            with SectionWriter(section_name) as writer:
-                writer.append(section_json)
 
 
 def kube_object_performance_sections(
@@ -1934,36 +1893,6 @@ def resource_quota_performance_sections(
             ),
         ),
     ]
-
-
-def write_kube_object_performance_section_cluster(
-    cluster: Cluster, performance_pods: Mapping[PodLookupName, PerformancePod]
-) -> None:
-    """Write Cluster sections based on collected performance metrics"""
-
-    if not (
-        cluster_pods := cluster.pods(phase=api.Phase.RUNNING, for_cluster_aggregation_only=True)
-    ):
-        return
-
-    if not (
-        cluster_performance_pods := filter_associating_performance_pods_from_agent_pods(
-            performance_pods, cluster_pods
-        )
-    ):
-        return
-
-    for section_name, section_json in kube_object_performance_sections(cluster_performance_pods):
-        with SectionWriter(section_name) as writer:
-            writer.append(section_json)
-
-
-def write_kube_object_performance_section_pod(pod: PerformancePod, piggyback_name: str) -> None:
-    """Write Pod sections based on collected performance metrics"""
-    with ConditionalPiggybackSection(piggyback_name):
-        for section_name, section_json in kube_object_performance_sections([pod]):
-            with SectionWriter(section_name) as writer:
-                writer.append(section_json)
 
 
 def _aggregate_metric(
@@ -2404,19 +2333,83 @@ def parse_and_group_containers_performance_metrics(
     return performance_pods
 
 
-def write_sections_based_on_performance_pods(
-    performance_pods: Mapping[PodLookupName, PerformancePod],
+@dataclass
+class Piggyback:
+    piggyback: str
+    pod_names: Sequence[PodLookupName]
+
+
+@dataclass
+class NamespacePiggy(Piggyback):
+    resource_quota_pod_names: Sequence[PodLookupName]
+
+
+@dataclass
+class PodsToHost:
+    piggybacks: Sequence[Piggyback]
+    cluster_pods: Sequence[PodLookupName]
+    namespace_piggies: Sequence[NamespacePiggy]
+
+
+def _names_of_running_pods(
+    kube_object: Union[Node, Deployment, DaemonSet, StatefulSet]
+) -> Sequence[PodLookupName]:
+    # TODO: This function should really be simple enough to allow a doctest.
+    # However, due to the way kube_object classes are constructed (e.g., see
+    # api_to_agent_daemonset) this is currently not possible. If we improve
+    # this function to use a PodOwner method instead, we can side-step these
+    # issues.
+    return list(map(pod_lookup_from_agent_pod, kube_object.pods(phase=api.Phase.RUNNING)))
+
+
+def determine_pods_to_host(
     monitored_objects: Sequence[MonitoredObject],
     monitored_pods: Set[PodLookupName],
     cluster: Cluster,
     monitored_namespaces: Set[api.NamespaceName],
+    api_pods: Sequence[api.Pod],
+    resource_quotas: Sequence[api.ResourceQuota],
+    monitored_api_namespaces: Sequence[api.Namespace],
+    api_cron_jobs: Sequence[api.CronJob],
     piggyback_formatter: PBFormatter,
     piggyback_formatter_node: ObjectSpecificPBFormatter,
-) -> None:
-    # Write performance sections
-    if MonitoredObject.pods in monitored_objects:
-        LOGGER.info("Write pod sections based on performance data")
+) -> PodsToHost:
+    namespace_piggies = []
+    if MonitoredObject.namespaces in monitored_objects:
+        for api_namespace in monitored_api_namespaces:
+            namespace_api_pods = filter_pods_by_phase(
+                filter_pods_by_namespace(api_pods, namespace_name(api_namespace)),
+                api.Phase.RUNNING,
+            )
+            resource_quota = filter_matching_namespace_resource_quota(
+                namespace_name(api_namespace), resource_quotas
+            )
+            if resource_quota is not None:
+                resource_quota_pod_names = [
+                    pod_lookup_from_api_pod(pod)
+                    for pod in filter_pods_by_resource_quota_criteria(
+                        namespace_api_pods, resource_quota
+                    )
+                ]
+            else:
+                resource_quota_pod_names = []
 
+            namespace_piggies.append(
+                NamespacePiggy(
+                    piggyback=piggyback_formatter(
+                        object_type="namespace",
+                        namespaced_name=namespace_name(api_namespace),
+                    ),
+                    pod_names=[pod_lookup_from_api_pod(pod) for pod in namespace_api_pods],
+                    resource_quota_pod_names=resource_quota_pod_names,
+                )
+            )
+    # TODO: write_object_sections_based_on_performance_pods is the equivalent
+    # function based solely on api.Pod rather than class Pod. All objects relying
+    # on write_sections_based_on_performance_pods should be refactored to use the
+    # other function similar to namespaces
+    piggybacks: list[Piggyback] = []
+    if MonitoredObject.pods in monitored_objects:
         running_pods = pods_from_namespaces(
             cluster.pods(phase=api.Phase.RUNNING), monitored_namespaces
         )
@@ -2427,61 +2420,114 @@ def write_sections_based_on_performance_pods(
             {pod_lookup_from_agent_pod(pod) for pod in running_pods}
         )
 
-        for pod in filter_outdated_and_non_monitored_pods(
-            list(performance_pods.values()), monitored_running_pods
-        ):
-            write_kube_object_performance_section_pod(
-                pod,
-                piggyback_name=piggyback_formatter(
+        piggybacks.extend(
+            Piggyback(
+                piggyback=piggyback_formatter(
                     object_type="pod",
-                    namespaced_name=lookup_name_piggyback_mappings[pod.lookup_name],
+                    namespaced_name=lookup_name_piggyback_mappings[pod_name],
                 ),
+                pod_names=[pod_name],
             )
-
+            for pod_name in monitored_running_pods
+        )
     if MonitoredObject.nodes in monitored_objects:
-        LOGGER.info("Write node sections based on performance data")
-        for node in cluster.nodes():
-            write_kube_object_performance_section(
-                node,
-                performance_pods,
-                piggyback_name=piggyback_formatter_node(node.name),
+        piggybacks.extend(
+            Piggyback(
+                piggyback=piggyback_formatter_node(node.name),
+                pod_names=names,
             )
-    if MonitoredObject.deployments in monitored_objects:
-        LOGGER.info("Write deployment sections based on performance data")
-        for deployment in kube_objects_from_namespaces(cluster.deployments(), monitored_namespaces):
-            write_kube_object_performance_section(
-                deployment,
-                performance_pods,
-                piggyback_name=piggyback_formatter(
-                    object_type="deployment",
-                    namespaced_name=deployment.name(prepend_namespace=True),
+            for node in cluster.nodes()
+            if (names := _names_of_running_pods(node))
+        )
+
+    name_type_objects: Sequence[
+        tuple[str, MonitoredObject, Callable[[], Sequence[Deployment | DaemonSet | StatefulSet]]]
+    ] = [
+        ("deployment", MonitoredObject.deployments, cluster.deployments),
+        ("statefulset", MonitoredObject.statefulsets, cluster.statefulsets),
+        ("daemonset", MonitoredObject.daemonsets, cluster.daemon_sets),
+    ]
+    for object_type_name, object_type, objects in name_type_objects:
+        if object_type in monitored_objects:
+            piggybacks.extend(
+                Piggyback(
+                    piggyback=piggyback_formatter(
+                        object_type=object_type_name,
+                        namespaced_name=k.name(prepend_namespace=True),
+                    ),
+                    pod_names=names,
+                )
+                for k in kube_objects_from_namespaces(objects(), monitored_namespaces)
+                if (names := _names_of_running_pods(k))
+            )
+    cluster_pods = list(
+        map(
+            pod_lookup_from_agent_pod,
+            cluster.pods(phase=api.Phase.RUNNING, for_cluster_aggregation_only=True),
+        )
+    )
+    if MonitoredObject.cronjobs_pods in monitored_objects:
+        piggybacks.extend(
+            Piggyback(
+                piggyback=piggyback_formatter(
+                    object_type="cronjob",
+                    namespaced_name=f"{k.metadata.namespace}_{k.metadata.name}",
                 ),
+                pod_names=[
+                    pod_lookup_from_api_pod(pod)
+                    for pod in filter_pods_by_phase(
+                        filter_pods_by_cron_job(api_pods, k),
+                        api.Phase.RUNNING,
+                    )
+                ],
             )
-    if MonitoredObject.daemonsets in monitored_objects:
-        LOGGER.info("Write DaemonSet sections based on performance data")
-        for daemonset in kube_objects_from_namespaces(cluster.daemon_sets(), monitored_namespaces):
-            write_kube_object_performance_section(
-                daemonset,
-                performance_pods,
-                piggyback_name=piggyback_formatter(
-                    object_type="daemonset", namespaced_name=daemonset.name(prepend_namespace=True)
-                ),
-            )
-    if MonitoredObject.statefulsets in monitored_objects:
-        LOGGER.info("Write StatefulSet sections based on performance data")
-        for statefulset in kube_objects_from_namespaces(
-            cluster.statefulsets(), monitored_namespaces
+            for k in api_cron_jobs
+        )
+    return PodsToHost(
+        piggybacks=piggybacks,
+        cluster_pods=cluster_pods,
+        namespace_piggies=namespace_piggies,
+    )
+
+
+def write_sections_based_on_performance_pods(
+    performance_pods: Mapping[PodLookupName, PerformancePod],
+    pods_to_host: PodsToHost,
+) -> None:
+    # TODO: The usage of filter_outdated_and_non_monitored_pods here is really
+    # inefficient. We can improve this, if we match the performance_pods to
+    # sets of pod_names in a single go.
+    LOGGER.info("Write piggyback sections based on performance data")
+    for piggy in pods_to_host.piggybacks:
+        pods = filter_outdated_and_non_monitored_pods(performance_pods.values(), piggy.pod_names)
+        with ConditionalPiggybackSection(piggy.piggyback):
+            for section_name, section_json in kube_object_performance_sections(pods):
+                with SectionWriter(section_name) as writer:
+                    writer.append(section_json)
+
+    LOGGER.info("Write Namespace piggyback sections based on performance data")
+    for piggy in pods_to_host.namespace_piggies:
+        pods = filter_outdated_and_non_monitored_pods(performance_pods.values(), piggy.pod_names)
+        resource_quota_pods = filter_outdated_and_non_monitored_pods(
+            performance_pods.values(), piggy.pod_names
+        )
+        sections = kube_object_performance_sections(pods) + resource_quota_performance_sections(
+            resource_quota_pods
+        )
+        with ConditionalPiggybackSection(piggy.piggyback):
+            for section_name, section_json in sections:
+                with SectionWriter(section_name) as writer:
+                    writer.append(section_json)
+
+    if cluster_performance_pods := filter_outdated_and_non_monitored_pods(
+        performance_pods.values(), pods_to_host.cluster_pods
+    ):
+        LOGGER.info("Write cluster sections based on performance data")
+        for section_name, section_json in kube_object_performance_sections(
+            cluster_performance_pods
         ):
-            write_kube_object_performance_section(
-                statefulset,
-                performance_pods,
-                piggyback_name=piggyback_formatter(
-                    object_type="statefulset",
-                    namespaced_name=statefulset.name(prepend_namespace=True),
-                ),
-            )
-    LOGGER.info("Write cluster sections based on performance data")
-    write_kube_object_performance_section_cluster(cluster, performance_pods)
+            with SectionWriter(section_name) as writer:
+                writer.append(section_json)
 
 
 def _identify_unsupported_node_collector_components(
@@ -2505,7 +2551,6 @@ def _identify_unsupported_node_collector_components(
 def _group_metadata_by_node(
     node_collectors_metadata: Sequence[section.NodeCollectorMetadata],
 ) -> Sequence[section.NodeMetadata]:
-
     nodes_components: Dict[section.NodeName, Dict[str, section.NodeComponent]] = {}
     for node_collector in node_collectors_metadata:
         components = nodes_components.setdefault(node_collector.node, {})
@@ -2650,7 +2695,6 @@ def pod_info(
     kubernetes_cluster_hostname: str,
     annotation_key_pattern: AnnotationOption,
 ) -> section.PodInfo:
-
     return section.PodInfo(
         namespace=pod_namespace(pod),
         name=pod_name(pod),
@@ -2749,13 +2793,11 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
             except client.ApiException as e:
                 raise CustomKubernetesApiException(e) from e
 
-            api_pods = api_data.pods
-
             # Namespaces are handled independently from the cluster object in order to improve
             # testability. The long term goal is to remove all objects from the cluster object
             cluster = Cluster.from_api_resources(
                 excluded_node_roles=arguments.roles or [],
-                pods=api_pods,
+                pods=api_data.pods,
                 nodes=api_data.nodes,
                 deployments=api_data.deployments,
                 daemon_sets=api_data.daemonsets,
@@ -2806,7 +2848,7 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
                 # namespace.
                 running_pending_pods = [
                     pod
-                    for pod in api_pods
+                    for pod in api_data.pods
                     if pod.status.phase in [api.Phase.RUNNING, api.Phase.PENDING]
                 ]
                 namespacenames_running_pending_pods = {
@@ -2821,7 +2863,7 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
                     arguments.annotation_key_pattern,
                     monitored_api_namespaces,
                     resource_quotas,
-                    api_pods,
+                    api_data.pods,
                     kubernetes_cluster_hostname=arguments.kubernetes_cluster_hostname,
                     piggyback_formatter=functools.partial(piggyback_formatter, "namespace"),
                 )
@@ -2865,6 +2907,7 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
                 arguments.annotation_key_pattern,
                 api_data.cron_jobs,
                 monitored_api_cron_job_pods,
+                {job.uid: job for job in api_data.jobs},
                 kubernetes_cluster_hostname=arguments.kubernetes_cluster_hostname,
                 piggyback_formatter=functools.partial(piggyback_formatter, "cronjob"),
             )
@@ -2992,88 +3035,22 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
                     ) from e
 
                 try:
-                    # TODO: write_object_sections_based_on_performance_pods is the equivalent
-                    # function based solely on api.Pod rather than class Pod. All objects relying
-                    # on write_sections_based_on_performance_pods should be refactored to use the
-                    # other function similar to namespaces
-                    write_sections_based_on_performance_pods(
-                        performance_pods=performance_pods,
+                    pods_to_host = determine_pods_to_host(
                         cluster=cluster,
                         monitored_pods=monitored_pods,
                         monitored_objects=arguments.monitored_objects,
                         monitored_namespaces=monitored_namespace_names,
+                        api_pods=api_data.pods,
+                        resource_quotas=resource_quotas,
+                        api_cron_jobs=api_data.cron_jobs,
+                        monitored_api_namespaces=monitored_api_namespaces,
                         piggyback_formatter=piggyback_formatter,
                         piggyback_formatter_node=piggyback_formatter_node,
                     )
-
-                    if MonitoredObject.namespaces in arguments.monitored_objects:
-                        for api_namespace in monitored_api_namespaces:
-                            namespace_api_pods = filter_pods_by_phase(
-                                filter_pods_by_namespace(api_pods, namespace_name(api_namespace)),
-                                api.Phase.RUNNING,
-                            )
-                            namespace_sections = kube_object_performance_sections(
-                                performance_pods=filter_associating_performance_pods_from_api_pods(
-                                    namespace_api_pods, performance_pods
-                                ),
-                            )
-                            if (
-                                resource_quota := filter_matching_namespace_resource_quota(
-                                    namespace_name(api_namespace), resource_quotas
-                                )
-                            ) is not None:
-                                namespace_sections.extend(
-                                    resource_quota_performance_sections(
-                                        resource_quota_performance_pods=filter_associating_performance_pods_from_api_pods(
-                                            filter_pods_by_resource_quota_criteria(
-                                                namespace_api_pods, resource_quota
-                                            ),
-                                            performance_pods,
-                                        )
-                                    )
-                                )
-                            if not namespace_sections:
-                                continue
-
-                            with ConditionalPiggybackSection(
-                                piggyback_formatter(
-                                    object_type="namespace",
-                                    namespaced_name=namespace_name(api_namespace),
-                                )
-                            ):
-                                for section_name, section_json in namespace_sections:
-                                    with SectionWriter(section_name) as writer:
-                                        writer.append(section_json)
-
-                    if MonitoredObject.cronjobs_pods in arguments.monitored_objects:
-
-                        for api_cron_job in api_data.cron_jobs:
-
-                            cronjob_api_pods = filter_pods_by_phase(
-                                filter_pods_by_cron_job(
-                                    monitored_api_cron_job_pods,
-                                    api_cron_job,
-                                ),
-                                api.Phase.RUNNING,
-                            )
-
-                            cronjob_sections = kube_object_performance_sections(
-                                performance_pods=filter_associating_performance_pods_from_api_pods(
-                                    cronjob_api_pods, performance_pods
-                                ),
-                            )
-
-                            if not cronjob_sections:
-                                continue
-                            with ConditionalPiggybackSection(
-                                piggyback_formatter(
-                                    object_type="cronjob",
-                                    namespaced_name=cron_job_namespaced_name(api_cron_job),
-                                )
-                            ):
-                                for section_name, section_json in cronjob_sections:
-                                    with SectionWriter(section_name) as writer:
-                                        writer.append(section_json)
+                    write_sections_based_on_performance_pods(
+                        performance_pods=performance_pods,
+                        pods_to_host=pods_to_host,
+                    )
 
                 except Exception as e:
                     raise CollectorHandlingException(

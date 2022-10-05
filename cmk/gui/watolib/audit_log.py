@@ -3,9 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 import time
 from pathlib import Path
-from typing import NamedTuple, Optional, Union
+from typing import NamedTuple, Optional, Sequence, Union
 
 from cmk.utils.type_defs import UserId
 
@@ -68,6 +69,17 @@ class AuditLogStore(ABCAppendStore["AuditLogStore.Entry"]):
                     break
 
         self._path.rename(newpath)
+
+    def get_entries_since(self, timestamp: int) -> Sequence["AuditLogStore.Entry"]:
+        return [entry for entry in self.read() if entry.time > timestamp]
+
+    @classmethod
+    def to_json(cls, entries: Sequence["AuditLogStore.Entry"]) -> str:
+        return json.dumps([cls._serialize(entry) for entry in entries])
+
+    @classmethod
+    def from_json(cls, raw: str) -> Sequence["AuditLogStore.Entry"]:
+        return [cls._deserialize(entry) for entry in json.loads(raw)]
 
 
 def log_audit(

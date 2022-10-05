@@ -1452,7 +1452,9 @@ run_real_time_checks() {
     define_optionally_encrypt "${ENCRYPTED_RT}"
     for trigger in "${MK_VARDIR}/rtc_remotes/"?*; do
         # no such file => no expansion of ?* => nothing to do
-        [ -e "${trigger}" ] && run_real_time_checks_for_remote "${trigger}" "${secret}" >/dev/null &
+        # braces are needed so run_real_time_checks_for_remote can be forked away
+        # otherwise async execution of check plugins is held off by activated realtime checks.
+        [ -e "${trigger}" ] && { run_real_time_checks_for_remote "${trigger}" "${secret}" >/dev/null & }
     done
 }
 

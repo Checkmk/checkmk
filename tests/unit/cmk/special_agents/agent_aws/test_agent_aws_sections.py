@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.special_agents.agent_aws import AWSSectionResult, AWSSectionsGeneric
+from cmk.special_agents.agent_aws import AWSSectionResult, AWSSectionsGeneric, Results
 
 
 class TestAWSSections:
@@ -25,8 +25,10 @@ class TestAWSSections:
     def generic_section(self, services, region, config):
         return AWSSectionsGeneric(services, region, config)
 
-    def test_section_header(self, generic_section, capsys) -> None:  # type:ignore[no-untyped-def]
-        cached_data = {
+    def test_section_header(
+        self, generic_section: AWSSectionsGeneric, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        cached_data: Results = {
             ("costs_and_usage", 1606382471.693873, 38582.763184): [
                 AWSSectionResult(
                     piggyback_hostname="",

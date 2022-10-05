@@ -3,11 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Iterator, Literal
+from typing import Literal
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
-from pytest_mock import MockerFixture
 
 import cmk.utils.version as cmk_version
 
@@ -92,7 +91,6 @@ def test_dashlet_registry_plugins() -> None:
             "inventory",
         ]
 
-    dashboard._transform_old_dict_based_dashlets()
     assert sorted(dashboard.dashlet_registry.keys()) == sorted(expected_plugins)
 
 
@@ -178,228 +176,6 @@ def test_dashlet_refresh_intervals(
     )
 
     assert dashlet.refresh_interval() == expected_refresh_interval
-
-
-@pytest.fixture(name="reset_dashlet_types")
-def _reset_dashlet_types() -> Iterator[None]:
-    default_entries = list(dashboard.dashlet_types)
-    try:
-        yield
-    finally:
-        for entry in list(dashboard.dashlet_types):
-            if entry not in default_entries:
-                del dashboard.dashlet_types[entry]
-
-
-def _legacy_dashlet_type(attrs=None):
-    dashboard.dashlet_types["test123"] = {
-        "title": "Test dashlet",
-        "description": "Descr",
-        "sort_index": 10,
-    }
-    if attrs:
-        dashboard.dashlet_types["test123"].update(attrs)
-
-    dashboard._transform_old_dict_based_dashlets()
-    return dashboard.dashlet_registry["test123"]
-
-
-@pytest.mark.usefixtures("reset_dashlet_types")
-def test_registry_of_old_dashlet_plugins() -> None:
-    dashlet_type = _legacy_dashlet_type()
-    assert dashlet_type.title() == "Test dashlet"
-    assert dashlet_type.description() == "Descr"
-    assert dashlet_type.sort_index() == 10
-
-
-_attr_map = [
-    # legacy key, new method name, default value
-    ("infos", "infos", []),
-    ("single_infos", "single_infos", []),
-    ("selectable", "is_selectable", True),
-    ("resizable", "is_resizable", True),
-    ("size", "initial_size", dashboard.Dashlet.minimum_size),
-    ("parameters", "vs_parameters", None),
-    ("opt_params", "opt_parameters", False),
-    ("validate_params", "validate_parameters_func", None),
-    ("refresh", "initial_refresh_interval", False),
-    ("allowed", "allowed_roles", builtin_role_ids),
-    ("styles", "styles", None),
-    ("script", "script", None),
-    ("title", "title", "Test dashlet"),
-]
-
-
-@pytest.mark.usefixtures("reset_dashlet_types")
-def test_old_dashlet_defaults() -> None:
-    dashlet_type = _legacy_dashlet_type()
-    dashlet = dashlet_type(
-        dashboard_name="main", dashboard=TEST_DASHBOARD, dashlet_id=0, dashlet={}
-    )
-    for _attr, new_method, deflt in _attr_map:
-        assert getattr(dashlet, new_method)() == deflt
-
-
-@pytest.mark.usefixtures("reset_dashlet_types")
-def test_old_dashlet_title_func() -> None:
-    dashlet_type = _legacy_dashlet_type(
-        {
-            "title_func": lambda d: "xyz",
-        }
-    )
-    dashlet = dashlet_type(
-        dashboard_name="main", dashboard=TEST_DASHBOARD, dashlet_id=0, dashlet={}
-    )
-
-    assert dashlet.title() == "Test dashlet"
-    assert dashlet.display_title() == "xyz"
-
-
-@pytest.mark.usefixtures("reset_dashlet_types")
-def test_old_dashlet_on_resize() -> None:
-    dashlet_type = _legacy_dashlet_type(
-        {
-            "on_resize": lambda x, y: "xyz",
-        }
-    )
-    dashlet = dashlet_type(
-        dashboard_name="main", dashboard=TEST_DASHBOARD, dashlet_id=0, dashlet={}
-    )
-
-    assert dashlet.on_resize() == "xyz"
-
-
-@pytest.mark.usefixtures("reset_dashlet_types")
-def test_old_dashlet_on_refresh() -> None:
-    dashlet_type = _legacy_dashlet_type(
-        {
-            "on_refresh": lambda nr, the_dashlet: "xyz",
-        }
-    )
-    dashlet = dashlet_type(
-        dashboard_name="main", dashboard=TEST_DASHBOARD, dashlet_id=0, dashlet={}
-    )
-
-    assert dashlet.on_refresh() == "xyz"
-
-
-@pytest.mark.usefixtures("reset_dashlet_types", "request_context")
-def test_old_dashlet_iframe_render(mocker: MockerFixture) -> None:
-    iframe_render_mock = mocker.Mock()
-
-    dashlet_type = _legacy_dashlet_type(
-        {
-            "iframe_render": iframe_render_mock.method,
-        }
-    )
-    test_dashboard = TEST_DASHBOARD.copy()
-    test_dashboard["mtime"] = 123
-    dashlet = dashlet_type(
-        dashboard_name="main",
-        dashboard=dashboard._add_context_to_dashboard(test_dashboard),
-        dashlet_id=1,
-        dashlet={"type": "url"},
-    )
-
-    assert dashlet.is_iframe_dashlet()
-    dashlet.show()
-    assert iframe_render_mock.called_once()
-
-    assert dashlet._get_iframe_url() == "dashboard_dashlet.py?id=1&mtime=123&name=main"
-
-
-@pytest.mark.usefixtures("reset_dashlet_types", "request_context")
-def test_old_dashlet_iframe_urlfunc() -> None:
-    dashlet_type = _legacy_dashlet_type(
-        {
-            "iframe_urlfunc": lambda x: "blaurl",
-        }
-    )
-    dashlet = dashlet_type(
-        dashboard_name="main", dashboard=TEST_DASHBOARD, dashlet_id=0, dashlet={}
-    )
-
-    assert dashlet._get_iframe_url() == "blaurl"
-
-
-@pytest.mark.usefixtures("reset_dashlet_types", "request_context")
-def test_old_dashlet_render(mocker: MockerFixture) -> None:
-    render_mock = mocker.Mock()
-
-    dashlet_type = _legacy_dashlet_type(
-        {
-            "render": render_mock,
-        }
-    )
-    dashlet = dashlet_type(
-        dashboard_name="main", dashboard={"mtime": 1}, dashlet_id=0, dashlet={"type": "url"}
-    )
-
-    assert not dashlet.is_iframe_dashlet()
-    dashlet.show()
-    assert render_mock.called_once()
-
-
-@pytest.mark.usefixtures("reset_dashlet_types")
-def test_old_dashlet_add_urlfunc() -> None:
-    dashlet_type = _legacy_dashlet_type({"add_urlfunc": lambda: "xyz"})
-    dashlet = dashlet_type(
-        dashboard_name="main", dashboard=TEST_DASHBOARD, dashlet_id=0, dashlet={}
-    )
-    assert dashlet.add_url() == "xyz"
-
-
-@pytest.mark.usefixtures("reset_dashlet_types")
-def test_old_dashlet_position() -> None:
-    dashlet_type = _legacy_dashlet_type({})
-    assert dashlet_type.initial_position() == (1, 1)
-
-    dashlet = dashlet_type(
-        dashboard_name="main", dashboard=TEST_DASHBOARD, dashlet_id=0, dashlet={}
-    )
-    assert dashlet.position() == (1, 1)
-
-    dashlet = dashlet_type(
-        dashboard_name="main",
-        dashboard=TEST_DASHBOARD,
-        dashlet_id=0,
-        dashlet={"position": (10, 12)},
-    )
-    assert dashlet.position() == (10, 12)
-
-
-@pytest.mark.usefixtures("reset_dashlet_types")
-def test_old_dashlet_size() -> None:
-    dashlet_type = _legacy_dashlet_type({})
-    assert dashlet_type.initial_size() == (12, 12)
-
-    dashlet_type = _legacy_dashlet_type({"size": (25, 10)})
-    assert dashlet_type.initial_size() == (25, 10)
-
-    dashlet = dashlet_type(
-        dashboard_name="main", dashboard=TEST_DASHBOARD, dashlet_id=0, dashlet={}
-    )
-    assert dashlet.size() == (25, 10)
-
-    dashlet = dashlet_type(
-        dashboard_name="main", dashboard=TEST_DASHBOARD, dashlet_id=0, dashlet={"size": (30, 20)}
-    )
-    assert dashlet.size() == (30, 20)
-
-
-@pytest.mark.usefixtures("reset_dashlet_types")
-def test_old_dashlet_settings() -> None:
-    dashlet_attrs = {}
-    for attr, _new_method, _deflt in _attr_map:
-        dashlet_attrs[attr] = attr
-
-    dashlet_type = _legacy_dashlet_type(dashlet_attrs)
-    dashlet = dashlet_type(
-        dashboard_name="main", dashboard=TEST_DASHBOARD, dashlet_id=0, dashlet={}
-    )
-
-    for attr, new_method, _deflt in _attr_map:
-        assert getattr(dashlet, new_method)() == attr
 
 
 @pytest.mark.usefixtures("request_context")

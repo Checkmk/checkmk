@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
+from pytest_mock import MockerFixture
 
 import cmk.utils.diagnostics as diagnostics
 
@@ -103,8 +104,10 @@ def test_diagnostics_serialize_wato_parameters_boolean() -> None:
         ),
     ],
 )
-def test_diagnostics_serialize_wato_parameters_files(  # type:ignore[no-untyped-def]
-    mocker, wato_parameters, expected_parameters
+def test_diagnostics_serialize_wato_parameters_files(
+    mocker: MockerFixture,
+    wato_parameters: diagnostics.DiagnosticsParameters,
+    expected_parameters: list[list[str]],
 ) -> None:
     mocker.patch("cmk.utils.diagnostics._get_max_args", return_value=5)
     assert diagnostics.serialize_wato_parameters(wato_parameters) == expected_parameters
@@ -154,8 +157,10 @@ def test_diagnostics_serialize_wato_parameters_files(  # type:ignore[no-untyped-
         ),
     ],
 )
-def test_diagnostics_deserialize(  # type:ignore[no-untyped-def]
-    cl_parameters, modes_parameters, expected_parameters
+def test_diagnostics_deserialize(
+    cl_parameters: list[str],
+    modes_parameters: dict[str, str],
+    expected_parameters: dict[str, list[str]],
 ) -> None:
     assert diagnostics.deserialize_cl_parameters(cl_parameters) == expected_parameters
     assert diagnostics.deserialize_modes_parameters(modes_parameters) == expected_parameters
@@ -171,8 +176,8 @@ def test_diagnostics_deserialize(  # type:ignore[no-untyped-def]
         (diagnostics.OPT_COMP_BUSINESS_INTELLIGENCE, [3, 3, 3, 3, 3, 3, 1]),
     ],
 )
-def test_diagnostics_get_checkmk_file_info_by_name(  # type:ignore[no-untyped-def]
-    component, sensitivity_values
+def test_diagnostics_get_checkmk_file_info_by_name(
+    component: str, sensitivity_values: list[int]
 ) -> None:
     rel_filepaths = [
         "path/to/sites.mk",
@@ -242,8 +247,8 @@ def test_diagnostics_get_checkmk_file_info_by_name(  # type:ignore[no-untyped-de
         ("web.log", 1),
     ],
 )
-def test_diagnostics_file_info_of_comp_notifications(  # type:ignore[no-untyped-def]
-    rel_filepath, sensitivity_value
+def test_diagnostics_file_info_of_comp_notifications(
+    rel_filepath: str, sensitivity_value: int
 ) -> None:
     assert (
         diagnostics.get_checkmk_file_info(

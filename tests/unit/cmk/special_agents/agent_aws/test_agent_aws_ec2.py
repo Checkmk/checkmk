@@ -109,28 +109,27 @@ class FakeEC2Client:
 def get_ec2_sections():
     def _create_ec2_sections(names, tags, *, skip_entities=None):
         region = "region"
-        config = AWSConfig("hostname", [], (None, None))
+        config = AWSConfig("hostname", [], ([], []))
         config.add_single_service_config("ec2_names", names)
         config.add_service_tags("ec2_tags", tags)
         fake_ec2_client = FakeEC2Client(skip_entities)
         fake_cloudwatch_client = FakeCloudwatchClient()
         fake_service_quotas_client = FakeServiceQuotasClient()
 
-        ec2_limits_distributor = ResultDistributor()
-        ec2_summary_distributor = ResultDistributor()
+        distributor = ResultDistributor()
 
         ec2_limits = EC2Limits(
-            fake_ec2_client, region, config, ec2_limits_distributor, fake_service_quotas_client
+            fake_ec2_client, region, config, distributor, fake_service_quotas_client
         )
-        ec2_summary = EC2Summary(fake_ec2_client, region, config, ec2_summary_distributor)
+        ec2_summary = EC2Summary(fake_ec2_client, region, config, distributor)
         ec2_labels = EC2Labels(fake_ec2_client, region, config)
         ec2_security_groups = EC2SecurityGroups(fake_ec2_client, region, config)
         ec2 = EC2(fake_cloudwatch_client, region, config)
 
-        ec2_limits_distributor.add(ec2_summary)
-        ec2_summary_distributor.add(ec2_labels)
-        ec2_summary_distributor.add(ec2_security_groups)
-        ec2_summary_distributor.add(ec2)
+        distributor.add(ec2_limits.name, ec2_summary)
+        distributor.add(ec2_summary.name, ec2_labels)
+        distributor.add(ec2_summary.name, ec2_security_groups)
+        distributor.add(ec2_summary.name, ec2)
         return ec2_limits, ec2_summary, ec2_labels, ec2_security_groups, ec2
 
     return _create_ec2_sections

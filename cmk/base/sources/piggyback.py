@@ -4,17 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Final, Optional, Sequence, Tuple
+from typing import Final, Literal, Optional, Sequence, Tuple
 
 from cmk.utils.paths import tmp_dir
 from cmk.utils.translations import TranslationOptions
-from cmk.utils.type_defs import HostAddress, HostName, SourceType
+from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, SourceType
 
+import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers import FetcherType, PiggybackFetcher
-from cmk.core_helpers.agent import AgentFileCache, NoCacheFactory
+from cmk.core_helpers.agent import AgentFileCache
+from cmk.core_helpers.cache import FileCacheGlobals, FileCacheMode
 from cmk.core_helpers.piggyback import PiggybackSummarizer
-
-from cmk.base.config import HostConfig
 
 from .agent import AgentSource
 
@@ -22,53 +22,63 @@ from .agent import AgentSource
 class PiggybackSource(AgentSource):
     def __init__(
         self,
-        host_config: HostConfig,
+        hostname: HostName,
         ipaddress: Optional[HostAddress],
         *,
+        id_: Literal["piggyback"],
         simulation_mode: bool,
         agent_simulator: bool,
         time_settings: Sequence[Tuple[Optional[str], str, int]],
         translation: TranslationOptions,
         encoding_fallback: str,
+        check_interval: int,
+        is_piggyback_host: bool,
+        file_cache_max_age: file_cache.MaxAge,
     ) -> None:
         super().__init__(
-            host_config,
+            hostname,
             ipaddress,
             source_type=SourceType.HOST,
             fetcher_type=FetcherType.PIGGYBACK,
-            description=PiggybackSource._make_description(host_config.hostname),
-            id_="piggyback",
+            description=PiggybackSource._make_description(hostname),
+            id_=id_,
             main_data_source=False,
             simulation_mode=simulation_mode,
             agent_simulator=agent_simulator,
             translation=translation,
             encoding_fallback=encoding_fallback,
+            check_interval=check_interval,
+            file_cache_max_age=file_cache_max_age,
         )
         self.time_settings: Final = time_settings
+        # Tag: 'Always use and expect piggback data'
+        self.is_piggyback_host: Final = is_piggyback_host
 
     def _make_file_cache(self) -> AgentFileCache:
-        return NoCacheFactory(
-            self.host_config.hostname,
+        return AgentFileCache(
+            self.hostname,
             base_path=self.file_cache_base_path,
-            simulation=False,  # TODO Quickfix for SUP-9912, should be handled in a better way
             max_age=self.file_cache_max_age,
-        ).make()
+            use_outdated=FileCacheGlobals.use_outdated,
+            simulation=False,  # TODO Quickfix for SUP-9912, should be handled in a better way
+            use_only_cache=False,
+            file_cache_mode=FileCacheMode.DISABLED,
+        )
 
     def _make_fetcher(self) -> PiggybackFetcher:
         return PiggybackFetcher(
-            hostname=self.host_config.hostname,
+            hostname=self.hostname,
             address=self.ipaddress,
             time_settings=self.time_settings,
         )
 
-    def _make_summarizer(self) -> PiggybackSummarizer:
+    def _make_summarizer(self, *, exit_spec: ExitSpec) -> PiggybackSummarizer:
         return PiggybackSummarizer(
-            self.exit_spec,
-            hostname=self.host_config.hostname,
+            exit_spec,
+            hostname=self.hostname,
             ipaddress=self.ipaddress,
             time_settings=self.time_settings,
-            # Tag: 'Always use and expect piggback data'
-            always=self.host_config.is_piggyback_host,
+            always=self.is_piggyback_host,
         )
 
     @staticmethod

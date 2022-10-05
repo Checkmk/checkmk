@@ -171,7 +171,7 @@ export class AbstractGUINode {
             .enter()
             .append("svg:image")
             .classed("in_downtime", true)
-            .attr("xlink:href", "themes/facelift/images/icon_downtime.png")
+            .attr("xlink:href", "themes/facelift/images/icon_downtime.svg")
             .attr("x", 0)
             .attr("y", this.radius - 8)
             .attr("width", 24)

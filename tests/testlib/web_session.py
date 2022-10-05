@@ -282,20 +282,3 @@ class CMKWebSession:
         )
 
         assert result is None
-
-    # TODO: Cleanup remaining API call
-    def set_site(self, site_id, site_config) -> None:  # type:ignore[no-untyped-def]
-        result = self._api_request(
-            "webapi.py?action=set_site&request_format=python&output_format=python",
-            {"request": str({"site_id": site_id, "site_config": site_config})},
-            output_format="python",
-        )
-        assert result is None
-
-    # TODO: Cleanup remaining API call
-    def login_site(self, site_id: object, user: str = "cmkadmin", password: str = "cmk") -> None:
-        result = self._api_request(
-            "webapi.py?action=login_site",
-            {"request": json.dumps({"site_id": site_id, "username": user, "password": password})},
-        )
-        assert result is None

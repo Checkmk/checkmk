@@ -33,7 +33,6 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
-import cmk.core_helpers.cache as cache
 from cmk.core_helpers.host_sections import HostSections
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -299,7 +298,6 @@ def _collect_host_sections(
     *,
     fetched: Sequence[Tuple[Source, FetcherMessage]],
     selected_sections: SectionNameCollection,
-    file_cache_max_age: cache.MaxAge,
 ) -> Tuple[
     Mapping[HostKey, HostSections],
     Sequence[Tuple[Source, result.Result[HostSections, Exception]]],
@@ -320,9 +318,7 @@ def _collect_host_sections(
     for source, fetcher_message in fetched:
         console.vverbose("  Source: %s/%s\n" % (source.source_type, source.fetcher_type))
 
-        source.file_cache_max_age = file_cache_max_age
-
-        host_key = HostKey(source.host_config.hostname, source.source_type)
+        host_key = HostKey(source.hostname, source.source_type)
         collected_host_sections.setdefault(
             host_key,
             source.default_host_sections,
@@ -346,9 +342,9 @@ def _collect_host_sections(
             # management board (SNMP or IPMI) does not support piggybacking
             continue
         cmk.utils.piggyback.store_piggyback_raw_data(
-            source.host_config.hostname,
+            source.hostname,
             collected_host_sections.setdefault(
-                HostKey(source.host_config.hostname, source.source_type),
+                HostKey(source.hostname, source.source_type),
                 HostSections[AgentRawDataSection](),
             ).piggybacked_raw_data,
         )
@@ -360,12 +356,10 @@ def make_broker(
     *,
     fetched: Sequence[Tuple[Source, FetcherMessage]],
     selected_sections: SectionNameCollection,
-    file_cache_max_age: cache.MaxAge,
 ) -> Tuple[ParsedSectionsBroker, SourceResults]:
     collected_host_sections, results = _collect_host_sections(
         fetched=fetched,
         selected_sections=selected_sections,
-        file_cache_max_age=file_cache_max_age,
     )
     return (
         ParsedSectionsBroker(

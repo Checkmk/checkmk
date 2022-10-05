@@ -81,6 +81,21 @@ def api_to_agent_daemonset(api_daemonset: api.DaemonSet) -> agent.DaemonSet:
     )
 
 
+# StatefulSet related Factories
+
+
+class APIStatefulSetFactory(ModelFactory):
+    __model__ = api.StatefulSet
+
+
+def api_to_agent_statefulset(api_statefulset: api.StatefulSet) -> agent.StatefulSet:
+    return agent.StatefulSet(
+        metadata=api_statefulset.metadata,
+        spec=api_statefulset.spec,
+        status=api_statefulset.status,
+    )
+
+
 # Namespace & Resource Quota related Factories
 
 

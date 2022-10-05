@@ -69,28 +69,27 @@ class FakeELBClient:
 def get_elb_sections():
     def _create_elb_sections(names, tags):
         region = "region"
-        config = AWSConfig("hostname", [], (None, None))
+        config = AWSConfig("hostname", [], ([], []))
         config.add_single_service_config("elb_names", names)
         config.add_service_tags("elb_tags", tags)
 
         fake_elb_client = FakeELBClient()
         fake_cloudwatch_client = FakeCloudwatchClient()
 
-        elb_limits_distributor = ResultDistributor()
-        elb_summary_distributor = ResultDistributor()
+        distributor = ResultDistributor()
 
-        elb_limits = ELBLimits(fake_elb_client, region, config, elb_limits_distributor)
+        elb_limits = ELBLimits(fake_elb_client, region, config, distributor)
         elb_summary = ELBSummaryGeneric(
-            fake_elb_client, region, config, elb_summary_distributor, resource="elb"
+            fake_elb_client, region, config, distributor, resource="elb"
         )
         elb_labels = ELBLabelsGeneric(fake_elb_client, region, config, resource="elb")
         elb_health = ELBHealth(fake_elb_client, region, config)
         elb = ELB(fake_cloudwatch_client, region, config)
 
-        elb_limits_distributor.add(elb_summary)
-        elb_summary_distributor.add(elb_labels)
-        elb_summary_distributor.add(elb_health)
-        elb_summary_distributor.add(elb)
+        distributor.add(elb_limits.name, elb_summary)
+        distributor.add(elb_summary.name, elb_labels)
+        distributor.add(elb_summary.name, elb_health)
+        distributor.add(elb_summary.name, elb)
         return elb_limits, elb_summary, elb_labels, elb_health, elb
 
     return _create_elb_sections

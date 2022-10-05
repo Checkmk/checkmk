@@ -8,6 +8,7 @@ from tests.testlib.base import Scenario
 from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.type_defs import HostName, result, SourceType
 
+import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers.host_sections import HostSections
 
 import cmk.base.config as config
@@ -27,20 +28,23 @@ def test_attribute_defaults(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     ipaddress = config.lookup_mgmt_board_ip_address(host_config)
 
     source = IPMISource(
-        host_config,
+        hostname,
         ipaddress,
+        id_="mgmt_ipmi",
         simulation_mode=True,
         agent_simulator=True,
         translation={},
         encoding_fallback="ascii",
+        check_interval=0,
+        management_credentials={},
+        file_cache_max_age=file_cache.MaxAge.none(),
     )
-    assert source.host_config.hostname == hostname
-    assert source.ipaddress == ipaddress
     assert source.description == "Management board - IPMI"
     assert source.source_type is SourceType.MANAGEMENT
-    assert source.summarize(result.OK(HostSections[AgentRawDataSection]())) == [
-        ActiveCheckResult(0, "Success")
-    ]
+    assert source.summarize(
+        result.OK(HostSections[AgentRawDataSection]()),
+        exit_spec_cb=host_config.exit_code_spec,
+    ) == [ActiveCheckResult(0, "Success")]
     assert source.id == "mgmt_ipmi"
 
 
@@ -63,15 +67,8 @@ def test_ipmi_ipaddress_from_mgmt_board(monkeypatch) -> None:  # type:ignore[no-
         },
     )
 
-    source = IPMISource(
-        HostConfig.make_host_config(hostname),
-        ipaddress,
-        simulation_mode=True,
-        agent_simulator=True,
-        translation={},
-        encoding_fallback="ascii",
-    )
-    assert source.host_config.management_address == ipaddress
+    host_config = HostConfig.make_host_config(hostname)
+    assert host_config.management_address == ipaddress
 
 
 def test_description_with_ipaddress(monkeypatch) -> None:  # type:ignore[no-untyped-def]

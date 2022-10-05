@@ -5,7 +5,9 @@
 
 # pylint: disable=protected-access
 
-import functools
+import os
+import socket
+from pathlib import Path
 
 import pytest
 
@@ -18,7 +20,6 @@ from cmk.utils.type_defs import AgentRawData, HostKey, HostName, result, Section
 
 from cmk.snmplib.type_defs import SNMPRawData
 
-import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers import (
     FetcherType,
     IPMIFetcher,
@@ -27,8 +28,10 @@ from cmk.core_helpers import (
     SNMPFetcher,
     TCPFetcher,
 )
+from cmk.core_helpers.cache import FileCacheMode, MaxAge
 from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.protocol import FetcherMessage
+from cmk.core_helpers.snmp import SNMPFileCache
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION
 
 import cmk.base.config as config
@@ -37,7 +40,7 @@ from cmk.base.config import HostConfig
 from cmk.base.sources import make_cluster_sources, Source
 from cmk.base.sources.agent import AgentRawDataSection
 from cmk.base.sources.piggyback import PiggybackSource
-from cmk.base.sources.programs import ProgramSource
+from cmk.base.sources.programs import DSProgramSource
 from cmk.base.sources.snmp import SNMPSource
 from cmk.base.sources.tcp import TCPSource
 
@@ -102,9 +105,7 @@ class TestMakeHostSectionsHosts:
             lambda self, raw_data, *, selection: result.OK(
                 DummyHostSection(
                     sections={
-                        SectionName("section_name_%s" % self.host_config.hostname): [
-                            ["section_content"]
-                        ]
+                        SectionName("section_name_%s" % self.hostname): [["section_content"]]
                     },
                     cache_info={},
                     piggybacked_raw_data={},
@@ -135,7 +136,6 @@ class TestMakeHostSectionsHosts:
     ) -> None:
         host_sections = _collect_host_sections(
             fetched=(),
-            file_cache_max_age=file_cache.MaxAge.none(),
             selected_sections=NO_SELECTION,
         )[0]
         assert not host_sections
@@ -148,14 +148,24 @@ class TestMakeHostSectionsHosts:
             fetched=[
                 (
                     SNMPSource.snmp(
-                        host_config,
+                        hostname,
                         ipaddress,
-                        selected_sections=NO_SELECTION,
-                        force_cache_refresh=False,
+                        id_="snmp",
                         on_scan_error=OnError.RAISE,
-                        simulation_mode=True,
-                        agent_simulator=True,
                         missing_sys_description=False,
+                        sections={},
+                        check_intervals={},
+                        snmp_config=host_config.snmp_config(ipaddress),
+                        do_status_data_inventory=False,
+                        cache=SNMPFileCache(
+                            hostname=hostname,
+                            base_path=Path(os.devnull),
+                            max_age=MaxAge.none(),
+                            use_outdated=True,
+                            simulation=True,
+                            use_only_cache=True,
+                            file_cache_mode=FileCacheMode.DISABLED,
+                        ),
                     ),
                     FetcherMessage.from_raw_data(
                         result.OK(raw_data),
@@ -164,7 +174,6 @@ class TestMakeHostSectionsHosts:
                     ),
                 )
             ],
-            file_cache_max_age=file_cache.MaxAge.none(),
             selected_sections=NO_SELECTION,
         )[0]
         assert len(host_sections) == 1
@@ -178,32 +187,58 @@ class TestMakeHostSectionsHosts:
         assert section.sections[SectionName("section_name_%s" % hostname)] == [["section_content"]]
 
     @pytest.mark.parametrize(
-        "source",
+        "make_source",
         [
-            functools.partial(PiggybackSource, time_settings=()),
-            lambda hostname, ipaddress, simulation_mode, agent_simulator, translation, encoding_fallback: ProgramSource.ds(
+            lambda hostname, ipaddress: PiggybackSource(
                 hostname,
                 ipaddress,
-                template="",
-                simulation_mode=simulation_mode,
-                agent_simulator=agent_simulator,
-                translation=translation,
-                encoding_fallback=encoding_fallback,
+                id_="piggyback",
+                simulation_mode=True,
+                agent_simulator=True,
+                time_settings=(),
+                translation={},
+                encoding_fallback="ascii",
+                check_interval=0,
+                is_piggyback_host=True,
+                file_cache_max_age=MaxAge.none(),
             ),
-            TCPSource,
+            lambda hostname, ipaddress: DSProgramSource(
+                hostname,
+                ipaddress,
+                id_="agent",
+                main_data_source=False,
+                cmdline="",
+                stdin=None,
+                simulation_mode=True,
+                agent_simulator=True,
+                translation={},
+                encoding_fallback="ascii",
+                check_interval=0,
+                is_cmc=False,
+                file_cache_max_age=MaxAge.none(),
+            ),
+            lambda hostname, ipaddress: TCPSource(
+                hostname,
+                ipaddress,
+                id_="agent",
+                main_data_source=True,
+                simulation_mode=True,
+                agent_simulator=True,
+                translation={},
+                encoding_fallback="ascii",
+                check_interval=0,
+                address_family=socket.AF_INET,
+                agent_port=0,
+                tcp_connect_timeout=0,
+                agent_encryption={},
+                file_cache_max_age=MaxAge.none(),
+            ),
         ],
     )
     def test_one_nonsnmp_source(  # type:ignore[no-untyped-def]
-        self, hostname, ipaddress, config_cache, host_config, source
+        self, hostname, ipaddress, config_cache, host_config, make_source
     ) -> None:
-        source = source(
-            host_config,
-            ipaddress,
-            simulation_mode=True,
-            agent_simulator=True,
-            translation={},
-            encoding_fallback="ascii",
-        )
+        source = make_source(hostname, ipaddress)
         assert source.source_type is SourceType.HOST
 
         host_sections = _collect_host_sections(
@@ -217,7 +252,6 @@ class TestMakeHostSectionsHosts:
                     ),
                 )
             ],
-            file_cache_max_age=file_cache.MaxAge.none(),
             selected_sections=NO_SELECTION,
         )[0]
         assert len(host_sections) == 1
@@ -230,30 +264,38 @@ class TestMakeHostSectionsHosts:
         assert len(section.sections) == 1
         assert section.sections[SectionName("section_name_%s" % hostname)] == [["section_content"]]
 
-    def test_multiple_sources_from_the_same_host(
-        self,
-        hostname,
-        ipaddress,
-        config_cache,
-        host_config,
-    ):
+    @pytest.mark.usefixtures("config_cache")
+    def test_multiple_sources_from_the_same_host(self, hostname, ipaddress, host_config):
         sources = [
-            ProgramSource.ds(
-                host_config,
+            DSProgramSource(
+                hostname,
                 ipaddress,
-                template="",
+                id_="agent",
+                cmdline="",
+                stdin=None,
+                main_data_source=False,
                 simulation_mode=True,
                 agent_simulator=True,
                 translation={},
                 encoding_fallback="ascii",
+                check_interval=0,
+                is_cmc=False,
+                file_cache_max_age=MaxAge.none(),
             ),
             TCPSource(
-                host_config,
+                hostname,
                 ipaddress,
+                id_="agent",
                 simulation_mode=True,
                 agent_simulator=True,
                 translation={},
                 encoding_fallback="ascii",
+                check_interval=0,
+                address_family=socket.AF_INET,
+                agent_port=0,
+                tcp_connect_timeout=0,
+                agent_encryption={},
+                file_cache_max_age=MaxAge.none(),
             ),
         ]
 
@@ -269,7 +311,6 @@ class TestMakeHostSectionsHosts:
                 )
                 for source in sources
             ],
-            file_cache_max_age=file_cache.MaxAge.none(),
             selected_sections=NO_SELECTION,
         )[0]
         assert len(host_sections) == 1
@@ -292,30 +333,50 @@ class TestMakeHostSectionsHosts:
         ts.apply(monkeypatch)
 
         sources = [
-            ProgramSource.ds(
-                HostConfig.make_host_config(HostName(f"{hostname}0")),
+            DSProgramSource(
+                HostName(f"{hostname}0"),
                 ipaddress,
-                template="",
+                id_="agent",
+                cmdline="",
+                stdin=None,
+                main_data_source=False,
                 simulation_mode=True,
                 agent_simulator=True,
                 translation={},
                 encoding_fallback="ascii",
+                check_interval=0,
+                is_cmc=False,
+                file_cache_max_age=MaxAge.none(),
             ),
             TCPSource(
-                HostConfig.make_host_config(HostName(f"{hostname}1")),
+                HostName(f"{hostname}1"),
                 ipaddress,
+                id_="agent",
                 simulation_mode=True,
                 agent_simulator=True,
                 translation={},
                 encoding_fallback="ascii",
+                check_interval=0,
+                address_family=socket.AF_INET,
+                agent_port=0,
+                tcp_connect_timeout=0,
+                agent_encryption={},
+                file_cache_max_age=MaxAge.none(),
             ),
             TCPSource(
-                HostConfig.make_host_config(HostName(f"{hostname}2")),
+                HostName(f"{hostname}2"),
                 ipaddress,
+                id_="agent",
                 simulation_mode=True,
                 agent_simulator=True,
                 translation={},
                 encoding_fallback="ascii",
+                check_interval=0,
+                address_family=socket.AF_INET,
+                agent_port=0,
+                tcp_connect_timeout=0,
+                agent_encryption={},
+                file_cache_max_age=MaxAge.none(),
             ),
         ]
 
@@ -331,7 +392,6 @@ class TestMakeHostSectionsHosts:
                 )
                 for source in sources
             ],
-            file_cache_max_age=file_cache.MaxAge.none(),
             selected_sections=NO_SELECTION,
         )[0]
 
@@ -342,8 +402,8 @@ class TestMakeHostSectionsHosts:
         }
 
         for source in sources:
-            assert host_sections[HostKey(source.host_config.hostname, SourceType.HOST)].sections[
-                SectionName(f"section_name_{source.host_config.hostname}")
+            assert host_sections[HostKey(source.hostname, SourceType.HOST)].sections[
+                SectionName(f"section_name_{source.hostname}")
             ] == [["section_content"]]
 
 
@@ -373,8 +433,8 @@ class TestMakeHostSectionsClusters:
             lambda self, *args, **kwargs: result.OK(
                 DummyHostSection(
                     sections={
-                        SectionName("section_name_%s" % self.host_config.hostname): [
-                            ["section_content_%s" % self.host_config.hostname]
+                        SectionName("section_name_%s" % self.hostname): [
+                            ["section_content_%s" % self.hostname]
                         ]
                     },
                     cache_info={},
@@ -429,6 +489,7 @@ class TestMakeHostSectionsClusters:
             translation={},
             encoding_fallback="ascii",
             missing_sys_description=True,
+            file_cache_max_age=MaxAge.none(),
         )
 
         host_sections = _collect_host_sections(
@@ -443,7 +504,6 @@ class TestMakeHostSectionsClusters:
                 )
                 for source in sources
             ],
-            file_cache_max_age=file_cache.MaxAge.none(),
             selected_sections=NO_SELECTION,
         )[0]
         assert len(host_sections) == len(nodes)
@@ -507,6 +567,7 @@ def test_get_host_sections_cluster(monkeypatch, mocker) -> None:  # type:ignore[
         translation={},
         encoding_fallback="ascii",
         missing_sys_description=True,
+        file_cache_max_age=MaxAge.none(),
     )
 
     host_sections = _collect_host_sections(
@@ -521,7 +582,6 @@ def test_get_host_sections_cluster(monkeypatch, mocker) -> None:  # type:ignore[
             )
             for source in sources
         ],
-        file_cache_max_age=host_config.max_cachefile_age,
         selected_sections=NO_SELECTION,
     )[0]
     assert len(host_sections) == len(hosts) == 3

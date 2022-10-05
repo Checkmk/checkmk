@@ -5,7 +5,7 @@
 
 import shutil
 from pathlib import Path
-from typing import Any, Mapping, Sequence, Tuple
+from typing import Any, Dict, Mapping, NamedTuple, Optional, Sequence, Tuple
 
 import pytest
 
@@ -382,3 +382,100 @@ def test_iter_active_check_services(  # type:ignore[no-untyped-def]
         core_config.iter_active_check_services(check_name, active_info, hostname, host_attrs, {})
     )
     assert services == expected_result
+
+
+@pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
+def test_template_translation(ipaddress, monkeypatch):  # type: ignore[no-untyped-def]
+    template = "<NOTHING>x<IP>x<HOST>x<host>x<ip>x"
+    hostname = HostName("testhost")
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.apply(monkeypatch)
+
+    assert core_config.translate_ds_program_source_cmdline(
+        template,
+        config.HostConfig.make_host_config(hostname),
+        ipaddress,
+    ) == "<NOTHING>x%sx%sx<host>x<ip>x" % (ipaddress if ipaddress is not None else "", hostname)
+
+
+# The types between core config and the argument thingies is not shared due to
+# a layering violation. Test whether a different type is still handled as valid
+# SpecialAgentConfiguration.
+class TestSpecialAgentConfiguration(NamedTuple):
+    args: Sequence[str]
+    stdin: Optional[str]
+
+
+# Hocus pocus...
+fun_args_stdin: Tuple[Tuple[config.SpecialAgentInfoFunctionResult, Tuple[str, Optional[str]]]] = (
+    ("arg0 arg1", "arg0 arg1", None),
+    (["arg0", "arg1"], "'arg0' 'arg1'", None),
+    (TestSpecialAgentConfiguration(["arg0"], None), "'arg0'", None),
+    (TestSpecialAgentConfiguration(["arg0", "arg1"], None), "'arg0' 'arg1'", None),
+    (TestSpecialAgentConfiguration(["list0", "list1"], None), "'list0' 'list1'", None),
+    (
+        TestSpecialAgentConfiguration(["arg0", "arg1"], "stdin_blob"),
+        "'arg0' 'arg1'",
+        "stdin_blob",
+    ),
+    (
+        TestSpecialAgentConfiguration(["list0", "list1"], "stdin_blob"),
+        "'list0' 'list1'",
+        "stdin_blob",
+    ),
+)  # type: ignore[assignment]
+
+
+class TestMakeSpecialAgentCmdline:
+    # ... and more hocus pocus.
+
+    @pytest.fixture(autouse=True)
+    def agent_dir(self, monkeypatch):
+        dir_ = Path("/tmp")
+        monkeypatch.setattr(cmk.utils.paths, "local_agents_dir", dir_)
+        monkeypatch.setattr(cmk.utils.paths, "agents_dir", dir_)
+        return dir_
+
+    @pytest.fixture
+    def agentname(self):
+        return "my_id"
+
+    @pytest.fixture(params=fun_args_stdin)
+    def patch_config(self, agentname, monkeypatch, request):
+        fun, args, stdin = request.param
+        monkeypatch.setitem(
+            config.special_agent_info,
+            agentname,
+            lambda a, b, c: fun,
+        )
+        return args, stdin
+
+    @pytest.fixture
+    def expected_args(self, patch_config):
+        return patch_config[0]
+
+    @pytest.fixture
+    def expected_stdin(self, patch_config):
+        return patch_config[1]
+
+    @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
+    def test_make_special_agent_cmdline(
+        self,
+        agentname,
+        ipaddress,
+        agent_dir,
+        expected_args,
+        monkeypatch,
+    ):
+        hostname = HostName("testhost")
+        params: Dict[Any, Any] = {}
+        ts = Scenario()
+        ts.add_host(hostname)
+        ts.apply(monkeypatch)
+
+        # end of setup
+
+        assert core_config.make_special_agent_cmdline(hostname, ipaddress, agentname, params) == (
+            str(agent_dir / "special" / ("agent_%s" % agentname)) + " " + expected_args
+        )

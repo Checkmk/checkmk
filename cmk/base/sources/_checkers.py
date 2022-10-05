@@ -7,21 +7,46 @@
 # - Discovery works.
 # - Checking doesn't work - as it was before. Maybe we can handle this in the future.
 
-from typing import Callable, Dict, Final, Iterable, List, Optional, Sequence, Tuple
+from pathlib import Path
+from typing import (
+    Callable,
+    Dict,
+    Final,
+    FrozenSet,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Tuple,
+)
 
+import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils import version
 from cmk.utils.cpu_tracking import CPUTracker
 from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
 from cmk.utils.translations import TranslationOptions
-from cmk.utils.type_defs import HostAddress, HostName
+from cmk.utils.type_defs import HostAddress, HostName, SectionName
 
-import cmk.core_helpers.cache as file_cache
+from cmk.snmplib.type_defs import BackendSNMPTree, SNMPDetectSpec
+
+from cmk.core_helpers.cache import FileCacheGlobals, FileCacheMode, MaxAge
 from cmk.core_helpers.protocol import FetcherMessage
+from cmk.core_helpers.snmp import (
+    SectionMeta,
+    SNMPFetcher,
+    SNMPFileCache,
+    SNMPPluginStore,
+    SNMPPluginStoreItem,
+)
 from cmk.core_helpers.type_defs import NO_SELECTION, SectionNameCollection
 
+import cmk.base.api.agent_based.register as agent_based_register
+import cmk.base.check_table as check_table
 import cmk.base.config as config
+import cmk.base.core_config as core_config
 from cmk.base.config import HostConfig
 
 from ._abstract import Mode, Source
@@ -37,7 +62,7 @@ if version.is_plus_edition():
 else:
 
     class PushAgentSource:  # type: ignore[no-redef]
-        def __init__(self, host_name, *a, **kw) -> None:  # type:ignore[no-untyped-def]
+        def __init__(self, host_name: HostName, *args: object, **kw: object) -> None:
             raise NotImplementedError(
                 f"[{host_name}]: connection mode 'push-agent' not available on "
                 f"{version.edition().title}"
@@ -45,6 +70,94 @@ else:
 
 
 __all__ = ["fetch_all", "make_non_cluster_sources", "make_cluster_sources", "make_sources"]
+
+
+def _make_inventory_sections() -> FrozenSet[SectionName]:
+    return frozenset(
+        s
+        for s in agent_based_register.get_relevant_raw_sections(
+            check_plugin_names=(),
+            inventory_plugin_names=(
+                p.name for p in agent_based_register.iter_all_inventory_plugins()
+            ),
+        )
+        if agent_based_register.is_registered_snmp_section_plugin(s)
+    )
+
+
+def make_plugin_store() -> SNMPPluginStore:
+    inventory_sections = _make_inventory_sections()
+    return SNMPPluginStore(
+        {
+            s.name: SNMPPluginStoreItem(
+                [BackendSNMPTree.from_frontend(base=t.base, oids=t.oids) for t in s.trees],
+                SNMPDetectSpec(s.detect_spec),
+                s.name in inventory_sections,
+            )
+            for s in agent_based_register.iter_all_snmp_sections()
+        }
+    )
+
+
+def make_check_intervals(
+    host_config: HostConfig,
+    *,
+    selected_sections: SectionNameCollection,
+) -> Mapping[SectionName, Optional[int]]:
+    return {
+        section_name: host_config.snmp_fetch_interval(section_name)
+        for section_name in _make_checking_sections(
+            host_config.hostname, selected_sections=selected_sections
+        )
+    }
+
+
+def make_sections(
+    host_config: HostConfig,
+    *,
+    selected_sections: SectionNameCollection,
+) -> Dict[SectionName, SectionMeta]:
+    def needs_redetection(section_name: SectionName) -> bool:
+        section = agent_based_register.get_section_plugin(section_name)
+        return len(agent_based_register.get_section_producers(section.parsed_section_name)) > 1
+
+    checking_sections = _make_checking_sections(
+        host_config.hostname,
+        selected_sections=selected_sections,
+    )
+    disabled_sections = host_config.disabled_snmp_sections()
+    return {
+        name: SectionMeta(
+            checking=name in checking_sections,
+            disabled=name in disabled_sections,
+            redetect=name in checking_sections and needs_redetection(name),
+            fetch_interval=host_config.snmp_fetch_interval(name),
+        )
+        for name in (checking_sections | disabled_sections)
+    }
+
+
+def _make_checking_sections(
+    hostname: HostName,
+    *,
+    selected_sections: SectionNameCollection,
+) -> FrozenSet[SectionName]:
+    if selected_sections is not NO_SELECTION:
+        checking_sections = selected_sections
+    else:
+        checking_sections = frozenset(
+            agent_based_register.get_relevant_raw_sections(
+                check_plugin_names=check_table.get_check_table(
+                    hostname,
+                    filter_mode=check_table.FilterMode.INCLUDE_CLUSTERED,
+                    skip_ignored=True,
+                ).needed_check_names(),
+                inventory_plugin_names=(),
+            )
+        )
+    return frozenset(
+        s for s in checking_sections if agent_based_register.is_registered_snmp_section_plugin(s)
+    )
 
 
 class _Builder:
@@ -63,6 +176,7 @@ class _Builder:
         translation: TranslationOptions,
         encoding_fallback: str,
         missing_sys_description: bool,
+        file_cache_max_age: MaxAge,
     ) -> None:
         super().__init__()
         self.host_config: Final = host_config
@@ -75,6 +189,7 @@ class _Builder:
         self.translation: Final = translation
         self.encoding_fallback: Final = encoding_fallback
         self.missing_sys_description: Final = missing_sys_description
+        self.file_cache_max_age: Final = file_cache_max_age
         self._elems: Dict[str, Source] = {}
 
         self._initialize()
@@ -123,8 +238,9 @@ class _Builder:
         if "no-piggyback" not in self.host_config.tags:
             self._add(
                 PiggybackSource(
-                    self.host_config,
+                    self.host_config.hostname,
                     self.ipaddress,
+                    id_="piggyback",
                     simulation_mode=self.simulation_mode,
                     agent_simulator=self.agent_simulator,
                     time_settings=config.get_config_cache().get_piggybacked_hosts_time_settings(
@@ -132,22 +248,63 @@ class _Builder:
                     ),
                     translation=self.translation,
                     encoding_fallback=self.encoding_fallback,
+                    check_interval=self.host_config.check_mk_check_interval,
+                    is_piggyback_host=self.host_config.is_piggyback_host,
+                    file_cache_max_age=self.file_cache_max_age,
                 )
             )
+
+    def _initialize_snmp_plugin_store(self) -> None:
+        if len(SNMPFetcher.plugin_store) != agent_based_register.len_snmp_sections():
+            # That's a hack.
+            #
+            # `make_plugin_store()` depends on
+            # `iter_all_snmp_sections()` and `iter_all_inventory_plugins()`
+            # that are populated by the Check API upon loading the plugins.
+            #
+            # It is there, when the plugins are loaded, that we should
+            # make the plugin store.  However, it is not clear whether
+            # the API would let us register hooks to accomplish that.
+            #
+            # The current solution is brittle in that there is not guarantee
+            # that all the relevant plugins are loaded at this point.
+            SNMPFetcher.plugin_store = make_plugin_store()
 
     def _initialize_snmp_based(self) -> None:
         if not self.host_config.is_snmp_host:
             return
+        self._initialize_snmp_plugin_store()
+        id_: Final = "snmp"
+        cache = SNMPFileCache(
+            self.host_config.hostname,
+            base_path=Path(cmk.utils.paths.data_source_cache_dir) / id_,
+            max_age=MaxAge.none() if self.force_snmp_cache_refresh else self.file_cache_max_age,
+            use_outdated=self.simulation_mode
+            or (False if self.force_snmp_cache_refresh else FileCacheGlobals.use_outdated),
+            simulation=self.simulation_mode,
+            use_only_cache=False,
+            file_cache_mode=FileCacheMode.DISABLED
+            if FileCacheGlobals.disabled
+            else FileCacheMode.READ_WRITE,
+        )
         self._add(
             SNMPSource.snmp(
-                self.host_config,
+                self.host_config.hostname,
                 self.ipaddress,
-                selected_sections=self.selected_sections,
+                id_=id_,
                 on_scan_error=self.on_scan_error,
-                force_cache_refresh=self.force_snmp_cache_refresh,
-                simulation_mode=self.simulation_mode,
-                agent_simulator=self.agent_simulator,
                 missing_sys_description=self.missing_sys_description,
+                sections=make_sections(
+                    self.host_config,
+                    selected_sections=self.selected_sections,
+                ),
+                check_intervals=make_check_intervals(
+                    self.host_config,
+                    selected_sections=self.selected_sections,
+                ),
+                snmp_config=self.host_config.snmp_config(self.ipaddress),
+                do_status_data_inventory=self.host_config.do_status_data_inventory,
+                cache=cache,
             )
         )
 
@@ -156,6 +313,7 @@ class _Builder:
         if protocol is None:
             return
 
+        self._initialize_snmp_plugin_store()
         ip_address = config.lookup_mgmt_board_ip_address(self.host_config)
         if ip_address is None:
             # HostAddress is not Optional.
@@ -163,27 +321,50 @@ class _Builder:
             # See above.
             return
         if protocol == "snmp":
+            id_: Final = "mgmt_snmp"
+            cache = SNMPFileCache(
+                self.host_config.hostname,
+                base_path=Path(cmk.utils.paths.data_source_cache_dir) / id_,
+                max_age=MaxAge.none() if self.force_snmp_cache_refresh else self.file_cache_max_age,
+                use_outdated=self.simulation_mode
+                or (False if self.force_snmp_cache_refresh else FileCacheGlobals.use_outdated),
+                simulation=self.simulation_mode,
+                use_only_cache=False,
+                file_cache_mode=FileCacheMode.DISABLED
+                if FileCacheGlobals.disabled
+                else FileCacheMode.READ_WRITE,
+            )
             self._add(
                 SNMPSource.management_board(
-                    self.host_config,
+                    self.host_config.hostname,
                     ip_address,
-                    selected_sections=self.selected_sections,
+                    id_=id_,
                     on_scan_error=self.on_scan_error,
-                    force_cache_refresh=self.force_snmp_cache_refresh,
-                    simulation_mode=self.simulation_mode,
-                    agent_simulator=self.agent_simulator,
                     missing_sys_description=self.missing_sys_description,
+                    sections=make_sections(
+                        self.host_config, selected_sections=self.selected_sections
+                    ),
+                    check_intervals=make_check_intervals(
+                        self.host_config, selected_sections=self.selected_sections
+                    ),
+                    snmp_config=self.host_config.management_snmp_config,
+                    do_status_data_inventory=self.host_config.do_status_data_inventory,
+                    cache=cache,
                 )
             )
         elif protocol == "ipmi":
             self._add(
                 IPMISource(
-                    self.host_config,
+                    self.host_config.hostname,
                     ip_address,
+                    id_="mgmt_ipmi",
                     simulation_mode=self.simulation_mode,
                     agent_simulator=self.agent_simulator,
                     translation=self.translation,
                     encoding_fallback=self.encoding_fallback,
+                    check_interval=self.host_config.check_mk_check_interval,
+                    management_credentials=self.host_config.ipmi_credentials,
+                    file_cache_max_age=self.file_cache_max_age,
                 )
             )
         else:
@@ -205,49 +386,81 @@ class _Builder:
         datasource_program = self.host_config.datasource_program
         if datasource_program is not None:
             return DSProgramSource(
-                self.host_config,
+                self.host_config.hostname,
                 self.ipaddress,
+                id_="agent",
                 main_data_source=main_data_source,
-                template=datasource_program,
+                cmdline=core_config.translate_ds_program_source_cmdline(
+                    datasource_program, self.host_config, self.ipaddress
+                ),
+                stdin=None,
                 simulation_mode=self.simulation_mode,
                 agent_simulator=self.agent_simulator,
                 translation=self.translation,
                 encoding_fallback=self.encoding_fallback,
+                check_interval=self.host_config.check_mk_check_interval,
+                is_cmc=config.is_cmc(),
+                file_cache_max_age=self.file_cache_max_age,
             )
 
         connection_mode = self.host_config.agent_connection_mode()
         if connection_mode == "push-agent":
             return PushAgentSource(
-                self.host_config,
+                self.host_config.hostname,
                 self.ipaddress,
+                id_="push-agent",
                 simulation_mode=self.simulation_mode,
                 agent_simulator=self.agent_simulator,
                 translation=self.translation,
                 encoding_fallback=self.encoding_fallback,
+                check_interval=self.host_config.check_mk_check_interval,
+                file_cache_max_age=self.file_cache_max_age,
             )
         if connection_mode == "pull-agent":
             return TCPSource(
-                self.host_config,
+                self.host_config.hostname,
                 self.ipaddress,
+                id_="agent",
                 main_data_source=main_data_source,
                 simulation_mode=self.simulation_mode,
                 agent_simulator=self.agent_simulator,
                 translation=self.translation,
                 encoding_fallback=self.encoding_fallback,
+                check_interval=self.host_config.check_mk_check_interval,
+                address_family=self.host_config.default_address_family,
+                agent_port=self.host_config.agent_port,
+                tcp_connect_timeout=self.host_config.tcp_connect_timeout,
+                agent_encryption=self.host_config.agent_encryption,
+                file_cache_max_age=self.file_cache_max_age,
             )
         raise NotImplementedError(f"connection mode {connection_mode!r}")
 
     def _get_special_agents(self) -> Sequence[Source]:
         return [
             SpecialAgentSource(
-                self.host_config,
+                self.host_config.hostname,
                 self.ipaddress,
-                special_agent_id=agentname,
-                params=params,
+                id_=f"special_{agentname}",
+                cmdline=core_config.make_special_agent_cmdline(
+                    self.host_config.hostname,
+                    self.ipaddress,
+                    agentname,
+                    params,
+                ),
+                stdin=core_config.make_special_agent_stdin(
+                    self.host_config.hostname,
+                    self.ipaddress,
+                    agentname,
+                    params,
+                ),
+                main_data_source=False,
                 simulation_mode=self.simulation_mode,
                 agent_simulator=self.agent_simulator,
                 translation=self.translation,
                 encoding_fallback=self.encoding_fallback,
+                check_interval=self.host_config.check_mk_check_interval,
+                is_cmc=config.is_cmc(),
+                file_cache_max_age=self.file_cache_max_age,
             )
             for agentname, params in self.host_config.special_agents
         ]
@@ -265,6 +478,7 @@ def make_non_cluster_sources(
     translation: TranslationOptions,
     encoding_fallback: str,
     missing_sys_description: bool,
+    file_cache_max_age: MaxAge,
 ) -> Sequence[Source]:
     """Sequence of sources available for `host_config`."""
     return _Builder(
@@ -278,21 +492,19 @@ def make_non_cluster_sources(
         translation=translation,
         encoding_fallback=encoding_fallback,
         missing_sys_description=missing_sys_description,
+        file_cache_max_age=file_cache_max_age,
     ).sources
 
 
 def fetch_all(
     sources: Iterable[Source],
     *,
-    file_cache_max_age: file_cache.MaxAge,
     mode: Mode,
 ) -> Sequence[Tuple[Source, FetcherMessage]]:
     console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
     out: List[Tuple[Source, FetcherMessage]] = []
     for source in sources:
         console.vverbose("  Source: %s/%s\n" % (source.source_type, source.fetcher_type))
-
-        source.file_cache_max_age = file_cache_max_age
 
         with CPUTracker() as tracker:
             raw_data = source.fetch(mode)
@@ -318,6 +530,7 @@ def make_cluster_sources(
     translation: TranslationOptions,
     encoding_fallback: str,
     missing_sys_description: bool,
+    file_cache_max_age: MaxAge,
 ) -> Sequence[Source]:
     """Abstract clusters/nodes/hosts"""
     assert host_config.nodes is not None
@@ -334,6 +547,7 @@ def make_cluster_sources(
             translation=translation,
             encoding_fallback=encoding_fallback,
             missing_sys_description=missing_sys_description,
+            file_cache_max_age=file_cache_max_age,
         )
     ]
 
@@ -351,6 +565,7 @@ def make_sources(
     translation: TranslationOptions,
     encoding_fallback: str,
     missing_sys_description: bool,
+    file_cache_max_age: MaxAge,
 ) -> Sequence[Source]:
     return (
         make_non_cluster_sources(
@@ -364,6 +579,7 @@ def make_sources(
             translation=translation,
             encoding_fallback=encoding_fallback,
             missing_sys_description=missing_sys_description,
+            file_cache_max_age=file_cache_max_age,
         )
         if host_config.nodes is None
         else make_cluster_sources(
@@ -374,5 +590,6 @@ def make_sources(
             translation=translation,
             encoding_fallback=encoding_fallback,
             missing_sys_description=missing_sys_description,
+            file_cache_max_age=file_cache_max_age,
         )
     )

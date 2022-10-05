@@ -829,9 +829,11 @@ def prepare_avo_timeformats(timeformat: AVTimeformatSpec) -> AVTimeFormats:
     return this_timeformat
 
 
-def get_default_avoptions() -> AVOptions:
+def get_default_avoptions(range_spec: tuple[float, float] | None = None) -> AVOptions:
+    if range_spec is None:
+        range_spec = time.time() - 86400, time.time()
     return {
-        "range": ((time.time() - 86400, time.time()), ""),
+        "range": (range_spec, ""),
         "rangespec": "d0",
         "labelling": [],
         "av_levels": None,

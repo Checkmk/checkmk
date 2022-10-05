@@ -200,6 +200,39 @@ metric_info["kube_misscheduled_replicas"] = {
 }
 
 
+metric_info["kube_cron_job_status_job_duration"] = {
+    "title": _("Duration"),
+    "unit": "s",
+    "color": "41/a",
+}
+
+
+metric_info["kube_cron_job_status_last_duration"] = {
+    "title": _("Last completed duration"),
+    "unit": "s",
+    "color": "44/a",
+}
+
+metric_info["kube_cron_job_status_active"] = {
+    "title": _("Active jobs"),
+    "unit": "",
+    "color": "31/a",
+}
+
+
+metric_info["kube_cron_job_status_since_completion"] = {
+    "title": _("Time since last successful completion"),
+    "unit": "s",
+    "color": "16/b",
+}
+
+
+metric_info["kube_cron_job_status_since_schedule"] = {
+    "title": _("Time since last successful schedule"),
+    "unit": "s",
+    "color": "14/b",
+}
+
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
 #   |                   / ___|_ __ __ _ _ __ | |__  ___                    |

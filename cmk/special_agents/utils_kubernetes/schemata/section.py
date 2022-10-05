@@ -49,6 +49,10 @@ class PerformanceContainer(BaseModel):
     name: api.ContainerName
 
 
+class BasePodLifeCycle(BaseModel):
+    phase: api.Phase
+
+
 class CollectorState(enum.Enum):
     OK = "ok"
     ERROR = "error"
@@ -120,6 +124,34 @@ class CronJobInfo(Section):
     suspend: bool
     cluster: str
     kubernetes_cluster_hostname: str
+
+
+class CronJobStatus(Section):
+    """section: kube_cron_job_status_v1"""
+
+    active_jobs_count: int | None
+    last_duration: float | None  # duration of the last completed job
+    last_successful_time: Timestamp | None
+    last_schedule_time: Timestamp | None
+
+
+class JobStatus(BaseModel):
+    conditions: Sequence[api.JobCondition]
+    start_time: Timestamp | None
+    completion_time: Timestamp | None
+
+
+class JobPod(BaseModel):
+    init_containers: Mapping[str, api.ContainerStatus]
+    containers: Mapping[str, api.ContainerStatus]
+    lifecycle: BasePodLifeCycle
+
+
+class CronJobLatestJob(Section):
+    """section: kube_cron_job_latest_job_v1"""
+
+    status: JobStatus
+    pods: Sequence[JobPod]
 
 
 class NodeCollectorMetadata(CollectorMetadata):
@@ -250,10 +282,8 @@ class AllocatablePods(Section):
     allocatable: int
 
 
-class PodLifeCycle(Section):
+class PodLifeCycle(BasePodLifeCycle, Section):
     """section: kube_pod_lifecycle_v1"""
-
-    phase: api.Phase
 
 
 class PodCondition(BaseModel):

@@ -3,6 +3,8 @@
 
 #include "eventlogbase.h"
 
+#include <fmt/core.h>
+
 #include "eventlogstd.h"
 #include "eventlogvista.h"
 #include "logger.h"
@@ -10,7 +12,7 @@
 namespace cma::evl {
 std::unique_ptr<EventLogBase> OpenEvl(const std::wstring &name,
                                       bool vista_api) {
-    if (vista_api && g_evt.close != nullptr) {
+    if (vista_api && IsEvtApiAvailable()) {
         return std::make_unique<EventLogVista>(name);
     }
 
@@ -20,12 +22,13 @@ std::unique_ptr<EventLogBase> OpenEvl(const std::wstring &name,
 /// scans whole eventlog to find worst possible case
 ///
 /// returns pos and case
-std::pair<uint64_t, cma::cfg::EventLevels> ScanEventLog(
-    EventLogBase &log, uint64_t pos, cma::cfg::EventLevels level) {
+std::pair<uint64_t, cfg::EventLevels> ScanEventLog(EventLogBase &log,
+                                                   uint64_t pos,
+                                                   cfg::EventLevels level) {
     // we must seek past the previously read event - if there was one
     log.seek(choosePos(pos));
 
-    auto worst_state = cma::cfg::EventLevels::kAll;
+    auto worst_state = cfg::EventLevels::kAll;
     auto last_pos = pos;
 
     while (true) {
@@ -70,7 +73,7 @@ bool operator!=(const EventLogRecordBase::ptr &lhs,
 ///
 /// returns last scanned pos where processor returns false
 uint64_t PrintEventLog(EventLogBase &log, uint64_t from_pos,
-                       cma::cfg::EventLevels level, bool hide_context,
+                       cfg::EventLevels level, bool hide_context,
                        SkipDuplicatedRecords skip,
                        const EvlProcessor &processor) {
     // we must seek past the previously read event - if there was one
@@ -115,6 +118,69 @@ uint64_t PrintEventLog(EventLogBase &log, uint64_t from_pos,
     }
 
     return last_pos;
+}
+
+std::string EventLogRecordBase::stringize(cfg::EventLevels required,
+                                          bool hide_trash) const {
+    // convert UNIX timestamp to local time
+    auto ch = getEventSymbol(required);
+    if (hide_trash && ch == '.') {
+        return {};
+    }
+
+    auto time_generated = timeGenerated();
+    const auto *t = ::localtime(&time_generated);
+    char timestamp[64];
+    ::strftime(timestamp, sizeof(timestamp), "%b %d %H:%M:%S", t);
+
+    // source is the application that produced the event
+    std::string source_name = wtools::ToUtf8(source());
+    std::ranges::replace(source_name, ' ', '_');
+
+    return fmt::format("{} {} {}.{} {} {}\n",
+                       ch,                 // char symbol
+                       timestamp,          //
+                       eventQualifiers(),  //
+                       eventId(),          //
+                       source_name,        //
+                       wtools::ToUtf8(makeMessage()));
+}
+
+char EventLogRecordBase::getEventSymbol(cfg::EventLevels required) const {
+    switch (eventLevel()) {
+        case Level::error:
+            return 'C';
+        case Level::warning:
+            return 'W';
+        case Level::information:
+        case Level::audit_success:
+        case Level::success:
+            return (required == cfg::EventLevels::kAll)
+                       ? 'O'
+                       : '.';  // potential drop of context
+        case Level::audit_failure:
+            return 'C';
+        default:
+            return 'u';
+    }
+}
+
+/// decode windows level to universal
+cfg::EventLevels EventLogRecordBase::calcEventLevel() const {
+    switch (eventLevel()) {
+        case Level::error:
+            return cfg::EventLevels::kCrit;
+        case Level::warning:
+            return cfg::EventLevels::kWarn;
+        case Level::information:
+        case Level::audit_success:
+        case Level::success:
+            return cfg::EventLevels::kAll;
+        case Level::audit_failure:
+            return cfg::EventLevels::kCrit;
+        default:
+            return cfg::EventLevels::kWarn;
+    }
 }
 
 }  // namespace cma::evl

@@ -23,9 +23,18 @@ from cmk.base.plugins.agent_based.utils.lnx_if import Section
 # and from lnx_if
 
 
+# The definition of the types can be looked up: include/uapi/linux/if_arp.h
+KNOWN_LOOPBACK_TYPE_IDS = {"772"}
+
+
 class InterfaceStatus(Enum):
     UP = "1"
     DOWN = "2"
+
+
+class InterfaceType(Enum):
+    LOOPBACK = "24"
+    NOT_LOOPBACK = "6"
 
 
 def _parse_raw_stats(line: Sequence[str]) -> Mapping[str, str]:
@@ -79,14 +88,33 @@ def _parse_interface_status(carrier: str) -> InterfaceStatus:
     raise ValueError(f"Unknown value for carrier: '{carrier}'")
 
 
+def _parse_interface_types(raw_type: str, interface_name: str) -> InterfaceType:
+    """
+    >>> _parse_interface_types("1", "tomato")
+    <InterfaceType.NOT_LOOPBACK: '6'>
+
+    >>> _parse_interface_types("772", "tomato")
+    <InterfaceType.LOOPBACK: '24'>
+    >>> _parse_interface_types("1", "lo")
+    <InterfaceType.LOOPBACK: '24'>
+    """
+    # Linux interfaces are always assumed to be ethernet and discovered unless they
+    # are proven to be Loopback interfaces.
+    # It is possible to be more exact, however, this is only relevant for the discovery.
+    if raw_type in KNOWN_LOOPBACK_TYPE_IDS or interface_name == "lo":
+        return InterfaceType.LOOPBACK
+    return InterfaceType.NOT_LOOPBACK
+
+
 def _create_interface(raw_stats: Mapping[str, str]) -> InterfaceWithCounters:
     multicast = float(raw_stats["multicast"])
+    name = raw_stats["name"]
     return InterfaceWithCounters(
         attributes=Attributes(
             index=raw_stats["ifindex"],
-            descr=raw_stats["name"],
-            alias=raw_stats["ifalias"],
-            type=raw_stats["type"],
+            descr=name,
+            alias=name,
+            type=_parse_interface_types(raw_stats["type"], name).value,
             speed=_parse_speed(raw_stats["speed"]),
             oper_status=_parse_interface_status(raw_stats["carrier"]).value,
             phys_address=mac_address_from_hexstring(raw_stats["address"]),

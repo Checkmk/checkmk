@@ -23,19 +23,19 @@ from .agent_aws_fake_clients import FakeCloudwatchClient
 def get_cloudwatch_alarms_sections():
     def _create_cloudwatch_alarms_sections(alarm_names):
         region = "region"
-        config = AWSConfig("hostname", [], (None, None))
+        config = AWSConfig("hostname", [], ([], []))
         config.add_single_service_config("cloudwatch_alarms", alarm_names)
 
         fake_cloudwatch_client = FakeCloudwatchClient()
 
-        cloudwatch_alarms_limits_distributor = ResultDistributor()
+        distributor = ResultDistributor()
 
         cloudwatch_alarms_limits = CloudwatchAlarmsLimits(
-            fake_cloudwatch_client, region, config, cloudwatch_alarms_limits_distributor
+            fake_cloudwatch_client, region, config, distributor
         )
         cloudwatch_alarms = CloudwatchAlarms(fake_cloudwatch_client, region, config)
 
-        cloudwatch_alarms_limits_distributor.add(cloudwatch_alarms)
+        distributor.add(cloudwatch_alarms_limits.name, cloudwatch_alarms)
         return cloudwatch_alarms_limits, cloudwatch_alarms
 
     return _create_cloudwatch_alarms_sections

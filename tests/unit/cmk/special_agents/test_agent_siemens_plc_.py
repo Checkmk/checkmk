@@ -94,7 +94,9 @@ from cmk.special_agents.agent_siemens_plc import (
         ),
     ],
 )
-def test_parse_spec(hostspec, expected_parsed_device) -> None:  # type:ignore[no-untyped-def]
+def test_parse_spec(
+    hostspec: str, expected_parsed_device: dict[str, str | int | list[dict[str, str | None | int]]]
+) -> None:
     assert parse_spec(hostspec) == expected_parsed_device
 
 
@@ -104,7 +106,7 @@ def test_parse_spec(hostspec, expected_parsed_device) -> None:  # type:ignore[no
         ("merker", 131),
     ],
 )
-def test__area_name_to_area_id(area_name, expected_id) -> None:  # type:ignore[no-untyped-def]
+def test__area_name_to_area_id(area_name: str, expected_id: int) -> None:
     assert _area_name_to_area_id(area_name) == expected_id
 
 
@@ -141,8 +143,8 @@ def test__area_name_to_area_id(area_name, expected_id) -> None:  # type:ignore[n
         ),
     ],
 )
-def test__addresses_from_area_values(  # type:ignore[no-untyped-def]
-    values, expected_addresses
+def test__addresses_from_area_values(
+    values: list[dict[str, str | None | int]], expected_addresses: tuple[int, int]
 ) -> None:
     assert _addresses_from_area_values(values) == expected_addresses
 
@@ -188,8 +190,11 @@ def test__addresses_from_area_values(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test__cast_values(  # type:ignore[no-untyped-def]
-    values, start_address, area_value, expected_value
+def test__cast_values(
+    values: list[dict[str, str | None | int]],
+    start_address: int,
+    area_value: bytes,
+    expected_value: list[tuple[str, str]],
 ) -> None:
     assert _cast_values(values, start_address, area_value) == expected_value
 
@@ -276,8 +281,9 @@ def test__cast_values(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test__group_device_values(  # type:ignore[no-untyped-def]
-    device, expected_grouped_values
+def test__group_device_values(
+    device: dict[str, str | int | list[dict[str, str | None | int]]],
+    expected_grouped_values: list[tuple[tuple[str, None], list[dict[str, str | None | int]]]],
 ) -> None:
     actual_values = [(i, list(j)) for i, j in _group_device_values(device)]
     assert actual_values == expected_grouped_values

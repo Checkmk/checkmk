@@ -21,6 +21,8 @@ from cmk.special_agents.agent_aws import (
     LambdaProvisionedConcurrency,
     LambdaRegionLimits,
     LambdaSummary,
+    OverallTags,
+    ResultDistributor,
 )
 
 from .agent_aws_fake_clients import (
@@ -79,15 +81,15 @@ class FakeLambdaClient:
         }
 
 
-def create_config(names: Sequence[str], tags: Sequence[tuple[str, str]]) -> AWSConfig:
-    config = AWSConfig("hostname", [], (None, None))
+def create_config(names: Sequence[str], tags: OverallTags) -> AWSConfig:
+    config = AWSConfig("hostname", [], ([], []))
     config.add_single_service_config("lambda_names", names)
     config.add_service_tags("lambda_tags", tags)
     return config
 
 
 def get_lambda_sections(
-    names: Sequence[str], tags: Sequence[tuple[str, str]]
+    names: Sequence[str], tags: OverallTags
 ) -> tuple[
     LambdaRegionLimits,
     LambdaSummary,
@@ -95,12 +97,15 @@ def get_lambda_sections(
     LambdaCloudwatch,
     LambdaCloudwatchInsights,
 ]:
+    distributor = ResultDistributor()
+
     return _create_lamdba_sections(
         FakeLambdaClient(False),
         FakeCloudwatchClient(),
         FakeCloudwatchClientLogsClient(),
         "region",
         create_config(names, tags),
+        distributor,
     )
 
 
@@ -137,7 +142,7 @@ summary_params = [
 @pytest.mark.parametrize("names,tags", no_tags_or_names_params)
 def test_agent_aws_lambda_region_limits(
     names: Sequence[str],
-    tags: Sequence[tuple[str, str]],
+    tags: OverallTags,
 ) -> None:
     (
         lambda_limits,
@@ -155,7 +160,7 @@ def test_agent_aws_lambda_region_limits(
 
 @pytest.mark.parametrize("names,tags,expected", summary_params)
 def test_agent_aws_lambda_summary(
-    names: Sequence[str], tags: Sequence[tuple[str, str]], expected: Sequence[str]
+    names: Sequence[str], tags: OverallTags, expected: Sequence[str]
 ) -> None:
     (
         _lambda_limits,
@@ -177,7 +182,7 @@ def test_agent_aws_lambda_summary(
 
 
 @pytest.mark.parametrize("names,tags", no_tags_or_names_params)
-def test_agent_aws_lambda_cloudwatch(names: Sequence[str], tags: Sequence[tuple[str, str]]) -> None:
+def test_agent_aws_lambda_cloudwatch(names: Sequence[str], tags: OverallTags) -> None:
     (
         _lambda_limits,
         lambda_summary,
@@ -204,7 +209,7 @@ def test_agent_aws_lambda_cloudwatch(names: Sequence[str], tags: Sequence[tuple[
 
 @pytest.mark.parametrize("names,tags", no_tags_or_names_params)
 def test_agent_aws_lambda_provisioned_concurrency_configuration(
-    names: Sequence[str], tags: Sequence[tuple[str, str]]
+    names: Sequence[str], tags: OverallTags
 ) -> None:
     (
         _lambda_limits,
@@ -231,9 +236,7 @@ def test_agent_aws_lambda_provisioned_concurrency_configuration(
 
 
 @pytest.mark.parametrize("names,tags", no_tags_or_names_params)
-def test_agent_aws_lambda_cloudwatch_insights(
-    names: Sequence[str], tags: Sequence[tuple[str, str]]
-) -> None:
+def test_agent_aws_lambda_cloudwatch_insights(names: Sequence[str], tags: OverallTags) -> None:
     (
         _lambda_limits,
         lambda_summary,

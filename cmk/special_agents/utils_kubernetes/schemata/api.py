@@ -624,10 +624,84 @@ class CronJobSpec(BaseModel):
     suspend: bool
 
 
+class CronJobStatus(BaseModel):
+    """
+    active:
+        a list of uids of currently running jobs
+    last_schedule_time:
+        information when was the last time the job was successfully scheduled (!= finished)
+    last_successful_time:
+        information when was the last time the job successfully completed
+    """
+
+    active: Sequence[JobUID] | None
+    last_schedule_time: Timestamp | None
+    last_successful_time: Timestamp | None
+
+
 class CronJob(BaseModel):
     uid: CronJobUID
     metadata: MetaData[str]
     spec: CronJobSpec
+    status: CronJobStatus
+    pod_uids: Sequence[PodUID]
+    job_uids: Sequence[JobUID]
+
+
+class JobConditionType(enum.Enum):
+    COMPLETE = "Complete"
+    FAILED = "Failed"
+    SUSPENDED = "Suspended"
+
+
+class JobCondition(BaseModel):
+    """
+    Remember: on job status level, conditions is a list of conditions
+    Scenarios:
+        * Job fails: type="Failed" & status is true
+        * Job suspended: type="Suspended" & status is true
+        * Job resumes: one of the status will become false
+        * Job completed: type="Complete" status true
+    """
+
+    type_: JobConditionType
+    status: ConditionStatus
+
+
+class JobStatus(BaseModel):
+    """
+    * Kubernetes Job Controller creates a pod based on the single pod template in the Job spec -> It
+    is not possible to have multiple pods in a Job (https://stackoverflow.com/a/63165871)
+    -> but Kubernetes is extensible and one can define its own Custom Resource and write a
+    controller which supports multiple pod templates (considered out of scope)
+
+    fields:
+        active:
+            number of pending & running pods
+        failed | succeeded | ready:
+            number of pods which reached phase Failed | Succeeded | have a ready condition
+        completion_time:
+            the completion time is only set when the job finishes successfully
+        start_time:
+            * represents time when job controller started processing a job
+            * When job is created in suspended state, then the value is not set until job is resumed
+            * the value is reset when the job transitions from suspended to resumed
+            (https://kubernetes.io/blog/2021/04/12/introducing-suspended-jobs/)
+
+    """
+
+    active: int | None
+    start_time: Timestamp | None
+    completion_time: Timestamp | None
+    failed: int | None  # it appears that None is equivalent to 0 failed
+    succeeded: int | None
+    conditions: Sequence[JobCondition] | None
+
+
+class Job(BaseModel):
+    uid: JobUID
+    metadata: MetaData[str]
+    status: JobStatus
     pod_uids: Sequence[PodUID]
 
 

@@ -3,11 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import socket
+
 import pytest
 
 from tests.testlib.base import Scenario
 
-from cmk.utils.type_defs import result, SectionName
+from cmk.utils.type_defs import HostName, result, SectionName
+
+import cmk.core_helpers.cache as file_cache
 
 from cmk.base import config
 from cmk.base.config import HostConfig
@@ -111,39 +115,89 @@ def test_host_config_creates_passing_source_sources(
             translation={},
             encoding_fallback="ascii",
             missing_sys_description=False,
+            file_cache_max_age=file_cache.MaxAge.none(),
         )
     ] == sources
 
 
 @pytest.mark.parametrize(
-    "source, kwargs",
+    "make_source",
     [
-        (SpecialAgentSource, {"special_agent_id": None, "params": None}),
-        (DSProgramSource, {"template": ""}),
-        (PiggybackSource, {"time_settings": ()}),
-        (TCPSource, {}),
+        lambda hostname, ipaddress: SpecialAgentSource(
+            hostname,
+            ipaddress,
+            id_="special_veryspecial",
+            simulation_mode=True,
+            agent_simulator=True,
+            translation={},
+            encoding_fallback="ascii",
+            check_interval=0,
+            cmdline="",
+            stdin="",
+            main_data_source=False,
+            is_cmc=False,
+            file_cache_max_age=file_cache.MaxAge.none(),
+        ),
+        lambda hostname, ipaddress: DSProgramSource(
+            hostname,
+            ipaddress,
+            id_="agent",
+            simulation_mode=True,
+            agent_simulator=True,
+            translation={},
+            encoding_fallback="ascii",
+            check_interval=0,
+            cmdline="",
+            stdin=None,
+            main_data_source=False,
+            is_cmc=False,
+            file_cache_max_age=file_cache.MaxAge.none(),
+        ),
+        lambda hostname, ipaddress: PiggybackSource(
+            hostname,
+            ipaddress,
+            id_="piggyback",
+            simulation_mode=True,
+            agent_simulator=True,
+            translation={},
+            encoding_fallback="ascii",
+            time_settings=(),
+            check_interval=0,
+            is_piggyback_host=True,
+            file_cache_max_age=file_cache.MaxAge.none(),
+        ),
+        lambda hostname, ipaddress: TCPSource(
+            hostname,
+            ipaddress,
+            id_="agent",
+            simulation_mode=True,
+            agent_simulator=True,
+            translation={},
+            encoding_fallback="ascii",
+            check_interval=0,
+            address_family=socket.AF_INET,
+            agent_port=0,
+            tcp_connect_timeout=0,
+            agent_encryption={},
+            file_cache_max_age=file_cache.MaxAge.none(),
+        ),
     ],
 )
 def test_data_source_preselected(  # type:ignore[no-untyped-def]
-    monkeypatch, source, kwargs
+    monkeypatch, make_source
 ) -> None:
-
     selected_sections = {SectionName("keep")}  # <- this is what we care about
-    kwargs["simulation_mode"] = True
-    kwargs["agent_simulator"] = True
-    kwargs["translation"] = {}
-    kwargs["encoding_fallback"] = "ascii"
 
     # a lot of hocus pocus to instantiate a source:
-    make_scenario("hostname", {}).apply(monkeypatch)
+    hostname = HostName("hostname")
+    make_scenario(hostname, {}).apply(monkeypatch)
     monkeypatch.setattr(config, "special_agent_info", {None: lambda *a: []})
-    source_inst = source(
-        HostConfig.make_host_config("hostname"),
+    source = make_source(
+        hostname,
         "127.0.0.1",
-        **kwargs,
     )
 
-    parse_result = source_inst.parse(
+    parse_result = source.parse(
         result.OK(
             b"<<<dismiss>>>\n"
             b"this is not\n"

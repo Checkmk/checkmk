@@ -10,6 +10,7 @@ from cmk.base.plugins.agent_based.section_lnx_container_host_if import parse_lnx
 from cmk.base.plugins.agent_based.utils.interfaces import (
     Attributes,
     Counters,
+    DISCOVERY_DEFAULT_PARAMETERS,
     InterfaceWithCounters,
 )
 
@@ -39,8 +40,8 @@ INTERFACE = InterfaceWithCounters(
     attributes=Attributes(
         index="2",
         descr="wlo1",
-        alias="",
-        type="1",
+        alias="wlo1",
+        type="6",
         speed=0.0,
         oper_status="1",
         out_qlen=0.0,
@@ -73,15 +74,11 @@ def test_parse_lnx_container_host_if() -> None:
     assert parse_lnx_container_host_if(STRING_TABLE) == ([INTERFACE], {})
 
 
-def test_discover_lnx_if() -> None:
+def test_discover_lnx_if_default_discovery() -> None:
+    """Interfaces are discovered per default if they are UP and not Loopback."""
     discovered_services = list(
         discover_lnx_if(
-            params=[
-                {
-                    "discovery_single": (True, {"item_appearance": "index"}),
-                    "matching_conditions": (True, {}),
-                }
-            ],
+            params=[DISCOVERY_DEFAULT_PARAMETERS],
             section_lnx_if=([INTERFACE], {}),
             section_bonding=None,
         )

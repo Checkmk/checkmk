@@ -5,6 +5,9 @@
 
 # pylint: disable=protected-access
 
+import os
+from pathlib import Path
+
 import pytest
 
 from tests.testlib.base import Scenario
@@ -13,8 +16,11 @@ from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import MKIPAddressLookupError, OnError
 from cmk.utils.type_defs import CheckPluginName, HostName, ParsedSectionName, result, SourceType
 
+from cmk.snmplib.type_defs import SNMPBackendEnum, SNMPHostConfig
+
+from cmk.core_helpers.cache import FileCacheMode, MaxAge
 from cmk.core_helpers.host_sections import HostSections
-from cmk.core_helpers.type_defs import NO_SELECTION
+from cmk.core_helpers.snmp import SNMPFileCache
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
@@ -24,43 +30,53 @@ from cmk.base.sources.agent import AgentRawDataSection
 from cmk.base.sources.snmp import SNMPSource
 
 
-@pytest.fixture(name="hostname")
-def hostname_fixture():
-    return "hostname"
-
-
-@pytest.fixture(name="ipaddress")
-def ipaddress_fixture():
-    return "1.2.3.4"
-
-
-@pytest.fixture(name="scenario")
-def scenario_fixture(hostname, monkeypatch):
-    ts = Scenario()
-    ts.add_host(hostname)
-    ts.apply(monkeypatch)
-
-
 @pytest.fixture(name="source")
-def source_fixture(scenario, hostname, ipaddress):
+def source_fixture():
+    hostname = HostName("hostname")
     return SNMPSource.snmp(
-        HostConfig.make_host_config(hostname),
-        ipaddress,
-        selected_sections=NO_SELECTION,
+        hostname,
+        "1.2.3.4",
+        id_="snmp",
         on_scan_error=OnError.RAISE,
-        force_cache_refresh=False,
-        simulation_mode=True,
-        agent_simulator=True,
         missing_sys_description=False,
+        sections={},
+        check_intervals={},
+        snmp_config=SNMPHostConfig(
+            hostname=hostname,
+            ipaddress="1.2.3.4",
+            is_ipv6_primary=False,
+            credentials=(),
+            port=0,
+            is_bulkwalk_host=False,
+            is_snmpv2or3_without_bulkwalk_host=False,
+            bulk_walk_size_of=0,
+            timing={},
+            oid_range_limits={},
+            snmpv3_contexts=[],
+            character_encoding=None,
+            is_usewalk_host=False,
+            snmp_backend=SNMPBackendEnum.CLASSIC,
+        ),
+        do_status_data_inventory=False,
+        cache=SNMPFileCache(
+            hostname=hostname,
+            base_path=Path(os.devnull),
+            max_age=MaxAge.none(),
+            use_outdated=True,
+            simulation=True,
+            use_only_cache=True,
+            file_cache_mode=FileCacheMode.DISABLED,
+        ),
     )
 
 
 def test_snmp_ipaddress_from_mgmt_board_unresolvable(  # type:ignore[no-untyped-def]
-    hostname, monkeypatch
+    monkeypatch,
 ) -> None:
     def fake_lookup_ip_address(*_a, **_kw):
         raise MKIPAddressLookupError("Failed to ...")
 
+    hostname = "hostname"
     ts = Scenario()
     ts.add_host(hostname)
     ts.apply(monkeypatch)
@@ -72,78 +88,9 @@ def test_snmp_ipaddress_from_mgmt_board_unresolvable(  # type:ignore[no-untyped-
             "hostname": {"management_address": "lolo"},
         },
     )
+
     host_config = config.get_config_cache().get_host_config(hostname)
     assert config.lookup_mgmt_board_ip_address(host_config) is None
-
-
-def test_attribute_defaults(  # type:ignore[no-untyped-def]
-    source, hostname, ipaddress, monkeypatch
-) -> None:
-    assert source.host_config.hostname == hostname
-    assert source.ipaddress == ipaddress
-    assert source.id == "snmp"
-    assert source._on_snmp_scan_error == OnError.RAISE
-
-
-def test_description_with_ipaddress(source, monkeypatch) -> None:  # type:ignore[no-untyped-def]
-    default = "SNMP (Community: 'public', Bulk walk: no, Port: 161, Backend: Classic)"
-    assert source.description == default
-
-
-class TestSNMPSource_SNMP:
-    def test_attribute_defaults(self, monkeypatch) -> None:  # type:ignore[no-untyped-def]
-        hostname = HostName("testhost")
-        ipaddress = "1.2.3.4"
-
-        ts = Scenario()
-        ts.add_host(hostname)
-        ts.apply(monkeypatch)
-
-        source = SNMPSource.snmp(
-            HostConfig.make_host_config(hostname),
-            ipaddress,
-            selected_sections=NO_SELECTION,
-            on_scan_error=OnError.RAISE,
-            force_cache_refresh=False,
-            simulation_mode=True,
-            agent_simulator=True,
-            missing_sys_description=False,
-        )
-        assert source.description == (
-            "SNMP (Community: 'public', Bulk walk: no, Port: 161, Backend: Classic)"
-        )
-
-
-class TestSNMPSource_MGMT:
-    def test_attribute_defaults(self, monkeypatch) -> None:  # type:ignore[no-untyped-def]
-        hostname = HostName("testhost")
-        ipaddress = "1.2.3.4"
-
-        ts = Scenario()
-        ts.add_host(hostname)
-        ts.set_option("management_protocol", {hostname: "snmp"})
-        ts.set_option(
-            "host_attributes",
-            {
-                hostname: {"management_address": ipaddress},
-            },
-        )
-        ts.apply(monkeypatch)
-
-        source = SNMPSource.management_board(
-            HostConfig.make_host_config(hostname),
-            ipaddress,
-            force_cache_refresh=False,
-            selected_sections=NO_SELECTION,
-            on_scan_error=OnError.RAISE,
-            simulation_mode=True,
-            agent_simulator=True,
-            missing_sys_description=False,
-        )
-        assert source.description == (
-            "Management board - SNMP "
-            "(Community: 'public', Bulk walk: no, Port: 161, Backend: Classic)"
-        )
 
 
 class TestSNMPSummaryResult:
@@ -161,28 +108,58 @@ class TestSNMPSummaryResult:
     @pytest.fixture
     def source(self, hostname: HostName):  # type:ignore[no-untyped-def]
         return SNMPSource(
-            HostConfig.make_host_config(hostname),
+            hostname,
             "1.2.3.4",
-            force_cache_refresh=False,
-            selected_sections=NO_SELECTION,
             source_type=SourceType.HOST,
-            id_="snmp_id",
+            id_="snmp",
             title="snmp title",
             on_scan_error=OnError.RAISE,
-            simulation_mode=True,
-            agent_simulator=True,
             missing_sys_description=False,
+            sections={},
+            check_intervals={},
+            snmp_config=SNMPHostConfig(
+                hostname="hostname",
+                ipaddress="1.2.3.4",
+                is_ipv6_primary=False,
+                credentials=(),
+                port=0,
+                is_bulkwalk_host=False,
+                is_snmpv2or3_without_bulkwalk_host=False,
+                bulk_walk_size_of=0,
+                timing={},
+                oid_range_limits={},
+                snmpv3_contexts=[],
+                character_encoding=None,
+                is_usewalk_host=False,
+                snmp_backend=SNMPBackendEnum.CLASSIC,
+            ),
+            do_status_data_inventory=False,
+            cache=SNMPFileCache(
+                hostname=hostname,
+                base_path=Path(os.devnull),
+                max_age=MaxAge.none(),
+                use_outdated=True,
+                simulation=True,
+                use_only_cache=True,
+                file_cache_mode=FileCacheMode.DISABLED,
+            ),
         )
 
     @pytest.mark.usefixtures("scenario")
     def test_defaults(self, source) -> None:  # type:ignore[no-untyped-def]
-        assert source.summarize(result.OK(HostSections[AgentRawDataSection]())) == [
-            ActiveCheckResult(0, "Success")
+        assert source.summarize(
+            result.OK(HostSections[AgentRawDataSection]()),
+            exit_spec_cb=HostConfig.make_host_config(source.hostname).exit_code_spec,
+        ) == [
+            ActiveCheckResult(0, "Success"),
         ]
 
     @pytest.mark.usefixtures("scenario")
     def test_with_exception(self, source) -> None:  # type:ignore[no-untyped-def]
-        assert source.summarize(result.Error(Exception())) == [ActiveCheckResult(3)]
+        assert source.summarize(
+            result.Error(Exception()),
+            exit_spec_cb=HostConfig.make_host_config(source.hostname).exit_code_spec,
+        ) == [ActiveCheckResult(3)]
 
 
 @pytest.fixture(name="check_plugin")

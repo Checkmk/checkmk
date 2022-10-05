@@ -38,26 +38,21 @@ class FakeGlacierClient:
 def get_glacier_sections():
     def _create_glacier_sections(names, tags):
         region = "eu-central-1"
-        config = AWSConfig("hostname", [], (None, None))
+        config = AWSConfig("hostname", [], ([], []))
         config.add_single_service_config("glacier_names", names)
         config.add_service_tags("glacier_tags", tags)
 
         fake_glacier_client = FakeGlacierClient()
         fake_cloudwatch_client = FakeCloudwatchClient()
 
-        glacier_limits_distributor = ResultDistributor()
-        glacier_summary_distributor = ResultDistributor()
+        distributor = ResultDistributor()
 
-        glacier_limits = GlacierLimits(
-            fake_glacier_client, region, config, glacier_limits_distributor
-        )
-        glacier_summary = GlacierSummary(
-            fake_glacier_client, region, config, glacier_summary_distributor
-        )
+        glacier_limits = GlacierLimits(fake_glacier_client, region, config, distributor)
+        glacier_summary = GlacierSummary(fake_glacier_client, region, config, distributor)
         glacier = Glacier(fake_cloudwatch_client, region, config)
 
-        glacier_limits_distributor.add(glacier_summary)
-        glacier_summary_distributor.add(glacier)
+        distributor.add(glacier_limits.name, glacier_summary)
+        distributor.add(glacier_summary.name, glacier)
         return glacier_limits, glacier_summary, glacier
 
     return _create_glacier_sections

@@ -4,92 +4,42 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Dict, Final, Optional, Set
+from typing import Final, Literal, Mapping, Optional
 
+import cmk.utils.paths
 from cmk.utils.exceptions import OnError
-from cmk.utils.type_defs import HostAddress, SectionName, SourceType
+from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, SectionName, SourceType
 
-from cmk.snmplib.type_defs import (
-    BackendSNMPTree,
-    SNMPDetectSpec,
-    SNMPHostConfig,
-    SNMPRawData,
-    SNMPRawDataSection,
-)
+from cmk.snmplib.type_defs import SNMPHostConfig, SNMPRawData, SNMPRawDataSection
 
 from cmk.core_helpers import FetcherType, SNMPFetcher
 from cmk.core_helpers.cache import FileCache, SectionStore
 from cmk.core_helpers.host_sections import HostSections
-from cmk.core_helpers.snmp import (
-    SectionMeta,
-    SNMPFileCacheFactory,
-    SNMPParser,
-    SNMPPluginStore,
-    SNMPPluginStoreItem,
-    SNMPSummarizer,
-)
-from cmk.core_helpers.type_defs import NO_SELECTION, SectionNameCollection
-
-import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.check_table as check_table
-from cmk.base.config import HostConfig
+from cmk.core_helpers.snmp import SectionMeta, SNMPParser, SNMPSummarizer
 
 from ._abstract import Source
-
-
-def make_inventory_sections() -> Set[SectionName]:
-    return {
-        s
-        for s in agent_based_register.get_relevant_raw_sections(
-            check_plugin_names=(),
-            inventory_plugin_names=(
-                p.name for p in agent_based_register.iter_all_inventory_plugins()
-            ),
-        )
-        if agent_based_register.is_registered_snmp_section_plugin(s)
-    }
-
-
-def make_plugin_store() -> SNMPPluginStore:
-    inventory_sections = make_inventory_sections()
-    return SNMPPluginStore(
-        {
-            s.name: SNMPPluginStoreItem(
-                [BackendSNMPTree.from_frontend(base=t.base, oids=t.oids) for t in s.trees],
-                SNMPDetectSpec(s.detect_spec),
-                s.name in inventory_sections,
-            )
-            for s in agent_based_register.iter_all_snmp_sections()
-        }
-    )
 
 
 class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
     def __init__(
         self,
-        host_config: HostConfig,
+        hostname: HostName,
         ipaddress: Optional[HostAddress],
         *,
         source_type: SourceType,
-        selected_sections: SectionNameCollection,
-        id_: str,
-        force_cache_refresh: bool,
-        cache_dir: Optional[Path] = None,
+        id_: Literal["snmp", "mgmt_snmp"],
         persisted_section_dir: Optional[Path] = None,
         title: str,
         on_scan_error: OnError,
-        simulation_mode: bool,
-        agent_simulator: bool,
         missing_sys_description: bool,
+        sections: Mapping[SectionName, SectionMeta],
+        check_intervals: Mapping[SectionName, Optional[int]],
+        snmp_config: SNMPHostConfig,
+        do_status_data_inventory: bool,
+        cache: FileCache[SNMPRawData],
     ):
-        snmp_config = (
-            # Because of crap inheritance.
-            host_config.snmp_config(ipaddress)
-            if source_type is SourceType.HOST
-            else host_config.management_snmp_config
-        )
         super().__init__(
-            host_config,
+            hostname,
             ipaddress,
             source_type=source_type,
             fetcher_type=FetcherType.SNMP,
@@ -97,161 +47,105 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             default_raw_data={},
             default_host_sections=HostSections[SNMPRawDataSection](),
             id_=id_,
-            cache_dir=cache_dir,
-            persisted_section_dir=persisted_section_dir,
-            simulation_mode=simulation_mode,
-            agent_simulator=agent_simulator,
         )
-        self.selected_sections = selected_sections
-        self.snmp_config = snmp_config
+        self.snmp_config: Final = snmp_config
         self.missing_sys_description: Final = missing_sys_description
-        self._on_snmp_scan_error = on_scan_error
-        self._force_cache_refresh = force_cache_refresh
+        self.sections: Final = sections
+        self.check_intervals: Final = check_intervals
+        self.do_status_data_inventory: Final = do_status_data_inventory
+        self.on_snmp_scan_error: Final = on_scan_error
+        if not persisted_section_dir:
+            persisted_section_dir = Path(cmk.utils.paths.var_dir) / "persisted_sections" / self.id
+        self.persisted_section_dir: Final[Path] = persisted_section_dir
+        self.cache: Final = cache
 
     @classmethod
     def snmp(
         cls,
-        host_config: HostConfig,
+        hostname: HostName,
         ipaddress: Optional[HostAddress],
         *,
-        selected_sections: SectionNameCollection,
+        id_: Literal["snmp"],
         on_scan_error: OnError,
-        force_cache_refresh: bool,
-        simulation_mode: bool,
-        agent_simulator: bool,
         missing_sys_description: bool,
+        sections: Mapping[SectionName, SectionMeta],
+        check_intervals: Mapping[SectionName, Optional[int]],
+        snmp_config: SNMPHostConfig,
+        do_status_data_inventory: bool,
+        cache: FileCache[SNMPRawData],
     ) -> "SNMPSource":
         return cls(
-            host_config,
+            hostname,
             ipaddress,
             source_type=SourceType.HOST,
-            selected_sections=selected_sections,
-            id_="snmp",
+            id_=id_,
             title="SNMP",
             on_scan_error=on_scan_error,
-            force_cache_refresh=force_cache_refresh,
-            simulation_mode=simulation_mode,
-            agent_simulator=agent_simulator,
             missing_sys_description=missing_sys_description,
+            sections=sections,
+            check_intervals=check_intervals,
+            snmp_config=snmp_config,
+            do_status_data_inventory=do_status_data_inventory,
+            cache=cache,
         )
 
     @classmethod
     def management_board(
         cls,
-        host_config: HostConfig,
+        hostname: HostName,
         ipaddress: HostAddress,
         *,
-        selected_sections: SectionNameCollection,
+        id_: Literal["mgmt_snmp"],
         on_scan_error: OnError,
-        force_cache_refresh: bool,
-        simulation_mode: bool,
-        agent_simulator: bool,
         missing_sys_description: bool,
+        sections: Mapping[SectionName, SectionMeta],
+        check_intervals: Mapping[SectionName, Optional[int]],
+        snmp_config: SNMPHostConfig,
+        do_status_data_inventory: bool,
+        cache: FileCache[SNMPRawData],
     ) -> "SNMPSource":
         return cls(
-            host_config,
+            hostname,
             ipaddress,
             source_type=SourceType.MANAGEMENT,
-            selected_sections=selected_sections,
-            id_="mgmt_snmp",
+            id_=id_,
             title="Management board - SNMP",
             on_scan_error=on_scan_error,
-            force_cache_refresh=force_cache_refresh,
-            simulation_mode=simulation_mode,
-            agent_simulator=agent_simulator,
             missing_sys_description=missing_sys_description,
+            sections=sections,
+            check_intervals=check_intervals,
+            snmp_config=snmp_config,
+            do_status_data_inventory=do_status_data_inventory,
+            cache=cache,
         )
 
     def _make_file_cache(self) -> FileCache[SNMPRawData]:
-        return SNMPFileCacheFactory(
-            self.host_config.hostname,
-            base_path=self.file_cache_base_path,
-            simulation=self.simulation_mode,
-            max_age=self.file_cache_max_age,
-        ).make(force_cache_refresh=self._force_cache_refresh)
+        return self.cache
 
     def _make_fetcher(self) -> SNMPFetcher:
-        if len(SNMPFetcher.plugin_store) != agent_based_register.len_snmp_sections():
-            # That's a hack.
-            #
-            # `make_plugin_store()` depends on
-            # `iter_all_snmp_sections()` and `iter_all_inventory_plugins()`
-            # that are populated by the Check API upon loading the plugins.
-            #
-            # It is there, when the plugins are loaded, that we should
-            # make the plugin store.  However, it is not clear whether
-            # the API would let us register hooks to accomplish that.
-            #
-            # The current solution is brittle in that there is not guarantee
-            # that all the relevant plugins are loaded at this point.
-            SNMPFetcher.plugin_store = make_plugin_store()
         return SNMPFetcher(
-            sections=self._make_sections(),
-            on_error=self._on_snmp_scan_error,
+            sections=self.sections,
+            on_error=self.on_snmp_scan_error,
             missing_sys_description=self.missing_sys_description,
-            do_status_data_inventory=self.host_config.do_status_data_inventory,
-            section_store_path=self.persisted_sections_file_path,
+            do_status_data_inventory=self.do_status_data_inventory,
+            section_store_path=self.persisted_section_dir / self.hostname,
             snmp_config=self.snmp_config,
         )
 
-    def _make_sections(self) -> Dict[SectionName, SectionMeta]:
-        checking_sections = self._make_checking_sections()
-        disabled_sections = self._make_disabled_sections()
-        return {
-            name: SectionMeta(
-                checking=name in checking_sections,
-                disabled=name in disabled_sections,
-                redetect=name in checking_sections and self._needs_redetection(name),
-                fetch_interval=self.host_config.snmp_fetch_interval(name),
-            )
-            for name in (checking_sections | disabled_sections)
-        }
-
     def _make_parser(self) -> SNMPParser:
         return SNMPParser(
-            self.host_config.hostname,
+            self.hostname,
             SectionStore[SNMPRawDataSection](
-                self.persisted_sections_file_path,
+                self.persisted_section_dir / self.hostname,
                 logger=self._logger,
             ),
-            check_intervals={
-                section_name: self.host_config.snmp_fetch_interval(section_name)
-                for section_name in self._make_checking_sections()
-            },
+            check_intervals=self.check_intervals,
             keep_outdated=self.use_outdated_persisted_sections,
             logger=self._logger,
         )
 
-    def _make_summarizer(self) -> SNMPSummarizer:
-        return SNMPSummarizer(self.exit_spec)
-
-    def _make_disabled_sections(self) -> Set[SectionName]:
-        return self.host_config.disabled_snmp_sections()
-
-    def _make_checking_sections(self) -> Set[SectionName]:
-        if self.selected_sections is not NO_SELECTION:
-            checking_sections = self.selected_sections
-        else:
-            checking_sections = set(
-                agent_based_register.get_relevant_raw_sections(
-                    check_plugin_names=check_table.get_check_table(
-                        self.host_config.hostname,
-                        filter_mode=check_table.FilterMode.INCLUDE_CLUSTERED,
-                        skip_ignored=True,
-                    ).needed_check_names(),
-                    inventory_plugin_names=(),
-                )
-            )
-        return {
-            s
-            for s in checking_sections
-            if agent_based_register.is_registered_snmp_section_plugin(s)
-        }
-
-    @staticmethod
-    def _needs_redetection(section_name: SectionName) -> bool:
-        section = agent_based_register.get_section_plugin(section_name)
-        return len(agent_based_register.get_section_producers(section.parsed_section_name)) > 1
+    def _make_summarizer(self, *, exit_spec: ExitSpec) -> SNMPSummarizer:
+        return SNMPSummarizer(exit_spec)
 
     @staticmethod
     def _make_description(

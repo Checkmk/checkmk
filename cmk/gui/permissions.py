@@ -4,10 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from typing import Callable, List, Type, Union
+from typing import Callable, Sequence, Type, Union
 
 import cmk.utils.plugin_registry
 
+from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.speaklater import LazyString
 
 
@@ -57,7 +58,7 @@ class Permission(abc.ABC):
         name: str,
         title: Union[str, LazyString],
         description: Union[str, LazyString],
-        defaults: List[str],
+        defaults: Sequence[str],
     ) -> None:
         self._section = section
         self._name = name
@@ -87,7 +88,7 @@ class Permission(abc.ABC):
         return str(self._description)
 
     @property
-    def defaults(self) -> List[str]:
+    def defaults(self) -> Sequence[str]:
         """List of role IDs that have this permission by default"""
         return self._defaults
 
@@ -147,7 +148,12 @@ def declare_permission_section(name, title, prio=50, do_sort=False):
     permission_section_registry.register(cls)
 
 
-def declare_permission(name, title, description, defaults):
+def declare_permission(
+    name: PermissionName,
+    title: str | LazyString,
+    description: str | LazyString,
+    defaults: Sequence[PermissionName],
+) -> None:
     section_name, permission_name = name.split(".", 1)
 
     permission_registry.register(

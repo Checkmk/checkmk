@@ -19624,20 +19624,6 @@ msgstr ""
 "Per l'invio dei rapporti sull'uso della licenza è necessario aggiungere le "
 "credenziali del portale clienti."
 
-#, python-format
-msgid ""
-"For the initial login into the remote site %s we need once your "
-"administration login for the Multsite GUI on that site. Your credentials "
-"will only be used for the initial handshake and not be stored. If the login "
-"is successful then both side will exchange a login secret which is used for "
-"the further remote calls."
-msgstr ""
-"Per il login iniziale nel sito remoto %s abbiamo bisogno una volta del tuo "
-"login di amministrazione per la GUI Multsite su quel sito. Le tue "
-"credenziali saranno usate solo per l'handshake iniziale e non saranno "
-"memorizzate. Se il login ha successo allora entrambi i lati si scambieranno "
-"un segreto di login che è usato per le ulteriori chiamate remote."
-
 msgid ""
 "For these hosts there is a new agent available that is not yet installed. "
 "This simply means that the target agent configuration hash does not match "
@@ -22494,6 +22480,10 @@ msgstr "Tag dell'host (con titoli)"
 msgid "Host to use for connecting to Cisco Prime"
 msgstr "Automazione Utente per la connessione al sito centrale"
 
+#, python-format
+msgid "Host uses xinetd or systemd %s"
+msgstr ""
+
 msgid "Host&nbsp;status"
 msgstr "Host&nbsp;stato"
 
@@ -23297,10 +23287,12 @@ msgstr ""
 "per iniziare ad elaborare il file dall'inizio e vedere tutti i messaggi che "
 "potrebbero essere già presenti."
 
+#, fuzzy
 msgid ""
-"If a select is set to <i>don't change</i> then currenty not all selected "
-"hosts share the same setting for this attribute. If you leave that "
-"selection, all hosts will keep their individual settings."
+"If a selection is set to <i>This value differs between the selected hosts.</"
+"i> then currenty not all selected hosts share the same setting for this "
+"attribute. If you keep that selection, all hosts will keep their individual "
+"settings."
 msgstr ""
 "Se una selezione è impostata su <i>non cambiare</i> allora non tutti gli "
 "host selezionati condividono la stessa impostazione per questo attributo. Se "
@@ -25008,9 +25000,11 @@ msgstr ""
 "che l'host viene controllato. La cache DNS di Check_MKs NON sarà "
 "interrogata. Usalo solo per gli host con indirizzi IP dinamici."
 
+#, fuzzy
 msgid ""
 "In case you want to <i>unset</i> attributes on multiple hosts, you need to "
-"use the <i>bulk cleanup</i> action instead of bulk edit."
+"use the <i>Remove explicit attribute settings</i> option instead of bulk "
+"edit."
 msgstr ""
 "Nel caso tu voglia <i>disabilitare</i> gli attributi su più host, devi usare "
 "l'azione <i>pulizia cumulativa</i> invece della modifica cumulativa."
@@ -34375,6 +34369,20 @@ msgstr "Un'ora"
 msgid "One line of text"
 msgstr "Una linea di testo"
 
+#, fuzzy, python-format
+msgid ""
+"One manual login as administrator to the Multisite GUI of the remote site "
+"\"%s\" is required to initialize the connection. The credentials will only "
+"be used for the initial handshake and not be stored. If the login is "
+"successful then both sides will exchange a login secret which will be used "
+"for subsequent remote calls."
+msgstr ""
+"Per il login iniziale nel sito remoto %s abbiamo bisogno una volta del tuo "
+"login di amministrazione per la GUI Multsite su quel sito. Le tue "
+"credenziali saranno usate solo per l'handshake iniziale e non saranno "
+"memorizzate. Se il login ha successo allora entrambi i lati si scambieranno "
+"un segreto di login che è usato per le ulteriori chiamate remote."
+
 msgid "One match without arguments"
 msgstr "Una partita senza argomenti"
 
@@ -39023,9 +39031,6 @@ msgstr "Rinominazione di %s"
 msgid "Renaming of %s -> %s"
 msgstr "Rinominazione di %s -> %s"
 
-msgid "Render URL contents in own frame"
-msgstr "Rendering dei contenuti dell'URL nel proprio frame"
-
 msgid "Render an error message into the document"
 msgstr "Rendere un messaggio di errore nel documento"
 
@@ -39038,9 +39043,6 @@ msgstr ""
 
 msgid "Render horizontal rules between rows"
 msgstr "Rendere le regole orizzontali tra le righe"
-
-msgid "Render in iframe"
-msgstr "Rendering in iframe"
 
 msgid "Render the titlebar including title and link above the element."
 msgstr ""
@@ -48738,6 +48740,9 @@ msgid ""
 msgstr ""
 "L'intervallo in cui la connessione verrà eseguita per eseguire il polling "
 "della fonte di dati e aggiornare la configurazione."
+
+msgid "The interval the plugin is triggered by check-mk-agent-async.service"
+msgstr ""
 
 msgid ""
 "The item name. The meaning of this depends on the proxied device: - Wagner "
@@ -63310,9 +63315,6 @@ msgstr "È necessario selezionare un'icona."
 msgid "You need to set the \"%s\" parameter."
 msgstr "Dovete impostare il parametro \"%s\"."
 
-msgid "You need to specify a URL in the element properties"
-msgstr "È necessario specificare un URL nelle proprietà dell'elemento"
-
 msgid "You need to specify a backup job."
 msgstr "È necessario specificare un lavoro di backup."
 
@@ -65265,6 +65267,10 @@ msgstr "sysdg"
 msgid "sysoper"
 msgstr "sysoper"
 
+#, fuzzy
+msgid "systemd"
+msgstr "Sistema"
+
 msgid "tasks"
 msgstr "compiti"
 
@@ -65496,6 +65502,9 @@ msgstr "stato peggiore"
 msgid "wrap"
 msgstr "avvolgere"
 
+msgid "xinetd"
+msgstr ""
+
 msgid "y"
 msgstr "y"
 
@@ -65521,6 +65530,15 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
+
+#~ msgid "Render URL contents in own frame"
+#~ msgstr "Rendering dei contenuti dell'URL nel proprio frame"
+
+#~ msgid "Render in iframe"
+#~ msgstr "Rendering in iframe"
+
+#~ msgid "You need to specify a URL in the element properties"
+#~ msgstr "È necessario specificare un URL nelle proprietà dell'elemento"
 
 #, fuzzy, python-format
 #~| msgid ""

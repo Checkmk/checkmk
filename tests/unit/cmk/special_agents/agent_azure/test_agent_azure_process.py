@@ -162,14 +162,14 @@ class MockMgmtApiClient:
         ),
     ],
 )
-def test_process_vm(  # type:ignore[no-untyped-def]
+def test_process_vm(
     mgmt_client: MgmtApiClient,
     vmach_info: Mapping[str, Any],
     args: Args,
     expected_info: Mapping[str, Any],
     expected_tags: Mapping[str, str],
     expected_piggyback_targets: Sequence[str],
-):
+) -> None:
     vmach = AzureResource(vmach_info)
     process_vm(mgmt_client, vmach, args)
 
@@ -207,9 +207,9 @@ def test_process_vm(  # type:ignore[no-untyped-def]
         )
     ],
 )
-def test_get_vm_labels_section(  # type:ignore[no-untyped-def]
+def test_get_vm_labels_section(
     vm: AzureResource, group_tags: GroupLabels, expected_result: Tuple[Sequence[str], Sequence[str]]
-):
+) -> None:
     labels_section = get_vm_labels_section(vm, group_tags)
 
     assert labels_section
@@ -321,13 +321,13 @@ def test_get_vm_labels_section(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_process_resource(  # type:ignore[no-untyped-def]
+def test_process_resource(
     mgmt_client: MgmtApiClient,
     resource_info: Mapping[str, Any],
     group_tags: GroupLabels,
     args: Args,
     expected_result: Sequence[Tuple[Type[Section], Sequence[str], Sequence[str]]],
-):
+) -> None:
     resource = AzureResource(resource_info)
     function_args = (mgmt_client, resource, group_tags, args)
     sections = process_resource(function_args)
@@ -354,9 +354,9 @@ def test_process_resource(  # type:ignore[no-untyped-def]
         )
     ],
 )
-def test_get_group_labels(  # type:ignore[no-untyped-def]
+def test_get_group_labels(
     mgmt_client: MgmtApiClient, monitored_groups: Sequence[str], expected_result: GroupLabels
-):
+) -> None:
     group_tags = get_group_labels(mgmt_client, monitored_groups)
     assert group_tags == expected_result
 
@@ -396,13 +396,13 @@ def test_get_group_labels(  # type:ignore[no-untyped-def]
         )
     ],
 )
-def test_write_group_info(  # type:ignore[no-untyped-def]
+def test_write_group_info(
     monitored_groups: Sequence[str],
     monitored_resources: Sequence[AzureResource],
     group_tags: GroupLabels,
     expected_result: Sequence[str],
-    capsys,
-):
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     write_group_info(monitored_groups, monitored_resources, group_tags)
     captured = capsys.readouterr()
     assert captured.out == expected_result

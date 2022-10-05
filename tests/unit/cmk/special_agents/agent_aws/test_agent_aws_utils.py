@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from cmk.special_agents.agent_aws import fetch_resources_matching_tags
+from cmk.special_agents.agent_aws import fetch_resources_matching_tags, Tags
 
 
 @pytest.mark.parametrize(
@@ -126,8 +126,10 @@ from cmk.special_agents.agent_aws import fetch_resources_matching_tags
         ),
     ],
 )
-def test_fetch_resources_matching_tags(  # type:ignore[no-untyped-def]
-    fetched_data, tags_to_match, expected_result
+def test_fetch_resources_matching_tags(
+    fetched_data: list[dict[str, object]],
+    tags_to_match: Tags,
+    expected_result: set[str],
 ) -> None:
     with patch("cmk.special_agents.agent_aws._fetch_tagged_resources_with_types") as fetch_fn:
         fetch_fn.return_value = fetched_data

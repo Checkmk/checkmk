@@ -22,6 +22,7 @@ from typing import (
     Hashable,
     Iterable,
     List,
+    Literal,
     Mapping,
     Optional,
     Sequence,
@@ -82,13 +83,13 @@ from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view_store import get_permitted_views
-from cmk.gui.view_utils import CellContent, CellSpec, CSSClass
+from cmk.gui.view_utils import CellContent, CellSpec
 from cmk.gui.visual_link import render_link_to_view
 from cmk.gui.visuals import view_title
 
 ExportCellContent = Union[str, Dict[str, Any]]
-PDFCellContent = Union[str, HTML, Tuple[str, str]]
-PDFCellSpec = Union[CellSpec, Tuple[CSSClass, PDFCellContent]]
+PDFCellContent = Union[str, Tuple[Literal["icon"], str]]
+PDFCellSpec = tuple[str, PDFCellContent]
 CommandSpecWithoutSite = str
 CommandSpecWithSite = Tuple[Optional[str], CommandSpecWithoutSite]
 CommandSpec = Union[CommandSpecWithoutSite, CommandSpecWithSite]
@@ -1131,11 +1132,14 @@ class Cell:
         try:
             row = join_row(row, self)
             css_classes, rendered_txt = self.render_content(row)
+            if css_classes is None:
+                css_classes = ""
             if rendered_txt is None:
                 return css_classes, ""
             assert isinstance(rendered_txt, (str, HTML))
 
-            txt: PDFCellContent = rendered_txt.strip()
+            txt = rendered_txt.strip()
+            content: PDFCellContent = ""
 
             # Handle <img...>. Our PDF writer cannot draw arbitrary
             # images, but all that we need for showing simple icons.
@@ -1147,18 +1151,17 @@ class Cell:
                 img_filename = re.sub(".*src=[\"']([^'\"]*)[\"'].*", "\\1", str(txt))
                 img_path = find_htdocs_image_path(img_filename)
                 if img_path:
-                    txt = ("icon", img_path)
+                    content = ("icon", img_path)
                 else:
-                    txt = img_filename
+                    content = img_filename
 
             if isinstance(txt, HTML):
-                txt = escaping.strip_tags(str(txt))
+                content = escaping.strip_tags(str(txt))
 
             elif not isinstance(txt, tuple):
-                txt = unescape(txt)
-                txt = escaping.strip_tags(txt)
+                content = escaping.strip_tags(unescape(txt))
 
-            return css_classes, txt
+            return css_classes, content
         except Exception:
             raise MKGeneralException(
                 'Failed to paint "%s": %s' % (self.painter_name(), traceback.format_exc())

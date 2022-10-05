@@ -1,0 +1,33 @@
+Title: Remove pre-1.6 dashboard plugin compatibility
+Class: fix
+Compatible: incomp
+Component: multisite
+Date: 1664518242
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+In Checkmk 1.6 and previous versions custom dashboard element plugins could be
+registered by deploying a file to
+<tt>local/share/check_mk/web/plugins/dashboard/</tt> with the following code to
+register with Checkmk:
+
+C+:
+dashlet_types["id_of_element"] = {
+    "title"       : _("Title"),
+    "sort_index"  : 45,
+    "description" : "..."
+    "render"      : dashlet_hoststats,
+    "refresh"     : 60,
+    "allowed"     : builtin_role_ids,
+    "size"        : (30, 18),
+    "resizable"   : False,
+}
+C-:
+
+This mechanism was replaced with 1.6 and is now being removed. In case you
+still have dashboard plugins using this mechanism, you need to rework your
+plugin to be usable with Checkmk 2.2 or newer. Have a look at the dashboard
+plugins shipped with Checkmk to, to see how it needs to be structured (e.g.
+<tt>lib/check_mk/gui/plugins/dashboard/overview.py</tt>).

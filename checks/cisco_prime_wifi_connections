@@ -28,6 +28,8 @@ def check_cisco_prime_wifi_connections(item, params, parsed):
         "dot11ac": "802.11ac",
         "dot11n2_4": "802.11n24",
         "dot11n5": "802.11n5",
+        "dot11ax2_4": "802.11ax24",
+        "dot11ax5": "802.11ax5",
     }
     try:
         # Find the entry with all connection count values summed up ("key" = "All SSIDs")
@@ -43,7 +45,11 @@ def check_cisco_prime_wifi_connections(item, params, parsed):
 
     for ctype, cname in keys.items():
         full_type_name = ctype + "authcount"
-        count = sum_entry[full_type_name]
+        # some newer standards might not be supported.
+        try:
+            count = sum_entry[full_type_name]
+        except KeyError:
+            continue
         lower_levels = params.get("levels_lower")
         if ctype == "":
             yield check_levels(

@@ -125,6 +125,8 @@ def get_raw_data(
 class Parser(Generic[TRawData, TRawDataSection], abc.ABC):
     """Parse raw data into host sections."""
 
+    DEFAULT_HOST_SECTIONS = HostSections[TRawDataSection]()
+
     @abc.abstractmethod
     def parse(
         self, raw_data: TRawData, *, selection: SectionNameCollection

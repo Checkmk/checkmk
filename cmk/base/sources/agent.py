@@ -13,7 +13,6 @@ import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers.agent import AgentParser, AgentRawDataSection
 from cmk.core_helpers.cache import SectionStore
 from cmk.core_helpers.controller import FetcherType
-from cmk.core_helpers.host_sections import HostSections
 
 from ._abstract import Source
 
@@ -45,8 +44,6 @@ class AgentSource(Source[AgentRawData, AgentRawDataSection]):
             ipaddress,
             source_type=source_type,
             fetcher_type=fetcher_type,
-            default_raw_data=AgentRawData(b""),
-            default_host_sections=HostSections[AgentRawDataSection](),
             id_=id_,
         )
         self.translation: Final = translation
@@ -54,6 +51,7 @@ class AgentSource(Source[AgentRawData, AgentRawDataSection]):
         self.agent_simulator: Final = agent_simulator
         self.check_interval: Final = check_interval
         self.persisted_section_dir: Final = persisted_section_dir
+
         self.file_cache_base_path: Final = cache_dir
         self.simulation_mode: Final = simulation_mode
         self.file_cache_max_age: Final = file_cache_max_age

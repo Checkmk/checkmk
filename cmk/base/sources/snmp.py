@@ -13,7 +13,6 @@ from cmk.snmplib.type_defs import SNMPHostConfig, SNMPRawData, SNMPRawDataSectio
 
 from cmk.core_helpers import FetcherType, SNMPFetcher
 from cmk.core_helpers.cache import FileCache, SectionStore
-from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.snmp import SectionMeta, SNMPParser, SNMPSummarizer
 
 from ._abstract import Source
@@ -41,8 +40,6 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             ipaddress,
             source_type=source_type,
             fetcher_type=FetcherType.SNMP,
-            default_raw_data={},
-            default_host_sections=HostSections[SNMPRawDataSection](),
             id_=id_,
         )
         self.snmp_config: Final = snmp_config

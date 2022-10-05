@@ -251,7 +251,7 @@ class TestMakeHostSectionsHosts:
                 (
                     source,
                     FetcherMessage.from_raw_data(
-                        result.OK(source.default_raw_data),
+                        result.OK(AgentRawData(b"")),
                         Snapshot.null(),
                         source.fetcher_type,
                     ),
@@ -312,7 +312,7 @@ class TestMakeHostSectionsHosts:
                 (
                     source,
                     FetcherMessage.from_raw_data(
-                        result.OK(source.default_raw_data),
+                        result.OK(AgentRawData(b"")),
                         Snapshot.null(),
                         source.fetcher_type,
                     ),
@@ -398,7 +398,7 @@ class TestMakeHostSectionsHosts:
                 (
                     source,
                     FetcherMessage.from_raw_data(
-                        result.OK(source.default_raw_data),
+                        result.OK(AgentRawData(b"")),
                         Snapshot.null(),
                         source.fetcher_type,
                     ),
@@ -588,7 +588,7 @@ def test_get_host_sections_cluster(monkeypatch, mocker) -> None:  # type:ignore[
             (
                 source,
                 FetcherMessage.from_raw_data(
-                    result.OK(source.default_raw_data),
+                    result.OK(AgentRawData(b"")),
                     Snapshot.null(),
                     source.fetcher_type,
                 ),

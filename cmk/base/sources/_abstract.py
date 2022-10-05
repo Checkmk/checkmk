@@ -44,16 +44,12 @@ class Source(Generic[TRawData, TRawDataSection], abc.ABC):
         *,
         source_type: SourceType,
         fetcher_type: FetcherType,
-        default_raw_data: TRawData,
-        default_host_sections: HostSections[TRawDataSection],
         id_: str,
     ) -> None:
         self.hostname: Final = hostname
         self.ipaddress: Final = ipaddress
         self.source_type: Final = source_type
         self.fetcher_type: Final = fetcher_type
-        self.default_raw_data: Final = default_raw_data
-        self.default_host_sections: Final = default_host_sections
         self.id: Final = id_
 
         self._logger: Final = logging.getLogger("cmk.base.data_source.%s" % id_)
@@ -118,6 +114,9 @@ class Source(Generic[TRawData, TRawDataSection], abc.ABC):
     def _make_parser(self) -> Parser[TRawData, TRawDataSection]:
         """Create a parser with this configuration."""
         raise NotImplementedError
+
+    def parser(self) -> Parser[TRawData, TRawDataSection]:
+        return self._make_parser()
 
     @abc.abstractmethod
     def _make_summarizer(self, *, exit_spec: ExitSpec) -> Summarizer:

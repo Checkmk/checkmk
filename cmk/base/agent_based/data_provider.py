@@ -321,7 +321,7 @@ def _collect_host_sections(
         host_key = HostKey(source.hostname, source.source_type)
         collected_host_sections.setdefault(
             host_key,
-            source.default_host_sections,
+            source.parser().DEFAULT_HOST_SECTIONS,
         )
 
         source_result = source.parse(fetcher_message.raw_data, selection=selected_sections)

@@ -667,6 +667,65 @@ mod test_legacy_pull_marker {
 }
 
 #[cfg(test)]
+mod test_client_config {
+    use super::*;
+
+    #[test]
+    fn test_defaults() {
+        let client_config = ClientConfig::new(
+            RuntimeConfig {
+                allowed_ip: None,
+                pull_port: None,
+                detect_proxy: None,
+                validate_api_cert: None,
+            },
+            cli::ClientOpts {
+                detect_proxy: false,
+                validate_api_cert: false,
+            },
+        );
+        assert!(!client_config.use_proxy);
+        assert!(!client_config.validate_api_cert);
+    }
+
+    #[test]
+    fn test_from_runtime_config() {
+        let client_config = ClientConfig::new(
+            RuntimeConfig {
+                allowed_ip: None,
+                pull_port: None,
+                detect_proxy: Some(true),
+                validate_api_cert: Some(true),
+            },
+            cli::ClientOpts {
+                detect_proxy: false,
+                validate_api_cert: false,
+            },
+        );
+        assert!(client_config.use_proxy);
+        assert!(client_config.validate_api_cert);
+    }
+
+    #[test]
+    fn test_from_client_opts() {
+        let client_config = ClientConfig::new(
+            RuntimeConfig {
+                allowed_ip: None,
+                pull_port: None,
+                detect_proxy: None,
+                validate_api_cert: None,
+            },
+            cli::ClientOpts {
+                detect_proxy: true,
+                validate_api_cert: true,
+            },
+        );
+        assert!(client_config.use_proxy);
+        assert!(client_config.validate_api_cert);
+    }
+}
+
+#[cfg(test)]
 mod test_registry {
     use super::*;
     use std::convert::From;

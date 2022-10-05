@@ -59,6 +59,32 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 
+# ==================================================================================================
+# These imports and statements are only here to garantuee compatibility with local extensions.
+from cmk.utils import aws_constants  # isort:skip  # pylint: disable=unused-import
+from cmk.gui.plugins.wato.special_agents.common import (  # isort:skip  # pylint: disable=unused-import
+    RulespecGroupDatasourcePrograms,
+    RulespecGroupDatasourceProgramsCloud,
+    RulespecGroupDatasourceProgramsContainer,
+)
+from cmk.gui.plugins.wato.special_agents.aws import (  # isort:skip  # pylint: disable=unused-import
+    _transform_aws,
+    _valuespec_special_agents_aws,
+    _vs_aws_tags,
+    _vs_element_aws_limits,
+    _vs_element_aws_service_selection,
+)
+from cmk.gui.plugins.wato.utils import (  # isort:skip  # pylint: disable=unused-import
+    rulespec_group_registry,
+    RulespecGroup,
+    RulespecSubGroup,
+)
+
+_api_request_authentication = api_request_authentication
+_api_request_connection_elements = api_request_connection_elements
+_validate_aws_tags = validate_aws_tags
+# ==================================================================================================
+
 
 def connection_set(
     options: Optional[List[str]] = None, auth_option: Optional[str] = None

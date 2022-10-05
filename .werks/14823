@@ -1,0 +1,17 @@
+Title: Correction to werk #14717: Compatibility of local GUI extensions
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1664977857
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p14
+
+In <a href="https://checkmk.com/werk/14717">werk #14717</a>, we introduced an incompatibility with
+respect to local GUI extensions. This was not intended, since we try to avoid incompatibilities in
+patch releases of stable versions as much as possible. Hence, with this werk, the incompatiblity is
+removed.
+
+However, note that this is does not affect the incompatibilites announced in
+<a href="https://checkmk.com/werk/14716">werk #14716</a> for the next major release.

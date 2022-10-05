@@ -44,7 +44,6 @@ class Source(Generic[TRawData, TRawDataSection], abc.ABC):
         *,
         source_type: SourceType,
         fetcher_type: FetcherType,
-        description: str,
         default_raw_data: TRawData,
         default_host_sections: HostSections[TRawDataSection],
         id_: str,
@@ -53,7 +52,6 @@ class Source(Generic[TRawData, TRawDataSection], abc.ABC):
         self.ipaddress: Final = ipaddress
         self.source_type: Final = source_type
         self.fetcher_type: Final = fetcher_type
-        self.description: Final = description
         self.default_raw_data: Final = default_raw_data
         self.default_host_sections: Final = default_host_sections
         self.id: Final = id_
@@ -61,11 +59,10 @@ class Source(Generic[TRawData, TRawDataSection], abc.ABC):
         self._logger: Final = logging.getLogger("cmk.base.data_source.%s" % id_)
 
     def __repr__(self) -> str:
-        return "%s(%r, %r, description=%r, id=%r)" % (
+        return "%s(%r, %r, id=%r)" % (
             type(self).__name__,
             self.hostname,
             self.ipaddress,
-            self.description,
             self.id,
         )
 

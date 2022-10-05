@@ -43,7 +43,6 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             ipaddress,
             source_type=source_type,
             fetcher_type=FetcherType.SNMP,
-            description=SNMPSource._make_description(snmp_config, title=title),
             default_raw_data={},
             default_host_sections=HostSections[SNMPRawDataSection](),
             id_=id_,
@@ -146,30 +145,3 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
 
     def _make_summarizer(self, *, exit_spec: ExitSpec) -> SNMPSummarizer:
         return SNMPSummarizer(exit_spec)
-
-    @staticmethod
-    def _make_description(
-        snmp_config: SNMPHostConfig,
-        *,
-        title: str,
-    ) -> str:
-        if snmp_config.is_usewalk_host:
-            return "SNMP (use stored walk)"
-
-        if snmp_config.is_snmpv3_host:
-            credentials_text = "Credentials: '%s'" % ", ".join(snmp_config.credentials)
-        else:
-            credentials_text = "Community: %r" % snmp_config.credentials
-
-        if snmp_config.is_snmpv3_host or snmp_config.is_bulkwalk_host:
-            bulk = "yes"
-        else:
-            bulk = "no"
-
-        return "%s (%s, Bulk walk: %s, Port: %d, Backend: %s)" % (
-            title,
-            credentials_text,
-            bulk,
-            snmp_config.port,
-            snmp_config.snmp_backend.value,
-        )

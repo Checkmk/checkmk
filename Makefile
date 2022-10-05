@@ -499,10 +499,10 @@ setup:
 	    pipenv=="$(PIPENV_VERSION)" \
 	    virtualenv=="$(VIRTUALENV_VERSION)" \
 	    wheel
-	if [ ! -f $$HOME/.cargo/bin/rustup ]; then \
+	if ! type rustup >/dev/null 2>&1; then \
 		curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh; \
 		source $$HOME/.cargo/env; \
-	fi
+	fi ; \
 	rustup target add x86_64-unknown-linux-musl
 	$(MAKE) -C web setup
 	$(MAKE) -C omd setup

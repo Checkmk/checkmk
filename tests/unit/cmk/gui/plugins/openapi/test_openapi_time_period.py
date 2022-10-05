@@ -131,7 +131,7 @@ def test_openapi_timeperiod_builtin(aut_user_auth_wsgi_app: WebTestAppForCMK) ->
     _ = aut_user_auth_wsgi_app.call_method(
         "put",
         base + "/objects/time_period/24X7",
-        headers={"Accept": "application/json"},
+        headers={"Accept": "application/json", "Content-Type": "application/json"},
         status=405,
     )
 
@@ -373,9 +373,7 @@ def test_openapi_timeperiod_complex_update(aut_user_auth_wsgi_app: WebTestAppFor
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_timeperiod_excluding_exclude(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
-    base = "/NO_SITE/check_mk/api/1.0"
-
+def test_openapi_timeperiod_excluding_exclude(base: str, aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     _resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + "/domain-types/time_period/collections/all",

@@ -39,7 +39,6 @@ def test_attribute_defaults(monkeypatch) -> None:  # type:ignore[no-untyped-def]
         management_credentials={},
         file_cache_max_age=file_cache.MaxAge.none(),
     )
-    assert source.description == "Management board - IPMI"
     assert source.source_type is SourceType.MANAGEMENT
     assert source.summarize(
         result.OK(HostSections[AgentRawDataSection]()),
@@ -69,32 +68,3 @@ def test_ipmi_ipaddress_from_mgmt_board(monkeypatch) -> None:  # type:ignore[no-
 
     host_config = HostConfig.make_host_config(hostname)
     assert host_config.management_address == ipaddress
-
-
-def test_description_with_ipaddress(monkeypatch) -> None:  # type:ignore[no-untyped-def]
-    assert (
-        IPMISource._make_description(
-            "1.2.3.4",
-            {},
-        )
-        == "Management board - IPMI (Address: 1.2.3.4)"
-    )
-
-
-def test_description_with_credentials(monkeypatch) -> None:  # type:ignore[no-untyped-def]
-    assert (
-        IPMISource._make_description(None, {"username": "Bobby"})
-        == "Management board - IPMI (User: Bobby)"
-    )
-
-
-def test_description_with_ipaddress_and_credentials(  # type:ignore[no-untyped-def]
-    monkeypatch,
-) -> None:
-    assert (
-        IPMISource._make_description(
-            "1.2.3.4",
-            {"username": "Bobby"},
-        )
-        == "Management board - IPMI (Address: 1.2.3.4, User: Bobby)"
-    )

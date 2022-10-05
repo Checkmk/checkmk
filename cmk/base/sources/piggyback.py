@@ -3,10 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from pathlib import Path
 from typing import Final, Literal, Optional, Sequence, Tuple
 
-from cmk.utils.paths import tmp_dir
 from cmk.utils.translations import TranslationOptions
 from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, SourceType
 
@@ -40,7 +38,6 @@ class PiggybackSource(AgentSource):
             ipaddress,
             source_type=SourceType.HOST,
             fetcher_type=FetcherType.PIGGYBACK,
-            description=PiggybackSource._make_description(hostname),
             id_=id_,
             main_data_source=False,
             simulation_mode=simulation_mode,
@@ -80,7 +77,3 @@ class PiggybackSource(AgentSource):
             time_settings=self.time_settings,
             always=self.is_piggyback_host,
         )
-
-    @staticmethod
-    def _make_description(hostname: HostName) -> str:
-        return "Process piggyback data from %s" % (Path(tmp_dir) / "piggyback" / hostname)

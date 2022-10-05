@@ -101,7 +101,7 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
     )
 
     agenttypes = [
-        source.description
+        str(source)
         for source in sources.make_non_cluster_sources(
             host_config,
             ipaddress,

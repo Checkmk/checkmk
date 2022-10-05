@@ -39,10 +39,6 @@ class ProgramSource(AgentSource):
             ipaddress,
             source_type=SourceType.HOST,
             fetcher_type=FetcherType.PROGRAM,
-            description=ProgramSource._make_description(
-                cmdline,
-                stdin,
-            ),
             id_=id_,
             main_data_source=main_data_source,
             simulation_mode=simulation_mode,
@@ -78,13 +74,6 @@ class ProgramSource(AgentSource):
 
     def _make_summarizer(self, *, exit_spec: ExitSpec) -> AgentSummarizerDefault:
         return AgentSummarizerDefault(exit_spec)
-
-    @staticmethod
-    def _make_description(cmdline, stdin):
-        response = ["Program: %s" % cmdline]
-        if stdin:
-            response.extend(["  Program stdin:", stdin])
-        return "\n".join(response)
 
 
 class DSProgramSource(ProgramSource):

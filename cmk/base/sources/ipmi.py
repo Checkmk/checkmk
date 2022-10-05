@@ -38,7 +38,6 @@ class IPMISource(AgentSource):
             ipaddress,
             source_type=SourceType.MANAGEMENT,
             fetcher_type=FetcherType.IPMI,
-            description=IPMISource._make_description(ipaddress, management_credentials),
             id_=id_,
             main_data_source=False,
             simulation_mode=simulation_mode,
@@ -75,17 +74,3 @@ class IPMISource(AgentSource):
 
     def _make_summarizer(self, *, exit_spec: ExitSpec) -> IPMISummarizer:
         return IPMISummarizer(exit_spec)
-
-    @staticmethod
-    def _make_description(  # type:ignore[no-untyped-def]
-        ipaddress: Optional[HostAddress], credentials: IPMICredentials
-    ):
-        description = "Management board - IPMI"
-        items = []
-        if ipaddress:
-            items.append("Address: %s" % ipaddress)
-        if credentials:
-            items.append("User: %s" % credentials["username"])
-        if items:
-            description = "%s (%s)" % (description, ", ".join(items))
-        return description

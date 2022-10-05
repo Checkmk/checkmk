@@ -65,19 +65,14 @@ def create_sections(names, tags, is_regional):
     fake_wafv2_client = FakeWAFV2Client()
     fake_cloudwatch_client = FakeCloudwatchClient()
 
-    wafv2_limits_distributor = ResultDistributor()
-    wafv2_summary_distributor = ResultDistributor()
+    distributor = ResultDistributor()
 
-    wafv2_limits = WAFV2Limits(
-        fake_wafv2_client, region, config, scope, distributor=wafv2_limits_distributor
-    )
-    wafv2_summary = WAFV2Summary(
-        fake_wafv2_client, region, config, scope, distributor=wafv2_summary_distributor
-    )
+    wafv2_limits = WAFV2Limits(fake_wafv2_client, region, config, scope, distributor=distributor)
+    wafv2_summary = WAFV2Summary(fake_wafv2_client, region, config, scope, distributor=distributor)
     wafv2_web_acl = WAFV2WebACL(fake_cloudwatch_client, region, config, is_regional)
 
-    wafv2_limits_distributor.add(wafv2_summary)
-    wafv2_summary_distributor.add(wafv2_web_acl)
+    distributor.add(wafv2_limits.name, wafv2_summary)
+    distributor.add(wafv2_summary.name, wafv2_web_acl)
 
     return {
         "wafv2_limits": wafv2_limits,

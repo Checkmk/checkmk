@@ -224,20 +224,20 @@ def get_cloudfront_sections():
         fake_cloudwatch_client = FakeCloudwatchClient()
         fake_tagging_client = FakeTaggingClient()
 
-        cloudfront_summary_distributor = ResultDistributor()
+        distributor = ResultDistributor()
 
         cloudfront_summary = CloudFrontSummary(
             fake_cloudfront_client,
             fake_tagging_client,
             region,
             config,
-            cloudfront_summary_distributor,
+            distributor,
         )
         host_assignment: Literal["domain_host", "aws_host"] = (
             "domain_host" if assign_to_domain_host else "aws_host"
         )
         cloudfront = CloudFront(fake_cloudwatch_client, region, config, host_assignment)
-        cloudfront_summary_distributor.add(cloudfront)
+        distributor.add(cloudfront_summary.name, cloudfront)
 
         return cloudfront_summary, cloudfront
 

@@ -76,13 +76,13 @@ def get_rds_sections():
         fake_rds_client = FakeRDSClient()
         fake_cloudwatch_client = FakeCloudwatchClient()
 
-        rds_summary_distributor = ResultDistributor()
+        distributor = ResultDistributor()
 
         rds_limits = RDSLimits(FakeRDSClient(), region, config)
-        rds_summary = RDSSummary(fake_rds_client, region, config, rds_summary_distributor)
+        rds_summary = RDSSummary(fake_rds_client, region, config, distributor)
         rds = RDS(fake_cloudwatch_client, region, config)
 
-        rds_summary_distributor.add(rds)
+        distributor.add(rds_summary.name, rds)
         return rds_limits, rds_summary, rds
 
     return _create_rds_sections

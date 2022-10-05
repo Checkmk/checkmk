@@ -68,17 +68,16 @@ def get_s3_sections(monkeypatch):
         fake_s3_client = FakeS3Client()
         fake_cloudwatch_client = FakeCloudwatchClient()
 
-        s3_limits_distributor = ResultDistributor()
-        s3_summary_distributor = ResultDistributor()
+        distributor = ResultDistributor()
 
-        s3_limits = S3Limits(fake_s3_client, region, config, s3_limits_distributor)
-        s3_summary = S3Summary(fake_s3_client, region, config, s3_summary_distributor)
+        s3_limits = S3Limits(fake_s3_client, region, config, distributor)
+        s3_summary = S3Summary(fake_s3_client, region, config, distributor)
         s3 = S3(fake_cloudwatch_client, region, config)
         s3_requests = S3Requests(fake_cloudwatch_client, region, config)
 
-        s3_limits_distributor.add(s3_summary)
-        s3_summary_distributor.add(s3)
-        s3_summary_distributor.add(s3_requests)
+        distributor.add(s3_limits.name, s3_summary)
+        distributor.add(s3_summary.name, s3)
+        distributor.add(s3_summary.name, s3_requests)
         return s3_limits, s3_summary, s3, s3_requests
 
     return _create_s3_sections

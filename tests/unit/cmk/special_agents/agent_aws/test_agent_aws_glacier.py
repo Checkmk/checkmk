@@ -45,19 +45,14 @@ def get_glacier_sections():
         fake_glacier_client = FakeGlacierClient()
         fake_cloudwatch_client = FakeCloudwatchClient()
 
-        glacier_limits_distributor = ResultDistributor()
-        glacier_summary_distributor = ResultDistributor()
+        distributor = ResultDistributor()
 
-        glacier_limits = GlacierLimits(
-            fake_glacier_client, region, config, glacier_limits_distributor
-        )
-        glacier_summary = GlacierSummary(
-            fake_glacier_client, region, config, glacier_summary_distributor
-        )
+        glacier_limits = GlacierLimits(fake_glacier_client, region, config, distributor)
+        glacier_summary = GlacierSummary(fake_glacier_client, region, config, distributor)
         glacier = Glacier(fake_cloudwatch_client, region, config)
 
-        glacier_limits_distributor.add(glacier_summary)
-        glacier_summary_distributor.add(glacier)
+        distributor.add(glacier_limits.name, glacier_summary)
+        distributor.add(glacier_summary.name, glacier)
         return glacier_limits, glacier_summary, glacier
 
     return _create_glacier_sections

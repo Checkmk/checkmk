@@ -22,6 +22,7 @@ from cmk.special_agents.agent_aws import (
     LambdaRegionLimits,
     LambdaSummary,
     OverallTags,
+    ResultDistributor,
 )
 
 from .agent_aws_fake_clients import (
@@ -96,12 +97,15 @@ def get_lambda_sections(
     LambdaCloudwatch,
     LambdaCloudwatchInsights,
 ]:
+    distributor = ResultDistributor()
+
     return _create_lamdba_sections(
         FakeLambdaClient(False),
         FakeCloudwatchClient(),
         FakeCloudwatchClientLogsClient(),
         "region",
         create_config(names, tags),
+        distributor,
     )
 
 

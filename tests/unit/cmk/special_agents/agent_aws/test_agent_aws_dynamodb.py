@@ -87,19 +87,14 @@ def get_dynamodb_sections():
         fake_dynamodb_client = FakeDynamoDBClient()
         fake_cloudwatch_client = FakeCloudwatchClient()
 
-        dynamodb_limits_distributor = ResultDistributor()
-        dynamodb_summary_distributor = ResultDistributor()
+        distributor = ResultDistributor()
 
-        dynamodb_limits = DynamoDBLimits(
-            fake_dynamodb_client, region, config, dynamodb_limits_distributor
-        )
-        dynamodb_summary = DynamoDBSummary(
-            fake_dynamodb_client, region, config, dynamodb_summary_distributor
-        )
+        dynamodb_limits = DynamoDBLimits(fake_dynamodb_client, region, config, distributor)
+        dynamodb_summary = DynamoDBSummary(fake_dynamodb_client, region, config, distributor)
         dynamodb_table = DynamoDBTable(fake_cloudwatch_client, region, config)
 
-        dynamodb_limits_distributor.add(dynamodb_summary)
-        dynamodb_summary_distributor.add(dynamodb_table)
+        distributor.add(dynamodb_limits.name, dynamodb_summary)
+        distributor.add(dynamodb_summary.name, dynamodb_table)
 
         return {
             "dynamodb_limits": dynamodb_limits,

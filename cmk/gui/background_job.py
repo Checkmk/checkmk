@@ -163,16 +163,23 @@ class BackgroundProcessInterface:
 
 
 class BackgroundProcess(multiprocessing.Process):
-    def __init__(self, job_parameters: JobParameters) -> None:
+    def __init__(
+        self,
+        job_status: JobStatus,
+        logger: logging.Logger,
+        work_dir: str,
+        job_id: str,
+        target: Callable,
+        args: tuple,
+        kwargs: dict[str, Any],
+    ) -> None:
         super().__init__()
-        self._jobstatus = job_parameters["jobstatus"]
-        # TODO: Hand over the logger via arguments
-        self._logger = cmk.gui.log.logger.getChild("background_process")
-
-        self._job_parameters = job_parameters
-        self._job_interface = BackgroundProcessInterface(
-            job_parameters["work_dir"], job_parameters["job_id"], self._logger
-        )
+        self._jobstatus = job_status
+        self._logger = logger
+        self._target = target
+        self._args = tuple(args)
+        self._kwargs = dict(kwargs)
+        self._job_interface = BackgroundProcessInterface(work_dir, job_id, logger)
 
     def _register_signal_handlers(self) -> None:
         self._logger.debug("Register signal handler %d", os.getpid())
@@ -184,7 +191,7 @@ class BackgroundProcess(multiprocessing.Process):
         if not status.get("stoppable", True):
             self._logger.warning(
                 "Skip termination of background job (Job ID: %s, PID: %d)",
-                self._job_parameters["job_id"],
+                self._job_interface.get_job_id(),
                 os.getpid(),
             )
             return
@@ -197,7 +204,7 @@ class BackgroundProcess(multiprocessing.Process):
         try:
             self.initialize_environment()
             self._logger.log(
-                VERBOSE, "Initialized background job (Job ID: %s)", self._job_parameters["job_id"]
+                VERBOSE, "Initialized background job (Job ID: %s)", self._job_interface.get_job_id()
             )
             self._jobstatus.update_status(
                 {
@@ -264,11 +271,7 @@ class BackgroundProcess(multiprocessing.Process):
 
     def _execute_function(self) -> None:
         try:
-            self._job_parameters["target"](
-                *self._job_parameters["args"],
-                job_interface=self._job_interface,
-                **self._job_parameters["kwargs"],
-            )
+            self._target(*self._args, job_interface=self._job_interface, **self._kwargs)
         except MKTerminate:
             raise
         except Exception as e:
@@ -591,7 +594,15 @@ class BackgroundJob:
 
             self._jobstatus.update_status({"ppid": os.getpid()})
 
-            p = self._background_process_class(job_parameters)
+            p = self._background_process_class(
+                job_status=self._jobstatus,
+                logger=cmk.gui.log.logger.getChild("background_process"),
+                work_dir=job_parameters["work_dir"],
+                job_id=job_parameters["job_id"],
+                target=job_parameters["target"],
+                args=job_parameters["args"],
+                kwargs=job_parameters["kwargs"],
+            )
             p.start()
         except Exception as e:
             self._logger.exception("Error while starting subprocess: %s", e)

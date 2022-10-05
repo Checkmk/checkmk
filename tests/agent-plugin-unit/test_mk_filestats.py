@@ -16,9 +16,9 @@ import pytest
 import agents.plugins.mk_filestats as mk_filestats
 
 try:
-    from collections import OrderedDict
+    from collections import namedtuple, OrderedDict
 except ImportError:  # Python2
-    from ordereddict import OrderedDict  # type: ignore
+    from ordereddict import namedtuple, OrderedDict  # type: ignore
 
 
 def configparser_library_name():
@@ -342,3 +342,14 @@ def test_grouping_multiple_groups(
         assert section_name_arg == expected_results_list[results_idx][0]
         for files_idx, single_file in enumerate(files):
             assert single_file == expected_results_list[results_idx][1][files_idx]
+
+
+@pytest.mark.parametrize("val", [None, "null"])
+def test_explicit_null_in_filestat(val):
+    FilestatFake = namedtuple(  # pylint: disable=collections-namedtuple-call
+        "FilestatFake", ["size", "age", "stat_status"]
+    )
+    filestat = FilestatFake(val, val, "file vanished")
+
+    assert not mk_filestats.SizeFilter(">=1024").matches(filestat)
+    assert not mk_filestats.AgeFilter(">=1024").matches(filestat)

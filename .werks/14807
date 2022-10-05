@@ -1,0 +1,12 @@
+Title: UCD CPU Load check is detected if not all counters are present
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1664972645
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p30
+
+If a UCD device did not provide all counters reguested by the plugin it would not be
+discovered during service discovery. We now use a default values of 0 for all counters.

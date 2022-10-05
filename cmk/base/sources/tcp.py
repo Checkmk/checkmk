@@ -41,7 +41,6 @@ class TCPSource(AgentSource):
             ipaddress,
             source_type=SourceType.HOST,
             fetcher_type=FetcherType.TCP,
-            description=TCPSource._make_description(ipaddress, agent_port),
             id_=id_,
             main_data_source=main_data_source,
             simulation_mode=simulation_mode,
@@ -84,7 +83,3 @@ class TCPSource(AgentSource):
 
     def _make_summarizer(self, *, exit_spec: ExitSpec) -> AgentSummarizerDefault:
         return AgentSummarizerDefault(exit_spec)
-
-    @staticmethod
-    def _make_description(ipaddress: Optional[HostAddress], agent_port: int) -> str:
-        return "TCP: %s:%d" % (ipaddress, agent_port)

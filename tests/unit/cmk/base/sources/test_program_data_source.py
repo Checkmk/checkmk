@@ -34,5 +34,4 @@ class TestDSProgramChecker:
             file_cache_max_age=file_cache.MaxAge.none(),
         )
         # Only check the computed attributes.
-        assert source.description == "Program: "
         assert source.id == "agent"

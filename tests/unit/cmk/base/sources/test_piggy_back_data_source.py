@@ -42,7 +42,6 @@ def test_attribute_defaults(ipaddress: HostAddress, monkeypatch: MonkeyPatch) ->
         file_cache_max_age=file_cache.MaxAge.none(),
     )
 
-    assert source.description.startswith("Process piggyback data from")
     assert not source.summarize(
         result.OK(HostSections[AgentRawDataSection]()),
         exit_spec_cb=host_config.exit_code_spec,

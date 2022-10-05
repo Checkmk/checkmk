@@ -42,5 +42,4 @@ def test_attribute_defaults(monkeypatch) -> None:  # type:ignore[no-untyped-def]
             "use_regular": "disable",
         },
     }
-    assert source.description == "TCP: %s:%s" % (ipaddress, 6556)
     assert source.id == "agent"

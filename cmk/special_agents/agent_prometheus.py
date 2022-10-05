@@ -27,7 +27,6 @@ from typing import (
     Tuple,
     Union,
 )
-from urllib.parse import quote
 
 import requests
 
@@ -1625,7 +1624,7 @@ class PrometheusAPI:
             return []
 
     def _perform_promql_query(self, promql: str) -> List[Dict[str, Any]]:
-        api_query_expression = "query?query=%s" % quote(promql)
+        api_query_expression = f"query?query={promql}"
         result = self._process_json_request(api_query_expression)["data"]["result"]
         return result
 

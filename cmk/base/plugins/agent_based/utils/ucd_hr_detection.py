@@ -75,7 +75,11 @@ _NOT_UCD = all_of(
         not_contains(".1.3.6.1.2.1.1.1.0", "serial"),
     ))
 
-PREFER_HR_ELSE_UCD = all_of(UCD, _NOT_HR)
+# PhotonOS has a HR identifier MIB but only uses UCD ¯\_(ツ)_/¯
+PREFER_HR_ELSE_UCD = any_of(
+    all_of(UCD, _NOT_HR),
+    contains(".1.3.6.1.2.1.1.1.0", "photon"),
+)
 
 #   ---helper---------------------------------------------------------------
 
@@ -89,6 +93,7 @@ _UCD_MEM = any_of(
         contains(".1.3.6.1.2.1.1.1.0", "pfsense"),
         not_exists(".1.3.6.1.2.1.25.1.1.0"),
     ),
+    contains(".1.3.6.1.2.1.1.1.0", "photon"),
     all_of(
         contains(".1.3.6.1.2.1.1.1.0", "ironport model c3"),
         not_exists(".1.3.6.1.2.1.25.1.1.0"),

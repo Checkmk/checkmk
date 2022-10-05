@@ -1,0 +1,14 @@
+Title: mk_filestat crash when scanning short lived files
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1664978743
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p14
+
+
+The mk_filestats check plugin would crash with a TypeError when scanning files that are short lived.
+Now such short lived files are filtered out in the agent plugin.

@@ -10,6 +10,7 @@ import configparser
 # pylint: disable=protected-access,redefined-outer-name
 import os
 import sys
+from collections import namedtuple
 
 import pytest
 from utils import import_module
@@ -346,3 +347,14 @@ def test_grouping_multiple_groups(
         assert section_name_arg == expected_results_list[results_idx][0]
         for files_idx, single_file in enumerate(files):
             assert single_file == expected_results_list[results_idx][1][files_idx]
+
+
+@pytest.mark.parametrize("val", [None, "null"])
+def test_explicit_null_in_filestat(val, mk_filestats):
+    FilestatFake = namedtuple(  # pylint: disable=collections-namedtuple-call
+        "FilestatFake", ["size", "age", "stat_status"]
+    )
+    filestat = FilestatFake(val, val, "file vanished")
+
+    assert not mk_filestats.SizeFilter(">=1024").matches(filestat)
+    assert not mk_filestats.AgeFilter(">=1024").matches(filestat)

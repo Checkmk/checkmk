@@ -86,18 +86,19 @@ class BackgroundJobAlreadyRunning(MKGeneralException):
 
 
 class BackgroundProcessInterface:
-    def __init__(self, job_parameters: JobParameters) -> None:
-        super().__init__()
-        self._job_parameters = job_parameters
+    def __init__(self, work_dir: str, job_id: str, logger: logging.Logger) -> None:
+        self._work_dir = work_dir
+        self._job_id = job_id
+        self._logger = logger
 
     def get_work_dir(self) -> str:
-        return self._job_parameters["work_dir"]
+        return self._work_dir
 
     def get_job_id(self) -> str:
-        return self._job_parameters["job_id"]
+        return self._job_id
 
     def get_logger(self) -> logging.Logger:
-        return self._job_parameters["logger"]
+        return self._logger
 
     def send_progress_update(self, info: str, with_timestamp: bool = False) -> None:
         """The progress update is written to stdout and will be catched by the threads counterpart"""
@@ -156,7 +157,9 @@ class BackgroundProcess(multiprocessing.Process):
         job_parameters["logger"] = self._logger
 
         self._job_parameters = job_parameters
-        self._job_interface = BackgroundProcessInterface(job_parameters)
+        self._job_interface = BackgroundProcessInterface(
+            job_parameters["work_dir"], job_parameters["job_id"], job_parameters["logger"]
+        )
 
     def _register_signal_handlers(self) -> None:
         self._logger.debug("Register signal handler %d", os.getpid())

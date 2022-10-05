@@ -5,6 +5,9 @@
 
 from __future__ import annotations
 
+import os
+from pathlib import Path
+
 import pytest
 
 from cmk.utils.type_defs import HostAddress, HostName
@@ -22,9 +25,10 @@ class TestDSProgramChecker:
             hostname,
             ipaddress,
             id_="agent",
+            persisted_section_dir=Path(os.devnull),
+            cache_dir=Path(os.devnull),
             cmdline="",
             stdin=None,
-            main_data_source=False,
             simulation_mode=True,
             agent_simulator=True,
             translation={},

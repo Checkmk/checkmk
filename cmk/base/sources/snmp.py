@@ -6,7 +6,6 @@
 from pathlib import Path
 from typing import Final, Literal, Mapping, Optional
 
-import cmk.utils.paths
 from cmk.utils.exceptions import OnError
 from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, SectionName, SourceType
 
@@ -28,8 +27,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
         *,
         source_type: SourceType,
         id_: Literal["snmp", "mgmt_snmp"],
-        persisted_section_dir: Optional[Path] = None,
-        title: str,
+        persisted_section_dir: Path,
         on_scan_error: OnError,
         missing_sys_description: bool,
         sections: Mapping[SectionName, SectionMeta],
@@ -53,9 +51,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
         self.check_intervals: Final = check_intervals
         self.do_status_data_inventory: Final = do_status_data_inventory
         self.on_snmp_scan_error: Final = on_scan_error
-        if not persisted_section_dir:
-            persisted_section_dir = Path(cmk.utils.paths.var_dir) / "persisted_sections" / self.id
-        self.persisted_section_dir: Final[Path] = persisted_section_dir
+        self.persisted_section_dir: Final = persisted_section_dir
         self.cache: Final = cache
 
     @classmethod
@@ -65,6 +61,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
         ipaddress: Optional[HostAddress],
         *,
         id_: Literal["snmp"],
+        persisted_section_dir: Path,
         on_scan_error: OnError,
         missing_sys_description: bool,
         sections: Mapping[SectionName, SectionMeta],
@@ -78,7 +75,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             ipaddress,
             source_type=SourceType.HOST,
             id_=id_,
-            title="SNMP",
+            persisted_section_dir=persisted_section_dir,
             on_scan_error=on_scan_error,
             missing_sys_description=missing_sys_description,
             sections=sections,
@@ -95,6 +92,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
         ipaddress: HostAddress,
         *,
         id_: Literal["mgmt_snmp"],
+        persisted_section_dir: Path,
         on_scan_error: OnError,
         missing_sys_description: bool,
         sections: Mapping[SectionName, SectionMeta],
@@ -108,7 +106,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             ipaddress,
             source_type=SourceType.MANAGEMENT,
             id_=id_,
-            title="Management board - SNMP",
+            persisted_section_dir=persisted_section_dir,
             on_scan_error=on_scan_error,
             missing_sys_description=missing_sys_description,
             sections=sections,

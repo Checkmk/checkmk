@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from pathlib import Path
 from typing import Final, Literal, Optional
 
 from cmk.utils.exceptions import MKAgentError
@@ -25,7 +26,8 @@ class IPMISource(AgentSource):
         ipaddress: Optional[HostAddress],
         *,
         id_: Literal["mgmt_ipmi"],
-        main_data_source: bool,
+        persisted_section_dir: Path,
+        cache_dir: Path,
         simulation_mode: bool,
         agent_simulator: bool,
         translation: TranslationOptions,
@@ -40,7 +42,8 @@ class IPMISource(AgentSource):
             source_type=SourceType.MANAGEMENT,
             fetcher_type=FetcherType.IPMI,
             id_=id_,
-            main_data_source=main_data_source,
+            persisted_section_dir=persisted_section_dir,
+            cache_dir=cache_dir,
             simulation_mode=simulation_mode,
             agent_simulator=agent_simulator,
             translation=translation,

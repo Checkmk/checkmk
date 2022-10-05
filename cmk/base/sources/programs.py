@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from pathlib import Path
 from typing import Final, Optional
 
 from cmk.utils.translations import TranslationOptions
@@ -23,7 +24,8 @@ class ProgramSource(AgentSource):
         ipaddress: Optional[HostAddress],
         *,
         id_: str,  # "agent" or "special_{agentname}"
-        main_data_source: bool,
+        persisted_section_dir: Path,
+        cache_dir: Path,
         cmdline: str,
         stdin: Optional[str],
         simulation_mode: bool,
@@ -40,7 +42,8 @@ class ProgramSource(AgentSource):
             source_type=SourceType.HOST,
             fetcher_type=FetcherType.PROGRAM,
             id_=id_,
-            main_data_source=main_data_source,
+            persisted_section_dir=persisted_section_dir,
+            cache_dir=cache_dir,
             simulation_mode=simulation_mode,
             agent_simulator=agent_simulator,
             translation=translation,

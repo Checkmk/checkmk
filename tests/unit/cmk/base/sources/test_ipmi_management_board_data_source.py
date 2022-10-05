@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import os
+from pathlib import Path
+
 from tests.testlib.base import Scenario
 
 from cmk.utils.check_utils import ActiveCheckResult
@@ -31,7 +34,8 @@ def test_attribute_defaults(monkeypatch) -> None:  # type:ignore[no-untyped-def]
         hostname,
         ipaddress,
         id_="mgmt_ipmi",
-        main_data_source=False,
+        persisted_section_dir=Path(os.devnull),
+        cache_dir=Path(os.devnull),
         simulation_mode=True,
         agent_simulator=True,
         translation={},

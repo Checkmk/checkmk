@@ -123,10 +123,12 @@ def test_host_config_creates_passing_source_sources(
 @pytest.mark.parametrize(
     "make_source",
     [
-        lambda hostname, ipaddress: SpecialAgentSource(
+        lambda hostname, ipaddress, base_dir: SpecialAgentSource(
             hostname,
             ipaddress,
             id_="special_veryspecial",
+            persisted_section_dir=base_dir,
+            cache_dir=base_dir,
             simulation_mode=True,
             agent_simulator=True,
             translation={},
@@ -134,14 +136,15 @@ def test_host_config_creates_passing_source_sources(
             check_interval=0,
             cmdline="",
             stdin="",
-            main_data_source=False,
             is_cmc=False,
             file_cache_max_age=file_cache.MaxAge.none(),
         ),
-        lambda hostname, ipaddress: DSProgramSource(
+        lambda hostname, ipaddress, base_dir: DSProgramSource(
             hostname,
             ipaddress,
             id_="agent",
+            persisted_section_dir=base_dir,
+            cache_dir=base_dir,
             simulation_mode=True,
             agent_simulator=True,
             translation={},
@@ -149,15 +152,15 @@ def test_host_config_creates_passing_source_sources(
             check_interval=0,
             cmdline="",
             stdin=None,
-            main_data_source=False,
             is_cmc=False,
             file_cache_max_age=file_cache.MaxAge.none(),
         ),
-        lambda hostname, ipaddress: PiggybackSource(
+        lambda hostname, ipaddress, base_dir: PiggybackSource(
             hostname,
             ipaddress,
             id_="piggyback",
-            main_data_source=False,
+            persisted_section_dir=base_dir,
+            cache_dir=base_dir,
             simulation_mode=True,
             agent_simulator=True,
             translation={},
@@ -167,11 +170,12 @@ def test_host_config_creates_passing_source_sources(
             is_piggyback_host=True,
             file_cache_max_age=file_cache.MaxAge.none(),
         ),
-        lambda hostname, ipaddress: TCPSource(
+        lambda hostname, ipaddress, base_dir: TCPSource(
             hostname,
             ipaddress,
             id_="agent",
-            main_data_source=False,
+            persisted_section_dir=base_dir,
+            cache_dir=base_dir,
             simulation_mode=True,
             agent_simulator=True,
             translation={},
@@ -186,7 +190,9 @@ def test_host_config_creates_passing_source_sources(
     ],
 )
 def test_data_source_preselected(  # type:ignore[no-untyped-def]
-    monkeypatch, make_source
+    monkeypatch,
+    make_source,
+    tmp_path,
 ) -> None:
     selected_sections = {SectionName("keep")}  # <- this is what we care about
 
@@ -197,6 +203,7 @@ def test_data_source_preselected(  # type:ignore[no-untyped-def]
     source = make_source(
         hostname,
         "127.0.0.1",
+        tmp_path,
     )
 
     parse_result = source.parse(

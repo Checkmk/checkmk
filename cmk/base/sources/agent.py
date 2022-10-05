@@ -6,8 +6,6 @@
 from pathlib import Path
 from typing import Final, Optional
 
-import cmk.utils.misc
-import cmk.utils.paths
 from cmk.utils.translations import TranslationOptions
 from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, SourceType
 
@@ -23,15 +21,7 @@ __all__ = ["AgentSource"]
 
 
 class AgentSource(Source[AgentRawData, AgentRawDataSection]):
-    """Configure agent checkers and fetchers.
-
-    Args:
-        main_data_source: The data source that is the "main" agent
-            based data source uses the cache and persisted directories
-            that existed before the data source concept has been added
-            where each data source has it's own set of directories.
-
-    """
+    """Configure agent checkers and fetchers."""
 
     def __init__(
         self,
@@ -41,7 +31,8 @@ class AgentSource(Source[AgentRawData, AgentRawDataSection]):
         source_type: SourceType,
         fetcher_type: FetcherType,
         id_: str,
-        main_data_source: bool,
+        persisted_section_dir: Path,
+        cache_dir: Path,
         simulation_mode: bool,
         agent_simulator: bool,
         translation: TranslationOptions,
@@ -58,23 +49,12 @@ class AgentSource(Source[AgentRawData, AgentRawDataSection]):
             default_host_sections=HostSections[AgentRawDataSection](),
             id_=id_,
         )
-        # TODO: We should cleanup these old directories one day.
-        #       Then we can remove this special case
-        self.main_data_source: Final[bool] = main_data_source
         self.translation: Final = translation
         self.encoding_fallback: Final = encoding_fallback
         self.agent_simulator: Final = agent_simulator
         self.check_interval: Final = check_interval
-        if self.main_data_source:
-            persisted_section_dir = Path(cmk.utils.paths.var_dir) / "persisted"
-        else:
-            persisted_section_dir = Path(cmk.utils.paths.var_dir) / "persisted_sections" / self.id
-        self.persisted_section_dir: Final[Path] = persisted_section_dir
-        if self.main_data_source:
-            cache_dir = Path(cmk.utils.paths.tcp_cache_dir)
-        else:
-            cache_dir = Path(cmk.utils.paths.data_source_cache_dir) / self.id
-        self.file_cache_base_path: Final[Path] = cache_dir
+        self.persisted_section_dir: Final = persisted_section_dir
+        self.file_cache_base_path: Final = cache_dir
         self.simulation_mode: Final = simulation_mode
         self.file_cache_max_age: Final = file_cache_max_age
 

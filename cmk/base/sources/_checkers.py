@@ -213,6 +213,13 @@ class _Builder:
         self._initialize_mgmt_boards()
 
     def _initialize_agent_based(self) -> None:
+        # `main_data_source` agent-based data sources use the cache and persisted
+        # directories that existed before the data source concept has been added
+        # where each data source has its own set of directories.
+        #
+        # TODO: We should cleanup these old directories one day, then we can
+        #       remove this special case.
+        #
         if self.host_config.is_all_agents_host:
             self._add(
                 self._get_agent(
@@ -241,7 +248,10 @@ class _Builder:
                     self.host_config.hostname,
                     self.ipaddress,
                     id_="piggyback",
-                    main_data_source=False,
+                    persisted_section_dir=(
+                        Path(cmk.utils.paths.var_dir) / "persisted_sections" / "piggyback"
+                    ),
+                    cache_dir=Path(cmk.utils.paths.data_source_cache_dir) / "piggyback",
                     simulation_mode=self.simulation_mode,
                     agent_simulator=self.agent_simulator,
                     time_settings=config.get_config_cache().get_piggybacked_hosts_time_settings(
@@ -293,6 +303,7 @@ class _Builder:
                 self.host_config.hostname,
                 self.ipaddress,
                 id_=id_,
+                persisted_section_dir=Path(cmk.utils.paths.var_dir) / "persisted_sections" / id_,
                 on_scan_error=self.on_scan_error,
                 missing_sys_description=self.missing_sys_description,
                 sections=make_sections(
@@ -340,6 +351,9 @@ class _Builder:
                     self.host_config.hostname,
                     ip_address,
                     id_=id_,
+                    persisted_section_dir=(
+                        Path(cmk.utils.paths.var_dir) / "persisted_sections" / id_
+                    ),
                     on_scan_error=self.on_scan_error,
                     missing_sys_description=self.missing_sys_description,
                     sections=make_sections(
@@ -359,7 +373,10 @@ class _Builder:
                     self.host_config.hostname,
                     ip_address,
                     id_="mgmt_ipmi",
-                    main_data_source=False,
+                    persisted_section_dir=(
+                        Path(cmk.utils.paths.var_dir) / "persisted_sections" / "mgmt_ipmi"
+                    ),
+                    cache_dir=Path(cmk.utils.paths.data_source_cache_dir) / "mgmt_ipmi",
                     simulation_mode=self.simulation_mode,
                     agent_simulator=self.agent_simulator,
                     translation=self.translation,
@@ -391,7 +408,16 @@ class _Builder:
                 self.host_config.hostname,
                 self.ipaddress,
                 id_="agent",
-                main_data_source=main_data_source,
+                persisted_section_dir=(
+                    Path(cmk.utils.paths.var_dir) / "persisted"
+                    if main_data_source
+                    else Path("persisted_sections", "agent")
+                ),
+                cache_dir=(
+                    Path(cmk.utils.paths.tcp_cache_dir)
+                    if main_data_source
+                    else Path(cmk.utils.paths.data_source_cache_dir) / "agent"
+                ),
                 cmdline=core_config.translate_ds_program_source_cmdline(
                     datasource_program, self.host_config, self.ipaddress
                 ),
@@ -411,7 +437,10 @@ class _Builder:
                 self.host_config.hostname,
                 self.ipaddress,
                 id_="push-agent",
-                main_data_source=False,
+                persisted_section_dir=(
+                    Path(cmk.utils.paths.var_dir) / "persisted_sections" / "push-agent"
+                ),
+                cache_dir=Path(cmk.utils.paths.data_source_cache_dir) / "push-agent",
                 simulation_mode=self.simulation_mode,
                 agent_simulator=self.agent_simulator,
                 translation=self.translation,
@@ -424,7 +453,16 @@ class _Builder:
                 self.host_config.hostname,
                 self.ipaddress,
                 id_="agent",
-                main_data_source=main_data_source,
+                persisted_section_dir=(
+                    Path(cmk.utils.paths.var_dir) / "persisted"
+                    if main_data_source
+                    else Path("persisted_sections", "agent")
+                ),
+                cache_dir=(
+                    Path(cmk.utils.paths.tcp_cache_dir)
+                    if main_data_source
+                    else Path(cmk.utils.paths.data_source_cache_dir) / "agent"
+                ),
                 simulation_mode=self.simulation_mode,
                 agent_simulator=self.agent_simulator,
                 translation=self.translation,
@@ -439,11 +477,14 @@ class _Builder:
         raise NotImplementedError(f"connection mode {connection_mode!r}")
 
     def _get_special_agents(self) -> Sequence[Source]:
+        def make_id(agentname: str) -> str:
+            return f"special_{agentname}"
+
         return [
             SpecialAgentSource(
                 self.host_config.hostname,
                 self.ipaddress,
-                id_=f"special_{agentname}",
+                id_=make_id(agentname),
                 cmdline=core_config.make_special_agent_cmdline(
                     self.host_config.hostname,
                     self.ipaddress,
@@ -456,7 +497,10 @@ class _Builder:
                     agentname,
                     params,
                 ),
-                main_data_source=False,
+                persisted_section_dir=(
+                    Path(cmk.utils.paths.var_dir) / "persisted_sections" / make_id(agentname)
+                ),
+                cache_dir=Path(cmk.utils.paths.data_source_cache_dir) / make_id(agentname),
                 simulation_mode=self.simulation_mode,
                 agent_simulator=self.agent_simulator,
                 translation=self.translation,

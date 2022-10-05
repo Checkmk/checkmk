@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import os
+from pathlib import Path
+
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
@@ -32,7 +35,8 @@ def test_attribute_defaults(ipaddress: HostAddress, monkeypatch: MonkeyPatch) ->
         hostname,
         ipaddress,
         id_="piggyback",
-        main_data_source=False,
+        persisted_section_dir=Path(os.devnull),
+        cache_dir=Path(os.devnull),
         simulation_mode=True,
         agent_simulator=True,
         time_settings=[],

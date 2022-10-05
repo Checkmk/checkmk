@@ -46,7 +46,7 @@ class JobStatusStates:
 
 
 # TODO: this is intended as a replacement to the Dict[str, Any] typing
-# but requires that initial_status.update(self._kwargs) gets refactored
+# but requires that initial_status.update(self._initial_status_args) gets refactored
 # class JobStatusSpec(TypedDict, total=False):
 #     state: str
 #     started: float
@@ -333,7 +333,7 @@ class BackgroundJob:
 
         kwargs.setdefault("stoppable", True)
 
-        self._kwargs = kwargs
+        self._initial_status_args = kwargs
         self._work_dir = os.path.join(self._job_base_dir, self._job_id)
         self._jobstatus = JobStatus(self._work_dir)
 
@@ -529,7 +529,7 @@ class BackgroundJob:
             "started": time.time(),
             "duration": 0.0,
         }
-        initial_status.update(self._kwargs)
+        initial_status.update(self._initial_status_args)
         self._jobstatus.update_status(initial_status)
 
         job_parameters: JobParameters = {}

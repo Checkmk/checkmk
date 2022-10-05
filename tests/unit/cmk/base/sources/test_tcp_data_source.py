@@ -20,6 +20,7 @@ def test_attribute_defaults(monkeypatch) -> None:  # type:ignore[no-untyped-def]
         hostname,
         ipaddress,
         id_="agent",
+        main_data_source=False,
         simulation_mode=True,
         agent_simulator=True,
         translation={},

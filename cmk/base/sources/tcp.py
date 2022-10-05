@@ -24,7 +24,7 @@ class TCPSource(AgentSource):
         ipaddress: Optional[HostAddress],
         *,
         id_: Literal["agent"],
-        main_data_source: bool = False,
+        main_data_source: bool,
         simulation_mode: bool,
         agent_simulator: bool,
         translation: TranslationOptions,

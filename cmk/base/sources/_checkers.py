@@ -241,6 +241,7 @@ class _Builder:
                     self.host_config.hostname,
                     self.ipaddress,
                     id_="piggyback",
+                    main_data_source=False,
                     simulation_mode=self.simulation_mode,
                     agent_simulator=self.agent_simulator,
                     time_settings=config.get_config_cache().get_piggybacked_hosts_time_settings(
@@ -358,6 +359,7 @@ class _Builder:
                     self.host_config.hostname,
                     ip_address,
                     id_="mgmt_ipmi",
+                    main_data_source=False,
                     simulation_mode=self.simulation_mode,
                     agent_simulator=self.agent_simulator,
                     translation=self.translation,
@@ -409,6 +411,7 @@ class _Builder:
                 self.host_config.hostname,
                 self.ipaddress,
                 id_="push-agent",
+                main_data_source=False,
                 simulation_mode=self.simulation_mode,
                 agent_simulator=self.agent_simulator,
                 translation=self.translation,

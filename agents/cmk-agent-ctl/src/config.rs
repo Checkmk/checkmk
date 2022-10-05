@@ -143,7 +143,7 @@ impl RegistrationConnectionConfig {
     ) -> AnyhowResult<Self> {
         let (server_spec, site) = match reg_args_conn.site {
             Some(site) => {
-                match reg_args_conn.server {
+                match reg_args_conn.server_spec {
                     Some(server_spec) => (server_spec, site),
                     None => return Err(anyhow!("Server not specified in the command line arguments, but site was. This should never happen.")),
                 }
@@ -583,7 +583,7 @@ mod test_registration_config {
 
     fn registration_args_connection() -> cli::RegistrationArgsConnection {
         cli::RegistrationArgsConnection {
-            server: None,
+            server_spec: None,
             site: None,
             user: None,
             password: None,
@@ -638,7 +638,7 @@ mod test_registration_config {
         reg_preset.host_name = Some(String::from("unused"));
 
         let mut reg_args_conn = registration_args_connection();
-        reg_args_conn.server = Some(site_spec::ServerSpec {
+        reg_args_conn.server_spec = Some(site_spec::ServerSpec {
             server: String::from("server"),
             port: Some(123),
         });
@@ -725,7 +725,7 @@ mod test_registration_config {
         reg_preset.host_name = Some(String::from("hostname"));
 
         let mut reg_args_conn = registration_args_connection();
-        reg_args_conn.server = Some(site_spec::ServerSpec {
+        reg_args_conn.server_spec = Some(site_spec::ServerSpec {
             server: String::from("server"),
             port: Some(123),
         });

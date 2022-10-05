@@ -45,8 +45,8 @@ pub struct ClientOpts {
 #[derive(StructOpt)]
 pub struct RegistrationArgsConnection {
     /// Address of the Checkmk site in the format "<server>" or "<server>:<port>"
-    #[structopt(long, short = "s", requires = "site", parse(try_from_str))]
-    pub server: Option<site_spec::ServerSpec>,
+    #[structopt(long = "server", short = "s", requires = "site", parse(try_from_str))]
+    pub server_spec: Option<site_spec::ServerSpec>,
 
     /// Name of the Checkmk site
     #[structopt(long, short = "i", requires = "server", parse(from_str))]

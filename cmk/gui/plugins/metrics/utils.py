@@ -30,8 +30,6 @@ from typing import (
     Union,
 )
 
-from six import ensure_str
-
 from livestatus import SiteId
 
 import cmk.utils.regex
@@ -47,7 +45,7 @@ from cmk.utils.version import parse_check_mk_version
 import cmk.gui.sites as sites
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
-from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -1471,14 +1469,6 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
             **kwargs,
         }
         super().__init__(**kwargs_with_defaults)
-
-    def _validate_value(self, value: str | None, varprefix: str) -> None:
-        if (
-            value is not None
-            and self._regex
-            and not self._regex.match(ensure_str(value))  # pylint: disable= six-ensure-str-bin-call
-        ):
-            raise MKUserError(varprefix, self._regex_error)
 
     def _choices_from_value(self, value: str | None) -> Choices:
         if value is None:

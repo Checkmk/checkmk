@@ -206,7 +206,7 @@ class TestSyslogMessage:
         "facility, severity, stuctured_data",
         [
             pytest.param(
-                30,
+                29,
                 2,
                 StructuredData({}),
                 id="invalid facility",
@@ -245,6 +245,22 @@ class TestSyslogMessage:
     @pytest.mark.parametrize(
         "syslog_message, expected_result",
         [
+            pytest.param(
+                SyslogMessage(
+                    facility=30,
+                    severity=2,
+                ),
+                "<242>1 - - - - - [Checkmk@18662]",
+                id="facility 30-logfile case",
+            ),
+            pytest.param(
+                SyslogMessage(
+                    facility=31,
+                    severity=2,
+                ),
+                "<250>1 - - - - - [Checkmk@18662]",
+                id="facility 31-snmptrap case",
+            ),
             pytest.param(
                 SyslogMessage(
                     facility=1,

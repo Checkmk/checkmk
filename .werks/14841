@@ -1,0 +1,14 @@
+Title: Add Syslog Facility logfile
+Class: feature
+Compatible: compat
+Component: ec
+Date: 1664973307
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p14
+
+The new Syslog facility called logfile
+can be used in filtering rules
+

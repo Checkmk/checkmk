@@ -1,0 +1,21 @@
+Title: fix runas plugin
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1664984917
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p14
+
+This werk fixes a bug in the runas plugin that was preventing it to run
+the plugins as any user other than root.
+
+This also impacted mrpe plugins included in the runas config when they
+were run asynchronously.
+
+The error shown by the agent output in debug mode was
+'check_mk_agent: line 211: su [RUNAS_USER] -c "[CHECK_FILE_PATH]": No such file or directory'
+
+

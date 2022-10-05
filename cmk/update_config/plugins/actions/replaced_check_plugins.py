@@ -5,7 +5,7 @@
 
 from cmk.utils.type_defs import CheckPluginName
 
-REMOVED_CHECK_PLUGINS = {
+REPLACED_CHECK_PLUGINS = {
     CheckPluginName("aix_diskiod"): CheckPluginName("diskstat_io"),
     CheckPluginName("cisco_mem_asa"): CheckPluginName("cisco_mem"),
     CheckPluginName("cisco_mem_asa64"): CheckPluginName("cisco_mem"),

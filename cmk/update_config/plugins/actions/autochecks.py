@@ -17,7 +17,7 @@ from cmk.base.autochecks import AutocheckEntry, AutochecksStore
 
 from cmk.gui.watolib.rulesets import AllRulesets, RulesetCollection
 
-from cmk.update_config.plugins.actions.removed_check_plugins import REMOVED_CHECK_PLUGINS
+from cmk.update_config.plugins.actions.replaced_check_plugins import REPLACED_CHECK_PLUGINS
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.update_config.update_state import UpdateActionState
 
@@ -65,7 +65,7 @@ def _fix_entry(
     hostname: str,
 ) -> AutocheckEntry:
     """Change names of removed plugins to the new ones and transform parameters"""
-    new_plugin_name = REMOVED_CHECK_PLUGINS.get(entry.check_plugin_name)
+    new_plugin_name = REPLACED_CHECK_PLUGINS.get(entry.check_plugin_name)
     new_params = _transformed_params(
         logger,
         new_plugin_name or entry.check_plugin_name,

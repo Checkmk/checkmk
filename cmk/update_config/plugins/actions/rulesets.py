@@ -15,11 +15,11 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.watolib import timeperiods
 from cmk.gui.watolib.rulesets import AllRulesets, RulesetCollection
 
-from cmk.update_config.plugins.actions.removed_check_plugins import REMOVED_CHECK_PLUGINS
+from cmk.update_config.plugins.actions.replaced_check_plugins import REPLACED_CHECK_PLUGINS
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.update_config.update_state import UpdateActionState
 
-REMOVED_RULESETS: Mapping[RulesetName, RulesetName] = {
+REPLACED_RULESETS: Mapping[RulesetName, RulesetName] = {
     "discovery_systemd_units_services_rules": "discovery_systemd_units_services",
     "checkgroup_parameters:systemd_services": "checkgroup_parameters:systemd_units_services",
     "static_checks:systemd_services": "static_checks:systemd_units_services",
@@ -33,7 +33,7 @@ class UpdateRulesets(UpdateAction):
         _transform_replaced_wato_rulesets(
             logger,
             all_rulesets,
-            REMOVED_RULESETS,
+            REPLACED_RULESETS,
         )
         _transform_wato_rulesets_params(
             logger,
@@ -41,7 +41,7 @@ class UpdateRulesets(UpdateAction):
         )
         _remove_removed_check_plugins_from_ignored_checks(
             all_rulesets,
-            REMOVED_CHECK_PLUGINS,
+            REPLACED_CHECK_PLUGINS,
         )
         _validate_rule_values(logger, all_rulesets)
         all_rulesets.save()

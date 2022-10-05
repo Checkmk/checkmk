@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import errno
 import io
 import logging
@@ -16,7 +18,7 @@ import time
 import traceback
 from pathlib import Path
 from types import FrameType
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Type
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Type, TypedDict
 
 import psutil  # type: ignore[import]
 from setproctitle import setthreadtitle  # type: ignore[import] # pylint: disable=no-name-in-module
@@ -33,7 +35,19 @@ import cmk.gui.log
 from cmk.gui.i18n import _
 
 JobId = str
-JobParameters = Dict[str, Any]
+
+
+class JobParameters(TypedDict):
+    """Just a small wrapper to help improve the typing through multiprocessing.Process call"""
+
+    work_dir: str
+    job_id: str
+    jobstatus: JobStatus
+    target: Callable
+    args: tuple
+    kwargs: dict[str, Any]
+
+
 JobStatusSpec = Dict[str, Any]
 
 
@@ -154,11 +168,10 @@ class BackgroundProcess(multiprocessing.Process):
         self._jobstatus = job_parameters["jobstatus"]
         # TODO: Hand over the logger via arguments
         self._logger = cmk.gui.log.logger.getChild("background_process")
-        job_parameters["logger"] = self._logger
 
         self._job_parameters = job_parameters
         self._job_interface = BackgroundProcessInterface(
-            job_parameters["work_dir"], job_parameters["job_id"], job_parameters["logger"]
+            job_parameters["work_dir"], job_parameters["job_id"], self._logger
         )
 
     def _register_signal_handlers(self) -> None:
@@ -250,9 +263,12 @@ class BackgroundProcess(multiprocessing.Process):
         self._register_signal_handlers()
 
     def _execute_function(self) -> None:
-        func_ptr, args, kwargs = self._job_parameters["function_parameters"]
         try:
-            func_ptr(*args, job_interface=self._job_interface, **kwargs)
+            self._job_parameters["target"](
+                *self._job_parameters["args"],
+                job_interface=self._job_interface,
+                **self._job_parameters["kwargs"],
+            )
         except MKTerminate:
             raise
         except Exception as e:
@@ -517,6 +533,7 @@ class BackgroundJob:
             store.release_lock(self._job_initializiation_lock)
 
     def _start(self) -> None:
+        assert self._queued_function is not None
         if self.is_active():
             raise BackgroundJobAlreadyRunning(_("Background Job %s already running") % self._job_id)
 
@@ -532,11 +549,16 @@ class BackgroundJob:
         initial_status.update(self._initial_status_args)
         self._jobstatus.update_status(initial_status)
 
-        job_parameters: JobParameters = {}
-        job_parameters["work_dir"] = self._work_dir
-        job_parameters["job_id"] = self._job_id
-        job_parameters["jobstatus"] = self._jobstatus
-        job_parameters["function_parameters"] = self._queued_function
+        job_parameters = JobParameters(
+            {
+                "work_dir": self._work_dir,
+                "job_id": self._job_id,
+                "jobstatus": self._jobstatus,
+                "target": self._queued_function[0],
+                "args": self._queued_function[1],
+                "kwargs": self._queued_function[2],
+            }
+        )
         p = multiprocessing.Process(
             target=self._start_background_subprocess, args=(job_parameters,)
         )

@@ -49,7 +49,6 @@ from cmk.utils.site import omd_site
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
-import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.hooks as hooks
 import cmk.gui.log as log
 import cmk.gui.utils
@@ -60,6 +59,7 @@ import cmk.gui.watolib.git
 import cmk.gui.watolib.sidebar_reload
 import cmk.gui.watolib.snapshots
 import cmk.gui.watolib.utils
+from cmk.gui import background_job, gui_background_job
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import (
     MKAuthException,
@@ -1225,7 +1225,7 @@ class ActivationCleanupBackgroundJob(WatoBackgroundJob):
         )
         self.maximum_age = maximum_age
 
-    def do_execute(self, job_interface):
+    def do_execute(self, job_interface: background_job.BackgroundProcessInterface) -> None:
         self._do_housekeeping()
         job_interface.send_result_message(_("Activation cleanup finished"))
 

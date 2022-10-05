@@ -410,7 +410,9 @@ class ConfigDomainOMD(ABCConfigDomain):
             if job.is_active():
                 raise MKUserError(None, _("Another omd config change job is already running."))
 
-            job.set_function(job.do_execute, config_change_commands)
+            job.set_function(
+                lambda job_interface: job.do_execute(config_change_commands, job_interface)
+            )
             job.start()
         else:
             _do_config_change(config_change_commands, self._logger)

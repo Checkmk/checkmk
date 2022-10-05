@@ -1336,11 +1336,13 @@ def execute_userdb_job() -> None:
         return
 
     job.set_function(
-        job.do_sync,
-        add_to_changelog=False,
-        enforce_sync=False,
-        load_users_func=load_users,
-        save_users_func=save_users,
+        lambda job_interface: job.do_sync(
+            job_interface=job_interface,
+            add_to_changelog=False,
+            enforce_sync=False,
+            load_users_func=load_users,
+            save_users_func=save_users,
+        )
     )
     job.start()
 
@@ -1362,11 +1364,13 @@ def ajax_sync() -> None:
     try:
         job = UserSyncBackgroundJob()
         job.set_function(
-            job.do_sync,
-            add_to_changelog=False,
-            enforce_sync=True,
-            load_users_func=load_users,
-            save_users_func=save_users,
+            lambda job_interface: job.do_sync(
+                job_interface=job_interface,
+                add_to_changelog=False,
+                enforce_sync=True,
+                load_users_func=load_users,
+                save_users_func=save_users,
+            )
         )
         try:
             job.start()

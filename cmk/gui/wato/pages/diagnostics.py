@@ -149,7 +149,9 @@ class ModeDiagnostics(WatoMode):
         if self._job.is_active() or self._diagnostics_parameters is None:
             return redirect(self._job.detail_url())
 
-        self._job.set_function(self._job.do_execute, self._diagnostics_parameters)
+        params = self._diagnostics_parameters
+        assert params is not None
+        self._job.set_function(lambda job_interface: self._job.do_execute(params, job_interface))
         self._job.start()
 
         return redirect(self._job.detail_url())

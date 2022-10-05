@@ -5,10 +5,11 @@
 """Modes for renaming one or multiple existing hosts"""
 
 import socket
-from typing import Collection, Optional, Type
+from typing import Collection, Optional, Sequence, Type
 
 from cmk.utils.regex import regex
 from cmk.utils.site import omd_site
+from cmk.utils.type_defs import HostName
 
 import cmk.gui.background_job as background_job
 import cmk.gui.forms as forms
@@ -49,7 +50,7 @@ from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.activate_changes import confirm_all_local_changes
 from cmk.gui.watolib.host_rename import perform_rename_hosts
-from cmk.gui.watolib.hosts_and_folders import Folder, Host, validate_host_uniqueness
+from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder, Host, validate_host_uniqueness
 from cmk.gui.watolib.site_changes import SiteChanges
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
@@ -177,7 +178,9 @@ class ModeBulkRenameHost(WatoMode):
         if c:
             title = _("Renaming of %s") % ", ".join("%s → %s" % x[1:] for x in renamings)
             host_renaming_job = RenameHostsBackgroundJob(title=title)
-            host_renaming_job.set_function(rename_hosts_background_job, renamings)
+            host_renaming_job.set_function(
+                lambda job_interface: rename_hosts_background_job(renamings, job_interface)
+            )
 
             try:
                 host_renaming_job.start()
@@ -384,7 +387,10 @@ def _confirm(html_title, message):
     return confirm_with_preview(message, confirm_options)
 
 
-def rename_hosts_background_job(renamings, job_interface=None):
+def rename_hosts_background_job(
+    renamings: Sequence[tuple[CREFolder, HostName, HostName]],
+    job_interface: background_job.BackgroundProcessInterface,
+) -> None:
     actions, auth_problems = rename_hosts(
         renamings, job_interface=job_interface
     )  # Already activates the changes!
@@ -491,7 +497,7 @@ class ModeRenameHost(WatoMode):
                 % (local_site, renamed_host_site),
             )
 
-        newname = request.var("newname")
+        newname = request.get_ascii_input_mandatory("newname")
         self._check_new_host_name("newname", newname)
         # Creating pending entry. That makes the site dirty and that will force a sync of
         # the config to that site before the automation is being done.
@@ -499,7 +505,9 @@ class ModeRenameHost(WatoMode):
             self._host, title=_("Renaming of %s -> %s") % (self._host.name(), newname)
         )
         renamings = [(Folder.current(), self._host.name(), newname)]
-        host_renaming_job.set_function(rename_hosts_background_job, renamings)
+        host_renaming_job.set_function(
+            lambda job_interface: rename_hosts_background_job(renamings, job_interface)
+        )
 
         try:
             host_renaming_job.start()
@@ -508,7 +516,7 @@ class ModeRenameHost(WatoMode):
 
         return redirect(host_renaming_job.detail_url())
 
-    def _check_new_host_name(self, varname, host_name):
+    def _check_new_host_name(self, varname: str, host_name: HostName) -> None:
         if not host_name:
             raise MKUserError(varname, _("Please specify a host name."))
         if Folder.current().has_host(host_name):

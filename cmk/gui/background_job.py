@@ -18,7 +18,7 @@ import time
 import traceback
 from pathlib import Path
 from types import FrameType
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Type, TypedDict
+from typing import Any, Callable, Dict, List, Optional, Sequence, Type, TypedDict
 
 import psutil  # type: ignore[import]
 from setproctitle import setthreadtitle  # type: ignore[import] # pylint: disable=no-name-in-module
@@ -42,10 +42,7 @@ class JobParameters(TypedDict):
 
     work_dir: str
     job_id: str
-    jobstatus: JobStatus
-    target: Callable
-    args: tuple
-    kwargs: dict[str, Any]
+    target: Callable[[BackgroundProcessInterface], None]
 
 
 JobStatusSpec = Dict[str, Any]
@@ -169,16 +166,12 @@ class BackgroundProcess(multiprocessing.Process):
         logger: logging.Logger,
         work_dir: str,
         job_id: str,
-        target: Callable,
-        args: tuple,
-        kwargs: dict[str, Any],
+        target: Callable[[BackgroundProcessInterface], None],
     ) -> None:
         super().__init__()
         self._jobstatus = job_status
         self._logger = logger
         self._target = target
-        self._args = tuple(args)
-        self._kwargs = dict(kwargs)
         self._job_interface = BackgroundProcessInterface(work_dir, job_id, logger)
 
     def _register_signal_handlers(self) -> None:
@@ -271,7 +264,7 @@ class BackgroundProcess(multiprocessing.Process):
 
     def _execute_function(self) -> None:
         try:
-            self._target(*self._args, job_interface=self._job_interface, **self._kwargs)
+            self._target(self._job_interface)
         except MKTerminate:
             raise
         except Exception as e:
@@ -356,8 +349,7 @@ class BackgroundJob:
         self._work_dir = os.path.join(self._job_base_dir, self._job_id)
         self._jobstatus = JobStatus(self._work_dir)
 
-        # The function ptr and its args/kwargs
-        self._queued_function: Optional[Tuple[Callable, Tuple[Any, ...], Dict[str, Any]]] = None
+        self._queued_function: Callable[[BackgroundProcessInterface], None] | None = None
 
     @staticmethod
     def validate_job_id(job_id: str) -> None:
@@ -525,8 +517,8 @@ class BackgroundJob:
         return status
 
     # TODO: Clean this up (functions are registered by subclassing, no need to register them here)
-    def set_function(self, func_ptr: Callable, *args: Any, **kwargs: Any) -> None:
-        self._queued_function = (func_ptr, args, kwargs)
+    def set_function(self, func_ptr: Callable[[BackgroundProcessInterface], None]) -> None:
+        self._queued_function = func_ptr
 
     def start(self) -> None:
         try:
@@ -556,10 +548,7 @@ class BackgroundJob:
             {
                 "work_dir": self._work_dir,
                 "job_id": self._job_id,
-                "jobstatus": self._jobstatus,
-                "target": self._queued_function[0],
-                "args": self._queued_function[1],
-                "kwargs": self._queued_function[2],
+                "target": self._queued_function,
             }
         )
         p = multiprocessing.Process(
@@ -600,8 +589,6 @@ class BackgroundJob:
                 work_dir=job_parameters["work_dir"],
                 job_id=job_parameters["job_id"],
                 target=job_parameters["target"],
-                args=job_parameters["args"],
-                kwargs=job_parameters["kwargs"],
             )
             p.start()
         except Exception as e:

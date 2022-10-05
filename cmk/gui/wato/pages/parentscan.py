@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Mode for automatic scan of parents (similar to cmk --scan-parents)"""
 
-from typing import Any, Collection, List, NamedTuple, Optional, Type
+from typing import Any, Collection, List, NamedTuple, Optional, Sequence, Type
 
 from livestatus import SiteId
 
@@ -12,8 +12,8 @@ import cmk.utils.store as store
 from cmk.utils.type_defs import HostName
 
 import cmk.gui.forms as forms
-import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.watolib.bakery as bakery
+from cmk.gui import background_job, gui_background_job
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKUserError
 from cmk.gui.htmllib.html import html
@@ -74,7 +74,12 @@ class ParentScanBackgroundJob(WatoBackgroundJob):
     def _back_url(self):
         return Folder.current().url()
 
-    def do_execute(self, settings, tasks, job_interface=None):
+    def do_execute(
+        self,
+        settings: ParentScanSettings,
+        tasks: Sequence[ParentScanTask],
+        job_interface: background_job.BackgroundProcessInterface,
+    ) -> None:
         self._initialize_statistics()
         self._logger.info("Parent scan started...")
 
@@ -333,7 +338,11 @@ class ModeParentScan(WatoMode):
             transactions.check_transaction()
             user.save_file("parentscan", dict(self._settings._asdict()))
 
-            self._job.set_function(self._job.do_execute, self._settings, self._get_tasks())
+            self._job.set_function(
+                lambda job_interface: self._job.do_execute(
+                    self._settings, self._get_tasks(), job_interface
+                )
+            )
             self._job.start()
         except Exception as e:
             if active_config.debug:
@@ -345,12 +354,12 @@ class ModeParentScan(WatoMode):
 
         raise HTTPRedirect(self._job.detail_url())
 
-    def _get_tasks(self):
+    def _get_tasks(self) -> list[ParentScanTask]:
         if not request.var("all"):
             return self._get_current_folder_host_tasks()
         return self._get_folder_tasks()
 
-    def _get_current_folder_host_tasks(self):
+    def _get_current_folder_host_tasks(self) -> list[ParentScanTask]:
         """only scan checked hosts in current folder, no recursion"""
         tasks = []
         for host in get_hosts_from_checkboxes():
@@ -358,7 +367,7 @@ class ModeParentScan(WatoMode):
                 tasks.append(ParentScanTask(host.site_id(), host.folder().path(), host.name()))
         return tasks
 
-    def _get_folder_tasks(self):
+    def _get_folder_tasks(self) -> list[ParentScanTask]:
         """all host in this folder, probably recursively"""
         tasks = []
         for host in self._recurse_hosts(

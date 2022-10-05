@@ -6,7 +6,6 @@
 from abc import ABC, abstractmethod
 from contextlib import suppress
 from dataclasses import dataclass
-from functools import partial
 from itertools import chain
 from time import sleep
 from typing import (
@@ -515,8 +514,8 @@ def build_index_background(
 ) -> None:
     build_job = SearchIndexBackgroundJob()
     build_job.set_function(
-        partial(
-            _build_index_background,
+        lambda job_interface: _build_index_background(
+            job_interface=job_interface,
             n_attempts_redis_connection=n_attempts_redis_connection,
             sleep_time=sleep_time,
         )
@@ -542,7 +541,9 @@ def _update_index_background(
 
 def update_index_background(change_action_name: str) -> None:
     update_job = SearchIndexBackgroundJob()
-    update_job.set_function(_update_index_background, change_action_name)
+    update_job.set_function(
+        lambda job_interface: _update_index_background(change_action_name, job_interface)
+    )
     with suppress(BackgroundJobAlreadyRunning):
         update_job.start()
 

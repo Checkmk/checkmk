@@ -215,11 +215,13 @@ class ModeUsers(WatoMode):
 
                 job = userdb.UserSyncBackgroundJob()
                 job.set_function(
-                    job.do_sync,
-                    add_to_changelog=True,
-                    enforce_sync=True,
-                    load_users_func=userdb.load_users,
-                    save_users_func=userdb.save_users,
+                    lambda job_interface: job.do_sync(
+                        job_interface=job_interface,
+                        add_to_changelog=True,
+                        enforce_sync=True,
+                        load_users_func=userdb.load_users,
+                        save_users_func=userdb.save_users,
+                    )
                 )
 
                 try:

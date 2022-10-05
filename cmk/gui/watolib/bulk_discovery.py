@@ -12,7 +12,7 @@ from cmk.utils.type_defs import DiscoveryResult
 
 from cmk.automations.results import DiscoveryResult as AutomationDiscoveryResult
 
-import cmk.gui.gui_background_job as gui_background_job
+from cmk.gui import background_job, gui_background_job
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -122,14 +122,14 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
     def _back_url(self):
         return Folder.current().url()
 
-    def do_execute(  # type:ignore[no-untyped-def]
+    def do_execute(
         self,
         mode: DiscoveryMode,
         do_scan: DoFullScan,
         ignore_errors: IgnoreErrors,
         tasks: Sequence[DiscoveryTask],
-        job_interface=None,
-    ):
+        job_interface: background_job.BackgroundProcessInterface,
+    ) -> None:
         self._initialize_statistics(
             num_hosts_total=sum(len(task.host_names) for task in tasks),
         )
@@ -363,7 +363,11 @@ def start_bulk_discovery(
 
     """
     tasks = _create_tasks_from_hosts(hosts, bulk_size)
-    job.set_function(job.do_execute, discovery_mode, do_full_scan, ignore_errors, tasks)
+    job.set_function(
+        lambda job_interface: job.do_execute(
+            discovery_mode, do_full_scan, ignore_errors, tasks, job_interface
+        )
+    )
     job.start()
 
 

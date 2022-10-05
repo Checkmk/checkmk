@@ -530,7 +530,7 @@ class AutomationCheckmkAutomationStart(AutomationCommand):
 
     def execute(self, api_request: CheckmkAutomationRequest) -> Tuple:
         job = CheckmkAutomationBackgroundJob(api_request=api_request)
-        job.set_function(job.execute_automation, api_request=api_request)
+        job.set_function(lambda job_interface: job.execute_automation(job_interface, api_request))
         job.start()
         return job.get_job_id()
 

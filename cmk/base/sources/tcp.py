@@ -59,10 +59,6 @@ class TCPSource(AgentSource):
         self.tcp_connect_timeout: Final = tcp_connect_timeout
         self.agent_encryption: Final = agent_encryption
 
-        # TODO(ml): These two options ought to be static as well!
-        self.port: Optional[int] = None
-        self.timeout: Optional[float] = None
-
     def _make_file_cache(self) -> AgentFileCache:
         return AgentFileCache(
             self.hostname,
@@ -79,9 +75,9 @@ class TCPSource(AgentSource):
     def _make_fetcher(self) -> TCPFetcher:
         return TCPFetcher(
             family=self.address_family,
-            address=(self.ipaddress, self.port or self.agent_port),
+            address=(self.ipaddress, self.agent_port),
             host_name=self.hostname,
-            timeout=self.timeout or self.tcp_connect_timeout,
+            timeout=self.tcp_connect_timeout,
             encryption_settings=self.agent_encryption,
         )
 

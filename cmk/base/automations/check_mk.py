@@ -1410,9 +1410,25 @@ class AutomationDiagHost(Automation):
                     file_cache_max_age=config.max_cachefile_age(),
                 )
             elif isinstance(source, sources.tcp.TCPSource):
-                source.port = agent_port
-                if tcp_connect_timeout is not None:
-                    source.timeout = tcp_connect_timeout
+                agent_port = agent_port or source.agent_port
+                tcp_connect_timeout = tcp_connect_timeout or source.tcp_connect_timeout
+                source = sources.tcp.TCPSource(
+                    source.hostname,
+                    source.ipaddress,
+                    id_="agent",
+                    persisted_section_dir=source.persisted_section_dir,
+                    cache_dir=source.file_cache_base_path,
+                    simulation_mode=source.simulation_mode,
+                    agent_simulator=source.agent_simulator,
+                    translation=source.translation,
+                    encoding_fallback=source.encoding_fallback,
+                    check_interval=source.check_interval,
+                    address_family=source.address_family,
+                    agent_port=agent_port,
+                    tcp_connect_timeout=tcp_connect_timeout,
+                    agent_encryption=source.agent_encryption,
+                    file_cache_max_age=source.file_cache_max_age,
+                )
             elif isinstance(source, sources.snmp.SNMPSource):
                 continue
 

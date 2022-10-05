@@ -776,7 +776,7 @@ run_remote_plugins() {
         cmdline="${rest#(*) }"
 
         if [ -n "${prefix}" ]; then
-            cmdline="${prefix}'${cmdline}'"
+            cmdline="${prefix} '${cmdline}'"
         fi
 
         if [ -z "${interval}" ]; then

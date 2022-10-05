@@ -1747,7 +1747,7 @@ run_remote_plugins() {
         cmdline="${rest#(*) }"
 
         if [ -n "${prefix}" ]; then
-            cmdline="${prefix}'${cmdline}'"
+            cmdline="${prefix} '${cmdline}'"
         fi
 
         if [ -z "${interval}" ]; then
@@ -1784,7 +1784,7 @@ run_runas_executor() {
     _non_comment_lines "${MK_CONFDIR}/runas.cfg" | while read -r type user configfile; do
         prefix=""
         if [ "${user}" != "-" ]; then
-            prefix="su ${user} -c "
+            prefix="su ${user} -c"
         fi
 
         # mrpe includes
@@ -1801,12 +1801,13 @@ run_runas_executor() {
                 find "${configfile}/" -executable -type f |
                     while read -r filename; do
                         if [ -n "${prefix}" ]; then
-                            cmdline="${prefix}\"${filename}\""
+                            # SC2086: We don't want to quote since prefix should not be treated as a
+                            # single string but as multiple arguments passed to _log_section_time
+                            # shellcheck disable=SC2086
+                            _log_section_time ${prefix} "${filename}"
                         else
-                            cmdline=${filename}
+                            _log_section_time "${filename}"
                         fi
-
-                        _log_section_time "${cmdline}"
                     done
             fi
         fi

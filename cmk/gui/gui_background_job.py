@@ -112,7 +112,7 @@ permission_registry.register(
 
 
 class GUIBackgroundProcess(background_job.BackgroundProcess):
-    def initialize_environment(self):
+    def initialize_environment(self) -> None:
         # setup logging
         log.init_logging()  # NOTE: We run in a subprocess!
         self._logger = log.logger.getChild("background-job")

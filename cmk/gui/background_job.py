@@ -147,13 +147,16 @@ class BackgroundProcessInterface:
 #   '----------------------------------------------------------------------'
 
 
-class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
+class BackgroundProcess(multiprocessing.Process):
     def __init__(self, job_parameters: JobParameters) -> None:
-        super().__init__(job_parameters)
-        self._jobstatus = self._job_parameters["jobstatus"]
+        super().__init__()
+        self._jobstatus = job_parameters["jobstatus"]
         # TODO: Hand over the logger via arguments
         self._logger = cmk.gui.log.logger.getChild("background_process")
-        self._job_parameters["logger"] = self._logger
+        job_parameters["logger"] = self._logger
+
+        self._job_parameters = job_parameters
+        self._job_interface = BackgroundProcessInterface(job_parameters)
 
     def _register_signal_handlers(self) -> None:
         self._logger.debug("Register signal handler %d", os.getpid())
@@ -245,16 +248,13 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
 
     def _execute_function(self) -> None:
         func_ptr, args, kwargs = self._job_parameters["function_parameters"]
-        job_interface = BackgroundProcessInterface(self._job_parameters)
-        kwargs["job_interface"] = job_interface
-
         try:
-            func_ptr(*args, **kwargs)
+            func_ptr(*args, job_interface=self._job_interface, **kwargs)
         except MKTerminate:
             raise
         except Exception as e:
             self._logger.exception("Exception in background function")
-            job_interface.send_exception(_("Exception: %s") % (e))
+            self._job_interface.send_exception(_("Exception: %s") % (e))
 
     def _open_stdout_and_stderr(self) -> None:
         """Create a temporary file and use it as stdout / stderr buffer"""
@@ -264,7 +264,7 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
         #   the job progress dialog
         # - Python 3's stdout and stderr expect 'str' not 'bytes'
         unbuffered = (
-            Path(self.get_work_dir()) / BackgroundJobDefines.progress_update_filename
+            Path(self._job_interface.get_work_dir()) / BackgroundJobDefines.progress_update_filename
         ).open("wb", buffering=0)
         sys.stdout = sys.stderr = io.TextIOWrapper(unbuffered, write_through=True)
         os.dup2(sys.stdout.fileno(), 1)

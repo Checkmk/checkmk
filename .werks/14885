@@ -1,0 +1,11 @@
+Title: Fix size of input field for "Count, size and age of files (Linux, Windows)"
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1664960558
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0p30
+
+

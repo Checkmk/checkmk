@@ -192,7 +192,12 @@ fn post_registration_conn_type(
         let status_resp = agent_rec_api.status(&coordinates.to_url()?, connection)?;
         if let Some(agent_receiver_api::HostStatus::Declined) = status_resp.status {
             return Err(anyhow!(
-                "Registration declined by Checkmk instance, please check credentials"
+                "Registration declined by Checkmk instance{}",
+                if let Some(msg) = status_resp.message {
+                    format!(": {}", msg)
+                } else {
+                    String::from("")
+                }
             ));
         }
         if let Some(ct) = status_resp.connection_type {

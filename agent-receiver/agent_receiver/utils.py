@@ -55,13 +55,13 @@ class Host:
         return self._host_type
 
 
-def read_message_from_file(path: Path) -> Optional[str]:
+def read_rejection_notice_from_file(path: Path) -> Optional[str]:
     try:
         registration_request = json.loads(path.read_text())
     except FileNotFoundError:
         return None
 
-    return registration_request.get("message")
+    return registration_request.get("rejection_notice")
 
 
 def update_file_access_time(path: Path) -> None:
@@ -76,7 +76,9 @@ def get_registration_status_from_file(uuid: UUID) -> Optional[RegistrationData]:
         path = r4r_dir() / status.name / f"{uuid}.json"
         if path.exists():
             message = (
-                read_message_from_file(path) if status is RegistrationStatusEnum.DECLINED else None
+                read_rejection_notice_from_file(path)
+                if status is RegistrationStatusEnum.DECLINED
+                else None
             )
             # access time is used to determine when to remove registration request file
             update_file_access_time(path)

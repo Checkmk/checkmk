@@ -37,7 +37,7 @@ from cmk.core_helpers.type_defs import Mode, NO_SELECTION
 import cmk.base.config as config
 from cmk.base.agent_based.data_provider import _collect_host_sections
 from cmk.base.config import HostConfig
-from cmk.base.sources import make_cluster_sources, Source
+from cmk.base.sources import make_sources, Source
 from cmk.base.sources.agent import AgentRawDataSection
 from cmk.base.sources.piggyback import PiggybackSource
 from cmk.base.sources.programs import DSProgramSource
@@ -503,9 +503,13 @@ class TestMakeHostSectionsClusters:
     def test_no_sources(  # type:ignore[no-untyped-def]
         self, cluster, nodes, config_cache, host_config
     ) -> None:
-        sources = make_cluster_sources(
+        sources = make_sources(
             host_config,
+            None,
             ip_lookup=lambda _: None,
+            selected_sections=NO_SELECTION,
+            on_scan_error=OnError.RAISE,
+            force_snmp_cache_refresh=False,
             simulation_mode=True,
             agent_simulator=True,
             keep_outdated=False,
@@ -582,9 +586,13 @@ def test_get_host_sections_cluster(monkeypatch, mocker) -> None:  # type:ignore[
     # Create a cluster
     host_config.nodes = list(hosts.keys())
 
-    sources = make_cluster_sources(
+    sources = make_sources(
         host_config,
+        None,
         ip_lookup=lambda host_name: hosts[host_name],
+        selected_sections=NO_SELECTION,
+        on_scan_error=OnError.RAISE,
+        force_snmp_cache_refresh=False,
         simulation_mode=True,
         agent_simulator=True,
         keep_outdated=False,

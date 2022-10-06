@@ -69,7 +69,7 @@ else:
             )
 
 
-__all__ = ["fetch_all", "make_non_cluster_sources", "make_cluster_sources", "make_sources"]
+__all__ = ["fetch_all", "make_non_cluster_sources", "make_sources"]
 
 
 def _make_inventory_sections() -> FrozenSet[SectionName]:
@@ -580,39 +580,6 @@ def fetch_all(
     return out
 
 
-def make_cluster_sources(
-    host_config: HostConfig,
-    *,
-    ip_lookup: Callable[[HostName], Optional[HostAddress]],
-    simulation_mode: bool,
-    agent_simulator: bool,
-    keep_outdated: bool,
-    translation: TranslationOptions,
-    encoding_fallback: str,
-    missing_sys_description: bool,
-    file_cache_max_age: MaxAge,
-) -> Sequence[Source]:
-    """Abstract clusters/nodes/hosts"""
-    assert host_config.nodes is not None
-
-    return [
-        source
-        for host_name in host_config.nodes
-        for source in make_non_cluster_sources(
-            HostConfig.make_host_config(host_name),
-            ip_lookup(host_name),
-            force_snmp_cache_refresh=False,
-            simulation_mode=simulation_mode,
-            agent_simulator=agent_simulator,
-            keep_outdated=keep_outdated,
-            translation=translation,
-            encoding_fallback=encoding_fallback,
-            missing_sys_description=missing_sys_description,
-            file_cache_max_age=file_cache_max_age,
-        )
-    ]
-
-
 def make_sources(
     host_config: HostConfig,
     ip_address: Optional[HostAddress],
@@ -629,13 +596,22 @@ def make_sources(
     missing_sys_description: bool,
     file_cache_max_age: MaxAge,
 ) -> Sequence[Source]:
-    return (
-        make_non_cluster_sources(
-            host_config,
-            ip_address,
-            selected_sections=selected_sections,
-            force_snmp_cache_refresh=force_snmp_cache_refresh,
-            on_scan_error=on_scan_error,
+    if host_config.nodes is None:
+        # Not a cluster
+        host_configs = [host_config]
+    else:
+        host_configs = [HostConfig.make_host_config(host_name) for host_name in host_config.nodes]
+    return [
+        source
+        for host_config_ in host_configs
+        for source in make_non_cluster_sources(
+            host_config_,
+            ip_address if host_config.nodes is None else ip_lookup(host_config_.hostname),
+            force_snmp_cache_refresh=force_snmp_cache_refresh
+            if host_config.nodes is None
+            else False,
+            selected_sections=selected_sections if host_config.nodes is None else NO_SELECTION,
+            on_scan_error=on_scan_error if host_config.nodes is None else OnError.RAISE,
             simulation_mode=simulation_mode,
             agent_simulator=agent_simulator,
             keep_outdated=keep_outdated,
@@ -644,16 +620,4 @@ def make_sources(
             missing_sys_description=missing_sys_description,
             file_cache_max_age=file_cache_max_age,
         )
-        if host_config.nodes is None
-        else make_cluster_sources(
-            host_config,
-            ip_lookup=ip_lookup,
-            simulation_mode=simulation_mode,
-            agent_simulator=agent_simulator,
-            keep_outdated=keep_outdated,
-            translation=translation,
-            encoding_fallback=encoding_fallback,
-            missing_sys_description=missing_sys_description,
-            file_cache_max_age=file_cache_max_age,
-        )
-    )
+    ]

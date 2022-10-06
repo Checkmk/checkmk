@@ -5,6 +5,7 @@
 #[cfg(windows)]
 use super::types;
 use super::{constants, site_spec};
+use anyhow::{Context, Result as AnyhowResult};
 use structopt::StructOpt;
 
 #[derive(StructOpt)]
@@ -90,6 +91,18 @@ pub struct RegistrationArgsAgentLabels {
 
     #[structopt(flatten)]
     pub logging_opts: LoggingOpts,
+
+    /// User-defined agent labels in the form KEY=VALUE. These labels supersede the automatic labels.
+    #[structopt(long = "agent-labels", name = "KEY=VALUE", parse(try_from_str = parse_agent_labels), )]
+    pub agent_labels_raw: Vec<(String, String)>,
+}
+
+// https://github.com/TeXitoi/structopt/blob/master/examples/keyvalue.rs
+fn parse_agent_labels(s: &str) -> AnyhowResult<(String, String)> {
+    let pos = s
+        .find('=')
+        .context(format!("invalid KEY=VALUE: no `=` found in `{}`", s))?;
+    Ok((String::from(&s[..pos]), String::from(&s[pos + 1..])))
 }
 
 #[derive(StructOpt)]
@@ -312,5 +325,22 @@ mod tests {
         assert_eq!((LoggingOpts { verbose: 0 }).logging_level(), "warn");
         assert_eq!((LoggingOpts { verbose: 1 }).logging_level(), "info");
         assert_eq!((LoggingOpts { verbose: 2 }).logging_level(), "debug");
+    }
+
+    #[test]
+    fn test_parse_agent_labels_ok() {
+        assert_eq!(
+            parse_agent_labels("a=b").unwrap(),
+            (String::from("a"), String::from("b"))
+        );
+        assert_eq!(
+            parse_agent_labels("abc-123=456-def").unwrap(),
+            (String::from("abc-123"), String::from("456-def"))
+        );
+    }
+
+    #[test]
+    fn test_parse_agent_labels_error() {
+        assert!(parse_agent_labels("missing-equal-sign").is_err(),);
     }
 }

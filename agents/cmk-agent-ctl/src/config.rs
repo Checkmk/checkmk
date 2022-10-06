@@ -86,7 +86,9 @@ impl RegistrationConfigAgentLabels {
                 runtime_config,
                 reg_args_agent_labels.connection_args,
             )?,
-            agent_labels: Self::enrich_with_automatic_agent_labels(types::AgentLabels::default())?,
+            agent_labels: Self::enrich_with_automatic_agent_labels(
+                reg_args_agent_labels.agent_labels_raw.into_iter().collect(),
+            )?,
         })
     }
 
@@ -593,6 +595,7 @@ mod test_registration_config {
             cli::RegistrationArgsAgentLabels {
                 connection_args: registration_args_connection(),
                 logging_opts: cli::LoggingOpts { verbose: 0 },
+                agent_labels_raw: vec![],
             },
         )
         .unwrap()
@@ -601,6 +604,32 @@ mod test_registration_config {
         let mut keys = agent_labels.keys().collect::<Vec<&String>>();
         keys.sort();
         assert_eq!(keys, ["cmk/hostname-simple", "cmk/os-family"]);
+    }
+
+    #[test]
+    fn test_user_defined_labels() {
+        let agent_labels = RegistrationConfigAgentLabels::new(
+            runtime_config(),
+            cli::RegistrationArgsAgentLabels {
+                connection_args: registration_args_connection(),
+                logging_opts: cli::LoggingOpts { verbose: 0 },
+                agent_labels_raw: vec![
+                    (
+                        String::from("cmk/hostname-simple"),
+                        String::from("custom-name"),
+                    ),
+                    (String::from("a"), String::from("b")),
+                ],
+            },
+        )
+        .unwrap()
+        .agent_labels;
+
+        let mut keys = agent_labels.keys().collect::<Vec<&String>>();
+        keys.sort();
+        assert_eq!(keys, ["a", "cmk/hostname-simple", "cmk/os-family"]);
+        assert_eq!(agent_labels["cmk/hostname-simple"], "custom-name");
+        assert_eq!(agent_labels["a"], "b");
     }
 }
 

@@ -12,20 +12,10 @@ import copy
 import logging
 import os
 import pprint
+from collections.abc import Iterable, Iterator, KeysView, Mapping, MutableMapping, Sequence
 from enum import Enum
 from pathlib import Path
-from typing import (
-    Any,
-    cast,
-    Iterable,
-    Iterator,
-    KeysView,
-    Mapping,
-    MutableMapping,
-    Optional,
-    Sequence,
-    Union,
-)
+from typing import Any, cast, Union
 
 import cmk.utils.log
 import cmk.utils.paths
@@ -63,7 +53,7 @@ class MkpRulePackProxy(MutableMapping[str, Any]):  # pylint: disable=too-many-an
         # this is not possible because the mknotifyd.mk could specify referenced
         # objects as well.
         self.id_ = rule_pack_id
-        self.rule_pack: Optional[ECRulePackSpec] = None
+        self.rule_pack: ECRulePackSpec | None = None
 
     def __getitem__(self, key: str) -> Any:
         if self.rule_pack is None:
@@ -272,7 +262,7 @@ def load_rule_packs() -> Sequence[ECRulePackSpec]:
 
 
 def save_rule_packs(
-    rule_packs: Iterable[ECRulePack], pretty_print: bool = False, dir_: Optional[Path] = None
+    rule_packs: Iterable[ECRulePack], pretty_print: bool = False, dir_: Path | None = None
 ) -> None:
     """Saves the given rule packs to rules.mk. By default they are saved to the
     default directory for rule packs. If dir_ is given it is used instead of
@@ -296,7 +286,7 @@ def save_rule_packs(
 # save_rule_packs(), otherwise there is a race condition when the EC
 # recursively reads all *.mk files!
 def export_rule_pack(
-    rule_pack: ECRulePack, pretty_print: bool = False, dir_: Optional[Path] = None
+    rule_pack: ECRulePack, pretty_print: bool = False, dir_: Path | None = None
 ) -> None:
     """
     Export the representation of a rule pack (i.e. a dict) to a .mk

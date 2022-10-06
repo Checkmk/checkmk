@@ -3,12 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterable, Mapping
 from datetime import datetime
 from logging import Logger
 from re import findall
 from time import localtime, mktime, strptime
 from time import time as _time
-from typing import Iterable, Mapping, Optional, TypedDict
+from typing import TypedDict
 
 from dateutil.parser import isoparse
 from dateutil.tz import tzlocal
@@ -27,12 +28,12 @@ class Event(TypedDict, total=False):
     application: str
     pid: int
     time: float
-    core_host: Optional[HostName]
+    core_host: HostName | None
     host_in_downtime: bool
     # added later
     comment: str
     contact: str
-    contact_groups: Optional[Iterable[str]]  # TODO: Do we really need the Optional?
+    contact_groups: Iterable[str] | None  # TODO: Do we really need the Optional?
     contact_groups_notify: bool
     contact_groups_precedence: str
     count: int
@@ -47,7 +48,7 @@ class Event(TypedDict, total=False):
     orig_host: str
     owner: str
     phase: str
-    rule_id: Optional[str]
+    rule_id: str | None
     sl: int
     state: int
 
@@ -68,7 +69,7 @@ def _make_event(text: str, ipaddress: str) -> Event:
 
 
 def create_event_from_line(
-    line: str, address: Optional[tuple[str, int]], logger: Logger, *, verbose: bool = False
+    line: str, address: tuple[str, int] | None, logger: Logger, *, verbose: bool = False
 ) -> Event:
     if verbose:
         adr = "" if address is None else f" from host {address[0]}, port {address[1]}:"
@@ -373,7 +374,7 @@ def remove_leading_bom(message: str) -> str:
     return message[1:] if message.startswith("\ufeff") else message
 
 
-def split_syslog_structured_data_and_message(sd_and_message: str) -> tuple[Optional[str], str]:
+def split_syslog_structured_data_and_message(sd_and_message: str) -> tuple[str | None, str]:
     """Split a string containing structured data and the message into the two parts"""
     if sd_and_message.startswith("["):
         return _split_syslog_nonnil_sd_and_message(sd_and_message)

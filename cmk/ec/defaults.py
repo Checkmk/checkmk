@@ -5,7 +5,8 @@
 """Defaults for rule pack and configuration"""
 
 import logging
-from typing import Any, Iterable
+from collections.abc import Iterable
+from typing import Any
 
 from cmk.utils.i18n import _
 

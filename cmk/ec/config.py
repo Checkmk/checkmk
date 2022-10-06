@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterable, Mapping, Sequence
 from re import Pattern
-from typing import Any, Iterable, Literal, Mapping, Optional, Sequence, TypedDict, Union
+from typing import Any, Literal, TypedDict, Union
 
 from cmk.utils.type_defs import Seconds
 
@@ -229,8 +230,8 @@ class ConfigFromWATO(TypedDict):
     log_messages: bool
     log_rulehits: bool
     mkp_rule_packs: Mapping[Any, Any]  # TODO: Move to Config (not from WATO!). TypedDict
-    remote_status: Optional[tuple[int, bool, Optional[Sequence[str]]]]
-    replication: Optional[Replication]
+    remote_status: tuple[int, bool, Sequence[str] | None] | None
+    replication: Replication | None
     retention_interval: int
     rule_optimizer: bool
     rule_packs: Sequence[dict[str, Any]]  # TODO: Mutable??? TypedDict

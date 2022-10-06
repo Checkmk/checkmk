@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import traceback
+from collections.abc import Callable, Iterable, Mapping
 from logging import Logger
 from pathlib import Path
-from typing import Any, Callable, Iterable, Mapping, Optional
+from typing import Any
 
 import pyasn1.error  # type: ignore[import]
 import pysnmp.debug  # type: ignore[import]
@@ -170,7 +171,7 @@ class SNMPTrapEngine:
             wholeMsg=message,
         )
 
-    def _handle_snmptrap(  # type:ignore[no-untyped-def]
+    def _handle_snmptrap(
         self,
         snmp_engine: pysnmp.entity.engine.SnmpEngine,
         state_reference: str,
@@ -260,7 +261,7 @@ class SNMPTrapTranslator:
     @staticmethod
     def _construct_resolver(
         logger: Logger, mibs_dir: Path, load_texts: bool
-    ) -> Optional[pysnmp.smi.view.MibViewController]:
+    ) -> pysnmp.smi.view.MibViewController | None:
         try:
             builder = pysnmp.smi.builder.MibBuilder()  # manages python MIB modules
 

@@ -6,8 +6,9 @@
 import os
 import subprocess
 import time
+from collections.abc import Iterable
 from logging import Logger
-from typing import Any, Iterable, Optional
+from typing import Any
 
 import cmk.utils.debug
 import cmk.utils.defines
@@ -194,8 +195,7 @@ def _send_email(config: Config, to: str, subject: str, body: str, logger: Logger
     completed_process = subprocess.run(
         command_utf8,
         close_fds=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         encoding="utf-8",
         input=body,
         check=False,
@@ -290,7 +290,7 @@ def do_notify(
     host_config: HostConfig,
     logger: Logger,
     event: Event,
-    username: Optional[str] = None,
+    username: str | None = None,
     is_cancelling: bool = False,
 ) -> None:
     if not _core_has_notifications_enabled(logger):
@@ -340,7 +340,7 @@ def do_notify(
 def _create_notification_context(
     host_config: HostConfig,
     event: Event,
-    username: Optional[str],
+    username: str | None,
     is_cancelling: bool,
     logger: Logger,
 ) -> ECEventContext:
@@ -351,7 +351,7 @@ def _create_notification_context(
 
 
 def _base_notification_context(
-    event: Event, username: Optional[str], is_cancelling: bool
+    event: Event, username: str | None, is_cancelling: bool
 ) -> ECEventContext:
     rule_id = event["rule_id"]
     return ECEventContext(

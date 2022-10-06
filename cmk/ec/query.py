@@ -3,8 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable
 from logging import Logger
-from typing import Any, Callable, Literal, Optional
+from typing import Any, Literal
 
 import cmk.utils.regex
 from cmk.utils.exceptions import MKException
@@ -86,9 +87,9 @@ class QueryGET(Query):
         self.requested_columns = self.table.column_names
         # NOTE: history's _get_mongodb and _get_files access filters and limits directly.
         self.filters: list[tuple[str, OperatorName, Callable, Any]] = []
-        self.limit: Optional[int] = None
+        self.limit: int | None = None
         # NOTE: StatusTableEvents uses only_host for optimization.
-        self.only_host: Optional[set[Any]] = None
+        self.only_host: set[Any] | None = None
         self._parse_header_lines(raw_query, logger)
 
     def _parse_header_lines(self, raw_query: list[str], logger: Logger) -> None:
@@ -138,7 +139,7 @@ class QueryGET(Query):
 
         op_name, operator_function = operator_for(operator_name)
         # TODO: BUG: The query is decoded to unicode after receiving it from
-        # the socket. The columns with type str (initialied with "") will apply
+        # the socket. The columns with type str (initialized with "") will apply
         # str(argument) here and convert the value back to str! This will crash
         # when the filter contains non ascii characters!
         # Fix this by making the default values unicode and skip unicode conversion
@@ -152,7 +153,7 @@ class QueryGET(Query):
 
         return (column, op_name, lambda x: operator_function(x, argument), argument)
 
-    def requested_column_indexes(self) -> list[Optional[int]]:
+    def requested_column_indexes(self) -> list[int | None]:
         # If a column is not known: Use None as index and None value later.
         return [
             self.table.column_indices.get(column_name) for column_name in self.requested_columns  #

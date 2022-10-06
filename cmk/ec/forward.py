@@ -6,9 +6,10 @@
 import socket
 from abc import ABC, abstractmethod
 from codecs import BOM_UTF8
+from collections.abc import Iterable
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Iterable, Literal, Optional, Union
+from typing import Literal
 
 from cmk.utils.paths import default_config_dir, omd_root
 
@@ -169,15 +170,15 @@ class SyslogMessage:
         *,
         facility: int,
         severity: int,
-        timestamp: Union[float, Literal["-"]] = _NILVALUE,
+        timestamp: float | Literal["-"] = _NILVALUE,
         host_name: str = _NILVALUE,
         application: str = _NILVALUE,
         proc_id: str = _NILVALUE,
         msg_id: str = _NILVALUE,
-        structured_data: Optional[StructuredData] = None,
-        text: Optional[str] = None,
-        ip_address: Optional[str] = None,
-        service_level: Optional[int] = None,
+        structured_data: StructuredData | None = None,
+        text: str | None = None,
+        ip_address: str | None = None,
+        service_level: int | None = None,
     ):
         structured_data = structured_data or StructuredData({})
 
@@ -246,8 +247,8 @@ class SyslogMessage:
     def _add_ip_and_sl_to_structured_data(
         cls,
         structured_data: StructuredData,
-        ip_address: Optional[str],
-        service_level: Optional[int],
+        ip_address: str | None,
+        service_level: int | None,
     ) -> StructuredData:
         checkmk_sd_params = {}
         if ip_address:
@@ -309,7 +310,7 @@ class SyslogForwarderUnixSocket(ABCSyslogForwarder):
 
     def __init__(
         self,
-        path: Optional[Path] = None,
+        path: Path | None = None,
     ):
         super().__init__()
         self._path = str(self._ec_paths().event_socket.value if path is None else path)

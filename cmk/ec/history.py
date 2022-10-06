@@ -8,9 +8,10 @@ import shlex
 import subprocess
 import threading
 import time
+from collections.abc import Callable, Iterable
 from logging import Logger
 from pathlib import Path
-from typing import Any, Callable, Iterable, Optional, Union
+from typing import Any
 
 from typing_extensions import assert_never
 
@@ -123,7 +124,7 @@ def _connect_mongodb(settings: Settings, mongodb: MongoDB) -> None:
     mongodb.db = mongodb.connection[os.environ["OMD_SITE"]]
 
 
-def _mongodb_local_connection_opts(settings: Settings) -> tuple[Optional[str], Optional[int]]:
+def _mongodb_local_connection_opts(settings: Settings) -> tuple[str | None, int | None]:
     ip, port = None, None
     with settings.paths.mongodb_config_file.value.open(encoding="utf-8") as f:
         for l in f:
@@ -230,7 +231,7 @@ def _get_mongodb(  # pylint: disable=too-many-branches
     for column_name, operator_name, _predicate, argument in filters:
 
         if operator_name == "=":
-            mongo_filter: Union[str, dict[str, str]] = argument
+            mongo_filter: str | dict[str, str] = argument
         elif operator_name == ">":
             mongo_filter = {"$gt": argument}
         elif operator_name == "<":
@@ -359,7 +360,7 @@ def quote_tab(col: Any) -> bytes:
 class ActiveHistoryPeriod:
     def __init__(self) -> None:
         super().__init__()
-        self.value: Optional[int] = None
+        self.value: int | None = None
 
 
 # Get file object to current log file, handle also
@@ -537,8 +538,8 @@ def _get_files(history: History, logger: Logger, query: QueryGET) -> Iterable[An
 
 def _greatest_lower_bound_for_filters(
     filters: Iterable[tuple[OperatorName, float]]
-) -> Optional[float]:
-    result: Optional[float] = None
+) -> float | None:
+    result: float | None = None
     for operator, value in filters:
         glb = _greatest_lower_bound_for_filter(operator, value)
         if glb is not None:
@@ -546,7 +547,7 @@ def _greatest_lower_bound_for_filters(
     return result
 
 
-def _greatest_lower_bound_for_filter(operator: OperatorName, value: float) -> Optional[float]:
+def _greatest_lower_bound_for_filter(operator: OperatorName, value: float) -> float | None:
     if operator == "=":
         return value
     if operator == ">=":
@@ -556,10 +557,8 @@ def _greatest_lower_bound_for_filter(operator: OperatorName, value: float) -> Op
     return None
 
 
-def _least_upper_bound_for_filters(
-    filters: Iterable[tuple[OperatorName, float]]
-) -> Optional[float]:
-    result: Optional[float] = None
+def _least_upper_bound_for_filters(filters: Iterable[tuple[OperatorName, float]]) -> float | None:
+    result: float | None = None
     for operator, value in filters:
         lub = _least_upper_bound_for_filter(operator, value)
         if lub is not None:
@@ -567,7 +566,7 @@ def _least_upper_bound_for_filters(
     return result
 
 
-def _least_upper_bound_for_filter(operator: OperatorName, value: float) -> Optional[float]:
+def _least_upper_bound_for_filter(operator: OperatorName, value: float) -> float | None:
     if operator == "=":
         return value
     if operator == "<=":
@@ -578,8 +577,8 @@ def _least_upper_bound_for_filter(operator: OperatorName, value: float) -> Optio
 
 
 def _intersects(
-    interval1: tuple[Optional[float], Optional[float]],
-    interval2: tuple[Optional[float], Optional[float]],
+    interval1: tuple[float | None, float | None],
+    interval2: tuple[float | None, float | None],
 ) -> bool:
     lo1, hi1 = interval1
     lo2, hi2 = interval2
@@ -591,7 +590,7 @@ def _parse_history_file(
     path: Path,
     query: QueryGET,
     cmd: str,
-    limit: Optional[int],
+    limit: int | None,
     logger: Logger,
 ) -> list[Any]:
     entries: list[Any] = []
@@ -673,14 +672,14 @@ def _unsplit(s: Any) -> Any:
     return s
 
 
-def _get_logfile_timespan(path: Path) -> tuple[Optional[float], Optional[float]]:
+def _get_logfile_timespan(path: Path) -> tuple[float | None, float | None]:
     try:
         with path.open(encoding="utf-8") as f:
-            first_entry: Optional[float] = float(f.readline().split("\t", 1)[0])
+            first_entry: float | None = float(f.readline().split("\t", 1)[0])
     except Exception:
         first_entry = None
     try:
-        last_entry: Optional[float] = path.stat().st_mtime
+        last_entry: float | None = path.stat().st_mtime
     except Exception:
         last_entry = None
     return first_entry, last_entry

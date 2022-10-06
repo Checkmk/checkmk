@@ -11,7 +11,7 @@
 import sys
 from argparse import ArgumentParser, ArgumentTypeError, RawDescriptionHelpFormatter
 from pathlib import Path
-from typing import NamedTuple, Optional, Union
+from typing import NamedTuple, Union
 
 
 class AnnotatedPath(NamedTuple):
@@ -206,7 +206,7 @@ EndPoint = Union[PortNumber, FileDescriptor]
 
 def _endpoint(
     enabled: bool, file_descriptor: FileDescriptor, default_port_number: PortNumber
-) -> Optional[EndPoint]:
+) -> EndPoint | None:
     """Returns a communication endpoint based on given commandline arguments"""
     if not enabled:
         return None
@@ -219,9 +219,9 @@ class Options(NamedTuple):
     """various post-processed commandline options"""
 
     verbosity: int
-    syslog_udp: Optional[EndPoint]
-    syslog_tcp: Optional[EndPoint]
-    snmptrap_udp: Optional[EndPoint]
+    syslog_udp: EndPoint | None
+    syslog_tcp: EndPoint | None
+    snmptrap_udp: EndPoint | None
     foreground: bool
     debug: bool
     profile_status: bool

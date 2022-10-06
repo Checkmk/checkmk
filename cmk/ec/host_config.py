@@ -5,7 +5,6 @@
 
 from logging import Logger
 from threading import Lock
-from typing import Optional
 
 from cmk.utils.type_defs import HostName, Timestamp
 
@@ -31,9 +30,9 @@ class HostConfig:
         self._lock = Lock()
         self._hosts_by_name: dict[HostName, HostInfo] = {}
         self._hosts_by_designation: dict[str, HostName] = {}
-        self._cache_timestamp: Optional[Timestamp] = None
+        self._cache_timestamp: Timestamp | None = None
 
-    def get_config_for_host(self, host_name: HostName) -> Optional[HostInfo]:
+    def get_config_for_host(self, host_name: HostName) -> HostInfo | None:
         with self._lock:
             return (
                 self._hosts_by_name.get(host_name)
@@ -41,7 +40,7 @@ class HostConfig:
                 else None
             )
 
-    def get_canonical_name(self, event_host_name: str) -> Optional[HostName]:
+    def get_canonical_name(self, event_host_name: str) -> HostName | None:
         with self._lock:
             return (
                 self._hosts_by_designation.get(event_host_name.lower())

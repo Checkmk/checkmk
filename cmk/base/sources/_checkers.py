@@ -224,11 +224,7 @@ class _Builder:
         #       remove this special case.
         #
         if self.host_config.is_all_agents_host:
-            self._add(
-                self._get_agent(
-                    ignore_special_agents=True,
-                )
-            )
+            self._add(self._get_agent())
             for elem in self._get_special_agents():
                 self._add(elem)
 
@@ -237,11 +233,11 @@ class _Builder:
                 self._add(elem)
 
         elif self.host_config.is_tcp_host:
-            self._add(
-                self._get_agent(
-                    ignore_special_agents=False,
-                )
-            )
+            special_agents = self._get_special_agents()
+            if special_agents:
+                self._add(special_agents[0])
+            else:
+                self._add(self._get_agent())
 
         if "no-piggyback" not in self.host_config.tags:
             self._add(
@@ -425,12 +421,7 @@ class _Builder:
     def _add(self, source: Source) -> None:
         self._elems[source.id] = source
 
-    def _get_agent(self, ignore_special_agents: bool) -> Source:
-        if not ignore_special_agents:
-            special_agents = self._get_special_agents()
-            if special_agents:
-                return special_agents[0]
-
+    def _get_agent(self) -> Source:
         datasource_program = self.host_config.datasource_program
         if datasource_program is not None:
             return DSProgramSource(

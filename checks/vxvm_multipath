@@ -3,6 +3,9 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import Any, Mapping, MutableMapping, NamedTuple
+
+from cmk.base.api.agent_based.type_defs import StringTable
 
 # Example output:
 # <<<vxvm_multipath>>>
@@ -13,25 +16,67 @@
 #
 
 
-def check_vxvm_multipath(item, params, info):
-    state = 0
-    for disk, status_txt, _enc_type, paths, paths_act, paths_inact, enclosure in info:
-        if disk == item:
-            if paths_act != paths and float(paths_act) >= float(paths) / 2:
-                state = 1
-            elif int(paths_inact) > 0 and float(paths_inact) > float(paths) / 2:
-                state = 2
-            return (
-                state,
-                "Status: %s, (%d/%d) Paths to enclosure %s enabled"
-                % (status_txt, int(paths_act), int(paths), enclosure),
-            )
+class VXVMMultipathDisk(NamedTuple):
+    name: str
+    status: str
+    paths: float
+    active_paths: float
+    inactive_paths: float
+    enclosure: str
 
-    return (3, "Item not found")
+
+VXVMMultipathSection = Mapping[str, VXVMMultipathDisk]
+
+
+def parse_vxvm_multipath(string_table: StringTable) -> VXVMMultipathSection:
+    vxvm_multipath_disks: MutableMapping[str, VXVMMultipathDisk] = {}
+
+    for line in string_table:
+        try:
+            name, status, _enc_type, paths, active_paths, inactive_paths, enclosure = line
+        except ValueError:
+            continue
+
+        vxvm_multipath_disks[name] = VXVMMultipathDisk(
+            name=name,
+            status=status,
+            paths=float(paths),
+            active_paths=float(active_paths),
+            inactive_paths=float(inactive_paths),
+            enclosure=enclosure,
+        )
+
+    return vxvm_multipath_disks
+
+
+def discover_vxvm_multipath(section: VXVMMultipathSection):
+    for disk in section:
+        yield disk, None
+
+
+def check_vxvm_multipath(
+    item: str,
+    params: Mapping[str, Any],
+    section: VXVMMultipathSection,
+):
+    if (disk := section.get(item)) is None:
+        yield (3, "Item not found")
+        return
+
+    state = 0
+    if disk.active_paths != disk.paths and disk.active_paths >= disk.paths / 2:
+        state = 1
+    elif disk.inactive_paths > 0 and disk.inactive_paths > disk.paths / 2:
+        state = 2
+    yield (
+        state,
+        f"Status: {disk.status}, ({disk.active_paths:.0f}/{disk.paths:.0f}) Paths to enclosure {disk.enclosure} enabled",
+    )
 
 
 check_info["vxvm_multipath"] = {
+    "parse_function": parse_vxvm_multipath,
     "check_function": check_vxvm_multipath,
-    "inventory_function": lambda info: [(item[0], None) for item in info],
+    "inventory_function": discover_vxvm_multipath,
     "service_description": "Multipath %s",
 }

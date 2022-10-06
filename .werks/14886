@@ -1,0 +1,16 @@
+Title: Fix links from views to dashboards with group datasources
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1665066337
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0i1
+
+If you used a column with a link to a dashboard in a view with datasource "Host
+groups" or "Service groups", the target dashboard did not recognize the given
+host or service group, leading to wrong results on the dashboard.
+
+

@@ -289,18 +289,6 @@ class _Builder:
             return
         self._initialize_snmp_plugin_store()
         id_: Final = "snmp"
-        cache = SNMPFileCache(
-            self.host_config.hostname,
-            base_path=Path(cmk.utils.paths.data_source_cache_dir) / id_,
-            max_age=MaxAge.none() if self.force_snmp_cache_refresh else self.file_cache_max_age,
-            use_outdated=self.simulation_mode
-            or (False if self.force_snmp_cache_refresh else FileCacheGlobals.use_outdated),
-            simulation=self.simulation_mode,
-            use_only_cache=False,
-            file_cache_mode=FileCacheMode.DISABLED
-            if FileCacheGlobals.disabled
-            else FileCacheMode.READ_WRITE,
-        )
         self._add(
             SNMPSource.snmp(
                 self.host_config.hostname,
@@ -320,7 +308,28 @@ class _Builder:
                 ),
                 snmp_config=self.host_config.snmp_config(self.ipaddress),
                 do_status_data_inventory=self.host_config.do_status_data_inventory,
-                cache=cache,
+                cache=SNMPFileCache(
+                    self.host_config.hostname,
+                    base_path=Path(cmk.utils.paths.data_source_cache_dir) / id_,
+                    max_age=(
+                        MaxAge.none() if self.force_snmp_cache_refresh else self.file_cache_max_age
+                    ),
+                    use_outdated=(
+                        self.simulation_mode
+                        or (
+                            False
+                            if self.force_snmp_cache_refresh
+                            else FileCacheGlobals.use_outdated
+                        )
+                    ),
+                    simulation=self.simulation_mode,
+                    use_only_cache=False,
+                    file_cache_mode=(
+                        FileCacheMode.DISABLED
+                        if FileCacheGlobals.disabled
+                        else FileCacheMode.READ_WRITE
+                    ),
+                ),
             )
         )
 
@@ -338,18 +347,6 @@ class _Builder:
             return
         if protocol == "snmp":
             id_: Final = "mgmt_snmp"
-            cache = SNMPFileCache(
-                self.host_config.hostname,
-                base_path=Path(cmk.utils.paths.data_source_cache_dir) / id_,
-                max_age=MaxAge.none() if self.force_snmp_cache_refresh else self.file_cache_max_age,
-                use_outdated=self.simulation_mode
-                or (False if self.force_snmp_cache_refresh else FileCacheGlobals.use_outdated),
-                simulation=self.simulation_mode,
-                use_only_cache=False,
-                file_cache_mode=FileCacheMode.DISABLED
-                if FileCacheGlobals.disabled
-                else FileCacheMode.READ_WRITE,
-            )
             self._add(
                 SNMPSource.management_board(
                     self.host_config.hostname,
@@ -369,7 +366,30 @@ class _Builder:
                     ),
                     snmp_config=self.host_config.management_snmp_config,
                     do_status_data_inventory=self.host_config.do_status_data_inventory,
-                    cache=cache,
+                    cache=SNMPFileCache(
+                        self.host_config.hostname,
+                        base_path=Path(cmk.utils.paths.data_source_cache_dir) / id_,
+                        max_age=(
+                            MaxAge.none()
+                            if self.force_snmp_cache_refresh
+                            else self.file_cache_max_age
+                        ),
+                        use_outdated=(
+                            self.simulation_mode
+                            or (
+                                False
+                                if self.force_snmp_cache_refresh
+                                else FileCacheGlobals.use_outdated
+                            )
+                        ),
+                        simulation=self.simulation_mode,
+                        use_only_cache=False,
+                        file_cache_mode=(
+                            FileCacheMode.DISABLED
+                            if FileCacheGlobals.disabled
+                            else FileCacheMode.READ_WRITE
+                        ),
+                    ),
                 )
             )
         elif protocol == "ipmi":

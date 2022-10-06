@@ -814,6 +814,9 @@ def _page_menu(
         breadcrumb=breadcrumb,
         has_pending_changes=has_pending_changes(),
         pending_changes_tooltip=get_pending_changes_tooltip(),
+        # Disable suggestion rendering because it makes the page content shift downwards, which is
+        # unwanted on unscrollable dashboards
+        enable_suggestions=False,
     )
 
     _extend_display_dropdown(menu, board, board_context, unconfigured_single_infos)

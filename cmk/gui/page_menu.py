@@ -180,6 +180,7 @@ class PageMenu:
     inpage_search: Optional[PageMenuSearch] = None
     has_pending_changes: bool = False
     pending_changes_tooltip: Optional[str] = None
+    enable_suggestions: bool = True
 
     def __post_init__(self) -> None:
         # Add the display options dropdown
@@ -226,7 +227,10 @@ class PageMenu:
                 continue
 
             if entry.is_suggested:
-                has_suggestions = True
+                if self.enable_suggestions:
+                    has_suggestions = True
+                else:
+                    entry.is_suggested = False
 
             shortcuts.append(entry)
 
@@ -244,6 +248,8 @@ class PageMenu:
 
     @property
     def suggestions(self) -> Iterator[PageMenuEntry]:
+        if not self.enable_suggestions:
+            return
         for entry in self.shortcuts:
             if entry.is_suggested:
                 yield entry
@@ -490,7 +496,8 @@ class PageMenuRenderer:
             self._show_pending_changes_icon(menu.pending_changes_tooltip)
         html.close_tr()
 
-        self._show_suggestions(menu)
+        if menu.enable_suggestions:
+            self._show_suggestions(menu)
         html.close_table()
 
     def _show_dropdowns(self, menu: PageMenu) -> None:

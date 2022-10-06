@@ -14,7 +14,7 @@ def main() {
                     sh("make .venv");
                 }
                 def test_builds = python_versions.collectEntries { python_version ->
-                    [python_version : {
+                    [(python_version) : {
                         stage("Test for python${python_version}") {
                             sh("make -C tests test-agent-plugin-unit-py${python_version}-docker");
                         }

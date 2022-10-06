@@ -2,37 +2,13 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Mapping, MutableMapping, NamedTuple
+from typing import Any, Mapping
 
-from cmk.base.api.agent_based.type_defs import StringTable
+from cmk.base.plugins.agent_based.vxvm_enclosures import VXVMEnclosureSection
 
 # Example output:
 # <<<vxvm_enclosures>>>
 # LIO-Sechs         aluadisk       ALUAdisk             CONNECTED    ALUA        3
-
-
-class VXVMEnclosure(NamedTuple):
-    name: str
-    status: str
-
-
-VXVMEnclosureSection = Mapping[str, VXVMEnclosure]
-
-
-def parse_vxvm_enclosures(string_table: StringTable) -> VXVMEnclosureSection:
-    vxvm_enclosures: MutableMapping[str, VXVMEnclosure] = {}
-
-    for line in string_table:
-        try:
-            name, status = line[0], line[3]
-        except IndexError:
-            continue
-
-        vxvm_enclosures[name] = VXVMEnclosure(
-            name=name,
-            status=status,
-        )
-    return vxvm_enclosures
 
 
 def discover_vxvm_enclosures(section: VXVMEnclosureSection):
@@ -56,7 +32,7 @@ def check_vxvm_enclosures(
 
 
 check_info["vxvm_enclosures"] = {
-    "parse_function": parse_vxvm_enclosures,
+    # Section already migrated!
     "check_function": check_vxvm_enclosures,
     "inventory_function": discover_vxvm_enclosures,
     "service_description": "Enclosure %s",

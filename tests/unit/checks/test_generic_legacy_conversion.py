@@ -2263,7 +2263,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
         "vutlan_ems_humidity",
         "vutlan_ems_leakage",
         "vutlan_ems_temp",
-        "vxvm_enclosures",
         "vxvm_multipath",
         "vxvm_objstatus",
         "wagner_titanus_topsense.info",

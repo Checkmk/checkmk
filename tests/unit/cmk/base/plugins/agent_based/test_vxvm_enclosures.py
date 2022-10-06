@@ -7,14 +7,13 @@ from collections.abc import Sequence
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
-from cmk.utils.type_defs import CheckPluginName
-
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-from cmk.base.plugins.agent_based.vxvm_enclosures import parse_vxvm_enclosures
+from cmk.base.plugins.agent_based.vxvm_enclosures import (
+    check_vxvm_enclosures,
+    discover_vxvm_enclosures,
+    parse_vxvm_enclosures,
+)
 
 STRING_TABLE = [
     ["san_vc0", "SAN_VC", "02006021c03c", "CONNECTED", "IBMSVC-ALUA", "8", "0000"],
@@ -26,11 +25,6 @@ STRING_TABLE_WITH_ERROR = [
     ["san_vc0", "SAN_VC", "02006021c03c", "CONNECTED", "IBMSVC-ALUA", "8", "0000"],
     ["md36xxf0", "MD36xxf", "6C81F66000C458900000000054331291", "CONNECTED", "A/P", "5", "0820"],
 ]
-
-
-@pytest.fixture(name="check")
-def _vxvm_enclosures_check_plugin(fix_register: FixRegister) -> CheckPlugin:
-    return fix_register.check_plugins[CheckPluginName("vxvm_enclosures")]
 
 
 @pytest.mark.parametrize(
@@ -55,13 +49,11 @@ def _vxvm_enclosures_check_plugin(fix_register: FixRegister) -> CheckPlugin:
     ],
 )
 def test_discover_vxvm_multipath(
-    check: CheckPlugin,
-    fix_register: FixRegister,
     section: StringTable,
     expected_discovery_result: Sequence[Service],
 ) -> None:
     assert (
-        list(check.discovery_function(parse_vxvm_enclosures(section))) == expected_discovery_result
+        list(discover_vxvm_enclosures(parse_vxvm_enclosures(section))) == expected_discovery_result
     )
 
 
@@ -93,19 +85,12 @@ def test_discover_vxvm_multipath(
         pytest.param(
             "not_found",
             [["san_vc0", "SAN_VC", "02006021c03c", "CONNECTED", "IBMSVC-ALUA", "8", "0000"]],
-            [
-                Result(
-                    state=State.UNKNOWN,
-                    summary="Item not found",
-                )
-            ],
+            [],
             id="The item was not found, so the state is UNKNOWN.",
         ),
     ],
 )
 def test_check_vxvm_enclosures(
-    check: CheckPlugin,
-    fix_register: FixRegister,
     item: str,
     section: StringTable,
     expected_check_result: Sequence[Result],
@@ -113,9 +98,8 @@ def test_check_vxvm_enclosures(
 
     assert (
         list(
-            check.check_function(
+            check_vxvm_enclosures(
                 item=item,
-                params={},
                 section=parse_vxvm_enclosures(section),
             )
         )

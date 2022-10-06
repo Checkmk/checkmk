@@ -565,9 +565,7 @@ def test_non_ascii_line_processing(tmpdir, monkeypatch, use_specific_encoding, l
                 break
             result.append(l)
 
-        ret = result == expected_result
-        if not ret:
-            assert False
+        assert result == expected_result
 
 
 def _linux_dataset_path(filename):
@@ -703,9 +701,7 @@ def test_process_logfile(monkeypatch, logfile, patterns, opt_raw, state, expecte
     monkeypatch.setattr(sys, 'stdout', MockStdout())
     header, warning_and_errors = lw.process_logfile(section, state, False)
     output = [header] + warning_and_errors
-    ret = output == expected_output
-    if not ret:
-        assert False
+    assert output == expected_output
     if len(output) > 1:
         assert isinstance(state['offset'], int)
         if logfile == __file__:
@@ -802,13 +798,15 @@ def test_process_batches(tmpdir, mocker):
         ]
         ],
         "batch_id",
-        "remote",
+        "::remote",
         123,
         456,
     )
     assert os.path.isfile(os.path.join(
         str(tmpdir),
-        "logwatch-batches/remote/logwatch-batch-file-batch_id",
+        "logwatch-batches",
+        "__remote" if os.name == "nt" else "::remote",
+        "logwatch-batch-file-batch_id",
     ))
 
 

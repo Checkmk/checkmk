@@ -9,7 +9,7 @@ from typing import Mapping
 
 from kubernetes import client  # type: ignore[import]
 
-from cmk.special_agents.utils_kubernetes.api_server import _match_controllers
+from cmk.special_agents.utils_kubernetes.controllers import _match_controllers
 from cmk.special_agents.utils_kubernetes.schemata import api
 
 

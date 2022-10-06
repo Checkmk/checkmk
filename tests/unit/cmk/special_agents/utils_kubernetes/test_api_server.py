@@ -15,13 +15,13 @@ from mocket import Mocketizer  # type: ignore[import]
 from mocket.mockhttp import Entry  # type: ignore[import]
 
 from cmk.special_agents.utils_kubernetes.api_server import (
-    _create_api_controller,
     _verify_version_support,
     decompose_git_version,
     RawAPI,
     UnsupportedEndpointData,
     version_from_json,
 )
+from cmk.special_agents.utils_kubernetes.controllers import _create_api_controller
 from cmk.special_agents.utils_kubernetes.schemata import api
 
 

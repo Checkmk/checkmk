@@ -44,11 +44,11 @@ module = [
     "tests.gui_e2e.*",
     "tests.testlib.playwright.*",
     "tests.unit.cmk.ec.*",
-    "tests/testlib/event_console",
+    "tests.testlib.event_console",
 ]
+check_untyped_defs = true
+disallow_incomplete_defs = true
 disallow_untyped_calls = true
 disallow_untyped_defs = true
-disallow_incomplete_defs = true
-check_untyped_defs = true
-warn_unused_ignores = true
 warn_return_any = true
+warn_unused_ignores = true

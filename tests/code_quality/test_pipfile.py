@@ -252,7 +252,6 @@ CEE_UNUSED_PACKAGES = [
     "click",
     "defusedxml",
     "docutils",
-    "fsspec",
     "grpcio",
     "gunicorn",
     "idna",

@@ -1250,7 +1250,9 @@ def filter_matching_namespace_resource_quota(
 def filter_pods_by_resource_quota_criteria(
     pods: Sequence[api.Pod], resource_quota: api.ResourceQuota
 ) -> Sequence[api.Pod]:
-    resource_quota_pods = filter_pods_by_resource_quota_scopes(pods, resource_quota.spec.scopes)
+    resource_quota_pods = filter_pods_by_resource_quota_scopes(
+        pods, resource_quota.spec.scopes or ()
+    )
     return filter_pods_by_resource_quota_scope_selector(
         resource_quota_pods, resource_quota.spec.scope_selector
     )
@@ -1314,12 +1316,9 @@ def _matches_scope_selector_match_expression(
 
 
 def filter_pods_by_resource_quota_scopes(
-    api_pods: Sequence[api.Pod], scopes: Optional[Sequence[api.QuotaScope]]
+    api_pods: Sequence[api.Pod], scopes: Sequence[api.QuotaScope] = ()
 ) -> Sequence[api.Pod]:
     """Filter pods based on selected scopes"""
-    if scopes is None:
-        return api_pods
-
     return [pod for pod in api_pods if all(_matches_quota_scope(pod, scope) for scope in scopes)]
 
 
@@ -2116,11 +2115,8 @@ def persist_containers_store(containers_store: ContainersStore, path: Path, file
 
 def group_metrics_by_container(
     performance_metrics: Union[Iterator[PerformanceMetric], Sequence[PerformanceMetric]],
-    omit_metrics: Optional[Sequence[MetricName]] = None,
+    omit_metrics: Sequence[MetricName] = (),
 ) -> Mapping[ContainerName, Mapping[MetricName, PerformanceMetric]]:
-    if omit_metrics is None:
-        omit_metrics = []
-
     containers: DefaultDict[
         ContainerName, Dict[MetricName, PerformanceMetric]
     ] = collections.defaultdict(dict)

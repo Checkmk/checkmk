@@ -22,9 +22,34 @@ try:
 except ImportError:
     pass  # only needed for type comments
 
+_SEP = os.sep.encode()
+_SEP_U = _SEP.decode("utf-8")
+
+
+def _oh_no():
+    return "oh-no-П" if os.name == "nt" else b"oh-no-\x89"
+
+
+def _wat_bad():
+    return "watПик" if os.name == "nt" else b"wat\xe2\x80\xbd"
+
+
+# NOTE: Linux could use bytes and str paths, Windows only str
+# we need to have kind of API to provide different types for different OS's
+_OH_NO = _oh_no()
+_WAT_BAD = _wat_bad()
+if os.name == "nt":
+    _OH_NO_STR = _OH_NO
+    _WAT_BAD_STR = _WAT_BAD
+    _OH_NO_BYTES = _OH_NO.encode()
+    _WAT_BAD_BYTES = _WAT_BAD.encode()
+else:
+    _OH_NO_STR = u"oh-no-\uFFFD"  # replace char
+    _WAT_BAD_STR = u"wat\u203D"  # actual interobang
+    _OH_NO_BYTES = _OH_NO
+    _WAT_BAD_BYTES = _WAT_BAD
 
 _TEST_CONFIG = u"""
-
 
 GLOBAL OPTIONS
  ignore invalid options
@@ -140,7 +165,8 @@ def test_options_setter(option_string, key, expected_value) -> None:  # type:ign
     ("regex=foobar", 'foobar', re.UNICODE),
     ("iregex=foobar", 'foobar', re.IGNORECASE | re.UNICODE),
 ])
-def test_options_setter_regex(option_string, expected_pattern, expected_flags) -> None:  # type:ignore[no-untyped-def]
+def test_options_setter_regex(option_string: str, expected_pattern: str,
+                              expected_flags: int) -> None:
     opt = lw.Options()
     opt.set_opt(option_string)
     assert opt.regex.pattern == expected_pattern
@@ -155,10 +181,9 @@ def test_get_config_files(tmpdir) -> None:  # type:ignore[no-untyped-def]
     os.mkdir(logwatch_d_dir)
 
     with open(os.path.join(logwatch_d_dir, "custom.cfg"), mode="w"):
-
         expected = [
-        str(os.path.join(fake_config_dir, "logwatch.cfg")),
-        str(os.path.join(fake_config_dir, "logwatch.d/custom.cfg"))
+            str(os.path.join(fake_config_dir, "logwatch.cfg")),
+            str(os.path.join(fake_config_dir, "logwatch.d", "custom.cfg"))
         ]
 
     assert lw.get_config_files(str(fake_config_dir)) == expected
@@ -210,7 +235,7 @@ def test_read_config_logfiles(parsed_config):
     assert l_config[0].files == [u'not', u'a', u'cluster', u'line']
     assert not l_config[0].patterns
 
-    assert l_config[1].files == [u'/var/log/messages']
+    assert l_config[1].files == [u'{}'.format(os.path.join(os.sep, "var", "log", "messages"))]
     assert l_config[1].patterns == [
             (u'C', u'Fail event detected on md device', [], []),
             (u'I', u'mdadm.*: Rebuild.*event detected', [], []),
@@ -222,7 +247,7 @@ def test_read_config_logfiles(parsed_config):
             (u'C', u'Error: (.*)', [], []),
         ]
 
-    assert l_config[2].files == [u'/var/log/auth.log']
+    assert l_config[2].files == [u'{}'.format(os.path.join(os.sep, "var", "log", "auth.log"))]
     assert l_config[2].patterns == [(u'W', u'sshd.*Corrupted MAC on input', [], [])]
 
     assert l_config[3].files == [u'c:\\a path\\with spaces', u'd:\\another path\\with spaces']
@@ -233,10 +258,11 @@ def test_read_config_logfiles(parsed_config):
         (u'W', u'.*Unrecovered read error - auto reallocate failed', [], []),
     ]
 
-    assert l_config[4].files == [u'/var/log/äumlaut.log']
+    assert l_config[4].files == [u'{}'.format(os.path.join(_SEP_U, u"var", u"log", u"äumlaut.log"))]
     assert l_config[4].patterns == [(u'W', u'sshd.*Corrupted MAC on input', [], [])]
 
-    assert l_config[5].files == [u'/var/log/test_append.log']
+    assert l_config[5].files == [
+        u'{}'.format(os.path.join(os.sep, "var", "log", "test_append.log"))]
     assert l_config[5].patterns == [
         (u'C', u'.*Error.*', [u'.*more information.*', u'.*also important.*'], [])
     ]
@@ -245,15 +271,19 @@ def test_read_config_logfiles(parsed_config):
 @pytest.mark.parametrize(
     "env_var, expected_status_filename",
     [
-        ("192.168.2.1", "/path/to/config/logwatch.state.192.168.2.1"),
-        ("::ffff:192.168.2.1", "/path/to/config/logwatch.state.__ffff_192.168.2.1"),
-        ("192.168.1.4", "/path/to/config/logwatch.state.my_cluster"),
-        ("1262:0:0:0:0:B03:1:AF18", "/path/to/config/logwatch.state.1262_0_0_0_0_B03_1_AF18"),
-        ("1762:0:0:0:0:B03:1:AF18", "/path/to/config/logwatch.state.another_cluster"),
-        ("local", "/path/to/config/logwatch.state.local"),
-        ("::ffff:192.168.1.2", "/path/to/config/logwatch.state.my_cluster"),
+        ("192.168.2.1", os.path.join("/path/to/config", "logwatch.state.192.168.2.1")),
+        (
+            "::ffff:192.168.2.1",
+            os.path.join("/path/to/config", "logwatch.state.__ffff_192.168.2.1")),
+        ("192.168.1.4", os.path.join("/path/to/config", "logwatch.state.my_cluster")),
+        ("1262:0:0:0:0:B03:1:AF18",
+         os.path.join("/path/to/config", "logwatch.state.1262_0_0_0_0_B03_1_AF18")),
+        ("1762:0:0:0:0:B03:1:AF18",
+         os.path.join("/path/to/config", "logwatch.state.another_cluster")),
+        ("local", os.path.join("/path/to/config", "logwatch.state.local")),
+        ("::ffff:192.168.1.2", os.path.join("/path/to/config", "logwatch.state.my_cluster")),
     ])
-def test_get_status_filename(env_var, expected_status_filename, monkeypatch, mocker) -> None:  # type:ignore[no-untyped-def]
+def test_get_status_filename(env_var, expected_status_filename, monkeypatch) -> None:  # type:ignore[no-untyped-def]
     monkeypatch.setattr(lw, "MK_VARDIR", '/path/to/config')
     fake_config = [
         lw.ClusterConfigBlock(
@@ -381,18 +411,39 @@ def test_state_write(tmpdir, state_dict) -> None:  # type:ignore[no-untyped-def]
 
 
 STAR_FILES = [
-    (b"/file.log", u"/file.log"),
-    (b"/hard_link_to_file.log", u"/hard_link_to_file.log"),
-    (b"/hard_linked_file.log", u"/hard_linked_file.log"),
-    (b"/oh-no-\x89", u"/oh-no-\uFFFD"),  # unicode replace char
-    (b"/symlink_to_file.log", u"/symlink_to_file.log"),
-    (b"/wat\xe2\x80\xbd", u"/wat\u203D"),  # actual interobang
+    (b"file.log", u"file.log"),
+    (b"hard_link_to_file.log", u"hard_link_to_file.log"),
+    (b"hard_linked_file.log", u"hard_linked_file.log"),
+    (_OH_NO_BYTES, _OH_NO_STR),
+    (b"symlink_to_file.log", u"symlink_to_file.log"),
+    (_WAT_BAD_BYTES, _WAT_BAD_STR),
 ]
 
 
+def _fix_for_os(pairs):
+    # type: (Sequence[tuple[bytes, str]])  -> list[tuple[bytes, str]]
+    def symlink_in_windows(s: str) -> bool:
+        return os.name == "nt" and s.find("symlink") != -1
+
+    return [(os.sep.encode() + b, os.sep + s) for b, s in pairs if not symlink_in_windows(s)]
+
+
+def _cvt(path):
+    return os.path.normpath(path.decode("utf-8", errors="replace")) if os.name == "nt" else path
+
+
+# NOTE: helper for mypy
+def _end_with(actual, *, expected) -> bool:  # type:ignore[no-untyped-def]
+    if isinstance(actual, str):
+        assert isinstance(expected, str)
+        return actual.endswith(expected)
+    assert isinstance(expected, bytes)
+    return actual.endswith(expected)
+
+
 @pytest.mark.parametrize("pattern_suffix, file_suffixes", [
-    (u"/*", STAR_FILES),
-    (u"/**", STAR_FILES),
+    (u"/*", _fix_for_os(STAR_FILES)),
+    (u"/**", _fix_for_os(STAR_FILES)),
     (u"/subdir/*", [(b"/subdir/symlink_to_file.log", u"/subdir/symlink_to_file.log")]),
     (u"/symlink_to_dir/*", [
         (b"/symlink_to_dir/yet_another_file.log", u"/symlink_to_dir/yet_another_file.log")
@@ -407,8 +458,7 @@ def test_find_matching_logfiles(fake_filesystem, pattern_suffix, file_suffixes) 
     ]
 
     for actual, expected in zip(sorted(files), fake_fs_file_suffixes):
-        assert isinstance(actual[0], type(expected[0]))
-        assert actual[0].endswith(expected[0])
+        assert _end_with(actual[0], expected=_cvt(expected[0]))
 
         assert isinstance(actual[1], text_type())
         assert actual[1].startswith(fake_fs_path_u)
@@ -441,7 +491,7 @@ def test_log_lines_iter_encoding(monkeypatch, buff, encoding, position) -> None:
 
 def test_log_lines_iter() -> None:
     txt_file = lw.__file__.rstrip('c')
-    with lw.LogLinesIter(txt_file, None) as log_iter:
+    with lw.LogLinesIter(txt_file, "utf-8" if os.name == "nt" else None) as log_iter:
         log_iter.set_position(122)
         assert log_iter.get_position() == 122
 
@@ -459,11 +509,15 @@ def test_log_lines_iter() -> None:
         assert log_iter.get_position() == os.stat(txt_file).st_size
 
 
+def _latin_1_encoding():
+    return "cp1252" if os.name == "nt" else "latin-1"
+
+
 @pytest.mark.parametrize(
     "use_specific_encoding,lines,expected_result",
     [
-        # UTF-8 encoding works by default
-        (None, [
+        # UTF-8 encoding works by default in Linux and must be selected in Windows
+        ("utf-8" if os.name == "nt" else None, [
             b"abc1",
             u"äbc2".encode("utf-8"),
             b"abc3",
@@ -473,9 +527,9 @@ def test_log_lines_iter() -> None:
             u"abc3\n",
         ]),
         # Replace characters that can not be decoded
-        (None, [
+        ("utf-8" if os.name == "nt" else None, [
             b"abc1",
-            u"äbc2".encode("latin-1"),
+            u"äbc2".encode(_latin_1_encoding()),
             b"abc3",
         ], [
             u"abc1\n",
@@ -483,9 +537,9 @@ def test_log_lines_iter() -> None:
             u"abc3\n",
         ]),
         # Set custom encoding
-        ("latin-1", [
+        (_latin_1_encoding(), [
             b"abc1",
-            u"äbc2".encode("latin-1"),
+            u"äbc2".encode(_latin_1_encoding()),
             b"abc3",
         ], [
             u"abc1\n",
@@ -515,7 +569,7 @@ def test_non_ascii_line_processing(tmpdir, monkeypatch, use_specific_encoding, l
         assert result == expected_result
 
 
-def _path_to_testfile(filename):
+def _linux_dataset_path(filename):
     return os.path.abspath(
         os.path.join(
             os.path.dirname(__file__),
@@ -524,6 +578,10 @@ def _path_to_testfile(filename):
                 filename,
         )
     )
+
+
+def _path_to_testfile(filename):
+    return _linux_dataset_path(filename)
 
 
 class MockStdout(object):  # pylint: disable=useless-object-inheritance
@@ -623,6 +681,10 @@ def test_process_logfile(monkeypatch, logfile, patterns, opt_raw, state,
 
     section = lw.LogfileSection((logfile, logfile))
     section.options.values.update(opt_raw)
+    # in Windows default encoding, i.e., None means cp1252 and we cant change default easy
+    # we want to test utf-8 file, so please
+    if os.name == "nt":
+        section.options.values.update({"encoding": "utf-8"})
     section._compiled_patterns = patterns
 
     monkeypatch.setattr(sys, 'stdout', MockStdout())
@@ -638,10 +700,9 @@ def test_process_logfile(monkeypatch, logfile, patterns, opt_raw, state,
 @pytest.mark.parametrize("input_lines, before, after, expected_output",
                          [([], 2, 3, []),
                           (["0", "1", "2", "C 3", "4", "5", "6", "7", "8", "9", "W 10"
-                           ], 2, 3, ["1", "2", "C 3", "4", "5", "6", "8", "9", "W 10"]),
+                            ], 2, 3, ["1", "2", "C 3", "4", "5", "6", "8", "9", "W 10"]),
                           (["C 0", "1", "2"], 12, 17, ["C 0", "1", "2"])])
 def test_filter_maxcontextlines(input_lines, before, after, expected_output) -> None:  # type:ignore[no-untyped-def]
-
     assert expected_output == list(lw._filter_maxcontextlines(input_lines, before, after))
 
 
@@ -672,8 +733,8 @@ def fake_filesystem(tmpdir):
     root = [
         # name     | type  | content/target
         ("file.log", "file", None),
-        (b"wat\xe2\x80\xbd", "file", None),
-        (b"oh-no-\x89", "file", None),
+        (_WAT_BAD, "file", None),
+        (_OH_NO, "file", None),
         ("symlink_to_file.log", "symlink", "symlinked_file.log"),
         ("subdir", "dir", [
             ("symlink_to_file.log", "symlink", "another_symlinked_file.log"),
@@ -705,7 +766,8 @@ def fake_filesystem(tmpdir):
 
         source = os.path.join(ensure_binary(dirpath), ensure_binary(value))
         if type_ == "symlink":
-            os.symlink(source, obj_path)
+            if os.name != "nt":
+                os.symlink(source, obj_path)
         else:
             os.link(source, obj_path)
 

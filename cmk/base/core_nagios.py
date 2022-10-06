@@ -11,7 +11,7 @@ import socket
 import sys
 from io import StringIO
 from pathlib import Path
-from typing import Any, cast, Dict, IO, Iterable, List, Literal, Optional, Set, Tuple
+from typing import Any, cast, Dict, IO, List, Literal, Optional, Set, Tuple
 
 import cmk.utils.config_path
 import cmk.utils.paths
@@ -36,15 +36,12 @@ from cmk.utils.type_defs import (
     TimeperiodName,
 )
 
-import cmk.core_helpers.cache as file_cache
-
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
 import cmk.base.plugin_contexts as plugin_contexts
-import cmk.base.sources as sources
 import cmk.base.utils
 from cmk.base.config import ConfigCache, HostConfig, ObjectAttributes
 from cmk.base.core_config import AbstractServiceID, CoreCommand, CoreCommandName
@@ -1326,7 +1323,7 @@ def _get_needed_plugin_names(
 ) -> Tuple[Set[CheckPluginNameStr], Set[CheckPluginName], Set[InventoryPluginName]]:
     from cmk.base import check_table  # pylint: disable=import-outside-toplevel
 
-    needed_legacy_check_plugin_names = {*_plugins_for_special_agents(host_config)}
+    needed_legacy_check_plugin_names = {f"agent_{name}" for name, _p in host_config.special_agents}
 
     # Collect the needed check plugin names using the host check table.
     # Even auto-migrated checks must be on the list of needed *agent based* plugins:
@@ -1362,45 +1359,6 @@ def _get_needed_plugin_names(
         needed_legacy_check_plugin_names,
         needed_agent_based_check_plugin_names,
         needed_agent_based_inventory_plugin_names,
-    )
-
-
-def _plugins_for_special_agents(host_config: HostConfig) -> Iterable[CheckPluginNameStr]:
-    """determine required special agent plugins
-
-    In case the host is monitored as special agent, the check plugin for the special agent
-    needs to be loaded
-    """
-    try:
-        ipaddress = config.lookup_ip_address(host_config)
-    except Exception:
-        ipaddress = None
-
-    def special_to_agent_plugin_file_name(name: str) -> str:
-        prefix = "special_"
-        if name.startswith(prefix):
-            # expected
-            return f"agent_{name[len(prefix):]}"
-        return "agent_{name}"
-
-    yield from (
-        # TODO(ml): The sources are not used or needed here.
-        special_to_agent_plugin_file_name(s.id)
-        for s in sources.make_non_cluster_sources(
-            host_config,
-            ipaddress,
-            simulation_mode=config.simulation_mode,
-            agent_simulator=config.agent_simulator,
-            keep_outdated=False,
-            translation=config.get_piggyback_translations(host_config.hostname),
-            encoding_fallback=config.fallback_agent_output_encoding,
-            missing_sys_description=config.get_config_cache().in_binary_hostlist(
-                host_config.hostname,
-                config.snmp_without_sys_descr,
-            ),
-            file_cache_max_age=file_cache.MaxAge.none(),
-        )
-        if isinstance(s, sources.programs.SpecialAgentSource)
     )
 
 

@@ -166,7 +166,7 @@ impl<'a> AgentRecvPortDiscoverer<'a> {
         }
 
         return Err(anyhow!(
-            "Failed to discover agent receiver port from Checkmk REST API, both with http and https.\n\nError with http:\n{}\n\nError with https:\n{}",
+            "Failed to discover agent receiver port from Checkmk REST API, both with http and https.\n\nError with https:\n{}\n\nError with http:\n{}",
             anyhow_error_to_human_readable(&error_messages["https"]),
             anyhow_error_to_human_readable(&error_messages["http"]),
         ));

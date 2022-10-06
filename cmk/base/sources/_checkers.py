@@ -216,9 +216,9 @@ class _Builder:
         self._initialize_mgmt_boards()
 
     def _initialize_agent_based(self) -> None:
-        # `main_data_source` agent-based data sources use the cache and persisted
-        # directories that existed before the data source concept has been added
-        # where each data source has its own set of directories.
+        # agent-based data sources use the cache and persisted directories
+        # that existed before the data source concept has been added where
+        # each data source has its own set of directories.
         #
         # TODO: We should cleanup these old directories one day, then we can
         #       remove this special case.
@@ -227,7 +227,6 @@ class _Builder:
             self._add(
                 self._get_agent(
                     ignore_special_agents=True,
-                    main_data_source=True,
                 )
             )
             for elem in self._get_special_agents():
@@ -241,7 +240,6 @@ class _Builder:
             self._add(
                 self._get_agent(
                     ignore_special_agents=False,
-                    main_data_source=True,
                 )
             )
 
@@ -427,11 +425,7 @@ class _Builder:
     def _add(self, source: Source) -> None:
         self._elems[source.id] = source
 
-    def _get_agent(
-        self,
-        ignore_special_agents: bool,
-        main_data_source: bool,
-    ) -> Source:
+    def _get_agent(self, ignore_special_agents: bool) -> Source:
         if not ignore_special_agents:
             special_agents = self._get_special_agents()
             if special_agents:
@@ -445,16 +439,8 @@ class _Builder:
                 source_type=SourceType.HOST,
                 fetcher_type=FetcherType.PROGRAM,
                 id_="agent",
-                persisted_section_dir=(
-                    Path(cmk.utils.paths.var_dir) / "persisted"
-                    if main_data_source
-                    else Path("persisted_sections", "agent")
-                ),
-                cache_dir=(
-                    Path(cmk.utils.paths.tcp_cache_dir)
-                    if main_data_source
-                    else Path(cmk.utils.paths.data_source_cache_dir) / "agent"
-                ),
+                persisted_section_dir=Path(cmk.utils.paths.var_dir) / "persisted",
+                cache_dir=Path(cmk.utils.paths.tcp_cache_dir),
                 cmdline=core_config.translate_ds_program_source_cmdline(
                     datasource_program, self.host_config, self.ipaddress
                 ),
@@ -496,16 +482,8 @@ class _Builder:
                 source_type=SourceType.HOST,
                 fetcher_type=FetcherType.TCP,
                 id_="agent",
-                persisted_section_dir=(
-                    Path(cmk.utils.paths.var_dir) / "persisted"
-                    if main_data_source
-                    else Path("persisted_sections", "agent")
-                ),
-                cache_dir=(
-                    Path(cmk.utils.paths.tcp_cache_dir)
-                    if main_data_source
-                    else Path(cmk.utils.paths.data_source_cache_dir) / "agent"
-                ),
+                persisted_section_dir=Path(cmk.utils.paths.var_dir) / "persisted",
+                cache_dir=Path(cmk.utils.paths.tcp_cache_dir),
                 simulation_mode=self.simulation_mode,
                 agent_simulator=self.agent_simulator,
                 keep_outdated=self.keep_outdated,

@@ -34,6 +34,7 @@ RUN yum -y makecache \
     autoconf \
     automake \
     bind-utils \
+    bzip2-devel \
     curl \
     curl-devel \
     expat-devel \

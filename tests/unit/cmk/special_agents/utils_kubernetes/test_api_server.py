@@ -418,6 +418,7 @@ def test__create_api_controller(
     controller_type: api.ControllerType,
 ) -> None:
     controller = _create_api_controller(
+        owner_reference.uid,
         owner_reference.name,
         owner_reference.namespace,
         owner_reference.kind,

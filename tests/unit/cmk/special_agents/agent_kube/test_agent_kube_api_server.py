@@ -30,14 +30,24 @@ def test_controller_matched_to_pod() -> None:
         owner_cronjob.uid: [],
     }
     assert _match_controllers([POD], object_to_owners) == (
-        {owner_cronjob.uid: [POD_UID]},
+        {
+            owner_cronjob.uid: [POD_UID],
+            owner_job.uid: [POD_UID],
+        },
         {
             POD_UID: [
                 api.Controller(
+                    type_=api.ControllerType.job,
+                    uid=owner_job.uid,
+                    name=owner_job.name,
+                    namespace=owner_job.namespace,
+                ),
+                api.Controller(
                     type_=api.ControllerType.cronjob,
+                    uid=owner_cronjob.uid,
                     name=owner_cronjob.name,
                     namespace=owner_cronjob.namespace,
-                )
+                ),
             ]
         },
     )
@@ -51,7 +61,7 @@ def test_controller_not_added_if_not_a_controller() -> None:
         owner_job.uid: [owner_cronjob],
         owner_cronjob.uid: [],
     }
-    assert _match_controllers([POD], object_to_owners) == ({}, {})
+    assert _match_controllers([POD], object_to_owners) == ({}, {POD_UID: []})
 
 
 def test_controller_not_added_if_not_a_controller_object_mapping() -> None:
@@ -62,12 +72,24 @@ def test_controller_not_added_if_not_a_controller_object_mapping() -> None:
         owner_job.uid: [owner_cronjob],
         owner_cronjob.uid: [],
     }
-    assert _match_controllers([POD], object_to_owners) == ({}, {})
+    assert _match_controllers([POD], object_to_owners) == (
+        {owner_job.uid: [POD_UID]},
+        {
+            POD_UID: [
+                api.Controller(
+                    type_=api.ControllerType.job,
+                    uid=owner_job.uid,
+                    name=owner_job.name,
+                    namespace=owner_job.namespace,
+                )
+            ]
+        },
+    )
 
 
 def test_controller_not_in_object_to_owners() -> None:
     object_to_owners: Mapping[str, api.OwnerReferences] = {"somethingelse": [], POD_UID: []}
-    assert _match_controllers([POD], object_to_owners) == ({}, {})
+    assert _match_controllers([POD], object_to_owners) == ({}, {POD_UID: []})
 
 
 def test_pod_does_not_have_owner_ref() -> None:
@@ -78,14 +100,14 @@ def test_pod_does_not_have_owner_ref() -> None:
         owner_job.uid: [owner_cronjob],
         owner_cronjob.uid: [],
     }
-    assert _match_controllers([POD], object_to_owners) == ({}, {})
+    assert _match_controllers([POD], object_to_owners) == ({}, {POD_UID: []})
 
 
 def test_multiple_owners() -> None:
     owner_cronjob = OwnerReferenceFactory.build(kind="CronJob", controller=True)
     owner_job = OwnerReferenceFactory.build(kind="Job", controller=True)
-    owner_deployment = OwnerReferenceFactory.build(kind="Deployment", controller=True)
-    owner_replicaset = OwnerReferenceFactory.build(kind="ReplicaSet", controller=True)
+    owner_deployment = OwnerReferenceFactory.build(kind="Deployment", controller=False)
+    owner_replicaset = OwnerReferenceFactory.build(kind="ReplicaSet", controller=False)
     object_to_owners: Mapping[str, api.OwnerReferences] = {
         POD_UID: [owner_job, owner_replicaset],
         owner_job.uid: [owner_cronjob],
@@ -96,19 +118,21 @@ def test_multiple_owners() -> None:
     assert _match_controllers([POD], object_to_owners) == (
         {
             owner_cronjob.uid: [POD_UID],
-            owner_deployment.uid: [POD_UID],
+            owner_job.uid: [POD_UID],
         },
         {
             POD_UID: [
                 api.Controller(
-                    type_=api.ControllerType.cronjob,
-                    name=owner_cronjob.name,
-                    namespace=owner_cronjob.namespace,
+                    type_=api.ControllerType.job,
+                    uid=owner_job.uid,
+                    name=owner_job.name,
+                    namespace=owner_job.namespace,
                 ),
                 api.Controller(
-                    type_=api.ControllerType.deployment,
-                    name=owner_deployment.name,
-                    namespace=owner_deployment.namespace,
+                    type_=api.ControllerType.cronjob,
+                    uid=owner_cronjob.uid,
+                    name=owner_cronjob.name,
+                    namespace=owner_cronjob.namespace,
                 ),
             ]
         },

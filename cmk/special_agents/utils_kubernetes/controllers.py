@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from dataclasses import dataclass
 from typing import Dict, Iterable, List, Mapping, Sequence, Tuple
 
 from kubernetes import client  # type: ignore[import]
@@ -10,12 +11,60 @@ from kubernetes import client  # type: ignore[import]
 from cmk.special_agents.utils_kubernetes.schemata import api
 
 
-def _create_api_controller(name: str, namespace: str | None, kind: str) -> api.Controller:
+@dataclass(frozen=True)
+class CompleteControlChain:
+    # A sequence of controllers, e.g. deployment -> replica set. For two adjacent elements, the first
+    # one controls the second one. The final element controls the pod.
+    chain: Sequence[api.Controller]
+
+
+@dataclass(frozen=True)
+class InCompleteControlChain:
+    # Not all Owners could be determined based on the API data. This can have
+    # several reasons. E.g., the controller is a CustomResourceDefinition; or
+    # the user has specified the UID of an object, which does not exist.
+    chain: Sequence[api.Controller]
+
+
+def _create_api_controller(uid: str, name: str, namespace: str | None, kind: str) -> api.Controller:
     return api.Controller(
+        uid=uid,
         name=name,
         namespace=namespace,
         type_=api.ControllerType.from_str(kind.lower()),
     )
+
+
+def _find_controller(owner_references: api.OwnerReferences) -> api.OwnerReference | None:
+    # There is only ever one controller, Checkmk ignores non-controlling owners.
+    return next((o for o in owner_references if o.controller), None)
+
+
+def _find_controllers(
+    pod_uid: api.PodUID, object_to_owners: Mapping[str, api.OwnerReferences]
+) -> CompleteControlChain | InCompleteControlChain:
+    # owner_reference approach is taken from these two links:
+    # https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
+    # https://github.com/kubernetes-client/python/issues/946
+    # We have tested the solution in the github issue. It does not work, but was good
+    # enough as a prototype.
+    chain = []
+    controller = _find_controller(object_to_owners[pod_uid])
+    while controller is not None:
+        chain.append(
+            _create_api_controller(
+                controller.uid,
+                controller.name,
+                controller.namespace,
+                controller.kind,
+            )
+        )
+        if (owners_of_controller := object_to_owners.get(controller.uid)) is None:
+            # A controller exists, but it was not available from the API data we have.
+            # Typically, this happens if we handle CustomResourceDefinitions.
+            return InCompleteControlChain(chain=chain)
+        controller = _find_controller(owners_of_controller)
+    return CompleteControlChain(chain=chain)
 
 
 # TODO Needs an integration test
@@ -23,41 +72,15 @@ def _match_controllers(
     pods: Iterable[client.V1Pod], object_to_owners: Mapping[str, api.OwnerReferences]
 ) -> Tuple[Mapping[str, Sequence[api.PodUID]], Mapping[api.PodUID, Sequence[api.Controller]]]:
     """Matches controllers to the pods they control."""
-    # owner_reference approach is taken from these two links:
-    # https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
-    # https://github.com/kubernetes-client/python/issues/946
-    # We have tested the solution in the github issue. It does not work, but was good
-    # enough as a prototype.
-
-    def recursive_toplevel_owner_lookup(
-        owner_references: api.OwnerReferences,
-    ) -> Iterable[api.OwnerReference]:
-        for owner in owner_references:
-            if not owner.controller:
-                continue
-            if (parent := object_to_owners.get(owner.uid)) is None:
-                continue
-            if len(parent) == 0:
-                # If an owner does not have any parent owners, then
-                # the owner is the top-level-owner
-                yield owner
-                continue
-            yield from recursive_toplevel_owner_lookup(parent)
-
     controller_to_pods: Dict[str, List[api.PodUID]] = {}
-    pod_to_controllers: Dict[api.PodUID, List[api.Controller]] = {}
+    pod_to_controllers: Dict[api.PodUID, Sequence[api.Controller]] = {}
+
     for pod in pods:
         pod_uid = api.PodUID(pod.metadata.uid)
-        pod_owners = object_to_owners[pod_uid]
-        for owner in recursive_toplevel_owner_lookup(pod_owners):
-            controller_to_pods.setdefault(owner.uid, []).append(pod_uid)
-            pod_to_controllers.setdefault(pod_uid, []).append(
-                _create_api_controller(
-                    owner.name,
-                    owner.namespace,
-                    owner.kind,
-                )
-            )
+        chain = _find_controllers(pod_uid, object_to_owners)
+        pod_to_controllers[pod_uid] = chain.chain
+        for controller in chain.chain:
+            controller_to_pods.setdefault(controller.uid, []).append(pod_uid)
 
     return controller_to_pods, pod_to_controllers
 

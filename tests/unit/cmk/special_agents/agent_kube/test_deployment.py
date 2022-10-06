@@ -10,6 +10,7 @@ from pydantic_factories import ModelFactory
 from tests.unit.cmk.special_agents.agent_kube.factory import (
     api_to_agent_deployment,
     api_to_agent_pod,
+    APIControllerFactory,
     APIDeploymentFactory,
     APIPodFactory,
     ContainerResourcesFactory,
@@ -41,9 +42,7 @@ def deployments_api_sections() -> Sequence[str]:
 def test_pod_deployment_controller_name() -> None:
     pod = api_to_agent_pod(
         APIPodFactory.build(),
-        controllers=[
-            api.Controller(type_=api.ControllerType.deployment, name="hi", namespace="bye")
-        ],
+        controllers=[APIControllerFactory.build(name="hi", namespace="bye")],
     )
     pod_info = pod.info("cluster", "host", agent.AnnotationNonPatternOption.ignore_all)
     assert len(pod_info.controllers) == 1

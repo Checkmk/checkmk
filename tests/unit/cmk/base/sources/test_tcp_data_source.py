@@ -7,9 +7,10 @@ import os
 import socket
 from pathlib import Path
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.type_defs import HostName, SourceType
 
 import cmk.core_helpers.cache as file_cache
+from cmk.core_helpers import FetcherType
 
 from cmk.base.sources.tcp import TCPSource
 
@@ -20,6 +21,8 @@ def test_attribute_defaults(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     source = TCPSource(
         hostname,
         ipaddress,
+        source_type=SourceType.HOST,
+        fetcher_type=FetcherType.TCP,
         id_="agent",
         persisted_section_dir=Path(os.devnull),
         cache_dir=Path(os.devnull),

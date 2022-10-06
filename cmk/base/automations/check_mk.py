@@ -1394,6 +1394,8 @@ class AutomationDiagHost(Automation):
                 source = sources.programs.DSProgramSource(
                     host_config.hostname,
                     ipaddress,
+                    source_type=source.source_type,
+                    fetcher_type=source.fetcher_type,
                     id_="agent",
                     cmdline=core_config.translate_ds_program_source_cmdline(
                         cmd,
@@ -1418,6 +1420,8 @@ class AutomationDiagHost(Automation):
                 source = sources.tcp.TCPSource(
                     source.hostname,
                     source.ipaddress,
+                    source_type=source.source_type,
+                    fetcher_type=source.fetcher_type,
                     id_="agent",
                     persisted_section_dir=source.persisted_section_dir,
                     cache_dir=source.file_cache_base_path,

@@ -10,9 +10,10 @@ from pathlib import Path
 
 import pytest
 
-from cmk.utils.type_defs import HostAddress, HostName
+from cmk.utils.type_defs import HostAddress, HostName, SourceType
 
 import cmk.core_helpers.cache as file_cache
+from cmk.core_helpers import FetcherType
 
 from cmk.base.sources.programs import DSProgramSource
 
@@ -24,6 +25,8 @@ class TestDSProgramChecker:
         source = DSProgramSource(
             hostname,
             ipaddress,
+            source_type=SourceType.HOST,
+            fetcher_type=FetcherType.PROGRAM,
             id_="agent",
             persisted_section_dir=Path(os.devnull),
             cache_dir=Path(os.devnull),

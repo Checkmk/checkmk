@@ -12,6 +12,7 @@ from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.type_defs import HostName, result, SourceType
 
 import cmk.core_helpers.cache as file_cache
+from cmk.core_helpers import FetcherType
 from cmk.core_helpers.host_sections import HostSections
 
 import cmk.base.config as config
@@ -33,6 +34,8 @@ def test_attribute_defaults(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     source = IPMISource(
         hostname,
         ipaddress,
+        source_type=SourceType.MANAGEMENT,
+        fetcher_type=FetcherType.IPMI,
         id_="mgmt_ipmi",
         persisted_section_dir=Path(os.devnull),
         cache_dir=Path(os.devnull),

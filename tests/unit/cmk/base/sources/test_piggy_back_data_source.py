@@ -11,9 +11,10 @@ from _pytest.monkeypatch import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
-from cmk.utils.type_defs import HostAddress, HostName, result
+from cmk.utils.type_defs import HostAddress, HostName, result, SourceType
 
 import cmk.core_helpers.cache as file_cache
+from cmk.core_helpers import FetcherType
 from cmk.core_helpers.agent import AgentRawDataSection
 from cmk.core_helpers.host_sections import HostSections
 
@@ -34,6 +35,8 @@ def test_attribute_defaults(ipaddress: HostAddress, monkeypatch: MonkeyPatch) ->
     source = PiggybackSource(
         hostname,
         ipaddress,
+        source_type=SourceType.HOST,
+        fetcher_type=FetcherType.PIGGYBACK,
         id_="piggyback",
         persisted_section_dir=Path(os.devnull),
         cache_dir=Path(os.devnull),

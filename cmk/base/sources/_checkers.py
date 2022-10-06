@@ -28,10 +28,11 @@ from cmk.utils.cpu_tracking import CPUTracker
 from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
 from cmk.utils.translations import TranslationOptions
-from cmk.utils.type_defs import HostAddress, HostName, SectionName
+from cmk.utils.type_defs import HostAddress, HostName, SectionName, SourceType
 
 from cmk.snmplib.type_defs import BackendSNMPTree, SNMPDetectSpec
 
+from cmk.core_helpers import FetcherType
 from cmk.core_helpers.cache import FileCacheGlobals, FileCacheMode, MaxAge
 from cmk.core_helpers.protocol import FetcherMessage
 from cmk.core_helpers.snmp import (
@@ -249,6 +250,8 @@ class _Builder:
                 PiggybackSource(
                     self.host_config.hostname,
                     self.ipaddress,
+                    source_type=SourceType.HOST,
+                    fetcher_type=FetcherType.PIGGYBACK,
                     id_="piggyback",
                     persisted_section_dir=(
                         Path(cmk.utils.paths.var_dir) / "persisted_sections" / "piggyback"
@@ -290,9 +293,11 @@ class _Builder:
         self._initialize_snmp_plugin_store()
         id_: Final = "snmp"
         self._add(
-            SNMPSource.snmp(
+            SNMPSource(
                 self.host_config.hostname,
                 self.ipaddress,
+                source_type=SourceType.HOST,
+                fetcher_type=FetcherType.SNMP,
                 id_=id_,
                 persisted_section_dir=Path(cmk.utils.paths.var_dir) / "persisted_sections" / id_,
                 on_scan_error=self.on_scan_error,
@@ -348,9 +353,11 @@ class _Builder:
         if protocol == "snmp":
             id_: Final = "mgmt_snmp"
             self._add(
-                SNMPSource.management_board(
+                SNMPSource(
                     self.host_config.hostname,
                     ip_address,
+                    source_type=SourceType.MANAGEMENT,
+                    fetcher_type=FetcherType.SNMP,
                     id_=id_,
                     persisted_section_dir=(
                         Path(cmk.utils.paths.var_dir) / "persisted_sections" / id_
@@ -397,6 +404,8 @@ class _Builder:
                 IPMISource(
                     self.host_config.hostname,
                     ip_address,
+                    source_type=SourceType.MANAGEMENT,
+                    fetcher_type=FetcherType.IPMI,
                     id_="mgmt_ipmi",
                     persisted_section_dir=(
                         Path(cmk.utils.paths.var_dir) / "persisted_sections" / "mgmt_ipmi"
@@ -433,6 +442,8 @@ class _Builder:
             return DSProgramSource(
                 self.host_config.hostname,
                 self.ipaddress,
+                source_type=SourceType.HOST,
+                fetcher_type=FetcherType.PROGRAM,
                 id_="agent",
                 persisted_section_dir=(
                     Path(cmk.utils.paths.var_dir) / "persisted"
@@ -463,6 +474,8 @@ class _Builder:
             return PushAgentSource(
                 self.host_config.hostname,
                 self.ipaddress,
+                source_type=SourceType.HOST,
+                fetcher_type=FetcherType.PUSH_AGENT,
                 id_="push-agent",
                 persisted_section_dir=(
                     Path(cmk.utils.paths.var_dir) / "persisted_sections" / "push-agent"
@@ -480,6 +493,8 @@ class _Builder:
             return TCPSource(
                 self.host_config.hostname,
                 self.ipaddress,
+                source_type=SourceType.HOST,
+                fetcher_type=FetcherType.TCP,
                 id_="agent",
                 persisted_section_dir=(
                     Path(cmk.utils.paths.var_dir) / "persisted"
@@ -513,6 +528,8 @@ class _Builder:
             SpecialAgentSource(
                 self.host_config.hostname,
                 self.ipaddress,
+                source_type=SourceType.HOST,
+                fetcher_type=FetcherType.PROGRAM,
                 id_=make_id(agentname),
                 cmdline=core_config.make_special_agent_cmdline(
                     self.host_config.hostname,

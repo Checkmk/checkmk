@@ -25,6 +25,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
         ipaddress: Optional[HostAddress],
         *,
         source_type: SourceType,
+        fetcher_type: FetcherType,
         id_: Literal["snmp", "mgmt_snmp"],
         persisted_section_dir: Path,
         on_scan_error: OnError,
@@ -40,7 +41,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             hostname,
             ipaddress,
             source_type=source_type,
-            fetcher_type=FetcherType.SNMP,
+            fetcher_type=fetcher_type,
             id_=id_,
         )
         self.snmp_config: Final = snmp_config
@@ -52,72 +53,6 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
         self.on_snmp_scan_error: Final = on_scan_error
         self.persisted_section_dir: Final = persisted_section_dir
         self.cache: Final = cache
-
-    @classmethod
-    def snmp(
-        cls,
-        hostname: HostName,
-        ipaddress: Optional[HostAddress],
-        *,
-        id_: Literal["snmp"],
-        persisted_section_dir: Path,
-        on_scan_error: OnError,
-        missing_sys_description: bool,
-        sections: Mapping[SectionName, SectionMeta],
-        keep_outdated: bool,
-        check_intervals: Mapping[SectionName, Optional[int]],
-        snmp_config: SNMPHostConfig,
-        do_status_data_inventory: bool,
-        cache: FileCache[SNMPRawData],
-    ) -> "SNMPSource":
-        return cls(
-            hostname,
-            ipaddress,
-            source_type=SourceType.HOST,
-            id_=id_,
-            persisted_section_dir=persisted_section_dir,
-            on_scan_error=on_scan_error,
-            missing_sys_description=missing_sys_description,
-            sections=sections,
-            keep_outdated=keep_outdated,
-            check_intervals=check_intervals,
-            snmp_config=snmp_config,
-            do_status_data_inventory=do_status_data_inventory,
-            cache=cache,
-        )
-
-    @classmethod
-    def management_board(
-        cls,
-        hostname: HostName,
-        ipaddress: HostAddress,
-        *,
-        id_: Literal["mgmt_snmp"],
-        persisted_section_dir: Path,
-        on_scan_error: OnError,
-        missing_sys_description: bool,
-        sections: Mapping[SectionName, SectionMeta],
-        keep_outdated: bool,
-        check_intervals: Mapping[SectionName, Optional[int]],
-        snmp_config: SNMPHostConfig,
-        do_status_data_inventory: bool,
-        cache: FileCache[SNMPRawData],
-    ) -> "SNMPSource":
-        return cls(
-            hostname,
-            ipaddress,
-            source_type=SourceType.MANAGEMENT,
-            id_=id_,
-            persisted_section_dir=persisted_section_dir,
-            on_scan_error=on_scan_error,
-            missing_sys_description=missing_sys_description,
-            sections=sections,
-            keep_outdated=keep_outdated,
-            check_intervals=check_intervals,
-            snmp_config=snmp_config,
-            do_status_data_inventory=do_status_data_inventory,
-            cache=cache,
-        )
 
     def _make_file_cache(self) -> FileCache[SNMPRawData]:
         return self.cache

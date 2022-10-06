@@ -18,6 +18,7 @@ from cmk.utils.type_defs import CheckPluginName, HostName, ParsedSectionName, re
 
 from cmk.snmplib.type_defs import SNMPBackendEnum, SNMPHostConfig
 
+from cmk.core_helpers import FetcherType
 from cmk.core_helpers.cache import FileCacheMode, MaxAge
 from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.snmp import SNMPFileCache
@@ -33,9 +34,11 @@ from cmk.base.sources.snmp import SNMPSource
 @pytest.fixture(name="source")
 def source_fixture():
     hostname = HostName("hostname")
-    return SNMPSource.snmp(
+    return SNMPSource(
         hostname,
         "1.2.3.4",
+        source_type=SourceType.HOST,
+        fetcher_type=FetcherType.SNMP,
         id_="snmp",
         persisted_section_dir=Path(os.devnull),
         on_scan_error=OnError.RAISE,
@@ -113,6 +116,7 @@ class TestSNMPSummaryResult:
             hostname,
             "1.2.3.4",
             source_type=SourceType.HOST,
+            fetcher_type=FetcherType.SNMP,
             id_="snmp",
             persisted_section_dir=Path(os.devnull),
             on_scan_error=OnError.RAISE,

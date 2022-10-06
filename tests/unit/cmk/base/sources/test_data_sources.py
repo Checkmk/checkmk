@@ -9,9 +9,10 @@ import pytest
 
 from tests.testlib.base import Scenario
 
-from cmk.utils.type_defs import HostName, result, SectionName
+from cmk.utils.type_defs import HostName, result, SectionName, SourceType
 
 import cmk.core_helpers.cache as file_cache
+from cmk.core_helpers import FetcherType
 
 from cmk.base import config
 from cmk.base.config import HostConfig
@@ -127,6 +128,8 @@ def test_host_config_creates_passing_source_sources(
         lambda hostname, ipaddress, base_dir: SpecialAgentSource(
             hostname,
             ipaddress,
+            source_type=SourceType.HOST,
+            fetcher_type=FetcherType.PROGRAM,
             id_="special_veryspecial",
             persisted_section_dir=base_dir,
             cache_dir=base_dir,
@@ -144,6 +147,8 @@ def test_host_config_creates_passing_source_sources(
         lambda hostname, ipaddress, base_dir: DSProgramSource(
             hostname,
             ipaddress,
+            source_type=SourceType.HOST,
+            fetcher_type=FetcherType.PROGRAM,
             id_="agent",
             persisted_section_dir=base_dir,
             cache_dir=base_dir,
@@ -161,6 +166,8 @@ def test_host_config_creates_passing_source_sources(
         lambda hostname, ipaddress, base_dir: PiggybackSource(
             hostname,
             ipaddress,
+            source_type=SourceType.HOST,
+            fetcher_type=FetcherType.PIGGYBACK,
             id_="piggyback",
             persisted_section_dir=base_dir,
             cache_dir=base_dir,
@@ -177,6 +184,8 @@ def test_host_config_creates_passing_source_sources(
         lambda hostname, ipaddress, base_dir: TCPSource(
             hostname,
             ipaddress,
+            source_type=SourceType.HOST,
+            fetcher_type=FetcherType.TCP,
             id_="agent",
             persisted_section_dir=base_dir,
             cache_dir=base_dir,

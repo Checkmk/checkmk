@@ -23,6 +23,8 @@ class ProgramSource(AgentSource):
         hostname: HostName,
         ipaddress: Optional[HostAddress],
         *,
+        source_type: SourceType,
+        fetcher_type: FetcherType,
         id_: str,  # "agent" or "special_{agentname}"
         persisted_section_dir: Path,
         cache_dir: Path,
@@ -40,8 +42,8 @@ class ProgramSource(AgentSource):
         super().__init__(
             hostname,
             ipaddress,
-            source_type=SourceType.HOST,
-            fetcher_type=FetcherType.PROGRAM,
+            source_type=source_type,
+            fetcher_type=fetcher_type,
             id_=id_,
             persisted_section_dir=persisted_section_dir,
             agent_simulator=agent_simulator,

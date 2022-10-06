@@ -147,9 +147,11 @@ class TestMakeHostSectionsHosts:
         host_sections = _collect_host_sections(
             fetched=[
                 (
-                    SNMPSource.snmp(
+                    SNMPSource(
                         hostname,
                         ipaddress,
+                        source_type=SourceType.HOST,
+                        fetcher_type=FetcherType.SNMP,
                         id_="snmp",
                         persisted_section_dir=Path(os.devnull),
                         on_scan_error=OnError.RAISE,
@@ -194,6 +196,8 @@ class TestMakeHostSectionsHosts:
             lambda hostname, ipaddress: PiggybackSource(
                 hostname,
                 ipaddress,
+                source_type=SourceType.HOST,
+                fetcher_type=FetcherType.PIGGYBACK,
                 id_="piggyback",
                 persisted_section_dir=Path(os.devnull),
                 cache_dir=Path(os.devnull),
@@ -210,6 +214,8 @@ class TestMakeHostSectionsHosts:
             lambda hostname, ipaddress: DSProgramSource(
                 hostname,
                 ipaddress,
+                source_type=SourceType.HOST,
+                fetcher_type=FetcherType.PROGRAM,
                 id_="agent",
                 persisted_section_dir=Path(os.devnull),
                 cache_dir=Path(os.devnull),
@@ -227,6 +233,8 @@ class TestMakeHostSectionsHosts:
             lambda hostname, ipaddress: TCPSource(
                 hostname,
                 ipaddress,
+                source_type=SourceType.HOST,
+                fetcher_type=FetcherType.TCP,
                 id_="agent",
                 persisted_section_dir=Path(os.devnull),
                 cache_dir=Path(os.devnull),
@@ -279,6 +287,8 @@ class TestMakeHostSectionsHosts:
             DSProgramSource(
                 hostname,
                 ipaddress,
+                source_type=SourceType.HOST,
+                fetcher_type=FetcherType.PROGRAM,
                 id_="agent",
                 persisted_section_dir=Path(os.devnull),
                 cache_dir=Path(os.devnull),
@@ -296,6 +306,8 @@ class TestMakeHostSectionsHosts:
             TCPSource(
                 hostname,
                 ipaddress,
+                source_type=SourceType.HOST,
+                fetcher_type=FetcherType.TCP,
                 id_="agent",
                 persisted_section_dir=Path(os.devnull),
                 cache_dir=Path(os.devnull),
@@ -350,6 +362,8 @@ class TestMakeHostSectionsHosts:
             DSProgramSource(
                 HostName(f"{hostname}0"),
                 ipaddress,
+                source_type=SourceType.HOST,
+                fetcher_type=FetcherType.PROGRAM,
                 id_="agent",
                 persisted_section_dir=Path(os.devnull),
                 cache_dir=Path(os.devnull),
@@ -367,6 +381,8 @@ class TestMakeHostSectionsHosts:
             TCPSource(
                 HostName(f"{hostname}1"),
                 ipaddress,
+                source_type=SourceType.HOST,
+                fetcher_type=FetcherType.TCP,
                 id_="agent",
                 persisted_section_dir=Path(os.devnull),
                 cache_dir=Path(os.devnull),
@@ -385,6 +401,8 @@ class TestMakeHostSectionsHosts:
             TCPSource(
                 HostName(f"{hostname}2"),
                 ipaddress,
+                source_type=SourceType.HOST,
+                fetcher_type=FetcherType.TCP,
                 id_="agent",
                 persisted_section_dir=Path(os.devnull),
                 cache_dir=Path(os.devnull),

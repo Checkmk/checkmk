@@ -138,6 +138,7 @@ REQUIRED_ARGUMENTS: dict[str, list[str]] = {
         "ADDRESS",
     ],
     "agent_gcp": ["--project", "a", "--credentials", "foo", "--services", "gcs"],
+    "agent_cisco_meraki": ["HOSTNAME", "API_KEY"],
 }
 
 

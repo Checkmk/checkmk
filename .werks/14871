@@ -1,0 +1,17 @@
+Title: Windows agent's ProgramData directory is accessible only with admins permissions
+Class: security
+Compatible: compat
+Component: checks
+Date: 1665040913
+Edition: cre
+Knowledge: doc
+Level: 2
+State: unknown
+Version: 2.1.0p15
+
+Previous to this Werk every authenticated Windows user could read some sensitive data
+from the Windows agent working directory. To prevent issues with leaking sensitive data
+we restrict the permission to read data of the Windows agent.
+
+CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:N
+(https://www.first.org/cvss/calculator/3.1#CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:N)

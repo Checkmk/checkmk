@@ -2,6 +2,7 @@
 package lib
 
 versioning = load 'buildscripts/scripts/lib/versioning.groovy'
+downloads_path = "/var/downloads/checkmk/"
 
 def upload(Map args) {
     // needed args + desc:
@@ -104,9 +105,15 @@ def deploy_to_website(UPLOAD_URL, PORT, CMK_VERS) {
             // CMK_VERS can contain a rc information like v2.1.0p6-rc1. On the website, we only want to have official
             // releases.
             def TARGET_VERSION = versioning.strip_rc_number_from_version(CMK_VERS)
+
+            // We also do not keep rc versions on the archive, so we're cleaning up
             sh """
                 ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p ${PORT} ${UPLOAD_URL} \
-                    ln -sf /var/downloads/checkmk/${CMK_VERS} /smb-share-customer/checkmk/${TARGET_VERSION}
+                    " \
+                    mv ${downloads_path}${CMK_VERS} ${downloads_path}${TARGET_VERSION}; \
+                    ln -sf ${downloads_path}${TARGET_VERSION} /smb-share-customer/checkmk/${TARGET_VERSION}; \
+                    rm -r ${downloads_path}${TARGET_VERSION}-rc*; \
+                    "
             """
         }
     }

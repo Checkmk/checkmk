@@ -8,9 +8,6 @@ from typing import Dict, Iterable, List, Mapping, Sequence, Tuple
 from kubernetes import client  # type: ignore[import]
 
 from cmk.special_agents.utils_kubernetes.schemata import api
-from cmk.special_agents.utils_kubernetes.transform import (
-    dependent_object_owner_refererences_from_client,
-)
 
 
 def _create_api_controller(name: str, namespace: str | None, kind: str) -> api.Controller:
@@ -25,14 +22,7 @@ def _create_api_controller(name: str, namespace: str | None, kind: str) -> api.C
 def _match_controllers(
     pods: Iterable[client.V1Pod], object_to_owners: Mapping[str, api.OwnerReferences]
 ) -> Tuple[Mapping[str, Sequence[api.PodUID]], Mapping[api.PodUID, Sequence[api.Controller]]]:
-    """Matches controllers to the pods they control
-
-    >>> pod = client.V1Pod(metadata=client.V1ObjectMeta(name="test-pod", uid="pod", owner_references=[client.V1OwnerReference(api_version="v1", kind="Job", name="test-job", uid="job", controller=True)]))
-    >>> object_to_owners = {"job": [api.OwnerReference(uid='cronjob', controller=True, kind="CronJob", name="mycron", namespace='namespace_name')], "cronjob": []}
-    >>> _match_controllers([pod], object_to_owners)
-    ({'cronjob': ['pod']}, {'pod': [Controller(type_=<ControllerType.cronjob: 'cronjob'>, name='mycron', namespace='namespace_name')]})
-
-    """
+    """Matches controllers to the pods they control."""
     # owner_reference approach is taken from these two links:
     # https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
     # https://github.com/kubernetes-client/python/issues/946
@@ -58,9 +48,8 @@ def _match_controllers(
     pod_to_controllers: Dict[api.PodUID, List[api.Controller]] = {}
     for pod in pods:
         pod_uid = api.PodUID(pod.metadata.uid)
-        for owner in recursive_toplevel_owner_lookup(
-            list(dependent_object_owner_refererences_from_client(pod))
-        ):
+        pod_owners = object_to_owners[pod_uid]
+        for owner in recursive_toplevel_owner_lookup(pod_owners):
             controller_to_pods.setdefault(owner.uid, []).append(pod_uid)
             pod_to_controllers.setdefault(pod_uid, []).append(
                 _create_api_controller(

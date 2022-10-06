@@ -493,6 +493,7 @@ def create_api_data_v1(
     )
     object_to_owners = parse_object_to_owners(
         workload_resources_client=itertools.chain(
+            raw_api_data.raw_pods,
             raw_api_data.raw_deployments,
             raw_api_data.raw_daemonsets,
             raw_api_data.raw_statefulsets,

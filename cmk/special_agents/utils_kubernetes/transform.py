@@ -687,6 +687,7 @@ def resource_quota_from_client(
 
 
 WorkloadResource = Union[
+    client.V1Pod,
     client.V1Deployment,
     client.V1ReplicaSet,
     client.V1DaemonSet,

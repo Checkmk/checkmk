@@ -12,20 +12,11 @@ from kubernetes import client  # type: ignore[import]
 from cmk.special_agents.utils_kubernetes.controllers import _match_controllers
 from cmk.special_agents.utils_kubernetes.schemata import api
 
+POD_UID = "pod_uid"
+POD = client.V1Pod(metadata=client.V1ObjectMeta(uid=POD_UID))
+
 
 def test_controller_matched_to_pod() -> None:
-    pod_owner_references = {
-        "job": client.V1OwnerReference(
-            api_version="v1", kind="Job", name="test-job", uid="job_uid", controller=True
-        )
-    }
-    pod = client.V1Pod(
-        metadata=client.V1ObjectMeta(
-            name="test-pod",
-            uid="pod",
-            owner_references=[pod_owner_references["job"]],
-        )
-    )
     job_owner_reference = {
         "cronjob": api.OwnerReference(
             uid="cronjob_uid",
@@ -36,13 +27,14 @@ def test_controller_matched_to_pod() -> None:
         )
     }
     object_to_owners: Mapping[str, api.OwnerReferences] = {
+        POD_UID: [api.OwnerReference(kind="Job", name="test-job", uid="job_uid", controller=True)],
         "job_uid": [job_owner_reference["cronjob"]],
         "cronjob_uid": [],
     }
-    assert _match_controllers([pod], object_to_owners) == (
-        {"cronjob_uid": ["pod"]},
+    assert _match_controllers([POD], object_to_owners) == (
+        {"cronjob_uid": [POD_UID]},
         {
-            "pod": [
+            POD_UID: [
                 api.Controller(
                     type_=api.ControllerType.cronjob, name="mycron", namespace="namespace-name"
                 )
@@ -52,94 +44,57 @@ def test_controller_matched_to_pod() -> None:
 
 
 def test_controller_not_added_if_not_a_controller() -> None:
-    pod = client.V1Pod(
-        metadata=client.V1ObjectMeta(
-            name="test-pod",
-            uid="pod",
-            owner_references=[
-                client.V1OwnerReference(
-                    api_version="v1", kind="Job", name="test-job", uid="job_uid", controller=False
-                )
-            ],
-        )
-    )
     object_to_owners: Mapping[str, api.OwnerReferences] = {
+        POD_UID: [api.OwnerReference(kind="Job", name="test-job", uid="job_uid", controller=False)],
         "job_uid": [api.OwnerReference(uid="cronjob_uid", controller=True, kind="Job", name="myj")],
         "cronjob_uid": [],
     }
-    assert _match_controllers([pod], object_to_owners) == ({}, {})
+    assert _match_controllers([POD], object_to_owners) == ({}, {})
 
 
 def test_controller_not_added_if_not_a_controller_object_mapping() -> None:
-    pod = client.V1Pod(
-        metadata=client.V1ObjectMeta(
-            name="test-pod",
-            uid="pod",
-            owner_references=[
-                client.V1OwnerReference(
-                    api_version="v1", kind="Job", name="test-job", uid="job_uid", controller=True
-                )
-            ],
-        )
-    )
     object_to_owners: Mapping[str, api.OwnerReferences] = {
+        POD_UID: [api.OwnerReference(kind="Job", name="test-job", uid="job_uid", controller=True)],
         "job_uid": [
             api.OwnerReference(uid="cronjob_uid", controller=False, kind="CronJob", name="mycron")
         ],
         "cronjob_uid": [],
     }
-    assert _match_controllers([pod], object_to_owners) == ({}, {})
+    assert _match_controllers([POD], object_to_owners) == ({}, {})
 
 
 def test_controller_not_in_object_to_owners() -> None:
-    pod = client.V1Pod(
-        metadata=client.V1ObjectMeta(
-            name="test-pod",
-            uid="pod",
-            owner_references=[
-                client.V1OwnerReference(
-                    api_version="v1", kind="Job", name="test-job", uid="job_uid", controller=True
-                )
-            ],
-        )
-    )
-    object_to_owners: Mapping[str, api.OwnerReferences] = {"somethingelse": []}
-    assert _match_controllers([pod], object_to_owners) == ({}, {})
+    object_to_owners: Mapping[str, api.OwnerReferences] = {"somethingelse": [], POD_UID: []}
+    assert _match_controllers([POD], object_to_owners) == ({}, {})
 
 
 def test_pod_does_not_have_owner_ref() -> None:
-    pod = client.V1Pod(
-        metadata=client.V1ObjectMeta(name="test-pod", uid="pod", owner_references=None)
-    )
     object_to_owners: Mapping[str, api.OwnerReferences] = {
+        POD_UID: [],
         "job_uid": [
             api.OwnerReference(uid="cronjob_uid", controller=True, kind="CronJob", name="mycron")
         ],
         "cronjob_uid": [],
     }
-    assert _match_controllers([pod], object_to_owners) == ({}, {})
+    assert _match_controllers([POD], object_to_owners) == ({}, {})
 
 
 def test_multiple_owners() -> None:
-    pod = client.V1Pod(
-        metadata=client.V1ObjectMeta(
-            name="test-pod",
-            uid="pod",
-            owner_references=[
-                client.V1OwnerReference(
-                    api_version="v1", kind="Job", name="test-job", uid="job_uid", controller=True
-                ),
-                client.V1OwnerReference(
-                    api_version="v1",
-                    kind="ReplicaSet",
-                    name="replicas",
-                    uid="replica_uid",
-                    controller=True,
-                ),
-            ],
-        )
-    )
     object_to_owners: Mapping[str, api.OwnerReferences] = {
+        POD_UID: [
+            api.OwnerReference(
+                kind="Job",
+                name="test-job",
+                uid="job_uid",
+                controller=True,
+            ),
+            api.OwnerReference(
+                kind="ReplicaSet",
+                name="replicas",
+                uid="replica_uid",
+                controller=True,
+            ),
+        ],
         "job_uid": [
             api.OwnerReference(
                 uid="cronjob_uid",
@@ -161,13 +116,13 @@ def test_multiple_owners() -> None:
         ],
         "deployment_uid": [],
     }
-    assert _match_controllers([pod], object_to_owners) == (
+    assert _match_controllers([POD], object_to_owners) == (
         {
-            "cronjob_uid": ["pod"],
-            "deployment_uid": ["pod"],
+            "cronjob_uid": [POD_UID],
+            "deployment_uid": [POD_UID],
         },
         {
-            "pod": [
+            POD_UID: [
                 api.Controller(
                     type_=api.ControllerType.cronjob, name="mycron", namespace="ns-name"
                 ),

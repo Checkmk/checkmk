@@ -46,7 +46,7 @@ from cmk.gui.exceptions import MKGeneralException, MKMissingDataError, MKTimeout
 from cmk.gui.figures import create_figures_response, FigureResponseData
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import mandatory_parameter, request
+from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.pages import AjaxPage, page_registry, PageResult
@@ -1100,18 +1100,17 @@ def kubernetes_dashboard_breadcrumb(
         return breadcrumb
 
     # Cluster
-    cluster_name: str = mandatory_parameter(
-        k8s_ids["cluster"], context.get(k8s_ids["cluster"], {}).get(k8s_ids["cluster"])
-    )
-    cluster_host: str = (
+    cluster_name: str | None = context.get(k8s_ids["cluster"], {}).get(k8s_ids["cluster"])
+    cluster_host: str | None = (
         # take current host from context, if on the cluster dashboard
-        mandatory_parameter("host", context.get("host", {}).get("host"))
+        context.get("host", {}).get("host")
         if name == k8s_ids["cluster"]
         # else take the cluster-host from request (url)
-        else mandatory_parameter(
-            k8s_ids["cluster-host"], request.get_str_input(k8s_ids["cluster-host"])
-        )
+        else request.get_str_input(k8s_ids["cluster-host"])
     )
+    if not (cluster_name and cluster_host):
+        breadcrumb.append(BreadcrumbItem(title, makeuri(request, [("name", name)])))
+        return breadcrumb
     add_vars: HTTPVariables = [
         ("site", context.get("site", {}).get("site")),
         (k8s_ids["cluster"], cluster_name),
@@ -1134,9 +1133,10 @@ def kubernetes_dashboard_breadcrumb(
         return breadcrumb
 
     # Namespace
-    namespace_name: str = mandatory_parameter(
-        k8s_ids["namespace"], context.get(k8s_ids["namespace"], {}).get(k8s_ids["namespace"])
-    )
+    namespace_name: str | None = context.get(k8s_ids["namespace"], {}).get(k8s_ids["namespace"])
+    if not namespace_name:
+        breadcrumb.append(BreadcrumbItem(title, makeuri(request, [("name", name)])))
+        return breadcrumb
     add_vars.append((k8s_ids["namespace"], namespace_name))
     breadcrumb.append(
         BreadcrumbItem(
@@ -1173,6 +1173,8 @@ def kubernetes_dashboard_breadcrumb(
                 )
             )
             break
+    if not obj_name:
+        breadcrumb.append(BreadcrumbItem(title, makeuri(request, [("name", name)])))
 
     return breadcrumb
 

@@ -42,6 +42,7 @@ def source_fixture():
         missing_sys_description=False,
         sections={},
         check_intervals={},
+        keep_outdated=False,
         snmp_config=SNMPHostConfig(
             hostname=hostname,
             ipaddress="1.2.3.4",
@@ -117,6 +118,7 @@ class TestSNMPSummaryResult:
             on_scan_error=OnError.RAISE,
             missing_sys_description=False,
             sections={},
+            keep_outdated=False,
             check_intervals={},
             snmp_config=SNMPHostConfig(
                 hostname="hostname",

@@ -39,6 +39,7 @@ def test_attribute_defaults(ipaddress: HostAddress, monkeypatch: MonkeyPatch) ->
         cache_dir=Path(os.devnull),
         simulation_mode=True,
         agent_simulator=True,
+        keep_outdated=False,
         time_settings=[],
         translation={},
         encoding_fallback="ascii",

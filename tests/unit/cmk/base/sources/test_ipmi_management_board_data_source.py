@@ -36,6 +36,7 @@ def test_attribute_defaults(monkeypatch) -> None:  # type:ignore[no-untyped-def]
         id_="mgmt_ipmi",
         persisted_section_dir=Path(os.devnull),
         cache_dir=Path(os.devnull),
+        keep_outdated=False,
         simulation_mode=True,
         agent_simulator=True,
         translation={},

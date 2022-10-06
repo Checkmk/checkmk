@@ -32,6 +32,7 @@ class TestDSProgramChecker:
             simulation_mode=True,
             agent_simulator=True,
             translation={},
+            keep_outdated=False,
             encoding_fallback="ascii",
             check_interval=0,
             is_cmc=False,

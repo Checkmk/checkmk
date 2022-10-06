@@ -27,7 +27,6 @@ import cmk.base.config as config
 import cmk.base.modes
 import cmk.base.modes.check_mk
 from cmk.base.sources import Source
-from cmk.base.sources.agent import AgentSource
 from cmk.base.sources.snmp import SNMPSource
 from cmk.base.submitters import get_submitter
 
@@ -75,7 +74,7 @@ def _patch_data_source(mocker, **kwargs):
         "max_age": config.max_cachefile_age(),
         "disabled": False,
         "use_only_cache": False,
-        "use_outdated_persisted_sections": False,
+        "keep_outdated": False,
         "on_error": "raise",
     }
     defaults.update(kwargs)
@@ -88,12 +87,7 @@ def _patch_data_source(mocker, **kwargs):
         assert file_cache.use_outdated == defaults["use_outdated"]
         assert file_cache.max_age == defaults["max_age"]
 
-        if isinstance(self, AgentSource):
-            assert (
-                self.use_outdated_persisted_sections == defaults["use_outdated_persisted_sections"]
-            )
-
-        elif isinstance(self, SNMPSource):
+        if isinstance(self, SNMPSource):
             assert self.on_snmp_scan_error == defaults["on_error"]
 
         result = callback(self, *args, **kwargs)
@@ -153,7 +147,7 @@ def without_inventory_plugins(monkeypatch):
 @pytest.mark.parametrize(
     ("force"),
     [
-        (True, {"use_outdated_persisted_sections": True}),
+        (True, {"keep_outdated": True}),
         (False, {}),
     ],
     ids=["force=True", "force=False"],

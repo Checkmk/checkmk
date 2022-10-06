@@ -35,8 +35,6 @@ class Source(Generic[TRawData, TRawDataSection], abc.ABC):
 
     """
 
-    use_outdated_persisted_sections: bool = False
-
     def __init__(
         self,
         hostname: HostName,

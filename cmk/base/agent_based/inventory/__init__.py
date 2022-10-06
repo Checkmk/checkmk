@@ -23,6 +23,7 @@ from cmk.utils.log import console
 from cmk.utils.structured_data import StructuredDataNode, StructuredDataStore
 from cmk.utils.type_defs import EVERYTHING, HostName, InventoryPluginName, result, ServiceState
 
+from cmk.core_helpers.cache import FileCacheGlobals
 from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
 
@@ -278,6 +279,7 @@ def _inventorize_host(
             on_scan_error=OnError.RAISE,
             simulation_mode=config.simulation_mode,
             agent_simulator=config.agent_simulator,
+            keep_outdated=FileCacheGlobals.keep_outdated,
             translation=config.get_piggyback_translations(host_config.hostname),
             encoding_fallback=config.fallback_agent_output_encoding,
             missing_sys_description=config.get_config_cache().in_binary_hostlist(

@@ -44,6 +44,7 @@ from cmk.utils.type_defs import (
     state_markers,
 )
 
+from cmk.core_helpers.cache import FileCacheGlobals
 from cmk.core_helpers.protocol import FetcherMessage, FetcherType
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
 
@@ -187,6 +188,7 @@ def _commandline_checking(
             on_scan_error=OnError.RAISE,
             simulation_mode=config.simulation_mode,
             agent_simulator=config.agent_simulator,
+            keep_outdated=FileCacheGlobals.keep_outdated,
             translation=config.get_piggyback_translations(host_config.hostname),
             encoding_fallback=config.fallback_agent_output_encoding,
             missing_sys_description=config.get_config_cache().in_binary_hostlist(

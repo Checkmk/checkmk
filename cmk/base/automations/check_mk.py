@@ -66,6 +66,7 @@ from cmk.snmplib.type_defs import BackendOIDSpec, BackendSNMPTree, SNMPCredentia
 
 import cmk.core_helpers.cache
 from cmk.core_helpers import factory
+from cmk.core_helpers.cache import FileCacheGlobals
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION
 
 import cmk.base.agent_based.discovery as discovery
@@ -1380,6 +1381,7 @@ class AutomationDiagHost(Automation):
             ipaddress,
             simulation_mode=config.simulation_mode,
             agent_simulator=config.agent_simulator,
+            keep_outdated=FileCacheGlobals.keep_outdated,
             translation=config.get_piggyback_translations(host_config.hostname),
             encoding_fallback=config.fallback_agent_output_encoding,
             missing_sys_description=config.get_config_cache().in_binary_hostlist(
@@ -1403,6 +1405,7 @@ class AutomationDiagHost(Automation):
                     cache_dir=Path(data_source_cache_dir) / "agent",
                     simulation_mode=config.simulation_mode,
                     agent_simulator=config.agent_simulator,
+                    keep_outdated=source.keep_outdated,
                     translation=config.get_piggyback_translations(host_config.hostname),
                     encoding_fallback=config.fallback_agent_output_encoding,
                     check_interval=host_config.check_mk_check_interval,
@@ -1420,6 +1423,7 @@ class AutomationDiagHost(Automation):
                     cache_dir=source.file_cache_base_path,
                     simulation_mode=source.simulation_mode,
                     agent_simulator=source.agent_simulator,
+                    keep_outdated=source.keep_outdated,
                     translation=source.translation,
                     encoding_fallback=source.encoding_fallback,
                     check_interval=source.check_interval,
@@ -1735,14 +1739,13 @@ class AutomationGetAgentOutput(Automation):
         try:
             ipaddress = config.lookup_ip_address(host_config)
             if ty == "agent":
-                cmk.core_helpers.cache.FileCacheGlobals.maybe = (
-                    not cmk.core_helpers.cache.FileCacheGlobals.disabled
-                )
+                FileCacheGlobals.maybe = not FileCacheGlobals.disabled
                 for source in sources.make_non_cluster_sources(
                     host_config,
                     ipaddress,
                     simulation_mode=config.simulation_mode,
                     agent_simulator=config.agent_simulator,
+                    keep_outdated=FileCacheGlobals.keep_outdated,
                     translation=config.get_piggyback_translations(host_config.hostname),
                     encoding_fallback=config.fallback_agent_output_encoding,
                     missing_sys_description=config.get_config_cache().in_binary_hostlist(

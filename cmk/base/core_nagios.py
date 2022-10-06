@@ -1384,12 +1384,14 @@ def _plugins_for_special_agents(host_config: HostConfig) -> Iterable[CheckPlugin
         return "agent_{name}"
 
     yield from (
+        # TODO(ml): The sources are not used or needed here.
         special_to_agent_plugin_file_name(s.id)
         for s in sources.make_non_cluster_sources(
             host_config,
             ipaddress,
             simulation_mode=config.simulation_mode,
             agent_simulator=config.agent_simulator,
+            keep_outdated=False,
             translation=config.get_piggyback_translations(host_config.hostname),
             encoding_fallback=config.fallback_agent_output_encoding,
             missing_sys_description=config.get_config_cache().in_binary_hostlist(

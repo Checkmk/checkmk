@@ -42,8 +42,8 @@ from cmk.utils.type_defs import (
 
 import cmk.snmplib.snmp_modes as snmp_modes
 
-import cmk.core_helpers.cache
 import cmk.core_helpers.factory as snmp_factory
+from cmk.core_helpers.cache import FileCacheGlobals
 from cmk.core_helpers.type_defs import Mode as FetchMode
 from cmk.core_helpers.type_defs import NO_SELECTION, SectionNameCollection
 
@@ -173,14 +173,14 @@ modes.register_general_option(
 def _handle_fetcher_options(options: Mapping[str, object]) -> None:
 
     if options.get("cache", False):
-        cmk.core_helpers.cache.FileCacheGlobals.maybe = True
-        cmk.core_helpers.cache.FileCacheGlobals.use_outdated = True
+        FileCacheGlobals.maybe = True
+        FileCacheGlobals.use_outdated = True
 
     if options.get("no-cache", False):
-        cmk.core_helpers.cache.FileCacheGlobals.disabled = True
+        FileCacheGlobals.disabled = True
 
     if options.get("no-tcp", False):
-        cmk.core_helpers.cache.FileCacheGlobals.tcp_use_only_cache = True
+        FileCacheGlobals.tcp_use_only_cache = True
 
     if options.get("usewalk", False):
         snmp_factory.force_stored_walks()
@@ -433,6 +433,7 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
             simulation_mode=config.simulation_mode,
             agent_simulator=config.agent_simulator,
             translation=config.get_piggyback_translations(host_config.hostname),
+            keep_outdated=FileCacheGlobals.keep_outdated,
             encoding_fallback=config.fallback_agent_output_encoding,
             missing_sys_description=config.get_config_cache().in_binary_hostlist(
                 host_config.hostname,
@@ -1692,11 +1693,11 @@ _DiscoveryOptions = TypedDict(
 def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     _handle_fetcher_options(options)
     hostnames = modes.parse_hostname_list(args)
-    cmk.core_helpers.cache.FileCacheGlobals.maybe = True
+    FileCacheGlobals.maybe = True
     if not hostnames:
         # In case of discovery without host restriction, use the cache file
         # by default. Otherwise Checkmk would have to connect to ALL hosts.
-        cmk.core_helpers.cache.FileCacheGlobals.use_outdated = True
+        FileCacheGlobals.use_outdated = True
 
     selected_sections, run_plugin_names = _extract_plugin_selection(options, CheckPluginName)
     discovery.commandline_discovery(
@@ -1927,13 +1928,11 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
     else:
         # No hosts specified: do all hosts and force caching
         hostnames = sorted(config_cache.all_active_hosts())
-        cmk.core_helpers.cache.FileCacheGlobals.maybe = (
-            not cmk.core_helpers.cache.FileCacheGlobals.disabled
-        )
+        FileCacheGlobals.maybe = not FileCacheGlobals.disabled
         console.verbose("Doing HW/SW inventory on all hosts\n")
 
     if "force" in options:
-        sources.agent.AgentSource.use_outdated_persisted_sections = True
+        FileCacheGlobals.keep_outdated = True
 
     selected_sections, run_plugin_names = _extract_plugin_selection(options, InventoryPluginName)
     inventory.commandline_inventory(

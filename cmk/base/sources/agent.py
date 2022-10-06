@@ -34,6 +34,7 @@ class AgentSource(Source[AgentRawData, AgentRawDataSection]):
         translation: TranslationOptions,
         encoding_fallback: str,
         check_interval: int,
+        keep_outdated: bool,
     ):
         super().__init__(
             hostname,
@@ -42,6 +43,7 @@ class AgentSource(Source[AgentRawData, AgentRawDataSection]):
             fetcher_type=fetcher_type,
             id_=id_,
         )
+        self.keep_outdated: Final = keep_outdated
         self.translation: Final = translation
         self.encoding_fallback: Final = encoding_fallback
         self.agent_simulator: Final = agent_simulator
@@ -56,7 +58,7 @@ class AgentSource(Source[AgentRawData, AgentRawDataSection]):
                 logger=self._logger,
             ),
             check_interval=self.check_interval,
-            keep_outdated=self.use_outdated_persisted_sections,
+            keep_outdated=self.keep_outdated,
             translation=self.translation,
             encoding_fallback=self.encoding_fallback,
             simulation=self.agent_simulator,

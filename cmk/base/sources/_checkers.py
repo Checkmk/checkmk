@@ -177,6 +177,7 @@ class _Builder:
         encoding_fallback: str,
         missing_sys_description: bool,
         file_cache_max_age: MaxAge,
+        keep_outdated: bool,
     ) -> None:
         super().__init__()
         self.host_config: Final = host_config
@@ -190,6 +191,7 @@ class _Builder:
         self.encoding_fallback: Final = encoding_fallback
         self.missing_sys_description: Final = missing_sys_description
         self.file_cache_max_age: Final = file_cache_max_age
+        self.keep_outdated: Final = keep_outdated
         self._elems: Dict[str, Source] = {}
 
         self._initialize()
@@ -258,6 +260,7 @@ class _Builder:
                         piggybacked_hostname=self.host_config.hostname
                     ),
                     translation=self.translation,
+                    keep_outdated=self.keep_outdated,
                     encoding_fallback=self.encoding_fallback,
                     check_interval=self.host_config.check_mk_check_interval,
                     is_piggyback_host=self.host_config.is_piggyback_host,
@@ -310,6 +313,7 @@ class _Builder:
                     self.host_config,
                     selected_sections=self.selected_sections,
                 ),
+                keep_outdated=self.keep_outdated,
                 check_intervals=make_check_intervals(
                     self.host_config,
                     selected_sections=self.selected_sections,
@@ -359,6 +363,7 @@ class _Builder:
                     sections=make_sections(
                         self.host_config, selected_sections=self.selected_sections
                     ),
+                    keep_outdated=self.keep_outdated,
                     check_intervals=make_check_intervals(
                         self.host_config, selected_sections=self.selected_sections
                     ),
@@ -381,6 +386,7 @@ class _Builder:
                     agent_simulator=self.agent_simulator,
                     translation=self.translation,
                     encoding_fallback=self.encoding_fallback,
+                    keep_outdated=self.keep_outdated,
                     check_interval=self.host_config.check_mk_check_interval,
                     management_credentials=self.host_config.ipmi_credentials,
                     file_cache_max_age=self.file_cache_max_age,
@@ -424,6 +430,7 @@ class _Builder:
                 stdin=None,
                 simulation_mode=self.simulation_mode,
                 agent_simulator=self.agent_simulator,
+                keep_outdated=self.keep_outdated,
                 translation=self.translation,
                 encoding_fallback=self.encoding_fallback,
                 check_interval=self.host_config.check_mk_check_interval,
@@ -443,6 +450,7 @@ class _Builder:
                 cache_dir=Path(cmk.utils.paths.data_source_cache_dir) / "push-agent",
                 simulation_mode=self.simulation_mode,
                 agent_simulator=self.agent_simulator,
+                keep_outdated=self.keep_outdated,
                 translation=self.translation,
                 encoding_fallback=self.encoding_fallback,
                 check_interval=self.host_config.check_mk_check_interval,
@@ -465,6 +473,7 @@ class _Builder:
                 ),
                 simulation_mode=self.simulation_mode,
                 agent_simulator=self.agent_simulator,
+                keep_outdated=self.keep_outdated,
                 translation=self.translation,
                 encoding_fallback=self.encoding_fallback,
                 check_interval=self.host_config.check_mk_check_interval,
@@ -502,6 +511,7 @@ class _Builder:
                 ),
                 cache_dir=Path(cmk.utils.paths.data_source_cache_dir) / make_id(agentname),
                 simulation_mode=self.simulation_mode,
+                keep_outdated=self.keep_outdated,
                 agent_simulator=self.agent_simulator,
                 translation=self.translation,
                 encoding_fallback=self.encoding_fallback,
@@ -522,6 +532,7 @@ def make_non_cluster_sources(
     on_scan_error: OnError = OnError.RAISE,
     simulation_mode: bool,
     agent_simulator: bool,
+    keep_outdated: bool,
     translation: TranslationOptions,
     encoding_fallback: str,
     missing_sys_description: bool,
@@ -536,6 +547,7 @@ def make_non_cluster_sources(
         force_snmp_cache_refresh=force_snmp_cache_refresh,
         simulation_mode=simulation_mode,
         agent_simulator=agent_simulator,
+        keep_outdated=keep_outdated,
         translation=translation,
         encoding_fallback=encoding_fallback,
         missing_sys_description=missing_sys_description,
@@ -574,6 +586,7 @@ def make_cluster_sources(
     ip_lookup: Callable[[HostName], Optional[HostAddress]],
     simulation_mode: bool,
     agent_simulator: bool,
+    keep_outdated: bool,
     translation: TranslationOptions,
     encoding_fallback: str,
     missing_sys_description: bool,
@@ -591,6 +604,7 @@ def make_cluster_sources(
             force_snmp_cache_refresh=False,
             simulation_mode=simulation_mode,
             agent_simulator=agent_simulator,
+            keep_outdated=keep_outdated,
             translation=translation,
             encoding_fallback=encoding_fallback,
             missing_sys_description=missing_sys_description,
@@ -609,6 +623,7 @@ def make_sources(
     on_scan_error: OnError,
     simulation_mode: bool,
     agent_simulator: bool,
+    keep_outdated: bool,
     translation: TranslationOptions,
     encoding_fallback: str,
     missing_sys_description: bool,
@@ -623,6 +638,7 @@ def make_sources(
             on_scan_error=on_scan_error,
             simulation_mode=simulation_mode,
             agent_simulator=agent_simulator,
+            keep_outdated=keep_outdated,
             translation=translation,
             encoding_fallback=encoding_fallback,
             missing_sys_description=missing_sys_description,
@@ -634,6 +650,7 @@ def make_sources(
             ip_lookup=ip_lookup,
             simulation_mode=simulation_mode,
             agent_simulator=agent_simulator,
+            keep_outdated=keep_outdated,
             translation=translation,
             encoding_fallback=encoding_fallback,
             missing_sys_description=missing_sys_description,

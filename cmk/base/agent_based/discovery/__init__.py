@@ -54,6 +54,7 @@ from cmk.utils.type_defs import (
 from cmk.automations.results import CheckPreviewEntry
 
 import cmk.core_helpers.cache
+from cmk.core_helpers.cache import FileCacheGlobals
 from cmk.core_helpers.protocol import FetcherMessage
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
 
@@ -183,6 +184,7 @@ def commandline_discovery(
                     force_snmp_cache_refresh=False,
                     on_scan_error=on_error,
                     simulation_mode=config.simulation_mode,
+                    keep_outdated=FileCacheGlobals.keep_outdated,
                     agent_simulator=config.agent_simulator,
                     translation=config.get_piggyback_translations(host_config.hostname),
                     encoding_fallback=config.fallback_agent_output_encoding,
@@ -357,6 +359,7 @@ def automation_discovery(
                 on_scan_error=on_error,
                 simulation_mode=config.simulation_mode,
                 agent_simulator=config.agent_simulator,
+                keep_outdated=FileCacheGlobals.keep_outdated,
                 translation=config.get_piggyback_translations(host_config.hostname),
                 encoding_fallback=config.fallback_agent_output_encoding,
                 missing_sys_description=config.get_config_cache().in_binary_hostlist(
@@ -608,6 +611,7 @@ def _commandline_check_discovery(
             on_scan_error=OnError.RAISE,
             simulation_mode=config.simulation_mode,
             agent_simulator=config.agent_simulator,
+            keep_outdated=FileCacheGlobals.keep_outdated,
             translation=config.get_piggyback_translations(host_config.hostname),
             encoding_fallback=config.fallback_agent_output_encoding,
             missing_sys_description=config.get_config_cache().in_binary_hostlist(
@@ -1306,6 +1310,7 @@ def get_check_preview(
             simulation_mode=config.simulation_mode,
             agent_simulator=config.agent_simulator,
             translation=config.get_piggyback_translations(host_config.hostname),
+            keep_outdated=FileCacheGlobals.keep_outdated,
             encoding_fallback=config.fallback_agent_output_encoding,
             missing_sys_description=config.get_config_cache().in_binary_hostlist(
                 host_config.hostname,

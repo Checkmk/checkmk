@@ -25,6 +25,7 @@ def test_attribute_defaults(monkeypatch) -> None:  # type:ignore[no-untyped-def]
         cache_dir=Path(os.devnull),
         simulation_mode=True,
         agent_simulator=True,
+        keep_outdated=False,
         translation={},
         encoding_fallback="ascii",
         check_interval=0,

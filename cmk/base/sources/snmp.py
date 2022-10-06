@@ -30,6 +30,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
         on_scan_error: OnError,
         missing_sys_description: bool,
         sections: Mapping[SectionName, SectionMeta],
+        keep_outdated: bool,
         check_intervals: Mapping[SectionName, Optional[int]],
         snmp_config: SNMPHostConfig,
         do_status_data_inventory: bool,
@@ -45,6 +46,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
         self.snmp_config: Final = snmp_config
         self.missing_sys_description: Final = missing_sys_description
         self.sections: Final = sections
+        self.keep_outdated: Final = keep_outdated
         self.check_intervals: Final = check_intervals
         self.do_status_data_inventory: Final = do_status_data_inventory
         self.on_snmp_scan_error: Final = on_scan_error
@@ -62,6 +64,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
         on_scan_error: OnError,
         missing_sys_description: bool,
         sections: Mapping[SectionName, SectionMeta],
+        keep_outdated: bool,
         check_intervals: Mapping[SectionName, Optional[int]],
         snmp_config: SNMPHostConfig,
         do_status_data_inventory: bool,
@@ -76,6 +79,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             on_scan_error=on_scan_error,
             missing_sys_description=missing_sys_description,
             sections=sections,
+            keep_outdated=keep_outdated,
             check_intervals=check_intervals,
             snmp_config=snmp_config,
             do_status_data_inventory=do_status_data_inventory,
@@ -93,6 +97,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
         on_scan_error: OnError,
         missing_sys_description: bool,
         sections: Mapping[SectionName, SectionMeta],
+        keep_outdated: bool,
         check_intervals: Mapping[SectionName, Optional[int]],
         snmp_config: SNMPHostConfig,
         do_status_data_inventory: bool,
@@ -107,6 +112,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             on_scan_error=on_scan_error,
             missing_sys_description=missing_sys_description,
             sections=sections,
+            keep_outdated=keep_outdated,
             check_intervals=check_intervals,
             snmp_config=snmp_config,
             do_status_data_inventory=do_status_data_inventory,
@@ -134,7 +140,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
                 logger=self._logger,
             ),
             check_intervals=self.check_intervals,
-            keep_outdated=self.use_outdated_persisted_sections,
+            keep_outdated=self.keep_outdated,
             logger=self._logger,
         )
 

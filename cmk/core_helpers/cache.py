@@ -475,3 +475,5 @@ class FileCacheGlobals:
     # Set by the --no-tcp option from discovery, inventory, inventory as check,
     # and dump agent.
     tcp_use_only_cache = False
+    # Set by the --force option from inventory.
+    keep_outdated = False

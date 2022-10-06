@@ -2,9 +2,9 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Mapping, MutableMapping, NamedTuple
+from typing import Any, Mapping
 
-from cmk.base.api.agent_based.type_defs import StringTable
+from cmk.base.plugins.agent_based.vxvm_multipath import VXVMMultipathSection
 
 # Example output:
 # <<<vxvm_multipath>>>
@@ -13,39 +13,6 @@ from cmk.base.api.agent_based.type_defs import StringTable
 # LIO-Sechs_1          ENABLED      aluadisk     1      1     0     LIO-Sechs
 # LIO-Sechs_2          ENABLED      aluadisk     1      1     0     LIO-Sechs
 #
-
-
-class VXVMMultipathDisk(NamedTuple):
-    name: str
-    status: str
-    paths: float
-    active_paths: float
-    inactive_paths: float
-    enclosure: str
-
-
-VXVMMultipathSection = Mapping[str, VXVMMultipathDisk]
-
-
-def parse_vxvm_multipath(string_table: StringTable) -> VXVMMultipathSection:
-    vxvm_multipath_disks: MutableMapping[str, VXVMMultipathDisk] = {}
-
-    for line in string_table:
-        try:
-            name, status, _enc_type, paths, active_paths, inactive_paths, enclosure = line
-        except ValueError:
-            continue
-
-        vxvm_multipath_disks[name] = VXVMMultipathDisk(
-            name=name,
-            status=status,
-            paths=float(paths),
-            active_paths=float(active_paths),
-            inactive_paths=float(inactive_paths),
-            enclosure=enclosure,
-        )
-
-    return vxvm_multipath_disks
 
 
 def discover_vxvm_multipath(section: VXVMMultipathSection):
@@ -74,7 +41,7 @@ def check_vxvm_multipath(
 
 
 check_info["vxvm_multipath"] = {
-    "parse_function": parse_vxvm_multipath,
+    # Section already migrated!
     "check_function": check_vxvm_multipath,
     "inventory_function": discover_vxvm_multipath,
     "service_description": "Multipath %s",

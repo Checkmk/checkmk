@@ -9,11 +9,12 @@ import pytest
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.type_defs import CheckPluginName, SectionName
+from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.vxvm_multipath import parse_vxvm_multipath
 
 STRING_TABLE = [
     ["san_vc0_0001da", "ENABLED", "SAN_VC", "8", "8", "0", "san_vc0"],
@@ -59,12 +60,12 @@ def _vxvm_multipath_check_plugin(fix_register: FixRegister) -> CheckPlugin:
 )
 def test_discover_vxvm_multipath(
     check: CheckPlugin,
-    fix_register: FixRegister,
     section: StringTable,
     expected_discovery_result: Sequence[Service],
 ) -> None:
-    parse_vxvm = fix_register.agent_sections[SectionName("vxvm_multipath")].parse_function
-    assert list(check.discovery_function(parse_vxvm(section))) == expected_discovery_result
+    assert (
+        list(check.discovery_function(parse_vxvm_multipath(section))) == expected_discovery_result
+    )
 
 
 @pytest.mark.parametrize(
@@ -118,19 +119,17 @@ def test_discover_vxvm_multipath(
 )
 def test_check_vxvm_multipath(
     check: CheckPlugin,
-    fix_register: FixRegister,
     item: str,
     section: StringTable,
     expected_check_result: Sequence[Result],
 ) -> None:
-    parse_vxvm = fix_register.agent_sections[SectionName("vxvm_multipath")].parse_function
 
     assert (
         list(
             check.check_function(
                 item=item,
                 params={},
-                section=parse_vxvm(section),
+                section=parse_vxvm_multipath(section),
             )
         )
         == expected_check_result

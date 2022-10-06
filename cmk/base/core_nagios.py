@@ -1291,11 +1291,11 @@ if '-d' in sys.argv:
         '                monitoring_core="nagios",\n'
         "                host_name=%r,\n"
         "                dry_run=False,\n"
-        "                show_perfdata=False,\n"
         '                perfdata_format="standard",\n'
-        "                active_check_handler=lambda *args: None,\n"
-        "                keepalive=False,\n"
-        "            )\n"
+        "                show_perfdata=False,\n"
+        "            ),\n"
+        "           active_check_handler=lambda *args: None,\n"
+        "           keepalive=False,\n"
         "        )\n"
         "    )\n" % (hostname, hostname)
     )

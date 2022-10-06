@@ -227,7 +227,6 @@ def test_section_parse_function_does_something(fix_register) -> None:  # type:ig
         "vms_queuejobs",
         "vms_users",
         "vnx_version",
-        "vxvm_enclosures",
         "vxvm_multipath",
         "vxvm_objstatus",
         "windows_broadcom_bonding",

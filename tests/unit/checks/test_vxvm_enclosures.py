@@ -9,7 +9,7 @@ import pytest
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.type_defs import CheckPluginName
+from cmk.utils.type_defs import CheckPluginName, SectionName
 
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import StringTable
@@ -46,20 +46,25 @@ def _vxvm_enclosures_check_plugin(fix_register: FixRegister) -> CheckPlugin:
         pytest.param(
             STRING_TABLE_WITH_ERROR,
             [
-                Service(item="============"),
                 Service(item="san_vc0"),
                 Service(item="md36xxf0"),
             ],
-            id="Discovery with section that has an error.",
+            id="Discovery with section that has an error. Now the check can handle 'bad' input.",
         ),
     ],
 )
 def test_discover_vxvm_multipath(
     check: CheckPlugin,
+    fix_register: FixRegister,
     section: StringTable,
     expected_discovery_result: Sequence[Service],
 ) -> None:
-    assert list(check.discovery_function(section)) == expected_discovery_result
+    parse_vxvm_enclosures = fix_register.agent_sections[
+        SectionName("vxvm_enclosures")
+    ].parse_function
+    assert (
+        list(check.discovery_function(parse_vxvm_enclosures(section))) == expected_discovery_result
+    )
 
 
 @pytest.mark.parametrize(
@@ -102,30 +107,21 @@ def test_discover_vxvm_multipath(
 )
 def test_check_vxvm_enclosures(
     check: CheckPlugin,
+    fix_register: FixRegister,
     item: str,
     section: StringTable,
     expected_check_result: Sequence[Result],
 ) -> None:
+    parse_vxvm_enclosures = fix_register.agent_sections[
+        SectionName("vxvm_enclosures")
+    ].parse_function
     assert (
         list(
             check.check_function(
                 item=item,
                 params={},
-                section=section,
+                section=parse_vxvm_enclosures(section),
             )
         )
         == expected_check_result
     )
-
-
-def test_check_vxvm_enclosures_with_error_section(
-    check: CheckPlugin,
-) -> None:
-    with pytest.raises(IndexError):
-        assert list(
-            check.check_function(
-                item="======",
-                params={},
-                section=[["======"]],
-            )
-        )

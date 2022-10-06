@@ -1,0 +1,13 @@
+Title: Docker monitoring: Prevent intermittent alerts due to race conditions
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1665069250
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p15
+
+If a docker container or image is removed while the docker agent plugin is collecting data, it could lead to temporary alerts such as "no such image"/"no such container" in the node info service and "count not present in agent output" in the containers service.
+The agent plugin now handles such cases without producing any alerts.

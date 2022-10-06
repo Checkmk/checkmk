@@ -9,7 +9,7 @@ import pytest
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.type_defs import CheckPluginName
+from cmk.utils.type_defs import CheckPluginName, SectionName
 
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import StringTable
@@ -49,21 +49,22 @@ def _vxvm_multipath_check_plugin(fix_register: FixRegister) -> CheckPlugin:
         pytest.param(
             STRING_TABLE_WITH_ERROR,
             [
-                Service(item="===================================="),
                 Service(item="san_vc0_0001da"),
                 Service(item="san_vc0_0001dc"),
                 Service(item="md36xxf0_4"),
             ],
-            id="Discovery with section that has an error.",
+            id="Discovery with section that has an error. Now this does not make a difference, since the parse function ignores the 'bad' input.",
         ),
     ],
 )
 def test_discover_vxvm_multipath(
     check: CheckPlugin,
+    fix_register: FixRegister,
     section: StringTable,
     expected_discovery_result: Sequence[Service],
 ) -> None:
-    assert list(check.discovery_function(section)) == expected_discovery_result
+    parse_vxvm = fix_register.agent_sections[SectionName("vxvm_multipath")].parse_function
+    assert list(check.discovery_function(parse_vxvm(section))) == expected_discovery_result
 
 
 @pytest.mark.parametrize(
@@ -117,30 +118,20 @@ def test_discover_vxvm_multipath(
 )
 def test_check_vxvm_multipath(
     check: CheckPlugin,
+    fix_register: FixRegister,
     item: str,
     section: StringTable,
     expected_check_result: Sequence[Result],
 ) -> None:
+    parse_vxvm = fix_register.agent_sections[SectionName("vxvm_multipath")].parse_function
+
     assert (
         list(
             check.check_function(
                 item=item,
                 params={},
-                section=section,
+                section=parse_vxvm(section),
             )
         )
         == expected_check_result
     )
-
-
-def test_check_vxvm_multipath_with_error_section(
-    check: CheckPlugin,
-) -> None:
-    with pytest.raises(ValueError):
-        assert list(
-            check.check_function(
-                item="random_item",
-                params={},
-                section=[["===================================="]],
-            )
-        )

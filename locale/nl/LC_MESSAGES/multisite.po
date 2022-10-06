@@ -664,10 +664,6 @@ msgid "%s: No discovery result"
 msgstr "%s: Geen ontdekkingsresultaat"
 
 #, python-format
-msgid "%s: No such agent output"
-msgstr "%s: Geen uitvoer van dergelijke agent"
-
-#, python-format
 msgid "%s: Not using SSL. Consider enabling it in the connection settings."
 msgstr ""
 "%s: Maakt geen gebruik van SSL. Overweeg het aan te zetten in de connectie "
@@ -3117,6 +3113,10 @@ msgstr "Actief gastgeheugen"
 #, fuzzy
 msgid "Active in time period"
 msgstr "Actief in tijdsperiode"
+
+#, fuzzy
+msgid "Active jobs"
+msgstr "Actieve gastheren"
 
 msgid "Active modems"
 msgstr "Actieve modems"
@@ -11089,6 +11089,10 @@ msgid "Convert imported User-IDs to lower case during synchronization."
 msgstr ""
 "Converteer geïmporteerde User-IDs naar kleine letters tijdens synchronisatie."
 
+#, fuzzy
+msgid "Convert unit to"
+msgstr "Maak verbinding met"
+
 msgid "Cooldown before retrying failed remote or local delivery"
 msgstr ""
 "Afkoeling voor het opnieuw proberen van mislukte aflevering op afstand of "
@@ -13306,6 +13310,14 @@ msgstr ""
 "gezondheid van componenten en ontslagen waarschuwingen."
 
 msgid "Degree Celsius"
+msgstr "Graad Celsius"
+
+#, fuzzy
+msgid "Degree Fahrenheit"
+msgstr "Fahrenheit"
+
+#, fuzzy
+msgid "Degree Kelvin"
 msgstr "Graad Celsius"
 
 msgid "Delay event creation"
@@ -15651,6 +15663,10 @@ msgstr "Geen compressie toepassen"
 
 msgid "Don't change state"
 msgstr "Verander niet van toestand"
+
+#, fuzzy
+msgid "Don't convert graph unit"
+msgstr "Toon de grafiektitel niet"
 
 msgid "Don't create a group service for the following groups"
 msgstr "Maak geen groepsdienst aan voor de volgende groepen"
@@ -18293,6 +18309,10 @@ msgstr "Kan peer-certificaat niet ophalen (%s)"
 msgid "Failed to find matching certificate in chain"
 msgstr "Geen overeenkomend certificaat gevonden in keten"
 
+#, fuzzy, python-format
+msgid "Failed to get audit logs from sites: %s."
+msgstr "Kan geen host aanmaken vanaf regel %d: %s"
+
 #, python-format
 msgid "Failed to get the status from DCD (%s)"
 msgstr "Mislukt om de status van DCD te krijgen (%s)"
@@ -19955,6 +19975,10 @@ msgstr "Generieke string"
 
 msgid "Get file from SFTP server"
 msgstr "Bestand van SFTP-server halen"
+
+#, fuzzy
+msgid "Get remote audit logs"
+msgstr "Opgeruimd audit log."
 
 msgid "GiB"
 msgstr "GiB"
@@ -26456,6 +26480,14 @@ msgstr "Kubernetes Cluster"
 msgid "Kubernetes Clusters"
 msgstr "Kubernetes Cluster"
 
+#, fuzzy
+msgid "Kubernetes Collector Info"
+msgstr "Kubernetes Cluster"
+
+#, fuzzy
+msgid "Kubernetes CronJob status"
+msgstr "Kubernetes pod status"
+
 msgid "Kubernetes DaemonSet"
 msgstr "Kubernetes DaemonSet"
 
@@ -26786,6 +26818,10 @@ msgstr "Laatste back-up"
 
 msgid "Last bake result"
 msgstr "Laatste bakresultaat"
+
+#, fuzzy
+msgid "Last completed duration"
+msgstr "geschatte looptijd"
 
 msgid "Last day of last month"
 msgstr "Laatste dag van de laatste maand"
@@ -32154,6 +32190,9 @@ msgstr "Geen hangende wijzigingen"
 #, python-format
 msgid "No performance data: %s"
 msgstr "Geen prestatiegegevens: %s"
+
+msgid "No remote audit logs processed."
+msgstr ""
 
 msgid "No replication with this site"
 msgstr "Geen replicatie met deze site"
@@ -44849,6 +44888,10 @@ msgstr "Succesvol verwijderd %d hosts"
 msgid "Successfully discarded all pending changes."
 msgstr "Met succes alle hangende wijzigingen verwijderd."
 
+#, fuzzy, python-format
+msgid "Successfully got audit logs from sites: %s<br>%s"
+msgstr "Succesvol ingelogd op externe site %s."
+
 #, python-format
 msgid "Successfully logged into remote site %s."
 msgstr "Succesvol ingelogd op externe site %s."
@@ -54376,6 +54419,18 @@ msgstr "Tijd sinds laatste controlepunt"
 msgid "Time since last successful build"
 msgstr "Tijd sinds laatste succesvolle bouw"
 
+#, fuzzy
+msgid "Time since last successful completion"
+msgstr "Tijd sinds laatste succesvolle bouw"
+
+#, fuzzy
+msgid "Time since last successful schedule"
+msgstr "Tijd sinds laatste succesvolle bouw"
+
+#, fuzzy
+msgid "Time since last sync"
+msgstr "Tijd sinds laatste back-up"
+
 msgid "Time since the last ANALYZE"
 msgstr "Tijd sinds de laatste ANALYZE"
 
@@ -54446,6 +54501,10 @@ msgstr "Tijd tot waarschuwing, indien voorwaarde GEREED vals is"
 
 msgid "Time until alert, if REPLICAFAILURE condition is true"
 msgstr "Tijd tot waarschuwing, indien voorwaarde REPLICAFAILURE waar is"
+
+#, fuzzy
+msgid "Time until alert, if latest CronJob job is in pending state"
+msgstr "Definieer een tolerante periode voor het activeren van diensten"
 
 msgid "Time until license expiration"
 msgstr "Tijd tot licentievervaldatum"
@@ -57313,6 +57372,9 @@ msgstr ""
 "Gebruik deze optie om één of meerdere proxy servers te configureren die dan "
 "op verschillende plaatsen kunnen worden gebruikt om verbindingen tot stand "
 "te brengen met diensten die deze HTTP proxies gebruiken."
+
+msgid "Use this option to convert the displayed unit of graphs"
+msgstr ""
 
 msgid ""
 "Use this option to disable startup of the livestatus proxy daemon. It can "
@@ -64575,6 +64637,10 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 
+#, python-format
+#~ msgid "%s: No such agent output"
+#~ msgstr "%s: Geen uitvoer van dergelijke agent"
+
 #~ msgid "Render URL contents in own frame"
 #~ msgstr "URL inhoud in eigen frame renderen"
 
@@ -65329,11 +65395,6 @@ msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 #, fuzzy
 #~| msgid "Define a tolerating time period for activating services"
 #~ msgid "Time until alert, if deployment not available"
-#~ msgstr "Definieer een tolerante periode voor het activeren van diensten"
-
-#, fuzzy
-#~| msgid "Define a tolerating time period for activating services"
-#~ msgid "Time until alert, if deployment not in progressing"
 #~ msgstr "Definieer een tolerante periode voor het activeren van diensten"
 
 #~ msgid "Bulk walk: Hosts using bulk walk (enforces SNMP v2c)"
@@ -66742,9 +66803,6 @@ msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 
 #~ msgid "Active VMs"
 #~ msgstr "Actieve VM's"
-
-#~ msgid "Active hosts"
-#~ msgstr "Actieve gastheren"
 
 #~ msgid "Active items"
 #~ msgstr "Actieve items"

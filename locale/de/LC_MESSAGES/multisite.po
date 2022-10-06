@@ -7,8 +7,8 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2022-08-13 06:00+0000\n"
-"Last-Translator: Marc Nerreter <marc.nerreter@tribe29.com>\n"
+"PO-Revision-Date: 2022-10-05 06:00+0000\n"
+"Last-Translator: Jörg Herbel <joerg.herbel@tribe29.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
 "Language: de\n"
@@ -663,10 +663,6 @@ msgstr "%s: Agentenausgabe herunterladen"
 #, python-format
 msgid "%s: No discovery result"
 msgstr "%s: Kein Suchergebnis"
-
-#, python-format
-msgid "%s: No such agent output"
-msgstr "%s: Keine Ausgabe eines solchen Agenten"
 
 #, python-format
 msgid "%s: Not using SSL. Consider enabling it in the connection settings."
@@ -3122,6 +3118,10 @@ msgstr "Aktiver Speicher auf dem Gast"
 #, fuzzy
 msgid "Active in time period"
 msgstr "Aktiv in Zeitperiode"
+
+#, fuzzy
+msgid "Active jobs"
+msgstr "Aktive Hosts"
 
 msgid "Active modems"
 msgstr "Aktive Modems"
@@ -11102,6 +11102,10 @@ msgstr ""
 "Importierte Benutzer IDs während Synchronisation in Kleinbuchstaben "
 "umwandeln."
 
+#, fuzzy
+msgid "Convert unit to"
+msgstr "Verbinden zu"
+
 msgid "Cooldown before retrying failed remote or local delivery"
 msgstr "Abklingzeit, bevor Auslieferung erneut versucht wird"
 
@@ -13325,6 +13329,14 @@ msgstr ""
 "Komponenten Status und ausgelöste Alarme abrufen."
 
 msgid "Degree Celsius"
+msgstr "Grad Celsius"
+
+#, fuzzy
+msgid "Degree Fahrenheit"
+msgstr "Fahrenheit"
+
+#, fuzzy
+msgid "Degree Kelvin"
 msgstr "Grad Celsius"
 
 msgid "Delay event creation"
@@ -15692,6 +15704,10 @@ msgstr "Keine Kompression anwenden"
 
 msgid "Don't change state"
 msgstr "Status nicht ändern"
+
+#, fuzzy
+msgid "Don't convert graph unit"
+msgstr "Nicht den Graphtitel anzeigen"
 
 msgid "Don't create a group service for the following groups"
 msgstr "Erstellen Sie keinen Gruppendienst für die folgenden Gruppen"
@@ -18352,6 +18368,10 @@ msgstr "Peer-Zertifikat konnte nicht abgerufen werden (%s)"
 msgid "Failed to find matching certificate in chain"
 msgstr "Das passende Zertifikat konnte in der Kette nicht gefunden werden"
 
+#, fuzzy, python-format
+msgid "Failed to get audit logs from sites: %s."
+msgstr "Fehler beim Erzeugen eines Hosts aus Zeile %d: %s"
+
 #, python-format
 msgid "Failed to get the status from DCD (%s)"
 msgstr "Der Status des DCD (%s) konnte nicht ermittelt werden"
@@ -20027,6 +20047,10 @@ msgstr "Generischer String"
 
 msgid "Get file from SFTP server"
 msgstr "Datei von SFTP-Server holen"
+
+#, fuzzy
+msgid "Get remote audit logs"
+msgstr "Audit-Logdatei geleert."
 
 msgid "GiB"
 msgstr "GiB"
@@ -26513,6 +26537,14 @@ msgstr "Kubernetes-Cluster"
 msgid "Kubernetes Clusters"
 msgstr "Kubernetes-Cluster"
 
+#, fuzzy
+msgid "Kubernetes Collector Info"
+msgstr "Kubernetes-Cluster"
+
+#, fuzzy
+msgid "Kubernetes CronJob status"
+msgstr "Kubernetes-Pod-Status"
+
 msgid "Kubernetes DaemonSet"
 msgstr "Kubernetes DaemonSet"
 
@@ -26841,6 +26873,10 @@ msgstr "Letzte Sicherung"
 
 msgid "Last bake result"
 msgstr "Letztes Back-Ergebnis"
+
+#, fuzzy
+msgid "Last completed duration"
+msgstr "geschätzte Dauer"
 
 msgid "Last day of last month"
 msgstr "Letzter Tag im Monat"
@@ -32215,6 +32251,10 @@ msgstr "Keine anstehenden Änderungen"
 #, python-format
 msgid "No performance data: %s"
 msgstr "Keine Metriken: %s"
+
+#, fuzzy
+msgid "No remote audit logs processed."
+msgstr "Verarbeitete Datenmenge"
 
 msgid "No replication with this site"
 msgstr "Keine Replikation mit dieser Instanz"
@@ -44951,6 +44991,10 @@ msgstr "%d Hosts wurden erfolgreich entfernt"
 msgid "Successfully discarded all pending changes."
 msgstr "Alle ausstehenden Änderungen wurden erfolgreich verworfen."
 
+#, fuzzy, python-format
+msgid "Successfully got audit logs from sites: %s<br>%s"
+msgstr "Anmeldung an entfernte Instanz %s war erfolgreich."
+
 #, python-format
 msgid "Successfully logged into remote site %s."
 msgstr "Anmeldung an entfernte Instanz %s war erfolgreich."
@@ -54444,6 +54488,18 @@ msgstr "Zeit seit letztem Checkpoint"
 msgid "Time since last successful build"
 msgstr "Zeit seit dem letzten erfolgreichen Build"
 
+#, fuzzy
+msgid "Time since last successful completion"
+msgstr "Zeit seit dem letzten erfolgreichen Build"
+
+#, fuzzy
+msgid "Time since last successful schedule"
+msgstr "Zeit seit dem letzten erfolgreichen Build"
+
+#, fuzzy
+msgid "Time since last sync"
+msgstr "Zeit seit der letzten Sicherung"
+
 msgid "Time since the last ANALYZE"
 msgstr "Zeit seit letztem ANALYZE"
 
@@ -54514,6 +54570,11 @@ msgstr "Zeit bis zum Alarm, wenn die READY-Bedingung falsch ist"
 
 msgid "Time until alert, if REPLICAFAILURE condition is true"
 msgstr "Zeit bis zum Alarm, wenn die Bedingung REPLICAFAILURE erfüllt ist"
+
+#, fuzzy
+msgid "Time until alert, if latest CronJob job is in pending state"
+msgstr ""
+"Definiere eine Dauer für die sich aktivierende Services toleriert werden"
 
 msgid "Time until license expiration"
 msgstr "Verbleibende Zeit bis zum Ablauf der Lizenz"
@@ -57392,6 +57453,9 @@ msgstr ""
 "Mithilfe dieser Option können Sie einen oder mehrere Proxy-Server "
 "konfigurieren, die dann an verschiedenen Stellen verwendet werden können, um "
 "über diese HTTP-Proxies Verbindungen zu Diensten herzustellen."
+
+msgid "Use this option to convert the displayed unit of graphs"
+msgstr ""
 
 msgid ""
 "Use this option to disable startup of the livestatus proxy daemon. It can "
@@ -64644,6 +64708,10 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
+#, python-format
+#~ msgid "%s: No such agent output"
+#~ msgstr "%s: Keine Ausgabe eines solchen Agenten"
+
 #~ msgid "Render URL contents in own frame"
 #~ msgstr "URL-Inhalte in eigenem Rahmen anzeigen"
 
@@ -65410,12 +65478,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 #, fuzzy
 #~| msgid "Define a tolerating time period for activating services"
 #~ msgid "Time until alert, if deployment not available"
-#~ msgstr ""
-#~ "Definiere eine Dauer für die sich aktivierende Services toleriert werden"
-
-#, fuzzy
-#~| msgid "Define a tolerating time period for activating services"
-#~ msgid "Time until alert, if deployment not in progressing"
 #~ msgstr ""
 #~ "Definiere eine Dauer für die sich aktivierende Services toleriert werden"
 
@@ -66822,9 +66884,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Active VMs"
 #~ msgstr "Aktive VMs"
-
-#~ msgid "Active hosts"
-#~ msgstr "Aktive Hosts"
 
 #~ msgid "Active items"
 #~ msgstr "Aktive Elemente"
@@ -74009,10 +74068,6 @@ msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Monitoring state if VM state is FastSavingCritical"
 #~ msgstr "Monitoringstatus, falls VM-Status FastSavingCritical ist"
-
-#, fuzzy
-#~ msgid "Not enough data to process"
-#~ msgstr "Verarbeitete Datenmenge"
 
 #~ msgid "Consolidated rrd data column"
 #~ msgstr "Spalte der konsolidierten RRD Daten"

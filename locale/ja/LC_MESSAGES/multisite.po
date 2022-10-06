@@ -657,10 +657,6 @@ msgid "%s: No discovery result"
 msgstr "%s: 結果なし"
 
 #, python-format
-msgid "%s: No such agent output"
-msgstr "%s: エージェント出力はありません"
-
-#, python-format
 msgid "%s: Not using SSL. Consider enabling it in the connection settings."
 msgstr ""
 "%s: SSLを使用していません。接続設定で有効にすることを検討してください。"
@@ -2958,6 +2954,10 @@ msgstr "アクティブなゲストメモリ"
 #, fuzzy
 msgid "Active in time period"
 msgstr "期間中アクティブ"
+
+#, fuzzy
+msgid "Active jobs"
+msgstr "アクティブなホスト"
 
 msgid "Active modems"
 msgstr "アクティブモデム"
@@ -10560,6 +10560,10 @@ msgstr "ホスト名を大文字に変換する"
 msgid "Convert imported User-IDs to lower case during synchronization."
 msgstr "同期中に、インポートされたユーザーIDを小文字に変換します。"
 
+#, fuzzy
+msgid "Convert unit to"
+msgstr "接続します"
+
 msgid "Cooldown before retrying failed remote or local delivery"
 msgstr "失敗したリモートまたはローカル配信を再試行する前のクールダウン"
 
@@ -12732,6 +12736,14 @@ msgstr ""
 "できます。コンポーネントの状態と発生したアラートを照会することもできます。"
 
 msgid "Degree Celsius"
+msgstr "摂氏"
+
+#, fuzzy
+msgid "Degree Fahrenheit"
+msgstr "華氏"
+
+#, fuzzy
+msgid "Degree Kelvin"
 msgstr "摂氏"
 
 msgid "Delay event creation"
@@ -15029,6 +15041,10 @@ msgstr ""
 
 msgid "Don't change state"
 msgstr "状態を変更しないでください"
+
+#, fuzzy
+msgid "Don't convert graph unit"
+msgstr "グラフのタイトルを表示しない"
 
 msgid "Don't create a group service for the following groups"
 msgstr ""
@@ -17616,6 +17632,10 @@ msgstr "ピア証明書のフェッチに失敗しました(%s)"
 msgid "Failed to find matching certificate in chain"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Failed to get audit logs from sites: %s."
+msgstr "行 %dからホストを作成できませんでした: %s"
+
 #, python-format
 msgid "Failed to get the status from DCD (%s)"
 msgstr "DCDからステータスを取得できませんでした(%s)"
@@ -19211,6 +19231,10 @@ msgstr "一般的な文字列"
 
 msgid "Get file from SFTP server"
 msgstr "SFTPサーバーからファイルを取得する"
+
+#, fuzzy
+msgid "Get remote audit logs"
+msgstr "監査ログをクリアしました。"
 
 msgid "GiB"
 msgstr "GiB"
@@ -25279,6 +25303,14 @@ msgstr "Kubernetesクラスター"
 msgid "Kubernetes Clusters"
 msgstr "Kubernetesクラスター"
 
+#, fuzzy
+msgid "Kubernetes Collector Info"
+msgstr "Kubernetesクラスター"
+
+#, fuzzy
+msgid "Kubernetes CronJob status"
+msgstr "Kubernetes Podステータス"
+
 msgid "Kubernetes DaemonSet"
 msgstr "Kubernetesデーモンセット"
 
@@ -25606,6 +25638,10 @@ msgstr "最後のバックアップ"
 
 msgid "Last bake result"
 msgstr ""
+
+#, fuzzy
+msgid "Last completed duration"
+msgstr "推定期間"
 
 msgid "Last day of last month"
 msgstr "先月の最終日"
@@ -30861,6 +30897,9 @@ msgstr "保留中の変更はありません"
 #, python-format
 msgid "No performance data: %s"
 msgstr "パフォーマンスデータなし: %s"
+
+msgid "No remote audit logs processed."
+msgstr ""
 
 msgid "No replication with this site"
 msgstr "このサイトとの複製はありません"
@@ -43098,6 +43137,10 @@ msgstr "%d ホストが正常に削除されました"
 msgid "Successfully discarded all pending changes."
 msgstr "保留中のすべての変更を正常に破棄しました。"
 
+#, fuzzy, python-format
+msgid "Successfully got audit logs from sites: %s<br>%s"
+msgstr "リモートサイト %s に正常にログインしました。"
+
 #, python-format
 msgid "Successfully logged into remote site %s."
 msgstr "リモートサイト %s に正常にログインしました。"
@@ -51642,6 +51685,18 @@ msgstr "最後のチェックポイントからの時間"
 msgid "Time since last successful build"
 msgstr "最後に成功したビルドからの時間"
 
+#, fuzzy
+msgid "Time since last successful completion"
+msgstr "最後に成功したビルドからの時間"
+
+#, fuzzy
+msgid "Time since last successful schedule"
+msgstr "最後に成功したビルドからの時間"
+
+#, fuzzy
+msgid "Time since last sync"
+msgstr "最後のバックアップからの時間"
+
 msgid "Time since the last ANALYZE"
 msgstr "最後の分析からの時間"
 
@@ -51708,6 +51763,10 @@ msgstr "READYがfalseの場合の、警告までの許容期間"
 
 msgid "Time until alert, if REPLICAFAILURE condition is true"
 msgstr "REPLICAFAILURE がtrueの場合の場合の、警告が出るまでの時間"
+
+#, fuzzy
+msgid "Time until alert, if latest CronJob job is in pending state"
+msgstr "デプロイが進行中でない場合、アラートが出るまでの時間"
 
 msgid "Time until license expiration"
 msgstr "ライセンスの有効期限が切れるまでの時間"
@@ -54488,6 +54547,9 @@ msgid ""
 "Use this option to configure one or several proxy servers that can then be "
 "used in different places to establish connections to services using these "
 "HTTP proxies."
+msgstr ""
+
+msgid "Use this option to convert the displayed unit of graphs"
 msgstr ""
 
 msgid ""
@@ -61211,6 +61273,10 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
+#, python-format
+#~ msgid "%s: No such agent output"
+#~ msgstr "%s: エージェント出力はありません"
+
 #~ msgid "Render URL contents in own frame"
 #~ msgstr "URLコンテンツを独自のフレームでレンダリングする"
 
@@ -61875,9 +61941,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Time until alert, if deployment not available"
 #~ msgstr "配備ができない場合、アラートが出るまでの時間"
-
-#~ msgid "Time until alert, if deployment not in progressing"
-#~ msgstr "デプロイが進行中でない場合、アラートが出るまでの時間"
 
 #~ msgid "Time until alert, if pod not ready"
 #~ msgstr "Podの準備ができていない場合の、警告までの許容期間"
@@ -63181,9 +63244,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 
 #~ msgid "Active VMs"
 #~ msgstr "アクティブVM"
-
-#~ msgid "Active hosts"
-#~ msgstr "アクティブなホスト"
 
 #~ msgid "Active items"
 #~ msgstr "アクティブアイテム"

@@ -654,10 +654,6 @@ msgid "%s: No discovery result"
 msgstr "Inventariere in masa"
 
 #, python-format
-msgid "%s: No such agent output"
-msgstr ""
-
-#, python-format
 msgid "%s: Not using SSL. Consider enabling it in the connection settings."
 msgstr ""
 
@@ -2795,6 +2791,10 @@ msgstr "Memorie liberă exactă"
 #, fuzzy
 msgid "Active in time period"
 msgstr "Perioada de timp Noua"
+
+#, fuzzy
+msgid "Active jobs"
+msgstr "Verificări active"
 
 #, fuzzy
 msgid "Active modems"
@@ -10442,6 +10442,10 @@ msgstr ""
 msgid "Convert imported User-IDs to lower case during synchronization."
 msgstr ""
 
+#, fuzzy
+msgid "Convert unit to"
+msgstr "Conexiuni Active"
+
 msgid "Cooldown before retrying failed remote or local delivery"
 msgstr ""
 
@@ -12758,6 +12762,12 @@ msgid ""
 msgstr ""
 
 msgid "Degree Celsius"
+msgstr ""
+
+msgid "Degree Fahrenheit"
+msgstr ""
+
+msgid "Degree Kelvin"
 msgstr ""
 
 msgid "Delay event creation"
@@ -15171,6 +15181,9 @@ msgid "Don't apply compression"
 msgstr ""
 
 msgid "Don't change state"
+msgstr ""
+
+msgid "Don't convert graph unit"
 msgstr ""
 
 msgid "Don't create a group service for the following groups"
@@ -17848,6 +17861,10 @@ msgid "Failed to find matching certificate in chain"
 msgstr ""
 
 #, python-format
+msgid "Failed to get audit logs from sites: %s."
+msgstr ""
+
+#, python-format
 msgid "Failed to get the status from DCD (%s)"
 msgstr ""
 
@@ -19450,6 +19467,9 @@ msgid "Generic string"
 msgstr ""
 
 msgid "Get file from SFTP server"
+msgstr ""
+
+msgid "Get remote audit logs"
 msgstr ""
 
 msgid "GiB"
@@ -24998,6 +25018,14 @@ msgid "Kubernetes Clusters"
 msgstr "Adresă"
 
 #, fuzzy
+msgid "Kubernetes Collector Info"
+msgstr "Adresă"
+
+#, fuzzy
+msgid "Kubernetes CronJob status"
+msgstr "Adresă"
+
+#, fuzzy
 msgid "Kubernetes DaemonSet"
 msgstr "Adresă"
 
@@ -25352,6 +25380,10 @@ msgstr "Vechimea maxima a backup-urilor"
 
 msgid "Last bake result"
 msgstr ""
+
+#, fuzzy
+msgid "Last completed duration"
+msgstr "Activare Configurare"
 
 #, fuzzy
 msgid "Last day of last month"
@@ -31048,6 +31080,9 @@ msgstr ""
 
 #, python-format
 msgid "No performance data: %s"
+msgstr ""
+
+msgid "No remote audit logs processed."
 msgstr ""
 
 msgid "No replication with this site"
@@ -43583,6 +43618,10 @@ msgid "Successfully discarded all pending changes."
 msgstr ""
 
 #, python-format
+msgid "Successfully got audit logs from sites: %s<br>%s"
+msgstr ""
+
+#, python-format
 msgid "Successfully logged into remote site %s."
 msgstr ""
 
@@ -50844,6 +50883,15 @@ msgstr ""
 msgid "Time since last successful build"
 msgstr ""
 
+msgid "Time since last successful completion"
+msgstr ""
+
+msgid "Time since last successful schedule"
+msgstr ""
+
+msgid "Time since last sync"
+msgstr ""
+
 msgid "Time since the last ANALYZE"
 msgstr ""
 
@@ -50910,6 +50958,9 @@ msgid "Time until alert, if READY condition is false"
 msgstr ""
 
 msgid "Time until alert, if REPLICAFAILURE condition is true"
+msgstr ""
+
+msgid "Time until alert, if latest CronJob job is in pending state"
 msgstr ""
 
 msgid "Time until license expiration"
@@ -53857,6 +53908,9 @@ msgid ""
 "Use this option to configure one or several proxy servers that can then be "
 "used in different places to establish connections to services using these "
 "HTTP proxies."
+msgstr ""
+
+msgid "Use this option to convert the displayed unit of graphs"
 msgstr ""
 
 msgid ""
@@ -60961,10 +61015,6 @@ msgstr ""
 
 #, fuzzy
 #~ msgid "Active VMs"
-#~ msgstr "Verificări active"
-
-#, fuzzy
-#~ msgid "Active hosts"
 #~ msgstr "Verificări active"
 
 #, fuzzy

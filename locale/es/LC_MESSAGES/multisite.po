@@ -664,10 +664,6 @@ msgid "%s: No discovery result"
 msgstr "%s: No hay resultado de descubrimiento"
 
 #, python-format
-msgid "%s: No such agent output"
-msgstr "%s: No existe tal salida de agente"
-
-#, python-format
 msgid "%s: Not using SSL. Consider enabling it in the connection settings."
 msgstr "%s: No usa SSL. Considere habilitarlo en la configuración de conexión."
 
@@ -3134,6 +3130,10 @@ msgstr "Memoria de invitados activa"
 #, fuzzy
 msgid "Active in time period"
 msgstr "Activo en el periodo de tiempo"
+
+#, fuzzy
+msgid "Active jobs"
+msgstr "Anfitriones activos"
 
 msgid "Active modems"
 msgstr "Módems activos"
@@ -11169,6 +11169,10 @@ msgid "Convert imported User-IDs to lower case during synchronization."
 msgstr ""
 "Convertir los User-IDs importados a minúsculas durante la sincronización."
 
+#, fuzzy
+msgid "Convert unit to"
+msgstr "Conéctate a"
+
 msgid "Cooldown before retrying failed remote or local delivery"
 msgstr "Enfriamiento antes de reintentar la entrega local o remota fallida"
 
@@ -13404,6 +13408,14 @@ msgstr ""
 "salud de los componentes y las alertas disparadas."
 
 msgid "Degree Celsius"
+msgstr "Grado Celsius"
+
+#, fuzzy
+msgid "Degree Fahrenheit"
+msgstr "Fahrenheit"
+
+#, fuzzy
+msgid "Degree Kelvin"
 msgstr "Grado Celsius"
 
 msgid "Delay event creation"
@@ -15781,6 +15793,10 @@ msgstr "No aplique la compresión"
 
 msgid "Don't change state"
 msgstr "No cambie de estado"
+
+#, fuzzy
+msgid "Don't convert graph unit"
+msgstr "No mostrar el título del gráfico"
 
 msgid "Don't create a group service for the following groups"
 msgstr "No cree un servicio de grupo para los siguientes grupos"
@@ -18444,6 +18460,10 @@ msgstr "Fallo en la obtención del certificado de pares (%s)"
 msgid "Failed to find matching certificate in chain"
 msgstr "No se ha podido encontrar el certificado correspondiente en la cadena"
 
+#, fuzzy, python-format
+msgid "Failed to get audit logs from sites: %s."
+msgstr "Fallo al crear un host de la línea %d: %s"
+
 #, python-format
 msgid "Failed to get the status from DCD (%s)"
 msgstr "No se ha podido obtener el estado de la DCD (%s)"
@@ -20116,6 +20136,10 @@ msgstr "Cadena genérica"
 
 msgid "Get file from SFTP server"
 msgstr "Obtener un archivo del servidor SFTP"
+
+#, fuzzy
+msgid "Get remote audit logs"
+msgstr "Registro de auditoría borrado."
 
 msgid "GiB"
 msgstr "GiB"
@@ -26665,6 +26689,14 @@ msgstr "Clúster Kubernetes"
 msgid "Kubernetes Clusters"
 msgstr "Clúster Kubernetes"
 
+#, fuzzy
+msgid "Kubernetes Collector Info"
+msgstr "Clúster Kubernetes"
+
+#, fuzzy
+msgid "Kubernetes CronJob status"
+msgstr "Estado del pod de Kubernetes"
+
 msgid "Kubernetes DaemonSet"
 msgstr "Kubernetes DaemonSet"
 
@@ -26994,6 +27026,10 @@ msgstr "Última copia de seguridad"
 
 msgid "Last bake result"
 msgstr "Resultado de la última cocción"
+
+#, fuzzy
+msgid "Last completed duration"
+msgstr "duración estimada"
 
 msgid "Last day of last month"
 msgstr "Último día del mes pasado"
@@ -32420,6 +32456,9 @@ msgstr "No hay cambios pendientes"
 #, python-format
 msgid "No performance data: %s"
 msgstr "No hay datos de rendimiento: %s"
+
+msgid "No remote audit logs processed."
+msgstr ""
 
 msgid "No replication with this site"
 msgstr "No hay réplica con este sitio"
@@ -45253,6 +45292,10 @@ msgstr "Se han eliminado con éxito %d hosts"
 msgid "Successfully discarded all pending changes."
 msgstr "Se han descartado con éxito todos los cambios pendientes."
 
+#, fuzzy, python-format
+msgid "Successfully got audit logs from sites: %s<br>%s"
+msgstr "Se ha registrado con éxito en el sitio remoto %s."
+
 #, python-format
 msgid "Successfully logged into remote site %s."
 msgstr "Se ha registrado con éxito en el sitio remoto %s."
@@ -54841,6 +54884,18 @@ msgstr "Tiempo desde el último punto de control"
 msgid "Time since last successful build"
 msgstr "Tiempo transcurrido desde la última construcción con éxito"
 
+#, fuzzy
+msgid "Time since last successful completion"
+msgstr "Tiempo transcurrido desde la última construcción con éxito"
+
+#, fuzzy
+msgid "Time since last successful schedule"
+msgstr "Tiempo transcurrido desde la última construcción con éxito"
+
+#, fuzzy
+msgid "Time since last sync"
+msgstr "Tiempo desde la última copia de seguridad"
+
 msgid "Time since the last ANALYZE"
 msgstr "Tiempo transcurrido desde el último ANALIZAR"
 
@@ -54911,6 +54966,12 @@ msgstr "Tiempo hasta la alerta, si la condición de LISTO es falsa"
 
 msgid "Time until alert, if REPLICAFAILURE condition is true"
 msgstr "Tiempo hasta la alerta, si la condición REPLICAFAILURE es verdadera"
+
+#, fuzzy
+msgid "Time until alert, if latest CronJob job is in pending state"
+msgstr ""
+"Definir un periodo de tiempo de tolerancia para la activación de los "
+"servicios"
 
 msgid "Time until license expiration"
 msgstr "Tiempo hasta la expiración de la licencia"
@@ -57804,6 +57865,9 @@ msgstr ""
 "Utilice esta opción para configurar uno o varios servidores proxy que luego "
 "pueden ser utilizados en diferentes lugares para establecer conexiones a los "
 "servicios que utilizan estos proxies HTTP."
+
+msgid "Use this option to convert the displayed unit of graphs"
+msgstr ""
 
 msgid ""
 "Use this option to disable startup of the livestatus proxy daemon. It can "
@@ -65104,6 +65168,10 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Todos los derechos reservados."
 
+#, python-format
+#~ msgid "%s: No such agent output"
+#~ msgstr "%s: No existe tal salida de agente"
+
 #~ msgid "Render URL contents in own frame"
 #~ msgstr "Renderizar el contenido de la URL en su propio marco"
 
@@ -65862,13 +65930,6 @@ msgstr "© %s tribe29 GmbH. Todos los derechos reservados."
 #, fuzzy
 #~| msgid "Define a tolerating time period for activating services"
 #~ msgid "Time until alert, if deployment not available"
-#~ msgstr ""
-#~ "Definir un periodo de tiempo de tolerancia para la activación de los "
-#~ "servicios"
-
-#, fuzzy
-#~| msgid "Define a tolerating time period for activating services"
-#~ msgid "Time until alert, if deployment not in progressing"
 #~ msgstr ""
 #~ "Definir un periodo de tiempo de tolerancia para la activación de los "
 #~ "servicios"
@@ -67311,9 +67372,6 @@ msgstr "© %s tribe29 GmbH. Todos los derechos reservados."
 
 #~ msgid "Active VMs"
 #~ msgstr "Máquinas virtuales activas"
-
-#~ msgid "Active hosts"
-#~ msgstr "Anfitriones activos"
 
 #~ msgid "Active items"
 #~ msgstr "Elementos activos"

@@ -667,10 +667,6 @@ msgstr "%s: Scarica l'output dell'agente"
 msgid "%s: No discovery result"
 msgstr "scoperta riuscita"
 
-#, fuzzy, python-format
-msgid "%s: No such agent output"
-msgstr "%s: Scarica l'output dell'agente"
-
 #, python-format
 msgid "%s: Not using SSL. Consider enabling it in the connection settings."
 msgstr ""
@@ -3127,6 +3123,10 @@ msgstr "Memoria ospite attiva"
 #, fuzzy
 msgid "Active in time period"
 msgstr "Attivo nel periodo di tempo"
+
+#, fuzzy
+msgid "Active jobs"
+msgstr "Ospiti attivi"
 
 msgid "Active modems"
 msgstr "Modem attivi"
@@ -11246,6 +11246,10 @@ msgid "Convert imported User-IDs to lower case during synchronization."
 msgstr ""
 "Convertire gli ID utente importati in minuscolo durante la sincronizzazione."
 
+#, fuzzy
+msgid "Convert unit to"
+msgstr "Collegarsi a"
+
 msgid "Cooldown before retrying failed remote or local delivery"
 msgstr "Cooldown prima di riprovare una consegna remota o locale fallita"
 
@@ -13500,6 +13504,14 @@ msgstr ""
 "interrogare la salute dei componenti e gli avvisi licenziati."
 
 msgid "Degree Celsius"
+msgstr "Grado Celsius"
+
+#, fuzzy
+msgid "Degree Fahrenheit"
+msgstr "Fahrenheit"
+
+#, fuzzy
+msgid "Degree Kelvin"
 msgstr "Grado Celsius"
 
 msgid "Delay event creation"
@@ -15901,6 +15913,10 @@ msgstr "Non applicare la compressione"
 
 msgid "Don't change state"
 msgstr "Non cambiare stato"
+
+#, fuzzy
+msgid "Don't convert graph unit"
+msgstr "Non mostrare il titolo del grafico"
 
 msgid "Don't create a group service for the following groups"
 msgstr "Non creare un servizio di gruppo per i seguenti gruppi"
@@ -18595,6 +18611,10 @@ msgstr "Fallito il recupero del certificato peer (%s)"
 msgid "Failed to find matching certificate in chain"
 msgstr "Impossibile trovare il certificato corrispondente nella catena"
 
+#, fuzzy, python-format
+msgid "Failed to get audit logs from sites: %s."
+msgstr "Impossibile creare un host dalla linea %d: %s"
+
 #, python-format
 msgid "Failed to get the status from DCD (%s)"
 msgstr "Impossibile ottenere lo stato dal DCD (%s)"
@@ -20283,6 +20303,10 @@ msgstr "Stringa generica"
 
 msgid "Get file from SFTP server"
 msgstr "Ottenere file dal server SFTP"
+
+#, fuzzy
+msgid "Get remote audit logs"
+msgstr "Cancellato il registro di controllo."
 
 #, fuzzy
 msgid "GiB"
@@ -26850,6 +26874,14 @@ msgid "Kubernetes Clusters"
 msgstr "Ruoli di Kubernetes"
 
 #, fuzzy
+msgid "Kubernetes Collector Info"
+msgstr "Ruoli di Kubernetes"
+
+#, fuzzy
+msgid "Kubernetes CronJob status"
+msgstr "Porta Kubernetes"
+
+#, fuzzy
 msgid "Kubernetes DaemonSet"
 msgstr "Porta Kubernetes"
 
@@ -27201,6 +27233,10 @@ msgstr "backup"
 
 msgid "Last bake result"
 msgstr "Risultato dell'ultima cottura"
+
+#, fuzzy
+msgid "Last completed duration"
+msgstr "durata stimata"
 
 msgid "Last day of last month"
 msgstr "Ultimo giorno del mese scorso"
@@ -32688,6 +32724,9 @@ msgstr "Nessun cambiamento in sospeso"
 #, python-format
 msgid "No performance data: %s"
 msgstr "Nessun dato sulle prestazioni: %s"
+
+msgid "No remote audit logs processed."
+msgstr ""
 
 msgid "No replication with this site"
 msgstr "Nessuna replica con questo sito"
@@ -45626,6 +45665,10 @@ msgstr "Eliminati con successo %d host"
 msgid "Successfully discarded all pending changes."
 msgstr "Ha scartato con successo tutte le modifiche in sospeso."
 
+#, fuzzy, python-format
+msgid "Successfully got audit logs from sites: %s<br>%s"
+msgstr "Accesso riuscito al sito remoto %s."
+
 #, python-format
 msgid "Successfully logged into remote site %s."
 msgstr "Accesso riuscito al sito remoto %s."
@@ -55210,6 +55253,18 @@ msgstr "Tempo dall'ultimo checkpoint"
 msgid "Time since last successful build"
 msgstr "Tempo trascorso dall'ultima costruzione riuscita"
 
+#, fuzzy
+msgid "Time since last successful completion"
+msgstr "Tempo trascorso dall'ultima costruzione riuscita"
+
+#, fuzzy
+msgid "Time since last successful schedule"
+msgstr "Tempo trascorso dall'ultima costruzione riuscita"
+
+#, fuzzy
+msgid "Time since last sync"
+msgstr "Tempo trascorso dall'ultimo backup"
+
 msgid "Time since the last ANALYZE"
 msgstr "Tempo trascorso dall'ultimo ANALYZE"
 
@@ -55287,6 +55342,10 @@ msgstr "Definire un periodo di tempo tollerante per l'attivazione dei servizi"
 
 #, fuzzy
 msgid "Time until alert, if REPLICAFAILURE condition is true"
+msgstr "Definire un periodo di tempo tollerante per l'attivazione dei servizi"
+
+#, fuzzy
+msgid "Time until alert, if latest CronJob job is in pending state"
 msgstr "Definire un periodo di tempo tollerante per l'attivazione dei servizi"
 
 msgid "Time until license expiration"
@@ -58206,6 +58265,9 @@ msgstr ""
 "Usate questa opzione per configurare uno o più server proxy che possono poi "
 "essere utilizzati in luoghi diversi per stabilire connessioni a servizi che "
 "utilizzano questi proxy HTTP."
+
+msgid "Use this option to convert the displayed unit of graphs"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -65531,6 +65593,11 @@ msgstr "z/OS"
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 
+#, fuzzy, python-format
+#~| msgid "%s: Download agent output"
+#~ msgid "%s: No such agent output"
+#~ msgstr "%s: Scarica l'output dell'agente"
+
 #~ msgid "Render URL contents in own frame"
 #~ msgstr "Rendering dei contenuti dell'URL nel proprio frame"
 
@@ -66348,12 +66415,6 @@ msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 #, fuzzy
 #~| msgid "Define a tolerating time period for activating services"
 #~ msgid "Time until alert, if deployment not available"
-#~ msgstr ""
-#~ "Definire un periodo di tempo tollerante per l'attivazione dei servizi"
-
-#, fuzzy
-#~| msgid "Define a tolerating time period for activating services"
-#~ msgid "Time until alert, if deployment not in progressing"
 #~ msgstr ""
 #~ "Definire un periodo di tempo tollerante per l'attivazione dei servizi"
 
@@ -67787,9 +67848,6 @@ msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 
 #~ msgid "Active VMs"
 #~ msgstr "VM attive"
-
-#~ msgid "Active hosts"
-#~ msgstr "Ospiti attivi"
 
 #~ msgid "Active items"
 #~ msgstr "Articoli attivi"

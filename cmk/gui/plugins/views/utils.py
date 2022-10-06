@@ -1381,12 +1381,36 @@ def make_linked_visual_url(
         )
 
     vars_values = get_linked_visual_request_vars(visual, singlecontext_request_vars)
+    http_vars = vars_values + required_vars
+
     # For views and dashboards currently the current filter settings
     return makeuri_contextless(
         request,
-        vars_values + required_vars,
+        _replace_group_vars(http_vars) if visual_type.ident == "dashboards" else http_vars,
         filename=filename,
     )
+
+
+def _replace_group_vars(vars_: HTTPVariables) -> HTTPVariables:
+    """
+    This is only needed for VisualTypeDashboards to get the correct http vars
+    for host and service groups. Dashboards have no datasource so this is
+    not covered by the current mechanism.
+
+    Replace hostgroup and servicegroup variables with opthost_group /
+    optservice_group
+    """
+    filtered_vars: HTTPVariables = []
+    for var in vars_:
+        value = var[1]
+        if var[0] == "hostgroup":
+            filtered_vars.append(("opthost_group", value))
+            continue
+        if var[0] == "servicegroup":
+            filtered_vars.append(("optservice_group", value))
+            continue
+        filtered_vars.append(var)
+    return filtered_vars
 
 
 def translate_filters(visual):

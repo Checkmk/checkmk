@@ -10,8 +10,8 @@ def main() {
         docker_image_from_alias("IMAGE_TESTING").inside(docker_args) {
             dir("${checkout_dir}") {
                 // pre-create virtual environments before parallel execution
-                stage("prepare virtual environment") { 
-                    sh("make .venv"); 
+                stage("prepare virtual environment") {
+                    sh("make .venv");
                 }
                 def test_builds = python_versions.collectEntries { python_version ->
                     [python_version : {
@@ -26,4 +26,3 @@ def main() {
     }
 }
 return this;
-

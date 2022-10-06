@@ -16,7 +16,7 @@ pub fn parse_port(src: &str) -> AnyhowResult<u16> {
     ))
 }
 
-#[derive(serde::Deserialize, PartialEq, Eq, Debug)]
+#[derive(serde::Deserialize, PartialEq, Eq, Debug, Clone)]
 pub struct ServerSpec {
     pub server: String,
 

@@ -8,6 +8,7 @@ use super::{cli, constants, types};
 #[cfg(unix)]
 use anyhow::Context;
 use anyhow::Result as AnyhowResult;
+use clap::Parser;
 use log::debug;
 #[cfg(windows)]
 use log::info;
@@ -16,7 +17,6 @@ use nix::unistd;
 use std::env;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
-use structopt::StructOpt;
 
 // TODO(sk): estimate to move in constants
 #[cfg(windows)]
@@ -264,7 +264,7 @@ pub fn init() -> AnyhowResult<(cli::Args, PathResolver)> {
         std::process::exit(1);
     }
     // Parse args as first action to directly exit from --help or malformatted arguments
-    let args = cli::Args::from_args();
+    let args = cli::Args::parse();
     #[cfg(windows)]
     misc::validate_elevation()?;
 

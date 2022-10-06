@@ -5,17 +5,17 @@
 #[cfg(windows)]
 use super::types;
 use super::{constants, site_spec};
-use anyhow::{Context, Result as AnyhowResult};
-use structopt::StructOpt;
+use clap::Parser;
 
-#[derive(StructOpt)]
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
 pub struct LoggingOpts {
     // TODO (jh): make this field private again once the Windows agent reads its pull configuration
     // from a file instead of from the command line. Currently, we need this to be public for
     // testing.
     /// Enable verbose output. Use once (-v) for logging level INFO and twice (-vv) for logging
     /// level DEBUG.
-    #[structopt(short, long, parse(from_occurrences))]
+    #[arg(short, long, action = clap::ArgAction::Count)]
     pub verbose: u8,
 }
 
@@ -29,138 +29,147 @@ impl LoggingOpts {
     }
 }
 
-#[derive(StructOpt)]
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
 pub struct ClientOpts {
     /// Detect and use proxy settings configured on this system for outgoing HTTPS connections.
     /// The default is to ignore configured proxies and to connect directly.
-    #[structopt(long, short = "d")]
+    #[arg(short = 'd', long)]
     pub detect_proxy: bool,
 
     /// Enable TLS certificate validation for querying the agent receiver port from the Checkmk
     /// REST API. By default, certificate validation is disabled because it is not security-relevant
     /// at this stage, see werk #14715.
-    #[structopt(long)]
+    #[arg(long)]
     pub validate_api_cert: bool,
 }
 
-#[derive(StructOpt)]
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
 pub struct RegistrationArgsConnection {
     /// Address of the Checkmk site in the format "<server>" or "<server>:<port>"
-    #[structopt(long = "server", short = "s", requires = "site", parse(try_from_str))]
+    #[arg(long = "server", short = 's', value_parser = clap::value_parser!(site_spec::ServerSpec))]
     pub server_spec: site_spec::ServerSpec,
 
     /// Name of the Checkmk site
-    #[structopt(long, short = "i", parse(from_str))]
+    #[arg(long, short = 'i')]
     pub site: String,
 
     /// API user to use for registration
-    #[structopt(long, short = "U", parse(from_str))]
+    #[arg(long, short = 'U')]
     pub user: String,
 
     /// Password for API user. Can also be entered interactively.
-    #[structopt(long, short = "P", parse(from_str))]
+    #[arg(long, short = 'P')]
     pub password: Option<String>,
 
     /// Blindly trust the server certificate of the Checkmk site
     // We are consistent with agent updater, which uses "trust-cert"
-    #[structopt(long = "trust-cert")]
+    #[arg(long = "trust-cert")]
     pub trust_server_cert: bool,
 
-    #[structopt(flatten)]
+    #[clap(flatten)]
     pub client_opts: ClientOpts,
 }
 
-#[derive(StructOpt)]
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
 pub struct RegistrationArgsHostName {
-    #[structopt(flatten)]
+    #[clap(flatten)]
     pub connection_args: RegistrationArgsConnection,
 
-    #[structopt(flatten)]
+    #[clap(flatten)]
     pub logging_opts: LoggingOpts,
 
     /// Name of this host in the monitoring site
     // We are consistent with agent updater, which uses "hostname", not "host-name".
-    #[structopt(long, short = "H", long = "hostname", parse(from_str))]
+    #[arg(long, short = 'H', long = "hostname", value_parser = clap::value_parser!(String))]
     pub host_name: String,
 }
 
-#[derive(StructOpt)]
+#[derive(Parser)]
 pub struct RegistrationArgsAgentLabels {
-    #[structopt(flatten)]
+    #[clap(flatten)]
     pub connection_args: RegistrationArgsConnection,
 
-    #[structopt(flatten)]
+    #[clap(flatten)]
     pub logging_opts: LoggingOpts,
 
     /// User-defined agent labels in the form KEY=VALUE. These labels supersede the automatic labels.
-    #[structopt(long = "agent-labels", name = "KEY=VALUE", parse(try_from_str = parse_agent_labels), )]
+    #[arg(long = "agent-labels", name = "KEY=VALUE",  value_parser = parse_agent_labels, )]
     pub agent_labels_raw: Vec<(String, String)>,
 }
 
-// https://github.com/TeXitoi/structopt/blob/master/examples/keyvalue.rs
-fn parse_agent_labels(s: &str) -> AnyhowResult<(String, String)> {
-    let pos = s
-        .find('=')
-        .context(format!("invalid KEY=VALUE: no `=` found in `{}`", s))?;
-    Ok((String::from(&s[..pos]), String::from(&s[pos + 1..])))
+//https://github.com/clap-rs/clap/blob/master/examples/tutorial_derive/04_02_validate.rs
+fn parse_agent_labels(s: &str) -> Result<(String, String), String> {
+    // TODO(sk): better to use something more rust, splitn: split_once and collect_tuple
+    match s.splitn(2, '=').collect::<Vec<&str>>()[..] {
+        [a, b] => Ok((a.to_owned(), b.to_owned())),
+        _ => Err(format!("invalid KEY=VALUE: no `=` found in `{}`", s)),
+    }
 }
 
-#[derive(StructOpt)]
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
 pub struct StatusArgs {
     /// Write output in JSON format
-    #[structopt(long)]
+    #[arg(long)]
     pub json: bool,
 
     /// Do not query the remote about our status
-    #[structopt(long)]
+    #[arg(long)]
     pub no_query_remote: bool,
 
-    #[structopt(flatten)]
+    #[clap(flatten)]
     pub client_opts: ClientOpts,
 
-    #[structopt(flatten)]
+    #[clap(flatten)]
     pub logging_opts: LoggingOpts,
 }
 
-#[derive(StructOpt)]
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
 pub struct DeleteArgs {
     /// The connection to delete
-    #[structopt(name = "CONNECTION")]
+    #[arg(name = "CONNECTION")]
     pub connection: String,
 
-    #[structopt(flatten)]
+    #[clap(flatten)]
     pub logging_opts: LoggingOpts,
 }
 
-#[derive(StructOpt)]
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
 pub struct PushArgs {
-    #[structopt(flatten)]
+    #[clap(flatten)]
     pub client_opts: ClientOpts,
 
-    #[structopt(flatten)]
+    #[clap(flatten)]
     pub logging_opts: LoggingOpts,
 }
 
-#[derive(StructOpt)]
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
 pub struct DeleteAllArgs {
     /// Enable insecure connections (no TLS, agent output will be accessible via TCP agent port without encryption)
-    #[structopt(long)]
+    #[arg(long)]
     pub enable_insecure_connections: bool,
 
-    #[structopt(flatten)]
+    #[clap(flatten)]
     pub logging_opts: LoggingOpts,
 }
 
 // TODO (sk): Remove port and allowed_ip and instead read from a toml file, as is done under unix
 #[cfg(windows)]
-#[derive(StructOpt)]
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
 pub struct PullOpts {
     /// TCP port to listen on for incoming pull connections
-    #[structopt(long, short = "P", parse(try_from_str = site_spec::parse_port))]
+    #[arg(long, short = 'P', value_parser = site_spec::parse_port)]
     pub port: Option<u16>,
 
     /// List of IP addresses & templates separated with ' '
-    #[structopt(long, short = "A", parse(from_str))]
+    #[arg(long, short = 'A', value_parser = clap::value_parser!(String))]
     pub allowed_ip: Option<Vec<String>>,
 
     /// Connection in format "type/peer"
@@ -171,67 +180,72 @@ pub struct PullOpts {
     ///     "ms/Global\\WinAgent_13"
     ///     "ip/localhost:28250"
     /// None means default behavior
-    #[structopt(long, parse(from_str))]
+    #[arg(long, value_parser = clap::value_parser!(String))]
     pub agent_channel: Option<types::AgentChannel>,
 }
 
 #[cfg(unix)]
-#[derive(StructOpt)]
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
 pub struct PullOpts {
     /// TCP port to listen on for incoming pull connections
-    #[structopt(long, short = "P", parse(try_from_str = site_spec::parse_port))]
+    #[arg(long, short = 'P', value_parser = site_spec::parse_port)]
     pub port: Option<u16>,
 
     /// List of IP addresses & templates separated with ' '
-    #[structopt(long, short = "A", parse(from_str))]
+    #[arg(long, short = 'A', value_parser = clap::value_parser!(String))]
     pub allowed_ip: Option<Vec<String>>,
 }
 
-#[derive(StructOpt)]
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
 pub struct PullArgs {
-    #[structopt(flatten)]
+    #[clap(flatten)]
     pub pull_opts: PullOpts,
 
-    #[structopt(flatten)]
+    #[clap(flatten)]
     pub logging_opts: LoggingOpts,
 }
 
-#[derive(StructOpt)]
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
 pub struct DaemonArgs {
-    #[structopt(flatten)]
+    #[clap(flatten)]
     pub pull_opts: PullOpts,
 
-    #[structopt(flatten)]
+    #[clap(flatten)]
     pub client_opts: ClientOpts,
 
-    #[structopt(flatten)]
+    #[clap(flatten)]
     pub logging_opts: LoggingOpts,
 }
 
-#[derive(StructOpt)]
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
 pub struct ImportArgs {
     /// The file to import. If not provided, data is read from standard input.
-    #[structopt(name = "CONNECTION_FILE")]
+    #[arg(name = "CONNECTION_FILE")]
     pub conn_file: Option<std::path::PathBuf>,
 
-    #[structopt(flatten)]
+    #[clap(flatten)]
     pub logging_opts: LoggingOpts,
 }
 
-#[derive(StructOpt)]
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
 pub struct SharedArgsOnly {
-    #[structopt(flatten)]
+    #[clap(flatten)]
     pub logging_opts: LoggingOpts,
 }
 
-#[derive(StructOpt)]
-#[structopt(about = "Checkmk agent controller.", version = constants::VERSION)]
+#[derive(Parser)]
+#[command(about = "Checkmk agent controller.", version = constants::VERSION)]
 pub enum Args {
     /// Register with a Checkmk site
     ///
     /// Register with a Checkmk instance for monitoring. The required information
     /// can be read from a config file or must be passed via command line.
-    #[structopt(name = "register")]
+    #[command(name = "register")]
     RegisterHostName(RegistrationArgsHostName),
 
     /// Register with a Checkmk site, automatically creating a new host.
@@ -239,27 +253,27 @@ pub enum Args {
     /// Register with a Checkmk instance for monitoring. A new host will be created
     /// in the target Checkmk instance. This mode is only available if the target
     /// is an Enterprise Plus edition.
-    #[structopt(name = "register-new")]
+    #[command(name = "register-new")]
     RegisterAgentLabels(RegistrationArgsAgentLabels),
 
     /// Register with a Checkmk site on behalf of another host
     ///
     /// This allows a registration by proxy for hosts which cannot register themselves.
     /// The gathered connection information is written to standard output.
-    #[structopt()]
+    #[command()]
     ProxyRegister(RegistrationArgsHostName),
 
     /// Push monitoring data to all Checkmk sites configured for 'push'
     ///
     /// This command will collect monitoring data, send them to all
     /// Checkmk site configured for 'push' and exit.
-    #[structopt()]
+    #[command()]
     Push(PushArgs),
 
     /// Handle incoming connections from Checkmk sites collecting monitoring data
     ///
     /// This command will listen for incoming connections
-    #[structopt()]
+    #[command()]
     Pull(PullArgs),
 
     /// Run as daemon and handle all pull and push connections
@@ -267,15 +281,15 @@ pub enum Args {
     /// Listen for incoming connections (as the 'pull' command does),
     /// and send data to all Checkmk sites configured for 'push'
     /// (as the 'push' command does) once a minute.
-    #[structopt()]
+    #[command()]
     Daemon(DaemonArgs),
 
     /// Collect monitoring data and write it to standard output
-    #[structopt()]
+    #[command()]
     Dump(SharedArgsOnly),
 
     /// Query the registration status of this host
-    #[structopt()]
+    #[command()]
     Status(StatusArgs),
 
     /// Delete a connection to a Checkmk instance
@@ -283,18 +297,18 @@ pub enum Args {
     /// Connections can be specified either by their site address or their UUID.
     /// The site address is '<servername>:<port>/<site>', see the output of the
     /// status command.
-    #[structopt()]
+    #[command()]
     Delete(DeleteArgs),
 
     /// Delete all connections to Checkmk sites
-    #[structopt()]
+    #[command()]
     DeleteAll(DeleteAllArgs),
 
     /// Import a pull connection from file or standard input
     ///
     /// A connection is imported from the JSON-encoded connection information.
     /// A compatible dataset can be created using the 'proxy-register' command.
-    #[structopt()]
+    #[command()]
     Import(ImportArgs),
 }
 
@@ -334,8 +348,12 @@ mod tests {
             (String::from("a"), String::from("b"))
         );
         assert_eq!(
-            parse_agent_labels("abc-123=456-def").unwrap(),
-            (String::from("abc-123"), String::from("456-def"))
+            parse_agent_labels("abc-123=456=def").unwrap(),
+            (String::from("abc-123"), String::from("456=def"))
+        );
+        assert_eq!(
+            parse_agent_labels("abc-123456-def").unwrap_err(),
+            "invalid KEY=VALUE: no `=` found in `abc-123456-def`"
         );
     }
 

@@ -43,7 +43,7 @@ fn test_supported_modes(help_stdout: String) -> bool {
     let mut n_modes_found = 0;
     for line in help_stdout.split('\n') {
         for mode in SUPPORTED_MODES {
-            if line.starts_with(format!("    {}", mode).as_str()) {
+            if line.starts_with(format!("  {}", mode).as_str()) {
                 n_modes_found += 1;
                 break;
             }

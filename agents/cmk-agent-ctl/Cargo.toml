@@ -10,7 +10,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-structopt = { version = "0.3", features = [ "paw" ] }
+#  structopt = { version = "0.3", features = [ "paw" ] }
+clap = { version = "4.0.9", features = ["derive"] }
 
 # ideally, we would just use "rustls-tls-native-roots" instead of "native-tls" and "rustls-tls-manual-roots
 # however, in SUP-10832, native-tls was ok with the custom CA of the customer, while rustls complained

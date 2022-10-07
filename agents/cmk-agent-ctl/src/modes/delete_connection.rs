@@ -32,7 +32,7 @@ fn delete_by_uuid(uuid: &uuid::Uuid, registry: &mut config::Registry) -> AnyhowR
 }
 
 pub fn delete(registry: &mut config::Registry, connection_id: &str) -> AnyhowResult<()> {
-    if let Err(err) = match site_spec::Coordinates::from_str(connection_id) {
+    match site_spec::Coordinates::from_str(connection_id) {
         Ok(coordinates) => registry.delete_standard_connection(&coordinates),
         Err(_) => delete_by_uuid(
             &uuid::Uuid::from_str(connection_id).context(
@@ -40,9 +40,8 @@ pub fn delete(registry: &mut config::Registry, connection_id: &str) -> AnyhowRes
             )?,
             registry,
         ),
-    } {
-        return Err(err);
-    }
+    }?;
+
     registry.save()?;
     Ok(())
 }

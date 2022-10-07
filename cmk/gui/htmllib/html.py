@@ -226,14 +226,14 @@ class HTMLGenerator(HTMLWriter):
             if filename_for_browser:
                 self.javascript_file(filename_for_browser)
 
-        self._set_js_csrf_token()
+        self.set_js_csrf_token()
 
         if self.browser_reload != 0.0:
             self.javascript("cmk.utils.set_reload(%s)" % (self.browser_reload))
 
         self.close_head()
 
-    def _set_js_csrf_token(self) -> None:
+    def set_js_csrf_token(self) -> None:
         session = request_local_attr("session")
         # session is LocalProxy, only on access it is None, so we cannot test on 'is None'
         if not hasattr(session, "session_info"):

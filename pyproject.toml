@@ -37,10 +37,28 @@ target-version = ['py310']
 
 # NOTE: Keep this is sync with mypy-raw.ini!
 [tool.mypy]
+# When all of these are true, we can enable --strict
 check_untyped_defs = true
+disallow_any_generics = false
 disallow_incomplete_defs = true
+disallow_subclassing_any = false
+disallow_untyped_calls = false
+disallow_untyped_decorators = false
+disallow_untyped_defs = false
 no_implicit_optional = true
+no_implicit_reexport = false
+strict_concatenate = false
 strict_equality = true
+warn_redundant_casts = false
+warn_return_any = false
+warn_unused_configs = false
+warn_unused_ignores = false
+# Miscellaneous stuff not in --strict
+disallow_any_decorated = false
+disallow_any_explicit = false
+disallow_any_expr = false
+disallow_any_unimported = false
+warn_unreachable = false
 
 [[tool.mypy.overrides]]
 module = [

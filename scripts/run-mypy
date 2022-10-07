@@ -39,9 +39,5 @@ $REPO_PATH/omd/packages/omd" \
     --python-version "${PYTHON_MAJOR_DOT_MINOR}" \
     --scripts-are-modules \
     --show-error-codes \
-    --check-untyped-defs \
-    --strict-equality \
-    --no-implicit-optional \
-    --disallow-incomplete-defs \
     ${JUNIT_XML} \
     "$@"

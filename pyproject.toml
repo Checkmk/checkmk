@@ -35,7 +35,13 @@ line-length = 100
 target-version = ['py310']
 
 
-# If you add more modules, add them to mypy-raw.ini as well...
+# NOTE: Keep this is sync with mypy-raw.ini!
+[tool.mypy]
+check_untyped_defs = true
+disallow_incomplete_defs = true
+no_implicit_optional = true
+strict_equality = true
+
 [[tool.mypy.overrides]]
 module = [
     "cmk.gui.plugins.views.mobile",
@@ -46,8 +52,6 @@ module = [
     "tests.unit.cmk.ec.*",
     "tests.testlib.event_console",
 ]
-check_untyped_defs = true
-disallow_incomplete_defs = true
 disallow_untyped_calls = true
 disallow_untyped_defs = true
 warn_return_any = true

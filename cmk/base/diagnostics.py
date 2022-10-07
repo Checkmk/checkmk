@@ -461,7 +461,7 @@ class PerfDataDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             if (key := result[0][i]) not in ["license_usage_history"]
         }
 
-        if cmk_version.get_general_version_infos()["core"] == "cmc":
+        if config.monitoring_core == "cmc":
             # CEE: Get information about the helper processes from config
             performance_data.update({
                 "cmc_check_helpers": config.cmc_check_helpers,

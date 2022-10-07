@@ -13,7 +13,6 @@ OS_PACKAGES    += dnsutils
 OS_PACKAGES    += graphviz
 OS_PACKAGES    += apache2
 OS_PACKAGES    += apache2-utils # contains htpasswd2
-OS_PACKAGES    += libdbi1
 OS_PACKAGES    += libevent-2.1-7
 OS_PACKAGES    += libltdl7
 OS_PACKAGES    += libnl-3-200

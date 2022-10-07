@@ -12,7 +12,6 @@ OS_PACKAGES      += dialog
 OS_PACKAGES      += dnsutils
 OS_PACKAGES      += graphviz
 OS_PACKAGES      += apache2
-OS_PACKAGES      += libdbi1
 OS_PACKAGES      += libevent-2.1-7
 OS_PACKAGES      += libgd3
 OS_PACKAGES      += libltdl7

@@ -1,0 +1,11 @@
+Title: Dashboards: Apply context to figure dashlets
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 2.2.0i1
+Date: 1665143507
+Class: fix
+
+Recently, figure dashlets (i.e. specific dashboard elements) did not apply the dashboard context anymore. This could lead to the display of unexpected content (e.g. in "inventory" type elements) as well as broken graph rendering (e.g. in "single metric" type elements).
+The application of the dashboard context is fixed for figure dashlets and thus their expected rendering is restored.

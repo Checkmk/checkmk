@@ -727,6 +727,9 @@ class FigureDashletPage(AjaxPage):
             dashboard = get_permitted_dashboards()[dashboard_name]
         except KeyError:
             raise MKUserError("name", _("The requested dashboard does not exist."))
+        # Get context from the AJAX request body (not simply from the dashboard config) to include
+        # potential dashboard context given via HTTP request variables
+        dashboard["context"] = json.loads(request.get_ascii_input_mandatory("context"))
 
         dashlet_id = request.get_integer_input_mandatory("id")
         try:
@@ -857,10 +860,13 @@ class ABCFigureDashlet(Dashlet[T], abc.ABC):
         )
 
     def _dashlet_http_variables(self) -> HTTPVariables:
-        args: HTTPVariables = []
-        args.append(("name", self.dashboard_name))
-        args.append(("id", self.dashlet_id))
-        return args
+        return [
+            ("name", self.dashboard_name),
+            ("id", self.dashlet_id),
+            # Add context to the dashlet's AJAX request body so any dashboard context that is given
+            # via HTTP request is not lost in the AJAX call
+            ("context", json.dumps(self._dashboard["context"])),
+        ]
 
 
 def _internal_dashboard_to_runtime_dashboard(raw_dashboard: dict[str, Any]) -> DashboardConfig:

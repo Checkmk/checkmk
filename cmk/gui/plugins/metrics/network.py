@@ -831,6 +831,8 @@ for ctype, ccolor in (
     ("dot11ac", "34/b"),
     ("dot11n2_4", "45/a"),
     ("dot11n5", "46/b"),
+    ("dot11ax2_4", "14/a"),
+    ("dot11ax5", "35/a"),
 ):
     metric_info["wifi_connection_" + ctype] = {
         "title": "802." + ctype,

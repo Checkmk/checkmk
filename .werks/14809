@@ -1,0 +1,12 @@
+Title: Add 802.11ax24 and 802.11ax5 standards for cisco prime connection count
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1665049239
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p30
+
+Previously the number of connected clients for 802.11ax24 and 802.11ax5 have not been displayed.

@@ -23,7 +23,8 @@ PYTEST_UNIT_TEST_OPTS = \
     ../agent-receiver \
     ../omd/packages/omd \
     unit
-PYTEST_ADDITIONAL_UNIT_TEST_OPTS = -m "not slow"
+PYTEST_OPTS_UNIT_SKIP_SLOW = -m "not slow"
+PYTEST_OPTS_UNIT_SLOW_ONLY = -m "slow"
 BLACK  := $(SCRIPTS)/run-black
 THREE_TO_TWO := $(PIPENV) run 3to2
 BANDIT := $(PIPENV) run bandit
@@ -362,18 +363,26 @@ test-cycles-docker:
 
 test-unit: prepare-protobuf-files sync-legacy-checks
 	$(PYTEST) \
-		$(PYTEST_ADDITIONAL_UNIT_TEST_OPTS) \
+		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
 		$(PYTEST_UNIT_TEST_OPTS)
 
 test-unit-docker:
 	../scripts/run-in-docker.sh make --quiet test-unit
+
+test-unit-slow: prepare-protobuf-files sync-legacy-checks
+	$(PYTEST) \
+		$(PYTEST_OPTS_UNIT_SLOW_ONLY) \
+		$(PYTEST_UNIT_TEST_OPTS)
+
+test-unit-slow-docker:
+	../scripts/run-in-docker.sh make --quiet test-unit-slow
 
 test-unit-resilience: prepare-protobuf-files sync-legacy-checks
 	$(PYTEST) \
 		--count=2 \
 		--random-order-bucket=global \
 	        -m "not non_resilient" \
-		$(PYTEST_ADDITIONAL_UNIT_TEST_OPTS) \
+		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
 		$(PYTEST_UNIT_TEST_OPTS)
 
 test-unit-resilience-docker:
@@ -388,7 +397,7 @@ test-unit-coverage-html: prepare-protobuf-files sync-legacy-checks
 		--cov-report=html \
 		--cov-config=.coveragerc_unit \
 		--no-cov-on-fail \
-		$(PYTEST_ADDITIONAL_UNIT_TEST_OPTS) \
+		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
 		$(PYTEST_UNIT_TEST_OPTS)
 
 test-unit-shell:

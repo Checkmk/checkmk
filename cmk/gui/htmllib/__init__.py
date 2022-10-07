@@ -1076,7 +1076,7 @@ class html(ABCHTMLGenerator):
             if filename_for_browser:
                 self.javascript_file(filename_for_browser)
 
-        self._set_js_csrf_token()
+        self.set_js_csrf_token()
 
         if self.browser_reload != 0.0:
             if self.browser_redirect != "":
@@ -1088,7 +1088,7 @@ class html(ABCHTMLGenerator):
 
         self.close_head()
 
-    def _set_js_csrf_token(self) -> None:
+    def set_js_csrf_token(self) -> None:
         # session is LocalProxy, only on access it is None, so we cannot test on 'is None'
         if not hasattr(session, "session_info"):
             return

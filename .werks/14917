@@ -1,0 +1,16 @@
+Title: Fix WebUI form submission
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1665384411
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p14
+
+With Werk 13903 a new CSRF token was introduced.
+This token is added to all AJAX calls so the backend can validate this.
+Unfortunately it was forgotten to add this token to the Mobile UI as well.
+The missing token raised an error when submitting forms in the WebUI.
+
+The token was added to the mobile UI.

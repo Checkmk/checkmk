@@ -3,15 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 import socket
 import time
+from pathlib import Path
 from typing import Optional, Union
 
 import cmk.utils.render
 import cmk.utils.tty as tty
 from cmk.utils.parameters import TimespecificParameters
-from cmk.utils.type_defs import HostName
+from cmk.utils.paths import tmp_dir
+from cmk.utils.type_defs import HostName, SourceType
 
 import cmk.core_helpers.cache as file_cache
 
@@ -22,6 +23,64 @@ import cmk.base.obsolete_output as out
 import cmk.base.sources as sources
 from cmk.base.check_utils import LegacyCheckParameters
 from cmk.base.config import HostConfig
+from cmk.base.sources import Source
+from cmk.base.sources.ipmi import IPMISource
+from cmk.base.sources.piggyback import PiggybackSource
+from cmk.base.sources.programs import ProgramSource
+from cmk.base.sources.snmp import SNMPSource
+from cmk.base.sources.tcp import TCPSource
+
+
+def dump_source(source: Source) -> str:
+    # pylint: disable=too-many-branches
+    if isinstance(source, IPMISource):
+        description = "Management board - IPMI"
+        items = []
+        if source.ipaddress:
+            items.append("Address: %s" % source.ipaddress)
+        if source.credentials:
+            items.append("User: %s" % source.credentials["username"])
+        if items:
+            description = "%s (%s)" % (description, ", ".join(items))
+        return description
+
+    if isinstance(source, PiggybackSource):
+        return "Process piggyback data from %s" % (Path(tmp_dir) / "piggyback" / source.hostname)
+
+    if isinstance(source, ProgramSource):
+        response = ["Program: %s" % source.cmdline]
+        if source.stdin:
+            response.extend(["  Program stdin:", source.stdin])
+        return "\n".join(response)
+
+    if isinstance(source, SNMPSource):
+        snmp_config = source.snmp_config
+        if snmp_config.is_usewalk_host:
+            return "SNMP (use stored walk)"
+
+        if snmp_config.is_snmpv3_host:
+            credentials_text = "Credentials: '%s'" % ", ".join(snmp_config.credentials)
+        else:
+            credentials_text = "Community: %r" % snmp_config.credentials
+
+        if snmp_config.is_snmpv3_host or snmp_config.is_bulkwalk_host:
+            bulk = "yes"
+        else:
+            bulk = "no"
+
+        return "%s (%s, Bulk walk: %s, Port: %d, Backend: %s)" % (
+            "SNMP" if source.source_type is SourceType.HOST else "Management board - SNMP",
+            credentials_text,
+            bulk,
+            snmp_config.port,
+            snmp_config.snmp_backend.value,
+        )
+
+    if isinstance(source, TCPSource):
+        return "TCP: %s:%d" % (source.ipaddress, source.agent_port)
+
+    # Fallback for non-raw stuff.
+    return type(source).__name__
 
 
 def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
@@ -102,7 +161,7 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
     )
 
     agenttypes = [
-        json.dumps(source.fetcher_configuration)
+        dump_source(source)
         for source in sources.make_non_cluster_sources(
             host_config,
             ipaddress,

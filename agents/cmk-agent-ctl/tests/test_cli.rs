@@ -13,22 +13,20 @@ use predicates::prelude::predicate;
 
 const BINARY: &str = "cmk-agent-ctl";
 
-fn supported_modes() -> Vec<&'static str> {
-    vec![
-        "daemon",
-        "delete",
-        "delete-all",
-        "dump",
-        "help",
-        "import",
-        "proxy-register",
-        "pull",
-        "push",
-        "register",
-        "register-new",
-        "status",
-    ]
-}
+const SUPPORTED_MODES: [&str; 12] = [
+    "daemon",
+    "delete",
+    "delete-all",
+    "dump",
+    "help",
+    "import",
+    "proxy-register",
+    "pull",
+    "push",
+    "register",
+    "register-new",
+    "status",
+];
 
 lazy_static::lazy_static! {
     static ref REQUIRED_ARGUMENTS: std::collections::HashMap<&'static str, Vec<&'static str>> = {
@@ -44,14 +42,14 @@ lazy_static::lazy_static! {
 fn test_supported_modes(help_stdout: String) -> bool {
     let mut n_modes_found = 0;
     for line in help_stdout.split('\n') {
-        for mode in supported_modes() {
+        for mode in SUPPORTED_MODES {
             if line.starts_with(format!("    {}", mode).as_str()) {
                 n_modes_found += 1;
                 break;
             }
         }
     }
-    n_modes_found == supported_modes().len()
+    n_modes_found == SUPPORTED_MODES.len()
 }
 
 #[test]
@@ -120,7 +118,7 @@ async fn test_dump() -> AnyhowResult<()> {
 #[cfg(unix)]
 #[test]
 fn test_fail_become_user() {
-    for mode in supported_modes() {
+    for mode in SUPPORTED_MODES {
         if mode == "help" {
             continue;
         }
@@ -143,7 +141,7 @@ fn test_fail_become_user() {
 fn test_fail_socket_missing() {
     let error_message_socket = "Something seems wrong with the agent socket";
 
-    for mode in supported_modes() {
+    for mode in SUPPORTED_MODES {
         let mut cmd = Command::cargo_bin(BINARY).unwrap();
         let output_res = cmd
             .timeout(std::time::Duration::from_secs(1))

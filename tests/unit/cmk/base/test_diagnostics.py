@@ -9,6 +9,7 @@ import json
 import shutil
 from pathlib import Path
 from typing import NamedTuple
+from unittest import mock
 
 import pytest
 import requests
@@ -144,6 +145,7 @@ def test_diagnostics_element_perfdata():
     )
 
 
+@mock.patch("cmk.base.diagnostics.cmk.base.config.load", return_value=True)
 def test_diagnostics_element_perfdata_content(tmp_path, _collectors, mock_livestatus):
 
     test_columns = {

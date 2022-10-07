@@ -44,7 +44,6 @@ RUN apt-get update \
     iputils-ping \
     joe \
     libcurl4-openssl-dev \
-    libdbi-dev \
     libevent-dev \
     libffi-dev \
     libfreeradius-dev \

@@ -50,7 +50,6 @@ RUN yum -y makecache \
     httpd-devel \
     joe \
     libXpm-devel \
-    libdbi-devel \
     libevent-devel \
     libffi-devel \
     libgsf-devel \

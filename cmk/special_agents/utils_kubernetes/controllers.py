@@ -19,7 +19,7 @@ class CompleteControlChain:
 
 
 @dataclass(frozen=True)
-class InCompleteControlChain:
+class IncompleteControlChain:
     # Not all Owners could be determined based on the API data. This can have
     # several reasons. E.g., the controller is a CustomResourceDefinition; or
     # the user has specified the UID of an object, which does not exist.
@@ -33,7 +33,33 @@ def _find_controller(owner_references: api.OwnerReferences) -> api.OwnerReferenc
 
 def _find_controllers(
     pod_uid: api.PodUID, object_to_owners: Mapping[str, api.OwnerReferences]
-) -> CompleteControlChain | InCompleteControlChain:
+) -> CompleteControlChain | IncompleteControlChain:
+    """Match Pod to ControlChain.
+
+    Kubernetes only provides the information which controller is directly
+    controlling the Pod. For instance, if we have a ControlChain of the form
+    DataBase > Deployment > ReplicaSet > Pod, then the Pod only knows about the
+    ReplicaSet. In order to obtain the whole chain, we need the API data of the
+    ReplicaSet and the Deployment, since each of them know about their
+    controller, and thus give us one piece of the ControlChain. This why this
+    function is combining data from muliple different queries to the API
+    Server, aka object_to_owners.
+    Note, that since DataBase is a CustomResourceDefinition Checkmk does not
+    collect any API data on this resource. Therefore, we can't lookup any
+    OwnerReferences of DataBase. Thus, the ControlChain ends.
+
+    >>> owner_database = api.OwnerReference(uid='3', kind="Database", controller=True, name='', namespace='')
+    >>> owner_deployment = api.OwnerReference(uid='2', kind="Deployment", controller=True, name='', namespace='')
+    >>> owner_replicaset = api.OwnerReference(uid='1', kind="ReplicaSet", controller=True, name='', namespace='')
+    >>> object_to_owners = {
+    ...     "0": [owner_replicaset],
+    ...     owner_replicaset.uid: [owner_deployment],
+    ...     owner_deployment.uid: [owner_database],
+    ... }
+    >>> _find_controllers("0", object_to_owners)
+    IncompleteControlChain(chain=[Controller(type_='ReplicaSet', uid='1', name='', namespace=''), Controller(type_='Deployment', uid='2', name='', namespace=''), Controller(type_='Database', uid='3', name='', namespace='')])
+    """
+
     # owner_reference approach is taken from these two links:
     # https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
     # https://github.com/kubernetes-client/python/issues/946
@@ -53,37 +79,39 @@ def _find_controllers(
         if (owners_of_controller := object_to_owners.get(controller.uid)) is None:
             # A controller exists, but it was not available from the API data we have.
             # Typically, this happens if we handle CustomResourceDefinitions.
-            return InCompleteControlChain(chain=chain)
+            return IncompleteControlChain(chain=chain)
         controller = _find_controller(owners_of_controller)
     return CompleteControlChain(chain=chain)
 
 
+def _find_control_chains(
+    pod_uids: Iterable[api.PodUID], object_to_owners: Mapping[str, api.OwnerReferences]
+) -> Mapping[api.PodUID, Sequence[api.Controller]]:
+    return {pod_uid: _find_controllers(pod_uid, object_to_owners).chain for pod_uid in pod_uids}
+
+
 # TODO Needs an integration test
 def _match_controllers(
-    pods: Iterable[client.V1Pod], object_to_owners: Mapping[str, api.OwnerReferences]
-) -> Tuple[Mapping[str, Sequence[api.PodUID]], Mapping[api.PodUID, Sequence[api.Controller]]]:
+    pod_to_controllers: Mapping[api.PodUID, Sequence[api.Controller]]
+) -> Mapping[str, Sequence[api.PodUID]]:
     """Matches controllers to the pods they control."""
     controller_to_pods: Dict[str, List[api.PodUID]] = {}
-    pod_to_controllers: Dict[api.PodUID, Sequence[api.Controller]] = {}
-
-    for pod in pods:
-        pod_uid = api.PodUID(pod.metadata.uid)
-        chain = _find_controllers(pod_uid, object_to_owners)
-        pod_to_controllers[pod_uid] = chain.chain
-        for controller in chain.chain:
+    for pod_uid, chain in pod_to_controllers.items():
+        for controller in chain:
             controller_to_pods.setdefault(controller.uid, []).append(pod_uid)
 
-    return controller_to_pods, pod_to_controllers
+    return controller_to_pods
 
 
 def map_controllers(
     raw_pods: Sequence[client.V1Pod],
     object_to_owners: Mapping[str, api.OwnerReferences],
 ) -> Tuple[Mapping[str, Sequence[api.PodUID]], Mapping[api.PodUID, Sequence[api.Controller]]]:
-    return _match_controllers(
-        pods=raw_pods,
+    pod_to_controllers = _find_control_chains(
+        pod_uids=(pod.metadata.uid for pod in raw_pods),
         object_to_owners=object_to_owners,
     )
+    return _match_controllers(pod_to_controllers), pod_to_controllers
 
 
 def map_controllers_top_to_down(

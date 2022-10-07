@@ -448,15 +448,34 @@ class PainterEventHost(Painter):
 
     def render(self, row, cell):
         host_name = row.get("host_name", row["event_host"])
-        # See SUP-10272 for a detailed explanation, hacks of view.py do not
-        # work for SNMP traps
-        link = makeuri_contextless(html.request, [
-            ("view_name", "ec_events_of_host"),
+        return "", HTML(html.render_a(host_name, _get_event_host_link(host_name, row, cell)))
+
+
+def _get_event_host_link(host_name: str, row, cell) -> str:
+    """
+    Needed to support links to views and dashboards. If no link is configured,
+    always use ec_events_of_host as target view.
+    """
+    link_type: str = "view_name"
+    filename: str = "view.py"
+    link_target: str = "ec_events_of_host"
+    if link_spec := cell._link_spec:
+        if link_spec.type_name == "dashboards":
+            link_type = "name"
+            filename = "dashboard.py"
+        link_target = link_spec.name
+
+    # See SUP-10272 for a detailed explanation, hacks of view.py do not
+    # work for SNMP traps
+    return makeuri_contextless(
+        html.request,
+        [
+            (link_type, link_target),
             ("host", host_name),
             ("event_host", row["event_host"]),
-        ])
-
-        return "", HTML(html.render_a(host_name, link))
+        ],
+        filename=filename,
+    )
 
 
 @painter_registry.register

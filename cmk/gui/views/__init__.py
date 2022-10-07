@@ -12,7 +12,6 @@ from itertools import chain
 from typing import (
     Any,
     Callable,
-    cast,
     Dict,
     Iterable,
     Iterator,
@@ -1376,7 +1375,7 @@ def _add_rest_api_menu_entries(view_renderer, queries: List[str]):  # type:ignor
             url = create_url(omd_site(), query)
         except ValueError:
             continue
-        table = cast(str, query.table.__tablename__)
+        table = query.table.__tablename__
         entries.append(
             PageMenuEntry(
                 title=_("Query %s resource") % (table,),

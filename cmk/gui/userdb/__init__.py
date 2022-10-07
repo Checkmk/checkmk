@@ -17,7 +17,7 @@ from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from logging import Logger
 from pathlib import Path
-from typing import Any, Callable, cast, Iterable, Literal, Mapping, Optional, TypeVar
+from typing import Any, Callable, Iterable, Literal, Mapping, Optional, TypeVar
 
 from six import ensure_str
 
@@ -1024,7 +1024,7 @@ def write_contacts_and_users_file(
     non_contact_attributes_cache: dict[str | None, list[str]] = {}
     multisite_attributes_cache: dict[str | None, list[str]] = {}
     for user_settings in updated_profiles.values():
-        connector = cast(Optional[str], user_settings.get("connector"))
+        connector = user_settings.get("connector")
         if connector not in non_contact_attributes_cache:
             non_contact_attributes_cache[connector] = non_contact_attributes(connector)
         if connector not in multisite_attributes_cache:

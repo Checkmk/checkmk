@@ -31,7 +31,7 @@ import os
 import socket
 import sys
 import tarfile
-from typing import BinaryIO, cast, List, Tuple, Union
+from typing import BinaryIO, List, Tuple, Union
 
 from omdlib.contexts import SiteContext
 from omdlib.type_defs import CommandOptions
@@ -51,9 +51,7 @@ def backup_site_to_tarfile(
         mode=mode,
         site=site,
         verbose=verbose,
-    ) as backup_tar:
-        tar = cast(BackupTarFile, backup_tar)
-
+    ) as tar:
         # Add the version symlink as first file to be able to
         # check a) the sitename and b) the version before reading
         # the whole tar archive. Important for streaming.

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
-from typing import Any, cast, Dict, Iterable, Literal, Optional
+from typing import Any, Dict, Iterable, Literal, Optional
 from urllib.parse import quote_plus
 
 import docstring_parser  # type: ignore[import]
@@ -171,7 +171,7 @@ def create_url(site: SiteId, query: Query) -> str:
         A ValueError when no URL could be created.
 
     """
-    table = cast(str, query.table.__tablename__)
+    table = query.table.__tablename__
     try:
         domain_type = {
             "hosts": "host",

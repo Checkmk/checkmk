@@ -6,10 +6,14 @@
 from collections.abc import Sequence
 from typing import List, NamedTuple
 
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.utils.fortinet import DETECT_FORTIGATE
 
-from .agent_based_api.v1 import register, SNMPTree
+from .agent_based_api.v1 import register, Result, Service, SNMPTree, State
 
 
 class FortigateCluster(NamedTuple):
@@ -44,4 +48,39 @@ register.snmp_section(
         ),
     ],
     detect=DETECT_FORTIGATE,
+)
+
+
+def discover_fortigate_sync_status(section: FortigateClusterSection) -> DiscoveryResult:
+    if section and len(section) > 1:
+        yield Service()
+
+
+def check_fortigate_sync_status(
+    section: FortigateClusterSection,
+) -> CheckResult:
+    map_statuses = {"0": (State.CRIT, "unsynchronized"), "1": (State.OK, "synchronized")}
+
+    if not section:
+        return
+
+    for cluster in section:
+        if not cluster.status:
+            yield Result(state=State.UNKNOWN, summary=f"{cluster.name}: Status not available")
+            return
+
+        state, state_summary = map_statuses.get(
+            cluster.status, (State.UNKNOWN, f"Unknown status {cluster.status}")
+        )
+        yield Result(
+            state=state,
+            summary=f"{cluster.name}: {state_summary}",
+        )
+
+
+register.check_plugin(
+    name="fortigate_sync_status",
+    service_name="Sync Status",
+    check_function=check_fortigate_sync_status,
+    discovery_function=discover_fortigate_sync_status,
 )

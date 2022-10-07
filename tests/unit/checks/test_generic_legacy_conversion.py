@@ -1450,7 +1450,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
         "fortigate_sessions_base",
         "fortigate_signatures",
         "fortigate_sslvpn",
-        "fortigate_sync_status",
         "fortinet_controller_aps",
         "fortisandbox_cpu_util",
         "fortisandbox_queues",

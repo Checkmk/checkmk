@@ -3,23 +3,62 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import Any, Mapping, MutableMapping, NamedTuple
+
+from cmk.base.api.agent_based.type_defs import StringTable
 
 # Example output:
 # <<<vxvm_enclosures>>>
 # LIO-Sechs         aluadisk       ALUAdisk             CONNECTED    ALUA        3
 
 
-def check_vxvm_enclosures(item, params, info):
-    for line in info:
-        if line[0] == item:
-            if line[3] != "CONNECTED":
-                return (2, "Status is %s" % line[3])
-            return (0, "Status is CONNECTED")
-    return (3, "Item not found")
+class VXVMEnclosure(NamedTuple):
+    name: str
+    status: str
+
+
+VXVMEnclosureSection = Mapping[str, VXVMEnclosure]
+
+
+def parse_vxvm_enclosures(string_table: StringTable) -> VXVMEnclosureSection:
+    vxvm_enclosures: MutableMapping[str, VXVMEnclosure] = {}
+
+    for line in string_table:
+        try:
+            name, status = line[0], line[3]
+        except IndexError:
+            continue
+
+        vxvm_enclosures[name] = VXVMEnclosure(
+            name=name,
+            status=status,
+        )
+    return vxvm_enclosures
+
+
+def discover_vxvm_enclosures(section: VXVMEnclosureSection):
+    for enclosure in section:
+        yield enclosure, None
+
+
+def check_vxvm_enclosures(
+    item: str,
+    params: Mapping[str, Any],
+    section: VXVMEnclosureSection,
+):
+    if (enclosure := section.get(item)) is None:
+        yield (3, "Item not found")
+        return
+
+    yield (
+        2 if enclosure.status != "CONNECTED" else 0,
+        f"Status is {enclosure.status}",
+    )
 
 
 check_info["vxvm_enclosures"] = {
+    "parse_function": parse_vxvm_enclosures,
     "check_function": check_vxvm_enclosures,
-    "inventory_function": lambda info: [(item[0], None) for item in info],
+    "inventory_function": discover_vxvm_enclosures,
     "service_description": "Enclosure %s",
 }

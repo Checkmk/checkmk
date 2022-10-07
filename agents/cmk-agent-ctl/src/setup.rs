@@ -88,7 +88,11 @@ trait ExistsOr {
 
 impl ExistsOr for PathBuf {
     fn exists_or(self, other_path: PathBuf) -> PathBuf {
-        self.exists().then(|| self).unwrap_or(other_path)
+        if self.exists() {
+            self
+        } else {
+            other_path
+        }
     }
 }
 

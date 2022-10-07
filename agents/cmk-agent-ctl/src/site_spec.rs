@@ -16,7 +16,7 @@ pub fn parse_port(src: &str) -> AnyhowResult<u16> {
     ))
 }
 
-#[derive(serde::Deserialize, PartialEq, Debug)]
+#[derive(serde::Deserialize, PartialEq, Eq, Debug)]
 pub struct ServerSpec {
     pub server: String,
 
@@ -157,11 +157,11 @@ impl<'a> AgentRecvPortDiscoverer<'a> {
             }
         }
 
-        return Err(anyhow!(
+        Err(anyhow!(
             "Failed to discover agent receiver port from Checkmk REST API, both with http and https.\n\nError with https:\n{}\n\nError with http:\n{}",
             anyhow_error_to_human_readable(&error_messages["https"]),
             anyhow_error_to_human_readable(&error_messages["http"]),
-        ));
+        ))
     }
 }
 

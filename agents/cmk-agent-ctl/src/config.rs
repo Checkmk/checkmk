@@ -17,7 +17,7 @@ use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 use string_enum::StringEnum;
 
-#[derive(StringEnum, PartialEq)]
+#[derive(StringEnum, PartialEq, Eq)]
 pub enum ConnectionType {
     /// `push-agent`
     Push,
@@ -148,7 +148,7 @@ impl RegistrationConnectionConfig {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum HostRegistrationData {
     Name(String),
     Labels(types::AgentLabels),
@@ -326,7 +326,7 @@ impl Connection {
     }
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
 pub struct RegisteredConnections {
     #[serde(default)]
     pub push: HashMap<site_spec::Coordinates, Connection>,

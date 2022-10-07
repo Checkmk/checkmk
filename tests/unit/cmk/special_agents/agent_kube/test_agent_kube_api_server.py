@@ -37,13 +37,13 @@ def test_controller_matched_to_pod() -> None:
         {
             POD_UID: [
                 api.Controller(
-                    type_=api.ControllerType.job,
+                    type_=owner_job.kind,
                     uid=owner_job.uid,
                     name=owner_job.name,
                     namespace=owner_job.namespace,
                 ),
                 api.Controller(
-                    type_=api.ControllerType.cronjob,
+                    type_=owner_cronjob.kind,
                     uid=owner_cronjob.uid,
                     name=owner_cronjob.name,
                     namespace=owner_cronjob.namespace,
@@ -77,7 +77,7 @@ def test_controller_not_added_if_not_a_controller_object_mapping() -> None:
         {
             POD_UID: [
                 api.Controller(
-                    type_=api.ControllerType.job,
+                    type_=owner_job.kind,
                     uid=owner_job.uid,
                     name=owner_job.name,
                     namespace=owner_job.namespace,
@@ -123,16 +123,38 @@ def test_multiple_owners() -> None:
         {
             POD_UID: [
                 api.Controller(
-                    type_=api.ControllerType.job,
+                    type_=owner_job.kind,
                     uid=owner_job.uid,
                     name=owner_job.name,
                     namespace=owner_job.namespace,
                 ),
                 api.Controller(
-                    type_=api.ControllerType.cronjob,
+                    type_=owner_cronjob.kind,
                     uid=owner_cronjob.uid,
                     name=owner_cronjob.name,
                     namespace=owner_cronjob.namespace,
+                ),
+            ]
+        },
+    )
+
+
+def test_unknown_owner() -> None:
+    owner_unknown = OwnerReferenceFactory.build(kind="Unknown", controller=True)
+    object_to_owners: Mapping[str, api.OwnerReferences] = {
+        POD_UID: [owner_unknown],
+    }
+    assert _match_controllers([POD], object_to_owners) == (
+        {
+            owner_unknown.uid: [POD_UID],
+        },
+        {
+            POD_UID: [
+                api.Controller(
+                    type_=owner_unknown.kind,
+                    uid=owner_unknown.uid,
+                    name=owner_unknown.name,
+                    namespace=owner_unknown.namespace,
                 ),
             ]
         },

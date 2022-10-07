@@ -26,15 +26,6 @@ class InCompleteControlChain:
     chain: Sequence[api.Controller]
 
 
-def _create_api_controller(uid: str, name: str, namespace: str | None, kind: str) -> api.Controller:
-    return api.Controller(
-        uid=uid,
-        name=name,
-        namespace=namespace,
-        type_=api.ControllerType.from_str(kind.lower()),
-    )
-
-
 def _find_controller(owner_references: api.OwnerReferences) -> api.OwnerReference | None:
     # There is only ever one controller, Checkmk ignores non-controlling owners.
     return next((o for o in owner_references if o.controller), None)
@@ -52,11 +43,11 @@ def _find_controllers(
     controller = _find_controller(object_to_owners[pod_uid])
     while controller is not None:
         chain.append(
-            _create_api_controller(
-                controller.uid,
-                controller.name,
-                controller.namespace,
-                controller.kind,
+            api.Controller(
+                uid=controller.uid,
+                name=controller.name,
+                namespace=controller.namespace,
+                type_=controller.kind,
             )
         )
         if (owners_of_controller := object_to_owners.get(controller.uid)) is None:

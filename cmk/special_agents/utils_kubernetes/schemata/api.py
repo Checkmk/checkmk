@@ -594,7 +594,7 @@ class Controller(BaseModel):
     # Example:
     # pod "test_pod" is owned by a job named "test_job" and the "test_job" in owned by a cronjob named "test_cronjob"
     # the top-level controller of the "test_pod" is the "test_cronjob"
-    type_: ControllerType  # Relates to the field kind in OwnerReference
+    type_: str  # Relates to the field kind in OwnerReference
     uid: str
     name: str
     namespace: str | None

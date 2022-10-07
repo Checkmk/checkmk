@@ -127,28 +127,6 @@ RestartPolicy = Literal["Always", "OnFailure", "Never"]
 QosClass = Literal["burstable", "besteffort", "guaranteed"]
 
 
-class ControllerType(enum.Enum):
-    deployment = "deployment"
-    daemonset = "daemonset"
-    statefulset = "statefulset"
-    cronjob = "cronjob"
-    job = "job"
-
-    @staticmethod
-    def from_str(label):
-        if label == "deployment":
-            return ControllerType.deployment
-        if label == "daemonset":
-            return ControllerType.daemonset
-        if label == "statefulset":
-            return ControllerType.statefulset
-        if label == "cronjob":
-            return ControllerType.cronjob
-        if label == "job":
-            return ControllerType.job
-        raise ValueError(f"Unknown controller type: {label}")
-
-
 class ConcurrencyPolicy(enum.Enum):
     # specifies how to treat concurrent executions of a Job.
     Allow = "Allow"  # allows concurrently running jobs
@@ -162,7 +140,7 @@ class Section(BaseModel):
 
 
 class Controller(BaseModel):
-    type_: ControllerType
+    type_: str
     name: str
 
 

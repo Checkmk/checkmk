@@ -41,9 +41,9 @@ def parse_kube_pod_info(string_table: StringTable) -> PodInfo:
     ... '"cluster": "cluster", '
     ... '"kubernetes_cluster_hostname": "host", '
     ... '"uid": "dd1019ca-c429-46af-b6b7-8aad47b6081a", '
-    ... '"controllers": [{"type_": "deployment", "name": "redis-deployment"}]}'
+    ... '"controllers": [{"type_": "Deployment", "name": "redis-deployment"}]}'
     ... ]])
-    PodInfo(namespace='redis', name='redis-xyz', creation_timestamp=1637069562.0, labels={}, annotations={}, node='k8-w2', host_network=None, dns_policy='Default', host_ip='192.168.49.2', pod_ip='172.17.0.2', qos_class='burstable', restart_policy='Always', uid='dd1019ca-c429-46af-b6b7-8aad47b6081a', controllers=[Controller(type_=<ControllerType.deployment: 'deployment'>, name='redis-deployment')], cluster='cluster', kubernetes_cluster_hostname='host')
+    PodInfo(namespace='redis', name='redis-xyz', creation_timestamp=1637069562.0, labels={}, annotations={}, node='k8-w2', host_network=None, dns_policy='Default', host_ip='192.168.49.2', pod_ip='172.17.0.2', qos_class='burstable', restart_policy='Always', uid='dd1019ca-c429-46af-b6b7-8aad47b6081a', controllers=[Controller(type_='Deployment', name='redis-deployment')], cluster='cluster', kubernetes_cluster_hostname='host')
     """
     return PodInfo(**json.loads(string_table[0][0]))
 
@@ -90,7 +90,7 @@ def host_labels(section: PodInfo) -> HostLabelGenerator:
         yield HostLabel("cmk/kubernetes/namespace", section.namespace)
 
     for controller in section.controllers:
-        yield HostLabel(f"cmk/kubernetes/{controller.type_.value}", controller.name)
+        yield HostLabel(f"cmk/kubernetes/{controller.type_.lower()}", controller.name)
 
     yield HostLabel("cmk/kubernetes/cluster-host", section.kubernetes_cluster_hostname)
     yield from kube_labels_to_cmk_labels(section.labels)

@@ -427,7 +427,7 @@ class Pod:
             restart_policy=self.spec.restart_policy,
             uid=self.uid,
             controllers=[
-                section.Controller(type_=controller.type_.value, name=controller.name)
+                section.Controller(type_=controller.type_, name=controller.name)
                 for controller in self.controllers
             ],
             cluster=cluster_name,
@@ -2702,7 +2702,7 @@ def pod_info(
         uid=pod.uid,
         controllers=[
             section.Controller(
-                type_=section.ControllerType(c.type_.value),
+                type_=c.type_,
                 name=controller_namespaced_name(c),
             )
             for c in pod.controllers

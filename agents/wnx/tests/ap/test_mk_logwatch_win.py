@@ -23,6 +23,7 @@ except ImportError:
     pass  # only needed for type comments
 
 _SEP = os.sep.encode()
+_SEP_U = _SEP.decode("utf-8")
 
 
 def _oh_no():
@@ -258,7 +259,7 @@ def test_read_config_logfiles(parsed_config):
                                      []),
                                     ]
 
-    assert l_config[4].files == [u'{}'.format(os.path.join(os.sep, "var", "log", "äumlaut.log"))]
+    assert l_config[4].files == [u'{}'.format(os.path.join(_SEP_U, u"var", u"log", u"äumlaut.log"))]
     assert l_config[4].patterns == [(u'W', u'sshd.*Corrupted MAC on input', [], [])]
 
     assert l_config[5].files == [
@@ -420,19 +421,20 @@ STAR_FILES = [
 ]
 
 
-def _fix_for_os(pairs: Sequence[tuple[bytes, str]]) -> list[tuple[bytes, str]]:
+def _fix_for_os(pairs):
+    # type: (Sequence[tuple[bytes, str]])  -> list[tuple[bytes, str]]
     def symlink_in_windows(s: str) -> bool:
         return os.name == "nt" and s.find("symlink") != -1
 
     return [(os.sep.encode() + b, os.sep + s) for b, s in pairs if not symlink_in_windows(s)]
 
 
-def _cvt(path: bytes) -> str | bytes:
+def _cvt(path):
     return os.path.normpath(path.decode("utf-8", errors="replace")) if os.name == "nt" else path
 
 
 # NOTE: helper for mypy
-def _end_with(actual: str | bytes, *, expected: str | bytes) -> bool:
+def _end_with(actual, *, expected) -> bool:  # type:ignore[no-untyped-def]
     if isinstance(actual, str):
         assert isinstance(expected, str)
         return actual.endswith(expected)
@@ -689,7 +691,9 @@ class MockStdout(object):  # pylint: disable=useless-object-inheritance
             ]
         ),
     ])
-def test_process_logfile(monkeypatch, logfile, patterns, opt_raw, state, expected_output):
+def test_process_logfile(monkeypatch, logfile, patterns, opt_raw, state,
+                         expected_output):
+
     section = lw.LogfileSection((logfile, logfile))
     section.options.values.update(opt_raw)
     # in Windows default encoding, i.e., None means cp1252 and we cant change default easy

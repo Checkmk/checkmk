@@ -86,6 +86,7 @@ pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> Anyhow
         cli::Args::Push(push_args) => push(
             &registry,
             &config::ClientConfig::new(runtime_config, push_args.client_opts),
+            &setup::agent_channel(),
         ),
         cli::Args::Pull(pull_args) => pull(config::PullConfig::new(
             runtime_config,

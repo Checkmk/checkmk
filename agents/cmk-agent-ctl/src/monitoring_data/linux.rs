@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::{setup, types};
+use crate::types::AgentChannel;
 use std::io::{Read, Result as IoResult, Write};
 
 use std::os::unix::net::UnixStream;
@@ -10,7 +10,7 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::UnixStream as AsyncUnixStream;
 
 pub async fn async_collect(
-    agent_channel: &types::AgentChannel,
+    agent_channel: &AgentChannel,
     remote_ip: std::net::IpAddr,
 ) -> IoResult<Vec<u8>> {
     let mut mondata: Vec<u8> = vec![];
@@ -22,9 +22,9 @@ pub async fn async_collect(
     Ok(mondata)
 }
 
-pub fn collect() -> IoResult<Vec<u8>> {
+pub fn collect(agent_channel: &AgentChannel) -> IoResult<Vec<u8>> {
     let mut mondata: Vec<u8> = vec![];
-    let mut agent_stream = UnixStream::connect(setup::agent_channel())?;
+    let mut agent_stream = UnixStream::connect(agent_channel)?;
     agent_stream.write_all("\n".as_bytes())?; // No remote IP, signalize agent to continue and collect
     agent_stream.read_to_end(&mut mondata)?;
     Ok(mondata)

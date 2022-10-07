@@ -5,6 +5,7 @@
 use crate::{
     agent_receiver_api::{self, AgentData},
     config, monitoring_data,
+    types::AgentChannel,
 };
 use anyhow::{Context, Result as AnyhowResult};
 use log::{debug, info, warn};
@@ -21,12 +22,13 @@ fn sleep_randomly() {
 pub fn push(
     mut registry: config::Registry,
     client_config: config::ClientConfig,
+    agent_channel: AgentChannel,
 ) -> AnyhowResult<()> {
     sleep_randomly();
     loop {
         registry.refresh()?;
         let begin = Instant::now();
-        if let Err(error) = handle_push_cycle(&registry, &client_config) {
+        if let Err(error) = handle_push_cycle(&registry, &client_config, &agent_channel) {
             warn!("Error running push cycle. ({})", error);
         };
         thread::sleep(Duration::from_secs(60).saturating_sub(begin.elapsed()));
@@ -36,6 +38,7 @@ pub fn push(
 pub fn handle_push_cycle(
     registry: &config::Registry,
     client_config: &config::ClientConfig,
+    agent_channel: &AgentChannel,
 ) -> AnyhowResult<()> {
     if registry.push_is_empty() {
         return Ok(());
@@ -44,7 +47,7 @@ pub fn handle_push_cycle(
     debug!("Handling registered push connections.");
 
     let compressed_mon_data = monitoring_data::compress(
-        &monitoring_data::collect().context("Error collecting agent output")?,
+        &monitoring_data::collect(agent_channel).context("Error collecting agent output")?,
     )
     .context("Error compressing agent output")?;
 

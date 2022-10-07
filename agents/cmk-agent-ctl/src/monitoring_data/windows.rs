@@ -4,7 +4,6 @@
 
 use crate::{
     mailslot_transport::{self, MailSlotBackend},
-    setup,
     types::AgentChannel,
 };
 use log::{debug, warn};
@@ -151,10 +150,8 @@ fn collect_from_mailslot(mailslot: &str) -> IoResult<Vec<u8>> {
     ))
 }
 
-// TODO(sk) : change function signature on collect(AgentChannel)
-// do not use config/default/setup implicitly: testing difficult, code non-readable
-pub fn collect() -> IoResult<Vec<u8>> {
-    let (ch_type, ch_addr) = setup::agent_channel().parse()?;
+pub fn collect(agent_channel: &AgentChannel) -> IoResult<Vec<u8>> {
+    let (ch_type, ch_addr) = agent_channel.parse()?;
     match ch_type {
         ChannelType::Ip => collect_from_ip(&ch_addr),
         ChannelType::Mailslot => collect_from_mailslot(&ch_addr),

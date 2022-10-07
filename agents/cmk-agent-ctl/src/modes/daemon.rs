@@ -15,8 +15,11 @@ pub fn daemon(
 ) -> AnyhowResult<()> {
     let (tx_push, rx) = mpsc::channel();
     let tx_pull = tx_push.clone();
+    let agent_channel = pull_config.agent_channel.clone();
     thread::spawn(move || {
-        tx_push.send(push::push(registry, client_config)).unwrap();
+        tx_push
+            .send(push::push(registry, client_config, agent_channel))
+            .unwrap();
     });
     thread::spawn(move || {
         tx_pull.send(pull::pull(pull_config)).unwrap();

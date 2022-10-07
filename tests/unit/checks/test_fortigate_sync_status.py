@@ -10,11 +10,12 @@ import pytest
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.type_defs import CheckPluginName, SectionName
+from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.fortigate_sync_status import parse_fortigate_sync_status
 
 STRING_TABLE = [[["FW-VPN-RZ1", "1"], ["FW-VPN-RZ2", "0"]]]
 
@@ -54,9 +55,6 @@ def test_discover_vxvm_multipath(
     section: List[StringTable],
     expected_discovery_result: Sequence[Service],
 ) -> None:
-    parse_fortigate_sync_status = fix_register.snmp_sections[
-        SectionName("fortigate_sync_status")
-    ].parse_function
     assert (
         list(check.discovery_function(parse_fortigate_sync_status(section)))
         == expected_discovery_result
@@ -111,9 +109,6 @@ def test_check_fortigate_sync_status(
     section: List[StringTable],
     expected_check_result: Sequence[Result],
 ) -> None:
-    parse_fortigate_sync_status = fix_register.snmp_sections[
-        SectionName("fortigate_sync_status")
-    ].parse_function
     assert (
         list(
             check.check_function(

@@ -108,7 +108,8 @@ timeout(time: 12, unit: 'HOURS') {
             stage('Deploying previously build version to website only') {
                 def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull ${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
                 BUILD_IMAGE.inside(DOCKER_ARGS) {
-                    upload_artifacts.deploy_to_website(WEB_DEPLOY_URL, WEB_DEPLOY_PORT, CMK_VERS_RC_AWARE)
+                    upload_artifacts.deploy_to_website(CMK_VERS_RC_AWARE)
+                    upload_artifacts.cleanup_rc_candidates_of_version(CMK_VERS_RC_AWARE)
                 }
             }
             // The job is already done here, so terminate it.
@@ -274,7 +275,8 @@ timeout(time: 12, unit: 'HOURS') {
                     upload_artifacts.download_version_dir(INTERNAL_UPLOAD_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS_RC_AWARE, VERSION_DIR)
                     upload_artifacts.upload_version_dir(VERSION_DIR, WEB_DEPLOY_DEST, WEB_DEPLOY_PORT)
                     if(params.DEPLOY_TO_WEBSITE) {
-                        upload_artifacts.deploy_to_website(WEB_DEPLOY_URL, WEB_DEPLOY_PORT, CMK_VERS_RC_AWARE)
+                        upload_artifacts.deploy_to_website(CMK_VERS_RC_AWARE)
+                        upload_artifacts.cleanup_rc_candidates_of_version(CMK_VERS_RC_AWARE)
                     }
                 }
             }

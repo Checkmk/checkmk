@@ -10,7 +10,7 @@ from typing import Final
 
 from _pytest.monkeypatch import MonkeyPatch
 
-from tests.testlib import import_module_hack, repo_path
+from tests.testlib import import_module_hack
 
 _NON_STD_PREFIX: Mapping[str, str] = {
     "mkbackup_lock_dir": "/%.0s",
@@ -93,5 +93,5 @@ def test_paths_in_omd_and_opt_root(monkeypatch: MonkeyPatch) -> None:
     omd_root = "/omd/sites/dingeling"
     with monkeypatch.context() as m:
         m.setitem(os.environ, "OMD_ROOT", omd_root)
-        test_paths = import_module_hack("%s/cmk/utils/paths.py" % repo_path())
+        test_paths = import_module_hack("cmk/utils/paths.py")
         _check_paths(omd_root, test_paths.__dict__)

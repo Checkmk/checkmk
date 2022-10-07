@@ -17,24 +17,24 @@ from typing import List
 logger = logging.getLogger()
 
 
-def repo_path() -> str:
-    return os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+def repo_path() -> Path:
+    return Path(__file__).resolve().parent.parent.parent
 
 
-def cmk_path() -> str:
-    return repo_path()
+def cmk_path() -> str:  # TODO: Use Path. Why do we need an alias?
+    return str(repo_path())
 
 
-def cmc_path() -> str:
-    return repo_path() + "/enterprise"
+def cmc_path() -> str:  # TODO: Use Path
+    return str(repo_path() / "enterprise")
 
 
-def cme_path() -> str:
-    return repo_path() + "/managed"
+def cme_path() -> str:  # TODO: Use Path
+    return str(repo_path() / "managed")
 
 
-def cpe_path() -> str:
-    return repo_path() + "/plus"
+def cpe_path() -> str:  # TODO: Use Path
+    return str(repo_path() / "plus")
 
 
 def is_enterprise_repo() -> bool:
@@ -51,7 +51,7 @@ def is_plus_repo() -> bool:
 
 def virtualenv_path() -> Path:
     venv = subprocess.check_output(
-        [repo_path() + "/scripts/run-pipenv", "--bare", "--venv"], encoding="utf-8"
+        [str(repo_path() / "scripts/run-pipenv"), "--bare", "--venv"], encoding="utf-8"
     )
     return Path(venv.rstrip("\n"))
 
@@ -148,7 +148,7 @@ def get_cmk_download_credentials() -> tuple[str, str]:
 
 
 def get_standard_linux_agent_output() -> str:
-    with Path(repo_path(), "tests/integration/cmk/base/test-files/linux-agent-output").open(
+    with (repo_path() / "tests/integration/cmk/base/test-files/linux-agent-output").open(
         encoding="utf-8"
     ) as f:
         return f.read()

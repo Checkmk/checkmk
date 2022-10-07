@@ -27,7 +27,7 @@ from tests.testlib.utils import (
 
 import docker  # type: ignore[import]
 
-build_path = os.path.join(testlib.repo_path(), "docker")
+build_path = str(testlib.repo_path() / "docker")
 image_prefix = "docker-tests"
 branch_name = os.environ.get("BRANCH", "master")
 

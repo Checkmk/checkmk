@@ -23,7 +23,7 @@ IGNORED_LIBS = {"cmk", "livestatus", "mk_jolokia"}  # our stuff
 IGNORED_LIBS |= isort.stdlibs._all.stdlib  # builtin stuff
 IGNORED_LIBS |= {"__future__", "typing_extensions"}  # other builtin stuff
 
-BUILD_DIRS = {Path(repo_path(), "agent-receiver", "build")}
+BUILD_DIRS = {repo_path() / "agent-receiver/build"}
 
 PACKAGE_REPLACEMENTS = ".-_"
 
@@ -34,7 +34,7 @@ ImportName = NewType("ImportName", str)  # Name in Source (import ...)
 
 @pytest.fixture(name="loaded_pipfile")
 def load_pipfile():
-    return Pipfile.load(filename=repo_path() + "/Pipfile")
+    return Pipfile.load(filename=str(repo_path() / "Pipfile"))
 
 
 def test_all_deployment_packages_pinned(loaded_pipfile) -> None:  # type:ignore[no-untyped-def]
@@ -221,8 +221,8 @@ def get_pipfile_libs(repopath: Path) -> dict[PackageName, list[ImportName]]:
 
 def get_unused_dependencies() -> Iterable[PackageName]:
     """Iterate over declared dependencies which are not imported"""
-    imported_libs = get_imported_libs(Path(repo_path()))
-    pipfile_libs = get_pipfile_libs(Path(repo_path()))
+    imported_libs = get_imported_libs(repo_path())
+    pipfile_libs = get_pipfile_libs(repo_path())
     for packagename, import_names in pipfile_libs.items():
         if set(import_names).isdisjoint(imported_libs):
             yield packagename
@@ -230,8 +230,8 @@ def get_unused_dependencies() -> Iterable[PackageName]:
 
 def get_undeclared_dependencies() -> Iterable[ImportName]:
     """Iterate over imported dependencies which could not be found in the Pipfile"""
-    imported_libs = get_imported_libs(Path(repo_path()) / "cmk")
-    pipfile_libs = get_pipfile_libs(Path(repo_path()))
+    imported_libs = get_imported_libs(repo_path() / "cmk")
+    pipfile_libs = get_pipfile_libs(repo_path())
     declared_libs = set(chain.from_iterable(pipfile_libs.values()))
 
     yield from imported_libs - declared_libs
@@ -322,5 +322,5 @@ def _get_lockfile_hash(lockfile_path) -> str:  # type:ignore[no-untyped-def]
 
 
 def test_pipfile_lock_up_to_date(loaded_pipfile) -> None:  # type:ignore[no-untyped-def]
-    lockfile_hash = _get_lockfile_hash(Path(repo_path(), "Pipfile.lock"))
+    lockfile_hash = _get_lockfile_hash(repo_path() / "Pipfile.lock")
     assert loaded_pipfile.hash == lockfile_hash

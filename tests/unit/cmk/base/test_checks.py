@@ -72,7 +72,7 @@ def test_includes_are_deprecated(fix_plugin_legacy) -> None:  # type:ignore[no-u
 
 
 def test_check_plugin_header() -> None:
-    for plugin in Path(testlib.repo_path(), "checks").iterdir():
+    for plugin in (testlib.repo_path() / "checks").iterdir():
         if plugin.name.startswith("."):
             # .f12
             continue

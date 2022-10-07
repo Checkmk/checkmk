@@ -21,7 +21,7 @@ from tests.testlib.site import Site
 
 
 def _load_pipfile_data() -> dict:
-    return Pipfile.load(filename=repo_path() + "/Pipfile").data
+    return Pipfile.load(filename=str(repo_path() / "Pipfile")).data
 
 
 def _get_import_names_from_dist_name(dist_name: str) -> List[str]:
@@ -55,7 +55,7 @@ def _get_import_names_from_pipfile() -> List[str]:
 
 
 def _get_python_version_from_defines_make() -> VersionInfo:
-    with open(repo_path() + "/defines.make") as defines:
+    with (repo_path() / "defines.make").open() as defines:
         python_version = (
             [line for line in defines.readlines() if re.match(r"^PYTHON_VERSION .*:=", line)][0]
             .split(":=")[1]

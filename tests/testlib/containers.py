@@ -373,7 +373,7 @@ def _image_build_volumes():
 def _git_repos():
     # This ensures that we can also work with git-worktrees. For this, the original git repository
     # needs to be mapped into the container as well.
-    repo_path = testlib.repo_path()
+    repo_path = str(testlib.repo_path())
     git_entry = os.path.join(repo_path, ".git")
     repos = {
         # To get access to the test scripts and for updating the version from

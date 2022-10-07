@@ -30,17 +30,11 @@ def cfg_setup_fixture(request, web, site: Site):  # type:ignore[no-untyped-def]
     # is needed to make it renew it's internal RRD file cache
     site.makedirs("var/check_mk/rrd/test-prediction")
     with open(site.path("var/check_mk/rrd/test-prediction/CPU_load.rrd"), "wb") as f:
-        f.write(
-            Path(
-                repo_path(), "tests", "integration", "cmk", "base", "test-files", "CPU_load.rrd"
-            ).read_bytes()
-        )
+        f.write((repo_path() / "tests/integration/cmk/base/test-files/CPU_load.rrd").read_bytes())
 
     site.write_text_file(
         "var/check_mk/rrd/test-prediction/CPU_load.info",
-        Path(
-            repo_path(), "tests", "integration", "cmk", "base", "test-files", "CPU_load.info"
-        ).read_text(),
+        (repo_path() / "tests/integration/cmk/base/test-files/CPU_load.info").read_text(),
     )
 
     site.restart_core()
@@ -440,8 +434,8 @@ def test_retieve_grouped_data_from_rrd(  # type:ignore[no-untyped-def]
     assert result == reference
 
 
-def _load_expected_result(path: str) -> object:
-    return json.loads(open(path).read())
+def _load_expected_result(path: Path) -> object:
+    return json.loads(path.open().read())
 
 
 # This test has a conflict with daemon usage. Since we now don't use
@@ -492,7 +486,7 @@ def test_calculate_data_for_prediction(  # type:ignore[no-untyped-def]
     data_for_pred = prediction._calculate_data_for_prediction(time_windows, rrd_datacolumn)
 
     expected_reference = _load_expected_result(
-        "%s/tests/integration/cmk/base/test-files/%s/%s" % (repo_path(), timezone, timegroup)
+        repo_path() / "tests/integration/cmk/base/test-files" / str(timezone) / str(timegroup)
     )
 
     assert isinstance(expected_reference, dict)

@@ -1,0 +1,35 @@
+Title: Do not log host secret
+Class: security
+Compatible: incomp
+Component: agents
+Date: 1665133214
+Edition: cee
+Knowledge: doc
+Level: 3
+Version: 2.1.0p14
+
+
+When using the <i>Agent updater</i> the Checkmk server needs a secret in order to allow the agent to download new agents.
+For security reasons this secret is unique for each host and generated with the <tt>cmk-update-agent register</tt> command.
+Unfortunately the generated host secret was written to the cmk-update-agent.log.
+This logfile is not protected and usually world-readable.
+
+With this secret one can download the current agent from the Checkmk server.
+Included in that agent package are the plugin configs which can contain other secrets. (e.g. database credentials)
+
+Mitigations without updateing:
+
+LI: Reregister the agent-updater. Then sanitize the cmk-update-agent.log files.
+LI: If you cannot rule out that any unauthorized user read <tt>/var/lib/check_mk_agent/cmk-update-agent.log</tt> respectively <tt>C:\ProgramData\checkmk\agent\log\cmk-update-agent.log</tt> you should rotate all secrets that might be or were included in the agent configurations.
+
+Steps needed with the update:
+
+LI: Update your agent.
+LI: Reregister the agent-updater.
+
+
+All versions including 1.5 are subject to this vulnerability.
+
+We found this vulnerability internally and have no indication of any exploitation.
+
+We calculated a CVSS 3.1 score of 6.5 (Medium) with the following vector: CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:C/C:H/I:N/A:N

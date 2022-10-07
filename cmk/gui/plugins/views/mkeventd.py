@@ -10,6 +10,7 @@ from typing import Callable, Optional, TypeVar, Union
 from livestatus import SiteId
 
 from cmk.utils.defines import short_service_state_name
+from cmk.utils.type_defs import HostName
 
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.sites as sites
@@ -435,37 +436,54 @@ class PainterEventSl(Painter):
 @painter_registry.register
 class PainterEventHost(Painter):
     @property
-    def ident(self):
+    def ident(self) -> str:
         return "event_host"
 
-    def title(self, cell):
+    def title(self, cell: "Cell") -> str:
         return _("Hostname")
 
-    def short_title(self, cell):
+    def short_title(self, cell: "Cell") -> str:
         return _("Host")
 
     @property
-    def columns(self):
+    def columns(self) -> list[ColumnName]:
         return ["event_host", "host_name"]
 
     @property
     def use_painter_link(self) -> bool:
         return False
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: "Cell") -> CellSpec:
         host_name = row.get("host_name", row["event_host"])
-        # See SUP-10272 for a detailed explanation, hacks of view.py do not
-        # work for SNMP traps
-        link = makeuri_contextless(
-            html.request,
-            [
-                ("view_name", "ec_events_of_host"),
-                ("host", host_name),
-                ("event_host", row["event_host"]),
-            ],
-        )
 
-        return "", HTML(html.render_a(host_name, link))
+        return "", HTML(html.render_a(host_name, _get_event_host_link(host_name, row, cell)))
+
+
+def _get_event_host_link(host_name: HostName, row: Row, cell: "Cell") -> str:
+    """
+    Needed to support links to views and dashboards. If no link is configured,
+    always use ec_events_of_host as target view.
+    """
+    link_type: str = "view_name"
+    filename: str = "view.py"
+    link_target: str = "ec_events_of_host"
+    if link_spec := cell._link_spec:
+        if link_spec.type_name == "dashboards":
+            link_type = "name"
+            filename = "dashboard.py"
+        link_target = link_spec.name
+
+    # See SUP-10272 for a detailed explanation, hacks of view.py do not
+    # work for SNMP traps
+    return makeuri_contextless(
+        html.request,
+        [
+            (link_type, link_target),
+            ("host", host_name),
+            ("event_host", row["event_host"]),
+        ],
+        filename=filename,
+    )
 
 
 @painter_registry.register

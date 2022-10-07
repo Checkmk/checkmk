@@ -1,0 +1,13 @@
+Title: Fix link of "Event Console Events/Hosts: Hostname" painter
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1665132269
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p14
+
+If the column "Event Console Events/Hosts: Hostname" was used in dashlets, the
+link always pointed to "dashboard_dashlets.py" what caused an error message
+like “Invalid user input - The name of the dashboard is missing”.

@@ -4,18 +4,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
+from typing import List
 
 import pytest
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.type_defs import CheckPluginName
+from cmk.utils.type_defs import CheckPluginName, SectionName
 
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 
-STRING_TABLE = [["FW-VPN-RZ1", "1"], ["FW-VPN-RZ2", "0"]]
+STRING_TABLE = [[["FW-VPN-RZ1", "1"], ["FW-VPN-RZ2", "0"]]]
 
 
 @pytest.fixture(name="check")
@@ -33,7 +34,9 @@ def _fortigate_sync_status_check_plugin(fix_register: FixRegister) -> CheckPlugi
         ),
         pytest.param(
             [
-                ["FW-VPN-RZ1", "1"],
+                [
+                    ["FW-VPN-RZ1", "1"],
+                ]
             ],
             [],
             id="If there is only one item in the input, nothing is discovered.",
@@ -47,10 +50,17 @@ def _fortigate_sync_status_check_plugin(fix_register: FixRegister) -> CheckPlugi
 )
 def test_discover_vxvm_multipath(
     check: CheckPlugin,
-    section: StringTable,
+    fix_register: FixRegister,
+    section: List[StringTable],
     expected_discovery_result: Sequence[Service],
 ) -> None:
-    assert list(check.discovery_function(section)) == expected_discovery_result
+    parse_fortigate_sync_status = fix_register.snmp_sections[
+        SectionName("fortigate_sync_status")
+    ].parse_function
+    assert (
+        list(check.discovery_function(parse_fortigate_sync_status(section)))
+        == expected_discovery_result
+    )
 
 
 @pytest.mark.parametrize(
@@ -65,7 +75,7 @@ def test_discover_vxvm_multipath(
             id="If one of the items has an 'unsynchronized' status, the check state is CRIT.",
         ),
         pytest.param(
-            [["FW-VPN-RZ1", "1"], ["FW-VPN-RZ2", "1"]],
+            [[["FW-VPN-RZ1", "1"], ["FW-VPN-RZ2", "1"]]],
             [
                 Result(state=State.OK, summary="FW-VPN-RZ1: synchronized"),
                 Result(state=State.OK, summary="FW-VPN-RZ2: synchronized"),
@@ -77,33 +87,40 @@ def test_discover_vxvm_multipath(
             [],
             id="If the input section is empty, there are no results.",
         ),
+        pytest.param(
+            [[["FW-VPN-RZ1", "1"], ["FW-VPN-RZ2", "3"]]],
+            [
+                Result(state=State.OK, summary="FW-VPN-RZ1: synchronized"),
+                Result(state=State.UNKNOWN, summary="FW-VPN-RZ2: Unknown status 3"),
+            ],
+            id="If the status of one item is not 1 or 0, the check state is UNKNOWN and in the description the value of the status is indicated.",
+        ),
+        pytest.param(
+            [[["FW-VPN-RZ1", "1"], ["FW-VPN-RZ2", ""]]],
+            [
+                Result(state=State.OK, summary="FW-VPN-RZ1: synchronized"),
+                Result(state=State.UNKNOWN, summary="FW-VPN-RZ2: Status not available"),
+            ],
+            id="If the status of one item is not available, the check state is UNKNOWN and in the description it's indicated that the status is not available.",
+        ),
     ],
 )
 def test_check_fortigate_sync_status(
     check: CheckPlugin,
-    section: StringTable,
+    fix_register: FixRegister,
+    section: List[StringTable],
     expected_check_result: Sequence[Result],
 ) -> None:
+    parse_fortigate_sync_status = fix_register.snmp_sections[
+        SectionName("fortigate_sync_status")
+    ].parse_function
     assert (
         list(
             check.check_function(
                 item="",
                 params={},
-                section=section,
+                section=parse_fortigate_sync_status(section),
             )
         )
         == expected_check_result
     )
-
-
-def test_check_fortigate_sync_status_with_unknown_status(
-    check: CheckPlugin,
-) -> None:
-    with pytest.raises(KeyError):
-        assert list(
-            check.check_function(
-                item="",
-                params={},
-                section=[["FW-VPN-RZ1", "1"], ["FW-VPN-RZ2", "3"]],
-            )
-        )

@@ -387,6 +387,21 @@ mod test_status {
     use anyhow::anyhow;
     use std::str::FromStr;
 
+    fn cert_info() -> CertInfo {
+        CertInfo {
+            issuer: String::from("Site 'site' local CA"),
+            from: String::from("Thu, 16 Dec 2021 08:18:41 +0000"),
+            to: String::from("Tue, 18 Apr 3020 08:18:41 +0000"),
+        }
+    }
+
+    fn local_connection_status() -> LocalConnectionStatus {
+        LocalConnectionStatus {
+            connection_type: config::ConnectionType::Pull,
+            cert_info: CertParsingResult::Success(cert_info()),
+        }
+    }
+
     #[test]
     fn test_connection_status_remote_disabled() {
         assert_eq!(
@@ -397,11 +412,7 @@ mod test_status {
                     uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Pull,
-                        cert_info: CertParsingResult::Success(CertInfo {
-                            issuer: String::from("Site 'site' local CA"),
-                            from: String::from("Thu, 16 Dec 2021 08:18:41 +0000"),
-                            to: String::from("Tue, 18 Apr 3020 08:18:41 +0000"),
-                        })
+                        cert_info: CertParsingResult::Success(cert_info())
                     },
                     remote: Remote::QueryDisabled
                 }
@@ -427,14 +438,7 @@ mod test_status {
                 ConnectionStatus {
                     coordinates: Some(site_spec::Coordinates::from_str("localhost:8000/site").unwrap()),
                     uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
-                    local: LocalConnectionStatus {
-                        connection_type: config::ConnectionType::Pull,
-                        cert_info: CertParsingResult::Success(CertInfo {
-                            issuer: String::from("Site 'site' local CA"),
-                            from: String::from("Thu, 16 Dec 2021 08:18:41 +0000"),
-                            to: String::from("Tue, 18 Apr 3020 08:18:41 +0000"),
-                        })
-                    },
+                    local: local_connection_status(),
                     remote: Remote::StatusResponse(Ok(
                         RemoteConnectionStatus {
                             connection_type: Some(config::ConnectionType::Pull),
@@ -467,14 +471,7 @@ mod test_status {
                 ConnectionStatus {
                     coordinates: Some(site_spec::Coordinates::from_str("localhost:8000/site").unwrap()),
                     uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
-                    local: LocalConnectionStatus {
-                        connection_type: config::ConnectionType::Pull,
-                        cert_info: CertParsingResult::Success(CertInfo {
-                            issuer: String::from("Site 'site' local CA"),
-                            from: String::from("Thu, 16 Dec 2021 08:18:41 +0000"),
-                            to: String::from("Tue, 18 Apr 3020 08:18:41 +0000"),
-                        })
-                    },
+                    local: local_connection_status(),
                     remote: Remote::StatusResponse(Ok(
                         RemoteConnectionStatus {
                             connection_type: Some(config::ConnectionType::Pull),
@@ -507,14 +504,7 @@ mod test_status {
                 ConnectionStatus {
                     coordinates: None,
                     uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
-                    local: LocalConnectionStatus {
-                        connection_type: config::ConnectionType::Pull,
-                        cert_info: CertParsingResult::Success(CertInfo {
-                            issuer: String::from("Site 'site' local CA"),
-                            from: String::from("Thu, 16 Dec 2021 08:18:41 +0000"),
-                            to: String::from("Tue, 18 Apr 3020 08:18:41 +0000"),
-                        })
-                    },
+                    local: local_connection_status(),
                     remote: Remote::Imported,
                 }
             ),
@@ -539,14 +529,7 @@ mod test_status {
                 ConnectionStatus {
                     coordinates: Some(site_spec::Coordinates::from_str("localhost:8000/site").unwrap()),
                     uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
-                    local: LocalConnectionStatus {
-                        connection_type: config::ConnectionType::Pull,
-                        cert_info: CertParsingResult::Success(CertInfo {
-                            issuer: String::from("Site 'site' local CA"),
-                            from: String::from("Thu, 16 Dec 2021 08:18:41 +0000"),
-                            to: String::from("Tue, 18 Apr 3020 08:18:41 +0000"),
-                        })
-                    },
+                    local: local_connection_status(),
                     remote: Remote::StatusResponse(Err(anyhow!("You shall not pass")))
                 }
             ),
@@ -571,14 +554,7 @@ mod test_status {
                 ConnectionStatus {
                     coordinates: Some(site_spec::Coordinates::from_str("localhost:8000/site").unwrap()),
                     uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
-                    local: LocalConnectionStatus {
-                        connection_type: config::ConnectionType::Pull,
-                        cert_info: CertParsingResult::Success(CertInfo {
-                            issuer: String::from("Site 'site' local CA"),
-                            from: String::from("Thu, 16 Dec 2021 08:18:41 +0000"),
-                            to: String::from("Tue, 18 Apr 3020 08:18:41 +0000"),
-                        })
-                    },
+                    local: local_connection_status(),
                     remote: Remote::StatusResponse(Ok(
                         RemoteConnectionStatus {
                             connection_type: Some(config::ConnectionType::Push),
@@ -611,14 +587,7 @@ mod test_status {
                 ConnectionStatus {
                     coordinates: Some(site_spec::Coordinates::from_str("localhost:8000/site").unwrap()),
                     uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
-                    local: LocalConnectionStatus {
-                        connection_type: config::ConnectionType::Pull,
-                        cert_info: CertParsingResult::Success(CertInfo {
-                            issuer: String::from("Site 'site' local CA"),
-                            from: String::from("Thu, 16 Dec 2021 08:18:41 +0000"),
-                            to: String::from("Tue, 18 Apr 3020 08:18:41 +0000"),
-                        })
-                    },
+                    local: local_connection_status(),
                     remote: Remote::StatusResponse(Ok(
                         RemoteConnectionStatus {
                             connection_type: Some(config::ConnectionType::Pull),
@@ -655,14 +624,7 @@ mod test_status {
                         site_spec::Coordinates::from_str("localhost:8000/site").unwrap(),
                     ),
                     uuid: uuid::Uuid::from_str("50611369-7a42-4c0b-927e-9a14330401fe").unwrap(),
-                    local: LocalConnectionStatus {
-                        connection_type: config::ConnectionType::Pull,
-                        cert_info: CertParsingResult::Success(CertInfo {
-                            issuer: String::from("Site 'site' local CA"),
-                            from: String::from("Thu, 16 Dec 2021 08:18:41 +0000"),
-                            to: String::from("Tue, 18 Apr 3020 08:18:41 +0000"),
-                        }),
-                    },
+                    local: local_connection_status(),
                     remote: Remote::StatusResponse(Ok(RemoteConnectionStatus {
                         connection_type: Some(config::ConnectionType::Pull),
                         registration_state: None,
@@ -772,12 +734,7 @@ mod test_status {
         let mut push = std::collections::HashMap::new();
         push.insert(
             site_spec::Coordinates::from_str("server:8000/push-site").unwrap(),
-            config::Connection {
-                uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
-                private_key: String::from("private_key"),
-                certificate: String::from("certificate"),
-                root_cert: String::from("root_cert"),
-            },
+            config::Connection::from("99f56bbc-5965-4b34-bc70-1959ad1d32d6"),
         );
         let registry = config::Registry::new(
             config::RegisteredConnections {

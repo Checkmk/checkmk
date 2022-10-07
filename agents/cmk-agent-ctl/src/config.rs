@@ -640,7 +640,25 @@ mod test_legacy_pull_marker {
 #[cfg(test)]
 mod test_registry {
     use super::*;
+    use std::convert::From;
     use std::str::FromStr;
+
+    impl From<uuid::Uuid> for Connection {
+        fn from(u: uuid::Uuid) -> Self {
+            Self {
+                uuid: u,
+                private_key: String::from("private_key"),
+                certificate: String::from("certificate"),
+                root_cert: String::from("root_cert"),
+            }
+        }
+    }
+
+    impl std::convert::From<&str> for Connection {
+        fn from(s: &str) -> Self {
+            Self::from(uuid::Uuid::from_str(s).unwrap())
+        }
+    }
 
     fn registry() -> Registry {
         let mut push = std::collections::HashMap::new();
@@ -649,30 +667,13 @@ mod test_registry {
 
         push.insert(
             site_spec::Coordinates::from_str("server:8000/push-site").unwrap(),
-            Connection {
-                uuid: uuid::Uuid::new_v4(),
-                private_key: String::from("private_key"),
-                certificate: String::from("certificate"),
-                root_cert: String::from("root_cert"),
-            },
+            connection(),
         );
-
         pull.insert(
             site_spec::Coordinates::from_str("server:8000/pull-site").unwrap(),
-            Connection {
-                uuid: uuid::Uuid::new_v4(),
-                private_key: String::from("private_key"),
-                certificate: String::from("certificate"),
-                root_cert: String::from("root_cert"),
-            },
+            connection(),
         );
-
-        pull_imported.insert(Connection {
-            uuid: uuid::Uuid::new_v4(),
-            private_key: String::from("private_key"),
-            certificate: String::from("certificate"),
-            root_cert: String::from("root_cert"),
-        });
+        pull_imported.insert(connection());
 
         Registry::new(
             RegisteredConnections {
@@ -686,12 +687,7 @@ mod test_registry {
     }
 
     fn connection() -> Connection {
-        Connection {
-            uuid: uuid::Uuid::new_v4(),
-            private_key: String::from("private_key"),
-            certificate: String::from("certificate"),
-            root_cert: String::from("root_cert"),
-        }
+        Connection::from(uuid::Uuid::new_v4())
     }
 
     #[test]
@@ -875,18 +871,8 @@ mod test_registry {
         let uuid_second_imported = uuid::Uuid::new_v4();
         let mut reg = registry();
         reg.connections.pull_imported.clear();
-        reg.register_imported_connection(Connection {
-            uuid: uuid_first_imported,
-            private_key: String::from("private_key"),
-            certificate: String::from("certificate"),
-            root_cert: String::from("root_cert"),
-        });
-        reg.register_imported_connection(Connection {
-            uuid: uuid_second_imported,
-            private_key: String::from("private_key"),
-            certificate: String::from("certificate"),
-            root_cert: String::from("root_cert"),
-        });
+        reg.register_imported_connection(Connection::from(uuid_first_imported));
+        reg.register_imported_connection(Connection::from(uuid_second_imported));
         assert!(reg.delete_imported_connection(&uuid_first_imported).is_ok());
         assert!(reg.connections.pull_imported.len() == 1);
         assert!(reg

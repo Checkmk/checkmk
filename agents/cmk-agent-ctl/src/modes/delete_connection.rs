@@ -76,34 +76,14 @@ mod tests {
         let mut pull_imported = std::collections::HashSet::new();
         push.insert(
             site_spec::Coordinates::from_str("server:8000/push-site").unwrap(),
-            config::Connection {
-                uuid: uuid::Uuid::from_str(UUID_PUSH).unwrap(),
-                private_key: String::from("private_key"),
-                certificate: String::from("certificate"),
-                root_cert: String::from("root_cert"),
-            },
+            config::Connection::from(UUID_PUSH),
         );
         pull.insert(
             site_spec::Coordinates::from_str("server:8000/pull-site").unwrap(),
-            config::Connection {
-                uuid: uuid::Uuid::from_str(UUID_PULL).unwrap(),
-                private_key: String::from("private_key"),
-                certificate: String::from("certificate"),
-                root_cert: String::from("root_cert"),
-            },
+            config::Connection::from(UUID_PULL),
         );
-        pull_imported.insert(config::Connection {
-            uuid: uuid::Uuid::from_str(UUID_PULL_IMP1).unwrap(),
-            private_key: String::from("private_key"),
-            certificate: String::from("certificate"),
-            root_cert: String::from("root_cert"),
-        });
-        pull_imported.insert(config::Connection {
-            uuid: uuid::Uuid::from_str(UUID_PULL_IMP2).unwrap(),
-            private_key: String::from("private_key"),
-            certificate: String::from("certificate"),
-            root_cert: String::from("root_cert"),
-        });
+        pull_imported.insert(config::Connection::from(UUID_PULL_IMP1));
+        pull_imported.insert(config::Connection::from(UUID_PULL_IMP2));
         config::Registry::new(
             config::RegisteredConnections {
                 push,

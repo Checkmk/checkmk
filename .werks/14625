@@ -1,0 +1,15 @@
+Title: fortigate_sync_status: No longer crashes if the status is not available or is not known
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1665151044
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p14
+
+The check used to crash if the status of a cluster was not available (i.e. empty string) or
+if the status was not known (wasn't either 'synchronized' nor 'unsynchronized').
+Now, if any of the above cases occur, the check turns to an UNKNOWN state and provides the appropriate description.
+

@@ -18,7 +18,7 @@ import time
 import traceback
 from pathlib import Path
 from types import FrameType
-from typing import Any, Callable, Dict, List, Optional, Sequence, Type, TypedDict
+from typing import Any, Callable, Dict, List, NoReturn, Optional, Sequence, Type, TypedDict
 
 import psutil  # type: ignore[import]
 from setproctitle import setthreadtitle  # type: ignore[import] # pylint: disable=no-name-in-module
@@ -45,9 +45,6 @@ class JobParameters(TypedDict):
     target: Callable[[BackgroundProcessInterface], None]
 
 
-JobStatusSpec = Dict[str, Any]
-
-
 class JobStatusStates:
     INITIALIZED = "initialized"
     RUNNING = "running"
@@ -56,6 +53,7 @@ class JobStatusStates:
     EXCEPTION = "exception"
 
 
+JobStatusSpec = Dict[str, Any]
 # TODO: this is intended as a replacement to the Dict[str, Any] typing
 # but requires that initial_status.update(self._initial_status_args) gets refactored
 # class JobStatusSpec(TypedDict, total=False):
@@ -232,7 +230,7 @@ class BackgroundProcess(multiprocessing.Process):
             )
             self._jobstatus.update_status({"state": JobStatusStates.EXCEPTION})
 
-    def _detach_from_parent(self):
+    def _detach_from_parent(self) -> None:
         # Detach from parent and cleanup inherited file descriptors
         os.setsid()
 
@@ -589,13 +587,13 @@ class BackgroundJob:
             self._exit(1)
         self._exit(0)
 
-    def _exit(self, code):
+    def _exit(self, code: int) -> NoReturn:
         """Exit the interpreter.
 
         This is here so we can mock this away cleanly."""
         os._exit(code)
 
-    def wait_for_completion(self):
+    def wait_for_completion(self) -> None:
         """Wait for background job to be complete."""
         while self.is_active():
             time.sleep(0.5)
@@ -704,13 +702,13 @@ class BackgroundJobManager:
                 job_ids = self.get_all_job_ids(job_class)
                 max_age = job_class.housekeeping_max_age_sec
                 max_count = job_class.housekeeping_max_count
-                all_jobs = []
+                all_jobs: list[tuple[str, JobStatusSpec]] = []
 
                 job_instances = {}
                 for job_id in job_ids:
                     job_instances[job_id] = BackgroundJob(job_id, self._logger)
                     all_jobs.append((job_id, job_instances[job_id].get_status()))
-                all_jobs.sort(key=lambda x: x[1]["started"], reverse=True)
+                all_jobs.sort(key=lambda x: int(x[1]["started"]), reverse=True)
 
                 for entry in all_jobs[-1:0:-1]:
                     job_id, job_status = entry

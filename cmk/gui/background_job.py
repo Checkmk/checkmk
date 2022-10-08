@@ -160,14 +160,13 @@ class BackgroundProcessInterface:
 class BackgroundProcess(multiprocessing.Process):
     def __init__(
         self,
-        job_status: JobStatusStore,
         logger: logging.Logger,
         work_dir: str,
         job_id: str,
         target: Callable[[BackgroundProcessInterface], None],
     ) -> None:
         super().__init__()
-        self._jobstatus_store = job_status
+        self._jobstatus_store = JobStatusStore(work_dir)
         self._logger = logger
         self._target = target
         self._job_interface = BackgroundProcessInterface(work_dir, job_id, logger)
@@ -572,7 +571,6 @@ class BackgroundJob:
             self._jobstatus_store.update({"ppid": os.getpid()})
 
             p = self._background_process_class(
-                job_status=self._jobstatus_store,
                 logger=cmk.gui.log.logger.getChild("background_process"),
                 work_dir=job_parameters["work_dir"],
                 job_id=job_parameters["job_id"],

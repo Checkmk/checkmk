@@ -998,8 +998,8 @@ section_mailqueue() {
             for queue_dir in ${multi_instances_dirs}; do
                 if [ -n "${queue_dir}" ]; then
                     postfix_queue_dir=$(postconf -c "${queue_dir}" 2>/dev/null | grep ^queue_directory | sed 's/.*=[[:space:]]*//g')
+                    read_postfix_queue_dirs "${postfix_queue_dir}" "${queue_dir}"
                     postfix_instance_name=$(postconf -c "${queue_dir}" -h multi_instance_name 2>/dev/null)
-                    read_postfix_queue_dirs "${postfix_queue_dir}" "${postfix_instance_name}"
                     read_postfix_master_pid "${postfix_queue_dir}" "${postfix_instance_name}"
                 fi
             done

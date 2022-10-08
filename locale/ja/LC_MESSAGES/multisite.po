@@ -5819,6 +5819,10 @@ msgstr "利用可能なエージェント構成"
 msgid "Available capacity"
 msgstr "利用可能な容量"
 
+#, fuzzy
+msgid "Available macros and search result(s)"
+msgstr "検索結果の数"
+
 msgid "Available options"
 msgstr "利用可能なオプション"
 
@@ -11571,6 +11575,10 @@ msgstr "カスタムタイムスパン:"
 
 msgid "Custom URL"
 msgstr "カスタムURL"
+
+#, fuzzy
+msgid "Custom URL base prefix"
+msgstr "カスタムURLプレフィックス"
 
 msgid "Custom URL prefix"
 msgstr "カスタムURLプレフィックス"
@@ -38618,9 +38626,6 @@ msgstr "ベースDNのエントリのみを検索します"
 msgid "Search pattern"
 msgstr "検索パターン"
 
-msgid "Search result(s) preview"
-msgstr "検索結果のプレビュー"
-
 #, python-format
 msgid "Search results for folder %s"
 msgstr "フォルダ %s の検索結果"
@@ -41373,6 +41378,18 @@ msgstr ""
 "API呼び出しを行うために追加のプレフィックスが必要な場合に役立ちます。より複雑"
 "なAPI URLを指定する必要がある場合は、カスタムURLオプションを使用してくださ"
 "い。"
+
+#, fuzzy
+msgid ""
+"Specifies a prefix, which is prepended to the hostname or base address. This "
+"is an exotic option, which is kept for legacy reasons. Consider using a "
+"custom URL instead. If this option is not relevant for your installation, "
+"please leave it unchecked."
+msgstr ""
+"Kubernetes APIへのAPI呼び出しの前に付加されるURLパスプレフィックスを指定しま"
+"す。これは、Rancherのインストールに便利なオプションです(詳細については、マ"
+"ニュアルを参照してください)。このオプションがインストールに関係しない場合は、"
+"オフのままにしてください。"
 
 msgid ""
 "Specifies an URL path suffix which is appended to the path in calls to the "
@@ -60250,9 +60267,6 @@ msgstr "の1つではありません"
 msgid "is not one of regex"
 msgstr "正規表現の1つではありません"
 
-msgid "is not required"
-msgstr "不要"
-
 msgid "is required"
 msgstr "必須"
 
@@ -60440,6 +60454,10 @@ msgstr ""
 #, python-format
 msgid "must match '%s'"
 msgstr "一致必須 '%s'"
+
+#, fuzzy
+msgid "must not exist"
+msgstr "存在しません"
 
 msgid "myhost089"
 msgstr "myhost089"
@@ -61272,6 +61290,12 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Search result(s) preview"
+#~ msgstr "検索結果のプレビュー"
+
+#~ msgid "is not required"
+#~ msgstr "不要"
 
 #, python-format
 #~ msgid "%s: No such agent output"

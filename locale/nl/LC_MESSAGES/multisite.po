@@ -6083,6 +6083,10 @@ msgstr "Beschikbare agent configuraties"
 msgid "Available capacity"
 msgstr "Beschikbare capaciteit"
 
+#, fuzzy
+msgid "Available macros and search result(s)"
+msgstr "Aantal zoekresultaten"
+
 msgid "Available options"
 msgstr "Beschikbare opties"
 
@@ -12119,6 +12123,10 @@ msgstr "Aangepaste tijdspanne:"
 
 msgid "Custom URL"
 msgstr "Aangepaste URL"
+
+#, fuzzy
+msgid "Custom URL base prefix"
+msgstr "Aangepast URL voorvoegsel"
 
 msgid "Custom URL prefix"
 msgstr "Aangepast URL voorvoegsel"
@@ -40146,9 +40154,6 @@ msgstr "Zoek alleen in de vermelding op de basis DN"
 msgid "Search pattern"
 msgstr "Zoekpatroon"
 
-msgid "Search result(s) preview"
-msgstr "Zoekresultaat(en) voorbeeld"
-
 #, python-format
 msgid "Search results for folder %s"
 msgstr "Zoekresultaten voor map %s"
@@ -43044,6 +43049,18 @@ msgstr ""
 "als basis adres gebruikt, maar een extra voorvoegsel nodig heeft om de "
 "juiste API oproep te maken. Gebruik de custom URL optie als u een meer "
 "complexe API url wilt specificeren."
+
+#, fuzzy
+msgid ""
+"Specifies a prefix, which is prepended to the hostname or base address. This "
+"is an exotic option, which is kept for legacy reasons. Consider using a "
+"custom URL instead. If this option is not relevant for your installation, "
+"please leave it unchecked."
+msgstr ""
+"Specificeert een URL pad voorvoegsel, dat wordt voorgehangen aan API "
+"aanroepen naar de Kubernetes API. Dit is een nuttige optie voor Rancher "
+"installaties (meer informatie kan gevonden worden in de handleiding). Als "
+"deze optie niet relevant is voor uw installatie, laat het dan uitgevinkt."
 
 msgid ""
 "Specifies an URL path suffix which is appended to the path in calls to the "
@@ -63608,9 +63625,6 @@ msgstr "is niet een van"
 msgid "is not one of regex"
 msgstr "is niet een van regex"
 
-msgid "is not required"
-msgstr "is niet vereist"
-
 msgid "is required"
 msgstr "is vereist"
 
@@ -63799,6 +63813,10 @@ msgstr "moet gelijk zijn aan '%s'"
 #, python-format
 msgid "must match '%s'"
 msgstr "moet overeenkomen met '%s'"
+
+#, fuzzy
+msgid "must not exist"
+msgstr "Bestaat niet"
 
 msgid "myhost089"
 msgstr "myhost089"
@@ -64636,6 +64654,12 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Search result(s) preview"
+#~ msgstr "Zoekresultaat(en) voorbeeld"
+
+#~ msgid "is not required"
+#~ msgstr "is niet vereist"
 
 #, python-format
 #~ msgid "%s: No such agent output"

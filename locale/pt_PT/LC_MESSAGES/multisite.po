@@ -6082,6 +6082,10 @@ msgstr "Configurações de agentes disponíveis"
 msgid "Available capacity"
 msgstr "Capacidade disponível"
 
+#, fuzzy
+msgid "Available macros and search result(s)"
+msgstr "Número de resultados da pesquisa"
+
 msgid "Available options"
 msgstr "Opções disponíveis"
 
@@ -12157,6 +12161,10 @@ msgstr "Tempo de duração personalizado:"
 
 msgid "Custom URL"
 msgstr "URL personalizado"
+
+#, fuzzy
+msgid "Custom URL base prefix"
+msgstr "Prefixo URL personalizado"
 
 msgid "Custom URL prefix"
 msgstr "Prefixo URL personalizado"
@@ -40562,9 +40570,6 @@ msgstr "Pesquisar apenas a entrada no DN base"
 msgid "Search pattern"
 msgstr "Padrão de pesquisa"
 
-msgid "Search result(s) preview"
-msgstr "Pré-visualização do(s) resultado(s) da pesquisa"
-
 #, python-format
 msgid "Search results for folder %s"
 msgstr "Resultados da pesquisa por pasta %s"
@@ -43469,6 +43474,18 @@ msgstr ""
 "endereço base, mas requer algum prefixo adicional para fazer a chamada API "
 "correta. Use a opção URL personalizada se você precisar especificar uma url "
 "de API mais complexa."
+
+#, fuzzy
+msgid ""
+"Specifies a prefix, which is prepended to the hostname or base address. This "
+"is an exotic option, which is kept for legacy reasons. Consider using a "
+"custom URL instead. If this option is not relevant for your installation, "
+"please leave it unchecked."
+msgstr ""
+"Especifica um prefixo de caminho de URL, que é prepenso a chamadas API para "
+"a API Kubernetes. Esta é uma opção útil para instalações de Rancher (mais "
+"informações podem ser encontradas no manual). Se esta opção não for "
+"relevante para a sua instalação, por favor deixe-a desmarcada."
 
 msgid ""
 "Specifies an URL path suffix which is appended to the path in calls to the "
@@ -63941,10 +63958,6 @@ msgid "is not one of regex"
 msgstr "não é um de regex"
 
 #, fuzzy
-msgid "is not required"
-msgstr "não está agrupado"
-
-#, fuzzy
 msgid "is required"
 msgstr "Esta regra"
 
@@ -64134,6 +64147,10 @@ msgstr ""
 #, fuzzy, python-format
 msgid "must match '%s'"
 msgstr "Lista de jogos do anfitrião"
+
+#, fuzzy
+msgid "must not exist"
+msgstr "As %s não existem."
 
 msgid "myhost089"
 msgstr "myhost089"
@@ -64972,6 +64989,14 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
+
+#~ msgid "Search result(s) preview"
+#~ msgstr "Pré-visualização do(s) resultado(s) da pesquisa"
+
+#, fuzzy
+#~| msgid "is not clustered"
+#~ msgid "is not required"
+#~ msgstr "não está agrupado"
 
 #, fuzzy, python-format
 #~| msgid "%s: Download agent output"

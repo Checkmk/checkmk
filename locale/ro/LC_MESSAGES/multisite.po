@@ -5763,6 +5763,10 @@ msgid "Available capacity"
 msgstr ""
 
 #, fuzzy
+msgid "Available macros and search result(s)"
+msgstr "Numarul maxim de mesaje"
+
+#, fuzzy
 msgid "Available options"
 msgstr "Optiuni tabel"
 
@@ -11529,6 +11533,10 @@ msgstr ""
 
 msgid "Custom URL"
 msgstr ""
+
+#, fuzzy
+msgid "Custom URL base prefix"
+msgstr "Atribute personalizate"
 
 msgid "Custom URL prefix"
 msgstr ""
@@ -39093,10 +39101,6 @@ msgstr ""
 msgid "Search pattern"
 msgstr "Adaugă model/tipar"
 
-#, fuzzy
-msgid "Search result(s) preview"
-msgstr "Cautare"
-
 #, python-format
 msgid "Search results for folder %s"
 msgstr ""
@@ -41896,6 +41900,13 @@ msgid ""
 "This is e.g. useful if you use the ip address or the hostname as base "
 "address but require some additional prefix to make the correct API call. Use "
 "the custom URL option if you need to specify a more complex API url."
+msgstr ""
+
+msgid ""
+"Specifies a prefix, which is prepended to the hostname or base address. This "
+"is an exotic option, which is kept for legacy reasons. Consider using a "
+"custom URL instead. If this option is not relevant for your installation, "
+"please leave it unchecked."
 msgstr ""
 
 msgid ""
@@ -59091,9 +59102,6 @@ msgstr ""
 msgid "is not one of regex"
 msgstr ""
 
-msgid "is not required"
-msgstr ""
-
 msgid "is required"
 msgstr ""
 
@@ -59290,6 +59298,10 @@ msgstr ""
 #, python-format
 msgid "must match '%s'"
 msgstr ""
+
+#, fuzzy
+msgid "must not exist"
+msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 msgid "myhost089"
 msgstr ""
@@ -60158,6 +60170,10 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Search result(s) preview"
+#~ msgstr "Cautare"
 
 # georgem ##############
 #, fuzzy

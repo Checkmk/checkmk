@@ -6143,6 +6143,10 @@ msgstr "Configurations d'agents disponibles"
 msgid "Available capacity"
 msgstr "Capacité disponible"
 
+#, fuzzy
+msgid "Available macros and search result(s)"
+msgstr "Nombre de résultats de recherche"
+
 msgid "Available options"
 msgstr "Options disponibles"
 
@@ -12274,6 +12278,10 @@ msgstr "Personnalisé Durée de vie :"
 
 msgid "Custom URL"
 msgstr "URL personnalisée"
+
+#, fuzzy
+msgid "Custom URL base prefix"
+msgstr "Préfixe d'URL personnalisé"
 
 msgid "Custom URL prefix"
 msgstr "Préfixe d'URL personnalisé"
@@ -40675,9 +40683,6 @@ msgstr "Ne cherchez que l'entrée de la base DN"
 msgid "Search pattern"
 msgstr "Modèle de recherche"
 
-msgid "Search result(s) preview"
-msgstr "Aperçu des résultats de la recherche"
-
 #, python-format
 msgid "Search results for folder %s"
 msgstr "Résultats de la recherche pour le dossier %s"
@@ -43620,6 +43625,19 @@ msgstr ""
 "d'hôte comme adresse de base, mais que vous avez besoin d'un préfixe "
 "supplémentaire pour effectuer l'appel d'API correct. Utilisez l'option URL "
 "personnalisée si vous devez spécifier une URL d'API plus complexe."
+
+#, fuzzy
+msgid ""
+"Specifies a prefix, which is prepended to the hostname or base address. This "
+"is an exotic option, which is kept for legacy reasons. Consider using a "
+"custom URL instead. If this option is not relevant for your installation, "
+"please leave it unchecked."
+msgstr ""
+"Spécifie un préfixe de chemin d'accès à l'URL, qui est ajouté aux appels "
+"d'API à l'API Kubernetes. Il s'agit d'une option utile pour les "
+"installations Rancher (vous trouverez de plus amples informations dans le "
+"manuel). Si cette option n'est pas pertinente pour votre installation, "
+"veuillez ne pas la cocher."
 
 msgid ""
 "Specifies an URL path suffix which is appended to the path in calls to the "
@@ -64484,9 +64502,6 @@ msgstr "ne fait pas partie des"
 msgid "is not one of regex"
 msgstr "n'est pas un des regex"
 
-msgid "is not required"
-msgstr "n'est pas nécessaire"
-
 msgid "is required"
 msgstr "est nécessaire"
 
@@ -64675,6 +64690,10 @@ msgstr "doit être égal à '%s' ;"
 #, python-format
 msgid "must match '%s'"
 msgstr "doit correspondre à '%s' ;"
+
+#, fuzzy
+msgid "must not exist"
+msgstr "N'existe pas"
 
 msgid "myhost089"
 msgstr "monhost089"
@@ -65513,6 +65532,12 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Tous droits réservés."
+
+#~ msgid "Search result(s) preview"
+#~ msgstr "Aperçu des résultats de la recherche"
+
+#~ msgid "is not required"
+#~ msgstr "n'est pas nécessaire"
 
 #, python-format
 #~ msgid "%s: No such agent output"

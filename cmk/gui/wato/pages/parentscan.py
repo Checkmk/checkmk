@@ -338,12 +338,11 @@ class ModeParentScan(WatoMode):
             transactions.check_transaction()
             user.save_file("parentscan", dict(self._settings._asdict()))
 
-            self._job.set_function(
+            self._job.start(
                 lambda job_interface: self._job.do_execute(
                     self._settings, self._get_tasks(), job_interface
                 )
             )
-            self._job.start()
         except Exception as e:
             if active_config.debug:
                 raise

@@ -737,8 +737,7 @@ def execute_discovery_job(api_request: StartDiscoveryRequest) -> DiscoveryResult
         DiscoveryAction.REFRESH,
         DiscoveryAction.TABULA_RASA,
     ]:
-        job.set_function(lambda job_interface: job.discover(api_request, job_interface))
-        job.start()
+        job.start(lambda job_interface: job.discover(api_request, job_interface))
 
     if job.is_active() and api_request.options.action == DiscoveryAction.STOP:
         job.stop()

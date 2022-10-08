@@ -932,7 +932,7 @@ class ActivateChangesManager(ActivateChanges):
         job = ActivateChangesSchedulerBackgroundJob(
             self._activation_id, self._site_snapshot_settings, self._prevent_activate
         )
-        job.start()
+        job.start(job.schedule_sites)
 
     def _log_activation(self):
         log_msg = _("Starting activation (Sites: %s)") % ",".join(self._sites)
@@ -1321,8 +1321,7 @@ def execute_activation_cleanup_background_job(maximum_age: Optional[int] = None)
         logger.debug("Another activation cleanup job is already running: Skipping this time")
         return
 
-    job.set_function(job.do_execute)
-    job.start()
+    job.start(job.do_execute)
 
 
 @gui_background_job.job_registry.register
@@ -1347,9 +1346,8 @@ class ActivateChangesSchedulerBackgroundJob(WatoBackgroundJob):
         self._activation_id = activation_id
         self._site_snapshot_settings = site_snapshot_settings
         self._prevent_activate = prevent_activate
-        self.set_function(self._schedule_sites)
 
-    def _schedule_sites(self, job_interface):
+    def schedule_sites(self, job_interface: background_job.BackgroundProcessInterface) -> None:
         # Prepare queued jobs
 
         job_interface.send_progress_update(

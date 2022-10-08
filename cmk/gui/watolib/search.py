@@ -513,15 +513,14 @@ def build_index_background(
     sleep_time: int = 5,
 ) -> None:
     build_job = SearchIndexBackgroundJob()
-    build_job.set_function(
-        lambda job_interface: _build_index_background(
-            job_interface=job_interface,
-            n_attempts_redis_connection=n_attempts_redis_connection,
-            sleep_time=sleep_time,
-        )
-    )
     with suppress(BackgroundJobAlreadyRunning):
-        build_job.start()
+        build_job.start(
+            lambda job_interface: _build_index_background(
+                job_interface=job_interface,
+                n_attempts_redis_connection=n_attempts_redis_connection,
+                sleep_time=sleep_time,
+            )
+        )
 
 
 def _update_index_background(
@@ -541,11 +540,10 @@ def _update_index_background(
 
 def update_index_background(change_action_name: str) -> None:
     update_job = SearchIndexBackgroundJob()
-    update_job.set_function(
-        lambda job_interface: _update_index_background(change_action_name, job_interface)
-    )
     with suppress(BackgroundJobAlreadyRunning):
-        update_job.start()
+        update_job.start(
+            lambda job_interface: _update_index_background(change_action_name, job_interface)
+        )
 
 
 @job_registry.register

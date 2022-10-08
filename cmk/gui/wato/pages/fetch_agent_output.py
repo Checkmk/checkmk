@@ -224,7 +224,7 @@ class AutomationFetchAgentOutputStart(ABCAutomationFetchAgentOutput):
 def start_fetch_agent_job(api_request):
     job = FetchAgentOutputBackgroundJob(api_request)
     try:
-        job.start()
+        job.start(job.fetch_agent_output)
     except background_job.BackgroundJobAlreadyRunning:
         pass
 
@@ -272,9 +272,7 @@ class FetchAgentOutputBackgroundJob(WatoBackgroundJob):
         )
         super().__init__(job_id, title=title)
 
-        self.set_function(self._fetch_agent_output)
-
-    def _fetch_agent_output(self, job_interface):
+    def fetch_agent_output(self, job_interface):
         job_interface.send_progress_update(_("Fetching '%s'...") % self._request.agent_type)
 
         agent_output_result = get_agent_output(

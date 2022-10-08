@@ -363,12 +363,11 @@ def start_bulk_discovery(
 
     """
     tasks = _create_tasks_from_hosts(hosts, bulk_size)
-    job.set_function(
+    job.start(
         lambda job_interface: job.do_execute(
             discovery_mode, do_full_scan, ignore_errors, tasks, job_interface
         )
     )
-    job.start()
 
 
 def _create_tasks_from_hosts(

@@ -119,10 +119,9 @@ def execute_host_label_sync_job() -> Optional[DiscoveredHostLabelSyncJob]:
         return None
 
     job = DiscoveredHostLabelSyncJob()
-    job.set_function(job.do_sync)
 
     try:
-        job.start()
+        job.start(job.do_sync)
     except background_job.BackgroundJobAlreadyRunning:
         logger.debug("Another synchronization job is already running: Skipping this sync")
 

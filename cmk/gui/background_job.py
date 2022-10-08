@@ -349,8 +349,6 @@ class BackgroundJob:
         self._work_dir = os.path.join(self._job_base_dir, self._job_id)
         self._jobstatus = JobStatus(self._work_dir)
 
-        self._queued_function: Callable[[BackgroundProcessInterface], None] | None = None
-
     @staticmethod
     def validate_job_id(job_id: str) -> None:
         if not regex(REGEX_GENERIC_IDENTIFIER).match(job_id):
@@ -516,19 +514,14 @@ class BackgroundJob:
 
         return status
 
-    # TODO: Clean this up (functions are registered by subclassing, no need to register them here)
-    def set_function(self, func_ptr: Callable[[BackgroundProcessInterface], None]) -> None:
-        self._queued_function = func_ptr
-
-    def start(self) -> None:
+    def start(self, target: Callable[[BackgroundProcessInterface], None]) -> None:
         try:
             store.aquire_lock(self._job_initializiation_lock)
-            self._start()
+            self._start(target)
         finally:
             store.release_lock(self._job_initializiation_lock)
 
-    def _start(self) -> None:
-        assert self._queued_function is not None
+    def _start(self, target: Callable[[BackgroundProcessInterface], None]) -> None:
         if self.is_active():
             raise BackgroundJobAlreadyRunning(_("Background Job %s already running") % self._job_id)
 
@@ -548,7 +541,7 @@ class BackgroundJob:
             {
                 "work_dir": self._work_dir,
                 "job_id": self._job_id,
-                "target": self._queued_function,
+                "target": target,
             }
         )
         p = multiprocessing.Process(

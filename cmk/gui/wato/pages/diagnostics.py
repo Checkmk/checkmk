@@ -151,8 +151,7 @@ class ModeDiagnostics(WatoMode):
 
         params = self._diagnostics_parameters
         assert params is not None
-        self._job.set_function(lambda job_interface: self._job.do_execute(params, job_interface))
-        self._job.start()
+        self._job.start(lambda job_interface: self._job.do_execute(params, job_interface))
 
         return redirect(self._job.detail_url())
 

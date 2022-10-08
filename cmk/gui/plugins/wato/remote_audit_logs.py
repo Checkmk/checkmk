@@ -211,8 +211,7 @@ def execute_get_remote_audit_logs() -> None:
         logger.debug("Another 'get remote audit logs' job is already running: Skipping this time.")
         return
 
-    job.set_function(job.do_execute)
-    job.start()
+    job.start(job.do_execute)
 
 
 register_job(execute_get_remote_audit_logs)

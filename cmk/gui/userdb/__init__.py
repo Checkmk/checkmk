@@ -1335,7 +1335,7 @@ def execute_userdb_job() -> None:
         gui_logger.debug("Another synchronization job is already running: Skipping this sync")
         return
 
-    job.set_function(
+    job.start(
         lambda job_interface: job.do_sync(
             job_interface=job_interface,
             add_to_changelog=False,
@@ -1344,7 +1344,6 @@ def execute_userdb_job() -> None:
             save_users_func=save_users,
         )
     )
-    job.start()
 
 
 def userdb_sync_job_enabled() -> bool:
@@ -1363,17 +1362,16 @@ def userdb_sync_job_enabled() -> bool:
 def ajax_sync() -> None:
     try:
         job = UserSyncBackgroundJob()
-        job.set_function(
-            lambda job_interface: job.do_sync(
-                job_interface=job_interface,
-                add_to_changelog=False,
-                enforce_sync=True,
-                load_users_func=load_users,
-                save_users_func=save_users,
-            )
-        )
         try:
-            job.start()
+            job.start(
+                lambda job_interface: job.do_sync(
+                    job_interface=job_interface,
+                    add_to_changelog=False,
+                    enforce_sync=True,
+                    load_users_func=load_users,
+                    save_users_func=save_users,
+                )
+            )
         except background_job.BackgroundJobAlreadyRunning as e:
             raise MKUserError(None, _("Another user synchronization is already running: %s") % e)
         response.set_data("OK Started synchronization\n")
@@ -1475,8 +1473,7 @@ def execute_user_profile_cleanup_job() -> None:
             gui_logger.debug("Job was already executed within last %d seconds", interval)
             return
 
-    job.set_function(job.do_execute)
-    job.start()
+    job.start(job.do_execute)
 
 
 @gui_background_job.job_registry.register

@@ -115,18 +115,18 @@ class DummyBackgroundJob(gui_background_job.GUIBackgroundJob):
         time.sleep(100)
 
 
-def test_start_job(request_context) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("request_context")
+def test_start_job() -> None:
     job = DummyBackgroundJob()
-    job.set_function(job.execute_hello)
 
     status = job.get_status()
     assert status["state"] == background_job.JobStatusStates.INITIALIZED
 
-    job.start()
+    job.start(job.execute_hello)
     testlib.wait_until(job.is_active, timeout=5, interval=0.1)
 
     with pytest.raises(background_job.BackgroundJobAlreadyRunning):
-        job.start()
+        job.start(job.execute_hello)
     assert job.is_active()
 
     job.finish_hello_event.set()
@@ -146,10 +146,10 @@ def test_start_job(request_context) -> None:  # type:ignore[no-untyped-def]
     assert "Hallo :-)" in output
 
 
-def test_stop_job(request_context) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("request_context")
+def test_stop_job() -> None:
     job = DummyBackgroundJob()
-    job.set_function(job.execute_endless)
-    job.start()
+    job.start(job.execute_endless)
 
     testlib.wait_until(
         lambda: "Hanging loop" in job.get_status()["loginfo"]["JobProgressUpdate"],

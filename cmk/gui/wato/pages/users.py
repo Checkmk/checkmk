@@ -214,18 +214,17 @@ class ModeUsers(WatoMode):
             try:
 
                 job = userdb.UserSyncBackgroundJob()
-                job.set_function(
-                    lambda job_interface: job.do_sync(
-                        job_interface=job_interface,
-                        add_to_changelog=True,
-                        enforce_sync=True,
-                        load_users_func=userdb.load_users,
-                        save_users_func=userdb.save_users,
-                    )
-                )
 
                 try:
-                    job.start()
+                    job.start(
+                        lambda job_interface: job.do_sync(
+                            job_interface=job_interface,
+                            add_to_changelog=True,
+                            enforce_sync=True,
+                            load_users_func=userdb.load_users,
+                            save_users_func=userdb.save_users,
+                        )
+                    )
                 except background_job.BackgroundJobAlreadyRunning as e:
                     raise MKUserError(
                         None, _("Another synchronization job is already running: %s") % e

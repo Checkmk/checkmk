@@ -167,3 +167,75 @@ def test_stop_job() -> None:
 
     output = "\n".join(status["loginfo"]["JobProgressUpdate"])
     assert "Job was stopped" in output
+
+
+@pytest.mark.usefixtures("request_context")
+def test_job_status_not_started() -> None:
+    job = DummyBackgroundJob()
+    # Seems the attributes defined for the job, like "deletable" or "title" are not correct in
+    # this stage. Looks like this should be changed.
+    assert job.has_exception() is False
+    assert job.acknowledged_by() is None
+    assert job.is_available() is False
+    assert job.is_deletable() is True
+    assert job.is_visible() is True
+    assert job.may_stop() is False
+    assert job.may_delete() is False
+    assert job.is_foreign() is False
+    assert job.is_active() is False
+    assert job.exists() is False
+    assert job.get_job_id() == "dummy_job"
+    assert job.get_title() == "Background job"
+
+
+@pytest.mark.usefixtures("request_context")
+def test_job_status_while_running() -> None:
+    job = DummyBackgroundJob()
+    job.start(job.execute_endless)
+    testlib.wait_until(
+        lambda: "Hanging loop" in job.get_status()["loginfo"]["JobProgressUpdate"],
+        timeout=5,
+        interval=0.1,
+    )
+
+    assert job.has_exception() is False
+    assert job.acknowledged_by() is None
+    assert job.is_available() is True
+    assert job.is_deletable() is False
+    assert job.is_visible() is True
+    assert job.may_stop() is False
+    assert job.may_delete() is False
+    assert job.is_foreign() is False
+    assert job.is_active() is True
+    assert job.exists() is True
+    assert job.get_job_id() == "dummy_job"
+    assert job.get_title() == "Dummy Job"
+    job.stop()
+
+
+@pytest.mark.usefixtures("request_context")
+def test_job_status_after_stop() -> None:
+    job = DummyBackgroundJob()
+    job.start(job.execute_endless)
+    testlib.wait_until(
+        lambda: "Hanging loop" in job.get_status()["loginfo"]["JobProgressUpdate"],
+        timeout=5,
+        interval=0.1,
+    )
+    job.stop()
+
+    status = job.get_status()
+    assert status["state"] == background_job.JobStatusStates.STOPPED
+
+    assert job.has_exception() is False
+    assert job.acknowledged_by() is None
+    assert job.is_available() is True
+    assert job.is_deletable() is False
+    assert job.is_visible() is True
+    assert job.may_stop() is False
+    assert job.may_delete() is False
+    assert job.is_foreign() is False
+    assert job.is_active() is False
+    assert job.exists() is True
+    assert job.get_job_id() == "dummy_job"
+    assert job.get_title() == "Dummy Job"

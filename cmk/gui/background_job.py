@@ -160,14 +160,14 @@ class BackgroundProcessInterface:
 class BackgroundProcess(multiprocessing.Process):
     def __init__(
         self,
-        job_status: JobStatus,
+        job_status: JobStatusStore,
         logger: logging.Logger,
         work_dir: str,
         job_id: str,
         target: Callable[[BackgroundProcessInterface], None],
     ) -> None:
         super().__init__()
-        self._jobstatus = job_status
+        self._jobstatus_store = job_status
         self._logger = logger
         self._target = target
         self._job_interface = BackgroundProcessInterface(work_dir, job_id, logger)
@@ -178,7 +178,7 @@ class BackgroundProcess(multiprocessing.Process):
 
     def _handle_sigterm(self, signum: int, frame: Optional[FrameType]) -> None:
         self._logger.debug("Received SIGTERM")
-        status = self._jobstatus.get_status_from_file()
+        status = self._jobstatus_store.read()
         if not status.get("stoppable", True):
             self._logger.warning(
                 "Skip termination of background job (Job ID: %s, PID: %d)",
@@ -197,7 +197,7 @@ class BackgroundProcess(multiprocessing.Process):
             self._logger.log(
                 VERBOSE, "Initialized background job (Job ID: %s)", self._job_interface.get_job_id()
             )
-            self._jobstatus.update_status(
+            self._jobstatus_store.update(
                 {
                     "pid": self.pid,
                     "state": JobStatusStates.RUNNING,
@@ -208,14 +208,14 @@ class BackgroundProcess(multiprocessing.Process):
             self._execute_function()
 
             # Final status update
-            job_status = self._jobstatus.get_status_from_file()
+            job_status = self._jobstatus_store.read()
 
             if job_status.get("loginfo", {}).get("JobException"):
                 final_state = JobStatusStates.EXCEPTION
             else:
                 final_state = JobStatusStates.FINISHED
 
-            self._jobstatus.update_status(
+            self._jobstatus_store.update(
                 {
                     "state": final_state,
                     "duration": time.time() - job_status["started"],
@@ -223,12 +223,12 @@ class BackgroundProcess(multiprocessing.Process):
             )
         except MKTerminate:
             self._logger.warning("Job was stopped")
-            self._jobstatus.update_status({"state": JobStatusStates.STOPPED})
+            self._jobstatus_store.update({"state": JobStatusStates.STOPPED})
         except Exception:
             self._logger.error(
                 "Exception while preparing background function environment", exc_info=True
             )
-            self._jobstatus.update_status({"state": JobStatusStates.EXCEPTION})
+            self._jobstatus_store.update({"state": JobStatusStates.EXCEPTION})
 
     def _detach_from_parent(self) -> None:
         # Detach from parent and cleanup inherited file descriptors
@@ -345,7 +345,7 @@ class BackgroundJob:
 
         self._initial_status_args = kwargs
         self._work_dir = os.path.join(self._job_base_dir, self._job_id)
-        self._jobstatus = JobStatus(self._work_dir)
+        self._jobstatus_store = JobStatusStore(self._work_dir)
 
     @staticmethod
     def validate_job_id(job_id: str) -> None:
@@ -356,19 +356,19 @@ class BackgroundJob:
         return self._job_id
 
     def get_title(self) -> str:
-        return self._jobstatus.get_status_from_file().get("title", _("Background job"))
+        return self._jobstatus_store.read().get("title", _("Background job"))
 
     def get_work_dir(self) -> str:
         return self._work_dir
 
     def exists(self) -> bool:
-        return os.path.exists(self._work_dir) and self._jobstatus.statusfile_exists()
+        return os.path.exists(self._work_dir) and self._jobstatus_store.exists()
 
     def is_available(self) -> bool:
         return self.exists()
 
     def is_stoppable(self) -> bool:
-        return self._jobstatus.get_status_from_file().get("stoppable", True)
+        return self._jobstatus_store.read().get("stoppable", True)
 
     def _verify_running(self, job_status: JobStatusSpec) -> bool:
         if job_status["state"] == JobStatusStates.INITIALIZED:
@@ -397,9 +397,6 @@ class BackgroundJob:
         job_status = self.get_status()
         return job_status["is_active"] and self._verify_running(job_status)
 
-    def update_status(self, new_data: JobStatusSpec) -> None:
-        self._jobstatus.update_status(new_data)
-
     def stop(self) -> None:
         if not self.is_active():
             raise MKGeneralException(_("Job already finished"))
@@ -409,9 +406,9 @@ class BackgroundJob:
 
         self._terminate_processes()
 
-        job_status = self._jobstatus.get_status_from_file()
+        job_status = self._jobstatus_store.read()
         duration = time.time() - job_status["started"]
-        self._jobstatus.update_status(
+        self._jobstatus_store.update(
             {
                 "state": JobStatusStates.STOPPED,
                 "duration": duration,
@@ -493,7 +490,7 @@ class BackgroundJob:
         return True
 
     def get_status(self) -> JobStatusSpec:
-        status = self._jobstatus.get_status_from_file()
+        status = self._jobstatus_store.read()
 
         # Some dynamic stuff
         if status.get("state", "") == JobStatusStates.RUNNING and status["pid"] is not None:
@@ -533,7 +530,7 @@ class BackgroundJob:
             "duration": 0.0,
         }
         initial_status.update(self._initial_status_args)
-        self._jobstatus.update_status(initial_status)
+        self._jobstatus_store.update(initial_status)
 
         job_parameters = JobParameters(
             {
@@ -572,10 +569,10 @@ class BackgroundJob:
             # daemon.closefrom(3)
             store.release_all_locks()
 
-            self._jobstatus.update_status({"ppid": os.getpid()})
+            self._jobstatus_store.update({"ppid": os.getpid()})
 
             p = self._background_process_class(
-                job_status=self._jobstatus,
+                job_status=self._jobstatus_store,
                 logger=cmk.gui.log.logger.getChild("background_process"),
                 work_dir=job_parameters["work_dir"],
                 job_id=job_parameters["job_id"],
@@ -599,7 +596,7 @@ class BackgroundJob:
             time.sleep(0.5)
 
 
-class JobStatus:
+class JobStatusStore:
     def __init__(self, work_dir: str) -> None:
         super().__init__()
         self._work_dir = work_dir
@@ -609,7 +606,7 @@ class JobStatus:
         self._result_message_path = Path(work_dir) / BackgroundJobDefines.result_message_filename
         self._exceptions_path = Path(work_dir) / BackgroundJobDefines.exceptions_filename
 
-    def get_status_from_file(self) -> JobStatusSpec:
+    def read(self) -> JobStatusSpec:
         if not self._jobstatus_path.exists():
             data: JobStatusSpec = {}
             data["state"] = JobStatusStates.INITIALIZED
@@ -650,10 +647,10 @@ class JobStatus:
         data["is_active"] = map_substate_to_active[data["state"]]
         return data
 
-    def statusfile_exists(self) -> bool:
+    def exists(self) -> bool:
         return self._jobstatus_path.exists()
 
-    def update_status(self, params: JobStatusSpec) -> None:
+    def update(self, params: JobStatusSpec) -> None:
         if not self._jobstatus_path.parent.exists():
             return
 

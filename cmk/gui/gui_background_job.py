@@ -219,7 +219,7 @@ class GUIBackgroundJob(GUIBackgroundJobSnapshottedFunctions):
         return GUIBackgroundStatusSnapshot(self)
 
     def acknowledge(self, user_id):
-        self.update_status({"acknowledged_by": user_id})
+        self._jobstatus_store.update({"acknowledged_by": user_id})
 
     def detail_url(self):
         """Returns the URL that displays the job detail page"""

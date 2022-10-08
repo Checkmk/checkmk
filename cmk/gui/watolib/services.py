@@ -788,11 +788,11 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
         self._pre_try_discovery = self._get_try_discovery(api_request)
 
         if api_request.options.action == DiscoveryAction.REFRESH:
-            self._jobstatus.update_status({"title": _("Refresh")})
+            self._jobstatus_store.update({"title": _("Refresh")})
             self._perform_service_scan(api_request)
 
         elif api_request.options.action == DiscoveryAction.TABULA_RASA:
-            self._jobstatus.update_status({"title": _("Tabula rasa")})
+            self._jobstatus_store.update({"title": _("Tabula rasa")})
             self._perform_automatic_refresh(api_request)
 
         else:

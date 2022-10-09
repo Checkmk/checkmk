@@ -199,6 +199,7 @@ class BackupTarFile(tarfile.TarFile):
             except IOError as e:
                 if self._verbose:
                     sys.stdout.write("skipping rrdcached command (%s)\n" % e)
+                return
             self._sock = sock
 
         try:

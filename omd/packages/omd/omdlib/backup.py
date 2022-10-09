@@ -123,10 +123,10 @@ class BackupTarFile(tarfile.TarFile):
     to prevent writing to individual RRDs during backups."""
 
     def __init__(self, name, mode, fileobj, **kwargs) -> None:  # type:ignore[no-untyped-def]
-        self._site = kwargs.pop("site")
+        site = kwargs.pop("site")
+        self._site_name = site.name
         self._verbose = kwargs.pop("verbose")
-        self._sites_path = os.path.realpath("/omd/sites")
-        self._rrd_socket = RRDSocket(self._site.dir, self._site.is_stopped(), self._verbose)
+        self._rrd_socket = RRDSocket(site.dir, site.is_stopped(), site.name, self._verbose)
 
         super().__init__(name, mode, fileobj, **kwargs)
 
@@ -137,7 +137,7 @@ class BackupTarFile(tarfile.TarFile):
     def add(
         self, name, arcname=None, recursive=True, *, filter=None
     ):  # pylint: disable=redefined-builtin
-        if arcname == self._site.name:
+        if arcname == self._site_name:
             super().add(name, arcname, recursive, filter=filter)
             return
         try:
@@ -147,30 +147,14 @@ class BackupTarFile(tarfile.TarFile):
                 sys.stdout.write("Skipping vanished file: %s\n" % arcname)
 
     def addfile(self, tarinfo, fileobj=None):
-        # In case of a stopped site or stopped rrdcached there is no
-        # need to suspend rrd updates
-        if not self._rrd_socket.requires_rrd_suspension:
-            super().addfile(tarinfo, fileobj)
-            return
-
-        site_rel_path = tarinfo.name[len(self._site.name) + 1 :]
-
-        is_rrd = (
-            site_rel_path.startswith("var/pnp4nagios/perfdata")
-            or site_rel_path.startswith("var/check_mk/rrd")
-        ) and site_rel_path.endswith(".rrd")
-
-        # rrdcached works realpath
-        rrd_file_path = os.path.join(self._sites_path, tarinfo.name)
-
-        if is_rrd:
-            self._rrd_socket.suspend_rrd_update(rrd_file_path)
-
+        requires_suspension = self._rrd_socket.path_requires_suspension(tarinfo.name)
+        if requires_suspension:
+            self._rrd_socket.suspend_rrd_update(tarinfo.name)
         try:
             super().addfile(tarinfo, fileobj)
         finally:
-            if is_rrd:
-                self._rrd_socket.resume_rrd_update(rrd_file_path)
+            if requires_suspension:
+                self._rrd_socket.resume_rrd_update(tarinfo.name)
 
     def close(self) -> None:
         super().close()
@@ -178,20 +162,39 @@ class BackupTarFile(tarfile.TarFile):
 
 
 class RRDSocket:
-    def __init__(self, site_dir: str, site_stopped: bool, verbose: bool) -> None:
+    def __init__(self, site_dir: str, site_stopped: bool, site_name: str, verbose: bool) -> None:
         self._rrdcached_socket_path = site_dir + "/tmp/run/rrdcached.sock"
-        self.requires_rrd_suspension = not site_stopped and os.path.exists(
+        self._site_requires_suspension = not site_stopped and os.path.exists(
             self._rrdcached_socket_path
         )
         self._sock: None | socket.socket = None
         self._verbose: bool = verbose
+        self._sites_path: str = os.path.realpath("/omd/sites")
+        self._site_name: str = site_name
 
-    def suspend_rrd_update(self, path: str) -> None:
+    def path_requires_suspension(self, tarinfo_name: str) -> bool:
+        # In case of a stopped site or stopped rrdcached there is no
+        # need to suspend rrd updates
+        site_rel_path = tarinfo_name[len(self._site_name) + 1 :]
+        return (
+            self._site_requires_suspension
+            and (
+                site_rel_path.startswith("var/pnp4nagios/perfdata")
+                or site_rel_path.startswith("var/check_mk/rrd")
+            )
+            and tarinfo_name.endswith(".rrd")
+        )
+
+    def suspend_rrd_update(self, tarinfo_name: str) -> None:
+        # rrdcached works realpath
+        path = os.path.join(self._sites_path, tarinfo_name)
         if self._verbose:
             sys.stdout.write("Pausing RRD updates for %s\n" % path)
         self._send_rrdcached_command("SUSPEND %s" % path)
 
-    def resume_rrd_update(self, path: str) -> None:
+    def resume_rrd_update(self, tarinfo_name: str) -> None:
+        # rrdcached works realpath
+        path = os.path.join(self._sites_path, tarinfo_name)
         if self._verbose:
             sys.stdout.write("Resuming RRD updates for %s\n" % path)
         self._send_rrdcached_command("RESUME %s" % path)

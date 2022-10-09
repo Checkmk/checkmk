@@ -96,11 +96,11 @@ export function open_popup() {
 
 // Registerd as click handler on the page while the popup menu is opened
 // This is used to close the menu when the user clicks elsewhere
-function handle_popup_close(event: Event) {
+function handle_popup_close(event: Event | undefined) {
     const container = active_popup.container;
-    const target = event.target as HTMLElement;
+    const target = event!.target as HTMLElement;
 
-    if (container && container.contains(target)) {
+    if (container && container.contains(target as Node)) {
         return true; // clicked menu or statusicon
     }
 
@@ -439,18 +439,23 @@ export function initialize_mega_menus() {
 }
 
 function resize_all_mega_menu_popups() {
-    for (const popup of document.getElementsByClassName("main_menu_popup")) {
+    for (const popup of utils.querySelectorAllByClassName("main_menu_popup")) {
         resize_mega_menu_popup(popup);
     }
 }
 
-export function resize_mega_menu_popup(menu_popup) {
+export function resize_mega_menu_popup(
+    menu_popup: utils.Nullable<HTMLElement>
+) {
     /* Resize a mega menu to the size of its content. Three cases are considered here:
      *   1) The overview of all topics is opened.
      *   2) The extended menu that shows all items of a topic is opened.
      *   3) The menu's search results are opened.
      */
-    const topics = menu_popup.getElementsByClassName("topic");
+    if (!menu_popup) throw new Error("menu_popup shouldn't be null!");
+    const topics = menu_popup.getElementsByClassName(
+        "topic"
+    ) as HTMLCollectionOf<HTMLElement>;
     if (topics.length === 0) {
         return;
     }
@@ -549,7 +554,7 @@ export function mega_menu_show_all_items(current_topic_id) {
     utils.remove_class(current_topic, "extendable");
     utils.add_class(current_topic, "extended");
     utils.add_class(current_topic!.closest(".main_menu"), "extended_topic");
-    resize_mega_menu_popup(current_topic!.closest(".main_menu_popup"));
+    resize_mega_menu_popup(current_topic!.closest(".main_menu_popup")!);
 }
 
 export function mega_menu_show_all_topics(current_topic_id) {
@@ -558,14 +563,16 @@ export function mega_menu_show_all_topics(current_topic_id) {
     utils.remove_class(current_topic!.closest(".main_menu"), "extended_topic");
     mega_menu_hide_entries(current_topic!.closest(".main_menu")?.id);
     current_topic?.getElementsByTagName("ul")[0].removeAttribute("style");
-    resize_mega_menu_popup(current_topic?.closest(".main_menu_popup"));
+    resize_mega_menu_popup(current_topic?.closest(".main_menu_popup")!);
 }
 
 export function mega_menu_hide_entries(menu_id) {
     let menu = document.getElementById(menu_id);
     let more_is_active = menu?.classList.contains("more");
-    let topics = menu?.getElementsByClassName("topic");
-    Array.from(topics!).forEach(topic => {
+    let topics = menu?.getElementsByClassName(
+        "topic"
+    ) as HTMLCollectionOf<HTMLElement>;
+    Array.from(topics).forEach(topic => {
         if (topic.classList.contains("extended")) return;
         let max_entry_number = Number(topic.getAttribute("data-max-entries"));
         if (!max_entry_number) {
@@ -593,7 +600,7 @@ export function mega_menu_hide_entries(menu_id) {
             else utils.remove_class(topic, "extendable");
         }
     });
-    resize_mega_menu_popup(menu?.parentElement);
+    resize_mega_menu_popup(menu?.parentElement!);
 }
 
 export function focus_search_field(input_id) {

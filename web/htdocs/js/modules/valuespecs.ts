@@ -610,8 +610,8 @@ export function iconselector_toggle(varprefix, category_name) {
     var i;
     for (i = 0; i < nav_links.length; i++) {
         if (nav_links[i].id == varprefix + "_" + category_name + "_nav")
-            utils.add_class(nav_links[i].parentNode, "active");
-        else utils.remove_class(nav_links[i].parentNode, "active");
+            utils.add_class(nav_links[i].parentNode as utils.Nullable<HTMLElement>, "active");
+        else utils.remove_class(nav_links[i].parentNode as utils.Nullable<HTMLElement>, "active");
     }
 
     // Now update the category containers

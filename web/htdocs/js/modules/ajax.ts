@@ -8,26 +8,34 @@ declare global {
 
 interface Args {
     method: "GET" | "POST";
-    post_data?;
-    response_handler?: (a?, b?) => void;
-    handler_data?;
-    error_handler?: (a?, b?, c?) => void;
+    post_data?: any;
+    response_handler?: (a?: any, b?: any) => void;
+    handler_data?: any;
+    error_handler?: (
+        handler_data: any,
+        status: number,
+        staus_text: string,
+        response_text?: string
+    ) => void;
     add_ajax_id?: boolean;
+    plain_error: boolean;
+    sync: boolean;
+    authorization?: string;
 }
 
-export function call_ajax(url, optional_args?) {
-    const default_args = {
+export function call_ajax(url: string, optional_args?: any) {
+    const default_args: Args = {
         add_ajax_id: true,
         plain_error: false,
-        response_handler: null,
-        error_handler: null,
+        response_handler: undefined,
+        error_handler: undefined,
         handler_data: null,
         method: "GET",
         post_data: null,
         sync: false,
-        authorization: null,
+        authorization: undefined,
     };
-    var args = {
+    var args: Args = {
         ...default_args,
         ...optional_args,
     };
@@ -52,7 +60,11 @@ export function call_ajax(url, optional_args?) {
         AJAX.open(args.method, url, !args.sync);
     } catch (e) {
         if (args.error_handler) {
-            args.error_handler(args.handler_data, null, e);
+            if (typeof e === "string")
+                args.error_handler(args.handler_data, 0, e);
+            else if (e instanceof Error)
+                args.error_handler(args.handler_data, 0, e.message);
+            else throw new Error("There is an error while using AJAX.open()");
             return null;
         } else {
             throw e;

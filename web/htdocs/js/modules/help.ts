@@ -43,7 +43,7 @@ function switch_help(how) {
 
     // small hack for wato ruleset lists, toggle the "float" and "nofloat"
     // classes on those objects to make the layout possible
-    var rulesetdivs = document.getElementsByClassName("ruleset");
+    var rulesetdivs = utils.querySelectorAllByClassName("ruleset");
     for (i = 0; i < rulesetdivs.length; i++) {
         if (how) {
             if (utils.has_class(rulesetdivs[i], "float")) {

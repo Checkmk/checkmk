@@ -7,6 +7,7 @@ import SimpleBar from "simplebar";
 import * as ajax from "ajax";
 import * as selection from "selection";
 
+export type Nullable<T> = null | T;
 let g_content_scrollbar: SimpleBar | null | undefined = null;
 
 export const browser = {
@@ -25,14 +26,14 @@ export const browser = {
     },
 };
 
-export function prevent_default_events(event) {
+export function prevent_default_events(event: Event) {
     event.preventDefault();
     event.stopPropagation();
     return false;
 }
 
 // Updates the contents of a snapin or dashboard container after get_url
-export function update_contents(id, code) {
+export function update_contents(id: string, code: string) {
     var obj = document.getElementById(id);
     if (obj) {
         obj.innerHTML = code;
@@ -40,9 +41,9 @@ export function update_contents(id, code) {
     }
 }
 
-export var current_script = null;
+export var current_script: HTMLScriptElement | null = null;
 
-export function execute_javascript_by_object(obj) {
+export function execute_javascript_by_object(obj: HTMLElement) {
     var aScripts = obj.getElementsByTagName("script");
     for (var i = 0; i < aScripts.length; i++) {
         if (aScripts[i].src && aScripts[i].src !== "") {
@@ -68,7 +69,7 @@ export function is_window_active() {
 
 // Predicate analogous to that used in JQuery to check whether an element is visible:
 // https://github.com/jquery/jquery/blob/master/src/css/hiddenVisibleSelectors.js
-export function is_visible(elem) {
+export function is_visible(elem: HTMLElement) {
     return !!(
         elem.offsetWidth ||
         elem.offsetHeight ||
@@ -76,10 +77,11 @@ export function is_visible(elem) {
     );
 }
 
-export function has_class(o, cn) {
+export function has_class(o: Nullable<HTMLElement>, cn: string) {
+    if (!o) throw new Error("The given HTMLElement is Null!");
     if (typeof o.className === "undefined") return false;
     let classname = o.className;
-    if (o.className.baseVal !== undefined)
+    if (o instanceof SVGElement && o.className.baseVal !== undefined)
         // SVG className
         classname = o.className.baseVal;
 
@@ -90,7 +92,8 @@ export function has_class(o, cn) {
     return false;
 }
 
-export function remove_class(o, cn) {
+export function remove_class(o: Nullable<HTMLElement>, cn: string) {
+    if (!o) throw new Error("The given HTMLElement is Null!");
     var parts = o.className.split(" ");
     var new_parts = Array();
     for (var x = 0; x < parts.length; x++) {
@@ -99,47 +102,53 @@ export function remove_class(o, cn) {
     o.className = new_parts.join(" ");
 }
 
-export function remove_classes_by_prefix(o, prefix) {
+export function remove_classes_by_prefix(o: Element, prefix: string) {
     const classes = o.className.split(" ").filter(c => !c.startsWith(prefix));
     o.className = classes.join(" ").trim();
 }
 
-export function add_class(o, cn) {
+export function add_class(o: Nullable<HTMLElement>, cn: string) {
+    if (!o) throw new Error("The given HTMLElement is Null!");
     if (!has_class(o, cn)) o.className += " " + cn;
 }
 
-export function change_class(o, a, b) {
+export function change_class(o: Nullable<HTMLElement>, a: string, b: string) {
     remove_class(o, a);
     add_class(o, b);
 }
 
-export function toggle_class(o, a, b) {
+export function toggle_class(o: Nullable<HTMLElement>, a: string, b: string) {
     if (has_class(o, a)) change_class(o, a, b);
     else change_class(o, b, a);
 }
 
 // Adds document/window global event handlers
 // TODO: Move the window fallback to the call sites (when necessary) and nuke this function
-export function add_event_handler(type, func, obj: any = undefined) {
+export function add_event_handler(
+    type: string,
+    func: (e: Event) => void,
+    obj?: EventTarget
+) {
     obj = typeof obj === "undefined" ? window : obj;
     obj.addEventListener(type, func, false);
 }
 
-export function del_event_handler(type, func, obj: any = undefined) {
+export function del_event_handler(
+    type: string,
+    func: (e?: Event) => void,
+    obj?: any
+) {
     obj = typeof obj === "undefined" ? window : obj;
 
     if (obj.removeEventListener) {
         // W3 stadnard browsers
         obj.removeEventListener(type, func, false);
-    } else if (obj.detachEvent) {
-        // IE<9
-        obj.detachEvent("on" + type, func);
     } else {
         obj["on" + type] = null;
     }
 }
 
-export function get_button(event) {
+export function get_button(event: MouseEvent) {
     if (event.which == null)
         /* IE case */
         return event.button < 2
@@ -222,7 +231,7 @@ export function get_content_wrapper_object() {
 }
 
 // Whether or not an element is partially in the the visible viewport
-export function is_in_viewport(element) {
+export function is_in_viewport(element: HTMLElement) {
     var rect = element.getBoundingClientRect(),
         window_height =
             window.innerHeight || document.documentElement.clientHeight,
@@ -272,7 +281,7 @@ export function get_row_info() {
     return document.getElementById("row_info")!.innerHTML;
 }
 
-export function update_row_info(text) {
+export function update_row_info(text: string) {
     const container = document.getElementById("row_info");
     if (container) {
         container.innerHTML = text;
@@ -280,7 +289,10 @@ export function update_row_info(text) {
 }
 
 // Function gets the value of the given url parameter
-export function get_url_param(name, url: string | undefined = undefined) {
+export function get_url_param(
+    name: string,
+    url: string | undefined = undefined
+) {
     name = name.replace("[", "\\[").replace("]", "\\]");
     url = typeof url === "undefined" ? window.location.toString() : url;
 
@@ -296,7 +308,7 @@ export function get_url_param(name, url: string | undefined = undefined) {
  * - Removes _* parameters
  */
 export function makeuri(
-    addvars,
+    addvars: any,
     url: string | undefined = undefined,
     filename: string | undefined = undefined
 ) {
@@ -348,7 +360,7 @@ export function makeuri(
     return base + "?" + params.join("&");
 }
 
-export function makeuri_contextless(vars, filename) {
+export function makeuri_contextless(vars: any, filename: string) {
     var params: string[] = [];
     // Add new params
     for (var key in vars) {
@@ -365,7 +377,7 @@ export function get_theme() {
 }
 
 // Changes a parameter in the current pages URL without reloading the page
-export function update_url_parameter(name, value) {
+export function update_url_parameter(name: string, value: string) {
     // Only a solution for browsers with history.replaceState support. Sadly we have no
     // F5/reload fix for others...
     if (!window.history.replaceState) return;
@@ -402,16 +414,18 @@ export function reload_whole_page(url: string | null = null) {
     }
 }
 
-export function delete_user_message(msg_id, btn) {
+export function delete_user_message(msg_id: string, btn: HTMLButtonElement) {
     ajax.call_ajax("ajax_delete_user_message.py", {
         method: "POST",
         post_data: "id=" + msg_id,
     });
-    var row = btn.parentNode.parentNode;
-    row.parentNode.removeChild(row);
+    var row = btn.parentNode!.parentNode!;
+    row.parentNode!.removeChild(row);
 }
 
-export function add_height_to_simple_bar_content_of_iframe(target_iframe) {
+export function add_height_to_simple_bar_content_of_iframe(
+    target_iframe: string
+) {
     var iframe = document.getElementById(target_iframe);
     if (!iframe) return;
 
@@ -442,7 +456,7 @@ var g_reload_interval = 0; // seconds
 var g_reload_error = false;
 
 // Reschedule the global timer to the given interval.
-export function set_reload(secs, url) {
+export function set_reload(secs: number, url?: string) {
     stop_reload_timer();
     set_reload_interval(secs);
     schedule_reload(url);
@@ -481,7 +495,7 @@ export function schedule_reload(
     }, 1000);
 }
 
-function update_page_state_reload_indicator(remaining_ms) {
+function update_page_state_reload_indicator(remaining_ms: number) {
     const icon = document.getElementById("page_state_icon");
     if (!icon) return; // Not present, no update needed
     const div = icon.closest(".page_state.reload");
@@ -494,7 +508,7 @@ function update_page_state_reload_indicator(remaining_ms) {
     }
 }
 
-function get_clip_path_polygon(perc) {
+function get_clip_path_polygon(perc: number) {
     /* Returns a polygon with n = 3 to 6 nodes in the form of
      * "polygon(p0x p0y, p1x p1y, ..., p(n-1)x p(n-1)y)",
      * where pix and piy are percentages, i.e. in the range of {0, 100%} and the origin
@@ -558,7 +572,7 @@ export function stop_reload_timer() {
     }
 }
 
-function do_reload(url) {
+function do_reload(url: string) {
     // Reschedule the reload in case the browser window / tab is not visible
     // for the user. Retry after short time.
     if (!is_window_active()) {
@@ -599,7 +613,7 @@ function do_reload(url) {
                 display_options += opts[i];
         }
 
-        var params = {_display_options: display_options};
+        var params = {_display_options: display_options} as any;
         var real_display_options = get_url_param("display_options");
         if (real_display_options !== "")
             params["display_options"] = real_display_options;
@@ -621,7 +635,7 @@ function do_reload(url) {
     }
 }
 
-function handle_content_reload(_unused, code) {
+function handle_content_reload(_unused: any, code: string) {
     g_reload_error = false;
     var o = document.getElementById("data_container")!;
     o.innerHTML = code;
@@ -633,7 +647,10 @@ function handle_content_reload(_unused, code) {
     schedule_reload();
 }
 
-function handle_content_reload_error(_unused, status_code) {
+function handle_content_reload_error(
+    _unused: any,
+    status_code: number | string
+) {
     if (!g_reload_error) {
         var o = document.getElementById("data_container")!;
         o.innerHTML =
@@ -648,13 +665,13 @@ function handle_content_reload_error(_unused, status_code) {
     schedule_reload();
 }
 
-export function set_reload_interval(secs) {
+export function set_reload_interval(secs: number) {
     if (secs !== 0) {
         g_reload_interval = secs;
     }
 }
 
-export function toggle_folding(img, to_be_opened) {
+export function toggle_folding(img: HTMLElement, to_be_opened: boolean) {
     if (to_be_opened) {
         change_class(img, "closed", "open");
     } else {
@@ -663,13 +680,14 @@ export function toggle_folding(img, to_be_opened) {
 }
 
 // Relative to viewport
-export function mouse_position(event) {
+export function mouse_position(event: MouseEvent) {
     return {
         x: event.clientX,
         y: event.clientY,
     };
 }
 
+//@ts-ignore
 export function wheel_event_delta(event) {
     return event.deltaY
         ? event.deltaY
@@ -684,25 +702,29 @@ export function wheel_event_name() {
     else return "mousewheel";
 }
 
-export function toggle_more(trigger, toggle_id, dom_levels_up) {
+export function toggle_more(
+    trigger: HTMLElement,
+    toggle_id: string,
+    dom_levels_up: number
+) {
     event!.stopPropagation();
-    let container = trigger;
+    let container: HTMLElement | ParentNode | null = trigger;
     let state;
     for (var i = 0; i < dom_levels_up; i++) {
-        container = container.parentNode;
-        while (container.className.includes("simplebar-"))
-            container = container.parentNode;
+        container = container!.parentNode;
+        while ((container as HTMLElement).className.includes("simplebar-"))
+            container = container!.parentNode;
     }
 
-    if (has_class(container, "more")) {
-        change_class(container, "more", "less");
+    if (has_class(container as HTMLElement, "more")) {
+        change_class(container as HTMLElement, "more", "less");
         state = "off";
     } else {
-        change_class(container, "less", "more");
+        change_class(container as HTMLElement, "less", "more");
         // The class withanimation is used to fade in the formlery
         // hidden items - which must not be done when they are already
         // visible when rendering the page.
-        add_class(container, "withanimation");
+        add_class(container as HTMLElement, "withanimation");
         state = "on";
     }
 
@@ -715,36 +737,37 @@ export function toggle_more(trigger, toggle_id, dom_levels_up) {
     );
 }
 
-export function add_simplebar_scrollbar(scrollable_id) {
+export function add_simplebar_scrollbar(scrollable_id: string) {
     return add_simplebar_scrollbar_to_object(
         document.getElementById(scrollable_id)
     );
 }
 
-export function add_simplebar_scrollbar_to_object(obj) {
+export function add_simplebar_scrollbar_to_object(obj: Nullable<HTMLElement>) {
     if (obj) {
         return new SimpleBar(obj);
     }
     console.log("Missing object for SimpleBar initiation.");
 }
 
-export function content_scrollbar(scrollable_id: string | null = null) {
+export function content_scrollbar(scrollable_id: string) {
     if (g_content_scrollbar === null)
         g_content_scrollbar = add_simplebar_scrollbar(scrollable_id);
     return g_content_scrollbar;
 }
 
-export function set_focus_by_name(form_name, field_name) {
+export function set_focus_by_name(form_name: string, field_name: number) {
     set_focus(
         (document.getElementById("form_" + form_name) as HTMLFormElement)
-            .elements[field_name]
+            .elements[field_name] as HTMLElement | null
     );
 }
 
-export function set_focus_by_id(dom_id) {
+export function set_focus_by_id(dom_id: string) {
     set_focus(document.getElementById(dom_id));
 }
 
+//@ts-ignore
 function set_focus(focus_obj) {
     if (focus_obj) {
         focus_obj.focus();
@@ -754,7 +777,10 @@ function set_focus(focus_obj) {
     }
 }
 
-export function update_pending_changes(changes_info, changes_tooltip) {
+export function update_pending_changes(
+    changes_info: Nullable<string>,
+    changes_tooltip: string
+) {
     if (!changes_info) {
         return;
     }
@@ -794,13 +820,16 @@ export function update_pending_changes(changes_info, changes_tooltip) {
     text_container?.parentElement?.parentElement?.appendChild(elem);
 }
 
-export function get_computed_style(object, property) {
+export function get_computed_style(
+    object: null | undefined | Element,
+    property: string
+) {
     return object
         ? window.getComputedStyle(object).getPropertyValue(property)
         : null;
 }
 
-export function copy_to_clipboard(node_id, success_msg_id = "") {
+export function copy_to_clipboard(node_id: string, success_msg_id = "") {
     const node = document.getElementById(node_id);
     if (!node) {
         console.warn("Copy to clipboard failed as no DOM element was given.");
@@ -824,4 +853,10 @@ export function copy_to_clipboard(node_id, success_msg_id = "") {
 
 export function querySelectorID<T extends HTMLElement>(id: string): T | null {
     return document.querySelector<T>(`#${id}`);
+}
+
+export function querySelectorAllByClassName<T extends HTMLElement>(
+    className: string
+) {
+    return document.querySelectorAll<T>(`.${className}`);
 }

@@ -138,7 +138,7 @@ export function load_graph_content(
     // In case the graph load container (-> is at future graph location) is not
     // visible to the user delay processing of this function
     var graph_load_container = script_object.previousSibling;
-    if (!utils.is_in_viewport(graph_load_container)) {
+    if (!utils.is_in_viewport(graph_load_container as HTMLElement)) {
         g_delayed_graphs.push({
             graph_load_container: graph_load_container,
             graph_recipe: graph_recipe,
@@ -164,7 +164,11 @@ export function register_delayed_graph_listener() {
     // Start of delayed graph renderer listening
     // @ts-ignore
     utils
-        .content_scrollbar()
+        // @ts-ignore
+        //TODO replace content scrollbar with two functions
+        //create_content_scrollbar if no parameter is given
+        //get_content_scrollbar if it is given
+        .content_scrollbar()!
         .getScrollElement()
         .addEventListener("scroll", delayed_graph_renderer);
     utils.add_event_handler("resize", delayed_graph_renderer);
@@ -261,7 +265,7 @@ function delayed_graph_renderer() {
     var i = num_delayed;
     while (i--) {
         var entry = g_delayed_graphs[i];
-        if (utils.is_in_viewport(entry.graph_load_container)) {
+        if (utils.is_in_viewport(entry.graph_load_container as HTMLElement)) {
             do_load_graph_content(
                 entry.graph_recipe,
                 entry.graph_data_range,
@@ -880,7 +884,7 @@ function get_graph_id_of_dom_node(target) {
 function graph_global_mouse_wheel(event: Event | undefined) {
     event = event || window.event; // IE FIX
 
-    var obj = event!.target;
+    var obj: HTMLElement | ParentNode | null = event!.target as HTMLElement;
     // prevent page scrolling when making wheelies over graphs
     while (obj instanceof HTMLElement && !obj.className) obj = obj.parentNode;
     if (
@@ -888,7 +892,7 @@ function graph_global_mouse_wheel(event: Event | undefined) {
         obj.tagName == "DIV" &&
         obj.className == "graph_container"
     )
-        return utils.prevent_default_events(event);
+        return utils.prevent_default_events(event!);
 }
 
 function graph_activate_mouse_control(graph) {
@@ -1291,7 +1295,7 @@ function graph_mouse_wheel(event, graph) {
 }
 
 function graph_get_click_time(event, graph) {
-    var canvas = event.target;
+    var canvas = event.target as HTMLCanvasElement;
 
     // Get X position of mouse click, converted to canvas pixels
     var x = (get_event_offset_x(event) * canvas.width) / canvas.clientWidth;

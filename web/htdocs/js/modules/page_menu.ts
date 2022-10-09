@@ -87,7 +87,9 @@ export function enable_menu_entries(css_class, enabled) {
         to = "disabled";
     }
 
-    for (const element of page_menu.querySelectorAll(".entry." + css_class)) {
+    for (const element of page_menu.querySelectorAll<HTMLElement>(
+        ".entry." + css_class
+    )) {
         utils.change_class(element, from, to);
     }
 }
@@ -255,7 +257,9 @@ export function update_filter_list_scroll(filter_list_id) {
 
 export function side_popup_add_simplebar_scrollbar(popup_id) {
     let popup = document.getElementById(popup_id);
-    let content = popup!.getElementsByClassName("side_popup_content")[0];
+    let content = popup!.getElementsByClassName(
+        "side_popup_content"
+    )[0] as HTMLElement;
     utils.add_simplebar_scrollbar_to_object(content);
 }
 
@@ -268,7 +272,7 @@ export function inpage_search_init(reset_button_id, was_submitted) {
     if (was_submitted) {
         const submit_button = (
             reset_button.parentNode as HTMLElement
-        ).getElementsByClassName("button submit")[0];
+        ).getElementsByClassName("button submit")[0] as HTMLElement;
         utils.add_class(submit_button, "hidden");
     } else {
         reset_button.disabled = true;

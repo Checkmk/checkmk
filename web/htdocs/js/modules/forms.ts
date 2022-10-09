@@ -311,16 +311,18 @@ export function confirm_dialog(optional_args, confirm_handler) {
 
 // Makes a form submittable after explicit confirmation
 export function add_confirm_on_submit(form_id, message) {
-    utils.add_event_handler(
-        "submit",
-        e => {
+    let form = document.getElementById(form_id);
+    if (form instanceof HTMLElement) {
+        form.addEventListener("submit", e => {
             confirm_dialog({html: message}, () => {
                 (document.getElementById(form_id) as HTMLFormElement)?.submit();
             });
-            return utils.prevent_default_events(e);
-        },
-        document.getElementById(form_id)
-    );
+            return utils.prevent_default_events(e!);
+        });
+    } else
+        throw new Error(
+            `Can not add confirm on submit: The Form with the id ${form_id} does not exist`
+        );
 }
 
 // Used as onclick handler on links to confirm following the link or not

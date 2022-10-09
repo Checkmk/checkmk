@@ -229,8 +229,9 @@ export function register_delayed_active_check(
     // Register event listeners on first call
     if (g_delayed_active_checks.length == 0) {
         utils
-            .content_scrollbar()
-            ?.getScrollElement()
+            //@ts-ignore
+            .content_scrollbar()!
+            .getScrollElement()
             .addEventListener("scroll", trigger_delayed_active_checks);
         utils.add_event_handler("resize", trigger_delayed_active_checks);
     }
@@ -254,7 +255,7 @@ function trigger_delayed_active_checks() {
     var i = num_delayed;
     while (i--) {
         var entry = g_delayed_active_checks[i];
-        if (utils.is_in_viewport(document.getElementById(entry.divid))) {
+        if (utils.is_in_viewport(document.getElementById(entry.divid)!)) {
             execute_active_check(entry);
             g_delayed_active_checks.splice(i, 1);
         }

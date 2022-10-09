@@ -9,7 +9,7 @@ export function details_period_hover(td, sla_period, onoff) {
         return;
     }
 
-    var sla_period_elements = document.getElementsByClassName(sla_period);
+    var sla_period_elements = utils.querySelectorAllByClassName(sla_period);
     for (var i = 0; i < sla_period_elements.length; i++) {
         if (onoff) {
             utils.add_class(sla_period_elements[i], "sla_hilite");
@@ -20,7 +20,7 @@ export function details_period_hover(td, sla_period, onoff) {
 }
 
 export function details_period_click(td, sla_period) {
-    var sla_period_elements = document.getElementsByClassName(sla_period);
+    var sla_period_elements = utils.querySelectorAllByClassName(sla_period);
     var onoff = utils.has_class(td, "lock_hilite");
     for (var i = 0; i < sla_period_elements.length; i++) {
         if (onoff) {

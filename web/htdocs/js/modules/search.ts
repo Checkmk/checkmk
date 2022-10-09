@@ -73,7 +73,10 @@ class Search {
 
         const more_button = document.getElementById(this.more_id);
         if (more_button) {
-            remove_class(more_button.parentNode, "hidden");
+            remove_class(
+                more_button.parentNode as HTMLElement | null,
+                "hidden"
+            );
         }
         remove_class(document.getElementById(this.content_id), "hidden");
     }
@@ -85,7 +88,7 @@ class Search {
         // search in case it is available.
         const more_button = document.getElementById(this.more_id);
         if (more_button) {
-            add_class(more_button.parentNode, "hidden");
+            add_class(more_button.parentNode as HTMLElement | null, "hidden");
         }
         add_class(document.getElementById(this.content_id), "hidden");
     }
@@ -287,7 +290,7 @@ function move_current_search_position(step, current_search) {
 
     Array.from(result_list).forEach((value, idx) => {
         idx == current_search.current_search_position
-            ? add_class(value.childNodes[0], "active")
-            : remove_class(value.childNodes[0], "active");
+            ? add_class(value.childNodes[0] as HTMLElement, "active")
+            : remove_class(value.childNodes[0] as HTMLElement, "active");
     });
 }

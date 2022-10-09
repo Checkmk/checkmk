@@ -23,7 +23,6 @@
 # Boston, MA 02110-1301 USA.
 """Cares about backing up the files of a site"""
 
-import errno
 import fnmatch
 import io
 import os
@@ -140,8 +139,8 @@ class BackupTarFile(tarfile.TarFile):
     ):  # pylint: disable=redefined-builtin
         try:
             super().add(name, arcname, recursive, filter=filter)
-        except OSError as e:
-            if e.errno != errno.ENOENT or arcname == self._site.name:
+        except FileNotFoundError:
+            if arcname == self._site.name:
                 raise
 
             if self._verbose:

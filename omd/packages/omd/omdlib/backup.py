@@ -202,7 +202,7 @@ class RRDSocket:
             sys.stdout.write("Resuming RRD updates for ALL\n")
         self._send_rrdcached_command("RESUMEALL")
 
-    def _send_rrdcached_command(self, cmd: str) -> None:  # pylint: disable=too-many-branches
+    def _send_rrdcached_command(self, cmd: str) -> None:
         if self._sock is None:
             sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             try:
@@ -226,26 +226,22 @@ class RRDSocket:
             if self._verbose:
                 sys.stdout.write("skipping rrdcached command (broken pipe)\n")
             return
-        except Exception:  # pylint: disable=try-except-raise
+        except Exception:
             self._sock = None
             raise
 
-        code, msg = answer.strip().split(" ", 1)
-        if code == "-1":
-            if self._verbose:
-                sys.stdout.write("rrdcached response: %r\n" % (answer))
+        self._raise_error_from_answer(answer, cmd)
 
-            if cmd.startswith("SUSPEND") and msg.endswith("already suspended"):
-                pass  # is fine when trying to suspend
-            elif cmd.startswith("RESUME") and msg.endswith("not suspended"):
-                pass  # is fine when trying to resume
-            elif msg.endswith("No such file or directory"):
-                pass  # is fine (unknown RRD)
-            else:
-                raise Exception("Error while processing rrdcached command (%s): %s" % (cmd, msg))
-
-        elif self._verbose:
+    def _raise_error_from_answer(self, answer: str, cmd: str) -> None:
+        if self._verbose:
             sys.stdout.write("rrdcached response: %r\n" % (answer))
+        code, msg = answer.strip().split(" ", 1)
+        if code == "-1" and not (
+            (cmd.startswith("SUSPEND") and msg.endswith("already suspended"))  # ok, if suspending
+            or (cmd.startswith("RESUME") and msg.endswith("not suspended"))  # ok, if resuming
+            or msg.endswith("No such file or directory")  # is fine (unknown RRD)
+        ):
+            raise Exception("Error while processing rrdcached command (%s): %s" % (cmd, msg))
 
     def close(self) -> None:
         if self._sock is not None:

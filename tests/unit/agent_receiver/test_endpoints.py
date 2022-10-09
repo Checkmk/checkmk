@@ -487,7 +487,15 @@ def test_registration_status_declined(
 ) -> None:
     (path_declined := site_context.r4r_dir() / "DECLINED").mkdir()
     (path_declined / f"{uuid}.json").write_text(
-        json.dumps({"rejection_notice": "Registration request declined"})
+        json.dumps(
+            {
+                "state": {
+                    "type": "FOO",
+                    "value": "BAR",
+                    "readable": "Registration request declined",
+                }
+            }
+        )
     )
 
     response = client.get(

@@ -61,7 +61,7 @@ def read_rejection_notice_from_file(path: Path) -> Optional[str]:
     except FileNotFoundError:
         return None
 
-    return registration_request.get("rejection_notice")
+    return registration_request.get("state", {}).get("readable")
 
 
 def update_file_access_time(path: Path) -> None:

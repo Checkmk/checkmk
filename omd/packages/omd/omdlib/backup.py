@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
 #
 #       U  ___ u  __  __   ____
 #        \/"_ \/U|' \/ '|u|  _"\
@@ -127,10 +126,8 @@ class BackupTarFile(tarfile.TarFile):
     def __init__(self, name, mode, fileobj, **kwargs) -> None:  # type:ignore[no-untyped-def]
         self._site = kwargs.pop("site")
         self._verbose = kwargs.pop("verbose")
-        self._site_stopped = self._site.is_stopped()
-        self._rrdcached_socket_path = self._site.dir + "/tmp/run/rrdcached.sock"
-        self._sock: None | socket.socket = None
         self._sites_path = os.path.realpath("/omd/sites")
+        self._rrd_socket = RRDSocket(self._site.dir, self._site.is_stopped(), self._verbose)
 
         super().__init__(name, mode, fileobj, **kwargs)
 
@@ -153,7 +150,7 @@ class BackupTarFile(tarfile.TarFile):
     def addfile(self, tarinfo, fileobj=None):
         # In case of a stopped site or stopped rrdcached there is no
         # need to suspend rrd updates
-        if self._site_stopped or not os.path.exists(self._rrdcached_socket_path):
+        if not self._rrd_socket.requires_rrd_suspension:
             super().addfile(tarinfo, fileobj)
             return
 
@@ -168,20 +165,34 @@ class BackupTarFile(tarfile.TarFile):
         rrd_file_path = os.path.join(self._sites_path, tarinfo.name)
 
         if is_rrd:
-            self._suspend_rrd_update(rrd_file_path)
+            self._rrd_socket.suspend_rrd_update(rrd_file_path)
 
         try:
             super().addfile(tarinfo, fileobj)
         finally:
             if is_rrd:
-                self._resume_rrd_update(rrd_file_path)
+                self._rrd_socket.resume_rrd_update(rrd_file_path)
 
-    def _suspend_rrd_update(self, path: str) -> None:
+    def close(self) -> None:
+        super().close()
+        self._rrd_socket.close()
+
+
+class RRDSocket:
+    def __init__(self, site_dir: str, site_stopped: bool, verbose: bool) -> None:
+        self._rrdcached_socket_path = site_dir + "/tmp/run/rrdcached.sock"
+        self.requires_rrd_suspension = not site_stopped and os.path.exists(
+            self._rrdcached_socket_path
+        )
+        self._sock: None | socket.socket = None
+        self._verbose: bool = verbose
+
+    def suspend_rrd_update(self, path: str) -> None:
         if self._verbose:
             sys.stdout.write("Pausing RRD updates for %s\n" % path)
         self._send_rrdcached_command("SUSPEND %s" % path)
 
-    def _resume_rrd_update(self, path: str) -> None:
+    def resume_rrd_update(self, path: str) -> None:
         if self._verbose:
             sys.stdout.write("Resuming RRD updates for %s\n" % path)
         self._send_rrdcached_command("RESUME %s" % path)
@@ -237,8 +248,6 @@ class BackupTarFile(tarfile.TarFile):
             sys.stdout.write("rrdcached response: %r\n" % (answer))
 
     def close(self) -> None:
-        super().close()
-
         if self._sock is not None:
             self._resume_all_rrds()
             self._sock.close()

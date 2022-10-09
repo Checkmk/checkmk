@@ -137,12 +137,12 @@ class BackupTarFile(tarfile.TarFile):
     def add(
         self, name, arcname=None, recursive=True, *, filter=None
     ):  # pylint: disable=redefined-builtin
+        if arcname == self._site.name:
+            super().add(name, arcname, recursive, filter=filter)
+            return
         try:
             super().add(name, arcname, recursive, filter=filter)
         except FileNotFoundError:
-            if arcname == self._site.name:
-                raise
-
             if self._verbose:
                 sys.stdout.write("Skipping vanished file: %s\n" % arcname)
 

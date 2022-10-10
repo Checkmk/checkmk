@@ -254,6 +254,7 @@ def _execute_checkmk_checks(
             *check_sources(
                 source_results=source_results,
                 include_ok_results=True,
+                exit_spec_cb=host_config.exit_code_spec,
             ),
             *check_parsing_errors(
                 errors=broker.parsing_errors(),

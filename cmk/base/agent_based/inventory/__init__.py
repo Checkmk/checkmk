@@ -193,6 +193,7 @@ def _execute_active_check_inventory(
             # Do not use source states which would overwrite "State when inventory fails" in the
             # ruleset "Do hardware/software Inventory". These are handled by the "Check_MK" service
             override_non_ok_state=fail_status,
+            exit_spec_cb=host_config.exit_code_spec,
         ),
         *check_parsing_errors(
             errors=inv_result.parsing_errors,

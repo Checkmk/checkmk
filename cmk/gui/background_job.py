@@ -551,7 +551,7 @@ class BackgroundJob:
             "duration": 0.0,
         }
         initial_status.update(asdict(self._initial_status_args))
-        self._jobstatus_store.update(initial_status)
+        self._jobstatus_store.write(initial_status)
 
         job_parameters = JobParameters(
             {
@@ -670,6 +670,9 @@ class JobStatusStore:
     def exists(self) -> bool:
         return self._jobstatus_path.exists()
 
+    def write(self, status: JobStatusSpec) -> None:
+        store.save_mk_file(self._jobstatus_path, self._format_value(status))
+
     def update(self, params: JobStatusSpec) -> None:
         if not self._jobstatus_path.parent.exists():
             return
@@ -680,7 +683,7 @@ class JobStatusStore:
                     str(self._jobstatus_path), default={}, lock=True
                 )
                 status.update(params)
-                store.save_mk_file(str(self._jobstatus_path), self._format_value(status))
+                self.write(status)
             finally:
                 store.release_lock(str(self._jobstatus_path))
 

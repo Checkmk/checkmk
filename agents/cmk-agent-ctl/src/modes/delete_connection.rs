@@ -15,7 +15,7 @@ fn retrieve_standard_connection_by_uuid(
         .push_connections()
         .chain(registry.standard_pull_connections())
     {
-        if &connection.uuid == uuid {
+        if &connection.trust.uuid == uuid {
             return Some(coordinates.clone());
         }
     }
@@ -76,14 +76,14 @@ mod tests {
         let mut pull_imported = std::collections::HashSet::new();
         push.insert(
             site_spec::Coordinates::from_str("server:8000/push-site").unwrap(),
-            config::Connection::from(UUID_PUSH),
+            config::TrustedConnectionWithRemote::from(UUID_PUSH),
         );
         pull.insert(
             site_spec::Coordinates::from_str("server:8000/pull-site").unwrap(),
-            config::Connection::from(UUID_PULL),
+            config::TrustedConnectionWithRemote::from(UUID_PULL),
         );
-        pull_imported.insert(config::Connection::from(UUID_PULL_IMP1));
-        pull_imported.insert(config::Connection::from(UUID_PULL_IMP2));
+        pull_imported.insert(config::TrustedConnection::from(UUID_PULL_IMP1));
+        pull_imported.insert(config::TrustedConnection::from(UUID_PULL_IMP2));
         config::Registry::new(
             config::RegisteredConnections {
                 push,

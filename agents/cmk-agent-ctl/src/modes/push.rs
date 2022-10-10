@@ -60,7 +60,7 @@ pub fn handle_push_cycle(
                 })
                 .agent_data(
                     &url,
-                    connection,
+                    &connection.trust,
                     &monitoring_data::compression_header_info().push,
                     &compressed_mon_data,
                 ) {

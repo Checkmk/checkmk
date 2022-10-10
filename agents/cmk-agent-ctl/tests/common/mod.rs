@@ -22,11 +22,13 @@ pub fn testing_registry(
     registry.register_connection(
         config::ConnectionType::Pull,
         &site_spec::Coordinates::from_str("some_server:1234/some_site").unwrap(),
-        config::Connection {
-            uuid: controller_uuid,
-            private_key: String::from_utf8(certs.controller_private_key.clone()).unwrap(),
-            certificate: String::from_utf8(certs.controller_cert.clone()).unwrap(),
-            root_cert: String::from_utf8(certs.ca_cert.clone()).unwrap(),
+        config::TrustedConnectionWithRemote {
+            trust: config::TrustedConnection {
+                uuid: controller_uuid,
+                private_key: String::from_utf8(certs.controller_private_key.clone()).unwrap(),
+                certificate: String::from_utf8(certs.controller_cert.clone()).unwrap(),
+                root_cert: String::from_utf8(certs.ca_cert.clone()).unwrap(),
+            },
         },
     );
     registry

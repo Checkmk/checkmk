@@ -103,7 +103,7 @@ impl CertParsingResult {
 impl ConnectionStatus {
     fn query_remote(
         coordinates: &site_spec::Coordinates,
-        conn: &config::Connection,
+        conn: &config::TrustedConnection,
         agent_rec_api: &impl agent_receiver_api::Status,
     ) -> AnyhowResult<RemoteConnectionStatus> {
         let status_response = agent_rec_api.status(&coordinates.to_url()?, conn)?;
@@ -116,7 +116,7 @@ impl ConnectionStatus {
 
     fn from_standard_conn(
         coordinates: &site_spec::Coordinates,
-        conn: &config::Connection,
+        conn: &config::TrustedConnection,
         conn_type: config::ConnectionType,
         agent_rec_api: &Option<impl agent_receiver_api::Status>,
     ) -> ConnectionStatus {
@@ -136,7 +136,7 @@ impl ConnectionStatus {
         }
     }
 
-    fn from_imported_conn(conn: &config::Connection) -> ConnectionStatus {
+    fn from_imported_conn(conn: &config::TrustedConnection) -> ConnectionStatus {
         ConnectionStatus {
             coordinates: None,
             uuid: conn.uuid,
@@ -269,7 +269,7 @@ impl Status {
         for (coordinates, push_conn) in registry.push_connections() {
             conn_stats.push(ConnectionStatus::from_standard_conn(
                 coordinates,
-                push_conn,
+                &push_conn.trust,
                 config::ConnectionType::Push,
                 agent_rec_api,
             ));
@@ -277,7 +277,7 @@ impl Status {
         for (coordinates, pull_conn) in registry.standard_pull_connections() {
             conn_stats.push(ConnectionStatus::from_standard_conn(
                 coordinates,
-                pull_conn,
+                &pull_conn.trust,
                 config::ConnectionType::Pull,
                 agent_rec_api,
             ));
@@ -717,7 +717,7 @@ mod test_status {
         fn status(
             &self,
             _base_url: &reqwest::Url,
-            _connection: &config::Connection,
+            _connection: &config::TrustedConnection,
         ) -> AnyhowResult<agent_receiver_api::StatusResponse> {
             Ok(agent_receiver_api::StatusResponse {
                 hostname: Some(String::from("host")),
@@ -733,7 +733,7 @@ mod test_status {
         let mut push = std::collections::HashMap::new();
         push.insert(
             site_spec::Coordinates::from_str("server:8000/push-site").unwrap(),
-            config::Connection::from("99f56bbc-5965-4b34-bc70-1959ad1d32d6"),
+            config::TrustedConnectionWithRemote::from("99f56bbc-5965-4b34-bc70-1959ad1d32d6"),
         );
         let registry = config::Registry::new(
             config::RegisteredConnections {

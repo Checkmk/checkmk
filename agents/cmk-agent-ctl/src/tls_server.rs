@@ -16,15 +16,15 @@ use tokio_rustls::TlsAcceptor;
 use std::io::{Read, Result as IoResult, Write};
 
 pub fn tls_acceptor<'a>(
-    connections: impl Iterator<Item = &'a config::Connection>,
+    connections: impl Iterator<Item = &'a config::TrustedConnection>,
 ) -> AnyhowResult<TlsAcceptor> {
     Ok(TlsAcceptor::from(tls_config(connections)?))
 }
 
 fn tls_config<'a>(
-    connections: impl Iterator<Item = &'a config::Connection>,
+    connections: impl Iterator<Item = &'a config::TrustedConnection>,
 ) -> AnyhowResult<Arc<ServerConfig>> {
-    let connections: Vec<&config::Connection> = connections.collect();
+    let connections: Vec<&config::TrustedConnection> = connections.collect();
     Ok(Arc::new(
         ServerConfig::builder()
             .with_safe_defaults()
@@ -72,7 +72,7 @@ impl ClientCertVerifier for CNNoUUIDVerifier {
 }
 
 fn sni_resolver<'a>(
-    connections: impl Iterator<Item = &'a config::Connection>,
+    connections: impl Iterator<Item = &'a config::TrustedConnection>,
 ) -> AnyhowResult<Arc<ResolvesServerCertUsingSni>> {
     let mut resolver = rustls::server::ResolvesServerCertUsingSni::new();
 

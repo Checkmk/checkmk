@@ -255,7 +255,7 @@ impl PullConfig {
         self.registry.is_empty() && self.legacy_pull_marker.exists()
     }
 
-    pub fn connections(&self) -> impl Iterator<Item = &Connection> {
+    pub fn connections(&self) -> impl Iterator<Item = &TrustedConnection> {
         self.registry.pull_connections()
     }
 
@@ -265,8 +265,8 @@ impl PullConfig {
 }
 
 #[serde_with::serde_as]
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Connection {
+#[derive(Serialize, Deserialize, Eq, Debug, Clone)]
+pub struct TrustedConnection {
     #[serde_as(as = "DisplayFromStr")]
     pub uuid: uuid::Uuid,
     pub private_key: String,
@@ -274,27 +274,25 @@ pub struct Connection {
     pub root_cert: String,
 }
 
-impl std::cmp::PartialEq for Connection {
+impl PartialEq for TrustedConnection {
     fn eq(&self, other: &Self) -> bool {
         self.uuid == other.uuid
     }
 }
 
-impl std::cmp::Eq for Connection {}
-
-impl std::hash::Hash for Connection {
+impl std::hash::Hash for TrustedConnection {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.uuid.hash(state);
     }
 }
 
-impl std::borrow::Borrow<uuid::Uuid> for Connection {
+impl std::borrow::Borrow<uuid::Uuid> for TrustedConnection {
     fn borrow(&self) -> &uuid::Uuid {
         &self.uuid
     }
 }
 
-impl Connection {
+impl TrustedConnection {
     pub fn tls_handshake_credentials(&self) -> AnyhowResult<certs::HandshakeCredentials> {
         Ok(certs::HandshakeCredentials {
             server_root_cert: &self.root_cert,
@@ -310,16 +308,28 @@ impl Connection {
     }
 }
 
+#[derive(Serialize, Deserialize, Eq, Debug, Clone)]
+pub struct TrustedConnectionWithRemote {
+    #[serde(flatten)]
+    pub trust: TrustedConnection,
+}
+
+impl PartialEq for TrustedConnectionWithRemote {
+    fn eq(&self, other: &Self) -> bool {
+        self.trust == other.trust
+    }
+}
+
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone, Default)]
 pub struct RegisteredConnections {
     #[serde(default)]
-    pub push: HashMap<site_spec::Coordinates, Connection>,
+    pub push: HashMap<site_spec::Coordinates, TrustedConnectionWithRemote>,
 
     #[serde(default)]
-    pub pull: HashMap<site_spec::Coordinates, Connection>,
+    pub pull: HashMap<site_spec::Coordinates, TrustedConnectionWithRemote>,
 
     #[serde(default)]
-    pub pull_imported: std::collections::HashSet<Connection>,
+    pub pull_imported: std::collections::HashSet<TrustedConnection>,
 }
 
 impl JSONLoader for RegisteredConnections {}
@@ -435,22 +445,25 @@ impl Registry {
 
     pub fn standard_pull_connections(
         &self,
-    ) -> impl Iterator<Item = (&site_spec::Coordinates, &Connection)> {
+    ) -> impl Iterator<Item = (&site_spec::Coordinates, &TrustedConnectionWithRemote)> {
         self.connections.pull.iter()
     }
 
-    pub fn imported_pull_connections(&self) -> impl Iterator<Item = &Connection> {
+    pub fn imported_pull_connections(&self) -> impl Iterator<Item = &TrustedConnection> {
         self.connections.pull_imported.iter()
     }
 
-    pub fn pull_connections(&self) -> impl Iterator<Item = &Connection> {
+    pub fn pull_connections(&self) -> impl Iterator<Item = &TrustedConnection> {
         self.connections
             .pull
             .values()
+            .map(|c| &c.trust)
             .chain(self.connections.pull_imported.iter())
     }
 
-    pub fn push_connections(&self) -> impl Iterator<Item = (&site_spec::Coordinates, &Connection)> {
+    pub fn push_connections(
+        &self,
+    ) -> impl Iterator<Item = (&site_spec::Coordinates, &TrustedConnectionWithRemote)> {
         self.connections.push.iter()
     }
 
@@ -458,7 +471,7 @@ impl Registry {
         &mut self,
         connection_type: ConnectionType,
         coordinates: &site_spec::Coordinates,
-        connection: Connection,
+        connection: TrustedConnectionWithRemote,
     ) {
         let (insert_connections, remove_connections) = match connection_type {
             ConnectionType::Push => (&mut self.connections.push, &mut self.connections.pull),
@@ -468,7 +481,7 @@ impl Registry {
         insert_connections.insert(coordinates.clone(), connection);
     }
 
-    pub fn register_imported_connection(&mut self, connection: Connection) {
+    pub fn register_imported_connection(&mut self, connection: TrustedConnection) {
         self.connections.pull_imported.insert(connection);
     }
 
@@ -713,7 +726,7 @@ mod test_registry {
     use std::convert::From;
     use std::str::FromStr;
 
-    impl From<uuid::Uuid> for Connection {
+    impl From<uuid::Uuid> for TrustedConnection {
         fn from(u: uuid::Uuid) -> Self {
             Self {
                 uuid: u,
@@ -724,7 +737,21 @@ mod test_registry {
         }
     }
 
-    impl std::convert::From<&str> for Connection {
+    impl std::convert::From<&str> for TrustedConnection {
+        fn from(s: &str) -> Self {
+            Self::from(uuid::Uuid::from_str(s).unwrap())
+        }
+    }
+
+    impl From<uuid::Uuid> for TrustedConnectionWithRemote {
+        fn from(u: uuid::Uuid) -> Self {
+            Self {
+                trust: TrustedConnection::from(u),
+            }
+        }
+    }
+
+    impl std::convert::From<&str> for TrustedConnectionWithRemote {
         fn from(s: &str) -> Self {
             Self::from(uuid::Uuid::from_str(s).unwrap())
         }
@@ -737,13 +764,13 @@ mod test_registry {
 
         push.insert(
             site_spec::Coordinates::from_str("server:8000/push-site").unwrap(),
-            connection(),
+            trusted_connection_with_remote(),
         );
         pull.insert(
             site_spec::Coordinates::from_str("server:8000/pull-site").unwrap(),
-            connection(),
+            trusted_connection_with_remote(),
         );
-        pull_imported.insert(connection());
+        pull_imported.insert(trusted_connection());
 
         Registry::new(
             RegisteredConnections {
@@ -756,8 +783,12 @@ mod test_registry {
         .unwrap()
     }
 
-    fn connection() -> Connection {
-        Connection::from(uuid::Uuid::new_v4())
+    fn trusted_connection_with_remote() -> TrustedConnectionWithRemote {
+        TrustedConnectionWithRemote::from(uuid::Uuid::new_v4())
+    }
+
+    fn trusted_connection() -> TrustedConnection {
+        TrustedConnection::from(uuid::Uuid::new_v4())
     }
 
     #[test]
@@ -805,7 +836,7 @@ mod test_registry {
         reg.register_connection(
             ConnectionType::Push,
             &site_spec::Coordinates::from_str("new_server:1234/new-site").unwrap(),
-            connection(),
+            trusted_connection_with_remote(),
         );
         assert!(reg.connections.push.len() == 2);
         assert!(reg.connections.pull.len() == 1);
@@ -818,7 +849,7 @@ mod test_registry {
         reg.register_connection(
             ConnectionType::Push,
             &site_spec::Coordinates::from_str("server:8000/pull-site").unwrap(),
-            connection(),
+            trusted_connection_with_remote(),
         );
         assert!(reg.connections.push.len() == 2);
         assert!(reg.connections.pull.is_empty());
@@ -831,7 +862,7 @@ mod test_registry {
         reg.register_connection(
             ConnectionType::Pull,
             &site_spec::Coordinates::from_str("new_server:1234/new-site").unwrap(),
-            connection(),
+            trusted_connection_with_remote(),
         );
         assert!(reg.connections.push.len() == 1);
         assert!(reg.connections.pull.len() == 2);
@@ -844,7 +875,7 @@ mod test_registry {
         reg.register_connection(
             ConnectionType::Pull,
             &site_spec::Coordinates::from_str("server:8000/push-site").unwrap(),
-            connection(),
+            trusted_connection_with_remote(),
         );
         assert!(reg.connections.push.is_empty());
         assert!(reg.connections.pull.len() == 2);
@@ -854,7 +885,7 @@ mod test_registry {
     #[test]
     fn test_register_imported_connection() {
         let mut reg = registry();
-        let conn = connection();
+        let conn = trusted_connection();
         let uuid = conn.uuid;
         reg.register_imported_connection(conn);
         assert!(reg.connections.push.len() == 1);
@@ -878,15 +909,16 @@ mod test_registry {
     #[test]
     fn test_pull_connections() {
         let reg = registry();
-        let pull_conns: Vec<&Connection> = reg.pull_connections().collect();
+        let pull_conns: Vec<&TrustedConnection> = reg.pull_connections().collect();
         assert!(pull_conns.len() == 2);
         assert!(
             pull_conns[0]
-                == reg
+                == &reg
                     .connections
                     .pull
                     .get(&site_spec::Coordinates::from_str("server:8000/pull-site").unwrap())
                     .unwrap()
+                    .trust
         );
         assert!(reg.connections.pull_imported.contains(pull_conns[1]));
     }
@@ -941,8 +973,8 @@ mod test_registry {
         let uuid_second_imported = uuid::Uuid::new_v4();
         let mut reg = registry();
         reg.connections.pull_imported.clear();
-        reg.register_imported_connection(Connection::from(uuid_first_imported));
-        reg.register_imported_connection(Connection::from(uuid_second_imported));
+        reg.register_imported_connection(TrustedConnection::from(uuid_first_imported));
+        reg.register_imported_connection(TrustedConnection::from(uuid_second_imported));
         assert!(reg.delete_imported_connection(&uuid_first_imported).is_ok());
         assert!(reg.connections.pull_imported.len() == 1);
         assert!(reg

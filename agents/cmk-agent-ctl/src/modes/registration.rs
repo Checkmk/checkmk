@@ -199,7 +199,7 @@ impl RegistrationEndpointCall for AgentLabelsRegistration<'_> {
 
 fn post_registration_conn_type(
     coordinates: &site_spec::Coordinates,
-    connection: &config::Connection,
+    connection: &config::TrustedConnection,
     agent_rec_api: &impl agent_receiver_api::Status,
 ) -> AnyhowResult<config::ConnectionType> {
     loop {
@@ -236,14 +236,16 @@ fn direct_registration(
 
     endpoint_call.call(config, &credentials, &pairing_result, agent_rec_api)?;
 
-    let connection = config::Connection {
-        uuid: pairing_result.uuid,
-        private_key: pairing_result.private_key,
-        certificate: pairing_result.pairing_response.client_cert,
-        root_cert: pairing_result.pairing_response.root_cert,
+    let connection = config::TrustedConnectionWithRemote {
+        trust: config::TrustedConnection {
+            uuid: pairing_result.uuid,
+            private_key: pairing_result.private_key,
+            certificate: pairing_result.pairing_response.client_cert,
+            root_cert: pairing_result.pairing_response.root_cert,
+        },
     };
     registry.register_connection(
-        post_registration_conn_type(&config.coordinates, &connection, agent_rec_api)?,
+        post_registration_conn_type(&config.coordinates, &connection.trust, agent_rec_api)?,
         &config.coordinates,
         connection,
     );
@@ -275,7 +277,7 @@ fn proxy_registration(
         "{}",
         serde_json::to_string(&ProxyPullData {
             agent_controller_version: String::from(constants::VERSION),
-            connection: config::Connection {
+            connection: config::TrustedConnection {
                 uuid: pairing_result.uuid,
                 private_key: pairing_result.private_key,
                 certificate: pairing_result.pairing_response.client_cert,
@@ -289,7 +291,7 @@ fn proxy_registration(
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct ProxyPullData {
     pub agent_controller_version: String,
-    pub connection: config::Connection,
+    pub connection: config::TrustedConnection,
 }
 
 pub fn register_host_name(
@@ -418,7 +420,7 @@ mod tests {
         fn status(
             &self,
             base_url: &reqwest::Url,
-            _connection: &config::Connection,
+            _connection: &config::TrustedConnection,
         ) -> AnyhowResult<agent_receiver_api::StatusResponse> {
             assert!(base_url.to_string() == SITE_URL);
             Ok(agent_receiver_api::StatusResponse {

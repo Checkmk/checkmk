@@ -98,7 +98,7 @@ pub trait AgentData {
     fn agent_data(
         &self,
         base_url: &reqwest::Url,
-        connection: &config::Connection,
+        connection: &config::TrustedConnection,
         compression_algorithm: &str,
         monitoring_data: &[u8],
     ) -> AnyhowResult<()>;
@@ -108,7 +108,7 @@ pub trait Status {
     fn status(
         &self,
         base_url: &reqwest::Url,
-        connection: &config::Connection,
+        connection: &config::TrustedConnection,
     ) -> AnyhowResult<StatusResponse>;
 }
 
@@ -255,7 +255,7 @@ impl AgentData for Api {
     fn agent_data(
         &self,
         base_url: &reqwest::Url,
-        connection: &config::Connection,
+        connection: &config::TrustedConnection,
         compression_algorithm: &str,
         monitoring_data: &[u8],
     ) -> AnyhowResult<()> {
@@ -287,7 +287,7 @@ impl Status for Api {
     fn status(
         &self,
         base_url: &reqwest::Url,
-        connection: &config::Connection,
+        connection: &config::TrustedConnection,
     ) -> AnyhowResult<StatusResponse> {
         let response = certs::client(
             Some(connection.tls_handshake_credentials()?),

@@ -1,0 +1,18 @@
+Title: logwatch: fix validation for REWRITE state
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1665421861
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p15
+
+The validation fot the REWRITE state in the Text logfiles rule
+(logwatch plugin) was erroring out when the patterns contained a
+reference to the previously matched groups.
+
+This werk fixes the issue.
+
+

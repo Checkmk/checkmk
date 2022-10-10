@@ -10,7 +10,7 @@ from typing import Any, Literal, TypedDict, Union
 from cmk.utils.type_defs import Seconds
 
 TextPattern = str | Pattern[str] | None
-TextMatchResult = bool | Sequence[str]
+TextMatchResult = Literal[False] | Sequence[str]
 MatchGroups = dict[str, TextMatchResult]
 
 ################################################################################

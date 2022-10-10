@@ -857,7 +857,7 @@ class EventServer(ECServerThread):
         for event in self._event_status.events():
             if not event["host_in_downtime"]:
                 continue  # only care about events created in downtime
-            host_name: HostName = event["core_host"]
+            host_name: HostName = event["core_host"] or ""
             try:
                 in_downtime = host_downtimes[host_name]
             except KeyError:
@@ -2978,7 +2978,7 @@ class EventStatus:
 
     def flush(self) -> None:
         # TODO: Improve types!
-        self._events: list[Any] = []
+        self._events: list[Event] = []
         self._next_event_id = 1
         self._rule_stats: dict[str, int] = {}
         # needed for expecting rules
@@ -2990,7 +2990,7 @@ class EventStatus:
         # - number of rule hits
         # - number of rule misses
 
-    def events(self) -> list[Any]:
+    def events(self) -> list[Event]:
         # TODO: Improve type!
         return self._events
 
@@ -3019,7 +3019,7 @@ class EventStatus:
             self._interval_starts[rule_id] = start
         return start
 
-    def next_interval_start(self, interval: tuple | int, previous_start: float) -> int:
+    def next_interval_start(self, interval: tuple[int, int] | int, previous_start: float) -> int:
         if isinstance(interval, tuple):
             length, offset = interval
             offset *= 3600
@@ -3031,7 +3031,7 @@ class EventStatus:
         full_parts = divmod(previous_start, length)[0]
         next_start = (full_parts + 1) * length
         next_start += offset
-        return next_start
+        return int(next_start)
 
     def start_next_interval(self, rule_id: str, interval: int) -> None:
         current_start = self.interval_start(rule_id, interval)
@@ -3207,7 +3207,7 @@ class EventStatus:
         event_server: EventServer,
         event_columns: Iterable[tuple[str, Any]],
         new_event: Event,
-        match_groups: dict,
+        match_groups: MatchGroups,
         rule: Rule,
     ) -> None:
         """
@@ -3399,7 +3399,7 @@ class EventStatus:
         event_server.new_event_respecting_limits(event)
 
     def count_event(
-        self, event_server: EventServer, event: Event, rule: str, count: dict
+        self, event_server: EventServer, event: Event, rule: str, count: dict[str, int]
     ) -> Event | None:
         """
         Find previous occurrance of this event and account for

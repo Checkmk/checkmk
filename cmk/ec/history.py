@@ -457,7 +457,9 @@ _GREPABLE_COLUMNS = {
 # Optimization: use grep in order to reduce amount of read lines based on some frequently used
 # filters. It's OK if the filters don't match 100% accurately on the right lines. If in doubt, you
 # can output more lines than necessary. This is only a kind of prefiltering.
-def _grep_pipeline(filters: list[tuple[str, OperatorName, Callable, Any]]) -> list[str]:
+def _grep_pipeline(
+    filters: list[tuple[str, OperatorName, Callable[[Any], bool], Any]]
+) -> list[str]:
     return [
         command
         for column_name, operator_name, _predicate, argument in filters

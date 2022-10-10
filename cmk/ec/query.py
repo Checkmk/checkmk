@@ -86,7 +86,7 @@ class QueryGET(Query):
         self.table = status_server.table(self.table_name)
         self.requested_columns = self.table.column_names
         # NOTE: history's _get_mongodb and _get_files access filters and limits directly.
-        self.filters: list[tuple[str, OperatorName, Callable, Any]] = []
+        self.filters: list[tuple[str, OperatorName, Callable[[Any], bool], Any]] = []
         self.limit: int | None = None
         # NOTE: StatusTableEvents uses only_host for optimization.
         self.only_host: set[Any] | None = None

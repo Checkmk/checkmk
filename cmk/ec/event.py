@@ -41,6 +41,7 @@ class Event(TypedDict, total=False):
     first: float
     id: int
     last: float
+    last_token: float
     live_until: float
     live_until_phases: Iterable[str]
     match_groups: Iterable[str]

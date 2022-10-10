@@ -38,7 +38,6 @@ from cmk.core_helpers.host_sections import HostSections
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.crash_reporting import create_section_crash_dump
-from cmk.base.sources.agent import AgentRawDataSection
 
 if TYPE_CHECKING:
     from cmk.core_helpers.protocol import FetcherMessage
@@ -335,18 +334,14 @@ def parse_and_store_piggybacked_payload(
         else:
             console.vverbose("  -> Not adding sections: %s\n" % source_result.error)
 
-    for source, _ in fetched:
+    for host_key, host_sections in collected_host_sections.items():
         # Store piggyback information received from all sources of this host. This
         # also implies a removal of piggyback files received during previous calls.
-        if source.source_type is SourceType.MANAGEMENT:
+        if host_key.source_type is SourceType.MANAGEMENT:
             # management board (SNMP or IPMI) does not support piggybacking
             continue
         cmk.utils.piggyback.store_piggyback_raw_data(
-            source.hostname,
-            collected_host_sections.setdefault(
-                HostKey(source.hostname, source.source_type),
-                HostSections[AgentRawDataSection](),
-            ).piggybacked_raw_data,
+            host_key.hostname, host_sections.piggybacked_raw_data
         )
 
     return collected_host_sections, results

@@ -67,7 +67,11 @@ import cmk.base.config as config
 import cmk.base.core
 import cmk.base.crash_reporting
 import cmk.base.section as section
-from cmk.base.agent_based.data_provider import make_broker, ParsedSectionsBroker
+from cmk.base.agent_based.data_provider import (
+    make_broker,
+    parse_and_store_piggybacked_payload,
+    ParsedSectionsBroker,
+)
 from cmk.base.agent_based.utils import check_parsing_errors, check_sources
 from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
 from cmk.base.check_utils import ConfiguredService, LegacyCheckParameters
@@ -196,10 +200,11 @@ def commandline_discovery(
                 ),
                 mode=mode,
             )
-            parsed_sections_broker, _results = make_broker(
-                fetched=fetched,
+            host_sections, _results = parse_and_store_piggybacked_payload(
+                fetched,
                 selected_sections=selected_sections,
             )
+            parsed_sections_broker = make_broker(host_sections)
             _commandline_discovery_on_host(
                 host_key=host_config.host_key,
                 host_key_mgmt=host_config.host_key_mgmt,
@@ -370,10 +375,11 @@ def automation_discovery(
             ),
             mode=Mode.DISCOVERY,
         )
-        parsed_sections_broker, _source_results = make_broker(
-            fetched=fetched,
+        host_sections, _results = parse_and_store_piggybacked_payload(
+            fetched,
             selected_sections=NO_SELECTION,
         )
+        parsed_sections_broker = make_broker(host_sections)
 
         if mode is not DiscoveryMode.REMOVE:
             host_labels = analyse_host_labels(
@@ -645,10 +651,10 @@ def _execute_check_discovery(
 
     discovery_mode = DiscoveryMode(params.rediscovery.get("mode"))
 
-    parsed_sections_broker, source_results = make_broker(
-        fetched=fetched,
-        selected_sections=NO_SELECTION,
+    host_sections, source_results = parse_and_store_piggybacked_payload(
+        fetched, selected_sections=NO_SELECTION
     )
+    parsed_sections_broker = make_broker(host_sections)
 
     host_labels = analyse_host_labels(
         host_config=host_config,
@@ -1320,10 +1326,10 @@ def get_check_preview(
         ),
         mode=Mode.DISCOVERY,
     )
-    parsed_sections_broker, _source_results = make_broker(
-        fetched=fetched,
-        selected_sections=NO_SELECTION,
+    host_sections, _source_results = parse_and_store_piggybacked_payload(
+        fetched, selected_sections=NO_SELECTION
     )
+    parsed_sections_broker = make_broker(host_sections)
 
     host_labels = analyse_host_labels(
         host_config=host_config,

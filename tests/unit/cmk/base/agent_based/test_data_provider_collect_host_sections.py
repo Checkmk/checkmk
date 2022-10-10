@@ -35,7 +35,7 @@ from cmk.core_helpers.snmp import SNMPFileCache
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION
 
 import cmk.base.config as config
-from cmk.base.agent_based.data_provider import _collect_host_sections
+from cmk.base.agent_based.data_provider import parse_and_store_piggybacked_payload
 from cmk.base.config import HostConfig
 from cmk.base.sources import make_sources, Source
 from cmk.base.sources.agent import AgentRawDataSection
@@ -134,7 +134,7 @@ class TestMakeHostSectionsHosts:
     def test_no_sources(  # type:ignore[no-untyped-def]
         self, hostname, ipaddress, config_cache, host_config
     ) -> None:
-        host_sections = _collect_host_sections(
+        host_sections = parse_and_store_piggybacked_payload(
             fetched=(),
             selected_sections=NO_SELECTION,
         )[0]
@@ -144,7 +144,7 @@ class TestMakeHostSectionsHosts:
         self, hostname, ipaddress, config_cache, host_config
     ) -> None:
         raw_data: SNMPRawData = {}
-        host_sections = _collect_host_sections(
+        host_sections = parse_and_store_piggybacked_payload(
             fetched=[
                 (
                     SNMPSource(
@@ -258,7 +258,7 @@ class TestMakeHostSectionsHosts:
         source = make_source(hostname, ipaddress)
         assert source.source_type is SourceType.HOST
 
-        host_sections = _collect_host_sections(
+        host_sections = parse_and_store_piggybacked_payload(
             fetched=[
                 (
                     source,
@@ -325,7 +325,7 @@ class TestMakeHostSectionsHosts:
             ),
         ]
 
-        host_sections = _collect_host_sections(
+        host_sections = parse_and_store_piggybacked_payload(
             fetched=[
                 (
                     source,
@@ -420,7 +420,7 @@ class TestMakeHostSectionsHosts:
             ),
         ]
 
-        host_sections = _collect_host_sections(
+        host_sections = parse_and_store_piggybacked_payload(
             fetched=[
                 (
                     source,
@@ -537,7 +537,7 @@ class TestMakeHostSectionsClusters:
             file_cache_max_age=MaxAge.none(),
         )
 
-        host_sections = _collect_host_sections(
+        host_sections = parse_and_store_piggybacked_payload(
             fetched=[
                 (
                     source,
@@ -620,7 +620,7 @@ def test_get_host_sections_cluster(monkeypatch, mocker) -> None:  # type:ignore[
         file_cache_max_age=MaxAge.none(),
     )
 
-    host_sections = _collect_host_sections(
+    host_sections = parse_and_store_piggybacked_payload(
         fetched=[
             (
                 source,

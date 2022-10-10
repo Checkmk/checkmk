@@ -294,9 +294,9 @@ class ParsedSectionsBroker:
         )
 
 
-def _collect_host_sections(
-    *,
+def parse_and_store_piggybacked_payload(
     fetched: Sequence[Tuple[Source, FetcherMessage]],
+    *,
     selected_sections: SectionNameCollection,
 ) -> Tuple[
     Mapping[HostKey, HostSections],
@@ -353,28 +353,19 @@ def _collect_host_sections(
 
 
 def make_broker(
-    *,
-    fetched: Sequence[Tuple[Source, FetcherMessage]],
-    selected_sections: SectionNameCollection,
-) -> Tuple[ParsedSectionsBroker, SourceResults]:
-    collected_host_sections, results = _collect_host_sections(
-        fetched=fetched,
-        selected_sections=selected_sections,
-    )
-    return (
-        ParsedSectionsBroker(
-            {
-                host_key: (
-                    ParsedSectionsResolver(
-                        section_plugins=[
-                            agent_based_register.get_section_plugin(section_name)
-                            for section_name in host_sections.sections
-                        ],
-                    ),
-                    SectionsParser(host_sections=host_sections, host_name=host_key.hostname),
-                )
-                for host_key, host_sections in collected_host_sections.items()
-            }
-        ),
-        results,
+    host_sections: Mapping[HostKey, HostSections],
+) -> ParsedSectionsBroker:
+    return ParsedSectionsBroker(
+        {
+            host_key: (
+                ParsedSectionsResolver(
+                    section_plugins=[
+                        agent_based_register.get_section_plugin(section_name)
+                        for section_name in host_sections.sections
+                    ],
+                ),
+                SectionsParser(host_sections=host_sections, host_name=host_key.hostname),
+            )
+            for host_key, host_sections in host_sections.items()
+        }
     )

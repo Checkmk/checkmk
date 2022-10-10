@@ -5,7 +5,7 @@
 mod agent_receiver_api;
 pub mod certs;
 mod cli;
-pub mod config;
+pub mod configuration;
 mod constants;
 #[cfg(windows)]
 mod log_ext;
@@ -19,7 +19,8 @@ pub mod site_spec;
 mod tls_server;
 pub mod types;
 use anyhow::{anyhow, Context, Result as AnyhowResult};
-use config::TOMLLoader;
+use configuration::config;
+use configuration::config::TOMLLoader;
 use log::info;
 use modes::daemon::daemon;
 use modes::delete_connection::{delete, delete_all};

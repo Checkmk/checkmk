@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use cmk_agent_ctl::{certs as lib_certs, config, site_spec, types};
+use cmk_agent_ctl::{certs as lib_certs, configuration::config, site_spec, types};
 use std::{path::Path, str::FromStr};
 pub mod agent;
 pub mod certs;

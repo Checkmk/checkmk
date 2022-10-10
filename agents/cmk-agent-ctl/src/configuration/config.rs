@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use super::{certs, cli, constants, setup, site_spec, types};
+use crate::{certs, cli, constants, setup, site_spec, types};
 use anyhow::{anyhow, Context, Result as AnyhowResult};
 use serde::de::DeserializeOwned;
 use serde::Deserialize;

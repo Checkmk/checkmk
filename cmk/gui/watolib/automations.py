@@ -12,7 +12,7 @@ import re
 import subprocess
 import uuid
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, NamedTuple, Optional, Sequence, Tuple
+from typing import Any, Callable, Iterable, NamedTuple, Optional, Sequence, Tuple
 
 import requests
 import urllib3
@@ -33,6 +33,7 @@ from cmk.gui.background_job import (
     BackgroundProcessInterface,
     InitialStatusArgs,
     job_registry,
+    JobStatusSpec,
 )
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
@@ -461,7 +462,7 @@ class CheckmkAutomationRequest(NamedTuple):
 
 
 class CheckmkAutomationGetStatusResponse(NamedTuple):
-    job_status: Dict[str, Any]
+    job_status: JobStatusSpec
     result: str
 
 
@@ -490,7 +491,12 @@ def _do_check_mk_remote_automation_in_background_job_serialized(
                 ("request", repr(job_id)),
             ],
         )
-        response = CheckmkAutomationGetStatusResponse(*raw_response)
+        response = CheckmkAutomationGetStatusResponse(
+            # Ignore for now. Can be cleaned up once we make the next step after the TypedDict
+            # [mypy:] Expected keyword arguments, {...}, or dict(...) in TypedDict constructor  [misc]
+            JobStatusSpec(**raw_response[0]),  # type: ignore[misc]
+            raw_response[1],
+        )
         auto_logger.debug("Job status: %r", response)
 
         if not response.job_status["is_active"]:
@@ -552,15 +558,14 @@ class AutomationCheckmkAutomationGetStatus(AutomationCommand):
     def _load_result(path: Path) -> str:
         return store.load_text_from_file(path)
 
-    def execute(self, api_request: str) -> Tuple:
+    def execute(self, api_request: str) -> tuple[dict[str, Any], str]:
         job_id = api_request
         job = CheckmkAutomationBackgroundJob(job_id)
-        return tuple(
-            CheckmkAutomationGetStatusResponse(
-                job_status=job.get_status_snapshot().status,
-                result=self._load_result(Path(job.get_work_dir()) / "result.mk"),
-            )
+        response = CheckmkAutomationGetStatusResponse(
+            job_status=job.get_status_snapshot().status,
+            result=self._load_result(Path(job.get_work_dir()) / "result.mk"),
         )
+        return dict(response[0]), response[1]
 
 
 @job_registry.register

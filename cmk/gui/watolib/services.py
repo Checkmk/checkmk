@@ -841,7 +841,7 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
 
     def get_result(self, api_request: StartDiscoveryRequest) -> DiscoveryResult:
         """Executed from the outer world to report about the job state"""
-        job_status = self.get_status()
+        job_status = dict(self.get_status())
         job_status["is_active"] = self.is_active()
 
         if job_status["is_active"]:

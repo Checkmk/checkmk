@@ -64,6 +64,7 @@ from cmk.gui.background_job import (
     BackgroundProcessInterface,
     InitialStatusArgs,
     job_registry,
+    JobStatusSpec,
 )
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import (
@@ -1850,10 +1851,13 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
                 )
 
                 omd_response = cmk.gui.watolib.automations.CheckmkAutomationGetStatusResponse(
-                    *raw_omd_response
+                    # Ignore for now. Can be cleaned up once we make the next step after the TypedDict
+                    # [mypy:] Expected keyword arguments, {...}, or dict(...) in TypedDict constructor  [misc]
+                    JobStatusSpec(**raw_omd_response[0]),  # type: ignore[misc]
+                    raw_omd_response[1],
                 )
                 if not omd_response.job_status["is_active"]:
-                    return omd_response.job_status["loginfo"]["JobException"]
+                    return list(omd_response.job_status["loginfo"]["JobException"])
                 time.sleep(0.5)
             except MKUserError as e:
                 if not (

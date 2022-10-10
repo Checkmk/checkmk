@@ -142,7 +142,8 @@ def _browser_name(pytestconfig: t.Any) -> str:
 
 # Making test result information available in fixtures
 # https://docs.pytest.org/en/latest/example/simple.html#making-test-result-information-available-in-fixtures
-@pytest.hookimpl(tryfirst=True, hookwrapper=True)
+# NOTE: hookimpl is poorly typed, so the decorator effectively removes the types from the decorated function!
+@pytest.hookimpl(tryfirst=True, hookwrapper=True)  # type: ignore[misc]
 def pytest_runtest_makereport(item: t.Any) -> t.Generator[None, t.Any, None]:
     # execute all other hooks to obtain the report object
     outcome = yield

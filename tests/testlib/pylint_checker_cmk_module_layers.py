@@ -259,12 +259,14 @@ class CMKModuleLayerChecker(BaseChecker):
     # This doesn't change during a pylint run, so let's save a realpath() call per import.
     cmk_path_cached = cmk_path() + "/"
 
-    @utils.check_messages("cmk-module-layer-violation")
+    # NOTE: There are no type stubs for pylint itself, so the decorator effectively removes the types from the decorated function!
+    @utils.check_messages("cmk-module-layer-violation")  # type: ignore[misc]
     def visit_import(self, node: Import) -> None:
         for name, _ in node.names:
             self._check_import(node, ModuleName(name))
 
-    @utils.check_messages("cmk-module-layer-violation")
+    # NOTE: There are no type stubs for pylint itself, so the decorator effectively removes the types from the decorated function!
+    @utils.check_messages("cmk-module-layer-violation")  # type: ignore[misc]
     def visit_importfrom(self, node: ImportFrom) -> None:
         # handle 'from . import foo, bar'
         imported = [node.modname] if node.modname else [n for n, _ in node.names]

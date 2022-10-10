@@ -128,11 +128,11 @@ def ensure_text(s):
     return s
 
 
-DEFAULT_CFG_FILE = os.path.join(os.getenv('MK_CONFDIR', ''), "filestats.cfg")
+DEFAULT_CFG_FILE = os.path.join(os.getenv("MK_CONFDIR", ""), "filestats.cfg")
 
 DEFAULT_CFG_SECTION = {"output": "file_stats"}
 
-FILTER_SPEC_PATTERN = re.compile('(?P<operator>[<>=]+)(?P<value>.+)')
+FILTER_SPEC_PATTERN = re.compile("(?P<operator>[<>=]+)(?P<value>.+)")
 
 LOGGER = logging.getLogger(__name__)
 
@@ -154,11 +154,11 @@ def parse_arguments(argv=None):
     else:
         LOGGER.propagate = False
 
-    parsed_args['cfg_file'] = DEFAULT_CFG_FILE
+    parsed_args["cfg_file"] = DEFAULT_CFG_FILE
     for opt in ("-c", "--config-file"):
         if opt in argv:
             try:
-                parsed_args['cfg_file'] = argv[argv.index(opt) + 1]
+                parsed_args["cfg_file"] = argv[argv.index(opt) + 1]
             except IndexError:
                 sys.stderr.write("missing value for option %r\n" % opt)
                 sys.exit(1)
@@ -174,7 +174,7 @@ class FileStat(object):  # pylint: disable=useless-object-inheritance
         super(FileStat, self).__init__()
         LOGGER.debug("Creating FileStat(%r)", path)
         self.path = ensure_text(path)
-        self.stat_status = 'ok'
+        self.stat_status = "ok"
         self.size = None
         self.age = None
         self._m_time = None
@@ -183,7 +183,7 @@ class FileStat(object):  # pylint: disable=useless-object-inheritance
         self.isdir = False
 
         LOGGER.debug("os.stat(%r)", self.path)
-        path = self.path.encode('utf8')
+        path = self.path.encode("utf8")
         try:
             stat = os.stat(path)
         except OSError as exc:
@@ -216,12 +216,12 @@ class FileStat(object):  # pylint: disable=useless-object-inheritance
             "stat_status": self.stat_status,
             "size": self.size,
             "age": self.age,
-            "mtime": self._m_time
+            "mtime": self._m_time,
         }
         return repr(data)
 
 
-#.
+# .
 #   .--Input---------------------------------------------------------------.
 #   |                      ___                   _                         |
 #   |                     |_ _|_ __  _ __  _   _| |_                       |
@@ -246,7 +246,7 @@ class PatternIterator(object):  # pylint: disable=useless-object-inheritance
             if filestat.isfile:
                 yield filestat
             elif filestat.isdir:
-                for filestat in self._iter_files(os.path.join(item, '*')):
+                for filestat in self._iter_files(os.path.join(item, "*")):
                     yield filestat
 
     def __iter__(self):
@@ -258,7 +258,7 @@ class PatternIterator(object):  # pylint: disable=useless-object-inheritance
 
 def get_file_iterator(config):
     """get a FileStat iterator"""
-    input_specs = [(k[6:], v) for k, v in config.items() if k.startswith('input_')]
+    input_specs = [(k[6:], v) for k, v in config.items() if k.startswith("input_")]
     if not input_specs:
         raise ValueError("missing input definition")
     if len(input_specs) != 1:  # currently not supported
@@ -270,7 +270,7 @@ def get_file_iterator(config):
     return PatternIterator(patterns)
 
 
-#.
+# .
 #   .--Filtering-----------------------------------------------------------.
 #   |                _____ _ _ _            _                              |
 #   |               |  ___(_) | |_ ___ _ __(_)_ __   __ _                  |
@@ -291,11 +291,11 @@ class AbstractFilter(object):  # pylint: disable=useless-object-inheritance
 
 
 COMPARATORS = {
-    '<': operator.lt,
-    '<=': operator.le,
-    '>': operator.gt,
-    '>=': operator.ge,
-    '==': operator.eq,
+    "<": operator.lt,
+    "<=": operator.le,
+    ">": operator.gt,
+    ">=": operator.ge,
+    "==": operator.eq,
 }
 
 
@@ -307,10 +307,10 @@ class AbstractNumericFilter(AbstractFilter):
         if match is None:
             raise ValueError("unable to parse filter spec: %r" % spec_string)
         spec = match.groupdict()
-        comp = COMPARATORS.get(spec['operator'])
+        comp = COMPARATORS.get(spec["operator"])
         if comp is None:
-            raise ValueError("unknown operator for numeric filter: %r" % spec['operator'])
-        reference = int(spec['value'])
+            raise ValueError("unknown operator for numeric filter: %r" % spec["operator"])
+        reference = int(spec["value"])
         self._matches_value = lambda actual: comp(int(actual), reference)
 
     def matches(self, filestat):
@@ -321,7 +321,7 @@ class SizeFilter(AbstractNumericFilter):
     def matches(self, filestat):
         """apply AbstractNumericFilter ti file size"""
         size = filestat.size
-        if size is not None:
+        if size is not None and size != "null":
             return self._matches_value(size)
         # Don't return vanished files.
         # Other cases are a problem, and should be included
@@ -332,7 +332,7 @@ class AgeFilter(AbstractNumericFilter):
     def matches(self, filestat):
         """apply AbstractNumericFilter ti file age"""
         age = filestat.age
-        if age is not None:
+        if age is not None and age != "null":
             return self._matches_value(age)
         # Don't return vanished files.
         # Other cases are a problem, and should be included
@@ -355,7 +355,7 @@ class InverseRegexFilter(RegexFilter):
 
 
 def get_file_filters(config):
-    filter_specs = ((k[7:], v) for k, v in config.items() if k.startswith('filter_'))
+    filter_specs = ((k[7:], v) for k, v in config.items() if k.startswith("filter_"))
 
     filters = []
     for variety, spec_string in filter_specs:
@@ -382,7 +382,7 @@ def iter_filtered_files(file_filters, iterator):
             yield filestat
 
 
-#.
+# .
 #   .--Grouping------------------------------------------------------------.
 #   |               ____                       _                           |
 #   |              / ___|_ __ ___  _   _ _ __ (_)_ __   __ _               |
@@ -400,7 +400,7 @@ def grouping_single_group(section_name, files_iter):
     yield section_name, files_iter
 
 
-#.
+# .
 #   .--Output--------------------------------------------------------------.
 #   |                    ___        _               _                      |
 #   |                   / _ \ _   _| |_ _ __  _   _| |_                    |
@@ -414,7 +414,7 @@ def grouping_single_group(section_name, files_iter):
 
 
 def output_aggregator_count_only(group_name, files_iter):
-    yield '[[[count_only %s]]]' % group_name
+    yield "[[[count_only %s]]]" % group_name
     count = sum(1 for __ in files_iter)
     yield repr({"type": "summary", "count": count})
 
@@ -458,7 +458,7 @@ def output_aggregator_single_file(group_name, files_iter):
         if count_format_specifiers == 0:
             subsection_name = group_name
         else:
-            subsection_name = group_name % ((lazy_file.path,) + (('%s',) *
+            subsection_name = group_name % ((lazy_file.path,) + (("%s",) *
                                                                  (count_format_specifiers - 1)))
         yield "[[[single_file %s]]]" % subsection_name
         yield lazy_file.dumps()
@@ -483,7 +483,7 @@ def write_output(groups, output_aggregator):
             sys.stdout.write("%s\n" % line)
 
 
-#.
+# .
 #   .--Main----------------------------------------------------------------.
 #   |                        __  __       _                                |
 #   |                       |  \/  | __ _(_)_ __                           |
@@ -513,21 +513,21 @@ def main():
 
     args = parse_arguments()
 
-    sys.stdout.write('<<<filestats:sep(0)>>>\n')
-    for section_name, config in iter_config_section_dicts(args['cfg_file']):
+    sys.stdout.write("<<<filestats:sep(0)>>>\n")
+    for section_name, config in iter_config_section_dicts(args["cfg_file"]):
 
-        #1 input
+        # 1 input
         files_iter = get_file_iterator(config)
 
-        #2 filtering
+        # 2 filtering
         filters = get_file_filters(config)
         filtered_files = iter_filtered_files(filters, files_iter)
 
-        #3 grouping
+        # 3 grouping
         grouper = grouping_single_group
         groups = grouper(section_name, filtered_files)
 
-        #4 output
+        # 4 output
         output_aggregator = get_output_aggregator(config)
         write_output(groups, output_aggregator)
 

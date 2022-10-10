@@ -23,6 +23,7 @@
 # Boston, MA 02110-1301 USA.
 """Cares about backing up the files of a site"""
 
+import contextlib
 import fnmatch
 import io
 import os
@@ -44,19 +45,21 @@ def backup_site_to_tarfile(
 ) -> None:
 
     # Mypy does not understand this: Unexpected keyword argument "verbose" for "open" of "TarFile", same for "site".
-    with BackupTarFile.open(  # type: ignore[call-arg]
-        fileobj=fh,
-        mode=mode,
-        site=site,
-        verbose=verbose,
-    ) as tar:
-        # Add the version symlink as first file to be able to
-        # check a) the sitename and b) the version before reading
-        # the whole tar archive. Important for streaming.
-        # The file is added twice to get the first for validation
-        # and the second for excration during restore.
-        tar.add(site.dir + "/version", site.name + "/version")
-        _backup_site_files_to_tarfile(site, tar, options)
+    with RRDSocket(site.dir, site.is_stopped(), site.name, verbose) as rrd_socket:
+        with BackupTarFile.open(  # type: ignore[call-arg]
+            fileobj=fh,
+            mode=mode,
+            site=site,
+            verbose=verbose,
+            rrd_socket=rrd_socket,
+        ) as tar:
+            # Add the version symlink as first file to be able to
+            # check a) the sitename and b) the version before reading
+            # the whole tar archive. Important for streaming.
+            # The file is added twice to get the first for validation
+            # and the second for excration during restore.
+            tar.add(site.dir + "/version", site.name + "/version")
+            _backup_site_files_to_tarfile(site, tar, options)
 
 
 def get_exclude_patterns(options: CommandOptions) -> List[str]:
@@ -122,11 +125,13 @@ class BackupTarFile(tarfile.TarFile):
     """We need to use our tarfile class here to perform a rrdcached SUSPEND/RESUME
     to prevent writing to individual RRDs during backups."""
 
-    def __init__(self, name, mode, fileobj, **kwargs) -> None:  # type:ignore[no-untyped-def]
+    def __init__(  # type:ignore[no-untyped-def]
+        self, name, mode, fileobj, rrd_socket, **kwargs
+    ) -> None:
         site = kwargs.pop("site")
         self._site_name = site.name
         self._verbose = kwargs.pop("verbose")
-        self._rrd_socket = RRDSocket(site.dir, site.is_stopped(), site.name, self._verbose)
+        self._rrd_socket = rrd_socket
 
         super().__init__(name, mode, fileobj, **kwargs)
 
@@ -150,18 +155,12 @@ class BackupTarFile(tarfile.TarFile):
         requires_suspension = self._rrd_socket.path_requires_suspension(tarinfo.name)
         if requires_suspension:
             self._rrd_socket.suspend_rrd_update(tarinfo.name)
-        try:
-            super().addfile(tarinfo, fileobj)
-        finally:
-            if requires_suspension:
-                self._rrd_socket.resume_rrd_update(tarinfo.name)
-
-    def close(self) -> None:
-        super().close()
-        self._rrd_socket.close()
+        super().addfile(tarinfo, fileobj)
+        if requires_suspension:
+            self._rrd_socket.resume_rrd_update(tarinfo.name)
 
 
-class RRDSocket:
+class RRDSocket(contextlib.AbstractContextManager):
     def __init__(self, site_dir: str, site_stopped: bool, site_name: str, verbose: bool) -> None:
         self._rrdcached_socket_path = site_dir + "/tmp/run/rrdcached.sock"
         self._site_requires_suspension = not site_stopped and os.path.exists(
@@ -245,9 +244,9 @@ class RRDSocket:
         ):
             raise Exception("Error while processing rrdcached command (%s): %s" % (cmd, msg))
 
-    def close(self) -> None:
+    def __exit__(self, exc_type: object, exc_value: object, exc_tb: object) -> None:
+        self._resume_all_rrds()
         if self._sock is not None:
-            self._resume_all_rrds()
             self._sock.close()
 
 

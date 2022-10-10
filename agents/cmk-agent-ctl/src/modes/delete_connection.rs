@@ -10,13 +10,13 @@ use anyhow::{Context, Result as AnyhowResult};
 fn retrieve_standard_connection_by_uuid(
     uuid: &uuid::Uuid,
     registry: &config::Registry,
-) -> Option<site_spec::Coordinates> {
-    for (coordinates, connection) in registry
+) -> Option<site_spec::SiteID> {
+    for (site_id, connection) in registry
         .push_connections()
         .chain(registry.standard_pull_connections())
     {
         if &connection.trust.uuid == uuid {
-            return Some(coordinates.clone());
+            return Some(site_id.clone());
         }
     }
     None
@@ -24,7 +24,7 @@ fn retrieve_standard_connection_by_uuid(
 
 fn delete_by_uuid(uuid: &uuid::Uuid, registry: &mut config::Registry) -> AnyhowResult<()> {
     match retrieve_standard_connection_by_uuid(uuid, registry) {
-        Some(coordinates) => registry.delete_standard_connection(&coordinates),
+        Some(site_id) => registry.delete_standard_connection(&site_id),
         None => registry
             .delete_imported_connection(uuid)
             .context(format!("No connection with UUID '{}'", uuid)),
@@ -32,11 +32,11 @@ fn delete_by_uuid(uuid: &uuid::Uuid, registry: &mut config::Registry) -> AnyhowR
 }
 
 pub fn delete(registry: &mut config::Registry, connection_id: &str) -> AnyhowResult<()> {
-    match site_spec::Coordinates::from_str(connection_id) {
-        Ok(coordinates) => registry.delete_standard_connection(&coordinates),
+    match site_spec::SiteID::from_str(connection_id) {
+        Ok(site_id) => registry.delete_standard_connection(&site_id),
         Err(_) => delete_by_uuid(
             &uuid::Uuid::from_str(connection_id).context(
-                "Provided connection identifier is neither a valid site address nor a valid UUID",
+                "Provided connection identifier is neither a valid site ID nor a valid UUID",
             )?,
             registry,
         ),
@@ -75,11 +75,11 @@ mod tests {
         let mut pull = std::collections::HashMap::new();
         let mut pull_imported = std::collections::HashSet::new();
         push.insert(
-            site_spec::Coordinates::from_str("server:8000/push-site").unwrap(),
+            site_spec::SiteID::from_str("server/push-site").unwrap(),
             config::TrustedConnectionWithRemote::from(UUID_PUSH),
         );
         pull.insert(
-            site_spec::Coordinates::from_str("server:8000/pull-site").unwrap(),
+            site_spec::SiteID::from_str("server/pull-site").unwrap(),
             config::TrustedConnectionWithRemote::from(UUID_PULL),
         );
         pull_imported.insert(config::TrustedConnection::from(UUID_PULL_IMP1));
@@ -96,21 +96,21 @@ mod tests {
     }
 
     #[test]
-    fn test_delete_by_coordinates_ok() {
+    fn test_delete_by_site_id_ok() {
         let mut reg = registry();
         assert!(!reg.path().exists());
-        assert!(delete(&mut reg, "server:8000/push-site").is_ok());
+        assert!(delete(&mut reg, "server/push-site").is_ok());
         assert!(reg.path().exists());
     }
 
     #[test]
-    fn test_delete_by_coordinates_missing() {
+    fn test_delete_by_site_id_missing() {
         assert_eq!(
             format!(
                 "{}",
-                delete(&mut registry(), "someserver:123/site").unwrap_err()
+                delete(&mut registry(), "someserver/site").unwrap_err()
             ),
-            "Connection 'someserver:123/site' not found"
+            "Connection 'someserver/site' not found"
         );
     }
 

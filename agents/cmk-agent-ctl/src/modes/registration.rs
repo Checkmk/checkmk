@@ -6,7 +6,7 @@ use crate::{agent_receiver_api, certs, config, constants, site_spec, types};
 use anyhow::{anyhow, Context, Result as AnyhowResult};
 
 trait TrustEstablishing {
-    fn prompt_server_certificate(&self, coordinates: &site_spec::Coordinates) -> AnyhowResult<()>;
+    fn prompt_server_certificate(&self, server: &str, port: &u16) -> AnyhowResult<()>;
     fn prompt_password(&self, user: &str) -> AnyhowResult<String>;
 }
 
@@ -38,12 +38,12 @@ impl InteractiveTrust {
 }
 
 impl TrustEstablishing for InteractiveTrust {
-    fn prompt_server_certificate(&self, coordinates: &site_spec::Coordinates) -> AnyhowResult<()> {
+    fn prompt_server_certificate(&self, server: &str, port: &u16) -> AnyhowResult<()> {
         eprintln!(
-            "Attempting to register at {}. Server certificate details:\n",
-            coordinates,
+            "Attempting to register at {}, port {}. Server certificate details:\n",
+            server, port,
         );
-        InteractiveTrust::display_cert(&coordinates.server, &coordinates.port)?;
+        InteractiveTrust::display_cert(server, port)?;
         eprintln!();
         eprintln!("Do you want to establish this connection? [Y/n]");
         eprint!("> ");
@@ -56,8 +56,8 @@ impl TrustEstablishing for InteractiveTrust {
                 "y" | "" => return Ok(()),
                 "n" => {
                     return Err(anyhow!(format!(
-                        "Cannot continue without trusting {}",
-                        coordinates
+                        "Cannot continue without trusting {}, port {}",
+                        server, port
                     )))
                 }
                 _ => {
@@ -91,7 +91,8 @@ fn registration_server_cert<'a>(
         }
         None => {
             if !config.trust_server_cert {
-                trust_establisher.prompt_server_certificate(&config.coordinates)?;
+                trust_establisher
+                    .prompt_server_certificate(&config.site_id.server, &config.receiver_port)?;
             }
             Ok(None)
         }
@@ -115,8 +116,16 @@ fn prepare_registration(
         },
     };
     let pairing_response = agent_rec_api
-        .pair(&config.coordinates.to_url()?, root_cert, csr, &credentials)
-        .context(format!("Error pairing with {}", &config.coordinates))?;
+        .pair(
+            &site_spec::make_site_url(&config.site_id, &config.receiver_port)?,
+            root_cert,
+            csr,
+            &credentials,
+        )
+        .context(format!(
+            "Error pairing with {}, port {}",
+            &config.site_id, &config.receiver_port
+        ))?;
     Ok((
         credentials,
         PairingResult {
@@ -157,15 +166,15 @@ impl RegistrationEndpointCall for HostNameRegistration<'_> {
     ) -> AnyhowResult<()> {
         agent_rec_api
             .register_with_hostname(
-                &config.coordinates.to_url()?,
+                &site_spec::make_site_url(&config.site_id, &config.receiver_port)?,
                 &pairing_result.pairing_response.root_cert,
                 credentials,
                 &pairing_result.uuid,
                 self.host_name,
             )
             .context(format!(
-                "Error registering with host name at {}",
-                &config.coordinates
+                "Error registering with host name at {}, port {}",
+                &config.site_id, &config.receiver_port
             ))
     }
 }
@@ -184,26 +193,29 @@ impl RegistrationEndpointCall for AgentLabelsRegistration<'_> {
     ) -> AnyhowResult<()> {
         agent_rec_api
             .register_with_agent_labels(
-                &config.coordinates.to_url()?,
+                &site_spec::make_site_url(&config.site_id, &config.receiver_port)?,
                 &pairing_result.pairing_response.root_cert,
                 credentials,
                 &pairing_result.uuid,
                 self.agent_labels,
             )
             .context(format!(
-                "Error registering with agent labels at {}",
-                &config.coordinates
+                "Error registering with host name at {}, port {}",
+                &config.site_id, &config.receiver_port
             ))
     }
 }
 
 fn post_registration_conn_type(
-    coordinates: &site_spec::Coordinates,
-    connection: &config::TrustedConnection,
+    site_id: &site_spec::SiteID,
+    connection: &config::TrustedConnectionWithRemote,
     agent_rec_api: &impl agent_receiver_api::Status,
 ) -> AnyhowResult<config::ConnectionType> {
     loop {
-        let status_resp = agent_rec_api.status(&coordinates.to_url()?, connection)?;
+        let status_resp = agent_rec_api.status(
+            &site_spec::make_site_url(site_id, &connection.receiver_port)?,
+            &connection.trust,
+        )?;
         if let Some(agent_receiver_api::HostStatus::Declined) = status_resp.status {
             return Err(anyhow!(
                 "Registration declined by Checkmk instance{}",
@@ -243,10 +255,12 @@ fn direct_registration(
             certificate: pairing_result.pairing_response.client_cert,
             root_cert: pairing_result.pairing_response.root_cert,
         },
+        receiver_port: config.receiver_port,
     };
+
     registry.register_connection(
-        post_registration_conn_type(&config.coordinates, &connection.trust, agent_rec_api)?,
-        &config.coordinates,
+        post_registration_conn_type(&config.site_id, &connection, agent_rec_api)?,
+        &config.site_id,
         connection,
     );
 
@@ -344,14 +358,24 @@ pub fn proxy_register(config: &config::RegistrationConfigHostName) -> AnyhowResu
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
-
     use super::*;
 
-    const SITE_COORDINATES: &str = "server:8000/host";
-    const SITE_URL: &str = "https://server:8000/host";
+    const SERVER: &str = "server";
+    const PORT: u16 = 8000;
+    const SITE: &str = "site";
     const HOST_NAME: &str = "host";
     const USERNAME: &str = "user";
+
+    fn site_id() -> site_spec::SiteID {
+        site_spec::SiteID {
+            server: String::from(SERVER),
+            site: String::from(SITE),
+        }
+    }
+
+    fn expected_url() -> reqwest::Url {
+        site_spec::make_site_url(&site_id(), &PORT).unwrap()
+    }
 
     enum RegistrationMethod {
         HostName,
@@ -371,7 +395,7 @@ mod tests {
             _csr: String,
             _credentials: &types::Credentials,
         ) -> AnyhowResult<agent_receiver_api::PairingResponse> {
-            assert!(base_url.to_string() == SITE_URL);
+            assert!(base_url == &expected_url());
             assert!(root_cert.is_some() == self.expect_root_cert_for_pairing);
             Ok(agent_receiver_api::PairingResponse {
                 root_cert: String::from("root_cert"),
@@ -393,7 +417,7 @@ mod tests {
                 self.expected_registration_method.as_ref().unwrap(),
                 RegistrationMethod::HostName
             ));
-            assert!(base_url.to_string() == SITE_URL);
+            assert!(base_url == &expected_url());
             assert!(host_name == HOST_NAME);
             Ok(())
         }
@@ -410,7 +434,7 @@ mod tests {
                 self.expected_registration_method.as_ref().unwrap(),
                 RegistrationMethod::AgentLabels
             ));
-            assert!(base_url.to_string() == SITE_URL);
+            assert!(base_url == &expected_url());
             assert!(ag_labels == &agent_labels());
             Ok(())
         }
@@ -422,7 +446,7 @@ mod tests {
             base_url: &reqwest::Url,
             _connection: &config::TrustedConnection,
         ) -> AnyhowResult<agent_receiver_api::StatusResponse> {
-            assert!(base_url.to_string() == SITE_URL);
+            assert!(base_url == &expected_url());
             Ok(agent_receiver_api::StatusResponse {
                 hostname: Some(String::from(HOST_NAME)),
                 status: None,
@@ -438,12 +462,10 @@ mod tests {
     }
 
     impl TrustEstablishing for MockInteractiveTrust {
-        fn prompt_server_certificate(
-            &self,
-            coordinates: &site_spec::Coordinates,
-        ) -> AnyhowResult<()> {
+        fn prompt_server_certificate(&self, server: &str, port: &u16) -> AnyhowResult<()> {
             assert!(self.expect_server_cert_prompt);
-            assert_eq!(coordinates.to_string(), SITE_COORDINATES);
+            assert!(server == SERVER);
+            assert!(port == &PORT);
             Ok(())
         }
 
@@ -474,7 +496,8 @@ mod tests {
         trust_server_cert: bool,
     ) -> config::RegistrationConnectionConfig {
         config::RegistrationConnectionConfig {
-            coordinates: site_spec::Coordinates::from_str(SITE_COORDINATES).unwrap(),
+            site_id: site_id(),
+            receiver_port: PORT,
             username: String::from(USERNAME),
             password,
             root_certificate,

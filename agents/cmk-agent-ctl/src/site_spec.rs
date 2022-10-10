@@ -48,61 +48,55 @@ impl FromStr for ServerSpec {
 }
 
 #[derive(
-    PartialEq,
-    std::cmp::Eq,
-    std::hash::Hash,
-    Debug,
-    Clone,
-    serde_with::SerializeDisplay,
-    serde_with::DeserializeFromStr,
+    PartialEq, Eq, Hash, Debug, Clone, serde_with::SerializeDisplay, serde_with::DeserializeFromStr,
 )]
-pub struct Coordinates {
+pub struct SiteID {
     pub server: String,
-    pub port: u16,
     pub site: String,
 }
 
-impl FromStr for Coordinates {
+impl FromStr for SiteID {
     type Err = AnyhowError;
 
-    fn from_str(s: &str) -> AnyhowResult<Coordinates> {
-        let outer_components: Vec<&str> = s.split('/').collect();
-        if outer_components.len() != 2 {
-            return Err(anyhow!(
-                "Failed to split into server address and site at '/'"
-            ));
+    fn from_str(s: &str) -> AnyhowResult<SiteID> {
+        let components: Vec<&str> = s.split('/').collect();
+        if components.len() != 2 {
+            return Err(anyhow!("Failed to split into server and site at '/'"));
         }
-        let server_components: Vec<&str> = outer_components[0].split(':').collect();
-        if server_components.len() != 2 {
-            return Err(anyhow!("Failed to split into server and port at ':'"));
-        }
-        Ok(Coordinates {
-            server: String::from(server_components[0]),
-            port: server_components[1].parse::<u16>()?,
-            site: String::from(outer_components[1]),
+        Ok(SiteID {
+            server: String::from(components[0]),
+            site: String::from(components[1]),
         })
     }
 }
 
-impl Display for Coordinates {
+impl Display for SiteID {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}:{}/{}", self.server, self.port, self.site)
+        write!(f, "{}/{}", self.server, self.site)
     }
 }
 
-impl Coordinates {
-    pub fn to_url(&self) -> AnyhowResult<reqwest::Url> {
-        reqwest::Url::parse(&format!(
-            "https://{}:{}/{}",
-            &self.server, &self.port, &self.site
-        ))
-        .context(format!("Failed to convert {} into a URL", &self))
+pub fn make_site_url(site_id: &SiteID, port: &u16) -> AnyhowResult<reqwest::Url> {
+    reqwest::Url::parse(&format!(
+        "https://{}:{}/{}",
+        site_id.server, port, site_id.site
+    ))
+    .context(format!(
+        "Failed to construct a URL from {} with port {}",
+        site_id, port,
+    ))
+}
+
+pub fn discover_receiver_port(site_id: &SiteID, client_config: &ClientConfig) -> AnyhowResult<u16> {
+    AgentRecvPortDiscoverer {
+        site_id,
+        client_config,
     }
+    .discover()
 }
 
 struct AgentRecvPortDiscoverer<'a> {
-    server: &'a str,
-    site: &'a str,
+    site_id: &'a SiteID,
     client_config: &'a ClientConfig,
 }
 
@@ -110,11 +104,11 @@ impl<'a> AgentRecvPortDiscoverer<'a> {
     fn url(&self, protocol: &str) -> AnyhowResult<reqwest::Url> {
         reqwest::Url::parse(&format!(
             "{}://{}/{}/check_mk/api/1.0/domain-types/internal/actions/discover-receiver/invoke",
-            protocol, self.server, self.site,
+            protocol, self.site_id.server, self.site_id.site,
         ))
         .context(format!(
             "Failed to construct URL for discovering agent receiver port using server {} and site {}",
-            self.server, self.site,
+            self.site_id.server, self.site_id.site,
         ))
     }
 
@@ -165,27 +159,6 @@ impl<'a> AgentRecvPortDiscoverer<'a> {
     }
 }
 
-pub fn make_coordinates(
-    server: &str,
-    port: Option<u16>,
-    site: &str,
-    client_config: &ClientConfig,
-) -> AnyhowResult<Coordinates> {
-    Ok(Coordinates {
-        server: String::from(server),
-        port: match port {
-            Some(p) => p,
-            None => AgentRecvPortDiscoverer {
-                server,
-                site,
-                client_config,
-            }
-            .discover()?,
-        },
-        site: String::from(site),
-    })
-}
-
 #[cfg(test)]
 mod test_parse_port {
     use super::*;
@@ -232,29 +205,27 @@ mod test_server_spec {
 }
 
 #[cfg(test)]
-mod test_coordinates {
+mod test_site_id {
     use super::*;
 
     #[test]
     fn test_to_string() {
         assert_eq!(
-            Coordinates {
+            SiteID {
                 server: String::from("my-server"),
-                port: u16::from_str("8002").unwrap(),
                 site: String::from("my-site"),
             }
             .to_string(),
-            "my-server:8002/my-site"
+            "my-server/my-site"
         )
     }
 
     #[test]
     fn test_from_str_ok() {
         assert_eq!(
-            Coordinates::from_str("checkmk.server.com:5678/awesome-site").unwrap(),
-            Coordinates {
+            SiteID::from_str("checkmk.server.com/awesome-site").unwrap(),
+            SiteID {
                 server: String::from("checkmk.server.com"),
-                port: u16::from_str("5678").unwrap(),
                 site: String::from("awesome-site"),
             }
         )
@@ -265,25 +236,10 @@ mod test_coordinates {
         for erroneous_address in [
             "checkmk.server.com",
             "checkmk.server.com:5678",
-            "checkmk.server.com:5678:site",
-            "checkmk.server.com/5678:site",
-            "5678:site",
-            "checkmk.server.com:5678/awesome-site/too-much",
+            "checkmk.server.com/awesome-site/too-much",
         ] {
-            assert!(Coordinates::from_str(erroneous_address).is_err())
+            assert!(SiteID::from_str(erroneous_address).is_err())
         }
-    }
-
-    #[test]
-    fn test_to_url() {
-        assert_eq!(
-            &Coordinates::from_str("my.server.something:7893/cool-site")
-                .unwrap()
-                .to_url()
-                .unwrap()
-                .to_string(),
-            "https://my.server.something:7893/cool-site"
-        )
     }
 }
 
@@ -295,8 +251,10 @@ mod test_agent_recv_port_discoverer {
     fn test_url() {
         assert_eq!(
             AgentRecvPortDiscoverer {
-                server: "some-server",
-                site: "some-site",
+                site_id: &SiteID {
+                    server: String::from("some-server"),
+                    site: String::from("some-site"),
+                },
                 client_config: &ClientConfig {
                     use_proxy: false,
                     validate_api_cert: false,
@@ -311,27 +269,21 @@ mod test_agent_recv_port_discoverer {
 }
 
 #[cfg(test)]
-mod test_make_coordinates {
+mod test_make_site_url {
     use super::*;
 
     #[test]
-    fn test_with_port() {
+    fn test_make_site_url() {
         assert_eq!(
-            make_coordinates(
-                "some-server",
-                Some(8000),
-                "some-site",
-                &ClientConfig {
-                    use_proxy: false,
-                    validate_api_cert: false,
-                }
+            make_site_url(
+                &SiteID {
+                    server: String::from("some-server"),
+                    site: String::from("some-site"),
+                },
+                &8000,
             )
             .unwrap(),
-            Coordinates {
-                server: String::from("some-server"),
-                port: 8000,
-                site: String::from("some-site")
-            }
+            reqwest::Url::from_str("https://some-server:8000/some-site").unwrap()
         )
     }
 }

@@ -63,7 +63,7 @@ impl serde::ser::Serialize for Remote {
 #[serde_with::serde_as]
 #[derive(serde::Serialize)]
 struct ConnectionStatus {
-    coordinates: Option<site_spec::Coordinates>,
+    site_id: Option<site_spec::SiteID>,
     #[serde_as(as = "DisplayFromStr")]
     uuid: uuid::Uuid,
     local: LocalConnectionStatus,
@@ -102,11 +102,14 @@ impl CertParsingResult {
 
 impl ConnectionStatus {
     fn query_remote(
-        coordinates: &site_spec::Coordinates,
-        conn: &config::TrustedConnection,
+        site_id: &site_spec::SiteID,
+        conn: &config::TrustedConnectionWithRemote,
         agent_rec_api: &impl agent_receiver_api::Status,
     ) -> AnyhowResult<RemoteConnectionStatus> {
-        let status_response = agent_rec_api.status(&coordinates.to_url()?, conn)?;
+        let status_response = agent_rec_api.status(
+            &site_spec::make_site_url(site_id, &conn.receiver_port)?,
+            &conn.trust,
+        )?;
         Ok(RemoteConnectionStatus {
             connection_type: status_response.connection_type,
             registration_state: status_response.status,
@@ -115,21 +118,21 @@ impl ConnectionStatus {
     }
 
     fn from_standard_conn(
-        coordinates: &site_spec::Coordinates,
-        conn: &config::TrustedConnection,
+        site_id: &site_spec::SiteID,
+        conn: &config::TrustedConnectionWithRemote,
         conn_type: config::ConnectionType,
         agent_rec_api: &Option<impl agent_receiver_api::Status>,
     ) -> ConnectionStatus {
         ConnectionStatus {
-            coordinates: Some(coordinates.clone()),
-            uuid: conn.uuid,
+            site_id: Some(site_id.clone()),
+            uuid: conn.trust.uuid,
             local: LocalConnectionStatus {
                 connection_type: conn_type,
-                cert_info: CertParsingResult::from(&conn.certificate),
+                cert_info: CertParsingResult::from(&conn.trust.certificate),
             },
             remote: match agent_rec_api {
                 Some(agent_rec_api) => {
-                    Remote::StatusResponse(Self::query_remote(coordinates, conn, agent_rec_api))
+                    Remote::StatusResponse(Self::query_remote(site_id, conn, agent_rec_api))
                 }
                 None => Remote::QueryDisabled,
             },
@@ -138,7 +141,7 @@ impl ConnectionStatus {
 
     fn from_imported_conn(conn: &config::TrustedConnection) -> ConnectionStatus {
         ConnectionStatus {
-            coordinates: None,
+            site_id: None,
             uuid: conn.uuid,
             local: LocalConnectionStatus {
                 connection_type: config::ConnectionType::Pull,
@@ -241,8 +244,8 @@ impl ConnectionStatus {
     fn to_human_readable(&self) -> String {
         format!(
             "{}\n\tUUID: {}\n\tLocal:\n\t\t{}\n\tRemote:\n\t\t{}",
-            match &self.coordinates {
-                Some(coord) => format!("Connection: {}", coord),
+            match &self.site_id {
+                Some(site_id) => format!("Connection: {}", site_id),
                 None => "Imported connection:".to_string(),
             },
             self.uuid,
@@ -266,18 +269,18 @@ impl Status {
     ) -> Status {
         let mut conn_stats = Vec::new();
 
-        for (coordinates, push_conn) in registry.push_connections() {
+        for (site_id, push_conn) in registry.push_connections() {
             conn_stats.push(ConnectionStatus::from_standard_conn(
-                coordinates,
-                &push_conn.trust,
+                site_id,
+                push_conn,
                 config::ConnectionType::Push,
                 agent_rec_api,
             ));
         }
-        for (coordinates, pull_conn) in registry.standard_pull_connections() {
+        for (site_id, pull_conn) in registry.standard_pull_connections() {
             conn_stats.push(ConnectionStatus::from_standard_conn(
-                coordinates,
-                &pull_conn.trust,
+                site_id,
+                pull_conn,
                 config::ConnectionType::Pull,
                 agent_rec_api,
             ));
@@ -407,7 +410,7 @@ mod test_status {
             format!(
                 "{}",
                 ConnectionStatus {
-                    coordinates: Some(site_spec::Coordinates::from_str("localhost:8000/site").unwrap()),
+                    site_id: Some(site_spec::SiteID::from_str("localhost/site").unwrap()),
                     uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Pull,
@@ -417,7 +420,7 @@ mod test_status {
                 }
             ),
             String::from(
-                "Connection: localhost:8000/site\n\
+                "Connection: localhost/site\n\
                  \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
                  \tLocal:\n\
                  \t\tConnection type: pull-agent\n\
@@ -435,7 +438,7 @@ mod test_status {
             format!(
                 "{}",
                 ConnectionStatus {
-                    coordinates: Some(site_spec::Coordinates::from_str("localhost:8000/site").unwrap()),
+                    site_id: Some(site_spec::SiteID::from_str("localhost/site").unwrap()),
                     uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: local_connection_status(),
                     remote: Remote::StatusResponse(Ok(
@@ -448,7 +451,7 @@ mod test_status {
                 }
             ),
             String::from(
-                "Connection: localhost:8000/site\n\
+                "Connection: localhost/site\n\
                  \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
                  \tLocal:\n\
                  \t\tConnection type: pull-agent\n\
@@ -468,7 +471,7 @@ mod test_status {
             format!(
                 "{}",
                 ConnectionStatus {
-                    coordinates: Some(site_spec::Coordinates::from_str("localhost:8000/site").unwrap()),
+                    site_id: Some(site_spec::SiteID::from_str("localhost/site").unwrap()),
                     uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: local_connection_status(),
                     remote: Remote::StatusResponse(Ok(
@@ -481,7 +484,7 @@ mod test_status {
                 }
             ),
             String::from(
-                "Connection: localhost:8000/site\n\
+                "Connection: localhost/site\n\
                  \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
                  \tLocal:\n\
                  \t\tConnection type: pull-agent\n\
@@ -501,7 +504,7 @@ mod test_status {
             format!(
                 "{}",
                 ConnectionStatus {
-                    coordinates: None,
+                    site_id: None,
                     uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: local_connection_status(),
                     remote: Remote::Imported,
@@ -526,14 +529,14 @@ mod test_status {
             format!(
                 "{}",
                 ConnectionStatus {
-                    coordinates: Some(site_spec::Coordinates::from_str("localhost:8000/site").unwrap()),
+                    site_id: Some(site_spec::SiteID::from_str("localhost/site").unwrap()),
                     uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: local_connection_status(),
                     remote: Remote::StatusResponse(Err(anyhow!("You shall not pass")))
                 }
             ),
             String::from(
-                "Connection: localhost:8000/site\n\
+                "Connection: localhost/site\n\
                  \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
                  \tLocal:\n\
                  \t\tConnection type: pull-agent\n\
@@ -551,7 +554,7 @@ mod test_status {
             format!(
                 "{}",
                 ConnectionStatus {
-                    coordinates: Some(site_spec::Coordinates::from_str("localhost:8000/site").unwrap()),
+                    site_id: Some(site_spec::SiteID::from_str("localhost/site").unwrap()),
                     uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: local_connection_status(),
                     remote: Remote::StatusResponse(Ok(
@@ -564,7 +567,7 @@ mod test_status {
                 }
             ),
             String::from(
-                "Connection: localhost:8000/site\n\
+                "Connection: localhost/site\n\
                  \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
                  \tLocal:\n\
                  \t\tConnection type: pull-agent\n\
@@ -584,7 +587,7 @@ mod test_status {
             format!(
                 "{}",
                 ConnectionStatus {
-                    coordinates: Some(site_spec::Coordinates::from_str("localhost:8000/site").unwrap()),
+                    site_id: Some(site_spec::SiteID::from_str("localhost/site").unwrap()),
                     uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: local_connection_status(),
                     remote: Remote::StatusResponse(Ok(
@@ -597,7 +600,7 @@ mod test_status {
                 }
             ),
             String::from(
-                "Connection: localhost:8000/site\n\
+                "Connection: localhost/site\n\
                  \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
                  \tLocal:\n\
                  \t\tConnection type: pull-agent\n\
@@ -619,9 +622,7 @@ mod test_status {
             allow_legacy_pull: false,
             connections: vec![
                 ConnectionStatus {
-                    coordinates: Some(
-                        site_spec::Coordinates::from_str("localhost:8000/site").unwrap(),
-                    ),
+                    site_id: Some(site_spec::SiteID::from_str("localhost/site").unwrap()),
                     uuid: uuid::Uuid::from_str("50611369-7a42-4c0b-927e-9a14330401fe").unwrap(),
                     local: local_connection_status(),
                     remote: Remote::StatusResponse(Ok(RemoteConnectionStatus {
@@ -631,9 +632,7 @@ mod test_status {
                     })),
                 },
                 ConnectionStatus {
-                    coordinates: Some(
-                        site_spec::Coordinates::from_str("somewhere:8000/site2").unwrap(),
-                    ),
+                    site_id: Some(site_spec::SiteID::from_str("somewhere/site2").unwrap()),
                     uuid: uuid::Uuid::from_str("3c87778b-8bb8-434d-bcc6-6d05f2668c80").unwrap(),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Push,
@@ -660,7 +659,7 @@ mod test_status {
             "Version: 1.0.0\n\
              Agent socket: operational\n\
              IP allowlist: 192.168.1.13 [::1]\n\n\n\
-             Connection: localhost:8000/site\n\
+             Connection: localhost/site\n\
              \tUUID: 50611369-7a42-4c0b-927e-9a14330401fe\n\
              \tLocal:\n\
              \t\tConnection type: pull-agent\n\
@@ -670,7 +669,7 @@ mod test_status {
              \t\tConnection type: pull-agent\n\
              \t\tRegistration state: operational\n\
              \t\tHost name: my-host\n\n\n\
-             Connection: somewhere:8000/site2\n\
+             Connection: somewhere/site2\n\
              \tUUID: 3c87778b-8bb8-434d-bcc6-6d05f2668c80\n\
              \tLocal:\n\
              \t\tConnection type: push-agent\n\
@@ -732,7 +731,7 @@ mod test_status {
     fn test_status_end_to_end() {
         let mut push = std::collections::HashMap::new();
         push.insert(
-            site_spec::Coordinates::from_str("server:8000/push-site").unwrap(),
+            site_spec::SiteID::from_str("server/push-site").unwrap(),
             config::TrustedConnectionWithRemote::from("99f56bbc-5965-4b34-bc70-1959ad1d32d6"),
         );
         let registry = config::Registry::new(
@@ -767,7 +766,7 @@ mod test_status {
                 "Version: {}\n\
                  Agent socket: {}\n\
                  IP allowlist: any\n\n\n\
-                 Connection: server:8000/push-site\n\
+                 Connection: server/push-site\n\
                  \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
                  \tLocal:\n\
                  \t\tConnection type: push-agent\n\

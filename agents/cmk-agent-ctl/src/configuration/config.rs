@@ -111,7 +111,8 @@ impl RegistrationConfigAgentLabels {
 }
 
 pub struct RegistrationConnectionConfig {
-    pub coordinates: site_spec::Coordinates,
+    pub site_id: site_spec::SiteID,
+    pub receiver_port: u16,
     pub username: String,
     pub password: Option<String>,
     pub root_certificate: Option<String>,
@@ -124,14 +125,19 @@ impl RegistrationConnectionConfig {
         runtime_config: RuntimeConfig,
         reg_args_conn: cli::RegistrationArgsConnection,
     ) -> AnyhowResult<Self> {
+        let site_id = site_spec::SiteID {
+            server: reg_args_conn.server_spec.server,
+            site: reg_args_conn.site,
+        };
         let client_config = ClientConfig::new(runtime_config, reg_args_conn.client_opts);
+        let receiver_port = (if let Some(p) = reg_args_conn.server_spec.port {
+            Ok(p)
+        } else {
+            site_spec::discover_receiver_port(&site_id, &client_config)
+        })?;
         Ok(Self {
-            coordinates: site_spec::make_coordinates(
-                &reg_args_conn.server_spec.server,
-                reg_args_conn.server_spec.port,
-                &reg_args_conn.site,
-                &client_config,
-            )?,
+            site_id,
+            receiver_port,
             username: reg_args_conn.user,
             password: reg_args_conn.password,
             root_certificate: None,
@@ -312,6 +318,7 @@ impl TrustedConnection {
 pub struct TrustedConnectionWithRemote {
     #[serde(flatten)]
     pub trust: TrustedConnection,
+    pub receiver_port: u16,
 }
 
 impl PartialEq for TrustedConnectionWithRemote {
@@ -323,10 +330,10 @@ impl PartialEq for TrustedConnectionWithRemote {
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone, Default)]
 pub struct RegisteredConnections {
     #[serde(default)]
-    pub push: HashMap<site_spec::Coordinates, TrustedConnectionWithRemote>,
+    pub push: HashMap<site_spec::SiteID, TrustedConnectionWithRemote>,
 
     #[serde(default)]
-    pub pull: HashMap<site_spec::Coordinates, TrustedConnectionWithRemote>,
+    pub pull: HashMap<site_spec::SiteID, TrustedConnectionWithRemote>,
 
     #[serde(default)]
     pub pull_imported: std::collections::HashSet<TrustedConnection>,
@@ -445,7 +452,7 @@ impl Registry {
 
     pub fn standard_pull_connections(
         &self,
-    ) -> impl Iterator<Item = (&site_spec::Coordinates, &TrustedConnectionWithRemote)> {
+    ) -> impl Iterator<Item = (&site_spec::SiteID, &TrustedConnectionWithRemote)> {
         self.connections.pull.iter()
     }
 
@@ -463,41 +470,38 @@ impl Registry {
 
     pub fn push_connections(
         &self,
-    ) -> impl Iterator<Item = (&site_spec::Coordinates, &TrustedConnectionWithRemote)> {
+    ) -> impl Iterator<Item = (&site_spec::SiteID, &TrustedConnectionWithRemote)> {
         self.connections.push.iter()
     }
 
     pub fn register_connection(
         &mut self,
         connection_type: ConnectionType,
-        coordinates: &site_spec::Coordinates,
+        site_id: &site_spec::SiteID,
         connection: TrustedConnectionWithRemote,
     ) {
         let (insert_connections, remove_connections) = match connection_type {
             ConnectionType::Push => (&mut self.connections.push, &mut self.connections.pull),
             ConnectionType::Pull => (&mut self.connections.pull, &mut self.connections.push),
         };
-        remove_connections.remove(coordinates);
-        insert_connections.insert(coordinates.clone(), connection);
+        remove_connections.remove(site_id);
+        insert_connections.insert(site_id.clone(), connection);
     }
 
     pub fn register_imported_connection(&mut self, connection: TrustedConnection) {
         self.connections.pull_imported.insert(connection);
     }
 
-    pub fn delete_standard_connection(
-        &mut self,
-        coordinates: &site_spec::Coordinates,
-    ) -> AnyhowResult<()> {
-        if self.connections.push.remove(coordinates).is_some() {
-            println!("Deleted push connection '{}'", coordinates);
+    pub fn delete_standard_connection(&mut self, site_id: &site_spec::SiteID) -> AnyhowResult<()> {
+        if self.connections.push.remove(site_id).is_some() {
+            println!("Deleted push connection '{}'", site_id);
             return Ok(());
         }
-        if self.connections.pull.remove(coordinates).is_some() {
-            println!("Deleted pull connection '{}'", coordinates);
+        if self.connections.pull.remove(site_id).is_some() {
+            println!("Deleted pull connection '{}'", site_id);
             return Ok(());
         }
-        Err(anyhow!("Connection '{}' not found", coordinates))
+        Err(anyhow!("Connection '{}' not found", site_id))
     }
 
     pub fn delete_imported_connection(&mut self, uuid: &uuid::Uuid) -> AnyhowResult<()> {
@@ -559,9 +563,9 @@ mod test_registration_config {
         let connection_config =
             RegistrationConnectionConfig::new(runtime_config(), registration_args_connection())
                 .unwrap();
-        assert_eq!(connection_config.coordinates.server, "server");
-        assert_eq!(connection_config.coordinates.port, 8000);
-        assert_eq!(connection_config.coordinates.site, "site");
+        assert_eq!(connection_config.site_id.server, "server");
+        assert_eq!(connection_config.site_id.site, "site");
+        assert_eq!(connection_config.receiver_port, 8000);
         assert_eq!(connection_config.username, "user");
         assert!(connection_config.password.is_none());
     }
@@ -747,6 +751,7 @@ mod test_registry {
         fn from(u: uuid::Uuid) -> Self {
             Self {
                 trust: TrustedConnection::from(u),
+                receiver_port: 8000,
             }
         }
     }
@@ -763,11 +768,11 @@ mod test_registry {
         let mut pull_imported = std::collections::HashSet::new();
 
         push.insert(
-            site_spec::Coordinates::from_str("server:8000/push-site").unwrap(),
+            site_spec::SiteID::from_str("server/push-site").unwrap(),
             trusted_connection_with_remote(),
         );
         pull.insert(
-            site_spec::Coordinates::from_str("server:8000/pull-site").unwrap(),
+            site_spec::SiteID::from_str("server/pull-site").unwrap(),
             trusted_connection_with_remote(),
         );
         pull_imported.insert(trusted_connection());
@@ -835,7 +840,7 @@ mod test_registry {
         let mut reg = registry();
         reg.register_connection(
             ConnectionType::Push,
-            &site_spec::Coordinates::from_str("new_server:1234/new-site").unwrap(),
+            &site_spec::SiteID::from_str("new_server/new-site").unwrap(),
             trusted_connection_with_remote(),
         );
         assert!(reg.connections.push.len() == 2);
@@ -848,7 +853,7 @@ mod test_registry {
         let mut reg = registry();
         reg.register_connection(
             ConnectionType::Push,
-            &site_spec::Coordinates::from_str("server:8000/pull-site").unwrap(),
+            &site_spec::SiteID::from_str("server/pull-site").unwrap(),
             trusted_connection_with_remote(),
         );
         assert!(reg.connections.push.len() == 2);
@@ -861,7 +866,7 @@ mod test_registry {
         let mut reg = registry();
         reg.register_connection(
             ConnectionType::Pull,
-            &site_spec::Coordinates::from_str("new_server:1234/new-site").unwrap(),
+            &site_spec::SiteID::from_str("new_server/new-site").unwrap(),
             trusted_connection_with_remote(),
         );
         assert!(reg.connections.push.len() == 1);
@@ -874,7 +879,7 @@ mod test_registry {
         let mut reg = registry();
         reg.register_connection(
             ConnectionType::Pull,
-            &site_spec::Coordinates::from_str("server:8000/push-site").unwrap(),
+            &site_spec::SiteID::from_str("server/push-site").unwrap(),
             trusted_connection_with_remote(),
         );
         assert!(reg.connections.push.is_empty());
@@ -916,7 +921,7 @@ mod test_registry {
                 == &reg
                     .connections
                     .pull
-                    .get(&site_spec::Coordinates::from_str("server:8000/pull-site").unwrap())
+                    .get(&site_spec::SiteID::from_str("server/pull-site").unwrap())
                     .unwrap()
                     .trust
         );
@@ -927,9 +932,7 @@ mod test_registry {
     fn test_delete_push() {
         let mut reg = registry();
         assert!(reg
-            .delete_standard_connection(
-                &site_spec::Coordinates::from_str("server:8000/push-site").unwrap()
-            )
+            .delete_standard_connection(&site_spec::SiteID::from_str("server/push-site").unwrap())
             .is_ok());
         assert!(reg.connections.push.is_empty());
         assert!(reg.connections.pull.len() == 1);
@@ -940,9 +943,7 @@ mod test_registry {
     fn test_delete_pull() {
         let mut reg = registry();
         assert!(reg
-            .delete_standard_connection(
-                &site_spec::Coordinates::from_str("server:8000/pull-site").unwrap()
-            )
+            .delete_standard_connection(&site_spec::SiteID::from_str("server/pull-site").unwrap())
             .is_ok());
         assert!(reg.connections.push.len() == 1);
         assert!(reg.connections.pull.is_empty());
@@ -956,11 +957,11 @@ mod test_registry {
             format!(
                 "{}",
                 reg.delete_standard_connection(
-                    &site_spec::Coordinates::from_str("wiener_schnitzel:8000/pommes").unwrap()
+                    &site_spec::SiteID::from_str("wiener_schnitzel/pommes").unwrap()
                 )
                 .unwrap_err()
             ),
-            "Connection 'wiener_schnitzel:8000/pommes' not found"
+            "Connection 'wiener_schnitzel/pommes' not found"
         );
         assert!(reg.connections.push.len() == 1);
         assert!(reg.connections.pull.len() == 1);

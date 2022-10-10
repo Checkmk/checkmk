@@ -286,7 +286,7 @@ pub enum Args {
     /// Delete a connection to a Checkmk instance
     ///
     /// Connections can be specified either by their site address or their UUID.
-    /// The site address is '<servername>:<port>/<site>', see the output of the
+    /// The site address is '<servername>/<site>', see the output of the
     /// status command.
     #[command()]
     Delete(DeleteArgs),

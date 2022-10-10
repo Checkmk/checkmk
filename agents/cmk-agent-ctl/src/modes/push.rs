@@ -4,7 +4,7 @@
 
 use crate::{
     agent_receiver_api::{self, AgentData},
-    config, monitoring_data,
+    config, monitoring_data, site_spec,
     types::AgentChannel,
 };
 use anyhow::{Context, Result as AnyhowResult};
@@ -51,27 +51,21 @@ pub fn handle_push_cycle(
     )
     .context("Error compressing agent output")?;
 
-    for (coordinates, connection) in registry.push_connections() {
-        info!("{}: Pushing agent output", coordinates);
-        match coordinates.to_url() {
-            Ok(url) => {
-                if let Err(error) = (agent_receiver_api::Api {
-                    use_proxy: client_config.use_proxy,
-                })
-                .agent_data(
-                    &url,
-                    &connection.trust,
-                    &monitoring_data::compression_header_info().push,
-                    &compressed_mon_data,
-                ) {
-                    warn!("{}: Error pushing agent output. ({})", coordinates, error);
-                };
-            }
-            Err(err) => warn!(
-                "{}: Failed to construct endpoint URL for pushing. ({})",
-                coordinates, err
-            ),
-        }
+    for (site_id, connection) in registry.push_connections() {
+        info!("{}: Pushing agent output", site_id);
+        let site_url = site_spec::make_site_url(site_id, &connection.receiver_port)
+            .context("Failed to construct URL for pushing data")?;
+        if let Err(error) = (agent_receiver_api::Api {
+            use_proxy: client_config.use_proxy,
+        })
+        .agent_data(
+            &site_url,
+            &connection.trust,
+            &monitoring_data::compression_header_info().push,
+            &compressed_mon_data,
+        ) {
+            warn!("{}: Error pushing agent output. ({})", site_url, error);
+        };
     }
     Ok(())
 }

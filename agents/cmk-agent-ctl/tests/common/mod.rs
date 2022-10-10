@@ -21,7 +21,7 @@ pub fn testing_registry(
     let mut registry = config::Registry::from_file(path).unwrap();
     registry.register_connection(
         config::ConnectionType::Pull,
-        &site_spec::Coordinates::from_str("some_server:1234/some_site").unwrap(),
+        &site_spec::SiteID::from_str("some_server/some_site").unwrap(),
         config::TrustedConnectionWithRemote {
             trust: config::TrustedConnection {
                 uuid: controller_uuid,
@@ -29,6 +29,7 @@ pub fn testing_registry(
                 certificate: String::from_utf8(certs.controller_cert.clone()).unwrap(),
                 root_cert: String::from_utf8(certs.ca_cert.clone()).unwrap(),
             },
+            receiver_port: 1234,
         },
     );
     registry

@@ -263,7 +263,7 @@ def _inventorize_host(
 ) -> ActiveInventoryResult:
     if host_config.is_cluster:
         return ActiveInventoryResult(
-            trees=_do_inv_for_cluster(host_config),
+            trees=_do_inv_for_cluster(host_config.nodes or (), is_cluster=host_config.is_cluster),
             source_results=(),
             parsing_errors=(),
             processing_failed=False,
@@ -350,18 +350,18 @@ def do_inventory_actions_during_checking_for(
         status_data_store.save(host_name=host_config.hostname, tree=trees.status_data)
 
 
-def _do_inv_for_cluster(host_config: HostConfig) -> InventoryTrees:
+def _do_inv_for_cluster(nodes: Sequence[HostName], *, is_cluster: bool) -> InventoryTrees:
     inventory_tree = StructuredDataNode()
-    _set_cluster_property(inventory_tree, host_config)
+    _set_cluster_property(inventory_tree, is_cluster)
 
-    if not host_config.nodes:
+    if not nodes:
         return InventoryTrees(inventory_tree, StructuredDataNode())
 
     node = inventory_tree.setdefault_node(
         ("software", "applications", "check_mk", "cluster", "nodes")
     )
     node.table.add_key_columns(["name"])
-    node.table.add_rows([{"name": node_name} for node_name in host_config.nodes])
+    node.table.add_rows([{"name": node_name} for node_name in nodes])
 
     return InventoryTrees(inventory_tree, StructuredDataNode())
 
@@ -375,7 +375,7 @@ def _do_inv_for_realhost(
 ) -> InventoryTrees:
     tree_aggregator = TreeAggregator()
 
-    _set_cluster_property(tree_aggregator.trees.inventory, host_config)
+    _set_cluster_property(tree_aggregator.trees.inventory, host_config.is_cluster)
 
     section.section_step("Executing inventory plugins")
     for inventory_plugin in agent_based_register.iter_all_inventory_plugins():
@@ -434,10 +434,10 @@ def _do_inv_for_realhost(
 
 def _set_cluster_property(
     inventory_tree: StructuredDataNode,
-    host_config: HostConfig,
+    is_cluster: bool,
 ) -> None:
     node = inventory_tree.setdefault_node(("software", "applications", "check_mk", "cluster"))
-    node.attributes.add_pairs({"is_cluster": host_config.is_cluster})
+    node.attributes.add_pairs({"is_cluster": is_cluster})
 
 
 def _save_inventory_tree(

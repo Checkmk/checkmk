@@ -179,7 +179,7 @@ class SyslogMessage:
         text: str | None = None,
         ip_address: str | None = None,
         service_level: int | None = None,
-    ):
+    ) -> None:
         structured_data = structured_data or StructuredData({})
 
         syslog_facility = SyslogFacility(facility)
@@ -311,7 +311,7 @@ class SyslogForwarderUnixSocket(ABCSyslogForwarder):
     def __init__(
         self,
         path: Path | None = None,
-    ):
+    ) -> None:
         super().__init__()
         self._path = str(self._ec_paths().event_socket.value if path is None else path)
 

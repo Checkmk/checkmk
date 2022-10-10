@@ -19,7 +19,7 @@ from typing import Any, cast, Union
 
 import cmk.utils.log
 import cmk.utils.paths
-import cmk.utils.store as store
+from cmk.utils import store
 from cmk.utils.exceptions import MKException
 
 from .config import ConfigFromWATO
@@ -55,7 +55,7 @@ class MkpRulePackProxy(MutableMapping[str, Any]):  # pylint: disable=too-many-an
         self.id_ = rule_pack_id
         self.rule_pack: ECRulePackSpec | None = None
 
-    def __getitem__(self, key: str) -> Any:
+    def __getitem__(self, key: str) -> ECRulePackSpec:
         if self.rule_pack is None:
             raise MkpRulePackBindingError("Proxy is not bound")
         return self.rule_pack[key]

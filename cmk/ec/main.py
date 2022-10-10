@@ -38,13 +38,12 @@ from setproctitle import setthreadtitle  # type: ignore[import] # pylint: disabl
 import cmk.utils.daemon
 import cmk.utils.debug
 import cmk.utils.defines
-import cmk.utils.log as log
 import cmk.utils.paths
 import cmk.utils.profile
 import cmk.utils.regex
 import cmk.utils.render
-import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils import log, store
 from cmk.utils.exceptions import MKException
 from cmk.utils.iterables import partition
 from cmk.utils.log import VERBOSE
@@ -187,7 +186,7 @@ class ECServerThread(threading.Thread):
 
     def __init__(
         self,
-        name: Any,
+        name: str,
         logger: Logger,
         settings: Settings,
         config: Config,
@@ -2849,7 +2848,7 @@ class StatusServer(ECServerThread):
 
 
 def run_eventd(  # pylint: disable=too-many-branches
-    terminate_main_event: Any,
+    terminate_main_event: threading.Event,
     settings: Settings,
     config: Config,
     lock_configuration: ECLock,

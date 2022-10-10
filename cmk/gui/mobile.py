@@ -57,6 +57,7 @@ def mobile_html_head(title: str) -> None:
                                href="themes/facelift/images/ios_logo.png",
                                close_tag=True))
     html.javascript_file(src='js/mobile_min.js')
+    html.set_js_csrf_token()
 
     html.close_head()
     html.open_body(class_="mobile")

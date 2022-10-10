@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Container, Iterator, List, Mapping, NamedTuple, Optional, Sequence, Tuple
+from typing import Any, Container, Iterator, Mapping, NamedTuple, Sequence
 from uuid import UUID
 
 import cmk.utils.paths
@@ -69,7 +69,7 @@ class UUIDLinkManager:
             if link.hostname in host_names:
                 link.unlink_source()
 
-    def get_uuid(self, host_name: HostName) -> Optional[UUID]:
+    def get_uuid(self, host_name: HostName) -> UUID | None:
         for link in self:
             if link.hostname == host_name:
                 return link.uuid
@@ -128,10 +128,10 @@ class UUIDLinkManager:
         )
 
     def rename(
-        self, successful_renamings: Sequence[Tuple[HostName, HostName]]
-    ) -> Sequence[Tuple[HostName, HostName]]:
+        self, successful_renamings: Sequence[tuple[HostName, HostName]]
+    ) -> Sequence[tuple[HostName, HostName]]:
         from_old_to_new = dict(successful_renamings)
-        renamed: List[Tuple[HostName, HostName]] = []
+        renamed: list[tuple[HostName, HostName]] = []
         for link in self:
             old_name = link.hostname
             if (new_name := from_old_to_new.get(old_name)) is not None:

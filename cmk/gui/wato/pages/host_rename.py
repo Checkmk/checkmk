@@ -59,25 +59,24 @@ class RenameHostsBackgroundJob(BackgroundJob):
     job_prefix = "rename-hosts"
 
     @classmethod
-    def gui_title(cls):
+    def gui_title(cls) -> str:
         return _("Host renaming")
 
     def __init__(self, title: str | None = None) -> None:
-        last_job_status = BackgroundJob(self.job_prefix).get_status()
         super().__init__(
             self.job_prefix,
             background_job.InitialStatusArgs(
                 title=title or self.gui_title(),
                 lock_wato=True,
                 stoppable=False,
-                estimated_duration=last_job_status.get("duration"),
+                estimated_duration=BackgroundJob(self.job_prefix).get_status().get("duration"),
             ),
         )
 
         if self.is_active():
             raise MKGeneralException(_("Another renaming operation is currently in progress"))
 
-    def _back_url(self):
+    def _back_url(self) -> str:
         return makeuri(request, [])
 
 

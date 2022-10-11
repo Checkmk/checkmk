@@ -560,13 +560,12 @@ class SearchIndexBackgroundJob(BackgroundJob):
         return _("Search index")
 
     def __init__(self) -> None:
-        last_job_status = BackgroundJob(self.job_prefix).get_status()
         super().__init__(
             self.job_prefix,
             InitialStatusArgs(
                 title=_("Search index"),
                 stoppable=False,
-                estimated_duration=last_job_status.get("duration"),
+                estimated_duration=BackgroundJob(self.job_prefix).get_status().get("duration"),
             ),
         )
 

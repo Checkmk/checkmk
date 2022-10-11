@@ -758,20 +758,17 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
     housekeeping_max_count = 20
 
     @classmethod
-    def gui_title(cls):
+    def gui_title(cls) -> str:
         return _("Service discovery")
 
     def __init__(self, host_name: str) -> None:
-        job_id = "%s-%s" % (self.job_prefix, host_name)
-        last_job_status = BackgroundJob(job_id).get_status()
-
         super().__init__(
-            job_id,
+            f"{self.job_prefix}-{host_name}",
             InitialStatusArgs(
                 title=_("Service discovery"),
                 stoppable=True,
                 host_name=host_name,
-                estimated_duration=last_job_status.get("duration"),
+                estimated_duration=BackgroundJob(self.job_prefix).get_status().get("duration"),
             ),
         )
         self._pre_try_discovery = (

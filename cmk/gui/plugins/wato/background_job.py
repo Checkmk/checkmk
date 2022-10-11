@@ -161,7 +161,7 @@ class ModeBackgroundJobDetails(WatoMode):
 
 
 @page_registry.register_page("ajax_background_job_details")
-class ModeAjaxCycleThemes(AjaxPage):
+class ModeAjaxBackgroundJobDetails(AjaxPage):
     """AJAX handler for supporting the background job state update"""
 
     def handle_page(self) -> None:

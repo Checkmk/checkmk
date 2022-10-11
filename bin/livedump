@@ -264,7 +264,6 @@ def usage(status: int) -> NoReturn:
 
   -V, --version              Show version and exit
   -h, --help                 Show this help
-  -v, --verbose              Output debug information on stderr
       --debug                Do not catch Python exceptions
 """
         % os.path.split(sys.argv[0])[1]
@@ -289,7 +288,7 @@ def print_version() -> NoReturn:
 #   | Main entry point, getopt, etc.                                       |
 #   '----------------------------------------------------------------------'
 
-short_options = "ChVTMp:s:O:H:S:i:vG"
+short_options = "ChVTMp:s:O:H:S:i:G"
 long_options = [
     "config",
     "help",
@@ -302,13 +301,11 @@ long_options = [
     "host-header=",
     "service-header=",
     "interval=",
-    "verbose",
     "include-groups",
     "include-host-icon",
     "debug",
 ]
 
-opt_verbose = False
 opt_debug = False
 opt_mark_mode = False
 opt_prefix = ""
@@ -351,8 +348,6 @@ for o, a in opts:
         opt_service_headers += a + "\n"
     elif o in ["-i", "--interval"]:
         opt_check_interval = int(a)
-    elif o in ["-v", "--verbose"]:
-        opt_verbose = True
     elif o in ["-G", "--include-groups"]:
         opt_groups = True
     elif o in ["--include-host-icon"]:

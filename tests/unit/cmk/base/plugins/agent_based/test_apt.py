@@ -5,10 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Optional
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.apt import _data_is_valid, parse_apt, Section
 
 import pytest
+
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.apt import _data_is_valid, parse_apt, Section
 
 _SECTION_UPDATES_AV = [
     ["Remv default-java-plugin [2:1.8-58]"],
@@ -41,6 +42,30 @@ _SECTION_KERNEL_UPDATES = [
         "Inst linux-image-amd64 [4.19+105+deb10u13] (4.19+105+deb10u14 Debian-Security:10/oldstable [amd64])"
     ],
 ]
+_SECTION_NO_ESM_SUPPORT = [
+    ["Enable UA Infra: ESM to receive additional future security updates."],
+    ["See https://ubuntu.com/16-04 or run: sudo ua status"],
+    ["Ubuntu comes with ABSOLUTELY NO WARRANTY, to the extent permitted by"],
+    ["applicable law."],
+    [
+        "Inst ubuntu-advantage-tools [27.4.1~16.04.1] (27.4.2~16.04.1 Ubuntu:16.04/xenial-updates [amd64])"
+    ],
+]
+_SECTION_ESM_SUPPORT = [
+    ["*The following packages could receive security updates with UA Infra: ESM service enabled:"],
+    ["libglib2.0-data libglib2.0-0"],
+    ["Learn more about UA Infra: ESM service for Ubuntu 16.04 at https://ubuntu.com/16-04"],
+    ["Ubuntu comes with ABSOLUTELY NO WARRANTY, to the extent permitted by"],
+    ["applicable law."],
+    [
+        "Inst ubuntu-advantage-tools [27.4.1~16.04.1] (27.4.2~16.04.1 Ubuntu:16.04/xenial-updates [amd64])"
+    ],
+]
+_SECTION_UBUNTU_PRO_ADVERTISEMENT = [
+    ["Receive additional future security updates with Ubuntu Pro."],
+    ["Learn more about Ubuntu Pro at https://ubuntu.com/pro"],
+    ["Inst base-files [9.9+deb9u9] (9.9+deb9u11 Debian:9.11/oldstable [amd64])"],
+]
 
 
 @pytest.mark.parametrize(
@@ -69,6 +94,14 @@ _SECTION_KERNEL_UPDATES = [
         pytest.param(
             _SECTION_KERNEL_UPDATES,
             True,
+        ),
+        pytest.param(
+            _SECTION_UBUNTU_PRO_ADVERTISEMENT,
+            False,
+        ),
+        pytest.param(
+            _SECTION_UBUNTU_PRO_ADVERTISEMENT + _SECTION_NO_ESM_SUPPORT,
+            False,
         ),
     ],
 )
@@ -111,6 +144,16 @@ def test_data_is_valid(
             id="security_upates_line",
         ),
         pytest.param(
+            _SECTION_NO_ESM_SUPPORT,
+            Section([], [], [], no_esm_support=True),
+            id="no_esm_support",
+        ),
+        pytest.param(
+            _SECTION_ESM_SUPPORT,
+            Section(["ubuntu-advantage-tools"], [], []),
+            id="esm_support",
+        ),
+        pytest.param(
             _SECTION_KERNEL_UPDATES,
             Section(
                 updates=[],
@@ -118,6 +161,39 @@ def test_data_is_valid(
                 sec_updates=["linux-image-4.19.0-19-amd64", "linux-image-amd64"],
             ),
             id="security_kernel_debian_line",
+        ),
+        pytest.param(
+            _SECTION_UBUNTU_PRO_ADVERTISEMENT,
+            Section(
+                updates=["base-files"],
+                removals=[],
+                sec_updates=[],
+            ),
+            id="ubuntu_pro_advertisement",
+        ),
+        pytest.param(
+            _SECTION_UBUNTU_PRO_ADVERTISEMENT + _SECTION_ESM_SUPPORT,
+            Section(
+                updates=[
+                    "base-files",
+                    "ubuntu-advantage-tools",
+                ],
+                removals=[],
+                sec_updates=[],
+            ),
+            id="ubuntu_pro_advertisement_first_esm_enabled_second",
+        ),
+        pytest.param(
+            _SECTION_ESM_SUPPORT + _SECTION_UBUNTU_PRO_ADVERTISEMENT,
+            Section(
+                updates=[
+                    "ubuntu-advantage-tools",
+                    "base-files",
+                ],
+                removals=[],
+                sec_updates=[],
+            ),
+            id="esm_enabled_first_ubuntu_pro_advertisement_second",
         ),
     ],
 )

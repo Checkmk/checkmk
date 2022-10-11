@@ -1,0 +1,15 @@
+Title: windows_tasks: Does not crash anymore if the "Scheduled Task State" is not available
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1665482880
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p30
+
+There were cases when the "Scheduled Taks State" was not available in the agent output.
+This caused the check to crash.
+Now if this is the case, the check behaves the same as if the "Scheduled Task State" is equal to "Disabled".
+

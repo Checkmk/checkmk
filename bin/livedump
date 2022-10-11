@@ -76,7 +76,10 @@ def connect(socket_path: str | None) -> SingleSiteConnection:
     return SingleSiteConnection(socket_path)
 
 
-def livedump_config(connection: SingleSiteConnection) -> None:  # pylint: disable=too-many-branches
+def livedump_config() -> None:  # pylint: disable=too-many-branches
+    connection = connect(opt_socket)
+    if opt_mark_mode:
+        sys.stdout.write("config %s\n" % omd_site())
     if opt_dump_templates:
         dump_templates()
 
@@ -140,7 +143,10 @@ def livedump_config(connection: SingleSiteConnection) -> None:  # pylint: disabl
         )
 
 
-def livedump_state(connection: SingleSiteConnection) -> None:
+def livedump_state() -> None:
+    connection = connect(opt_socket)
+    if opt_mark_mode:
+        sys.stdout.write("status\n")
     now = time.time()
     # Dump hosts
     query = (
@@ -214,11 +220,6 @@ def omd_root() -> str | None:
 
 def omd_site() -> str | None:
     return os.getenv("OMD_SITE")
-
-
-def verbose(x: object) -> None:
-    if opt_verbose:
-        sys.stderr.write("%s\n" % x)
 
 
 def bail_out(x: str) -> NoReturn:
@@ -319,6 +320,7 @@ opt_groups = False
 opt_host_icon = False
 opt_check_interval: int | None = None
 opt_socket: str | None = None
+opt_dumper = livedump_state
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -331,6 +333,8 @@ for o, a in opts:
         usage(0)
     elif o in ["-V", "--version"]:
         print_version()
+    elif o in ["-C", "--config"]:
+        opt_dumper = livedump_config
     elif o in ["-T", "--dump-templates"]:
         opt_dump_templates = True
     elif o in ["-M", "--mark-mode"]:
@@ -356,18 +360,8 @@ for o, a in opts:
     elif o == "--debug":
         opt_debug = True
 
-# Main modes
 try:
-    for o, a in opts:
-        if o in ["-C", "--config"]:
-            if opt_mark_mode:
-                sys.stdout.write("config %s\n" % omd_site())
-            livedump_config(connect(opt_socket))
-            sys.exit(0)
-    if opt_mark_mode:
-        sys.stdout.write("status\n")
-    livedump_state(connect(opt_socket))
-
+    opt_dumper()
 except Exception as e:
     if opt_debug:
         raise

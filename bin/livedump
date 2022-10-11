@@ -95,12 +95,7 @@ def livedump_config(connection: SingleSiteConnection) -> None:  # pylint: disabl
         prepare_row(row)
         row["groupstring"] = ",".join(row["groups"])
         sys.stdout.write("define host {\n  use                livedump-host\n")
-
-        if opt_prefix:
-            sys.stdout.write("  host_name          %s%s\n" % (opt_prefix, row["name"]))
-        else:
-            sys.stdout.write("  host_name          %s\n" % row["name"])
-
+        sys.stdout.write("  host_name          %s%s\n" % (opt_prefix, row["name"]))
         sys.stdout.write(
             "  alias              %(alias)s\n"
             "  address            %(address)s\n"
@@ -134,12 +129,7 @@ def livedump_config(connection: SingleSiteConnection) -> None:  # pylint: disabl
             row["groupstring"] = ""
         row["contactsstring"] = ",".join(row["contacts"])
         sys.stdout.write("define service {\n  use                livedump-service\n")
-
-        if opt_prefix:
-            sys.stdout.write("  host_name          %s%s\n" % (opt_prefix, row["host_name"]))
-        else:
-            sys.stdout.write("  host_name          %s\n" % row["host_name"])
-
+        sys.stdout.write("  host_name          %s%s\n" % (opt_prefix, row["host_name"]))
         sys.stdout.write(
             "  description        %(description)s\n"
             "  %(groupstring)s\n"
@@ -162,11 +152,7 @@ def livedump_state(connection: SingleSiteConnection) -> None:
 
     for row in connection.query_table_assoc(query):
         row["now"] = now
-        if opt_prefix:
-            sys.stdout.write("host_name=%s%s" % (opt_prefix, row["name"]))
-        else:
-            sys.stdout.write("host_name=%s" % row["name"])
-
+        sys.stdout.write("host_name=%s%s" % (opt_prefix, row["name"]))
         sys.stdout.write(
             """
 check_type=1
@@ -191,11 +177,7 @@ output=%(plugin_output)s|%(perf_data)s
 
     for row in connection.query_table_assoc(query):
         row["now"] = now
-        if opt_prefix:
-            sys.stdout.write("host_name=%s%s" % (opt_prefix, row["host_name"]))
-        else:
-            sys.stdout.write("host_name=%s" % row["host_name"])
-
+        sys.stdout.write("host_name=%s%s" % (opt_prefix, row["host_name"]))
         sys.stdout.write(
             """
 service_description=%(description)s
@@ -244,7 +226,7 @@ def bail_out(x: str) -> NoReturn:
     sys.exit(1)
 
 
-def usage() -> None:
+def usage(status: int) -> NoReturn:
     sys.stderr.write(
         """Usage: %s [OPTION]...
 
@@ -286,10 +268,12 @@ def usage() -> None:
 """
         % os.path.split(sys.argv[0])[1]
     )
+    sys.exit(status)
 
 
-def print_version() -> None:
+def print_version() -> NoReturn:
     sys.stdout.write("This is livedump version %s\n" % __version__)
+    sys.exit(0)
 
 
 # .
@@ -340,16 +324,13 @@ try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
 except getopt.GetoptError as err:
     sys.stderr.write("%s\n\n" % err)
-    usage()
-    sys.exit(1)
+    usage(1)
 
 for o, a in opts:
     if o in ["-h", "--help"]:
-        usage()
-        sys.exit(0)
+        usage(0)
     elif o in ["-V", "--version"]:
         print_version()
-        sys.exit(0)
     elif o in ["-T", "--dump-templates"]:
         opt_dump_templates = True
     elif o in ["-M", "--mark-mode"]:

@@ -3,62 +3,79 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, MutableMapping
+from typing import NamedTuple
+
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.utils import megaraid
 
 factory_settings["storcli_vdrives_default_levels"] = megaraid.LDISKS_DEFAULTS
 
 
-def parse_storcli_vdrives(info):
+class StorcliVDrive(NamedTuple):
+    raid_type: str
+    state: str
+    access: str
+    consistent: bool
 
-    parsed = {}
+
+StorcliVDrivesSection = Mapping[str, StorcliVDrive]
+
+
+def parse_storcli_vdrives(string_table: StringTable) -> StorcliVDrivesSection:
+
+    section: MutableMapping[str, StorcliVDrive] = {}
 
     controller_num = 0
     separator_count = 0
-    for line in info:
+    for line in string_table:
         if line[0].startswith("-----"):
             separator_count += 1
         elif separator_count == 2:
             dg_vd, raid_type, rawstate, access, consistent = line[:5]
-            parsed["C%i.%s" % (controller_num, dg_vd)] = {
-                "raid_type": raid_type,
-                "state": megaraid.expand_abbreviation(rawstate),
-                "access": access,
-                "consistent": consistent,
-            }
+            section["C%i.%s" % (controller_num, dg_vd)] = StorcliVDrive(
+                raid_type=raid_type,
+                state=megaraid.expand_abbreviation(rawstate),
+                access=access,
+                consistent=consistent == "Yes",
+            )
+
         if separator_count == 3:
             # each controller has 3 separators, reset count and continue
             separator_count = 0
             controller_num += 1
 
-    return parsed
+    return section
 
 
-def inventory_storcli_vdrives(parsed):
-    for item in parsed:
+def inventory_storcli_vdrives(section: StorcliVDrivesSection):
+    for item in section:
         yield (item, {})
 
 
-def check_storcli_vdrives(item, params, parsed):
-    if item not in parsed:
+def check_storcli_vdrives(
+    item: str,
+    params: Mapping[str, int],
+    section: StorcliVDrivesSection,
+):
+    if (drive := section.get(item)) is None:
         return
 
-    yield 0, "Raid type is " + parsed[item]["raid_type"]
-    yield 0, "Access: " + parsed[item]["access"]
+    yield 0, "Raid type is " + drive.raid_type
+    yield 0, "Access: " + drive.access
 
-    if parsed[item]["consistent"] == "Yes":
-        yield 0, "Drive is consistent"
-    else:
+    if not drive.consistent:
         yield 1, "Drive is not consistent"
-
-    device_state = parsed[item]["state"]
-    infotext = "State is %s" % device_state
-
-    if device_state in params:
-        status = params[device_state]
     else:
-        status = 3
-        infotext += " (unknown[%s])" % device_state
-    yield status, infotext
+        yield 0, "Drive is consistent"
+
+    summary = "State is %s" % drive.state
+
+    if (raw_state := params.get(drive.state)) is None:
+        raw_state = 3
+        summary += " (unknown[%s])" % drive.state
+
+    yield raw_state, summary
 
 
 check_info["storcli_vdrives"] = {

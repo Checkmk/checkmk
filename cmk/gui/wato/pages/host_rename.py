@@ -63,14 +63,16 @@ class RenameHostsBackgroundJob(WatoBackgroundJob):
     def gui_title(cls):
         return _("Host renaming")
 
-    def __init__(self, title=None) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, title: str | None = None) -> None:
         last_job_status = WatoBackgroundJob(self.job_prefix).get_status()
         super().__init__(
             self.job_prefix,
-            title=title or self.gui_title(),
-            lock_wato=True,
-            stoppable=False,
-            estimated_duration=last_job_status.get("duration"),
+            background_job.InitialStatusArgs(
+                title=title or self.gui_title(),
+                lock_wato=True,
+                stoppable=False,
+                estimated_duration=last_job_status.get("duration"),
+            ),
         )
 
         if self.is_active():

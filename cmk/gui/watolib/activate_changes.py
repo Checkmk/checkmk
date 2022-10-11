@@ -59,7 +59,8 @@ import cmk.gui.watolib.git
 import cmk.gui.watolib.sidebar_reload
 import cmk.gui.watolib.snapshots
 import cmk.gui.watolib.utils
-from cmk.gui import background_job, gui_background_job
+from cmk.gui import gui_background_job
+from cmk.gui.background_job import BackgroundProcessInterface, InitialStatusArgs
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import (
     MKAuthException,
@@ -1219,13 +1220,15 @@ class ActivationCleanupBackgroundJob(WatoBackgroundJob):
         """
         super().__init__(
             self.job_prefix,
-            title=self.gui_title(),
-            lock_wato=False,
-            stoppable=False,
+            InitialStatusArgs(
+                title=self.gui_title(),
+                lock_wato=False,
+                stoppable=False,
+            ),
         )
         self.maximum_age = maximum_age
 
-    def do_execute(self, job_interface: background_job.BackgroundProcessInterface) -> None:
+    def do_execute(self, job_interface: BackgroundProcessInterface) -> None:
         self._do_housekeeping()
         job_interface.send_result_message(_("Activation cleanup finished"))
 
@@ -1341,13 +1344,17 @@ class ActivateChangesSchedulerBackgroundJob(WatoBackgroundJob):
         prevent_activate: bool,
     ) -> None:
         super().__init__(
-            "%s-%s" % (self.job_prefix, activation_id), deletable=False, stoppable=False
+            f"{self.job_prefix}-{activation_id}",
+            InitialStatusArgs(
+                deletable=False,
+                stoppable=False,
+            ),
         )
         self._activation_id = activation_id
         self._site_snapshot_settings = site_snapshot_settings
         self._prevent_activate = prevent_activate
 
-    def schedule_sites(self, job_interface: background_job.BackgroundProcessInterface) -> None:
+    def schedule_sites(self, job_interface: BackgroundProcessInterface) -> None:
         # Prepare queued jobs
 
         job_interface.send_progress_update(

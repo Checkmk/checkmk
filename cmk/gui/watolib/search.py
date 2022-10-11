@@ -31,7 +31,11 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.redis import get_redis_client
 
-from cmk.gui.background_job import BackgroundJobAlreadyRunning, BackgroundProcessInterface
+from cmk.gui.background_job import (
+    BackgroundJobAlreadyRunning,
+    BackgroundProcessInterface,
+    InitialStatusArgs,
+)
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.gui_background_job import GUIBackgroundJob, job_registry
@@ -558,9 +562,11 @@ class SearchIndexBackgroundJob(GUIBackgroundJob):
         last_job_status = GUIBackgroundJob(self.job_prefix).get_status()
         super().__init__(
             self.job_prefix,
-            title=_("Search index"),
-            stoppable=False,
-            estimated_duration=last_job_status.get("duration"),
+            InitialStatusArgs(
+                title=_("Search index"),
+                stoppable=False,
+                estimated_duration=last_job_status.get("duration"),
+            ),
         )
 
 

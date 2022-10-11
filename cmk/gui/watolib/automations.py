@@ -26,10 +26,10 @@ from cmk.utils.type_defs import PhaseOneResult, UserId
 
 from cmk.automations.results import result_type_registry, SerializedResult
 
-import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.hooks as hooks
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.background_job import BackgroundProcessInterface
+from cmk.gui import gui_background_job
+from cmk.gui.background_job import BackgroundProcessInterface, InitialStatusArgs
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.http import request
@@ -583,8 +583,10 @@ class CheckmkAutomationBackgroundJob(WatoBackgroundJob):
         # A new job is started
         automation_id = str(uuid.uuid4())
         super().__init__(
-            job_id="%s%s-%s" % (self.job_prefix, api_request.command, automation_id),
-            title=_("Checkmk automation %s %s") % (api_request.command, automation_id),
+            f"{self.job_prefix}{api_request.command}-{automation_id}",
+            InitialStatusArgs(
+                title=_("Checkmk automation %s %s") % (api_request.command, automation_id),
+            ),
         )
 
     @staticmethod

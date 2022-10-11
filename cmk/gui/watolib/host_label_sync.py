@@ -24,10 +24,14 @@ from cmk.utils.labels import (
 )
 from cmk.utils.type_defs import HostName
 
-import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.log as log
 import cmk.gui.pages
+from cmk.gui.background_job import (
+    BackgroundJobAlreadyRunning,
+    BackgroundProcessInterface,
+    InitialStatusArgs,
+)
 from cmk.gui.config import load_config
 from cmk.gui.context import RequestContext
 from cmk.gui.exceptions import MKGeneralException, MKUserError
@@ -122,7 +126,7 @@ def execute_host_label_sync_job() -> Optional[DiscoveredHostLabelSyncJob]:
 
     try:
         job.start(job.do_sync)
-    except background_job.BackgroundJobAlreadyRunning:
+    except BackgroundJobAlreadyRunning:
         logger.debug("Another synchronization job is already running: Skipping this sync")
 
     return job
@@ -145,11 +149,13 @@ class DiscoveredHostLabelSyncJob(gui_background_job.GUIBackgroundJob):
     def __init__(self) -> None:
         super().__init__(
             job_id=self.job_prefix,
-            title=self.gui_title(),
-            stoppable=False,
+            initial_status_args=InitialStatusArgs(
+                title=self.gui_title(),
+                stoppable=False,
+            ),
         )
 
-    def do_sync(self, job_interface: background_job.BackgroundProcessInterface) -> None:
+    def do_sync(self, job_interface: BackgroundProcessInterface) -> None:
         job_interface.send_progress_update(_("Synchronization started..."))
         self._execute_sync()
         job_interface.send_result_message(_("The synchronization finished."))

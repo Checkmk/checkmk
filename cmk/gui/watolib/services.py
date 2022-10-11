@@ -33,7 +33,7 @@ from cmk.automations.results import CheckPreviewEntry, TryDiscoveryResult
 
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.watolib.changes as _changes
-from cmk.gui.background_job import BackgroundProcessInterface, JobStatusStates
+from cmk.gui.background_job import BackgroundProcessInterface, InitialStatusArgs, JobStatusStates
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -763,10 +763,12 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
 
         super().__init__(
             job_id,
-            title=_("Service discovery"),
-            stoppable=True,
-            host_name=host_name,
-            estimated_duration=last_job_status.get("duration"),
+            InitialStatusArgs(
+                title=_("Service discovery"),
+                stoppable=True,
+                host_name=host_name,
+                estimated_duration=last_job_status.get("duration"),
+            ),
         )
         self._pre_try_discovery = (
             0,

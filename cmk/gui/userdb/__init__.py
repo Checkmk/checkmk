@@ -17,7 +17,7 @@ from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from logging import Logger
 from pathlib import Path
-from typing import Any, Callable, Iterable, Literal, Mapping, Optional, TypeVar
+from typing import Any, Callable, Iterable, Literal, Mapping, TypeVar
 
 from six import ensure_str
 
@@ -27,11 +27,15 @@ import cmk.utils.version as cmk_version
 from cmk.utils.crypto import password_hashing
 from cmk.utils.type_defs import ContactgroupName, UserId
 
-import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.hooks as hooks
 import cmk.gui.pages
 import cmk.gui.utils as utils
+from cmk.gui.background_job import (
+    BackgroundJobAlreadyRunning,
+    BackgroundProcessInterface,
+    InitialStatusArgs,
+)
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKAuthException, MKInternalError, MKUserError
@@ -1372,7 +1376,7 @@ def ajax_sync() -> None:
                     save_users_func=save_users,
                 )
             )
-        except background_job.BackgroundJobAlreadyRunning as e:
+        except BackgroundJobAlreadyRunning as e:
             raise MKUserError(None, _("Another user synchronization is already running: %s") % e)
         response.set_data("OK Started synchronization\n")
     except Exception as e:
@@ -1393,8 +1397,10 @@ class UserSyncBackgroundJob(gui_background_job.GUIBackgroundJob):
     def __init__(self) -> None:
         super().__init__(
             self.job_prefix,
-            title=self.gui_title(),
-            stoppable=False,
+            InitialStatusArgs(
+                title=self.gui_title(),
+                stoppable=False,
+            ),
         )
 
     def _back_url(self) -> str:
@@ -1402,7 +1408,7 @@ class UserSyncBackgroundJob(gui_background_job.GUIBackgroundJob):
 
     def do_sync(
         self,
-        job_interface: background_job.BackgroundProcessInterface,
+        job_interface: BackgroundProcessInterface,
         add_to_changelog: bool,
         enforce_sync: bool,
         load_users_func: Callable[[bool], Users],
@@ -1423,7 +1429,7 @@ class UserSyncBackgroundJob(gui_background_job.GUIBackgroundJob):
 
     def _execute_sync_action(
         self,
-        job_interface: background_job.BackgroundProcessInterface,
+        job_interface: BackgroundProcessInterface,
         add_to_changelog: bool,
         enforce_sync: bool,
         load_users_func: Callable[[bool], Users],
@@ -1491,12 +1497,14 @@ class UserProfileCleanupBackgroundJob(gui_background_job.GUIBackgroundJob):
     def __init__(self) -> None:
         super().__init__(
             self.job_prefix,
-            title=self.gui_title(),
-            lock_wato=False,
-            stoppable=False,
+            InitialStatusArgs(
+                title=self.gui_title(),
+                lock_wato=False,
+                stoppable=False,
+            ),
         )
 
-    def do_execute(self, job_interface: background_job.BackgroundProcessInterface) -> None:
+    def do_execute(self, job_interface: BackgroundProcessInterface) -> None:
         try:
             cleanup_abandoned_profiles(self._logger, datetime.now(), timedelta(days=30))
             job_interface.send_result_message(_("Job finished"))

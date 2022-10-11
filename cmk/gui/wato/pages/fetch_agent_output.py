@@ -12,8 +12,8 @@ from typing import Dict
 import cmk.utils.store as store
 from cmk.utils.site import omd_site
 
-import cmk.gui.background_job as background_job
-import cmk.gui.gui_background_job as gui_background_job
+from cmk.gui import gui_background_job
+from cmk.gui.background_job import BackgroundJobAlreadyRunning, InitialStatusArgs
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKUserError
 from cmk.gui.htmllib.header import make_header
@@ -225,7 +225,7 @@ def start_fetch_agent_job(api_request):
     job = FetchAgentOutputBackgroundJob(api_request)
     try:
         job.start(job.fetch_agent_output)
-    except background_job.BackgroundJobAlreadyRunning:
+    except BackgroundJobAlreadyRunning:
         pass
 
 
@@ -270,7 +270,7 @@ class FetchAgentOutputBackgroundJob(WatoBackgroundJob):
             host.site_id(),
             host.name(),
         )
-        super().__init__(job_id, title=title)
+        super().__init__(job_id, InitialStatusArgs(title=title))
 
     def fetch_agent_output(self, job_interface):
         job_interface.send_progress_update(_("Fetching '%s'...") % self._request.agent_type)

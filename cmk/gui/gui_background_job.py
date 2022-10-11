@@ -200,14 +200,19 @@ class GUIBackgroundJobSnapshottedFunctions(background_job.BackgroundJob):
 class GUIBackgroundJob(GUIBackgroundJobSnapshottedFunctions):
     _background_process_class = GUIBackgroundProcess
 
-    def __init__(self, job_id, **kwargs) -> None:  # type:ignore[no-untyped-def]
+    def __init__(
+        self,
+        job_id: background_job.JobId,
+        initial_status_args: background_job.InitialStatusArgs | None = None,
+    ) -> None:
         logger = log.logger.getChild("background-job")
-        kwargs["user"] = user.id
-        kwargs["logfile_path"] = "~/var/log/web.log"
-        # Deletable is currently a GUI only feature, not known in background_job
-        self._deletable = kwargs.get("deletable", True)
 
-        super().__init__(job_id, logger=logger, **kwargs)
+        if initial_status_args is None:
+            initial_status_args = background_job.InitialStatusArgs()
+        initial_status_args.user = str(user.id) if user.id else None
+        initial_status_args.logfile_path = "~/var/log/web.log"
+
+        super().__init__(job_id, logger, initial_status_args)
 
     @classmethod
     def gui_title(cls) -> str:
@@ -661,7 +666,7 @@ class ActionHandler:
         return self._did_delete_job
 
     def acknowledge_job(self):
-        job_id = request.var(self.acknowledge_job_var)
+        job_id = request.get_ascii_input_mandatory(self.acknowledge_job_var)
         job = GUIBackgroundJob(job_id)
         if not job.is_available():
             return
@@ -670,10 +675,7 @@ class ActionHandler:
         job.acknowledge(user.id)
 
     def stop_job(self):
-        job_id = request.var(self.stop_job_var)
-        if not job_id:
-            return
-
+        job_id = request.get_ascii_input_mandatory(self.stop_job_var)
         job = GUIBackgroundJob(job_id)
         if not job.is_available():
             return
@@ -688,11 +690,8 @@ class ActionHandler:
             html.show_message(_("Background job has been stopped"))
 
     def delete_job(self):
-        job_id = request.var(self.delete_job_var)
-        if not job_id:
-            return
-
-        job = GUIBackgroundJob(job_id=job_id)
+        job_id = request.get_ascii_input_mandatory(self.delete_job_var)
+        job = GUIBackgroundJob(job_id)
         if not job.is_available():
             return
 

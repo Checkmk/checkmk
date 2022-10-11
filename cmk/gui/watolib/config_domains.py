@@ -27,6 +27,7 @@ import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.hooks as hooks
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.watolib.config_domain_name as config_domain_name
+from cmk.gui.background_job import InitialStatusArgs
 from cmk.gui.config import active_config, get_default_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.i18n import _, get_language_alias, is_community_translation
@@ -596,9 +597,11 @@ class OMDConfigChangeBackgroundJob(WatoBackgroundJob):
     def __init__(self) -> None:
         super().__init__(
             self.job_prefix,
-            title=self.gui_title(),
-            lock_wato=False,
-            stoppable=False,
+            InitialStatusArgs(
+                title=self.gui_title(),
+                lock_wato=False,
+                stoppable=False,
+            ),
         )
 
     def do_execute(  # type:ignore[no-untyped-def]

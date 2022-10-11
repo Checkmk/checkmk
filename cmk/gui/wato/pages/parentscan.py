@@ -13,7 +13,8 @@ from cmk.utils.type_defs import HostName
 
 import cmk.gui.forms as forms
 import cmk.gui.watolib.bakery as bakery
-from cmk.gui import background_job, gui_background_job
+from cmk.gui import gui_background_job
+from cmk.gui.background_job import BackgroundProcessInterface, InitialStatusArgs
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKUserError
 from cmk.gui.htmllib.html import html
@@ -66,9 +67,11 @@ class ParentScanBackgroundJob(WatoBackgroundJob):
     def __init__(self) -> None:
         super().__init__(
             self.job_prefix,
-            title=_("Parent scan"),
-            lock_wato=False,
-            stoppable=False,
+            InitialStatusArgs(
+                title=_("Parent scan"),
+                lock_wato=False,
+                stoppable=False,
+            ),
         )
 
     def _back_url(self):
@@ -78,7 +81,7 @@ class ParentScanBackgroundJob(WatoBackgroundJob):
         self,
         settings: ParentScanSettings,
         tasks: Sequence[ParentScanTask],
-        job_interface: background_job.BackgroundProcessInterface,
+        job_interface: BackgroundProcessInterface,
     ) -> None:
         self._initialize_statistics()
         self._logger.info("Parent scan started...")

@@ -75,9 +75,11 @@ class GetRemoteAuditLogsBackgroundJob(WatoBackgroundJob):
     def __init__(self) -> None:
         super().__init__(
             self.job_prefix,
-            title=self.gui_title(),
-            lock_wato=False,
-            stoppable=False,
+            background_job.InitialStatusArgs(
+                title=self.gui_title(),
+                lock_wato=False,
+                stoppable=False,
+            ),
         )
         self._last_audit_log_timestamps_path = _get_last_audit_log_timestamps_path()
         self._last_audit_log_timestamps_store = LastAuditLogTimestampsStore(

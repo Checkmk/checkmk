@@ -16,6 +16,7 @@ import signal
 import sys
 import time
 import traceback
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from types import FrameType
 from typing import Any, Callable, Dict, List, NoReturn, Optional, Sequence, Type, TypedDict
@@ -51,6 +52,21 @@ class JobStatusStates:
     FINISHED = "finished"
     STOPPED = "stopped"
     EXCEPTION = "exception"
+
+
+@dataclass
+class InitialStatusArgs:
+    title: str = "Background job"
+    stoppable: bool = True
+    deletable: bool = True
+    user: str | None = None
+    estimated_duration: float | None = None
+    # Only affects GUIBackgroundJob based jobs, but added here for simplicity
+    logfile_path: str = ""
+    # Only affects WatoBackgroundJob based jobs, but added here for simplicity
+    lock_wato: bool = False
+    # Only used by ServiceDiscoveryBackgroundJob
+    host_name: str = ""
 
 
 JobStatusSpec = Dict[str, Any]
@@ -329,7 +345,12 @@ class BackgroundJob:
     # TODO: Make this an abstract property
     job_prefix = "unnamed-job"
 
-    def __init__(self, job_id: str, logger: Optional[logging.Logger] = None, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        job_id: str,
+        logger: logging.Logger | None = None,
+        initial_status_args: InitialStatusArgs | None = None,
+    ) -> None:
         super().__init__()
         self.validate_job_id(job_id)
         self._job_id = job_id
@@ -340,9 +361,10 @@ class BackgroundJob:
             raise MKGeneralException(_("The background job is missing a logger instance"))
         self._logger = logger
 
-        kwargs.setdefault("stoppable", True)
+        if initial_status_args is None:
+            initial_status_args = InitialStatusArgs()
 
-        self._initial_status_args = kwargs
+        self._initial_status_args = initial_status_args
         self._work_dir = os.path.join(self._job_base_dir, self._job_id)
         self._jobstatus_store = JobStatusStore(self._work_dir)
 
@@ -528,7 +550,7 @@ class BackgroundJob:
             "started": time.time(),
             "duration": 0.0,
         }
-        initial_status.update(self._initial_status_args)
+        initial_status.update(asdict(self._initial_status_args))
         self._jobstatus_store.update(initial_status)
 
         job_parameters = JobParameters(

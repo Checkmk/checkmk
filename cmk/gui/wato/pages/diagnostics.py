@@ -38,8 +38,8 @@ from cmk.utils.diagnostics import (
 
 from cmk.automations.results import CreateDiagnosticsDumpResult
 
-import cmk.gui.gui_background_job as gui_background_job
-from cmk.gui.background_job import BackgroundProcessInterface
+from cmk.gui import gui_background_job
+from cmk.gui.background_job import BackgroundProcessInterface, InitialStatusArgs
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
@@ -544,9 +544,11 @@ class DiagnosticsDumpBackgroundJob(WatoBackgroundJob):
     def __init__(self) -> None:
         super().__init__(
             self.job_prefix,
-            title=self.gui_title(),
-            lock_wato=False,
-            stoppable=False,
+            InitialStatusArgs(
+                title=self.gui_title(),
+                lock_wato=False,
+                stoppable=False,
+            ),
         )
 
     def _back_url(self) -> str:

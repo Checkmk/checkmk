@@ -16,10 +16,14 @@ import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 
-import cmk.gui.background_job as background_job
-import cmk.gui.config as config
-import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.log
+from cmk.gui import config, gui_background_job
+from cmk.gui.background_job import (
+    BackgroundJobAlreadyRunning,
+    BackgroundJobDefines,
+    InitialStatusArgs,
+    JobStatusStates,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -83,7 +87,7 @@ def job_base_dir(tmp_path, monkeypatch):
     # Patch for web.log. Sholdn't we do this for all web tests?
     monkeypatch.setattr(cmk.utils.paths, "log_dir", str(log_dir))
 
-    monkeypatch.setattr(background_job.BackgroundJobDefines, "base_dir", str(job_dir))
+    monkeypatch.setattr(BackgroundJobDefines, "base_dir", str(job_dir))
     return job_dir
 
 
@@ -96,13 +100,16 @@ class DummyBackgroundJob(gui_background_job.GUIBackgroundJob):
         return "Dummy Job"
 
     def __init__(self) -> None:
-        kwargs = {}
-        kwargs["title"] = self.gui_title()
-        kwargs["deletable"] = False
-        kwargs["stoppable"] = True
         self.finish_hello_event = multiprocessing.Event()
 
-        super().__init__(self.job_prefix, **kwargs)
+        super().__init__(
+            self.job_prefix,
+            InitialStatusArgs(
+                title=self.gui_title(),
+                deletable=False,
+                stoppable=True,
+            ),
+        )
 
     def execute_hello(self, job_interface):
         sys.stdout.write("Hallo :-)\n")
@@ -120,12 +127,12 @@ def test_start_job() -> None:
     job = DummyBackgroundJob()
 
     status = job.get_status()
-    assert status["state"] == background_job.JobStatusStates.INITIALIZED
+    assert status["state"] == JobStatusStates.INITIALIZED
 
     job.start(job.execute_hello)
     testlib.wait_until(job.is_active, timeout=5, interval=0.1)
 
-    with pytest.raises(background_job.BackgroundJobAlreadyRunning):
+    with pytest.raises(BackgroundJobAlreadyRunning):
         job.start(job.execute_hello)
     assert job.is_active()
 
@@ -133,13 +140,13 @@ def test_start_job() -> None:
 
     testlib.wait_until(
         lambda: job.get_status()["state"]
-        not in [background_job.JobStatusStates.INITIALIZED, background_job.JobStatusStates.RUNNING],
+        not in [JobStatusStates.INITIALIZED, JobStatusStates.RUNNING],
         timeout=5,
         interval=0.1,
     )
 
     status = job.get_status()
-    assert status["state"] == background_job.JobStatusStates.FINISHED
+    assert status["state"] == JobStatusStates.FINISHED
 
     output = "\n".join(status["loginfo"]["JobProgressUpdate"])
     assert "Initialized background job" in output
@@ -158,12 +165,12 @@ def test_stop_job() -> None:
     )
 
     status = job.get_status()
-    assert status["state"] == background_job.JobStatusStates.RUNNING
+    assert status["state"] == JobStatusStates.RUNNING
 
     job.stop()
 
     status = job.get_status()
-    assert status["state"] == background_job.JobStatusStates.STOPPED
+    assert status["state"] == JobStatusStates.STOPPED
 
     output = "\n".join(status["loginfo"]["JobProgressUpdate"])
     assert "Job was stopped" in output
@@ -225,7 +232,7 @@ def test_job_status_after_stop() -> None:
     job.stop()
 
     status = job.get_status()
-    assert status["state"] == background_job.JobStatusStates.STOPPED
+    assert status["state"] == JobStatusStates.STOPPED
 
     assert job.has_exception() is False
     assert job.acknowledged_by() is None

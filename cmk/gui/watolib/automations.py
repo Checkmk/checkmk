@@ -28,8 +28,12 @@ from cmk.automations.results import result_type_registry, SerializedResult
 
 import cmk.gui.hooks as hooks
 import cmk.gui.utils.escaping as escaping
-from cmk.gui import gui_background_job
-from cmk.gui.background_job import BackgroundProcessInterface, InitialStatusArgs
+from cmk.gui.background_job import (
+    BackgroundJob,
+    BackgroundProcessInterface,
+    InitialStatusArgs,
+    job_registry,
+)
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.http import request
@@ -39,7 +43,6 @@ from cmk.gui.site_config import get_site_config
 from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.utils import mk_repr
-from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
 auto_logger = logger.getChild("automations")
 
@@ -560,8 +563,8 @@ class AutomationCheckmkAutomationGetStatus(AutomationCommand):
         )
 
 
-@gui_background_job.job_registry.register
-class CheckmkAutomationBackgroundJob(WatoBackgroundJob):
+@job_registry.register
+class CheckmkAutomationBackgroundJob(BackgroundJob):
     """The background job is always executed on the site where the host is located on"""
 
     job_prefix = "automation-"

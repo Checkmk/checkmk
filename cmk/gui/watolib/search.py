@@ -32,13 +32,14 @@ from cmk.utils.plugin_registry import Registry
 from cmk.utils.redis import get_redis_client
 
 from cmk.gui.background_job import (
+    BackgroundJob,
     BackgroundJobAlreadyRunning,
     BackgroundProcessInterface,
     InitialStatusArgs,
+    job_registry,
 )
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.gui_background_job import GUIBackgroundJob, job_registry
 from cmk.gui.http import request
 from cmk.gui.i18n import _, get_current_language, get_languages, localize
 from cmk.gui.logged_in import SuperUserContext, user
@@ -551,7 +552,7 @@ def update_index_background(change_action_name: str) -> None:
 
 
 @job_registry.register
-class SearchIndexBackgroundJob(GUIBackgroundJob):
+class SearchIndexBackgroundJob(BackgroundJob):
     job_prefix = "search_index"
 
     @classmethod
@@ -559,7 +560,7 @@ class SearchIndexBackgroundJob(GUIBackgroundJob):
         return _("Search index")
 
     def __init__(self) -> None:
-        last_job_status = GUIBackgroundJob(self.job_prefix).get_status()
+        last_job_status = BackgroundJob(self.job_prefix).get_status()
         super().__init__(
             self.job_prefix,
             InitialStatusArgs(

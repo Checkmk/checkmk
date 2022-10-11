@@ -27,7 +27,7 @@ import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.hooks as hooks
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.watolib.config_domain_name as config_domain_name
-from cmk.gui.background_job import InitialStatusArgs
+from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
 from cmk.gui.config import active_config, get_default_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.i18n import _, get_language_alias, is_community_translation
@@ -43,7 +43,6 @@ from cmk.gui.userdb import load_users, save_users
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.config_domain_name import ConfigDomainName
 from cmk.gui.watolib.utils import liveproxyd_config_dir, multisite_dir, wato_root_dir
-from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
 
 @dataclass
@@ -587,11 +586,11 @@ class ConfigDomainOMD(ABCConfigDomain):
         return omd_config
 
 
-class OMDConfigChangeBackgroundJob(WatoBackgroundJob):
+class OMDConfigChangeBackgroundJob(BackgroundJob):
     job_prefix = "omd-config-change"
 
     @classmethod
-    def gui_title(cls):
+    def gui_title(cls) -> str:
         return _("Apply OMD config changes")
 
     def __init__(self) -> None:
@@ -604,9 +603,9 @@ class OMDConfigChangeBackgroundJob(WatoBackgroundJob):
             ),
         )
 
-    def do_execute(  # type:ignore[no-untyped-def]
-        self, config_change_commands: List[str], job_interface
-    ):
+    def do_execute(
+        self, config_change_commands: List[str], job_interface: BackgroundProcessInterface
+    ) -> None:
         _do_config_change(config_change_commands, self._logger)
         job_interface.send_result_message(_("OMD config changes have been applied."))
 

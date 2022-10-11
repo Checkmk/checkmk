@@ -13,6 +13,7 @@ from cmk.utils.exceptions import MKGeneralException
 
 import cmk.gui.background_job as background_job
 import cmk.gui.log as log
+from cmk.gui.background_job import BackgroundJob, GUIBackgroundStatusSnapshot
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -110,120 +111,6 @@ permission_registry.register(
 )
 
 
-class GUIBackgroundJob(background_job.BackgroundJob):
-    def __init__(
-        self,
-        job_id: background_job.JobId,
-        initial_status_args: background_job.InitialStatusArgs | None = None,
-    ) -> None:
-        logger = log.logger.getChild("background-job")
-
-        if initial_status_args is None:
-            initial_status_args = background_job.InitialStatusArgs()
-        initial_status_args.user = str(user.id) if user.id else None
-        initial_status_args.logfile_path = "~/var/log/web.log"
-
-        super().__init__(job_id, logger, initial_status_args)
-
-    @classmethod
-    def gui_title(cls) -> str:
-        # FIXME: This method cannot be made abstract since GUIBackgroundJob is
-        # instantiated in various places.
-        raise NotImplementedError()
-
-    def get_status_snapshot(self) -> GUIBackgroundStatusSnapshot:
-        status = self.get_status()
-        return GUIBackgroundStatusSnapshot(
-            job_id=self.get_job_id(),
-            status=status,
-            exists=self.exists(),
-            is_active=self.is_active(),
-            has_exception=status.get("state") == background_job.JobStatusStates.EXCEPTION,
-            acknowledged_by=status.get("acknowledged_by"),
-        )
-
-    def acknowledge(self, user_id):
-        self._jobstatus_store.update({"acknowledged_by": user_id})
-
-    def detail_url(self):
-        """Returns the URL that displays the job detail page"""
-        return makeuri_contextless(
-            request,
-            [
-                ("mode", "background_job_details"),
-                ("job_id", self.get_job_id()),
-                ("back_url", self._back_url()),
-            ],
-            filename="wato.py",
-        )
-
-    def _back_url(self):
-        """Returns either None or the URL that the job detail page may be link back"""
-        return None
-
-    def is_available(self) -> bool:
-        return super().is_available() and self.is_visible()
-
-    def is_deletable(self) -> bool:
-        return self.get_status().get("deletable", True)
-
-    def is_visible(self) -> bool:
-        if user.may("background_jobs.see_foreign_jobs"):
-            return True
-        return user.id == self.get_status().get("user")
-
-    def may_stop(self):
-        if not self.is_stoppable():
-            return False
-
-        if not user.may("background_jobs.stop_jobs"):
-            return False
-
-        if self._is_foreign() and not user.may("background_jobs.stop_foreign_jobs"):
-            return False
-
-        if not self.is_active():
-            return False
-
-        return True
-
-    def may_delete(self):
-        if not self.is_deletable():
-            return False
-
-        if not self.is_stoppable() and self.is_active():
-            return False
-
-        if not user.may("background_jobs.delete_jobs"):
-            return False
-
-        if self._is_foreign() and not user.may("background_jobs.delete_foreign_jobs"):
-            return False
-
-        return True
-
-    def _is_foreign(self) -> bool:
-        return self.get_status().get("user") != user.id
-
-
-class GUIBackgroundJobRegistry(cmk.utils.plugin_registry.Registry[Type[GUIBackgroundJob]]):
-    def plugin_name(self, instance):
-        return instance.__name__
-
-
-job_registry = GUIBackgroundJobRegistry()
-
-
-@dataclass
-class GUIBackgroundStatusSnapshot:
-    job_id: background_job.JobId
-    status: background_job.JobStatusSpec
-    exists: bool
-    is_active: bool
-    has_exception: bool
-    acknowledged_by: str | None
-
-
 @dataclass
 class JobInfo:
     status: background_job.JobStatusSpec
@@ -253,7 +140,7 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
         visible_jobs = []
         for job_id in job_ids:
             try:
-                job = GUIBackgroundJob(job_id)
+                job = BackgroundJob(job_id)
                 if job.is_available():
                     visible_jobs.append(job_id)
             except Exception as e:
@@ -262,10 +149,10 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
         return visible_jobs
 
     def show_status_of_job_classes(
-        self, job_classes: Iterable[Type[GUIBackgroundJob]], job_details_back_url: str
+        self, job_classes: Iterable[Type[BackgroundJob]], job_details_back_url: str
     ) -> None:
         job_class_infos: dict[
-            Type[GUIBackgroundJob],
+            Type[BackgroundJob],
             dict[background_job.JobId, JobInfo],
         ] = {}
         for job_class in job_classes:
@@ -289,7 +176,7 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
         all_jobs = {}
         for job_id in jobs:
             try:
-                job = GUIBackgroundJob(job_id)
+                job = BackgroundJob(job_id)
                 job_status = job.get_status()
                 is_active = job.is_active()
             except Exception as e:
@@ -436,7 +323,7 @@ class JobRenderer:
     def show_job_class_infos(
         cls,
         job_class_infos: dict[
-            Type[GUIBackgroundJob],
+            Type[BackgroundJob],
             dict[background_job.JobId, JobInfo],
         ],
         job_details_back_url: str,
@@ -631,7 +518,7 @@ class ActionHandler:
 
     def acknowledge_job(self):
         job_id = request.get_ascii_input_mandatory(self.acknowledge_job_var)
-        job = GUIBackgroundJob(job_id)
+        job = BackgroundJob(job_id)
         if not job.is_available():
             return
 
@@ -640,7 +527,7 @@ class ActionHandler:
 
     def stop_job(self):
         job_id = request.get_ascii_input_mandatory(self.stop_job_var)
-        job = GUIBackgroundJob(job_id)
+        job = BackgroundJob(job_id)
         if not job.is_available():
             return
 
@@ -655,7 +542,7 @@ class ActionHandler:
 
     def delete_job(self):
         job_id = request.get_ascii_input_mandatory(self.delete_job_var)
-        job = GUIBackgroundJob(job_id)
+        job = BackgroundJob(job_id)
         if not job.is_available():
             return
 

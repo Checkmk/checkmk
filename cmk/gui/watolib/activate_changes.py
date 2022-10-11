@@ -59,8 +59,12 @@ import cmk.gui.watolib.git
 import cmk.gui.watolib.sidebar_reload
 import cmk.gui.watolib.snapshots
 import cmk.gui.watolib.utils
-from cmk.gui import gui_background_job
-from cmk.gui.background_job import BackgroundProcessInterface, InitialStatusArgs
+from cmk.gui.background_job import (
+    BackgroundJob,
+    BackgroundProcessInterface,
+    InitialStatusArgs,
+    job_registry,
+)
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import (
     MKAuthException,
@@ -99,7 +103,6 @@ from cmk.gui.watolib.hosts_and_folders import (
     validate_all_hosts,
 )
 from cmk.gui.watolib.site_changes import SiteChanges
-from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
 # TODO: Make private
 Phase = str  # TODO: Make dedicated type
@@ -1192,8 +1195,8 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
         return generic_site_components, custom_site_components
 
 
-@gui_background_job.job_registry.register
-class ActivationCleanupBackgroundJob(WatoBackgroundJob):
+@job_registry.register
+class ActivationCleanupBackgroundJob(BackgroundJob):
     job_prefix = "activation_cleanup"
 
     @classmethod
@@ -1327,8 +1330,8 @@ def execute_activation_cleanup_background_job(maximum_age: Optional[int] = None)
     job.start(job.do_execute)
 
 
-@gui_background_job.job_registry.register
-class ActivateChangesSchedulerBackgroundJob(WatoBackgroundJob):
+@job_registry.register
+class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
     job_prefix = "activate-changes-scheduler"
     housekeeping_max_age_sec = 86400 * 30
     housekeeping_max_count = 10

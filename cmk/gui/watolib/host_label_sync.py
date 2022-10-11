@@ -24,13 +24,14 @@ from cmk.utils.labels import (
 )
 from cmk.utils.type_defs import HostName
 
-import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.log as log
 import cmk.gui.pages
 from cmk.gui.background_job import (
+    BackgroundJob,
     BackgroundJobAlreadyRunning,
     BackgroundProcessInterface,
     InitialStatusArgs,
+    job_registry,
 )
 from cmk.gui.config import load_config
 from cmk.gui.context import RequestContext
@@ -132,8 +133,8 @@ def execute_host_label_sync_job() -> Optional[DiscoveredHostLabelSyncJob]:
     return job
 
 
-@gui_background_job.job_registry.register
-class DiscoveredHostLabelSyncJob(gui_background_job.GUIBackgroundJob):
+@job_registry.register
+class DiscoveredHostLabelSyncJob(BackgroundJob):
     """This job synchronizes the discovered host labels from remote sites to the central site
 
     Currently they are only needed for the agent bakery, but may be used in other places in the

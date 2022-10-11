@@ -7,7 +7,6 @@ from typing import Callable, Sequence, Tuple, Type
 
 import urllib3 as _urllib3
 
-import cmk.gui.gui_background_job as _gui_background_job
 import cmk.gui.hooks as _hooks
 import cmk.gui.mkeventd as _mkeventd
 import cmk.gui.pages as _pages
@@ -18,6 +17,7 @@ import cmk.gui.watolib.builtin_attributes as builtin_attributes
 import cmk.gui.watolib.config_domains as _config_domains
 import cmk.gui.watolib.groups as groups
 import cmk.gui.weblib as _webling
+from cmk.gui.background_job import job_registry as _job_registry
 from cmk.gui.config import register_post_config_load_hook as _register_post_config_load_hook
 from cmk.gui.permissions import permission_section_registry as _permission_section_registry
 from cmk.gui.plugins.watolib.utils import config_domain_registry as _config_domain_registry
@@ -40,7 +40,7 @@ def _register_automation_commands() -> None:
 
 def _register_gui_background_jobs() -> None:
     cls = _config_domains.OMDConfigChangeBackgroundJob
-    _gui_background_job.job_registry.register(cls)
+    _job_registry.register(cls)
 
 
 def _register_config_domains() -> None:

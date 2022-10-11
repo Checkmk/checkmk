@@ -17,11 +17,13 @@ import cmk.utils.paths
 import cmk.utils.version as cmk_version
 
 import cmk.gui.log
-from cmk.gui import config, gui_background_job
+from cmk.gui import config
 from cmk.gui.background_job import (
+    BackgroundJob,
     BackgroundJobAlreadyRunning,
     BackgroundJobDefines,
     InitialStatusArgs,
+    job_registry,
     JobStatusStates,
 )
 
@@ -39,7 +41,6 @@ def test_registered_background_jobs() -> None:
     expected_jobs = [
         "ActivateChangesSchedulerBackgroundJob",
         "ParentScanBackgroundJob",
-        "DummyBackgroundJob",
         "RenameHostsBackgroundJob",
         "RenameHostBackgroundJob",
         "FetchAgentOutputBackgroundJob",
@@ -65,11 +66,11 @@ def test_registered_background_jobs() -> None:
             "ReportingBackgroundJob",
         ]
 
-    assert sorted(gui_background_job.job_registry.keys()) == sorted(expected_jobs)
+    assert sorted(job_registry.keys()) == sorted(expected_jobs)
 
 
 def test_registered_background_jobs_attributes() -> None:
-    for job_class in gui_background_job.job_registry.values():
+    for job_class in job_registry.values():
         assert isinstance(job_class.job_prefix, str)
         assert isinstance(job_class.gui_title(), str)
 
@@ -91,8 +92,7 @@ def job_base_dir(tmp_path, monkeypatch):
     return job_dir
 
 
-@gui_background_job.job_registry.register
-class DummyBackgroundJob(gui_background_job.GUIBackgroundJob):
+class DummyBackgroundJob(BackgroundJob):
     job_prefix = "dummy_job"
 
     @classmethod

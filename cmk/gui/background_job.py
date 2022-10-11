@@ -26,15 +26,20 @@ from setproctitle import setthreadtitle  # type: ignore[import] # pylint: disabl
 
 import cmk.utils.daemon as daemon
 import cmk.utils.log
+import cmk.utils.plugin_registry
 import cmk.utils.render as render
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException, MKTerminate
 from cmk.utils.log import VERBOSE
 from cmk.utils.regex import regex, REGEX_GENERIC_IDENTIFIER
+from cmk.utils.type_defs import UserId
 
 from cmk.gui import log, sites
+from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.utils.timeout_manager import timeout_manager
+from cmk.gui.utils.urls import makeuri_contextless
 
 JobId = str
 
@@ -62,9 +67,7 @@ class InitialStatusArgs:
     deletable: bool = True
     user: str | None = None
     estimated_duration: float | None = None
-    # Only affects GUIBackgroundJob based jobs, but added here for simplicity
     logfile_path: str = ""
-    # Only affects WatoBackgroundJob based jobs, but added here for simplicity
     lock_wato: bool = False
     # Only used by ServiceDiscoveryBackgroundJob
     host_name: str = ""
@@ -88,6 +91,16 @@ JobStatusSpec = Dict[str, Any]
 #     stoppable: bool
 #     may_stop: bool
 #     may_delete: bool
+
+
+@dataclass
+class GUIBackgroundStatusSnapshot:
+    job_id: JobId
+    status: JobStatusSpec
+    exists: bool
+    is_active: bool
+    has_exception: bool
+    acknowledged_by: str | None
 
 
 class BackgroundJobAlreadyRunning(MKGeneralException):
@@ -361,18 +374,23 @@ class BackgroundJobDefines:
 
 
 class BackgroundJob:
-    _background_process_class = BackgroundProcess
     housekeeping_max_age_sec = 86400 * 30
     housekeeping_max_count = 50
 
     # TODO: Make this an abstract property
     job_prefix = "unnamed-job"
 
+    @classmethod
+    def gui_title(cls) -> str:
+        # FIXME: This method cannot be made abstract since GUIBackgroundJob is
+        # instantiated in various places.
+        raise NotImplementedError()
+
     def __init__(
         self,
         job_id: str,
-        logger: logging.Logger | None = None,
         initial_status_args: InitialStatusArgs | None = None,
+        logger: logging.Logger | None = None,
     ) -> None:
         super().__init__()
         self.validate_job_id(job_id)
@@ -380,14 +398,14 @@ class BackgroundJob:
         self._job_base_dir = BackgroundJobDefines.base_dir
         self._job_initializiation_lock = os.path.join(self._job_base_dir, "job_initialization.lock")
 
-        if not logger:
-            raise MKGeneralException(_("The background job is missing a logger instance"))
-        self._logger = logger
+        self._logger = logger if logger else log.logger.getChild("background-job")
 
         if initial_status_args is None:
             initial_status_args = InitialStatusArgs()
-
+        initial_status_args.user = str(user.id) if user.id else None
+        initial_status_args.logfile_path = "~/var/log/web.log"
         self._initial_status_args = initial_status_args
+
         self._work_dir = os.path.join(self._job_base_dir, self._job_id)
         self._jobstatus_store = JobStatusStore(self._work_dir)
 
@@ -409,10 +427,51 @@ class BackgroundJob:
         return os.path.exists(self._work_dir) and self._jobstatus_store.exists()
 
     def is_available(self) -> bool:
-        return self.exists()
+        return self.exists() and self.is_visible()
+
+    def is_deletable(self) -> bool:
+        return self.get_status().get("deletable", True)
 
     def is_stoppable(self) -> bool:
         return self._jobstatus_store.read().get("stoppable", True)
+
+    def is_visible(self) -> bool:
+        if user.may("background_jobs.see_foreign_jobs"):
+            return True
+        return user.id == self.get_status().get("user")
+
+    def may_stop(self) -> bool:
+        if not self.is_stoppable():
+            return False
+
+        if not user.may("background_jobs.stop_jobs"):
+            return False
+
+        if self._is_foreign() and not user.may("background_jobs.stop_foreign_jobs"):
+            return False
+
+        if not self.is_active():
+            return False
+
+        return True
+
+    def may_delete(self) -> bool:
+        if not self.is_deletable():
+            return False
+
+        if not self.is_stoppable() and self.is_active():
+            return False
+
+        if not user.may("background_jobs.delete_jobs"):
+            return False
+
+        if self._is_foreign() and not user.may("background_jobs.delete_foreign_jobs"):
+            return False
+
+        return True
+
+    def _is_foreign(self) -> bool:
+        return self.get_status().get("user") != user.id
 
     def _verify_running(self, job_status: JobStatusSpec) -> bool:
         if job_status["state"] == JobStatusStates.INITIALIZED:
@@ -615,7 +674,7 @@ class BackgroundJob:
 
             self._jobstatus_store.update({"ppid": os.getpid()})
 
-            p = self._background_process_class(
+            p = BackgroundProcess(
                 logger=log.logger.getChild("background_process"),
                 work_dir=job_parameters["work_dir"],
                 job_id=job_parameters["job_id"],
@@ -637,6 +696,44 @@ class BackgroundJob:
         """Wait for background job to be complete."""
         while self.is_active():
             time.sleep(0.5)
+
+    def get_status_snapshot(self) -> GUIBackgroundStatusSnapshot:
+        status = self.get_status()
+        return GUIBackgroundStatusSnapshot(
+            job_id=self.get_job_id(),
+            status=status,
+            exists=self.exists(),
+            is_active=self.is_active(),
+            has_exception=status.get("state") == JobStatusStates.EXCEPTION,
+            acknowledged_by=status.get("acknowledged_by"),
+        )
+
+    def acknowledge(self, user_id: UserId | None) -> None:
+        self._jobstatus_store.update({"acknowledged_by": str(user.id) if user.id else None})
+
+    def detail_url(self) -> str:
+        """Returns the URL that displays the job detail page"""
+        return makeuri_contextless(
+            request,
+            [
+                ("mode", "background_job_details"),
+                ("job_id", self.get_job_id()),
+                ("back_url", self._back_url()),
+            ],
+            filename="wato.py",
+        )
+
+    def _back_url(self) -> str | None:
+        """Returns either None or the URL that the job detail page may be link back"""
+        return None
+
+
+class BackgroundJobRegistry(cmk.utils.plugin_registry.Registry[Type[BackgroundJob]]):
+    def plugin_name(self, instance: Type[BackgroundJob]) -> str:
+        return instance.__name__
+
+
+job_registry = BackgroundJobRegistry()
 
 
 class JobStatusStore:
@@ -749,7 +846,7 @@ class BackgroundJobManager:
 
                 job_instances = {}
                 for job_id in job_ids:
-                    job_instances[job_id] = BackgroundJob(job_id, self._logger)
+                    job_instances[job_id] = BackgroundJob(job_id, logger=self._logger)
                     all_jobs.append((job_id, job_instances[job_id].get_status()))
                 all_jobs.sort(key=lambda x: int(x[1]["started"]), reverse=True)
 

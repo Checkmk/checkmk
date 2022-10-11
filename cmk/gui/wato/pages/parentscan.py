@@ -13,8 +13,12 @@ from cmk.utils.type_defs import HostName
 
 import cmk.gui.forms as forms
 import cmk.gui.watolib.bakery as bakery
-from cmk.gui import gui_background_job
-from cmk.gui.background_job import BackgroundProcessInterface, InitialStatusArgs
+from cmk.gui.background_job import (
+    BackgroundJob,
+    BackgroundProcessInterface,
+    InitialStatusArgs,
+    job_registry,
+)
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKUserError
 from cmk.gui.htmllib.html import html
@@ -28,7 +32,6 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.check_mk_automations import scan_parents
 from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder
-from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
 
 class ParentScanTask(NamedTuple):
@@ -56,8 +59,8 @@ class ParentScanSettings(NamedTuple):
 
 
 # TODO: This job should be executable multiple times at once
-@gui_background_job.job_registry.register
-class ParentScanBackgroundJob(WatoBackgroundJob):
+@job_registry.register
+class ParentScanBackgroundJob(BackgroundJob):
     job_prefix = "parent_scan"
 
     @classmethod

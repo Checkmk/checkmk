@@ -27,14 +27,15 @@ import cmk.utils.version as cmk_version
 from cmk.utils.crypto import password_hashing
 from cmk.utils.type_defs import ContactgroupName, UserId
 
-import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.hooks as hooks
 import cmk.gui.pages
 import cmk.gui.utils as utils
 from cmk.gui.background_job import (
+    BackgroundJob,
     BackgroundJobAlreadyRunning,
     BackgroundProcessInterface,
     InitialStatusArgs,
+    job_registry,
 )
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import request_local_attr
@@ -1383,8 +1384,8 @@ def ajax_sync() -> None:
         response.set_data("ERROR %s\n" % e)
 
 
-@gui_background_job.job_registry.register
-class UserSyncBackgroundJob(gui_background_job.GUIBackgroundJob):
+@job_registry.register
+class UserSyncBackgroundJob(BackgroundJob):
     job_prefix = "user_sync"
 
     @classmethod
@@ -1479,8 +1480,8 @@ def execute_user_profile_cleanup_job() -> None:
     job.start(job.do_execute)
 
 
-@gui_background_job.job_registry.register
-class UserProfileCleanupBackgroundJob(gui_background_job.GUIBackgroundJob):
+@job_registry.register
+class UserProfileCleanupBackgroundJob(BackgroundJob):
     job_prefix = "user_profile_cleanup"
 
     @staticmethod

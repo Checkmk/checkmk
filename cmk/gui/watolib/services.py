@@ -31,9 +31,14 @@ from cmk.utils.type_defs import HostOrServiceConditions, Item, SetAutochecksTabl
 
 from cmk.automations.results import CheckPreviewEntry, TryDiscoveryResult
 
-import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.watolib.changes as _changes
-from cmk.gui.background_job import BackgroundProcessInterface, InitialStatusArgs, JobStatusStates
+from cmk.gui.background_job import (
+    BackgroundJob,
+    BackgroundProcessInterface,
+    InitialStatusArgs,
+    job_registry,
+    JobStatusStates,
+)
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -55,7 +60,6 @@ from cmk.gui.watolib.rulesets import (
     Ruleset,
     service_description_to_condition,
 )
-from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
 
 # Would rather use an Enum for this, but this information is exported to javascript
@@ -745,8 +749,8 @@ def execute_discovery_job(api_request: StartDiscoveryRequest) -> DiscoveryResult
     return job.get_result(api_request)
 
 
-@gui_background_job.job_registry.register
-class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
+@job_registry.register
+class ServiceDiscoveryBackgroundJob(BackgroundJob):
     """The background job is always executed on the site where the host is located on"""
 
     job_prefix = "service_discovery"
@@ -759,7 +763,7 @@ class ServiceDiscoveryBackgroundJob(WatoBackgroundJob):
 
     def __init__(self, host_name: str) -> None:
         job_id = "%s-%s" % (self.job_prefix, host_name)
-        last_job_status = WatoBackgroundJob(job_id).get_status()
+        last_job_status = BackgroundJob(job_id).get_status()
 
         super().__init__(
             job_id,

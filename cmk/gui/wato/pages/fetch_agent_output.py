@@ -12,10 +12,16 @@ from typing import Dict
 import cmk.utils.store as store
 from cmk.utils.site import omd_site
 
-from cmk.gui import gui_background_job
-from cmk.gui.background_job import BackgroundJobAlreadyRunning, InitialStatusArgs, JobStatusSpec
+from cmk.gui.background_job import (
+    BackgroundJob,
+    BackgroundJobAlreadyRunning,
+    InitialStatusArgs,
+    job_registry,
+    JobStatusSpec,
+)
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKUserError
+from cmk.gui.gui_background_job import ActionHandler, JobRenderer
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
@@ -31,7 +37,6 @@ from cmk.gui.watolib.automation_commands import automation_command_registry, Aut
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import get_agent_output
 from cmk.gui.watolib.hosts_and_folders import CREHost, Folder, Host
-from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
 # .
 #   .--Agent-Output--------------------------------------------------------.
@@ -149,7 +154,7 @@ class PageFetchAgentOutput(AgentOutputPage):
         if not transactions.transaction_valid():
             return
 
-        action_handler = gui_background_job.ActionHandler(self._breadcrumb(self._title()))
+        action_handler = ActionHandler(self._breadcrumb(self._title()))
 
         if action_handler.handle_actions() and action_handler.did_delete_job():
             raise HTTPRedirect(
@@ -171,7 +176,7 @@ class PageFetchAgentOutput(AgentOutputPage):
             html.immediate_browser_redirect(0.8, makeuri(request, []))
 
         job = FetchAgentOutputBackgroundJob(self._request)
-        gui_background_job.JobRenderer.show_job_details(job.get_job_id(), job_status)
+        JobRenderer.show_job_details(job.get_job_id(), job_status)
 
     def _start_fetch(self) -> None:
         """Start the job on the site the host is monitored by"""
@@ -245,8 +250,8 @@ def get_fetch_agent_job_status(api_request: FetchAgentOutputRequest) -> JobStatu
     return job.get_status_snapshot().status
 
 
-@gui_background_job.job_registry.register
-class FetchAgentOutputBackgroundJob(WatoBackgroundJob):
+@job_registry.register
+class FetchAgentOutputBackgroundJob(BackgroundJob):
     """The background job is always executed on the site where the host is located on"""
 
     job_prefix = "agent-output-"

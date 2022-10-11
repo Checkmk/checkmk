@@ -8,6 +8,7 @@ import traceback
 from typing import Collection, Iterator, Optional, Type
 
 import cmk.gui.gui_background_job as gui_background_job
+from cmk.gui.background_job import BackgroundJob, job_registry
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.gui_background_job import GUIBackgroundStatusSnapshot
 from cmk.gui.htmllib.html import html
@@ -89,13 +90,9 @@ class ModeBackgroundJobsOverview(WatoMode):
         job_manager = gui_background_job.GUIBackgroundJobManager()
 
         back_url = makeuri_contextless(request, [("mode", "background_jobs_overview")])
-        job_manager.show_status_of_job_classes(
-            gui_background_job.job_registry.values(), job_details_back_url=back_url
-        )
+        job_manager.show_status_of_job_classes(job_registry.values(), job_details_back_url=back_url)
 
-        if any(
-            job_manager.get_running_job_ids(c) for c in gui_background_job.job_registry.values()
-        ):
+        if any(job_manager.get_running_job_ids(c) for c in job_registry.values()):
             html.immediate_browser_redirect(0.8, "")
 
     # Mypy requires the explicit return, pylint does not like it.
@@ -183,7 +180,7 @@ class ModeAjaxCycleThemes(AjaxPage):
         }
 
     def _show_details_page(self, job_id: str) -> Optional[GUIBackgroundStatusSnapshot]:
-        job = gui_background_job.GUIBackgroundJob(job_id)
+        job = BackgroundJob(job_id)
         if not job.exists():
             html.show_message(_("Background job info is not available"))
             return None

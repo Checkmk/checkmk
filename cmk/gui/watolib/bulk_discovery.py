@@ -12,7 +12,12 @@ from cmk.utils.type_defs import DiscoveryResult
 
 from cmk.automations.results import DiscoveryResult as AutomationDiscoveryResult
 
-from cmk.gui import background_job, gui_background_job
+from cmk.gui.background_job import (
+    BackgroundJob,
+    BackgroundProcessInterface,
+    InitialStatusArgs,
+    job_registry,
+)
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -20,7 +25,6 @@ from cmk.gui.valuespec import Checkbox, Dictionary, DropdownChoice, Integer, Tup
 from cmk.gui.watolib.changes import add_service_change
 from cmk.gui.watolib.check_mk_automations import discovery
 from cmk.gui.watolib.hosts_and_folders import Folder, Host
-from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
 DiscoveryMode = NewType("DiscoveryMode", str)
 DoFullScan = NewType("DoFullScan", bool)
@@ -103,8 +107,8 @@ def vs_bulk_discovery(render_form=False, include_subfolders=True):
 
 
 # TODO: This job should be executable multiple times at once
-@gui_background_job.job_registry.register
-class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
+@job_registry.register
+class BulkDiscoveryBackgroundJob(BackgroundJob):
     job_prefix = "bulk_discovery"
 
     @classmethod
@@ -114,7 +118,7 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
     def __init__(self) -> None:
         super().__init__(
             self.job_prefix,
-            background_job.InitialStatusArgs(
+            InitialStatusArgs(
                 title=self.gui_title(),
                 lock_wato=False,
                 stoppable=False,
@@ -130,7 +134,7 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
         do_scan: DoFullScan,
         ignore_errors: IgnoreErrors,
         tasks: Sequence[DiscoveryTask],
-        job_interface: background_job.BackgroundProcessInterface,
+        job_interface: BackgroundProcessInterface,
     ) -> None:
         self._initialize_statistics(
             num_hosts_total=sum(len(task.host_names) for task in tasks),

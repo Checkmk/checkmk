@@ -13,7 +13,7 @@ from cmk.utils.type_defs import HostName
 
 import cmk.gui.background_job as background_job
 import cmk.gui.forms as forms
-import cmk.gui.gui_background_job as gui_background_job
+from cmk.gui.background_job import BackgroundJob, job_registry
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKGeneralException, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -52,11 +52,10 @@ from cmk.gui.watolib.activate_changes import confirm_all_local_changes
 from cmk.gui.watolib.host_rename import perform_rename_hosts
 from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder, Host, validate_host_uniqueness
 from cmk.gui.watolib.site_changes import SiteChanges
-from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
 
-@gui_background_job.job_registry.register
-class RenameHostsBackgroundJob(WatoBackgroundJob):
+@job_registry.register
+class RenameHostsBackgroundJob(BackgroundJob):
     job_prefix = "rename-hosts"
 
     @classmethod
@@ -64,7 +63,7 @@ class RenameHostsBackgroundJob(WatoBackgroundJob):
         return _("Host renaming")
 
     def __init__(self, title: str | None = None) -> None:
-        last_job_status = WatoBackgroundJob(self.job_prefix).get_status()
+        last_job_status = BackgroundJob(self.job_prefix).get_status()
         super().__init__(
             self.job_prefix,
             background_job.InitialStatusArgs(
@@ -82,7 +81,7 @@ class RenameHostsBackgroundJob(WatoBackgroundJob):
         return makeuri(request, [])
 
 
-@gui_background_job.job_registry.register
+@job_registry.register
 class RenameHostBackgroundJob(RenameHostsBackgroundJob):
     def __init__(self, host, title=None) -> None:  # type:ignore[no-untyped-def]
         super().__init__(title)

@@ -38,8 +38,12 @@ from cmk.utils.diagnostics import (
 
 from cmk.automations.results import CreateDiagnosticsDumpResult
 
-from cmk.gui import gui_background_job
-from cmk.gui.background_job import BackgroundProcessInterface, InitialStatusArgs
+from cmk.gui.background_job import (
+    BackgroundJob,
+    BackgroundProcessInterface,
+    InitialStatusArgs,
+    job_registry,
+)
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
@@ -71,7 +75,6 @@ from cmk.gui.valuespec import (
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import create_diagnostics_dump
-from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
 _CHECKMK_FILES_NOTE = _(
     "<br>Note: Some files may contain highly sensitive data like"
@@ -532,8 +535,8 @@ class ModeDiagnostics(WatoMode):
         ]
 
 
-@gui_background_job.job_registry.register
-class DiagnosticsDumpBackgroundJob(WatoBackgroundJob):
+@job_registry.register
+class DiagnosticsDumpBackgroundJob(BackgroundJob):
     job_prefix = "diagnostics_dump"
 
     @classmethod

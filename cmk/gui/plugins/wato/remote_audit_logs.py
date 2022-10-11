@@ -14,8 +14,12 @@ from livestatus import SiteId
 
 import cmk.utils.store as store
 
-import cmk.gui.background_job as background_job
-import cmk.gui.gui_background_job as gui_background_job
+from cmk.gui.background_job import (
+    BackgroundJob,
+    BackgroundProcessInterface,
+    InitialStatusArgs,
+    job_registry,
+)
 from cmk.gui.cron import register_job
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -25,7 +29,6 @@ from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.paths import wato_var_dir
-from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
 
 @automation_command_registry.register
@@ -64,8 +67,8 @@ def _get_last_audit_log_timestamps_path() -> Path:
     return wato_var_dir() / "log" / "last_audit_log_timestamps"
 
 
-@gui_background_job.job_registry.register
-class GetRemoteAuditLogsBackgroundJob(WatoBackgroundJob):
+@job_registry.register
+class GetRemoteAuditLogsBackgroundJob(BackgroundJob):
     job_prefix = "get_remote_audit_logs"
 
     @classmethod
@@ -75,7 +78,7 @@ class GetRemoteAuditLogsBackgroundJob(WatoBackgroundJob):
     def __init__(self) -> None:
         super().__init__(
             self.job_prefix,
-            background_job.InitialStatusArgs(
+            InitialStatusArgs(
                 title=self.gui_title(),
                 lock_wato=False,
                 stoppable=False,
@@ -88,7 +91,7 @@ class GetRemoteAuditLogsBackgroundJob(WatoBackgroundJob):
         self._audit_log_store_path = AuditLogStore.make_path()
         self._audit_log_store = AuditLogStore(self._audit_log_store_path)
 
-    def do_execute(self, job_interface: background_job.BackgroundProcessInterface) -> None:
+    def do_execute(self, job_interface: BackgroundProcessInterface) -> None:
         with store.locked(self._last_audit_log_timestamps_path):
             prev_last_timestamps = self._last_audit_log_timestamps_store.load()
 

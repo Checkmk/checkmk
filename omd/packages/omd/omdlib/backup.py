@@ -30,7 +30,7 @@ import os
 import socket
 import sys
 import tarfile
-from typing import BinaryIO, List, Tuple, Union
+from typing import BinaryIO, Iterator, List, Tuple, Union
 
 from omdlib.contexts import SiteContext
 from omdlib.type_defs import CommandOptions
@@ -54,13 +54,23 @@ def backup_site_to_tarfile(
         )
         return None if matches_exclude else tarinfo
 
+    @contextlib.contextmanager
+    def error_handler(arcname: str) -> Iterator[None]:
+        if arcname == site.name:
+            yield
+        else:
+            try:
+                yield
+            except FileNotFoundError:
+                if verbose:
+                    sys.stdout.write("Skipping vanished file: %s\n" % arcname)
+
     # Mypy does not understand this: Unexpected keyword argument "verbose" for "open" of "TarFile", same for "site".
     with RRDSocket(site.dir, site.is_stopped(), site.name, verbose) as rrd_socket:
         with BackupTarFile.open(  # type: ignore[call-arg]
             fileobj=fh,
             mode=mode,
-            site=site,
-            verbose=verbose,
+            error_handler=error_handler,
             rrd_socket=rrd_socket,
         ) as tar:
             # Add the version symlink as first file to be able to
@@ -121,11 +131,9 @@ class BackupTarFile(tarfile.TarFile):
     to prevent writing to individual RRDs during backups."""
 
     def __init__(  # type:ignore[no-untyped-def]
-        self, name, mode, fileobj, rrd_socket, **kwargs
+        self, name, mode, fileobj, rrd_socket, error_handler, **kwargs
     ) -> None:
-        site = kwargs.pop("site")
-        self._site_name = site.name
-        self._verbose = kwargs.pop("verbose")
+        self._error_handler = error_handler
         self._rrd_socket = rrd_socket
 
         super().__init__(name, mode, fileobj, **kwargs)
@@ -137,14 +145,8 @@ class BackupTarFile(tarfile.TarFile):
     def add(
         self, name, arcname=None, recursive=True, *, filter=None
     ):  # pylint: disable=redefined-builtin
-        if arcname == self._site_name:
+        with self._error_handler(arcname):
             super().add(name, arcname, recursive, filter=filter)
-            return
-        try:
-            super().add(name, arcname, recursive, filter=filter)
-        except FileNotFoundError:
-            if self._verbose:
-                sys.stdout.write("Skipping vanished file: %s\n" % arcname)
 
     def addfile(self, tarinfo, fileobj=None):
         requires_suspension = self._rrd_socket.path_requires_suspension(tarinfo.name)

@@ -79,6 +79,22 @@ __all__ = [
 ]
 
 
+def make_persisted_section_dir(
+    *,
+    fetcher_type: FetcherType,
+    ident: str,
+) -> Path:
+    var_dir = Path(cmk.utils.paths.var_dir)
+    return {
+        FetcherType.PIGGYBACK: var_dir / "persisted_sections" / ident,
+        FetcherType.SNMP: var_dir / "persisted_sections" / ident,
+        FetcherType.IPMI: var_dir / "persisted_sections" / ident,
+        FetcherType.PROGRAM: var_dir / "persisted",
+        FetcherType.PUSH_AGENT: var_dir / "persisted_sections" / ident,
+        FetcherType.TCP: var_dir / "persisted",
+    }[fetcher_type]
+
+
 def make_agent_parser_config(hostname: HostName) -> AgentParserConfig:
     # Move to `cmk.base.config` once the direction of the dependencies
     # has been fixed (ie, as little components as possible get the full,
@@ -274,8 +290,9 @@ class _Builder:
                     source_type=SourceType.HOST,
                     fetcher_type=FetcherType.PIGGYBACK,
                     id_="piggyback",
-                    persisted_section_dir=(
-                        Path(cmk.utils.paths.var_dir) / "persisted_sections" / "piggyback"
+                    persisted_section_dir=make_persisted_section_dir(
+                        fetcher_type=FetcherType.PIGGYBACK,
+                        ident="piggyback",
                     ),
                     cache_dir=Path(cmk.utils.paths.data_source_cache_dir) / "piggyback",
                     simulation_mode=self.simulation_mode,
@@ -316,7 +333,10 @@ class _Builder:
                 source_type=SourceType.HOST,
                 fetcher_type=FetcherType.SNMP,
                 id_=id_,
-                persisted_section_dir=Path(cmk.utils.paths.var_dir) / "persisted_sections" / id_,
+                persisted_section_dir=make_persisted_section_dir(
+                    fetcher_type=FetcherType.SNMP,
+                    ident=id_,
+                ),
                 on_scan_error=self.on_scan_error,
                 missing_sys_description=self.missing_sys_description,
                 sections=make_sections(
@@ -372,8 +392,9 @@ class _Builder:
                     source_type=SourceType.MANAGEMENT,
                     fetcher_type=FetcherType.SNMP,
                     id_=id_,
-                    persisted_section_dir=(
-                        Path(cmk.utils.paths.var_dir) / "persisted_sections" / id_
+                    persisted_section_dir=make_persisted_section_dir(
+                        fetcher_type=FetcherType.SNMP,
+                        ident=id_,
                     ),
                     on_scan_error=self.on_scan_error,
                     missing_sys_description=self.missing_sys_description,
@@ -417,8 +438,9 @@ class _Builder:
                     source_type=SourceType.MANAGEMENT,
                     fetcher_type=FetcherType.IPMI,
                     id_="mgmt_ipmi",
-                    persisted_section_dir=(
-                        Path(cmk.utils.paths.var_dir) / "persisted_sections" / "mgmt_ipmi"
+                    persisted_section_dir=make_persisted_section_dir(
+                        fetcher_type=FetcherType.IPMI,
+                        ident="mgmt_ipmi",
                     ),
                     cache_dir=Path(cmk.utils.paths.data_source_cache_dir) / "mgmt_ipmi",
                     simulation_mode=self.simulation_mode,
@@ -442,7 +464,10 @@ class _Builder:
                 source_type=SourceType.HOST,
                 fetcher_type=FetcherType.PROGRAM,
                 id_="agent",
-                persisted_section_dir=Path(cmk.utils.paths.var_dir) / "persisted",
+                persisted_section_dir=make_persisted_section_dir(
+                    fetcher_type=FetcherType.PROGRAM,
+                    ident="",  # unused
+                ),
                 cache_dir=Path(cmk.utils.paths.tcp_cache_dir),
                 cmdline=core_config.translate_ds_program_source_cmdline(
                     datasource_program, self.host_config, self.ipaddress
@@ -462,8 +487,9 @@ class _Builder:
                 source_type=SourceType.HOST,
                 fetcher_type=FetcherType.PUSH_AGENT,
                 id_="push-agent",
-                persisted_section_dir=(
-                    Path(cmk.utils.paths.var_dir) / "persisted_sections" / "push-agent"
+                persisted_section_dir=make_persisted_section_dir(
+                    fetcher_type=FetcherType.PUSH_AGENT,
+                    ident="push-agent",
                 ),
                 cache_dir=Path(cmk.utils.paths.data_source_cache_dir) / "push-agent",
                 simulation_mode=self.simulation_mode,
@@ -478,7 +504,10 @@ class _Builder:
                 source_type=SourceType.HOST,
                 fetcher_type=FetcherType.TCP,
                 id_="agent",
-                persisted_section_dir=Path(cmk.utils.paths.var_dir) / "persisted",
+                persisted_section_dir=make_persisted_section_dir(
+                    fetcher_type=FetcherType.TCP,
+                    ident="",  # unused
+                ),
                 cache_dir=Path(cmk.utils.paths.tcp_cache_dir),
                 simulation_mode=self.simulation_mode,
                 address_family=self.host_config.default_address_family,
@@ -513,8 +542,9 @@ class _Builder:
                     agentname,
                     params,
                 ),
-                persisted_section_dir=(
-                    Path(cmk.utils.paths.var_dir) / "persisted_sections" / make_id(agentname)
+                persisted_section_dir=make_persisted_section_dir(
+                    fetcher_type=FetcherType.PROGRAM,
+                    ident=make_id(agentname),
                 ),
                 cache_dir=Path(cmk.utils.paths.data_source_cache_dir) / make_id(agentname),
                 simulation_mode=self.simulation_mode,

@@ -25,27 +25,19 @@ pub enum ConnectionType {
     Pull,
 }
 
-pub trait JSONLoader: DeserializeOwned {
-    fn new() -> AnyhowResult<Self> {
-        Ok(serde_json::from_str("{}")?)
-    }
-
+pub trait JSONLoader: DeserializeOwned + Default {
     fn load(path: &Path) -> AnyhowResult<Self> {
         if !path.exists() {
-            return Self::new();
+            return Ok(Self::default());
         }
         Ok(serde_json::from_str(&fs::read_to_string(path)?)?)
     }
 }
 
-pub trait TOMLLoader: DeserializeOwned {
-    fn new() -> AnyhowResult<Self> {
-        Ok(toml::from_str("")?)
-    }
-
+pub trait TOMLLoader: DeserializeOwned + Default {
     fn load(path: &Path) -> AnyhowResult<Self> {
         if !path.exists() {
-            return Self::new();
+            return Ok(Self::default());
         }
         Ok(toml::from_str(&fs::read_to_string(path)?)?)
     }
@@ -156,7 +148,7 @@ pub enum HostRegistrationData {
     Labels(types::AgentLabels),
 }
 
-#[derive(Deserialize, Clone)]
+#[derive(Deserialize, Clone, Default)]
 pub struct RuntimeConfig {
     #[serde(default)]
     allowed_ip: Option<Vec<String>>,
@@ -328,7 +320,7 @@ impl Connection {
     }
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone, Default)]
 pub struct RegisteredConnections {
     #[serde(default)]
     pub push: HashMap<site_spec::Coordinates, Connection>,

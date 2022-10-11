@@ -383,7 +383,6 @@ pub fn status(
 mod test_status {
     use super::*;
     use crate::cli;
-    use crate::config::TOMLLoader;
     use anyhow::anyhow;
     use std::str::FromStr;
 
@@ -750,7 +749,7 @@ mod test_status {
             _status(
                 &registry,
                 &config::PullConfig::new(
-                    config::RuntimeConfig::new().unwrap(),
+                    config::RuntimeConfig::default(),
                     cli::PullOpts {
                         port: None,
                         #[cfg(windows)]

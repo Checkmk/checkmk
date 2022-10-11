@@ -331,7 +331,6 @@ mod tests {
     use std::str::FromStr;
 
     use super::*;
-    use crate::config::JSONLoader;
 
     const SITE_COORDINATES: &str = "server:8000/host";
     const SITE_URL: &str = "https://server:8000/host";
@@ -427,7 +426,7 @@ mod tests {
 
     fn registry() -> config::Registry {
         config::Registry::new(
-            config::RegisteredConnections::new().unwrap(),
+            config::RegisteredConnections::default(),
             tempfile::NamedTempFile::new().unwrap(),
         )
         .unwrap()

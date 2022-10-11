@@ -80,10 +80,7 @@ def livedump_config(connection: SingleSiteConnection) -> None:  # pylint: disabl
     if opt_dump_templates:
         dump_templates()
 
-    check_commands = set()
-
     def prepare_row(row: dict[str, Any]) -> None:
-        check_commands.add(row["check_command"])
         row["contactsstring"] = ",".join(row["contacts"])
         if "contact_groups" in row:
             row["contact_groups"] = ",".join(row["contact_groups"])

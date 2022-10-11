@@ -23,7 +23,7 @@ description:
  This check uses the 3PAR special agent.
 
 item:
- {{Protocol name}} (i.e. FC, iSCSI, FCOE, IP or SAS) and {{Node}}, {{Slot}} and {{Cardport}} values.
+ {{Protocol name}} (i.e. FC, iSCSI, FCOE, IP, SAS or NVMe) and {{Node}}, {{Slot}} and {{Cardport}} values.
 
 discovery:
  One service is created for each port connection if type is not 3 (FREE).

@@ -139,6 +139,8 @@ def _data_is_valid(string_table: StringTable) -> bool:
 
 def parse_apt(string_table: StringTable) -> Optional[Section]:
     sanitized_string_table = _sanitize_string_table(string_table)
+    if len(sanitized_string_table) == 0:
+        return Section(updates=[], removals=[], sec_updates=[])
 
     if ESM_NOT_ENABLED in sanitized_string_table[0][0]:
         return Section(updates=[], removals=[], sec_updates=[], no_esm_support=True)

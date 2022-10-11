@@ -3,18 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.utils.store as store
-
-import cmk.gui.gui_background_job
+from cmk.gui import gui_background_job
 
 
-class WatoBackgroundProcess(cmk.gui.gui_background_job.GUIBackgroundProcess):
-    def initialize_environment(self) -> None:
-        super().initialize_environment()
-        if self._jobstatus_store.read().get("lock_wato"):
-            store.release_all_locks()
-            store.lock_exclusive()
-
-
-class WatoBackgroundJob(cmk.gui.gui_background_job.GUIBackgroundJob):
-    _background_process_class = WatoBackgroundProcess
+class WatoBackgroundJob(gui_background_job.GUIBackgroundJob):
+    ...

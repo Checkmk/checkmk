@@ -32,8 +32,9 @@ from cmk.utils.exceptions import MKGeneralException, MKTerminate
 from cmk.utils.log import VERBOSE
 from cmk.utils.regex import regex, REGEX_GENERIC_IDENTIFIER
 
-import cmk.gui.log
+from cmk.gui import log, sites
 from cmk.gui.i18n import _
+from cmk.gui.utils.timeout_manager import timeout_manager
 
 JobId = str
 
@@ -271,9 +272,26 @@ class BackgroundProcess(multiprocessing.Process):
 
     def initialize_environment(self) -> None:
         """Setup environment (Logging, Livestatus handles, etc.)"""
+        self._init_gui_logging()
+        self._disable_timeout_manager()
+        self._cleanup_livestatus_connections()
         self._open_stdout_and_stderr()
         self._enable_logging_to_stdout()
         self._register_signal_handlers()
+        self._lock_configuration()
+
+    def _init_gui_logging(self) -> None:
+        log.init_logging()  # NOTE: We run in a subprocess!
+        self._logger = log.logger.getChild("background-job")
+        self._log_path_hint = _("More information can be found in ~/var/log/web.log")
+
+    def _disable_timeout_manager(self) -> None:
+        if timeout_manager:
+            timeout_manager.disable_timeout()
+
+    def _cleanup_livestatus_connections(self) -> None:
+        """Close livestatus connections inherited from the parent process"""
+        sites.disconnect()
 
     def _execute_function(self) -> None:
         try:
@@ -303,7 +321,12 @@ class BackgroundProcess(multiprocessing.Process):
         in stdout (which results in job progress info)"""
         handler = logging.StreamHandler(stream=sys.stdout)
         handler.setFormatter(cmk.utils.log.get_formatter())
-        cmk.gui.log.logger.addHandler(handler)
+        log.logger.addHandler(handler)
+
+    def _lock_configuration(self) -> None:
+        if self._jobstatus_store.read().get("lock_wato"):
+            store.release_all_locks()
+            store.lock_exclusive()
 
 
 class BackgroundJobDefines:
@@ -593,7 +616,7 @@ class BackgroundJob:
             self._jobstatus_store.update({"ppid": os.getpid()})
 
             p = self._background_process_class(
-                logger=cmk.gui.log.logger.getChild("background_process"),
+                logger=log.logger.getChild("background_process"),
                 work_dir=job_parameters["work_dir"],
                 job_id=job_parameters["job_id"],
                 target=job_parameters["target"],

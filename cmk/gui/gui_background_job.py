@@ -13,7 +13,6 @@ from cmk.utils.exceptions import MKGeneralException
 
 import cmk.gui.background_job as background_job
 import cmk.gui.log as log
-import cmk.gui.sites as sites
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -27,7 +26,6 @@ from cmk.gui.permissions import (
     PermissionSection,
 )
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.timeout_manager import timeout_manager
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri_contextless
 
@@ -112,26 +110,7 @@ permission_registry.register(
 )
 
 
-class GUIBackgroundProcess(background_job.BackgroundProcess):
-    def initialize_environment(self) -> None:
-        # setup logging
-        log.init_logging()  # NOTE: We run in a subprocess!
-        self._logger = log.logger.getChild("background-job")
-        self._log_path_hint = _("More information can be found in ~/var/log/web.log")
-
-        # Disable html request timeout
-        if timeout_manager:
-            timeout_manager.disable_timeout()
-
-        # Close livestatus connections inherited from the parent process
-        sites.disconnect()
-
-        super().initialize_environment()
-
-
 class GUIBackgroundJob(background_job.BackgroundJob):
-    _background_process_class = GUIBackgroundProcess
-
     def __init__(
         self,
         job_id: background_job.JobId,

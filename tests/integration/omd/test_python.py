@@ -32,11 +32,15 @@ def _get_import_names_from_dist_name(dist_name: str) -> List[str]:
 
 def _get_import_names_from_pipfile() -> List[str]:
 
+    static_import_names = ["typing_extensions", "rsa"]
+
     parsed_pipfile = Pipfile.load(filename=repo_path() + "/Pipfile")
     import_names = []
     for dist_name in parsed_pipfile.data["default"].keys():
-        import_names.extend(_get_import_names_from_dist_name(dist_name))
+        if dist_name not in static_import_names:
+            import_names.extend(_get_import_names_from_dist_name(dist_name))
     assert import_names
+    import_names.extend(static_import_names)
     return import_names
 
 

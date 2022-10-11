@@ -1,0 +1,35 @@
+Title: Update dependencies
+Class: security
+Compatible: compat
+Component: core
+Date: 1661419829
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p30
+
+Update various dependencies
+
+LI: pyjwt 1.7.1 to 2.4.0: This fixes CVE-2022-29217. Since Checkmk does not
+validate JWT tokens the vulnerability does not affect Checkmk.
+
+LI: Babel 2.8.0 to 2.10.3: This fixes CVE-2021-42771. We could not exploit the
+vulnerability in our tests. So it is unlikely Checkmk was vulnerable to this
+vulnerability.
+
+LI: PyPDF2 1.26.0 to 2.10.2: This fixes CVE-2022-24859. Checkmk was not
+vulnerable to this vulnerability, since Checkmk does not parse untrusted PDFs.
+
+LI: reportlab 3.5.34 to 3.6.11: This fixes CVE-2020-28463. Checkmk does not use
+the vulnerable functions and is therefore not affected.
+
+LI: rsa 4.6 to 4.9: This fixes CVE-2020-25658. Checkmk does not use rsa
+directly (transitive dependency). We could not find a method to exploit this
+vulnerability in Checkmk.
+
+Checkmk was not vulnerable to any of those vulnerabilities.
+
+We calculated the following CVSS score for this 0.0 (None):
+CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:N
+
+This CVSS of null is meant for semi-automatic scrapers in order to show that no exploitation was possible.

@@ -13,7 +13,7 @@ import cmk.utils.store as store
 from cmk.utils.site import omd_site
 
 from cmk.gui import gui_background_job
-from cmk.gui.background_job import BackgroundJobAlreadyRunning, InitialStatusArgs
+from cmk.gui.background_job import BackgroundJobAlreadyRunning, InitialStatusArgs, JobStatusSpec
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKUserError
 from cmk.gui.htmllib.header import make_header
@@ -187,7 +187,7 @@ class PageFetchAgentOutput(AgentOutputPage):
             ],
         )
 
-    def _get_job_status(self) -> Dict:
+    def _get_job_status(self) -> JobStatusSpec:
         if site_is_local(self._request.host.site_id()):
             return get_fetch_agent_job_status(self._request)
 
@@ -237,10 +237,10 @@ class AutomationFetchAgentOutputGetStatus(ABCAutomationFetchAgentOutput):
         return "fetch-agent-output-get-status"
 
     def execute(self, api_request: FetchAgentOutputRequest) -> Dict:
-        return get_fetch_agent_job_status(api_request)
+        return dict(get_fetch_agent_job_status(api_request))
 
 
-def get_fetch_agent_job_status(api_request: FetchAgentOutputRequest) -> Dict:
+def get_fetch_agent_job_status(api_request: FetchAgentOutputRequest) -> JobStatusSpec:
     job = FetchAgentOutputBackgroundJob(api_request)
     return job.get_status_snapshot().get_status_as_dict()[job.get_job_id()]
 

@@ -71,10 +71,10 @@ def ungettext(singular: str, plural: str, n: int, /) -> str:
     return str(plural)
 
 
-def get_current_language() -> str | None:
+def get_current_language() -> str:
     if translation := _translation():
         return translation.name
-    return None
+    return "en"
 
 
 def _get_language_dirs() -> list[Path]:
@@ -98,8 +98,8 @@ def _get_package_language_dirs() -> list[Path]:
     return list(package_locale_dir.iterdir())
 
 
-def get_language_alias(lang: str | None) -> str:
-    if lang is None:
+def get_language_alias(lang: str) -> str:
+    if lang == "en":
         return _("English")
 
     alias = lang
@@ -116,7 +116,7 @@ def get_languages() -> list[tuple[str, str]]:
     # Add the hard coded english language to the language list
     # It must be choosable even if the administrator changed the default
     # language to a custom value
-    languages = {("", _("English"))}
+    languages = {("en", _("English"))}
 
     for lang_dir in _get_language_dirs():
         try:
@@ -139,9 +139,9 @@ def _unlocalize() -> None:
     request_local_attr().translation = None
 
 
-def localize(lang: str | None) -> None:
+def localize(lang: str) -> None:
     _.cache_clear()  # type:ignore[attr-defined]
-    if lang is None:
+    if lang == "en":
         _unlocalize()
         return
 
@@ -179,9 +179,9 @@ def _init_language(lang: str) -> gettext_module.NullTranslations | None:
     return translations[-1]
 
 
-def is_community_translation(lang: str | None) -> bool:
-    """All languages but English (None/"en") and German ("de") are community translations."""
-    return lang not in [None, "en", "de"]
+def is_community_translation(lang: str) -> bool:
+    """All languages but English ("en") and German ("de") are community translations."""
+    return lang not in ["en", "de"]
 
 
 # .
@@ -204,7 +204,7 @@ def _u(text: str) -> str:
     ldict = _user_localizations.get(text)
     if ldict:
         current_language = get_current_language()
-        if current_language is None:
+        if current_language == "en":
             return text
         return ldict.get(current_language, text)
     if translation := _translation():

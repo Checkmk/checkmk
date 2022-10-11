@@ -85,7 +85,7 @@ msgstr "%s"
 
 
 def test_underscore_without_localization() -> None:
-    assert i18n.get_current_language() is None
+    assert i18n.get_current_language() == "en"
     assert isinstance(i18n._("bla"), str)
     assert i18n._("bla") == "bla"
 
@@ -99,7 +99,7 @@ def test_underscore_localization() -> None:
     with application_and_request_context():
         i18n._unlocalize()
         assert i18n._("Age") == "Age"
-        assert i18n.get_current_language() is None
+        assert i18n.get_current_language() == "en"
 
 
 def test_lazy_localization() -> None:
@@ -182,8 +182,8 @@ def test_init_language_with_package_localization(local_translation: None) -> Non
 
 
 def test_get_language_alias() -> None:
-    assert isinstance(i18n.get_language_alias(None), str)
-    assert i18n.get_language_alias(None) == "English"
+    assert isinstance(i18n.get_language_alias("en"), str)
+    assert i18n.get_language_alias("en") == "English"
 
     assert isinstance(i18n.get_language_alias("de"), str)
     assert i18n.get_language_alias("de") == "German"
@@ -197,7 +197,7 @@ def test_get_language_local_alias(local_translation: None) -> None:
 def test_get_languages() -> None:
     assert i18n.get_languages() == [
         ("nl", "Dutch (community translated)"),
-        ("", "English"),
+        ("en", "English"),
         ("fr", "French (community translated)"),
         ("de", "German"),
         ("it", "Italian (community translated)"),
@@ -211,7 +211,7 @@ def test_get_languages() -> None:
 def test_get_languages_new_local_language(local_translation: None) -> None:
     assert i18n.get_languages() == [
         ("nl", "Dutch (community translated)"),
-        ("", "English"),
+        ("en", "English"),
         ("fr", "French (community translated)"),
         ("it", "Italian (community translated)"),
         ("ja", "Japanese (community translated)"),

@@ -131,11 +131,11 @@ class ConfigDomainGUI(ABCConfigDomain):
                 gui_config = self.load()
                 gui_config.pop("default_language", None)
                 self.save(gui_config)
-                active_config.default_language = None
+                active_config.default_language = "en"
 
             users = load_users()
             for ident, user_config in users.items():
-                lang = user_config.get("language", None)
+                lang: str = user_config.get("language", "en")
                 if is_community_translation(lang):
                     warnings.append(
                         f"For user '{ident}': Resetting the language '{get_language_alias(lang)}' to the default "

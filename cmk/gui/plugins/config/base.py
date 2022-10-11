@@ -268,7 +268,7 @@ class CREConfig:
     filter_columns: int = 2
 
     # Default language for l10n
-    default_language: Optional[str] = None
+    default_language: str = "en"
 
     # Hide these languages from user selection
     hide_languages: List[str] = field(default_factory=list)

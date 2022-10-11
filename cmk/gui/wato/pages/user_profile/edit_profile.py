@@ -47,7 +47,7 @@ class UserProfile(ABCUserProfilePage):
         users = userdb.load_users(lock=True)
         user_spec = users[user.id]
 
-        language = request.get_ascii_input_mandatory("language", "")
+        language = request.get_ascii_input_mandatory("language")
         # Set the users language if requested to set it explicitly
         if language != "_default_":
             user_spec["language"] = language

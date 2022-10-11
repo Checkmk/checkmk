@@ -171,7 +171,7 @@ def fixture_get_languages(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(
         search,
         "get_languages",
-        lambda: [[""], ["de"]],
+        lambda: [["en"], ["de"]],
     )
 
 
@@ -213,7 +213,7 @@ class TestIndexBuilder:
         index_builder: IndexBuilder,
     ) -> None:
 
-        current_lang = ""
+        current_lang = "en"
 
         def localize_with_memory(lang):
             """Needed to remember currently set language"""
@@ -232,7 +232,7 @@ class TestIndexBuilder:
             lambda: current_lang,
         )
 
-        start_lang = ""
+        start_lang = "en"
         localize_with_memory(start_lang)
         index_builder.build_full_index()
         assert current_lang == start_lang

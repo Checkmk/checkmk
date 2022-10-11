@@ -108,11 +108,11 @@ class LoggedInUser:
             pass
 
     @property
-    def language(self) -> str | None:
+    def language(self) -> str:
         return self.get_attribute("language", active_config.default_language)
 
     @language.setter
-    def language(self, value: str | None) -> None:
+    def language(self, value: str) -> None:
         self._set_attribute("language", value)
 
     def reset_language(self) -> None:

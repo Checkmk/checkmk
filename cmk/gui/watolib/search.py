@@ -111,7 +111,7 @@ class IndexBuilder:
     def __init__(self, registry: MatchItemGeneratorRegistry) -> None:
         self._registry = registry
         self._all_languages = {
-            name: name or _NAME_DEFAULT_LANGUAGE
+            name: _NAME_DEFAULT_LANGUAGE if name == "en" else name
             for language in get_languages()
             for name in [language[0]]
         }
@@ -356,7 +356,8 @@ class IndexSearcher:
     def __init__(self, permissions_handler: PermissionsHandler) -> None:
         self._may_see_category = permissions_handler.may_see_category
         self._may_see_item_func = permissions_handler.permissions_for_items()
-        self._current_language = get_current_language() or _NAME_DEFAULT_LANGUAGE
+        current_lang = get_current_language()
+        self._current_language = _NAME_DEFAULT_LANGUAGE if current_lang == "en" else current_lang
         self._user_id = user.ident
         self._redis_client = get_redis_client()
 

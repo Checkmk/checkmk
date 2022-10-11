@@ -1334,21 +1334,20 @@ class ModeEditUser(WatoMode):
 
 def select_language(user_spec: UserSpec) -> None:
     languages: Choices = [
-        (ident or "en", alias)
+        (ident, alias)
         for (ident, alias) in get_languages()
         if ident not in active_config.hide_languages
     ]
     if not active_config.enable_community_translations:
         languages = [
-            (ident, alias) for (ident, alias) in languages if not is_community_translation(ident)
+            (ident, alias)
+            for (ident, alias) in languages
+            if ident and not is_community_translation(ident)
         ]
     if not languages:
         return
 
-    current_language = user_spec.get("language")
-    if current_language is None:
-        current_language = "_default_"
-
+    current_language = user_spec.get("language", "_default_")
     languages.insert(
         0,
         (

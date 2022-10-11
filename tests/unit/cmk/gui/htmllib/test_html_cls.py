@@ -51,7 +51,7 @@ def test_render_help_visible(request_context, monkeypatch) -> None:  # type:igno
 
 
 def test_add_manual_link(request_context) -> None:  # type:ignore[no-untyped-def]
-    assert user.language is None
+    assert user.language == "en"
     assert compare_html(
         html.render_help("[intro_welcome|Welcome]"),
         HTML(

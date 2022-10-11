@@ -132,14 +132,14 @@ def _handle_community_translations(logger: Logger, global_config: GlobalSettings
     UI language. Otherwise this global setting defaults to False and community translations are not
     choosable as language.
     """
-    enable_ct_ident = ConfigVariableEnableCommunityTranslations().ident()
+    enable_ct_ident: str = ConfigVariableEnableCommunityTranslations().ident()
     if not enable_ct_ident in global_config:
-        enable_ct = False
-        if is_community_translation(global_config.get("default_language", None)):
+        enable_ct: bool = False
+        if is_community_translation(global_config.get("default_language", "en")):
             enable_ct = True
         else:
             for user_config in load_users().values():
-                if is_community_translation(user_config.get("language", None)):
+                if is_community_translation(user_config.get("language", "en")):
                     enable_ct = True
                     break
 

@@ -1258,8 +1258,7 @@ class ConfigVariableUserLocalizations(ConfigVariable):
                         Dictionary(
                             title=_("Translations"),
                             elements=lambda: [
-                                (l or "en", TextInput(title=a, size=32))
-                                for (l, a) in get_languages()
+                                (l, TextInput(title=a, size=32)) for (l, a) in get_languages()
                             ],
                             columns=2,
                         ),

@@ -38,15 +38,9 @@ def test_attribute_defaults(ipaddress: HostAddress, monkeypatch: MonkeyPatch) ->
         source_type=SourceType.HOST,
         fetcher_type=FetcherType.PIGGYBACK,
         id_="piggyback",
-        persisted_section_dir=Path(os.devnull),
         cache_dir=Path(os.devnull),
         simulation_mode=True,
-        agent_simulator=True,
-        keep_outdated=False,
         time_settings=[],
-        translation={},
-        encoding_fallback="ascii",
-        check_interval=0,
         is_piggyback_host=False,
         file_cache_max_age=file_cache.MaxAge.none(),
     )
@@ -55,4 +49,3 @@ def test_attribute_defaults(ipaddress: HostAddress, monkeypatch: MonkeyPatch) ->
         result.OK(HostSections[AgentRawDataSection]()),
         exit_spec_cb=host_config.exit_code_spec,
     )
-    assert source.id == "piggyback"

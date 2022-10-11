@@ -171,8 +171,6 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
                 config.snmp_without_sys_descr,
             ),
             file_cache_max_age=file_cache.MaxAge.none(),
-            agent_parser_config=sources.make_agent_parser_config(host_config.hostname),
-            snmp_parser_config=sources.make_snmp_parser_config(host_config.hostname),
         )
     ]
 

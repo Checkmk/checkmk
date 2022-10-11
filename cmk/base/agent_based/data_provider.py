@@ -319,10 +319,7 @@ def parse_and_store_piggybacked_payload(
         console.vverbose("  Source: %s/%s\n" % (source.source_type, source.fetcher_type))
 
         host_key = HostKey(source.hostname, source.source_type)
-        collected_host_sections.setdefault(
-            host_key,
-            source.parser().DEFAULT_HOST_SECTIONS,
-        )
+        collected_host_sections.setdefault(host_key, HostSections())
 
         # TODO(ml): Extend protocol in order to make the parser from the
         #           fetcher_message and not from the source.

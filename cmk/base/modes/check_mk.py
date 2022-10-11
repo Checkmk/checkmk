@@ -437,8 +437,6 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
                 config.snmp_without_sys_descr,
             ),
             file_cache_max_age=config.max_cachefile_age(),
-            agent_parser_config=sources.make_agent_parser_config(host_config.hostname),
-            snmp_parser_config=sources.make_snmp_parser_config(host_config.hostname),
         ):
             if not isinstance(source, sources.agent.AgentSource):
                 continue

@@ -6,7 +6,6 @@
 from pathlib import Path
 from typing import Final, Literal, Optional, Sequence, Tuple
 
-from cmk.utils.translations import TranslationOptions
 from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, SourceType
 
 import cmk.core_helpers.cache as file_cache
@@ -27,15 +26,9 @@ class PiggybackSource(AgentSource):
         source_type: SourceType,
         fetcher_type: FetcherType,
         id_: Literal["piggyback"],
-        persisted_section_dir: Path,
         cache_dir: Path,
         simulation_mode: bool,
-        agent_simulator: bool,
         time_settings: Sequence[Tuple[Optional[str], str, int]],
-        translation: TranslationOptions,
-        keep_outdated: bool,
-        encoding_fallback: str,
-        check_interval: int,
         is_piggyback_host: bool,
         file_cache_max_age: file_cache.MaxAge,
     ) -> None:
@@ -45,12 +38,6 @@ class PiggybackSource(AgentSource):
             source_type=source_type,
             fetcher_type=fetcher_type,
             id_=id_,
-            persisted_section_dir=persisted_section_dir,
-            agent_simulator=agent_simulator,
-            keep_outdated=keep_outdated,
-            translation=translation,
-            encoding_fallback=encoding_fallback,
-            check_interval=check_interval,
         )
         self.file_cache_base_path: Final = cache_dir
         self.simulation_mode: Final = simulation_mode

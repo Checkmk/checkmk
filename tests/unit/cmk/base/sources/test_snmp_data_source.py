@@ -44,7 +44,6 @@ def source_fixture():
         on_scan_error=OnError.RAISE,
         missing_sys_description=False,
         sections={},
-        check_intervals={},
         keep_outdated=False,
         snmp_config=SNMPHostConfig(
             hostname=hostname,
@@ -123,7 +122,6 @@ class TestSNMPSummaryResult:
             missing_sys_description=False,
             sections={},
             keep_outdated=False,
-            check_intervals={},
             snmp_config=SNMPHostConfig(
                 hostname="hostname",
                 ipaddress="1.2.3.4",
@@ -170,7 +168,7 @@ class TestSNMPSummaryResult:
 
 
 @pytest.fixture(name="check_plugin")
-def fixture_check_plugin(monkeypatch):
+def fixture_check_plugin():
     return CheckPlugin(
         CheckPluginName("unit_test_check_plugin"),
         [ParsedSectionName("norris")],

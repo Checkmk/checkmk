@@ -15,7 +15,7 @@ from cmk.core_helpers import FetcherType
 from cmk.base.sources.tcp import TCPSource
 
 
-def test_attribute_defaults(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_attribute_defaults() -> None:  # type:ignore[no-untyped-def]
     ipaddress = "1.2.3.4"
     hostname = HostName("testhost")
     source = TCPSource(
@@ -24,21 +24,14 @@ def test_attribute_defaults(monkeypatch) -> None:  # type:ignore[no-untyped-def]
         source_type=SourceType.HOST,
         fetcher_type=FetcherType.TCP,
         id_="agent",
-        persisted_section_dir=Path(os.devnull),
         cache_dir=Path(os.devnull),
         simulation_mode=True,
-        agent_simulator=True,
-        keep_outdated=False,
-        translation={},
-        encoding_fallback="ascii",
-        check_interval=0,
         address_family=socket.AF_INET,
         agent_port=6556,
         tcp_connect_timeout=5.0,
         agent_encryption={"use_realtime": "enforce", "use_regular": "disable"},
         file_cache_max_age=file_cache.MaxAge.none(),
     )
-    monkeypatch.setattr(source, "file_cache_base_path", Path("/my/path/"))
     assert source.fetcher_configuration == {
         "family": socket.AF_INET,
         "address": (ipaddress, 6556),

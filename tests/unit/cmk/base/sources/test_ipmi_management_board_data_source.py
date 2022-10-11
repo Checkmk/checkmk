@@ -37,14 +37,8 @@ def test_attribute_defaults(monkeypatch) -> None:  # type:ignore[no-untyped-def]
         source_type=SourceType.MANAGEMENT,
         fetcher_type=FetcherType.IPMI,
         id_="mgmt_ipmi",
-        persisted_section_dir=Path(os.devnull),
         cache_dir=Path(os.devnull),
-        keep_outdated=False,
         simulation_mode=True,
-        agent_simulator=True,
-        translation={},
-        encoding_fallback="ascii",
-        check_interval=0,
         management_credentials={},
         file_cache_max_age=file_cache.MaxAge.none(),
     )
@@ -53,7 +47,6 @@ def test_attribute_defaults(monkeypatch) -> None:  # type:ignore[no-untyped-def]
         result.OK(HostSections[AgentRawDataSection]()),
         exit_spec_cb=host_config.exit_code_spec,
     ) == [ActiveCheckResult(0, "Success")]
-    assert source.id == "mgmt_ipmi"
 
 
 def test_ipmi_ipaddress_from_mgmt_board(monkeypatch) -> None:  # type:ignore[no-untyped-def]

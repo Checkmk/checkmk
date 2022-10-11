@@ -38,13 +38,7 @@ from cmk.base.agent_based.data_provider import (
 )
 from cmk.base.agent_based.utils import check_parsing_errors, check_sources, get_section_kwargs
 from cmk.base.config import HostConfig
-from cmk.base.sources import (
-    fetch_all,
-    make_agent_parser_config,
-    make_snmp_parser_config,
-    make_sources,
-    Source,
-)
+from cmk.base.sources import fetch_all, make_sources, Source
 
 from ._retentions import Retentions, RetentionsTracker
 from ._tree_aggregator import InventoryTrees, TreeAggregator
@@ -292,8 +286,6 @@ def _inventorize_host(
                 config.snmp_without_sys_descr,
             ),
             file_cache_max_age=host_config.max_cachefile_age,
-            agent_parser_config=make_agent_parser_config(host_config.hostname),
-            snmp_parser_config=make_snmp_parser_config(host_config.hostname),
         ),
         mode=(Mode.INVENTORY if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS),
     )

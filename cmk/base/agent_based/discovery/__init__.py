@@ -83,13 +83,7 @@ from cmk.base.core_config import (
     ObjectAttributes,
 )
 from cmk.base.discovered_labels import HostLabel, ServiceLabel
-from cmk.base.sources import (
-    fetch_all,
-    make_agent_parser_config,
-    make_snmp_parser_config,
-    make_sources,
-    Source,
-)
+from cmk.base.sources import fetch_all, make_sources, Source
 
 from ._discovered_services import analyse_discovered_services
 from ._filters import ServiceFilters as _ServiceFilters
@@ -199,8 +193,6 @@ def commandline_discovery(
                         config.snmp_without_sys_descr,
                     ),
                     file_cache_max_age=config.max_cachefile_age(),
-                    agent_parser_config=make_agent_parser_config(host_config.hostname),
-                    snmp_parser_config=make_snmp_parser_config(host_config.hostname),
                 ),
                 mode=mode,
             )
@@ -372,8 +364,6 @@ def automation_discovery(
                     config.snmp_without_sys_descr,
                 ),
                 file_cache_max_age=max_cachefile_age,
-                agent_parser_config=make_agent_parser_config(host_config.hostname),
-                snmp_parser_config=make_snmp_parser_config(host_config.hostname),
             ),
             mode=Mode.DISCOVERY,
         )
@@ -625,8 +615,6 @@ def _commandline_check_discovery(
             file_cache_max_age=config.max_cachefile_age(
                 discovery=None if cmk.core_helpers.cache.FileCacheGlobals.maybe else 0
             ),
-            agent_parser_config=make_agent_parser_config(host_config.hostname),
-            snmp_parser_config=make_snmp_parser_config(host_config.hostname),
         ),
         mode=Mode.DISCOVERY,
     )
@@ -1319,8 +1307,6 @@ def get_check_preview(
                 config.snmp_without_sys_descr,
             ),
             file_cache_max_age=max_cachefile_age,
-            agent_parser_config=make_agent_parser_config(host_config.hostname),
-            snmp_parser_config=make_snmp_parser_config(host_config.hostname),
         ),
         mode=Mode.DISCOVERY,
     )

@@ -16,7 +16,7 @@ import cmk.base.core_config as core_config
 from cmk.base.config import HostConfig
 
 from ._abstract import Source
-from ._checkers import make_agent_parser_config, make_non_cluster_sources, make_snmp_parser_config
+from ._checkers import make_non_cluster_sources
 
 __all__ = ["fetchers", "clusters"]
 
@@ -60,8 +60,6 @@ def fetchers(host_config: HostConfig) -> Dict[str, Any]:
                     config.snmp_without_sys_descr,
                 ),
                 file_cache_max_age=file_cache.MaxAge.none(),
-                agent_parser_config=make_agent_parser_config(host_config.hostname),
-                snmp_parser_config=make_snmp_parser_config(host_config.hostname),
             )
         ]
     }

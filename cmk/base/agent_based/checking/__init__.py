@@ -73,13 +73,7 @@ from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_paramete
 from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.check_utils import ConfiguredService, LegacyCheckParameters
 from cmk.base.config import ConfigCache, HostConfig
-from cmk.base.sources import (
-    fetch_all,
-    make_agent_parser_config,
-    make_snmp_parser_config,
-    make_sources,
-    Source,
-)
+from cmk.base.sources import fetch_all, make_sources, Source
 from cmk.base.submitters import Submittee, Submitter
 
 from . import _cluster_modes
@@ -202,8 +196,6 @@ def _commandline_checking(
                 config.snmp_without_sys_descr,
             ),
             file_cache_max_age=host_config.max_cachefile_age,
-            agent_parser_config=make_agent_parser_config(host_config.hostname),
-            snmp_parser_config=make_snmp_parser_config(host_config.hostname),
         ),
         mode=Mode.CHECKING if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS,
     )

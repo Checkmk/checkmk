@@ -5,24 +5,18 @@
 
 import abc
 import logging
-from functools import partial
 from typing import Callable, final, Final, Generic, Optional, Sequence
 
-import cmk.utils
-import cmk.utils.debug
-import cmk.utils.misc
-import cmk.utils.paths
 from cmk.utils.check_utils import ActiveCheckResult
-from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, result, SourceType
 
 from cmk.snmplib.type_defs import TRawData
 
-from cmk.core_helpers import Fetcher, get_raw_data, Parser, Summarizer
+from cmk.core_helpers import Fetcher, get_raw_data, Summarizer
 from cmk.core_helpers.cache import FileCache
 from cmk.core_helpers.controller import FetcherType
 from cmk.core_helpers.host_sections import HostSections, TRawDataSection
-from cmk.core_helpers.type_defs import Mode, SectionNameCollection
+from cmk.core_helpers.type_defs import Mode
 
 __all__ = ["Source"]
 
@@ -73,21 +67,6 @@ class Source(Generic[TRawData, TRawDataSection], abc.ABC):
         return get_raw_data(self._make_file_cache(), self._make_fetcher(), mode)
 
     @final
-    def parse(
-        self,
-        raw_data: result.Result[TRawData, Exception],
-        *,
-        selection: SectionNameCollection,
-    ) -> result.Result[HostSections[TRawDataSection], Exception]:
-        try:
-            return raw_data.map(partial(self._make_parser().parse, selection=selection))
-        except Exception as exc:
-            self._logger.log(VERBOSE, "ERROR: %s", exc)
-            if cmk.utils.debug.enabled():
-                raise
-            return result.Error(exc)
-
-    @final
     def summarize(
         self,
         host_sections: result.Result[HostSections[TRawDataSection], Exception],
@@ -107,14 +86,6 @@ class Source(Generic[TRawData, TRawDataSection], abc.ABC):
     def _make_fetcher(self) -> Fetcher:
         """Create a fetcher with this configuration."""
         raise NotImplementedError
-
-    @abc.abstractmethod
-    def _make_parser(self) -> Parser[TRawData, TRawDataSection]:
-        """Create a parser with this configuration."""
-        raise NotImplementedError
-
-    def parser(self) -> Parser[TRawData, TRawDataSection]:
-        return self._make_parser()
 
     @abc.abstractmethod
     def _make_summarizer(self, *, exit_spec: ExitSpec) -> Summarizer:

@@ -86,9 +86,6 @@ __all__ = [
     "fetch_all",
     "make_non_cluster_sources",
     "make_sources",
-    "make_parser",
-    "make_agent_parser_config",
-    "make_snmp_parser_config",
     "parse",
 ]
 
@@ -128,7 +125,7 @@ def parse(
     selection: SectionNameCollection,
     logger: logging.Logger,
 ) -> result.Result[HostSections[TRawDataSection], Exception]:
-    parser = make_parser(
+    parser = _make_parser(
         hostname,
         fetcher_type=fetcher_type,
         ident=ident,
@@ -140,7 +137,7 @@ def parse(
         return result.Error(exc)
 
 
-def make_parser(
+def _make_parser(
     hostname: HostName, *, fetcher_type: FetcherType, ident: str, logger: logging.Logger
 ) -> Parser:
     if fetcher_type is FetcherType.SNMP:
@@ -150,11 +147,11 @@ def make_parser(
                 make_persisted_section_dir(fetcher_type=fetcher_type, ident=ident) / hostname,
                 logger=logger,
             ),
-            **make_snmp_parser_config(hostname)._asdict(),
+            **_make_snmp_parser_config(hostname)._asdict(),
             logger=logger,
         )
 
-    agent_parser_config = make_agent_parser_config(hostname)
+    agent_parser_config = _make_agent_parser_config(hostname)
     return AgentParser(
         hostname,
         SectionStore[AgentRawDataSection](
@@ -186,7 +183,7 @@ def make_persisted_section_dir(
     }[fetcher_type]
 
 
-def make_agent_parser_config(hostname: HostName) -> AgentParserConfig:
+def _make_agent_parser_config(hostname: HostName) -> AgentParserConfig:
     # Move to `cmk.base.config` once the direction of the dependencies
     # has been fixed (ie, as little components as possible get the full,
     # global config instead of whatever they need to work).
@@ -200,7 +197,7 @@ def make_agent_parser_config(hostname: HostName) -> AgentParserConfig:
     )
 
 
-def make_snmp_parser_config(hostname: HostName) -> SNMPParserConfig:
+def _make_snmp_parser_config(hostname: HostName) -> SNMPParserConfig:
     # Move to `cmk.base.config` once the direction of the dependencies
     # has been fixed (ie, as little components as possible get the full,
     # global config instead of whatever they need to work).
@@ -313,8 +310,6 @@ class _Builder:
         simulation_mode: bool,
         missing_sys_description: bool,
         file_cache_max_age: MaxAge,
-        agent_parser_config: AgentParserConfig,
-        snmp_parser_config: SNMPParserConfig,
     ) -> None:
         super().__init__()
         self.host_config: Final = host_config
@@ -325,8 +320,6 @@ class _Builder:
         self.simulation_mode: Final = simulation_mode
         self.missing_sys_description: Final = missing_sys_description
         self.file_cache_max_age: Final = file_cache_max_age
-        self.agent_parser_config: Final = agent_parser_config
-        self.snmp_parser_config: Final = snmp_parser_config
         self._elems: Dict[str, Source] = {}
 
         self._initialize()
@@ -381,10 +374,6 @@ class _Builder:
                     source_type=SourceType.HOST,
                     fetcher_type=FetcherType.PIGGYBACK,
                     id_="piggyback",
-                    persisted_section_dir=make_persisted_section_dir(
-                        fetcher_type=FetcherType.PIGGYBACK,
-                        ident="piggyback",
-                    ),
                     cache_dir=Path(cmk.utils.paths.data_source_cache_dir) / "piggyback",
                     simulation_mode=self.simulation_mode,
                     time_settings=config.get_config_cache().get_piggybacked_hosts_time_settings(
@@ -392,7 +381,6 @@ class _Builder:
                     ),
                     is_piggyback_host=self.host_config.is_piggyback_host,
                     file_cache_max_age=self.file_cache_max_age,
-                    **self.agent_parser_config._asdict(),
                 )
             )
 
@@ -458,7 +446,7 @@ class _Builder:
                         else FileCacheMode.READ_WRITE
                     ),
                 ),
-                **self.snmp_parser_config._asdict(),
+                keep_outdated=FileCacheGlobals.keep_outdated,
             )
         )
 
@@ -489,9 +477,6 @@ class _Builder:
                     ),
                     on_scan_error=self.on_scan_error,
                     missing_sys_description=self.missing_sys_description,
-                    check_intervals=make_check_intervals(
-                        self.host_config, selected_sections=self.selected_sections
-                    ),
                     snmp_config=self.host_config.management_snmp_config,
                     do_status_data_inventory=self.host_config.do_status_data_inventory,
                     cache=SNMPFileCache(
@@ -518,7 +503,10 @@ class _Builder:
                             else FileCacheMode.READ_WRITE
                         ),
                     ),
-                    **self.snmp_parser_config._asdict(),
+                    sections=make_sections(
+                        self.host_config, selected_sections=self.selected_sections
+                    ),
+                    keep_outdated=FileCacheGlobals.keep_outdated,
                 )
             )
         elif protocol == "ipmi":
@@ -529,15 +517,10 @@ class _Builder:
                     source_type=SourceType.MANAGEMENT,
                     fetcher_type=FetcherType.IPMI,
                     id_="mgmt_ipmi",
-                    persisted_section_dir=make_persisted_section_dir(
-                        fetcher_type=FetcherType.IPMI,
-                        ident="mgmt_ipmi",
-                    ),
                     cache_dir=Path(cmk.utils.paths.data_source_cache_dir) / "mgmt_ipmi",
                     simulation_mode=self.simulation_mode,
                     management_credentials=self.host_config.ipmi_credentials,
                     file_cache_max_age=self.file_cache_max_age,
-                    **self.agent_parser_config._asdict(),
                 )
             )
         else:
@@ -555,10 +538,6 @@ class _Builder:
                 source_type=SourceType.HOST,
                 fetcher_type=FetcherType.PROGRAM,
                 id_="agent",
-                persisted_section_dir=make_persisted_section_dir(
-                    fetcher_type=FetcherType.PROGRAM,
-                    ident="",  # unused
-                ),
                 cache_dir=Path(cmk.utils.paths.tcp_cache_dir),
                 cmdline=core_config.translate_ds_program_source_cmdline(
                     datasource_program, self.host_config, self.ipaddress
@@ -567,26 +546,21 @@ class _Builder:
                 simulation_mode=self.simulation_mode,
                 is_cmc=config.is_cmc(),
                 file_cache_max_age=self.file_cache_max_age,
-                **self.agent_parser_config._asdict(),
             )
 
         connection_mode = self.host_config.agent_connection_mode()
         if connection_mode == "push-agent":
+            # convert to seconds and add grace period
+            interval = int(1.5 * 60 * self.host_config.check_mk_check_interval)
             return PushAgentSource(
                 self.host_config.hostname,
                 self.ipaddress,
                 source_type=SourceType.HOST,
                 fetcher_type=FetcherType.PUSH_AGENT,
                 id_="push-agent",
-                persisted_section_dir=make_persisted_section_dir(
-                    fetcher_type=FetcherType.PUSH_AGENT,
-                    ident="push-agent",
-                ),
                 cache_dir=Path(cmk.utils.paths.data_source_cache_dir) / "push-agent",
                 simulation_mode=self.simulation_mode,
-                check_interval=self.host_config.check_mk_check_interval,
-                file_cache_max_age=self.file_cache_max_age,
-                **self.agent_parser_config._asdict(),
+                file_cache_max_age=MaxAge(interval, interval, interval),
             )
         if connection_mode == "pull-agent":
             return TCPSource(
@@ -595,10 +569,6 @@ class _Builder:
                 source_type=SourceType.HOST,
                 fetcher_type=FetcherType.TCP,
                 id_="agent",
-                persisted_section_dir=make_persisted_section_dir(
-                    fetcher_type=FetcherType.TCP,
-                    ident="",  # unused
-                ),
                 cache_dir=Path(cmk.utils.paths.tcp_cache_dir),
                 simulation_mode=self.simulation_mode,
                 address_family=self.host_config.default_address_family,
@@ -606,7 +576,6 @@ class _Builder:
                 tcp_connect_timeout=self.host_config.tcp_connect_timeout,
                 agent_encryption=self.host_config.agent_encryption,
                 file_cache_max_age=self.file_cache_max_age,
-                **self.agent_parser_config._asdict(),
             )
         raise NotImplementedError(f"connection mode {connection_mode!r}")
 
@@ -633,15 +602,10 @@ class _Builder:
                     agentname,
                     params,
                 ),
-                persisted_section_dir=make_persisted_section_dir(
-                    fetcher_type=FetcherType.PROGRAM,
-                    ident=make_id(agentname),
-                ),
                 cache_dir=Path(cmk.utils.paths.data_source_cache_dir) / make_id(agentname),
                 simulation_mode=self.simulation_mode,
                 is_cmc=config.is_cmc(),
                 file_cache_max_age=self.file_cache_max_age,
-                **self.agent_parser_config._asdict(),
             )
             for agentname, params in self.host_config.special_agents
         ]
@@ -657,8 +621,6 @@ def make_non_cluster_sources(
     simulation_mode: bool,
     missing_sys_description: bool,
     file_cache_max_age: MaxAge,
-    agent_parser_config: AgentParserConfig,
-    snmp_parser_config: SNMPParserConfig,
 ) -> Sequence[Source]:
     """Sequence of sources available for `host_config`."""
     return _Builder(
@@ -670,8 +632,6 @@ def make_non_cluster_sources(
         simulation_mode=simulation_mode,
         missing_sys_description=missing_sys_description,
         file_cache_max_age=file_cache_max_age,
-        agent_parser_config=agent_parser_config,
-        snmp_parser_config=snmp_parser_config,
     ).sources
 
 
@@ -711,8 +671,6 @@ def make_sources(
     simulation_mode: bool,
     missing_sys_description: bool,
     file_cache_max_age: MaxAge,
-    agent_parser_config: AgentParserConfig,
-    snmp_parser_config: SNMPParserConfig,
 ) -> Sequence[Source]:
     if host_config.nodes is None:
         # Not a cluster
@@ -733,7 +691,5 @@ def make_sources(
             simulation_mode=simulation_mode,
             missing_sys_description=missing_sys_description,
             file_cache_max_age=file_cache_max_age,
-            agent_parser_config=agent_parser_config,
-            snmp_parser_config=snmp_parser_config,
         )
     ]

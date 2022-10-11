@@ -1386,8 +1386,6 @@ class AutomationDiagHost(Automation):
                 config.snmp_without_sys_descr,
             ),
             file_cache_max_age=config.max_cachefile_age(),
-            agent_parser_config=sources.make_agent_parser_config(host_config.hostname),
-            snmp_parser_config=sources.make_snmp_parser_config(host_config.hostname),
         ):
             if isinstance(source, sources.programs.DSProgramSource) and cmd:
                 source = sources.programs.DSProgramSource(
@@ -1402,14 +1400,8 @@ class AutomationDiagHost(Automation):
                         ipaddress,
                     ),
                     stdin=None,
-                    persisted_section_dir=Path(var_dir) / "persisted_sections" / "agent",
                     cache_dir=Path(data_source_cache_dir) / "agent",
                     simulation_mode=config.simulation_mode,
-                    agent_simulator=config.agent_simulator,
-                    keep_outdated=source.keep_outdated,
-                    translation=config.get_piggyback_translations(host_config.hostname),
-                    encoding_fallback=config.fallback_agent_output_encoding,
-                    check_interval=host_config.check_mk_check_interval,
                     is_cmc=config.is_cmc(),
                     file_cache_max_age=config.max_cachefile_age(),
                 )
@@ -1422,14 +1414,8 @@ class AutomationDiagHost(Automation):
                     source_type=source.source_type,
                     fetcher_type=source.fetcher_type,
                     id_="agent",
-                    persisted_section_dir=source.persisted_section_dir,
                     cache_dir=source.file_cache_base_path,
                     simulation_mode=source.simulation_mode,
-                    agent_simulator=source.agent_simulator,
-                    keep_outdated=source.keep_outdated,
-                    translation=source.translation,
-                    encoding_fallback=source.encoding_fallback,
-                    check_interval=source.check_interval,
                     address_family=source.address_family,
                     agent_port=agent_port,
                     tcp_connect_timeout=tcp_connect_timeout,
@@ -1752,8 +1738,6 @@ class AutomationGetAgentOutput(Automation):
                         config.snmp_without_sys_descr,
                     ),
                     file_cache_max_age=config.max_cachefile_age(),
-                    agent_parser_config=sources.make_agent_parser_config(host_config.hostname),
-                    snmp_parser_config=sources.make_snmp_parser_config(host_config.hostname),
                 ):
                     if not isinstance(source, sources.agent.AgentSource):
                         continue

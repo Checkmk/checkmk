@@ -7,7 +7,6 @@ import socket
 from pathlib import Path
 from typing import Final, Literal, Mapping, Optional
 
-from cmk.utils.translations import TranslationOptions
 from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, SourceType
 
 import cmk.core_helpers.cache as file_cache
@@ -27,14 +26,8 @@ class TCPSource(AgentSource):
         source_type: SourceType,
         fetcher_type: FetcherType,
         id_: Literal["agent"],
-        persisted_section_dir: Path,
         cache_dir: Path,
         simulation_mode: bool,
-        agent_simulator: bool,
-        keep_outdated: bool,
-        translation: TranslationOptions,
-        encoding_fallback: str,
-        check_interval: int,
         address_family: socket.AddressFamily,
         agent_port: int,
         tcp_connect_timeout: float,
@@ -47,12 +40,6 @@ class TCPSource(AgentSource):
             source_type=source_type,
             fetcher_type=fetcher_type,
             id_=id_,
-            persisted_section_dir=persisted_section_dir,
-            agent_simulator=agent_simulator,
-            keep_outdated=keep_outdated,
-            translation=translation,
-            encoding_fallback=encoding_fallback,
-            check_interval=check_interval,
         )
         self.file_cache_base_path: Final = cache_dir
         self.simulation_mode: Final = simulation_mode

@@ -7,15 +7,15 @@ import getopt
 import os
 import sys
 import time
-from typing import Any, Dict, List, NoReturn, Optional
+from typing import Any, NoReturn
 
-import livestatus
+from livestatus import QueryTypes, SingleSiteConnection
 
 # These variable will be substituted at 'make dist' time
 __version__ = "2.2.0i1"
 
 
-def dump_templates():
+def dump_templates() -> None:
     check_interval = ""
     if opt_check_interval is not None:
         check_interval = "check_interval          %d" % opt_check_interval
@@ -65,11 +65,11 @@ define timeperiod {
 #   | The actual livedump                                                  |
 #   '----------------------------------------------------------------------'
 
-g_connection: Optional[livestatus.SingleSiteConnection] = None
-opt_socket: Optional[str] = None
+g_connection: SingleSiteConnection | None = None
+opt_socket: str | None = None
 
 
-def connect():
+def connect() -> None:
     global g_connection, opt_socket
     if not opt_socket and not omd_root():
         bail_out("Please specify the URL of the livestatus socket.")
@@ -77,22 +77,22 @@ def connect():
         opt_socket = "unix:%s/tmp/run/live" % omd_root()
     elif opt_socket is None:
         bail_out("No socket specified")
-    g_connection = livestatus.SingleSiteConnection(opt_socket)
+    g_connection = SingleSiteConnection(opt_socket)
 
 
-def run_query(query: livestatus.QueryTypes) -> List[Dict[str, Any]]:
+def run_query(query: QueryTypes) -> list[dict[str, Any]]:
     if g_connection is None:
         bail_out("No connection")
     return g_connection.query_table_assoc(query)
 
 
-def livedump_config():  # pylint: disable=too-many-branches
+def livedump_config() -> None:  # pylint: disable=too-many-branches
     if opt_dump_templates:
         dump_templates()
 
     check_commands = set()
 
-    def prepare_row(row):
+    def prepare_row(row: dict[str, Any]) -> None:
         check_commands.add(row["check_command"])
         row["contactsstring"] = ",".join(row["contacts"])
         if "contact_groups" in row:
@@ -163,7 +163,7 @@ def livedump_config():  # pylint: disable=too-many-branches
         )
 
 
-def livedump_state():
+def livedump_state() -> None:
     now = time.time()
     # Dump hosts
     query = (
@@ -239,15 +239,15 @@ output=%(plugin_output)s|%(perf_data)s
 #   '----------------------------------------------------------------------'
 
 
-def omd_root():
+def omd_root() -> str | None:
     return os.getenv("OMD_ROOT")
 
 
-def omd_site():
+def omd_site() -> str | None:
     return os.getenv("OMD_SITE")
 
 
-def verbose(x):
+def verbose(x: object) -> None:
     if opt_verbose:
         sys.stderr.write("%s\n" % x)
 
@@ -257,7 +257,7 @@ def bail_out(x: str) -> NoReturn:
     sys.exit(1)
 
 
-def usage():
+def usage() -> None:
     sys.stderr.write(
         """Usage: %s [OPTION]...
 
@@ -301,7 +301,7 @@ def usage():
     )
 
 
-def print_version():
+def print_version() -> None:
     sys.stdout.write("This is livedump version %s\n" % __version__)
 
 
@@ -346,7 +346,7 @@ opt_service_headers = ""
 opt_dump_templates = False
 opt_groups = False
 opt_host_icon = False
-opt_check_interval = None
+opt_check_interval: int | None = None
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)

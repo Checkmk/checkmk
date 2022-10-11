@@ -73,6 +73,15 @@ _SECTION_UBUNTU_PRO_ADVERTISEMENT = [
     ["Learn more about Ubuntu Pro at https://ubuntu.com/pro"],
     ["Inst base-files [9.9+deb9u9] (9.9+deb9u11 Debian:9.11/oldstable [amd64])"],
 ]
+_SECTION_UBUNTU_PRO_ADVERTISEMENT_TWO = [
+    ["Try Ubuntu Pro beta with a free personal subscription on up to 5 machines"],
+    ["Learn more at https://ubuntu.com/pro"],
+    ["Inst base-files [9.9+deb9u9] (9.9+deb9u11 Debian:9.11/oldstable [amd64])"],
+]
+_SECTION_UBUNTU_PRO_ADVERTISEMENT_ONLY = [
+    ["Try Ubuntu Pro beta with a free personal subscription on up to 5 machines"],
+    ["Learn more at https://ubuntu.com/pro"],
+]
 
 DEFAULT_PARAMS = {
     "normal": 1,
@@ -110,6 +119,14 @@ DEFAULT_PARAMS = {
         ),
         pytest.param(
             _SECTION_UBUNTU_PRO_ADVERTISEMENT,
+            False,
+        ),
+        pytest.param(
+            _SECTION_UBUNTU_PRO_ADVERTISEMENT_TWO,
+            False,
+        ),
+        pytest.param(
+            _SECTION_UBUNTU_PRO_ADVERTISEMENT_ONLY,
             False,
         ),
         pytest.param(
@@ -183,6 +200,20 @@ def test_data_is_valid(
                 sec_updates=[],
             ),
             id="ubuntu_pro_advertisement",
+        ),
+        pytest.param(
+            _SECTION_UBUNTU_PRO_ADVERTISEMENT_TWO,
+            Section(
+                updates=["base-files"],
+                removals=[],
+                sec_updates=[],
+            ),
+            id="ubuntu_pro_advertisement 2",
+        ),
+        pytest.param(
+            _SECTION_UBUNTU_PRO_ADVERTISEMENT_ONLY,
+            Section(updates=[], removals=[], sec_updates=[]),
+            id="ubuntu_pro_advertisement only",
         ),
         pytest.param(
             _SECTION_UBUNTU_PRO_ADVERTISEMENT + _SECTION_ESM_SUPPORT,

@@ -44,6 +44,16 @@ def backup_site_to_tarfile(
     verbose: bool,
 ) -> None:
 
+    excludes = get_exclude_patterns(options)
+
+    def filter_files(tarinfo):
+        # patterns are relative to site directory, tarinfo.name includes site name.
+        matches_exclude = any(
+            fnmatch.fnmatch(tarinfo.name[len(site.name) + 1 :], glob_pattern)
+            for glob_pattern in excludes
+        )
+        return None if matches_exclude else tarinfo
+
     # Mypy does not understand this: Unexpected keyword argument "verbose" for "open" of "TarFile", same for "site".
     with RRDSocket(site.dir, site.is_stopped(), site.name, verbose) as rrd_socket:
         with BackupTarFile.open(  # type: ignore[call-arg]
@@ -59,11 +69,24 @@ def backup_site_to_tarfile(
             # The file is added twice to get the first for validation
             # and the second for excration during restore.
             tar.add(site.dir + "/version", site.name + "/version")
-            _backup_site_files_to_tarfile(site, tar, options)
+            tar.add(site.dir, site.name, filter=filter_files)
 
 
 def get_exclude_patterns(options: CommandOptions) -> List[str]:
     excludes = []
+    excludes.append("tmp/*")  # Exclude all tmpfs files
+
+    # exclude all temporary files that are created during cmk.utils.store writes
+    excludes.append("*.mk.new*")
+    excludes.append("var/log/.liveproxyd.state.new*")
+
+    # exclude section cache because files may vanish during backup. It would
+    # be better to have them in the backup and simply don't make the backup
+    # fail in case a file vanishes during the backup, but the tarfile module
+    # does not allow this.
+    excludes.append("var/check_mk/persisted/*")
+    excludes.append("var/check_mk/persisted_sections/*")
+
     if "no-rrds" in options or "no-past" in options:
         excludes.append("var/pnp4nagios/perfdata/*")
         excludes.append("var/pnp4nagios/spool/*")
@@ -91,34 +114,6 @@ def get_exclude_patterns(options: CommandOptions) -> List[str]:
         excludes.append("var/check_mk/wato/snapshots/*.tar")
 
     return excludes
-
-
-def _backup_site_files_to_tarfile(
-    site: SiteContext, tar: "BackupTarFile", options: CommandOptions
-) -> None:
-    exclude = get_exclude_patterns(options)
-    exclude.append("tmp/*")  # Exclude all tmpfs files
-
-    # exclude all temporary files that are created during cmk.utils.store writes
-    exclude.append("*.mk.new*")
-    exclude.append("var/log/.liveproxyd.state.new*")
-
-    # exclude section cache because files may vanish during backup. It would
-    # be better to have them in the backup and simply don't make the backup
-    # fail in case a file vanishes during the backup, but the tarfile module
-    # does not allow this.
-    exclude.append("var/check_mk/persisted/*")
-    exclude.append("var/check_mk/persisted_sections/*")
-
-    def filter_files(tarinfo):
-        # patterns are relative to site directory, tarinfo.name includes site name.
-        matches_exclude = any(
-            fnmatch.fnmatch(tarinfo.name[len(site.name) + 1 :], glob_pattern)
-            for glob_pattern in exclude
-        )
-        return None if matches_exclude else tarinfo
-
-    tar.add(site.dir, site.name, filter=filter_files)
 
 
 class BackupTarFile(tarfile.TarFile):

@@ -39,7 +39,11 @@ class Section(NamedTuple):
     updates: Sequence[str]
     removals: Sequence[str]
     sec_updates: Sequence[str]
-    no_esm_support: bool = False
+    esm_support: bool = True
+
+    @property
+    def n_updates(self) -> int:
+        return sum(len(l) for l in [self.updates, self.removals, self.sec_updates])
 
 
 @dataclass(frozen=True)
@@ -165,7 +169,7 @@ def parse_apt(string_table: StringTable) -> Optional[Section]:
         return Section(updates=[], removals=[], sec_updates=[])
 
     if ESM_NOT_ENABLED in sanitized_string_table[0][0]:
-        return Section(updates=[], removals=[], sec_updates=[], no_esm_support=True)
+        return Section(updates=[], removals=[], sec_updates=[], esm_support=False)
 
     if not _data_is_valid(sanitized_string_table):
         return None
@@ -215,15 +219,15 @@ def _format_summary(action: str, packages: Sequence[str], verbose: bool = False)
 
 
 def check_apt(params: Mapping[str, Any], section: Section) -> CheckResult:
-    if not any(section):
-        yield Result(state=State.OK, summary=NOTHING_PENDING_FOR_INSTALLATION)
-        return
-
-    if section.no_esm_support:
+    if not section.esm_support:
         yield Result(
             state=State.CRIT,
             summary="System could receive security updates, but needs extended support license",
         )
+        return
+
+    if section.n_updates == 0:
+        yield Result(state=State.OK, summary=NOTHING_PENDING_FOR_INSTALLATION)
         return
 
     yield Result(

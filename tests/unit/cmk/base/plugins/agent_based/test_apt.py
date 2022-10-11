@@ -175,7 +175,7 @@ def test_data_is_valid(
         ),
         pytest.param(
             _SECTION_NO_ESM_SUPPORT,
-            Section([], [], [], no_esm_support=True),
+            Section([], [], [], esm_support=False),
             id="no_esm_support",
         ),
         pytest.param(
@@ -263,14 +263,14 @@ def test_apt_discovery() -> None:
         ),
         pytest.param(
             DEFAULT_PARAMS,
-            Section([], [], [], no_esm_support=True),
+            Section([], [], [], esm_support=False),
             [
                 Result(
                     state=State.CRIT,
                     summary="System could receive security updates, but needs extended support license",
                 ),
             ],
-            id="The system has no esm support and there are no updates.",
+            id="The system has no esm support.",
         ),
         pytest.param(
             DEFAULT_PARAMS,
@@ -326,7 +326,7 @@ def test_apt_discovery() -> None:
                 ["normal-update"],
                 ["auto-removal-update"],
                 ["security-update"],
-                no_esm_support=True,
+                esm_support=False,
             ),
             [
                 Result(

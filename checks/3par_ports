@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# For more information about the used API and data refer to: https://support.hpe.com/hpesc/public/docDisplay?docId=c03606339
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
@@ -42,16 +44,19 @@ def translate_protocol_3par_ports(number):
         3: "FCOE",
         4: "IP",
         5: "SAS",
+        6: "NVMe",
     }
-    return protocols[number]
+    return protocols.get(number)
 
 
 def inventory_3par_ports(parsed):
     for entry in parsed.get("members", {}):
-        # Only create an item if not "FREE" (type = 3)
-        if not entry.get("type", 3) == 3:
+        translated_protocol = translate_protocol_3par_ports(entry["protocol"])
+
+        # Only create an item if not "FREE" (type = 3) and if the protocol is known
+        if not entry.get("type", 3) == 3 and translated_protocol is not None:
             item = "%s Node %s Slot %s Port %s" % (
-                translate_protocol_3par_ports(entry["protocol"]),
+                translated_protocol,
                 entry["portPos"]["node"],
                 entry["portPos"]["slot"],
                 entry["portPos"]["cardPort"],
@@ -95,12 +100,19 @@ def check_3par_ports(item, params, parsed):
     }
 
     for entry in parsed.get("members", {}):
+
+        translated_protocol = translate_protocol_3par_ports(entry["protocol"])
+
+        if translated_protocol is None:
+            continue
+
         if item == "%s Node %s Slot %s Port %s" % (
-            translate_protocol_3par_ports(entry["protocol"]),
+            translated_protocol,
             entry["portPos"]["node"],
             entry["portPos"]["slot"],
             entry["portPos"]["cardPort"],
         ):
+
             if "label" in entry:
                 yield 0, "Label: %s" % entry["label"]
 

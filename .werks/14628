@@ -1,0 +1,22 @@
+Title: 3par_ports: Check and discovery used to fail if the protocol was NVMe
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1665502882
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p15
+
+The discovery and check functions used to crash because the port protocol was NVMe.
+
+Now the check support the following protocols:
+<ul>
+<li>FC</li>
+<li>iSCSI</li>
+<li>FCOE</li>
+<li>IP</li>
+<li>SAS</li>
+<li>NVMe</li>
+</ul>

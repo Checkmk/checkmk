@@ -179,7 +179,7 @@ class ModeAjaxCycleThemes(AjaxPage):
 
         return {
             "status_container_content": content,
-            "is_finished": job_snapshot and not job_snapshot.is_active(),
+            "is_finished": job_snapshot and not job_snapshot.is_active,
         }
 
     def _show_details_page(self, job_id: str) -> Optional[GUIBackgroundStatusSnapshot]:

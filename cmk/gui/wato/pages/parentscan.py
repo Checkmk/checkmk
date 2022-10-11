@@ -401,8 +401,7 @@ class ModeParentScan(WatoMode):
         return entries
 
     def page(self) -> None:
-        job_status_snapshot = self._job.get_status_snapshot()
-        if job_status_snapshot.is_active():
+        if self._job.is_active():
             html.show_message(
                 _('Parent scan currently running in <a href="%s">background</a>.')
                 % self._job.detail_url()

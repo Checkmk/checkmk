@@ -156,8 +156,7 @@ class ModeDiagnostics(WatoMode):
         return redirect(self._job.detail_url())
 
     def page(self) -> None:
-        job_status_snapshot = self._job.get_status_snapshot()
-        if job_status_snapshot.is_active():
+        if self._job.is_active():
             raise HTTPRedirect(self._job.detail_url())
 
         html.begin_form("diagnostics", method="POST")

@@ -129,76 +129,7 @@ class GUIBackgroundProcess(background_job.BackgroundProcess):
         super().initialize_environment()
 
 
-# These functions here are included in a frozen snapshot of a background job
-# Restrictions for newly added functions: no function arguments, only getters
-class GUIBackgroundJobSnapshottedFunctions(background_job.BackgroundJob):
-    def has_exception(self) -> bool:
-        return self.get_status().get("state") == background_job.JobStatusStates.EXCEPTION
-
-    def acknowledged_by(self):
-        return self.get_status().get("acknowledged_by")
-
-    def is_available(self) -> bool:
-        return self.exists() and self.is_visible()
-
-    def is_deletable(self) -> bool:
-        return self.get_status().get("deletable", True)
-
-    def is_visible(self) -> bool:
-        if user.may("background_jobs.see_foreign_jobs"):
-            return True
-        return user.id == self.get_status().get("user")
-
-    def may_stop(self):
-        if not self.is_stoppable():
-            return False
-
-        if not user.may("background_jobs.stop_jobs"):
-            return False
-
-        if self.is_foreign() and not user.may("background_jobs.stop_foreign_jobs"):
-            return False
-
-        if not self.is_active():
-            return False
-
-        return True
-
-    def may_delete(self):
-        if not self.is_deletable():
-            return False
-
-        if not self.is_stoppable() and self.is_active():
-            return False
-
-        if not user.may("background_jobs.delete_jobs"):
-            return False
-
-        if self.is_foreign() and not user.may("background_jobs.delete_foreign_jobs"):
-            return False
-
-        return True
-
-    def is_foreign(self) -> bool:
-        return self.get_status().get("user") != user.id
-
-    # FIXME: There is some arcane metaprogramming Kung Fu going on in
-    # GUIBackgroundStatusSnapshot which needs the methods *in this class*,
-    # although they are actually totally useless here.
-    def is_active(self) -> bool:  # pylint: disable=useless-super-delegation
-        return super().is_active()
-
-    def exists(self):  # pylint: disable=useless-super-delegation
-        return super().exists()
-
-    def get_job_id(self):  # pylint: disable=useless-super-delegation
-        return super().get_job_id()
-
-    def get_title(self):  # pylint: disable=useless-super-delegation
-        return super().get_title()
-
-
-class GUIBackgroundJob(GUIBackgroundJobSnapshottedFunctions):
+class GUIBackgroundJob(background_job.BackgroundJob):
     _background_process_class = GUIBackgroundProcess
 
     def __init__(
@@ -222,7 +153,15 @@ class GUIBackgroundJob(GUIBackgroundJobSnapshottedFunctions):
         raise NotImplementedError()
 
     def get_status_snapshot(self) -> GUIBackgroundStatusSnapshot:
-        return GUIBackgroundStatusSnapshot(self)
+        status = self.get_status()
+        return GUIBackgroundStatusSnapshot(
+            job_id=self.get_job_id(),
+            status=status,
+            exists=self.exists(),
+            is_active=self.is_active(),
+            has_exception=status.get("state") == background_job.JobStatusStates.EXCEPTION,
+            acknowledged_by=status.get("acknowledged_by"),
+        )
 
     def acknowledge(self, user_id):
         self._jobstatus_store.update({"acknowledged_by": user_id})
@@ -243,6 +182,50 @@ class GUIBackgroundJob(GUIBackgroundJobSnapshottedFunctions):
         """Returns either None or the URL that the job detail page may be link back"""
         return None
 
+    def is_available(self) -> bool:
+        return super().is_available() and self.is_visible()
+
+    def is_deletable(self) -> bool:
+        return self.get_status().get("deletable", True)
+
+    def is_visible(self) -> bool:
+        if user.may("background_jobs.see_foreign_jobs"):
+            return True
+        return user.id == self.get_status().get("user")
+
+    def may_stop(self):
+        if not self.is_stoppable():
+            return False
+
+        if not user.may("background_jobs.stop_jobs"):
+            return False
+
+        if self._is_foreign() and not user.may("background_jobs.stop_foreign_jobs"):
+            return False
+
+        if not self.is_active():
+            return False
+
+        return True
+
+    def may_delete(self):
+        if not self.is_deletable():
+            return False
+
+        if not self.is_stoppable() and self.is_active():
+            return False
+
+        if not user.may("background_jobs.delete_jobs"):
+            return False
+
+        if self._is_foreign() and not user.may("background_jobs.delete_foreign_jobs"):
+            return False
+
+        return True
+
+    def _is_foreign(self) -> bool:
+        return self.get_status().get("user") != user.id
+
 
 class GUIBackgroundJobRegistry(cmk.utils.plugin_registry.Registry[Type[GUIBackgroundJob]]):
     def plugin_name(self, instance):
@@ -252,32 +235,14 @@ class GUIBackgroundJobRegistry(cmk.utils.plugin_registry.Registry[Type[GUIBackgr
 job_registry = GUIBackgroundJobRegistry()
 
 
-# GUI pages are built in several phases, and each face can take a non-trivial
-# amount of time. Nevertheless, it is crucial to render a consistent state of
-# the background job in question. The class below provides such a status
-# snapshot for the job given to the constructor.
-#
-# TODO: BackgroundJob should provide an explicit status object, which we can use
-# here without any metaprogramming Kung Fu and arcane inheritance hierarchies.
+@dataclass
 class GUIBackgroundStatusSnapshot:
-    def __init__(self, job: GUIBackgroundJob) -> None:
-        super().__init__()
-        self._job_status = job.get_status()
-        self._logger = job._logger.getChild("snapshot")
-
-        for name, value in GUIBackgroundJobSnapshottedFunctions.__dict__.items():
-            if hasattr(value, "__call__"):
-                self._job_status[name] = getattr(job, name)()
-
-    def get_status_as_dict(self) -> dict[background_job.JobId, background_job.JobStatusSpec]:
-        return {self.get_job_id(): self._job_status}
-
-    def __getattr__(self, name):
-        if name not in self._job_status:
-            raise MKGeneralException(
-                _("The function %s is not in the snapshotted functions.") % name
-            )
-        return lambda: self._job_status[name]
+    job_id: background_job.JobId
+    status: background_job.JobStatusSpec
+    exists: bool
+    is_active: bool
+    has_exception: bool
+    acknowledged_by: str | None
 
 
 @dataclass
@@ -333,14 +298,11 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
         JobRenderer.show_job_class_infos(job_class_infos, job_details_back_url)
 
     def show_job_details_from_snapshot(self, job_snapshot: GUIBackgroundStatusSnapshot) -> None:
-        if job_snapshot.exists():
-            job_info = job_snapshot.get_status_as_dict()
-            job_id, job_status = list(job_info.items())[0]
-            JobRenderer.show_job_details(job_id, job_status)
-        else:
+        if not job_snapshot.exists:
             raise MKGeneralException(
-                "Background job with id <i>%s</i> not found" % job_snapshot.get_job_id()
+                "Background job with id <i>%s</i> not found" % job_snapshot.job_id
             )
+        JobRenderer.show_job_details(job_snapshot.job_id, job_snapshot.status)
 
     def _get_job_infos(
         self, jobs: Sequence[background_job.JobId]

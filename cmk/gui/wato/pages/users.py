@@ -167,7 +167,7 @@ class ModeUsers(WatoMode):
 
     def _page_menu_entries_synchronized_users(self) -> Iterator[PageMenuEntry]:
         if userdb.sync_possible():
-            if not self._job_snapshot.is_active():
+            if not self._job_snapshot.is_active:
                 yield PageMenuEntry(
                     title=_("Synchronize users"),
                     icon_name="replicate",
@@ -264,11 +264,11 @@ class ModeUsers(WatoMode):
             delete_users(selected_users)
 
     def page(self) -> None:
-        if not self._job_snapshot.exists():
+        if not self._job_snapshot.exists:
             # Skip if snapshot doesnt exists
             pass
 
-        elif self._job_snapshot.is_active():
+        elif self._job_snapshot.is_active:
             # Still running
             html.show_message(
                 HTML(_("User synchronization currently running: ")) + self._job_details_link()
@@ -277,14 +277,15 @@ class ModeUsers(WatoMode):
             html.immediate_browser_redirect(2, url)
 
         elif (
-            self._job_snapshot.state() == gui_background_job.background_job.JobStatusStates.FINISHED
-            and not self._job_snapshot.acknowledged_by()
+            self._job_snapshot.status["state"]
+            == gui_background_job.background_job.JobStatusStates.FINISHED
+            and not self._job_snapshot.acknowledged_by
         ):
             # Just finished, auto-acknowledge
             userdb.UserSyncBackgroundJob().acknowledge(user.id)
             # html.show_message(_("User synchronization successful"))
 
-        elif not self._job_snapshot.acknowledged_by() and self._job_snapshot.has_exception():
+        elif not self._job_snapshot.acknowledged_by and self._job_snapshot.has_exception:
             # Finished, but not OK - show info message with links to details
             html.show_warning(
                 HTML(_("Last user synchronization ran into an exception: "))
@@ -302,13 +303,13 @@ class ModeUsers(WatoMode):
             [
                 ("mode", "background_job_details"),
                 ("back_url", makeuri_contextless(request, [("mode", "users")])),
-                ("job_id", self._job_snapshot.get_job_id()),
+                ("job_id", self._job_snapshot.job_id),
             ],
             filename="wato.py",
         )
 
     def _show_job_info(self):
-        if self._job_snapshot.is_active():
+        if self._job_snapshot.is_active:
             html.h3(_("Current status of synchronization process"))
             html.browser_reload = 0.8
         else:

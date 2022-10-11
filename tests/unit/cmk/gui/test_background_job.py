@@ -181,14 +181,14 @@ def test_job_status_not_started() -> None:
     job = DummyBackgroundJob()
     # Seems the attributes defined for the job, like "deletable" or "title" are not correct in
     # this stage. Looks like this should be changed.
-    assert job.has_exception() is False
-    assert job.acknowledged_by() is None
+    snapshot = job.get_status_snapshot()
+    assert snapshot.has_exception is False
+    assert snapshot.acknowledged_by is None
     assert job.is_available() is False
     assert job.is_deletable() is True
     assert job.is_visible() is True
     assert job.may_stop() is False
     assert job.may_delete() is False
-    assert job.is_foreign() is False
     assert job.is_active() is False
     assert job.exists() is False
     assert job.get_job_id() == "dummy_job"
@@ -205,14 +205,14 @@ def test_job_status_while_running() -> None:
         interval=0.1,
     )
 
-    assert job.has_exception() is False
-    assert job.acknowledged_by() is None
+    snapshot = job.get_status_snapshot()
+    assert snapshot.has_exception is False
+    assert snapshot.acknowledged_by is None
     assert job.is_available() is True
     assert job.is_deletable() is False
     assert job.is_visible() is True
     assert job.may_stop() is False
     assert job.may_delete() is False
-    assert job.is_foreign() is False
     assert job.is_active() is True
     assert job.exists() is True
     assert job.get_job_id() == "dummy_job"
@@ -234,14 +234,14 @@ def test_job_status_after_stop() -> None:
     status = job.get_status()
     assert status["state"] == JobStatusStates.STOPPED
 
-    assert job.has_exception() is False
-    assert job.acknowledged_by() is None
+    snapshot = job.get_status_snapshot()
+    assert snapshot.has_exception is False
+    assert snapshot.acknowledged_by is None
     assert job.is_available() is True
     assert job.is_deletable() is False
     assert job.is_visible() is True
     assert job.may_stop() is False
     assert job.may_delete() is False
-    assert job.is_foreign() is False
     assert job.is_active() is False
     assert job.exists() is True
     assert job.get_job_id() == "dummy_job"

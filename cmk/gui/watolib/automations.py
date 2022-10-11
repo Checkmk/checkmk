@@ -528,7 +528,7 @@ class AutomationCheckmkAutomationStart(AutomationCommand):
             *ast.literal_eval(request.get_ascii_input_mandatory("request"))
         )
 
-    def execute(self, api_request: CheckmkAutomationRequest) -> Tuple:
+    def execute(self, api_request: CheckmkAutomationRequest) -> str:
         job = CheckmkAutomationBackgroundJob(api_request=api_request)
         job.start(lambda job_interface: job.execute_automation(job_interface, api_request))
         return job.get_job_id()
@@ -554,7 +554,7 @@ class AutomationCheckmkAutomationGetStatus(AutomationCommand):
         job = CheckmkAutomationBackgroundJob(job_id)
         return tuple(
             CheckmkAutomationGetStatusResponse(
-                job_status=job.get_status_snapshot().get_status_as_dict()[job.get_job_id()],
+                job_status=job.get_status_snapshot().status,
                 result=self._load_result(Path(job.get_work_dir()) / "result.mk"),
             )
         )

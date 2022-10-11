@@ -242,7 +242,7 @@ class AutomationFetchAgentOutputGetStatus(ABCAutomationFetchAgentOutput):
 
 def get_fetch_agent_job_status(api_request: FetchAgentOutputRequest) -> JobStatusSpec:
     job = FetchAgentOutputBackgroundJob(api_request)
-    return job.get_status_snapshot().get_status_as_dict()[job.get_job_id()]
+    return job.get_status_snapshot().status
 
 
 @gui_background_job.job_registry.register

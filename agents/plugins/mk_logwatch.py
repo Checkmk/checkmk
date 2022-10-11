@@ -413,8 +413,8 @@ class State(object):  # pylint: disable=useless-object-inheritance
             # These were used prior to to 1.7.0i1
             parts = line.split("|")
             filename, offset = parts[0], int(parts[1])
-            inode = int(parts[2]) if len(parts) >= 3 else -1
-            return {"file": filename, "offset": offset, "inode": inode}
+            file_id = int(parts[2]) if len(parts) >= 3 else -1
+            return {"file": filename, "offset": offset, "inode": file_id}
 
     def read(self):
         # type: () -> State
@@ -556,16 +556,15 @@ class LogLinesIter(object):  # pylint: disable=useless-object-inheritance
         return None
 
 
-def is_inode_capable(path):
+def get_file_info(path):
+    stat = os.stat(path)
     system = platform.system().lower()
     if system == "windows":
-        volume_name = "%s:\\\\" % path.split(":", 1)[0]
-        import win32api  # type: ignore[import] # pylint: disable=import-error
+        return (stat.st_ctime_ns, stat.st_size)
+    if system in ("linux", "aix", "sunos"):
+        return (stat.st_ino, stat.st_size)
 
-        volume_info = win32api.GetVolumeInformation(volume_name)
-        volume_type = volume_info[-1]
-        return "ntfs" in volume_type.lower()
-    return system in {"linux", "aix", "sunos"}
+    return (1, stat.st_size)
 
 
 def get_formatted_line(line, level):
@@ -607,16 +606,14 @@ def process_logfile(section, filestate, debug):  # pylint: disable=too-many-bran
     try:
         header = "[[[%s]]]\n" % section.name_write
 
-        stat = os.stat(section.name_fs)
-        inode = stat.st_ino if is_inode_capable(section.name_fs) else 1
-        # If we have never seen this file before, we set the inode to -1
-        prev_inode = filestate.get("inode", -1)
-        filestate["inode"] = inode
+        file_id, size = get_file_info(section.name_fs)
+        prev_file_id = filestate.get("inode", -1)
+        filestate["inode"] = file_id
 
         # Look at which file offset we have finished scanning the logfile last time.
         offset = filestate.get("offset")
         # Set the current pointer to the file end
-        filestate["offset"] = stat.st_size
+        filestate["offset"] = size
 
         # If we have never seen this file before, we do not want
         # to make a fuss about ancient log messages... (unless configured to)
@@ -627,19 +624,19 @@ def process_logfile(section, filestate, debug):  # pylint: disable=too-many-bran
         # been started from new (logfile rotation). At least we must
         # assume that. In some rare cases (restore of a backup, etc)
         # we are wrong and resend old log messages
-        if prev_inode >= 0 and inode != prev_inode:
+        if prev_file_id >= 0 and file_id != prev_file_id:
             offset = None
 
         # Our previously stored offset is the current end ->
         # no new lines in this file
-        if offset == stat.st_size:
+        if offset == size:
             return header, []
 
         # If our offset is beyond the current end, the logfile has been
-        # truncated or wrapped while keeping the same inode. We assume
+        # truncated or wrapped while keeping the same file_id. We assume
         # that it contains all new data in that case and restart from
         # beginning.
-        if offset is not None and offset > stat.st_size:
+        if offset is not None and offset > size:
             offset = None
 
         # now seek to offset where interesting data begins

@@ -814,6 +814,25 @@ def test_process_batches(tmpdir, mocker):
     ))
 
 
+def _get_file_info(tmp_path, file_name):
+    return lw.get_file_info(os.path.join(str(tmp_path), "root", file_name))
+
+
+def test_get_uniq_id_one_file(fake_filesystem, tmpdir):
+    file_id, sz = _get_file_info(tmpdir, "file.log")
+    assert file_id > 1
+    assert sz == 0
+    assert (file_id, sz) == _get_file_info(tmpdir, "file.log")
+
+
+def test_get_uniq_id_with_hard_link(fake_filesystem, tmpdir):
+    info = [_get_file_info(tmpdir, f) for f in ("file.log", "hard_linked_file.log", "hard_link_to_file.log" )]
+    assert {s for(_, s) in info} == {0}
+    assert len({i for(i, _) in info}) == 2
+    assert info[0][0] != info[1][0]
+    assert info[1][0] == info[2][0]
+
+
 def test_main(tmpdir, mocker):
     mocker.patch.object(lw, "MK_VARDIR", str(tmpdir))
     lw.main()

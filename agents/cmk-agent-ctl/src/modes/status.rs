@@ -63,11 +63,18 @@ impl serde::ser::Serialize for Remote {
 #[serde_with::serde_as]
 #[derive(serde::Serialize)]
 struct ConnectionStatus {
-    site_id: Option<site_spec::SiteID>,
+    #[serde(flatten)]
+    site_data: Option<SiteData>,
     #[serde_as(as = "DisplayFromStr")]
     uuid: uuid::Uuid,
     local: LocalConnectionStatus,
     remote: Remote,
+}
+
+#[derive(serde::Serialize)]
+struct SiteData {
+    site_id: site_spec::SiteID,
+    receiver_port: u16,
 }
 
 #[derive(serde::Serialize)]
@@ -124,7 +131,10 @@ impl ConnectionStatus {
         agent_rec_api: &Option<impl agent_receiver_api::Status>,
     ) -> ConnectionStatus {
         ConnectionStatus {
-            site_id: Some(site_id.clone()),
+            site_data: Some(SiteData {
+                site_id: site_id.clone(),
+                receiver_port: conn.receiver_port,
+            }),
             uuid: conn.trust.uuid,
             local: LocalConnectionStatus {
                 connection_type: conn_type,
@@ -141,7 +151,7 @@ impl ConnectionStatus {
 
     fn from_imported_conn(conn: &config::TrustedConnection) -> ConnectionStatus {
         ConnectionStatus {
-            site_id: None,
+            site_data: None,
             uuid: conn.uuid,
             local: LocalConnectionStatus {
                 connection_type: config::ConnectionType::Pull,
@@ -154,6 +164,14 @@ impl ConnectionStatus {
     fn local_lines_readable(&self) -> Vec<String> {
         let mut lines = vec![];
         lines.push(format!("Connection type: {}", self.local.connection_type));
+        lines.push(format!(
+            "Connecting to receiver port: {}",
+            if let Some(site_data) = &self.site_data {
+                site_data.receiver_port.to_string()
+            } else {
+                String::from("None (imported connection)")
+            }
+        ));
         match &self.local.cert_info {
             CertParsingResult::Success(cert_info) => {
                 lines.push(format!("Certificate issuer: {}", cert_info.issuer));
@@ -244,8 +262,8 @@ impl ConnectionStatus {
     fn to_human_readable(&self) -> String {
         format!(
             "{}\n\tUUID: {}\n\tLocal:\n\t\t{}\n\tRemote:\n\t\t{}",
-            match &self.site_id {
-                Some(site_id) => format!("Connection: {}", site_id),
+            match &self.site_data {
+                Some(site_data) => format!("Connection: {}", &site_data.site_id),
                 None => "Imported connection:".to_string(),
             },
             self.uuid,
@@ -410,7 +428,10 @@ mod test_status {
             format!(
                 "{}",
                 ConnectionStatus {
-                    site_id: Some(site_spec::SiteID::from_str("localhost/site").unwrap()),
+                    site_data: Some(SiteData {
+                        site_id: site_spec::SiteID::from_str("localhost/site").unwrap(),
+                        receiver_port: 8000,
+                    }),
                     uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Pull,
@@ -424,6 +445,7 @@ mod test_status {
                  \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
                  \tLocal:\n\
                  \t\tConnection type: pull-agent\n\
+                 \t\tConnecting to receiver port: 8000\n\
                  \t\tCertificate issuer: Site 'site' local CA\n\
                  \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
                  \tRemote:\n\
@@ -438,7 +460,10 @@ mod test_status {
             format!(
                 "{}",
                 ConnectionStatus {
-                    site_id: Some(site_spec::SiteID::from_str("localhost/site").unwrap()),
+                    site_data: Some(SiteData {
+                        site_id: site_spec::SiteID::from_str("localhost/site").unwrap(),
+                        receiver_port: 8000,
+                    }),
                     uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: local_connection_status(),
                     remote: Remote::StatusResponse(Ok(
@@ -455,6 +480,7 @@ mod test_status {
                  \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
                  \tLocal:\n\
                  \t\tConnection type: pull-agent\n\
+                 \t\tConnecting to receiver port: 8000\n\
                  \t\tCertificate issuer: Site 'site' local CA\n\
                  \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
                  \tRemote:\n\
@@ -471,7 +497,10 @@ mod test_status {
             format!(
                 "{}",
                 ConnectionStatus {
-                    site_id: Some(site_spec::SiteID::from_str("localhost/site").unwrap()),
+                    site_data: Some(SiteData {
+                        site_id: site_spec::SiteID::from_str("localhost/site").unwrap(),
+                        receiver_port: 8000,
+                    }),
                     uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: local_connection_status(),
                     remote: Remote::StatusResponse(Ok(
@@ -488,6 +517,7 @@ mod test_status {
                  \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
                  \tLocal:\n\
                  \t\tConnection type: pull-agent\n\
+                 \t\tConnecting to receiver port: 8000\n\
                  \t\tCertificate issuer: Site 'site' local CA\n\
                  \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
                  \tRemote:\n\
@@ -504,7 +534,7 @@ mod test_status {
             format!(
                 "{}",
                 ConnectionStatus {
-                    site_id: None,
+                    site_data: None,
                     uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: local_connection_status(),
                     remote: Remote::Imported,
@@ -515,6 +545,7 @@ mod test_status {
                  \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
                  \tLocal:\n\
                  \t\tConnection type: pull-agent\n\
+                 \t\tConnecting to receiver port: None (imported connection)\n\
                  \t\tCertificate issuer: Site 'site' local CA\n\
                  \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
                  \tRemote:\n\
@@ -529,7 +560,10 @@ mod test_status {
             format!(
                 "{}",
                 ConnectionStatus {
-                    site_id: Some(site_spec::SiteID::from_str("localhost/site").unwrap()),
+                    site_data: Some(SiteData {
+                        site_id: site_spec::SiteID::from_str("localhost/site").unwrap(),
+                        receiver_port: 8000,
+                    }),
                     uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: local_connection_status(),
                     remote: Remote::StatusResponse(Err(anyhow!("You shall not pass")))
@@ -540,6 +574,7 @@ mod test_status {
                  \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
                  \tLocal:\n\
                  \t\tConnection type: pull-agent\n\
+                 \t\tConnecting to receiver port: 8000\n\
                  \t\tCertificate issuer: Site 'site' local CA\n\
                  \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
                  \tRemote:\n\
@@ -554,7 +589,10 @@ mod test_status {
             format!(
                 "{}",
                 ConnectionStatus {
-                    site_id: Some(site_spec::SiteID::from_str("localhost/site").unwrap()),
+                    site_data: Some(SiteData {
+                        site_id: site_spec::SiteID::from_str("localhost/site").unwrap(),
+                        receiver_port: 8000,
+                    }),
                     uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: local_connection_status(),
                     remote: Remote::StatusResponse(Ok(
@@ -571,6 +609,7 @@ mod test_status {
                  \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
                  \tLocal:\n\
                  \t\tConnection type: pull-agent\n\
+                 \t\tConnecting to receiver port: 8000\n\
                  \t\tCertificate issuer: Site 'site' local CA\n\
                  \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
                  \tRemote:\n\
@@ -587,7 +626,10 @@ mod test_status {
             format!(
                 "{}",
                 ConnectionStatus {
-                    site_id: Some(site_spec::SiteID::from_str("localhost/site").unwrap()),
+                    site_data: Some(SiteData {
+                        site_id: site_spec::SiteID::from_str("localhost/site").unwrap(),
+                        receiver_port: 8000,
+                    }),
                     uuid: uuid::Uuid::from_str("99f56bbc-5965-4b34-bc70-1959ad1d32d6").unwrap(),
                     local: local_connection_status(),
                     remote: Remote::StatusResponse(Ok(
@@ -604,6 +646,7 @@ mod test_status {
                  \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
                  \tLocal:\n\
                  \t\tConnection type: pull-agent\n\
+                 \t\tConnecting to receiver port: 8000\n\
                  \t\tCertificate issuer: Site 'site' local CA\n\
                  \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
                  \tRemote:\n\
@@ -622,7 +665,10 @@ mod test_status {
             allow_legacy_pull: false,
             connections: vec![
                 ConnectionStatus {
-                    site_id: Some(site_spec::SiteID::from_str("localhost/site").unwrap()),
+                    site_data: Some(SiteData {
+                        site_id: site_spec::SiteID::from_str("localhost/site").unwrap(),
+                        receiver_port: 8000,
+                    }),
                     uuid: uuid::Uuid::from_str("50611369-7a42-4c0b-927e-9a14330401fe").unwrap(),
                     local: local_connection_status(),
                     remote: Remote::StatusResponse(Ok(RemoteConnectionStatus {
@@ -632,7 +678,10 @@ mod test_status {
                     })),
                 },
                 ConnectionStatus {
-                    site_id: Some(site_spec::SiteID::from_str("somewhere/site2").unwrap()),
+                    site_data: Some(SiteData {
+                        site_id: site_spec::SiteID::from_str("somewhere/site2").unwrap(),
+                        receiver_port: 8000,
+                    }),
                     uuid: uuid::Uuid::from_str("3c87778b-8bb8-434d-bcc6-6d05f2668c80").unwrap(),
                     local: LocalConnectionStatus {
                         connection_type: config::ConnectionType::Push,
@@ -663,6 +712,7 @@ mod test_status {
              \tUUID: 50611369-7a42-4c0b-927e-9a14330401fe\n\
              \tLocal:\n\
              \t\tConnection type: pull-agent\n\
+             \t\tConnecting to receiver port: 8000\n\
              \t\tCertificate issuer: Site 'site' local CA\n\
              \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
              \tRemote:\n\
@@ -673,6 +723,7 @@ mod test_status {
              \tUUID: 3c87778b-8bb8-434d-bcc6-6d05f2668c80\n\
              \tLocal:\n\
              \t\tConnection type: push-agent\n\
+             \t\tConnecting to receiver port: 8000\n\
              \t\tCertificate issuer: Site 'site2' local CA\n\
              \t\tCertificate validity: Thu, 16 Dec 2021 08:18:41 +0000 - Tue, 18 Apr 3020 08:18:41 +0000\n\
              \tRemote:\n\
@@ -770,6 +821,7 @@ mod test_status {
                  \tUUID: 99f56bbc-5965-4b34-bc70-1959ad1d32d6\n\
                  \tLocal:\n\
                  \t\tConnection type: push-agent\n\
+                 \t\tConnecting to receiver port: 8000\n\
                  \t\tCertificate parsing failed (!!)\n\
                  \tRemote:\n\
                  \t\tConnection type: pull-agent (!!)\n\

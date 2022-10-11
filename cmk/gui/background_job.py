@@ -83,7 +83,7 @@ class _JobStatusSpec_Mandatory(TypedDict):
     started: float  # Change to Timestamp type later
     pid: int | None
     loginfo: JobLogInfo
-    is_active: bool
+    is_active: bool  # Remove this field and always derive from state dynamically?
 
 
 class JobStatusSpec(_JobStatusSpec_Mandatory, total=False):
@@ -635,9 +635,14 @@ class BackgroundJob:
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 status["state"] = JobStatusStates.STOPPED
 
-        if "state" not in status:
-            status["state"] = JobStatusStates.INITIALIZED
-            status["started"] = time.time()
+        map_job_state_to_is_active = {
+            JobStatusStates.INITIALIZED: True,
+            JobStatusStates.RUNNING: True,
+            JobStatusStates.FINISHED: False,
+            JobStatusStates.STOPPED: False,
+            JobStatusStates.EXCEPTION: False,
+        }
+        status["is_active"] = map_job_state_to_is_active[status["state"]]
 
         return status
 
@@ -809,15 +814,8 @@ class JobStatusStore:
         try:
             # Ignore until we have replaced the TypedDict
             data: JobStatusSpec = JobStatusSpec(self.read_raw())  # type: ignore[misc]
-
-            # Repair broken/invalid files
-            if "state" not in data:
-                data["state"] = JobStatusStates.INITIALIZED
-                data["started"] = os.path.getctime(str(self._jobstatus_path))
         finally:
             store.release_lock(str(self._jobstatus_path))
-
-        data.setdefault("pid", None)
 
         def _log_lines(path: Path) -> list[str]:
             try:
@@ -830,14 +828,6 @@ class JobStatusStore:
         data["loginfo"]["JobResult"] = _log_lines(self._result_message_path)
         data["loginfo"]["JobException"] = _log_lines(self._exceptions_path)
 
-        map_substate_to_active = {
-            JobStatusStates.INITIALIZED: True,
-            JobStatusStates.RUNNING: True,
-            JobStatusStates.FINISHED: False,
-            JobStatusStates.STOPPED: False,
-            JobStatusStates.EXCEPTION: False,
-        }
-        data["is_active"] = map_substate_to_active[data["state"]]
         return data
 
     def read_raw(self) -> dict[str, Any]:

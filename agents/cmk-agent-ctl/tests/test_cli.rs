@@ -9,7 +9,9 @@ mod common;
 
 use anyhow::Result as AnyhowResult;
 use assert_cmd::prelude::OutputAssertExt;
+use cmk_agent_ctl::configuration::config;
 use predicates::prelude::predicate;
+use std::path::Path;
 
 const SUPPORTED_MODES: [&str; 12] = [
     "daemon",
@@ -163,5 +165,51 @@ fn test_fail_socket_missing() {
                 }
             }
         }
+    }
+}
+
+fn write_legacy_registry(path: impl AsRef<Path>) {
+    std::fs::write(
+        path,
+        r#"{
+        "push": {},
+        "pull": {
+          "server:8000/site": {
+            "uuid": "9a2c4eb5-35f5-4bf7-82c0-e2f2c06215ea",
+            "private_key": "private_key",
+            "certificate": "certificate",
+            "root_cert": "root_cert"
+          }
+        },
+        "pull_imported": []
+      }"#,
+    )
+    .unwrap();
+}
+
+#[test]
+fn test_migration_is_always_triggered() {
+    #[cfg(windows)]
+    if !is_elevated::is_elevated() {
+        println!("Test is skipped, must be in elevated mode");
+        return;
+    }
+
+    let test_dir = common::setup_test_dir("cmk-agent-ctl_test_migration_is_always_triggered");
+    let path_registry = test_dir.path().join("registered_connections.json");
+
+    for mode in SUPPORTED_MODES {
+        if mode == "help" {
+            continue;
+        }
+        write_legacy_registry(&path_registry);
+        assert!(config::Registry::from_file(&path_registry).is_err());
+        let mut cmd = common::controller_command();
+        cmd.timeout(std::time::Duration::from_secs(2))
+            .env("DEBUG_HOME_DIR", test_dir.path())
+            .arg(mode)
+            .args(REQUIRED_ARGUMENTS.get(mode).unwrap_or(&vec![]))
+            .assert();
+        assert!(config::Registry::from_file(&path_registry).is_ok())
     }
 }

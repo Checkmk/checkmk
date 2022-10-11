@@ -2,16 +2,63 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use crate::site_spec::SiteID;
+
 use super::config;
-use anyhow::{anyhow, Error as AnyhowError, Result as AnyhowResult};
+use anyhow::{anyhow, Context, Error as AnyhowError, Result as AnyhowResult};
+use config::JSONLoader;
 use serde::Deserialize;
 use serde_with::DisplayFromStr;
 use std::collections::{HashMap, HashSet};
+use std::convert::Into;
 use std::hash::Hash;
+use std::path::Path;
 use std::str::FromStr;
 
+pub fn migrate_registered_connections(path: impl AsRef<Path>) -> AnyhowResult<()> {
+    if config::Registry::from_file(path.as_ref()).is_ok() {
+        return Ok(());
+    }
+
+    let registered_connections_legacy =
+        RegisteredConnections::load(path.as_ref()).context(format!(
+        "Failed to load registered connections from {:?}, both with current and with legacy format",
+        path.as_ref()
+    ))?;
+
+    let mut migrated_registry = config::Registry::new(path.as_ref());
+
+    for (connection_type, legacy_connections) in [
+        (
+            config::ConnectionType::Push,
+            registered_connections_legacy.push,
+        ),
+        (
+            config::ConnectionType::Pull,
+            registered_connections_legacy.pull,
+        ),
+    ] {
+        for (coordinates, legacy_connection) in legacy_connections.into_iter() {
+            let (site_id, migrated_connection) =
+                migrate_standard_connection(coordinates, legacy_connection);
+            migrated_registry.register_connection(&connection_type, &site_id, migrated_connection);
+        }
+    }
+
+    for migrated_connection in registered_connections_legacy
+        .pull_imported
+        .into_iter()
+        .map(|c| c.into())
+    {
+        migrated_registry.register_imported_connection(migrated_connection);
+    }
+
+    migrated_registry
+        .save()
+        .context("Failed to save migrated connection registry")
+}
+
 #[derive(Deserialize, Default)]
-#[allow(dead_code)]
 struct RegisteredConnections {
     #[serde(default)]
     push: HashMap<Coordinates, Connection>,
@@ -24,6 +71,22 @@ struct RegisteredConnections {
 }
 
 impl config::JSONLoader for RegisteredConnections {}
+
+fn migrate_standard_connection(
+    coordinates: Coordinates,
+    connection: Connection,
+) -> (SiteID, config::TrustedConnectionWithRemote) {
+    (
+        SiteID {
+            server: coordinates.server,
+            site: coordinates.site,
+        },
+        config::TrustedConnectionWithRemote {
+            trust: connection.into(),
+            receiver_port: coordinates.port,
+        },
+    )
+}
 
 #[derive(PartialEq, Eq, Hash, serde_with::DeserializeFromStr)]
 struct Coordinates {
@@ -56,7 +119,6 @@ impl FromStr for Coordinates {
 
 #[serde_with::serde_as]
 #[derive(Deserialize)]
-#[allow(dead_code)]
 struct Connection {
     #[serde_as(as = "DisplayFromStr")]
     uuid: uuid::Uuid,
@@ -76,5 +138,164 @@ impl Eq for Connection {}
 impl Hash for Connection {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.uuid.hash(state);
+    }
+}
+
+#[allow(clippy::from_over_into)]
+impl Into<config::TrustedConnection> for Connection {
+    fn into(self) -> config::TrustedConnection {
+        config::TrustedConnection {
+            uuid: self.uuid,
+            private_key: self.private_key,
+            certificate: self.certificate,
+            root_cert: self.root_cert,
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use std::path::PathBuf;
+
+    fn tmp_path() -> PathBuf {
+        tempfile::NamedTempFile::new()
+            .unwrap()
+            .into_temp_path()
+            .to_path_buf()
+    }
+
+    fn write_legacy_registry(path: impl AsRef<Path>) {
+        std::fs::write(
+            path,
+            r#"{
+            "push": {
+              "server:8000/push-site": {
+                "uuid": "ca30e826-cf0e-4a7a-9f9d-84b304d61ccb",
+                "private_key": "private_key_push",
+                "certificate": "certificate_push",
+                "root_cert": "root_cert_push"
+              }
+            },
+            "pull": {
+              "server:8000/pull-site": {
+                "uuid": "9a2c4eb5-35f5-4bf7-82c0-e2f2c06215ea",
+                "private_key": "private_key_pull",
+                "certificate": "certificate_pull",
+                "root_cert": "root_cert_pull"
+              }
+            },
+            "pull_imported": [
+              {
+                "uuid": "882c9443-4d63-4a11-bdc8-3c1fe8bf1506",
+                "private_key": "private_key_imported",
+                "certificate": "certificate_imported",
+                "root_cert": "root_cert_imported"
+              }
+            ]
+          }"#,
+        )
+        .unwrap();
+    }
+
+    #[test]
+    fn test_missing_registry_ok() {
+        let tmp_path = tmp_path();
+        assert!(!tmp_path.exists());
+        assert!(migrate_registered_connections(&tmp_path).is_ok());
+        assert!(!tmp_path.exists());
+    }
+
+    #[test]
+    fn test_up_to_date_registry_untouched() {
+        let tmp_path = tmp_path();
+        config::Registry::new(&tmp_path).save().unwrap();
+        let mtime_before_migration = std::fs::metadata(&tmp_path).unwrap().modified().unwrap();
+        assert!(migrate_registered_connections(&tmp_path).is_ok());
+        let mtime_after_migration = std::fs::metadata(&tmp_path).unwrap().modified().unwrap();
+        assert_eq!(mtime_before_migration, mtime_after_migration);
+    }
+
+    #[test]
+    fn test_legacy_registry_migration() {
+        let tmp_path = tmp_path();
+        write_legacy_registry(&tmp_path);
+        assert!(migrate_registered_connections(&tmp_path).is_ok());
+        let migrated_registry = config::Registry::from_file(&tmp_path).unwrap();
+
+        assert_eq!(migrated_registry.push_connections().count(), 1);
+        assert_eq!(migrated_registry.standard_pull_connections().count(), 1);
+        assert_eq!(migrated_registry.imported_pull_connections().count(), 1);
+
+        let (site_id_push, connection_push) = migrated_registry.push_connections().next().unwrap();
+        assert_eq!(site_id_push.to_string(), "server/push-site");
+        assert_eq!(
+            connection_push.trust.uuid.to_string(),
+            "ca30e826-cf0e-4a7a-9f9d-84b304d61ccb"
+        );
+        assert_eq!(
+            connection_push.trust.private_key.to_string(),
+            "private_key_push"
+        );
+        assert_eq!(
+            connection_push.trust.certificate.to_string(),
+            "certificate_push"
+        );
+        assert_eq!(
+            connection_push.trust.root_cert.to_string(),
+            "root_cert_push"
+        );
+        assert_eq!(connection_push.receiver_port, 8000);
+
+        let (site_id_pull, connection_pull) = migrated_registry
+            .standard_pull_connections()
+            .next()
+            .unwrap();
+        assert_eq!(site_id_pull.to_string(), "server/pull-site");
+        assert_eq!(
+            connection_pull.trust.uuid.to_string(),
+            "9a2c4eb5-35f5-4bf7-82c0-e2f2c06215ea"
+        );
+        assert_eq!(
+            connection_pull.trust.private_key.to_string(),
+            "private_key_pull"
+        );
+        assert_eq!(
+            connection_pull.trust.certificate.to_string(),
+            "certificate_pull"
+        );
+        assert_eq!(
+            connection_pull.trust.root_cert.to_string(),
+            "root_cert_pull"
+        );
+        assert_eq!(connection_pull.receiver_port, 8000);
+
+        let connection_imported = migrated_registry
+            .imported_pull_connections()
+            .next()
+            .unwrap();
+        assert_eq!(
+            connection_imported.uuid.to_string(),
+            "882c9443-4d63-4a11-bdc8-3c1fe8bf1506"
+        );
+        assert_eq!(
+            connection_imported.private_key.to_string(),
+            "private_key_imported"
+        );
+        assert_eq!(
+            connection_imported.certificate.to_string(),
+            "certificate_imported"
+        );
+        assert_eq!(
+            connection_imported.root_cert.to_string(),
+            "root_cert_imported"
+        );
+    }
+
+    #[test]
+    fn test_crash_upon_corrupt_registry() {
+        let tmp_path = tmp_path();
+        std::fs::write(&tmp_path, "nonsense").unwrap();
+        assert!(migrate_registered_connections(&tmp_path).is_err())
     }
 }

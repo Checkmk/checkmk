@@ -36,6 +36,7 @@ pub use setup::init;
 pub use misc::validate_elevation;
 
 pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> AnyhowResult<()> {
+    configuration::migrate::migrate_registered_connections(&paths.registry_path)?;
     agent_socket_operational(&args)?;
 
     let runtime_config = config::RuntimeConfig::load(&paths.config_path)?;

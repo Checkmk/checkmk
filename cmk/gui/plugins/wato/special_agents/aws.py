@@ -107,9 +107,7 @@ class AWSSpecialAgentValuespecBuilder:
         "cloudfront",
     }
     # Regional services that should be present just in the CMK plus edition
-    PLUS_ONLY_REGIONAL_SERVICES = {
-        "sns",
-    }
+    PLUS_ONLY_REGIONAL_SERVICES = {"sns", "ecs"}
 
     def __init__(self, plus_edition: bool):
         self.is_plus_edition = plus_edition
@@ -366,6 +364,17 @@ class AWSSpecialAgentValuespecBuilder:
                     ],
                     optional_keys=["limits"],
                     default_keys=["limits"],
+                ),
+            ),
+            (
+                "ecs",
+                Dictionary(
+                    title=_("Elastic Container Service (ECS)"),
+                    elements=[
+                        _vs_element_aws_service_selection(),
+                    ],
+                    optional_keys=[],
+                    default_keys=[],
                 ),
             ),
         ]

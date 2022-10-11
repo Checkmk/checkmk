@@ -17,6 +17,7 @@ import sys
 from collections import Counter, defaultdict
 from collections.abc import Iterable, Mapping, Sequence
 from datetime import datetime, timedelta
+from enum import Enum
 from pathlib import Path
 from time import sleep
 from typing import Any, Callable, Literal, NamedTuple, TypedDict, TypeVar
@@ -24,6 +25,7 @@ from typing import Any, Callable, Literal, NamedTuple, TypedDict, TypeVar
 import boto3  # type: ignore[import]
 import botocore  # type: ignore[import]
 from botocore.client import BaseClient  # type: ignore[import]
+from pydantic import BaseModel, Field
 from typing_extensions import NotRequired
 
 import cmk.utils.password_store
@@ -82,7 +84,7 @@ class RawTag(TypedDict):
     Values: Sequence[str]
 
 
-OverallTags = tuple[Sequence[str], Sequence[str]]
+OverallTags = tuple[Sequence[str] | None, Sequence[str] | None]
 RawTags = list[RawTag]
 Tags = list[Mapping[Literal["Key", "Value"], str]]
 
@@ -192,6 +194,10 @@ T = TypeVar("T")
 #     |
 #     '-- WAFV2WebACL
 
+# ECSSummary
+# |
+# '-- ECS
+
 
 class AWSConfig:
     def __init__(self, hostname: str, sys_argv: Sequence[str], overall_tags: OverallTags) -> None:
@@ -221,12 +227,11 @@ class AWSConfig:
     def _prepare_tags(
         tags: OverallTags,
     ) -> RawTags | None:
-        if all(tags):
-            keys, values = tags
-            return [
-                {"Name": "tag:%s" % k, "Values": v} for k, v in zip([k[0] for k in keys], values)
-            ]
-        return None
+        keys, values = tags
+        if keys is None or values is None:
+            return None
+
+        return [{"Name": "tag:%s" % k, "Values": v} for k, v in zip([k[0] for k in keys], values)]
 
     def add_single_service_config(self, key: str, value: object | None) -> None:
         self.service_config.setdefault(key, value)
@@ -5335,6 +5340,175 @@ class SNSLimits(AWSSectionLimits):
 
 
 # .
+#   .--ECS-----------------------------------------------------------------.
+#   |                          _____ ____ ____                             |
+#   |                         | ____/ ___/ ___|                            |
+#   |                         |  _|| |   \___ \                            |
+#   |                         | |__| |___|___) |                           |
+#   |                         |_____\____|____/                            |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+class StatusEnum(str, Enum):
+    active = "ACTIVE"
+    provisioning = "PROVISIONING"
+    deprovisioning = "DEPROVISIONING"
+    failed = "FAILED"
+    inactive = "INACTIVE"
+
+
+class Tag(BaseModel):
+    Key: str = Field(None, alias="key")
+    Value: str = Field(None, alias="value")
+
+    class Config:
+        allow_population_by_field_name = True
+
+
+class Cluster(BaseModel):
+    clusterArn: str
+    clusterName: str
+    status: StatusEnum
+    tags: Sequence[Tag]
+
+
+class ECSSummary(AWSSection):
+    def __init__(
+        self,
+        client: BaseClient,
+        region: str,
+        config: AWSConfig,
+        distributor: ResultDistributor | None = None,
+    ) -> None:
+        super().__init__(client, region, config, distributor=distributor)
+        self._names = self._config.service_config["ecs_names"]
+        self._tags = self._prepare_tags_for_api_response(self._config.service_config["ecs_tags"])
+
+    @property
+    def name(self) -> str:
+        return "ecs_summary"
+
+    @property
+    def cache_interval(self) -> int:
+        return 300
+
+    @property
+    def granularity(self) -> int:
+        return 300
+
+    def _get_colleague_contents(self) -> AWSColleagueContents:
+        return AWSColleagueContents(None, 0.0)
+
+    def _get_cluster_ids(self) -> Iterable[str]:
+        if self._names is not None:
+            yield from self._names
+            return
+
+        for page in self._client.get_paginator("list_clusters").paginate():
+            yield from self._get_response_content(page, "clusterArns")
+
+    def _get_clusters(self, cluster_ids: Sequence[str]) -> Iterable[Cluster]:
+        # the ECS.Client API allows fetching up to 100 clusters at once
+        for chunk in _chunks(cluster_ids, length=100):
+            clusters = self._client.describe_clusters(clusters=chunk, include=["TAGS"])
+            yield from [
+                Cluster(**cluster_data)
+                for cluster_data in self._get_response_content(clusters, "clusters")
+            ]
+
+    def _filter_clusters_by_tags(
+        self, clusters: Iterable[Cluster]
+    ) -> Iterable[Mapping[str, object]]:
+        for cluster in clusters:
+            for cluster_tag in cluster.tags:
+                if self._tags and cluster_tag.dict() in self._tags:
+                    yield cluster.dict()
+
+    def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping[str, object]]:
+        cluster_ids = list(self._get_cluster_ids())
+        clusters = self._get_clusters(cluster_ids)
+
+        if self._tags is not None:
+            return list(self._filter_clusters_by_tags(clusters))
+
+        return [c.dict() for c in clusters]
+
+    def _compute_content(
+        self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
+    ) -> AWSComputedContent:
+        clusters = [Cluster(**c) for c in raw_content.content]
+        return AWSComputedContent(clusters, raw_content.cache_timestamp)
+
+    def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
+        return [AWSSectionResult("", [c.dict() for c in computed_content.content])]
+
+
+class ECS(AWSSectionCloudwatch):
+    @property
+    def name(self) -> str:
+        return "ecs"
+
+    @property
+    def cache_interval(self) -> int:
+        return 300
+
+    @property
+    def granularity(self) -> int:
+        return 300
+
+    def _get_colleague_contents(self) -> AWSColleagueContents:
+        colleague = self._received_results.get("ecs_summary")
+        if colleague and colleague.content:
+            return AWSColleagueContents(
+                [cluster.clusterName for cluster in colleague.content],
+                colleague.cache_timestamp,
+            )
+        return AWSColleagueContents([], 0.0)
+
+    def _get_metrics(self, colleague_contents: AWSColleagueContents) -> Metrics:
+        muv: list[tuple[str, str]] = [
+            ("CPUUtilization", "Percent"),
+            ("CPUReservation", "Percent"),
+            ("MemoryUtilization", "Percent"),
+            ("MemoryReservation", "Percent"),
+        ]
+        metrics: Metrics = []
+        for idx, cluster_name in enumerate(colleague_contents.content):
+            for metric_name, unit in muv:
+                metric: Metric = {
+                    "Id": self._create_id_for_metric_data_query(idx, metric_name),
+                    "Label": cluster_name,
+                    "MetricStat": {
+                        "Metric": {
+                            "Namespace": "AWS/ECS",
+                            "MetricName": metric_name,
+                            "Dimensions": [
+                                {
+                                    "Name": "ClusterName",
+                                    "Value": cluster_name,
+                                }
+                            ],
+                        },
+                        "Period": self.period,
+                        "Stat": "Average",
+                    },
+                }
+                if unit:
+                    metric["MetricStat"]["Unit"] = unit
+                metrics.append(metric)
+        return metrics
+
+    def _compute_content(
+        self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
+    ) -> AWSComputedContent:
+        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
+
+    def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
+        return [AWSSectionResult("", computed_content.content)]
+
+
+# .
 #   .--sections------------------------------------------------------------.
 #   |                               _   _                                  |
 #   |                 ___  ___  ___| |_(_) ___  _ __  ___                  |
@@ -5809,6 +5983,15 @@ class AWSSectionsGeneric(AWSSections):
             if config.service_config.get("sns_limits"):
                 self._sections.append(sns_limits)
 
+        if "ecs" in services:
+            ecs_client = self._init_client("ecs")
+            ecs_summary = ECSSummary(ecs_client, region, config, distributor)
+            self._sections.append(ecs_summary)
+
+            ecs = ECS(cloudwatch_client, region, config)
+            distributor.add("ecs_summary", ecs)
+            self._sections.append(ecs)
+
 
 # .
 #   .--main----------------------------------------------------------------.
@@ -5947,6 +6130,14 @@ AWSServices = [
         key="cloudfront",
         title="CloudFront",
         global_service=True,
+        filter_by_names=True,
+        filter_by_tags=True,
+        limits=False,
+    ),
+    AWSServiceAttributes(
+        key="ecs",
+        title="ECS",
+        global_service=False,
         filter_by_names=True,
         filter_by_tags=True,
         limits=False,
@@ -6239,6 +6430,7 @@ def _configure_aws(args: Args, sys_argv: Sequence[str]) -> AWSConfig:
             (args.cloudfront_tag_key, args.cloudfront_tag_values),
             None,
         ),
+        ("ecs", args.ecs_names, (args.ecs_tag_key, args.ecs_tag_values), None),
     ]:
         aws_config.add_single_service_config("%s_names" % service_key, service_names)
         aws_config.add_service_tags("%s_tags" % service_key, service_tags)

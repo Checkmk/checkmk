@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
-from typing import Iterable, Sequence, Type
+from typing import Iterable, Literal, Sequence, Type
 
 import cmk.utils.plugin_registry
 import cmk.utils.render
@@ -312,7 +312,10 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
     def show_status_of_job_classes(
         self, job_classes: Iterable[Type[GUIBackgroundJob]], job_details_back_url: str
     ) -> None:
-        job_class_infos = {}
+        job_class_infos: dict[
+            Type[GUIBackgroundJob],
+            dict[background_job.JobId, background_job.JobStatusSpec],
+        ] = {}
         for job_class in job_classes:
             all_job_ids = self.get_all_job_ids(job_class)
             if not all_job_ids:
@@ -366,7 +369,9 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
 
 class JobRenderer:
     @classmethod
-    def show_job_details(cls, job_id, job_status):
+    def show_job_details(
+        cls, job_id: background_job.JobId, job_status: background_job.JobStatusSpec
+    ) -> None:
         """Renders the complete job details in a single table with left headers"""
         html.open_table(class_=["data", "headerleft", "job_details"])
 
@@ -424,15 +429,15 @@ class JobRenderer:
             html.close_tr()
 
         # Dynamic data
-        loginfo = job_status.get("loginfo")
+        loginfo = job_status["loginfo"]
         runtime_info = cmk.utils.render.timespan(job_status.get("duration", 0))
         if (
             job_status["state"] == background_job.JobStatusStates.RUNNING
-            and job_status.get("estimated_duration") is not None
+            and (estimated_duration := job_status.get("estimated_duration")) is not None
         ):
             runtime_info += " (%s: %s)" % (
                 _("estimated duration"),
-                cmk.utils.render.timespan(job_status["estimated_duration"]),
+                cmk.utils.render.timespan(estimated_duration),
             )
         for left, right in [
             (_("Runtime"), runtime_info),
@@ -447,7 +452,7 @@ class JobRenderer:
             html.close_tr()
 
         # Exceptions
-        exceptions = loginfo["JobException"]
+        exceptions = list(loginfo["JobException"])
         if exceptions:
             html.open_tr()
             html.th(_("Exceptions"))
@@ -476,11 +481,18 @@ class JobRenderer:
         html.close_table()
 
     @classmethod
-    def _get_extra_info(cls, job_status) -> str:  # type:ignore[no-untyped-def]
+    def _get_extra_info(cls, job_status: background_job.JobStatusSpec) -> str:
         return " (%s)" % job_status["title"] if job_status.get("title") else ""
 
     @classmethod
-    def show_job_class_infos(cls, job_class_infos, job_details_back_url):
+    def show_job_class_infos(
+        cls,
+        job_class_infos: dict[
+            Type[GUIBackgroundJob],
+            dict[background_job.JobId, background_job.JobStatusSpec],
+        ],
+        job_details_back_url: str,
+    ) -> None:
         """Renders all jobs from the job_class_infos in a single multi-table"""
         html.open_table(css="job_table data")
         for job_class, jobs_info in sorted(job_class_infos.items(), key=lambda x: x[0].gui_title()):
@@ -499,7 +511,7 @@ class JobRenderer:
                 continue
 
             cls.show_job_row_headers()
-            odd = "even"
+            odd: Literal["odd", "even"] = "even"
             for job_id, job_status in sorted(
                 jobs_info.items(), key=lambda x: x[1]["started"], reverse=True
             ):
@@ -507,14 +519,14 @@ class JobRenderer:
                 odd = "even" if odd == "odd" else "odd"
 
     @classmethod
-    def show_job_row_headers(cls):
+    def show_job_row_headers(cls) -> None:
         html.open_tr()
         for header in cls.get_headers():
             html.th(header)
         html.close_tr()
 
     @classmethod
-    def get_headers(cls):
+    def get_headers(cls) -> list[str]:
         return [
             _("Actions"),
             _("Job ID"),
@@ -529,8 +541,12 @@ class JobRenderer:
         ]
 
     @classmethod
-    def render_job_row(  # type:ignore[no-untyped-def]
-        cls, job_id, job_status, odd, job_details_back_url
+    def render_job_row(
+        cls,
+        job_id: background_job.JobId,
+        job_status: background_job.JobStatusSpec,
+        odd: Literal["odd", "even"],
+        job_details_back_url: str,
     ) -> None:
         html.open_tr(css="data %s0" % odd)
 
@@ -586,7 +602,7 @@ class JobRenderer:
         html.td(cmk.utils.render.timespan(job_status.get("duration", 0)), css="job_runtime")
 
         # Progress info
-        loginfo = job_status.get("loginfo")
+        loginfo = job_status["loginfo"]
         if loginfo:
             if job_status.get("state") == background_job.JobStatusStates.EXCEPTION:
                 html.td(HTML("<br>".join(loginfo["JobException"])), css="job_last_progress")
@@ -602,7 +618,7 @@ class JobRenderer:
             html.td("", css="job_result")
 
     @classmethod
-    def get_css_for_jobstate(cls, job_state):
+    def get_css_for_jobstate(cls, job_state: str) -> str:
         job_css_map = {
             background_job.JobStatusStates.INITIALIZED: "state statep",
             background_job.JobStatusStates.RUNNING: "state job_running",

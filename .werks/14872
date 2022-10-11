@@ -1,0 +1,19 @@
+Title: mk_logwatch plugins correctly reports changes on Windows
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1665512248
+Edition: cre
+Knowledge: doc
+Level: 2
+State: unknown
+Version: 2.1.0p14
+
+Previously, mk_logwatch plugin may wrongly report as changed 
+the whole content of a log file. The source of the problem was 
+an unstable file identification algorithm on Windows.
+
+With this release logwatch plugin on Windows always correctly 
+deteremines changed part of monitored file.
+
+

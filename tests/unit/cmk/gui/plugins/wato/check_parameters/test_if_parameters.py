@@ -429,6 +429,44 @@ def test_transform_discovery_if_rules(params, result):
                 ),
             },
         ),
+        (
+            {
+                "map_operstates": [
+                    ("1", 0),
+                    ("2", 2),
+                    ("3", 0),
+                    ("6", 3),
+                    ("7", 1),
+                    ("8", 1),
+                    ("9", 2),
+                ],
+            },
+            {
+                "state_mappings": (
+                    "independent_mappings",
+                    {
+                        "map_operstates": [
+                            (["1", "3"], 0),
+                            (["2"], 2),
+                            (["6"], 3),
+                            (["7", "8"], 1),
+                        ],
+                        "map_admin_states": [(["2"], 2)],
+                    },
+                ),
+            },
+        ),
+        (
+            {"map_operstates": [("9", 0)]},
+            {
+                "state_mappings": (
+                    "independent_mappings",
+                    {
+                        "map_admin_states": [(["2"], 0)],
+                    },
+                ),
+            },
+        ),
         # transformations for 2.0.0i1/b1 -> 2.0.0b2
         (
             {

@@ -1,0 +1,17 @@
+Title: Fix 1.6 rule "Network interfaces and switch ports" with "admin down" state when upgrading
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1665493224
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p17
+
+When upgrading from 1.6, the "Network interfaces and switch ports" rule can lead to an error
+C+:
+'str' object has no attribute 'remove'
+C-:
+if the "admin down" operational state is configured.
+This error has been fixed with this werk.

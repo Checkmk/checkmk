@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
+from collections import defaultdict
 from typing import Any, Dict, List
 from typing import Optional as _Optional
 from typing import Tuple as _Tuple
@@ -352,7 +353,6 @@ def _vs_matching_conditions():
 
 
 def _transform_discovery_if_rules(params):
-
     use_alias = params.pop("use_alias", None)
     if use_alias:
         params["item_appearance"] = "alias"
@@ -672,7 +672,6 @@ def _item_spec_if():
 
 
 def _transform_if_check_parameters(v):
-
     # TODO: This is a workaround which makes sure input arguments are not getting altered.
     #       A nice implementation would return a new dict based on the input
     v = copy.deepcopy(v)
@@ -733,19 +732,29 @@ def _transform_if_check_parameters(v):
         v["admin_state"] = ["2"]
 
     # map_operstates can be transformed uniquely
-    map_operstates = v.get("map_operstates", [])
     mon_state_9 = None
+    reverse_map = defaultdict(set)
+    # selection type changed from DropdownChoice (single choice) to ListChoice (multiple choice)
+    # support both input types
+    map_operstates = [
+        (oper_states if isinstance(oper_states, list) else [oper_states], mon_state)
+        for oper_states, mon_state in v.get("map_operstates", [])
+    ]
     for oper_states, mon_state in map_operstates:
         if "9" in oper_states:
             mon_state_9 = mon_state
             oper_states.remove("9")
+        # combine operational states on same monitoring states for cleaner config
+        reverse_map[mon_state].update(oper_states)
+    map_operstates = [(list(sorted(oper)), mon) for mon, oper in reverse_map.items()]
+
     if map_operstates:
         v["map_operstates"] = [
             mapping_oper_states for mapping_oper_states in map_operstates if mapping_oper_states[0]
         ]
         if not v["map_operstates"]:
             del v["map_operstates"]
-    if mon_state_9:
+    if mon_state_9 is not None:
         v["map_admin_states"] = [(["2"], mon_state_9)]
 
     # Up to 2.0.0p5, there were only independent mappings of operational and admin states. Then, we

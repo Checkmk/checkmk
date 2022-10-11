@@ -9,7 +9,7 @@ import sys
 import time
 from typing import Any, NoReturn
 
-from livestatus import QueryTypes, SingleSiteConnection
+from livestatus import SingleSiteConnection
 
 # These variable will be substituted at 'make dist' time
 __version__ = "2.2.0i1"
@@ -65,28 +65,18 @@ define timeperiod {
 #   | The actual livedump                                                  |
 #   '----------------------------------------------------------------------'
 
-g_connection: SingleSiteConnection | None = None
-opt_socket: str | None = None
 
-
-def connect() -> None:
-    global g_connection, opt_socket
-    if not opt_socket and not omd_root():
+def connect(socket_path: str | None) -> SingleSiteConnection:
+    if not socket_path and not omd_root():
         bail_out("Please specify the URL of the livestatus socket.")
     if omd_root():
-        opt_socket = "unix:%s/tmp/run/live" % omd_root()
-    elif opt_socket is None:
+        socket_path = "unix:%s/tmp/run/live" % omd_root()
+    elif socket_path is None:
         bail_out("No socket specified")
-    g_connection = SingleSiteConnection(opt_socket)
+    return SingleSiteConnection(socket_path)
 
 
-def run_query(query: QueryTypes) -> list[dict[str, Any]]:
-    if g_connection is None:
-        bail_out("No connection")
-    return g_connection.query_table_assoc(query)
-
-
-def livedump_config() -> None:  # pylint: disable=too-many-branches
+def livedump_config(connection: SingleSiteConnection) -> None:  # pylint: disable=too-many-branches
     if opt_dump_templates:
         dump_templates()
 
@@ -104,7 +94,7 @@ def livedump_config() -> None:  # pylint: disable=too-many-branches
         "Columns: name alias address groups check_command icon_image "
         "max_check_attempts contacts contact_groups\n" + opt_host_headers + opt_host_only_headers
     )
-    for row in run_query(query):
+    for row in connection.query_table_assoc(query):
         prepare_row(row)
         row["groupstring"] = ",".join(row["groups"])
         sys.stdout.write("define host {\n  use                livedump-host\n")
@@ -139,7 +129,7 @@ def livedump_config() -> None:  # pylint: disable=too-many-branches
         "Columns: host_name description groups check_command "
         "max_check_attempts contacts\n" + opt_host_headers + opt_service_headers
     )
-    for row in run_query(query):
+    for row in connection.query_table_assoc(query):
         prepare_row(row)
         if row["groups"]:
             row["groupstring"] = "service_groups " + ",".join(row["groups"])
@@ -163,7 +153,7 @@ def livedump_config() -> None:  # pylint: disable=too-many-branches
         )
 
 
-def livedump_state() -> None:
+def livedump_state(connection: SingleSiteConnection) -> None:
     now = time.time()
     # Dump hosts
     query = (
@@ -173,7 +163,7 @@ def livedump_state() -> None:
         + opt_host_only_headers
     )
 
-    for row in run_query(query):
+    for row in connection.query_table_assoc(query):
         row["now"] = now
         if opt_prefix:
             sys.stdout.write("host_name=%s%s" % (opt_prefix, row["name"]))
@@ -202,7 +192,7 @@ output=%(plugin_output)s|%(perf_data)s
         + opt_service_headers
     )
 
-    for row in run_query(query):
+    for row in connection.query_table_assoc(query):
         row["now"] = now
         if opt_prefix:
             sys.stdout.write("host_name=%s%s" % (opt_prefix, row["host_name"]))
@@ -347,6 +337,7 @@ opt_dump_templates = False
 opt_groups = False
 opt_host_icon = False
 opt_check_interval: int | None = None
+opt_socket: str | None = None
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -356,15 +347,12 @@ except getopt.GetoptError as err:
     sys.exit(1)
 
 for o, a in opts:
-    # Docu modes
     if o in ["-h", "--help"]:
         usage()
         sys.exit(0)
     elif o in ["-V", "--version"]:
         print_version()
         sys.exit(0)
-
-    # Modifiers
     elif o in ["-T", "--dump-templates"]:
         opt_dump_templates = True
     elif o in ["-M", "--mark-mode"]:
@@ -392,16 +380,15 @@ for o, a in opts:
 
 # Main modes
 try:
-    connect()
     for o, a in opts:
         if o in ["-C", "--config"]:
             if opt_mark_mode:
                 sys.stdout.write("config %s\n" % omd_site())
-            livedump_config()
+            livedump_config(connect(opt_socket))
             sys.exit(0)
     if opt_mark_mode:
         sys.stdout.write("status\n")
-    livedump_state()
+    livedump_state(connect(opt_socket))
 
 except Exception as e:
     if opt_debug:

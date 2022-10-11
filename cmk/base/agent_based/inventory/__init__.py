@@ -148,7 +148,7 @@ def active_check_inventory(
 ) -> ServiceState:
     host_config = HostConfig.make_host_config(hostname)
     return error_handling.check_result(
-        partial(_execute_active_check_inventory, hostname, options),
+        partial(_execute_active_check_inventory, host_config, options),
         host_config=host_config,
         plugin_name="check_mk_active-cmk_inv",
         service_name="Check_MK HW/SW Inventory",
@@ -158,14 +158,12 @@ def active_check_inventory(
 
 
 def _execute_active_check_inventory(
-    hostname: HostName, options: Dict[str, int]
+    host_config: HostConfig, options: Dict[str, int]
 ) -> ActiveCheckResult:
     hw_changes = options.get("hw-changes", 0)
     sw_changes = options.get("sw-changes", 0)
     sw_missing = options.get("sw-missing", 0)
     fail_status = options.get("inv-fail-status", 1)
-
-    host_config = HostConfig.make_host_config(hostname)
 
     retentions_tracker = RetentionsTracker(host_config.inv_retention_intervals)
 
@@ -188,7 +186,7 @@ def _execute_active_check_inventory(
         old_tree = None
         update_result = ActiveCheckResult(fail_status, "Cannot update tree")
     else:
-        old_tree = _save_inventory_tree(hostname, trees.inventory, retentions)
+        old_tree = _save_inventory_tree(host_config.hostname, trees.inventory, retentions)
         update_result = ActiveCheckResult()
 
     return ActiveCheckResult.from_subresults(

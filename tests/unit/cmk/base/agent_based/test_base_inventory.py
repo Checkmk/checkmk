@@ -21,6 +21,7 @@ from cmk.base.agent_based.inventory._retentions import (
     TableUpdater,
 )
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
+from cmk.base.config import HostConfig
 
 
 def test_aggregator_raises_collision() -> None:
@@ -1478,7 +1479,8 @@ def test__execute_active_check_inventory(
     )
 
     result = inventory._execute_active_check_inventory(
-        hostname, {} if failed_state is None else {"inv-fail-status": failed_state}
+        HostConfig.make_host_config(hostname),
+        {} if failed_state is None else {"inv-fail-status": failed_state},
     )
 
     assert expected == result.state

@@ -10,7 +10,6 @@ import io
 import logging
 import multiprocessing
 import os
-import pprint
 import shutil
 import signal
 import sys
@@ -793,7 +792,7 @@ class JobStatusStore:
 
     def read(self) -> JobStatusSpec:
         if not self._jobstatus_path.exists():
-            data = JobStatusSpec(
+            return JobStatusSpec(
                 {
                     "state": JobStatusStates.INITIALIZED,
                     "started": time.time(),
@@ -806,18 +805,17 @@ class JobStatusStore:
                     },
                 }
             )
-        else:
-            try:
-                # Read this data with an explicit lock
-                # This prevents a race condition where an empty jobstatus.mk file is read
-                data = store.load_object_from_file(str(self._jobstatus_path), default={}, lock=True)
 
-                # Repair broken/invalid files
-                if "state" not in data:
-                    data["state"] = JobStatusStates.INITIALIZED
-                    data["started"] = os.path.getctime(str(self._jobstatus_path))
-            finally:
-                store.release_lock(str(self._jobstatus_path))
+        try:
+            # Ignore until we have replaced the TypedDict
+            data: JobStatusSpec = JobStatusSpec(self.read_raw())  # type: ignore[misc]
+
+            # Repair broken/invalid files
+            if "state" not in data:
+                data["state"] = JobStatusStates.INITIALIZED
+                data["started"] = os.path.getctime(str(self._jobstatus_path))
+        finally:
+            store.release_lock(str(self._jobstatus_path))
 
         data.setdefault("pid", None)
 
@@ -842,11 +840,19 @@ class JobStatusStore:
         data["is_active"] = map_substate_to_active[data["state"]]
         return data
 
+    def read_raw(self) -> dict[str, Any]:
+        status: dict[str, Any] | None = store.load_object_from_file(
+            self._jobstatus_path, default=None, lock=True
+        )
+        if not status:
+            raise ValueError(f"Invalid job status {status!r} found in {self._jobstatus_path}")
+        return status
+
     def exists(self) -> bool:
         return self._jobstatus_path.exists()
 
     def write(self, status: JobStatusSpec) -> None:
-        store.save_mk_file(self._jobstatus_path, self._format_value(status))
+        store.save_object_to_file(self._jobstatus_path, status)
 
     def update(self, params: JobStatusSpecUpdate) -> None:
         if not self._jobstatus_path.parent.exists():
@@ -854,16 +860,12 @@ class JobStatusStore:
 
         if params:
             try:
-                status = store.load_object_from_file(
-                    str(self._jobstatus_path), default={}, lock=True
-                )
+                # Ignore until we have replaced the TypedDict
+                status = JobStatusSpec(self.read_raw())  # type: ignore[misc]
                 status.update(params)
                 self.write(status)
             finally:
                 store.release_lock(str(self._jobstatus_path))
-
-    def _format_value(self, value: Any) -> str:
-        return pprint.pformat(value)
 
 
 class BackgroundJobManager:

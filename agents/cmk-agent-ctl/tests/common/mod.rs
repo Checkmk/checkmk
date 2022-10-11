@@ -6,6 +6,7 @@ use cmk_agent_ctl::{certs as lib_certs, configuration::config, site_spec, types}
 use std::{path::Path, str::FromStr};
 pub mod agent;
 pub mod certs;
+use assert_cmd::Command;
 #[cfg(windows)]
 pub use is_elevated;
 
@@ -123,4 +124,8 @@ pub fn setup_agent_socket_path(home_dir: &std::path::Path) -> String {
         .to_str()
         .unwrap()
         .to_string()
+}
+
+pub fn controller_command() -> Command {
+    Command::cargo_bin("cmk-agent-ctl").unwrap()
 }

@@ -8,10 +8,8 @@
 mod common;
 
 use anyhow::Result as AnyhowResult;
-use assert_cmd::{prelude::OutputAssertExt, Command};
+use assert_cmd::prelude::OutputAssertExt;
 use predicates::prelude::predicate;
-
-const BINARY: &str = "cmk-agent-ctl";
 
 const SUPPORTED_MODES: [&str; 12] = [
     "daemon",
@@ -54,7 +52,7 @@ fn test_supported_modes(help_stdout: String) -> bool {
 
 #[test]
 fn test_help() {
-    let output = Command::cargo_bin(BINARY).unwrap().arg("-h").unwrap();
+    let output = common::controller_command().arg("-h").unwrap();
     let stdout = std::str::from_utf8(&output.stdout).unwrap();
     assert!(stdout.contains("Checkmk agent controller"));
     assert!(test_supported_modes(String::from(stdout)));
@@ -98,7 +96,7 @@ async fn test_dump() -> AnyhowResult<()> {
         expected_remote_address,
     ));
 
-    let mut cmd = Command::cargo_bin(BINARY)?;
+    let mut cmd = common::controller_command();
 
     cmd.env("DEBUG_HOME_DIR", test_dir.path())
         .env("DEBUG_WINDOWS_INTERNAL_PORT", port.to_string())
@@ -122,7 +120,7 @@ fn test_fail_become_user() {
         if mode == "help" {
             continue;
         }
-        let mut cmd = Command::cargo_bin(BINARY).unwrap();
+        let mut cmd = common::controller_command();
         let err = cmd
             .arg(mode)
             .args(REQUIRED_ARGUMENTS.get(mode).unwrap_or(&vec![]))
@@ -142,7 +140,7 @@ fn test_fail_socket_missing() {
     let error_message_socket = "Something seems wrong with the agent socket";
 
     for mode in SUPPORTED_MODES {
-        let mut cmd = Command::cargo_bin(BINARY).unwrap();
+        let mut cmd = common::controller_command();
         let output_res = cmd
             .timeout(std::time::Duration::from_secs(1))
             .env("DEBUG_HOME_DIR", "whatever")

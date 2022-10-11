@@ -7,7 +7,7 @@
 #![allow(dead_code)]
 mod common;
 
-use assert_cmd::{prelude::OutputAssertExt, Command};
+use assert_cmd::prelude::OutputAssertExt;
 use predicates::prelude::*;
 
 #[tokio::test(flavor = "multi_thread")]
@@ -30,7 +30,7 @@ async fn test_status_ok() {
         ));
     }
 
-    let mut cmd = Command::cargo_bin("cmk-agent-ctl").unwrap();
+    let mut cmd = common::controller_command();
     cmd.env("DEBUG_HOME_DIR", test_dir.path())
         .arg("status")
         .unwrap()
@@ -47,7 +47,7 @@ async fn test_status_ok() {
 #[cfg(unix)]
 #[test]
 fn test_status_socket_down() {
-    let mut cmd = Command::cargo_bin("cmk-agent-ctl").unwrap();
+    let mut cmd = common::controller_command();
     cmd.env("DEBUG_HOME_DIR", "/hurz/barz")
         .arg("status")
         .unwrap()

@@ -28,6 +28,8 @@ from cmk.gui.userdb import htpasswd
 from cmk.gui.watolib.custom_attributes import load_custom_attrs_from_mk_file
 from cmk.gui.watolib.users import delete_users, edit_users
 
+from .host_config import _except_keys
+
 TIMESTAMP_RANGE = Tuple[float, float]
 
 
@@ -201,7 +203,7 @@ def serialize_user(user_id, attributes):
         domain_type="user_config",
         identifier=user_id,
         title=attributes["fullname"],
-        extensions=attributes,
+        extensions=_except_keys(attributes, ["auth_option"]),
     )
 
 
@@ -277,10 +279,7 @@ def _internal_to_api_format(internal_attrs: UserSpec) -> dict[str, Any]:
         api_attrs["pager_address"] = internal_attrs["pager"]
 
     if "enforce_pw_change" in internal_attrs:
-        api_attrs["auth_option"] = {
-            "enforce_password_change": internal_attrs["enforce_pw_change"],
-            "auth_type": "password",
-        }
+        api_attrs["enforce_password_change"] = internal_attrs["enforce_pw_change"]
 
     api_attrs.update(
         {

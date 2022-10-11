@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
-from typing import Type
+from typing import Iterable, Sequence, Type
 
 import cmk.utils.plugin_registry
 import cmk.utils.render
@@ -283,15 +283,21 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
     def __init__(self) -> None:
         super().__init__(logger=log.logger.getChild("background-job.manager"))
 
-    def get_running_job_ids(self, job_class):
+    def get_running_job_ids(
+        self, job_class: Type[background_job.BackgroundJob]
+    ) -> list[background_job.JobId]:
         job_ids = super().get_running_job_ids(job_class)
         return self._filter_available_jobs(job_ids)
 
-    def get_all_job_ids(self, job_class):
+    def get_all_job_ids(
+        self, job_class: Type[background_job.BackgroundJob]
+    ) -> list[background_job.JobId]:
         job_ids = super().get_all_job_ids(job_class)
         return self._filter_available_jobs(job_ids)
 
-    def _filter_available_jobs(self, job_ids):
+    def _filter_available_jobs(
+        self, job_ids: Sequence[background_job.JobId]
+    ) -> list[background_job.JobId]:
         visible_jobs = []
         for job_id in job_ids:
             try:
@@ -303,7 +309,9 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
                 continue
         return visible_jobs
 
-    def show_status_of_job_classes(self, job_classes, job_details_back_url):
+    def show_status_of_job_classes(
+        self, job_classes: Iterable[Type[GUIBackgroundJob]], job_details_back_url: str
+    ) -> None:
         job_class_infos = {}
         for job_class in job_classes:
             all_job_ids = self.get_all_job_ids(job_class)
@@ -313,19 +321,7 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
 
         JobRenderer.show_job_class_infos(job_class_infos, job_details_back_url)
 
-    def get_status_all_jobs(self, job_class):
-        all_job_ids = self.get_all_job_ids(job_class)
-        return self._get_job_infos(all_job_ids)
-
-    def show_job_details(self, job_id=None, job_snapshot=None):
-        job_info = self._get_job_infos([job_id])
-        if not job_info:
-            raise MKGeneralException("Background job with id <i>%s</i> not found" % job_id)
-
-        job_id, job_status = list(job_info.items())[0]
-        JobRenderer.show_job_details(job_id, job_status)
-
-    def show_job_details_from_snapshot(self, job_snapshot):
+    def show_job_details_from_snapshot(self, job_snapshot: GUIBackgroundStatusSnapshot) -> None:
         if job_snapshot.exists():
             job_info = job_snapshot.get_status_as_dict()
             job_id, job_status = list(job_info.items())[0]
@@ -335,7 +331,9 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
                 "Background job with id <i>%s</i> not found" % job_snapshot.get_job_id()
             )
 
-    def _get_job_infos(self, jobs):
+    def _get_job_infos(
+        self, jobs: Sequence[background_job.JobId]
+    ) -> dict[background_job.JobId, background_job.JobStatusSpec]:
         all_jobs = {}
         for job_id in jobs:
             try:

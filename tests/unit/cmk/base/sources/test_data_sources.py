@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import socket
+from typing import Final
 
 import pytest
 
@@ -13,6 +14,7 @@ from cmk.utils.type_defs import HostName, result, SectionName, SourceType
 
 import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers import FetcherType
+from cmk.core_helpers.config import AgentParserConfig, SNMPParserConfig
 
 from cmk.base import config
 from cmk.base.config import HostConfig
@@ -21,6 +23,20 @@ from cmk.base.sources.piggyback import PiggybackSource
 from cmk.base.sources.programs import DSProgramSource, SpecialAgentSource
 from cmk.base.sources.snmp import SNMPSource
 from cmk.base.sources.tcp import TCPSource
+
+AGENT_PARSER_CONFIG: Final = AgentParserConfig(
+    check_interval=0,
+    encoding_fallback="ascii",
+    keep_outdated=False,
+    translation={},
+    agent_simulator=True,
+)
+
+
+SNMP_PARSER_CONFIG: Final = SNMPParserConfig(
+    check_intervals={},
+    keep_outdated=False,
+)
 
 
 def make_scenario(hostname, tags):
@@ -112,12 +128,10 @@ def test_host_config_creates_passing_source_sources(
             host_config,
             ipaddress,
             simulation_mode=True,
-            agent_simulator=True,
-            keep_outdated=False,
-            translation={},
-            encoding_fallback="ascii",
             missing_sys_description=False,
             file_cache_max_age=file_cache.MaxAge.none(),
+            agent_parser_config=AGENT_PARSER_CONFIG,
+            snmp_parser_config=SNMP_PARSER_CONFIG,
         )
     ] == sources
 

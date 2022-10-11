@@ -1380,15 +1380,13 @@ class AutomationDiagHost(Automation):
             host_config,
             ipaddress,
             simulation_mode=config.simulation_mode,
-            agent_simulator=config.agent_simulator,
-            keep_outdated=FileCacheGlobals.keep_outdated,
-            translation=config.get_piggyback_translations(host_config.hostname),
-            encoding_fallback=config.fallback_agent_output_encoding,
             missing_sys_description=config.get_config_cache().in_binary_hostlist(
                 host_config.hostname,
                 config.snmp_without_sys_descr,
             ),
             file_cache_max_age=config.max_cachefile_age(),
+            agent_parser_config=sources.make_agent_parser_config(host_config.hostname),
+            snmp_parser_config=sources.make_snmp_parser_config(host_config.hostname),
         ):
             if isinstance(source, sources.programs.DSProgramSource) and cmd:
                 source = sources.programs.DSProgramSource(
@@ -1748,15 +1746,13 @@ class AutomationGetAgentOutput(Automation):
                     host_config,
                     ipaddress,
                     simulation_mode=config.simulation_mode,
-                    agent_simulator=config.agent_simulator,
-                    keep_outdated=FileCacheGlobals.keep_outdated,
-                    translation=config.get_piggyback_translations(host_config.hostname),
-                    encoding_fallback=config.fallback_agent_output_encoding,
                     missing_sys_description=config.get_config_cache().in_binary_hostlist(
                         host_config.hostname,
                         config.snmp_without_sys_descr,
                     ),
                     file_cache_max_age=config.max_cachefile_age(),
+                    agent_parser_config=sources.make_agent_parser_config(host_config.hostname),
+                    snmp_parser_config=sources.make_snmp_parser_config(host_config.hostname),
                 ):
                     if not isinstance(source, sources.agent.AgentSource):
                         continue

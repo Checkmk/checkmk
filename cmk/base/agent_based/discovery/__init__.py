@@ -83,7 +83,13 @@ from cmk.base.core_config import (
     ObjectAttributes,
 )
 from cmk.base.discovered_labels import HostLabel, ServiceLabel
-from cmk.base.sources import fetch_all, make_sources, Source
+from cmk.base.sources import (
+    fetch_all,
+    make_agent_parser_config,
+    make_snmp_parser_config,
+    make_sources,
+    Source,
+)
 
 from ._discovered_services import analyse_discovered_services
 from ._filters import ServiceFilters as _ServiceFilters
@@ -188,15 +194,13 @@ def commandline_discovery(
                     force_snmp_cache_refresh=False,
                     on_scan_error=on_error,
                     simulation_mode=config.simulation_mode,
-                    keep_outdated=FileCacheGlobals.keep_outdated,
-                    agent_simulator=config.agent_simulator,
-                    translation=config.get_piggyback_translations(host_config.hostname),
-                    encoding_fallback=config.fallback_agent_output_encoding,
                     missing_sys_description=config.get_config_cache().in_binary_hostlist(
                         host_config.hostname,
                         config.snmp_without_sys_descr,
                     ),
                     file_cache_max_age=config.max_cachefile_age(),
+                    agent_parser_config=make_agent_parser_config(host_config.hostname),
+                    snmp_parser_config=make_snmp_parser_config(host_config.hostname),
                 ),
                 mode=mode,
             )
@@ -363,15 +367,13 @@ def automation_discovery(
                 force_snmp_cache_refresh=not use_cached_snmp_data,
                 on_scan_error=on_error,
                 simulation_mode=config.simulation_mode,
-                agent_simulator=config.agent_simulator,
-                keep_outdated=FileCacheGlobals.keep_outdated,
-                translation=config.get_piggyback_translations(host_config.hostname),
-                encoding_fallback=config.fallback_agent_output_encoding,
                 missing_sys_description=config.get_config_cache().in_binary_hostlist(
                     host_config.hostname,
                     config.snmp_without_sys_descr,
                 ),
                 file_cache_max_age=max_cachefile_age,
+                agent_parser_config=make_agent_parser_config(host_config.hostname),
+                snmp_parser_config=make_snmp_parser_config(host_config.hostname),
             ),
             mode=Mode.DISCOVERY,
         )
@@ -616,10 +618,6 @@ def _commandline_check_discovery(
             force_snmp_cache_refresh=False,
             on_scan_error=OnError.RAISE,
             simulation_mode=config.simulation_mode,
-            agent_simulator=config.agent_simulator,
-            keep_outdated=FileCacheGlobals.keep_outdated,
-            translation=config.get_piggyback_translations(host_config.hostname),
-            encoding_fallback=config.fallback_agent_output_encoding,
             missing_sys_description=config.get_config_cache().in_binary_hostlist(
                 host_config.hostname,
                 config.snmp_without_sys_descr,
@@ -627,6 +625,8 @@ def _commandline_check_discovery(
             file_cache_max_age=config.max_cachefile_age(
                 discovery=None if cmk.core_helpers.cache.FileCacheGlobals.maybe else 0
             ),
+            agent_parser_config=make_agent_parser_config(host_config.hostname),
+            snmp_parser_config=make_snmp_parser_config(host_config.hostname),
         ),
         mode=Mode.DISCOVERY,
     )
@@ -1314,15 +1314,13 @@ def get_check_preview(
             force_snmp_cache_refresh=not use_cached_snmp_data,
             on_scan_error=on_error,
             simulation_mode=config.simulation_mode,
-            agent_simulator=config.agent_simulator,
-            translation=config.get_piggyback_translations(host_config.hostname),
-            keep_outdated=FileCacheGlobals.keep_outdated,
-            encoding_fallback=config.fallback_agent_output_encoding,
             missing_sys_description=config.get_config_cache().in_binary_hostlist(
                 host_config.hostname,
                 config.snmp_without_sys_descr,
             ),
             file_cache_max_age=max_cachefile_age,
+            agent_parser_config=make_agent_parser_config(host_config.hostname),
+            snmp_parser_config=make_snmp_parser_config(host_config.hostname),
         ),
         mode=Mode.DISCOVERY,
     )

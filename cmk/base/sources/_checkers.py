@@ -27,13 +27,13 @@ from cmk.utils import version
 from cmk.utils.cpu_tracking import CPUTracker
 from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
-from cmk.utils.translations import TranslationOptions
 from cmk.utils.type_defs import HostAddress, HostName, SectionName, SourceType
 
 from cmk.snmplib.type_defs import BackendSNMPTree, SNMPDetectSpec
 
 from cmk.core_helpers import FetcherType
 from cmk.core_helpers.cache import FileCacheGlobals, FileCacheMode, MaxAge
+from cmk.core_helpers.config import AgentParserConfig, SNMPParserConfig
 from cmk.core_helpers.protocol import FetcherMessage
 from cmk.core_helpers.snmp import (
     SectionMeta,
@@ -70,7 +70,38 @@ else:
             )
 
 
-__all__ = ["fetch_all", "make_non_cluster_sources", "make_sources"]
+__all__ = [
+    "fetch_all",
+    "make_non_cluster_sources",
+    "make_sources",
+    "make_agent_parser_config",
+    "make_snmp_parser_config",
+]
+
+
+def make_agent_parser_config(hostname: HostName) -> AgentParserConfig:
+    # Move to `cmk.base.config` once the direction of the dependencies
+    # has been fixed (ie, as little components as possible get the full,
+    # global config instead of whatever they need to work).
+    host_config = HostConfig.make_host_config(hostname)
+    return AgentParserConfig(
+        check_interval=host_config.check_mk_check_interval,
+        encoding_fallback=config.fallback_agent_output_encoding,
+        keep_outdated=FileCacheGlobals.keep_outdated,
+        translation=config.get_piggyback_translations(hostname),
+        agent_simulator=config.agent_simulator,
+    )
+
+
+def make_snmp_parser_config(hostname: HostName) -> SNMPParserConfig:
+    # Move to `cmk.base.config` once the direction of the dependencies
+    # has been fixed (ie, as little components as possible get the full,
+    # global config instead of whatever they need to work).
+    host_config = HostConfig.make_host_config(hostname)
+    return SNMPParserConfig(
+        check_intervals=make_check_intervals(host_config, selected_sections=NO_SELECTION),
+        keep_outdated=FileCacheGlobals.keep_outdated,
+    )
 
 
 def _make_inventory_sections() -> FrozenSet[SectionName]:
@@ -173,12 +204,10 @@ class _Builder:
         on_scan_error: OnError,
         force_snmp_cache_refresh: bool,
         simulation_mode: bool,
-        agent_simulator: bool,
-        translation: TranslationOptions,
-        encoding_fallback: str,
         missing_sys_description: bool,
         file_cache_max_age: MaxAge,
-        keep_outdated: bool,
+        agent_parser_config: AgentParserConfig,
+        snmp_parser_config: SNMPParserConfig,
     ) -> None:
         super().__init__()
         self.host_config: Final = host_config
@@ -187,12 +216,10 @@ class _Builder:
         self.on_scan_error: Final = on_scan_error
         self.force_snmp_cache_refresh: Final = force_snmp_cache_refresh
         self.simulation_mode: Final = simulation_mode
-        self.agent_simulator: Final = agent_simulator
-        self.translation: Final = translation
-        self.encoding_fallback: Final = encoding_fallback
         self.missing_sys_description: Final = missing_sys_description
         self.file_cache_max_age: Final = file_cache_max_age
-        self.keep_outdated: Final = keep_outdated
+        self.agent_parser_config: Final = agent_parser_config
+        self.snmp_parser_config: Final = snmp_parser_config
         self._elems: Dict[str, Source] = {}
 
         self._initialize()
@@ -252,16 +279,12 @@ class _Builder:
                     ),
                     cache_dir=Path(cmk.utils.paths.data_source_cache_dir) / "piggyback",
                     simulation_mode=self.simulation_mode,
-                    agent_simulator=self.agent_simulator,
                     time_settings=config.get_config_cache().get_piggybacked_hosts_time_settings(
                         piggybacked_hostname=self.host_config.hostname
                     ),
-                    translation=self.translation,
-                    keep_outdated=self.keep_outdated,
-                    encoding_fallback=self.encoding_fallback,
-                    check_interval=self.host_config.check_mk_check_interval,
                     is_piggyback_host=self.host_config.is_piggyback_host,
                     file_cache_max_age=self.file_cache_max_age,
+                    **self.agent_parser_config._asdict(),
                 )
             )
 
@@ -300,11 +323,6 @@ class _Builder:
                     self.host_config,
                     selected_sections=self.selected_sections,
                 ),
-                keep_outdated=self.keep_outdated,
-                check_intervals=make_check_intervals(
-                    self.host_config,
-                    selected_sections=self.selected_sections,
-                ),
                 snmp_config=self.host_config.snmp_config(self.ipaddress),
                 do_status_data_inventory=self.host_config.do_status_data_inventory,
                 cache=SNMPFileCache(
@@ -329,6 +347,7 @@ class _Builder:
                         else FileCacheMode.READ_WRITE
                     ),
                 ),
+                **self.snmp_parser_config._asdict(),
             )
         )
 
@@ -358,10 +377,6 @@ class _Builder:
                     ),
                     on_scan_error=self.on_scan_error,
                     missing_sys_description=self.missing_sys_description,
-                    sections=make_sections(
-                        self.host_config, selected_sections=self.selected_sections
-                    ),
-                    keep_outdated=self.keep_outdated,
                     check_intervals=make_check_intervals(
                         self.host_config, selected_sections=self.selected_sections
                     ),
@@ -391,6 +406,7 @@ class _Builder:
                             else FileCacheMode.READ_WRITE
                         ),
                     ),
+                    **self.snmp_parser_config._asdict(),
                 )
             )
         elif protocol == "ipmi":
@@ -406,13 +422,9 @@ class _Builder:
                     ),
                     cache_dir=Path(cmk.utils.paths.data_source_cache_dir) / "mgmt_ipmi",
                     simulation_mode=self.simulation_mode,
-                    agent_simulator=self.agent_simulator,
-                    translation=self.translation,
-                    encoding_fallback=self.encoding_fallback,
-                    keep_outdated=self.keep_outdated,
-                    check_interval=self.host_config.check_mk_check_interval,
                     management_credentials=self.host_config.ipmi_credentials,
                     file_cache_max_age=self.file_cache_max_age,
+                    **self.agent_parser_config._asdict(),
                 )
             )
         else:
@@ -437,13 +449,9 @@ class _Builder:
                 ),
                 stdin=None,
                 simulation_mode=self.simulation_mode,
-                agent_simulator=self.agent_simulator,
-                keep_outdated=self.keep_outdated,
-                translation=self.translation,
-                encoding_fallback=self.encoding_fallback,
-                check_interval=self.host_config.check_mk_check_interval,
                 is_cmc=config.is_cmc(),
                 file_cache_max_age=self.file_cache_max_age,
+                **self.agent_parser_config._asdict(),
             )
 
         connection_mode = self.host_config.agent_connection_mode()
@@ -459,12 +467,9 @@ class _Builder:
                 ),
                 cache_dir=Path(cmk.utils.paths.data_source_cache_dir) / "push-agent",
                 simulation_mode=self.simulation_mode,
-                agent_simulator=self.agent_simulator,
-                keep_outdated=self.keep_outdated,
-                translation=self.translation,
-                encoding_fallback=self.encoding_fallback,
                 check_interval=self.host_config.check_mk_check_interval,
                 file_cache_max_age=self.file_cache_max_age,
+                **self.agent_parser_config._asdict(),
             )
         if connection_mode == "pull-agent":
             return TCPSource(
@@ -476,16 +481,12 @@ class _Builder:
                 persisted_section_dir=Path(cmk.utils.paths.var_dir) / "persisted",
                 cache_dir=Path(cmk.utils.paths.tcp_cache_dir),
                 simulation_mode=self.simulation_mode,
-                agent_simulator=self.agent_simulator,
-                keep_outdated=self.keep_outdated,
-                translation=self.translation,
-                encoding_fallback=self.encoding_fallback,
-                check_interval=self.host_config.check_mk_check_interval,
                 address_family=self.host_config.default_address_family,
                 agent_port=self.host_config.agent_port,
                 tcp_connect_timeout=self.host_config.tcp_connect_timeout,
                 agent_encryption=self.host_config.agent_encryption,
                 file_cache_max_age=self.file_cache_max_age,
+                **self.agent_parser_config._asdict(),
             )
         raise NotImplementedError(f"connection mode {connection_mode!r}")
 
@@ -517,13 +518,9 @@ class _Builder:
                 ),
                 cache_dir=Path(cmk.utils.paths.data_source_cache_dir) / make_id(agentname),
                 simulation_mode=self.simulation_mode,
-                keep_outdated=self.keep_outdated,
-                agent_simulator=self.agent_simulator,
-                translation=self.translation,
-                encoding_fallback=self.encoding_fallback,
-                check_interval=self.host_config.check_mk_check_interval,
                 is_cmc=config.is_cmc(),
                 file_cache_max_age=self.file_cache_max_age,
+                **self.agent_parser_config._asdict(),
             )
             for agentname, params in self.host_config.special_agents
         ]
@@ -537,12 +534,10 @@ def make_non_cluster_sources(
     selected_sections: SectionNameCollection = NO_SELECTION,
     on_scan_error: OnError = OnError.RAISE,
     simulation_mode: bool,
-    agent_simulator: bool,
-    keep_outdated: bool,
-    translation: TranslationOptions,
-    encoding_fallback: str,
     missing_sys_description: bool,
     file_cache_max_age: MaxAge,
+    agent_parser_config: AgentParserConfig,
+    snmp_parser_config: SNMPParserConfig,
 ) -> Sequence[Source]:
     """Sequence of sources available for `host_config`."""
     return _Builder(
@@ -552,12 +547,10 @@ def make_non_cluster_sources(
         on_scan_error=on_scan_error,
         force_snmp_cache_refresh=force_snmp_cache_refresh,
         simulation_mode=simulation_mode,
-        agent_simulator=agent_simulator,
-        keep_outdated=keep_outdated,
-        translation=translation,
-        encoding_fallback=encoding_fallback,
         missing_sys_description=missing_sys_description,
         file_cache_max_age=file_cache_max_age,
+        agent_parser_config=agent_parser_config,
+        snmp_parser_config=snmp_parser_config,
     ).sources
 
 
@@ -595,12 +588,10 @@ def make_sources(
     force_snmp_cache_refresh: bool,
     on_scan_error: OnError,
     simulation_mode: bool,
-    agent_simulator: bool,
-    keep_outdated: bool,
-    translation: TranslationOptions,
-    encoding_fallback: str,
     missing_sys_description: bool,
     file_cache_max_age: MaxAge,
+    agent_parser_config: AgentParserConfig,
+    snmp_parser_config: SNMPParserConfig,
 ) -> Sequence[Source]:
     if host_config.nodes is None:
         # Not a cluster
@@ -619,11 +610,9 @@ def make_sources(
             selected_sections=selected_sections if host_config.nodes is None else NO_SELECTION,
             on_scan_error=on_scan_error if host_config.nodes is None else OnError.RAISE,
             simulation_mode=simulation_mode,
-            agent_simulator=agent_simulator,
-            keep_outdated=keep_outdated,
-            translation=translation,
-            encoding_fallback=encoding_fallback,
             missing_sys_description=missing_sys_description,
             file_cache_max_age=file_cache_max_age,
+            agent_parser_config=agent_parser_config,
+            snmp_parser_config=snmp_parser_config,
         )
     ]

@@ -431,15 +431,13 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
             host_config,
             ipaddress,
             simulation_mode=config.simulation_mode,
-            agent_simulator=config.agent_simulator,
-            translation=config.get_piggyback_translations(host_config.hostname),
-            keep_outdated=FileCacheGlobals.keep_outdated,
-            encoding_fallback=config.fallback_agent_output_encoding,
             missing_sys_description=config.get_config_cache().in_binary_hostlist(
                 host_config.hostname,
                 config.snmp_without_sys_descr,
             ),
             file_cache_max_age=config.max_cachefile_age(),
+            agent_parser_config=sources.make_agent_parser_config(host_config.hostname),
+            snmp_parser_config=sources.make_snmp_parser_config(host_config.hostname),
         ):
             if not isinstance(source, sources.agent.AgentSource):
                 continue

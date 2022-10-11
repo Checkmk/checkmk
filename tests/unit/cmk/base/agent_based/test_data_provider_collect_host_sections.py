@@ -8,6 +8,7 @@
 import os
 import socket
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -29,6 +30,7 @@ from cmk.core_helpers import (
     TCPFetcher,
 )
 from cmk.core_helpers.cache import FileCacheMode, MaxAge
+from cmk.core_helpers.config import AgentParserConfig, SNMPParserConfig
 from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.protocol import FetcherMessage
 from cmk.core_helpers.snmp import SNMPFileCache
@@ -43,6 +45,20 @@ from cmk.base.sources.piggyback import PiggybackSource
 from cmk.base.sources.programs import DSProgramSource
 from cmk.base.sources.snmp import SNMPSource
 from cmk.base.sources.tcp import TCPSource
+
+AGENT_PARSER_CONFIG: Final = AgentParserConfig(
+    check_interval=0,
+    encoding_fallback="ascii",
+    keep_outdated=False,
+    translation={},
+    agent_simulator=True,
+)
+
+
+SNMP_PARSER_CONFIG: Final = SNMPParserConfig(
+    check_intervals={},
+    keep_outdated=False,
+)
 
 
 @pytest.fixture(name="mode", params=Mode)
@@ -529,12 +545,10 @@ class TestMakeHostSectionsClusters:
             on_scan_error=OnError.RAISE,
             force_snmp_cache_refresh=False,
             simulation_mode=True,
-            agent_simulator=True,
-            keep_outdated=False,
-            translation={},
-            encoding_fallback="ascii",
             missing_sys_description=True,
             file_cache_max_age=MaxAge.none(),
+            agent_parser_config=AGENT_PARSER_CONFIG,
+            snmp_parser_config=SNMP_PARSER_CONFIG,
         )
 
         host_sections = parse_and_store_piggybacked_payload(
@@ -612,12 +626,10 @@ def test_get_host_sections_cluster(monkeypatch, mocker) -> None:  # type:ignore[
         on_scan_error=OnError.RAISE,
         force_snmp_cache_refresh=False,
         simulation_mode=True,
-        agent_simulator=True,
-        keep_outdated=False,
-        translation={},
-        encoding_fallback="ascii",
         missing_sys_description=True,
         file_cache_max_age=MaxAge.none(),
+        agent_parser_config=AGENT_PARSER_CONFIG,
+        snmp_parser_config=SNMP_PARSER_CONFIG,
     )
 
     host_sections = parse_and_store_piggybacked_payload(

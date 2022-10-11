@@ -38,6 +38,7 @@ from cmk.core_helpers.host_sections import HostSections
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.type_defs import SectionPlugin
 from cmk.base.crash_reporting import create_section_crash_dump
+from cmk.base.sources import parse as parse_raw_data
 
 if TYPE_CHECKING:
     from cmk.core_helpers.protocol import FetcherMessage
@@ -323,7 +324,19 @@ def parse_and_store_piggybacked_payload(
             source.parser().DEFAULT_HOST_SECTIONS,
         )
 
-        source_result = source.parse(fetcher_message.raw_data, selection=selected_sections)
+        # TODO(ml): Extend protocol in order to make the parser from the
+        #           fetcher_message and not from the source.
+        #
+        #           The protocol is just missing the host name and id.
+        assert source.fetcher_type is fetcher_message.header.fetcher_type
+        source_result = parse_raw_data(
+            fetcher_message.raw_data,
+            hostname=source.hostname,
+            fetcher_type=source.fetcher_type,
+            ident=source.id,
+            selection=selected_sections,
+            logger=source._logger,
+        )
         results.append((source, source_result))
         if source_result.is_ok():
             console.vverbose(

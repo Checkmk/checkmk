@@ -67,6 +67,7 @@ from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 from cmk.base.config import HostConfig
 from cmk.base.core_factory import create_core
 from cmk.base.modes import keepalive_option, Mode, modes, Option
+from cmk.base.sources import parse as parse_raw_data
 from cmk.base.submitters import get_submitter, Submitter
 
 # TODO: Investigate all modes and try to find out whether or not we can
@@ -443,7 +444,14 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
                 continue
 
             raw_data = source.fetch(FetchMode.CHECKING)
-            host_sections = source.parse(raw_data, selection=NO_SELECTION)
+            host_sections = parse_raw_data(
+                raw_data,
+                hostname=source.hostname,
+                fetcher_type=source.fetcher_type,
+                ident=source.id,
+                selection=NO_SELECTION,
+                logger=source._logger,
+            )
             source_results = source.summarize(
                 host_sections,
                 exit_spec_cb=host_config.exit_code_spec,

@@ -7,6 +7,8 @@
 # - Discovery works.
 # - Checking doesn't work - as it was before. Maybe we can handle this in the future.
 
+import logging
+from functools import partial
 from pathlib import Path
 from typing import (
     Callable,
@@ -17,6 +19,7 @@ from typing import (
     List,
     Mapping,
     Optional,
+    overload,
     Sequence,
     Tuple,
 )
@@ -27,18 +30,27 @@ from cmk.utils import version
 from cmk.utils.cpu_tracking import CPUTracker
 from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
-from cmk.utils.type_defs import HostAddress, HostName, SectionName, SourceType
+from cmk.utils.type_defs import HostAddress, HostName, result, SectionName, SourceType
 
-from cmk.snmplib.type_defs import BackendSNMPTree, SNMPDetectSpec
+from cmk.snmplib.type_defs import (
+    BackendSNMPTree,
+    SNMPDetectSpec,
+    SNMPRawData,
+    SNMPRawDataSection,
+    TRawData,
+)
 
-from cmk.core_helpers import FetcherType
-from cmk.core_helpers.cache import FileCacheGlobals, FileCacheMode, MaxAge
+from cmk.core_helpers import FetcherType, Parser
+from cmk.core_helpers.agent import AgentParser, AgentRawData, AgentRawDataSection
+from cmk.core_helpers.cache import FileCacheGlobals, FileCacheMode, MaxAge, SectionStore
 from cmk.core_helpers.config import AgentParserConfig, SNMPParserConfig
+from cmk.core_helpers.host_sections import HostSections, TRawDataSection
 from cmk.core_helpers.protocol import FetcherMessage
 from cmk.core_helpers.snmp import (
     SectionMeta,
     SNMPFetcher,
     SNMPFileCache,
+    SNMPParser,
     SNMPPluginStore,
     SNMPPluginStoreItem,
 )
@@ -74,9 +86,88 @@ __all__ = [
     "fetch_all",
     "make_non_cluster_sources",
     "make_sources",
+    "make_parser",
     "make_agent_parser_config",
     "make_snmp_parser_config",
+    "parse",
 ]
+
+
+@overload
+def parse(
+    raw_data: result.Result[AgentRawData, Exception],
+    *,
+    hostname: HostName,
+    fetcher_type: FetcherType,
+    ident: str,
+    selection: SectionNameCollection,
+    logger: logging.Logger,
+) -> result.Result[HostSections[AgentRawDataSection], Exception]:
+    ...
+
+
+@overload
+def parse(
+    raw_data: result.Result[SNMPRawData, Exception],
+    *,
+    hostname: HostName,
+    fetcher_type: FetcherType,
+    ident: str,
+    selection: SectionNameCollection,
+    logger: logging.Logger,
+) -> result.Result[HostSections[SNMPRawDataSection], Exception]:
+    ...
+
+
+def parse(
+    raw_data: result.Result[TRawData, Exception],
+    *,
+    hostname: HostName,
+    fetcher_type: FetcherType,
+    ident: str,
+    selection: SectionNameCollection,
+    logger: logging.Logger,
+) -> result.Result[HostSections[TRawDataSection], Exception]:
+    parser = make_parser(
+        hostname,
+        fetcher_type=fetcher_type,
+        ident=ident,
+        logger=logger,
+    )
+    try:
+        return raw_data.map(partial(parser.parse, selection=selection))
+    except Exception as exc:
+        return result.Error(exc)
+
+
+def make_parser(
+    hostname: HostName, *, fetcher_type: FetcherType, ident: str, logger: logging.Logger
+) -> Parser:
+    if fetcher_type is FetcherType.SNMP:
+        return SNMPParser(
+            hostname,
+            SectionStore[SNMPRawDataSection](
+                make_persisted_section_dir(fetcher_type=fetcher_type, ident=ident) / hostname,
+                logger=logger,
+            ),
+            **make_snmp_parser_config(hostname)._asdict(),
+            logger=logger,
+        )
+
+    agent_parser_config = make_agent_parser_config(hostname)
+    return AgentParser(
+        hostname,
+        SectionStore[AgentRawDataSection](
+            make_persisted_section_dir(fetcher_type=fetcher_type, ident=ident) / hostname,
+            logger=logger,
+        ),
+        check_interval=agent_parser_config.check_interval,
+        keep_outdated=agent_parser_config.keep_outdated,
+        translation=agent_parser_config.translation,
+        encoding_fallback=agent_parser_config.encoding_fallback,
+        simulation=agent_parser_config.agent_simulator,  # name mismatch
+        logger=logger,
+    )
 
 
 def make_persisted_section_dir(

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Iterable, Literal, Sequence, Type
 
 import cmk.utils.plugin_registry
@@ -279,6 +280,13 @@ class GUIBackgroundStatusSnapshot:
         return lambda: self._job_status[name]
 
 
+@dataclass
+class JobInfo:
+    status: background_job.JobStatusSpec
+    may_stop: bool
+    may_delete: bool
+
+
 class GUIBackgroundJobManager(background_job.BackgroundJobManager):
     def __init__(self) -> None:
         super().__init__(logger=log.logger.getChild("background-job.manager"))
@@ -314,7 +322,7 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
     ) -> None:
         job_class_infos: dict[
             Type[GUIBackgroundJob],
-            dict[background_job.JobId, background_job.JobStatusSpec],
+            dict[background_job.JobId, JobInfo],
         ] = {}
         for job_class in job_classes:
             all_job_ids = self.get_all_job_ids(job_class)
@@ -336,7 +344,7 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
 
     def _get_job_infos(
         self, jobs: Sequence[background_job.JobId]
-    ) -> dict[background_job.JobId, background_job.JobStatusSpec]:
+    ) -> dict[background_job.JobId, JobInfo]:
         all_jobs = {}
         for job_id in jobs:
             try:
@@ -347,12 +355,11 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
                 self._logger.error("Exception parsing background job %s: %s" % (job_id, str(e)))
                 continue
 
-            if is_active and job.may_stop():
-                job_status["may_stop"] = True
-
-            if job.may_delete():
-                job_status["may_delete"] = True
-            all_jobs[job_id] = job_status
+            all_jobs[job_id] = JobInfo(
+                status=job_status,
+                may_stop=is_active and job.may_stop(),
+                may_delete=job.may_delete(),
+            )
         return all_jobs
 
 
@@ -489,7 +496,7 @@ class JobRenderer:
         cls,
         job_class_infos: dict[
             Type[GUIBackgroundJob],
-            dict[background_job.JobId, background_job.JobStatusSpec],
+            dict[background_job.JobId, JobInfo],
         ],
         job_details_back_url: str,
     ) -> None:
@@ -512,10 +519,10 @@ class JobRenderer:
 
             cls.show_job_row_headers()
             odd: Literal["odd", "even"] = "even"
-            for job_id, job_status in sorted(
-                jobs_info.items(), key=lambda x: x[1]["started"], reverse=True
+            for job_id, job_info in sorted(
+                jobs_info.items(), key=lambda x: x[1].status["started"], reverse=True
             ):
-                cls.render_job_row(job_id, job_status, odd, job_details_back_url)
+                cls.render_job_row(job_id, job_info, odd, job_details_back_url)
                 odd = "even" if odd == "odd" else "odd"
 
     @classmethod
@@ -544,21 +551,23 @@ class JobRenderer:
     def render_job_row(
         cls,
         job_id: background_job.JobId,
-        job_status: background_job.JobStatusSpec,
+        job_info: JobInfo,
         odd: Literal["odd", "even"],
         job_details_back_url: str,
     ) -> None:
+        job_status = job_info.status
+
         html.open_tr(css="data %s0" % odd)
 
         # Actions
         html.open_td(css="job_actions")
-        if job_status.get("may_stop"):
+        if job_info.may_stop:
             html.icon_button(
                 makeactionuri(request, transactions, [(ActionHandler.stop_job_var, job_id)]),
                 _("Stop this job"),
                 "disable_test",
             )
-        if job_status.get("may_delete"):
+        if job_info.may_delete:
             html.icon_button(
                 makeactionuri(request, transactions, [(ActionHandler.delete_job_var, job_id)]),
                 _("Delete this job"),

@@ -1,6 +1,6 @@
 Title: Do not log host secret
 Class: security
-Compatible: incompat
+Compatible: incomp
 Component: agents
 Date: 1665133214
 Edition: cee

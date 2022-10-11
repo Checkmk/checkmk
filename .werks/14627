@@ -1,0 +1,15 @@
+Title: storcli_vrdives: KeyError(<ITEM>) raised in the check function if the item vanished
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1665492596
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p14
+
+storcli_vrdives check function did not check for the existence of an item in the preprocessed
+data and raised KeyError() in case it didn't exists. This change aborts the check resulting
+in UNKN state in that case.
+

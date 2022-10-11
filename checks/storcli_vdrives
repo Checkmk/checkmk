@@ -40,6 +40,8 @@ def inventory_storcli_vdrives(parsed):
 
 
 def check_storcli_vdrives(item, params, parsed):
+    if item not in parsed:
+        return
 
     yield 0, "Raid type is " + parsed[item]["raid_type"]
     yield 0, "Access: " + parsed[item]["access"]

@@ -71,25 +71,21 @@ def test_backup_site_to_tarfile_vanishing_files(  # type:ignore[no-untyped-def]
     test_dir.mkdir(parents=True, exist_ok=True)
     test_file.touch()
 
-    orig_add = omdlib.backup.BackupTarFile.add
+    orig_gettarinfo = tarfile.TarFile.gettarinfo
 
-    def add(
-        self, name, arcname=None, recursive=True, exclude=None, filter=None
-    ):  # pylint: disable=redefined-builtin
-        if exclude is not None:
-            raise DeprecationWarning("TarFile.add's exclude parameter should not be used")
-        # The add() was called for test_dir which then calls os.listdir() and
-        # add() for all found entries. Remove the test_file here to simulate
-        # a vanished file during this step.
+    def gettarinfo(self: tarfile.TarFile, name: str, arcname: str) -> tarfile.TarInfo:
+        # Remove the test_file here to simulate a vanished file during this step.
         if arcname == "unit/xyz/test_file":
             test_file.unlink()
-        orig_add(self, name, arcname, recursive, filter=filter)
+        return orig_gettarinfo(self, name, arcname)
 
-    monkeypatch.setattr(omdlib.backup.BackupTarFile, "add", add)
+    monkeypatch.setattr(tarfile.TarFile, "gettarinfo", gettarinfo)
 
     tar_path = tmp_path / "backup.tar"
     with tar_path.open("wb") as backup_tar:
         omdlib.backup.backup_site_to_tarfile(site, backup_tar, mode="w:", options={}, verbose=False)
+
+    assert not test_file.exists()  # check that the monkeypatch worked
 
     with tar_path.open("rb") as backup_tar:
         with tarfile.open(fileobj=backup_tar, mode="r:*") as tar:

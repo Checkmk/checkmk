@@ -30,7 +30,7 @@ import os
 import socket
 import sys
 import tarfile
-from typing import BinaryIO, Iterator, List, Tuple, Union
+from typing import BinaryIO, Callable, ContextManager, Iterator, List, Tuple, Union
 
 from omdlib.contexts import SiteContext
 from omdlib.type_defs import CommandOptions
@@ -46,13 +46,12 @@ def backup_site_to_tarfile(
 
     excludes = get_exclude_patterns(options)
 
-    def filter_files(tarinfo):
+    def accepted_files(tarinfo: tarfile.TarInfo) -> bool:
         # patterns are relative to site directory, tarinfo.name includes site name.
-        matches_exclude = any(
+        return not any(
             fnmatch.fnmatch(tarinfo.name[len(site.name) + 1 :], glob_pattern)
             for glob_pattern in excludes
         )
-        return None if matches_exclude else tarinfo
 
     @contextlib.contextmanager
     def error_handler(arcname: str) -> Iterator[None]:
@@ -70,7 +69,6 @@ def backup_site_to_tarfile(
         with BackupTarFile.open(  # type: ignore[call-arg]
             fileobj=fh,
             mode=mode,
-            error_handler=error_handler,
             rrd_socket=rrd_socket,
         ) as tar:
             # Add the version symlink as first file to be able to
@@ -78,8 +76,8 @@ def backup_site_to_tarfile(
             # the whole tar archive. Important for streaming.
             # The file is added twice to get the first for validation
             # and the second for excration during restore.
-            tar.add(site.dir + "/version", site.name + "/version")
-            tar.add(site.dir, site.name, filter=filter_files)
+            tar_add(tar, site.dir + "/version", site.name + "/version", error_handler=error_handler)
+            tar_add(tar, site.dir, site.name, predicate=accepted_files, error_handler=error_handler)
 
 
 def get_exclude_patterns(options: CommandOptions) -> List[str]:
@@ -131,22 +129,11 @@ class BackupTarFile(tarfile.TarFile):
     to prevent writing to individual RRDs during backups."""
 
     def __init__(  # type:ignore[no-untyped-def]
-        self, name, mode, fileobj, rrd_socket, error_handler, **kwargs
+        self, name, mode, fileobj, rrd_socket, **kwargs
     ) -> None:
-        self._error_handler = error_handler
         self._rrd_socket = rrd_socket
 
         super().__init__(name, mode, fileobj, **kwargs)
-
-    # We override this function to workaround an issue in the builtin add() method in
-    # case it is called in recursive mode and a file vanishes between the os.listdir()
-    # and the first file access (often seen os.lstat()) during backup. Instead of failing
-    # like this we want to skip those files silently during backup.
-    def add(
-        self, name, arcname=None, recursive=True, *, filter=None
-    ):  # pylint: disable=redefined-builtin
-        with self._error_handler(arcname):
-            super().add(name, arcname, recursive, filter=filter)
 
     def addfile(self, tarinfo, fileobj=None):
         requires_suspension = self._rrd_socket.path_requires_suspension(tarinfo.name)
@@ -245,6 +232,49 @@ class RRDSocket(contextlib.AbstractContextManager):
         self._resume_all_rrds()
         if self._sock is not None:
             self._sock.close()
+
+
+def tar_add(
+    tar: tarfile.TarFile,
+    name: str,
+    arcname: str,
+    *,
+    predicate: Callable[[tarfile.TarInfo], bool] = lambda _: True,
+    error_handler: Callable[[str], ContextManager[None]],
+) -> None:
+    # We avoid tar.add() method in case a file vanishes between the
+    # os.listdir() and the first file access (often seen os.lstat()) during
+    # backup. Instead of failing like this we want to skip those files silently
+    # during backup.
+    with error_handler(arcname):
+        # Skip if somebody tries to archive the archive...
+        if tar.name is not None and os.path.abspath(name) == tar.name:
+            return
+        # Create a TarInfo object from the file.
+        tarinfo = tar.gettarinfo(name, arcname)
+
+        # Exclude files.
+        if tarinfo is None or not predicate(tarinfo):
+            return
+
+        # Append the tar header and data to the archive.
+        if tarinfo.isreg():
+            with open(name, "rb") as file:
+                tar.addfile(tarinfo, file)
+
+        elif tarinfo.isdir():
+            tar.addfile(tarinfo)
+            for filename in sorted(os.listdir(name)):
+                tar_add(  # recursive call
+                    tar,
+                    os.path.join(name, filename),
+                    os.path.join(arcname, filename),
+                    predicate=predicate,
+                    error_handler=error_handler,
+                )
+
+        else:
+            tar.addfile(tarinfo)
 
 
 def get_site_and_version_from_backup(tar: tarfile.TarFile) -> Tuple[str, str]:

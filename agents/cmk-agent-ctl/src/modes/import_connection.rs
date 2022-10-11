@@ -75,15 +75,7 @@ mod tests {
 
     #[test]
     fn test_import() {
-        let mut reg = config::Registry::new(
-            config::RegisteredConnections {
-                push: std::collections::HashMap::new(),
-                pull: std::collections::HashMap::new(),
-                pull_imported: std::collections::HashSet::new(),
-            },
-            tempfile::NamedTempFile::new().unwrap(),
-        )
-        .unwrap();
+        let mut reg = config::Registry::new(tempfile::NamedTempFile::new().unwrap().as_ref());
         assert!(reg.is_empty());
         assert!(!reg.path().exists());
         assert!(_import(&mut reg, MockJSONProvider {}).is_ok());

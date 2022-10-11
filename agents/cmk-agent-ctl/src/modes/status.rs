@@ -780,20 +780,12 @@ mod test_status {
 
     #[test]
     fn test_status_end_to_end() {
-        let mut push = std::collections::HashMap::new();
-        push.insert(
-            site_spec::SiteID::from_str("server/push-site").unwrap(),
+        let mut registry = config::Registry::new(tempfile::NamedTempFile::new().unwrap().as_ref());
+        registry.register_connection(
+            &config::ConnectionType::Push,
+            &site_spec::SiteID::from_str("server/push-site").unwrap(),
             config::TrustedConnectionWithRemote::from("99f56bbc-5965-4b34-bc70-1959ad1d32d6"),
         );
-        let registry = config::Registry::new(
-            config::RegisteredConnections {
-                push,
-                pull: std::collections::HashMap::new(),
-                pull_imported: std::collections::HashSet::new(),
-            },
-            tempfile::NamedTempFile::new().unwrap(),
-        )
-        .unwrap();
 
         assert_eq!(
             _status(

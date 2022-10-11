@@ -71,28 +71,20 @@ mod tests {
     const UUID_PULL_IMP2: &str = "3bf83706-8e47-4e38-beb6-b1ce83a4eee1";
 
     fn registry() -> config::Registry {
-        let mut push = std::collections::HashMap::new();
-        let mut pull = std::collections::HashMap::new();
-        let mut pull_imported = std::collections::HashSet::new();
-        push.insert(
-            site_spec::SiteID::from_str("server/push-site").unwrap(),
+        let mut registry = config::Registry::new(tempfile::NamedTempFile::new().unwrap().as_ref());
+        registry.register_connection(
+            &config::ConnectionType::Push,
+            &site_spec::SiteID::from_str("server/push-site").unwrap(),
             config::TrustedConnectionWithRemote::from(UUID_PUSH),
         );
-        pull.insert(
-            site_spec::SiteID::from_str("server/pull-site").unwrap(),
+        registry.register_connection(
+            &config::ConnectionType::Pull,
+            &site_spec::SiteID::from_str("server/pull-site").unwrap(),
             config::TrustedConnectionWithRemote::from(UUID_PULL),
         );
-        pull_imported.insert(config::TrustedConnection::from(UUID_PULL_IMP1));
-        pull_imported.insert(config::TrustedConnection::from(UUID_PULL_IMP2));
-        config::Registry::new(
-            config::RegisteredConnections {
-                push,
-                pull,
-                pull_imported,
-            },
-            tempfile::NamedTempFile::new().unwrap(),
-        )
-        .unwrap()
+        registry.register_imported_connection(config::TrustedConnection::from(UUID_PULL_IMP1));
+        registry.register_imported_connection(config::TrustedConnection::from(UUID_PULL_IMP2));
+        registry
     }
 
     #[test]

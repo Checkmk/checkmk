@@ -259,7 +259,7 @@ fn direct_registration(
     };
 
     registry.register_connection(
-        post_registration_conn_type(&config.site_id, &connection, agent_rec_api)?,
+        &post_registration_conn_type(&config.site_id, &connection, agent_rec_api)?,
         &config.site_id,
         connection,
     );
@@ -477,11 +477,7 @@ mod tests {
     }
 
     fn registry() -> config::Registry {
-        config::Registry::new(
-            config::RegisteredConnections::default(),
-            tempfile::NamedTempFile::new().unwrap(),
-        )
-        .unwrap()
+        config::Registry::new(tempfile::NamedTempFile::new().unwrap().as_ref())
     }
 
     fn agent_labels() -> types::AgentLabels {

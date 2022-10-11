@@ -328,15 +328,15 @@ impl PartialEq for TrustedConnectionWithRemote {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone, Default)]
-pub struct RegisteredConnections {
+struct RegisteredConnections {
     #[serde(default)]
-    pub push: HashMap<site_spec::SiteID, TrustedConnectionWithRemote>,
+    push: HashMap<site_spec::SiteID, TrustedConnectionWithRemote>,
 
     #[serde(default)]
-    pub pull: HashMap<site_spec::SiteID, TrustedConnectionWithRemote>,
+    pull: HashMap<site_spec::SiteID, TrustedConnectionWithRemote>,
 
     #[serde(default)]
-    pub pull_imported: std::collections::HashSet<TrustedConnection>,
+    pull_imported: std::collections::HashSet<TrustedConnection>,
 }
 
 impl JSONLoader for RegisteredConnections {}
@@ -357,22 +357,16 @@ pub struct Registry {
 
 impl Registry {
     #[cfg(test)]
-    pub fn new<P>(connections: RegisteredConnections, path: P) -> AnyhowResult<Registry>
-    where
-        P: AsRef<Path>,
-    {
-        let path = path.as_ref().to_owned();
-        let last_reload = mtime(&path)?;
-        Ok(Registry {
-            connections,
-            path,
-            last_reload,
-        })
-    }
-
-    #[cfg(test)]
     pub fn path(&self) -> &Path {
         &self.path
+    }
+
+    pub fn new(path: &Path) -> Self {
+        Self {
+            connections: RegisteredConnections::default(),
+            path: PathBuf::from(path),
+            last_reload: None,
+        }
     }
 
     pub fn from_file(path: &Path) -> AnyhowResult<Registry> {
@@ -476,7 +470,7 @@ impl Registry {
 
     pub fn register_connection(
         &mut self,
-        connection_type: ConnectionType,
+        connection_type: &ConnectionType,
         site_id: &site_spec::SiteID,
         connection: TrustedConnectionWithRemote,
     ) {
@@ -763,29 +757,19 @@ mod test_registry {
     }
 
     fn registry() -> Registry {
-        let mut push = std::collections::HashMap::new();
-        let mut pull = std::collections::HashMap::new();
-        let mut pull_imported = std::collections::HashSet::new();
-
-        push.insert(
-            site_spec::SiteID::from_str("server/push-site").unwrap(),
+        let mut registry = Registry::new(tempfile::NamedTempFile::new().unwrap().as_ref());
+        registry.register_connection(
+            &ConnectionType::Push,
+            &site_spec::SiteID::from_str("server/push-site").unwrap(),
             trusted_connection_with_remote(),
         );
-        pull.insert(
-            site_spec::SiteID::from_str("server/pull-site").unwrap(),
+        registry.register_connection(
+            &ConnectionType::Pull,
+            &site_spec::SiteID::from_str("server/pull-site").unwrap(),
             trusted_connection_with_remote(),
         );
-        pull_imported.insert(trusted_connection());
-
-        Registry::new(
-            RegisteredConnections {
-                push,
-                pull,
-                pull_imported,
-            },
-            tempfile::NamedTempFile::new().unwrap(),
-        )
-        .unwrap()
+        registry.register_imported_connection(trusted_connection());
+        registry
     }
 
     fn trusted_connection_with_remote() -> TrustedConnectionWithRemote {
@@ -836,10 +820,17 @@ mod test_registry {
     }
 
     #[test]
+    fn test_new() {
+        let reg = Registry::new(tempfile::NamedTempFile::new().unwrap().as_ref());
+        assert!(reg.pull_is_empty() && reg.push_is_empty());
+        assert!(reg.last_reload.is_none());
+    }
+
+    #[test]
     fn test_register_push_connection_new() {
         let mut reg = registry();
         reg.register_connection(
-            ConnectionType::Push,
+            &ConnectionType::Push,
             &site_spec::SiteID::from_str("new_server/new-site").unwrap(),
             trusted_connection_with_remote(),
         );
@@ -852,7 +843,7 @@ mod test_registry {
     fn test_register_push_connection_from_pull() {
         let mut reg = registry();
         reg.register_connection(
-            ConnectionType::Push,
+            &ConnectionType::Push,
             &site_spec::SiteID::from_str("server/pull-site").unwrap(),
             trusted_connection_with_remote(),
         );
@@ -865,7 +856,7 @@ mod test_registry {
     fn test_register_pull_connection_new() {
         let mut reg = registry();
         reg.register_connection(
-            ConnectionType::Pull,
+            &ConnectionType::Pull,
             &site_spec::SiteID::from_str("new_server/new-site").unwrap(),
             trusted_connection_with_remote(),
         );
@@ -878,7 +869,7 @@ mod test_registry {
     fn test_register_pull_connection_from_push() {
         let mut reg = registry();
         reg.register_connection(
-            ConnectionType::Pull,
+            &ConnectionType::Pull,
             &site_spec::SiteID::from_str("server/push-site").unwrap(),
             trusted_connection_with_remote(),
         );

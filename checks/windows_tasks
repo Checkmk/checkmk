@@ -179,7 +179,7 @@ def check_windows_tasks(item, params, parsed):
         f"{state_txt} ({last_result_hex})" if state_txt else f"Got exit code {last_result_hex}",
     )
 
-    if data["Scheduled Task State"] != "Enabled":
+    if data.get("Scheduled Task State", None) != "Enabled":
         yield state_not_enabled, "Task not enabled"
 
     additional_infos = []

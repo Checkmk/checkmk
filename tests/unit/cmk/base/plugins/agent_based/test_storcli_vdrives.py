@@ -6,14 +6,13 @@ from collections.abc import Sequence
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
-from cmk.utils.type_defs import CheckPluginName
-
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.storcli_vdrives import parse_storcli_vdrives
+from cmk.base.plugins.agent_based.storcli_vdrives import (
+    check_storcli_vdrives,
+    discover_storcli_vdrives,
+    parse_storcli_vdrives,
+)
 from cmk.base.plugins.agent_based.utils.megaraid import LDISKS_DEFAULTS
 
 STRING_TABLE = [
@@ -56,11 +55,6 @@ STRING_TABLE = [
 ]
 
 
-@pytest.fixture(name="check")
-def _storcli_vdrives_check_plugin(fix_register: FixRegister) -> CheckPlugin:
-    return fix_register.check_plugins[CheckPluginName("storcli_vdrives")]
-
-
 @pytest.mark.parametrize(
     "section, expected_discovery_result",
     [
@@ -82,13 +76,12 @@ def _storcli_vdrives_check_plugin(fix_register: FixRegister) -> CheckPlugin:
     ],
 )
 def test_discover_storcli_vdrives(
-    check: CheckPlugin,
     section: StringTable,
     expected_discovery_result: Sequence[Service],
 ) -> None:
 
     assert (
-        list(check.discovery_function(parse_storcli_vdrives(section))) == expected_discovery_result
+        list(discover_storcli_vdrives(parse_storcli_vdrives(section))) == expected_discovery_result
     )
 
 
@@ -148,7 +141,6 @@ def test_discover_storcli_vdrives(
     ],
 )
 def test_check_storcli_vdrives(
-    check: CheckPlugin,
     section: StringTable,
     item: str,
     expected_check_result: Sequence[Result],
@@ -156,7 +148,7 @@ def test_check_storcli_vdrives(
 
     assert (
         list(
-            check.check_function(
+            check_storcli_vdrives(
                 item=item,
                 params=LDISKS_DEFAULTS,
                 section=parse_storcli_vdrives(section),

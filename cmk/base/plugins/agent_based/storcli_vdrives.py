@@ -6,10 +6,14 @@
 from collections.abc import Mapping, MutableMapping
 from typing import NamedTuple
 
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils.megaraid import expand_abbreviation
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
+from cmk.base.plugins.agent_based.utils.megaraid import expand_abbreviation, LDISKS_DEFAULTS
 
-from .agent_based_api.v1 import register
+from .agent_based_api.v1 import register, Result, Service, State
 
 
 class StorcliVDrive(NamedTuple):
@@ -52,4 +56,46 @@ def parse_storcli_vdrives(string_table: StringTable) -> StorcliVDrivesSection:
 register.agent_section(
     name="storcli_vdrives",
     parse_function=parse_storcli_vdrives,
+)
+
+
+def discover_storcli_vdrives(section: StorcliVDrivesSection) -> DiscoveryResult:
+    for item in section:
+        yield Service(item=item)
+
+
+def check_storcli_vdrives(
+    item: str,
+    params: Mapping[str, int],
+    section: StorcliVDrivesSection,
+) -> CheckResult:
+    if (drive := section.get(item)) is None:
+        return
+
+    yield Result(state=State.OK, summary=f"Raid type is {drive.raid_type}")
+    yield Result(state=State.OK, summary=f"Access: {drive.access}")
+
+    if not drive.consistent:
+        yield Result(state=State.WARN, summary="Drive is not consistent")
+    else:
+        yield Result(state=State.OK, summary="Drive is consistent")
+
+    summary = "State is %s" % drive.state
+
+    if (raw_state := params.get(drive.state)) is None:
+        state = State.UNKNOWN
+        summary += " (unknown[%s])" % drive.state
+    else:
+        state = State(raw_state)
+
+    yield Result(state=state, summary=summary)
+
+
+register.check_plugin(
+    name="storcli_vdrives",
+    service_name="RAID Virtual Drive %s",
+    discovery_function=discover_storcli_vdrives,
+    check_function=check_storcli_vdrives,
+    check_default_parameters=LDISKS_DEFAULTS,
+    check_ruleset_name="storcli_vdrives",
 )

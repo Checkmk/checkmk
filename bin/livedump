@@ -8,7 +8,7 @@ import os
 import sys
 import time
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, NoReturn
 
 from livestatus import SingleSiteConnection
@@ -19,8 +19,8 @@ __version__ = "2.2.0i1"
 
 def dump_templates() -> None:
     check_interval = ""
-    if args.check_interval is not None:
-        check_interval = "check_interval          %d" % args.check_interval
+    if args.interval is not None:
+        check_interval = "check_interval          %d" % args.interval
 
     sys.stdout.write(
         """define host {
@@ -91,10 +91,13 @@ def livedump_config() -> None:  # pylint: disable=too-many-branches
             row["contact_groups"] = ",".join(row["contact_groups"])
 
     # Dump host config
-    query = (
-        "GET hosts\n"
-        "Columns: name alias address groups check_command icon_image "
-        "max_check_attempts contacts contact_groups\n" + args.host_headers + args.host_only_headers
+    query = "\n".join(
+        [
+            "GET hosts",
+            "Columns: name alias address groups check_command icon_image max_check_attempts contacts contact_groups",
+        ]
+        + args.host_header
+        + args.host_only_header
     )
     for row in connection.query_table_assoc(query):
         prepare_row(row)
@@ -109,22 +112,25 @@ def livedump_config() -> None:  # pylint: disable=too-many-branches
             "  max_check_attempts %(max_check_attempts)d\n" % row
         )
 
-        if args.groups:
+        if args.include_groups:
             sys.stdout.write("  contacts           %s\n" % row["contactsstring"])
         else:
             sys.stdout.write("  contact_groups     %s\n" % row["contact_groups"])
 
-        if args.host_icon:
+        if args.include_host_icon:
             if row.get("icon_image"):
                 sys.stdout.write("  icon_image         %s\n" % row["icon_image"])
 
         sys.stdout.write("}\n\n")
 
     # Dump service config
-    query = (
-        "GET services\n"
-        "Columns: host_name description groups check_command "
-        "max_check_attempts contacts\n" + args.host_headers + args.service_headers
+    query = "\n".join(
+        [
+            "GET services"
+            "Columns: host_name description groups check_command max_check_attempts contacts",
+        ]
+        + args.host_header
+        + args.service_header
     )
     for row in connection.query_table_assoc(query):
         prepare_row(row)
@@ -151,13 +157,14 @@ def livedump_state() -> None:
         sys.stdout.write("status\n")
     now = time.time()
     # Dump hosts
-    query = (
-        "GET hosts\n"
-        "Columns: name state plugin_output perf_data latency\n"
-        + args.host_headers
-        + args.host_only_headers
+    query = "\n".join(
+        [
+            "GET hosts",
+            "Columns: name state plugin_output perf_data latency",
+        ]
+        + args.host_header
+        + args.host_only_header
     )
-
     for row in connection.query_table_assoc(query):
         row["now"] = now
         sys.stdout.write("host_name=%s%s" % (args.prefix, row["name"]))
@@ -176,13 +183,14 @@ output=%(plugin_output)s|%(perf_data)s
             % row
         )
 
-    query = (
-        "GET services\n"
-        "Columns: host_name description state plugin_output perf_data latency\n"
-        + args.host_headers
-        + args.service_headers
+    query = "\n".join(
+        [
+            "GET services",
+            "Columns: host_name description state plugin_output perf_data latency",
+        ]
+        + args.host_header
+        + args.service_header
     )
-
     for row in connection.query_table_assoc(query):
         row["now"] = now
         sys.stdout.write("host_name=%s%s" % (args.prefix, row["host_name"]))
@@ -309,20 +317,20 @@ long_options = [
 ]
 
 
-@dataclass
+@dataclass(slots=True)
 class Namespace:
-    debug: bool = False
+    dumper: Callable[[], None] = livedump_state
+    dump_templates: bool = False
     mark_mode: bool = False
     prefix: str = ""
-    host_headers: str = ""
-    host_only_headers: str = ""
-    service_headers: str = ""
-    dump_templates: bool = False
-    groups: bool = False
-    host_icon: bool = False
-    check_interval: int | None = None
     socket: str | None = None
-    dumper: Callable[[], None] = livedump_state
+    host_only_header: list[str] = field(default_factory=list)
+    host_header: list[str] = field(default_factory=list)
+    service_header: list[str] = field(default_factory=list)
+    interval: int | None = None
+    include_groups: bool = False
+    include_host_icon: bool = False
+    debug: bool = False
 
 
 try:
@@ -348,17 +356,17 @@ for o, a in opts:
     elif o in ["-s", "--socket"]:
         args.socket = a
     elif o in ["-O", "--host-only-header"]:
-        args.host_only_headers += a + "\n"
+        args.host_only_header.append(a)
     elif o in ["-H", "--host-header"]:
-        args.host_headers += a + "\n"
+        args.host_header.append(a)
     elif o in ["-S", "--service-header"]:
-        args.service_headers += a + "\n"
+        args.service_header.append(a)
     elif o in ["-i", "--interval"]:
-        args.check_interval = int(a)
+        args.interval = int(a)
     elif o in ["-G", "--include-groups"]:
-        args.groups = True
+        args.include_groups = True
     elif o in ["--include-host-icon"]:
-        args.host_icon = True
+        args.include_host_icon = True
     elif o == "--debug":
         args.debug = True
 

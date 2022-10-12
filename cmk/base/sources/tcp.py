@@ -63,6 +63,7 @@ class TCPSource(Source[AgentRawData, AgentRawDataSection]):
 
     def _make_fetcher(self) -> TCPFetcher:
         return TCPFetcher(
+            ident=self.id,
             family=self.address_family,
             address=(self.ipaddress, self.agent_port),
             host_name=self.hostname,

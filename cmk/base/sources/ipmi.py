@@ -60,6 +60,7 @@ class IPMISource(Source[AgentRawData, AgentRawDataSection]):
             raise MKAgentError("Missing IP address")
 
         return IPMIFetcher(
+            ident=self.id,
             address=self.ipaddress,
             username=self.credentials.get("username"),
             password=self.credentials.get("password"),

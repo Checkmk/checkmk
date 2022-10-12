@@ -650,6 +650,8 @@ def fetch_all(
             (
                 source,
                 FetcherMessage.from_raw_data(
+                    source.hostname,
+                    source.id,
                     raw_data,
                     tracker.duration,
                     source.fetcher_type,

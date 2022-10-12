@@ -60,6 +60,7 @@ class ProgramSource(Source[AgentRawData, AgentRawDataSection]):
 
     def _make_fetcher(self) -> ProgramFetcher:
         return ProgramFetcher(
+            ident=self.id,
             cmdline=self.cmdline,
             stdin=self.stdin,
             is_cmc=self.is_cmc,

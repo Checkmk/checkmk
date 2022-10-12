@@ -36,6 +36,7 @@ def test_attribute_defaults() -> None:  # type:ignore[no-untyped-def]
         "family": socket.AF_INET,
         "address": (ipaddress, 6556),
         "host_name": str(hostname),
+        "ident": "agent",
         "timeout": 5.0,
         "encryption_settings": {
             "use_realtime": "enforce",

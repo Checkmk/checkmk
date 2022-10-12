@@ -66,7 +66,7 @@ import pydantic
 import cmk.utils.log as log
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import MKFetcherError, MKTimeout
-from cmk.utils.type_defs import AgentRawData, result, SectionName
+from cmk.utils.type_defs import AgentRawData, HostName, result, SectionName
 from cmk.utils.type_defs.protocol import Deserializer, Serializer
 
 from cmk.snmplib.type_defs import SNMPRawData, TRawData
@@ -342,14 +342,12 @@ class ErrorResultMessage(ResultMessage[AgentRawData]):
 class FetcherHeader(Serializer, Deserializer):
     """Header is fixed size bytes in format:
 
-    <FETCHER_TYPE><PAYLOAD_TYPE><STATUS><PAYLOAD_SIZE><STATS_SIZE>
-
     This is an application layer protocol used to transmit data
     from the fetcher to the checker.
 
     """
 
-    fmt = "!HHHII"
+    fmt = "!HHHIIII"
     length = struct.calcsize(fmt)
 
     def __init__(
@@ -358,12 +356,16 @@ class FetcherHeader(Serializer, Deserializer):
         payload_type: PayloadType,
         *,
         status: int,
+        host_name_length: int,
+        ident_length: int,
         payload_length: int,
         stats_length: int,
     ) -> None:
         self.fetcher_type: Final = fetcher_type
         self.payload_type: Final = payload_type
         self.status: Final = status
+        self.host_name_length: Final = host_name_length
+        self.ident_length: Final = ident_length
         self.payload_length: Final = payload_length
         self.stats_length: Final = stats_length
 
@@ -376,6 +378,8 @@ class FetcherHeader(Serializer, Deserializer):
             f"{type(self).__name__}("
             f"{self.fetcher_type!r}, {self.payload_type!r}, "
             f"status={self.status!r}, "
+            f"host_name_length={self.host_name_length!r}, "
+            f"ident_length={self.ident_length!r}, "
             f"payload_length={self.payload_length!r}, "
             f"stats_length={self.stats_length!r})"
         )
@@ -389,6 +393,8 @@ class FetcherHeader(Serializer, Deserializer):
             self.fetcher_type.value,
             self.payload_type.value,
             self.status,
+            self.host_name_length,
+            self.ident_length,
             self.payload_length,
             self.stats_length,
         )
@@ -396,7 +402,15 @@ class FetcherHeader(Serializer, Deserializer):
     @classmethod
     def from_bytes(cls, data: bytes) -> FetcherHeader:
         try:
-            fetcher_type, payload_type, status, payload_length, stats_length = struct.unpack(
+            (
+                fetcher_type,
+                payload_type,
+                status,
+                host_name_length,
+                ident_length,
+                payload_length,
+                stats_length,
+            ) = struct.unpack(
                 FetcherHeader.fmt,
                 data[: cls.length],
             )
@@ -404,6 +418,8 @@ class FetcherHeader(Serializer, Deserializer):
                 FetcherType(fetcher_type),
                 PayloadType(payload_type),
                 status=status,
+                host_name_length=host_name_length,
+                ident_length=ident_length,
                 payload_length=payload_length,
                 stats_length=stats_length,
             )
@@ -415,43 +431,62 @@ class FetcherMessage(Serializer, Deserializer):
     def __init__(
         self,
         header: FetcherHeader,
+        host_name: HostName,
+        ident: str,
         payload: Union[ResultMessage[AgentRawData], ResultMessage[SNMPRawData]],
         stats: ResultStats,
     ) -> None:
         self.header: Final = header
+        self.host_name: Final = host_name
+        self.ident: Final = ident
         self.payload: Final = payload
         self.stats: Final = stats
 
     def __repr__(self) -> str:
-        return f"{type(self).__name__}({self.header!r}, {self.payload!r}, {self.stats!r})"
+        return (
+            f"{type(self).__name__}("
+            f"{self.header!r}, "
+            f"{self.host_name!r}, "
+            f"{self.ident!r}, "
+            f"{self.payload!r}, "
+            f"{self.stats!r})"
+        )
 
     def __len__(self) -> int:
-        return len(self.header) + self.header.payload_length + self.header.stats_length
+        return sum(
+            (
+                len(self.header),
+                self.header.host_name_length,
+                self.header.ident_length,
+                self.header.payload_length,
+                self.header.stats_length,
+            )
+        )
 
     def __iter__(self) -> Iterator[bytes]:
         yield from self.header
+        yield self.host_name.encode("utf8")
+        yield self.ident.encode("utf8")
         yield from self.payload
         yield from self.stats
 
     @classmethod
     def from_bytes(cls, data: bytes) -> FetcherMessage:
         header = FetcherHeader.from_bytes(data)
+        curr = len(header)
+        host_name = data[curr : (curr := curr + header.host_name_length)]
+        ident = data[curr : (curr := curr + header.ident_length)]
         payload = header.payload_type.make().from_bytes(
-            data[len(header) : len(header) + header.payload_length],
+            data[curr : (curr := curr + header.payload_length)]
         )
-        stats = ResultStats.from_bytes(
-            data[
-                len(header)
-                + header.payload_length : len(header)
-                + header.payload_length
-                + header.stats_length
-            ]
-        )
-        return cls(header, payload, stats)
+        stats = ResultStats.from_bytes(data[curr : (curr := curr + header.stats_length)])
+        return cls(header, host_name.decode("utf8"), ident.decode("utf8"), payload, stats)
 
     @classmethod
     def from_raw_data(
         cls,
+        host_name: HostName,
+        ident: str,
         raw_data: result.Result[TRawData, Exception],
         duration: Snapshot,
         fetcher_type: FetcherType,
@@ -463,12 +498,18 @@ class FetcherMessage(Serializer, Deserializer):
                 FetcherHeader(
                     fetcher_type,
                     payload_type=PayloadType.ERROR,
-                    status=logging.INFO
-                    if isinstance(raw_data.error, MKFetcherError)
-                    else logging.CRITICAL,
+                    status=(
+                        logging.INFO
+                        if isinstance(raw_data.error, MKFetcherError)
+                        else logging.CRITICAL
+                    ),
+                    host_name_length=len(host_name.encode("utf8")),
+                    ident_length=len(ident.encode("utf8")),
                     payload_length=len(error_payload),
                     stats_length=len(stats),
                 ),
+                host_name,
+                ident,
                 error_payload,
                 stats,
             )
@@ -481,9 +522,13 @@ class FetcherMessage(Serializer, Deserializer):
                     fetcher_type,
                     payload_type=PayloadType.SNMP,
                     status=0,
+                    host_name_length=len(host_name.encode("utf8")),
+                    ident_length=len(ident.encode("utf8")),
                     payload_length=len(snmp_payload),
                     stats_length=len(stats),
                 ),
+                host_name,
+                ident,
                 snmp_payload,
                 stats,
             )
@@ -495,15 +540,26 @@ class FetcherMessage(Serializer, Deserializer):
                 fetcher_type,
                 payload_type=PayloadType.AGENT,
                 status=0,
+                host_name_length=len(host_name.encode("utf8")),
+                ident_length=len(ident.encode("utf8")),
                 payload_length=len(agent_payload),
                 stats_length=len(stats),
             ),
+            host_name,
+            ident,
             agent_payload,
             stats,
         )
 
     @classmethod
-    def error(cls, fetcher_type: FetcherType, exc: Exception, duration: Snapshot) -> FetcherMessage:
+    def error(
+        cls,
+        fetcher_type: FetcherType,
+        host_name: HostName,
+        ident: str,
+        exc: Exception,
+        duration: Snapshot,
+    ) -> FetcherMessage:
         stats = ResultStats(duration)
         payload = ErrorResultMessage(exc)
         return cls(
@@ -511,9 +567,13 @@ class FetcherMessage(Serializer, Deserializer):
                 fetcher_type,
                 PayloadType.ERROR,
                 status=logging.CRITICAL,
+                host_name_length=len(host_name.encode("utf8")),
+                ident_length=len(ident.encode("utf8")),
                 payload_length=len(payload),
                 stats_length=len(stats),
             ),
+            host_name,
+            ident,
             payload,
             stats,
         )
@@ -522,6 +582,8 @@ class FetcherMessage(Serializer, Deserializer):
     def timeout(
         cls,
         fetcher_type: FetcherType,
+        host_name: HostName,
+        ident: str,
         exc: MKTimeout,
         duration: Snapshot,
     ) -> FetcherMessage:
@@ -532,9 +594,13 @@ class FetcherMessage(Serializer, Deserializer):
                 fetcher_type,
                 PayloadType.ERROR,
                 status=logging.ERROR,
+                host_name_length=len(host_name.encode("utf8")),
+                ident_length=len(ident.encode("utf8")),
                 payload_length=len(payload),
                 stats_length=len(stats),
             ),
+            host_name,
+            ident,
             payload,
             stats,
         )

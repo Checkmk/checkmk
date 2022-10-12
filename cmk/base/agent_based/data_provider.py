@@ -316,21 +316,16 @@ def parse_messages(
     # Special agents can produce data for the same check_plugin_name on the same host, in this case
     # the section lines need to be extended
     for source, fetcher_message in fetched:
-        console.vverbose("  Source: %s/%s\n" % (source.source_type, source.fetcher_type))
+        console.vverbose(f"  {fetcher_message.header}")
 
-        host_key = HostKey(source.hostname, source.source_type)
+        host_key = HostKey(fetcher_message.host_name, source.source_type)
         collected_host_sections.setdefault(host_key, HostSections())
 
-        # TODO(ml): Extend protocol in order to make the parser from the
-        #           fetcher_message and not from the source.
-        #
-        #           The protocol is just missing the host name and id.
-        assert source.fetcher_type is fetcher_message.header.fetcher_type
         source_result = parse_raw_data(
             fetcher_message.raw_data,
-            hostname=source.hostname,
-            fetcher_type=source.fetcher_type,
-            ident=source.id,
+            hostname=fetcher_message.host_name,
+            fetcher_type=fetcher_message.fetcher_type,
+            ident=fetcher_message.ident,
             selection=selected_sections,
             logger=source._logger,
         )

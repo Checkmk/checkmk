@@ -6,7 +6,7 @@
 import abc
 import logging
 from functools import partial
-from typing import Any, final, Generic, Literal, Mapping, Optional, Type, TypeVar
+from typing import Any, Final, final, Generic, Literal, Mapping, Optional, Type, TypeVar
 
 from cmk.utils.exceptions import MKFetcherError, MKIPAddressLookupError
 from cmk.utils.log import VERBOSE
@@ -30,8 +30,9 @@ TFetcher = TypeVar("TFetcher", bound="Fetcher")
 class Fetcher(Generic[TRawData], abc.ABC):
     """Interface to the data fetchers."""
 
-    def __init__(self, logger: logging.Logger) -> None:
+    def __init__(self, ident: str, *, logger: logging.Logger) -> None:
         super().__init__()
+        self.ident: Final = ident
         self._logger = logger
 
     @final

@@ -41,11 +41,12 @@ class IPMIFetcher(Fetcher[AgentRawData]):
     def __init__(
         self,
         *,
+        ident: str,  # Literal["mgmt_ipmi"],
         address: HostAddress,  # Could actually be HostName as well.
         username: Optional[str],
         password: Optional[str],
     ) -> None:
-        super().__init__(logging.getLogger("cmk.helper.ipmi"))
+        super().__init__(ident, logger=logging.getLogger("cmk.helper.ipmi"))
         self.address: Final = address
         self.username: Final = username
         self.password: Final = password
@@ -73,6 +74,7 @@ class IPMIFetcher(Fetcher[AgentRawData]):
             "address": self.address,
             "username": self.username,
             "password": self.password,
+            "ident": self.ident,
         }
 
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:

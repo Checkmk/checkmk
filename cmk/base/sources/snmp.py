@@ -57,6 +57,7 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
 
     def _make_fetcher(self) -> SNMPFetcher:
         return SNMPFetcher(
+            ident=self.id,
             sections=self.sections,
             on_error=self.on_snmp_scan_error,
             missing_sys_description=self.missing_sys_description,

@@ -121,20 +121,25 @@ class TestCMCMessage:
     def test_serialization(self, count) -> None:  # type:ignore[no-untyped-def]
         fetcher_payload = AgentResultMessage(AgentRawData(69 * b"\xff"))
         fetcher_stats = ResultStats(Snapshot.null())
+        host_name = "my_host_name"
+        ident = "ident"
         fetcher_message = FetcherMessage(
             FetcherHeader(
                 FetcherType.TCP,
                 PayloadType.AGENT,
                 status=42,
+                host_name_length=len(host_name.encode("utf8")),
+                ident_length=len(ident.encode("utf8")),
                 payload_length=len(fetcher_payload),
                 stats_length=len(fetcher_stats),
             ),
+            host_name,
+            ident,
             fetcher_payload,
             fetcher_stats,
         )
         fetcher_messages = list(repeat(fetcher_message, count))
         serial = 1337
-        host_name = "my_host_name"
         timeout = 7
 
         message = CMCMessage.result_answer(
@@ -197,8 +202,13 @@ class TestCMCResultsStats:
 
 class TestCMCResults:
     @pytest.fixture
-    def messages(self):
+    def host_name(self):
+        return "my_host_name"
+
+    @pytest.fixture
+    def messages(self, host_name):
         msg = []
+        ident = "ident"
         for payload, stats in (
             (AgentResultMessage(AgentRawData(42 * b"\0")), ResultStats(Snapshot.null())),
             (AgentResultMessage(AgentRawData(12 * b"\0")), ResultStats(Snapshot.null())),
@@ -209,9 +219,13 @@ class TestCMCResults:
                         FetcherType.TCP,
                         PayloadType.AGENT,
                         status=69,
+                        host_name_length=len(host_name.encode("utf8")),
+                        ident_length=len(ident.encode("utf8")),
                         payload_length=len(payload),
                         stats_length=len(stats),
                     ),
+                    host_name,
+                    ident,
                     payload,
                     stats,
                 )
@@ -219,10 +233,10 @@ class TestCMCResults:
         return msg
 
     @pytest.fixture
-    def payload(self, messages):
+    def payload(self, messages, host_name):
         return CMCResults(
             messages,
-            FetcherResultsId(1337, "my_host_name"),
+            FetcherResultsId(1337, host_name),
             FetcherResultsStats(timeout=7, duration=Snapshot.null()),
         )
 
@@ -336,6 +350,8 @@ class TestFetcherHeader:
             FetcherType.TCP,
             PayloadType.AGENT,
             status=42,
+            host_name_length=24,
+            ident_length=12,
             payload_length=69,
             stats_length=1337,
         )
@@ -372,6 +388,14 @@ class TestFetcherHeaderEq:
         return 42
 
     @pytest.fixture
+    def host_name(self):
+        return "my_host_name"
+
+    @pytest.fixture
+    def ident(self):
+        return "ident"
+
+    @pytest.fixture
     def payload_length(self):
         return 69
 
@@ -380,17 +404,36 @@ class TestFetcherHeaderEq:
         return len(ResultStats(Snapshot.null()))
 
     @pytest.fixture
-    def header(self, fetcher_type, payload_type, status, payload_length, stats_length):
+    def header(
+        self,
+        fetcher_type,
+        payload_type,
+        status,
+        host_name,
+        ident,
+        payload_length,
+        stats_length,
+    ):
         return FetcherHeader(
             fetcher_type,
             payload_type,
             status=status,
+            host_name_length=len(host_name.encode("utf8")),
+            ident_length=len(ident.encode("utf8")),
             payload_length=payload_length,
             stats_length=stats_length,
         )
 
     def test_eq(  # type:ignore[no-untyped-def]
-        self, header, fetcher_type, payload_type, status, payload_length, stats_length
+        self,
+        header,
+        fetcher_type,
+        payload_type,
+        status,
+        host_name,
+        ident,
+        payload_length,
+        stats_length,
     ) -> None:
         assert header == bytes(header)
         assert bytes(header) == header
@@ -399,6 +442,8 @@ class TestFetcherHeaderEq:
             fetcher_type,
             payload_type,
             status=status,
+            host_name_length=len(host_name.encode("utf8")),
+            ident_length=len(ident.encode("utf8")),
             payload_length=payload_length,
             stats_length=stats_length,
         )
@@ -411,6 +456,8 @@ class TestFetcherHeaderEq:
             other,
             payload_type=header.payload_type,
             status=header.status,
+            host_name_length=header.host_name_length,
+            ident_length=header.ident_length,
             payload_length=header.payload_length,
             stats_length=header.stats_length,
         )
@@ -423,6 +470,8 @@ class TestFetcherHeaderEq:
             header.fetcher_type,
             other,
             status=header.status,
+            host_name_length=header.host_name_length,
+            ident_length=header.ident_length,
             payload_length=header.payload_length,
             stats_length=header.stats_length,
         )
@@ -435,6 +484,8 @@ class TestFetcherHeaderEq:
             header.fetcher_type,
             header.payload_type,
             status=other,
+            host_name_length=header.host_name_length,
+            ident_length=header.ident_length,
             payload_length=header.payload_length,
             stats_length=header.stats_length,
         )
@@ -449,6 +500,8 @@ class TestFetcherHeaderEq:
             header.fetcher_type,
             header.payload_type,
             status=header.status,
+            host_name_length=header.host_name_length,
+            ident_length=header.ident_length,
             payload_length=other,
             stats_length=header.stats_length,
         )
@@ -475,6 +528,14 @@ class TestResultStats:
 
 class TestFetcherMessage:
     @pytest.fixture
+    def hostname(self):
+        return "hostname"
+
+    @pytest.fixture
+    def ident(self):
+        return "ident"
+
+    @pytest.fixture
     def duration(self):
         return Snapshot.null()
 
@@ -483,11 +544,13 @@ class TestFetcherMessage:
         return ResultStats(duration)
 
     @pytest.fixture
-    def header(self, stats):
+    def header(self, hostname, ident, stats):
         return FetcherHeader(
             FetcherType.TCP,
             PayloadType.AGENT,
             status=42,
+            host_name_length=len(hostname.encode("utf8")),
+            ident_length=len(ident.encode("utf8")),
             payload_length=69,
             stats_length=len(stats),
         )
@@ -497,8 +560,8 @@ class TestFetcherMessage:
         return AgentResultMessage(b"\0" * (header.payload_length - AgentResultMessage.length))
 
     @pytest.fixture
-    def message(self, header, payload, stats):
-        return FetcherMessage(header, payload, stats)
+    def message(self, header, hostname, ident, payload, stats):
+        return FetcherMessage(header, hostname, ident, payload, stats)
 
     @pytest.fixture
     def snmp_raw_data(self):
@@ -519,15 +582,14 @@ class TestFetcherMessage:
         with pytest.raises(ValueError):
             FetcherMessage.from_bytes(b"random bytes")
 
-    def test_len(self, message, header, payload, stats) -> None:  # type:ignore[no-untyped-def]
-        assert len(message) == len(header) + len(payload) + len(stats)
-
     @pytest.mark.parametrize("fetcher_type", [FetcherType.TCP])
     def test_from_raw_data_standard(  # type:ignore[no-untyped-def]
         self, agent_raw_data, duration, fetcher_type
     ) -> None:
         raw_data: result.Result[AgentRawData, Exception] = result.OK(agent_raw_data)
-        message = FetcherMessage.from_raw_data(raw_data, duration, fetcher_type)
+        message = FetcherMessage.from_raw_data(
+            "host_name", "ident", raw_data, duration, fetcher_type
+        )
         assert message.header.fetcher_type is fetcher_type
         assert message.header.payload_type is PayloadType.AGENT
         assert message.raw_data == raw_data
@@ -536,14 +598,18 @@ class TestFetcherMessage:
         self, snmp_raw_data, duration
     ) -> None:
         raw_data: result.Result[SNMPRawData, Exception] = result.OK(snmp_raw_data)
-        message = FetcherMessage.from_raw_data(raw_data, duration, FetcherType.SNMP)
+        message = FetcherMessage.from_raw_data(
+            "host_name", "ident", raw_data, duration, FetcherType.SNMP
+        )
         assert message.header.fetcher_type is FetcherType.SNMP
         assert message.header.payload_type is PayloadType.SNMP
         assert message.raw_data == raw_data
 
     def test_from_raw_data_exception(self, duration) -> None:  # type:ignore[no-untyped-def]
         error: result.Result[AgentRawData, Exception] = result.Error(ValueError("zomg!"))
-        message = FetcherMessage.from_raw_data(error, duration, FetcherType.TCP)
+        message = FetcherMessage.from_raw_data(
+            "host_name", "ident", error, duration, FetcherType.TCP
+        )
         assert message.header.fetcher_type is FetcherType.TCP
         assert message.header.payload_type is PayloadType.ERROR
         # Comparison of exception is "interesting" in Python so we check the type and args.
@@ -555,16 +621,22 @@ class TestFetcherMessage:
         self, agent_raw_data, duration, fetcher_type
     ) -> None:
         raw_data: result.Result[AgentRawData, Exception] = result.OK(agent_raw_data)
-        message = FetcherMessage.from_raw_data(raw_data, duration, fetcher_type)
+        message = FetcherMessage.from_raw_data(
+            "host_name", "ident", raw_data, duration, fetcher_type
+        )
         assert message.raw_data == raw_data
 
     def test_raw_data_snmp(self, snmp_raw_data, duration) -> None:  # type:ignore[no-untyped-def]
         raw_data: result.Result[SNMPRawData, Exception] = result.OK(snmp_raw_data)
-        message = FetcherMessage.from_raw_data(raw_data, duration, FetcherType.SNMP)
+        message = FetcherMessage.from_raw_data(
+            "host_name", "ident", raw_data, duration, FetcherType.SNMP
+        )
         assert message.raw_data == raw_data
 
     def test_raw_data_exception(self, duration) -> None:  # type:ignore[no-untyped-def]
         raw_data: result.Result[AgentRawData, Exception] = result.Error(Exception("zomg!"))
-        message = FetcherMessage.from_raw_data(raw_data, duration, FetcherType.TCP)
+        message = FetcherMessage.from_raw_data(
+            "host_name", "ident", raw_data, duration, FetcherType.TCP
+        )
         assert isinstance(message.raw_data.error, Exception)
         assert str(message.raw_data.error) == "zomg!"

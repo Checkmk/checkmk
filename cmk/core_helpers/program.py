@@ -24,11 +24,12 @@ class ProgramFetcher(Fetcher[AgentRawData]):
     def __init__(
         self,
         *,
+        ident: str,
         cmdline: Union[bytes, str],
         stdin: Optional[str],
         is_cmc: bool,
     ) -> None:
-        super().__init__(logging.getLogger("cmk.helper.program"))
+        super().__init__(ident, logger=logging.getLogger("cmk.helper.program"))
         self.cmdline: Final = cmdline
         self.stdin: Final = stdin
         self.is_cmc: Final = is_cmc
@@ -56,6 +57,7 @@ class ProgramFetcher(Fetcher[AgentRawData]):
             "cmdline": self.cmdline,
             "stdin": self.stdin,
             "is_cmc": self.is_cmc,
+            "ident": self.ident,
         }
 
     def open(self) -> None:

@@ -56,6 +56,7 @@ class PiggybackSource(Source[AgentRawData, AgentRawDataSection]):
 
     def _make_fetcher(self) -> PiggybackFetcher:
         return PiggybackFetcher(
+            ident=self.id,
             hostname=self.hostname,
             address=self.ipaddress,
             time_settings=self.time_settings,

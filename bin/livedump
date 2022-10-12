@@ -3,56 +3,150 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import getopt
-import os
 import sys
 import time
-from collections.abc import Callable
+from argparse import ArgumentParser
+from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Any, NoReturn
+from os import getenv
+from typing import NoReturn
 
 from livestatus import SingleSiteConnection
 
-# These variable will be substituted at 'make dist' time
+# This will be substituted at 'make dist' time.
 __version__ = "2.2.0i1"
 
 
-def dump_templates() -> None:
-    check_interval = ""
-    if args.interval is not None:
-        check_interval = "check_interval          %d" % args.interval
+@dataclass(slots=True)
+class Arguments:
+    config: bool = False
+    dump_templates: bool = False
+    mark_mode: bool = False
+    prefix: str = ""
+    socket: str | None = None
+    host_only_header: list[str] = field(default_factory=list)
+    host_header: list[str] = field(default_factory=list)
+    service_header: list[str] = field(default_factory=list)
+    interval: int | None = None
+    include_groups: bool = False
+    include_host_icon: bool = False
+    debug: bool = False
 
+
+def parse_arguments(argv: Sequence[str]) -> Arguments:
+    parser = ArgumentParser(prog=argv[0])
+    parser.add_argument(
+        "-V",
+        "--version",
+        action="version",
+        version=f"This is livedump version {__version__}\n",
+    )
+    parser.add_argument(
+        "-C",
+        "--config",
+        help="dump configuration instead of state",
+        action="store_true",
+    )
+    parser.add_argument(
+        "-T",
+        "--dump-templates",
+        help="dump host and service templates, too",
+        action="store_true",
+    )
+    parser.add_argument(
+        "-M",
+        "--mark-mode",
+        help="emit the mode as the first line, for use with e.g. livedump-ssh-recv",
+        action="store_true",
+    )
+    parser.add_argument(
+        "-p",
+        "--prefix",
+        help="add PREFIX to host names, useful for disambiguation in a multi-site setup",
+    )
+    parser.add_argument(
+        "-s",
+        "--socket",
+        help="connect to Livestatus at SOCKET, e.g. 'tcp:10.11.0.55:6557' or 'unix:/var/run/nagios/rw/live'",
+    )
+    parser.add_argument(
+        "-O",
+        "--host-only-header",
+        metavar="HEADER",
+        help="add HEADER to host queries only, usually 'Filter: ...'",
+        action="append",
+    )
+    parser.add_argument(
+        "-H",
+        "--host-header",
+        metavar="HEADER",
+        help="add HEADER to host and service queries only, usually 'Filter: ...'",
+        action="append",
+    )
+    parser.add_argument(
+        "-S",
+        "--service-header",
+        metavar="HEADER",
+        help="add HEADER to service queries only, usually 'Filter: ...'",
+        action="append",
+    )
+    parser.add_argument(
+        "-i",
+        "--interval",
+        help="dump the given check INTERVAL for hosts/services into the template",
+        type=int,
+    )
+    parser.add_argument(
+        "-G",
+        "--include-groups",
+        help="dump contact groups instead of contacts into config",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--include-host-icon",
+        help="add host icon_image to config",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--debug",
+        help="do not catch Python exceptions",
+        action="store_true",
+    )
+    return parser.parse_args(args=argv[1:], namespace=Arguments())
+
+
+def dump_templates(args: Arguments) -> None:
+    check_interval = (
+        "" if args.interval is None else f"\n    check_interval          {args.interval}"
+    )
     sys.stdout.write(
-        """define host {
+        f"""define host {{
     name                    livedump-host
     use                     check_mk_default
     register                0
     active_checks_enabled   0
-    passive_checks_enabled  1
-    %s
-}
+    passive_checks_enabled  1{check_interval}
+}}
 
-define service {
+define service {{
     name                    livedump-service
     register                0
     active_checks_enabled   0
     passive_checks_enabled  1
-    check_period            0x0
-    %s
-}
+    check_period            0x0{check_interval}
+}}
 
-define command {
+define command {{
     command_name            check-livedump
     command_line            echo "WARN - You did an active check, but this check is passive" ; exit 1
-}
+}}
 
-define timeperiod {
+define timeperiod {{
     timeperiod_name         0x0
     alias                   Never ever
-}
+}}
 
 """
-        % (check_interval, check_interval)
     )
 
 
@@ -68,27 +162,34 @@ define timeperiod {
 #   '----------------------------------------------------------------------'
 
 
+def bail_out(message: object) -> NoReturn:
+    sys.stderr.write(f"{message}\n")
+    sys.exit(1)
+
+
 def connect(socket_path: str | None) -> SingleSiteConnection:
-    if not socket_path and not omd_root():
-        bail_out("Please specify the URL of the livestatus socket.")
-    if omd_root():
-        socket_path = "unix:%s/tmp/run/live" % omd_root()
-    elif socket_path is None:
-        bail_out("No socket specified")
-    return SingleSiteConnection(socket_path)
+    if socket_path is not None:
+        return SingleSiteConnection(socket_path)
+    if omd_root := getenv("OMD_ROOT"):
+        return SingleSiteConnection(f"unix:{omd_root}/tmp/run/live")
+    bail_out("specify Livestatus socket or set OMD_ROOT")
 
 
-def livedump_config() -> None:  # pylint: disable=too-many-branches
+def prepare_row(row: dict[str, object]) -> None:
+    contacts = row["contacts"]
+    assert isinstance(contacts, list)
+    row["contactsstring"] = ",".join(contacts)
+    contact_groups = row.get("contact_groups")
+    if isinstance(contact_groups, list):
+        row["contact_groups"] = ",".join(contact_groups)
+
+
+def livedump_config(args: Arguments) -> None:
     connection = connect(args.socket)
     if args.mark_mode:
-        sys.stdout.write("config %s\n" % omd_site())
+        sys.stdout.write(f"config {getenv('OMD_SITE')}\n")
     if args.dump_templates:
-        dump_templates()
-
-    def prepare_row(row: dict[str, Any]) -> None:
-        row["contactsstring"] = ",".join(row["contacts"])
-        if "contact_groups" in row:
-            row["contact_groups"] = ",".join(row["contact_groups"])
+        dump_templates(args)
 
     # Dump host config
     query = "\n".join(
@@ -102,8 +203,11 @@ def livedump_config() -> None:  # pylint: disable=too-many-branches
     for row in connection.query_table_assoc(query):
         prepare_row(row)
         row["groupstring"] = ",".join(row["groups"])
-        sys.stdout.write("define host {\n  use                livedump-host\n")
-        sys.stdout.write("  host_name          %s%s\n" % (args.prefix, row["name"]))
+        sys.stdout.write(
+            "define host {\n"
+            "  use                livedump-host\n"
+            f"  host_name          {args.prefix}{row['name']}\n"
+        )
         sys.stdout.write(
             "  alias              %(alias)s\n"
             "  address            %(address)s\n"
@@ -111,22 +215,19 @@ def livedump_config() -> None:  # pylint: disable=too-many-branches
             "  check_command      %(check_command)s\n"
             "  max_check_attempts %(max_check_attempts)d\n" % row
         )
-
         if args.include_groups:
             sys.stdout.write("  contacts           %s\n" % row["contactsstring"])
         else:
             sys.stdout.write("  contact_groups     %s\n" % row["contact_groups"])
-
         if args.include_host_icon:
             if row.get("icon_image"):
                 sys.stdout.write("  icon_image         %s\n" % row["icon_image"])
-
         sys.stdout.write("}\n\n")
 
     # Dump service config
     query = "\n".join(
         [
-            "GET services"
+            "GET services",
             "Columns: host_name description groups check_command max_check_attempts contacts",
         ]
         + args.host_header
@@ -139,8 +240,11 @@ def livedump_config() -> None:  # pylint: disable=too-many-branches
         else:
             row["groupstring"] = ""
         row["contactsstring"] = ",".join(row["contacts"])
-        sys.stdout.write("define service {\n  use                livedump-service\n")
-        sys.stdout.write("  host_name          %s%s\n" % (args.prefix, row["host_name"]))
+        sys.stdout.write(
+            "define service {\n"
+            "  use                livedump-service\n"
+            f"  host_name          {args.prefix}{row['host_name']}\n"
+        )
         sys.stdout.write(
             "  description        %(description)s\n"
             "  %(groupstring)s\n"
@@ -151,12 +255,11 @@ def livedump_config() -> None:  # pylint: disable=too-many-branches
         )
 
 
-def livedump_state() -> None:
+def livedump_state(args: Arguments) -> None:
     connection = connect(args.socket)
     if args.mark_mode:
         sys.stdout.write("status\n")
     now = time.time()
-    # Dump hosts
     query = "\n".join(
         [
             "GET hosts",
@@ -167,7 +270,7 @@ def livedump_state() -> None:
     )
     for row in connection.query_table_assoc(query):
         row["now"] = now
-        sys.stdout.write("host_name=%s%s" % (args.prefix, row["name"]))
+        sys.stdout.write(f"host_name={args.prefix}{row['name']}")
         sys.stdout.write(
             """
 check_type=1
@@ -193,7 +296,7 @@ output=%(plugin_output)s|%(perf_data)s
     )
     for row in connection.query_table_assoc(query):
         row["now"] = now
-        sys.stdout.write("host_name=%s%s" % (args.prefix, row["host_name"]))
+        sys.stdout.write(f"host_name={args.prefix}{row['host_name']}")
         sys.stdout.write(
             """
 service_description=%(description)s
@@ -211,168 +314,15 @@ output=%(plugin_output)s|%(perf_data)s
         )
 
 
-# .
-#   .-Helpers--------------------------------------------------------------.
-#   |                  _   _      _                                        |
-#   |                 | | | | ___| |_ __   ___ _ __ ___                    |
-#   |                 | |_| |/ _ \ | '_ \ / _ \ '__/ __|                   |
-#   |                 |  _  |  __/ | |_) |  __/ |  \__ \                   |
-#   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
-#   |                              |_|                                     |
-#   +----------------------------------------------------------------------+
-#   | Various helper functions                                             |
-#   '----------------------------------------------------------------------'
+def main() -> None:
+    try:
+        args = parse_arguments(sys.argv)
+        (livedump_config if args.config else livedump_state)(args)
+    except Exception as e:
+        if args.debug:
+            raise
+        bail_out(e)
 
 
-def omd_root() -> str | None:
-    return os.getenv("OMD_ROOT")
-
-
-def omd_site() -> str | None:
-    return os.getenv("OMD_SITE")
-
-
-def bail_out(x: str) -> NoReturn:
-    sys.stderr.write("%s\n" % x)
-    sys.exit(1)
-
-
-def usage(status: int) -> NoReturn:
-    sys.stderr.write(
-        """Usage: %s [OPTION]...
-
-  -s, --socket S             Connect to Livestatus-socket at S
-                             -s tcp:10.11.0.55:6557
-                             -s unix:/var/run/nagios/rw/live
-
-  -C, --config               Dump configuration (instead of state)
-
-  -T, --dump-templates       Also dump host/service templates
-
-  -M, --mark-mode            Puts the mode (state/configuration dump) in the first
-                             line for use with livedump-ssh-recv and similar scripts
-
-  -p, --prefix P             Add a prefix P to hostnames. Use this option to dump live
-                             data from multiple sites with duplicated hostnames
-
-  -O, --host-only-header H   Add header H to host queries only (usually Filter: ...)
-
-  -H, --host-header H        Add header H to host queries (usually Filter: ...)
-                             This header is also used in service queries
-
-  -S, --service-header H     Add header H to service queries (usually Filter: ...)
-
-  -i, --interval I           Assume this check interval for hosts/services. This is
-                             used in nagios config definition "check_interval".
-                             Will be used for staleness checks on the server. This
-                             option is only used when dumping the config together
-                             with templates (-C -T)
-
-  -G, --include-groups       Use contact groups instead of contacts on dumping config
-
-      --include-host-icon    Add host icon_image to config
-
-  -V, --version              Show version and exit
-  -h, --help                 Show this help
-      --debug                Do not catch Python exceptions
-"""
-        % os.path.split(sys.argv[0])[1]
-    )
-    sys.exit(status)
-
-
-def print_version() -> NoReturn:
-    sys.stdout.write("This is livedump version %s\n" % __version__)
-    sys.exit(0)
-
-
-# .
-#   .-main-----------------------------------------------------------------.
-#   |                                       _                              |
-#   |                       _ __ ___   __ _(_)_ __                         |
-#   |                      | '_ ` _ \ / _` | | '_ \                        |
-#   |                      | | | | | | (_| | | | | |                       |
-#   |                      |_| |_| |_|\__,_|_|_| |_|                       |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Main entry point, getopt, etc.                                       |
-#   '----------------------------------------------------------------------'
-
-short_options = "ChVTMp:s:O:H:S:i:G"
-long_options = [
-    "config",
-    "help",
-    "version",
-    "dump-templates",
-    "mark-mode",
-    "prefix=",
-    "socket=",
-    "host-only-header=",
-    "host-header=",
-    "service-header=",
-    "interval=",
-    "include-groups",
-    "include-host-icon",
-    "debug",
-]
-
-
-@dataclass(slots=True)
-class Namespace:
-    dumper: Callable[[], None] = livedump_state
-    dump_templates: bool = False
-    mark_mode: bool = False
-    prefix: str = ""
-    socket: str | None = None
-    host_only_header: list[str] = field(default_factory=list)
-    host_header: list[str] = field(default_factory=list)
-    service_header: list[str] = field(default_factory=list)
-    interval: int | None = None
-    include_groups: bool = False
-    include_host_icon: bool = False
-    debug: bool = False
-
-
-try:
-    opts, _args = getopt.getopt(sys.argv[1:], short_options, long_options)
-    args = Namespace()
-except getopt.GetoptError as err:
-    sys.stderr.write("%s\n\n" % err)
-    usage(1)
-
-for o, a in opts:
-    if o in ["-h", "--help"]:
-        usage(0)
-    elif o in ["-V", "--version"]:
-        print_version()
-    elif o in ["-C", "--config"]:
-        args.dumper = livedump_config
-    elif o in ["-T", "--dump-templates"]:
-        args.dump_templates = True
-    elif o in ["-M", "--mark-mode"]:
-        args.mark_mode = True
-    elif o in ["-p", "--prefix"]:
-        args.prefix = a
-    elif o in ["-s", "--socket"]:
-        args.socket = a
-    elif o in ["-O", "--host-only-header"]:
-        args.host_only_header.append(a)
-    elif o in ["-H", "--host-header"]:
-        args.host_header.append(a)
-    elif o in ["-S", "--service-header"]:
-        args.service_header.append(a)
-    elif o in ["-i", "--interval"]:
-        args.interval = int(a)
-    elif o in ["-G", "--include-groups"]:
-        args.include_groups = True
-    elif o in ["--include-host-icon"]:
-        args.include_host_icon = True
-    elif o == "--debug":
-        args.debug = True
-
-try:
-    args.dumper()
-except Exception as e:
-    if args.debug:
-        raise
-    bail_out(str(e))
+if __name__ == "__main__":
+    main()

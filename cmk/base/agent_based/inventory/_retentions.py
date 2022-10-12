@@ -35,7 +35,7 @@ table columns longer than their validity period.
 
 from __future__ import annotations
 
-from typing import NamedTuple, Union
+from typing import NamedTuple
 
 from cmk.utils.structured_data import (
     ATTRIBUTES_KEY,
@@ -51,11 +51,10 @@ from cmk.utils.structured_data import (
 )
 
 RawCacheInfo = tuple[int, int]
-RawChoicesFromConfig = Union[tuple[str, list[str]], str]
 
 
 class IntervalFromConfig(NamedTuple):
-    choices: RawChoicesFromConfig
+    choices: tuple[str, list[str]] | str
     interval: int
 
 

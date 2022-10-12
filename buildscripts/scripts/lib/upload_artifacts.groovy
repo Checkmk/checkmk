@@ -87,8 +87,13 @@ def via_rsync(ARCHIVE_BASE, CMK_VERS, FILE_NAME, UPLOAD_DEST, PORT) {
 
 def create_hashes(ARCHIVE_DIR) {
     stage("Create file hashes") {
-        def HASHES_PATH = ARCHIVE_DIR + "/HASHES"
-        sh("cd ${ARCHIVE_DIR} ; sha256sum -- *.{tar.gz,rpm,deb,cma,cmk} | sort -k 2 > ${HASHES_PATH}")
+        sh("""
+            for FILE in *.{tar.gz,rpm,deb,cma,cmk}; do
+                if [ -f \${FILE} ] ; then
+                    sha256sum -- \${FILE} > \${FILE}.hash
+                fi
+            done
+        """);
     }
 }
 

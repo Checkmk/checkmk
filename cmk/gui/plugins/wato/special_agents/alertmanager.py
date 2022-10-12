@@ -28,8 +28,10 @@ def _valuespec_generic_metrics_alertmanager():
             (
                 "hostname",
                 TextInput(
-                    title=_("Name of Piggyback Host"),
-                    allow_empty=False,
+                    title=_("Optionally forward output to host"),
+                    help=_(
+                        "If given forward output to a different host using piggyback mechanics."
+                    ),
                 ),
             ),
             (
@@ -43,10 +45,10 @@ def _valuespec_generic_metrics_alertmanager():
                                 elements=api_request_connection_elements(
                                     help_text=_(
                                         "Specifies a URL path prefix, which is prepended to API calls "
-                                        "to the Alertmanager API. If this option is not relevant for "
+                                        "to the Prometheus API. If this option is not relevant for "
                                         "your installation, please leave it unchecked."
                                     ),
-                                    default_port=9093,
+                                    default_port=9091,
                                 ),
                                 help=_("Use IP address of assigned host"),
                             ),
@@ -58,10 +60,10 @@ def _valuespec_generic_metrics_alertmanager():
                                 elements=api_request_connection_elements(
                                     help_text=_(
                                         "Specifies a URL path prefix, which is prepended to API calls "
-                                        "to the Alertmanager API. If this option is not relevant for "
+                                        "to the Prometheus API. If this option is not relevant for "
                                         "your installation, please leave it unchecked."
                                     ),
-                                    default_port=9093,
+                                    default_port=9091,
                                 ),
                                 help=_("Use host name of assigned host"),
                             ),
@@ -90,7 +92,7 @@ def _valuespec_generic_metrics_alertmanager():
                             ),
                         ),
                     ],
-                    title=_("Alertmanager connection option"),
+                    title=_("Prometheus connection option"),
                 ),
             ),
             ssl_verification(),

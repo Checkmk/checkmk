@@ -10,23 +10,6 @@ import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 
 def main(job_definition_file) {
-
-    // https://github.com/comquent/imperative-when/commit/9133dc840adad30c75f497000716981e53032d55
-    // TODO make this public
-    conditional_stage = {String name, boolean condition, body -> 
-        body.resolveStrategy = Closure.OWNER_FIRST;
-        body.delegate = [:];
-        stage(name) {
-            if (condition) {
-                print("Execute conditional stage ${STAGE_NAME}");
-                body();
-            } else {
-                print("Skip conditional stage ${STAGE_NAME}");
-                Utils.markStageSkippedForConditional(STAGE_NAME);
-            }
-        }
-    }
-
     /// brings raise, load_json, cmd_output
     load("${checkout_dir}/buildscripts/scripts/utils/common.groovy");
     load("${checkout_dir}/buildscripts/scripts/utils/docker_util.groovy");

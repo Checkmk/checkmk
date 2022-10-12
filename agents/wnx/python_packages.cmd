@@ -60,4 +60,5 @@ call python_package_install !ppath! pyOpenSSL
 call python_package_install !ppath! requests[socks]
 call python_package_install !ppath! pathlib
 call python_package_install !ppath! pathlib2
+call python_package_install !ppath! win_inet_pton
 call python_package_install !ppath! "cryptography==3.3.2"

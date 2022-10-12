@@ -155,34 +155,34 @@ class UpdateResult(NamedTuple):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-# TODO cleanup store: better method names for saving/loading current tree,
-# archive files or delta caches.
+
+# TODO Centralize different stores and loaders of tree files:
+#   - inventory/HOSTNAME, inventory/HOSTNAME.gz
+#   - inventory_archive/HOSTNAME/TIMESTAMP,
+#   - inventory_delta_cache/HOSTNAME/TIMESTAMP_{TIMESTAMP,None}
+#   - status_data/HOSTNAME, status_data/HOSTNAME.gz
 
 
-class StructuredDataStore:
-    @staticmethod
-    def load_file(file_path: Path) -> StructuredDataNode:
-        if raw_tree := store.load_object_from_file(file_path, default=None):
-            return StructuredDataNode.deserialize(raw_tree)
-        return StructuredDataNode()
+def load_tree(filepath: Path) -> StructuredDataNode:
+    if raw_tree := store.load_object_from_file(filepath, default=None):
+        return StructuredDataNode.deserialize(raw_tree)
+    return StructuredDataNode()
 
-    def __init__(self, path: Union[Path, str]) -> None:
-        self._path = Path(path)
 
-    def _host_file(self, host_name: HostName) -> Path:
-        return self._path / str(host_name)
+class TreeStore:
+    def __init__(self, tree_dir: Path | str) -> None:
+        self._tree_dir = Path(tree_dir)
 
-    def _gz_file(self, host_name: HostName) -> Path:
-        return self._path / f"{host_name}.gz"
+    def load(self, *, host_name: HostName | str) -> StructuredDataNode:
+        return load_tree(self._tree_file(host_name))
 
     def save(self, *, host_name: HostName, tree: StructuredDataNode, pretty: bool = False) -> None:
+        self._tree_dir.mkdir(parents=True, exist_ok=True)
 
-        self._path.mkdir(parents=True, exist_ok=True)
-
-        filepath = self._host_file(host_name)
+        tree_file = self._tree_file(host_name)
 
         output = tree.serialize()
-        store.save_object_to_file(filepath, output, pretty=pretty)
+        store.save_object_to_file(tree_file, output, pretty=pretty)
 
         buf = io.BytesIO()
         with gzip.GzipFile(fileobj=buf, mode="wb") as f:
@@ -190,20 +190,32 @@ class StructuredDataStore:
         store.save_bytes_to_file(self._gz_file(host_name), buf.getvalue())
 
         # Inform Livestatus about the latest inventory update
-        store.save_text_to_file(filepath.with_name(".last"), "")
+        store.save_text_to_file(tree_file.with_name(".last"), "")
 
-    def load(self, *, host_name: HostName) -> StructuredDataNode:
-        return self.load_file(self._host_file(host_name))
-
-    def remove_files(self, *, host_name: HostName) -> None:
-        self._host_file(host_name).unlink(missing_ok=True)
+    def remove(self, *, host_name: HostName) -> None:
+        self._tree_file(host_name).unlink(missing_ok=True)
         self._gz_file(host_name).unlink(missing_ok=True)
 
-    def archive(self, *, host_name: HostName, archive_dir: Union[Path, str]) -> None:
-        target_dir = Path(archive_dir, str(host_name))
+    def _tree_file(self, host_name: HostName) -> Path:
+        return self._tree_dir / str(host_name)
+
+    def _gz_file(self, host_name: HostName) -> Path:
+        return self._tree_dir / f"{host_name}.gz"
+
+
+class TreeOrArchiveStore(TreeStore):
+    def __init__(self, tree_dir: Path | str, archive: Path | str) -> None:
+        super().__init__(tree_dir)
+        self._archive_dir = Path(archive)
+
+    def _archive_host_dir(self, host_name: HostName) -> Path:
+        return self._archive_dir / str(host_name)
+
+    def archive(self, *, host_name: HostName) -> None:
+        target_dir = self._archive_host_dir(host_name)
         target_dir.mkdir(parents=True, exist_ok=True)
 
-        filepath = self._host_file(host_name)
+        filepath = self._tree_file(host_name)
         filepath.rename(target_dir / str(int(filepath.stat().st_mtime)))
 
 

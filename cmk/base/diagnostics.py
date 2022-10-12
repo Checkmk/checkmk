@@ -51,7 +51,7 @@ from cmk.utils.diagnostics import (
 from cmk.utils.i18n import _
 from cmk.utils.log import console
 from cmk.utils.site import omd_site
-from cmk.utils.structured_data import StructuredDataStore
+from cmk.utils.structured_data import load_tree
 from cmk.utils.type_defs import HostName
 
 import cmk.base.section as section
@@ -676,9 +676,8 @@ class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         if checkmk_server_name is None:
             raise DiagnosticsElementError("No Checkmk server found")
 
-        inventory_store = StructuredDataStore(Path(cmk.utils.paths.inventory_output_dir))
         try:
-            tree = inventory_store.load(host_name=checkmk_server_name)
+            tree = load_tree(Path(cmk.utils.paths.inventory_output_dir) / checkmk_server_name)
         except FileNotFoundError:
             raise DiagnosticsElementError(
                 "No HW/SW inventory tree of '%s' found" % checkmk_server_name

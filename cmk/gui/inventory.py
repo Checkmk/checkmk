@@ -25,12 +25,12 @@ import cmk.utils.regex
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKException, MKGeneralException
 from cmk.utils.structured_data import (
+    load_tree,
     make_filter,
     SDKey,
     SDPath,
     SDRawPath,
     StructuredDataNode,
-    StructuredDataStore,
 )
 from cmk.utils.type_defs import HostName
 
@@ -408,7 +408,7 @@ class _CachedTreeLoader:
 
     def _load_tree_from_file(self, filepath: Path) -> StructuredDataNode:
         try:
-            tree = _filter_tree(StructuredDataStore.load_file(filepath))
+            tree = _filter_tree(load_tree(filepath))
         except FileNotFoundError:
             raise LoadStructuredDataError()
 
@@ -494,14 +494,15 @@ def _load_structured_data_tree(
         # just for security reasons
         return None
 
-    tree_store = StructuredDataStore(
-        Path(cmk.utils.paths.inventory_output_dir)
-        if tree_type == "inventory"
-        else Path(cmk.utils.paths.status_data_dir)
-    )
-
     try:
-        return tree_store.load(host_name=hostname)
+        return load_tree(
+            Path(
+                cmk.utils.paths.inventory_output_dir
+                if tree_type == "inventory"
+                else cmk.utils.paths.status_data_dir
+            )
+            / hostname
+        )
     except Exception as e:
         if active_config.debug:
             html.show_warning("%s" % e)

@@ -18,9 +18,9 @@ from cmk.utils.structured_data import (
     parse_visible_raw_path,
     RetentionIntervals,
     StructuredDataNode,
-    StructuredDataStore,
     Table,
     TableRetentions,
+    TreeStore,
 )
 from cmk.utils.type_defs import HostName
 
@@ -521,7 +521,7 @@ def test_filtering_node_mixed() -> None:
 
 TEST_DIR = "%s/tests/unit/cmk/utils/structured_data/tree_test_data" % cmk_path()
 
-TEST_DATA_STORE = StructuredDataStore(Path(TEST_DIR))
+TEST_DATA_STORE = TreeStore(Path(TEST_DIR))
 
 tree_name_old_addresses_arrays_memory = HostName("tree_old_addresses_arrays_memory")
 tree_name_old_addresses = HostName("tree_old_addresses")
@@ -560,9 +560,9 @@ def test_structured_data_StructuredDataTree_load_from(tree_name: HostName) -> No
     TEST_DATA_STORE.load(host_name=tree_name)
 
 
-def test_real_save_gzip(tmp_path) -> None:  # type:ignore[no-untyped-def]
+def test_real_save_gzip(tmp_path: Path) -> None:
     host_name = HostName("heute")
-    target = tmp_path / str(host_name)
+    target = tmp_path / "inventory" / str(host_name)
     raw_tree = {
         "node": {
             "foo": 1,
@@ -570,8 +570,8 @@ def test_real_save_gzip(tmp_path) -> None:  # type:ignore[no-untyped-def]
         },
     }
     tree = StructuredDataNode.deserialize(raw_tree)
-    store = StructuredDataStore(tmp_path)
-    store.save(host_name=host_name, tree=tree)
+    tree_store = TreeStore(tmp_path / "inventory")
+    tree_store.save(host_name=host_name, tree=tree)
 
     assert target.exists()
 
@@ -651,10 +651,10 @@ def test_real_equal_tables() -> None:
 
 @pytest.mark.parametrize("tree", trees)
 def test_real_is_equal_save_and_load(tree, tmp_path) -> None:  # type:ignore[no-untyped-def]
-    store = StructuredDataStore(tmp_path)
+    tree_store = TreeStore(tmp_path / "inventory")
     try:
-        store.save(host_name=HostName("foo"), tree=tree)
-        loaded_tree = store.load(host_name=HostName("foo"))
+        tree_store.save(host_name=HostName("foo"), tree=tree)
+        loaded_tree = tree_store.load(host_name=HostName("foo"))
         assert tree.is_equal(loaded_tree)
     finally:
         shutil.rmtree(str(tmp_path))

@@ -13,7 +13,6 @@ CL:
 
 import time
 from functools import partial
-from pathlib import Path
 from typing import Callable, Container, NamedTuple, Sequence
 
 import cmk.utils.cleanup
@@ -24,7 +23,7 @@ import cmk.utils.tty as tty
 from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
-from cmk.utils.structured_data import StructuredDataNode, StructuredDataStore
+from cmk.utils.structured_data import StructuredDataNode, TreeOrArchiveStore, TreeStore
 from cmk.utils.type_defs import EVERYTHING, HostName, InventoryPluginName, result, ServiceState
 
 from cmk.core_helpers.host_sections import HostSections
@@ -337,12 +336,11 @@ def do_inventory_actions_during_checking_for(
     *,
     parsed_sections_broker: ParsedSectionsBroker,
 ) -> None:
-
-    status_data_store = StructuredDataStore(Path(cmk.utils.paths.status_data_dir))
+    tree_store = TreeStore(cmk.utils.paths.status_data_dir)
 
     if not host_config.do_status_data_inventory:
         # includes cluster case
-        status_data_store.remove_files(host_name=host_config.hostname)
+        tree_store.remove(host_name=host_config.hostname)
         return  # nothing to do here
 
     trees = _do_inv_for_realhost(
@@ -352,7 +350,7 @@ def do_inventory_actions_during_checking_for(
         retentions_tracker=RetentionsTracker([]),
     )
     if trees.status_data and not trees.status_data.is_empty():
-        status_data_store.save(host_name=host_config.hostname, tree=trees.status_data)
+        tree_store.save(host_name=host_config.hostname, tree=trees.status_data)
 
 
 def _do_inv_for_cluster(nodes: Sequence[HostName], *, is_cluster: bool) -> InventoryTrees:
@@ -450,14 +448,17 @@ def _save_inventory_tree(
     inventory_tree: StructuredDataNode,
     retentions: Retentions,
 ) -> StructuredDataNode | None:
-    inventory_store = StructuredDataStore(cmk.utils.paths.inventory_output_dir)
+    tree_or_archive_store = TreeOrArchiveStore(
+        cmk.utils.paths.inventory_output_dir,
+        cmk.utils.paths.inventory_archive_dir,
+    )
 
     if inventory_tree.is_empty():
         # Remove empty inventory files. Important for host inventory icon
-        inventory_store.remove_files(host_name=hostname)
+        tree_or_archive_store.remove(host_name=hostname)
         return None
 
-    old_tree = inventory_store.load(host_name=hostname)
+    old_tree = tree_or_archive_store.load(host_name=hostname)
     update_result = retentions.may_update(int(time.time()), old_tree)
 
     if old_tree.is_empty():
@@ -465,10 +466,7 @@ def _save_inventory_tree(
 
     elif not old_tree.is_equal(inventory_tree):
         console.verbose("Inventory tree has changed. Add history entry.\n")
-        inventory_store.archive(
-            host_name=hostname,
-            archive_dir=cmk.utils.paths.inventory_archive_dir,
-        )
+        tree_or_archive_store.archive(host_name=hostname)
 
     elif update_result.save_tree:
         console.verbose(
@@ -482,5 +480,5 @@ def _save_inventory_tree(
         )
         return None
 
-    inventory_store.save(host_name=hostname, tree=inventory_tree)
+    tree_or_archive_store.save(host_name=hostname, tree=inventory_tree)
     return old_tree

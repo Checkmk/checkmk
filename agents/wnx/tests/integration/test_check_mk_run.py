@@ -47,6 +47,7 @@ _WMI_SECTIONS: Final = {
 
 _INTERNAL_SECTIONS: Final = _NOT_WMI_SECTIONS.union(_WMI_SECTIONS)
 
+
 @pytest.mark.parametrize(
     "only_from, description",
     [

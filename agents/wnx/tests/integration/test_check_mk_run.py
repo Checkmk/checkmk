@@ -62,7 +62,6 @@ def test_check_mk_base(
     only_from: List[str],
     description: str,
 ) -> None:
-    pytest.skip("This test is temporary disabled due to some changes on CI")
     output = obtain_agent_data(
         _make_config(default_yaml_config, only_from),
         main_exe=main_exe,

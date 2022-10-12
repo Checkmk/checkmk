@@ -261,13 +261,6 @@ std::wstring BuildCommandLine(const fs::path &controller) {
     auto only_from =
         cfg::GetInternalArray(cfg::groups::kGlobal, cfg::vars::kOnlyFrom);
     auto agent_channel = GetConfiguredAgentChannel(GetModus());
-    std::string allowed_ip;
-    if (!only_from.empty()) {
-        allowed_ip = " "s + std::string{kCmdLineAllowedIp};
-        for (const auto &a : only_from) {
-            allowed_ip += " " + a;
-        }
-    }
 
     return controller.wstring() +
            wtools::ConvertToUTF16(fmt::format(" {} {} {} -vv",   //

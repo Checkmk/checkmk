@@ -159,7 +159,6 @@ pub struct DeleteAllArgs {
     pub logging_opts: LoggingOpts,
 }
 
-// TODO (sk): Remove port and allowed_ip and instead read from a toml file, as is done under unix
 #[cfg(windows)]
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -167,10 +166,6 @@ pub struct PullOpts {
     /// TCP port to listen on for incoming pull connections
     #[arg(long, short = 'P', value_parser = site_spec::parse_port)]
     pub port: Option<u16>,
-
-    /// List of IP addresses & templates separated with ' '
-    #[arg(long, short = 'A', value_parser = clap::value_parser!(String))]
-    pub allowed_ip: Option<Vec<String>>,
 
     /// Connection in format "type/peer"
     /// where
@@ -180,7 +175,7 @@ pub struct PullOpts {
     ///     "ms/Global\\WinAgent_13"
     ///     "ip/localhost:28250"
     /// None means default behavior
-    #[arg(long, value_parser = clap::value_parser!(String))]
+    #[arg(long, value_parser = clap::value_parser!(types::AgentChannel))]
     pub agent_channel: Option<types::AgentChannel>,
 }
 
@@ -191,10 +186,6 @@ pub struct PullOpts {
     /// TCP port to listen on for incoming pull connections
     #[arg(long, short = 'P', value_parser = site_spec::parse_port)]
     pub port: Option<u16>,
-
-    /// List of IP addresses & templates separated with ' '
-    #[arg(long, short = 'A', value_parser = clap::value_parser!(String))]
-    pub allowed_ip: Option<Vec<String>>,
 }
 
 #[derive(Parser)]

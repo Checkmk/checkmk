@@ -114,7 +114,6 @@ pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> Anyhow
                     port: None,
                     #[cfg(windows)]
                     agent_channel: None,
-                    allowed_ip: None,
                 },
                 legacy_pull_marker,
                 registry.clone(),

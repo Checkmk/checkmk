@@ -754,7 +754,6 @@ mod test_status {
                         port: None,
                         #[cfg(windows)]
                         agent_channel: None,
-                        allowed_ip: None,
                     },
                     config::LegacyPullMarker::new(tempfile::NamedTempFile::new().unwrap()),
                     registry.clone()

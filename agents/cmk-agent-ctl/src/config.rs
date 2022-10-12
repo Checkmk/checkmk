@@ -228,10 +228,7 @@ impl PullConfig {
         legacy_pull_marker: LegacyPullMarker,
         registry: Registry,
     ) -> AnyhowResult<PullConfig> {
-        let allowed_ip = pull_opts
-            .allowed_ip
-            .or(runtime_config.allowed_ip)
-            .unwrap_or_default();
+        let allowed_ip = runtime_config.allowed_ip.unwrap_or_default();
         let port = pull_opts
             .port
             .or(runtime_config.pull_port)

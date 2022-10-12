@@ -2,7 +2,6 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use anyhow::{Context, Error as AnyhowError, Result as AnyhowResult};
 #[cfg(unix)]
 use faccess::PathExt;
 use std::fmt::Display;
@@ -86,35 +85,7 @@ impl AgentChannel {
     }
 }
 
-#[derive(serde::Deserialize, Clone)]
-pub struct OptPwdCredentials {
-    pub username: String,
-    pub password: Option<String>,
-}
-
 pub struct Credentials {
     pub username: String,
     pub password: String,
-}
-
-impl std::convert::TryFrom<OptPwdCredentials> for Credentials {
-    type Error = AnyhowError;
-
-    fn try_from(opt_pwd_credentials: OptPwdCredentials) -> AnyhowResult<Self> {
-        Ok(Self {
-            password: match opt_pwd_credentials.password {
-                Some(pwd) => pwd,
-                None => Self::prompt_password(&opt_pwd_credentials.username)?,
-            },
-            username: opt_pwd_credentials.username,
-        })
-    }
-}
-
-impl Credentials {
-    fn prompt_password(user: &str) -> AnyhowResult<String> {
-        eprintln!();
-        eprint!("Please enter password for '{}'\n> ", user);
-        rpassword::read_password().context("Failed to obtain API password")
-    }
 }

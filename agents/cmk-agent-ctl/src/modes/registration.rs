@@ -6,7 +6,8 @@ use crate::{agent_receiver_api, certs, config, constants, site_spec, types};
 use anyhow::{anyhow, Context, Result as AnyhowResult};
 
 trait TrustEstablishing {
-    fn ask_for_trust(&self, coordinates: &site_spec::Coordinates) -> AnyhowResult<()>;
+    fn prompt_server_certificate(&self, coordinates: &site_spec::Coordinates) -> AnyhowResult<()>;
+    fn prompt_password(&self, user: &str) -> AnyhowResult<String>;
 }
 
 struct InteractiveTrust {}
@@ -37,7 +38,7 @@ impl InteractiveTrust {
 }
 
 impl TrustEstablishing for InteractiveTrust {
-    fn ask_for_trust(&self, coordinates: &site_spec::Coordinates) -> AnyhowResult<()> {
+    fn prompt_server_certificate(&self, coordinates: &site_spec::Coordinates) -> AnyhowResult<()> {
         eprintln!(
             "Attempting to register at {}. Server certificate details:\n",
             coordinates,
@@ -66,6 +67,12 @@ impl TrustEstablishing for InteractiveTrust {
             }
         }
     }
+
+    fn prompt_password(&self, user: &str) -> AnyhowResult<String> {
+        eprintln!();
+        eprint!("Please enter password for '{}'\n> ", user);
+        rpassword::read_password().context("Failed to obtain API password")
+    }
 }
 
 fn registration_server_cert<'a>(
@@ -84,7 +91,7 @@ fn registration_server_cert<'a>(
         }
         None => {
             if !config.trust_server_cert {
-                trust_establisher.ask_for_trust(&config.coordinates)?;
+                trust_establisher.prompt_server_certificate(&config.coordinates)?;
             }
             Ok(None)
         }
@@ -99,7 +106,14 @@ fn prepare_registration(
     let uuid = uuid::Uuid::new_v4();
     let (csr, private_key) = certs::make_csr(&uuid.to_string()).context("Error creating CSR.")?;
     let root_cert = registration_server_cert(config, trust_establisher)?;
-    let credentials = types::Credentials::try_from(config.opt_pwd_credentials.to_owned())?;
+    let credentials = types::Credentials {
+        username: config.username.clone(),
+        password: if let Some(password) = &config.password {
+            String::from(password)
+        } else {
+            trust_establisher.prompt_password(&config.username)?
+        },
+    };
     let pairing_response = agent_rec_api
         .pair(&config.coordinates.to_url()?, root_cert, csr, &credentials)
         .context(format!("Error pairing with {}", &config.coordinates))?;
@@ -335,6 +349,7 @@ mod tests {
     const SITE_COORDINATES: &str = "server:8000/host";
     const SITE_URL: &str = "https://server:8000/host";
     const HOST_NAME: &str = "host";
+    const USERNAME: &str = "user";
 
     enum RegistrationMethod {
         HostName,
@@ -415,12 +430,25 @@ mod tests {
         }
     }
 
-    struct MockInteractiveTrust {}
+    struct MockInteractiveTrust {
+        expect_server_cert_prompt: bool,
+        expect_password_prompt: bool,
+    }
 
     impl TrustEstablishing for MockInteractiveTrust {
-        fn ask_for_trust(&self, coordinates: &site_spec::Coordinates) -> AnyhowResult<()> {
-            assert!(coordinates.to_string() == SITE_COORDINATES);
+        fn prompt_server_certificate(
+            &self,
+            coordinates: &site_spec::Coordinates,
+        ) -> AnyhowResult<()> {
+            assert!(self.expect_server_cert_prompt);
+            assert_eq!(coordinates.to_string(), SITE_COORDINATES);
             Ok(())
+        }
+
+        fn prompt_password(&self, user: &str) -> AnyhowResult<String> {
+            assert!(self.expect_password_prompt);
+            assert_eq!(user, USERNAME);
+            Ok(String::from("password"))
         }
     }
 
@@ -440,14 +468,13 @@ mod tests {
 
     fn registration_connection_config(
         root_certificate: Option<String>,
+        password: Option<String>,
         trust_server_cert: bool,
     ) -> config::RegistrationConnectionConfig {
         config::RegistrationConnectionConfig {
             coordinates: site_spec::Coordinates::from_str(SITE_COORDINATES).unwrap(),
-            opt_pwd_credentials: types::OptPwdCredentials {
-                username: String::from("user"),
-                password: Some(String::from("password")),
-            },
+            username: String::from(USERNAME),
+            password,
             root_certificate,
             trust_server_cert,
             client_config: config::ClientConfig {
@@ -463,12 +490,15 @@ mod tests {
         #[test]
         fn test_interactive_trust() {
             assert!(prepare_registration(
-                &registration_connection_config(None, false),
+                &registration_connection_config(None, None, false),
                 &MockApi {
                     expect_root_cert_for_pairing: false,
                     expected_registration_method: None,
                 },
-                &MockInteractiveTrust {},
+                &MockInteractiveTrust {
+                    expect_server_cert_prompt: true,
+                    expect_password_prompt: true,
+                },
             )
             .is_ok());
         }
@@ -476,12 +506,15 @@ mod tests {
         #[test]
         fn test_blind_trust() {
             assert!(prepare_registration(
-                &registration_connection_config(None, false),
+                &registration_connection_config(None, Some(String::from("password")), true),
                 &MockApi {
                     expect_root_cert_for_pairing: false,
                     expected_registration_method: None,
                 },
-                &MockInteractiveTrust {},
+                &MockInteractiveTrust {
+                    expect_server_cert_prompt: false,
+                    expect_password_prompt: false,
+                },
             )
             .is_ok());
         }
@@ -489,12 +522,19 @@ mod tests {
         #[test]
         fn test_root_cert_from_config() {
             assert!(prepare_registration(
-                &registration_connection_config(Some(String::from("root_certificate")), false),
+                &registration_connection_config(
+                    Some(String::from("root_certificate")),
+                    Some(String::from("password")),
+                    false
+                ),
                 &MockApi {
                     expect_root_cert_for_pairing: true,
                     expected_registration_method: None,
                 },
-                &MockInteractiveTrust {},
+                &MockInteractiveTrust {
+                    expect_server_cert_prompt: false,
+                    expect_password_prompt: false,
+                },
             )
             .is_ok());
         }
@@ -502,12 +542,15 @@ mod tests {
         #[test]
         fn test_root_cert_from_config_and_blind_trust() {
             assert!(prepare_registration(
-                &registration_connection_config(Some(String::from("root_certificate")), true),
+                &registration_connection_config(Some(String::from("root_certificate")), None, true),
                 &MockApi {
                     expect_root_cert_for_pairing: true,
                     expected_registration_method: None,
                 },
-                &MockInteractiveTrust {},
+                &MockInteractiveTrust {
+                    expect_server_cert_prompt: false,
+                    expect_password_prompt: true,
+                },
             )
             .is_ok());
         }
@@ -521,13 +564,16 @@ mod tests {
             let mut registry = registry();
             assert!(!registry.path().exists());
             assert!(direct_registration(
-                &registration_connection_config(None, false),
+                &registration_connection_config(None, None, false),
                 &mut registry,
                 &MockApi {
                     expect_root_cert_for_pairing: false,
                     expected_registration_method: Some(RegistrationMethod::HostName),
                 },
-                &MockInteractiveTrust {},
+                &MockInteractiveTrust {
+                    expect_server_cert_prompt: true,
+                    expect_password_prompt: true,
+                },
                 &HostNameRegistration {
                     host_name: HOST_NAME
                 },
@@ -542,13 +588,20 @@ mod tests {
             let mut registry = registry();
             assert!(!registry.path().exists());
             assert!(direct_registration(
-                &registration_connection_config(Some(String::from("root_certificate")), false),
+                &registration_connection_config(
+                    Some(String::from("root_certificate")),
+                    Some(String::from("password")),
+                    false
+                ),
                 &mut registry,
                 &MockApi {
                     expect_root_cert_for_pairing: true,
                     expected_registration_method: Some(RegistrationMethod::AgentLabels),
                 },
-                &MockInteractiveTrust {},
+                &MockInteractiveTrust {
+                    expect_server_cert_prompt: false,
+                    expect_password_prompt: false,
+                },
                 &AgentLabelsRegistration {
                     agent_labels: &agent_labels()
                 },
@@ -563,14 +616,17 @@ mod tests {
     fn test_proxy() {
         assert!(proxy_registration(
             &config::RegistrationConfigHostName {
-                connection_config: registration_connection_config(None, true),
+                connection_config: registration_connection_config(None, None, true),
                 host_name: String::from(HOST_NAME),
             },
             &MockApi {
                 expect_root_cert_for_pairing: false,
                 expected_registration_method: Some(RegistrationMethod::HostName),
             },
-            &MockInteractiveTrust {},
+            &MockInteractiveTrust {
+                expect_server_cert_prompt: false,
+                expect_password_prompt: true,
+            },
         )
         .is_ok());
     }

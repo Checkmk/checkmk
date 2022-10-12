@@ -112,7 +112,8 @@ impl RegistrationConfigAgentLabels {
 
 pub struct RegistrationConnectionConfig {
     pub coordinates: site_spec::Coordinates,
-    pub opt_pwd_credentials: types::OptPwdCredentials,
+    pub username: String,
+    pub password: Option<String>,
     pub root_certificate: Option<String>,
     pub trust_server_cert: bool,
     pub client_config: ClientConfig,
@@ -131,10 +132,8 @@ impl RegistrationConnectionConfig {
                 &reg_args_conn.site,
                 &client_config,
             )?,
-            opt_pwd_credentials: types::OptPwdCredentials {
-                username: reg_args_conn.user,
-                password: reg_args_conn.password,
-            },
+            username: reg_args_conn.user,
+            password: reg_args_conn.password,
             root_certificate: None,
             trust_server_cert: reg_args_conn.trust_server_cert,
             client_config,
@@ -550,8 +549,8 @@ mod test_registration_config {
         assert_eq!(connection_config.coordinates.server, "server");
         assert_eq!(connection_config.coordinates.port, 8000);
         assert_eq!(connection_config.coordinates.site, "site");
-        assert_eq!(connection_config.opt_pwd_credentials.username, "user");
-        assert!(connection_config.opt_pwd_credentials.password.is_none());
+        assert_eq!(connection_config.username, "user");
+        assert!(connection_config.password.is_none());
     }
 
     #[test]

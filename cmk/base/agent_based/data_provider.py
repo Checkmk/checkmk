@@ -294,7 +294,7 @@ class ParsedSectionsBroker:
         )
 
 
-def parse_and_store_piggybacked_payload(
+def parse_messages(
     fetched: Sequence[Tuple[Source, FetcherMessage]],
     *,
     selected_sections: SectionNameCollection,
@@ -344,17 +344,20 @@ def parse_and_store_piggybacked_payload(
         else:
             console.vverbose("  -> Not adding sections: %s\n" % source_result.error)
 
+    return collected_host_sections, results
+
+
+def store_piggybacked_sections(collected_host_sections: Mapping[HostKey, HostSections]) -> None:
     for host_key, host_sections in collected_host_sections.items():
         # Store piggyback information received from all sources of this host. This
         # also implies a removal of piggyback files received during previous calls.
         if host_key.source_type is SourceType.MANAGEMENT:
             # management board (SNMP or IPMI) does not support piggybacking
             continue
+
         cmk.utils.piggyback.store_piggyback_raw_data(
             host_key.hostname, host_sections.piggybacked_raw_data
         )
-
-    return collected_host_sections, results
 
 
 def make_broker(

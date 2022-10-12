@@ -59,8 +59,9 @@ import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.utils
 from cmk.base.agent_based.data_provider import (
     make_broker,
-    parse_and_store_piggybacked_payload,
+    parse_messages,
     ParsedSectionsBroker,
+    store_piggybacked_sections,
 )
 from cmk.base.agent_based.utils import (
     check_parsing_errors,
@@ -227,9 +228,8 @@ def _execute_checkmk_checks(
             key=lambda service: service.description,
         ),
     )
-    host_sections, source_results = parse_and_store_piggybacked_payload(
-        fetched, selected_sections=selected_sections
-    )
+    host_sections, source_results = parse_messages(fetched, selected_sections=selected_sections)
+    store_piggybacked_sections(host_sections)
     broker = make_broker(host_sections)
     with CPUTracker() as tracker:
         service_results = check_host_services(

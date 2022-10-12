@@ -37,8 +37,9 @@ import cmk.base.config as config
 import cmk.base.section as section
 from cmk.base.agent_based.data_provider import (
     make_broker,
-    parse_and_store_piggybacked_payload,
+    parse_messages,
     ParsedSectionsBroker,
+    store_piggybacked_sections,
 )
 from cmk.base.agent_based.utils import check_parsing_errors, check_sources, get_section_kwargs
 from cmk.base.config import HostConfig
@@ -293,9 +294,8 @@ def _inventorize_host(
         ),
         mode=(Mode.INVENTORY if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS),
     )
-    host_sections, results = parse_and_store_piggybacked_payload(
-        fetched, selected_sections=selected_sections
-    )
+    host_sections, results = parse_messages(fetched, selected_sections=selected_sections)
+    store_piggybacked_sections(host_sections)
     broker = make_broker(host_sections)
 
     parsing_errors = broker.parsing_errors()

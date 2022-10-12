@@ -67,7 +67,7 @@ class Source(Generic[TRawData, TRawDataSection], abc.ABC):
         return get_raw_data(self._make_file_cache(), self._make_fetcher(), mode)
 
     @final
-    def summarize(
+    def summarize_(
         self,
         host_sections: result.Result[HostSections[TRawDataSection], Exception],
         *,

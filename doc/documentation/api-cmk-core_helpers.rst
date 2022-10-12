@@ -23,8 +23,6 @@ IPMI helper
 
 .. autoclass:: cmk.core_helpers.ipmi.IPMIFetcher
 
-.. autoclass:: cmk.core_helpers.ipmi.IPMISummarizer
-
 .. seealso::
 
   The parser is :class:`cmk.core_helpers.agent.AgentParser`.
@@ -36,8 +34,6 @@ Piggyback helper
 
 .. autoclass:: cmk.core_helpers.piggyback.PiggybackFetcher
 
-.. autoclass:: cmk.core_helpers.piggyback.PiggybackSummarizer
-
 Program helpers
 ---------------
 
@@ -48,7 +44,6 @@ Program helpers
 .. seealso::
 
   - The parser is :class:`cmk.core_helpers.agent.AgentParser`.
-  - The summarizer is :class:`cmk.core_helpers.agent.AgentSummarizer`.
 
 TCP helpers
 -----------
@@ -60,7 +55,6 @@ TCP helpers
 .. seealso::
 
   - The parser is :class:`cmk.core_helpers.agent.AgentParser`.
-  - The summarizer is :class:`cmk.core_helpers.agent.AgentSummarizer`.
 
 SNMP helpers
 ============
@@ -73,8 +67,6 @@ SNMP helper
 .. autoclass:: cmk.core_helpers.snmp.SNMPFetcher
 
 .. autoclass:: cmk.core_helpers.snmp.SNMPParser
-
-.. autoclass:: cmk.core_helpers.snmp.SNMPSummarizer
 
 SNMP backends
 -------------

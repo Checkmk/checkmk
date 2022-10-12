@@ -186,7 +186,7 @@ def _ensure_lock_file(lock_file_path: Path) -> None:
             dir=str(lock_file_path.parent),
             delete=False,
         ) as backup_lock:
-            set_permissions(path=backup_lock.name, gid=grp.getgrnam("omd").gr_gid, mode=0o660)
+            set_permissions(path=Path(backup_lock.name), gid=grp.getgrnam("omd").gr_gid, mode=0o660)
             os.rename(backup_lock.name, lock_file_path)
     except OSError as e:
         raise MKGeneralException(f'Failed to open lock file "{lock_file_path}": {e}')
@@ -233,7 +233,7 @@ def acquire_single_lock(lock_file_path: Path) -> Generator[IO[bytes], None, None
 
 
 def set_permissions(
-    *, path: str, uid: int | None = None, gid: int | None = None, mode: int | None = None
+    *, path: Path, uid: int | None = None, gid: int | None = None, mode: int | None = None
 ) -> None:
     try:
         os.chown(path, uid if uid is not None else -1, gid if gid is not None else -1)
@@ -265,7 +265,7 @@ def set_permissions(
 
 # TODO: Move to cmklib?
 def makedirs(
-    path: str, user: str | None = None, group: str | None = None, mode: int | None = None
+    path: Path, user: str | None = None, group: str | None = None, mode: int | None = None
 ) -> None:
     head, tail = os.path.split(path)
     if not tail:
@@ -273,7 +273,7 @@ def makedirs(
 
     if head and tail and not os.path.exists(head):
         try:
-            makedirs(head, user, group, mode)
+            makedirs(Path(head), user, group, mode)
         except OSError as e:
             # be happy if someone already created the path
             if e.errno != errno.EEXIST:
@@ -285,7 +285,7 @@ def makedirs(
 
 # TODO: Move to cmklib?
 def makedir(
-    path: str, user: str | None = None, group: str | None = None, mode: int | None = None
+    path: Path, user: str | None = None, group: str | None = None, mode: int | None = None
 ) -> None:
     if os.path.exists(path):
         return
@@ -747,7 +747,7 @@ def load_config() -> Config:
     return config
 
 
-def load_backup_info(path: str) -> BackupInfo:
+def load_backup_info(path: Path) -> BackupInfo:
     with open(path) as f:
         info = json.load(f)
 
@@ -982,7 +982,7 @@ def do_site_backup(action: BackupAction, state: State) -> None:
     backup_path = site_backup_archive_path(site, action, action.job.config)
 
     # Create missing directories. Ensure group permissions and mode.
-    makedirs(os.path.dirname(backup_path), group="omd", mode=0o775)
+    makedirs(backup_path.parent, group="omd", mode=0o775)
 
     verbose("Command: %s" % " ".join(cmd))
     with subprocess.Popen(
@@ -1013,8 +1013,8 @@ def do_site_backup(action: BackupAction, state: State) -> None:
 
 # Returns the base path for the backup to work with. In backup mode, this is
 # the directory of the target+job. In restore mode it is the target+backup path.
-def backup_info_path(action: Action) -> str:
-    return f"{action.base_path}/mkbackup.info"
+def backup_info_path(action: Action) -> Path:
+    return action.base_path / "mkbackup.info"
 
 
 def site_backup_archive_path(site_id: str, action: Action, job_config: JobConfig) -> Path:
@@ -1333,7 +1333,7 @@ def mode_list(target_id: str, opts: dict[str, str], config: Config) -> None:
     fmt_detail = (" " * 30) + " %-20s %48s\n"
     sys.stdout.write(fmt % ("Type", "Job", "Details", ""))
     sys.stdout.write("%s\n" % ("-" * 100))
-    for path in sorted(glob.glob("%s/*/mkbackup.info" % target_path(target_id, config))):
+    for path in sorted(target_path(target_id, config).glob("*/mkbackup.info")):
         info = load_backup_info(path)
         from_info = info["hostname"]
         if "site_id" in info:
@@ -1487,7 +1487,7 @@ def main() -> None:
     except KeyError:
         raise MKGeneralException("Running outside of site context.")
     # Ensure the backup lock path exists and has correct permissions
-    makedirs(str(mkbackup_lock_dir), group="omd", mode=0o770)
+    makedirs(mkbackup_lock_dir, group="omd", mode=0o770)
     opt_dict = {k.lstrip("-"): v for k, v in opts + mode_opts}
     mode.runner(mode_args, opt_dict, config)
 

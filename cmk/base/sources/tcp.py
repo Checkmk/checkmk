@@ -7,10 +7,10 @@ import socket
 from pathlib import Path
 from typing import Final, Literal, Mapping, Optional
 
-from cmk.utils.type_defs import AgentRawData, ExitSpec, HostAddress, HostName, SourceType
+from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, SourceType
 
 import cmk.core_helpers.cache as file_cache
-from cmk.core_helpers import DefaultSummarizer, FetcherType, TCPFetcher
+from cmk.core_helpers import FetcherType, TCPFetcher
 from cmk.core_helpers.agent import AgentFileCache, AgentRawDataSection
 from cmk.core_helpers.cache import FileCacheGlobals, FileCacheMode
 
@@ -71,6 +71,3 @@ class TCPSource(Source[AgentRawData, AgentRawDataSection]):
             timeout=self.tcp_connect_timeout,
             encryption_settings=self.agent_encryption,
         )
-
-    def _make_summarizer(self, *, exit_spec: ExitSpec) -> DefaultSummarizer:
-        return DefaultSummarizer(exit_spec)

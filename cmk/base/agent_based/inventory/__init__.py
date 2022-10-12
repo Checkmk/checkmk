@@ -27,7 +27,6 @@ from cmk.utils.log import console
 from cmk.utils.structured_data import StructuredDataNode, StructuredDataStore
 from cmk.utils.type_defs import EVERYTHING, HostName, InventoryPluginName, result, ServiceState
 
-from cmk.core_helpers.cache import FileCacheGlobals
 from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
 
@@ -41,7 +40,11 @@ from cmk.base.agent_based.data_provider import (
     ParsedSectionsBroker,
     store_piggybacked_sections,
 )
-from cmk.base.agent_based.utils import check_parsing_errors, check_sources, get_section_kwargs
+from cmk.base.agent_based.utils import (
+    check_parsing_errors,
+    get_section_kwargs,
+    summarize_host_sections,
+)
 from cmk.base.config import HostConfig
 from cmk.base.sources import fetch_all, make_sources, Source
 
@@ -191,12 +194,16 @@ def _execute_active_check_inventory(
     return ActiveCheckResult.from_subresults(
         update_result,
         *_check_inventory_tree(trees, old_tree, sw_missing, sw_changes, hw_changes),
-        *check_sources(
+        *summarize_host_sections(
             source_results=inv_result.source_results,
             # Do not use source states which would overwrite "State when inventory fails" in the
             # ruleset "Do hardware/software Inventory". These are handled by the "Check_MK" service
             override_non_ok_state=fail_status,
             exit_spec_cb=host_config.exit_code_spec,
+            time_settings_cb=lambda hostname: config.get_config_cache().get_piggybacked_hosts_time_settings(
+                piggybacked_hostname=hostname,
+            ),
+            is_piggyback=host_config.is_piggyback_host,
         ),
         *check_parsing_errors(
             errors=inv_result.parsing_errors,

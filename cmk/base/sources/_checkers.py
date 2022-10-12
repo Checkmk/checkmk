@@ -379,7 +379,6 @@ class _Builder:
                     time_settings=config.get_config_cache().get_piggybacked_hosts_time_settings(
                         piggybacked_hostname=self.host_config.hostname
                     ),
-                    is_piggyback_host=self.host_config.is_piggyback_host,
                     file_cache_max_age=self.file_cache_max_age,
                 )
             )

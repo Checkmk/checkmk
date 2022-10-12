@@ -39,16 +39,10 @@ from typing import Any, Mapping, Type
 
 from cmk.utils import version
 
+from cmk.core_helpers.summarize import summarize
+
 from . import cache
-from ._base import (
-    DefaultSummarizer,
-    Fetcher,
-    FileCache,
-    get_raw_data,
-    Parser,
-    Summarizer,
-    verify_ipaddress,
-)
+from ._base import Fetcher, FileCache, get_raw_data, Parser, verify_ipaddress
 from .agent import NoFetcher
 from .ipmi import IPMIFetcher
 from .piggyback import PiggybackFetcher
@@ -68,7 +62,7 @@ __all__ = [
     "PiggybackFetcher",
     "ProgramFetcher",
     "SNMPFetcher",
-    "Summarizer",
+    "summarize",
     "TCPFetcher",
 ]
 

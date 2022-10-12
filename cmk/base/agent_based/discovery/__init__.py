@@ -73,7 +73,7 @@ from cmk.base.agent_based.data_provider import (
     ParsedSectionsBroker,
     store_piggybacked_sections,
 )
-from cmk.base.agent_based.utils import check_parsing_errors, check_sources
+from cmk.base.agent_based.utils import check_parsing_errors, summarize_host_sections
 from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
 from cmk.base.check_utils import ConfiguredService, LegacyCheckParameters
 from cmk.base.config import ConfigCache, DiscoveryCheckParameters, HostConfig
@@ -678,7 +678,14 @@ def _execute_check_discovery(
     return ActiveCheckResult.from_subresults(
         *services_result,
         host_labels_result,
-        *check_sources(source_results=source_results, exit_spec_cb=host_config.exit_code_spec),
+        *summarize_host_sections(
+            source_results=source_results,
+            exit_spec_cb=host_config.exit_code_spec,
+            time_settings_cb=lambda hostname: config.get_config_cache().get_piggybacked_hosts_time_settings(
+                piggybacked_hostname=hostname,
+            ),
+            is_piggyback=host_config.is_piggyback_host,
+        ),
         *parsing_errors_results,
         _schedule_rediscovery(
             host_config=host_config,

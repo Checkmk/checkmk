@@ -7,17 +7,10 @@ from pathlib import Path
 from typing import Final, Literal, Optional
 
 from cmk.utils.exceptions import MKAgentError
-from cmk.utils.type_defs import (
-    AgentRawData,
-    ExitSpec,
-    HostAddress,
-    HostName,
-    IPMICredentials,
-    SourceType,
-)
+from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, IPMICredentials, SourceType
 
 import cmk.core_helpers.cache as file_cache
-from cmk.core_helpers import DefaultSummarizer, FetcherType, IPMIFetcher
+from cmk.core_helpers import FetcherType, IPMIFetcher
 from cmk.core_helpers.agent import AgentFileCache, AgentRawDataSection
 from cmk.core_helpers.cache import FileCacheGlobals, FileCacheMode
 
@@ -73,6 +66,3 @@ class IPMISource(Source[AgentRawData, AgentRawDataSection]):
             username=self.credentials.get("username"),
             password=self.credentials.get("password"),
         )
-
-    def _make_summarizer(self, *, exit_spec: ExitSpec) -> DefaultSummarizer:
-        return DefaultSummarizer(exit_spec)

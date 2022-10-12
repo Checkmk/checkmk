@@ -6,19 +6,11 @@
 import abc
 import logging
 from functools import partial
-from typing import Any, final, Final, Generic, Literal, Mapping, Optional, Sequence, Type, TypeVar
+from typing import Any, final, Generic, Literal, Mapping, Optional, Type, TypeVar
 
-from cmk.utils.check_utils import ActiveCheckResult
-from cmk.utils.exceptions import (
-    MKAgentError,
-    MKEmptyAgentData,
-    MKFetcherError,
-    MKIPAddressLookupError,
-    MKSNMPError,
-    MKTimeout,
-)
+from cmk.utils.exceptions import MKFetcherError, MKIPAddressLookupError
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import ExitSpec, HostAddress, result
+from cmk.utils.type_defs import HostAddress, result
 
 from cmk.snmplib.type_defs import TRawData
 
@@ -26,7 +18,11 @@ from .cache import FileCache
 from .host_sections import HostSections, TRawDataSection
 from .type_defs import Mode, SectionNameCollection
 
-__all__ = ["Fetcher", "verify_ipaddress", "get_raw_data", "DefaultSummarizer", "Summarizer"]
+__all__ = [
+    "Fetcher",
+    "verify_ipaddress",
+    "get_raw_data",
+]
 
 TFetcher = TypeVar("TFetcher", bound="Fetcher")
 
@@ -130,54 +126,6 @@ class Parser(Generic[TRawData, TRawDataSection], abc.ABC):
         self, raw_data: TRawData, *, selection: SectionNameCollection
     ) -> HostSections[TRawDataSection]:
         raise NotImplementedError
-
-
-class Summarizer(abc.ABC):
-    """Class to summarize datasource execution into a ServiceCheckResult.
-
-    Note:
-        It is forbidden to add base dependencies to classes
-        that derive this class.
-
-    """
-
-    def __init__(self, exit_spec: ExitSpec) -> None:
-        super().__init__()
-        self.exit_spec: Final[ExitSpec] = exit_spec
-
-    @abc.abstractmethod
-    def summarize_success(self) -> Sequence[ActiveCheckResult]:
-        raise NotImplementedError
-
-    def summarize_failure(
-        self,
-        exc: Exception,
-    ) -> Sequence[ActiveCheckResult]:
-        return [ActiveCheckResult(self._extract_status(exc), str(exc))]
-
-    def _extract_status(self, exc: Exception) -> int:
-        if isinstance(exc, MKEmptyAgentData):
-            return self.exit_spec.get("empty_output", 2)
-        if isinstance(
-            exc,
-            (
-                MKAgentError,
-                MKFetcherError,
-                MKIPAddressLookupError,
-                MKSNMPError,
-            ),
-        ):
-            return self.exit_spec.get("connection", 2)
-        if isinstance(exc, MKTimeout):
-            return self.exit_spec.get("timeout", 2)
-        return self.exit_spec.get("exception", 3)
-
-
-class DefaultSummarizer(Summarizer):
-    def summarize_success(self) -> Sequence[ActiveCheckResult]:
-        # Note: currently we *must not* return an empty sequence, because the datasource
-        # will not be visible in the Check_MK service otherwise.
-        return [ActiveCheckResult(0, "Success")]
 
 
 def verify_ipaddress(address: Optional[HostAddress]) -> None:

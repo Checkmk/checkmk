@@ -4,16 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
-import itertools
 import json
 import logging
 from typing import Any, Final, List, Mapping, Optional, Sequence, Tuple
 
-from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackRawDataInfo, PiggybackTimeSettings
-from cmk.utils.type_defs import AgentRawData, ExitSpec, HostAddress, HostName
+from cmk.utils.type_defs import AgentRawData, HostAddress, HostName
 
-from ._base import Fetcher, Summarizer
+from ._base import Fetcher
 from .type_defs import Mode
 
 
@@ -96,53 +94,3 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
         time_settings: PiggybackTimeSettings,
     ) -> Sequence[PiggybackRawDataInfo]:
         return get_piggyback_raw_data(hostname if hostname else "", time_settings)
-
-
-class PiggybackSummarizer(Summarizer):
-    def __init__(
-        self,
-        exit_spec: ExitSpec,
-        *,
-        hostname: HostName,
-        ipaddress: Optional[HostAddress],
-        time_settings: Sequence[Tuple[Optional[str], str, int]],
-        always: bool,
-    ) -> None:
-        super().__init__(exit_spec)
-        self.hostname = hostname
-        self.ipaddress = ipaddress
-        self.time_settings = time_settings
-        self.always = always
-
-    def __repr__(self) -> str:
-        return "%s(%r, hostname=%r, ipaddress=%r, time_settings=%r, always=%r)" % (
-            type(self).__name__,
-            self.exit_spec,
-            self.hostname,
-            self.ipaddress,
-            self.time_settings,
-            self.always,
-        )
-
-    def summarize_success(self) -> Sequence[ActiveCheckResult]:
-        """Returns useful information about the data source execution"""
-
-        sources: Final[Sequence[PiggybackRawDataInfo]] = list(
-            itertools.chain.from_iterable(
-                # TODO(ml): The code uses `get_piggyback_raw_data()` instead of
-                # `HostSections.piggyback_raw_data` because this allows it to
-                # sneakily use cached data.  At minimum, we should group all cache
-                # handling performed after the parser.
-                get_piggyback_raw_data(origin, self.time_settings)
-                for origin in (self.hostname, self.ipaddress)
-            )
-        )
-        if not sources:
-            if self.always:
-                return [ActiveCheckResult(1, "Missing data")]
-            return []
-        return [
-            ActiveCheckResult(src.info.status, src.info.message)
-            for src in sources
-            if src.info.message
-        ]

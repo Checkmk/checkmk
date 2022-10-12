@@ -6,13 +6,12 @@
 from pathlib import Path
 from typing import Final, Literal, Optional, Sequence, Tuple
 
-from cmk.utils.type_defs import AgentRawData, ExitSpec, HostAddress, HostName, SourceType
+from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, SourceType
 
 import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers import FetcherType, PiggybackFetcher
 from cmk.core_helpers.agent import AgentFileCache, AgentRawDataSection
 from cmk.core_helpers.cache import FileCacheGlobals, FileCacheMode
-from cmk.core_helpers.piggyback import PiggybackSummarizer
 
 from ._abstract import Source
 
@@ -29,7 +28,6 @@ class PiggybackSource(Source[AgentRawData, AgentRawDataSection]):
         cache_dir: Path,
         simulation_mode: bool,
         time_settings: Sequence[Tuple[Optional[str], str, int]],
-        is_piggyback_host: bool,
         file_cache_max_age: file_cache.MaxAge,
     ) -> None:
         super().__init__(
@@ -44,8 +42,6 @@ class PiggybackSource(Source[AgentRawData, AgentRawDataSection]):
         self.file_cache_max_age: Final = file_cache_max_age
 
         self.time_settings: Final = time_settings
-        # Tag: 'Always use and expect piggback data'
-        self.is_piggyback_host: Final = is_piggyback_host
 
     def _make_file_cache(self) -> AgentFileCache:
         return AgentFileCache(
@@ -63,13 +59,4 @@ class PiggybackSource(Source[AgentRawData, AgentRawDataSection]):
             hostname=self.hostname,
             address=self.ipaddress,
             time_settings=self.time_settings,
-        )
-
-    def _make_summarizer(self, *, exit_spec: ExitSpec) -> PiggybackSummarizer:
-        return PiggybackSummarizer(
-            exit_spec,
-            hostname=self.hostname,
-            ipaddress=self.ipaddress,
-            time_settings=self.time_settings,
-            always=self.is_piggyback_host,
         )

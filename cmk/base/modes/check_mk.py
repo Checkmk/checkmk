@@ -44,6 +44,7 @@ import cmk.snmplib.snmp_modes as snmp_modes
 
 import cmk.core_helpers.factory as snmp_factory
 from cmk.core_helpers.cache import FileCacheGlobals
+from cmk.core_helpers.summarize import summarize
 from cmk.core_helpers.type_defs import Mode as FetchMode
 from cmk.core_helpers.type_defs import NO_SELECTION, SectionNameCollection
 
@@ -450,9 +451,16 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
                 selection=NO_SELECTION,
                 logger=source._logger,
             )
-            source_results = source.summarize(
+            source_results = summarize(
+                source.hostname,
+                source.ipaddress,
                 host_sections,
-                exit_spec_cb=host_config.exit_code_spec,
+                exit_spec=host_config.exit_code_spec(source.id),
+                time_settings=config.get_config_cache().get_piggybacked_hosts_time_settings(
+                    piggybacked_hostname=hostname,
+                ),
+                is_piggyback=host_config.is_piggyback_host,
+                fetcher_type=source.fetcher_type,
             )
             if any(r.state != 0 for r in source_results):
                 console.error(

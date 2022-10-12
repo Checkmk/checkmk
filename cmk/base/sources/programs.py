@@ -6,10 +6,10 @@
 from pathlib import Path
 from typing import Final, Optional
 
-from cmk.utils.type_defs import AgentRawData, ExitSpec, HostAddress, HostName, SourceType
+from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, SourceType
 
 import cmk.core_helpers.cache as file_cache
-from cmk.core_helpers import DefaultSummarizer, FetcherType, ProgramFetcher
+from cmk.core_helpers import FetcherType, ProgramFetcher
 from cmk.core_helpers.agent import AgentFileCache, AgentRawDataSection
 from cmk.core_helpers.cache import FileCacheGlobals, FileCacheMode
 
@@ -66,9 +66,6 @@ class ProgramSource(Source[AgentRawData, AgentRawDataSection]):
             stdin=self.stdin,
             is_cmc=self.is_cmc,
         )
-
-    def _make_summarizer(self, *, exit_spec: ExitSpec) -> DefaultSummarizer:
-        return DefaultSummarizer(exit_spec)
 
 
 class DSProgramSource(ProgramSource):

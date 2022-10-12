@@ -5,17 +5,16 @@
 
 import abc
 import logging
-from typing import Callable, final, Final, Generic, Optional, Sequence
+from typing import final, Final, Generic, Optional
 
-from cmk.utils.check_utils import ActiveCheckResult
-from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, result, SourceType
+from cmk.utils.type_defs import HostAddress, HostName, result, SourceType
 
 from cmk.snmplib.type_defs import TRawData
 
-from cmk.core_helpers import Fetcher, get_raw_data, Summarizer
+from cmk.core_helpers import Fetcher, get_raw_data
 from cmk.core_helpers.cache import FileCache
 from cmk.core_helpers.controller import FetcherType
-from cmk.core_helpers.host_sections import HostSections, TRawDataSection
+from cmk.core_helpers.host_sections import TRawDataSection
 from cmk.core_helpers.type_defs import Mode
 
 __all__ = ["Source"]
@@ -66,18 +65,6 @@ class Source(Generic[TRawData, TRawDataSection], abc.ABC):
     def fetch(self, mode: Mode) -> result.Result[TRawData, Exception]:
         return get_raw_data(self._make_file_cache(), self._make_fetcher(), mode)
 
-    @final
-    def summarize(
-        self,
-        host_sections: result.Result[HostSections[TRawDataSection], Exception],
-        *,
-        exit_spec_cb: Callable[[str], ExitSpec],
-    ) -> Sequence[ActiveCheckResult]:
-        summarizer = self._make_summarizer(exit_spec=exit_spec_cb(self.id))
-        if host_sections.is_ok():
-            return summarizer.summarize_success()
-        return summarizer.summarize_failure(host_sections.error)
-
     @abc.abstractmethod
     def _make_file_cache(self) -> FileCache[TRawData]:
         raise NotImplementedError
@@ -85,9 +72,4 @@ class Source(Generic[TRawData, TRawDataSection], abc.ABC):
     @abc.abstractmethod
     def _make_fetcher(self) -> Fetcher:
         """Create a fetcher with this configuration."""
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def _make_summarizer(self, *, exit_spec: ExitSpec) -> Summarizer:
-        """Create a summarizer with this configuration."""
         raise NotImplementedError

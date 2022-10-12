@@ -65,9 +65,9 @@ from cmk.base.agent_based.data_provider import (
 )
 from cmk.base.agent_based.utils import (
     check_parsing_errors,
-    check_sources,
     get_section_cluster_kwargs,
     get_section_kwargs,
+    summarize_host_sections,
 )
 from cmk.base.api.agent_based import checking_classes, value_store
 from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_parameters
@@ -247,10 +247,14 @@ def _execute_checkmk_checks(
                 parsed_sections_broker=broker,
             )
         timed_results = [
-            *check_sources(
+            *summarize_host_sections(
                 source_results=source_results,
                 include_ok_results=True,
                 exit_spec_cb=host_config.exit_code_spec,
+                time_settings_cb=lambda hostname: config.get_config_cache().get_piggybacked_hosts_time_settings(
+                    piggybacked_hostname=hostname,
+                ),
+                is_piggyback=host_config.is_piggyback_host,
             ),
             *check_parsing_errors(
                 errors=broker.parsing_errors(),

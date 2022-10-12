@@ -67,6 +67,7 @@ from cmk.snmplib.type_defs import BackendOIDSpec, BackendSNMPTree, SNMPCredentia
 import cmk.core_helpers.cache
 from cmk.core_helpers import factory
 from cmk.core_helpers.cache import FileCacheGlobals
+from cmk.core_helpers.summarize import summarize
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION
 
 import cmk.base.agent_based.discovery as discovery
@@ -1751,9 +1752,16 @@ class AutomationGetAgentOutput(Automation):
                         selection=NO_SELECTION,
                         logger=source._logger,
                     )
-                    source_results = source.summarize(
+                    source_results = summarize(
+                        source.hostname,
+                        source.ipaddress,
                         host_sections,
-                        exit_spec_cb=host_config.exit_code_spec,
+                        exit_spec=host_config.exit_code_spec(source.id),
+                        time_settings=config.get_config_cache().get_piggybacked_hosts_time_settings(
+                            piggybacked_hostname=hostname,
+                        ),
+                        is_piggyback=host_config.is_piggyback_host,
+                        fetcher_type=source.fetcher_type,
                     )
                     if any(r.state != 0 for r in source_results):
                         # Optionally show errors of problematic data sources

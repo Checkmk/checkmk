@@ -6,7 +6,10 @@
 from typing import Callable, Dict, Iterable, Mapping, Optional, Sequence
 
 from cmk.utils.check_utils import ActiveCheckResult
-from cmk.utils.type_defs import ExitSpec, HostKey, ParsedSectionName, ServiceState
+from cmk.utils.piggyback import PiggybackTimeSettings
+from cmk.utils.type_defs import ExitSpec, HostKey, HostName, ParsedSectionName, ServiceState
+
+from cmk.core_helpers.summarize import summarize
 
 from .data_provider import ParsedSectionContent, ParsedSectionsBroker, SourceResults
 
@@ -62,15 +65,25 @@ def get_section_cluster_kwargs(
     return kwargs
 
 
-def check_sources(
+def summarize_host_sections(
     *,
     source_results: SourceResults,
     include_ok_results: bool = False,
     override_non_ok_state: Optional[ServiceState] = None,
     exit_spec_cb: Callable[[str], ExitSpec],
+    time_settings_cb: Callable[[HostName], PiggybackTimeSettings],
+    is_piggyback: bool,
 ) -> Iterable[ActiveCheckResult]:
     for source, host_sections in source_results:
-        subresults = source.summarize(host_sections, exit_spec_cb=exit_spec_cb)
+        subresults = summarize(
+            source.hostname,
+            source.ipaddress,
+            host_sections,
+            exit_spec=exit_spec_cb(source.id),
+            time_settings=time_settings_cb(source.hostname),
+            is_piggyback=is_piggyback,
+            fetcher_type=source.fetcher_type,
+        )
         if include_ok_results or any(s.state != 0 for s in subresults):
             yield from (
                 ActiveCheckResult(

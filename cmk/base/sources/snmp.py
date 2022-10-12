@@ -7,11 +7,11 @@ from pathlib import Path
 from typing import Final, Literal, Mapping, Optional
 
 from cmk.utils.exceptions import OnError
-from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, SectionName, SourceType
+from cmk.utils.type_defs import HostAddress, HostName, SectionName, SourceType
 
 from cmk.snmplib.type_defs import SNMPHostConfig, SNMPRawData, SNMPRawDataSection
 
-from cmk.core_helpers import DefaultSummarizer, FetcherType, SNMPFetcher
+from cmk.core_helpers import FetcherType, SNMPFetcher
 from cmk.core_helpers.cache import FileCache
 from cmk.core_helpers.snmp import SectionMeta
 
@@ -64,6 +64,3 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             section_store_path=self.persisted_section_dir / self.hostname,
             snmp_config=self.snmp_config,
         )
-
-    def _make_summarizer(self, *, exit_spec: ExitSpec) -> DefaultSummarizer:
-        return DefaultSummarizer(exit_spec)

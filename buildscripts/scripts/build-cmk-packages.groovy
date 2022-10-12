@@ -1,6 +1,6 @@
 #!groovy
 
-/// build-cmk-packages.groovy
+/// file: build-cmk-packages.groovy
 
 /// Build the distribution packages (.rpm, .dep, etc.) for a given edition of
 /// Checkmk and a given set of distributions.

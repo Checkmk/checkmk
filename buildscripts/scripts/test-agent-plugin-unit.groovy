@@ -1,3 +1,7 @@
+#!groovy
+
+/// file: test-agent-plugin-unit.groovy
+
 def main() {
     // Due to https://github.com/pypa/pypi-support/issues/978, we need to disable Plugin tests for py2.6
     // until we have a feasible solution or we drop the support for 2.6 completly.

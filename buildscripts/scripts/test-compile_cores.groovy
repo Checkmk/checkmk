@@ -1,5 +1,7 @@
 #!groovy
 
+/// file: test-compile_cores.groovy
+
 def main() {
     dir("${checkout_dir}") {
         stage("Execute Test") {

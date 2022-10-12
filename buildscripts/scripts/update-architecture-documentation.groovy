@@ -1,5 +1,7 @@
 #!groovy
 
+/// file: update-architecture-documentation.groovy
+
 def main() {
     dir("${checkout_dir}") {
         stage("Update") {

@@ -1,5 +1,7 @@
 #!groovy
 
+/// file: windows-agent-modules-build.groovy
+
 /// builds python module for windows agent
 
 // TODO: pipelineTriggers([pollSCM('H/15 * * * *')]),

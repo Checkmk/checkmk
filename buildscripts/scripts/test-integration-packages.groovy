@@ -1,5 +1,7 @@
 #!groovy
 
+/// file: test-integration-packages.groovy
+
 /// Run integration tests for the Checkmk Docker image
 
 def main() {

@@ -1,4 +1,7 @@
 #!groovy
+
+/// file: test-composition.groovy
+
 /// Run composition tests
 
 /// Jenkins artifacts: ???

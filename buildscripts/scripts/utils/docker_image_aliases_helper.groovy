@@ -1,5 +1,7 @@
 #!groovy
 
+/// file: docker_image_aliases_helper.groovy
+
 resolve_docker_image_alias = { alias_name ->
     // same as docker.build("build-image:${env.BUILD_ID}",
     //   "--pull ${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")

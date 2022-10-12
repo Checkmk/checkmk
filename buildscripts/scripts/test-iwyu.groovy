@@ -1,5 +1,7 @@
 #!groovy
 
+/// file: test-iwyu.groovy
+
 def main() {
     dir("${checkout_dir}") {
         stage("Execute Test") {

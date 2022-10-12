@@ -1,5 +1,7 @@
 #!groovy
 
+/// file: build-build-images.groovy
+
 /// Build base images on top of (pinned) upstream OS images
 
 /// Parameters / environment values:

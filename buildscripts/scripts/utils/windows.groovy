@@ -1,5 +1,7 @@
 #!groovy
 
+/// file: windows.groovy
+
 def build(Map args) {
     def jenkins_base_folder = new File(currentBuild.fullProjectName).parent;
     def artifacts_dir = 'artefacts';

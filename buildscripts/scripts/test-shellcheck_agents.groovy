@@ -1,6 +1,6 @@
 #!groovy
 
-/// test-shellcheck_agents.groovy
+/// file: test-shellcheck_agents.groovy
 
 def main() {
     dir("${checkout_dir}") {

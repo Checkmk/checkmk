@@ -1,5 +1,7 @@
 #!groovy
 
+/// file: windows-agent-build-gerrit.groovy
+
 def main() {
     def windows = load("${checkout_dir}/buildscripts/scripts/utils/windows.groovy");
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");

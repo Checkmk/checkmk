@@ -1,6 +1,6 @@
 #!groovy
 
-/// test-clang_tidy.groovy
+/// file: test-clang_tidy.groovy
 
 def main() {
     dir("${checkout_dir}") {

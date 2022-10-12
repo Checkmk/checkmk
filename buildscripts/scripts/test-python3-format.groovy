@@ -1,6 +1,6 @@
 #!groovy
 
-/// test-python3-format.groovy
+/// file: test-python3-format.groovy
 
 def main() {
     dir("${checkout_dir}") {

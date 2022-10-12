@@ -1,5 +1,7 @@
 #!groovy
 
+/// file: test-integration-single.groovy
+
 def main() {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def testing_helper = load("${checkout_dir}/buildscripts/scripts/utils/integration.groovy");

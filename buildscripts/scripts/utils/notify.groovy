@@ -1,5 +1,7 @@
 #!groovy
 
+/// file: notify.groovy
+
 import org.codehaus.groovy.runtime.StackTraceUtils;
 
 def get_author_email() {

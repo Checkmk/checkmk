@@ -1,5 +1,7 @@
 #!groovy
 
+/// file: windows-agent-cmk-agent-ctl-build.groovy
+
 def main() {
     check_job_parameters(["VERSION"]);
     

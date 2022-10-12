@@ -1,6 +1,6 @@
 #!groovy
 
-/// test-shell-unit.groovy
+/// file: test-shell-unit.groovy
 
 def main() {
     dir("${checkout_dir}") {

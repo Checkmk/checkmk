@@ -1,4 +1,7 @@
 #!groovy
+
+/// file: build-cmk-image.groovy
+
 /// Build Checkmk Docker image
 
 /// Jenkins artifacts: ???

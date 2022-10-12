@@ -1,5 +1,7 @@
 #!groovy
 
+/// file: test-unit-test-cores.groovy
+
 def main() {
     dir("${checkout_dir}") {
         stage("Execute NEB Test") {

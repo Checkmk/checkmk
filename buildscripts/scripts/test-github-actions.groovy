@@ -1,5 +1,7 @@
 #!groovy
 
+/// file: test-github-actions.groovy
+
 def main() {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def docker_args = "--ulimit nofile=1024:1024 --init";

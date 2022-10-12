@@ -1,5 +1,7 @@
 #!groovy
 
+/// file: versioning.groovy
+
 // library for calculation of version numbers
 import groovy.transform.Field
 

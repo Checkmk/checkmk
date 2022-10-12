@@ -1,5 +1,7 @@
 #!groovy
 
+/// file: str_mod.groovy
+
 // library for simple string modifications
 package lib
 

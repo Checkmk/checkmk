@@ -1,5 +1,7 @@
 #!groovy
 
+/// file: windows-agent-integration-test.groovy
+
 def main() {
     def windows = load("${checkout_dir}/buildscripts/scripts/utils/windows.groovy");
 

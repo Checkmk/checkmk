@@ -1,5 +1,7 @@
 #!groovy
 
+/// file: integration.groovy
+
 // library for managing shared integration like test logic
 
 def run_make_targets(Map args) {

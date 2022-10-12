@@ -1,5 +1,7 @@
 #!groovy
 
+/// file: gerrit_stages.groovy
+
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 def log_stage_duration(last_stage_date) {

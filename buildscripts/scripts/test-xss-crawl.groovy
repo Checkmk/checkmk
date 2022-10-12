@@ -1,6 +1,6 @@
 #!groovy
 
-/// test-xss-crawl.groovy
+/// file: test-xss-crawl.groovy
 
 def main() {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");

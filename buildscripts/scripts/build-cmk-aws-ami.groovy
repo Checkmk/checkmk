@@ -1,4 +1,7 @@
 #!groovy
+
+/// file: build-cmk-aws-ami.groovy
+
 /// Build the Amazon Machine Image (AMI) for Checkmk
 
 /// Parameters / environment values:

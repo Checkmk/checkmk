@@ -1,5 +1,7 @@
 #!groovy
 
+/// file: test-python3-code-quality.groovy
+
 def main() {
     def docker_args = "--ulimit nofile=1024:1024 --init";
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {

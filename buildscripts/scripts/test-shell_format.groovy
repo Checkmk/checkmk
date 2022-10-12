@@ -1,6 +1,6 @@
 #!groovy
 
-/// test-shell_format.groovy
+/// file: test-shell_format.groovy
 
 def main() {
     stage('Check shell format') {

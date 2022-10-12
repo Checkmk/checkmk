@@ -1,4 +1,7 @@
 #!groovy
+
+/// file: test-integration-docker.groovy
+
 /// Run integration tests for the Checkmk Docker image
 
 /// Jenkins artifacts: ???

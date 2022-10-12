@@ -1,3 +1,7 @@
+#!groovy
+
+/// file: trigger-cmk-build-chain.groovy
+
 /// This job will trigger other jobs
 
 /// Jenkins artifacts:  Those of child jobs

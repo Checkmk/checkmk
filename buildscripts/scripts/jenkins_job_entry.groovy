@@ -1,3 +1,7 @@
+#!groovy
+
+/// file: jenkins_job_entry.groovy
+
 /// This is the branch specific Checkmk main entry point. It exists to
 /// avoid redundant code in the actual job definition files and to be able
 /// to provide a standard environment for all Checkmk jobs

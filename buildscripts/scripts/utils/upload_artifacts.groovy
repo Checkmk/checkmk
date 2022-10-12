@@ -1,5 +1,7 @@
 #!groovy
 
+/// file: upload_artifacts.groovy
+
 // library for uploading packages
 package lib
 

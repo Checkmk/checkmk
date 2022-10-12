@@ -1,6 +1,6 @@
-// FIXME
-//throttle(['Gerrit']) {
-//}
+#!groovy
+
+/// file: test-gerrit.groovy
 
 def main() {
     def test_gerrit_helper = load("${checkout_dir}/buildscripts/scripts/utils/gerrit_stages.groovy");

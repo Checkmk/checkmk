@@ -767,16 +767,16 @@ def save_backup_info(info: BackupInfo, action: BackupAction) -> None:
 
 
 def create_backup_info(action: BackupAction) -> BackupInfo:
-    files = get_files_for_backup_info(action)
+    filename, filesize, checksum = get_fileinfo_for_backup_info(action)
 
     info: BackupInfo = {
         "type": "Check_MK",
         "job_id": action.job.local_id,
         "config": action.job.config,
         "hostname": hostname(),
-        "files": files,
+        "files": [(filename, filesize, checksum)],
         "finished": time.time(),
-        "size": sum(f[1] for f in files),
+        "size": filesize,
         "site_id": current_site_id(),
         "site_version": site_version(current_site_id()),
         "backup_id": None,
@@ -785,13 +785,11 @@ def create_backup_info(action: BackupAction) -> BackupInfo:
     return info
 
 
-def get_files_for_backup_info(action: BackupAction) -> list[tuple[str, int, str]]:
-    backup_path = action.base_path
-    dir_entries: list[str] = os.listdir(backup_path)
-    files = []
-    for f in sorted(dir_entries):
-        files.append((f, os.path.getsize(backup_path / f), file_checksum(backup_path / f)))
-    return files
+def get_fileinfo_for_backup_info(action: BackupAction) -> tuple[str, int, str]:
+    dir_entries = list(action.base_path.iterdir())
+    assert len(dir_entries) == 1
+    f = dir_entries[0]
+    return f.name, os.path.getsize(f), file_checksum(f)
 
 
 #   List: Alle Backups auflisten
@@ -1030,12 +1028,10 @@ def archive_suffix(config: JobConfig) -> str:
     return suffix
 
 
-def needed_backup_archive_files(info: BackupInfo) -> Sequence[str]:
+def needed_backup_archive_file(info: BackupInfo) -> str:
     # Care about restore from a backup made in a site with another site_id
     site = info.get("site_id", current_site_id())
-    needed_files = ["site-%s" % site]
-
-    return [f + archive_suffix(info["config"]) for f in needed_files]
+    return f"site-{site}{archive_suffix(info['config'])}"
 
 
 def target_cfg(target_ident: str, config: Config) -> Mapping[str, Any]:
@@ -1075,38 +1071,28 @@ def verify_backup_exists(action: Action) -> None:
 
 def verify_backup_consistency(info: BackupInfo, action: Action) -> None:
     log("Verifying backup consistency")
-    needed_files = needed_backup_archive_files(info)
-    optional_files = [entry[0] for entry in info["files"] if entry[0] not in needed_files]
-
-    verify_backup_files(info, needed_files, needed=True, action=action)
-    verify_backup_files(info, optional_files, needed=False, action=action)
+    needed_file = needed_backup_archive_file(info)
+    verify_backup_file(info, needed_file, action=action)
 
 
-def verify_backup_files(
-    info: BackupInfo, files: Sequence[str], needed: bool, action: Action
-) -> None:
-    for archive_file in files:
-        size, checksum = None, None
-        for entry in info["files"]:
-            if entry[0] == archive_file:
-                size, checksum = entry[1:]
-                break
+def verify_backup_file(info: BackupInfo, archive_file: str, action: Action) -> None:
+    size, checksum = None, None
+    for entry in info["files"]:
+        if entry[0] == archive_file:
+            size, checksum = entry[1:]
+            break
 
-        if size is None:
-            if needed:
-                raise MKGeneralException(
-                    "The backup is missing the needed archive %s." % archive_file
-                )
-            continue  # missing optional files are OK
+    if size is None:
+        raise MKGeneralException("The backup is missing the needed archive %s." % archive_file)
 
-        archive_path = action.base_path / archive_file
-        this_checksum = file_checksum(archive_path)
-        if this_checksum != checksum:
-            raise MKGeneralException(
-                "The backup seems to be damaged and can not be restored. "
-                "The checksum of the archive %s is wrong (got %s but "
-                "expected %s)." % (archive_path, this_checksum, checksum)
-            )
+    archive_path = action.base_path / archive_file
+    this_checksum = file_checksum(archive_path)
+    if this_checksum != checksum:
+        raise MKGeneralException(
+            "The backup seems to be damaged and can not be restored. "
+            "The checksum of the archive %s is wrong (got %s but "
+            "expected %s)." % (archive_path, this_checksum, checksum)
+        )
 
 
 def complete_backup(action: BackupAction, state: State) -> None:

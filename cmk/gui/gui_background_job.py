@@ -219,9 +219,9 @@ class JobRenderer:
         # Static info
         for left, right in [
             (_("ID"), job_id),
-            (_("Title"), job_status.get("title", "")),
-            (_("Started"), cmk.utils.render.date_and_time(job_status["started"])),
-            (_("Owner"), job_status.get("user", "")),
+            (_("Title"), job_status.title),
+            (_("Started"), cmk.utils.render.date_and_time(job_status.started)),
+            (_("Owner"), job_status.user),
         ]:
             html.open_tr()
             html.th(left)
@@ -260,21 +260,21 @@ class JobRenderer:
         # Job state
         html.open_tr()
         html.th(_("State"))
-        html.td(job_status["state"], css=cls.get_css_for_jobstate(job_status["state"]))
+        html.td(job_status.state, css=cls.get_css_for_jobstate(job_status.state))
         html.close_tr()
 
-        if job_status["state"] == background_job.JobStatusStates.EXCEPTION:
+        if job_status.state == background_job.JobStatusStates.EXCEPTION:
             html.open_tr()
             html.th(_("Acknowledged by"))
-            html.td(job_status.get("acknowledged_by", ""))
+            html.td(job_status.acknowledged_by or "")
             html.close_tr()
 
         # Dynamic data
-        loginfo = job_status["loginfo"]
-        runtime_info = cmk.utils.render.timespan(job_status.get("duration", 0))
+        loginfo = job_status.loginfo
+        runtime_info = cmk.utils.render.timespan(job_status.duration)
         if (
-            job_status["state"] == background_job.JobStatusStates.RUNNING
-            and (estimated_duration := job_status.get("estimated_duration")) is not None
+            job_status.state == background_job.JobStatusStates.RUNNING
+            and (estimated_duration := job_status.estimated_duration) is not None
         ):
             runtime_info += " (%s: %s)" % (
                 _("estimated duration"),
@@ -282,7 +282,7 @@ class JobRenderer:
             )
         for left, right in [
             (_("Runtime"), runtime_info),
-            (_("PID"), str(job_status["pid"]) or ""),
+            (_("PID"), str(job_status.pid) or ""),
             (_("Result"), "<br>".join(loginfo["JobResult"])),
         ]:
             if right is None:
@@ -298,9 +298,9 @@ class JobRenderer:
             html.open_tr()
             html.th(_("Exceptions"))
             html.open_td()
-            if exceptions and "logfile_path" in job_status:
+            if exceptions:
                 exceptions.append(
-                    _("More information can be found in %s") % job_status["logfile_path"]
+                    _("More information can be found in %s") % job_status.logfile_path
                 )
             html.open_div(class_="log_output", id_="exception_log")
             html.pre("\n".join(exceptions))
@@ -323,7 +323,7 @@ class JobRenderer:
 
     @classmethod
     def _get_extra_info(cls, job_status: background_job.JobStatusSpec) -> str:
-        return " (%s)" % job_status["title"] if job_status.get("title") else ""
+        return " (%s)" % job_status.title
 
     @classmethod
     def show_job_class_infos(
@@ -354,7 +354,7 @@ class JobRenderer:
             cls.show_job_row_headers()
             odd: Literal["odd", "even"] = "even"
             for job_id, job_info in sorted(
-                jobs_info.items(), key=lambda x: x[1].status["started"], reverse=True
+                jobs_info.items(), key=lambda x: x[1].status.started, reverse=True
             ):
                 cls.render_job_row(job_id, job_info, odd, job_details_back_url)
                 odd = "even" if odd == "odd" else "odd"
@@ -424,30 +424,30 @@ class JobRenderer:
         html.close_td()
 
         # Title
-        html.td(job_status.get("title", _("Background Job")), css="job_title")
+        html.td(job_status.title, css="job_title")
 
         # State
         html.td(
-            HTMLWriter.render_span(job_status["state"]),
-            css=cls.get_css_for_jobstate(job_status["state"]),
+            HTMLWriter.render_span(job_status.state),
+            css=cls.get_css_for_jobstate(job_status.state),
         )
 
         # Started
-        html.td(cmk.utils.render.date_and_time(job_status["started"]), css="job_started")
+        html.td(cmk.utils.render.date_and_time(job_status.started), css="job_started")
 
         # Owner
-        html.td(job_status.get("user", _("Unknown user")), css="job_owner")
+        html.td(job_status.user or _("Unknown user"), css="job_owner")
 
         # PID
-        html.td(job_status["pid"] or "", css="job_pid")
+        html.td(job_status.pid or "", css="job_pid")
 
         # Druation
-        html.td(cmk.utils.render.timespan(job_status.get("duration", 0)), css="job_runtime")
+        html.td(cmk.utils.render.timespan(job_status.duration), css="job_runtime")
 
         # Progress info
-        loginfo = job_status["loginfo"]
+        loginfo = job_status.loginfo
         if loginfo:
-            if job_status.get("state") == background_job.JobStatusStates.EXCEPTION:
+            if job_status.state == background_job.JobStatusStates.EXCEPTION:
                 html.td(HTML("<br>".join(loginfo["JobException"])), css="job_last_progress")
             else:
                 progress_text = ""

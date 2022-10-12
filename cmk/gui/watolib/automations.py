@@ -492,14 +492,12 @@ def _do_check_mk_remote_automation_in_background_job_serialized(
             ],
         )
         response = CheckmkAutomationGetStatusResponse(
-            # Ignore for now. Can be cleaned up once we make the next step after the TypedDict
-            # [mypy:] Expected keyword arguments, {...}, or dict(...) in TypedDict constructor  [misc]
-            JobStatusSpec(**raw_response[0]),  # type: ignore[misc]
+            JobStatusSpec.parse_obj(raw_response[0]),
             raw_response[1],
         )
         auto_logger.debug("Job status: %r", response)
 
-        if not response.job_status["is_active"]:
+        if not response.job_status.is_active:
             result = response.result
             auto_logger.debug("Job is not active anymore. Return the result: %s", result)
             break

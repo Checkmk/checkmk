@@ -316,13 +316,13 @@ def show_service_discovery_run(params: Mapping[str, Any]) -> Response:
         constructors.domain_object(
             domain_type="service_discovery_run",
             identifier=job_id,
-            title=f"Service discovery background job {job_id} is {job_status['state']}",
+            title=f"Service discovery background job {job_id} is {job_status.state}",
             extensions={
-                "active": job_status["is_active"],
-                "state": job_status["state"],
+                "active": job_status.is_active,
+                "state": job_status.state,
                 "logs": {
-                    "result": job_status["loginfo"]["JobResult"],
-                    "progress": job_status["loginfo"]["JobProgressUpdate"],
+                    "result": job_status.loginfo["JobResult"],
+                    "progress": job_status.loginfo["JobProgressUpdate"],
                 },
             },
             deletable=False,

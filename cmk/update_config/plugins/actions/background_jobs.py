@@ -50,10 +50,7 @@ def update_job_status(logger: Logger, job_path: Path) -> None:
         raw_status, jobstatus_ctime=job_status_store._jobstatus_path.stat().st_ctime
     )
 
-    # Now ensure it's compatible and then write it back
-    # TODO: Apply the pydantic model here once we have replaced the TypedDict
-    # [mypy:] Expected keyword arguments, {...}, or dict(...) in TypedDict constructor  [misc]
-    job_status_store.write(JobStatusSpec(raw_status))  # type: ignore[misc]
+    job_status_store.write(JobStatusSpec.parse_obj(raw_status))
 
 
 def _get_all_job_ids(logger: Logger) -> Iterator[JobId]:

@@ -1851,13 +1851,11 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
                 )
 
                 omd_response = cmk.gui.watolib.automations.CheckmkAutomationGetStatusResponse(
-                    # Ignore for now. Can be cleaned up once we make the next step after the TypedDict
-                    # [mypy:] Expected keyword arguments, {...}, or dict(...) in TypedDict constructor  [misc]
-                    JobStatusSpec(**raw_omd_response[0]),  # type: ignore[misc]
+                    JobStatusSpec.parse_obj(raw_omd_response[0]),
                     raw_omd_response[1],
                 )
-                if not omd_response.job_status["is_active"]:
-                    return list(omd_response.job_status["loginfo"]["JobException"])
+                if not omd_response.job_status.is_active:
+                    return list(omd_response.job_status.loginfo["JobException"])
                 time.sleep(0.5)
             except MKUserError as e:
                 if not (

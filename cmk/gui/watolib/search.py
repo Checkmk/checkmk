@@ -565,7 +565,7 @@ class SearchIndexBackgroundJob(BackgroundJob):
             InitialStatusArgs(
                 title=_("Search index"),
                 stoppable=False,
-                estimated_duration=BackgroundJob(self.job_prefix).get_status().get("duration"),
+                estimated_duration=BackgroundJob(self.job_prefix).get_status().duration,
             ),
         )
 

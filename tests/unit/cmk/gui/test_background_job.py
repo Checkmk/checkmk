@@ -127,7 +127,7 @@ def test_start_job() -> None:
     job = DummyBackgroundJob()
 
     status = job.get_status()
-    assert status["state"] == JobStatusStates.INITIALIZED
+    assert status.state == JobStatusStates.INITIALIZED
 
     job.start(job.execute_hello)
     testlib.wait_until(job.is_active, timeout=5, interval=0.1)
@@ -139,16 +139,16 @@ def test_start_job() -> None:
     job.finish_hello_event.set()
 
     testlib.wait_until(
-        lambda: job.get_status()["state"]
+        lambda: job.get_status().state
         not in [JobStatusStates.INITIALIZED, JobStatusStates.RUNNING],
         timeout=5,
         interval=0.1,
     )
 
     status = job.get_status()
-    assert status["state"] == JobStatusStates.FINISHED
+    assert status.state == JobStatusStates.FINISHED
 
-    output = "\n".join(status["loginfo"]["JobProgressUpdate"])
+    output = "\n".join(status.loginfo["JobProgressUpdate"])
     assert "Initialized background job" in output
     assert "Hallo :-)" in output
 
@@ -159,20 +159,20 @@ def test_stop_job() -> None:
     job.start(job.execute_endless)
 
     testlib.wait_until(
-        lambda: "Hanging loop" in job.get_status()["loginfo"]["JobProgressUpdate"],
+        lambda: "Hanging loop" in job.get_status().loginfo["JobProgressUpdate"],
         timeout=5,
         interval=0.1,
     )
 
     status = job.get_status()
-    assert status["state"] == JobStatusStates.RUNNING
+    assert status.state == JobStatusStates.RUNNING
 
     job.stop()
 
     status = job.get_status()
-    assert status["state"] == JobStatusStates.STOPPED
+    assert status.state == JobStatusStates.STOPPED
 
-    output = "\n".join(status["loginfo"]["JobProgressUpdate"])
+    output = "\n".join(status.loginfo["JobProgressUpdate"])
     assert "Job was stopped" in output
 
 
@@ -200,7 +200,7 @@ def test_job_status_while_running() -> None:
     job = DummyBackgroundJob()
     job.start(job.execute_endless)
     testlib.wait_until(
-        lambda: "Hanging loop" in job.get_status()["loginfo"]["JobProgressUpdate"],
+        lambda: "Hanging loop" in job.get_status().loginfo["JobProgressUpdate"],
         timeout=5,
         interval=0.1,
     )
@@ -225,14 +225,14 @@ def test_job_status_after_stop() -> None:
     job = DummyBackgroundJob()
     job.start(job.execute_endless)
     testlib.wait_until(
-        lambda: "Hanging loop" in job.get_status()["loginfo"]["JobProgressUpdate"],
+        lambda: "Hanging loop" in job.get_status().loginfo["JobProgressUpdate"],
         timeout=5,
         interval=0.1,
     )
     job.stop()
 
     status = job.get_status()
-    assert status["state"] == JobStatusStates.STOPPED
+    assert status.state == JobStatusStates.STOPPED
 
     snapshot = job.get_status_snapshot()
     assert snapshot.has_exception is False

@@ -69,7 +69,7 @@ class RenameHostsBackgroundJob(BackgroundJob):
                 title=title or self.gui_title(),
                 lock_wato=True,
                 stoppable=False,
-                estimated_duration=BackgroundJob(self.job_prefix).get_status().get("duration"),
+                estimated_duration=BackgroundJob(self.job_prefix).get_status().duration,
             ),
         )
 

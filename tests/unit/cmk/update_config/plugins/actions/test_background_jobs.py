@@ -78,4 +78,4 @@ def test_update_job_status_add_missing_pid(tmp_path: Path) -> None:
     )
 
     update_job_status(logging.getLogger(), job_status.parent)
-    assert JobStatusStore(str(job_status.parent)).read()["pid"] is None
+    assert JobStatusStore(str(job_status.parent)).read().pid is None

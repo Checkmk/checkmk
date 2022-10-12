@@ -21,6 +21,7 @@ from types import FrameType
 from typing import Any, Callable, List, NoReturn, Optional, Sequence, Type, TypedDict
 
 import psutil  # type: ignore[import]
+from pydantic import BaseModel
 from setproctitle import setthreadtitle  # type: ignore[import] # pylint: disable=no-name-in-module
 
 import cmk.utils.daemon as daemon
@@ -78,27 +79,24 @@ class JobLogInfo(TypedDict):
     JobException: Sequence[str]
 
 
-class _JobStatusSpec_Mandatory(TypedDict):
+class JobStatusSpec(BaseModel):
     state: str  # Make Literal["initialized", "running", "finished", "stopped", "exception"]
     started: float  # Change to Timestamp type later
     pid: int | None
     loginfo: JobLogInfo
     is_active: bool  # Remove this field and always derive from state dynamically?
-
-
-class JobStatusSpec(_JobStatusSpec_Mandatory, total=False):
-    duration: float  # Make this mandatory
-    title: str
-    stoppable: bool
-    deletable: bool
-    user: str | None
-    estimated_duration: float | None
-    ppid: int
-    logfile_path: str
-    acknowledged_by: str | None
-    lock_wato: bool
+    duration: float = 0.0
+    title: str = "Background job"
+    stoppable: bool = True
+    deletable: bool = True
+    user: str | None = None
+    estimated_duration: float | None = None
+    ppid: int | None = None
+    logfile_path: str = ""  # Move out of job status -> Has a static value
+    acknowledged_by: str | None = None
+    lock_wato: bool = False
     # Only used by ServiceDiscoveryBackgroundJob
-    host_name: str
+    host_name: str = ""
 
 
 # Same as JobStatusSpec but without mandatory attributes. Is there a way to prevent the duplication?
@@ -239,7 +237,7 @@ class BackgroundProcess(multiprocessing.Process):
     def _handle_sigterm(self, signum: int, frame: Optional[FrameType]) -> None:
         self._logger.debug("Received SIGTERM")
         status = self._jobstatus_store.read()
-        if not status.get("stoppable", True):
+        if not status.stoppable:
             self._logger.warning(
                 "Skip termination of background job (Job ID: %s, PID: %d)",
                 self._job_interface.get_job_id(),
@@ -270,7 +268,7 @@ class BackgroundProcess(multiprocessing.Process):
             # Final status update
             job_status = self._jobstatus_store.read()
 
-            if job_status.get("loginfo", {}).get("JobException"):
+            if job_status.loginfo["JobException"]:
                 final_state = JobStatusStates.EXCEPTION
             else:
                 final_state = JobStatusStates.FINISHED
@@ -278,7 +276,7 @@ class BackgroundProcess(multiprocessing.Process):
             self._jobstatus_store.update(
                 {
                     "state": final_state,
-                    "duration": time.time() - job_status["started"],
+                    "duration": time.time() - job_status.started,
                 }
             )
         except MKTerminate:
@@ -368,7 +366,7 @@ class BackgroundProcess(multiprocessing.Process):
         log.logger.addHandler(handler)
 
     def _lock_configuration(self) -> None:
-        if self._jobstatus_store.read().get("lock_wato"):
+        if self._jobstatus_store.read().lock_wato:
             store.release_all_locks()
             store.lock_exclusive()
 
@@ -449,7 +447,7 @@ class BackgroundJob:
         return self._job_id
 
     def get_title(self) -> str:
-        return self._jobstatus_store.read().get("title", _("Background job"))
+        return self._jobstatus_store.read().title
 
     def get_work_dir(self) -> str:
         return self._work_dir
@@ -461,15 +459,15 @@ class BackgroundJob:
         return self.exists() and self.is_visible()
 
     def is_deletable(self) -> bool:
-        return self.get_status().get("deletable", True)
+        return self.get_status().deletable
 
     def is_stoppable(self) -> bool:
-        return self._jobstatus_store.read().get("stoppable", True)
+        return self._jobstatus_store.read().stoppable
 
     def is_visible(self) -> bool:
         if user.may("background_jobs.see_foreign_jobs"):
             return True
-        return user.id == self.get_status().get("user")
+        return user.id == self.get_status().user
 
     def may_stop(self) -> bool:
         if not self.is_stoppable():
@@ -502,21 +500,21 @@ class BackgroundJob:
         return True
 
     def _is_foreign(self) -> bool:
-        return self.get_status().get("user") != user.id
+        return self.get_status().user != user.id
 
     def _verify_running(self, job_status: JobStatusSpec) -> bool:
-        if job_status["state"] == JobStatusStates.INITIALIZED:
+        if job_status.state == JobStatusStates.INITIALIZED:
             # The process was created a millisecond ago
             # The child process however, did not have time to update the statefile with its PID
             # We consider this scenario as OK, if the start time was recent enough
-            if time.time() - job_status["started"] < 5:  # 5 seconds
+            if time.time() - job_status.started < 5:  # 5 seconds
                 return True
 
-        if job_status["pid"] is None:
+        if job_status.pid is None:
             return False
 
         try:
-            p = psutil.Process(job_status["pid"])
+            p = psutil.Process(job_status.pid)
             if self._is_correct_process(job_status, p):
                 return True
         except (psutil.NoSuchProcess, psutil.AccessDenied):
@@ -529,7 +527,7 @@ class BackgroundJob:
             return False
 
         job_status = self.get_status()
-        return job_status["is_active"] and self._verify_running(job_status)
+        return job_status.is_active and self._verify_running(job_status)
 
     def stop(self) -> None:
         if not self.is_active():
@@ -541,7 +539,7 @@ class BackgroundJob:
         self._terminate_processes()
 
         job_status = self._jobstatus_store.read()
-        duration = time.time() - job_status["started"]
+        duration = time.time() - job_status.started
         self._jobstatus_store.update(
             {
                 "state": JobStatusStates.STOPPED,
@@ -575,15 +573,15 @@ class BackgroundJob:
     def _terminate_processes(self) -> None:
         job_status = self.get_status()
 
-        if job_status["pid"] is None:
+        if job_status.pid is None:
             return
 
         # Send SIGTERM
         self._logger.debug(
-            'Stopping job using SIGTERM "%s" (PID: %s)', self._job_id, job_status["pid"]
+            'Stopping job using SIGTERM "%s" (PID: %s)', self._job_id, job_status.pid
         )
         try:
-            process = psutil.Process(job_status["pid"])
+            process = psutil.Process(job_status.pid)
             if not self._is_correct_process(job_status, process):
                 return
             process.send_signal(signal.SIGTERM)
@@ -595,7 +593,7 @@ class BackgroundJob:
         while time.time() - start_time < 10:  # 10 seconds SIGTERM grace period
             job_still_running = False
             try:
-                process = psutil.Process(job_status["pid"])
+                process = psutil.Process(job_status.pid)
                 if not self._is_correct_process(job_status, process):
                     return
                 job_still_running = True
@@ -607,7 +605,7 @@ class BackgroundJob:
             time.sleep(0.1)
 
         try:
-            p = psutil.Process(job_status["pid"])
+            p = psutil.Process(job_status.pid)
             if self._is_correct_process(job_status, process):
                 # Kill unresponsive jobs
                 self._logger.debug("Killing job")
@@ -627,15 +625,15 @@ class BackgroundJob:
         status = self._jobstatus_store.read()
 
         # Some dynamic stuff
-        if status.get("state", "") == JobStatusStates.RUNNING and status["pid"] is not None:
+        if status.state == JobStatusStates.RUNNING and status.pid is not None:
             try:
-                p = psutil.Process(status["pid"])
+                p = psutil.Process(status.pid)
                 if not self._is_correct_process(status, p):
-                    status["state"] = JobStatusStates.STOPPED
+                    status.state = JobStatusStates.STOPPED
                 else:
-                    status["duration"] = time.time() - status["started"]
+                    status.duration = time.time() - status.started
             except (psutil.NoSuchProcess, psutil.AccessDenied):
-                status["state"] = JobStatusStates.STOPPED
+                status.state = JobStatusStates.STOPPED
 
         map_job_state_to_is_active = {
             JobStatusStates.INITIALIZED: True,
@@ -644,7 +642,7 @@ class BackgroundJob:
             JobStatusStates.STOPPED: False,
             JobStatusStates.EXCEPTION: False,
         }
-        status["is_active"] = map_job_state_to_is_active[status["state"]]
+        status.is_active = map_job_state_to_is_active[status.state]
 
         return status
 
@@ -663,26 +661,24 @@ class BackgroundJob:
 
         # Start processes
         initial_status = JobStatusSpec(
-            {
-                "state": JobStatusStates.INITIALIZED,
-                "started": time.time(),
-                "duration": 0.0,
-                "pid": None,
-                "is_active": False,
-                "loginfo": {
-                    "JobProgressUpdate": [],
-                    "JobResult": [],
-                    "JobException": [],
-                },
-                "title": self._initial_status_args.title,
-                "stoppable": self._initial_status_args.stoppable,
-                "deletable": self._initial_status_args.deletable,
-                "user": self._initial_status_args.user,
-                "estimated_duration": self._initial_status_args.estimated_duration,
-                "logfile_path": self._initial_status_args.logfile_path,
-                "lock_wato": self._initial_status_args.lock_wato,
-                "host_name": self._initial_status_args.host_name,
-            }
+            state=JobStatusStates.INITIALIZED,
+            started=time.time(),
+            duration=0.0,
+            pid=None,
+            is_active=False,
+            loginfo={
+                "JobProgressUpdate": [],
+                "JobResult": [],
+                "JobException": [],
+            },
+            title=self._initial_status_args.title,
+            stoppable=self._initial_status_args.stoppable,
+            deletable=self._initial_status_args.deletable,
+            user=self._initial_status_args.user,
+            estimated_duration=self._initial_status_args.estimated_duration,
+            logfile_path=self._initial_status_args.logfile_path,
+            lock_wato=self._initial_status_args.lock_wato,
+            host_name=self._initial_status_args.host_name,
         )
         self._jobstatus_store.write(initial_status)
 
@@ -702,7 +698,7 @@ class BackgroundJob:
 
         if p.exitcode == 0:
             job_status = self.get_status()
-            self._logger.debug('Started job "%s" (PID: %s)', self._job_id, job_status["pid"])
+            self._logger.debug('Started job "%s" (PID: %s)', self._job_id, job_status.pid)
 
     def _prepare_work_dir(self) -> None:
         self._delete_work_dir()
@@ -755,8 +751,8 @@ class BackgroundJob:
             status=status,
             exists=self.exists(),
             is_active=self.is_active(),
-            has_exception=status.get("state") == JobStatusStates.EXCEPTION,
-            acknowledged_by=status.get("acknowledged_by"),
+            has_exception=status.state == JobStatusStates.EXCEPTION,
+            acknowledged_by=status.acknowledged_by,
             may_stop=self.may_stop(),
             may_delete=self.may_delete(),
         )
@@ -802,22 +798,19 @@ class JobStatusStore:
     def read(self) -> JobStatusSpec:
         if not self._jobstatus_path.exists():
             return JobStatusSpec(
-                {
-                    "state": JobStatusStates.INITIALIZED,
-                    "started": time.time(),
-                    "pid": None,
-                    "is_active": False,
-                    "loginfo": {
-                        "JobProgressUpdate": [],
-                        "JobResult": [],
-                        "JobException": [],
-                    },
-                }
+                state=JobStatusStates.INITIALIZED,
+                started=time.time(),
+                pid=None,
+                is_active=False,
+                loginfo={
+                    "JobProgressUpdate": [],
+                    "JobResult": [],
+                    "JobException": [],
+                },
             )
 
         try:
-            # Ignore until we have replaced the TypedDict
-            data: JobStatusSpec = JobStatusSpec(self.read_raw())  # type: ignore[misc]
+            data: JobStatusSpec = JobStatusSpec.parse_obj(self.read_raw())
         finally:
             store.release_lock(str(self._jobstatus_path))
 
@@ -828,9 +821,9 @@ class JobStatusStore:
             except FileNotFoundError:
                 return []
 
-        data["loginfo"]["JobProgressUpdate"] = _log_lines(self._progress_update_path)
-        data["loginfo"]["JobResult"] = _log_lines(self._result_message_path)
-        data["loginfo"]["JobException"] = _log_lines(self._exceptions_path)
+        data.loginfo["JobProgressUpdate"] = _log_lines(self._progress_update_path)
+        data.loginfo["JobResult"] = _log_lines(self._result_message_path)
+        data.loginfo["JobException"] = _log_lines(self._exceptions_path)
 
         return data
 
@@ -846,7 +839,7 @@ class JobStatusStore:
         return self._jobstatus_path.exists()
 
     def write(self, status: JobStatusSpec) -> None:
-        store.save_object_to_file(self._jobstatus_path, status)
+        store.save_object_to_file(self._jobstatus_path, status.dict())
 
     def update(self, params: JobStatusSpecUpdate) -> None:
         if not self._jobstatus_path.parent.exists():
@@ -854,10 +847,7 @@ class JobStatusStore:
 
         if params:
             try:
-                # Ignore until we have replaced the TypedDict
-                status = JobStatusSpec(self.read_raw())  # type: ignore[misc]
-                status.update(params)
-                self.write(status)
+                self.write(JobStatusSpec.parse_obj({**self.read_raw(), **params}))
             finally:
                 store.release_lock(str(self._jobstatus_path))
 
@@ -899,14 +889,14 @@ class BackgroundJobManager:
                 for job_id in job_ids:
                     job_instances[job_id] = BackgroundJob(job_id, logger=self._logger)
                     all_jobs.append((job_id, job_instances[job_id].get_status()))
-                all_jobs.sort(key=lambda x: int(x[1]["started"]), reverse=True)
+                all_jobs.sort(key=lambda x: x[1].started, reverse=True)
 
                 for entry in all_jobs[-1:0:-1]:
                     job_id, job_status = entry
-                    if job_status["state"] == JobStatusStates.RUNNING:
+                    if job_status.state == JobStatusStates.RUNNING:
                         continue
 
-                    if len(all_jobs) > max_count or (time.time() - job_status["started"] > max_age):
+                    if len(all_jobs) > max_count or (time.time() - job_status.started > max_age):
                         job_instances[job_id].delete()
                         all_jobs.remove(entry)
         except Exception:

@@ -277,7 +277,7 @@ class ModeUsers(WatoMode):
             html.immediate_browser_redirect(2, url)
 
         elif (
-            self._job_snapshot.status["state"]
+            self._job_snapshot.status.state
             == gui_background_job.background_job.JobStatusStates.FINISHED
             and not self._job_snapshot.acknowledged_by
         ):

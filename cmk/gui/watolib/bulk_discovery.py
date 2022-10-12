@@ -326,10 +326,10 @@ def bulk_discovery_job_status(job: BulkDiscoveryBackgroundJob) -> BulkDiscoveryS
     status = job.get_status()
     return BulkDiscoveryStatus(
         is_active=job.is_active(),
-        job_state=status["state"],
+        job_state=status.state,
         logs=JobLogs(
-            result=status["loginfo"]["JobResult"],
-            progress=status["loginfo"]["JobProgressUpdate"],
+            result=status.loginfo["JobResult"],
+            progress=status.loginfo["JobProgressUpdate"],
         ),
     )
 

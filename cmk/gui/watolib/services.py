@@ -768,7 +768,7 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
                 title=_("Service discovery"),
                 stoppable=True,
                 host_name=host_name,
-                estimated_duration=BackgroundJob(self.job_prefix).get_status().get("duration"),
+                estimated_duration=BackgroundJob(self.job_prefix).get_status().duration,
             ),
         )
         self._pre_try_discovery = (

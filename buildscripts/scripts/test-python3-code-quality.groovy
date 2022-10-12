@@ -1,39 +1,15 @@
-properties([
-  buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
-])
+#!groovy
 
-def NODE = ''
-withFolderProperties{
-    NODE = env.BUILD_NODE
-}
-
-timeout(time: 12, unit: 'HOURS') {
-    node (NODE) {
-        stage('checkout sources') {
-            checkout(scm)
-        }
-        versioning = load 'buildscripts/scripts/lib/versioning.groovy'
-    }
-    try {
-        node (NODE) {
-            docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                def TEST_IMAGE = docker.build("test-image:${env.BUILD_ID}", "buildscripts/docker_image_aliases/IMAGE_TESTING")
-                // The commands are executed with the 1001:1000 UID:GID (non-root).
-                // This is the UID of the jenkins user on the node which does not exist
-                // in the container. For the moment this does not look like a problem.
-                // But it may be that we get to the point where we need an existing
-                // user in the container.
-                TEST_IMAGE.inside("--ulimit nofile=1024:1024 --init") {
-                    stage('test python3 code quality') {
-                        dir ('tests') {
-                            sh "bash -c \"make test-code-quality\""
-                        }
-                    }
+def main() {
+    def docker_args = "--ulimit nofile=1024:1024 --init";
+    docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
+        docker_image_from_alias("IMAGE_TESTING").inside(docker_args) {
+            stage('test python3 code quality') {
+                dir("${checkout_dir}") {
+                    sh("make -C tests test-code-quality");
                 }
             }
         }
-    } catch(Exception e) {
-        currentBuild.setKeepLog(true)
-        throw e
     }
 }
+return this;

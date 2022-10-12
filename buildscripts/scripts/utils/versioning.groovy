@@ -1,12 +1,6 @@
-/* THIS FILE IS CURRENTLY BEING MIGRATED AND SHOULD NOT BE MODIFIED!!
- *
- * if you really need to modify it, please also modify it's twin located at
- *  ../utils/
- *
-*/
+#!groovy
 
 // library for calculation of version numbers
-import java.text.SimpleDateFormat
 import groovy.transform.Field
 
 // TODO: Use ntop_rules.json as soon as we want to exclude ntop-mkp-able files from the enterprise build
@@ -49,45 +43,61 @@ def REPO_PATCH_RULES = [\
         "web/htdocs/themes/{facelift,modern-dark}/scss/cme"]], \
 ]
 
-def get_branch(scm) {
-    def BRANCH = scm.branches[0].name.replaceAll("/","-")
-    return BRANCH
+def branch_name(scm) {
+    return scm.branches[0].name;
 }
 
-def get_cmk_version(scm, VERSION) {
-    def BRANCH = get_branch(scm)
+def safe_branch_name(scm) {
+    return scm.branches[0].name.replaceAll("/", "-");
+}
 
-    if (BRANCH == 'master' && VERSION == 'daily') {
-        return get_date() // Regular daily build of master branch
-    } else if (BRANCH.startsWith('sandbox') && VERSION == 'daily') {
-        return get_date() + '-' + BRANCH // Experimental builds
-    } else if (VERSION == 'daily') {
-        return BRANCH + '-' + get_date() // version branch dailies (e.g. 1.6.0)
-    } else {
-        return VERSION
+def get_cmk_version(branch, version) {
+    return (
+      // Regular daily build of master branch
+      (branch == 'master' && version == 'daily') ? "${build_date}" :
+      // Experimental builds
+      (branch.startsWith('sandbox') && version == 'daily') ? "${build_date}-${branch}" :
+      // version branch dailies (e.g. 1.6.0)
+      (version == 'daily') ? "${branch}-${build_date}" :
+      // else
+      "${version}");
+}
+
+def configured_or_overridden_distros(edition, distro_list, distro_key="DISTROS") {
+    if(distro_list) {
+        return distro_list.trim().split(' ');
+    }
+    try {
+        return load_json("${checkout_dir}/editions.json")[edition][distro_key];
+    } catch (Exception exc) {
+        raise("Could not find editions.json:'${edition}':'{distro_key}'");
     }
 }
 
-def get_branch_version() {
-    return sh(returnStdout: true, script: "grep -m 1 BRANCH_VERSION defines.make | sed 's/^.*= //g'").trim()
+def get_branch_version(String git_dir=".") {
+    dir(git_dir) {
+        return (cmd_output("grep -m 1 BRANCH_VERSION defines.make | sed 's/^.*= //g'")
+                ?: raise("Could not read BRANCH_VERSION from defines.make - wrong directory?"));
+    }
 }
 
-def get_git_hash() {
-    def HASH = sh(returnStdout: true, script: "git log -n 1 --pretty=format:'%h'").trim()
-    return HASH
+def get_git_hash(String git_dir=".") {
+    dir(git_dir) {
+        return (cmd_output("git log -n 1 --pretty=format:'%h'")
+                ?: raise("Could not read git commit hash - wrong directory?"));
+    }
 }
 
-def get_date() {
-    def DATE_FORMAT = new SimpleDateFormat("yyyy.MM.dd")
-    def DATE = new Date()
-    return DATE_FORMAT.format(DATE)
+distro_package_type = { distro ->
+    return (
+      (distro ==~ /centos.*|rh.*|sles.*|opensuse.*|alma.*/) ? "rpm" :
+      (distro ==~ /cma.*/) ? "cma" :
+      (distro ==~ /debian.*|ubuntu.*/) ? "deb" :
+      raise("Cannot associate distro ${distro}"));
 }
 
-def get_docker_tag(scm) {
-    def BRANCH = get_branch(scm)
-    def DATE = get_date()
-    def HASH = get_git_hash()
-    return BRANCH + '-' + DATE + '-' + HASH
+def get_docker_tag(scm, String git_dir=".") {
+    return "${safe_branch_name(scm)}-${build_date}-${get_git_hash(git_dir)}";
 }
 
 def get_docker_artifact_name(edition, cmk_version) {
@@ -95,31 +105,21 @@ def get_docker_artifact_name(edition, cmk_version) {
 }
 
 def select_docker_tag(BRANCH, BUILD_TAG, FOLDER_TAG) {
-    // Empty folder prperties are null pointers
-    // Other emput string variables have the value ''
-    if (BUILD_TAG != '') {
-        return BUILD_TAG
-    }
-    if (FOLDER_TAG != null) {
-        return FOLDER_TAG
-    }
-    return BRANCH + '-latest'
+    return BUILD_TAG ?: FOLDER_TAG ?: "${BRANCH}-latest";
 }
 
 def print_image_tag() {
-    sh "cat /version.txt"
+    sh("cat /version.txt");
 }
 
-def patch_folders(EDITION) {
-    REPO_PATCH_RULES[EDITION]["folders_to_be_removed"].each{FOLDER ->
-            sh """
-                rm -rf ${FOLDER}
-            """ }
+def patch_folders(edition) {
+    REPO_PATCH_RULES[edition]["folders_to_be_removed"].each{FOLDER ->
+        sh("rm -rf ${FOLDER}");
+    }
 
-    REPO_PATCH_RULES[EDITION]["folders_to_be_created"].each{FOLDER ->
-            sh """
-                mkdir -p ${FOLDER}
-            """ }
+    REPO_PATCH_RULES[edition]["folders_to_be_created"].each{FOLDER ->
+        sh("mkdir -p ${FOLDER}");
+    }
 }
 
 def patch_themes(EDITION) {
@@ -159,15 +159,16 @@ def patch_demo(EDITION) {
     }
 }
 
-def set_version(CMK_VERS) {
-    sh "make NEW_VERSION=${CMK_VERS} setversion"
+def set_version(cmk_version) {
+    sh("make NEW_VERSION=${cmk_version} setversion");
 }
 
-def patch_git_after_checkout(EDITION, CMK_VERS) {
-    patch_folders(EDITION)
-    patch_themes(EDITION)
-    patch_demo(EDITION)
-    set_version(CMK_VERS)
+def configure_checkout_folder(edition, cmk_version) {
+    assert edition in REPO_PATCH_RULES: "edition=${edition} not known"
+    patch_folders(edition);
+    patch_themes(edition);
+    patch_demo(edition);
+    set_version(cmk_version);
 }
 
 def delete_non_cre_files() {

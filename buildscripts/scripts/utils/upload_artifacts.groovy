@@ -1,32 +1,9 @@
-/* THIS FILE IS CURRENTLY BEING MIGRATED AND SHOULD NOT BE MODIFIED!!
- *
- * if you really need to modify it, please also modify it's twin located at
- *  ../utils/
- *
-*/
+#!groovy
 
 // library for uploading packages
 package lib
 
-versioning = load 'buildscripts/scripts/lib/versioning.groovy'
-
-def upload(Map args) {
-    // needed args + desc:
-    // NAME: Name of the artifact to display
-    // FILE_PATH: Path where the File is stored
-    // FILE_NAME: Name of the File to be uploaded
-    // CMK_VERS: Version that should be uploaded
-    // UPLOAD_DEST: Where should the packages be uploaded to
-    // PORT: Port fo upload dest
-    def FILE_BASE = get_file_base(args.FILE_PATH)
-    def ARCHIVE_BASE = get_archive_base(FILE_BASE)
-
-    create_hashes(ARCHIVE_BASE)
-
-    stage(args.NAME + ' upload package') {
-        via_rsync(ARCHIVE_BASE, args.CMK_VERS, args.FILE_NAME, args.UPLOAD_DEST, args.PORT)
-    }
-}
+def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
 def download_deb(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, EDITION, DISTRO) {
     def FILE_PATTERN = "check-mk-${EDITION}-${CMK_VERSION}_0.${DISTRO}_amd64.deb"
@@ -44,6 +21,16 @@ def download_docker_tar(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, EDITI
 }
 
 def download_version_dir(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, PATTERN = "*", INFO = 'all packages') {
+    println("""
+        ||== download_version_dir() ================================================================
+        || DOWNLOAD_SOURCE = |${DOWNLOAD_SOURCE}|
+        || PORT =            |${PORT}|
+        || CMK_VERSION =     |${CMK_VERSION}|
+        || DOWNLOAD_DEST =   |${DOWNLOAD_DEST}|
+        || PATTERN =         |${PATTERN}|
+        || INFO =            |${INFO}|
+        ||==========================================================================================
+        """.stripMargin());
     stage("Download from shared storage (${INFO})") {
         withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
             sh("mkdir -p ${DOWNLOAD_DEST}")
@@ -57,9 +44,7 @@ def download_version_dir(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, PATT
     }
 }
 
-def upload_version_dir(SOURCE_PATH, UPLOAD_DEST, PORT)
-{
-    create_hashes(SOURCE_PATH)
+def upload_version_dir(SOURCE_PATH, UPLOAD_DEST, PORT) {
     stage('Upload to download server') {
         withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
             sh """
@@ -72,27 +57,26 @@ def upload_version_dir(SOURCE_PATH, UPLOAD_DEST, PORT)
     }
 }
 
-def get_file_base(FILE_PATH) {
-    return sh(script: "dirname ${FILE_PATH}", returnStdout: true).toString().trim()
-}
+def upload_via_rsync(archive_base, cmk_version, filename, upload_dest, upload_port) {
+    println("""
+        ||== upload_via_rsync() ================================================
+        || archive_base = |${archive_base}|
+        || cmk_version =  |${cmk_version}|
+        || filename =     |${filename}|
+        || upload_dest =  |${upload_dest}|
+        || upload_port =  |${upload_port}|
+        ||======================================================================
+        """.stripMargin());
 
-def get_archive_base(FILE_BASE) {
-    return sh(script: "dirname ${FILE_BASE}", returnStdout: true).toString().trim()
-}
-
-def get_file_name(FILE_PATH) {
-    return sh(script: "basename ${FILE_PATH}", returnStdout: true).toString().trim()
-}
-
-def via_rsync(ARCHIVE_BASE, CMK_VERS, FILE_NAME, UPLOAD_DEST, PORT) {
     withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
-        sh """
+        sh("""
             rsync -av --relative \
                 --exclude '*dbgsym*.deb' \
-                -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p ${PORT}" \
-                ${ARCHIVE_BASE}/./${CMK_VERS}/${FILE_NAME} \
-                ${UPLOAD_DEST}
-        """
+                -e "ssh -o StrictHostKeyChecking=no \
+                -i ${RELEASE_KEY} -p ${upload_port}" \
+                ${archive_base}/./${cmk_version}/${filename} \
+                ${upload_dest}
+        """);
     }
 }
 
@@ -106,10 +90,10 @@ def create_hashes(ARCHIVE_DIR) {
 def deploy_to_website(UPLOAD_URL, PORT, CMK_VERS) {
     stage("Deploy to Website") {
         withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
-            sh """
+            sh("""
                 ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p ${PORT} ${UPLOAD_URL} \
                     ln -sf /var/downloads/checkmk/${CMK_VERS} /smb-share-customer/checkmk
-            """
+            """);
         }
     }
 }

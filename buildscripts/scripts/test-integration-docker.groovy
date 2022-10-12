@@ -1,49 +1,74 @@
-properties([
-  buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
-])
+#!groovy
+/// Run integration tests for the Checkmk Docker image
 
-def NODE = ''
-withFolderProperties{
-    NODE = env.BUILD_NODE
-}
+/// Jenkins artifacts: ???
+/// Other artifacts: ???
+/// Depends on: ???
 
-properties([
-  buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
-  parameters([
-    string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, enterprise or managed' ),
-    string(name: 'VERSION', defaultValue: 'daily', description: 'Version: "daily" builds current git state of the branch. You also can specify a git tag here.' ),
-  ])
-])
+def main() {
+    check_job_parameters([
+        "EDITION",
+        "VERSION",
+    ]);
 
-timeout(time: 12, unit: 'HOURS') {
-    node (NODE) {
-        stage('checkout sources') {
-            checkout(scm)
-            notify = load 'buildscripts/scripts/lib/notify.groovy'
-            versioning = load 'buildscripts/scripts/lib/versioning.groovy'
-            upload = load 'buildscripts/scripts/lib/upload_artifacts.groovy'
+    check_environment_variables([
+        "INTERNAL_DEPLOY_DEST",
+        "INTERNAL_DEPLOY_PORT",
+    ]);
+
+    def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+    def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
+
+    def package_dir = "${checkout_dir}/packages";
+    def branch_name = versioning.safe_branch_name(scm);
+    def cmk_version = versioning.get_cmk_version(branch_name, VERSION);
+
+    print(
+        """
+        |===== CONFIGURATION ===============================
+        |cmk_version:....................(local)  │${cmk_version}│
+        |===================================================
+        """.stripMargin());
+
+    currentBuild.description = (
+        """
+        |Run integration tests for the Checkmk Docker image
+        """.stripMargin());
+
+    stage('cleanup old versions') {
+        sh("rm -rf '${package_dir}'");
+    }
+
+    stage('Download') {
+        on_dry_run_omit(LONG_RUNNING, "Download package and source") {
+            artifacts_helper.download_deb(
+                INTERNAL_DEPLOY_DEST,
+                INTERNAL_DEPLOY_PORT,
+                cmk_version,
+                "${package_dir}/${cmk_version}",
+                EDITION,
+                "buster",  // TODO should be parametrized
+            );
+            
+            artifacts_helper.download_source_tar(
+                INTERNAL_DEPLOY_DEST,
+                INTERNAL_DEPLOY_PORT,
+                cmk_version,
+                "${package_dir}/${cmk_version}",
+                EDITION,
+            );
         }
     }
     
-    try {
-        node (NODE) {
-            def PACKAGE_DIR = WORKSPACE + "/packages"
-            def CMK_VERSION = versioning.get_cmk_version(scm, params.VERSION)
-
-            stage('cleanup old versions') {
-                sh("rm -rf \"${PACKAGE_DIR}\"")
-            }
-
-            upload.download_deb(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERSION, "${PACKAGE_DIR}/${CMK_VERSION}", EDITION, "buster")
-            upload.download_source_tar(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERSION, "${PACKAGE_DIR}/${CMK_VERSION}", EDITION)
-
-            stage('test cmk-docker integration') {
-                dir ('tests') {
-                    sh "make test-docker-docker EDITION='$EDITION' VERSION='$CMK_VERSION'"
-                }
+    // TODO: don't run make-test-docker but use docker.inside() instead
+    stage('test cmk-docker integration') {
+        dir("${checkout_dir}/tests") {
+            def cmd = "make test-docker-docker WORKSPACE='${checkout_dir}' EDITION='$EDITION' VERSION='$cmk_version'";
+            on_dry_run_omit(LONG_RUNNING, "RUN ${cmd}") {
+                sh(cmd);
             }
         }
-    } catch(Exception e) {
-        notify.notify_error(e)
     }
 }
+return this;
+

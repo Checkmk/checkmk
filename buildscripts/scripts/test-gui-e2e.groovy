@@ -1,40 +1,26 @@
-def NODE
-def DOCKER_TAG_DEFAULT
-def BRANCH
-withFolderProperties{
-    NODE = env.BUILD_NODE
-    DOCKER_TAG_DEFAULT = env.DOCKER_TAG_FOLDER
-    BRANCH = env.BRANCH
+#!groovy
+
+def main() {
+    def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+    def testing_helper = load("${checkout_dir}/buildscripts/scripts/utils/integration.groovy");
+    def branch_name = versioning.safe_branch_name(scm);
+
+    check_environment_variables([
+        "DOCKER_TAG",
+    ]);
+
+    testing_helper.run_make_targets(
+        DOCKER_GROUP_ID: get_docker_group_id(),
+        DISTRO_LIST: ["ubuntu-20.04"],
+        EDITION: "enterprise",
+        VERSION: "git",
+        DOCKER_TAG: versioning.select_docker_tag(
+            branch_name,
+            "", 
+            ""),   // FIXME was DOCKER_TAG_DEFAULT before
+        MAKE_TARGET: "test-gui-e2e-docker",
+        BRANCH: branch_name,
+        cmk_version: versioning.get_cmk_version(branch_name, "git"),
+    );
 }
-
-properties([
-    buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
-])
-
-timeout(time: 12, unit: 'HOURS') {
-    node (NODE) {
-        stage('checkout sources') {
-            checkout(scm)
-            notify = load 'buildscripts/scripts/lib/notify.groovy'
-            versioning = load 'buildscripts/scripts/lib/versioning.groovy'
-            docker_util = load 'buildscripts/scripts/lib/docker_util.groovy'
-            integration = load 'buildscripts/scripts/lib/integration.groovy'
-            // ID of docker group on the node
-            DOCKER_GROUP_ID = docker_util.get_docker_group_id()
-
-        }
-        try {
-            integration.build(
-                DOCKER_GROUP_ID: DOCKER_GROUP_ID,
-                DISTRO_LIST: ["ubuntu-20.04"],
-                EDITION: "enterprise",
-                VERSION: "git",
-                DOCKER_TAG: versioning.select_docker_tag(versioning.get_branch(scm), "", DOCKER_TAG_DEFAULT),
-                MAKE_TARGET: "test-gui-e2e-docker",
-                BRANCH: BRANCH,
-            )
-        }catch(Exception e) {
-            notify.notify_error(e)
-        }
-    }
-}
+return this;

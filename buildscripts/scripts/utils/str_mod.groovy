@@ -1,9 +1,4 @@
-/* THIS FILE IS CURRENTLY BEING MIGRATED AND SHOULD NOT BE MODIFIED!!
- *
- * if you really need to modify it, please also modify it's twin located at
- *  ../utils/
- *
-*/
+#!groovy
 
 // library for simple string modifications
 package lib

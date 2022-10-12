@@ -1,20 +1,6 @@
-/* THIS FILE IS CURRENTLY BEING MIGRATED AND SHOULD NOT BE MODIFIED!!
- *
- * if you really need to modify it, please also modify it's twin located at
- *  ../utils/
- *
-*/
+#!groovy
 
-// library for simple string modifications
-package lib
-import groovy.json.JsonSlurperClassic
-
-
-// Runs provided command in a shell and returns the JSON parsed stdout output
-def load_json(json_file) {
-    def cmd_stdout_result = sh(script: "cat ${json_file}", returnStdout: true);
-    (new groovy.json.JsonSlurperClassic()).parseText(cmd_stdout_result);
-}
+import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 def log_stage_duration(last_stage_date) {
     def this_stage_date = new Date();
@@ -22,7 +8,7 @@ def log_stage_duration(last_stage_date) {
         this_stage_date,
         last_stage_date,
     );
-    println("+ Stage duration: " + duration);
+    println("+ Stage duration: ${duration}");
     return this_stage_date;
 }
 
@@ -40,6 +26,7 @@ def create_stage(Map args, issues, time_stage_started) {
     def duration;
     stage(args.NAME) {
         if (args.SKIPPED) {
+            Utils.markStageSkippedForConditional(STAGE_NAME);
             println("SKIPPED: ${args.SKIPPED}");
             duration = groovy.time.TimeCategory.minus(new Date(), time_stage_started);
             desc_add_status_row(args.NAME, duration, 'skipped', '--');
@@ -55,7 +42,10 @@ def create_stage(Map args, issues, time_stage_started) {
                     cmd_status = sh(script: args.COMMAND, returnStatus: true);
                 }
                 duration = groovy.time.TimeCategory.minus(new Date(), time_stage_started);
-                desc_add_status_row(args.NAME, duration, cmd_status, "${args.RESULT_CHECK_FILE_PATTERN}");
+                desc_add_status_row(
+                    args.NAME,
+                    duration, cmd_status==0 ? "success" : "failure",
+                    "${args.RESULT_CHECK_FILE_PATTERN}");
 
                 println("Check results: ${args.RESULT_CHECK_TYPE}");
                 if (args.RESULT_CHECK_TYPE) {
@@ -74,49 +64,55 @@ def create_stage(Map args, issues, time_stage_started) {
                     }
                 }
                 /// make the stage fail if the command returned nonzero
-                sh('exit ' + cmd_status);
+                sh("exit ${cmd_status}");
             }
         }
         return cmd_status == 0;
     }
 }
 
-
-// Functions to add status of stages in from of tables
 def desc_init() {
-    currentBuild.description = ""
+    currentBuild.description = "";
 }
+
 def desc_add_line(TEXT) {
-    currentBuild.description += '<p>' + TEXT + '</p>'
+    currentBuild.description += "<p>${TEXT}</p>";
 }
+
 def desc_add_table_head() {
-    currentBuild.description += '<table>'
+    currentBuild.description += "<table>"
 }
+
 def desc_add_table_bottom() {
-    currentBuild.description += '</table>'
+    currentBuild.description += "</table>";
 }
+
 def desc_add_table() {
-    desc_add_table_head()
-    desc_add_table_bottom()
+    desc_add_table_head();
+    desc_add_table_bottom();
 }
+
 def desc_rm_table_bottom() {
-    currentBuild.description -= '</table>'
+    currentBuild.description -= "</table>";
 }
+
 def desc_add_row(ITEM_1, ITEM_2, ITEM_3, ITEM_4) {
     desc_rm_table_bottom()
-    currentBuild.description += '<tr><td>' + ITEM_1 + '</td><td>' + ITEM_2 + '</td><td>' + ITEM_3 + '</td><td>' + ITEM_4 + '</td></tr>'
-    desc_add_table_bottom()
-}
-def desc_add_status_row(STAGE, DURATION, STATUS, PATTERN) {
-    desc_rm_table_bottom()
-    if (STATUS == 0) {
-        currentBuild.description += '<tr><td>' + STAGE + '</td><td>' + DURATION + '</td><td style="color: green;">success</td><td>' + PATTERN + '</td></tr>'
-    } else if (STATUS == 'skipped') {
-        currentBuild.description += '<tr><td>' + STAGE + '</td><td>' + DURATION + '</td><td style="color: grey;">skipped</td><td>' + PATTERN + '</td></tr>'
-    } else {
-        currentBuild.description += '<tr><td>' + STAGE + '</td><td>' + DURATION + '</td><td style="color: red;">failed</td><td>' + PATTERN + '</td></tr>'
-    }
-    desc_add_table_bottom()
+    currentBuild.description += """<tr>
+    <td>${ITEM_1}</td><td>${ITEM_2}</td><td>${ITEM_3}</td><td>${ITEM_4}</td>
+    </tr>""";
+    desc_add_table_bottom();
 }
 
-return this
+def desc_add_status_row(STAGE, DURATION, status, PATTERN) {
+    desc_rm_table_bottom();
+    currentBuild.description += """<tr>
+    <td>${STAGE}</td>
+    <td>${DURATION}</td>
+    <td style=\"color: ${['success': 'green', 'skipped': 'grey', 'failure': 'red'][status]};\">${status}</td>
+    <td>${PATTERN}</td>
+    </tr>""";
+    desc_add_table_bottom();
+}
+
+return this;

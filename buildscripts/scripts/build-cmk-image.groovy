@@ -1,132 +1,152 @@
-import java.text.SimpleDateFormat
+#!groovy
+/// Build Checkmk Docker image
 
-currentBuild.description = '\nBuilding the CMK docker container\n'
+/// Jenkins artifacts: ???
+/// Other artifacts: ???
+/// Depends on: Buster / Debian 10 package
 
-def NODE = ''
-withFolderProperties{
-    NODE = env.BUILD_NODE
-}
 
-properties([
-  buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
-  parameters([
-    string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, free, enterprise or managed' ),
-    string(name: 'VERSION', defaultValue: 'daily', description: 'Version: daily builds current git state of the branch. You also can specify a git tag here.' ),
-    string(name: 'SET_LATEST_TAG', defaultValue: 'no', description: 'SET_LATEST_TAG: setting yes will push this docker container to the latest tag on docker hub.' ),
-    string(name: 'SET_BRANCH_LATEST_TAG', defaultValue: 'no', description: 'SET_BRANCH_LATEST_TAG: setting yes will push this docker image to the BRANCH-latest tag on docker hub.' ),
-    booleanParam(name: 'PUSH_TO_REGISTRY', defaultValue: true, description: 'Set to false if the built docker images should not be pushed to their registries.' ),
-    booleanParam(name: 'PUSH_TO_REGISTRY_ONLY', defaultValue: false, description: 'Set to true, if previously built docker images should only be pushed to their registries.' )
-  ])
-])
+def main() {
+    check_job_parameters([
+        "EDITION",
+        "VERSION",
+        "SET_LATEST_TAG",
+        "SET_BRANCH_LATEST_TAG",
+        "PUSH_TO_REGISTRY",
+        "PUSH_TO_REGISTRY_ONLY",
+    ]);
 
-// TODO: Change to versioning.get_branch and versioning.get_cmk_version! Then
-// the copy&paste below can be removed. First we'll have to clean up the
-def BRANCH = scm.branches[0].name.replaceAll("/","-")
-def CMK_VERS = get_cmk_version(BRANCH, VERSION)
+    check_environment_variables([
+        "WEB_DEPLOY_DEST",
+        "WEB_DEPLOY_PORT",
+        "INTERNAL_DEPLOY_DEST",
+        "INTERNAL_DEPLOY_PORT",
+        "NODE_NAME",
+    ]);
+    
+    shout("load libaries");
 
-// Duplicate code with nightly-build.jenkins
-def get_cmk_version(BRANCH, VERSION){
-    def DATE_FORMAT = new SimpleDateFormat("yyyy.MM.dd")
-    def DATE = new Date()
+    def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+    def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
 
-    if (BRANCH == 'master' && VERSION == 'daily') {
-        return DATE_FORMAT.format(DATE) // Regular daily build of master branch
-    } else if (BRANCH.startsWith('sandbox') && VERSION == 'daily') {
-        return DATE_FORMAT.format(DATE) + '-' + BRANCH // Experimental builds
-    } else if (VERSION == 'daily') {
-        return BRANCH + '-' + DATE_FORMAT.format(DATE) // version branch dailies (e.g. 1.6.0)
-    } else {
-        return VERSION
-    }
-}
+    def package_dir = "${checkout_dir}/download";
+    def branch_name = versioning.safe_branch_name(scm);
+    def cmk_version = versioning.get_cmk_version(branch_name, VERSION);
+    def docker_args = "--ulimit nofile=1024:1024 --group-add=${get_docker_group_id()} -v /var/run/docker.sock:/var/run/docker.sock";
 
-def registry_credentials_id() {
-    return (EDITION == "raw") ? '11fb3d5f-e44e-4f33-a651-274227cc48ab' : "registry.checkmk.com"
-}
+    def push_to_registry = PUSH_TO_REGISTRY=='true';
+    def build_image = PUSH_TO_REGISTRY_ONLY!='true';
 
-timeout(time: 12, unit: 'HOURS') {
-    node (NODE) {
-        def PACKAGE_DIR = WORKSPACE + '/download'
-        def DOCKER_GROUP_ID = ''
+   print(
+        """
+        |===== CONFIGURATION ===============================
+        |branch_name:....... │${branch_name}│
+        |cmk_version:....... │${cmk_version}│
+        |push_to_registry:.. │${push_to_registry}│
+        |build_image:....... │${build_image}│
+        |package_dir:....... │${package_dir}│
+        |===================================================
+        """.stripMargin());
 
-        stage('checkout sources') {
-            checkout(scm)
-        }
-        notify = load 'buildscripts/scripts/lib/notify.groovy'
-        versioning = load 'buildscripts/scripts/lib/versioning.groovy'
-        upload = load 'buildscripts/scripts/lib/upload_artifacts.groovy'
-        docker_util = load 'buildscripts/scripts/lib/docker_util.groovy'
+    currentBuild.description = (
+        """
+        |Building the CMK docker image
+        """.stripMargin());
 
-        // Get the ID of the docker group from the node(!). This must not be
-        // executed inside the container (as long as the IDs are different)
-        DOCKER_GROUP_ID = docker_util.get_docker_group_id()
 
-        try {
-            docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull buildscripts/docker_image_aliases/IMAGE_TESTING")
-                BUILD_IMAGE.inside("--ulimit nofile=1024:1024 --group-add=${DOCKER_GROUP_ID} -v /var/run/docker.sock:/var/run/docker.sock") {
+    shout("build image");
+    
+    docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
 
-                    if (!params.PUSH_TO_REGISTRY_ONLY) {
+        docker_image_from_alias("IMAGE_TESTING").inside("${docker_args}") {
+            withCredentials([
+                usernamePassword(
+                    credentialsId: (EDITION == "raw") ? // FIXME getCredentialsId() mergen
+                        "11fb3d5f-e44e-4f33-a651-274227cc48ab" :
+                        "registry.checkmk.com",
+                    passwordVariable: 'DOCKER_PASSPHRASE',
+                    usernameVariable: 'DOCKER_USERNAME'),
+                usernamePassword(
+                    credentialsId: 'nexus',
+                    passwordVariable: 'NEXUS_PASSWORD',
+                    usernameVariable: 'NEXUS_USERNAME')
+            ]) {
+                dir("${checkout_dir}") {
 
-                        stage('Prepare package directory') {
-                            sh("rm -rf \"${PACKAGE_DIR}\"")
-                            sh("mkdir -p \"${PACKAGE_DIR}\"")
+                    conditional_stage('Prepare package directory', build_image) {
+                        cleanup_directory("${package_dir}");
+                    }
+
+                    conditional_stage('Build Image', build_image) {
+                        on_dry_run_omit(LONG_RUNNING, "Download build sources") {
+                            artifacts_helper.download_deb(
+                                "${INTERNAL_DEPLOY_DEST}",
+                                "${INTERNAL_DEPLOY_PORT}",
+                                "${cmk_version}",
+                                "${package_dir}/${cmk_version}",
+                                "${EDITION}",
+                                "buster");
+                            artifacts_helper.download_source_tar(
+                                "${INTERNAL_DEPLOY_DEST}",
+                                "${INTERNAL_DEPLOY_PORT}",
+                                "${cmk_version}",
+                                "${package_dir}/${cmk_version}",
+                                "${EDITION}");
                         }
-
-                        stage('Build Container') {
-                            def CREDENTIALS_ID = registry_credentials_id()
-
-                            upload.download_deb(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS, PACKAGE_DIR + "/" + CMK_VERS, EDITION, "buster")
-                            upload.download_source_tar(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS, PACKAGE_DIR + "/" + CMK_VERS, EDITION)
-
-                            withCredentials([
-                                usernamePassword(credentialsId: CREDENTIALS_ID, passwordVariable: 'DOCKER_PASSPHRASE', usernameVariable: 'DOCKER_USERNAME'),
-                                usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
-                                sh """
-                                ./buildscripts/scripts/build-cmk-container.sh ${BRANCH} ${EDITION} ${CMK_VERS} ${SET_LATEST_TAG} ${SET_BRANCH_LATEST_TAG} "build"
-                            """
+                        
+                        on_dry_run_omit(LONG_RUNNING, "Run build-cmk-container.sh") {
+                            /// TODO: fix this:
+                            /// build-cmk-container does not support the downloads dir
+                            /// to have an arbitrary location, so we have to provide
+                            /// `download` inside the checkout_dir
+                            sh("""buildscripts/scripts/build-cmk-container.sh \
+                                ${branch_name} ${EDITION} ${cmk_version} \
+                                ${SET_LATEST_TAG} ${SET_BRANCH_LATEST_TAG} \
+                                build""");
+                        }
+                        
+                        def filename = versioning.get_docker_artifact_name(EDITION, cmk_version);
+                        on_dry_run_omit(LONG_RUNNING, "Upload ${filename}") {
+                            stage("Upload ${filename}") {
+                                artifacts_helper.upload_via_rsync(
+                                    "${package_dir}",
+                                    "${cmk_version}",
+                                    "${filename}",
+                                    "${INTERNAL_DEPLOY_DEST}",
+                                    "${INTERNAL_DEPLOY_PORT}",
+                                );
                             }
                         }
-
-                        def filename = versioning.get_docker_artifact_name(EDITION, CMK_VERS)
-                        upload.upload(
-                                NAME: filename,
-                                FILE_PATH: "${PACKAGE_DIR}/download/${CMK_VERS}",
-                                FILE_NAME: filename,
-                                CMK_VERS: CMK_VERS,
-                                UPLOAD_DEST: INTERNAL_DEPLOY_DEST,
-                                PORT: INTERNAL_DEPLOY_PORT,
-                        )
-
-                        // Upload all built docker.tar.gz except builds from experimental branches to WEB_DEPLOY_DEST
-                        if (!BRANCH.contains("sandbox")) {
-                            upload.upload(
-                                    NAME: "check-mk-${EDITION}-docker-${CMK_VERS}.tar.gz",
-                                    FILE_PATH: "${PACKAGE_DIR}/download/${CMK_VERS}",
-                                    FILE_NAME: "check-mk-${EDITION}-docker-${CMK_VERS}.tar.gz",
-                                    CMK_VERS: CMK_VERS,
-                                    UPLOAD_DEST: WEB_DEPLOY_DEST,
-                                    PORT: "52022",
-                            )
+                        
+                        def image_archive_file = "check-mk-${EDITION}-docker-${cmk_version}.tar.gz";
+                        if (branch_name.contains("sandbox") ) {
+                            print("Skip uploading ${image_archive_file} due to sandbox branch");
+                        } else {
+                            stage("Upload ${image_archive_file}") {
+                                artifacts_helper.upload_via_rsync(
+                                    "${package_dir}",
+                                    "${cmk_version}",
+                                    "check-mk-${EDITION}-docker-${cmk_version}.tar.gz",
+                                    "${WEB_DEPLOY_DEST}",
+                                    "${WEB_DEPLOY_PORT}",
+                                );
+                            }
                         }
                     }
 
-                    if (params.PUSH_TO_REGISTRY || params.PUSH_TO_REGISTRY_ONLY) {
-                        stage("Push images") {
-                            def CREDENTIALS_ID = registry_credentials_id()
-                            withCredentials([
-                                usernamePassword(credentialsId: CREDENTIALS_ID, passwordVariable: 'DOCKER_PASSPHRASE', usernameVariable: 'DOCKER_USERNAME'),
-                                usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
-                                sh """
-                                ./buildscripts/scripts/build-cmk-container.sh ${BRANCH} ${EDITION} ${CMK_VERS} ${SET_LATEST_TAG} ${SET_BRANCH_LATEST_TAG} "push"
-                            """
-                            }
-                        }
+                    conditional_stage("Push images", push_to_registry) {
+                        sh("""buildscripts/scripts/build-cmk-container.sh \
+                            ${BRANCH} \
+                            ${EDITION} \
+                            ${cmk_version} \
+                            ${SET_LATEST_TAG} \
+                            ${SET_BRANCH_LATEST_TAG} \
+                            push""");
                     }
                 }
             }
-        } catch(Exception e) {
-            notify.notify_error(e)
         }
     }
 }
+return this;
+

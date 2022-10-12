@@ -1,17 +1,9 @@
-/* THIS FILE IS CURRENTLY BEING MIGRATED AND SHOULD NOT BE MODIFIED!!
- *
- * if you really need to modify it, please also modify it's twin located at
- *  ../utils/
- *
-*/
+#!groovy
 
-// library for easier interaction with docker containers
-package lib
+load("${checkout_dir}/buildscripts/scripts/utils/docker_image_aliases_helper.groovy");
 
 // Make sure the docker group from outside the container is added inside of the contaienr
-def get_docker_group_id() {
-    def DOCKER_GROUP_ID = sh(script: "getent group docker | cut -d: -f3", returnStdout: true).toString().trim()
-    return DOCKER_GROUP_ID
+get_docker_group_id = { it ->
+    cmd_output("getent group docker | cut -d: -f3");
 }
 
-return this

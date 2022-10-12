@@ -1,149 +1,113 @@
-BRANCH_NAME = scm.branches[0].name
-FOLDER_ID = currentBuild.fullProjectName.split('/')[0..-2].join('/')
+/// This job will trigger other jobs
 
-def DISTRO_LIST_DEFAULT = ''
-def NODE = ''
-def EDITION_DEFAULT = ''
-def DEPLOY_TO_WEBSITE = false
-def JOB_EDITION = JOB_BASE_NAME.split("-")[-1]
-def ENABLE_NIGHTLY_TRIGGER = false
+/// Jenkins artifacts:  Those of child jobs
+/// Other artifacts:    Those of child jobs
+/// Depends on:         Nothing
 
-withFolderProperties{
-    switch (JOB_EDITION) {
-        case 'cee':
-            DISTRO_LIST_DEFAULT = env.DISTRO_LIST
-            EDITION_DEFAULT = 'enterprise'
-            START_HOUR = '0'
-            RUN_INTEGRATION_TESTS = true
-            RUN_IMAGE_TESTS = true
-            DEPLOY_TO_WEBSITE = !FOLDER_ID.startsWith('Testing') // Do not deploy from Testing folder.
-            BUILD_IMAGE = true
-            BUILD_AMI_IMAGE = false
-            break
-        case 'cre':
-            DISTRO_LIST_DEFAULT = env.DISTRO_LIST_CRE
-            EDITION_DEFAULT = 'raw'
-            START_HOUR = '2'
-            RUN_INTEGRATION_TESTS = true
-            RUN_IMAGE_TESTS = true
-            DEPLOY_TO_WEBSITE = false
-            BUILD_IMAGE = true
-            BUILD_AMI_IMAGE = false
-            break
-        case 'cfe':
-            DISTRO_LIST_DEFAULT = env.DISTRO_LIST_CFE
-            EDITION_DEFAULT = 'free'
-            // TODO (tbc): As we're now building AMI in 2.1.0 *and* master, we may start two EC2 instances at the same
-            // time.
-            // Workaround: move the trigger in master two hours later so that we avoid the situation and fix it in CMK-9862
-            START_HOUR = '6'
-            // CFE is basically a CEE, so we do not need to test it
-            RUN_INTEGRATION_TESTS = false
-            RUN_IMAGE_TESTS = false
-            DEPLOY_TO_WEBSITE = false
-            BUILD_IMAGE = false
-            BUILD_AMI_IMAGE = true
-            break
-        case 'cpe':
-            DISTRO_LIST_DEFAULT = env.DISTRO_LIST_CPE
-            EDITION_DEFAULT = 'plus'
-            START_HOUR = '4'
-            // Enable this later when we have CPE specific integration tests.
-            // Until then it's similar to the CEE.
-            RUN_INTEGRATION_TESTS = false
-            RUN_IMAGE_TESTS = true
-            // Do not publish anything, no docker and no AMI images. We only
-            // use the packages for our own tests - for now.
-            DEPLOY_TO_WEBSITE = false
-            BUILD_IMAGE = true
-            BUILD_AMI_IMAGE = false
-            break
-        default:
-            throw new Exception('unknown trigger job')
-    }
-    NODE = env.BUILD_NODE
-    ENABLE_NIGHTLY_TRIGGER = env.ENABLE_NIGHTLY_TRIGGER == "True"
-}
+def main() {
 
-properties([
-    buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
-    parameters([
-        string(name: 'DISTROS', defaultValue: DISTRO_LIST_DEFAULT, description: 'List of targeted distros' ),
-        string(name: 'EDITION', defaultValue: EDITION_DEFAULT, description: 'Edition: raw, enterprise, managed or plus' )
-    ]),
-    pipelineTriggers(
-        ENABLE_NIGHTLY_TRIGGER ? [cron("0 ${START_HOUR} * * *")] : []
-    )
-])
+    /// make sure the listed parameters are set
+    check_job_parameters([
+        "VERSION",
+        "OVERRIDE_DISTROS",
+        "SKIP_DEPLOY_TO_WEBSITE",
+        "DEPLOY_TO_WEBSITE_ONLY",
+        "DOCKER_TAG_BUILD",
+        "FAKE_WINDOWS_ARTIFACTS",
+        "SET_LATEST_TAG",
+        "SET_BRANCH_LATEST_TAG",
+        "PUSH_TO_REGISTRY",
+        "PUSH_TO_REGISTRY_ONLY",
+    ]);
 
-node: {
-    label 'NODE'
+    def edition = JOB_BASE_NAME.split("-")[-1];
+    def base_folder = "${currentBuild.fullProjectName.split('/')[0..-2].join('/')}/nightly-${edition}";
+
+    /// NOTE: this way ALL parameter are being passed through..
+    def job_parameters = [
+        [$class: 'StringParameterValue', name: 'EDITION', value: edition],
+
+        // TODO perhaps use `params` + [EDITION]?
+        // FIXME: all parameters from all triggered jobs have to be handled here
+        [$class: 'StringParameterValue',  name: 'VERSION', value: VERSION],
+        [$class: 'StringParameterValue',  name: 'OVERRIDE_DISTROS', value: params.OVERRIDE_DISTROS],
+        [$class: 'BooleanParameterValue', name: 'SKIP_DEPLOY_TO_WEBSITE', value: params.SKIP_DEPLOY_TO_WEBSITE],
+        [$class: 'BooleanParameterValue', name: 'DEPLOY_TO_WEBSITE_ONLY', value: params.DEPLOY_TO_WEBSITE_ONLY],
+        [$class: 'BooleanParameterValue', name: 'FAKE_WINDOWS_ARTIFACTS', value: params.FAKE_WINDOWS_ARTIFACTS],
+        [$class: 'StringParameterValue',  name: 'DOCKER_TAG', value: DOCKER_TAG],
+        [$class: 'StringParameterValue',  name: 'DOCKER_TAG_BUILD', value: params.DOCKER_TAG_BUILD],
+        [$class: 'BooleanParameterValue', name: 'SET_LATEST_TAG', value: params.SET_LATEST_TAG],
+        [$class: 'BooleanParameterValue', name: 'SET_BRANCH_LATEST_TAG', value: params.SET_BRANCH_LATEST_TAG],
+        [$class: 'BooleanParameterValue', name: 'PUSH_TO_REGISTRY', value: params.PUSH_TO_REGISTRY],
+        [$class: 'BooleanParameterValue', name: 'PUSH_TO_REGISTRY_ONLY', value: params.PUSH_TO_REGISTRY_ONLY],
+    ];
+
+    // TODO we should take this list from a single source of truth
+    assert edition in ["enterprise", "raw", "free", "managed", "plus"] : (
+        "Do not know edition '${edition}' extracted from ${JOB_BASE_NAME}")
+
+    def build_image = !(edition in ["free"]);
+    def build_ami_image = edition == "free";
+
+    // TODO
+    // Enable this for 'plus' later when we have CPE specific integration tests.
+    // Until then it's similar to the CEE.
+    def run_integration_tests = !(edition in ["free", "plus"]);
+    def run_image_tests = !(edition in ["free"]);
+
+    print(
+        """
+        |===== CONFIGURATION ===============================
+        |edition:............... │${edition}│
+        |base_folder:........... │${base_folder}│
+        |build_image:........... │${build_image}│
+        |build_ami_image:....... │${build_ami_image}│
+        |run_integration_tests:. │${run_integration_tests}│
+        |run_image_tests:....... │${run_image_tests}│
+        |===================================================
+        """.stripMargin());
+    
     stage('Build Packages') {
-        build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/build-cmk-packages",
-              parameters: [
-                [$class: 'StringParameterValue', name: 'DISTROS', value: DISTROS],
-                [$class: 'StringParameterValue', name: 'EDITION', value: EDITION],
-                [$class: 'BooleanParameterValue', name: 'DEPLOY_TO_WEBSITE', value: DEPLOY_TO_WEBSITE],
-            ]
-        )
-    }
-    if (BUILD_IMAGE) {
-        stage('Build CMK IMAGE') {
-            build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/build-cmk-image",
-                parameters: [
-                    [$class: 'StringParameterValue', name: 'EDITION', value: EDITION],
-                    [$class: 'BooleanParameterValue', name: 'PUSH_TO_REGISTRY', value: DEPLOY_TO_WEBSITE],
-                ]
-            )
-        }
-    }
-    if (BUILD_AMI_IMAGE) {
-        stage('Build AMI Image') {
-            build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/build-cmk-aws",
-                parameters: [
-                    [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
-                ]
-            )
+        on_dry_run_omit(LONG_RUNNING, "trigger build-cmk-packages") {
+            build(job: "${base_folder}/build-cmk-packages", parameters: job_parameters);
         }
     }
 
-    def TEST_STAGES = [:]
+    conditional_stage('Build CMK IMAGE', build_image) {
+        on_dry_run_omit(LONG_RUNNING, "trigger build-cmk-image") {
+            build(job: "${base_folder}/build-cmk-image", parameters: job_parameters);
+        }
+    }
 
-    if (RUN_IMAGE_TESTS) {
-        TEST_STAGES['Integration Test for Docker Container'] = {
-            stage('Integration Test for Docker Container') {
-                build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/test-docker-integration",
-                    parameters: [
-                        [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
-                    ]
-                )
+    conditional_stage('Build AMI Image', build_ami_image) {
+        on_dry_run_omit(LONG_RUNNING, "trigger build-cmk-aws-ami") {
+            build(job: "${base_folder}/build-cmk-aws-ami", parameters: job_parameters);
+        }
+    }
+
+    parallel([
+        'Integration Test for Docker Container': {
+            conditional_stage('Integration Test for Docker Container', run_image_tests) {
+                on_dry_run_omit(LONG_RUNNING, "trigger test-integration-docker") {
+                    build(job: "${base_folder}/test-integration-docker", parameters: job_parameters);
+                }
+            }
+        },
+
+        'Composition Test for Packages': {
+            conditional_stage('Composition Test for Packages', run_integration_tests) {
+                on_dry_run_omit(LONG_RUNNING, "trigger test-composition") {
+                    build(job: "${base_folder}/test-composition", parameters: job_parameters);
+                }
             }
         }
-    }
+    ])
 
-    if (RUN_INTEGRATION_TESTS) {
-        TEST_STAGES['Composition Test for Packages'] = {
-            stage('Composition Test for Packages') {
-                build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/test-composition",
-                    parameters: [
-                        [$class: 'StringParameterValue', name: 'DISTROS', value: DISTROS],
-                        [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
-                    ]
-                )
-            }
-        }
-    }
-
-    parallel(TEST_STAGES)
-
-    if (RUN_INTEGRATION_TESTS) {
-        stage('Integration Test for Packages') {
-            build(job: "${FOLDER_ID}/nightly-${JOB_EDITION}/test-integration",
-                parameters: [
-                    [$class: 'StringParameterValue', name: 'DISTROS', value: DISTROS],
-                    [$class: 'StringParameterValue', name: 'EDITION', value: EDITION]
-                ]
-            )
+    conditional_stage('Integration Test for Packages', run_integration_tests) {
+        on_dry_run_omit(LONG_RUNNING, "trigger test-integration-packages") {
+            build(job: "${base_folder}/test-integration-packages", parameters: job_parameters);
         }
     }
 }
+return this;
+

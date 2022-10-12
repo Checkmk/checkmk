@@ -1,35 +1,35 @@
-def NODE = "linux"
+#!groovy
 
-properties([
-  buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
-  pipelineTriggers([pollSCM('H/2 * * * *')]),
-])
-
-timeout(time: 12, unit: 'HOURS') {
-    node (NODE) {
-        stage('checkout sources') {
-            checkout(scm)
-            notify = load 'buildscripts/scripts/lib/notify.groovy'
+def main() {
+    dir("${checkout_dir}") {
+        stage("Execute NEB Test") {
+            dir("livestatus/src/test") {
+                sh("./.f12");
+            }
         }
-        try {
-            stage("Execute NEB Test") {
-                sh("( cd livestatus/src/test && ./.f12 )")
+        stage("Execute CMC Test") {
+            dir("enterprise/core/src/test") {
+                sh("./.f12");
             }
-            stage("Execute CMC Test") {
-                sh("( cd enterprise/core/src/test && ./.f12 )")
-            }
-            stage("Analyse Issues") {
-                xunit([GoogleTest(
-                    deleteOutputFiles: true,
-                    failIfNotNew: true,
-                    pattern: 'livestatus/src/test_detail.xml, enterprise/core/src/test_detail.xml',
-                    skipNoTestFiles: false, stopProcessingIfError: true
-                )])
-                def GCC = scanForIssues tool: gcc()
-                publishIssues issues:[GCC], trendChartType: 'TOOLS_ONLY', qualityGates: [[threshold: 1, type: 'TOTAL', unstable: false]]
-            }
-        } catch(Exception e) {
-            notify.notify_error(e)
+        }
+        stage("Analyse Issues") {
+            xunit([GoogleTest(
+                deleteOutputFiles: true,
+                failIfNotNew: true,
+                pattern: 'livestatus/src/test_detail.xml, enterprise/core/src/test_detail.xml',
+                skipNoTestFiles: false,
+                stopProcessingIfError: true
+            )]);
+            publishIssues(
+                issues: [scanForIssues(tool: gcc())],
+                trendChartType: 'TOOLS_ONLY',
+                qualityGates: [[
+                    threshold: 1,
+                    type: 'TOTAL',
+                    unstable: false,
+                ]]
+            );
         }
     }
 }
+return this;

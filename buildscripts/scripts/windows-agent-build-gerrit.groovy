@@ -1,21 +1,23 @@
-// builds windows agent + agent controller
+#!groovy
 
-properties([
-    buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
-])
+def main() {
+    def windows = load("${checkout_dir}/buildscripts/scripts/utils/windows.groovy");
+    def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+    
+    def branch_name = versioning.safe_branch_name(scm);
+    def cmk_version = versioning.get_cmk_version(branch_name, "daily");
 
-node ('win_master_gerrit') {
-    stage('git checkout') {
-        checkout(scm)
-        windows = load 'buildscripts/scripts/lib/windows.groovy'
-        versioning = load 'buildscripts/scripts/lib/versioning.groovy'
-        def CMK_VERS = versioning.get_cmk_version(scm, 'daily')
-        bat("make -C agents\\wnx NEW_VERSION=\"${CMK_VERS}\" setversion")
+    dir("${checkout_dir}") {
+        stage("make setversion") {
+            bat("make -C agents\\wnx NEW_VERSION='${cmk_version}' setversion");
+        }
+        windows.build(
+            TARGET: "agent_no_sign"
+        );
+        windows.build(
+            TARGET: "cmk_agent_ctl_no_sign"
+        );
     }
-    windows.build(
-        TARGET: 'agent_no_sign'
-    )
-    windows.build(
-        TARGET: 'cmk_agent_ctl_no_sign'
-    )
 }
+return this;
+

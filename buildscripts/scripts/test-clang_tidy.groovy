@@ -1,26 +1,25 @@
-def NODE = "linux"
+#!groovy
 
-properties([
-  buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
-  pipelineTriggers([upstream('compile_cores')]),
-])
+/// test-clang_tidy.groovy
 
-timeout(time: 12, unit: 'HOURS') {
-    node (NODE) {
-        stage('checkout sources') {
-            checkout(scm)
-            notify = load 'buildscripts/scripts/lib/notify.groovy'
+def main() {
+    dir("${checkout_dir}") {
+        stage("Execute Test") {
+            sh("make -C tests test-tidy-docker");
         }
-        try {
-            stage("Execute Test") {
-                sh("make -C tests test-tidy-docker")
-            }
-            stage("Analyse Issues") {
-                def CLANG = scanForIssues tool: clang()
-                publishIssues issues:[CLANG], trendChartType: 'TOOLS_ONLY', qualityGates: [[threshold: 1, type: 'TOTAL', unstable: false]]
-            }
-        }catch(Exception e) {
-            notify.notify_error(e)
+
+        stage("Analyse Issues") {
+            publishIssues(
+                issues: [scanForIssues(tool: clang())],
+                trendChartType: 'TOOLS_ONLY',
+                qualityGates: [[
+                    threshold: 1,
+                    type: 'TOTAL',
+                    unstable: false,
+                ]],
+            );
         }
     }
 }
+return this;
+

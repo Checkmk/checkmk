@@ -1,37 +1,23 @@
-// builds python module for windows agent
+#!groovy
 
-properties([
-    buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
-    pipelineTriggers([pollSCM('H/15 * * * *')]),
-    parameters([
-        string(name: 'VERSION', defaultValue: 'daily', description: 'Version: "daily" for current state of the branch, e.g. "1.6.0b2" for building the git tag "v1.6.0b2".' ),
-    ])
-])
+def main() {
+    check_job_parameters(["VERSION"]);
+    
+    def windows = load("${checkout_dir}/buildscripts/scripts/utils/windows.groovy");
+    def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+    
+    def branch_name = versioning.safe_branch_name(scm);
+    def cmk_version = versioning.get_cmk_version(branch_name, VERSION);
 
-node ('win_master_ctl_build') {
-    stage('git checkout') {
-        checkout_git(scm, VERSION)
-        windows = load 'buildscripts/scripts/lib/windows.groovy'
-        versioning = load 'buildscripts/scripts/lib/versioning.groovy'
-        def CMK_VERS = versioning.get_cmk_version(scm, VERSION)
-        bat("make -C agents\\wnx NEW_VERSION=\"${CMK_VERS}\" setversion")
-    }
+    dir("${checkout_dir}") {
+        stage("make setversion") {
+            bat("make -C agents\\wnx NEW_VERSION='${cmk_version}' setversion")
+        }
 
-    stage('build') {
-        windows.build(TARGET: 'cmk_agent_ctl_no_sign' )
+        windows.build(
+            TARGET: 'cmk_agent_ctl_no_sign',
+        )
     }
 }
+return this;
 
-def checkout_git(scm, VERSION) {
-    if (VERSION == 'daily') {
-        checkout(scm)
-    } else {
-        checkout([
-            $class: 'GitSCM',
-            userRemoteConfigs: scm.userRemoteConfigs,
-            branches: [
-                [name: 'refs/tags/v' + VERSION]
-            ]
-        ])
-    }
-}

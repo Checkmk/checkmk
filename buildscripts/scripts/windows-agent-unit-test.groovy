@@ -1,16 +1,13 @@
-def FOLDER_ID = currentBuild.fullProjectName.split('/')[0]
+#!groovy
 
-properties([
-    buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
-    pipelineTriggers([triggers: [upstream(upstreamProjects: "${FOLDER_ID}/windows-agent-build", threshold: hudson.model.Result.SUCCESS)]]),
-])
+def main() {
+    def windows = load("${checkout_dir}/buildscripts/scripts/utils/windows.groovy");
 
-node('win_master_agent_unit') {
-    stage('git checkout') {
-        checkout(scm)
-        windows = load 'buildscripts/scripts/lib/windows.groovy'
+    dir("${checkout_dir}") {
+        windows.build(
+            TARGET: 'test_unit'
+        )
     }
-    windows.build(
-        TARGET: 'test_unit'
-    )
 }
+return this;
+

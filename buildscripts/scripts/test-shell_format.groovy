@@ -1,26 +1,25 @@
-def NODE = "linux"
+#!groovy
 
-properties([
-  buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
-  pipelineTriggers([pollSCM('H/3 * * * *')]),
-])
+/// test-shell_format.groovy
 
-timeout(time: 12, unit: 'HOURS') {
-    node (NODE) {
-        stage('checkout sources') {
-            checkout(scm)
-            notify = load 'buildscripts/scripts/lib/notify.groovy'
-        }
-        try {
-            stage("Execute Test") {
-                sh("make -C $WORKSPACE/tests test-format-shell")
-            }
-            stage("Analyse Issues") {
-                def CLANG = scanForIssues tool: clang()
-                publishIssues issues:[CLANG], trendChartType: 'TOOLS_ONLY', qualityGates: [[threshold: 1, type: 'TOTAL', unstable: false]]
-            }
-        } catch(Exception e) {
-            notify.notify_error(e)
+def main() {
+    stage('Check shell format') {
+        dir("${checkout_dir}") {
+            sh("make -C tests test-format-shell")
         }
     }
+    stage("Analyse Issues") {
+        publishIssues(
+            issues:[scanForIssues(tool: clang())],
+            trendChartType: 'TOOLS_ONLY',
+            qualityGates: [[
+                threshold: 1,
+                type: 'TOTAL',
+                unstable: false,
+            ]],
+        );
+    }
 }
+return this;
+
+

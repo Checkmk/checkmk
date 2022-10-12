@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Iterable, List, Literal, NamedTuple, Optional, Sequence, Tuple, Union
+from typing import Iterable, List, NamedTuple, Optional, Sequence, Tuple, Union
 
 import cmk.utils.debug
 from cmk.utils.structured_data import ATTRIBUTES_KEY, StructuredDataNode, TABLE_KEY
@@ -26,11 +26,16 @@ class InventoryTrees(NamedTuple):
 
 class TreeAggregator:
     def __init__(self) -> None:
-        self.trees = InventoryTrees(
-            inventory=StructuredDataNode(),
-            status_data=StructuredDataNode(),
-        )
+        self._inventory_tree = StructuredDataNode()
+        self._status_data_tree = StructuredDataNode()
         self._class_mutex: dict[tuple, str] = {}
+
+    @property
+    def trees(self) -> InventoryTrees:
+        return InventoryTrees(
+            inventory=self._inventory_tree,
+            status_data=self._status_data_tree,
+        )
 
     def aggregate_results(
         self,
@@ -110,38 +115,36 @@ class TreeAggregator:
         attributes: Attributes,
     ) -> None:
         if attributes.inventory_attributes:
-            node = self.trees.inventory.setdefault_node(tuple(attributes.path))
+            node = self._inventory_tree.setdefault_node(tuple(attributes.path))
             node.attributes.add_pairs(attributes.inventory_attributes)
 
         if attributes.status_attributes:
-            node = self.trees.status_data.setdefault_node(tuple(attributes.path))
+            node = self._status_data_tree.setdefault_node(tuple(attributes.path))
             node.attributes.add_pairs(attributes.status_attributes)
 
-    def _add_row(
-        self,
-        path: List[str],
-        tree_name: Literal["inventory", "status_data"],
-        key_columns: AttrDict,
-        columns: AttrDict,
-    ) -> None:
-        table = getattr(self.trees, tree_name).setdefault_node(path).table
-        table.add_key_columns(sorted(key_columns))
-        table.add_rows([{**key_columns, **columns}])
-
     def _integrate_table_row(self, table_row: TableRow) -> None:
+        def _add_row(
+            tree: StructuredDataNode,
+            path: List[str],
+            key_columns: AttrDict,
+            columns: AttrDict,
+        ) -> None:
+            node = tree.setdefault_node(tuple(path))
+            node.table.add_key_columns(sorted(key_columns))
+            node.table.add_rows([{**key_columns, **columns}])
+
         # do this always, it sets key_columns!
-        self._add_row(
+        _add_row(
+            self._inventory_tree,
             table_row.path,
-            "inventory",
             table_row.key_columns,
             table_row.inventory_columns,
         )
 
-        # do this only if not empty:
         if table_row.status_columns:
-            self._add_row(
+            _add_row(
+                self._status_data_tree,
                 table_row.path,
-                "status_data",
                 table_row.key_columns,
                 table_row.status_columns,
             )

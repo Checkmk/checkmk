@@ -194,6 +194,20 @@ T = TypeVar("T")
 #     |
 #     '-- WAFV2WebACL
 
+# LambdaSummary, LambdaRegionLimits
+# |
+# '-- LambdaProvisionedConcurrency
+#     |
+#     |-- LambdaCloudwatch
+#     |
+#     '-- LambdaCloudwatchInsights
+
+# Route53HealthChecks
+# |
+# '-- Route53Cloudwatch
+
+# SNSLimits
+
 # ECSSummary
 # |
 # '-- ECS
@@ -2054,7 +2068,7 @@ class S3Limits(AWSSectionLimits):
     def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
-    def get_live_data(self, *args) -> Buckets:  # type:ignore[no-untyped-def]
+    def get_live_data(self, *args: AWSColleagueContents) -> Buckets:
         """
         There's no API method for getting account limits thus we have to
         fetch all buckets.
@@ -2517,7 +2531,7 @@ class Glacier(AWSSection):
             return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
         return AWSColleagueContents({}, 0.0)
 
-    def get_live_data(self, *args) -> None:  # type:ignore[no-untyped-def]
+    def get_live_data(self, *args: AWSColleagueContents) -> None:
         pass
 
     def _compute_content(
@@ -5149,7 +5163,7 @@ class Route53HealthChecks(AWSSection):
     def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents([], 0.0)
 
-    def get_live_data(self, *args) -> Sequence[HealthCheck]:  # type:ignore[no-untyped-def]
+    def get_live_data(self, *args: AWSColleagueContents) -> Sequence[HealthCheck]:
         return list(
             itertools.chain.from_iterable(
                 self._get_response_content(page, "HealthChecks")
@@ -5288,7 +5302,7 @@ class SNSLimits(AWSSectionLimits):
     def _get_colleague_contents(self) -> AWSColleagueContents:
         return AWSColleagueContents(None, 0.0)
 
-    def get_live_data(self, *args) -> Sequence[Mapping]:  # type:ignore[no-untyped-def]
+    def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping]:
         topics = [
             topic
             for page in self._client.get_paginator("list_topics").paginate()
@@ -5539,7 +5553,7 @@ class AWSSections(abc.ABC):
         services: Sequence[str],
         region: str,
         config: AWSConfig,
-        s3_limits_distributor: ResultDistributorS3Limits | None = None,
+        s3_limits_distributor: ResultDistributorS3Limits,
     ) -> None:
         pass
 
@@ -5653,7 +5667,7 @@ class AWSSectionsUSEast(AWSSections):
         services: Sequence[str],
         region: str,
         config: AWSConfig,
-        s3_limits_distributor: ResultDistributorS3Limits | None = None,
+        s3_limits_distributor: ResultDistributorS3Limits,
     ) -> None:
         distributor = ResultDistributor()
 
@@ -5769,12 +5783,8 @@ class AWSSectionsGeneric(AWSSections):
         services: Sequence[str],
         region: str,
         config: AWSConfig,
-        s3_limits_distributor: ResultDistributorS3Limits | None = None,
+        s3_limits_distributor: ResultDistributorS3Limits,
     ) -> None:
-        assert (
-            s3_limits_distributor is not None
-        ), "AWSSectionsGeneric.init_sections: Must provide s3_limits_distributor"
-
         distributor = ResultDistributor()
 
         cloudwatch_client = self._init_client("cloudwatch")
@@ -6504,9 +6514,7 @@ def main(sys_argv: Sequence[str] | None = None) -> int:  # pylint: disable=too-m
                     )
 
                 sections = aws_sections(hostname, session, debug=args.debug, config=proxy_config)
-                sections.init_sections(
-                    aws_services, region, aws_config, s3_limits_distributor=s3_limits_distributor
-                )
+                sections.init_sections(aws_services, region, aws_config, s3_limits_distributor)
                 sections.run(use_cache=use_cache)
             except AwsAccessError as ae:
                 # can not access AWS, retreat

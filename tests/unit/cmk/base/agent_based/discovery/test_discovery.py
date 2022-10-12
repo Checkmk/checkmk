@@ -27,6 +27,7 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
+from cmk.core_helpers.agent import AgentRawDataSection
 from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.type_defs import NO_SELECTION
 
@@ -42,7 +43,6 @@ from cmk.base.agent_based.data_provider import (
 from cmk.base.agent_based.discovery import _discovered_services
 from cmk.base.config import HostConfig
 from cmk.base.discovered_labels import HostLabel
-from cmk.base.sources.agent import AgentRawDataSection
 from cmk.base.sources.snmp import SNMPRawDataSection
 
 

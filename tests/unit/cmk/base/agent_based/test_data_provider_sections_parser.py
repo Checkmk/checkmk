@@ -10,6 +10,7 @@ import pytest
 import cmk.utils.debug
 from cmk.utils.type_defs import HostName, SectionName
 
+from cmk.core_helpers.agent import AgentRawDataSection
 from cmk.core_helpers.host_sections import HostSections
 
 from cmk.base import crash_reporting
@@ -18,7 +19,6 @@ from cmk.base.api.agent_based.register.section_plugins import (
     AgentSectionPlugin,
     trivial_section_factory,
 )
-from cmk.base.sources.agent import AgentRawDataSection
 
 
 def _section(name: str, parse_function: Callable) -> AgentSectionPlugin:

@@ -36,6 +36,6 @@ See Also:
 
 """
 
-from . import agent, fetcher_configuration, ipmi, piggyback, programs, snmp, tcp
+from . import fetcher_configuration, ipmi, piggyback, programs, snmp, tcp
 from ._abstract import *
 from ._checkers import *

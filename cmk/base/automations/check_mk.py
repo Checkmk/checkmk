@@ -1739,7 +1739,7 @@ class AutomationGetAgentOutput(Automation):
                     ),
                     file_cache_max_age=config.max_cachefile_age(),
                 ):
-                    if not isinstance(source, sources.agent.AgentSource):
+                    if isinstance(source, sources.snmp.SNMPSource):
                         continue
 
                     raw_data = source.fetch(Mode.CHECKING)

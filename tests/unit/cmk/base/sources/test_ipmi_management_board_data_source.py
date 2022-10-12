@@ -13,12 +13,12 @@ from cmk.utils.type_defs import HostName, result, SourceType
 
 import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers import FetcherType
+from cmk.core_helpers.agent import AgentRawDataSection
 from cmk.core_helpers.host_sections import HostSections
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base.config import HostConfig
-from cmk.base.sources.agent import AgentRawDataSection
 from cmk.base.sources.ipmi import IPMISource
 
 

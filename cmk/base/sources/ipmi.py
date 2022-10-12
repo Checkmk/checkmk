@@ -7,18 +7,25 @@ from pathlib import Path
 from typing import Final, Literal, Optional
 
 from cmk.utils.exceptions import MKAgentError
-from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, IPMICredentials, SourceType
+from cmk.utils.type_defs import (
+    AgentRawData,
+    ExitSpec,
+    HostAddress,
+    HostName,
+    IPMICredentials,
+    SourceType,
+)
 
 import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers import FetcherType, IPMIFetcher
-from cmk.core_helpers.agent import AgentFileCache
+from cmk.core_helpers.agent import AgentFileCache, AgentRawDataSection
 from cmk.core_helpers.cache import FileCacheGlobals, FileCacheMode
 from cmk.core_helpers.ipmi import IPMISummarizer
 
-from .agent import AgentSource
+from ._abstract import Source
 
 
-class IPMISource(AgentSource):
+class IPMISource(Source[AgentRawData, AgentRawDataSection]):
     def __init__(
         self,
         hostname: HostName,

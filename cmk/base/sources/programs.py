@@ -6,17 +6,17 @@
 from pathlib import Path
 from typing import Final, Optional
 
-from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, SourceType
+from cmk.utils.type_defs import AgentRawData, ExitSpec, HostAddress, HostName, SourceType
 
 import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers import FetcherType, ProgramFetcher
-from cmk.core_helpers.agent import AgentFileCache, AgentSummarizerDefault
+from cmk.core_helpers.agent import AgentFileCache, AgentRawDataSection, AgentSummarizerDefault
 from cmk.core_helpers.cache import FileCacheGlobals, FileCacheMode
 
-from .agent import AgentSource
+from ._abstract import Source
 
 
-class ProgramSource(AgentSource):
+class ProgramSource(Source[AgentRawData, AgentRawDataSection]):
     def __init__(
         self,
         hostname: HostName,

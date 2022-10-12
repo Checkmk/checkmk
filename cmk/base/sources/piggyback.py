@@ -6,18 +6,18 @@
 from pathlib import Path
 from typing import Final, Literal, Optional, Sequence, Tuple
 
-from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, SourceType
+from cmk.utils.type_defs import AgentRawData, ExitSpec, HostAddress, HostName, SourceType
 
 import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers import FetcherType, PiggybackFetcher
-from cmk.core_helpers.agent import AgentFileCache
+from cmk.core_helpers.agent import AgentFileCache, AgentRawDataSection
 from cmk.core_helpers.cache import FileCacheGlobals, FileCacheMode
 from cmk.core_helpers.piggyback import PiggybackSummarizer
 
-from .agent import AgentSource
+from ._abstract import Source
 
 
-class PiggybackSource(AgentSource):
+class PiggybackSource(Source[AgentRawData, AgentRawDataSection]):
     def __init__(
         self,
         hostname: HostName,

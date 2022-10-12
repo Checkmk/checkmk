@@ -2,10 +2,14 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Currently this module manages the inventory tree which is built
-while the inventory is performed for one host.
+"""This module is the main entry point for the inventory tree creation/deletion of hosts.
 
-In the future all inventory code should be moved to this module."""
+CL:
+- 'cmk -i[i] ...' is intended to be a kind of preview and does not store any trees.
+- 'cmk --inventory-as-check ...' is the related command of the HW/SW Inventory service,
+    ie. a tree is created, stored and compared to the old one if it exists,
+    if and only if there are NO errors while executing inventory plugins.
+"""
 
 import time
 from functools import partial

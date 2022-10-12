@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import urllib.parse
-from typing import Any, Literal, MutableMapping
+from typing import Literal
 
-import marshmallow
 from marshmallow_oneofschema import OneOfSchema
 
 from cmk.utils.defines import weekday_ids
@@ -13,7 +12,6 @@ from cmk.utils.livestatus_helpers import tables
 
 from cmk.gui import fields as gui_fields
 from cmk.gui.config import builtin_role_ids
-from cmk.gui.exceptions import MKInternalError
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.livestatus_utils.commands.acknowledgments import (
     acknowledge_host_problem,
@@ -28,11 +26,9 @@ from cmk.gui.livestatus_utils.commands.downtimes import (
 )
 from cmk.gui.permissions import permission_registry
 from cmk.gui.plugins.openapi.utils import param_description
-from cmk.gui.plugins.userdb.utils import user_attribute_registry
-from cmk.gui.userdb import load_users, register_custom_user_attributes
+from cmk.gui.userdb import load_users
 from cmk.gui.watolib import userroles
 from cmk.gui.watolib.activate_changes import activate_changes_start
-from cmk.gui.watolib.custom_attributes import load_custom_attrs_from_mk_file
 from cmk.gui.watolib.groups import is_alias_used
 from cmk.gui.watolib.tags import load_aux_tags, tag_group_exists
 from cmk.gui.watolib.timeperiods import verify_timeperiod_name_exists
@@ -1361,10 +1357,6 @@ class UserContactUpdateOption(BaseSchema):
 
 
 class CreateUser(BaseSchema):
-    class Meta:
-        ordered = True
-        unknown = marshmallow.INCLUDE
-
     username = Username(
         required=True,
         should_exist=False,
@@ -1478,31 +1470,6 @@ class CreateUser(BaseSchema):
         example={"interface_theme": "dark"},
         description="",
     )
-
-    @marshmallow.post_load(pass_original=True)
-    def validate_custom_attributes(
-        self,
-        result_data: dict[str, Any],
-        original_data: MutableMapping[str, Any],
-        **_unused_args: Any,
-    ) -> dict[str, Any]:
-        register_custom_user_attributes(load_custom_attrs_from_mk_file(lock=False)["user"])
-
-        for field in self.fields:
-            original_data.pop(field, None)
-
-        for name, value in original_data.items():
-            attribute = user_attribute_registry.get(name)
-            if attribute is None:
-                raise marshmallow.ValidationError(f"Unknown Attribute: {name!r}")
-            if not attribute.is_custom():
-                raise MKInternalError(
-                    f"A non custom attribute is not in the CreateUser Schema: {name!r}"
-                )
-            valuespec = attribute().valuespec()
-            valuespec.validate_value(value, "")
-            result_data[name] = value
-        return result_data
 
 
 class UpdateUser(BaseSchema):

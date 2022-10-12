@@ -659,3 +659,25 @@ def fake_filesystem(tmpdir):
     create_recursively(str(tmpdir), "root", "dir", root)
 
     return os.path.join(str(tmpdir), "root")
+
+
+def _get_file_info(lw, tmp_path, file_name):
+    return lw.get_file_info(os.path.join(str(tmp_path), "root", file_name))
+
+
+def test_get_uniq_id_one_file(fake_filesystem, tmpdir, mk_logwatch):
+    file_id, sz = _get_file_info(mk_logwatch, tmpdir, "file.log")
+    assert file_id > 1
+    assert sz == 0
+    assert (file_id, sz) == _get_file_info(mk_logwatch, tmpdir, "file.log")
+
+
+def test_get_uniq_id_with_hard_link(fake_filesystem, tmpdir, mk_logwatch):
+    info = [
+        _get_file_info(mk_logwatch, tmpdir, f)
+        for f in ("file.log", "hard_linked_file.log", "hard_link_to_file.log")
+    ]
+    assert {s for (_, s) in info} == {0}
+    assert len({i for (i, _) in info}) == 2
+    assert info[0][0] != info[1][0]
+    assert info[1][0] == info[2][0]

@@ -56,7 +56,13 @@ pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> Anyhow
             &mut registry,
         ),
         cli::Args::RegisterAgentLabels(reg_args) => registration::register_agent_labels(
-            &config::RegistrationConfigAgentLabels::new(runtime_config, reg_args)?,
+            &config::RegistrationConfigAgentLabels::new(
+                config::RegistrationConnectionConfig::new(
+                    runtime_config,
+                    reg_args.connection_args,
+                )?,
+                reg_args.agent_labels_raw.into_iter().collect(),
+            )?,
             &mut registry,
         ),
         cli::Args::ProxyRegister(proxy_reg_args) => registration::proxy_register(
@@ -74,6 +80,7 @@ pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> Anyhow
             registry,
         )?),
         cli::Args::Daemon(daemon_args) => daemon(
+            &paths.pre_configured_connections_path,
             registry.clone(),
             config::PullConfig::new(runtime_config.clone(), daemon_args.pull_opts, registry)?,
             config::ClientConfig::new(runtime_config, daemon_args.client_opts),

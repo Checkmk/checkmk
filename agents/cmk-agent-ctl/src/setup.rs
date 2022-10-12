@@ -49,7 +49,7 @@ fn is_os_supported() -> bool {
 pub struct PathResolver {
     pub home_dir: PathBuf,
     pub config_path: PathBuf,
-    pub registration_preset_path: PathBuf,
+    pub pre_configured_connections_path: PathBuf,
     pub registry_path: PathBuf,
 }
 
@@ -62,9 +62,9 @@ impl PathResolver {
             config_path: home_dir
                 .join(constants::CONFIG_FILE)
                 .exists_or(etc_dir.join(constants::CONFIG_FILE)),
-            registration_preset_path: home_dir
-                .join(constants::REGISTRATION_PRESET_FILE)
-                .exists_or(etc_dir.join(constants::REGISTRATION_PRESET_FILE)),
+            pre_configured_connections_path: home_dir
+                .join(constants::PRE_CONFIGURED_CONNECTIONS_FILE)
+                .exists_or(etc_dir.join(constants::PRE_CONFIGURED_CONNECTIONS_FILE)),
             registry_path: home_dir.join(Path::new(constants::REGISTRY_FILE)),
         }
     }
@@ -76,7 +76,8 @@ impl PathResolver {
         PathResolver {
             home_dir: PathBuf::from(home_dir),
             config_path: home_dir.join(Path::new(constants::CONFIG_FILE)),
-            registration_preset_path: home_dir.join(Path::new(constants::REGISTRATION_PRESET_FILE)),
+            pre_configured_connections_path: home_dir
+                .join(Path::new(constants::PRE_CONFIGURED_CONNECTIONS_FILE)),
             registry_path: home_dir.join(Path::new(constants::REGISTRY_FILE)),
         }
     }
@@ -291,8 +292,8 @@ mod tests {
         let home = String::from("C:\\ProgramData") + constants::WIN_AGENT_HOME_DIR;
         assert_eq!(p.home_dir, std::path::PathBuf::from(&home));
         assert_eq!(
-            p.registration_preset_path,
-            std::path::PathBuf::from(&home).join("registration_preset.json")
+            p.pre_configured_connections_path,
+            std::path::PathBuf::from(&home).join("pre_configured_connections.json")
         );
         assert_eq!(
             p.registry_path,

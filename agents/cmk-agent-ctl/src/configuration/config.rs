@@ -82,17 +82,12 @@ pub struct RegistrationConfigAgentLabels {
 
 impl RegistrationConfigAgentLabels {
     pub fn new(
-        runtime_config: RuntimeConfig,
-        reg_args_agent_labels: cli::RegistrationArgsAgentLabels,
+        connection_config: RegistrationConnectionConfig,
+        agent_labels: types::AgentLabels,
     ) -> AnyhowResult<Self> {
         Ok(Self {
-            connection_config: RegistrationConnectionConfig::new(
-                runtime_config,
-                reg_args_agent_labels.connection_args,
-            )?,
-            agent_labels: Self::enrich_with_automatic_agent_labels(
-                reg_args_agent_labels.agent_labels_raw.into_iter().collect(),
-            )?,
+            connection_config,
+            agent_labels: Self::enrich_with_automatic_agent_labels(agent_labels)?,
         })
     }
 
@@ -133,7 +128,7 @@ pub struct RegistrationConnectionConfig {
 }
 
 impl RegistrationConnectionConfig {
-    fn new(
+    pub fn new(
         runtime_config: RuntimeConfig,
         reg_args_conn: cli::RegistrationArgsConnection,
     ) -> AnyhowResult<Self> {
@@ -157,6 +152,22 @@ impl RegistrationConnectionConfig {
             client_config,
         })
     }
+}
+
+#[derive(Deserialize)]
+pub struct PreConfiguredConnections {
+    pub connections: HashMap<site_spec::SiteID, PreConfiguredConnection>,
+    pub agent_labels: types::AgentLabels,
+    pub keep_vanished_connections: bool,
+}
+
+impl JSONLoader for PreConfiguredConnections {}
+
+#[derive(Deserialize, Clone)]
+pub struct PreConfiguredConnection {
+    pub port: Option<u16>,
+    pub credentials: types::Credentials,
+    pub root_cert: String,
 }
 
 #[derive(Deserialize, Clone, Default)]
@@ -214,6 +225,7 @@ impl LegacyPullMarker {
     }
 }
 
+#[derive(Clone)]
 pub struct ClientConfig {
     pub use_proxy: bool,
     pub validate_api_cert: bool,
@@ -478,6 +490,23 @@ impl Registry {
         self.connections.push.iter()
     }
 
+    pub fn registered_site_ids(&self) -> impl Iterator<Item = &site_spec::SiteID> {
+        self.connections
+            .pull
+            .keys()
+            .chain(self.connections.push.keys())
+    }
+
+    pub fn get_mutable(
+        &mut self,
+        site_id: &site_spec::SiteID,
+    ) -> Option<&mut TrustedConnectionWithRemote> {
+        self.connections
+            .pull
+            .get_mut(site_id)
+            .or_else(|| self.connections.push.get_mut(site_id))
+    }
+
     pub fn register_connection(
         &mut self,
         connection_type: &ConnectionType,
@@ -522,6 +551,10 @@ impl Registry {
     pub fn clear(&mut self) {
         self.connections.push.clear();
         self.connections.pull.clear();
+        self.clear_imported();
+    }
+
+    pub fn clear_imported(&mut self) {
         self.connections.pull_imported.clear();
     }
 
@@ -615,12 +648,9 @@ mod test_registration_config {
     #[test]
     fn test_automatic_agent_labels() {
         let agent_labels = RegistrationConfigAgentLabels::new(
-            runtime_config(),
-            cli::RegistrationArgsAgentLabels {
-                connection_args: registration_args_connection(),
-                logging_opts: cli::LoggingOpts { verbose: 0 },
-                agent_labels_raw: vec![],
-            },
+            RegistrationConnectionConfig::new(runtime_config(), registration_args_connection())
+                .unwrap(),
+            types::AgentLabels::new(),
         )
         .unwrap()
         .agent_labels;
@@ -633,18 +663,15 @@ mod test_registration_config {
     #[test]
     fn test_user_defined_labels() {
         let agent_labels = RegistrationConfigAgentLabels::new(
-            runtime_config(),
-            cli::RegistrationArgsAgentLabels {
-                connection_args: registration_args_connection(),
-                logging_opts: cli::LoggingOpts { verbose: 0 },
-                agent_labels_raw: vec![
-                    (
-                        String::from("cmk/hostname-simple"),
-                        String::from("custom-name"),
-                    ),
-                    (String::from("a"), String::from("b")),
-                ],
-            },
+            RegistrationConnectionConfig::new(runtime_config(), registration_args_connection())
+                .unwrap(),
+            types::AgentLabels::from([
+                (
+                    String::from("cmk/hostname-simple"),
+                    String::from("custom-name"),
+                ),
+                (String::from("a"), String::from("b")),
+            ]),
         )
         .unwrap()
         .agent_labels;
@@ -951,6 +978,35 @@ mod test_registry {
     }
 
     #[test]
+    fn test_registered_site_ids() {
+        let reg = registry();
+        let mut reg_site_ids: Vec<String> =
+            reg.registered_site_ids().map(|s| s.to_string()).collect();
+        reg_site_ids.sort_unstable();
+        assert_eq!(reg_site_ids, vec!["server/pull-site", "server/push-site"]);
+    }
+
+    #[test]
+    fn test_get_mutable() {
+        let mut reg = registry();
+        let pull_conn = reg.standard_pull_connections().next().unwrap().1.clone();
+        let push_conn = reg.push_connections().next().unwrap().1.clone();
+        assert_eq!(
+            reg.get_mutable(&site_spec::SiteID::from_str("server/pull-site").unwrap())
+                .unwrap(),
+            &pull_conn
+        );
+        assert_eq!(
+            reg.get_mutable(&site_spec::SiteID::from_str("server/push-site").unwrap())
+                .unwrap(),
+            &push_conn
+        );
+        assert!(reg
+            .get_mutable(&site_spec::SiteID::from_str("a/b").unwrap())
+            .is_none());
+    }
+
+    #[test]
     fn test_delete_push() {
         let mut reg = registry();
         assert!(reg
@@ -1024,6 +1080,14 @@ mod test_registry {
         let mut reg = registry();
         reg.clear();
         assert!(reg.is_empty());
+    }
+
+    #[test]
+    fn test_clear_imported() {
+        let mut reg = registry();
+        reg.clear_imported();
+        assert!(reg.pull_imported_is_empty());
+        assert!(!reg.is_empty());
     }
 
     #[test]

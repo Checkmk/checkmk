@@ -223,30 +223,6 @@ class DictInstanceBuilder(abc.ABC):
 #   .--S3-------------------------------------------------------------------
 
 
-class GlacierListVaultsIB(InstanceBuilder):
-    def _fill_instance(self) -> Iterable[Entity]:
-        return [
-            Str("VaultARN"),
-            Str("VaultName"),
-            Str("CreationDate"),
-            Str("LastInventoryDate"),
-            Int("NumberOfArchives"),
-            Int("SizeInBytes"),
-        ]
-
-
-class GlacierVaultTaggingIB(InstanceBuilder):
-    def _fill_instance(self) -> Iterable[Entity]:
-        return [
-            Str("Key"),
-            Str("Value"),
-        ]
-
-
-# .
-#   .--S3-------------------------------------------------------------------
-
-
 class S3ListBucketsIB(InstanceBuilder):
     def _fill_instance(self) -> Iterable[Entity]:
         return [
@@ -3236,3 +3212,27 @@ class SNSListSubscriptionsIB(InstanceBuilder):
 class SNSListTopicsIB(InstanceBuilder):
     def _fill_instance(self) -> Iterable[Entity]:
         return [Str("TopicArn")]
+
+
+# .
+#   .--Glacier--------------------------------------------------------------
+
+
+class GlacierListVaultsIB(InstanceBuilder):
+    def _fill_instance(self) -> Iterable[Entity]:
+        return [
+            Str("VaultARN"),
+            Str("VaultName"),
+            Str("CreationDate"),
+            Str("LastInventoryDate"),
+            Int("NumberOfArchives"),
+            Int("SizeInBytes"),
+        ]
+
+
+class GlacierListTagsInstancesIB(DictInstanceBuilder):
+    def _key(self):
+        return Str("Tag")
+
+    def _value(self):
+        return Str("Value")

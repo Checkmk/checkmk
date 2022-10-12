@@ -15,7 +15,11 @@ from cmk.special_agents.agent_aws import (
     ResultDistributor,
 )
 
-from .agent_aws_fake_clients import FakeCloudwatchClient, GlacierListVaultsIB, GlacierVaultTaggingIB
+from .agent_aws_fake_clients import (
+    FakeCloudwatchClient,
+    GlacierListTagsInstancesIB,
+    GlacierListVaultsIB,
+)
 
 
 class FakeGlacierClient:
@@ -25,13 +29,13 @@ class FakeGlacierClient:
     def list_tags_for_vault(self, vaultName=""):
         if vaultName == "VaultName-0":
             return {
-                "Tags": GlacierVaultTaggingIB.create_instances(amount=1),
+                "Tags": GlacierListTagsInstancesIB.create_instances(amount=1),
             }
         if vaultName == "VaultName-1":
             return {
-                "Tags": GlacierVaultTaggingIB.create_instances(amount=2),
+                "Tags": GlacierListTagsInstancesIB.create_instances(amount=2),
             }
-        return {}
+        return {"Tags": {}}
 
 
 @pytest.fixture()
@@ -66,11 +70,11 @@ glacier_params = [
     (["VaultName-0", "VaultName-1", "VaultName-2"], (None, None), 3),
     (["VaultName-0", "VaultName-1", "VaultName-2", "string4"], (None, None), 3),
     (["VaultName-0", "VaultName-1", "VaultName-2", "FOOBAR"], (None, None), 3),
-    (None, ([["Key-1"]], [["Value-0"]]), 0),
-    (None, ([["Key-1"]], [["Value-1"]]), 1),
-    (None, ([["Key-0"]], [["Value-0"]]), 2),
-    (None, ([["Key-0"]], [["Value-0", "Value-1"]]), 2),
-    (None, ([["Key-0", "unknown-tag"]], [["Value-0", "Value-1"], ["unknown-val"]]), 2),
+    (None, ([["Tag-1"]], [["Value-0"]]), 0),
+    (None, ([["Tag-1"]], [["Value-1"]]), 1),
+    (None, ([["Tag-0"]], [["Value-0"]]), 2),
+    (None, ([["Tag-0"]], [["Value-0", "Value-1"]]), 2),
+    (None, ([["Tag-0", "unknown-tag"]], [["Value-0", "Value-1"], ["unknown-val"]]), 2),
 ]
 
 

@@ -2487,12 +2487,14 @@ class GlacierSummary(AWSSection):
             return colleague_contents.content
         return self._get_response_content(self._client.list_vaults(), "VaultList")
 
-    def _matches_tag_conditions(self, tagging: Tags) -> bool:
+    def _matches_tag_conditions(self, tagging: Mapping[str, str]) -> bool:
         if self._names is not None:
             return True
         if self._tags is None:
             return True
-        for tag in tagging:
+
+        vault_tags = [{"Key": key, "Value": value} for key, value in tagging.items()]
+        for tag in vault_tags:
             if tag in self._tags:
                 return True
         return False

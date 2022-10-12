@@ -32,7 +32,6 @@ anyhow = { version = "1.0", features = ["backtrace"]}
 nix = { version = "0.24" }
 string_enum = { version = "0.3" }
 x509-parser = { version = "0.13" }
-tempfile = { version = "3.3" }
 flate2 = { version = "1.0" }
 rand = { version = "0.8" }
 tokio = { version = "1.18", features = ["full"] }
@@ -59,6 +58,7 @@ wepoll-ffi = { path = "./patch/wepoll-ffi-0.1.2" }
 assert_cmd = { version = "*" }
 predicates = { version = "*" }
 lazy_static = { version = "*" }
+tempfile = { version = "*" }
 
 [profile.release]
 opt-level = "z"  # Optimize for size.

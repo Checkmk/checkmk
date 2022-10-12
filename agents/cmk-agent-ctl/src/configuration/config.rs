@@ -25,21 +25,33 @@ pub enum ConnectionType {
     Pull,
 }
 
-pub trait JSONLoader: DeserializeOwned + Default {
+pub trait JSONLoader: DeserializeOwned {
     fn load(path: &Path) -> AnyhowResult<Self> {
-        if !path.exists() {
-            return Ok(Self::default());
-        }
         Ok(serde_json::from_str(&fs::read_to_string(path)?)?)
     }
 }
 
-pub trait TOMLLoader: DeserializeOwned + Default {
-    fn load(path: &Path) -> AnyhowResult<Self> {
+pub trait JSONLoaderMissingSafe: JSONLoader + Default {
+    fn load_missing_safe(path: &Path) -> AnyhowResult<Self> {
         if !path.exists() {
             return Ok(Self::default());
         }
+        Self::load(path)
+    }
+}
+
+pub trait TOMLLoader: DeserializeOwned {
+    fn load(path: &Path) -> AnyhowResult<Self> {
         Ok(toml::from_str(&fs::read_to_string(path)?)?)
+    }
+}
+
+pub trait TOMLLoaderMissingSafe: TOMLLoader + Default {
+    fn load_missing_safe(path: &Path) -> AnyhowResult<Self> {
+        if !path.exists() {
+            return Ok(Self::default());
+        }
+        Self::load(path)
     }
 }
 
@@ -163,6 +175,7 @@ pub struct RuntimeConfig {
 }
 
 impl TOMLLoader for RuntimeConfig {}
+impl TOMLLoaderMissingSafe for RuntimeConfig {}
 
 #[derive(Debug)]
 pub struct LegacyPullMarker(std::path::PathBuf);
@@ -340,6 +353,7 @@ struct RegisteredConnections {
 }
 
 impl JSONLoader for RegisteredConnections {}
+impl JSONLoaderMissingSafe for RegisteredConnections {}
 
 fn mtime(path: &Path) -> AnyhowResult<Option<SystemTime>> {
     Ok(if path.exists() {
@@ -371,7 +385,7 @@ impl Registry {
 
     pub fn from_file(path: &Path) -> AnyhowResult<Registry> {
         Ok(Registry {
-            connections: RegisteredConnections::load(path)?,
+            connections: RegisteredConnections::load_missing_safe(path)?,
             path: PathBuf::from(path),
             last_reload: mtime(path)?,
         })
@@ -516,7 +530,7 @@ impl Registry {
     }
 
     fn reload(&mut self) -> AnyhowResult<()> {
-        self.connections = RegisteredConnections::load(&self.path)?;
+        self.connections = RegisteredConnections::load_missing_safe(&self.path)?;
         self.last_reload = mtime(&self.path)?;
         Ok(())
     }

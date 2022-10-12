@@ -20,7 +20,7 @@ mod tls_server;
 pub mod types;
 use anyhow::{anyhow, Context, Result as AnyhowResult};
 use configuration::config;
-use configuration::config::TOMLLoader;
+use configuration::config::TOMLLoaderMissingSafe;
 use log::info;
 use modes::daemon::daemon;
 use modes::delete_connection::{delete, delete_all};
@@ -39,7 +39,7 @@ pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> Anyhow
     configuration::migrate::migrate_registered_connections(&paths.registry_path)?;
     agent_socket_operational(&args)?;
 
-    let runtime_config = config::RuntimeConfig::load(&paths.config_path)?;
+    let runtime_config = config::RuntimeConfig::load_missing_safe(&paths.config_path)?;
     let mut registry = config::Registry::from_file(&paths.registry_path).with_context(|| {
         format!(
             "Error while loading registered connections from {:?}.",

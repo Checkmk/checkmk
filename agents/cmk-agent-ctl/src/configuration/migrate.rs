@@ -6,7 +6,7 @@ use crate::site_spec::SiteID;
 
 use super::config;
 use anyhow::{anyhow, Context, Error as AnyhowError, Result as AnyhowResult};
-use config::JSONLoader;
+use config::JSONLoaderMissingSafe;
 use serde::Deserialize;
 use serde_with::DisplayFromStr;
 use std::collections::{HashMap, HashSet};
@@ -20,8 +20,8 @@ pub fn migrate_registered_connections(path: impl AsRef<Path>) -> AnyhowResult<()
         return Ok(());
     }
 
-    let registered_connections_legacy =
-        RegisteredConnections::load(path.as_ref()).context(format!(
+    let registered_connections_legacy = RegisteredConnections::load_missing_safe(path.as_ref())
+        .context(format!(
         "Failed to load registered connections from {:?}, both with current and with legacy format",
         path.as_ref()
     ))?;
@@ -71,6 +71,7 @@ struct RegisteredConnections {
 }
 
 impl config::JSONLoader for RegisteredConnections {}
+impl config::JSONLoaderMissingSafe for RegisteredConnections {}
 
 fn migrate_standard_connection(
     coordinates: Coordinates,

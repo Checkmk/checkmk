@@ -26,7 +26,7 @@ from .cache import FileCache
 from .host_sections import HostSections, TRawDataSection
 from .type_defs import Mode, SectionNameCollection
 
-__all__ = ["Fetcher", "verify_ipaddress", "get_raw_data"]
+__all__ = ["Fetcher", "verify_ipaddress", "get_raw_data", "DefaultSummarizer", "Summarizer"]
 
 TFetcher = TypeVar("TFetcher", bound="Fetcher")
 
@@ -171,6 +171,13 @@ class Summarizer(abc.ABC):
         if isinstance(exc, MKTimeout):
             return self.exit_spec.get("timeout", 2)
         return self.exit_spec.get("exception", 3)
+
+
+class DefaultSummarizer(Summarizer):
+    def summarize_success(self) -> Sequence[ActiveCheckResult]:
+        # Note: currently we *must not* return an empty sequence, because the datasource
+        # will not be visible in the Check_MK service otherwise.
+        return [ActiveCheckResult(0, "Success")]
 
 
 def verify_ipaddress(address: Optional[HostAddress]) -> None:

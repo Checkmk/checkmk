@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import copy
 import logging
-from typing import Any, Final, List, Mapping, Optional, Sequence, TYPE_CHECKING
+from typing import Any, Final, List, Mapping, Optional, TYPE_CHECKING
 
 import pyghmi.constants as ipmi_const  # type: ignore[import]
 from pyghmi.exceptions import IpmiException  # type: ignore[import]
@@ -19,12 +19,11 @@ if TYPE_CHECKING:
 
 from six import ensure_binary
 
-from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.log import VERBOSE
 from cmk.utils.type_defs import AgentRawData, HostAddress
 
-from ._base import Fetcher, Summarizer
+from ._base import Fetcher
 from .type_defs import Mode
 
 
@@ -274,8 +273,3 @@ class IPMIFetcher(Fetcher[AgentRawData]):
         # ipmi_sensors.include (freeipmi_status_txt_mapping),
         # where it will default to 2(CRIT)
         return AgentRawData(b", ".join(states))
-
-
-class IPMISummarizer(Summarizer):
-    def summarize_success(self) -> Sequence[ActiveCheckResult]:
-        return [ActiveCheckResult(0, "Success")]

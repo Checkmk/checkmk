@@ -11,9 +11,9 @@ from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, SectionName, So
 
 from cmk.snmplib.type_defs import SNMPHostConfig, SNMPRawData, SNMPRawDataSection
 
-from cmk.core_helpers import FetcherType, SNMPFetcher
+from cmk.core_helpers import DefaultSummarizer, FetcherType, SNMPFetcher
 from cmk.core_helpers.cache import FileCache
-from cmk.core_helpers.snmp import SectionMeta, SNMPSummarizer
+from cmk.core_helpers.snmp import SectionMeta
 
 from ._abstract import Source
 
@@ -65,5 +65,5 @@ class SNMPSource(Source[SNMPRawData, SNMPRawDataSection]):
             snmp_config=self.snmp_config,
         )
 
-    def _make_summarizer(self, *, exit_spec: ExitSpec) -> SNMPSummarizer:
-        return SNMPSummarizer(exit_spec)
+    def _make_summarizer(self, *, exit_spec: ExitSpec) -> DefaultSummarizer:
+        return DefaultSummarizer(exit_spec)

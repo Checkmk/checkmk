@@ -26,11 +26,10 @@ from typing import (
 import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.debug
 import cmk.utils.misc
-from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.translations import TranslationOptions
 from cmk.utils.type_defs import AgentRawData, HostName, SectionName
 
-from ._base import Fetcher, Parser, Summarizer
+from ._base import Fetcher, Parser
 from ._markers import PiggybackMarker, SectionMarker
 from .cache import FileCache, SectionStore
 from .host_sections import HostSections
@@ -665,10 +664,3 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
             parser = parser(line.rstrip(b"\r"))
 
         return parser.sections, parser.piggyback_sections
-
-
-class AgentSummarizerDefault(Summarizer):
-    def summarize_success(self) -> Sequence[ActiveCheckResult]:
-        # Note: currently we *must not* return an empty sequence, because the datasource
-        # will not be visible in the Check_MK service otherwise.
-        return [ActiveCheckResult(0, "Success")]

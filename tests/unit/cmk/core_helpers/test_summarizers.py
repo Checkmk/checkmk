@@ -15,8 +15,8 @@ from cmk.utils.piggyback import PiggybackFileInfo, PiggybackRawDataInfo
 from cmk.utils.type_defs import AgentRawData, ExitSpec
 
 import cmk.core_helpers.piggyback
+from cmk.core_helpers import DefaultSummarizer
 from cmk.core_helpers import Summarizer as _Summarizer
-from cmk.core_helpers.agent import AgentSummarizerDefault
 from cmk.core_helpers.piggyback import PiggybackSummarizer
 
 CONTROLLER_STATUS_LEGACY: Final = json.dumps(
@@ -66,10 +66,10 @@ class TestAgentSummarizer:
         assert summarizer.summarize_failure(MKTimeout()) == [ActiveCheckResult(2)]
 
 
-class TestAgentSummarizerDefault_AllModes:
+class TestDefaultSummarizer_AllModes:
     @pytest.fixture
     def summarizer(self):
-        return AgentSummarizerDefault(ExitSpec())
+        return DefaultSummarizer(ExitSpec())
 
     def test_missing_section(self, summarizer) -> None:  # type:ignore[no-untyped-def]
         assert summarizer.summarize_success() == [ActiveCheckResult(0, "Success")]

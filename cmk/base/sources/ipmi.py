@@ -17,10 +17,9 @@ from cmk.utils.type_defs import (
 )
 
 import cmk.core_helpers.cache as file_cache
-from cmk.core_helpers import FetcherType, IPMIFetcher
+from cmk.core_helpers import DefaultSummarizer, FetcherType, IPMIFetcher
 from cmk.core_helpers.agent import AgentFileCache, AgentRawDataSection
 from cmk.core_helpers.cache import FileCacheGlobals, FileCacheMode
-from cmk.core_helpers.ipmi import IPMISummarizer
 
 from ._abstract import Source
 
@@ -75,5 +74,5 @@ class IPMISource(Source[AgentRawData, AgentRawDataSection]):
             password=self.credentials.get("password"),
         )
 
-    def _make_summarizer(self, *, exit_spec: ExitSpec) -> IPMISummarizer:
-        return IPMISummarizer(exit_spec)
+    def _make_summarizer(self, *, exit_spec: ExitSpec) -> DefaultSummarizer:
+        return DefaultSummarizer(exit_spec)

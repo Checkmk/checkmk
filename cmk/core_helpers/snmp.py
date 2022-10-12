@@ -25,7 +25,6 @@ from typing import (
     Union,
 )
 
-from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import OnError
 from cmk.utils.type_defs import HostName, SectionName
 
@@ -40,7 +39,7 @@ from cmk.snmplib.type_defs import (
 )
 
 from . import factory
-from ._base import Fetcher, Parser, Summarizer, verify_ipaddress
+from ._base import Fetcher, Parser, verify_ipaddress
 from .cache import FileCache, PersistedSections, SectionStore
 from .host_sections import HostSections
 from .type_defs import Mode, SectionNameCollection
@@ -51,7 +50,6 @@ __all__ = [
     "SNMPParser",
     "SNMPPluginStore",
     "SNMPPluginStoreItem",
-    "SNMPSummarizer",
 ]
 
 
@@ -432,8 +430,3 @@ class SNMPParser(Parser[SNMPRawData, SNMPRawDataSection]):
             keep_outdated=self.keep_outdated,
         )
         return HostSections[SNMPRawDataSection](new_sections, cache_info=cache_info)
-
-
-class SNMPSummarizer(Summarizer):
-    def summarize_success(self) -> Sequence[ActiveCheckResult]:
-        return [ActiveCheckResult(0, "Success")]

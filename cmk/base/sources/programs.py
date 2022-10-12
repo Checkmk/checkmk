@@ -9,8 +9,8 @@ from typing import Final, Optional
 from cmk.utils.type_defs import AgentRawData, ExitSpec, HostAddress, HostName, SourceType
 
 import cmk.core_helpers.cache as file_cache
-from cmk.core_helpers import FetcherType, ProgramFetcher
-from cmk.core_helpers.agent import AgentFileCache, AgentRawDataSection, AgentSummarizerDefault
+from cmk.core_helpers import DefaultSummarizer, FetcherType, ProgramFetcher
+from cmk.core_helpers.agent import AgentFileCache, AgentRawDataSection
 from cmk.core_helpers.cache import FileCacheGlobals, FileCacheMode
 
 from ._abstract import Source
@@ -67,8 +67,8 @@ class ProgramSource(Source[AgentRawData, AgentRawDataSection]):
             is_cmc=self.is_cmc,
         )
 
-    def _make_summarizer(self, *, exit_spec: ExitSpec) -> AgentSummarizerDefault:
-        return AgentSummarizerDefault(exit_spec)
+    def _make_summarizer(self, *, exit_spec: ExitSpec) -> DefaultSummarizer:
+        return DefaultSummarizer(exit_spec)
 
 
 class DSProgramSource(ProgramSource):

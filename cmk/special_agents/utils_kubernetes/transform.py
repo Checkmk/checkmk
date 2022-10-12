@@ -472,7 +472,9 @@ def parse_cron_job_status(status: client.V1CronJobStatus) -> api.CronJobStatus:
         last_successful_time=convert_to_timestamp(status.last_successful_time)
         if status.last_successful_time is not None
         else None,
-        last_schedule_time=convert_to_timestamp(status.last_schedule_time),
+        last_schedule_time=convert_to_timestamp(status.last_schedule_time)
+        if status.last_schedule_time is not None
+        else None,
     )
 
 

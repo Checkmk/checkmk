@@ -1,8 +1,0 @@
-{
-    "mkp-able_ntop_files": [
-        "enterprise/cmk/gui/cee/plugins/dashboard/ntop_dashlets.py",
-        "enterprise/cmk/gui/cee/plugins/views/ntop.py",
-        "enterprise/cmk/gui/cee/plugins/wato/ntop.py",
-        "enterprise/cmk/gui/cee/plugins/config/ntop.py"
-    ]
-}

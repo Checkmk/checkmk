@@ -177,17 +177,13 @@ def _load_werk(path: Path) -> Werk:
                 except ValueError:
                     value = text.strip()
                 field = key.lower()
-                # typeshed is missing these class attributes
-                # https://github.com/python/typeshed/pull/8512 merged in 08/2022, wait for release...
-                if field not in (Werk.__optional_keys__ | Werk.__required_keys__):  # type: ignore[attr-defined]
+                if field not in (Werk.__optional_keys__ | Werk.__required_keys__):
                     raise MKGeneralException("unknown werk field %s" % key)
                 werk[field] = value
             else:
                 werk["description"].append(line)
 
-    # typeshed is missing these class attributes
-    # https://github.com/python/typeshed/pull/8512 merged in 08/2022, wait for release...
-    missing_fields = Werk.__required_keys__ - set(werk.keys())  # type: ignore[attr-defined]
+    missing_fields = Werk.__required_keys__ - set(werk.keys())
     if missing_fields:
         raise MKGeneralException("missing fields: %s" % ",".join(missing_fields))
     # TODO: Check if all fields have an allowed value, see .werks/config.
@@ -231,7 +227,7 @@ def write_werk_as_text(f: IO[str], werk: Werk) -> None:
         prefix = " SEC:"
 
     # See following commits...
-    if werk.get("description") and len(werk["description"]) > 3:  # type: ignore
+    if werk.get("description") and len(werk["description"]) > 3:
         omit = "..."
     else:
         omit = ""

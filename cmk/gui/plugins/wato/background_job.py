@@ -8,9 +8,8 @@ import traceback
 from typing import Collection, Iterator, Optional, Type
 
 import cmk.gui.gui_background_job as gui_background_job
-from cmk.gui.background_job import BackgroundJob, job_registry
+from cmk.gui.background_job import BackgroundJob, BackgroundStatusSnapshot, job_registry
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.gui_background_job import GUIBackgroundStatusSnapshot
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -179,7 +178,7 @@ class ModeAjaxBackgroundJobDetails(AjaxPage):
             "is_finished": job_snapshot and not job_snapshot.is_active,
         }
 
-    def _show_details_page(self, job_id: str) -> Optional[GUIBackgroundStatusSnapshot]:
+    def _show_details_page(self, job_id: str) -> Optional[BackgroundStatusSnapshot]:
         job = BackgroundJob(job_id)
         if not job.exists():
             html.show_message(_("Background job info is not available"))

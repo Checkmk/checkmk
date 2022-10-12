@@ -13,7 +13,7 @@ from cmk.utils.exceptions import MKGeneralException
 
 import cmk.gui.background_job as background_job
 import cmk.gui.log as log
-from cmk.gui.background_job import BackgroundJob, GUIBackgroundStatusSnapshot
+from cmk.gui.background_job import BackgroundJob, BackgroundStatusSnapshot
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -163,7 +163,7 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
 
         JobRenderer.show_job_class_infos(job_class_infos, job_details_back_url)
 
-    def show_job_details_from_snapshot(self, job_snapshot: GUIBackgroundStatusSnapshot) -> None:
+    def show_job_details_from_snapshot(self, job_snapshot: BackgroundStatusSnapshot) -> None:
         if not job_snapshot.exists:
             raise MKGeneralException(
                 "Background job with id <i>%s</i> not found" % job_snapshot.job_id

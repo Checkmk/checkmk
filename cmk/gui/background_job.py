@@ -121,7 +121,7 @@ class JobStatusSpecUpdate(TypedDict, total=False):
 
 
 @dataclass
-class GUIBackgroundStatusSnapshot:
+class BackgroundStatusSnapshot:
     job_id: JobId
     status: JobStatusSpec
     exists: bool
@@ -744,9 +744,9 @@ class BackgroundJob:
         while self.is_active():
             time.sleep(0.5)
 
-    def get_status_snapshot(self) -> GUIBackgroundStatusSnapshot:
+    def get_status_snapshot(self) -> BackgroundStatusSnapshot:
         status = self.get_status()
-        return GUIBackgroundStatusSnapshot(
+        return BackgroundStatusSnapshot(
             job_id=self.get_job_id(),
             status=status,
             exists=self.exists(),

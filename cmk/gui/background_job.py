@@ -130,6 +130,8 @@ class GUIBackgroundStatusSnapshot:
     is_active: bool
     has_exception: bool
     acknowledged_by: str | None
+    may_stop: bool
+    may_delete: bool
 
 
 class BackgroundJobAlreadyRunning(MKGeneralException):
@@ -755,6 +757,8 @@ class BackgroundJob:
             is_active=self.is_active(),
             has_exception=status.get("state") == JobStatusStates.EXCEPTION,
             acknowledged_by=status.get("acknowledged_by"),
+            may_stop=self.may_stop(),
+            may_delete=self.may_delete(),
         )
 
     def acknowledge(self, user_id: UserId | None) -> None:

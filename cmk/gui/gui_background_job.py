@@ -168,7 +168,9 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
             raise MKGeneralException(
                 "Background job with id <i>%s</i> not found" % job_snapshot.job_id
             )
-        JobRenderer.show_job_details(job_snapshot.job_id, job_snapshot.status)
+        JobRenderer.show_job_details(
+            job_snapshot.job_id, job_snapshot.status, job_snapshot.may_stop, job_snapshot.may_delete
+        )
 
     def _get_job_infos(
         self, jobs: Sequence[background_job.JobId]
@@ -205,7 +207,11 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
 class JobRenderer:
     @classmethod
     def show_job_details(
-        cls, job_id: background_job.JobId, job_status: background_job.JobStatusSpec
+        cls,
+        job_id: background_job.JobId,
+        job_status: background_job.JobStatusSpec,
+        may_stop: bool,
+        may_delete: bool,
     ) -> None:
         """Renders the complete job details in a single table with left headers"""
         html.open_table(class_=["data", "headerleft", "job_details"])
@@ -226,7 +232,7 @@ class JobRenderer:
         html.open_tr()
         html.th(_("Actions"))
         html.open_td()
-        if job_status.get("may_stop"):
+        if may_stop:
             html.icon_button(
                 make_confirm_link(
                     url=makeactionuri(
@@ -237,7 +243,7 @@ class JobRenderer:
                 _("Stop this job"),
                 "disable_test",
             )
-        if job_status.get("may_delete"):
+        if may_delete:
             html.icon_button(
                 make_confirm_link(
                     url=makeactionuri(

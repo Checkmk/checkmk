@@ -176,7 +176,7 @@ class PageFetchAgentOutput(AgentOutputPage):
             html.immediate_browser_redirect(0.8, makeuri(request, []))
 
         job = FetchAgentOutputBackgroundJob(self._request)
-        JobRenderer.show_job_details(job.get_job_id(), job_status)
+        JobRenderer.show_job_details(job.get_job_id(), job_status, job.may_stop(), job.may_delete())
 
     def _start_fetch(self) -> None:
         """Start the job on the site the host is monitored by"""

@@ -477,3 +477,7 @@ class FileCacheGlobals:
     tcp_use_only_cache = False
     # Set by the --force option from inventory.
     keep_outdated = False
+
+    @staticmethod
+    def file_cache_mode() -> FileCacheMode:
+        return FileCacheMode.DISABLED if FileCacheGlobals.disabled else FileCacheMode.READ_WRITE

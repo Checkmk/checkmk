@@ -11,7 +11,7 @@ from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, SourceType
 import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers import FetcherType, ProgramFetcher
 from cmk.core_helpers.agent import AgentFileCache, AgentRawDataSection
-from cmk.core_helpers.cache import FileCacheGlobals, FileCacheMode
+from cmk.core_helpers.cache import FileCacheGlobals
 
 from ._abstract import Source
 
@@ -55,9 +55,7 @@ class ProgramSource(Source[AgentRawData, AgentRawDataSection]):
             use_outdated=self.simulation_mode or FileCacheGlobals.use_outdated,
             simulation=self.simulation_mode,
             use_only_cache=False,
-            file_cache_mode=FileCacheMode.DISABLED
-            if FileCacheGlobals.disabled
-            else FileCacheMode.READ_WRITE,
+            file_cache_mode=FileCacheGlobals.file_cache_mode(),
         )
 
     def _make_fetcher(self) -> ProgramFetcher:

@@ -724,13 +724,6 @@ def site_config_path() -> Path:
     return Path(os.environ["OMD_ROOT"]) / "etc" / "check_mk" / "backup.mk"
 
 
-# Wenn als root ausgeführt:
-# - System-Konfiguration laden
-# Wenn als Site-User ausgeführt:
-# - TargetIds aus System-Konfiguration laden
-# - Site-Konfiguration laden
-
-
 def load_config() -> Config:
     def load_file(path: Path) -> Any:
         with path.open("r", encoding="utf-8") as f:
@@ -754,7 +747,6 @@ def load_config() -> Config:
     return config
 
 
-# TODO: Duplicate code with htdocs/backup.py
 def load_backup_info(path: str) -> BackupInfo:
     with open(path) as f:
         info = json.load(f)
@@ -886,7 +878,6 @@ modes = {
             "no-verify": Opt(
                 description="Disable verification of the backup files to restore from."
             ),
-            "no-reboot": Opt(description="Don't trigger a system reboot after succeeded restore."),
         },
         runner=lambda args, opts, config: mode_restore(args[0], args[1], opts=opts, config=config),
     ),
@@ -976,12 +967,7 @@ def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None
             )
 
 
-def do_site_backup(
-    action: BackupAction,
-    state: State,
-    site: str | None = None,
-    try_stop: bool = True,
-) -> None:  # pylint: disable=too-many-branches
+def do_site_backup(action: BackupAction, state: State) -> None:
     cmd = ["omd", "backup"]
 
     if not action.job.config["compress"]:
@@ -990,9 +976,9 @@ def do_site_backup(
     if action.job.config.get("no_history", False):
         cmd.append("--no-past")
 
-    site = current_site_id()
     cmd.append("-")
 
+    site = current_site_id()
     backup_path = site_backup_archive_path(site, action, action.job.config)
 
     # Create missing directories. Ensure group permissions and mode.
@@ -1064,7 +1050,6 @@ def target_path(target_ident: str, config: Config) -> Path:
     return Path(cfg["remote"][1]["path"])
 
 
-# TODO: Duplicate code with htdocs/backup.py
 def verify_target_is_ready(target_ident: str, config: Config) -> None:
     try:
         cfg = target_cfg(target_ident, config)

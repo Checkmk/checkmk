@@ -1,0 +1,16 @@
+Title: Improve readability of SLA reports
+Class: feature
+Compatible: compat
+Component: reporting
+Date: 1665555523
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p15
+
+In reports the SLA column was rendered in a incomprehensible way.
+
+Now the timestamp and the status (OK/Broken) are displayed in one line and the
+broken SLAs are highlighted in red.
+

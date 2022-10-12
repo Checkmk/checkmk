@@ -142,12 +142,6 @@ impl RegistrationConnectionConfig {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
-pub enum HostRegistrationData {
-    Name(String),
-    Labels(types::AgentLabels),
-}
-
 #[derive(Deserialize, Clone, Default)]
 pub struct RuntimeConfig {
     #[serde(default)]

@@ -35,7 +35,7 @@ table columns longer than their validity period.
 
 from __future__ import annotations
 
-from typing import Dict, List, NamedTuple, Optional, Tuple, Union
+from typing import NamedTuple, Union
 
 from cmk.utils.structured_data import (
     ATTRIBUTES_KEY,
@@ -50,8 +50,8 @@ from cmk.utils.structured_data import (
     UpdateResult,
 )
 
-RawCacheInfo = Tuple[int, int]
-RawChoicesFromConfig = Union[Tuple[str, List[str]], str]
+RawCacheInfo = tuple[int, int]
+RawChoicesFromConfig = Union[tuple[str, list[str]], str]
 
 
 class IntervalFromConfig(NamedTuple):
@@ -64,9 +64,9 @@ class RetentionInfo(NamedTuple):
     intervals: RetentionIntervals
 
 
-RetentionKey = Tuple[SDPath, str]
-RetentionInfos = Dict[RetentionKey, RetentionInfo]
-IntervalsFromConfig = Dict[RetentionKey, IntervalFromConfig]
+RetentionKey = tuple[SDPath, str]
+RetentionInfos = dict[RetentionKey, RetentionInfo]
+IntervalsFromConfig = dict[RetentionKey, IntervalFromConfig]
 
 #   .--config--------------------------------------------------------------.
 #   |                                      __ _                            |
@@ -120,7 +120,7 @@ class RetentionsTracker:
         now: int,
         node_name: str,
         path: SDPath,
-        raw_cache_info: Optional[RawCacheInfo],
+        raw_cache_info: RawCacheInfo | None,
     ) -> None:
         retention_key = (tuple(path), node_name)
 
@@ -135,7 +135,7 @@ class RetentionsTracker:
     @staticmethod
     def _make_intervals(
         now: int,
-        raw_cache_info: Optional[RawCacheInfo],
+        raw_cache_info: RawCacheInfo | None,
         retention_interval: int,
     ) -> RetentionIntervals:
         if raw_cache_info:

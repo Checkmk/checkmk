@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Iterable, List, NamedTuple, Optional, Sequence, Tuple, Union
+from typing import Iterable, NamedTuple, Sequence
 
 import cmk.utils.debug
 from cmk.utils.structured_data import ATTRIBUTES_KEY, StructuredDataNode, TABLE_KEY
@@ -42,9 +42,9 @@ class TreeAggregator:
         *,
         inventory_generator: InventoryResult,
         retentions_tracker: RetentionsTracker,
-        raw_cache_info: Optional[RawCacheInfo],
+        raw_cache_info: RawCacheInfo | None,
         is_legacy_plugin: bool,
-    ) -> Optional[Exception]:
+    ) -> Exception | None:
 
         try:
             table_rows, attributes = self._dispatch(inventory_generator)
@@ -88,8 +88,8 @@ class TreeAggregator:
 
     def _dispatch(
         self,
-        intentory_items: Iterable[Union[TableRow, Attributes]],
-    ) -> Tuple[Sequence[TableRow], Sequence[Attributes]]:
+        intentory_items: Iterable[TableRow | Attributes],
+    ) -> tuple[Sequence[TableRow], Sequence[Attributes]]:
         attributes = []
         table_rows = []
         for item in intentory_items:
@@ -125,7 +125,7 @@ class TreeAggregator:
     def _integrate_table_row(self, table_row: TableRow) -> None:
         def _add_row(
             tree: StructuredDataNode,
-            path: List[str],
+            path: list[str],
             key_columns: AttrDict,
             columns: AttrDict,
         ) -> None:

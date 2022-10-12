@@ -10,7 +10,7 @@ In the future all inventory code should be moved to this module."""
 import time
 from functools import partial
 from pathlib import Path
-from typing import Callable, Container, Dict, List, NamedTuple, Optional, Sequence, Tuple
+from typing import Callable, Container, NamedTuple, Sequence
 
 import cmk.utils.cleanup
 import cmk.utils.debug
@@ -46,7 +46,7 @@ from ._tree_aggregator import InventoryTrees, TreeAggregator
 
 class ActiveInventoryResult(NamedTuple):
     trees: InventoryTrees
-    source_results: Sequence[Tuple[Source, result.Result[HostSections, Exception]]]
+    source_results: Sequence[tuple[Source, result.Result[HostSections, Exception]]]
     parsing_errors: Sequence[str]
     processing_failed: bool
 
@@ -62,7 +62,7 @@ class ActiveInventoryResult(NamedTuple):
 
 
 def commandline_inventory(
-    hostnames: List[HostName],
+    hostnames: list[HostName],
     *,
     selected_sections: SectionNameCollection,
     run_plugin_names: Container[InventoryPluginName] = EVERYTHING,
@@ -135,7 +135,7 @@ def _commandline_inventory_on_host(
 
 def active_check_inventory(
     hostname: HostName,
-    options: Dict[str, int],
+    options: dict[str, int],
     *,
     active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,
@@ -152,7 +152,7 @@ def active_check_inventory(
 
 
 def _execute_active_check_inventory(
-    host_config: HostConfig, options: Dict[str, int]
+    host_config: HostConfig, options: dict[str, int]
 ) -> ActiveCheckResult:
     hw_changes = options.get("hw-changes", 0)
     sw_changes = options.get("sw-changes", 0)
@@ -202,7 +202,7 @@ def _execute_active_check_inventory(
 
 def _check_inventory_tree(
     trees: InventoryTrees,
-    old_tree: Optional[StructuredDataNode],
+    old_tree: StructuredDataNode | None,
     sw_missing: ServiceState,
     sw_changes: ServiceState,
     hw_changes: ServiceState,
@@ -235,7 +235,7 @@ def _check_inventory_tree(
 
 def _tree_nodes_are_equal(
     old_tree: StructuredDataNode,
-    inv_tree: Optional[StructuredDataNode],
+    inv_tree: StructuredDataNode | None,
     edge: str,
 ) -> bool:
     if inv_tree is None:
@@ -309,7 +309,7 @@ def _inventorize_host(
 
 
 def _sources_failed(
-    results: Sequence[Tuple[Source, result.Result[HostSections, Exception]]],
+    results: Sequence[tuple[Source, result.Result[HostSections, Exception]]],
 ) -> bool:
     """Check if data sources of a host failed
 
@@ -438,8 +438,7 @@ def _save_inventory_tree(
     hostname: HostName,
     inventory_tree: StructuredDataNode,
     retentions: Retentions,
-) -> Optional[StructuredDataNode]:
-
+) -> StructuredDataNode | None:
     inventory_store = StructuredDataStore(cmk.utils.paths.inventory_output_dir)
 
     if inventory_tree.is_empty():

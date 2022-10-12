@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=protected-access
-from typing import Dict, List, Optional, Tuple, Union
 
 import pytest
 
@@ -25,7 +24,7 @@ from cmk.base.config import HostConfig
 
 
 def test_aggregator_raises_collision() -> None:
-    inventory_items: List[Union[Attributes, TableRow]] = [
+    inventory_items: list[Attributes | TableRow] = [
         Attributes(path=["a", "b", "c"], status_attributes={"foo": "bar"}),
         TableRow(path=["a", "b", "c"], key_columns={"foo": "bar"}),
     ]
@@ -63,7 +62,8 @@ _TREE_WITH_EDGE.setdefault_node(("edge",))
     ],
 )
 def test__tree_nodes_are_not_equal(
-    old_tree: StructuredDataNode, inv_tree: Optional[StructuredDataNode]
+    old_tree: StructuredDataNode,
+    inv_tree: StructuredDataNode | None,
 ) -> None:
     assert inventory._tree_nodes_are_equal(old_tree, inv_tree, "edge") is False
 
@@ -80,7 +80,7 @@ def test__tree_nodes_are_equal(old_tree: StructuredDataNode, inv_tree: Structure
 
 
 def test_integrate_attributes() -> None:
-    inventory_items: List[Attributes] = [
+    inventory_items: list[Attributes] = [
         Attributes(
             path=["a", "b", "c"],
             inventory_attributes={
@@ -126,7 +126,7 @@ def test_integrate_attributes() -> None:
 
 
 def test_integrate_table_row() -> None:
-    inventory_items: List[TableRow] = [
+    inventory_items: list[TableRow] = [
         TableRow(
             path=["a", "b", "c"],
             key_columns={"foo": "baz"},
@@ -501,10 +501,10 @@ def test_integrate_table_row() -> None:
     ],
 )
 def test_retentions_add_cache_info_no_match(
-    raw_intervals: list[Dict],
+    raw_intervals: list[dict],
     node_name: str,
     path: SDPath,
-    raw_cache_info: Optional[Tuple[int, int]],
+    raw_cache_info: tuple[int, int] | None,
 ) -> None:
     now = 100
     retentions_tracker = RetentionsTracker(raw_intervals)
@@ -673,9 +673,9 @@ def test_retentions_add_cache_info_no_match(
     ],
 )
 def test_retentions_add_cache_info(
-    raw_intervals: list[Dict],
+    raw_intervals: list[dict],
     node_name: str,
-    raw_cache_info: Optional[Tuple[int, int]],
+    raw_cache_info: tuple[int, int] | None,
     expected_intervals: RetentionIntervals,
     match_some_keys: bool,
     match_other_keys: bool,
@@ -702,8 +702,8 @@ def test_retentions_add_cache_info(
 
 
 def _make_trees(
-    previous_attributes_retentions: Dict, previous_table_retentions: Dict
-) -> Tuple[StructuredDataNode, StructuredDataNode]:
+    previous_attributes_retentions: dict, previous_table_retentions: dict
+) -> tuple[StructuredDataNode, StructuredDataNode]:
     previous_tree = StructuredDataNode.deserialize(
         {
             "Attributes": {},
@@ -852,7 +852,7 @@ def test_updater_null_obj_tables_outdated() -> None:
 )
 def test_updater_handle_inv_attributes(
     filter_func: SDFilterFunc,
-    expected_retentions: Dict,
+    expected_retentions: dict,
 ) -> None:
     _previous_tree, inv_tree = _make_trees({}, {})
 
@@ -895,7 +895,7 @@ def test_updater_handle_inv_attributes(
 )
 def test_updater_handle_inv_attributes_outdated(
     filter_func: SDFilterFunc,
-    expected_retentions: Dict,
+    expected_retentions: dict,
 ) -> None:
     _previous_tree, inv_tree = _make_trees({}, {})
 
@@ -941,7 +941,7 @@ def test_updater_handle_inv_attributes_outdated(
 )
 def test_updater_handle_inv_tables(
     filter_func: SDFilterFunc,
-    expected_retentions: Dict,
+    expected_retentions: dict,
 ) -> None:
     _previous_tree, inv_tree = _make_trees({}, {})
 
@@ -987,7 +987,7 @@ def test_updater_handle_inv_tables(
 )
 def test_updater_handle_inv_tables_outdated(
     filter_func: SDFilterFunc,
-    expected_retentions: Dict,
+    expected_retentions: dict,
 ) -> None:
     _previous_tree, inv_tree = _make_trees({}, {})
 
@@ -1027,7 +1027,7 @@ def test_updater_handle_inv_tables_outdated(
 )
 def test_updater_merge_previous_attributes(  # type:ignore[no-untyped-def]
     filter_func: SDFilterFunc,
-    expected_retentions: Dict,
+    expected_retentions: dict,
 ):
     previous_tree, _inv_tree = _make_trees({"old": (1, 2, 3)}, {})
     inv_tree = StructuredDataNode()
@@ -1105,7 +1105,7 @@ def test_updater_merge_previous_attributes_outdated(filter_func: SDFilterFunc) -
 )
 def test_updater_merge_previous_tables(
     filter_func: SDFilterFunc,
-    expected_retentions: Dict,
+    expected_retentions: dict,
 ) -> None:
     previous_tree, _inv_tree = _make_trees(
         {},
@@ -1206,7 +1206,7 @@ def test_updater_merge_previous_tables_outdated(filter_func: SDFilterFunc) -> No
 )
 def test_updater_merge_attributes(
     filter_func: SDFilterFunc,
-    expected_retentions: Dict,
+    expected_retentions: dict,
 ) -> None:
     previous_tree, inv_tree = _make_trees(
         {
@@ -1266,7 +1266,7 @@ def test_updater_merge_attributes(
 )
 def test_updater_merge_attributes_outdated(
     filter_func: SDFilterFunc,
-    expected_retentions: Dict,
+    expected_retentions: dict,
 ) -> None:
     previous_tree, inv_tree = _make_trees(
         {
@@ -1333,7 +1333,7 @@ def test_updater_merge_attributes_outdated(
 )
 def test_updater_merge_tables(
     filter_func: SDFilterFunc,
-    expected_retentions: Dict,
+    expected_retentions: dict,
 ) -> None:
     previous_tree, inv_tree = _make_trees(
         {},
@@ -1409,7 +1409,7 @@ def test_updater_merge_tables(
 )
 def test_updater_merge_tables_outdated(
     filter_func: SDFilterFunc,
-    expected_retentions: Dict,
+    expected_retentions: dict,
 ) -> None:
     previous_tree, inv_tree = _make_trees(
         {},
@@ -1456,7 +1456,7 @@ def test_updater_merge_tables_outdated(
 )
 def test__execute_active_check_inventory(
     monkeypatch: pytest.MonkeyPatch,
-    failed_state: Optional[int],
+    failed_state: int | None,
     expected: int,
 ) -> None:
     hostname = "my-host"

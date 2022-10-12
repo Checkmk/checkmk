@@ -8871,6 +8871,13 @@ msgstr ""
 msgid "Cisco Memory Usage (%s)"
 msgstr ""
 
+#, fuzzy
+msgid "Cisco Meraki"
+msgstr "Nivelurile maxime pentru voltaj"
+
+msgid "Cisco Meraki Organisation Licenses Overview"
+msgstr ""
+
 msgid "Cisco Nexus Supervisor Memory Usage"
 msgstr ""
 
@@ -27299,6 +27306,10 @@ msgstr "Nivelurile maxime pentru voltaj"
 msgid "Lower levels for remaining API reads"
 msgstr ""
 
+#, fuzzy
+msgid "Lower levels for remaining expiration time of licenses"
+msgstr "Numarul maxim de mesaje"
+
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr ""
 
@@ -33218,6 +33229,14 @@ msgstr "Starea porturilor pentru inventariere"
 
 msgid "Order"
 msgstr ""
+
+#, fuzzy
+msgid "Organisation licenses overview"
+msgstr "Numele Aplicatiei"
+
+#, fuzzy
+msgid "Organisations"
+msgstr "Numele Aplicatiei"
 
 msgid "Organization"
 msgstr ""
@@ -39241,6 +39260,10 @@ msgstr ""
 
 msgid "Section(s) cannot be disabled and enabled at the same time:"
 msgstr ""
+
+#, fuzzy
+msgid "Sections"
+msgstr "Acțiune"
 
 msgid "Sections - data to collect"
 msgstr ""
@@ -46712,6 +46735,11 @@ msgid "The number of elements in the tuple must be exactly %d."
 msgstr ""
 
 msgid ""
+"The number of incoming and processed agent registration requests are not the "
+"same."
+msgstr ""
+
+msgid ""
 "The number of object handles in the processes object table. This includes "
 "open handles to threads, files and other resources like registry keys."
 msgstr ""
@@ -46809,6 +46837,10 @@ msgid ""
 "The option to use a custom command can only be configured with the "
 "permission \"Can add or modify executables\"."
 msgstr ""
+
+#, fuzzy
+msgid "The organisation ID"
+msgstr "Numele Aplicatiei"
 
 msgid "The original aspect of the image will be ignored."
 msgstr ""
@@ -60898,10 +60930,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "request utilization"
 #~ msgstr "Dezactiveaza Notificarile"
-
-#, fuzzy
-#~ msgid "Organisation"
-#~ msgstr "Numele Aplicatiei"
 
 #, fuzzy
 #~ msgid "Container memory"

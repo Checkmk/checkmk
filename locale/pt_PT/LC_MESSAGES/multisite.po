@@ -9493,6 +9493,13 @@ msgstr "Uso da Memória Cisco"
 msgid "Cisco Memory Usage (%s)"
 msgstr "Uso da Memória Cisco (%s)"
 
+#, fuzzy
+msgid "Cisco Meraki"
+msgstr "Cisco Prime"
+
+msgid "Cisco Meraki Organisation Licenses Overview"
+msgstr ""
+
 msgid "Cisco Nexus Supervisor Memory Usage"
 msgstr "Cisco Nexus Supervisor Memory Usage"
 
@@ -28822,6 +28829,10 @@ msgstr "Níveis mais baixos para a vida saudável"
 msgid "Lower levels for remaining API reads"
 msgstr "Níveis mais baixos para o API restante lê"
 
+#, fuzzy
+msgid "Lower levels for remaining expiration time of licenses"
+msgstr "Níveis mais baixos para o API restante lê"
+
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr ""
 "Níveis mais baixos para a velocidade do ventilador de um dispositivo de "
@@ -34629,6 +34640,14 @@ msgstr "Descoberta do desempenho da Oracle"
 
 msgid "Order"
 msgstr "Encomenda"
+
+#, fuzzy
+msgid "Organisation licenses overview"
+msgstr "Visão geral das aplicações"
+
+#, fuzzy
+msgid "Organisations"
+msgstr "Organização"
 
 msgid "Organization"
 msgstr "Organização"
@@ -40709,6 +40728,10 @@ msgstr "Secção de ficheiros a monitorizar"
 
 msgid "Section(s) cannot be disabled and enabled at the same time:"
 msgstr "As secções não podem ser desactivadas e activadas ao mesmo tempo:"
+
+#, fuzzy
+msgid "Sections"
+msgstr "Secção"
 
 msgid "Sections - data to collect"
 msgstr "Seções - dados a recolher"
@@ -49071,6 +49094,11 @@ msgid "The number of elements in the tuple must be exactly %d."
 msgstr "O número de elementos no tuple deve ser exactamente %d."
 
 msgid ""
+"The number of incoming and processed agent registration requests are not the "
+"same."
+msgstr ""
+
+msgid ""
 "The number of object handles in the processes object table. This includes "
 "open handles to threads, files and other resources like registry keys."
 msgstr ""
@@ -49201,6 +49229,10 @@ msgid ""
 msgstr ""
 "A opção de usar um comando personalizado só pode ser configurada com a "
 "permissão \"Pode adicionar ou modificar executáveis\"."
+
+#, fuzzy
+msgid "The organisation ID"
+msgstr "Organização"
 
 msgid "The original aspect of the image will be ignored."
 msgstr "O aspecto original da imagem será ignorado."
@@ -66830,10 +66862,6 @@ msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
 #, python-format
 #~ msgid "%s Finished."
 #~ msgstr "%s Concluído."
-
-#, fuzzy
-#~ msgid "Organisation"
-#~ msgstr "Organização"
 
 #, fuzzy
 #~| msgid "Container Name"

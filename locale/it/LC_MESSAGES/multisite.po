@@ -9598,6 +9598,13 @@ msgstr "Uso della memoria di Cisco"
 msgid "Cisco Memory Usage (%s)"
 msgstr "Utilizzo della memoria Cisco (%s)"
 
+#, fuzzy
+msgid "Cisco Meraki"
+msgstr "Cisco Prime"
+
+msgid "Cisco Meraki Organisation Licenses Overview"
+msgstr ""
+
 msgid "Cisco Nexus Supervisor Memory Usage"
 msgstr "Utilizzo della memoria del supervisore Cisco Nexus"
 
@@ -29067,6 +29074,10 @@ msgstr "Livelli più bassi per la durata della salute"
 msgid "Lower levels for remaining API reads"
 msgstr "Livelli più bassi per le restanti letture API"
 
+#, fuzzy
+msgid "Lower levels for remaining expiration time of licenses"
+msgstr "Livelli più bassi per le restanti letture API"
+
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr ""
 "Livelli inferiori per la velocità della ventola di un dispositivo hardware"
@@ -34902,6 +34913,14 @@ msgstr "Scoperta delle prestazioni Oracle"
 
 msgid "Order"
 msgstr "Ordina"
+
+#, fuzzy
+msgid "Organisation licenses overview"
+msgstr "Panoramica delle applicazioni"
+
+#, fuzzy
+msgid "Organisations"
+msgstr "Organizzazione"
 
 msgid "Organization"
 msgstr "Organizzazione"
@@ -41008,6 +41027,10 @@ msgstr "Sezione di file da monitorare"
 msgid "Section(s) cannot be disabled and enabled at the same time:"
 msgstr ""
 "Le sezioni non possono essere disabilitate e abilitate allo stesso tempo:"
+
+#, fuzzy
+msgid "Sections"
+msgstr "Sezione"
 
 msgid "Sections - data to collect"
 msgstr "Sezioni - dati da raccogliere"
@@ -49459,6 +49482,11 @@ msgid "The number of elements in the tuple must be exactly %d."
 msgstr "Il numero di elementi nella tupla deve essere esattamente %d."
 
 msgid ""
+"The number of incoming and processed agent registration requests are not the "
+"same."
+msgstr ""
+
+msgid ""
 "The number of object handles in the processes object table. This includes "
 "open handles to threads, files and other resources like registry keys."
 msgstr ""
@@ -49596,6 +49624,10 @@ msgid ""
 msgstr ""
 "L'opzione di usare un comando personalizzato può essere configurata solo con "
 "il permesso \"Can add or modify executables\"."
+
+#, fuzzy
+msgid "The organisation ID"
+msgstr "Organizzazione"
 
 msgid "The original aspect of the image will be ignored."
 msgstr "L'aspetto originale dell'immagine sarà ignorato."
@@ -67502,10 +67534,6 @@ msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
 #, python-format
 #~ msgid "%s Finished."
 #~ msgstr "%s Finito."
-
-#, fuzzy
-#~ msgid "Organisation"
-#~ msgstr "Organizzazione"
 
 #, fuzzy
 #~| msgid "Container Name"

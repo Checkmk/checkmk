@@ -9029,6 +9029,13 @@ msgstr "Ciscoのメモリ使用量"
 msgid "Cisco Memory Usage (%s)"
 msgstr "Ciscoメモリ使用量 (%s)"
 
+#, fuzzy
+msgid "Cisco Meraki"
+msgstr "Cisco Prime"
+
+msgid "Cisco Meraki Organisation Licenses Overview"
+msgstr ""
+
 msgid "Cisco Nexus Supervisor Memory Usage"
 msgstr "Cisco Nexusスーパーバイザのメモリ使用量"
 
@@ -27396,6 +27403,10 @@ msgstr "ヘルスライフタイムの低レベル"
 msgid "Lower levels for remaining API reads"
 msgstr "残りのAPI読み取りの下位レベル"
 
+#, fuzzy
+msgid "Lower levels for remaining expiration time of licenses"
+msgstr "残りのAPI読み取りの下位レベル"
+
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr "ハードウェアデバイスのファン速度の低いレベル"
 
@@ -32958,6 +32969,14 @@ msgstr "Oracleのパフォーマンスの検出"
 
 msgid "Order"
 msgstr "注文"
+
+#, fuzzy
+msgid "Organisation licenses overview"
+msgstr "アプリケーションの概要"
+
+#, fuzzy
+msgid "Organisations"
+msgstr "組織"
 
 msgid "Organization"
 msgstr "組織"
@@ -38767,6 +38786,10 @@ msgstr "監視するファイルのセクション"
 
 msgid "Section(s) cannot be disabled and enabled at the same time:"
 msgstr "セクションの無効化と有効化を同時に行うことはできません。"
+
+#, fuzzy
+msgid "Sections"
+msgstr "セクション"
 
 msgid "Sections - data to collect"
 msgstr "セクション - 収集するデータ"
@@ -46574,6 +46597,11 @@ msgid "The number of elements in the tuple must be exactly %d."
 msgstr "タプル内の要素の数は正確に%dである必要があります。"
 
 msgid ""
+"The number of incoming and processed agent registration requests are not the "
+"same."
+msgstr ""
+
+msgid ""
 "The number of object handles in the processes object table. This includes "
 "open handles to threads, files and other resources like registry keys."
 msgstr ""
@@ -46690,6 +46718,10 @@ msgid ""
 msgstr ""
 "カスタムコマンドを使用するオプションは、\"実行可能ファイルを追加または変更で"
 "きます\"という権限でのみ構成できます。"
+
+#, fuzzy
+msgid "The organisation ID"
+msgstr "組織"
 
 msgid "The original aspect of the image will be ignored."
 msgstr "画像の元の側面は無視されます。"

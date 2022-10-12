@@ -9476,6 +9476,13 @@ msgstr "Cisco-geheugengebruik"
 msgid "Cisco Memory Usage (%s)"
 msgstr "Cisco-geheugengebruik (%s)"
 
+#, fuzzy
+msgid "Cisco Meraki"
+msgstr "Cisco Prime"
+
+msgid "Cisco Meraki Organisation Licenses Overview"
+msgstr ""
+
 msgid "Cisco Nexus Supervisor Memory Usage"
 msgstr "Cisco Nexus Supervisor-geheugengebruik"
 
@@ -28614,6 +28621,10 @@ msgstr "Lagere niveaus voor levenslange gezondheid"
 msgid "Lower levels for remaining API reads"
 msgstr "Lagere niveaus voor resterende API-lezingen"
 
+#, fuzzy
+msgid "Lower levels for remaining expiration time of licenses"
+msgstr "Lagere niveaus voor resterende API-lezingen"
+
 msgid "Lower levels for the fan speed of a hardware device"
 msgstr "Lagere niveaus voor de ventilatorsnelheid van een hardwareapparaat"
 
@@ -34324,6 +34335,14 @@ msgstr "Oracle prestatie ontdekking"
 
 msgid "Order"
 msgstr "Bestel"
+
+#, fuzzy
+msgid "Organisation licenses overview"
+msgstr "Overzicht toepassingen"
+
+#, fuzzy
+msgid "Organisations"
+msgstr "Organisatie"
 
 msgid "Organization"
 msgstr "Organisatie"
@@ -40298,6 +40317,10 @@ msgstr "Sectie van te controleren bestanden"
 msgid "Section(s) cannot be disabled and enabled at the same time:"
 msgstr ""
 "Sectie(s) kunnen niet tegelijkertijd worden uitgeschakeld en ingeschakeld:"
+
+#, fuzzy
+msgid "Sections"
+msgstr "Sectie"
 
 msgid "Sections - data to collect"
 msgstr "Secties - te verzamelen gegevens"
@@ -48658,6 +48681,11 @@ msgid "The number of elements in the tuple must be exactly %d."
 msgstr "Het aantal elementen in de tupel moet precies %d zijn."
 
 msgid ""
+"The number of incoming and processed agent registration requests are not the "
+"same."
+msgstr ""
+
+msgid ""
 "The number of object handles in the processes object table. This includes "
 "open handles to threads, files and other resources like registry keys."
 msgstr ""
@@ -48792,6 +48820,10 @@ msgstr ""
 "De optie om een aangepast commando te gebruiken kan alleen worden "
 "geconfigureerd met de permissie \"Kan uitvoerbare bestanden toevoegen of "
 "wijzigen\"."
+
+#, fuzzy
+msgid "The organisation ID"
+msgstr "Organisatie"
 
 msgid "The original aspect of the image will be ignored."
 msgstr "Het oorspronkelijke aspect van het beeld zal worden genegeerd."
@@ -66464,10 +66496,6 @@ msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 #, python-format
 #~ msgid "%s Finished."
 #~ msgstr "%s Afgerond."
-
-#, fuzzy
-#~ msgid "Organisation"
-#~ msgstr "Organisatie"
 
 #, fuzzy
 #~| msgid "Container Name"

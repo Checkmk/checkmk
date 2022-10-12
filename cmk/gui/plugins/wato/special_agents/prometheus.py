@@ -39,7 +39,9 @@ def _rename_path_prefix_key(connection_elements: dict[str, object]) -> dict[str,
     return connection_elements
 
 
-def _valuespec_connection_elements() -> Migrate:
+def _valuespec_connection_elements(  # pylint: disable=redefined-builtin
+    help: str,
+) -> Migrate:
     return Migrate(
         valuespec=Dictionary(
             elements=[
@@ -72,6 +74,7 @@ def _valuespec_connection_elements() -> Migrate:
                 ),
             ],
             show_more_keys=["base_prefix"],
+            help=help,
         ),
         migrate=_rename_path_prefix_key,
     )
@@ -102,8 +105,20 @@ def _valuespec_generic_metrics_prometheus() -> Dictionary:
                 "connection",
                 CascadingDropdown(
                     choices=[
-                        ("ip_address", _("IP Address"), _valuespec_connection_elements()),
-                        ("host_name", _("Host name"), _valuespec_connection_elements()),
+                        (
+                            "ip_address",
+                            _("IP Address"),
+                            _valuespec_connection_elements(
+                                help=_("Use IP Address of assigned host")
+                            ),
+                        ),
+                        (
+                            "host_name",
+                            _("Host name"),
+                            _valuespec_connection_elements(
+                                help=_("Use host name of assigned host")
+                            ),
+                        ),
                         (
                             "url_custom",
                             _("Custom URL"),

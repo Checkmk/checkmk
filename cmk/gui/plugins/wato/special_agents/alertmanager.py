@@ -48,6 +48,7 @@ def _valuespec_generic_metrics_alertmanager():
                                     ),
                                     default_port=9093,
                                 ),
+                                help=_("Use IP address of assigned host"),
                             ),
                         ),
                         (
@@ -62,6 +63,7 @@ def _valuespec_generic_metrics_alertmanager():
                                     ),
                                     default_port=9093,
                                 ),
+                                help=_("Use host name of assigned host"),
                             ),
                         ),
                         (

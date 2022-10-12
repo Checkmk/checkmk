@@ -19,4 +19,4 @@ logins now, because no LDAP connection matches.
 
 The problem will be fixed with this werk. A workaround was, to manually change
 the user attribute of affected users from 'connector':'ldap' to
-'connector':'default' in ~/var/check_mk/USERNAME/cached_profile.mk.
+'connector':'default' in ~/var/check_mk/web/USERNAME/cached_profile.mk.

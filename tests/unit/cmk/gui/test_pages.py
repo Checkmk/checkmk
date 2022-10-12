@@ -145,7 +145,6 @@ def test_registered_pages() -> None:
         "wato_ajax_execute_check",
         "wato_ajax_fetch_site_status",
         "wato_ajax_profile_repl",
-        "webapi",
         "werk",
         "ajax_graph",
         "ajax_graph_hover",

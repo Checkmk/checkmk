@@ -30,7 +30,6 @@ def _plugin_path(main_module_name: str) -> Path:
         "visuals",
         "wato",
         "watolib",
-        "webapi",
     ],
 )
 def fixture_main_module_name(request):
@@ -72,7 +71,6 @@ def test_load_local_plugin(main_module_name) -> None:  # type:ignore[no-untyped-
         "watolib",
         "sidebar",
         "userdb",
-        "webapi",
         "main_modules",
         "dashboard",
         "visuals",

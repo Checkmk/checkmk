@@ -6,6 +6,7 @@
 # flake8: noqa
 # pylint: disable=unused-import
 
+import cmk.gui.autocompleters
 import cmk.gui.bi
 import cmk.gui.crash_reporting
 import cmk.gui.cron
@@ -34,6 +35,5 @@ import cmk.gui.valuespec
 import cmk.gui.views
 import cmk.gui.visuals
 import cmk.gui.wato
-import cmk.gui.webapi
 import cmk.gui.weblib
 import cmk.gui.werks

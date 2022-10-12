@@ -445,7 +445,6 @@ def test_registered_permissions() -> None:
         "wato.add_or_modify_executables",
         "wato.all_folders",
         "wato.analyze_config",
-        "wato.api_allowed",
         "wato.auditlog",
         "wato.automation",
         "wato.backups",

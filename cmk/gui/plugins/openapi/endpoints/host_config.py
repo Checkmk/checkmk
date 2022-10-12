@@ -61,7 +61,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.plugins.openapi.utils import problem, serve_json
-from cmk.gui.plugins.webapi.utils import check_hostname
+from cmk.gui.valuespec import Hostname
 from cmk.gui.watolib.activate_changes import has_pending_changes
 from cmk.gui.watolib.check_mk_automations import delete_hosts
 from cmk.gui.watolib.host_rename import perform_rename_hosts
@@ -368,7 +368,7 @@ def update_host(params: Mapping[str, Any]) -> Response:
     new_attributes = body["attributes"]
     update_attributes = body["update_attributes"]
     remove_attributes = body["remove_attributes"]
-    check_hostname(host_name, should_exist=True)
+    _verify_hostname(host_name, should_exist=True)
     host: CREHost = Host.load_host(host_name)
     _require_host_etag(host)
 
@@ -427,7 +427,7 @@ def bulk_update_hosts(params: Mapping[str, Any]) -> Response:
         new_attributes = update_detail["attributes"]
         update_attributes = update_detail["update_attributes"]
         remove_attributes = update_detail["remove_attributes"]
-        check_hostname(host_name)
+        _verify_hostname(host_name)
         host: CREHost = Host.load_host(host_name)
         if new_attributes:
             host.edit(new_attributes, None)
@@ -553,7 +553,7 @@ def delete(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.edit")
     host_name = params["host_name"]
     # Parameters can't be validated through marshmallow yet.
-    check_hostname(host_name, should_exist=True)
+    _verify_hostname(host_name, should_exist=True)
     host: CREHost = Host.load_host(host_name)
     host.folder().delete_hosts([host.name()], automation=delete_hosts)
     return Response(status=204)
@@ -675,3 +675,22 @@ def _host_etag_values(host):
         "attributes": _except_keys(host.attributes(), ["meta_data"]),
         "cluster_nodes": host.cluster_nodes(),
     }
+
+
+def _verify_hostname(hostname: HostName, should_exist: bool = True) -> None:
+    Hostname().validate_value(hostname, "hostname")
+
+    if should_exist:
+        host = Host.host(hostname)
+        if not host:
+            raise MKUserError(None, "No such host")
+    else:
+        if (host := Host.host(hostname)) is not None:
+            raise MKUserError(
+                None,
+                "Host %s already exists in the folder %s"
+                % (
+                    hostname,
+                    host.folder().path(),
+                ),
+            )

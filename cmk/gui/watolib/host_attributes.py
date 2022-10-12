@@ -23,9 +23,7 @@ from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
-from cmk.gui.site_config import allsites
 from cmk.gui.type_defs import Choices
-from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import Checkbox, DropdownChoice, TextInput, Transform, ValueSpec
 from cmk.gui.watolib.utils import host_attribute_matches
@@ -1134,64 +1132,3 @@ def EnumAttribute(
             "_enumlist": enumlist,
         },
     )
-
-
-def _validate_host_tags(host_tags):
-    """Check if the tag group exists and the tag value is valid"""
-    for tag_group_id, tag_id in host_tags.items():
-        for tag_group in active_config.tags.tag_groups:
-            if tag_group.id == tag_group_id:
-                for grouped_tag in tag_group.tags:
-                    if grouped_tag.id == tag_id:
-                        break
-                else:
-                    raise MKUserError(None, _("Unknown tag %s") % escaping.escape_attribute(tag_id))
-                break
-        else:
-            raise MKUserError(
-                None, _("Unknown tag group %s") % escaping.escape_attribute(tag_group_id)
-            )
-
-
-def validate_host_attributes(  # type:ignore[no-untyped-def]
-    attributes, extra_attrs: Sequence[str] = (), new=False
-):
-    # `extra_attrs` is only necessary for the webapi and should be removed later.
-    _validate_general_host_attributes(
-        dict((key, value) for key, value in attributes.items() if not key.startswith("tag_")),
-        extra_attrs,
-        new,
-    )
-    _validate_host_tags(
-        dict((key[4:], value) for key, value in attributes.items() if key.startswith("tag_"))
-    )
-
-
-def _validate_general_host_attributes(  # type:ignore[no-untyped-def]
-    host_attributes, extra_attrs: Sequence[str], new: bool
-):
-    """Check if the given attribute name exists, no type check"""
-    all_host_attribute_names = _retrieve_host_attributes()
-    all_host_attribute_names.extend(extra_attrs)
-    for name, value in host_attributes.items():
-        if name not in all_host_attribute_names:
-            raise MKUserError(None, _("Unknown attribute: %s") % escaping.escape_attribute(name))
-
-        # For real host attributes validate the values
-        try:
-            attr: Optional[ABCHostAttribute] = host_attribute(name)
-        except KeyError:
-            attr = None
-
-        if attr is not None:
-            if attr.needs_validation("host", new):
-                attr.validate_input(value, "")
-
-        # The site attribute gets an extra check
-        if name == "site" and value not in allsites().keys():
-            raise MKUserError(None, _("Unknown site %s") % escaping.escape_attribute(value))
-
-
-def _retrieve_host_attributes() -> List[str]:
-    """Returns list of registered host attribute names"""
-    return list(host_attribute_registry.keys())

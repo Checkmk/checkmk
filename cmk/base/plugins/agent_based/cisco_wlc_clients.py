@@ -7,7 +7,7 @@
 import re
 from typing import List
 
-from .agent_based_api.v1 import matches, register, SNMPTree
+from .agent_based_api.v1 import any_of, equals, matches, register, SNMPTree
 from .agent_based_api.v1.type_defs import StringTable
 from .utils.cisco_wlc import CISCO_WLC_OIDS
 from .utils.wlc_clients import ClientsPerInterface, ClientsTotal, WlcClientsSection
@@ -63,7 +63,10 @@ def parse_cisco_wlc_9800_clients(
 register.snmp_section(
     name="cisco_wlc_9800_clients",
     parsed_section_name="wlc_clients",
-    detect=matches(OID_sysObjectID, r"^\.1\.3\.6\.1\.4\.1\.9\.1\.2530"),
+    detect=any_of(
+        equals(OID_sysObjectID, ".1.3.6.1.4.1.9.1.2530"),
+        equals(OID_sysObjectID, ".1.3.6.1.4.1.9.1.2861"),
+    ),
     parse_function=parse_cisco_wlc_9800_clients,
     fetch=[
         SNMPTree(

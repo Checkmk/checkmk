@@ -34,7 +34,7 @@ def _check_not_empty_exporter_dict(value, _varprefix):
 
 
 def _rename_path_prefix_key(connection_elements: dict[str, object]) -> dict[str, object]:
-    if (prefix := connection_elements.get("path-prefix")) is not None:
+    if (prefix := connection_elements.pop("path-prefix", None)) is not None:
         connection_elements["base_prefix"] = prefix
     return connection_elements
 

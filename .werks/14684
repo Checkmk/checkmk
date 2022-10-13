@@ -1,0 +1,17 @@
+Title: Fixed handling of Livestatus socket specification in livedump/cmc
+Class: fix
+Compatible: compat
+Component: livestatus
+Date: 1665650799
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p30
+
+There were a few tiny bugs plus some surprising behavior when specifying the
+Livestatus socket for livedump/cmcdump.  With this change, the rules are
+simple and consistent now: If there is a -s/--socket commandline option, use
+that.  Otherwise derive the UNIX socket from the OMD_ROOT environment
+variable if that is set (probably the common case).  And finally: If there
+is no -s/--socket option and no OMD_ROOT, complain and exit.

@@ -7,49 +7,20 @@ from collections.abc import Sequence
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
-from cmk.utils.type_defs import CheckPluginName
-
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-from cmk.base.plugins.agent_based.threepar_ports import parse_3par_ports
+from cmk.base.plugins.agent_based.threepar_ports import (
+    check_3par_ports,
+    discover_3par_ports,
+    parse_3par_ports,
+    THREEPAR_PORTS_DEFAULT_LEVELS,
+)
 
 STRING_TABLE = [
     [
         '{"total":24,"members":[{"portPos":{"node":0,"slot":0,"cardPort":1},"mode":3,"linkState":4,"portWWN":"943FC9606F9C","type":2,"protocol":1,"label":"DP-1"},{"portPos":{"node":0,"slot":0,"cardPort":1},"mode":3,"linkState":4,"portWWN":"943FC9606F9C","type":2,"protocol":6,"label":"DP-1"}]}'
     ]
 ]
-
-THREEPAR_PORTS_DEFAULT_LEVELS = {
-    "1_link": 1,
-    "2_link": 1,
-    "3_link": 1,
-    "4_link": 0,
-    "5_link": 2,
-    "6_link": 2,
-    "7_link": 1,
-    "8_link": 0,
-    "9_link": 1,
-    "10_link": 1,
-    "11_link": 1,
-    "12_link": 1,
-    "13_link": 1,
-    "14_link": 1,
-    "1_fail": 0,
-    "2_fail": 2,
-    "3_fail": 2,
-    "4_fail": 2,
-    "5_fail": 2,
-    "6_fail": 2,
-    "7_fail": 1,
-}
-
-
-@pytest.fixture(name="check")
-def _3par_ports_check_plugin(fix_register: FixRegister) -> CheckPlugin:
-    return fix_register.check_plugins[CheckPluginName("3par_ports")]
 
 
 @pytest.mark.parametrize(
@@ -89,12 +60,11 @@ def _3par_ports_check_plugin(fix_register: FixRegister) -> CheckPlugin:
     ],
 )
 def test_discover_3par_ports(
-    check: CheckPlugin,
     section: StringTable,
     expected_discovery_result: Sequence[Service],
 ) -> None:
 
-    assert list(check.discovery_function(parse_3par_ports(section))) == expected_discovery_result
+    assert list(discover_3par_ports(parse_3par_ports(section))) == expected_discovery_result
 
 
 @pytest.mark.parametrize(
@@ -196,7 +166,6 @@ def test_discover_3par_ports(
     ],
 )
 def test_check_3par_ports(
-    check: CheckPlugin,
     section: StringTable,
     item: str,
     expected_check_result: Sequence[Result],
@@ -204,7 +173,7 @@ def test_check_3par_ports(
 
     assert (
         list(
-            check.check_function(
+            check_3par_ports(
                 item=item,
                 params=THREEPAR_PORTS_DEFAULT_LEVELS,
                 section=parse_3par_ports(section),

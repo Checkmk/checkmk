@@ -6,11 +6,38 @@
 from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass, field
 
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
 
-from .agent_based_api.v1 import register
+from .agent_based_api.v1 import register, Result, Service, State
 from .utils.threepar import parse_3par
 
+THREEPAR_PORTS_DEFAULT_LEVELS = {
+    "1_link": 1,
+    "2_link": 1,
+    "3_link": 1,
+    "4_link": 0,
+    "5_link": 2,
+    "6_link": 2,
+    "7_link": 1,
+    "8_link": 0,
+    "9_link": 1,
+    "10_link": 1,
+    "11_link": 1,
+    "12_link": 1,
+    "13_link": 1,
+    "14_link": 1,
+    "1_fail": 0,
+    "2_fail": 2,
+    "3_fail": 2,
+    "4_fail": 2,
+    "5_fail": 2,
+    "6_fail": 2,
+    "7_fail": 1,
+}
 PROTOCOLS = {
     1: "FC",
     2: "iSCSI",
@@ -118,4 +145,55 @@ def parse_3par_ports(string_table: StringTable) -> ThreeParPortsSection:
 register.agent_section(
     name="3par_ports",
     parse_function=parse_3par_ports,
+)
+
+
+def discover_3par_ports(section: ThreeParPortsSection) -> DiscoveryResult:
+    for port in section.values():
+        # Only create an item if not "FREE" (type = 3)
+        if port.type != 3:
+            yield Service(item=port.name)
+
+
+def check_3par_ports(
+    item: str,
+    params: Mapping[str, int],
+    section: ThreeParPortsSection,
+) -> CheckResult:
+
+    if (port := section.get(item)) is None:
+        return
+
+    if port.label:
+        yield Result(state=State.OK, summary=f"Label: {port.label}")
+
+    if port.state and port.translated_state:
+        yield Result(
+            state=State(params.get(f"{port.state}_link")),
+            summary=port.translated_state,
+        )
+
+    if port.portWWN:
+        yield Result(state=State.OK, summary=f"portWWN: {port.portWWN}")
+
+    if port.mode:
+        yield Result(
+            state=State.OK,
+            summary=f"Mode: {port.translated_mode}",
+        )
+
+    if port.failoverState:
+        yield Result(
+            state=State(params.get(f"{port.failoverState}_fail")),
+            summary=f"Failover: {port.translated_failover}",
+        )
+
+
+register.check_plugin(
+    name="3par_ports",
+    service_name="Port %s",
+    check_function=check_3par_ports,
+    check_default_parameters=THREEPAR_PORTS_DEFAULT_LEVELS,
+    check_ruleset_name="threepar_ports",
+    discovery_function=discover_3par_ports,
 )

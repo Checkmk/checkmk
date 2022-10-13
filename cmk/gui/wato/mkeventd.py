@@ -1772,39 +1772,8 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                         % (rule_pack["id"], rule_pack["title"], len(rule_pack["rules"])),
                     )
                     html.icon_button(delete_url, _("Delete this rule pack"), "delete")
-                elif type_ == ec.RulePackType.exported:
-                    dissolve_url = make_action_link(
-                        [("mode", "mkeventd_rule_packs"), ("_dissolve", nr)]
-                    )
-                    html.icon_button(
-                        dissolve_url,
-                        _("Remove this rule pack from the Extension Packages module"),
-                        {
-                            "icon": "mkps",
-                            "emblem": "disable",
-                        },
-                    )
-                elif type_ == ec.RulePackType.modified_mkp:
-                    reset_url = make_action_link([("mode", "mkeventd_rule_packs"), ("_reset", nr)])
-                    html.icon_button(
-                        reset_url,
-                        _("Reset rule pack to the MKP version"),
-                        {
-                            "icon": "mkps",
-                            "emblem": "disable",
-                        },
-                    )
-                    sync_url = make_action_link(
-                        [("mode", "mkeventd_rule_packs"), ("_synchronize", nr)]
-                    )
-                    html.icon_button(
-                        sync_url,
-                        _("Synchronize MKP with modified version"),
-                        {
-                            "icon": "mkps",
-                            "emblem": "refresh",
-                        },
-                    )
+                else:
+                    html.disabled_icon_button("trans")  # Invisible dummy button for icon spacing
 
                 rules_url_vars = [("mode", "mkeventd_rules"), ("rule_pack", id_)]
                 if found_packs.get(id_):
@@ -1826,18 +1795,51 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                                 "emblem": "add",
                             },
                         )
-
-                    table.cell("", css="buttons")
-                    if type_ == ec.RulePackType.unmodified_mkp:
-                        html.icon(
-                            "mkps", _("This rule pack is provided via the MKP %s.") % id_to_mkp[id_]
-                        )
                     elif type_ == ec.RulePackType.exported:
+                        dissolve_url = make_action_link(
+                            [("mode", "mkeventd_rule_packs"), ("_dissolve", nr)]
+                        )
+                        html.icon_button(
+                            dissolve_url,
+                            _("Remove this rule pack from the Extension Packages module"),
+                            {
+                                "icon": "mkps",
+                                "emblem": "disable",
+                            },
+                        )
+                    elif type_ == ec.RulePackType.modified_mkp:
+                        reset_url = make_action_link(
+                            [("mode", "mkeventd_rule_packs"), ("_reset", nr)]
+                        )
+                        html.icon_button(
+                            reset_url,
+                            _("Reset rule pack to the MKP version"),
+                            {
+                                "icon": "mkps",
+                                "emblem": "disable",
+                            },
+                        )
+                        sync_url = make_action_link(
+                            [("mode", "mkeventd_rule_packs"), ("_synchronize", nr)]
+                        )
+                        html.icon_button(
+                            sync_url,
+                            _("Synchronize MKP with modified version"),
+                            {
+                                "icon": "mkps",
+                                "emblem": "refresh",
+                            },
+                        )
+
+                    table.cell(_("State"), css="buttons")
+                    if type_ == ec.RulePackType.exported:
                         html.icon(
                             "mkps",
-                            _(
-                                "This is rule pack can be packaged with the Extension Packages module."
-                            ),
+                            _("This rule pack can be packaged with the Extension Packages module."),
+                        )
+                    elif type_ == ec.RulePackType.unmodified_mkp:
+                        html.icon(
+                            "mkps", _("This rule pack is provided via the MKP %s.") % id_to_mkp[id_]
                         )
                     elif type_ == ec.RulePackType.modified_mkp:
                         html.icon(

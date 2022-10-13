@@ -114,7 +114,7 @@ class MkpRulePackProxy(MutableMapping[str, Any]):  # pylint: disable=too-many-an
 
 class RulePackType(Enum):  # pylint: disable=too-few-public-methods
     """
-    A class to distinguishes the four kinds of rule pack types:
+    A class to distinguish the four kinds of rule pack types:
 
         1. internal: A rule pack that is not available in the Extension Packages module.
         2. exported: A rule pack that is available in the Extension Packages, but not

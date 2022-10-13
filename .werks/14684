@@ -6,7 +6,7 @@ Date: 1665650799
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0p15
+Version: 2.1.0p14
 
 There were a few tiny bugs plus some surprising behavior when specifying the
 Livestatus socket for livedump/cmcdump.  With this change, the rules are

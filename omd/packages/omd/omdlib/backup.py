@@ -24,13 +24,14 @@
 """Cares about backing up the files of a site"""
 
 import contextlib
+import errno
 import fnmatch
 import io
 import os
 import socket
 import sys
 import tarfile
-from typing import BinaryIO, Callable, ContextManager, Iterator, List, Tuple, Union
+from typing import BinaryIO, Callable, Iterator, List, Tuple, Union
 
 from omdlib.contexts import SiteContext
 from omdlib.type_defs import CommandOptions
@@ -44,6 +45,9 @@ def backup_site_to_tarfile(
     verbose: bool,
 ) -> None:
 
+    if not os.path.isdir(site.dir):
+        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), site.dir)
+
     excludes = get_exclude_patterns(options)
 
     def accepted_files(tarinfo: tarfile.TarInfo) -> bool:
@@ -52,17 +56,6 @@ def backup_site_to_tarfile(
             fnmatch.fnmatch(tarinfo.name[len(site.name) + 1 :], glob_pattern)
             for glob_pattern in excludes
         )
-
-    @contextlib.contextmanager
-    def error_handler(arcname: str) -> Iterator[None]:
-        if arcname == site.name:
-            yield
-        else:
-            try:
-                yield
-            except FileNotFoundError:
-                if verbose:
-                    sys.stdout.write("Skipping vanished file: %s\n" % arcname)
 
     with RRDSocket(site.dir, site.is_stopped(), site.name, verbose) as rrd_socket:
         with tarfile.TarFile.open(
@@ -79,7 +72,7 @@ def backup_site_to_tarfile(
                 tar,
                 site.dir + "/version",
                 site.name + "/version",
-                error_handler=error_handler,
+                verbose=verbose,
             )
             tar_add(
                 rrd_socket,
@@ -87,7 +80,7 @@ def backup_site_to_tarfile(
                 site.dir,
                 site.name,
                 predicate=accepted_files,
-                error_handler=error_handler,
+                verbose=verbose,
             )
 
 
@@ -243,7 +236,7 @@ def tar_add(
     arcname: str,
     *,
     predicate: Callable[[tarfile.TarInfo], bool] = lambda _: True,
-    error_handler: Callable[[str], ContextManager[None]],
+    verbose: bool,
 ) -> None:
     """Reimplement tar.add().
 
@@ -257,7 +250,7 @@ def tar_add(
     if tar.name is not None and os.path.abspath(name) == tar.name:
         return
     directory_files = []
-    with error_handler(arcname):
+    try:
         with rrd_socket.suspend_rrd_update_if_needed(arcname):
             # Create a TarInfo object from the file.
             tarinfo = tar.gettarinfo(name, arcname)
@@ -275,6 +268,9 @@ def tar_add(
 
             if tarinfo.isdir():
                 directory_files = sorted(os.listdir(name))
+    except FileNotFoundError:
+        if verbose:
+            sys.stdout.write("Skipping vanished file: %s\n" % arcname)
 
     for filename in directory_files:
         tar_add(  # recursive call
@@ -283,7 +279,7 @@ def tar_add(
             os.path.join(name, filename),
             os.path.join(arcname, filename),
             predicate=predicate,
-            error_handler=error_handler,
+            verbose=verbose,
         )
 
 

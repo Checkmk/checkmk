@@ -797,22 +797,6 @@ def save_backup_info(info: BackupInfo, action: BackupAction) -> None:
         json.dump(raw_info, f, sort_keys=True, indent=4, separators=(",", ": "))
 
 
-def create_backup_info(action: BackupAction) -> BackupInfo:
-    filename, filesize, checksum = get_fileinfo_for_backup_info(action)
-    return BackupInfo(
-        config=action.job.config,
-        filename=filename,
-        checksum=checksum,
-        finished=time.time(),
-        hostname=hostname(),
-        job_id=action.job.local_id,
-        site_id=current_site_id(),
-        site_version=site_version(current_site_id()),
-        size=filesize,
-        backup_id=None,
-    )
-
-
 def get_fileinfo_for_backup_info(action: BackupAction) -> tuple[str, int, str]:
     dir_entries = list(action.base_path.iterdir())
     assert len(dir_entries) == 1
@@ -967,8 +951,8 @@ def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None
                 },
             )
 
-            do_site_backup(action, state)
-            complete_backup(action, state)
+            info = do_site_backup(action, state)
+            complete_backup(action, state, info)
             success = True
 
         except MKGeneralException as e:
@@ -993,7 +977,32 @@ def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None
             )
 
 
-def do_site_backup(action: BackupAction, state: State) -> None:
+class InfoCalculator:
+    def __init__(self, filename: str) -> None:
+        self.filename = filename
+        self.hash = md5(usedforsecurity=False)  # pylint: disable=unexpected-keyword-arg
+        self.size = 0
+
+    def update(self, chunk: bytes) -> None:
+        self.hash.update(chunk)
+        self.size += len(chunk)
+
+    def info(self, action: BackupAction, site_id: str) -> BackupInfo:
+        return BackupInfo(
+            config=action.job.config,
+            filename=self.filename,
+            checksum=self.hash.hexdigest(),
+            finished=time.time(),
+            hostname=hostname(),
+            job_id=action.job.local_id,
+            site_id=site_id,
+            site_version=site_version(site_id),
+            size=self.size,
+            backup_id=None,
+        )
+
+
+def do_site_backup(action: BackupAction, state: State) -> BackupInfo:
     cmd = ["omd", "backup"]
 
     if not action.job.config["compress"]:
@@ -1009,6 +1018,7 @@ def do_site_backup(action: BackupAction, state: State) -> None:
 
     # Create missing directories. Ensure group permissions and mode.
     makedirs(backup_path.parent, group="omd", mode=0o775)
+    info = InfoCalculator(backup_path.name)
 
     verbose("Command: %s" % " ".join(cmd))
     with subprocess.Popen(
@@ -1031,11 +1041,14 @@ def do_site_backup(action: BackupAction, state: State) -> None:
             for chunk in s.process():
                 backup_file.write(chunk)
                 progess_logger.update(len(chunk))
+                info.update(chunk)
 
         err = p.stderr.read().decode()
 
     if p.returncode != 0:
         raise MKGeneralException("Site backup failed: %s" % err)
+
+    return info.info(action, site_id=site)
 
 
 # Returns the base path for the backup to work with. In backup mode, this is
@@ -1116,8 +1129,7 @@ def verify_backup_file(info: BackupInfo, archive_file: str, action: Action) -> N
         )
 
 
-def complete_backup(action: BackupAction, state: State) -> None:
-    info = create_backup_info(action)
+def complete_backup(action: BackupAction, state: State, info: BackupInfo) -> None:
     save_backup_info(info, action)
 
     state.save(

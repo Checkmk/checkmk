@@ -309,6 +309,8 @@ pub struct ProxyPullData {
     pub connection: config::TrustedConnection,
 }
 
+impl config::JSONLoader for ProxyPullData {}
+
 pub fn register_host_name(
     config: &config::RegistrationConfigHostName,
     registry: &mut config::Registry,

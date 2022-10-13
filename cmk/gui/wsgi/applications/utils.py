@@ -66,7 +66,7 @@ def ensure_authentication(func: pages.PageHandlerFunc) -> Callable[[], Response]
 def plain_error() -> bool:
     """Webservice functions may decide to get a normal result code
     but a text with an error message in case of an error"""
-    return request.has_var("_plain_error") or requested_file_name(request) == "webapi"
+    return request.has_var("_plain_error")
 
 
 def fail_silently() -> bool:

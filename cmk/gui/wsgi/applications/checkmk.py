@@ -161,12 +161,6 @@ def default_response_headers(req: http.Request) -> Dict[str, str]:
         # user related and are required to be up-to-date on every refresh
         "Cache-Control": "no-cache",
     }
-
-    # Would be better to put this to page individual code, but we currently have
-    # no mechanism for a page to set do this before the authentication is made.
-    if requested_file_name(req) == "webapi":
-        headers["Access-Control-Allow-Origin"] = "*"
-
     return headers
 
 

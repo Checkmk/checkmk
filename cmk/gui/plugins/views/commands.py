@@ -33,7 +33,7 @@ from cmk.gui.plugins.views.utils import (
     CommandGroup,
     CommandSpec,
 )
-from cmk.gui.type_defs import Choices, Row
+from cmk.gui.type_defs import Choices, Row, Rows
 from cmk.gui.valuespec import AbsoluteDate, Age, Seconds
 from cmk.gui.watolib.downtime import determine_downtime_mode, DowntimeSchedule
 
@@ -122,7 +122,7 @@ class CommandReschedule(Command):
         )
 
     def _action(
-        self, cmdtag: str, spec: str, row: Row, row_index: int, num_rows: int
+        self, cmdtag: str, spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.var("_resched_checks"):
             spread = utils.saveint(request.var("_resched_spread"))
@@ -134,7 +134,7 @@ class CommandReschedule(Command):
 
             t = time.time()
             if spread:
-                t += spread * 60.0 * row_index / num_rows
+                t += spread * 60.0 * row_index / len(action_rows)
 
             command = "SCHEDULE_FORCED_" + cmdtag + "_CHECK;%s;%d" % (spec, int(t))
             return command, title
@@ -191,7 +191,7 @@ class CommandNotifications(Command):
         html.button("_disable_notifications", _("Disable"))
 
     def _action(
-        self, cmdtag: str, spec: str, row: Row, row_index: int, num_rows: int
+        self, cmdtag: str, spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.var("_enable_notifications"):
             return (
@@ -256,7 +256,7 @@ class CommandToggleActiveChecks(Command):
         html.button("_disable_checks", _("Disable"))
 
     def _action(
-        self, cmdtag: str, spec: str, row: Row, row_index: int, num_rows: int
+        self, cmdtag: str, spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.var("_enable_checks"):
             return ("ENABLE_" + cmdtag + "_CHECK;%s" % spec, _("<b>enable active checks</b> for"))
@@ -305,7 +305,7 @@ class CommandTogglePassiveChecks(Command):
         html.button("_disable_passive_checks", _("Disable"))
 
     def _action(
-        self, cmdtag: str, spec: str, row: Row, row_index: int, num_rows: int
+        self, cmdtag: str, spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.var("_enable_passive_checks"):
             return (
@@ -372,7 +372,7 @@ class CommandClearModifiedAttributes(Command):
         html.button("_clear_modattr", _("Clear modified attributes"))
 
     def _action(
-        self, cmdtag: str, spec: str, row: Row, row_index: int, num_rows: int
+        self, cmdtag: str, spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.var("_clear_modattr"):
             return "CHANGE_" + cmdtag + "_MODATTR;%s;0" % spec, _(
@@ -487,7 +487,7 @@ class CommandFakeCheckResult(Command):
         html.close_table()
 
     def _action(
-        self, cmdtag: str, spec: str, row: Row, row_index: int, num_rows: int
+        self, cmdtag: str, spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         for s in [0, 1, 2, 3]:
             statename = request.var("_fake_%d" % s)
@@ -594,7 +594,7 @@ class CommandCustomNotification(Command):
         )
 
     def _action(
-        self, cmdtag: str, spec: str, row: Row, row_index: int, num_rows: int
+        self, cmdtag: str, spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.var("_customnotification"):
             comment = request.get_str_input_mandatory("_cusnot_comment")
@@ -720,8 +720,8 @@ class CommandAcknowledge(Command):
         html.button("_remove_ack", _("Remove acknowledgement"), formnovalidate=True)
         html.close_div()
 
-    def _action(
-        self, cmdtag: str, spec: str, row: Row, row_index: int, num_rows: int
+    def _action(  # pylint: disable=too-many-branches
+        self, cmdtag: str, spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if "aggr_tree" in row:  # BI mode
             specs = []
@@ -857,7 +857,7 @@ class CommandAddComment(Command):
         )
 
     def _action(
-        self, cmdtag: str, spec: str, row: Row, row_index: int, num_rows: int
+        self, cmdtag: str, spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.var("_add_comment"):
             comment = request.get_str_input("_comment")
@@ -1051,7 +1051,7 @@ class CommandScheduleDowntimes(Command):
             html.close_div()
 
     def _action(
-        self, cmdtag: str, spec: str, row: Row, row_index: int, num_rows: int
+        self, cmdtag: str, spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         """Prepares the livestatus command for any received downtime information through WATO"""
         if request.var("_down_remove"):
@@ -1420,7 +1420,7 @@ class CommandRemoveDowntime(Command):
         html.button("_remove_downtimes", _("Remove"))
 
     def _action(
-        self, cmdtag: str, spec: str, row: Row, row_index: int, num_rows: int
+        self, cmdtag: str, spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.has_var("_remove_downtimes"):
             return ("DEL_%s_DOWNTIME;%s" % (cmdtag, spec), _("remove"))
@@ -1463,7 +1463,7 @@ class CommandRemoveComments(Command):
         html.button("_remove_comments", _("Remove"))
 
     def _action(
-        self, cmdtag: str, spec: str, row: Row, row_index: int, num_rows: int
+        self, cmdtag: str, spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if not request.has_var("_remove_comments"):
             return None
@@ -1529,7 +1529,7 @@ class CommandFavorites(Command):
         html.button("_unstar", _("Remove from Favorites"))
 
     def _action(
-        self, cmdtag: str, spec: str, row: Row, row_index: int, num_rows: int
+        self, cmdtag: str, spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.var("_star") or request.var("_unstar"):
             star = 1 if request.var("_star") else 0

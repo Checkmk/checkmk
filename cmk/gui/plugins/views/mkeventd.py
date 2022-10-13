@@ -42,7 +42,7 @@ from cmk.gui.plugins.views.utils import (
     row_id,
     RowTableLivestatus,
 )
-from cmk.gui.type_defs import ColumnName, HTTPVariables, Row, ViewSpec
+from cmk.gui.type_defs import ColumnName, HTTPVariables, Row, Rows, ViewSpec
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless, urlencode_vars
 from cmk.gui.valuespec import MonitoringState
 from cmk.gui.view_utils import CellSpec
@@ -1133,7 +1133,7 @@ class CommandECUpdateEvent(ECCommand):
         html.button("_mkeventd_update", _("Update"))
 
     def _action(
-        self, cmdtag: str, spec: str, row: Row, row_index: int, num_rows: int
+        self, cmdtag: str, spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.var("_mkeventd_update"):
             if user.may("mkeventd.update_comment"):
@@ -1203,7 +1203,7 @@ class CommandECChangeState(ECCommand):
         MonitoringState().render_input("_mkeventd_state", 2)
 
     def _action(
-        self, cmdtag: str, spec: str, row: Row, row_index: int, num_rows: int
+        self, cmdtag: str, spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.var("_mkeventd_changestate"):
             state = MonitoringState().from_html_vars("_mkeventd_state")
@@ -1251,7 +1251,7 @@ class CommandECCustomAction(ECCommand):
             html.br()
 
     def _action(
-        self, cmdtag: str, spec: str, row: Row, row_index: int, num_rows: int
+        self, cmdtag: str, spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         for action_id, title in mkeventd.action_choices(omit_hidden=True):
             if request.var("_action_" + action_id):
@@ -1295,10 +1295,11 @@ class CommandECArchiveEvent(ECCommand):
         html.button("_delete_event", _("Archive Event"))
 
     def _action(
-        self, cmdtag: str, spec: str, row: Row, row_index: int, num_rows: int
+        self, cmdtag: str, spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.var("_delete_event"):
-            command = "DELETE;%s;%s" % (row["event_id"], user.id)
+            events = ",".join([str(entry["event_id"]) for entry in action_rows])
+            command = "DELETE;%s;%s" % (events, user.id)
             title = _("<b>archive</b>")
             return command, title
         return None
@@ -1344,7 +1345,7 @@ class CommandECArchiveEventsOfHost(ECCommand):
         html.button("_archive_events_of_hosts", _("Archive events"), cssclass="hot")
 
     def _action(
-        self, cmdtag: str, spec: str, row: Row, row_index: int, num_rows: int
+        self, cmdtag: str, spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.var("_archive_events_of_hosts"):
             if cmdtag == "HOST":

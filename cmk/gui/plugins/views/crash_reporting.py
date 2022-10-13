@@ -29,6 +29,7 @@ from cmk.gui.plugins.views.utils import (
     Sorter,
     sorter_registry,
 )
+from cmk.gui.type_defs import Rows
 from cmk.gui.utils.urls import makeuri_contextless
 
 
@@ -316,7 +317,7 @@ class CommandDeleteCrashReports(Command):
         html.button("_delete_crash_reports", _("Delete"))
 
     def _action(
-        self, cmdtag: str, spec: str, row: dict, row_index: int, num_rows: int
+        self, cmdtag: str, spec: str, row: dict, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.has_var("_delete_crash_reports"):
             commands = [("DEL_CRASH_REPORT;%s" % row["crash_id"])]

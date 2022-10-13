@@ -846,7 +846,7 @@ def get_host_attributes(hostname: HostName, config_cache: ConfigCache) -> Object
         attrs["_ACTIONS"] = ",".join(actions)
 
     if cmk_version.is_managed_edition():
-        attrs["_CUSTOMER"] = config.current_customer
+        attrs["_CUSTOMER"] = config.current_customer  # type: ignore[attr-defined] # needed for CRE/CEE
 
     return attrs
 

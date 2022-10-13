@@ -323,7 +323,7 @@ class CommandDeleteCrashReports(Command):
     def render(self, what):
         html.button("_delete_crash_reports", _("Delete"))
 
-    def _action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag, spec, row, row_index, action_rows):
         if html.request.has_var("_delete_crash_reports"):
             commands = [("DEL_CRASH_REPORT;%s" % row["crash_id"])]
             return commands, _("remove")

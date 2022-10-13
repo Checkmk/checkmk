@@ -456,7 +456,7 @@ def do_commands(what: str, rows: Rows) -> bool:
         what,
         rows[0],
         0,
-        len(rows),
+        rows,
     )[1:4]  # just get confirm_options, title and executor
 
     confirm_title = _("Do you really want to %s") % title
@@ -471,7 +471,7 @@ def do_commands(what: str, rows: Rows) -> bool:
             what,
             row,
             nr,
-            len(rows),
+            rows,
         )
         for command in nagios_commands:
             if command not in already_executed:

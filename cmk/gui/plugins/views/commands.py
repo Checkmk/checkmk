@@ -117,7 +117,7 @@ class CommandReschedule(Command):
         html.div(html.render_button("_resched_checks", _("Reschedule"), cssclass="hot"),
                  class_="group")
 
-    def _action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag, spec, row, row_index, action_rows):
         if html.request.var("_resched_checks"):
             spread = utils.saveint(html.request.var("_resched_spread"))
             title = "<b>" + _("reschedule an immediate check")
@@ -128,7 +128,7 @@ class CommandReschedule(Command):
 
             t = time.time()
             if spread:
-                t += spread * 60.0 * row_index / num_rows
+                t += spread * 60.0 * row_index / len(action_rows)
 
             command = "SCHEDULE_FORCED_" + cmdtag + "_CHECK;%s;%d" % (spec, int(t))
             return command, title
@@ -182,7 +182,7 @@ class CommandNotifications(Command):
         html.button("_enable_notifications", _("Enable"))
         html.button("_disable_notifications", _("Disable"))
 
-    def _action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag, spec, row, row_index, action_rows):
         if html.request.var("_enable_notifications"):
             return ("ENABLE_" + cmdtag + "_NOTIFICATIONS;%s" % spec,
                     _("<b>enable notifications</b> for"))
@@ -239,7 +239,7 @@ class CommandToggleActiveChecks(Command):
         html.button("_enable_checks", _("Enable"))
         html.button("_disable_checks", _("Disable"))
 
-    def _action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag, spec, row, row_index, action_rows):
         if html.request.var("_enable_checks"):
             return ("ENABLE_" + cmdtag + "_CHECK;%s" % spec, _("<b>enable active checks</b> for"))
         if html.request.var("_disable_checks"):
@@ -285,7 +285,7 @@ class CommandTogglePassiveChecks(Command):
         html.button("_enable_passive_checks", _("Enable"))
         html.button("_disable_passive_checks", _("Disable"))
 
-    def _action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag, spec, row, row_index, action_rows):
         if html.request.var("_enable_passive_checks"):
             return ("ENABLE_PASSIVE_" + cmdtag + "_CHECKS;%s" % spec,
                     _("<b>enable passive checks</b> for"))
@@ -342,7 +342,7 @@ class CommandClearModifiedAttributes(Command):
     def render(self, what):
         html.button("_clear_modattr", _('Clear modified attributes'))
 
-    def _action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag, spec, row, row_index, action_rows):
         if html.request.var("_clear_modattr"):
             return "CHANGE_" + cmdtag + "_MODATTR;%s;0" % spec, _(
                 "<b>clear the modified attributes</b> of")
@@ -452,7 +452,7 @@ class CommandFakeCheckResult(Command):
 
         html.close_table()
 
-    def _action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag, spec, row, row_index, action_rows):
         for s in [0, 1, 2, 3]:
             statename = html.request.var("_fake_%d" % s)
             if statename:
@@ -543,7 +543,7 @@ class CommandCustomNotification(Command):
         html.div(html.render_button("_customnotification", _('Send'), cssclass="hot"),
                  class_="group")
 
-    def _action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag, spec, row, row_index, action_rows):
         if html.request.var("_customnotification"):
             comment = html.request.get_unicode_input_mandatory("_cusnot_comment")
             broadcast = 1 if html.get_checkbox("_cusnot_broadcast") else 0
@@ -660,7 +660,7 @@ class CommandAcknowledge(Command):
         html.button("_remove_ack", _("Remove acknowledgement"), formnovalidate=True)
         html.close_div()
 
-    def _action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag, spec, row, row_index, action_rows):
         if "aggr_tree" in row:  # BI mode
             specs = []
             for site, host, service in bi.find_all_leaves(row["aggr_tree"]):
@@ -782,7 +782,7 @@ class CommandAddComment(Command):
         html.div(html.render_button("_add_comment", _("Add comment"), cssclass="hot"),
                  class_="group")
 
-    def _action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag, spec, row, row_index, action_rows):
         if html.request.var("_add_comment"):
             comment = html.request.get_unicode_input("_comment")
             if not comment:
@@ -964,7 +964,7 @@ class CommandScheduleDowntimes(Command):
             html.write_text(" " + _("(only works with the microcore)"))
             html.close_div()
 
-    def _action(self, cmdtag: Any, spec: Any, row: Any, row_index: Any, num_rows: Any) -> Any:
+    def _action(self, cmdtag: Any, spec: Any, row: Any, row_index: Any, action_rows: Any) -> Any:
         """Prepares the livestatus command for any received downtime information through WATO"""
         if html.request.var("_down_remove"):
             return self._remove_downtime_details(cmdtag, row)
@@ -1338,7 +1338,7 @@ class CommandRemoveDowntime(Command):
     def render(self, what):
         html.button("_remove_downtimes", _("Remove"))
 
-    def _action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag, spec, row, row_index, action_rows):
         if html.request.has_var("_remove_downtimes"):
             return ("DEL_%s_DOWNTIME;%d" % (cmdtag, spec), _("remove"))
 
@@ -1376,7 +1376,7 @@ class CommandRemoveComments(Command):
     def render(self, what):
         html.button("_remove_comments", _("Remove"))
 
-    def _action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag, spec, row, row_index, action_rows):
         if html.request.has_var("_remove_comments"):
             commands = [("DEL_%s_COMMENT;%d" % (cmdtag, spec))]
             if row.get("comment_entry_type") == 4:
@@ -1437,7 +1437,7 @@ class CommandFavorites(Command):
         html.button("_star", _("Add to Favorites"), cssclass="hot")
         html.button("_unstar", _("Remove from Favorites"))
 
-    def _action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag, spec, row, row_index, action_rows):
         if html.request.var("_star") or html.request.var("_unstar"):
             star = 1 if html.request.var("_star") else 0
             if star:

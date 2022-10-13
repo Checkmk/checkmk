@@ -1116,7 +1116,7 @@ class CommandECUpdateEvent(ECCommand):
         html.close_table()
         html.button('_mkeventd_update', _("Update"))
 
-    def _action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag, spec, row, row_index, action_rows):
         if html.request.var('_mkeventd_update'):
             if config.user.may("mkeventd.update_comment"):
                 comment = html.request.get_unicode_input_mandatory(
@@ -1169,7 +1169,7 @@ class CommandECChangeState(ECCommand):
         html.nbsp()
         MonitoringState().render_input("_mkeventd_state", 2)
 
-    def _action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag, spec, row, row_index, action_rows):
         if html.request.var('_mkeventd_changestate'):
             state = MonitoringState().from_html_vars("_mkeventd_state")
             return "CHANGESTATE;%s;%s;%s" % (row["event_id"], config.user.id,
@@ -1212,7 +1212,7 @@ class CommandECCustomAction(ECCommand):
             html.button("_action_" + action_id, title)
             html.br()
 
-    def _action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag, spec, row, row_index, action_rows):
         for action_id, title in mkeventd.action_choices(omit_hidden=True):
             if html.request.var("_action_" + action_id):
                 title = _("execute the action \"%s\"") % title
@@ -1252,9 +1252,10 @@ class CommandECArchiveEvent(ECCommand):
     def render(self, what):
         html.button("_delete_event", _("Archive Event"))
 
-    def _action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag, spec, row, row_index, action_rows):
         if html.request.var("_delete_event"):
-            command = "DELETE;%s;%s" % (row["event_id"], config.user.id)
+            events = ",".join([str(entry["event_id"]) for entry in action_rows])
+            command = "DELETE;%s;%s" % (events, config.user.id)
             title = _("<b>archive</b>")
             return command, title
 
@@ -1294,7 +1295,7 @@ class CommandECArchiveEventsOfHost(ECCommand):
               'configured.'))
         html.button("_archive_events_of_hosts", _('Archive events'), cssclass="hot")
 
-    def _action(self, cmdtag, spec, row, row_index, num_rows):
+    def _action(self, cmdtag, spec, row, row_index, action_rows):
         if html.request.var("_archive_events_of_hosts"):
             if cmdtag == "HOST":
                 tag: Optional[str] = "host"

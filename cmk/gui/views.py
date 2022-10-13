@@ -3080,7 +3080,7 @@ def _get_command_groups(info_name: InfoName) -> Dict[Type[CommandGroup], List[Co
 # (host name, service description, downtime/commands id) and
 # construct one or several core command lines and a descriptive
 # title.
-def core_command(what, row, row_nr, total_rows):
+def core_command(what, row, row_nr, action_rows):
     host = row.get("host_name")
     descr = row.get("service_description")
 
@@ -3105,8 +3105,8 @@ def core_command(what, row, row_nr, total_rows):
     for cmd_class in command_registry.values():
         cmd = cmd_class()
         if config.user.may(cmd.permission.name):
-            result = cmd.action(cmdtag, spec, row, row_nr, total_rows)
-            confirm_options = cmd.user_confirm_options(total_rows, cmdtag)
+            result = cmd.action(cmdtag, spec, row, row_nr, action_rows)
+            confirm_options = cmd.user_confirm_options(len(action_rows), cmdtag)
             if result:
                 executor = cmd.executor
                 commands, title = result
@@ -3146,7 +3146,7 @@ def do_actions(view, what, action_rows, backurl):
         what,
         action_rows[0],
         0,
-        len(action_rows),
+        action_rows,
     )[1:4]  # just get confirm_options, title and executor
 
     command_title = _("Do you really want to %s") % cmd_title
@@ -3163,7 +3163,7 @@ def do_actions(view, what, action_rows, backurl):
             what,
             row,
             nr,
-            len(action_rows),
+            action_rows,
         )
         for command_entry in core_commands:
             site = row.get(

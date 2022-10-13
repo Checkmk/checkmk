@@ -6,7 +6,7 @@
 from collections import Counter
 from typing import Dict
 
-import pytest  # type: ignore[import]
+import pytest
 
 from tests.testlib import Check  # type: ignore[import]
 

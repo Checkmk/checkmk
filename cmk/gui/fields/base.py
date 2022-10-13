@@ -5,7 +5,7 @@
 import collections
 import typing
 
-from apispec.ext.marshmallow import common  # type: ignore[import]
+from apispec.ext.marshmallow import common
 from marshmallow import (
     EXCLUDE,
     fields,

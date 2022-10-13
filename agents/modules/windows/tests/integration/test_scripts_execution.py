@@ -9,7 +9,7 @@ import subprocess
 from pathlib import Path
 from typing import Tuple
 
-import pytest  # type: ignore[import]
+import pytest
 
 
 def run_script(work_python: Path, *, script: Path) -> Tuple[int, str, str]:

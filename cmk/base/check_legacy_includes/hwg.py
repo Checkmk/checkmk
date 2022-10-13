@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[attr-defined]
-
 from typing import Dict, Optional
 
 from cmk.base.check_api import get_parsed_item_data

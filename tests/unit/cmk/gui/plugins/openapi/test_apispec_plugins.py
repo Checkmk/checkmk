@@ -6,7 +6,7 @@
 from typing import Type
 
 import pytest
-from apispec import APISpec  # type: ignore[import]
+from apispec import APISpec
 from marshmallow import post_load, Schema, ValidationError
 from marshmallow.base import SchemaABC
 

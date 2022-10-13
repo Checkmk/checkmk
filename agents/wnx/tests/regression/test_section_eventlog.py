@@ -9,7 +9,7 @@ import math
 import os
 import platform
 import re
-import winreg  # type: ignore[import]  # pylint: disable=import-error
+import winreg  # pylint: disable=import-error
 from itertools import chain, repeat
 
 import pytest

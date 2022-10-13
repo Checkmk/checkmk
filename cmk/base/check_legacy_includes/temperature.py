@@ -344,7 +344,7 @@ def check_temperature(  # pylint: disable=too-many-branches
         dev_status = None
 
     # infotext does some device/user specifics
-    status, _, perfdata = check_levels(  # type: ignore[name-defined]
+    status, _, perfdata = check_levels(
         temp,
         "temp",
         effective_levels,

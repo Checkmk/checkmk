@@ -5,7 +5,7 @@
 
 from typing import List, Tuple
 
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.gui.forms import remove_unused_vars
 from cmk.gui.http import request

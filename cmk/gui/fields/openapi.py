@@ -5,8 +5,8 @@
 import typing
 from typing import Optional, Tuple
 
-from apispec.ext import marshmallow  # type: ignore[import]
-from apispec.ext.marshmallow import common, field_converter  # type: ignore[import]
+from apispec.ext import marshmallow
+from apispec.ext.marshmallow import common, field_converter
 from marshmallow import fields, Schema
 
 from cmk.gui.fields.base import FieldWrapper, MultiNested, ValueTypedDictSchema

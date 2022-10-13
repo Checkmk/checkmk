@@ -20,7 +20,7 @@ from cmk.base.plugins.agent_based.utils.df import (
     TREND_DEFAULT_PARAMS,
 )
 
-from .size_trend import size_trend  # type: ignore[attr-defined]
+from .size_trend import size_trend
 
 # Common include file for all filesystem checks (df, df_netapp, hr_fs, ...)
 

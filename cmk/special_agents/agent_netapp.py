@@ -97,7 +97,7 @@ LicenseInformation = MutableMapping[str, MutableMapping[str, Any]]
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 # TODO: Couldn't we use create_urllib3_context() instead of this access violation?
-urllib3.util.ssl_.DEFAULT_CIPHERS += ":" + ":".join(  # type: ignore[attr-defined]
+urllib3.util.ssl_.DEFAULT_CIPHERS += ":" + ":".join(
     [
         "DH+3DES",
         "DH+HIGH",
@@ -420,7 +420,7 @@ class NetAppConnection:
             headers=self.headers,
             auth=(self.user, self.password),
         )
-        prepped = self.session.prepare_request(req)  # type: ignore[no-untyped-call]
+        prepped = self.session.prepare_request(req)
 
         # No SSL certificate check..
         response = self.session.send(prepped, timeout=self.timeout, verify=False)
@@ -891,9 +891,9 @@ def process_clustermode(  # pylint: disable=too-many-branches
             for node, entry in cluster_status.items():
                 # Small trick to improve formatting
                 container = NetAppNode("container")
-                container.append(entry.get_node())  # type: ignore[attr-defined]
+                container.append(entry.get_node())
 
-                partner_name = entry.child_get_string("partner-name")  # type: ignore[attr-defined]
+                partner_name = entry.child_get_string("partner-name")
                 if partner_name:
                     ha_partners[node] = partner_name
                 print(format_config(container, "cluster", node.split(".", 1)[1]))
@@ -902,7 +902,7 @@ def process_clustermode(  # pylint: disable=too-many-branches
             current_time = int(time.time())
             print("<<<netapp_api_systemtime:sep(9)>>>")
             for node, entry in cluster_status.items():
-                node_current_time = entry.child_get_string("current-time")  # type: ignore[attr-defined]
+                node_current_time = entry.child_get_string("current-time")
                 print("%s\t%s\t%s" % (node[10:], current_time, node_current_time))
 
     # Disk

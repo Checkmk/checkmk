@@ -40,6 +40,6 @@ def check_firewall_if(item, params, data):
         )
 
         perfdata: List[Any]
-        perfdata = [(what, rate)] + extraperf[:1]  # type: ignore[operator]
+        perfdata = [(what, rate)] + extraperf[:1]
 
         yield status, infotext, perfdata

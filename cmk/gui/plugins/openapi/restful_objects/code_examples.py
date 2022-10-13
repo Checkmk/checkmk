@@ -15,8 +15,8 @@ from typing import Any, Dict, List, NamedTuple, Optional, Type, Union
 
 import black
 import jinja2
-from apispec.ext.marshmallow import resolve_schema_instance  # type: ignore[import]
-from marshmallow import Schema  # type: ignore[import]
+from apispec.ext.marshmallow import resolve_schema_instance
+from marshmallow import Schema
 
 from cmk.utils.site import omd_site
 

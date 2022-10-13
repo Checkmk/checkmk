@@ -5473,14 +5473,10 @@ class Tuple(ValueSpec[TT]):
         )  # type:ignore[return-value]
 
     def value_to_html(self, value: TT) -> ValueSpecText:
-        return HTML(", ").join(
-            el.value_to_html(val) for _, el, val in self._iter_value(value)
-        )  # type:ignore[return-value]
+        return HTML(", ").join(el.value_to_html(val) for _, el, val in self._iter_value(value))
 
     def value_to_json(self, value: TT) -> JSONValue:
-        return [
-            el.value_to_json(val) for _, el, val in self._iter_value(value)
-        ]  # type:ignore[return-value]
+        return [el.value_to_json(val) for _, el, val in self._iter_value(value)]
 
     def value_from_json(self, json_value: JSONValue) -> TT:
         return tuple(

@@ -7,6 +7,6 @@
 
 import sys
 
-import agents.wnx.tests.testlib.utils as testlib  # type: ignore
+import agents.wnx.tests.testlib.utils as testlib
 
 sys.path.insert(0, str(testlib.get_git_root_path()))

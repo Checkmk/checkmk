@@ -10,7 +10,7 @@ import json
 import os
 import shutil
 import time
-import xml.dom.minidom  # type: ignore[import]
+import xml.dom.minidom
 from dataclasses import dataclass, field
 from enum import auto, Enum
 from pathlib import Path

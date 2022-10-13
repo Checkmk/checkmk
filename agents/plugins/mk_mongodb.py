@@ -46,9 +46,9 @@ except ImportError:
 
 
 try:
-    import pymongo  # type: ignore[import] # pylint: disable=import-error
-    import pymongo.errors  # type: ignore[import] # pylint: disable=import-error
-    from bson.json_util import dumps  # type: ignore[import]
+    import pymongo
+    import pymongo.errors
+    from bson.json_util import dumps
 except ImportError:
     sys.stdout.write("<<<mongodb_instance:sep(9)>>>\n")
     sys.stdout.write(

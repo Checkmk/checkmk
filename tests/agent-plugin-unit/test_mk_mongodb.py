@@ -10,7 +10,7 @@ import json
 import os
 import sys
 
-import pymongo  # type: ignore[import] # pylint: disable=import-error
+import pymongo
 import pytest
 
 if sys.version_info[0] == 2:
@@ -26,7 +26,7 @@ def read_dataset(filename):
     :param filename: filename of the dataset
     :return: dataset as extended JSON
     """
-    from bson.json_util import loads  # type: ignore[import]
+    from bson.json_util import loads
 
     dataset_file = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "datasets", "mk_mongodb", filename)
@@ -331,7 +331,7 @@ def test_read_config(config, expected_pymongo_config) -> None:  # type:ignore[no
     ],
 )
 def test_transform_config(pymongo_version, pymongo_config) -> None:  # type:ignore[no-untyped-def]
-    class DummyConfig(mk_mongodb.Config):  # type: ignore[name-defined]
+    class DummyConfig(mk_mongodb.Config):
         def __init__(self) -> None:  # pylint: disable=super-init-not-called
             self.tls_enable = True
             self.tls_verify = None

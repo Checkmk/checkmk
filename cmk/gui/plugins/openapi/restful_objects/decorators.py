@@ -37,8 +37,8 @@ from typing import (
 )
 from urllib import parse
 
-import apispec  # type: ignore[import]
-import apispec.utils  # type: ignore[import]
+import apispec
+import apispec.utils
 from marshmallow import Schema, ValidationError
 from marshmallow.schema import SchemaMeta
 from werkzeug.datastructures import MultiDict

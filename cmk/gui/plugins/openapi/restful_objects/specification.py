@@ -308,8 +308,8 @@ documented we may change it without incrementing the API version.
 """
 from typing import Dict, List, Literal, TypedDict
 
-import apispec.ext.marshmallow as marshmallow  # type: ignore[import]
-import apispec.utils  # type: ignore[import]
+import apispec.ext.marshmallow as marshmallow
+import apispec.utils
 import apispec_oneofschema  # type: ignore[import]
 
 from cmk.gui.fields.openapi import CheckmkMarshmallowPlugin

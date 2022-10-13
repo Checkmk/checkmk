@@ -66,7 +66,7 @@ def discover(
         yield Service()
 
 
-def _component_check(  # type:ignore[no-untyped-def]
+def _component_check(
     params: Mapping[str, int],
     component: Literal["container_metrics", "machine_metrics"],
     component_log: Optional[CollectorHandlerLog],

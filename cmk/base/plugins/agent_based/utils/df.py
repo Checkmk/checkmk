@@ -485,7 +485,7 @@ def df_discovery(
     )
 
 
-def check_filesystem_levels(  # type:ignore[no-untyped-def]
+def check_filesystem_levels(
     filesystem_size: float,
     allocatable_filesystem_size: float,
     free_space: float,

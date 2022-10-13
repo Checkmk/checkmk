@@ -32,8 +32,7 @@ class QuotasType(enum.Enum):
     Group = "grp"
 
 
-# https://github.com/python/mypy/issues/5374
-@dataclasses.dataclass(frozen=True)  # type: ignore[misc]
+@dataclasses.dataclass(frozen=True)
 class Quota(abc.ABC):
     owner: str
     used: int

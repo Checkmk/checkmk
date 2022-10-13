@@ -18,7 +18,7 @@ import urllib.parse
 from datetime import datetime
 from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, Type, TYPE_CHECKING
 
-from apispec.yaml_utils import dict_to_yaml  # type: ignore[import]
+from apispec.yaml_utils import dict_to_yaml
 from werkzeug.exceptions import HTTPException, NotFound
 from werkzeug.routing import Map, Rule, Submount
 

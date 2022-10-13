@@ -192,7 +192,7 @@ def parse_ucs_bladecenter_if(string_table: type_defs.StringTable) -> interfaces.
                 # On summing keys there is a possiblility to overlook some counter wraps.
                 # Right now, it's only Recv-Errors (therefore unlikely). We can live with that
                 interfaces.Counters(
-                    **{  # type: ignore[arg-type]
+                    **{
                         iface_field: sum(
                             int(values[ctr_class].get(ctr_key, "0"))
                             for ctr_class, ctr_key in ctr_keys

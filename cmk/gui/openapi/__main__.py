@@ -6,7 +6,7 @@
 import json
 import sys
 
-from apispec.yaml_utils import dict_to_yaml  # type: ignore[import]
+from apispec.yaml_utils import dict_to_yaml
 
 from cmk.gui import main_modules
 from cmk.gui.openapi import generate_data

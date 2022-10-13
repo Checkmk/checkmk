@@ -11,7 +11,7 @@ from pathlib import Path
 from subprocess import PIPE, Popen
 from typing import List, Optional
 
-import pytest  # type: ignore[import]
+import pytest
 
 
 def pytest_addoption(parser):

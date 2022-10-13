@@ -2,11 +2,12 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-# type: ignore[attr-defined]  # TODO: see which are needed in this file
+
+from collections.abc import Callable
 
 from cmk.base.check_api import check_levels, get_percent_human_readable
 
-_RENDER_FUNCTION_AND_UNIT = {
+_RENDER_FUNCTION_AND_UNIT: dict[str, tuple[Callable | None, str]] = {
     "%": (
         get_percent_human_readable,
         "",
@@ -76,7 +77,7 @@ def check_elphase(item, params, parsed):  # pylint: disable=too-many-branches
                 value = entry  # 12.0
                 state_info = None
 
-            levels = [None] * 4
+            levels: list[float | None] = [None] * 4
             if what in params:
                 if bound == Bounds.Both:
                     levels = params[what]

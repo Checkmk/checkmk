@@ -14,7 +14,7 @@ import sys
 import time
 from pathlib import Path
 from typing import Any, Counter, Dict, List, Sequence
-from xml.dom import minidom  # type: ignore[import]
+from xml.dom import minidom
 
 import dateutil.parser
 import requests

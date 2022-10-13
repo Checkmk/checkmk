@@ -2,9 +2,8 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-# type: ignore[attr-defined]  # TODO: see which are needed in this file
 
-from .elphase import check_elphase
+from .elphase import check_elphase  # type: ignore[attr-defined]
 from .humidity import check_humidity
 from .temperature import check_temperature
 
@@ -30,7 +29,7 @@ def parse_didactum_sensors(info):
         "off": 3,
     }
 
-    parsed = {}
+    parsed: dict = {}
     for line in info:
         ty, name, status = line[:3]
         if status in map_states:
@@ -52,7 +51,7 @@ def parse_didactum_sensors(info):
         if len(line) >= 4:
             value_str = line[3]
             if value_str.isdigit():
-                value = int(value_str)
+                value: float = int(value_str)
             else:
                 try:
                     value = float(value_str)

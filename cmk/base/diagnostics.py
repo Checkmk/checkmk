@@ -57,8 +57,9 @@ from cmk.utils.type_defs import HostName
 import cmk.base.section as section
 
 if cmk_version.is_enterprise_edition():
-    # type: ignore[import]  # pylint: disable=no-name-in-module,import-error
-    from cmk.base.cee.diagnostics import cmc_specific_attrs
+    from cmk.base.cee.diagnostics import (  # type: ignore[import]  # pylint: disable=no-name-in-module,import-error
+        cmc_specific_attrs,
+    )
 else:
 
     def cmc_specific_attrs() -> Mapping[str, int]:

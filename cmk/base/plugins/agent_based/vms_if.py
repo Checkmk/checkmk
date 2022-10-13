@@ -42,7 +42,7 @@ def parse_vms_if(string_table: type_defs.StringTable) -> interfaces.Section:
                 oper_status="1",
             ),
             interfaces.Counters(
-                **{  # type: ignore[arg-type]
+                **{
                     counter: wrap_negative(str_val)
                     for counter, str_val in zip(_VMS_IF_COUNTERS_ORDER, line[1:])
                 },

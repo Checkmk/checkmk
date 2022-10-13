@@ -51,7 +51,7 @@ class SerializedResult(str):
 _DeserializedType = TypeVar("_DeserializedType", bound="ABCAutomationResult")
 
 
-@dataclass  # type: ignore[misc]  # https://github.com/python/mypy/issues/5374
+@dataclass
 class ABCAutomationResult(ABC):
     def serialize(
         self,

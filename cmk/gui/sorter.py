@@ -24,7 +24,7 @@ class SorterEntry(NamedTuple):
 
 
 # Is used to add default arguments to the named tuple. Would be nice to have a cleaner solution
-SorterEntry.__new__.__defaults__ = (None,) * len(SorterEntry._fields)  # type: ignore[attr-defined]
+SorterEntry.__new__.__defaults__ = (None,) * len(SorterEntry._fields)
 
 
 class Sorter(abc.ABC):

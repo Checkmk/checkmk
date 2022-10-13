@@ -5,14 +5,9 @@
 
 # For more information about the used API and data refer to: https://support.hpe.com/hpesc/public/docDisplay?docId=c03606339
 
-from collections.abc import Mapping, MutableMapping
-from dataclasses import dataclass, field
+from collections.abc import Mapping
 
-from cmk.base.api.agent_based.type_defs import StringTable
-
-# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
-# problems because it might remove variables needed for accessing discovery rulesets.
-from cmk.base.check_legacy_includes.threepar import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.threepar_ports import ThreeParPortsSection
 
 factory_settings["threepar_ports_default_levels"] = {
     "1_link": 1,
@@ -37,109 +32,6 @@ factory_settings["threepar_ports_default_levels"] = {
     "6_fail": 2,
     "7_fail": 1,
 }
-
-PROTOCOLS = {
-    1: "FC",
-    2: "iSCSI",
-    3: "FCOE",
-    4: "IP",
-    5: "SAS",
-    6: "NVMe",
-}
-
-FAILOVERS = {
-    1: "NONE",
-    2: "FAILOVER_PENDING",
-    3: "FAILED_OVER",
-    4: "ACTIVE",
-    5: "ACTIVE_DOWN",
-    6: "ACTIVE_FAILED",
-    7: "FAILBACK_PENDING",
-}
-
-LINKS = {
-    1: "CONFIG_WAIT",
-    2: "ALPA_WAIT",
-    3: "LOGIN_WAIT",
-    4: "READY",
-    5: "LOSS_SYNC",
-    6: "ERROR_STATE",
-    7: "XXX",
-    8: "NONPARTICIPATE",
-    9: "COREDUMP",
-    10: "OFFLINE",
-    11: "FWDEAD",
-    12: "IDLE_FOR_RESET",
-    13: "DHCP_IN_PROGRESS",
-    14: "PENDING_RESET",
-}
-
-MODES = {
-    1: "SUSPENDED",
-    2: "TARGET",
-    3: "INITIATOR",
-    4: "PEER",
-}
-
-
-@dataclass
-class ThreeParPort:
-    label: str | None
-    type: int
-    state: int | None
-    translated_state: str | None
-    protocol: int
-    portWWN: str | None
-    mode: int | None
-    translated_mode: str | None
-    failoverState: int | None
-    translated_failover: str | None
-    name: str = field(init=False)
-    node: int
-    slot: int
-    cardPort: int
-
-    def __post_init__(self):
-        self.name = "%s Node %s Slot %s Port %s" % (
-            PROTOCOLS.get(self.protocol),
-            self.node,
-            self.slot,
-            self.cardPort,
-        )
-
-
-ThreeParPortsSection = Mapping[str, ThreeParPort]
-
-
-def parse_3par_ports(string_table: StringTable) -> ThreeParPortsSection:
-    threepar_ports: MutableMapping[str, ThreeParPort] = {}
-
-    for port in parse_3par(string_table).get("members", {}):
-        if PROTOCOLS.get(port["protocol"]) is None:
-            continue
-
-        port_state = port.get("linkState")
-        port_mode = port.get("mode")
-        port_failoverState = port.get("failoverState")
-
-        port = ThreeParPort(
-            label=port.get("label"),
-            type=port["type"],
-            state=port_state,
-            translated_state=LINKS.get(port_state),
-            protocol=port["protocol"],
-            node=port["portPos"]["node"],
-            slot=port["portPos"]["slot"],
-            cardPort=port["portPos"]["cardPort"],
-            portWWN=port.get("portWWN"),
-            mode=port_mode,
-            translated_mode=MODES.get(port_mode),
-            failoverState=port_failoverState,
-            translated_failover=FAILOVERS.get(port_failoverState),
-        )
-        threepar_ports.setdefault(port.name, port)
-
-    return threepar_ports
 
 
 def discover_3par_ports(section: ThreeParPortsSection):
@@ -175,7 +67,7 @@ def check_3par_ports(
 
 
 check_info["3par_ports"] = {
-    "parse_function": parse_3par_ports,
+    # Section already migrated!
     "inventory_function": discover_3par_ports,
     "check_function": check_3par_ports,
     "service_description": "Port %s",

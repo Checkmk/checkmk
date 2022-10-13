@@ -35712,7 +35712,7 @@ msgid ""
 "Better disable it."
 msgstr ""
 "Persistente Verbindungen sind nahezu nutzlos, wenn Sie den Livestaus-Proxy-"
-"Deamon einsetzen. Deaktivieren Sie diese besser."
+"Daemon einsetzen. Deaktivieren Sie diese besser."
 
 msgid ""
 "Persistent connections may be a configuration to improve the performance of "

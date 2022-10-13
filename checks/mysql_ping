@@ -21,7 +21,7 @@ from cmk.base.check_legacy_includes.mysql import *  # pylint: disable=wildcard-i
 def check_mysql_ping(_no_item, _no_params, data):
     message = " ".join(data[0])
     if message == "mysqld is alive":
-        return 0, "MySQL Deamon is alive"
+        return 0, "MySQL Daemon is alive"
     return 2, message
 
 

@@ -4,7 +4,7 @@ catalog: app/mysql
 license: GPLv2
 distribution: check_mk
 description:
- This check only shows the Version of the runnin MySQL Deamon.
+ This check only shows the Version of the runnin MySQL Daemon.
 
  This check needs the agent plugin {mk_mysql} to be installed.
  Further details about this plugin and monitoring of MySQL can be

@@ -22,9 +22,14 @@ EXTLIBS         := extlibs
 PACKAGE_ASIO 	:= $(TOP_SRC_DIR)\omd\packages\asio
 # ATTENTION: this value is hardcoded in the vcxproj files - fix it, please, too
 ASIO_VERSION 	:= asio-1.24.0
+
 PACKAGE_FMT     := $(TOP_SRC_DIR)\omd\packages\fmt
 # ATTENTION: this value is hardcoded in the vcxproj files - fix it, please, too
 FMT_VERSION    := fmt-9.0.0
+
+PACKAGE_OHM     := $(TOP_SRC_DIR)\omd\packages\openhardwaremonitor
+# ATTENTION: this value is hardcoded in the vcxproj files - fix it, please, too
+OHM_VERSION    := openhardwaremonitor-0.8.0
 
 
 
@@ -48,7 +53,7 @@ clean_artifacts:
 setversion:
 	@python patch_windows_agent_version.py src\common\wnx_version.h $(NEW_VERSION)
 
-install_extlibs: $(EXTLIBS)\$(ASIO_VERSION) $(EXTLIBS)\$(FMT_VERSION)
+install_extlibs: $(EXTLIBS)\$(ASIO_VERSION) $(EXTLIBS)\$(FMT_VERSION) $(EXTLIBS)\$(OHM_VERSION)
 
 $(EXTLIBS)\$(ASIO_VERSION): $(PACKAGE_ASIO)/$(ASIO_VERSION).tar.gz
 	@if "$(EXTLIBS)" == "" echo bad extlibs && exit 1
@@ -63,5 +68,13 @@ $(EXTLIBS)\$(FMT_VERSION): $(PACKAGE_FMT)/$(FMT_VERSION).tar.gz
 	@rmdir /s /q .\$@ 2> nul || echo "directory $@ is absent, ok!"
 	@scripts\unpack_package.cmd 7z $(PACKAGE_FMT) $(FMT_VERSION) $(EXTLIBS) $(FMT_VERSION) *
 	@powershell (Get-Item $@).LastWriteTime = (Get-Date)
+
+$(EXTLIBS)\$(OHM_VERSION): $(PACKAGE_OHM)/$(OHM_VERSION).zip
+	@if "$(EXTLIBS)" == "" echo bad extlibs && exit 1
+	@if "$(OHM_VERSION)" == "" echo bad fmt_version && exit 1
+	@rmdir /s /q .\$@ 2> nul || echo "directory $@ is absent, ok!"
+	@7z x $? -o$(EXTLIBS) > nul 2>&1
+	@powershell (Get-Item $@).LastWriteTime = (Get-Date)
+
 
 

@@ -1,21 +1,22 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{D75E9F56-CAF1-4482-BD7D-AC18D6AE8EDE}</ProjectGuid>
+    <ProjectGuid>{D880D351-9AFD-4A07-8FB1-AE13C8853F8C}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>OpenHardwareMonitorCLI</RootNamespace>
     <AssemblyName>OpenHardwareMonitorCLI</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\Bin\Debug</OutputPath>
+    <OutputPath>..\..\build\Bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -23,7 +24,7 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
-    <OutputPath>..\Bin\Release</OutputPath>
+    <OutputPath>..\..\build\Bin\Release\</OutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Externalconsole>true</Externalconsole>
@@ -44,7 +45,9 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="UpdateVisitor.cs" />
-    <Compile Include="OHMService.cs" />
+    <Compile Include="OHMService.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="DataProvider.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
@@ -52,7 +55,7 @@
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\OpenHardwareMonitorLib.csproj">
+    <ProjectReference Include="..\..\extlibs\openhardwaremonitor-0.8.0\OpenHardwareMonitorLib.csproj">
       <Project>{B0397530-545A-471D-BB74-027AE456DF1A}</Project>
       <Name>OpenHardwareMonitorLib</Name>
     </ProjectReference>

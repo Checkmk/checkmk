@@ -44,7 +44,7 @@ from cmk.gui.utils.confirm_with_preview import confirm_with_preview
 
 
 def core_command(
-    what: str, row: Row, row_nr: int, total_rows: int
+    what: str, row: Row, row_nr: int, action_rows: Rows
 ) -> Tuple[Sequence[CommandSpec], List[Tuple[str, str]], str, CommandExecutor]:
     """Examine the current HTML variables in order determine, which command the user has selected.
     The fetch ids from a data row (host name, service description, downtime/commands id) and
@@ -80,8 +80,8 @@ def core_command(
     for cmd_class in command_registry.values():
         cmd = cmd_class()
         if user.may(cmd.permission.name):
-            result = cmd.action(cmdtag, spec, row, row_nr, total_rows)
-            confirm_options = cmd.user_confirm_options(total_rows, cmdtag)
+            result = cmd.action(cmdtag, spec, row, row_nr, action_rows)
+            confirm_options = cmd.user_confirm_options(len(action_rows), cmdtag)
             if result:
                 executor = cmd.executor
                 commands, title = result
@@ -166,7 +166,7 @@ def do_actions(  # pylint: disable=too-many-branches
         return False  # no actions done
 
     command = None
-    confirm_options, cmd_title, executor = core_command(what, action_rows[0], 0, len(action_rows),)[
+    confirm_options, cmd_title, executor = core_command(what, action_rows[0], 0, action_rows)[
         1:4
     ]  # just get confirm_options, title and executor
 
@@ -184,7 +184,7 @@ def do_actions(  # pylint: disable=too-many-branches
             what,
             row,
             nr,
-            len(action_rows),
+            action_rows,
         )
         for command_entry in core_commands:
             site: Optional[str] = row.get(

@@ -466,7 +466,7 @@ def _show_command_form(datasource: ABCDataSource, rows: Rows) -> None:
 
 # FIXME: Reduce duplicate code with views.py
 def do_commands(what: str, rows: Rows) -> bool:
-    confirm_options, title, executor = core_command(what, rows[0], 0, len(rows),)[
+    confirm_options, title, executor = core_command(what, rows[0], 0, rows)[
         1:4
     ]  # just get confirm_options, title and executor
 
@@ -482,7 +482,7 @@ def do_commands(what: str, rows: Rows) -> bool:
             what,
             row,
             nr,
-            len(rows),
+            rows,
         )
         for command in nagios_commands:
             if command not in already_executed:

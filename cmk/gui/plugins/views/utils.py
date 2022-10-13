@@ -304,17 +304,17 @@ class Command(abc.ABC):
         raise NotImplementedError()
 
     def action(
-        self, cmdtag: str, spec: str, row: Row, row_index: int, num_rows: int
+        self, cmdtag: str, spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
-        result = self._action(cmdtag, spec, row, row_index, num_rows)
+        result = self._action(cmdtag, spec, row, row_index, action_rows)
         if result:
             commands, title = result
-            return commands, self.user_dialog_suffix(title, num_rows, cmdtag)
+            return commands, self.user_dialog_suffix(title, len(action_rows), cmdtag)
         return None
 
     @abc.abstractmethod
     def _action(
-        self, cmdtag: str, spec: str, row: Row, row_index: int, num_rows: int
+        self, cmdtag: str, spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         raise NotImplementedError()
 

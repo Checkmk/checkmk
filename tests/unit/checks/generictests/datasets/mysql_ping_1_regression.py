@@ -34,6 +34,6 @@ checks = {
     '': [
         ('mysql', {}, [(2, 'this line is no longer ignored', [])]),
         ('elephant', {}, [(2, "mysqladmin: connect to server at 'localhost' failed", [])]),
-        ('moth', {}, [(0, 'MySQL Deamon is alive', [])]),
+        ('moth', {}, [(0, 'MySQL Daemon is alive', [])]),
     ],
 }

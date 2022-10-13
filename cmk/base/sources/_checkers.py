@@ -655,6 +655,7 @@ def fetch_all(
                     raw_data,
                     tracker.duration,
                     source.fetcher_type,
+                    source.source_type,
                 ),
             )
         )

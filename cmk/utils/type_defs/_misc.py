@@ -282,8 +282,8 @@ TimeperiodSpecs = dict[TimeperiodName, TimeperiodSpec]
 class SourceType(enum.Enum):
     """Classification of management sources vs regular hosts"""
 
-    HOST = "HOST"
-    MANAGEMENT = "MANAGEMENT"
+    HOST = enum.auto()
+    MANAGEMENT = enum.auto()
 
 
 class HostKey(NamedTuple):

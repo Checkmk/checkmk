@@ -316,9 +316,9 @@ def parse_messages(
     # Special agents can produce data for the same check_plugin_name on the same host, in this case
     # the section lines need to be extended
     for source, fetcher_message in fetched:
-        console.vverbose(f"  {fetcher_message.header}")
+        host_key = HostKey(fetcher_message.host_name, fetcher_message.source_type)
 
-        host_key = HostKey(fetcher_message.host_name, source.source_type)
+        console.vverbose(f"  {host_key!s}")
         collected_host_sections.setdefault(host_key, HostSections())
 
         source_result = parse_raw_data(

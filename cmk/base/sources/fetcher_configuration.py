@@ -48,6 +48,7 @@ def fetchers(host_config: HostConfig) -> Dict[str, Any]:
         "fetchers": [
             {
                 "fetcher_type": c.fetcher_type.name,
+                "source_type": c.source_type.name,
                 "fetcher_params": _fixup_caching_info(c).fetcher_configuration,
                 "file_cache_params": _fixup_caching_info(c).file_cache_configuration,
             }

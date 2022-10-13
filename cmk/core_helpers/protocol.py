@@ -66,7 +66,7 @@ import pydantic
 import cmk.utils.log as log
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import MKFetcherError, MKTimeout
-from cmk.utils.type_defs import AgentRawData, HostName, result, SectionName
+from cmk.utils.type_defs import AgentRawData, HostName, result, SectionName, SourceType
 from cmk.utils.type_defs.protocol import Deserializer, Serializer
 
 from cmk.snmplib.type_defs import SNMPRawData, TRawData
@@ -347,12 +347,13 @@ class FetcherHeader(Serializer, Deserializer):
 
     """
 
-    fmt = "!HHHIIII"
+    fmt = "!HHHHIIII"
     length = struct.calcsize(fmt)
 
     def __init__(
         self,
         fetcher_type: FetcherType,
+        source_type: SourceType,
         payload_type: PayloadType,
         *,
         status: int,
@@ -362,6 +363,7 @@ class FetcherHeader(Serializer, Deserializer):
         stats_length: int,
     ) -> None:
         self.fetcher_type: Final = fetcher_type
+        self.source_type: Final = source_type
         self.payload_type: Final = payload_type
         self.status: Final = status
         self.host_name_length: Final = host_name_length
@@ -376,7 +378,9 @@ class FetcherHeader(Serializer, Deserializer):
     def __repr__(self) -> str:
         return (
             f"{type(self).__name__}("
-            f"{self.fetcher_type!r}, {self.payload_type!r}, "
+            f"{self.fetcher_type!r}, "
+            f"{self.source_type!r}, "
+            f"{self.payload_type!r}, "
             f"status={self.status!r}, "
             f"host_name_length={self.host_name_length!r}, "
             f"ident_length={self.ident_length!r}, "
@@ -391,6 +395,7 @@ class FetcherHeader(Serializer, Deserializer):
         yield struct.pack(
             FetcherHeader.fmt,
             self.fetcher_type.value,
+            self.source_type.value,
             self.payload_type.value,
             self.status,
             self.host_name_length,
@@ -404,6 +409,7 @@ class FetcherHeader(Serializer, Deserializer):
         try:
             (
                 fetcher_type,
+                source_type,
                 payload_type,
                 status,
                 host_name_length,
@@ -416,6 +422,7 @@ class FetcherHeader(Serializer, Deserializer):
             )
             return cls(
                 FetcherType(fetcher_type),
+                SourceType(source_type),
                 PayloadType(payload_type),
                 status=status,
                 host_name_length=host_name_length,
@@ -490,6 +497,7 @@ class FetcherMessage(Serializer, Deserializer):
         raw_data: result.Result[TRawData, Exception],
         duration: Snapshot,
         fetcher_type: FetcherType,
+        source_type: SourceType,
     ) -> FetcherMessage:
         stats = ResultStats(duration)
         if raw_data.is_error():
@@ -497,6 +505,7 @@ class FetcherMessage(Serializer, Deserializer):
             return cls(
                 FetcherHeader(
                     fetcher_type,
+                    source_type,
                     payload_type=PayloadType.ERROR,
                     status=(
                         logging.INFO
@@ -520,6 +529,7 @@ class FetcherMessage(Serializer, Deserializer):
             return cls(
                 FetcherHeader(
                     fetcher_type,
+                    source_type,
                     payload_type=PayloadType.SNMP,
                     status=0,
                     host_name_length=len(host_name.encode("utf8")),
@@ -538,6 +548,7 @@ class FetcherMessage(Serializer, Deserializer):
         return cls(
             FetcherHeader(
                 fetcher_type,
+                source_type,
                 payload_type=PayloadType.AGENT,
                 status=0,
                 host_name_length=len(host_name.encode("utf8")),
@@ -555,6 +566,7 @@ class FetcherMessage(Serializer, Deserializer):
     def error(
         cls,
         fetcher_type: FetcherType,
+        source_type: SourceType,
         host_name: HostName,
         ident: str,
         exc: Exception,
@@ -565,6 +577,7 @@ class FetcherMessage(Serializer, Deserializer):
         return cls(
             FetcherHeader(
                 fetcher_type,
+                source_type,
                 PayloadType.ERROR,
                 status=logging.CRITICAL,
                 host_name_length=len(host_name.encode("utf8")),
@@ -582,6 +595,7 @@ class FetcherMessage(Serializer, Deserializer):
     def timeout(
         cls,
         fetcher_type: FetcherType,
+        source_type: SourceType,
         host_name: HostName,
         ident: str,
         exc: MKTimeout,
@@ -592,6 +606,7 @@ class FetcherMessage(Serializer, Deserializer):
         return cls(
             FetcherHeader(
                 fetcher_type,
+                source_type,
                 PayloadType.ERROR,
                 status=logging.ERROR,
                 host_name_length=len(host_name.encode("utf8")),
@@ -608,6 +623,10 @@ class FetcherMessage(Serializer, Deserializer):
     @property
     def fetcher_type(self) -> FetcherType:
         return self.header.fetcher_type
+
+    @property
+    def source_type(self) -> SourceType:
+        return self.header.source_type
 
     @property
     def raw_data(

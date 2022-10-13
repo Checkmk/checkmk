@@ -22,7 +22,7 @@ from cmk.utils.exceptions import (
     MKTerminate,
     MKTimeout,
 )
-from cmk.utils.type_defs import AgentRawData, result, SectionName
+from cmk.utils.type_defs import AgentRawData, result, SectionName, SourceType
 
 from cmk.snmplib.type_defs import SNMPRawData, SNMPTable
 
@@ -126,6 +126,7 @@ class TestCMCMessage:
         fetcher_message = FetcherMessage(
             FetcherHeader(
                 FetcherType.TCP,
+                SourceType.HOST,
                 PayloadType.AGENT,
                 status=42,
                 host_name_length=len(host_name.encode("utf8")),
@@ -217,6 +218,7 @@ class TestCMCResults:
                 FetcherMessage(
                     FetcherHeader(
                         FetcherType.TCP,
+                        SourceType.HOST,
                         PayloadType.AGENT,
                         status=69,
                         host_name_length=len(host_name.encode("utf8")),
@@ -348,6 +350,7 @@ class TestFetcherHeader:
     def header(self):
         return FetcherHeader(
             FetcherType.TCP,
+            SourceType.HOST,
             PayloadType.AGENT,
             status=42,
             host_name_length=24,
@@ -380,6 +383,10 @@ class TestFetcherHeaderEq:
         return FetcherType.NONE
 
     @pytest.fixture
+    def source_type(self):
+        return SourceType.HOST
+
+    @pytest.fixture
     def payload_type(self):
         return PayloadType.AGENT
 
@@ -407,6 +414,7 @@ class TestFetcherHeaderEq:
     def header(
         self,
         fetcher_type,
+        source_type,
         payload_type,
         status,
         host_name,
@@ -416,6 +424,7 @@ class TestFetcherHeaderEq:
     ):
         return FetcherHeader(
             fetcher_type,
+            source_type,
             payload_type,
             status=status,
             host_name_length=len(host_name.encode("utf8")),
@@ -428,6 +437,7 @@ class TestFetcherHeaderEq:
         self,
         header,
         fetcher_type,
+        source_type,
         payload_type,
         status,
         host_name,
@@ -440,6 +450,7 @@ class TestFetcherHeaderEq:
         assert bytes(header) == bytes(header)
         assert header == FetcherHeader(
             fetcher_type,
+            source_type,
             payload_type,
             status=status,
             host_name_length=len(host_name.encode("utf8")),
@@ -454,6 +465,7 @@ class TestFetcherHeaderEq:
 
         assert header != FetcherHeader(
             other,
+            source_type=header.source_type,
             payload_type=header.payload_type,
             status=header.status,
             host_name_length=header.host_name_length,
@@ -468,6 +480,7 @@ class TestFetcherHeaderEq:
 
         assert header != FetcherHeader(
             header.fetcher_type,
+            header.source_type,
             other,
             status=header.status,
             host_name_length=header.host_name_length,
@@ -482,6 +495,7 @@ class TestFetcherHeaderEq:
 
         assert header != FetcherHeader(
             header.fetcher_type,
+            header.source_type,
             header.payload_type,
             status=other,
             host_name_length=header.host_name_length,
@@ -498,6 +512,7 @@ class TestFetcherHeaderEq:
 
         assert header != FetcherHeader(
             header.fetcher_type,
+            header.source_type,
             header.payload_type,
             status=header.status,
             host_name_length=header.host_name_length,
@@ -547,6 +562,7 @@ class TestFetcherMessage:
     def header(self, hostname, ident, stats):
         return FetcherHeader(
             FetcherType.TCP,
+            SourceType.HOST,
             PayloadType.AGENT,
             status=42,
             host_name_length=len(hostname.encode("utf8")),
@@ -588,7 +604,12 @@ class TestFetcherMessage:
     ) -> None:
         raw_data: result.Result[AgentRawData, Exception] = result.OK(agent_raw_data)
         message = FetcherMessage.from_raw_data(
-            "host_name", "ident", raw_data, duration, fetcher_type
+            "host_name",
+            "ident",
+            raw_data,
+            duration,
+            fetcher_type,
+            SourceType.HOST,
         )
         assert message.header.fetcher_type is fetcher_type
         assert message.header.payload_type is PayloadType.AGENT
@@ -599,7 +620,12 @@ class TestFetcherMessage:
     ) -> None:
         raw_data: result.Result[SNMPRawData, Exception] = result.OK(snmp_raw_data)
         message = FetcherMessage.from_raw_data(
-            "host_name", "ident", raw_data, duration, FetcherType.SNMP
+            "host_name",
+            "ident",
+            raw_data,
+            duration,
+            FetcherType.SNMP,
+            SourceType.HOST,
         )
         assert message.header.fetcher_type is FetcherType.SNMP
         assert message.header.payload_type is PayloadType.SNMP
@@ -608,7 +634,12 @@ class TestFetcherMessage:
     def test_from_raw_data_exception(self, duration) -> None:  # type:ignore[no-untyped-def]
         error: result.Result[AgentRawData, Exception] = result.Error(ValueError("zomg!"))
         message = FetcherMessage.from_raw_data(
-            "host_name", "ident", error, duration, FetcherType.TCP
+            "host_name",
+            "ident",
+            error,
+            duration,
+            FetcherType.TCP,
+            SourceType.HOST,
         )
         assert message.header.fetcher_type is FetcherType.TCP
         assert message.header.payload_type is PayloadType.ERROR
@@ -622,21 +653,36 @@ class TestFetcherMessage:
     ) -> None:
         raw_data: result.Result[AgentRawData, Exception] = result.OK(agent_raw_data)
         message = FetcherMessage.from_raw_data(
-            "host_name", "ident", raw_data, duration, fetcher_type
+            "host_name",
+            "ident",
+            raw_data,
+            duration,
+            fetcher_type,
+            SourceType.HOST,
         )
         assert message.raw_data == raw_data
 
     def test_raw_data_snmp(self, snmp_raw_data, duration) -> None:  # type:ignore[no-untyped-def]
         raw_data: result.Result[SNMPRawData, Exception] = result.OK(snmp_raw_data)
         message = FetcherMessage.from_raw_data(
-            "host_name", "ident", raw_data, duration, FetcherType.SNMP
+            "host_name",
+            "ident",
+            raw_data,
+            duration,
+            FetcherType.SNMP,
+            SourceType.HOST,
         )
         assert message.raw_data == raw_data
 
     def test_raw_data_exception(self, duration) -> None:  # type:ignore[no-untyped-def]
         raw_data: result.Result[AgentRawData, Exception] = result.Error(Exception("zomg!"))
         message = FetcherMessage.from_raw_data(
-            "host_name", "ident", raw_data, duration, FetcherType.TCP
+            "host_name",
+            "ident",
+            raw_data,
+            duration,
+            FetcherType.TCP,
+            SourceType.HOST,
         )
         assert isinstance(message.raw_data.error, Exception)
         assert str(message.raw_data.error) == "zomg!"

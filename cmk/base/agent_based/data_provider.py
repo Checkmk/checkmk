@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import (
     Any,
     Dict,
@@ -34,6 +35,7 @@ from cmk.utils.type_defs import (
 )
 
 from cmk.core_helpers.host_sections import HostSections
+from cmk.core_helpers.type_defs import HostMeta
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.type_defs import SectionPlugin
@@ -44,13 +46,13 @@ if TYPE_CHECKING:
     from cmk.core_helpers.protocol import FetcherMessage
     from cmk.core_helpers.type_defs import SectionNameCollection
 
-    from cmk.base.sources import Source
 
 CacheInfo = Optional[Tuple[int, int]]
 
 ParsedSectionContent = object  # the parse function may return *anything*.
 
-SourceResults = Sequence[Tuple["Source", result.Result[HostSections, Exception]]]
+
+SourceResults = Sequence[Tuple[HostMeta, result.Result[HostSections, Exception]]]
 
 
 class ParsingResult(NamedTuple):
@@ -295,12 +297,13 @@ class ParsedSectionsBroker:
 
 
 def parse_messages(
-    fetched: Sequence[Tuple[Source, FetcherMessage]],
+    fetched: Sequence[Tuple[HostMeta, FetcherMessage]],
     *,
     selected_sections: SectionNameCollection,
+    logger: logging.Logger,
 ) -> Tuple[
     Mapping[HostKey, HostSections],
-    Sequence[Tuple[Source, result.Result[HostSections, Exception]]],
+    Sequence[Tuple[HostMeta, result.Result[HostSections, Exception]]],
 ]:
     """Gather ALL host info data for any host (hosts, nodes, clusters) in Checkmk.
 
@@ -312,7 +315,7 @@ def parse_messages(
     console.vverbose("%s+%s %s\n", tty.yellow, tty.normal, "Parse fetcher results".upper())
 
     collected_host_sections: Dict[HostKey, HostSections] = {}
-    results: List[Tuple[Source, result.Result[HostSections, Exception]]] = []
+    results: List[Tuple[HostMeta, result.Result[HostSections, Exception]]] = []
     # Special agents can produce data for the same check_plugin_name on the same host, in this case
     # the section lines need to be extended
     for source, fetcher_message in fetched:
@@ -327,7 +330,7 @@ def parse_messages(
             fetcher_type=fetcher_message.fetcher_type,
             ident=fetcher_message.ident,
             selection=selected_sections,
-            logger=source._logger,
+            logger=logger,
         )
         results.append((source, source_result))
         if source_result.is_ok():

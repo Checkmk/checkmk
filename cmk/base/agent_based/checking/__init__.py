@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Performing the actual checks."""
 
+import logging
 from collections import defaultdict
 from contextlib import suppress
 from functools import partial
@@ -47,7 +48,7 @@ from cmk.utils.type_defs import (
 
 from cmk.core_helpers.cache import FileCacheGlobals
 from cmk.core_helpers.protocol import FetcherMessage, FetcherType
-from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
+from cmk.core_helpers.type_defs import HostMeta, Mode, NO_SELECTION, SectionNameCollection
 
 import cmk.base.agent_based.error_handling as error_handling
 import cmk.base.agent_based.inventory as inventory
@@ -75,7 +76,7 @@ from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_paramete
 from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.check_utils import ConfiguredService, LegacyCheckParameters
 from cmk.base.config import ConfigCache, HostConfig
-from cmk.base.sources import fetch_all, make_sources, Source
+from cmk.base.sources import fetch_all, make_sources
 from cmk.base.submitters import Submittee, Submitter
 
 from . import _cluster_modes
@@ -106,7 +107,7 @@ def active_check_checking(
     hostname: HostName,
     *,
     submitter: Submitter,
-    fetched: Sequence[Tuple[Source, FetcherMessage]],
+    fetched: Sequence[Tuple[HostMeta, FetcherMessage]],
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
     selected_sections: SectionNameCollection = NO_SELECTION,
     active_check_handler: Callable[[HostName, str], object],
@@ -213,7 +214,7 @@ def _commandline_checking(
 def _execute_checkmk_checks(
     *,
     hostname: HostName,
-    fetched: Sequence[Tuple[Source, FetcherMessage]],
+    fetched: Sequence[Tuple[HostMeta, FetcherMessage]],
     run_plugin_names: Container[CheckPluginName],
     selected_sections: SectionNameCollection,
     submitter: Submitter,
@@ -229,7 +230,11 @@ def _execute_checkmk_checks(
             key=lambda service: service.description,
         ),
     )
-    host_sections, source_results = parse_messages(fetched, selected_sections=selected_sections)
+    host_sections, source_results = parse_messages(
+        fetched,
+        selected_sections=selected_sections,
+        logger=logging.getLogger("cmk.base.checking"),
+    )
     store_piggybacked_sections(host_sections)
     broker = make_broker(host_sections)
     with CPUTracker() as tracker:

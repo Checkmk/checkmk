@@ -54,7 +54,7 @@ from cmk.core_helpers.snmp import (
     SNMPPluginStore,
     SNMPPluginStoreItem,
 )
-from cmk.core_helpers.type_defs import NO_SELECTION, SectionNameCollection
+from cmk.core_helpers.type_defs import HostMeta, NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_table as check_table
@@ -638,9 +638,9 @@ def fetch_all(
     sources: Iterable[Source],
     *,
     mode: Mode,
-) -> Sequence[Tuple[Source, FetcherMessage]]:
+) -> Sequence[Tuple[HostMeta, FetcherMessage]]:
     console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
-    out: List[Tuple[Source, FetcherMessage]] = []
+    out: List[Tuple[HostMeta, FetcherMessage]] = []
     for source in sources:
         console.vverbose("  Source: %s/%s\n" % (source.source_type, source.fetcher_type))
 
@@ -648,7 +648,13 @@ def fetch_all(
             raw_data = source.fetch(mode)
         out.append(
             (
-                source,
+                HostMeta(
+                    source.hostname,
+                    source.ipaddress,
+                    source.id,
+                    source.fetcher_type,
+                    source.source_type,
+                ),
                 FetcherMessage.from_raw_data(
                     source.hostname,
                     source.id,

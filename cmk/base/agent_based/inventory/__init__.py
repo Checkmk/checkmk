@@ -11,9 +11,10 @@ CL:
     if and only if there are NO errors while executing inventory plugins.
 """
 
+import logging
 import time
 from functools import partial
-from typing import Callable, Container, NamedTuple, Sequence
+from typing import Callable, Container, Iterable, NamedTuple, Sequence
 
 import cmk.utils.cleanup
 import cmk.utils.debug
@@ -37,6 +38,7 @@ from cmk.base.agent_based.data_provider import (
     make_broker,
     parse_messages,
     ParsedSectionsBroker,
+    SourceResults,
     store_piggybacked_sections,
 )
 from cmk.base.agent_based.utils import (
@@ -45,7 +47,7 @@ from cmk.base.agent_based.utils import (
     summarize_host_sections,
 )
 from cmk.base.config import HostConfig
-from cmk.base.sources import fetch_all, make_sources, Source
+from cmk.base.sources import fetch_all, make_sources
 
 from ._retentions import Retentions, RetentionsTracker
 from ._tree_aggregator import InventoryTrees, TreeAggregator
@@ -53,7 +55,7 @@ from ._tree_aggregator import InventoryTrees, TreeAggregator
 
 class ActiveInventoryResult(NamedTuple):
     trees: InventoryTrees
-    source_results: Sequence[tuple[Source, result.Result[HostSections, Exception]]]
+    source_results: SourceResults
     parsing_errors: Sequence[str]
     processing_failed: bool
 
@@ -300,7 +302,11 @@ def _inventorize_host(
         ),
         mode=(Mode.INVENTORY if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS),
     )
-    host_sections, results = parse_messages(fetched, selected_sections=selected_sections)
+    host_sections, results = parse_messages(
+        fetched,
+        selected_sections=selected_sections,
+        logger=logging.getLogger("cmk.base.inventory"),
+    )
     store_piggybacked_sections(host_sections)
     broker = make_broker(host_sections)
 
@@ -314,12 +320,14 @@ def _inventorize_host(
         ),
         source_results=results,
         parsing_errors=parsing_errors,
-        processing_failed=(_sources_failed(results) or bool(parsing_errors)),
+        processing_failed=(
+            _sources_failed(host_section for _meta, host_section in results) or bool(parsing_errors)
+        ),
     )
 
 
 def _sources_failed(
-    results: Sequence[tuple[Source, result.Result[HostSections, Exception]]],
+    host_sections: Iterable[result.Result[HostSections, Exception]],
 ) -> bool:
     """Check if data sources of a host failed
 
@@ -328,7 +336,7 @@ def _sources_failed(
     of the tree, which would blow up the inventory history (in terms of disk usage).
     """
     # If a result is not OK, that means the corresponding sections have not been added.
-    return any(not source_result.is_ok() for _source, source_result in results)
+    return any(not host_section.is_ok() for host_section in host_sections)
 
 
 def do_inventory_actions_during_checking_for(

@@ -79,7 +79,7 @@ def summarize_host_sections(
             source.hostname,
             source.ipaddress,
             host_sections,
-            exit_spec=exit_spec_cb(source.id),
+            exit_spec=exit_spec_cb(source.ident),
             time_settings=time_settings_cb(source.hostname),
             is_piggyback=is_piggyback,
             fetcher_type=source.fetcher_type,
@@ -88,7 +88,7 @@ def summarize_host_sections(
             yield from (
                 ActiveCheckResult(
                     s.state if override_non_ok_state is None else override_non_ok_state,
-                    f"[{source.id}] {s.summary}",
+                    f"[{source.ident}] {s.summary}",
                     s.details,
                     s.metrics,
                 )

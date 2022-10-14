@@ -5,11 +5,11 @@
 """Package containing the fetchers to the data sources."""
 
 import enum
-from typing import Final, FrozenSet, Sequence, Union
+from typing import Final, FrozenSet, NamedTuple, Optional, Sequence, Union
 
-from cmk.utils.type_defs import SectionName
+from cmk.utils.type_defs import HostAddress, HostName, SectionName, SourceType
 
-__all__ = ["Mode", "NO_SELECTION", "SectionNameCollection"]
+__all__ = ["Mode", "NO_SELECTION", "SectionNameCollection", "HostMeta", "FetcherType"]
 
 
 class Mode(enum.Enum):
@@ -34,6 +34,15 @@ class FetcherType(enum.Enum):
     PROGRAM = enum.auto()
     SNMP = enum.auto()
     TCP = enum.auto()
+
+
+class HostMeta(NamedTuple):
+    # TODO(ml): Rename that to Source once the current Sources are gone?
+    hostname: HostName
+    ipaddress: Optional[HostAddress]
+    ident: str
+    fetcher_type: FetcherType
+    source_type: SourceType
 
 
 # Note that the inner Sequence[str] to AgentRawDataSection

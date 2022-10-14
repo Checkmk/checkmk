@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
 import socket
 import time
 from contextlib import suppress
@@ -56,7 +57,7 @@ from cmk.automations.results import CheckPreviewEntry
 import cmk.core_helpers.cache
 from cmk.core_helpers.cache import FileCacheGlobals
 from cmk.core_helpers.protocol import FetcherMessage
-from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
+from cmk.core_helpers.type_defs import HostMeta, Mode, NO_SELECTION, SectionNameCollection
 
 import cmk.base.agent_based.checking as checking
 import cmk.base.agent_based.error_handling as error_handling
@@ -84,7 +85,7 @@ from cmk.base.core_config import (
     ObjectAttributes,
 )
 from cmk.base.discovered_labels import HostLabel, ServiceLabel
-from cmk.base.sources import fetch_all, make_sources, Source
+from cmk.base.sources import fetch_all, make_sources
 
 from ._discovered_services import analyse_discovered_services
 from ._filters import ServiceFilters as _ServiceFilters
@@ -200,6 +201,7 @@ def commandline_discovery(
             host_sections, _results = parse_messages(
                 fetched,
                 selected_sections=selected_sections,
+                logger=logging.getLogger("cmk.base.discovery"),
             )
             store_piggybacked_sections(host_sections)
             parsed_sections_broker = make_broker(host_sections)
@@ -372,6 +374,7 @@ def automation_discovery(
         host_sections, _results = parse_messages(
             fetched,
             selected_sections=NO_SELECTION,
+            logger=logging.getLogger("cmk.base.discovery"),
         )
         store_piggybacked_sections(host_sections)
         parsed_sections_broker = make_broker(host_sections)
@@ -555,7 +558,7 @@ def _make_diff(
 def active_check_discovery(
     host_name: HostName,
     *,
-    fetched: Sequence[Tuple[Source, FetcherMessage]],
+    fetched: Sequence[Tuple[HostMeta, FetcherMessage]],
     active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,
 ) -> ServiceState:
@@ -628,7 +631,7 @@ def _commandline_check_discovery(
 def _execute_check_discovery(
     host_name: HostName,
     *,
-    fetched: Sequence[Tuple[Source, FetcherMessage]],
+    fetched: Sequence[Tuple[HostMeta, FetcherMessage]],
 ) -> ActiveCheckResult:
     # Note: '--cache' is set in core_cmc, nagios template or even on CL and means:
     # 1. use caches as default:
@@ -642,7 +645,11 @@ def _execute_check_discovery(
 
     discovery_mode = DiscoveryMode(params.rediscovery.get("mode"))
 
-    host_sections, source_results = parse_messages(fetched, selected_sections=NO_SELECTION)
+    host_sections, source_results = parse_messages(
+        fetched,
+        selected_sections=NO_SELECTION,
+        logger=logging.getLogger("cmk.base.discovery"),
+    )
     store_piggybacked_sections(host_sections)
     parsed_sections_broker = make_broker(host_sections)
 
@@ -1319,7 +1326,11 @@ def get_check_preview(
         ),
         mode=Mode.DISCOVERY,
     )
-    host_sections, _source_results = parse_messages(fetched, selected_sections=NO_SELECTION)
+    host_sections, _source_results = parse_messages(
+        fetched,
+        selected_sections=NO_SELECTION,
+        logger=logging.getLogger("cmk.base.discovery"),
+    )
     store_piggybacked_sections(host_sections)
     parsed_sections_broker = make_broker(host_sections)
 

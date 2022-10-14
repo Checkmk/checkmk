@@ -2081,18 +2081,12 @@ def SingleInfoSelection(info_keys: SingleInfos) -> Transform:
 
 # Converts a context from the form { filtername : { ... } } into
 # the for { infoname : { filtername : { } } for editing.
-def pack_context_for_editing(
-    visual: Visual, info_handler: Optional[Callable[[Visual], SingleInfos]]
-) -> Dict:
+def pack_context_for_editing(context: VisualContext, info_keys: Sequence[InfoName]) -> Dict:
     # We need to pack all variables into dicts with the name of the
     # info. Since we have no mapping from info the the filter variable,
     # we pack into every info every filter. The dict valuespec will
     # pick out what it needs. Yurks.
-    packed_context = {}
-    info_keys = info_handler(visual) if info_handler else visual_info_registry.keys()
-    for info_name in info_keys:
-        packed_context[info_name] = visual.get("context", {})
-    return packed_context
+    return {info_name: context for info_name in info_keys}
 
 
 def unpack_context_after_editing(packed_context: Dict) -> VisualContext:

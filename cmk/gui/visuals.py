@@ -968,11 +968,13 @@ def page_create_visual(
 #   '----------------------------------------------------------------------'
 
 
-def get_context_specs(single_infos, info_keys):
+def get_context_specs(
+    single_infos: Sequence[InfoName], info_keys: Sequence[InfoName]
+) -> list[tuple[InfoName, Transform[dict] | VisualFilterList]]:
     single_info_keys = [key for key in info_keys if key in single_infos]
     multi_info_keys = [key for key in info_keys if key not in single_info_keys]
 
-    def host_service_lead(val):
+    def host_service_lead(val: tuple[InfoName, Transform[dict] | VisualFilterList]) -> int:
         # Sort is stable in python, thus only prioritize host>service>rest
         if val[0] == "host":
             return 0
@@ -981,23 +983,26 @@ def get_context_specs(single_infos, info_keys):
         return 2
 
     # single infos first, the rest afterwards
-    context_specs = [(info_key, visual_spec_single(info_key)) for info_key in single_info_keys] + [
-        (info_key, visual_spec_multi(info_key))
+    context_specs: list[tuple[InfoName, Transform[dict] | VisualFilterList]] = [
+        (info_key, _visual_spec_single(info_key)) for info_key in single_info_keys
+    ] + [
+        (info_key, spec)
         for info_key in multi_info_keys
-        if visual_spec_multi(info_key)
+        for spec in [_visual_spec_multi(info_key)]
+        if spec is not None
     ]
 
     return sorted(context_specs, key=host_service_lead)
 
 
-def visual_spec_single(info_key):
+def _visual_spec_single(info_key: InfoName) -> Transform[dict]:
     # VisualInfos have a single_spec, which might declare multiple filters.
     # In this case each spec is as filter value and it is typed(at the moment only Integer & TextInput).
     # Filters at the moment, due to use of url_vars, are string only.
     # At the moment single_info_spec relation to filters is:
     #     for all (i): info.single_spec[i][0]==filter.ident==filter.htmlvars[0]
 
-    # This visual_spec_single stores direct into the VisualContext, thus it needs to dissosiate
+    # This _visual_spec_single stores direct into the VisualContext, thus it needs to dissosiate
     # the single_spec into separate filters. This transformations are the equivalent of flattening
     # the values into the url, but now they preserve the VisualContext type.
 
@@ -1038,7 +1043,7 @@ def visual_spec_single(info_key):
     )
 
 
-def visual_spec_multi(info_key):
+def _visual_spec_multi(info_key: InfoName) -> VisualFilterList | None:
     info = visual_info_registry[info_key]()
     filter_list = VisualFilterList([info_key], title=info.title)
     filter_names = filter_list.filter_names()
@@ -1046,23 +1051,25 @@ def visual_spec_multi(info_key):
     return filter_list if filter_names else None
 
 
-def process_context_specs(context_specs) -> VisualContext:  # type:ignore[no-untyped-def]
-    context = {}
+def process_context_specs(
+    context_specs: list[tuple[InfoName, Transform[dict] | VisualFilterList]]
+) -> VisualContext:
+    context: dict[str, Any] = {}
     for info_key, spec in context_specs:
         ident = "context_" + info_key
 
         attrs = spec.from_html_vars(ident)
-        spec.validate_value(attrs, ident)
+        spec.validate_value(dict(attrs), ident)
         context.update(attrs)
     return context
 
 
-def render_context_specs(  # type:ignore[no-untyped-def]
-    visual,
-    context_specs,
+def render_context_specs(
+    context: VisualContext,
+    context_specs: list[tuple[InfoName, Transform[dict] | VisualFilterList]],
     isopen: bool = True,
     help_text: Union[str, HTML, None] = None,
-):
+) -> None:
     if not context_specs:
         return
 
@@ -1075,7 +1082,6 @@ def render_context_specs(  # type:ignore[no-untyped-def]
     # Trick: the field "context" contains a dictionary with
     # all filter settings, from which the value spec will automatically
     # extract those that it needs.
-    value = visual.get("context", {})
     for info_key, spec in context_specs:
         forms.section(
             spec.title(),
@@ -1084,7 +1090,7 @@ def render_context_specs(  # type:ignore[no-untyped-def]
             else all(flt.is_show_more for _title, flt in spec.filter_items() if flt is not None),
         )
         ident = "context_" + info_key
-        spec.render_input(ident, value)
+        spec.render_input(ident, context)
 
 
 def _vs_general(
@@ -1491,7 +1497,7 @@ def page_edit_visual(  # type:ignore[no-untyped-def] # pylint: disable=too-many-
         custom_field_handler(visual)
 
     render_context_specs(
-        visual,
+        visual["context"],
         context_specs,
         isopen=what != "dashboards",
         help_text=help_text_context,

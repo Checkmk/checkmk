@@ -2038,7 +2038,7 @@ class EditDashletPage(Page):
 
         html.begin_form("dashlet", method="POST")
         vs_general.render_input("general", dict(dashlet_spec))
-        visuals.render_context_specs(dashlet_spec, context_specs)
+        visuals.render_context_specs(dashlet_spec["context"], context_specs)
 
         if vs_type:
             vs_type.render_input("type", dict(dashlet_spec))

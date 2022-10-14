@@ -320,16 +320,19 @@ class _Builder:
         self.simulation_mode: Final = simulation_mode
         self.missing_sys_description: Final = missing_sys_description
         self.file_cache_max_age: Final = file_cache_max_age
-        self._elems: Dict[str, Source] = {}
+        self._elems: Dict[str, Tuple[HostMeta, FileCache, Fetcher]] = {}
 
         self._initialize()
 
     @property
-    def sources(self) -> Sequence[Source]:
+    def sources(self) -> Sequence[Tuple[HostMeta, FileCache, Fetcher]]:
         # Always execute piggyback at the end
         return sorted(
             self._elems.values(),
-            key=lambda c: (isinstance(c, PiggybackSource), c.id),
+            key=lambda args: (
+                args[0].fetcher_type is FetcherType.PIGGYBACK,
+                args[0].ident,
+            ),
         )
 
     def _initialize(self) -> None:
@@ -526,7 +529,17 @@ class _Builder:
             raise LookupError()
 
     def _add(self, source: Source) -> None:
-        self._elems[source.id] = source
+        self._elems[source.id] = (
+            HostMeta(
+                source.hostname,
+                source.ipaddress,
+                source.id,
+                source.fetcher_type,
+                source.source_type,
+            ),
+            source.file_cache(),
+            source.fetcher(),
+        )
 
     def _get_agent(self) -> Source:
         datasource_program = self.host_config.datasource_program
@@ -622,29 +635,16 @@ def make_non_cluster_sources(
     file_cache_max_age: MaxAge,
 ) -> Sequence[Tuple[HostMeta, FileCache, Fetcher]]:
     """Sequence of sources available for `host_config`."""
-    return [
-        (
-            HostMeta(
-                source.hostname,
-                source.ipaddress,
-                source.id,
-                source.fetcher_type,
-                source.source_type,
-            ),
-            source.file_cache(),
-            source.fetcher(),
-        )
-        for source in _Builder(
-            host_config,
-            ipaddress,
-            selected_sections=selected_sections,
-            on_scan_error=on_scan_error,
-            force_snmp_cache_refresh=force_snmp_cache_refresh,
-            simulation_mode=simulation_mode,
-            missing_sys_description=missing_sys_description,
-            file_cache_max_age=file_cache_max_age,
-        ).sources
-    ]
+    return _Builder(
+        host_config,
+        ipaddress,
+        selected_sections=selected_sections,
+        on_scan_error=on_scan_error,
+        force_snmp_cache_refresh=force_snmp_cache_refresh,
+        simulation_mode=simulation_mode,
+        missing_sys_description=missing_sys_description,
+        file_cache_max_age=file_cache_max_age,
+    ).sources
 
 
 def fetch_all(

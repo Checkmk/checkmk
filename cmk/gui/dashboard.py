@@ -1958,7 +1958,9 @@ class EditDashletPage(Page):
             dashlet = dashlet_type(self._board, self._dashboard, self._ident, dashlet_spec)
             return dashlet.infos()
 
-        context_specs = visuals.get_context_specs(dashlet_spec, info_handler=dashlet_info_handler)
+        context_specs = visuals.get_context_specs(
+            dashlet_spec["single_infos"], dashlet_info_handler(dashlet_spec)
+        )
 
         vs_type: ValueSpec | None = None
         params = dashlet_type.vs_parameters()

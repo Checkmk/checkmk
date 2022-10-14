@@ -968,14 +968,8 @@ def page_create_visual(
 #   '----------------------------------------------------------------------'
 
 
-def get_context_specs(visual, info_handler):
-    info_keys = list(visual_info_registry.keys())
-    if info_handler:
-        handler_keys = info_handler(visual)
-        if handler_keys is not None:
-            info_keys = handler_keys
-
-    single_info_keys = [key for key in info_keys if key in visual["single_infos"]]
+def get_context_specs(single_infos, info_keys):
+    single_info_keys = [key for key in info_keys if key in single_infos]
     multi_info_keys = [key for key in info_keys if key not in single_info_keys]
 
     def host_service_lead(val):
@@ -1368,7 +1362,10 @@ def page_edit_visual(  # type:ignore[no-untyped-def] # pylint: disable=too-many-
         mode,
         what,
     )
-    context_specs = get_context_specs(visual, info_handler)
+    context_specs = get_context_specs(
+        visual["single_infos"],
+        info_handler(visual) if info_handler else list(visual_info_registry.keys()),
+    )
 
     # handle case of save or try or press on search button
     save_and_go = None

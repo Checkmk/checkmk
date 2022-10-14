@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import (
     Any,
     Callable,
+    cast,
     Dict,
     Final,
     Generic,
@@ -1223,14 +1224,14 @@ def _vs_general(
 
 def page_edit_visual(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branches
     what: VisualTypeName,
-    all_visuals: Dict[Tuple[UserId, VisualName], Visual],
+    all_visuals: dict[tuple[UserId, VisualName], T],
     custom_field_handler=None,
     create_handler=None,
     load_handler=None,
     info_handler=None,
-    sub_pages: Optional[pagetypes.SubPagesSpec] = None,
-    help_text_context: Union[str, HTML, None] = None,
-):
+    sub_pages: pagetypes.SubPagesSpec | None = None,
+    help_text_context: str | HTML | None = None,
+) -> None:
     if sub_pages is None:
         sub_pages = []
 
@@ -1447,7 +1448,12 @@ def page_edit_visual(  # type:ignore[no-untyped-def] # pylint: disable=too-many-
 
                 if transactions.check_transaction():
                     assert owner_user_id is not None
-                    all_visuals[(owner_user_id, visual["name"])] = visual
+                    # Since we have no way to parse the raw dictionary and Dictionary is also not
+                    # typable, we need to hope here that page_dict fits with T. On the mission to at
+                    # least add some typing here, we take this shortcut for now. There are way
+                    # bigger problems in this class hierarchy than the edit dialog we should solve
+                    # first.
+                    all_visuals[(owner_user_id, visual["name"])] = cast(T, visual)
                     # Handle renaming of visuals
                     if oldname and oldname != visual["name"]:
                         # -> delete old entry

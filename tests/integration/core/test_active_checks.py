@@ -35,7 +35,8 @@ def test_cfg_fixture(site: Site) -> Iterator[None]:
     site.openapi.delete_host("test-host")
 
 
-def test_active_check_execution(site: Site, web) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("web")
+def test_active_check_execution(site: Site) -> None:
     rule_id = site.openapi.create_rule(
         ruleset_name="custom_checks",
         value={
@@ -62,7 +63,9 @@ def test_active_check_execution(site: Site, web) -> None:  # type:ignore[no-unty
         site.activate_changes_and_wait_for_core_reload()
 
 
-def test_active_check_macros(test_cfg, site, web) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("web")
+@pytest.mark.usefixtures("test_cfg")
+def test_active_check_macros(site: Site) -> None:
     macros = {
         "$HOSTADDRESS$": "127.0.0.1",
         "$HOSTNAME$": "test-host",

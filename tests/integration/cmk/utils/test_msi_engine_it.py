@@ -24,7 +24,7 @@ TEST_MSI_FILE: Final = Path("agents/wnx/test_files/msibuild/msi") / "check_mk_ag
 
 
 @pytest.mark.parametrize("executable", EXPECTED_EXECUTABLES)
-def test_executables(site: Site, executable) -> None:  # type:ignore[no-untyped-def]
+def test_executables(site: Site, executable: Path) -> None:
     p = Path(site.path("bin")) / executable
     assert p.exists(), f"path: '{p}' exe: '{executable}'"
 

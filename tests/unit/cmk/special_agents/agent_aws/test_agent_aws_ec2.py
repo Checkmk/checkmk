@@ -5,6 +5,8 @@
 
 # pylint: disable=redefined-outer-name
 
+from collections.abc import Callable, Mapping, Sequence
+
 import pytest
 
 from cmk.special_agents.agent_aws import (
@@ -14,6 +16,7 @@ from cmk.special_agents.agent_aws import (
     EC2Limits,
     EC2SecurityGroups,
     EC2Summary,
+    OverallTags,
     ResultDistributor,
 )
 
@@ -32,7 +35,7 @@ from .agent_aws_fake_clients import (
 
 
 class FakeEC2Client:
-    def __init__(self, skip_entities=None) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, skip_entities: Mapping[str, object] | None = None) -> None:
         self._skip_entities = {} if not skip_entities else skip_entities
 
     def describe_instances(self, InstanceIds=None, Filters=None):
@@ -105,9 +108,20 @@ class FakeEC2Client:
         }
 
 
+EC2Sections = Callable[
+    [object | None, OverallTags, list[object], Mapping[str, object] | None],
+    tuple[EC2Limits, EC2Summary, EC2Labels, EC2SecurityGroups, EC2],
+]
+
+
 @pytest.fixture()
-def get_ec2_sections():
-    def _create_ec2_sections(names, tags, *, skip_entities=None):
+def get_ec2_sections() -> EC2Sections:
+    def _create_ec2_sections(
+        names: object | None,
+        tags: OverallTags,
+        *args: object,
+        skip_entities: Mapping[str, object] | None = None,
+    ) -> tuple[EC2Limits, EC2Summary, EC2Labels, EC2SecurityGroups, EC2]:
         region = "region"
         config = AWSConfig("hostname", [], ([], []))
         config.add_single_service_config("ec2_names", names)
@@ -154,11 +168,15 @@ ec2_params = [
 
 
 @pytest.mark.parametrize("names,tags,found_ec2,found_ec2_with_labels", ec2_params)
-def test_agent_aws_ec2_limits(  # type:ignore[no-untyped-def]
-    get_ec2_sections, names, tags, found_ec2, found_ec2_with_labels
+def test_agent_aws_ec2_limits(
+    get_ec2_sections: EC2Sections,
+    names: Sequence[str] | None,
+    tags: OverallTags,
+    found_ec2: int,
+    found_ec2_with_labels: int,
 ) -> None:
     ec2_limits, _ec2_summary, _ec2_labels, _ec2_security_groups, _ec2 = get_ec2_sections(
-        names, tags
+        names, tags, [], None
     )
     ec2_limits_results = ec2_limits.run().results
 
@@ -183,10 +201,16 @@ def test_agent_aws_ec2_limits(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.parametrize("names,tags,found_ec2,found_ec2_with_labels", ec2_params)
-def test_agent_aws_ec2_summary(  # type:ignore[no-untyped-def]
-    get_ec2_sections, names, tags, found_ec2, found_ec2_with_labels
+def test_agent_aws_ec2_summary(
+    get_ec2_sections: EC2Sections,
+    names: Sequence[str] | None,
+    tags: OverallTags,
+    found_ec2: int,
+    found_ec2_with_labels: int,
 ) -> None:
-    ec2_limits, ec2_summary, _ec2_labels, _ec2_security_groups, _ec2 = get_ec2_sections(names, tags)
+    ec2_limits, ec2_summary, _ec2_labels, _ec2_security_groups, _ec2 = get_ec2_sections(
+        names, tags, [], None
+    )
     _ec2_limits_results = ec2_limits.run().results
     ec2_summary_results = ec2_summary.run().results
 
@@ -206,10 +230,16 @@ def test_agent_aws_ec2_summary(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.parametrize("names,tags,found_ec2,found_ec2_with_labels", ec2_params)
-def test_agent_aws_ec2_labels(  # type:ignore[no-untyped-def]
-    get_ec2_sections, names, tags, found_ec2, found_ec2_with_labels
+def test_agent_aws_ec2_labels(
+    get_ec2_sections: EC2Sections,
+    names: Sequence[str] | None,
+    tags: OverallTags,
+    found_ec2_with_labels: int,
+    found_ec2: int,
 ) -> None:
-    ec2_limits, ec2_summary, ec2_labels, _ec2_security_groups, _ec2 = get_ec2_sections(names, tags)
+    ec2_limits, ec2_summary, ec2_labels, _ec2_security_groups, _ec2 = get_ec2_sections(
+        names, tags, [], None
+    )
     _ec2_limits_results = ec2_limits.run().results
     _ec2_summary_results = ec2_summary.run().results
     ec2_labels_results = ec2_labels.run().results
@@ -223,9 +253,15 @@ def test_agent_aws_ec2_labels(  # type:ignore[no-untyped-def]
 
 @pytest.mark.parametrize("names,tags,found_ec2,found_ec2_with_labels", ec2_params)
 def test_agent_aws_ec2_security_groups(
-    get_ec2_sections, names, tags, found_ec2, found_ec2_with_labels
-):
-    ec2_limits, ec2_summary, _ec2_labels, ec2_security_groups, _ec2 = get_ec2_sections(names, tags)
+    get_ec2_sections: EC2Sections,
+    names: Sequence[str] | None,
+    tags: OverallTags,
+    found_ec2: int,
+    found_ec2_with_labels: int,
+) -> None:
+    ec2_limits, ec2_summary, _ec2_labels, ec2_security_groups, _ec2 = get_ec2_sections(
+        names, tags, [], None
+    )
     _ec2_limits_results = ec2_limits.run().results
     _ec2_summary_results = ec2_summary.run().results
     ec2_security_groups_results = ec2_security_groups.run().results
@@ -241,10 +277,16 @@ def test_agent_aws_ec2_security_groups(
 
 
 @pytest.mark.parametrize("names,tags,found_ec2,found_ec2_with_labels", ec2_params)
-def test_agent_aws_ec2(  # type:ignore[no-untyped-def]
-    get_ec2_sections, names, tags, found_ec2, found_ec2_with_labels
+def test_agent_aws_ec2(
+    get_ec2_sections: EC2Sections,
+    names: Sequence[str] | None,
+    tags: OverallTags,
+    found_ec2: int,
+    found_ec2_with_labels: int,
 ) -> None:
-    ec2_limits, ec2_summary, _ec2_labels, _ec2_security_groups, ec2 = get_ec2_sections(names, tags)
+    ec2_limits, ec2_summary, _ec2_labels, _ec2_security_groups, ec2 = get_ec2_sections(
+        names, tags, [], None
+    )
     _ec2_limits_results = ec2_limits.run().results
     _ec2_summary_results = ec2_summary.run().results
     ec2_results = ec2.run().results
@@ -262,11 +304,11 @@ def test_agent_aws_ec2(  # type:ignore[no-untyped-def]
         assert len(result.content) == 11
 
 
-def test_agent_aws_ec2_summary_without_limits(  # type:ignore[no-untyped-def]
-    get_ec2_sections,
+def test_agent_aws_ec2_summary_without_limits(
+    get_ec2_sections: EC2Sections,
 ) -> None:
     _ec2_limits, ec2_summary, _ec2_labels, _ec2_security_groups, _ec2 = get_ec2_sections(
-        None, (None, None)
+        None, (None, None), [], None
     )
     ec2_summary_results = ec2_summary.run().results
 
@@ -281,11 +323,11 @@ def test_agent_aws_ec2_summary_without_limits(  # type:ignore[no-untyped-def]
     assert len(result.content) == 3
 
 
-def test_agent_aws_ec2_labels_without_limits(  # type:ignore[no-untyped-def]
-    get_ec2_sections,
+def test_agent_aws_ec2_labels_without_limits(
+    get_ec2_sections: EC2Sections,
 ) -> None:
     _ec2_limits, ec2_summary, ec2_labels, _ec2_security_groups, _ec2 = get_ec2_sections(
-        None, (None, None)
+        None, (None, None), [], None
     )
     _ec2_summary_results = ec2_summary.run().results
     ec2_labels_results = ec2_labels.run().results
@@ -297,11 +339,11 @@ def test_agent_aws_ec2_labels_without_limits(  # type:ignore[no-untyped-def]
     assert len(ec2_labels_results) == 1
 
 
-def test_agent_aws_ec2_security_groups_without_limits(  # type:ignore[no-untyped-def]
-    get_ec2_sections,
+def test_agent_aws_ec2_security_groups_without_limits(
+    get_ec2_sections: EC2Sections,
 ) -> None:
     _ec2_limits, ec2_summary, _ec2_labels, ec2_security_groups, _ec2 = get_ec2_sections(
-        None, (None, None)
+        None, (None, None), [], None
     )
     _ec2_summary_results = ec2_summary.run().results
     ec2_security_groups_results = ec2_security_groups.run().results
@@ -316,9 +358,9 @@ def test_agent_aws_ec2_security_groups_without_limits(  # type:ignore[no-untyped
         assert result.piggyback_hostname != ""
 
 
-def test_agent_aws_ec2_without_limits(get_ec2_sections) -> None:  # type:ignore[no-untyped-def]
+def test_agent_aws_ec2_without_limits(get_ec2_sections: EC2Sections) -> None:
     _ec2_limits, ec2_summary, _ec2_labels, _ec2_security_groups, ec2 = get_ec2_sections(
-        None, (None, None)
+        None, (None, None), [], None
     )
     _ec2_summary_results = ec2_summary.run().results
     ec2_results = ec2.run().results

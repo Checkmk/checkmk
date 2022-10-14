@@ -5,6 +5,7 @@
 
 # pylint: disable=redefined-outer-name
 
+from collections.abc import Callable
 from typing import List, Optional, Tuple
 
 import pytest
@@ -18,10 +19,16 @@ from cmk.special_agents.agent_aws import (
 
 from .agent_aws_fake_clients import FakeCloudwatchClient
 
+CreateCloudwatchAlarmSections = Callable[
+    [object | None], tuple[CloudwatchAlarmsLimits, CloudwatchAlarms]
+]
+
 
 @pytest.fixture()
-def get_cloudwatch_alarms_sections():
-    def _create_cloudwatch_alarms_sections(alarm_names):
+def get_cloudwatch_alarms_sections() -> CreateCloudwatchAlarmSections:
+    def _create_cloudwatch_alarms_sections(
+        alarm_names: object | None,
+    ) -> tuple[CloudwatchAlarmsLimits, CloudwatchAlarms]:
         region = "region"
         config = AWSConfig("hostname", [], ([], []))
         config.add_single_service_config("cloudwatch_alarms", alarm_names)
@@ -76,8 +83,10 @@ def test_agent_aws_cloudwatch_alarms_limits(
 
 
 @pytest.mark.parametrize("alarm_names,amount_alarms", cloudwatch_params)
-def test_agent_aws_cloudwatch_alarms(  # type:ignore[no-untyped-def]
-    get_cloudwatch_alarms_sections, alarm_names, amount_alarms
+def test_agent_aws_cloudwatch_alarms(
+    get_cloudwatch_alarms_sections: CreateCloudwatchAlarmSections,
+    alarm_names: list[str] | None,
+    amount_alarms: int,
 ) -> None:
     cloudwatch_alarms_limits, cloudwatch_alarms = get_cloudwatch_alarms_sections(alarm_names)
     _cloudwatch_alarms_limits_results = cloudwatch_alarms_limits.run().results  # noqa: F841

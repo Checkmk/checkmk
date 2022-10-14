@@ -5,9 +5,18 @@
 
 # pylint: disable=redefined-outer-name
 
+from collections.abc import Callable, Sequence
+
 import pytest
 
-from cmk.special_agents.agent_aws import AWSConfig, RDS, RDSLimits, RDSSummary, ResultDistributor
+from cmk.special_agents.agent_aws import (
+    AWSConfig,
+    OverallTags,
+    RDS,
+    RDSLimits,
+    RDSSummary,
+    ResultDistributor,
+)
 
 from .agent_aws_fake_clients import (
     FakeCloudwatchClient,
@@ -65,9 +74,14 @@ class FakeRDSClient:
         raise NotImplementedError
 
 
+RDSSections = Callable[[object | None, OverallTags], tuple[RDSLimits, RDSSummary, RDS]]
+
+
 @pytest.fixture()
-def get_rds_sections():
-    def _create_rds_sections(names, tags):
+def get_rds_sections() -> RDSSections:
+    def _create_rds_sections(
+        names: object | None, tags: OverallTags
+    ) -> tuple[RDSLimits, RDSSummary, RDS]:
         region = "region"
         config = AWSConfig("hostname", [], ([], []))
         config.add_single_service_config("rds_names", names)
@@ -133,8 +147,11 @@ rds_params = [
 
 
 @pytest.mark.parametrize("names,tags,found_instances", rds_params)
-def test_agent_aws_rds_limits(  # type:ignore[no-untyped-def]
-    get_rds_sections, names, tags, found_instances
+def test_agent_aws_rds_limits(
+    get_rds_sections: RDSSections,
+    names: Sequence[str] | None,
+    tags: OverallTags,
+    found_instances: Sequence[str],
 ) -> None:
     rds_limits, _rds_summary, _rds = get_rds_sections(names, tags)
     rds_limits_results = rds_limits.run().results
@@ -151,8 +168,11 @@ def test_agent_aws_rds_limits(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.parametrize("names,tags,found_instances", rds_params)
-def test_agent_aws_rds_summary(  # type:ignore[no-untyped-def]
-    get_rds_sections, names, tags, found_instances
+def test_agent_aws_rds_summary(
+    get_rds_sections: RDSSections,
+    names: Sequence[str] | None,
+    tags: OverallTags,
+    found_instances: Sequence[str],
 ) -> None:
     _rds_limits, rds_summary, _rds = get_rds_sections(names, tags)
     rds_summary_results = rds_summary.run().results
@@ -171,8 +191,11 @@ def test_agent_aws_rds_summary(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.parametrize("names,tags,found_instances", rds_params)
-def test_agent_aws_rds(  # type:ignore[no-untyped-def]
-    get_rds_sections, names, tags, found_instances
+def test_agent_aws_rds(
+    get_rds_sections: RDSSections,
+    names: Sequence[str] | None,
+    tags: OverallTags,
+    found_instances: Sequence[str],
 ) -> None:
     _rds_limits, rds_summary, rds = get_rds_sections(names, tags)
     _rds_summary_results = rds_summary.run().results

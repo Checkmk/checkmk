@@ -5,6 +5,8 @@
 
 # pylint: disable=redefined-outer-name
 
+from collections.abc import Callable, Sequence
+
 import pytest
 
 from cmk.special_agents.agent_aws import (
@@ -12,6 +14,7 @@ from cmk.special_agents.agent_aws import (
     Glacier,
     GlacierLimits,
     GlacierSummary,
+    OverallTags,
     ResultDistributor,
 )
 
@@ -38,9 +41,16 @@ class FakeGlacierClient:
         return {"Tags": {}}
 
 
+GlacierSections = Callable[
+    [object | None, OverallTags], tuple[GlacierLimits, GlacierSummary, Glacier]
+]
+
+
 @pytest.fixture()
-def get_glacier_sections():
-    def _create_glacier_sections(names, tags):
+def get_glacier_sections() -> GlacierSections:
+    def _create_glacier_sections(
+        names: object | None, tags: OverallTags
+    ) -> tuple[GlacierLimits, GlacierSummary, Glacier]:
         region = "eu-central-1"
         config = AWSConfig("hostname", [], ([], []))
         config.add_single_service_config("glacier_names", names)
@@ -79,8 +89,11 @@ glacier_params = [
 
 
 @pytest.mark.parametrize("names,tags,amount_vaults", glacier_params)
-def test_agent_aws_glacier_limits(  # type:ignore[no-untyped-def]
-    get_glacier_sections, names, tags, amount_vaults
+def test_agent_aws_glacier_limits(
+    get_glacier_sections: GlacierSections,
+    names: Sequence[str] | None,
+    tags: OverallTags,
+    amount_vaults: int,
 ) -> None:
     glacier_limits, _glacier_summary, _glacier = get_glacier_sections(names, tags)
     glacier_limits_results = glacier_limits.run().results
@@ -98,8 +111,11 @@ def test_agent_aws_glacier_limits(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.parametrize("names,tags,amount_vaults", glacier_params)
-def test_agent_aws_glacier_summary(  # type:ignore[no-untyped-def]
-    get_glacier_sections, names, tags, amount_vaults
+def test_agent_aws_glacier_summary(
+    get_glacier_sections: GlacierSections,
+    names: Sequence[str] | None,
+    tags: OverallTags,
+    amount_vaults: int,
 ) -> None:
     glacier_limits, glacier_summary, _glacier = get_glacier_sections(names, tags)
     _glacier_summary_results = glacier_limits.run().results
@@ -110,8 +126,11 @@ def test_agent_aws_glacier_summary(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.parametrize("names,tags,amount_vaults", glacier_params)
-def test_agent_aws_glacier(  # type:ignore[no-untyped-def]
-    get_glacier_sections, names, tags, amount_vaults
+def test_agent_aws_glacier(
+    get_glacier_sections: GlacierSections,
+    names: Sequence[str] | None,
+    tags: OverallTags,
+    amount_vaults: int,
 ) -> None:
     glacier_limits, glacier_summary, glacier = get_glacier_sections(names, tags)
     _glacier_summary_results = glacier_limits.run().results
@@ -127,8 +146,11 @@ def test_agent_aws_glacier(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.parametrize("names,tags,amount_vaults", glacier_params)
-def test_agent_aws_glacier_summary_without_limits(  # type:ignore[no-untyped-def]
-    get_glacier_sections, names, tags, amount_vaults
+def test_agent_aws_glacier_summary_without_limits(
+    get_glacier_sections: GlacierSections,
+    names: Sequence[str] | None,
+    tags: OverallTags,
+    amount_vaults: int,
 ) -> None:
     _glacier_limits, glacier_summary, _glacier = get_glacier_sections(names, tags)
     glacier_summary_results = glacier_summary.run().results

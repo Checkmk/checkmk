@@ -14,13 +14,14 @@ MSI(Future)
 | File                       |  Classic |  Future  | Testing  |
 |----------------------------|:--------:|:--------:|:--------:|
 | OpenHardwareMonitorLib.dll |      +   |    +     |    +     |
-| OpenHardwareMonitorLib.dll |      +   |          |          |
+| OpenHardwareMonitorLib.exe |      +   |          |          |
 | ohm_bridge.dll             |          |    +     |    +     |
 | ohm_host.exe               |          |          |    +     |
+| ohm_call.exe               |          |          |    +     |
 
 Classic is a current state with OHM distributed as exe + dll
 Future is a next gen build with OHM distributed as dll + dll
-Testing uses next gen build plus exe
+Testing uses next gen build plus exe either in C# or in managed C++
 
 
 # Update

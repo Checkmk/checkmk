@@ -13,7 +13,7 @@ using System;
 using System.ServiceProcess;
 
 
-namespace OpenHardwareMonitor.Bridge
+namespace Bridge
 {
     public class OHMService : System.ServiceProcess.ServiceBase
     {

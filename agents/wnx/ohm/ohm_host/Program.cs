@@ -14,7 +14,7 @@ using System;
 using System.Threading;
 
 
-namespace OpenHardwareMonitor.Host
+namespace Host
 {
     class CLI
     {

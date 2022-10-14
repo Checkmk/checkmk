@@ -15,7 +15,7 @@ using OpenHardwareMonitor.WMI;
 using System.Timers;
 
 
-namespace OpenHardwareMonitor.Bridge
+namespace Bridge
 {
     public class DataProvider
     {

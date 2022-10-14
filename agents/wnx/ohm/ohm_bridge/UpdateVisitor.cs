@@ -14,7 +14,7 @@ using System.Collections.Generic;
 using OpenHardwareMonitor.Hardware;
 
 
-namespace OpenHardwareMonitor.Bridge
+namespace Bridge
 {
     public class UpdateVisitor : IVisitor
     {

@@ -50,17 +50,17 @@ from urllib.parse import urlparse
 import requests
 import urllib3
 from kubernetes import client  # type: ignore[import]
-from pydantic import BaseModel
 
 import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.profile
-from cmk.utils.http_proxy_config import deserialize_http_proxy_config, HTTPProxyConfig
+from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 from cmk.utils.misc import typeshed_issue_7724
 
 from cmk.special_agents.utils import vcrtrace
 from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, SectionWriter
 from cmk.special_agents.utils.request_helper import get_requests_ca
+from cmk.special_agents.utils_kubernetes import query
 from cmk.special_agents.utils_kubernetes.api_server import from_kubernetes
 from cmk.special_agents.utils_kubernetes.common import (
     LOGGER,
@@ -84,11 +84,6 @@ NATIVE_NODE_CONDITION_TYPES = [
     "PIDPressure",
     "NetworkUnavailable",
 ]
-
-
-class TCPTimeout(BaseModel):
-    connect: int
-    read: int
 
 
 class PBFormatter(Protocol):
@@ -1448,39 +1443,33 @@ class ClusterConnectionError(Exception):
 
 
 def request_cluster_collector(
-    cluster_agent_url: str,
-    token: str,
-    verify: bool,
-    timeout: TCPTimeout,
-    proxy: HTTPProxyConfig,
+    path: query.CollectorPath, config: query.CollectorSessionConfig
 ) -> Any:
-    if not verify:
+    if not config.verify_cert_collector:
         LOGGER.info("Disabling SSL certificate verification")
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-    error_message = (
-        f"Failed attempting to communicate with cluster collector at URL {cluster_agent_url}"
-    )
+    url = config.cluster_collector_endpoint + path
     try:
         cluster_resp = requests.get(
-            cluster_agent_url,
-            headers={"Authorization": f"Bearer {token}"},
-            verify=verify,
-            timeout=(timeout.connect, timeout.read),
-            proxies=typeshed_issue_7724(proxy.to_requests_proxies()),
+            url,
+            headers={"Authorization": f"Bearer {config.token}"},
+            verify=config.verify_cert_collector,
+            timeout=config.requests_timeout(),
+            proxies=typeshed_issue_7724(config.requests_proxies()),
         )
         cluster_resp.raise_for_status()
     except requests.HTTPError as e:
         raise CollectorHandlingException(
             title="Connection Error",
-            detail=error_message,
+            detail=f"Failed attempting to communicate with cluster collector at URL {url}",
         ) from e
     except requests.exceptions.RequestException as e:
         # All TCP Exceptions raised by requests inherit from RequestException,
         # see https://docs.python-requests.org/en/latest/user/quickstart/#errors-and-exceptions
         raise CollectorHandlingException(
             title="Setup Error",
-            detail=f"Failure to establish a connection to cluster collector at URL {cluster_agent_url}",
+            detail=f"Failure to establish a connection to cluster collector at URL {url}",
         ) from e
 
     return json.loads(cluster_resp.content.decode("utf-8"))
@@ -2148,15 +2137,12 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
                     piggyback_formatter=functools.partial(piggyback_formatter, "pod"),
                 )
 
+            usage_config = query.parse_session_config(arguments)
             # Skip machine & container sections when cluster agent endpoint not configured
-            if arguments.cluster_collector_endpoint is None:
+            if isinstance(usage_config, query.NoUsageConfig):
                 return 0
 
             # Sections based on cluster collector performance data
-            cluster_collector_timeout = TCPTimeout(
-                connect=arguments.cluster_collector_connect_timeout,
-                read=arguments.cluster_collector_read_timeout,
-            )
 
             # Handling of any of the cluster components should not crash the special agent as this
             # would discard all the API data. Special Agent failures of the Cluster Collector
@@ -2166,11 +2152,8 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
             collector_metadata_logs: List[section.CollectorHandlerLog] = []
             with collector_exception_handler(logs=collector_metadata_logs, debug=arguments.debug):
                 metadata_response = request_cluster_collector(
-                    f"{arguments.cluster_collector_endpoint}/metadata",
-                    arguments.token,
-                    arguments.verify_cert_collector,
-                    cluster_collector_timeout,
-                    deserialize_http_proxy_config(arguments.cluster_collector_proxy),
+                    query.CollectorPath.metadata,
+                    usage_config,
                 )
 
                 metadata = section.Metadata(**metadata_response)
@@ -2217,11 +2200,8 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
             with collector_exception_handler(logs=collector_container_logs, debug=arguments.debug):
                 LOGGER.info("Collecting container metrics from cluster collector")
                 container_metrics: Sequence[RawMetrics] = request_cluster_collector(
-                    f"{arguments.cluster_collector_endpoint}/container_metrics",
-                    arguments.token,
-                    arguments.verify_cert_collector,
-                    cluster_collector_timeout,
-                    deserialize_http_proxy_config(arguments.cluster_collector_proxy),
+                    query.CollectorPath.container_metrics,
+                    usage_config,
                 )
 
                 if not container_metrics:
@@ -2281,11 +2261,8 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
             with collector_exception_handler(logs=collector_machine_logs, debug=arguments.debug):
                 LOGGER.info("Collecting machine sections from cluster collector")
                 machine_sections: List[Mapping[str, str]] = request_cluster_collector(
-                    f"{arguments.cluster_collector_endpoint}/machine_sections",
-                    arguments.token,
-                    arguments.verify_cert_collector,
-                    cluster_collector_timeout,
-                    deserialize_http_proxy_config(arguments.cluster_collector_proxy),
+                    query.CollectorPath.machine_sections,
+                    usage_config,
                 )
 
                 if not machine_sections:

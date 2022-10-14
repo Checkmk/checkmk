@@ -108,9 +108,17 @@ class TCPFetcher(Fetcher[AgentRawData]):
             self.timeout,
         )
         self._opt_socket = socket.socket(self.family, socket.SOCK_STREAM)
+        # For an explanation on these options have a look at tcp(7) (man tcp)
+        self._opt_socket.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+        self._opt_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 120)  # start after
+        self._opt_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 10)  # wait between
+        self._opt_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 3)  # how many tries
         try:
             self._socket.settimeout(self.timeout)
             self._socket.connect(self.address)
+            # We can't set a specific timeout here, because we don't use the sockets in
+            # "non-blocking" mode. However, we want to prevent a completely dead connection,
+            # so we set the KEEPALIVE settings above.
             self._socket.settimeout(None)
         except OSError as e:
             self._close_socket()

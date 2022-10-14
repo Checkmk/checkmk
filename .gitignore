@@ -65,6 +65,8 @@ agent-receiver/dist/*
 agents/linux/*
 doc/plugin-api/build/
 doc/plugin-api/source/apidoc/
+doc/documentation/*.png
+doc/documentation/*.cmapx
 GPATH
 GRTAGS
 GTAGS

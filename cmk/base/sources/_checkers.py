@@ -40,7 +40,7 @@ from cmk.snmplib.type_defs import (
     TRawData,
 )
 
-from cmk.core_helpers import FetcherType, Parser
+from cmk.core_helpers import Fetcher, FetcherType, FileCache, get_raw_data, Parser
 from cmk.core_helpers.agent import AgentParser, AgentRawData, AgentRawDataSection
 from cmk.core_helpers.cache import FileCacheGlobals, FileCacheMode, MaxAge, SectionStore
 from cmk.core_helpers.config import AgentParserConfig, SNMPParserConfig
@@ -635,33 +635,27 @@ def make_non_cluster_sources(
 
 
 def fetch_all(
-    sources: Iterable[Source],
+    sources: Iterable[Tuple[HostMeta, FileCache, Fetcher]],
     *,
     mode: Mode,
 ) -> Sequence[Tuple[HostMeta, FetcherMessage]]:
     console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
     out: List[Tuple[HostMeta, FetcherMessage]] = []
-    for source in sources:
-        console.vverbose("  Source: %s/%s\n" % (source.source_type, source.fetcher_type))
+    for meta, file_cache, fetcher in sources:
+        console.vverbose("  Source: %s\n" % (meta,))
 
         with CPUTracker() as tracker:
-            raw_data = source.fetch(mode)
+            raw_data = get_raw_data(file_cache, fetcher, mode)
         out.append(
             (
-                HostMeta(
-                    source.hostname,
-                    source.ipaddress,
-                    source.id,
-                    source.fetcher_type,
-                    source.source_type,
-                ),
+                meta,
                 FetcherMessage.from_raw_data(
-                    source.hostname,
-                    source.id,
+                    meta.hostname,
+                    meta.ident,
                     raw_data,
                     tracker.duration,
-                    source.fetcher_type,
-                    source.source_type,
+                    meta.fetcher_type,
+                    meta.source_type,
                 ),
             )
         )
@@ -679,14 +673,24 @@ def make_sources(
     simulation_mode: bool,
     missing_sys_description: bool,
     file_cache_max_age: MaxAge,
-) -> Sequence[Source]:
+) -> Sequence[Tuple[HostMeta, FileCache, Fetcher]]:
     if host_config.nodes is None:
         # Not a cluster
         host_configs = [host_config]
     else:
         host_configs = [HostConfig.make_host_config(host_name) for host_name in host_config.nodes]
     return [
-        source
+        (
+            HostMeta(
+                source.hostname,
+                source.ipaddress,
+                source.id,
+                source.fetcher_type,
+                source.source_type,
+            ),
+            source.file_cache(),
+            source.fetcher(),
+        )
         for host_config_ in host_configs
         for source in make_non_cluster_sources(
             host_config_,

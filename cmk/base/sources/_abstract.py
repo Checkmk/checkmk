@@ -69,7 +69,13 @@ class Source(Generic[TRawData, TRawDataSection], abc.ABC):
     def _make_file_cache(self) -> FileCache[TRawData]:
         raise NotImplementedError
 
+    def file_cache(self) -> FileCache[TRawData]:
+        return self._make_file_cache()
+
     @abc.abstractmethod
     def _make_fetcher(self) -> Fetcher:
         """Create a fetcher with this configuration."""
         raise NotImplementedError
+
+    def fetcher(self) -> Fetcher:
+        return self._make_fetcher()

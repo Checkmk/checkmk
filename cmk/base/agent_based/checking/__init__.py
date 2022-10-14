@@ -184,7 +184,7 @@ def _commandline_checking(
         ipaddress = config.lookup_ip_address(host_config)
 
     fetched = fetch_all(
-        sources=make_sources(
+        make_sources(
             host_config,
             ipaddress,
             ip_lookup=lambda host_name: config.lookup_ip_address(

@@ -180,7 +180,7 @@ def commandline_discovery(
         section.section_begin(host_name)
         try:
             fetched = fetch_all(
-                sources=make_sources(
+                make_sources(
                     host_config,
                     config.lookup_ip_address(host_config),
                     ip_lookup=lambda host_name: config.lookup_ip_address(
@@ -353,7 +353,7 @@ def automation_discovery(
         ipaddress = None if host_config.is_cluster else config.lookup_ip_address(host_config)
 
         fetched = fetch_all(
-            sources=make_sources(
+            make_sources(
                 host_config,
                 ipaddress,
                 ip_lookup=lambda host_name: config.lookup_ip_address(
@@ -604,7 +604,7 @@ def _commandline_check_discovery(
         ipaddress = config.lookup_ip_address(host_config)
 
     fetched = fetch_all(
-        sources=make_sources(
+        make_sources(
             host_config,
             ipaddress,
             ip_lookup=lambda host_name: config.lookup_ip_address(
@@ -1308,7 +1308,7 @@ def get_check_preview(
     cmk.core_helpers.cache.FileCacheGlobals.maybe = use_cached_snmp_data
 
     fetched = fetch_all(
-        sources=make_sources(
+        make_sources(
             host_config,
             ip_address,
             ip_lookup=lambda host_name: config.lookup_ip_address(

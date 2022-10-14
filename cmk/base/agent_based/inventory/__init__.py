@@ -284,7 +284,7 @@ def _inventorize_host(
     config_cache = config.get_config_cache()
 
     fetched = fetch_all(
-        sources=make_sources(
+        make_sources(
             host_config,
             ipaddress,
             ip_lookup=lambda host_name: config.lookup_ip_address(

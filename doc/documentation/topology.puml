@@ -90,7 +90,7 @@ package "[[../arch-comp-hosts.html hosts]]" as hosts {
     package api_hosts
 }
 
-package "Push-Agent" as push-agent {
+package "[[../arch-comp-push-agent.html Push-Agent]]" as push-agent {
     component "Checkmk Agent" as checkmk_agent
     component "cmk-agent-ctl" as cmk_agent_ctl
     component "Agent updater" as agent_updater

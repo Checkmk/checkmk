@@ -281,7 +281,6 @@ class TestPodStartUp(TestCase):
             pod_containers(container_statuses),
             {
                 "unready_container": api.ContainerStatus(
-                    id=None,
                     name="unready_container",
                     image="gcr.io/kuar-demo/kuard-amd64:blue",
                     image_id="",

@@ -176,7 +176,6 @@ def test_pod_info() -> None:
         host_ip="127.0.0.1",
         pod_ip="11.1.1.1",
         qos_class="besteffort",
-        cluster_name="cluster-name",
         host_network=None,
         dns_policy="ClusterFirst",
         restart_policy="Always",

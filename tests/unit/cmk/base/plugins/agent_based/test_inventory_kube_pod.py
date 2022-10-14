@@ -81,12 +81,12 @@ from cmk.base.plugins.agent_based.utils.kube import (
             ),
             ContainerSpecs(
                 containers={
-                    "busybox": ContainerSpec(name="busybox", image_pull_policy="Always"),
+                    "busybox": ContainerSpec(image_pull_policy="Always"),
                 }
             ),
             ContainerSpecs(
                 containers={
-                    "busybox-init": ContainerSpec(name="busybox-init", image_pull_policy="Always"),
+                    "busybox-init": ContainerSpec(image_pull_policy="Always"),
                 }
             ),
             [
@@ -171,9 +171,7 @@ def test_inventory_kube_pod(
             id="no init containers specified",
         ),
         pytest.param(
-            ContainerSpecs(
-                containers={"busybox": ContainerSpec(name="busybox", image_pull_policy="Always")}
-            ),
+            ContainerSpecs(containers={"busybox": ContainerSpec(image_pull_policy="Always")}),
             None,
             [
                 TableRow(
@@ -186,9 +184,7 @@ def test_inventory_kube_pod(
             id="no status information, since pod is not scheduled",
         ),
         pytest.param(
-            ContainerSpecs(
-                containers={"busybox": ContainerSpec(name="busybox", image_pull_policy="Always")}
-            ),
+            ContainerSpecs(containers={"busybox": ContainerSpec(image_pull_policy="Always")}),
             PodContainers(
                 containers={
                     "busybox": ContainerStatus(
@@ -222,9 +218,7 @@ def test_inventory_kube_pod(
             id="reduced status information for regular containers, since init containers are still running",
         ),
         pytest.param(
-            ContainerSpecs(
-                containers={"busybox": ContainerSpec(name="busybox", image_pull_policy="Always")}
-            ),
+            ContainerSpecs(containers={"busybox": ContainerSpec(image_pull_policy="Always")}),
             PodContainers(
                 containers={
                     "busybox": ContainerStatus(

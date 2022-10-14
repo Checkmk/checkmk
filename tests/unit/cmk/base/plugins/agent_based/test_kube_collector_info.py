@@ -62,7 +62,7 @@ def test_parse_collector_metadata() -> None:
                 },
                 "checkmk_kube_agent": {"project_version": "package"},
             },
-            "node_collectors": [
+            "nodes": [
                 {
                     "name": "minikube",
                     "components": {
@@ -94,13 +94,13 @@ def test_parse_collector_metadata() -> None:
             ),
             checkmk_kube_agent=CheckmkKubeAgentMetadata(project_version="package"),
         ),
-        node_collectors=[
+        nodes=[
             NodeMetadata(
-                name="node",
+                name="minikube",
                 components={
                     "checkmk_agent_version": NodeComponent(
                         collector_type=CollectorType.MACHINE_SECTIONS,
-                        checkmk_kube_agent=CheckmkKubeAgentMetadata(project_version="package"),
+                        checkmk_kube_agent=CheckmkKubeAgentMetadata(project_version="0.1.0"),
                         name="checkmk_agent_version",
                         version="version",
                     ),

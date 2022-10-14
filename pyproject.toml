@@ -65,7 +65,7 @@ disallow_any_unimported = false  # 317 errors in 47 files
 warn_unreachable = false  # 240 errors in 133 files
 
 [tool.pydantic-mypy]
-init_forbid_extra = false  # 10 errors in 6 files
+init_forbid_extra = true
 init_typed = false  # 158 errors in 31 files
 warn_required_dynamic_aliases = true
 warn_untyped_fields = true

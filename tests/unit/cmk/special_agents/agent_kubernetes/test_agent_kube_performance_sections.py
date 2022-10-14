@@ -17,7 +17,6 @@ from cmk.special_agents.utils_kubernetes.performance import (
     PerformanceContainer,
     PerformanceMetric,
 )
-from cmk.special_agents.utils_kubernetes.schemata import api
 
 
 def _performance_container(
@@ -34,7 +33,6 @@ def _performance_container(
             )
             for metric in metrics
         },
-        pod_uid=api.PodUID(pod_name),
         pod_lookup_name=lookup_name(namespace, pod_name),
         rate_metrics=None,
     )

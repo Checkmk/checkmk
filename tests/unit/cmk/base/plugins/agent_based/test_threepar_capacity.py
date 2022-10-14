@@ -5,16 +5,18 @@
 
 from collections.abc import Mapping, Sequence
 
+import freezegun
 import pytest
 
-from tests.unit.conftest import FixRegister
+from tests.unit.checks.checktestlib import mock_item_state
 
-from cmk.utils.type_defs import CheckPluginName
-
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.threepar_capacity import parse_threepar_capacity
+from cmk.base.plugins.agent_based.threepar_capacity import (
+    check_threepar_capacity,
+    discover_threepar_capacity,
+    parse_threepar_capacity,
+)
 from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 
 STRING_TABLE = [
@@ -22,11 +24,6 @@ STRING_TABLE = [
         '{"allCapacity": {"totalMiB": 161120256,"freeMiB": 120660992,"failedCapacityMiB": 0},"FCCapacity": {"totalMiB": 0,"freeMiB": 0,"failedCapacityMiB": 0},"NLCapacity": {"totalMiB": 0,"freeMiB": 0,"failedCapacityMiB": 0},"SSDCapacity": {"totalMiB": 161120256,"freeMiB": 120660992,"failedCapacityMiB": 0}}'
     ]
 ]
-
-
-@pytest.fixture(name="check")
-def _3par_capacity_check_plugin(fix_register: FixRegister) -> CheckPlugin:
-    return fix_register.check_plugins[CheckPluginName("3par_capacity")]
 
 
 @pytest.mark.parametrize(
@@ -47,13 +44,12 @@ def _3par_capacity_check_plugin(fix_register: FixRegister) -> CheckPlugin:
         ),
     ],
 )
-def test_discover_3par_capacity(
-    check: CheckPlugin,
+def test_discover_threepar_capacity(
     section: StringTable,
     expected_discovery_result: Sequence[Service],
 ) -> None:
     assert (
-        list(check.discovery_function(parse_threepar_capacity(section)))
+        list(discover_threepar_capacity(parse_threepar_capacity(section)))
         == expected_discovery_result
     )
 
@@ -88,7 +84,6 @@ def test_discover_3par_capacity(
             "all",
             FILESYSTEM_DEFAULT_PARAMS,
             [
-                Result(state=State.OK, summary="Used: 25.11% - 38.6 TiB of 154 TiB"),
                 Metric(
                     "fs_used",
                     40459264.0,
@@ -102,7 +97,13 @@ def test_discover_3par_capacity(
                     levels=(79.99999999999953, 89.99999999999976),
                     boundaries=(0.0, 100.0),
                 ),
+                Result(state=State.OK, summary="Used: 25.11% - 38.6 TiB of 154 TiB"),
                 Metric("fs_size", 161120256.0, boundaries=(0.0, None)),
+                Metric("growth", 2337.2427533197924),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +2.28 GiB"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +<0.01%"),
+                Metric("trend", 2337.2427533197924, boundaries=(0.0, 6713344.0)),
+                Result(state=State.OK, summary="Time left until disk full: 141 years 160 days"),
             ],
             id="If the free capacity is above the WARN/CRIT level, the check result is OK.",
         ),
@@ -111,14 +112,19 @@ def test_discover_3par_capacity(
             "all",
             FILESYSTEM_DEFAULT_PARAMS,
             [
+                Metric("fs_used", 81.0, levels=(80.0, 90.0), boundaries=(0.0, None)),
+                Metric("fs_free", 19.0, boundaries=(0.0, None)),
+                Metric("fs_used_percent", 81.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
                 Result(
                     state=State.WARN,
                     summary="Used: 81.00% - 81.0 MiB of 100 MiB (warn/crit at 80.00%/90.00% used)",
                 ),
-                Metric("fs_used", 81.0, levels=(80.0, 90.0), boundaries=(0.0, None)),
-                Metric("fs_free", 19.0, boundaries=(0.0, None)),
-                Metric("fs_used_percent", 81.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
                 Metric("fs_size", 100.0, boundaries=(0.0, None)),
+                Metric("growth", 0.004101514958375289),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +4.20 KiB"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +<0.01%"),
+                Metric("trend", 0.004101514958375289, boundaries=(0.0, 4.166666666666666)),
+                Result(state=State.OK, summary="Time left until disk full: 12 years 252 days"),
             ],
             id="If the free capacity is below the WARN level, the check result is WARN.",
         ),
@@ -127,61 +133,76 @@ def test_discover_3par_capacity(
             "all",
             FILESYSTEM_DEFAULT_PARAMS,
             [
+                Metric("fs_used", 91.0, levels=(80.0, 90.0), boundaries=(0.0, None)),
+                Metric("fs_free", 9.0, boundaries=(0.0, None)),
+                Metric("fs_used_percent", 91.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
                 Result(
                     state=State.CRIT,
                     summary="Used: 91.00% - 91.0 MiB of 100 MiB (warn/crit at 80.00%/90.00% used)",
                 ),
-                Metric("fs_used", 91.0, levels=(80.0, 90.0), boundaries=(0.0, None)),
-                Metric("fs_free", 9.0, boundaries=(0.0, None)),
-                Metric("fs_used_percent", 91.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
                 Metric("fs_size", 100.0, boundaries=(0.0, None)),
+                Metric("growth", 0.004679193121526739),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +4.79 KiB"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +<0.01%"),
+                Metric("trend", 0.004679193121526739, boundaries=(0.0, 4.166666666666666)),
+                Result(state=State.OK, summary="Time left until disk full: 5 years 98 days"),
             ],
             id="If the free capacity is below the CRIT level, the check result is CRIT.",
         ),
         pytest.param(
             [['{"allCapacity": {"totalMiB": 100,"freeMiB": 80,"failedCapacityMiB": 3}}']],
             "all",
-            {"levels": (80.0, 90.0), "failed_capacity_levels": (2.0, 5.0)},
+            FILESYSTEM_DEFAULT_PARAMS | {"failed_capacity_levels": (2.0, 5.0)},
             [
-                Result(state=State.OK, summary="Used: 20.00% - 20.0 MiB of 100 MiB"),
                 Metric("fs_used", 20.0, levels=(80.0, 90.0), boundaries=(0.0, None)),
                 Metric("fs_free", 80.0, boundaries=(0.0, None)),
                 Metric("fs_used_percent", 20.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
+                Result(state=State.OK, summary="Used: 20.00% - 20.0 MiB of 100 MiB"),
                 Metric("fs_size", 100.0, boundaries=(0.0, None)),
-                Result(state=State.WARN, summary="3 MB failed: 3.00% (warn/crit at 2.00%/5.00%)"),
+                Metric("growth", 0.0005776781631514493),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +606 B"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +<0.01%"),
+                Metric("trend", 0.0005776781631514493, boundaries=(0.0, 4.166666666666666)),
+                Result(state=State.OK, summary="Time left until disk full: 379 years 150 days"),
+                Result(state=State.WARN, summary="3.0 MB failed: 3.00% (warn/crit at 2.00%/5.00%)"),
             ],
             id="If the failed capacity is above the WARN level, the result is WARN.",
         ),
         pytest.param(
             [['{"allCapacity": {"totalMiB": 100,"freeMiB": 80,"failedCapacityMiB": 6}}']],
             "all",
-            {"levels": (80.0, 90.0), "failed_capacity_levels": (2.0, 5.0)},
+            FILESYSTEM_DEFAULT_PARAMS | {"failed_capacity_levels": (2.0, 5.0)},
             [
-                Result(state=State.OK, summary="Used: 20.00% - 20.0 MiB of 100 MiB"),
                 Metric("fs_used", 20.0, levels=(80.0, 90.0), boundaries=(0.0, None)),
                 Metric("fs_free", 80.0, boundaries=(0.0, None)),
                 Metric("fs_used_percent", 20.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
+                Result(state=State.OK, summary="Used: 20.00% - 20.0 MiB of 100 MiB"),
                 Metric("fs_size", 100.0, boundaries=(0.0, None)),
-                Result(state=State.CRIT, summary="6 MB failed: 6.00% (warn/crit at 2.00%/5.00%)"),
+                Metric("growth", 0.0005776781631514493),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +606 B"),
+                Result(state=State.OK, summary="trend per 1 day 0 hours: +<0.01%"),
+                Metric("trend", 0.0005776781631514493, boundaries=(0.0, 4.166666666666666)),
+                Result(state=State.OK, summary="Time left until disk full: 379 years 150 days"),
+                Result(state=State.CRIT, summary="6.0 MB failed: 6.00% (warn/crit at 2.00%/5.00%)"),
             ],
             id="If the failed capacity is above the CRIT level, the result is CRIT.",
         ),
     ],
 )
-def test_check_3par_capacity(
-    check: CheckPlugin,
+def test_check_threepar_capacity(
     section: StringTable,
     item: str,
     parameters: Mapping[str, tuple[float, float]],
     expected_check_result: Sequence[Result | Metric],
 ) -> None:
-    assert (
-        list(
-            check.check_function(
-                item=item,
-                params=parameters,
-                section=parse_threepar_capacity(section),
+    with freezegun.freeze_time("2022-07-16 07:00:00"), mock_item_state((162312321.0, 10.0)):
+        assert (
+            list(
+                check_threepar_capacity(
+                    item=item,
+                    params=parameters,
+                    section=parse_threepar_capacity(section),
+                )
             )
+            == expected_check_result
         )
-        == expected_check_result
-    )

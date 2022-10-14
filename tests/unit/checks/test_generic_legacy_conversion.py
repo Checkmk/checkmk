@@ -804,7 +804,6 @@ def test_all_check_variables_present(fix_plugin_legacy: FixPluginLegacy) -> None
 
 def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) -> None:
     expected_legacy_checks = {
-        "3par_capacity",
         "3par_cpgs",
         "3par_cpgs.usage",
         "3par_hosts",

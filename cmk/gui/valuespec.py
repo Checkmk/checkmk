@@ -6313,6 +6313,7 @@ class Password(TextInput):
         self,
         is_stored_plain: bool = True,
         encrypt_value: bool = True,
+        password_meter: bool = False,
         # TextInput
         label: str | None = None,
         size: int | Literal["max"] = 25,
@@ -6336,8 +6337,14 @@ class Password(TextInput):
         default_value: ValueSpecDefault[str] = DEF_VALUE,
         validate: ValueSpecValidateFunc[str] | None = None,
     ) -> None:
+        """Password ValueSpec
+
+        Args:
+            password_meter (bool): Should the password meter be displayed? (Default: False)
+        """
         self._is_stored_plain = is_stored_plain
         self._encrypt_value = encrypt_value
+        self.password_meter = password_meter
         if self._is_stored_plain:
             plain_help = _(
                 "The password entered here is stored in plain text within the "
@@ -6393,6 +6400,8 @@ class Password(TextInput):
             autocomplete="new-password" if self._autocomplete is False else None,
             placeholder="******" if value else "",
         )
+        if self.password_meter:
+            html.password_meter()
 
     def password_plaintext_warning(self) -> None:
         if self._is_stored_plain:

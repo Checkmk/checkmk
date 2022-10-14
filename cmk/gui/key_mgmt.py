@@ -281,6 +281,7 @@ class PageEditKey:
                         allow_empty=False,
                         is_stored_plain=False,
                         minlen=self._minlen,
+                        password_meter=True,
                     ),
                 ),
             ],
@@ -422,6 +423,7 @@ class PageUploadKey:
                         help=self._passphrase_help(),
                         allow_empty=False,
                         is_stored_plain=False,
+                        password_meter=True,
                     ),
                 ),
                 (

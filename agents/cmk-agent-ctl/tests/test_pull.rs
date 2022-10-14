@@ -25,7 +25,6 @@ fn test_pull_inconsistent_cert() -> AnyhowResult<()> {
     );
 
     let error = cmk_agent_ctl::modes::pull::pull(common::testing_pull_config(
-        test_path,
         1234,
         "dummy".into(),
         registry,
@@ -99,15 +98,19 @@ impl PullFixture {
     }
 
     fn enable_legacy_pull(&self) {
-        common::legacy_pull_marker(self.test_dir.path())
-            .create()
-            .unwrap();
+        std::fs::write(
+            self.path_legacy_pull_marker(),
+            "file content does not matter",
+        )
+        .unwrap();
     }
 
     fn disable_legacy_pull(&self) {
-        common::legacy_pull_marker(self.test_dir.path())
-            .remove()
-            .unwrap();
+        std::fs::remove_file(self.path_legacy_pull_marker()).unwrap()
+    }
+
+    fn path_legacy_pull_marker(&self) -> std::path::PathBuf {
+        self.test_dir.path().join("allow-legacy-pull")
     }
 }
 

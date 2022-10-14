@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use crate::{certs, cli, constants, setup, site_spec, types};
-use anyhow::{anyhow, Context, Result as AnyhowResult};
+use anyhow::{anyhow, bail, Context, Result as AnyhowResult};
 use serde::de::DeserializeOwned;
 use serde::Deserialize;
 use serde::Serialize;
@@ -177,22 +177,22 @@ pub struct RuntimeConfig {
 impl TOMLLoader for RuntimeConfig {}
 impl TOMLLoaderMissingSafe for RuntimeConfig {}
 
-#[derive(Debug)]
-pub struct LegacyPullMarker(std::path::PathBuf);
+#[derive(Debug, PartialEq, Clone)]
+struct LegacyPullMarker(std::path::PathBuf);
 
 impl LegacyPullMarker {
-    pub fn new<P>(path: P) -> Self
+    fn new<P>(path: P) -> Self
     where
         P: AsRef<Path>,
     {
         Self(path.as_ref().to_owned())
     }
 
-    pub fn exists(&self) -> bool {
+    fn exists(&self) -> bool {
         self.0.exists()
     }
 
-    pub fn remove(&self) -> std::io::Result<()> {
+    fn remove(&self) -> std::io::Result<()> {
         if !&self.exists() {
             return Ok(());
         }
@@ -200,7 +200,7 @@ impl LegacyPullMarker {
         fs::remove_file(&self.0)
     }
 
-    pub fn create(&self) -> std::io::Result<()> {
+    fn create(&self) -> std::io::Result<()> {
         fs::write(
             &self.0,
             "This file has been placed as a marker for cmk-agent-ctl\n\
@@ -235,7 +235,6 @@ pub struct PullConfig {
     pub max_connections: usize,
     pub connection_timeout: u64,
     pub agent_channel: types::AgentChannel,
-    pub legacy_pull_marker: LegacyPullMarker,
     pub registry: Registry,
 }
 
@@ -243,7 +242,6 @@ impl PullConfig {
     pub fn new(
         runtime_config: RuntimeConfig,
         pull_opts: cli::PullOpts,
-        legacy_pull_marker: LegacyPullMarker,
         registry: Registry,
     ) -> AnyhowResult<PullConfig> {
         let allowed_ip = runtime_config.allowed_ip.unwrap_or_default();
@@ -261,7 +259,6 @@ impl PullConfig {
             max_connections: setup::max_connections(),
             connection_timeout: setup::connection_timeout(),
             agent_channel,
-            legacy_pull_marker,
             registry,
         })
     }
@@ -271,7 +268,7 @@ impl PullConfig {
     }
 
     pub fn allow_legacy_pull(&self) -> bool {
-        self.registry.is_empty() && self.legacy_pull_marker.exists()
+        self.registry.legacy_pull_active()
     }
 
     pub fn connections(&self) -> impl Iterator<Item = &TrustedConnection> {
@@ -367,6 +364,7 @@ pub struct Registry {
     connections: RegisteredConnections,
     path: PathBuf,
     last_reload: Option<SystemTime>,
+    legacy_pull_marker: LegacyPullMarker,
 }
 
 impl Registry {
@@ -375,19 +373,21 @@ impl Registry {
         &self.path
     }
 
-    pub fn new(path: &Path) -> Self {
-        Self {
+    pub fn new(path: &Path) -> AnyhowResult<Self> {
+        Ok(Self {
             connections: RegisteredConnections::default(),
             path: PathBuf::from(path),
             last_reload: None,
-        }
+            legacy_pull_marker: LegacyPullMarker::new(&Self::path_legacy_pull_marker(path)?),
+        })
     }
 
-    pub fn from_file(path: &Path) -> AnyhowResult<Registry> {
-        Ok(Registry {
+    pub fn from_file(path: &Path) -> AnyhowResult<Self> {
+        Ok(Self {
             connections: RegisteredConnections::load_missing_safe(path)?,
             path: PathBuf::from(path),
             last_reload: mtime(path)?,
+            legacy_pull_marker: LegacyPullMarker::new(&Self::path_legacy_pull_marker(path)?),
         })
     }
 
@@ -425,17 +425,13 @@ impl Registry {
     }
 
     pub fn save(&self) -> io::Result<()> {
-        let write_op_result = fs::write(
+        fs::write(
             &self.path,
             &serde_json::to_string_pretty(&self.connections)?,
-        );
-        #[cfg(windows)]
-        return write_op_result;
+        )?;
         #[cfg(unix)]
-        {
-            write_op_result?;
-            fs::set_permissions(&self.path, fs::Permissions::from_mode(0o600))
-        }
+        fs::set_permissions(&self.path, fs::Permissions::from_mode(0o600))?;
+        self.legacy_pull_marker.remove()
     }
 
     pub fn pull_standard_is_empty(&self) -> bool {
@@ -527,6 +523,27 @@ impl Registry {
         self.connections.push.clear();
         self.connections.pull.clear();
         self.connections.pull_imported.clear();
+    }
+
+    pub fn legacy_pull_active(&self) -> bool {
+        self.is_empty() && self.legacy_pull_marker.exists()
+    }
+
+    pub fn activate_legacy_pull(&self) -> AnyhowResult<()> {
+        if !self.is_empty() {
+            bail!("Cannot enable legacy pull mode since there are registered connections")
+        }
+        self.legacy_pull_marker
+            .create()
+            .context("Failed to activate legacy pull mode")
+    }
+
+    fn path_legacy_pull_marker(registry_path: impl AsRef<Path>) -> AnyhowResult<PathBuf> {
+        Ok(registry_path
+            .as_ref()
+            .parent()
+            .context("Failed to determine parent path of connection registry")?
+            .join("allow-legacy-pull"))
     }
 
     fn reload(&mut self) -> AnyhowResult<()> {
@@ -771,7 +788,7 @@ mod test_registry {
     }
 
     fn registry() -> Registry {
-        let mut registry = Registry::new(tempfile::NamedTempFile::new().unwrap().as_ref());
+        let mut registry = Registry::new(tempfile::NamedTempFile::new().unwrap().as_ref()).unwrap();
         registry.register_connection(
             &ConnectionType::Push,
             &site_spec::SiteID::from_str("server/push-site").unwrap(),
@@ -835,7 +852,7 @@ mod test_registry {
 
     #[test]
     fn test_new() {
-        let reg = Registry::new(tempfile::NamedTempFile::new().unwrap().as_ref());
+        let reg = Registry::new(tempfile::NamedTempFile::new().unwrap().as_ref()).unwrap();
         assert!(reg.pull_is_empty() && reg.push_is_empty());
         assert!(reg.last_reload.is_none());
     }
@@ -1007,5 +1024,24 @@ mod test_registry {
         let mut reg = registry();
         reg.clear();
         assert!(reg.is_empty());
+    }
+
+    #[test]
+    fn test_legacy_pull_marker_handling() {
+        let tmp_dir = tempfile::tempdir().unwrap();
+        let mut registry = Registry::new(&tmp_dir.path().join("registry.json")).unwrap();
+        assert!(!registry.legacy_pull_active());
+        assert!(registry.activate_legacy_pull().is_ok());
+        assert!(registry.legacy_pull_active());
+        registry.register_connection(
+            &ConnectionType::Push,
+            &site_spec::SiteID::from_str("server/push-site").unwrap(),
+            trusted_connection_with_remote(),
+        );
+        assert!(!registry.legacy_pull_active());
+        assert!(registry.activate_legacy_pull().is_err());
+        registry.save().unwrap();
+        assert!(!registry.legacy_pull_marker.exists());
+        tmp_dir.close().unwrap();
     }
 }

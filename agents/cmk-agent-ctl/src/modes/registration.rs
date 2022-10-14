@@ -477,7 +477,7 @@ mod tests {
     }
 
     fn registry() -> config::Registry {
-        config::Registry::new(tempfile::NamedTempFile::new().unwrap().as_ref())
+        config::Registry::new(tempfile::NamedTempFile::new().unwrap().as_ref()).unwrap()
     }
 
     fn agent_labels() -> types::AgentLabels {

@@ -783,7 +783,8 @@ mod test_status {
 
     #[test]
     fn test_status_end_to_end() {
-        let mut registry = config::Registry::new(tempfile::NamedTempFile::new().unwrap().as_ref());
+        let mut registry =
+            config::Registry::new(tempfile::NamedTempFile::new().unwrap().as_ref()).unwrap();
         registry.register_connection(
             &config::ConnectionType::Push,
             &site_spec::SiteID::from_str("server/push-site").unwrap(),
@@ -800,7 +801,6 @@ mod test_status {
                         #[cfg(windows)]
                         agent_channel: None,
                     },
-                    config::LegacyPullMarker::new(tempfile::NamedTempFile::new().unwrap()),
                     registry.clone()
                 )
                 .unwrap(),

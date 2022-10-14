@@ -51,7 +51,6 @@ pub struct PathResolver {
     pub config_path: PathBuf,
     pub registration_preset_path: PathBuf,
     pub registry_path: PathBuf,
-    pub legacy_pull_path: PathBuf,
 }
 
 #[cfg(unix)]
@@ -67,7 +66,6 @@ impl PathResolver {
                 .join(constants::REGISTRATION_PRESET_FILE)
                 .exists_or(etc_dir.join(constants::REGISTRATION_PRESET_FILE)),
             registry_path: home_dir.join(Path::new(constants::REGISTRY_FILE)),
-            legacy_pull_path: home_dir.join(Path::new(constants::LEGACY_PULL_FILE)),
         }
     }
 }
@@ -80,7 +78,6 @@ impl PathResolver {
             config_path: home_dir.join(Path::new(constants::CONFIG_FILE)),
             registration_preset_path: home_dir.join(Path::new(constants::REGISTRATION_PRESET_FILE)),
             registry_path: home_dir.join(Path::new(constants::REGISTRY_FILE)),
-            legacy_pull_path: home_dir.join(Path::new(constants::LEGACY_PULL_FILE)),
         }
     }
 }
@@ -300,10 +297,6 @@ mod tests {
         assert_eq!(
             p.registry_path,
             std::path::PathBuf::from(&home).join("registered_connections.json")
-        );
-        assert_eq!(
-            p.legacy_pull_path,
-            std::path::PathBuf::from(&home).join("allow-legacy-pull")
         );
     }
 

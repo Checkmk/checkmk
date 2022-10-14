@@ -16,7 +16,6 @@ pub const UNIX_AGENT_SOCKET: &str = "/run/check-mk-agent.socket";
 // FILES
 pub const REGISTRATION_PRESET_FILE: &str = "registration_preset.json";
 pub const REGISTRY_FILE: &str = "registered_connections.json";
-pub const LEGACY_PULL_FILE: &str = "allow-legacy-pull";
 pub const CONFIG_FILE: &str = "cmk-agent-ctl.toml";
 
 // ENVIRONMENT

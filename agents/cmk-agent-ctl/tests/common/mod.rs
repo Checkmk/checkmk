@@ -52,17 +52,12 @@ pub fn testing_pull_setup(
 
     (
         controller_uuid.to_string(),
-        testing_pull_config(path, port, agent_channel, registry),
+        testing_pull_config(port, agent_channel, registry),
         x509_certs,
     )
 }
 
-pub fn legacy_pull_marker(path: &Path) -> config::LegacyPullMarker {
-    config::LegacyPullMarker::new(&path.join("allow_legacy_pull"))
-}
-
 pub fn testing_pull_config(
-    path: &Path,
     port: u16,
     agent_channel: types::AgentChannel,
     registry: config::Registry,
@@ -73,7 +68,6 @@ pub fn testing_pull_config(
         max_connections: 3,
         connection_timeout: 1,
         agent_channel,
-        legacy_pull_marker: legacy_pull_marker(path),
         registry,
     }
 }

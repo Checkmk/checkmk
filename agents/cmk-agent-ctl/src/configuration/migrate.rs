@@ -26,7 +26,7 @@ pub fn migrate_registered_connections(path: impl AsRef<Path>) -> AnyhowResult<()
         path.as_ref()
     ))?;
 
-    let mut migrated_registry = config::Registry::new(path.as_ref());
+    let mut migrated_registry = config::Registry::new(path.as_ref())?;
 
     for (connection_type, legacy_connections) in [
         (
@@ -210,7 +210,7 @@ mod test {
     #[test]
     fn test_up_to_date_registry_untouched() {
         let tmp_path = tmp_path();
-        config::Registry::new(&tmp_path).save().unwrap();
+        config::Registry::new(&tmp_path).unwrap().save().unwrap();
         let mtime_before_migration = std::fs::metadata(&tmp_path).unwrap().modified().unwrap();
         assert!(migrate_registered_connections(&tmp_path).is_ok());
         let mtime_after_migration = std::fs::metadata(&tmp_path).unwrap().modified().unwrap();

@@ -75,7 +75,8 @@ mod tests {
 
     #[test]
     fn test_import() {
-        let mut reg = config::Registry::new(tempfile::NamedTempFile::new().unwrap().as_ref());
+        let mut reg =
+            config::Registry::new(tempfile::NamedTempFile::new().unwrap().as_ref()).unwrap();
         assert!(reg.is_empty());
         assert!(!reg.path().exists());
         assert!(_import(&mut reg, MockJSONProvider {}).is_ok());

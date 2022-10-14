@@ -46,45 +46,23 @@ pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> Anyhow
             &paths.registry_path
         )
     })?;
-    let legacy_pull_marker = config::LegacyPullMarker::new(&paths.legacy_pull_path);
     info!(
-        "Loaded config from '{:?}', legacy pull '{:?}' {}",
-        &paths.config_path,
-        legacy_pull_marker,
-        if legacy_pull_marker.exists() {
-            "exists"
-        } else {
-            "absent"
-        }
+        "Loaded config from '{:?}', connection registry from '{:?}'",
+        &paths.config_path, &paths.registry_path
     );
     match args {
-        cli::Args::RegisterHostName(reg_args) => {
-            registration::register_host_name(
-                &config::RegistrationConfigHostName::new(runtime_config, reg_args)?,
-                &mut registry,
-            )?;
-            legacy_pull_marker.remove().context(
-                "Registration successful, but could not delete marker for legacy pull mode",
-            )
-        }
-        cli::Args::RegisterAgentLabels(reg_args) => {
-            registration::register_agent_labels(
-                &config::RegistrationConfigAgentLabels::new(runtime_config, reg_args)?,
-                &mut registry,
-            )?;
-            legacy_pull_marker.remove().context(
-                "Registration successful, but could not delete marker for legacy pull mode",
-            )
-        }
+        cli::Args::RegisterHostName(reg_args) => registration::register_host_name(
+            &config::RegistrationConfigHostName::new(runtime_config, reg_args)?,
+            &mut registry,
+        ),
+        cli::Args::RegisterAgentLabels(reg_args) => registration::register_agent_labels(
+            &config::RegistrationConfigAgentLabels::new(runtime_config, reg_args)?,
+            &mut registry,
+        ),
         cli::Args::ProxyRegister(proxy_reg_args) => registration::proxy_register(
             &config::RegistrationConfigHostName::new(runtime_config, proxy_reg_args)?,
         ),
-        cli::Args::Import(import_args) => {
-            import(&mut registry, &import_args)?;
-            legacy_pull_marker
-                .remove()
-                .context("Import successful, but could not delete marker for legacy pull mode")
-        }
+        cli::Args::Import(import_args) => import(&mut registry, &import_args),
         cli::Args::Push(push_args) => push(
             &registry,
             &config::ClientConfig::new(runtime_config, push_args.client_opts),
@@ -93,17 +71,11 @@ pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> Anyhow
         cli::Args::Pull(pull_args) => pull(config::PullConfig::new(
             runtime_config,
             pull_args.pull_opts,
-            legacy_pull_marker,
             registry,
         )?),
         cli::Args::Daemon(daemon_args) => daemon(
             registry.clone(),
-            config::PullConfig::new(
-                runtime_config.clone(),
-                daemon_args.pull_opts,
-                legacy_pull_marker,
-                registry,
-            )?,
+            config::PullConfig::new(runtime_config.clone(), daemon_args.pull_opts, registry)?,
             config::ClientConfig::new(runtime_config, daemon_args.client_opts),
         ),
         cli::Args::Dump { .. } => dump(),
@@ -117,7 +89,6 @@ pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> Anyhow
                     #[cfg(windows)]
                     agent_channel: None,
                 },
-                legacy_pull_marker,
                 registry.clone(),
             )?,
             config::ClientConfig::new(runtime_config, status_args.client_opts),
@@ -125,11 +96,9 @@ pub fn run_requested_mode(args: cli::Args, paths: setup::PathResolver) -> Anyhow
             !status_args.no_query_remote,
         ),
         cli::Args::Delete(delete_args) => delete(&mut registry, &delete_args.connection),
-        cli::Args::DeleteAll(delete_all_args) => delete_all(
-            &mut registry,
-            delete_all_args.enable_insecure_connections,
-            &legacy_pull_marker,
-        ),
+        cli::Args::DeleteAll(delete_all_args) => {
+            delete_all(&mut registry, delete_all_args.enable_insecure_connections)
+        }
     }
 }
 

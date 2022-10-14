@@ -12,7 +12,7 @@ import pytest_mock
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.kube_node_info import check_kube_node_info
-from cmk.base.plugins.agent_based.utils.kube import NodeInfo
+from cmk.base.plugins.agent_based.utils.kube import NodeInfo, NodeName, Timestamp
 
 
 @pytest.mark.parametrize(
@@ -25,8 +25,8 @@ from cmk.base.plugins.agent_based.utils.kube import NodeInfo
                 os_image="Ubuntu 20.04.2 LTS",
                 operating_system="linux",
                 container_runtime_version="docker://20.10.8",
-                name="minikube",
-                creation_timestamp=1600000000.0,
+                name=NodeName("minikube"),
+                creation_timestamp=Timestamp(1600000000.0),
                 labels={},
                 annotations={},
                 addresses=[],

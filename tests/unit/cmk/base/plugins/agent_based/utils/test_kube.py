@@ -9,13 +9,14 @@ from cmk.base.plugins.agent_based.utils.kube import (
     Label,
     LabelName,
     Labels,
+    LabelValue,
 )
 
 
 def test_kube_labels_to_cmk_labels() -> None:
     labels: Labels = {
-        LabelName("asd"): Label(name="asd", value="bsd"),
-        LabelName("empty"): Label(name="empty", value=""),
+        LabelName("asd"): Label(name=LabelName("asd"), value=LabelValue("bsd")),
+        LabelName("empty"): Label(name=LabelName("empty"), value=LabelValue("")),
     }
     result = list(kube_labels_to_cmk_labels(labels))
     assert result == [

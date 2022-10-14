@@ -406,7 +406,8 @@ def _thin_containers(pods: Collection[api.Pod]) -> section.ThinContainers:
         if containers := pod.containers:
             container_images.update({container.image for container in containers.values()})
             container_names.extend([container.name for container in containers.values()])
-    return section.ThinContainers(images=container_images, names=container_names)
+    # CMK-10333
+    return section.ThinContainers(images=container_images, names=container_names)  # type: ignore[arg-type]
 
 
 class DaemonSet(PodOwner):
@@ -572,8 +573,9 @@ class Node(PodOwner):
         if not self.status.conditions:
             return None
 
+        # CMK-10333
         return section.NodeConditions(
-            **{
+            **{  # type:ignore[arg-type]
                 condition.type_.lower(): section.NodeCondition(
                     status=condition.status,
                     reason=condition.reason,
@@ -917,7 +919,7 @@ def cron_job_latest_job(
 ) -> section.CronJobLatestJob:
     return section.CronJobLatestJob(
         status=section.JobStatus(
-            conditions=job.status.conditions,
+            conditions=job.status.conditions or [],
             start_time=job.status.start_time,
             completion_time=job.status.completion_time,
         ),

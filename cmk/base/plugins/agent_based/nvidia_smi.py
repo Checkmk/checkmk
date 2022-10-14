@@ -126,20 +126,21 @@ def get_float_from_element(
 
 def parse_nvidia_smi(string_table: StringTable) -> Section:
     xml = ElementTree.fromstring("".join([element[0] for element in string_table]))
+    # CMK-10333
     return Section(
         timestamp=datetime.strptime(timestamp, "%a %b %d %H:%M:%S %Y")
         if (timestamp := get_text_from_element(xml.find("timestamp")))
         else None,
         driver_version=get_text_from_element(xml.find("driver_version")),
         cuda_version=get_text_from_element(xml.find("cuda_version")),
-        attached_gpus=get_text_from_element(xml.find("attached_gpus")),
+        attached_gpus=get_text_from_element(xml.find("attached_gpus")),  # type: ignore[arg-type]
         gpus={
             ":".join(gpu.get("id", "").split(":")[-2:]): GPU(
-                id=gpu.get("id"),
-                product_name=get_text_from_element(gpu.find("product_name")),
+                id=gpu.get("id"),  # type: ignore[arg-type]
+                product_name=get_text_from_element(gpu.find("product_name")),  # type: ignore[arg-type]
                 product_brand=get_text_from_element(gpu.find("product_brand")),
                 power_readings=PowerReadings(
-                    power_state=get_text_from_element(gpu.find("power_readings/power_state")),
+                    power_state=get_text_from_element(gpu.find("power_readings/power_state")),  # type: ignore[arg-type]
                     power_management=PowerManagement(
                         get_text_from_element(gpu.find("power_readings/power_management"))
                     ),

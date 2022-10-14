@@ -88,7 +88,7 @@ class JSONStatefulSetList(TypedDict):
     items: Sequence[JSONStatefulSet]
 
 
-def _metadata_from_json(metadata: JSONStatefulSetMetaData) -> api.MetaData:
+def _metadata_from_json(metadata: JSONStatefulSetMetaData) -> api.MetaData[str]:
     return api.MetaData(
         name=metadata["name"],
         namespace=api.NamespaceName(metadata["namespace"]),

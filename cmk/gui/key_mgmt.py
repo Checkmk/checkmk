@@ -386,7 +386,8 @@ class PageUploadKey:
             certificate=cert_pem,
             private_key=key_pem,
             alias=alias,
-            owner=user.id,
+            # CMK-10333
+            owner=user.id,  # type: ignore[arg-type]
             date=created,
             not_downloaded=False,
         )

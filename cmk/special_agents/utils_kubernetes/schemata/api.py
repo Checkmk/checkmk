@@ -138,6 +138,7 @@ class MetaDataNoNamespace(GenericModel, Generic[ObjectName]):
 
 
 class MetaData(MetaDataNoNamespace[ObjectName], Generic[ObjectName]):
+    name: ObjectName
     namespace: NamespaceName
 
 

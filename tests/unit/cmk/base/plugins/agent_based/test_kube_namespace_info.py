@@ -7,13 +7,13 @@
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.kube_namespace_info import check_kube_namespace_info
-from cmk.base.plugins.agent_based.utils.kube import NamespaceInfo
+from cmk.base.plugins.agent_based.utils.kube import NamespaceInfo, NamespaceName, Timestamp
 
 
 def test_check_kube_namespace_info() -> None:
     info = NamespaceInfo(
-        name="namespace",
-        creation_timestamp=1600000000.0,
+        name=NamespaceName("namespace"),
+        creation_timestamp=Timestamp(1600000000.0),
         labels={},
         annotations={},
         cluster="cluster",

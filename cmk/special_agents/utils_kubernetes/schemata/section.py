@@ -22,7 +22,6 @@ PodSequence = Sequence[str]
 NodeName = NewType("NodeName", str)
 OsName = NewType("OsName", str)
 PythonCompiler = NewType("PythonCompiler", str)
-Timestamp = NewType("Timestamp", float)
 Version = NewType("Version", str)
 
 FilteredAnnotations = NewType("FilteredAnnotations", api.Annotations)
@@ -131,14 +130,14 @@ class CronJobStatus(Section):
 
     active_jobs_count: int | None
     last_duration: float | None  # duration of the last completed job
-    last_successful_time: Timestamp | None
-    last_schedule_time: Timestamp | None
+    last_successful_time: api.Timestamp | None
+    last_schedule_time: api.Timestamp | None
 
 
 class JobStatus(BaseModel):
     conditions: Sequence[api.JobCondition]
-    start_time: Timestamp | None
-    completion_time: Timestamp | None
+    start_time: api.Timestamp | None
+    completion_time: api.Timestamp | None
 
 
 class JobPod(BaseModel):
@@ -600,7 +599,7 @@ class CollectorDaemons(Section):
 class StartTime(Section):
     """section: kube_start_time_v1"""
 
-    start_time: int
+    start_time: api.Timestamp
 
 
 class KubeletInfo(Section, api.KubeletInfo):

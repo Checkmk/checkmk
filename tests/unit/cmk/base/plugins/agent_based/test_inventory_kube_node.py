@@ -10,7 +10,15 @@ from pydantic_factories import ModelFactory
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
 from cmk.base.plugins.agent_based.inventory_kube_node import inventory_kube_node
-from cmk.base.plugins.agent_based.utils.kube import HealthZ, KubeletInfo, NodeAddress, NodeInfo
+from cmk.base.plugins.agent_based.utils.kube import (
+    HealthZ,
+    IpAddress,
+    KubeletInfo,
+    NodeAddress,
+    NodeInfo,
+    NodeName,
+    Timestamp,
+)
 
 from .utils_inventory import sort_inventory_result
 
@@ -24,14 +32,14 @@ from .utils_inventory import sort_inventory_result
                 kernel_version="5.13.0-27-generic",
                 os_image="Ubuntu 20.04.2 LTS",
                 operating_system="linux",
-                container_runtime_version="docker://20.10.8",
-                name="minikube",
-                creation_timestamp=1640000000.0,
+                container_runtime_version=IpAddress("docker://20.10.8"),
+                name=NodeName("minikube"),
+                creation_timestamp=Timestamp(1640000000.0),
                 labels={},
                 annotations={},
                 addresses=[
-                    NodeAddress(type_="Hostname", address="k8-21"),
-                    NodeAddress(type_="ExternalIP", address="10.200.3.21"),
+                    NodeAddress(type_="Hostname", address=IpAddress("k8-21")),
+                    NodeAddress(type_="ExternalIP", address=IpAddress("10.200.3.21")),
                 ],
                 cluster="cluster",
                 kubernetes_cluster_hostname="host",

@@ -32,9 +32,9 @@ class NodeMetadataFactory(ModelFactory):
 
 def components(collector_type: CollectorType) -> Components:
     if collector_type == CollectorType.MACHINE_SECTIONS:
-        return Components(cadvisor_version=None, checkmk_agent_version="1.0.0")
+        return Components(cadvisor_version=None, checkmk_agent_version=Version("1.0.0"))
     if collector_type == CollectorType.CONTAINER_METRICS:
-        return Components(cadvisor_version="1.0.0", checkmk_agent_version=None)
+        return Components(cadvisor_version=Version("1.0.0"), checkmk_agent_version=None)
     raise ValueError("Unknown collector type: %s" % collector_type)
 
 

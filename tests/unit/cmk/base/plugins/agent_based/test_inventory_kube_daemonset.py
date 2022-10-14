@@ -12,10 +12,12 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 from cmk.base.plugins.agent_based.inventory_kube_daemonset import inventory_kube_daemonset
 from cmk.base.plugins.agent_based.utils.kube import (
     DaemonSetInfo,
+    NamespaceName,
     OnDelete,
     RollingUpdate,
     Selector,
     ThinContainers,
+    Timestamp,
     UpdateStrategy,
 )
 
@@ -28,12 +30,12 @@ from .utils_inventory import sort_inventory_result
         pytest.param(
             DaemonSetInfo(
                 name="oh-lord",
-                namespace="have-mercy",
+                namespace=NamespaceName("have-mercy"),
                 labels={},
                 annotations={},
                 selector=Selector(match_labels={}, match_expressions=[]),
-                creation_timestamp=1600000000.0,
-                containers=ThinContainers(images={"i/name:0.5"}, names=["name"]),
+                creation_timestamp=Timestamp(1600000000.0),
+                containers=ThinContainers(images=frozenset({"i/name:0.5"}), names=["name"]),
                 cluster="cluster",
                 kubernetes_cluster_hostname="host",
             ),

@@ -112,7 +112,8 @@ def parse_and_group_containers_performance_metrics(
     # We only persist the relevant counter metrics (not all metrics)
     current_cycle_store = ContainersStore(
         containers={
-            container_name: ContainerMetricsStore(name=container_name, metrics=metrics)
+            # CMK-10333
+            container_name: ContainerMetricsStore(name=container_name, metrics=metrics)  # type: ignore[arg-type]
             for container_name, metrics in containers_counter_metrics.items()
         }
     )
@@ -238,7 +239,7 @@ def _parse_containers_metadata(
         if (container_name := metric["container_name"]) in containers:
             continue
         containers[ContainerName(container_name)] = ContainerMetadata(
-            name=container_name, pod_lookup_name=lookup_func(metric)
+            name=ContainerName(container_name), pod_lookup_name=lookup_func(metric)
         )
     return containers
 

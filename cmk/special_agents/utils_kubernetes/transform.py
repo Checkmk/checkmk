@@ -85,7 +85,9 @@ def parse_metadata_no_namespace(
 def parse_metadata(
     metadata: client.V1ObjectMeta, type_: type[api.ObjectName]
 ) -> api.MetaData[api.ObjectName]:
-    metadata_no_namespace = parse_metadata_no_namespace(metadata, type_=type_)
+    metadata_no_namespace: api.MetaDataNoNamespace = parse_metadata_no_namespace(
+        metadata, type_=type_
+    )
     return api.MetaData(
         name=type_(metadata_no_namespace.name),
         namespace=api.NamespaceName(metadata.namespace),

@@ -76,7 +76,7 @@ version_json_pytest_params = [
             "compiler": "gc",
             "platform": "linux/amd64",
         },
-        api.KubernetesVersion(git_version="v1.22.2", major=1, minor=22),
+        api.KubernetesVersion(git_version=api.GitVersion("v1.22.2"), major=1, minor=22),
         id="Vanilla Kubernetes cluster, supported version",
     ),
     pytest.param(
@@ -91,7 +91,7 @@ version_json_pytest_params = [
             "compiler": "gc",
             "platform": "linux/amd64",
         },
-        api.KubernetesVersion(git_version="v1.24.0", major=1, minor=24),
+        api.KubernetesVersion(git_version=api.GitVersion("v1.24.0"), major=1, minor=24),
         id="Minikube, untested version",
     ),
     pytest.param(
@@ -106,7 +106,7 @@ version_json_pytest_params = [
             "compiler": "gc",
             "platform": "linux/amd64",
         },
-        api.KubernetesVersion(git_version="v1.16.0", major=1, minor=16),
+        api.KubernetesVersion(git_version=api.GitVersion("v1.16.0"), major=1, minor=16),
         id="Minikube, outdated version",
     ),
     pytest.param(
@@ -121,7 +121,7 @@ version_json_pytest_params = [
             "compiler": "gc",
             "platform": "linux/amd64",
         },
-        api.KubernetesVersion(git_version="v1.21.9-eks-0d102a7", major=1, minor=21),
+        api.KubernetesVersion(git_version=api.GitVersion("v1.21.9-eks-0d102a7"), major=1, minor=21),
         id="AWS cluster, eks flavor, supported version",
     ),
 ]
@@ -216,7 +216,7 @@ formatter = logging.Formatter("%(levelname)s %(message)s")
     [
         (
             "",
-            api.UnknownKubernetesVersion(git_version=""),
+            api.UnknownKubernetesVersion(git_version=api.GitVersion("")),
             [
                 "ERROR Could not parse version string '', using regex from kubectl "
                 "'\\s*v?([0-9]+(?:\\.[0-9]+)*).*'.",
@@ -224,34 +224,34 @@ formatter = logging.Formatter("%(levelname)s %(message)s")
         ),
         (
             "v1.21.0",
-            api.KubernetesVersion(git_version="v1.21.0", major=1, minor=21),
+            api.KubernetesVersion(git_version=api.GitVersion("v1.21.0"), major=1, minor=21),
             [],
         ),
         (
             "v1.22.1",
-            api.KubernetesVersion(git_version="v1.22.1", major=1, minor=22),
+            api.KubernetesVersion(git_version=api.GitVersion("v1.22.1"), major=1, minor=22),
             [],
         ),
         (
             "v1.23.2",
-            api.KubernetesVersion(git_version="v1.23.2", major=1, minor=23),
+            api.KubernetesVersion(git_version=api.GitVersion("v1.23.2"), major=1, minor=23),
             [],
         ),
         (
             "1",
-            api.UnknownKubernetesVersion(git_version="1"),
+            api.UnknownKubernetesVersion(git_version=api.GitVersion("1")),
             [
                 "ERROR Could not parse version string '1', version '1' has no minor.",
             ],
         ),
         (
             "0.1",
-            api.KubernetesVersion(git_version="0.1", major=0, minor=1),
+            api.KubernetesVersion(git_version=api.GitVersion("0.1"), major=0, minor=1),
             [],
         ),
         (
             "1.01",
-            api.UnknownKubernetesVersion(git_version="1.01"),
+            api.UnknownKubernetesVersion(git_version=api.GitVersion("1.01")),
             [
                 "ERROR Could not parse version string '1.01', a version component is "
                 "zero-prefixed.",
@@ -274,7 +274,7 @@ def test_decompose_git_version(
     "kubernetes_version, logs",
     [
         (
-            api.UnknownKubernetesVersion(git_version=""),
+            api.UnknownKubernetesVersion(git_version=api.GitVersion("")),
             [
                 "WARNING Unsupported Kubernetes version ''. "
                 "Supported versions are v1.21, v1.22, v1.23.",
@@ -282,19 +282,19 @@ def test_decompose_git_version(
             ],
         ),
         (
-            api.KubernetesVersion(git_version="v1.21.0", major=1, minor=21),
+            api.KubernetesVersion(git_version=api.GitVersion("v1.21.0"), major=1, minor=21),
             [],
         ),
         (
-            api.KubernetesVersion(git_version="v1.22.1", major=1, minor=22),
+            api.KubernetesVersion(git_version=api.GitVersion("v1.22.1"), major=1, minor=22),
             [],
         ),
         (
-            api.KubernetesVersion(git_version="v1.23.2", major=1, minor=23),
+            api.KubernetesVersion(git_version=api.GitVersion("v1.23.2"), major=1, minor=23),
             [],
         ),
         (
-            api.KubernetesVersion(git_version="v1.24.0", major=1, minor=24),
+            api.KubernetesVersion(git_version=api.GitVersion("v1.24.0"), major=1, minor=24),
             [
                 "WARNING Unsupported Kubernetes version 'v1.24.0'. "
                 "Supported versions are v1.21, v1.22, v1.23.",
@@ -317,13 +317,13 @@ def test__verify_version_support_continue_processing(
     "kubernetes_version, message",
     [
         (
-            api.KubernetesVersion(git_version="v1.16.0", major=1, minor=16),
+            api.KubernetesVersion(git_version=api.GitVersion("v1.16.0"), major=1, minor=16),
             "Unsupported Kubernetes version 'v1.16.0'. API Servers with version < v1.21 are "
             "known to return incompatible data. Aborting processing API data. "
             "Supported versions are v1.21, v1.22, v1.23.",
         ),
         (
-            api.KubernetesVersion(git_version="1.14.0", major=1, minor=14),
+            api.KubernetesVersion(git_version=api.GitVersion("1.14.0"), major=1, minor=14),
             "Unsupported Kubernetes version '1.14.0'. API Servers with version < v1.21 are "
             "known to return incompatible data. Aborting processing API data. "
             "Supported versions are v1.21, v1.22, v1.23.",

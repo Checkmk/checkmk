@@ -17,9 +17,11 @@ from cmk.base.plugins.agent_based.kube_pod_status import (
 )
 from cmk.base.plugins.agent_based.utils.kube import (
     ContainerRunningState,
+    ContainerStateType,
     ContainerStatus,
     ContainerTerminatedState,
     ContainerWaitingState,
+    Phase,
     PodContainers,
     PodLifeCycle,
 )
@@ -50,11 +52,13 @@ def _mocked_container_info_from_state(  # type:ignore[no-untyped-def]
             PodContainers(
                 containers={
                     "running": _mocked_container_info_from_state(
-                        ContainerRunningState(type="running", start_time=1639135964)
+                        ContainerRunningState(
+                            type=ContainerStateType.running, start_time=1639135964
+                        )
                     ),
                 },
             ),
-            PodLifeCycle(phase="running"),
+            PodLifeCycle(phase=Phase.RUNNING),
             [Result(state=State.OK, summary="Running")],
             id="A single running container",
         ),
@@ -63,12 +67,12 @@ def _mocked_container_info_from_state(  # type:ignore[no-untyped-def]
                 containers={
                     "downloading-container": _mocked_container_info_from_state(
                         ContainerWaitingState(
-                            type="waiting", reason="ContainerCreating", detail=None
+                            type=ContainerStateType.waiting, reason="ContainerCreating", detail=None
                         )
                     )
                 }
             ),
-            PodLifeCycle(phase="pending"),
+            PodLifeCycle(phase=Phase.PENDING),
             [
                 Result(state=State.OK, summary="Pending: since 0 seconds"),
             ],
@@ -79,7 +83,7 @@ def _mocked_container_info_from_state(  # type:ignore[no-untyped-def]
                 containers={
                     "succeeding-container": _mocked_container_info_from_state(
                         ContainerTerminatedState(
-                            type="terminated",
+                            type=ContainerStateType.terminated,
                             exit_code=0,
                             start_time=1639135989,
                             end_time=1639135989,
@@ -89,7 +93,7 @@ def _mocked_container_info_from_state(  # type:ignore[no-untyped-def]
                     )
                 }
             ),
-            PodLifeCycle(phase="succeeded"),
+            PodLifeCycle(phase=Phase.SUCCEEDED),
             [Result(state=State.OK, summary="Succeeded")],
             id="Container exits with 0, and is not restarted",
         ),
@@ -121,14 +125,14 @@ def test_check_kube_pod_status_no_issues_in_containers(  # type:ignore[no-untype
                 containers={
                     "failing-container": _mocked_container_info_from_state(
                         ContainerWaitingState(
-                            type="waiting",
+                            type=ContainerStateType.waiting,
                             reason="CrashLoopBackOff",
                             detail="back-off 5m0s restarting failed container=busybox pod=container-exits-with-1-but-is-restarted_default(c654fe38-6551-473f-8cd1-4a9b06e609de)",
                         )
                     )
                 }
             ),
-            PodLifeCycle(phase="running"),
+            PodLifeCycle(phase=Phase.RUNNING),
             [
                 Result(state=State.OK, summary="CrashLoopBackOff: since 0 seconds"),
                 Result(
@@ -143,7 +147,7 @@ def test_check_kube_pod_status_no_issues_in_containers(  # type:ignore[no-untype
                 containers={
                     "failing-container": _mocked_container_info_from_state(
                         ContainerTerminatedState(
-                            type="terminated",
+                            type=ContainerStateType.terminated,
                             exit_code=1,
                             start_time=1639136018,
                             end_time=1639136018,
@@ -153,7 +157,7 @@ def test_check_kube_pod_status_no_issues_in_containers(  # type:ignore[no-untype
                     )
                 },
             ),
-            PodLifeCycle(phase="failed"),
+            PodLifeCycle(phase=Phase.FAILED),
             [
                 Result(state=State.OK, summary="Error: since 0 seconds"),
             ],
@@ -187,7 +191,7 @@ def test_check_kube_pod_status_failing_container(  # type:ignore[no-untyped-def]
                 containers={
                     "failing-container": _mocked_container_info_from_state(
                         ContainerTerminatedState(
-                            type="terminated",
+                            type=ContainerStateType.terminated,
                             exit_code=1,
                             start_time=1639136911,
                             end_time=1639136911,
@@ -197,7 +201,7 @@ def test_check_kube_pod_status_failing_container(  # type:ignore[no-untyped-def]
                     ),
                     "running": _mocked_container_info_from_state(
                         ContainerTerminatedState(
-                            type="terminated",
+                            type=ContainerStateType.terminated,
                             exit_code=0,
                             start_time=1639136913,
                             end_time=1639137513,
@@ -207,7 +211,7 @@ def test_check_kube_pod_status_failing_container(  # type:ignore[no-untyped-def]
                     ),
                 }
             ),
-            PodLifeCycle(phase="failed"),
+            PodLifeCycle(phase=Phase.FAILED),
             [
                 Result(state=State.OK, summary="Error: since 0 seconds"),
             ],
@@ -218,21 +222,21 @@ def test_check_kube_pod_status_failing_container(  # type:ignore[no-untyped-def]
                 containers={
                     "failing-container": _mocked_container_info_from_state(
                         state=ContainerWaitingState(
-                            type="waiting",
+                            type=ContainerStateType.waiting,
                             reason="CrashLoopBackOff",
                             detail="back-off 5m0s restarting failed container=busybox pod=failingcontainer-imagepullbackerror_default(e7437bfb-3043-44a0-a071-4221ab43c550)",
                         )
                     ),
                     "wrong-image-name": _mocked_container_info_from_state(
                         state=ContainerWaitingState(
-                            type="waiting",
+                            type=ContainerStateType.waiting,
                             reason="ImagePullBackOff",
                             detail='Back-off pulling image "busybox1"',
                         )
                     ),
                 }
             ),
-            PodLifeCycle(phase="pending"),
+            PodLifeCycle(phase=Phase.PENDING),
             [
                 Result(state=State.OK, summary="CrashLoopBackOff: since 0 seconds"),
                 Result(
@@ -245,7 +249,7 @@ def test_check_kube_pod_status_failing_container(  # type:ignore[no-untyped-def]
         ),
         pytest.param(
             None,
-            PodLifeCycle(phase="pending"),
+            PodLifeCycle(phase=Phase.PENDING),
             [
                 Result(state=State.OK, summary="Pending: since 0 seconds"),
             ],
@@ -275,7 +279,7 @@ def test_check_kube_pod_status_multiple_issues(  # type:ignore[no-untyped-def]
 def test_check_alert_if_pending_too_long() -> None:
     value_store: ValueStore = {}
     section_kube_pod_containers = None
-    section_kube_pod_lifecycle = PodLifeCycle(phase="pending")
+    section_kube_pod_lifecycle = PodLifeCycle(phase=Phase.PENDING)
     params = kube_pod_status.Params(
         groups=[
             (("levels", (60, 120)), ["Pending"]),
@@ -306,7 +310,7 @@ def test_check_alert_if_pending_too_long() -> None:
                 containers={
                     "failing-container": _mocked_container_info_from_state(
                         ContainerTerminatedState(
-                            type="terminated",
+                            type=ContainerStateType.terminated,
                             exit_code=1,
                             start_time=1639136911,
                             end_time=1639136911,
@@ -323,7 +327,7 @@ def test_check_alert_if_pending_too_long() -> None:
                     ),
                 }
             ),
-            PodLifeCycle(phase="pending"),
+            PodLifeCycle(phase=Phase.PENDING),
             "Init:Error",
             id="Both containers have an error, but the second container is not intialized",
         ),
@@ -360,10 +364,10 @@ def test_check_alert_resets() -> None:
     section_kube_pod_containers = None
 
     pod_cycles = (
-        PodLifeCycle(phase="pending"),
-        PodLifeCycle(phase="pending"),
-        PodLifeCycle(phase="running"),
-        PodLifeCycle(phase="pending"),
+        PodLifeCycle(phase=Phase.PENDING),
+        PodLifeCycle(phase=Phase.PENDING),
+        PodLifeCycle(phase=Phase.RUNNING),
+        PodLifeCycle(phase=Phase.PENDING),
     )
 
     expectations = (
@@ -417,10 +421,10 @@ def test_check_group_timer() -> None:
     section_kube_pod_containers = None
 
     pod_cycles = (
-        PodLifeCycle(phase="pending"),
-        PodLifeCycle(phase="pending"),
-        PodLifeCycle(phase="running"),
-        PodLifeCycle(phase="pending"),
+        PodLifeCycle(phase=Phase.PENDING),
+        PodLifeCycle(phase=Phase.PENDING),
+        PodLifeCycle(phase=Phase.RUNNING),
+        PodLifeCycle(phase=Phase.PENDING),
     )
 
     expectations = (
@@ -474,9 +478,9 @@ def test_check_group_order_matters() -> None:
     section_kube_pod_containers = None
 
     pod_cycles = (
-        PodLifeCycle(phase="pending"),
-        PodLifeCycle(phase="pending"),
-        PodLifeCycle(phase="pending"),
+        PodLifeCycle(phase=Phase.PENDING),
+        PodLifeCycle(phase=Phase.PENDING),
+        PodLifeCycle(phase=Phase.PENDING),
     )
 
     for section_kube_pod_lifecycle in pod_cycles:

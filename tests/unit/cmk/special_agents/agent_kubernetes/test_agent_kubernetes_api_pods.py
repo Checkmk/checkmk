@@ -68,7 +68,9 @@ class TestAPIPod:
         assert metadata.name == "cluster-collector-595b64557d-x9t5q"
         assert metadata.namespace == "checkmk-monitoring"
         assert isinstance(metadata.creation_timestamp, float)
-        assert metadata.labels == {"app": api.Label(name="app", value="cluster-collector")}
+        assert metadata.labels == {
+            "app": api.Label(name=api.LabelName("app"), value=api.LabelValue("cluster-collector"))
+        }
         assert metadata.annotations == {"foo": "case"}
 
     def test_parse_metadata_missing_annotations_and_labels(
@@ -244,7 +246,8 @@ class TestPodWithNoNode(TestCase):
                     custom_type=None,
                     reason="Unschedulable",
                     detail="0/1 nodes are available: 1 Too many pods.",
-                    last_transition_time=convert_to_timestamp(last_transition_time),
+                    # CMK-10333
+                    last_transition_time=int(convert_to_timestamp(last_transition_time)),
                 )
             ],
         )
@@ -296,12 +299,8 @@ class TestPodStartUp(TestCase):
         It is possible that during startup of pods, also more complete information arises.
         """
         api_pod_status = api.PodStatus(
-            start_time=int(
-                convert_to_timestamp(
-                    datetime.datetime(
-                        2021, 11, 22, 16, 11, 38, 710257, tzinfo=datetime.timezone.utc
-                    )
-                )
+            start_time=convert_to_timestamp(
+                datetime.datetime(2021, 11, 22, 16, 11, 38, 710257, tzinfo=datetime.timezone.utc)
             ),
             conditions=[
                 api.PodCondition(
@@ -359,12 +358,8 @@ class TestPodStartUp(TestCase):
         In this specific instance all of the fields except for the scheduled field are missing.
         """
         api_pod_status = api.PodStatus(
-            start_time=int(
-                convert_to_timestamp(
-                    datetime.datetime(
-                        2021, 11, 22, 16, 11, 38, 710257, tzinfo=datetime.timezone.utc
-                    )
-                )
+            start_time=convert_to_timestamp(
+                datetime.datetime(2021, 11, 22, 16, 11, 38, 710257, tzinfo=datetime.timezone.utc)
             ),
             conditions=[
                 api.PodCondition(

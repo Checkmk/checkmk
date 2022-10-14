@@ -11,14 +11,21 @@ from pydantic_factories import ModelFactory
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
 from cmk.base.plugins.agent_based.inventory_kube_pod import _containers_to_table, inventory_kube_pod
 from cmk.base.plugins.agent_based.utils.kube import (
+    ContainerName,
     ContainerRunningState,
     ContainerSpec,
     ContainerSpecs,
+    ContainerStateType,
     ContainerStatus,
     ContainerTerminatedState,
     ContainerWaitingState,
+    IpAddress,
+    NamespaceName,
+    NodeName,
     PodContainers,
     PodInfo,
+    PodUID,
+    Timestamp,
 )
 
 
@@ -27,19 +34,19 @@ from cmk.base.plugins.agent_based.utils.kube import (
     [
         pytest.param(
             PodInfo(
-                namespace="default",
+                namespace=NamespaceName("default"),
                 name="name",
-                creation_timestamp=1600000000.0,
+                creation_timestamp=Timestamp(1600000000.0),
                 labels={},
                 annotations={},
-                node="minikube",
+                node=NodeName("minikube"),
                 host_network=None,
                 dns_policy="ClusterFirst",
-                host_ip="192.168.49.2",
-                pod_ip="172.17.0.5",
+                host_ip=IpAddress("192.168.49.2"),
+                pod_ip=IpAddress("172.17.0.5"),
                 qos_class="besteffort",
                 restart_policy="Never",
-                uid="3336928e-b9e1-4774-a5c4-bf45b8f9f24e",
+                uid=PodUID("3336928e-b9e1-4774-a5c4-bf45b8f9f24e"),
                 controllers=[],
                 cluster="cluster",
                 kubernetes_cluster_hostname="host",
@@ -53,7 +60,7 @@ from cmk.base.plugins.agent_based.utils.kube import (
                         image="busybox",
                         ready=False,
                         state=ContainerWaitingState(
-                            type="waiting", reason="PodInitializing", detail=None
+                            type=ContainerStateType.waiting, reason="PodInitializing", detail=None
                         ),
                         restart_count=0,
                     )
@@ -68,7 +75,7 @@ from cmk.base.plugins.agent_based.utils.kube import (
                         image="busybox:latest",
                         ready=False,
                         state=ContainerTerminatedState(
-                            type="terminated",
+                            type=ContainerStateType.terminated,
                             exit_code=1,
                             start_time=1644141019,
                             end_time=1644141019,
@@ -81,12 +88,12 @@ from cmk.base.plugins.agent_based.utils.kube import (
             ),
             ContainerSpecs(
                 containers={
-                    "busybox": ContainerSpec(image_pull_policy="Always"),
+                    ContainerName("busybox"): ContainerSpec(image_pull_policy="Always"),
                 }
             ),
             ContainerSpecs(
                 containers={
-                    "busybox-init": ContainerSpec(image_pull_policy="Always"),
+                    ContainerName("busybox-init"): ContainerSpec(image_pull_policy="Always"),
                 }
             ),
             [
@@ -171,7 +178,9 @@ def test_inventory_kube_pod(
             id="no init containers specified",
         ),
         pytest.param(
-            ContainerSpecs(containers={"busybox": ContainerSpec(image_pull_policy="Always")}),
+            ContainerSpecs(
+                containers={ContainerName("busybox"): ContainerSpec(image_pull_policy="Always")}
+            ),
             None,
             [
                 TableRow(
@@ -184,7 +193,9 @@ def test_inventory_kube_pod(
             id="no status information, since pod is not scheduled",
         ),
         pytest.param(
-            ContainerSpecs(containers={"busybox": ContainerSpec(image_pull_policy="Always")}),
+            ContainerSpecs(
+                containers={ContainerName("busybox"): ContainerSpec(image_pull_policy="Always")}
+            ),
             PodContainers(
                 containers={
                     "busybox": ContainerStatus(
@@ -194,7 +205,7 @@ def test_inventory_kube_pod(
                         image="busybox",
                         ready=False,
                         state=ContainerWaitingState(
-                            type="waiting", reason="PodInitializing", detail=None
+                            type=ContainerStateType.waiting, reason="PodInitializing", detail=None
                         ),
                         restart_count=0,
                     )
@@ -218,7 +229,9 @@ def test_inventory_kube_pod(
             id="reduced status information for regular containers, since init containers are still running",
         ),
         pytest.param(
-            ContainerSpecs(containers={"busybox": ContainerSpec(image_pull_policy="Always")}),
+            ContainerSpecs(
+                containers={ContainerName("busybox"): ContainerSpec(image_pull_policy="Always")}
+            ),
             PodContainers(
                 containers={
                     "busybox": ContainerStatus(
@@ -227,7 +240,9 @@ def test_inventory_kube_pod(
                         name="busybox",
                         image="busybox:latest",
                         ready=True,
-                        state=ContainerRunningState(type="running", start_time=1644140827),
+                        state=ContainerRunningState(
+                            type=ContainerStateType.running, start_time=1644140827
+                        ),
                         restart_count=0,
                     )
                 }

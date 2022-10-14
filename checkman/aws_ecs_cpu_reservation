@@ -1,0 +1,18 @@
+title: AWS ECS: CPU Reservation
+agents: aws
+catalog: cloud/aws
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the percentage of CPU units that are
+ reserved by running tasks on the cluster.
+
+ To make this check work you have to configure the related
+ special agent {Amazon Web Services (AWS)}.
+
+item:
+ Name of the cluster
+
+discovery:
+ One service is created for each cluster if CPUReservation
+ metric given.

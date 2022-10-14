@@ -398,6 +398,12 @@ metric_info["cpu_total_in_millis"] = {
     "color": "26/a",
 }
 
+metric_info["cpu_reservation"] = {
+    "title": _l("CPU reservation"),
+    "unit": "%",
+    "color": "13/a",
+}
+
 # .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |

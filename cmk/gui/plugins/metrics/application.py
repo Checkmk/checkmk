@@ -636,6 +636,12 @@ metric_info["mobileiron_non_compliant_summary"] = {
     "color": "41/b",
 }
 
+metric_info["memory_reservation"] = {
+    "title": _l("Memory reservation"),
+    "unit": "%",
+    "color": "36/a",
+}
+
 # .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |

@@ -154,3 +154,28 @@ rulespec_registry.register(
         title=lambda: _("Memory Utilization"),
     )
 )
+
+
+def _parameter_valuespec_memory_reservation():
+    return Dictionary(
+        title=_("Levels memory"),
+        elements=[
+            (
+                "levels",
+                SimpleLevels(
+                    Percentage, title=_("Memory reservation"), default_levels=(80.0, 90.0)
+                ),
+            ),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="memory_reservation",
+        item_spec=lambda: TextInput(title=_("Memory Reservation")),
+        group=RulespecGroupCheckParametersApplications,
+        parameter_valuespec=_parameter_valuespec_memory_reservation,
+        title=lambda: _("Memory Reservation"),
+    )
+)

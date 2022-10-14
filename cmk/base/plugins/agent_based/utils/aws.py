@@ -43,7 +43,9 @@ class LambdaFunctionConfiguration:
 @dataclass(frozen=True)
 class AWSMetric:
     value: float
+    render_func: Callable[[float], str] | None = None
     levels_lower: tuple[float, float] | None = None
+    levels_upper: tuple[float, float] | None = None
     name: str | None = None
     label: str | None = None
 
@@ -133,7 +135,9 @@ def check_aws_metrics(metric_infos: Sequence[AWSMetric]) -> CheckResult:
             value=metric_info.value,
             metric_name=metric_info.name,
             levels_lower=metric_info.levels_lower,
+            levels_upper=metric_info.levels_upper,
             label=metric_info.label,
+            render_func=metric_info.render_func,
         )
 
 

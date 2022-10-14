@@ -537,7 +537,7 @@ class _Builder:
                 source_type=SourceType.HOST,
                 fetcher_type=FetcherType.PROGRAM,
                 id_="agent",
-                cache_dir=Path(cmk.utils.paths.tcp_cache_dir),
+                cache_dir=Path(cmk.utils.paths.data_source_cache_dir) / "agent",
                 cmdline=core_config.translate_ds_program_source_cmdline(
                     datasource_program, self.host_config, self.ipaddress
                 ),

@@ -1390,21 +1390,19 @@ class AutomationDiagHost(Automation):
         ):
             if isinstance(source, sources.programs.DSProgramSource) and cmd:
                 source = sources.programs.DSProgramSource(
-                    host_config.hostname,
-                    ipaddress,
+                    source.hostname,
+                    source.ipaddress,
                     source_type=source.source_type,
                     fetcher_type=source.fetcher_type,
-                    id_="agent",
+                    id_=source.id,
                     cmdline=core_config.translate_ds_program_source_cmdline(
-                        cmd,
-                        host_config,
-                        ipaddress,
+                        cmd, host_config, ipaddress
                     ),
-                    stdin=None,
-                    cache_dir=Path(data_source_cache_dir) / "agent",
-                    simulation_mode=config.simulation_mode,
-                    is_cmc=config.is_cmc(),
-                    file_cache_max_age=config.max_cachefile_age(),
+                    stdin=source.stdin,
+                    cache_dir=source.file_cache_base_path,
+                    simulation_mode=source.simulation_mode,
+                    is_cmc=source.is_cmc,
+                    file_cache_max_age=source.file_cache_max_age,
                 )
             elif isinstance(source, sources.tcp.TCPSource):
                 agent_port = agent_port or source.agent_port

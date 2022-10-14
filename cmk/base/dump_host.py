@@ -15,6 +15,15 @@ from cmk.utils.paths import tmp_dir
 from cmk.utils.type_defs import HostName, SourceType
 
 import cmk.core_helpers.cache as file_cache
+from cmk.core_helpers import (
+    Fetcher,
+    IPMIFetcher,
+    PiggybackFetcher,
+    ProgramFetcher,
+    SNMPFetcher,
+    TCPFetcher,
+)
+from cmk.core_helpers.type_defs import HostMeta
 
 import cmk.base.check_table as check_table
 import cmk.base.config as config
@@ -23,38 +32,39 @@ import cmk.base.obsolete_output as out
 import cmk.base.sources as sources
 from cmk.base.check_utils import LegacyCheckParameters
 from cmk.base.config import HostConfig
-from cmk.base.sources import Source
-from cmk.base.sources.ipmi import IPMISource
-from cmk.base.sources.piggyback import PiggybackSource
-from cmk.base.sources.programs import ProgramSource
-from cmk.base.sources.snmp import SNMPSource
-from cmk.base.sources.tcp import TCPSource
 
 
-def dump_source(source: Source) -> str:
+def dump_source(meta: HostMeta, fetcher: Fetcher) -> str:
     # pylint: disable=too-many-branches
-    if isinstance(source, IPMISource):
+    if isinstance(fetcher, IPMIFetcher):
         description = "Management board - IPMI"
         items = []
-        if source.ipaddress:
-            items.append("Address: %s" % source.ipaddress)
-        if source.credentials:
-            items.append("User: %s" % source.credentials["username"])
+        if fetcher.address:
+            items.append("Address: %s" % fetcher.address)
+        if fetcher.username:
+            items.append("User: %s" % fetcher.username)
         if items:
             description = "%s (%s)" % (description, ", ".join(items))
         return description
 
-    if isinstance(source, PiggybackSource):
-        return "Process piggyback data from %s" % (Path(tmp_dir) / "piggyback" / source.hostname)
+    if isinstance(fetcher, PiggybackFetcher):
+        return "Process piggyback data from %s" % (Path(tmp_dir) / "piggyback" / fetcher.hostname)
 
-    if isinstance(source, ProgramSource):
-        response = ["Program: %s" % source.cmdline]
-        if source.stdin:
-            response.extend(["  Program stdin:", source.stdin])
+    if isinstance(fetcher, ProgramFetcher):
+        response = [
+            "Program: %s"
+            % (
+                fetcher.cmdline
+                if isinstance(fetcher.cmdline, str)
+                else fetcher.cmdline.decode("utf8")
+            )
+        ]
+        if fetcher.stdin:
+            response.extend(["  Program stdin:", fetcher.stdin])
         return "\n".join(response)
 
-    if isinstance(source, SNMPSource):
-        snmp_config = source.snmp_config
+    if isinstance(fetcher, SNMPFetcher):
+        snmp_config = fetcher.snmp_config
         if snmp_config.is_usewalk_host:
             return "SNMP (use stored walk)"
 
@@ -69,18 +79,18 @@ def dump_source(source: Source) -> str:
             bulk = "no"
 
         return "%s (%s, Bulk walk: %s, Port: %d, Backend: %s)" % (
-            "SNMP" if source.source_type is SourceType.HOST else "Management board - SNMP",
+            "SNMP" if meta.source_type is SourceType.HOST else "Management board - SNMP",
             credentials_text,
             bulk,
             snmp_config.port,
             snmp_config.snmp_backend.value,
         )
 
-    if isinstance(source, TCPSource):
-        return "TCP: %s:%d" % (source.ipaddress, source.agent_port)
+    if isinstance(fetcher, TCPFetcher):
+        return "TCP: %s:%d" % fetcher.address
 
     # Fallback for non-raw stuff.
-    return type(source).__name__
+    return type(fetcher).__name__
 
 
 def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
@@ -161,8 +171,8 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
     )
 
     agenttypes = [
-        dump_source(source)
-        for source in sources.make_non_cluster_sources(
+        dump_source(meta, fetcher)
+        for meta, _file_cache, fetcher in sources.make_non_cluster_sources(
             host_config,
             ipaddress,
             simulation_mode=config.simulation_mode,

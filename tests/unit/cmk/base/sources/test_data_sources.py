@@ -8,13 +8,10 @@ import pytest
 from tests.testlib.base import Scenario
 
 import cmk.core_helpers.cache as file_cache
+from cmk.core_helpers import PiggybackFetcher, ProgramFetcher, SNMPFetcher, TCPFetcher
 
 from cmk.base.config import HostConfig
 from cmk.base.sources import make_non_cluster_sources
-from cmk.base.sources.piggyback import PiggybackSource
-from cmk.base.sources.programs import DSProgramSource, SpecialAgentSource
-from cmk.base.sources.snmp import SNMPSource
-from cmk.base.sources.tcp import TCPSource
 
 
 def make_scenario(hostname, tags):
@@ -55,36 +52,36 @@ def make_scenario(hostname, tags):
 @pytest.mark.parametrize(
     "hostname, tags, sources",
     [
-        ("agent-host", {}, [TCPSource, PiggybackSource]),
+        ("agent-host", {}, [TCPFetcher, PiggybackFetcher]),
         (
             "ping-host",
             {"agent": "no-agent"},
-            [PiggybackSource],
+            [PiggybackFetcher],
         ),
         (
             "snmp-host",
             {"agent": "no-agent", "snmp_ds": "snmp-v2"},
-            [SNMPSource, PiggybackSource],
+            [SNMPFetcher, PiggybackFetcher],
         ),
         (
             "snmp-host",
             {"agent": "no-agent", "snmp_ds": "snmp-v1"},
-            [SNMPSource, PiggybackSource],
+            [SNMPFetcher, PiggybackFetcher],
         ),
         (
             "dual-host",
             {"agent": "cmk-agent", "snmp_ds": "snmp-v2"},
-            [TCPSource, SNMPSource, PiggybackSource],
+            [TCPFetcher, SNMPFetcher, PiggybackFetcher],
         ),
         (
             "all-agents-host",
             {"agent": "all-agents"},
-            [DSProgramSource, SpecialAgentSource, PiggybackSource],
+            [ProgramFetcher, ProgramFetcher, PiggybackFetcher],
         ),
         (
             "all-special-host",
             {"agent": "special-agents"},
-            [SpecialAgentSource, PiggybackSource],
+            [ProgramFetcher, PiggybackFetcher],
         ),
     ],
 )
@@ -101,8 +98,8 @@ def test_host_config_creates_passing_source_sources(
     ipaddress = "127.0.0.1"
 
     assert [
-        type(c)
-        for c in make_non_cluster_sources(
+        type(fetcher)
+        for _meta, _file_cache, fetcher in make_non_cluster_sources(
             host_config,
             ipaddress,
             simulation_mode=True,

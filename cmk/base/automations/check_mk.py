@@ -8,6 +8,7 @@ import ast
 import errno
 import glob
 import io
+import logging
 import operator
 import os
 import shlex
@@ -65,9 +66,11 @@ import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.type_defs import BackendOIDSpec, BackendSNMPTree, SNMPCredentials, SNMPHostConfig
 
 import cmk.core_helpers.cache
-from cmk.core_helpers import factory
+from cmk.core_helpers import factory, FetcherType, get_raw_data
 from cmk.core_helpers.cache import FileCacheGlobals
+from cmk.core_helpers.program import ProgramFetcher
 from cmk.core_helpers.summarize import summarize
+from cmk.core_helpers.tcp import TCPFetcher
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION
 
 import cmk.base.agent_based.discovery as discovery
@@ -1378,7 +1381,7 @@ class AutomationDiagHost(Automation):
         tcp_connect_timeout: Optional[float],
     ) -> Tuple[int, str]:
         state, output = 0, ""
-        for source in sources.make_non_cluster_sources(
+        for meta, file_cache, fetcher in sources.make_non_cluster_sources(
             host_config,
             ipaddress,
             simulation_mode=config.simulation_mode,
@@ -1388,43 +1391,31 @@ class AutomationDiagHost(Automation):
             ),
             file_cache_max_age=config.max_cachefile_age(),
         ):
-            if isinstance(source, sources.programs.DSProgramSource) and cmd:
-                source = sources.programs.DSProgramSource(
-                    source.hostname,
-                    source.ipaddress,
-                    source_type=source.source_type,
-                    fetcher_type=source.fetcher_type,
-                    id_=source.id,
+            if meta.fetcher_type is FetcherType.SNMP:
+                continue
+
+            if isinstance(fetcher, ProgramFetcher) and fetcher.stdin is None and cmd:
+                fetcher = ProgramFetcher(
+                    ident=fetcher.ident,
                     cmdline=core_config.translate_ds_program_source_cmdline(
                         cmd, host_config, ipaddress
                     ),
-                    stdin=source.stdin,
-                    cache_dir=source.file_cache_base_path,
-                    simulation_mode=source.simulation_mode,
-                    is_cmc=source.is_cmc,
-                    file_cache_max_age=source.file_cache_max_age,
+                    stdin=fetcher.stdin,
+                    is_cmc=fetcher.is_cmc,
                 )
-            elif isinstance(source, sources.tcp.TCPSource):
-                agent_port = agent_port or source.agent_port
-                tcp_connect_timeout = tcp_connect_timeout or source.tcp_connect_timeout
-                source = sources.tcp.TCPSource(
-                    source.hostname,
-                    source.ipaddress,
-                    source_type=source.source_type,
-                    fetcher_type=source.fetcher_type,
-                    id_="agent",
-                    cache_dir=source.file_cache_base_path,
-                    simulation_mode=source.simulation_mode,
-                    address_family=source.address_family,
-                    agent_port=agent_port,
-                    tcp_connect_timeout=tcp_connect_timeout,
-                    agent_encryption=source.agent_encryption,
-                    file_cache_max_age=source.file_cache_max_age,
+            elif isinstance(fetcher, TCPFetcher):
+                port = agent_port or fetcher.address[1]
+                timeout = tcp_connect_timeout or fetcher.timeout
+                fetcher = TCPFetcher(
+                    ident=fetcher.ident,
+                    family=fetcher.family,
+                    address=(fetcher.address[0], port),
+                    timeout=timeout,
+                    host_name=fetcher.host_name,
+                    encryption_settings=fetcher.encryption_settings,
                 )
-            elif isinstance(source, sources.snmp.SNMPSource):
-                continue
 
-            raw_data = source.fetch(Mode.CHECKING)
+            raw_data = get_raw_data(file_cache, fetcher, Mode.CHECKING)
             if raw_data.is_ok():
                 # We really receive a byte string here. The agent sections
                 # may have different encodings and are normally decoded one
@@ -1728,7 +1719,7 @@ class AutomationGetAgentOutput(Automation):
             ipaddress = config.lookup_ip_address(host_config)
             if ty == "agent":
                 FileCacheGlobals.maybe = not FileCacheGlobals.disabled
-                for source in sources.make_non_cluster_sources(
+                for meta, file_cache, fetcher in sources.make_non_cluster_sources(
                     host_config,
                     ipaddress,
                     simulation_mode=config.simulation_mode,
@@ -1738,33 +1729,33 @@ class AutomationGetAgentOutput(Automation):
                     ),
                     file_cache_max_age=config.max_cachefile_age(),
                 ):
-                    if isinstance(source, sources.snmp.SNMPSource):
+                    if meta.fetcher_type is FetcherType.SNMP:
                         continue
 
-                    raw_data = source.fetch(Mode.CHECKING)
+                    raw_data = get_raw_data(file_cache, fetcher, Mode.CHECKING)
                     host_sections = parse_raw_data(
                         raw_data,
-                        hostname=source.hostname,
-                        fetcher_type=source.fetcher_type,
-                        ident=source.id,
+                        hostname=meta.hostname,
+                        fetcher_type=meta.fetcher_type,
+                        ident=meta.ident,
                         selection=NO_SELECTION,
-                        logger=source._logger,
+                        logger=logging.getLogger("cmk.base.checking"),
                     )
                     source_results = summarize(
-                        source.hostname,
-                        source.ipaddress,
+                        meta.hostname,
+                        meta.ipaddress,
                         host_sections,
-                        exit_spec=host_config.exit_code_spec(source.id),
+                        exit_spec=host_config.exit_code_spec(meta.ident),
                         time_settings=config.get_config_cache().get_piggybacked_hosts_time_settings(
                             piggybacked_hostname=hostname,
                         ),
                         is_piggyback=host_config.is_piggyback_host,
-                        fetcher_type=source.fetcher_type,
+                        fetcher_type=meta.fetcher_type,
                     )
                     if any(r.state != 0 for r in source_results):
                         # Optionally show errors of problematic data sources
                         success = False
-                        output += f"[{source.id}] {', '.join(r.summary for r in source_results)}\n"
+                        output += f"[{meta.ident}] {', '.join(r.summary for r in source_results)}\n"
                     assert raw_data.ok is not None
                     info += raw_data.ok
             else:

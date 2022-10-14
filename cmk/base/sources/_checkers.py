@@ -620,18 +620,31 @@ def make_non_cluster_sources(
     simulation_mode: bool,
     missing_sys_description: bool,
     file_cache_max_age: MaxAge,
-) -> Sequence[Source]:
+) -> Sequence[Tuple[HostMeta, FileCache, Fetcher]]:
     """Sequence of sources available for `host_config`."""
-    return _Builder(
-        host_config,
-        ipaddress,
-        selected_sections=selected_sections,
-        on_scan_error=on_scan_error,
-        force_snmp_cache_refresh=force_snmp_cache_refresh,
-        simulation_mode=simulation_mode,
-        missing_sys_description=missing_sys_description,
-        file_cache_max_age=file_cache_max_age,
-    ).sources
+    return [
+        (
+            HostMeta(
+                source.hostname,
+                source.ipaddress,
+                source.id,
+                source.fetcher_type,
+                source.source_type,
+            ),
+            source.file_cache(),
+            source.fetcher(),
+        )
+        for source in _Builder(
+            host_config,
+            ipaddress,
+            selected_sections=selected_sections,
+            on_scan_error=on_scan_error,
+            force_snmp_cache_refresh=force_snmp_cache_refresh,
+            simulation_mode=simulation_mode,
+            missing_sys_description=missing_sys_description,
+            file_cache_max_age=file_cache_max_age,
+        ).sources
+    ]
 
 
 def fetch_all(
@@ -680,17 +693,7 @@ def make_sources(
     else:
         host_configs = [HostConfig.make_host_config(host_name) for host_name in host_config.nodes]
     return [
-        (
-            HostMeta(
-                source.hostname,
-                source.ipaddress,
-                source.id,
-                source.fetcher_type,
-                source.source_type,
-            ),
-            source.file_cache(),
-            source.fetcher(),
-        )
+        source
         for host_config_ in host_configs
         for source in make_non_cluster_sources(
             host_config_,

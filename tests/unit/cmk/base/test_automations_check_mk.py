@@ -15,11 +15,12 @@ from cmk.utils.type_defs import result
 from cmk.automations import results as automation_results
 from cmk.automations.results import DiagHostResult
 
+from cmk.core_helpers import PiggybackFetcher
+
 import cmk.base.automations.check_mk as check_mk
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 from cmk.base.config import HostConfig
-from cmk.base.sources.tcp import TCPSource
 
 
 class TestAutomationDiagHost:
@@ -45,7 +46,13 @@ class TestAutomationDiagHost:
 
     @pytest.fixture
     def patch_fetch(self, raw_data, monkeypatch):
-        monkeypatch.setattr(TCPSource, "fetch", lambda self, mode: result.OK(raw_data))
+        monkeypatch.setattr(
+            check_mk,
+            "get_raw_data",
+            lambda _file_cache, fetcher, _mode: (
+                result.OK(b"") if isinstance(fetcher, PiggybackFetcher) else result.OK(raw_data)
+            ),
+        )
 
     @pytest.mark.usefixtures("scenario")
     @pytest.mark.usefixtures("patch_fetch")

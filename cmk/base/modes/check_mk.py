@@ -43,6 +43,7 @@ from cmk.utils.type_defs import (
 import cmk.snmplib.snmp_modes as snmp_modes
 
 import cmk.core_helpers.factory as snmp_factory
+from cmk.core_helpers import FetcherType, get_raw_data
 from cmk.core_helpers.cache import FileCacheGlobals
 from cmk.core_helpers.summarize import summarize
 from cmk.core_helpers.type_defs import Mode as FetchMode
@@ -429,7 +430,7 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
         output = []
         # Show errors of problematic data sources
         has_errors = False
-        for source in sources.make_non_cluster_sources(
+        for meta, file_cache, fetcher in sources.make_non_cluster_sources(
             host_config,
             ipaddress,
             simulation_mode=config.simulation_mode,
@@ -439,33 +440,33 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
             ),
             file_cache_max_age=config.max_cachefile_age(),
         ):
-            if isinstance(source, sources.snmp.SNMPSource):
+            if meta.fetcher_type is FetcherType.SNMP:
                 continue
 
-            raw_data = source.fetch(FetchMode.CHECKING)
+            raw_data = get_raw_data(file_cache, fetcher, FetchMode.CHECKING)
             host_sections = parse_raw_data(
                 raw_data,
-                hostname=source.hostname,
-                fetcher_type=source.fetcher_type,
-                ident=source.id,
+                hostname=meta.hostname,
+                fetcher_type=meta.fetcher_type,
+                ident=meta.ident,
                 selection=NO_SELECTION,
-                logger=source._logger,
+                logger=log.logger,
             )
             source_results = summarize(
-                source.hostname,
-                source.ipaddress,
+                meta.hostname,
+                meta.ipaddress,
                 host_sections,
-                exit_spec=host_config.exit_code_spec(source.id),
+                exit_spec=host_config.exit_code_spec(meta.ident),
                 time_settings=config.get_config_cache().get_piggybacked_hosts_time_settings(
                     piggybacked_hostname=hostname,
                 ),
                 is_piggyback=host_config.is_piggyback_host,
-                fetcher_type=source.fetcher_type,
+                fetcher_type=meta.fetcher_type,
             )
             if any(r.state != 0 for r in source_results):
                 console.error(
                     "ERROR [%s]: %s\n",
-                    source.id,
+                    meta.ident,
                     ", ".join(r.summary for r in source_results),
                 )
                 has_errors = True

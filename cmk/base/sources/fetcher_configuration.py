@@ -8,14 +8,13 @@ from typing import Any, Dict, Optional
 
 from cmk.utils.type_defs import HostAddress
 
-import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers import FetcherType
+from cmk.core_helpers.cache import MaxAge
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 from cmk.base.config import HostConfig
 
-from ._abstract import Source
 from ._checkers import make_non_cluster_sources
 
 __all__ = ["fetchers", "clusters"]
@@ -28,31 +27,36 @@ def get_ip_address(host_config: HostConfig) -> Optional[HostAddress]:
     return core_config.ip_address_of(host_config, socket.AF_INET)
 
 
-def _fixup_caching_info(source: Source) -> Source:
-    if source.fetcher_type is not FetcherType.SNMP:
-        # By default this is MaxAge.none(). For checking this is the same as max_cachefile_age(),
-        # but:
-        # During discovery, the allowed cache age is (by default) 120 seconds, such that the
-        # discovery service won't steal data in the TCP case.
-        # But we do want to see new services, so for SNMP we leave the cache age at zero.
-        # For TCP, we ensure updated caches by triggering the "Check_MK" service whenever the
-        # user manually triggers "Check_MK Discovery", but then use cached data during the actual
-        # discovery
-        setattr(source, "file_cache_max_age", config.max_cachefile_age())
-    return source
-
-
 def fetchers(host_config: HostConfig) -> Dict[str, Any]:
     ipaddress = get_ip_address(host_config)
     return {
         "fetchers": [
             {
-                "fetcher_type": c.fetcher_type.name,
-                "source_type": c.source_type.name,
-                "fetcher_params": _fixup_caching_info(c).fetcher_configuration,
-                "file_cache_params": _fixup_caching_info(c).file_cache_configuration,
+                "fetcher_type": meta.fetcher_type.name,
+                "source_type": meta.source_type.name,
+                "fetcher_params": fetcher.to_json(),
+                "file_cache_params": type(file_cache)(
+                    file_cache.hostname,
+                    base_path=file_cache.base_path,
+                    # During discovery, the allowed cache age defaults to 120 seconds,
+                    # such that the discovery service won't steal data for TCP.
+                    # For SNMP, we do want to see new services so we invalidate the cache
+                    # immediately.
+                    # For TCP, we ensure the cache gets updated by triggering the "Check_MK"
+                    # service when the "Check_MK Discovery" is triggered and use the newly
+                    # cached data during the discovery.
+                    max_age=(
+                        MaxAge.none()
+                        if meta.fetcher_type is FetcherType.SNMP
+                        else file_cache.max_age
+                    ),
+                    use_outdated=file_cache.use_outdated,
+                    simulation=file_cache.simulation,
+                    use_only_cache=file_cache.use_only_cache,
+                    file_cache_mode=file_cache.file_cache_mode,
+                ).to_json(),
             }
-            for c in make_non_cluster_sources(
+            for meta, file_cache, fetcher in make_non_cluster_sources(
                 host_config,
                 ipaddress,
                 simulation_mode=config.simulation_mode,
@@ -60,7 +64,7 @@ def fetchers(host_config: HostConfig) -> Dict[str, Any]:
                     host_config.hostname,
                     config.snmp_without_sys_descr,
                 ),
-                file_cache_max_age=file_cache.MaxAge.none(),
+                file_cache_max_age=config.max_cachefile_age(),
             )
         ]
     }

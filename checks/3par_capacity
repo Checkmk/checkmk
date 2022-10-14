@@ -3,6 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+from dataclasses import dataclass
+
+from cmk.base.api.agent_based.type_defs import StringTable
+from cmk.base.check_api import check_levels
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
@@ -11,41 +17,70 @@ from cmk.base.plugins.agent_based.utils.threepar import parse_3par
 factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
 
 
-def inventory_3par_capacity(parsed):
-    for key, value in parsed.items():
-        if value["totalMiB"] == 0:
+@dataclass
+class ThreeParCapacity:
+    name: str
+    total_capacity: int
+    free_capacity: int
+    failed_capacity: int
+
+
+ThreeParCapacitySection = Mapping[str, ThreeParCapacity]
+
+
+def parse_3par_capacity(string_table: StringTable) -> ThreeParCapacitySection:
+
+    return {
+        raw_name.replace("Capacity", ""): ThreeParCapacity(
+            name=raw_name.replace("Capacity", ""),
+            total_capacity=raw_values["totalMiB"],
+            free_capacity=raw_values["freeMiB"],
+            failed_capacity=raw_values["failedCapacityMiB"],
+        )
+        for raw_name, raw_values in parse_3par(string_table).items()
+    }
+
+
+def inventory_3par_capacity(section: ThreeParCapacitySection):
+    for disk in section.values():
+        if disk.total_capacity == 0:
             continue
-        yield (key.replace("Capacity", ""), {})
+        yield (disk.name, {})
 
 
-def check_3par_capacity(item, params, parsed):
-    for key, value in parsed.items():
-        if key.replace("Capacity", "") == item:
-            total = value["totalMiB"]
-            free = value["freeMiB"]
-            failed = value["failedCapacityMiB"]
+def check_3par_capacity(
+    item: str,
+    params: Mapping[str, tuple[float, float]],
+    section: ThreeParCapacitySection,
+):
 
-            yield df_check_filesystem_list(item, params, [(item, total, free, failed)])
+    if (disk := section.get(item)) is None:
+        return
 
-            if failed == 0:
-                return
+    yield df_check_filesystem_single(
+        item,
+        disk.total_capacity,
+        disk.free_capacity,
+        disk.failed_capacity,
+        None,
+        None,
+        params,
+    )
 
-            failed_percent = float(failed) / float(total) * 100.0
-            warn, crit = params.get("failed_capacity_levels", (0.0, 0.0))
-            msg = "%s MB / %.1f%% failed (warn/crit at %.1f%%/%.1f%%)" % (
-                failed,
-                failed_percent,
-                warn,
-                crit,
-            )
-            if failed_percent >= crit:
-                yield 2, msg
-            elif failed_percent >= warn:
-                yield 1, msg
+    if disk.failed_capacity == 0:
+        return
+
+    yield check_levels(
+        float(disk.failed_capacity) / float(disk.total_capacity) * 100,
+        None,
+        params.get("failed_capacity_levels", (0.0, 0.0)),
+        infoname=f"{disk.failed_capacity} MB failed",
+        human_readable_func=get_percent_human_readable,
+    )
 
 
 check_info["3par_capacity"] = {
-    "parse_function": parse_3par,
+    "parse_function": parse_3par_capacity,
     "inventory_function": inventory_3par_capacity,
     "check_function": check_3par_capacity,
     "service_description": "Capacity %s",

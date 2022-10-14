@@ -155,13 +155,9 @@ CustomUserVisuals = Dict[Tuple[UserId, VisualName], T]
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-title_functions: List[Callable] = []
-
 
 def load_plugins() -> None:
     """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
-    global title_functions
-    title_functions = []
     _register_pre_21_plugin_api()
     utils.load_web_plugins("visuals", globals())
 
@@ -2176,15 +2172,6 @@ def visual_title(
 
     if visual["add_context_to_title"] and not skip_title_context:
         title = _add_context_title(context, visual["single_infos"], title)
-
-    # Execute title plugin functions which might be added by the user to
-    # the visuals plugins. When such a plugin function returns None, the regular
-    # title of the page is used, otherwise the title returned by the plugin
-    # function is used.
-    for func in title_functions:
-        result = func(what, visual, title)
-        if result is not None:
-            return result
 
     return title
 

@@ -42,6 +42,7 @@ from cmk.utils.type_defs import (
     ServiceState,
     SourceType,
     state_markers,
+    TimeperiodName,
 )
 
 from cmk.core_helpers.cache import FileCacheGlobals
@@ -410,14 +411,16 @@ def _filter_services_to_check(
         service
         for service in services
         if service.check_plugin_name in run_plugin_names
-        and not service_outside_check_period(config_cache, host_name, service.description)
+        and not service_outside_check_period(
+            service.description,
+            config_cache.check_period_of_service(host_name, service.description),
+        )
     ]
 
 
 def service_outside_check_period(
-    config_cache: ConfigCache, hostname: HostName, description: ServiceName
+    description: ServiceName, period: Optional[TimeperiodName]
 ) -> bool:
-    period = config_cache.check_period_of_service(hostname, description)
     if period is None:
         return False
     if cmk.base.core.check_timeperiod(period):

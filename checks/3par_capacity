@@ -4,41 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping
-from dataclasses import dataclass
 
-from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.check_api import check_levels
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.plugins.agent_based.utils.threepar import parse_3par
+from cmk.base.plugins.agent_based.threepar_capacity import ThreeParCapacitySection
 
 factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
-
-
-@dataclass
-class ThreeParCapacity:
-    name: str
-    total_capacity: int
-    free_capacity: int
-    failed_capacity: int
-
-
-ThreeParCapacitySection = Mapping[str, ThreeParCapacity]
-
-
-def parse_3par_capacity(string_table: StringTable) -> ThreeParCapacitySection:
-
-    return {
-        raw_name.replace("Capacity", ""): ThreeParCapacity(
-            name=raw_name.replace("Capacity", ""),
-            total_capacity=raw_values["totalMiB"],
-            free_capacity=raw_values["freeMiB"],
-            failed_capacity=raw_values["failedCapacityMiB"],
-        )
-        for raw_name, raw_values in parse_3par(string_table).items()
-    }
 
 
 def inventory_3par_capacity(section: ThreeParCapacitySection):
@@ -80,7 +54,7 @@ def check_3par_capacity(
 
 
 check_info["3par_capacity"] = {
-    "parse_function": parse_3par_capacity,
+    # Section already migrated!
     "inventory_function": inventory_3par_capacity,
     "check_function": check_3par_capacity,
     "service_description": "Capacity %s",

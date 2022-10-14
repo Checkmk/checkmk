@@ -1,0 +1,16 @@
+Title: Properly handle marked units on utf-8 systems
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1665746427
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p15
+
+The systemd check used to miss failed units if the leading character is a UTF-8 character, i.e. ●,.
+Now we do not print leading characters when the agent runs and find all failed units. If any exist.
+
+This requires an agent update.
+

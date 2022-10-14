@@ -674,6 +674,84 @@ class Job:
     id: str
 
 
+@dataclass
+class Backup:
+    info: BackupInfo
+    id: str
+    _path: Path
+
+    @contextmanager
+    def open(self) -> Iterator[IO[bytes]]:
+        with self._path.open(mode="rb") as fh:
+            yield fh
+
+
+class LocalTarget:
+    def __init__(self, params: Mapping[str, Any]) -> None:
+        self.path = Path(params["path"])
+        self.is_mountpoint = bool(params["is_mountpoint"])
+
+    def check_ready(self) -> None:
+        if not self.path.exists():
+            raise MKGeneralException(f"Local target path does not exist: {self.path}")
+        if self.is_mountpoint and not os.path.ismount(self.path):
+            raise MKGeneralException(
+                "The backup target path is configured to be a mountpoint, but nothing is mounted."
+            )
+
+    def list_backups(self) -> Iterator[tuple[str, BackupInfo]]:
+        for backup_id in self.path.iterdir():
+            # if backup_id is a directory not owned by the current user
+            # any attempt to get information about files in the folder will
+            # result in a permission error. In that case do not show a backup
+            try:
+                if backup_id.is_dir() and (backup_id / "mkbackup.info").exists():
+                    yield backup_id.name, load_backup_info(backup_id / "mkbackup.info")
+            except PermissionError:
+                continue
+
+    def get_backup(self, backup_id: str) -> Backup:
+        backup_path = self.path / backup_id
+        info = load_backup_info(backup_path / "mkbackup.info")
+        archive_file = backup_path / info.filename
+        verify_backup_file(info, archive_file)
+        return Backup(info, backup_id, archive_file)
+
+    def _working_dir(self, job: Job) -> Path:
+        return self.path / f"{job.id}-incomplete"
+
+    def start_backup(self, job: Job) -> Path:
+        site = current_site_id()
+        working_dir = self._working_dir(job)
+        shutil.rmtree(working_dir, ignore_errors=True)
+        path = working_dir / f"site-{site}{archive_suffix(job.config)}"
+        makedirs(path.parent, group="omd", mode=0o775)
+        return path
+
+    def finish_backup(self, info: BackupInfo, job: Job) -> None:
+        save_backup_info(info, self._working_dir(job) / "mkbackup.info")
+        completed_path = self.path / f"{job.id}-complete"
+        if completed_path.exists():
+            log("Cleaning up previously completed backup")
+            shutil.rmtree(completed_path)
+        os.rename(self._working_dir(job), completed_path)
+
+
+Target = LocalTarget
+target_classes = {"local": LocalTarget}
+
+
+def load_target(config: Config, target_id: TargetId) -> Target:
+    target_config = config["targets"][target_id]
+    target_type, params = target_config["remote"]
+    try:
+        return target_classes[target_type](params)
+    except KeyError:
+        raise MKGeneralException(
+            f"Target type, {target_type}, not implemented. Choose one of {target_classes}"
+        )
+
+
 @dataclass(frozen=True)
 class BackupAction:
     config: Config
@@ -781,7 +859,7 @@ def load_backup_info(path: Path) -> BackupInfo:
     )
 
 
-def save_backup_info(info: BackupInfo, action: BackupAction) -> None:
+def save_backup_info(info: BackupInfo, path: Path) -> None:
     raw_info: RawBackupInfo = {
         "config": info.config,
         "files": [(info.filename, info.size, info.checksum)],
@@ -793,7 +871,7 @@ def save_backup_info(info: BackupInfo, action: BackupAction) -> None:
         "type": info.type,
         "finished": info.finished,
     }
-    with open(backup_info_path(action), "w") as f:
+    with path.open("w") as f:
         json.dump(raw_info, f, sort_keys=True, indent=4, separators=(",", ": "))
 
 
@@ -919,6 +997,8 @@ modes = {
 
 def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None:
     job = load_job(local_job_id, config)
+    target = load_target(config, job.config["target"])
+    target.check_ready()
     action = BackupAction(config, job)
     state = backup_state(job)
 
@@ -928,8 +1008,6 @@ def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None
             for lock_file_path in get_needed_lock_files(opts, job.config)
         ]:
             stack.enter_context(cm)
-        target_ident = job.config["target"]
-        verify_target_is_ready(target_ident, config)
 
         init_new_run(state)
         save_next_run(job, state)
@@ -939,7 +1017,7 @@ def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None
             state.save({"pid": os.getpid()})
 
         start_logging(state)
-        log(f"--- Starting backup ({job.id} to {target_ident}) ---")
+        log(f"--- Starting backup ({job.id} to {action.target_id}) ---")
 
         success = False
         try:
@@ -951,8 +1029,10 @@ def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None
                 },
             )
 
-            info = do_site_backup(action, state)
-            complete_backup(action, state, info)
+            temp_path = target.start_backup(job)
+            info = do_site_backup(temp_path, job, state)
+            target.finish_backup(info, job)
+            complete_backup(state, info)
             success = True
 
         except MKGeneralException as e:
@@ -987,14 +1067,14 @@ class InfoCalculator:
         self.hash.update(chunk)
         self.size += len(chunk)
 
-    def info(self, action: BackupAction, site_id: str) -> BackupInfo:
+    def info(self, job: Job, site_id: str) -> BackupInfo:
         return BackupInfo(
-            config=action.job.config,
+            config=job.config,
             filename=self.filename,
             checksum=self.hash.hexdigest(),
             finished=time.time(),
             hostname=hostname(),
-            job_id=action.job.local_id,
+            job_id=job.local_id,
             site_id=site_id,
             site_version=site_version(site_id),
             size=self.size,
@@ -1002,24 +1082,15 @@ class InfoCalculator:
         )
 
 
-def do_site_backup(action: BackupAction, state: State) -> BackupInfo:
+def do_site_backup(backup_path: Path, job: Job, state: State) -> BackupInfo:
     cmd = ["omd", "backup"]
-
-    if not action.job.config["compress"]:
+    if not job.config["compress"]:
         cmd.append("--no-compression")
-
-    if action.job.config.get("no_history", False):
+    if job.config.get("no_history", False):
         cmd.append("--no-past")
-
     cmd.append("-")
-
     site = current_site_id()
-    backup_path = site_backup_archive_path(site, action, action.job.config)
-
-    # Create missing directories. Ensure group permissions and mode.
-    makedirs(backup_path.parent, group="omd", mode=0o775)
     info = InfoCalculator(backup_path.name)
-
     verbose("Command: %s" % " ".join(cmd))
     with subprocess.Popen(
         cmd,
@@ -1035,7 +1106,7 @@ def do_site_backup(action: BackupAction, state: State) -> BackupInfo:
             s = BackupStream(
                 stream=p.stdout,
                 is_alive=lambda: p.poll() is None,
-                key_ident=action.job.config["encrypt"],
+                key_ident=job.config["encrypt"],
             )
             progess_logger = ProgressLogger(state)
             for chunk in s.process():
@@ -1048,17 +1119,13 @@ def do_site_backup(action: BackupAction, state: State) -> BackupInfo:
     if p.returncode != 0:
         raise MKGeneralException("Site backup failed: %s" % err)
 
-    return info.info(action, site_id=site)
+    return info.info(job, site_id=site)
 
 
 # Returns the base path for the backup to work with. In backup mode, this is
 # the directory of the target+job. In restore mode it is the target+backup path.
 def backup_info_path(action: Action) -> Path:
     return action.base_path / "mkbackup.info"
-
-
-def site_backup_archive_path(site_id: str, action: Action, job_config: JobConfig) -> Path:
-    return action.base_path / f"site-{site_id}{archive_suffix(job_config)}"
 
 
 def archive_suffix(config: JobConfig) -> str:
@@ -1110,16 +1177,14 @@ def verify_backup_exists(action: Action) -> None:
         )
 
 
-def verify_backup_consistency(info: BackupInfo, action: Action) -> None:
+def verify_backup_consistency(info: BackupInfo, backup_path: Path) -> None:
     log("Verifying backup consistency")
     needed_file = needed_backup_archive_file(info)
-    verify_backup_file(info, needed_file, action=action)
+    verify_backup_file(info, backup_path / needed_file)
 
 
-def verify_backup_file(info: BackupInfo, archive_file: str, action: Action) -> None:
+def verify_backup_file(info: BackupInfo, archive_path: Path) -> None:
     checksum = info.checksum
-
-    archive_path = action.base_path / archive_file
     this_checksum = file_checksum(archive_path)
     if this_checksum != checksum:
         raise MKGeneralException(
@@ -1129,29 +1194,10 @@ def verify_backup_file(info: BackupInfo, archive_file: str, action: Action) -> N
         )
 
 
-def complete_backup(action: BackupAction, state: State, info: BackupInfo) -> None:
-    save_backup_info(info, action)
-
-    state.save(
-        {
-            "size": info.size,
-        },
-    )
-
-    verify_backup_consistency(info, action=action)
-
-    # Now we can be sure this new backup is a good one. Remove eventual old
-    # backup and move from "incomplete" to "complete".
-
-    if os.path.exists(action.completed_path):
-        log("Cleaning up previously completed backup")
-        shutil.rmtree(action.completed_path)
-
-    os.rename(action.base_path, action.completed_path)
-
+def complete_backup(state: State, info: BackupInfo) -> None:
+    state.save({"size": info.size})
     state_content = state.load()
     duration = time.time() - state_content["started"]
-
     log(
         "--- Backup completed (Duration: %s, Size: %s, IO: %s/s) ---"
         % (
@@ -1230,22 +1276,17 @@ def cleanup_backup_job_states() -> None:
 
 
 def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: Config) -> None:
-    action = RestoreAction(TargetId(target_id), backup_id, config)
-    info = load_backup_info(backup_info_path(action))
+    target = load_target(config, TargetId(target_id))
+    target.check_ready()
+    backup = target.get_backup(backup_id)
     state = restore_state()
 
     with ExitStack() as stack:
         for cm in [
             acquire_single_lock(lock_file_path)
-            for lock_file_path in get_needed_lock_files(opts, info.config)
+            for lock_file_path in get_needed_lock_files(opts, backup.info.config)
         ]:
             stack.enter_context(cm)
-
-        verify_target_is_ready(target_id, config)
-        verify_backup_exists(action)
-
-        if "no-verify" not in opts:
-            verify_backup_consistency(info, action)
 
         init_new_run(state)
 
@@ -1265,7 +1306,7 @@ def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: C
                 },
             )
 
-            do_site_restore(info, action, state)
+            do_site_restore(backup, state)
             complete_restore(state)
             success = True
 
@@ -1292,25 +1333,22 @@ def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: C
 
 
 def do_site_restore(
-    info: BackupInfo,
-    action: RestoreAction,
+    backup: Backup,
     state: State,
 ) -> None:
     cmd = ["omd", "restore", "--kill"]
 
     cmd.append("-")
 
-    backup_path = action.base_path / info.filename
-
     with subprocess.Popen(cmd, close_fds=True, stderr=subprocess.PIPE, stdin=subprocess.PIPE) as p:
         assert p.stdin is not None
         assert p.stderr is not None
 
-        with open(backup_path, "rb") as backup_file:
+        with backup.open() as backup_file:
             s = RestoreStream(
                 stream=backup_file,
                 is_alive=lambda: False,
-                key_ident=info.config["encrypt"],
+                key_ident=backup.info.config["encrypt"],
             )
             progress_logger = ProgressLogger(state)
             try:
@@ -1346,18 +1384,17 @@ def mode_list(target_id: str, opts: dict[str, str], config: Config) -> None:
             "This backup target does not exist. Choose one of: %s"
             % ", ".join(config["targets"].keys())
         )
-
-    verify_target_is_ready(target_id, config)
+    target = load_target(config, TargetId(target_id))
+    target.check_ready()
 
     fmt = "%-9s %-20s %-16s %52s\n"
     fmt_detail = (" " * 30) + " %-20s %48s\n"
     sys.stdout.write(fmt % ("Type", "Job", "Details", ""))
     sys.stdout.write("%s\n" % ("-" * 100))
-    for path in sorted(target_path(target_id, config).glob("*/mkbackup.info")):
-        info = load_backup_info(path)
+    for backup_id, info in target.list_backups():
         from_info = info.hostname
         from_info += " (Site: %s)" % info.site_id
-        sys.stdout.write(fmt % (info.type, info.job_id, "Backup-ID:", info.backup_id))
+        sys.stdout.write(fmt % (info.type, info.job_id, "Backup-ID:", backup_id))
 
         sys.stdout.write(fmt_detail % ("From:", from_info))
         sys.stdout.write(fmt_detail % ("Finished:", render.date_and_time(info.finished)))

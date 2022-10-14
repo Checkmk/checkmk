@@ -11,9 +11,9 @@ import cmk.gui.cron as cron
 def test_registered_jobs() -> None:
 
     expected = [
-        "cmk.gui.inventory.run",
-        "cmk.gui.plugins.cron.gui_background_job.housekeeping",
-        "cmk.gui.plugins.cron.wato_folder_lookup_cache.rebuild_folder_lookup_cache",
+        "cmk.gui.inventory.execute_inventory_housekeeping_job",
+        "cmk.gui.background_job.execute_housekeeping_job",
+        "cmk.gui.watolib.hosts_and_folders.rebuild_folder_lookup_cache",
         "cmk.gui.userdb.execute_userdb_job",
         "cmk.gui.userdb.execute_user_profile_cleanup_job",
         "cmk.gui.watolib.network_scan.execute_network_scan_job",

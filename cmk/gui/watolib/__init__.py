@@ -7,6 +7,7 @@ from typing import Callable, Sequence, Tuple, Type
 
 import urllib3 as _urllib3
 
+import cmk.gui.background_job as _background_job
 import cmk.gui.hooks as _hooks
 import cmk.gui.mkeventd as _mkeventd
 import cmk.gui.pages as _pages
@@ -17,15 +18,24 @@ import cmk.gui.watolib.builtin_attributes as builtin_attributes
 import cmk.gui.watolib.config_domains as _config_domains
 import cmk.gui.watolib.groups as groups
 import cmk.gui.weblib as _webling
-from cmk.gui.background_job import job_registry as _job_registry
 from cmk.gui.config import register_post_config_load_hook as _register_post_config_load_hook
+from cmk.gui.cron import register_job as _register_job
+from cmk.gui.inventory import (
+    execute_inventory_housekeeping_job as _execute_inventory_housekeeping_job,
+)
 from cmk.gui.permissions import permission_section_registry as _permission_section_registry
 from cmk.gui.plugins.watolib.utils import config_domain_registry as _config_domain_registry
 from cmk.gui.utils import load_web_plugins as _load_web_plugins
 from cmk.gui.watolib._host_attributes import register as _register_host_attributes
+from cmk.gui.watolib.activate_changes import (
+    execute_activation_cleanup_background_job as _execute_activation_cleanup_background_job,
+)
 from cmk.gui.watolib.host_attributes import ABCHostAttribute
 from cmk.gui.watolib.host_attributes import host_attribute_registry as _host_attributes_registry
-from cmk.gui.watolib.mkeventd import load_mkeventd_rules
+from cmk.gui.watolib.hosts_and_folders import (
+    rebuild_folder_lookup_cache as _rebuild_folder_lookup_cache,
+)
+from cmk.gui.watolib.network_scan import execute_network_scan_job as _execute_network_scan_job
 
 # Disable python warnings in background job output or logs like "Unverified
 # HTTPS request is being made". We warn the user using analyze configuration.
@@ -40,7 +50,7 @@ def _register_automation_commands() -> None:
 
 def _register_gui_background_jobs() -> None:
     cls = _config_domains.OMDConfigChangeBackgroundJob
-    _job_registry.register(cls)
+    _background_job.job_registry.register(cls)
 
 
 def _register_config_domains() -> None:
@@ -118,6 +128,16 @@ def _register_post_config_load():
         _register_post_config_load_hook(cls)
 
 
+def _register_cronjobs() -> None:
+    _register_job(_execute_activation_cleanup_background_job)
+    _register_job(_background_job.execute_housekeeping_job)
+    _register_job(_execute_inventory_housekeeping_job)
+    _register_job(_execute_network_scan_job)
+    _register_job(_userdb.execute_userdb_job)
+    _register_job(_userdb.execute_user_profile_cleanup_job)
+    _register_job(_rebuild_folder_lookup_cache)
+
+
 def load_watolib_plugins():
     _load_web_plugins("watolib", globals())
 
@@ -134,3 +154,4 @@ _register_host_attribute()
 _register_pages()
 _register_permission_section_registry()
 _register_post_config_load()
+_register_cronjobs()

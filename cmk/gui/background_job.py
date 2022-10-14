@@ -901,3 +901,8 @@ class BackgroundJobManager:
                         all_jobs.remove(entry)
         except Exception:
             self._logger.error(traceback.format_exc())
+
+
+def execute_housekeeping_job() -> None:
+    housekeep_classes = list(job_registry.values())
+    BackgroundJobManager(log.logger).do_housekeeping(housekeep_classes)

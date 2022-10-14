@@ -3942,3 +3942,23 @@ match_item_generator_registry.register(
         collect_all_hosts,
     )
 )
+
+
+def rebuild_folder_lookup_cache() -> None:
+    """Rebuild folder lookup cache around ~5AM
+    This needs to be done, since the cachefile might include outdated/vanished hosts"""
+
+    localtime = time.localtime()
+    if not (localtime.tm_hour == 5 and localtime.tm_min < 5):
+        return
+
+    cache_path = Path(Folder.host_lookup_cache_path())
+    if cache_path.exists() and time.time() - cache_path.stat().st_mtime < 300:
+        return
+
+    # Touch the file. The cronjob interval might be faster than the file creation
+    # Note: If this takes longer than the RequestTimeout -> Problem
+    #       On very big configurations, e.g. 300MB this might take 30-50 seconds
+    cache_path.parent.mkdir(parents=True, exist_ok=True)  # pylint: disable=no-member
+    cache_path.touch()
+    Folder.build_host_lookup_cache(str(cache_path))

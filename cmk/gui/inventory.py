@@ -792,3 +792,7 @@ class InventoryHousekeeping:
         ]:
             timestamps.add(filename.name)
         return timestamps
+
+
+def execute_inventory_housekeeping_job() -> None:
+    cmk.gui.inventory.InventoryHousekeeping().run()

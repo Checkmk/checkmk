@@ -1758,7 +1758,8 @@ def call_scripts(site: SiteContext, phase: str) -> None:
     if os.path.exists(path):
         putenv("OMD_ROOT", site.dir)
         putenv("OMD_SITE", site.name)
-        for f in os.listdir(path):
+        # NOTE: scripts have an order!
+        for f in sorted(os.listdir(path)):
             if f[0] == ".":
                 continue
             sys.stdout.write('Executing %s script "%s"...' % (phase, f))

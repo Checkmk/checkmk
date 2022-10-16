@@ -9,31 +9,31 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersVirtualization,
 )
-from cmk.gui.valuespec import Checkbox, Dictionary
+from cmk.gui.valuespec import Dictionary, Percentage, Tuple
 
 
-def _parameter_valuespec_prism_alerts():
+def _parameter_valuespec_prism_vm_memory():
     return Dictionary(
         elements=[
             (
-                "prism_central_only",
-                Checkbox(
-                    title=_("Consider alerts for Prism Central only"),
-                    label=_("Activate (off: consider all alerts)"),
-                    default_value=True,
+                "levels_upper",
+                Tuple(
+                    title=_("Specify levels in percentage of total RAM"),
+                    elements=[
+                        Percentage(title=_("Warning at a RAM usage of"), default_value=80.0),
+                        Percentage(title=_("Critical at a RAM usage of"), default_value=90.0),
+                    ],
                 ),
             ),
-        ],
-        required_keys=[],
+        ]
     )
 
 
 rulespec_registry.register(
     CheckParameterRulespecWithoutItem(
-        check_group_name="prism_alerts",
+        check_group_name="prism_vm_memory",
         group=RulespecGroupCheckParametersVirtualization,
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_prism_alerts,
-        title=lambda: _("Nutanix Prism Alerts"),
+        parameter_valuespec=_parameter_valuespec_prism_vm_memory,
+        title=lambda: _("Nutanix VM memory usage"),
     )
 )

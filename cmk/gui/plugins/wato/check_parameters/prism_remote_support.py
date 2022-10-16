@@ -9,31 +9,34 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersVirtualization,
 )
-from cmk.gui.valuespec import Checkbox, Dictionary
+from cmk.gui.valuespec import Dictionary, DropdownChoice
 
 
-def _parameter_valuespec_prism_alerts():
+def _parameter_valuespec_prism_remote_support():
     return Dictionary(
         elements=[
             (
-                "prism_central_only",
-                Checkbox(
-                    title=_("Consider alerts for Prism Central only"),
-                    label=_("Activate (off: consider all alerts)"),
-                    default_value=True,
+                "tunnel_state",
+                DropdownChoice(
+                    title=_("Target remote tunnel state"),
+                    help=_("Configure the target state of the remote support tunnel."),
+                    choices=[
+                        (False, "Tunnel should be inactive"),
+                        (True, "Tunnel should be active"),
+                    ],
+                    default_value=False,
                 ),
             ),
         ],
-        required_keys=[],
     )
 
 
 rulespec_registry.register(
     CheckParameterRulespecWithoutItem(
-        check_group_name="prism_alerts",
+        check_group_name="prism_remote_support",
         group=RulespecGroupCheckParametersVirtualization,
         match_type="dict",
-        parameter_valuespec=_parameter_valuespec_prism_alerts,
-        title=lambda: _("Nutanix Prism Alerts"),
+        parameter_valuespec=_parameter_valuespec_prism_remote_support,
+        title=lambda: _("Nutanix Prism Support State"),
     )
 )

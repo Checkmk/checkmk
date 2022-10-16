@@ -4,36 +4,33 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato.check_parameters.cpu_utilization import cpu_util_elements
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersVirtualization,
 )
-from cmk.gui.valuespec import Checkbox, Dictionary
+from cmk.gui.valuespec import Dictionary
 
 
-def _parameter_valuespec_prism_alerts():
+def _parameter_valuespec_prism_host_cpu():
     return Dictionary(
-        elements=[
-            (
-                "prism_central_only",
-                Checkbox(
-                    title=_("Consider alerts for Prism Central only"),
-                    label=_("Activate (off: consider all alerts)"),
-                    default_value=True,
-                ),
-            ),
-        ],
-        required_keys=[],
+        help=_(
+            "This rule configures levels for the CPU utilization (not load) for "
+            "Nutanix host systems. "
+            "The utilization percentage is computed with respect to the total "
+            "number of CPUs. "
+        ),
+        elements=cpu_util_elements(),
     )
 
 
 rulespec_registry.register(
     CheckParameterRulespecWithoutItem(
-        check_group_name="prism_alerts",
+        check_group_name="prism_host_cpu",
         group=RulespecGroupCheckParametersVirtualization,
         match_type="dict",
-        parameter_valuespec=_parameter_valuespec_prism_alerts,
-        title=lambda: _("Nutanix Prism Alerts"),
+        parameter_valuespec=_parameter_valuespec_prism_host_cpu,
+        title=lambda: _("Nutanix host system CPU utilization"),
     )
 )

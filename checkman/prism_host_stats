@@ -1,0 +1,12 @@
+title: Nutanix Prism: Host I/O
+agents: nutanix
+catalog: virtual/nutanix
+license: GPLv2
+distribution: check_mk
+description:
+ This check shows the actual I/O values for the Nutanix host.
+
+ This check requires the special agent configurable through "Nutanix Prism".
+
+discovery:
+ One service is created.

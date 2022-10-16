@@ -1,6 +1,6 @@
 title: Nutanix Prism: Containers
 agents: nutanix
-catalog: os/storage
+catalog: virtual/nutanix
 license: GPLv2
 distribution: check_mk
 description:

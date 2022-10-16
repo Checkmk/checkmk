@@ -292,6 +292,7 @@ CATALOG_TITLES: Final = {
     "smb_share": "SMB Share",
     "gcp": "Google Cloud Platform",
     "mobileiron": "Mobileiron",
+    "virtual": "Virtualization",
 }
 
 # TODO: Do we need a more generic place for this?

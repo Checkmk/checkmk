@@ -381,6 +381,12 @@ def _man_page_catalog_topics():
             _("Generic check plugins"),
             _("Plugins for local agent extensions or communication with the agent in general"),
         ),
+        (
+            "virtual",
+            False,
+            _("Virtualization"),
+            _("Monitoring of classic virtual environment like ESX, Nutanix and HyperV"),
+        ),
     ]
 
 

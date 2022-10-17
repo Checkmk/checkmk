@@ -86,7 +86,7 @@ persistent_connections: Dict[str, socket.socket] = {}
 remove_cache_regex: Pattern = re.compile("\nCache:[^\n]*")
 
 # Pattern for allowed UserId values
-validate_user_id_regex: Pattern = re.compile(r"^[\w_][-\w.@_]*$")
+validate_user_id_regex: Pattern = re.compile(r"^[\w_$][-\w.@_$]*$")
 
 
 def _ensure_unicode(value: Union[str, bytes]) -> str:

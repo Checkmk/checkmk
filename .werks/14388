@@ -1,0 +1,15 @@
+Title: Allow dollar sign in AuthUser IDs in Livestatus
+Class: fix
+Compatible: compat
+Component: livestatus
+Date: 1666006212
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p15
+
+Due to user ID sanitization in Livestatus (see Werk #14384), user IDs were not allowed to contain dollar signs (`$`).
+While such user IDs cannot be configured in Wato, they can be present as LDAP users.
+
+This Werk permits user IDs with dollar signs again.

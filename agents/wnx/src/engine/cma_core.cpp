@@ -26,18 +26,8 @@ namespace rs = std::ranges;
 namespace cma {
 
 namespace security {
-void ProtectFiles(const std::filesystem::path& root,
-                  std::vector<std::wstring>& commands) {
-    for (const auto& p : {
-             root / cfg::kAppDataAppName / cfg::files::kUserYmlFile,
-             root / cfg::kAppDataAppName / cfg::dirs::kBakery /
-                 cfg::files::kBakeryYmlFile,
-             root / cfg::kAppDataAppName / cfg::dirs::kInstall,
-             root / cfg::kAppDataAppName / cfg::dirs::kBackup,
-             root / cfg::kAppDataAppName / cfg::dirs::kPluginConfig,
-             root / cfg::kAppDataAppName / cfg::dirs::kUpdate,
-
-         }) {
+void ProtectFiles(const fs::path &root, std::vector<std::wstring> &commands) {
+    for (const auto &p : {root / cfg::kAppDataAppName}) {
         wtools::ProtectPathFromUserAccess(p, commands);
     }
 }

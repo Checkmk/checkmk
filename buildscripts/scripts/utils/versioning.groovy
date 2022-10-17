@@ -46,11 +46,11 @@ def REPO_PATCH_RULES = [\
 ]
 
 def branch_name(scm) {
-    return scm.branches[0].name;
+    return env.GERRIT_BRANCH ?: scm.branches[0].name;
 }
 
 def safe_branch_name(scm) {
-    return scm.branches[0].name.replaceAll("/", "-");
+    return branch_name().replaceAll("/", "-");
 }
 
 def get_cmk_version(branch, version) {

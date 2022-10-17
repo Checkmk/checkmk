@@ -22,6 +22,7 @@ information about VMs and nodes:
 # - https://pypi.org/project/proxmoxer/
 """
 
+import json
 import logging
 import re
 from datetime import datetime, timedelta
@@ -592,15 +593,17 @@ def agent_proxmox_ve_main(args: Args) -> None:
                         },
                     }
                 )
-            with SectionWriter("proxmox_ve_mem_usage") as writer:
-                writer.append_json(
-                    {
-                        "mem": node["mem"],
-                        "max_mem": node["maxmem"],
-                    }
-                )
-            with SectionWriter("uptime", separator=None) as writer:
-                writer.append(node["uptime"])
+            if "mem" in node and "maxmem" in node:
+                with SectionWriter("proxmox_ve_mem_usage") as writer:
+                    writer.append_json(
+                        {
+                            "mem": node["mem"],
+                            "max_mem": node["maxmem"],
+                        }
+                    )
+            if "uptime" in node:
+                with SectionWriter("uptime", separator=None) as writer:
+                    writer.append(node["uptime"])
 
     for vmid, vm in all_vms.items():
         with ConditionalPiggybackSection(vm["name"]):
@@ -728,7 +731,13 @@ class ProxmoxVeSession:
 
     def get_api_element(self, path: str) -> Any:
         """do an API GET request"""
-        response_json = self.get_raw("api2/json/" + path).json()
+        response = self.get_raw("api2/json/" + path)
+        if response.status_code != requests.codes.ok:
+            return []
+        try:
+            response_json = response.json()
+        except json.JSONDecodeError as e:
+            raise RuntimeError("Couldn't parse API element %r" % path) from e
         if "errors" in response_json:
             raise RuntimeError("Could not fetch %r (%r)" % (path, response_json["errors"]))
         return response_json.get("data")

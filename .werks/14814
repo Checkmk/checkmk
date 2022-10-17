@@ -1,0 +1,16 @@
+Title: Proxmox agent can handle rebooting VMs
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1666020757
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p15
+
+In case of the reboot of a proxmox node the proxmox special agent crashed.
+This has been fixed now.
+
+Instead of crashing it now returns no data. This could lead to the service
+going into an unkown state during the reboot.

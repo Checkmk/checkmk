@@ -386,8 +386,6 @@ def test__filename_matches(  # type:ignore[no-untyped-def]
                     ),
                 },
             ),
-            # This additional test for check_fileinfo_groups_data passes,
-            # but it still passes, when the bug in _fileinfo_check_conjunctions is present
             [
                 Result(state=State.OK, notice="Include patterns: ~my_folder/*.dat"),
                 Result(state=State.OK, summary="Count: 0"),
@@ -446,6 +444,18 @@ def test__fileinfo_check_function(  # type:ignore[no-untyped-def]
                 )
             ],
         ),
+    ],
+)
+def test__fileinfo_check_conjunctions(  # type:ignore[no-untyped-def]
+    check_definition, params, expected_result
+) -> None:
+    result = list(_fileinfo_check_conjunctions(check_definition, params))
+    assert result == expected_result
+
+
+@pytest.mark.parametrize(
+    "check_definition, params",
+    [
         (
             [
                 ("Count", "count", 0, saveint),
@@ -456,18 +466,13 @@ def test__fileinfo_check_function(  # type:ignore[no-untyped-def]
                 ("Newest age", "age_newest", None, get_age_human_readable),
             ],
             {"conjunctions": [(2, [("age_oldest_lower", 129600)])], "maxcount": (10, 20)},
-            [
-                Result(
-                    state=None,   # These None assertions are not allowed, but would be correct,
-                    summary=None, # as _fileinfo_check_conjunctions will not yield any result,
-                                  # when no file matches
-                )
-            ],
         ),
     ],
 )
-def test__fileinfo_check_conjunctions(  # type:ignore[no-untyped-def]
-    check_definition, params, expected_result
+def test_typeerror__fileinfo_check_conjunctions(  # type:ignore[no-untyped-def]
+    check_definition, params
 ) -> None:
-    result = list(_fileinfo_check_conjunctions(check_definition, params))
-    assert result == expected_result
+    try:
+        _result = list(_fileinfo_check_conjunctions(check_definition, params))
+    except TypeError:
+        pytest.fail("TypeError in _fileinfo_check_conjunctions with empty file list.")

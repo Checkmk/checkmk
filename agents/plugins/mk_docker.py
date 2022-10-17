@@ -37,7 +37,7 @@ import sys
 import time
 
 try:
-    from typing import Dict, Union, Tuple
+    from typing import Dict, Tuple, Union
 except ImportError:
     pass
 
@@ -259,7 +259,7 @@ class MKDockerClient(docker.DockerClient):
 
     def __init__(self, config):
         super(MKDockerClient, self).__init__(config['base_url'], version=MKDockerClient.API_VERSION)
-        all_containers = self.containers.list(all=True)
+        all_containers = self.containers.list(all=True, ignore_removed=True)
         if config['container_id'] == "name":
             self.all_containers = {c.attrs["Name"].lstrip('/'): c for c in all_containers}
         elif config['container_id'] == "long":
@@ -332,7 +332,12 @@ class MKDockerClient(docker.DockerClient):
         if not container.status == "running":
             return self._container_stats.setdefault(container_key, None)
 
-        stats = container.stats(stream=False)
+        try:
+            stats = container.stats(stream=False)
+        except docker.errors.NotFound:
+            # container was removed in between collecting containers and here
+            return self._container_stats.setdefault(container_key, None)
+
         return self._container_stats.setdefault(container_key, stats)
 
 
@@ -434,12 +439,24 @@ def section_node_disk_usage(client):
     section.write()
 
 
+def _robust_inspect_images(client):
+    # workaround instead of calling client.images.list() directly to be able to
+    # ignore errors when image was removed in between listing available images
+    # and getting detailed information about them
+    for response in client.api.images():
+        try:
+            yield client.images.get(response["Id"])
+        except docker.errors.ImageNotFound:
+            pass
+
+
 @time_it
 def section_node_images(client):
     '''in subsections list [[[images]]] and [[[containers]]]'''
     section = Section('node_images')
 
-    images = client.images.list()
+    images = _robust_inspect_images(client)
+
     LOGGER.debug(images)
     section.append('[[[images]]]')
     for image in images:
@@ -506,11 +523,21 @@ def section_container_network(client, container_id):
     section.write()
 
 
+def _is_not_running_exception(exception):
+    return exception.response.status_code == 409 and "is not running" in exception.explanation
+
+
 def section_container_agent(client, container_id):
     container = client.all_containers[container_id]
     if container.status != "running":
         return True
-    result = client.run_agent(container)
+    try:
+        result = client.run_agent(container)
+    except docker.errors.APIError as e:
+        # container was removed in between collecting containers and here
+        if _is_not_running_exception(e):
+            return True
+        raise e
     success = '<<<check_mk>>>' in result
     LOGGER.debug("running containers check_mk_agent: %s", 'ok' if success else 'failed')
     section = Section(piggytarget=container_id)

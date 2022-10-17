@@ -755,7 +755,7 @@ class Site:
         for file_name in os.listdir(str(packages_dir)):
             # Only copy modules that do not exist in regular module path
             if file_name not in enforce_override:
-                if os.path.exists("%s/lib/python/%s" % (self.root, file_name)) or os.path.exists(
+                if os.path.exists(
                     f"{self.root}/lib/python{PYTHON_VERSION_MAJOR}.{PYTHON_VERSION_MINOR}/site-packages/{file_name}"
                 ):
                     continue

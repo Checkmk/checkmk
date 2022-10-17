@@ -50,7 +50,7 @@ def branch_name(scm) {
 }
 
 def safe_branch_name(scm) {
-    return branch_name().replaceAll("/", "-");
+    return branch_name(scm).replaceAll("/", "-");
 }
 
 def get_cmk_version(branch, version) {

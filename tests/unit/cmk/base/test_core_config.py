@@ -64,11 +64,11 @@ def test_commandline_arguments_basics() -> None:
     )
 
     with pytest.raises(MKGeneralException):
-        core_config.commandline_arguments("bla", "blub", (1, 2))  # type: ignore[arg-type]
+        core_config.commandline_arguments("bla", "blub", (1, 2))
 
 
 @pytest.mark.parametrize("pw", ["abc", "123", "x'äd!?", "aädg"])
-def test_commandline_arguments_password_store(pw) -> None:  # type:ignore[no-untyped-def]
+def test_commandline_arguments_password_store(pw: str) -> None:
     password_store.save({"pw-id": pw})
     assert core_config.commandline_arguments(
         HostName("bla"), "blub", ["arg1", ("store", "pw-id", "--password=%s"), "arg3"]
@@ -93,7 +93,7 @@ def test_commandline_arguments_wrong_types() -> None:
         core_config.commandline_arguments(HostName("bla"), "blub", 1)  # type: ignore[arg-type]
 
     with pytest.raises(MKGeneralException):
-        core_config.commandline_arguments(HostName("bla"), "blub", (1, 2))  # type: ignore[arg-type]
+        core_config.commandline_arguments(HostName("bla"), "blub", (1, 2))
 
 
 def test_commandline_arguments_str() -> None:
@@ -385,7 +385,7 @@ def test_iter_active_check_services(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
-def test_template_translation(ipaddress, monkeypatch):  # type: ignore[no-untyped-def]
+def test_template_translation(ipaddress: str | None, monkeypatch: pytest.MonkeyPatch) -> None:
     template = "<NOTHING>x<IP>x<HOST>x<host>x<ip>x"
     hostname = HostName("testhost")
     ts = Scenario()

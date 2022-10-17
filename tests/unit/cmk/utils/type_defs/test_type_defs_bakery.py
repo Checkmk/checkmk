@@ -39,7 +39,7 @@ class TestBakeryTargetVanilla:
 
     def test_equals(self) -> None:
         assert BakeryTargetVanilla() == BakeryTargetVanilla()
-        assert BakeryTargetVanilla() != 21  # type: ignore[comparison-overlap]
+        assert BakeryTargetVanilla() != 21
 
 
 class TestBakeryTargetFolder:
@@ -66,7 +66,7 @@ class TestBakeryTargetFolder:
     def test_equals(self) -> None:
         assert BakeryTargetFolder("foo/bar") == BakeryTargetFolder("foo/bar")
         assert BakeryTargetFolder("foo/bar") != BakeryTargetFolder("bar/foos")
-        assert BakeryTargetFolder("knulf") != "knulf"  # type: ignore[comparison-overlap]
+        assert BakeryTargetFolder("knulf") != "knulf"
 
 
 class TestBakeryTargetHost:
@@ -94,7 +94,7 @@ class TestBakeryTargetHost:
     def test_equals(self) -> None:
         assert BakeryTargetHost(HostName("foobar")) == BakeryTargetHost(HostName("foobar"))
         assert BakeryTargetHost(HostName("foobar")) != BakeryTargetHost(HostName("barfoos"))
-        assert BakeryTargetHost(HostName("knulf")) != "knulf"  # type: ignore[comparison-overlap]
+        assert BakeryTargetHost(HostName("knulf")) != "knulf"
 
 
 @pytest.mark.parametrize(

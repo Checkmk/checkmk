@@ -13,8 +13,8 @@ class TestValueSpecPercentage:
         expect_validate_failure(vs.Percentage(), 105.0)
         expect_validate_success(vs.Percentage(), 101.0)
         expect_validate_failure(vs.Percentage(), -10.0)
-        expect_validate_failure(vs.Percentage(), 10)  # type: ignore
-        expect_validate_success(vs.Percentage(allow_int=True), 10)  # type: ignore
+        expect_validate_failure(vs.Percentage(), 10)
+        expect_validate_success(vs.Percentage(allow_int=True), 10)
         expect_validate_failure(vs.Percentage(allow_int=True), "10")  # type: ignore
 
     def test_value_to_html(self) -> None:

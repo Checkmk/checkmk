@@ -3,10 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[attr-defined]
 from typing import Callable
 
 import pytest
+
+from tests.unit.conftest import FixPluginLegacy, FixRegister
 
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.type_defs import SectionName
@@ -28,7 +29,9 @@ from cmk.base.check_legacy_includes.fsc import _is_fsc_or_windows, is_fsc
 pytestmark = pytest.mark.checks
 
 
-def test_create_section_plugin_from_legacy(fix_plugin_legacy, fix_register) -> None:
+def test_create_section_plugin_from_legacy(
+    fix_plugin_legacy: FixPluginLegacy, fix_register: FixRegister
+) -> None:
     for name, check_info_dict in fix_plugin_legacy.check_info.items():
         # only test main checks
         if name != section_name_of(name):
@@ -53,11 +56,11 @@ def test_create_section_plugin_from_legacy(fix_plugin_legacy, fix_register) -> N
             assert original_parse_function.__name__ == section.parse_function.__name__
 
 
-def test_snmp_info_snmp_scan_functions_equal(fix_plugin_legacy) -> None:
+def test_snmp_info_snmp_scan_functions_equal(fix_plugin_legacy: FixPluginLegacy) -> None:
     assert set(fix_plugin_legacy.snmp_scan_functions) == set(fix_plugin_legacy.snmp_info)
 
 
-def test_snmp_tree_translation(fix_plugin_legacy) -> None:
+def test_snmp_tree_translation(fix_plugin_legacy: FixPluginLegacy) -> None:
     for info_spec in fix_plugin_legacy.snmp_info.values():
         new_trees, recover_function = _create_snmp_trees(info_spec)
         assert callable(recover_function)  # is tested separately
@@ -65,7 +68,7 @@ def test_snmp_tree_translation(fix_plugin_legacy) -> None:
         assert all(isinstance(tree, SNMPTree) for tree in new_trees)
 
 
-def test_scan_function_translation(fix_plugin_legacy) -> None:
+def test_scan_function_translation(fix_plugin_legacy: FixPluginLegacy) -> None:
     for name, scan_func in fix_plugin_legacy.snmp_scan_functions.items():
         if name in (
             # these are already migrated manually:
@@ -98,12 +101,12 @@ def test_explicit_conversion(func: Callable[[str], str]) -> None:
     assert created == explicit
 
 
-def test_no_subcheck_with_snmp_keywords(fix_plugin_legacy) -> None:
+def test_no_subcheck_with_snmp_keywords(fix_plugin_legacy: FixPluginLegacy) -> None:
     for name in fix_plugin_legacy.snmp_info:
         assert name == section_name_of(name)
 
 
-def test_all_checks_migrated(fix_plugin_legacy, fix_register) -> None:
+def test_all_checks_migrated(fix_plugin_legacy: FixPluginLegacy, fix_register: FixRegister) -> None:
     migrated = {str(name) for name in fix_register.check_plugins}
     # we don't expect pure section declarations anymore
     true_checks = {
@@ -115,7 +118,7 @@ def test_all_checks_migrated(fix_plugin_legacy, fix_register) -> None:
     assert not failures, "failed to migrate: {!r}".format(failures)
 
 
-def test_all_check_variables_present(fix_plugin_legacy) -> None:
+def test_all_check_variables_present(fix_plugin_legacy: FixPluginLegacy) -> None:
     expected_check_variables = {
         "AKCP_TEMP_CHECK_DEFAULT_PARAMETERS",
         "ALCATEL_TEMP_CHECK_DEFAULT_PARAMETERS",
@@ -800,7 +803,7 @@ def test_all_check_variables_present(fix_plugin_legacy) -> None:
     )
 
 
-def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy) -> None:
+def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) -> None:
     expected_legacy_checks = {
         "3par_capacity",
         "3par_cpgs",

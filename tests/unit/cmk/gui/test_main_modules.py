@@ -58,7 +58,7 @@ def test_load_local_plugin(main_module_name) -> None:  # type:ignore[no-untyped-
                 else importlib.import_module("cmk.gui.wato")
             ]
         )
-        assert main_module.ding == "dong"  # type: ignore[attr-defined]
+        assert main_module.ding == "dong"
     finally:
         del main_module.__dict__["ding"]
 

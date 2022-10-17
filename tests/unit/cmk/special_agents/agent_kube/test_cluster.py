@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Iterable, Mapping, NoReturn, Sequence, Tuple
+from unittest.mock import MagicMock
 
 import pytest
 from pydantic_factories import ModelFactory
@@ -140,17 +141,17 @@ def test_cluster_allocatable_cpu_resource():
     assert actual == expected
 
 
-def test_write_cluster_api_sections_registers_sections_to_be_written(  # type:ignore[no-untyped-def]
-    write_sections_mock,
-):
+def test_write_cluster_api_sections_registers_sections_to_be_written(
+    write_sections_mock: MagicMock,
+) -> None:
     cluster = _cluster_builder_from_agents()
     agent.write_cluster_api_sections("cluster", cluster)
     assert list(write_sections_mock.call_args[0][0]) == cluster_api_sections()
 
 
-def test_write_cluster_api_sections_maps_section_names_to_callables(  # type:ignore[no-untyped-def]
-    write_sections_mock,
-):
+def test_write_cluster_api_sections_maps_section_names_to_callables(
+    write_sections_mock: MagicMock,
+) -> None:
     cluster = _cluster_builder_from_agents()
     agent.write_cluster_api_sections("cluster", cluster)
     assert all(

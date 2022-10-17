@@ -9,9 +9,7 @@ from collections.abc import Generator, Mapping, Sequence
 from typing import Any
 
 import pytest
-from _pytest.monkeypatch import (
-    MonkeyPatch,  # type: ignore[import] # pylint: disable=import-outside-toplevel
-)
+from _pytest.monkeypatch import MonkeyPatch
 
 from cmk.special_agents.agent_aws import (
     _create_lamdba_sections,

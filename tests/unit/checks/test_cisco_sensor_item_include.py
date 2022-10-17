@@ -62,4 +62,4 @@ FALLBACK = "999"
 def test_cisco_sensor_item(  # type:ignore[no-untyped-def]
     status_description, expected_item
 ) -> None:
-    assert cisco_sensor_item(status_description, FALLBACK) == expected_item  # type: ignore[name-defined] # pylint: disable=undefined-variable
+    assert cisco_sensor_item(status_description, FALLBACK) == expected_item

@@ -40,7 +40,7 @@ def compile_builtin_po_files(locale_base_dir):
 
 
 @pytest.fixture()
-def local_translation():
+def local_translation() -> None:
     _add_local_translation("de", "Äxtended German", texts={"bla": "blub"})
     _add_local_translation("xz", "Xz", texts={"bla": "blub"})
     # Add one package localization
@@ -131,9 +131,7 @@ def test_init_language_only_builtin() -> None:
     assert translated == "bla"
 
 
-def test_init_language_with_local_modification(  # type:ignore[no-untyped-def]
-    local_translation,
-) -> None:
+def test_init_language_with_local_modification(local_translation: None) -> None:
     trans = i18n._init_language("de")
     assert isinstance(trans, gettext.GNUTranslations)
     assert trans.info()["language"] == "de"
@@ -144,9 +142,7 @@ def test_init_language_with_local_modification(  # type:ignore[no-untyped-def]
     assert translated == "blub"
 
 
-def test_init_language_with_local_modification_fallback(  # type:ignore[no-untyped-def]
-    local_translation,
-) -> None:  # type:ignore[no-untyped-def]
+def test_init_language_with_local_modification_fallback(local_translation: None) -> None:
     trans = i18n._init_language("de")
     assert isinstance(trans, gettext.GNUTranslations)
     assert trans.info()["language"] == "de"
@@ -163,9 +159,7 @@ def test_init_language_with_local_modification_fallback(  # type:ignore[no-untyp
     assert translated == "Alter"
 
 
-def test_init_language_with_package_localization(  # type:ignore[no-untyped-def]
-    local_translation,
-) -> None:
+def test_init_language_with_package_localization(local_translation: None) -> None:
     trans = i18n._init_language("de")
     assert trans is not None
     translated = trans.gettext("pkg1")
@@ -181,7 +175,7 @@ def test_get_language_alias() -> None:
     assert i18n.get_language_alias("de") == "German"
 
 
-def test_get_language_local_alias(local_translation) -> None:  # type:ignore[no-untyped-def]
+def test_get_language_local_alias(local_translation: None) -> None:
     assert isinstance(i18n.get_language_alias("de"), str)
     assert i18n.get_language_alias("de") == "Äxtended German"
 
@@ -200,7 +194,7 @@ def test_get_languages() -> None:
     ]
 
 
-def test_get_languages_new_local_language(local_translation) -> None:  # type:ignore[no-untyped-def]
+def test_get_languages_new_local_language(local_translation: None) -> None:
     assert i18n.get_languages() == [
         ("nl", "Dutch (community translated)"),
         ("", "English"),

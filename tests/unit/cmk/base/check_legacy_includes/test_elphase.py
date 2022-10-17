@@ -7,7 +7,7 @@ from typing import Any, Mapping, Sequence, Tuple
 
 import pytest
 
-from cmk.base.check_legacy_includes.elphase import check_elphase  # type: ignore[attr-defined]
+from cmk.base.check_legacy_includes.elphase import check_elphase
 
 
 @pytest.mark.parametrize(

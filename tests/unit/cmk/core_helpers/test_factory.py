@@ -15,9 +15,9 @@ import cmk.core_helpers.factory as factory
 from cmk.core_helpers.snmp_backend import ClassicSNMPBackend
 
 try:
-    from cmk.core_helpers.cee.snmp_backend import inline  # type: ignore[import]
+    from cmk.core_helpers.cee.snmp_backend.inline import InlineSNMPBackend  # type: ignore[import]
 except ImportError:
-    inline = None  # type: ignore[assignment]
+    InlineSNMPBackend = None  # type: ignore[assignment, misc]
 
 
 @pytest.fixture(name="snmp_config")
@@ -46,19 +46,15 @@ def test_factory_snmp_backend_classic(snmp_config: SNMPHostConfig) -> None:
 
 def test_factory_snmp_backend_inline(snmp_config: SNMPHostConfig) -> None:
     snmp_config = snmp_config._replace(snmp_backend=SNMPBackendEnum.INLINE)
-    if inline:
-        assert isinstance(
-            factory.backend(snmp_config, logging.getLogger()), inline.InlineSNMPBackend
-        )
+    if InlineSNMPBackend:
+        assert isinstance(factory.backend(snmp_config, logging.getLogger()), InlineSNMPBackend)
 
 
 def test_factory_snmp_backend_unknown_backend(snmp_config: SNMPHostConfig) -> None:
     with pytest.raises(NotImplementedError, match="Unknown SNMP backend"):
         snmp_config = snmp_config._replace(snmp_backend="bla")  # type: ignore[arg-type]
-        if inline:
-            assert isinstance(
-                factory.backend(snmp_config, logging.getLogger()), inline.InlineSNMPBackend
-            )
+        if InlineSNMPBackend:
+            assert isinstance(factory.backend(snmp_config, logging.getLogger()), InlineSNMPBackend)
         else:
             assert isinstance(
                 factory.backend(snmp_config, logging.getLogger()),

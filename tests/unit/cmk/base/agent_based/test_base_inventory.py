@@ -7,7 +7,7 @@
 
 import pytest
 
-from tests.testlib.base import Scenario  # type: ignore[import]
+from tests.testlib.base import Scenario
 
 import cmk.utils.debug
 from cmk.utils.structured_data import RetentionIntervals, SDFilterFunc, SDPath, StructuredDataNode

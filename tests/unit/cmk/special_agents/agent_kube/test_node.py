@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Sequence
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock
 
 import pytest
 
@@ -85,9 +85,9 @@ def test_write_nodes_api_sections_registers_sections_to_be_written(  # type:igno
     assert list(write_sections_mock.call_args[0][0]) == nodes_api_sections()
 
 
-def test_write_nodes_api_sections_maps_section_names_to_callables(  # type:ignore[no-untyped-def]
-    write_sections_mock,
-):
+def test_write_nodes_api_sections_maps_section_names_to_callables(
+    write_sections_mock: MagicMock,
+) -> None:
     node = api_to_agent_node(APINodeFactory.build())
     agent.write_nodes_api_sections(
         "cluster", agent.AnnotationNonPatternOption.ignore_all, [node], "host", Mock()
@@ -98,9 +98,9 @@ def test_write_nodes_api_sections_maps_section_names_to_callables(  # type:ignor
     )
 
 
-def test_write_nodes_api_sections_calls_write_sections_for_each_node(  # type:ignore[no-untyped-def]
-    write_sections_mock,
-):
+def test_write_nodes_api_sections_calls_write_sections_for_each_node(
+    write_sections_mock: MagicMock,
+) -> None:
     cluster_nodes = 3
     agent.write_nodes_api_sections(
         "cluster",

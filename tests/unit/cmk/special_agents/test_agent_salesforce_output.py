@@ -5,7 +5,7 @@
 
 
 import pytest
-import responses  # type: ignore[import]
+import responses
 from pytest import MonkeyPatch
 
 from cmk.special_agents.agent_salesforce import main

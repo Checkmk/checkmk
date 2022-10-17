@@ -2,6 +2,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 import copy
 import logging
 import shutil
@@ -70,7 +71,7 @@ def fixture_capsys(capsys: pytest.CaptureFixture[str]) -> Iterator[pytest.Captur
 @pytest.fixture(name="edition", params=["cre", "cee", "cme", "cpe"])
 def fixture_edition(request: pytest.FixtureRequest) -> Iterable[cmk_version.Edition]:
     # The param seems to be an optional attribute which mypy can not understand
-    edition_short = request.param  # type: ignore[attr-defined]
+    edition_short = request.param
     if edition_short == "cpe" and not is_plus_repo():
         pytest.skip("Needed files are not available")
 
@@ -315,12 +316,12 @@ class FixPluginLegacy:
 
 
 @pytest.fixture(scope="session", name="fix_register")
-def fix_register_fixture():
+def fix_register_fixture() -> Iterator[FixRegister]:
     yield FixRegister()
 
 
 @pytest.fixture(scope="session")
-def fix_plugin_legacy(fix_register):
+def fix_plugin_legacy(fix_register: FixRegister) -> Iterator[FixPluginLegacy]:
     yield FixPluginLegacy(fix_register)
 
 

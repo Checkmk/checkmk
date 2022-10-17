@@ -95,7 +95,7 @@ def test_df_discovery_yields_volume_name_as_item() -> None:
 def test_df_check() -> None:
     item_1st = "VMFS_01"
     params = {
-        **FILESYSTEM_DEFAULT_PARAMS,  # type: ignore
+        **FILESYSTEM_DEFAULT_PARAMS,
         "flex_levels": "irrelevant",
     }
     check = Check("hp_msa_volume.df")

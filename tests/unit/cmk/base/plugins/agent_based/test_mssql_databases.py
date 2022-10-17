@@ -30,9 +30,7 @@ def _get_section():
 
 def test_discover_mssql_databases(section) -> None:  # type:ignore[no-untyped-def]
 
-    assert sorted(
-        discover_mssql_databases(section), key=lambda s: s.item or ""
-    ) == [  # type: ignore[attr-defined]
+    assert sorted(discover_mssql_databases(section), key=lambda s: s.item or "") == [
         Service(item="MSSQL_MSSQL46 CorreLog_Report_T"),
         Service(item="MSSQL_MSSQL46 NOC_ALARM_T"),
         Service(item="MSSQL_MSSQL46 master"),

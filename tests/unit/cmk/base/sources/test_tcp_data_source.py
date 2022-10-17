@@ -15,7 +15,7 @@ from cmk.core_helpers import FetcherType
 from cmk.base.sources.tcp import TCPSource
 
 
-def test_attribute_defaults() -> None:  # type:ignore[no-untyped-def]
+def test_attribute_defaults() -> None:
     ipaddress = "1.2.3.4"
     hostname = HostName("testhost")
     source = TCPSource(

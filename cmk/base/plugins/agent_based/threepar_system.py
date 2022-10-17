@@ -6,9 +6,13 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
 
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
 
-from .agent_based_api.v1 import register
+from .agent_based_api.v1 import register, Result, Service, State
 from .utils.threepar import parse_3par
 
 
@@ -22,7 +26,7 @@ class ThreeParSystem:
     online_nodes: Sequence[int]
 
 
-def parse_3par_system(string_table: StringTable) -> ThreeParSystem:
+def parse_threepar_system(string_table: StringTable) -> ThreeParSystem:
     pre_parsed = parse_3par(string_table)
 
     return ThreeParSystem(
@@ -37,5 +41,30 @@ def parse_3par_system(string_table: StringTable) -> ThreeParSystem:
 
 register.agent_section(
     name="3par_system",
-    parse_function=parse_3par_system,
+    parse_function=parse_threepar_system,
+)
+
+
+def discover_threepar_system(section: ThreeParSystem) -> DiscoveryResult:
+    if section.name:
+        yield Service(item=section.name)
+
+
+def check_threepar_system(section: ThreeParSystem) -> CheckResult:
+
+    yield Result(
+        state=State.OK,
+        summary=f"Model: {section.model}, Version: {section.system_version}, Serial number: {section.serial_number}, Online nodes: {len(section.online_nodes)}/{len(section.cluster_nodes)}",
+    )
+
+    if len(section.online_nodes) < len(section.cluster_nodes):
+        for node in set(section.cluster_nodes) ^ set(section.online_nodes):
+            yield Result(state=State.CRIT, summary=f"(Node {node} not available)")
+
+
+register.check_plugin(
+    name="3par_system",
+    check_function=check_threepar_system,
+    discovery_function=discover_threepar_system,
+    service_name="3PAR",
 )

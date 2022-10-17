@@ -6,25 +6,19 @@ from collections.abc import Sequence
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
-from cmk.utils.type_defs import CheckPluginName
-
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-from cmk.base.plugins.agent_based.threepar_system import parse_3par_system
+from cmk.base.plugins.agent_based.threepar_system import (
+    check_threepar_system,
+    discover_threepar_system,
+    parse_threepar_system,
+)
 
 STRING_TABLE = [
     [
         '{"id":168676,"name":"test-name","systemVersion":"9.5.3.12","IPv4Addr":"172.17.37.20","model":"HPEAlletra9060","serialNumber":"CZ222908M6","totalNodes":2,"masterNode":0,"onlineNodes":[0,1],"clusterNodes":[0,1]}'
     ]
 ]
-
-
-@pytest.fixture(name="check")
-def _3par_system_check_plugin(fix_register: FixRegister) -> CheckPlugin:
-    return fix_register.check_plugins[CheckPluginName("3par_system")]
 
 
 @pytest.mark.parametrize(
@@ -45,12 +39,12 @@ def _3par_system_check_plugin(fix_register: FixRegister) -> CheckPlugin:
     ],
 )
 def test_discover_3par_system(
-    check: CheckPlugin,
-    fix_register: FixRegister,
     section: StringTable,
     expected_discovery_result: Sequence[Service],
 ) -> None:
-    assert list(check.discovery_function(parse_3par_system(section))) == expected_discovery_result
+    assert (
+        list(discover_threepar_system(parse_threepar_system(section))) == expected_discovery_result
+    )
 
 
 @pytest.mark.parametrize(
@@ -98,17 +92,13 @@ def test_discover_3par_system(
     ],
 )
 def test_check_3par_system(
-    check: CheckPlugin,
-    fix_register: FixRegister,
     section: StringTable,
     expected_check_result: Sequence[Result],
 ) -> None:
     assert (
         list(
-            check.check_function(
-                item="",
-                params={},
-                section=parse_3par_system(section),
+            check_threepar_system(
+                section=parse_threepar_system(section),
             )
         )
         == expected_check_result

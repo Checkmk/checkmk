@@ -222,6 +222,7 @@ def test_local_connection(mock_livestatus):
         ("1234", True),
         ("cmkadmin", True),
         ("ädmin", True),
+        ("$pecial-chars_$", True),  # cannot be configured via Wato, but allowed in LDAP users
         ("12 34", False),
         ("🙈🙉🙊", False),
         ("12\n34", False),

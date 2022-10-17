@@ -12,8 +12,11 @@
 
 import argparse
 import enum
+import logging
 from typing import Mapping, NewType
 
+import requests
+import urllib3
 from pydantic import BaseModel
 
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
@@ -53,6 +56,19 @@ class SessionConfig(NoUsageConfig):
 
 class CollectorSessionConfig(SessionConfig):
     cluster_collector_endpoint: str
+
+
+def create_session(config: SessionConfig, logger: logging.Logger) -> requests.Session:
+    if not config.verify_cert_collector:
+        logger.warning("Disabling SSL certificate verification.")
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+    session = requests.Session()
+    session.proxies.update(config.requests_proxies())
+    session.headers.update(
+        {} if config.token is None else {"Authorization": f"Bearer {config.token}"}
+    )
+    return session
 
 
 def parse_session_config(

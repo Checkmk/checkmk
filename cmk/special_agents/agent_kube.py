@@ -55,7 +55,6 @@ import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.profile
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
-from cmk.utils.misc import typeshed_issue_7724
 
 from cmk.special_agents.utils import vcrtrace
 from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, SectionWriter
@@ -1454,18 +1453,13 @@ def request_cluster_collector(
     config: query.CollectorSessionConfig,
     parser: Callable[[bytes], Model],
 ) -> Model:
-    if not config.verify_cert_collector:
-        LOGGER.info("Disabling SSL certificate verification")
-        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
+    session = query.create_session(config, LOGGER)
     url = config.cluster_collector_endpoint + path
+    request = requests.Request("GET", url)
+    prepare_request = session.prepare_request(request)
     try:
-        cluster_resp = requests.get(
-            url,
-            headers={"Authorization": f"Bearer {config.token}"},
-            verify=config.verify_cert_collector,
-            timeout=config.requests_timeout(),
-            proxies=typeshed_issue_7724(config.requests_proxies()),
+        cluster_resp = session.send(
+            prepare_request, verify=config.verify_cert_collector, timeout=config.requests_timeout()
         )
         cluster_resp.raise_for_status()
     except requests.HTTPError as e:

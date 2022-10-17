@@ -382,7 +382,7 @@ def deployment_conditions(
 
 
 def controller_strategy(controller: Deployment | DaemonSet | StatefulSet) -> section.UpdateStrategy:
-    return section.UpdateStrategy.parse_obj(controller.spec.strategy)
+    return section.UpdateStrategy.parse_obj(controller.spec)
 
 
 def deployment_replicas(deployment_status: api.DeploymentStatus) -> section.DeploymentReplicas:

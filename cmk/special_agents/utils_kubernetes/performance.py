@@ -164,7 +164,7 @@ def write_sections_based_on_performance_pods(
     for piggy in pods_to_host.namespace_piggies:
         pods = _filter_outdated_and_non_monitored_pods(performance_pods.values(), piggy.pod_names)
         resource_quota_pods = _filter_outdated_and_non_monitored_pods(
-            performance_pods.values(), piggy.pod_names
+            performance_pods.values(), piggy.resource_quota_pod_names
         )
         sections = _kube_object_performance_sections(pods) + _resource_quota_performance_sections(
             resource_quota_pods

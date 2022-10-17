@@ -17,7 +17,7 @@ from typing import Mapping, NewType
 
 import requests
 import urllib3
-from pydantic import BaseModel
+from pydantic import BaseModel, parse_obj_as
 
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 
@@ -71,10 +71,8 @@ def create_session(config: SessionConfig, logger: logging.Logger) -> requests.Se
     return session
 
 
-def parse_session_config(
-    arguments: argparse.Namespace,
-) -> CollectorSessionConfig | NoUsageConfig:
-    class _AllConfigs(BaseModel):
-        config: CollectorSessionConfig | NoUsageConfig
+_AllConfigs = CollectorSessionConfig | NoUsageConfig
 
-    return _AllConfigs.parse_obj(arguments.__dict__).config
+
+def parse_session_config(arguments: argparse.Namespace) -> _AllConfigs:
+    return parse_obj_as(_AllConfigs, arguments.__dict__)  # type: ignore[arg-type]

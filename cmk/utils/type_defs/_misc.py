@@ -242,7 +242,7 @@ class DiscoveryResult:
 
 
 class UserId(str):
-    USER_ID_REGEX = re.compile(r"^[\w_][-\w.@_]*$")
+    USER_ID_REGEX = re.compile(r"^[\w_$][-\w.@_$]*$")
 
     @classmethod
     def validate(cls, text: str) -> None:

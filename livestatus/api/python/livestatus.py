@@ -150,7 +150,7 @@ persistent_connections: dict[str, socket.socket] = {}
 remove_cache_regex = re.compile("\nCache:[^\n]*")
 
 # Pattern for allowed UserId values
-validate_user_id_regex = re.compile(r"^[\w_][-\w.@_]*$")
+validate_user_id_regex = re.compile(r"^[\w_$][-\w.@_$]*$")
 
 
 class MKLivestatusException(Exception):

@@ -41,13 +41,26 @@ from cmk.base.agent_based.data_provider import (
     SectionsParser,
 )
 from cmk.base.agent_based.discovery import _discovered_services
+from cmk.base.agent_based.discovery._discovery import _check_service_lists
+from cmk.base.agent_based.discovery._host_labels import analyse_node_labels
+from cmk.base.agent_based.discovery.autodiscovery import (
+    _get_cluster_services,
+    _get_node_services,
+    _get_post_discovery_autocheck_services,
+    _group_by_transition,
+    _make_diff,
+    _ServiceFilters,
+    ServicesByTransition,
+    ServicesTable,
+)
+from cmk.base.agent_based.discovery.utils import DiscoveryMode
 from cmk.base.config import HostConfig
 from cmk.base.discovered_labels import HostLabel
 from cmk.base.sources.snmp import SNMPRawDataSection
 
 
 @pytest.fixture
-def service_table() -> discovery.ServicesTable:
+def service_table() -> ServicesTable:
     return {
         ServiceID(CheckPluginName("check_plugin_name"), "New Item 1"): (
             "new",
@@ -93,7 +106,7 @@ def service_table() -> discovery.ServicesTable:
 
 
 @pytest.fixture
-def grouped_services() -> discovery.ServicesByTransition:
+def grouped_services() -> ServicesByTransition:
     return {
         "new": [
             autochecks.AutocheckServiceWithNodes(
@@ -139,9 +152,9 @@ def grouped_services() -> discovery.ServicesByTransition:
 
 
 def test__group_by_transition(
-    service_table: discovery.ServicesTable, grouped_services: discovery.ServicesByTransition
+    service_table: ServicesTable, grouped_services: ServicesByTransition
 ) -> None:
-    assert discovery._group_by_transition(service_table) == grouped_services
+    assert _group_by_transition(service_table) == grouped_services
 
 
 @pytest.mark.parametrize(
@@ -149,73 +162,73 @@ def test__group_by_transition(
     [
         # No params
         (
-            discovery.DiscoveryMode.NEW,
+            DiscoveryMode.NEW,
             {},
             ["New Item 1", "New Item 2", "Vanished Item 1", "Vanished Item 2"],
             (2, 2, 0),
         ),
-        (discovery.DiscoveryMode.FIXALL, {}, ["New Item 1", "New Item 2"], (2, 0, 2)),
+        (DiscoveryMode.FIXALL, {}, ["New Item 1", "New Item 2"], (2, 0, 2)),
         (
-            discovery.DiscoveryMode.REFRESH,
+            DiscoveryMode.REFRESH,
             {},
             ["New Item 1", "New Item 2", "Vanished Item 1", "Vanished Item 2"],
             (2, 2, 0),
         ),
-        (discovery.DiscoveryMode.REMOVE, {}, [], (0, 0, 2)),
+        (DiscoveryMode.REMOVE, {}, [], (0, 0, 2)),
         # New services
         # Whitelist
         (
-            discovery.DiscoveryMode.NEW,
+            DiscoveryMode.NEW,
             {"service_whitelist": ["^Test Description New Item 1"]},
             ["New Item 1", "Vanished Item 1", "Vanished Item 2"],
             (1, 2, 0),
         ),
         (
-            discovery.DiscoveryMode.FIXALL,
+            DiscoveryMode.FIXALL,
             {"service_whitelist": ["^Test Description New Item 1"]},
             ["New Item 1", "Vanished Item 1", "Vanished Item 2"],
             (1, 2, 0),
         ),
         (
-            discovery.DiscoveryMode.REFRESH,
+            DiscoveryMode.REFRESH,
             {"service_whitelist": ["^Test Description New Item 1"]},
             ["New Item 1", "Vanished Item 1", "Vanished Item 2"],
             (1, 2, 0),
         ),
         (
-            discovery.DiscoveryMode.REMOVE,
+            DiscoveryMode.REMOVE,
             {"service_whitelist": ["^Test Description New Item 1"]},
             ["Vanished Item 1", "Vanished Item 2"],
             (0, 2, 0),
         ),
         # Blacklist
         (
-            discovery.DiscoveryMode.NEW,
+            DiscoveryMode.NEW,
             {"service_blacklist": ["^Test Description New Item 1"]},
             ["New Item 2", "Vanished Item 1", "Vanished Item 2"],
             (1, 2, 0),
         ),
         (
-            discovery.DiscoveryMode.FIXALL,
+            DiscoveryMode.FIXALL,
             {"service_blacklist": ["^Test Description New Item 1"]},
             ["New Item 2"],
             (1, 0, 2),
         ),
         (
-            discovery.DiscoveryMode.REFRESH,
+            DiscoveryMode.REFRESH,
             {"service_blacklist": ["^Test Description New Item 1"]},
             ["New Item 2", "Vanished Item 1", "Vanished Item 2"],
             (1, 2, 0),
         ),
         (
-            discovery.DiscoveryMode.REMOVE,
+            DiscoveryMode.REMOVE,
             {"service_blacklist": ["^Test Description New Item 1"]},
             [],
             (0, 0, 2),
         ),
         # White-/blacklist
         (
-            discovery.DiscoveryMode.NEW,
+            DiscoveryMode.NEW,
             {
                 "service_whitelist": ["^Test Description New Item 1"],
                 "service_blacklist": ["^Test Description New Item 2"],
@@ -224,7 +237,7 @@ def test__group_by_transition(
             (1, 2, 0),
         ),
         (
-            discovery.DiscoveryMode.FIXALL,
+            DiscoveryMode.FIXALL,
             {
                 "service_whitelist": ["^Test Description New Item 1"],
                 "service_blacklist": ["^Test Description New Item 2"],
@@ -233,7 +246,7 @@ def test__group_by_transition(
             (1, 2, 0),
         ),
         (
-            discovery.DiscoveryMode.REFRESH,
+            DiscoveryMode.REFRESH,
             {
                 "service_whitelist": ["^Test Description New Item 1"],
                 "service_blacklist": ["^Test Description New Item 2"],
@@ -242,7 +255,7 @@ def test__group_by_transition(
             (1, 2, 0),
         ),
         (
-            discovery.DiscoveryMode.REMOVE,
+            DiscoveryMode.REMOVE,
             {
                 "service_whitelist": ["^Test Description New Item 1"],
                 "service_blacklist": ["^Test Description New Item 2"],
@@ -253,57 +266,57 @@ def test__group_by_transition(
         # Vanished services
         # Whitelist
         (
-            discovery.DiscoveryMode.NEW,
+            DiscoveryMode.NEW,
             {"service_whitelist": ["^Test Description Vanished Item 1"]},
             ["Vanished Item 1", "Vanished Item 2"],
             (0, 2, 0),
         ),
         (
-            discovery.DiscoveryMode.FIXALL,
+            DiscoveryMode.FIXALL,
             {"service_whitelist": ["^Test Description Vanished Item 1"]},
             ["Vanished Item 2"],
             (0, 1, 1),
         ),
         (
-            discovery.DiscoveryMode.REFRESH,
+            DiscoveryMode.REFRESH,
             {"service_whitelist": ["^Test Description Vanished Item 1"]},
             ["Vanished Item 1", "Vanished Item 2"],
             (0, 2, 0),
         ),
         (
-            discovery.DiscoveryMode.REMOVE,
+            DiscoveryMode.REMOVE,
             {"service_whitelist": ["^Test Description Vanished Item 1"]},
             ["Vanished Item 2"],
             (0, 1, 1),
         ),
         # Blacklist
         (
-            discovery.DiscoveryMode.NEW,
+            DiscoveryMode.NEW,
             {"service_blacklist": ["^Test Description Vanished Item 1"]},
             ["New Item 1", "New Item 2", "Vanished Item 1", "Vanished Item 2"],
             (2, 2, 0),
         ),
         (
-            discovery.DiscoveryMode.FIXALL,
+            DiscoveryMode.FIXALL,
             {"service_blacklist": ["^Test Description Vanished Item 1"]},
             ["New Item 1", "New Item 2", "Vanished Item 1"],
             (2, 1, 1),
         ),
         (
-            discovery.DiscoveryMode.REFRESH,
+            DiscoveryMode.REFRESH,
             {"service_blacklist": ["^Test Description Vanished Item 1"]},
             ["New Item 1", "New Item 2", "Vanished Item 1", "Vanished Item 2"],
             (2, 2, 0),
         ),
         (
-            discovery.DiscoveryMode.REMOVE,
+            DiscoveryMode.REMOVE,
             {"service_blacklist": ["^Test Description Vanished Item 1"]},
             ["Vanished Item 1"],
             (0, 1, 1),
         ),
         # White-/blacklist
         (
-            discovery.DiscoveryMode.NEW,
+            DiscoveryMode.NEW,
             {
                 "service_whitelist": ["^Test Description Vanished Item 1"],
                 "service_blacklist": ["^Test Description Vanished Item 2"],
@@ -312,7 +325,7 @@ def test__group_by_transition(
             (0, 2, 0),
         ),
         (
-            discovery.DiscoveryMode.FIXALL,
+            DiscoveryMode.FIXALL,
             {
                 "service_whitelist": ["^Test Description Vanished Item 1"],
                 "service_blacklist": ["^Test Description Vanished Item 2"],
@@ -321,7 +334,7 @@ def test__group_by_transition(
             (0, 1, 1),
         ),
         (
-            discovery.DiscoveryMode.REFRESH,
+            DiscoveryMode.REFRESH,
             {
                 "service_whitelist": ["^Test Description Vanished Item 1"],
                 "service_blacklist": ["^Test Description Vanished Item 2"],
@@ -330,7 +343,7 @@ def test__group_by_transition(
             (0, 2, 0),
         ),
         (
-            discovery.DiscoveryMode.REMOVE,
+            DiscoveryMode.REMOVE,
             {
                 "service_whitelist": ["^Test Description Vanished Item 1"],
                 "service_blacklist": ["^Test Description Vanished Item 2"],
@@ -342,8 +355,8 @@ def test__group_by_transition(
 )
 def test__get_post_discovery_services(
     monkeypatch: MonkeyPatch,
-    grouped_services: discovery.ServicesByTransition,
-    mode: discovery.DiscoveryMode,
+    grouped_services: ServicesByTransition,
+    mode: DiscoveryMode,
     parameters_rediscovery: Dict[str, List[str]],
     result_new_item_names: List[str],
     result_counts: Tuple[int, int, int],
@@ -357,11 +370,11 @@ def test__get_post_discovery_services(
 
     result = DiscoveryResult()
 
-    service_filters = discovery._ServiceFilters.from_settings(parameters_rediscovery)
+    service_filters = _ServiceFilters.from_settings(parameters_rediscovery)
 
     new_item_names = [
         entry.service.item or ""
-        for entry in discovery._get_post_discovery_autocheck_services(
+        for entry in _get_post_discovery_autocheck_services(
             HostName("hostname"),
             grouped_services,
             service_filters,
@@ -398,7 +411,7 @@ def _get_params(rediscovery: dict[str, Any]) -> config.DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": discovery.DiscoveryMode.NEW,
+                    "mode": DiscoveryMode.NEW,
                     "service_whitelist": ["^Test Description New Item 1"],
                 }
             ),
@@ -407,7 +420,7 @@ def _get_params(rediscovery: dict[str, Any]) -> config.DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": discovery.DiscoveryMode.REMOVE,
+                    "mode": DiscoveryMode.REMOVE,
                     "service_whitelist": ["^Test Description New Item 1"],
                 }
             ),
@@ -416,7 +429,7 @@ def _get_params(rediscovery: dict[str, Any]) -> config.DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": discovery.DiscoveryMode.FIXALL,
+                    "mode": DiscoveryMode.FIXALL,
                     "service_whitelist": ["^Test Description New Item 1"],
                 }
             ),
@@ -425,7 +438,7 @@ def _get_params(rediscovery: dict[str, Any]) -> config.DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": discovery.DiscoveryMode.REFRESH,
+                    "mode": DiscoveryMode.REFRESH,
                     "service_whitelist": ["^Test Description New Item 1"],
                 }
             ),
@@ -435,7 +448,7 @@ def _get_params(rediscovery: dict[str, Any]) -> config.DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": discovery.DiscoveryMode.NEW,
+                    "mode": DiscoveryMode.NEW,
                     "service_blacklist": ["^Test Description New Item 1"],
                 }
             ),
@@ -444,7 +457,7 @@ def _get_params(rediscovery: dict[str, Any]) -> config.DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": discovery.DiscoveryMode.REMOVE,
+                    "mode": DiscoveryMode.REMOVE,
                     "service_blacklist": ["^Test Description New Item 1"],
                 }
             ),
@@ -453,7 +466,7 @@ def _get_params(rediscovery: dict[str, Any]) -> config.DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": discovery.DiscoveryMode.FIXALL,
+                    "mode": DiscoveryMode.FIXALL,
                     "service_blacklist": ["^Test Description New Item 1"],
                 }
             ),
@@ -462,7 +475,7 @@ def _get_params(rediscovery: dict[str, Any]) -> config.DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": discovery.DiscoveryMode.REFRESH,
+                    "mode": DiscoveryMode.REFRESH,
                     "service_blacklist": ["^Test Description New Item 1"],
                 }
             ),
@@ -472,7 +485,7 @@ def _get_params(rediscovery: dict[str, Any]) -> config.DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": discovery.DiscoveryMode.NEW,
+                    "mode": DiscoveryMode.NEW,
                     "service_whitelist": ["^Test Description New Item 1"],
                     "service_blacklist": ["^Test Description New Item 2"],
                 }
@@ -482,7 +495,7 @@ def _get_params(rediscovery: dict[str, Any]) -> config.DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": discovery.DiscoveryMode.REMOVE,
+                    "mode": DiscoveryMode.REMOVE,
                     "service_whitelist": ["^Test Description New Item 1"],
                     "service_blacklist": ["^Test Description New Item 2"],
                 }
@@ -492,7 +505,7 @@ def _get_params(rediscovery: dict[str, Any]) -> config.DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": discovery.DiscoveryMode.FIXALL,
+                    "mode": DiscoveryMode.FIXALL,
                     "service_whitelist": ["^Test Description New Item 1"],
                     "service_blacklist": ["^Test Description New Item 2"],
                 }
@@ -502,7 +515,7 @@ def _get_params(rediscovery: dict[str, Any]) -> config.DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": discovery.DiscoveryMode.REFRESH,
+                    "mode": DiscoveryMode.REFRESH,
                     "service_whitelist": ["^Test Description New Item 1"],
                     "service_blacklist": ["^Test Description New Item 2"],
                 }
@@ -514,7 +527,7 @@ def _get_params(rediscovery: dict[str, Any]) -> config.DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": discovery.DiscoveryMode.NEW,
+                    "mode": DiscoveryMode.NEW,
                     "service_whitelist": ["^Test Description Vanished Item 1"],
                 }
             ),
@@ -523,7 +536,7 @@ def _get_params(rediscovery: dict[str, Any]) -> config.DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": discovery.DiscoveryMode.REMOVE,
+                    "mode": DiscoveryMode.REMOVE,
                     "service_whitelist": ["^Test Description Vanished Item 1"],
                 }
             ),
@@ -532,7 +545,7 @@ def _get_params(rediscovery: dict[str, Any]) -> config.DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": discovery.DiscoveryMode.FIXALL,
+                    "mode": DiscoveryMode.FIXALL,
                     "service_whitelist": ["^Test Description Vanished Item 1"],
                 }
             ),
@@ -541,7 +554,7 @@ def _get_params(rediscovery: dict[str, Any]) -> config.DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": discovery.DiscoveryMode.REFRESH,
+                    "mode": DiscoveryMode.REFRESH,
                     "service_whitelist": ["^Test Description Vanished Item 1"],
                 }
             ),
@@ -551,7 +564,7 @@ def _get_params(rediscovery: dict[str, Any]) -> config.DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": discovery.DiscoveryMode.NEW,
+                    "mode": DiscoveryMode.NEW,
                     "service_blacklist": ["^Test Description Vanished Item 1"],
                 }
             ),
@@ -560,7 +573,7 @@ def _get_params(rediscovery: dict[str, Any]) -> config.DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": discovery.DiscoveryMode.REMOVE,
+                    "mode": DiscoveryMode.REMOVE,
                     "service_blacklist": ["^Test Description Vanished Item 1"],
                 }
             ),
@@ -569,7 +582,7 @@ def _get_params(rediscovery: dict[str, Any]) -> config.DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": discovery.DiscoveryMode.FIXALL,
+                    "mode": DiscoveryMode.FIXALL,
                     "service_blacklist": ["^Test Description Vanished Item 1"],
                 }
             ),
@@ -578,7 +591,7 @@ def _get_params(rediscovery: dict[str, Any]) -> config.DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": discovery.DiscoveryMode.REFRESH,
+                    "mode": DiscoveryMode.REFRESH,
                     "service_blacklist": ["^Test Description Vanished Item 1"],
                 }
             ),
@@ -588,7 +601,7 @@ def _get_params(rediscovery: dict[str, Any]) -> config.DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": discovery.DiscoveryMode.NEW,
+                    "mode": DiscoveryMode.NEW,
                     "service_whitelist": ["^Test Description Vanished Item 1"],
                     "service_blacklist": ["^Test Description Vanished Item 2"],
                 }
@@ -598,7 +611,7 @@ def _get_params(rediscovery: dict[str, Any]) -> config.DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": discovery.DiscoveryMode.REMOVE,
+                    "mode": DiscoveryMode.REMOVE,
                     "service_whitelist": ["^Test Description Vanished Item 1"],
                     "service_blacklist": ["^Test Description Vanished Item 2"],
                 }
@@ -608,7 +621,7 @@ def _get_params(rediscovery: dict[str, Any]) -> config.DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": discovery.DiscoveryMode.FIXALL,
+                    "mode": DiscoveryMode.FIXALL,
                     "service_whitelist": ["^Test Description Vanished Item 1"],
                     "service_blacklist": ["^Test Description Vanished Item 2"],
                 }
@@ -618,7 +631,7 @@ def _get_params(rediscovery: dict[str, Any]) -> config.DiscoveryCheckParameters:
         (
             _get_params(
                 {
-                    "mode": discovery.DiscoveryMode.REFRESH,
+                    "mode": DiscoveryMode.REFRESH,
                     "service_whitelist": ["^Test Description Vanished Item 1"],
                     "service_blacklist": ["^Test Description Vanished Item 2"],
                 }
@@ -629,7 +642,7 @@ def _get_params(rediscovery: dict[str, Any]) -> config.DiscoveryCheckParameters:
 )
 def test__check_service_table(
     monkeypatch: MonkeyPatch,
-    grouped_services: discovery.ServicesByTransition,
+    grouped_services: ServicesByTransition,
     parameters: config.DiscoveryCheckParameters,
     result_need_rediscovery: bool,
 ) -> None:
@@ -639,13 +652,13 @@ def test__check_service_table(
     monkeypatch.setattr(config, "service_description", _get_service_description)
 
     rediscovery_parameters = parameters.rediscovery.copy()
-    discovery_mode = rediscovery_parameters.pop("mode", discovery.DiscoveryMode.FALLBACK)
-    assert isinstance(discovery_mode, discovery.DiscoveryMode)  # for mypy
-    results, need_rediscovery = discovery._check_service_lists(
+    discovery_mode = rediscovery_parameters.pop("mode", DiscoveryMode.FALLBACK)
+    assert isinstance(discovery_mode, DiscoveryMode)  # for mypy
+    results, need_rediscovery = _check_service_lists(
         host_name=HostName("hostname"),
         services_by_transition=grouped_services,
         params=parameters,
-        service_filters=discovery._ServiceFilters.from_settings(rediscovery_parameters),
+        service_filters=_ServiceFilters.from_settings(rediscovery_parameters),
         discovery_mode=discovery_mode,
     )
 
@@ -1467,7 +1480,7 @@ def test__discover_host_labels_and_services_on_realhost(
     scenario = realhost_scenario
 
     # we're depending on the changed host labels:
-    _ = discovery.analyse_node_labels(
+    _ = analyse_node_labels(
         host_key=scenario.host_key,
         host_key_mgmt=scenario.host_key_mgmt,
         parsed_sections_broker=scenario.parsed_sections_broker,
@@ -1496,7 +1509,7 @@ def test__perform_host_label_discovery_on_realhost(
 ) -> None:
     scenario = realhost_scenario
 
-    host_label_result = discovery.analyse_node_labels(
+    host_label_result = analyse_node_labels(
         host_key=scenario.host_key,
         host_key_mgmt=scenario.host_key_mgmt,
         parsed_sections_broker=scenario.parsed_sections_broker,
@@ -1538,7 +1551,7 @@ def test__discover_services_on_cluster(
         on_error=OnError.RAISE,
     )
 
-    discovered_services = discovery._get_cluster_services(
+    discovered_services = _get_cluster_services(
         scenario.host_config,
         scenario.parsed_sections_broker,
         OnError.RAISE,
@@ -1620,7 +1633,7 @@ def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
         ],
     )
 
-    assert discovery._get_node_services(
+    assert _get_node_services(
         HostKey(HostName("horst"), SourceType.HOST),
         HostKey(HostName("horst"), SourceType.MANAGEMENT),
         ParsedSectionsBroker({}),
@@ -1637,7 +1650,7 @@ def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
 
 
 def test_make_discovery_diff_empty() -> None:
-    assert discovery._make_diff((), (), (), ()) == "Nothing was changed."
+    assert _make_diff((), (), (), ()) == "Nothing was changed."
 
 
 class _MockService(NamedTuple):
@@ -1646,7 +1659,7 @@ class _MockService(NamedTuple):
 
 
 def test_make_discovery_diff() -> None:
-    assert discovery._make_diff(
+    assert _make_diff(
         (HostLabel("foo", "bar"),),
         (HostLabel("gee", "boo"),),
         (_MockService(CheckPluginName("norris"), "chuck"),),  # type: ignore[arg-type]

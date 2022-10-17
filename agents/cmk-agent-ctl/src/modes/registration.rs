@@ -631,24 +631,24 @@ mod tests {
             assert!(!registry.is_empty());
             assert!(registry.path().exists());
         }
-    }
 
-    #[test]
-    fn test_proxy() {
-        assert!(proxy_registration(
-            &config::RegistrationConfigHostName {
-                connection_config: registration_connection_config(None, None, true),
-                host_name: String::from(HOST_NAME),
-            },
-            &MockApi {
-                expect_root_cert_for_pairing: false,
-                expected_registration_method: Some(RegistrationMethod::HostName),
-            },
-            &MockInteractiveTrust {
-                expect_server_cert_prompt: false,
-                expect_password_prompt: true,
-            },
-        )
-        .is_ok());
+        #[test]
+        fn test_proxy() {
+            assert!(proxy_registration(
+                &config::RegistrationConfigHostName {
+                    connection_config: registration_connection_config(None, None, true),
+                    host_name: String::from(HOST_NAME),
+                },
+                &MockApi {
+                    expect_root_cert_for_pairing: false,
+                    expected_registration_method: Some(RegistrationMethod::HostName),
+                },
+                &MockInteractiveTrust {
+                    expect_server_cert_prompt: false,
+                    expect_password_prompt: true,
+                },
+            )
+            .is_ok());
+        }
     }
 }

@@ -27,7 +27,6 @@ import re
 import sys
 from dataclasses import dataclass
 from typing import (
-    Any,
     Callable,
     Collection,
     DefaultDict,
@@ -50,6 +49,7 @@ from urllib.parse import urlparse
 import requests
 import urllib3
 from kubernetes import client  # type: ignore[import]
+from pydantic import parse_raw_as
 
 import cmk.utils.password_store
 import cmk.utils.paths
@@ -1442,9 +1442,18 @@ class ClusterConnectionError(Exception):
     pass
 
 
+Model = TypeVar("Model")
+
+
+def _parse_raw_metrics(content: bytes) -> list[RawMetrics]:
+    return parse_raw_as(list[RawMetrics], content)
+
+
 def request_cluster_collector(
-    path: query.CollectorPath, config: query.CollectorSessionConfig
-) -> Any:
+    path: query.CollectorPath,
+    config: query.CollectorSessionConfig,
+    parser: Callable[[bytes], Model],
+) -> Model:
     if not config.verify_cert_collector:
         LOGGER.info("Disabling SSL certificate verification")
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -1472,7 +1481,7 @@ def request_cluster_collector(
             detail=f"Failure to establish a connection to cluster collector at URL {url}",
         ) from e
 
-    return json.loads(cluster_resp.content.decode("utf-8"))
+    return parser(cluster_resp.content)
 
 
 def make_api_client(arguments: argparse.Namespace) -> client.ApiClient:
@@ -2151,12 +2160,12 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
 
             collector_metadata_logs: List[section.CollectorHandlerLog] = []
             with collector_exception_handler(logs=collector_metadata_logs, debug=arguments.debug):
-                metadata_response = request_cluster_collector(
+                metadata = request_cluster_collector(
                     query.CollectorPath.metadata,
                     usage_config,
+                    section.Metadata.parse_raw,
                 )
 
-                metadata = section.Metadata(**metadata_response)
                 supported_collector_version = 1
                 if not _supported_cluster_collector_major_version(
                     metadata.cluster_collector_metadata.checkmk_kube_agent.project_version,
@@ -2199,9 +2208,10 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
             collector_container_logs: List[section.CollectorHandlerLog] = []
             with collector_exception_handler(logs=collector_container_logs, debug=arguments.debug):
                 LOGGER.info("Collecting container metrics from cluster collector")
-                container_metrics: Sequence[RawMetrics] = request_cluster_collector(
+                container_metrics = request_cluster_collector(
                     query.CollectorPath.container_metrics,
                     usage_config,
+                    _parse_raw_metrics,
                 )
 
                 if not container_metrics:
@@ -2260,9 +2270,10 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
             collector_machine_logs: List[section.CollectorHandlerLog] = []
             with collector_exception_handler(logs=collector_machine_logs, debug=arguments.debug):
                 LOGGER.info("Collecting machine sections from cluster collector")
-                machine_sections: List[Mapping[str, str]] = request_cluster_collector(
+                machine_sections = request_cluster_collector(
                     query.CollectorPath.machine_sections,
                     usage_config,
+                    _parse_raw_metrics,
                 )
 
                 if not machine_sections:

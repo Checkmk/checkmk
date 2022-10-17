@@ -1,0 +1,14 @@
+Title: 3par_system: Check plugin used to fail if a list of online nodes or cluster nodes was not available
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1666018801
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p17
+
+The check plugin used to fail if a list of online nodes or clusted nodes was not available in the agent output.
+
+

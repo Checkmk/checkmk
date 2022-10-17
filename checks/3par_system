@@ -34,8 +34,8 @@ def check_3par_system(item, _no_params, parsed):
     serial = parsed.get("serialNumber", "N/A")
     model = parsed.get("model", "N/A")
     sys_version = parsed.get("systemVersion", "N/A")
-    cluster_nodes = parsed.get("clusterNodes", 0)
-    online_nodes = parsed.get("onlineNodes", 0)
+    cluster_nodes = parsed.get("clusterNodes", [])
+    online_nodes = parsed.get("onlineNodes", [])
 
     yield state, "Model: %s, Version: %s, Serial number: %s, Online nodes: %s/%s" % (
         model,

@@ -110,13 +110,9 @@ def _transform_aws(d):
 
 class AWSSpecialAgentValuespecBuilder:
     # Global services that should be present just in the CMK plus edition
-    PLUS_ONLY_GLOBAL_SERVICES = {
-        "cloudfront",
-    }
+    PLUS_ONLY_GLOBAL_SERVICES = {"cloudfront", "route53"}
     # Regional services that should be present just in the CMK plus edition
-    PLUS_ONLY_REGIONAL_SERVICES = {
-        "sns",
-    }
+    PLUS_ONLY_REGIONAL_SERVICES = {"sns", "lambda"}
 
     def __init__(self, plus_edition: bool):
         self.is_plus_edition = plus_edition

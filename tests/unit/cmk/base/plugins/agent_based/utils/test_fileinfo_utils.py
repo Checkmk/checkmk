@@ -8,7 +8,7 @@ from typing import Any
 import pytest
 from freezegun import freeze_time
 
-from cmk.base.check_api import get_age_human_readable, get_filesize_human_readable
+from cmk.base.check_api import get_age_human_readable, get_filesize_human_readable, saveint
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.utils.fileinfo import (
@@ -371,6 +371,31 @@ def test__filename_matches(  # type:ignore[no-untyped-def]
                 Metric("age_newest", 98209582),
             ],
         ),
+        (
+            "my_folder/*.dat",
+            {"group_patterns": [("~my_folder/*.dat", "")]},
+            Fileinfo(
+                reftime=1563288717,
+                files={
+                    "my_folder/*.dat": FileinfoItem(
+                        name="my_folder/*.dat",
+                        missing=True,  # no files found
+                        failed=True,
+                        size=None,
+                        time=1563288717,
+                    ),
+                },
+            ),
+            # This additional test for check_fileinfo_groups_data passes,
+            # but it still passes, when the bug in _fileinfo_check_conjunctions is present
+            [
+                Result(state=State.OK, notice="Include patterns: ~my_folder/*.dat"),
+                Result(state=State.OK, summary="Count: 0"),
+                Metric("count", 0),
+                Result(state=State.OK, summary="Size: 0 B"),
+                Metric("size", 0),
+            ],
+        ),
     ],
 )
 def test_check_fileinfo_groups_data(  # type:ignore[no-untyped-def]
@@ -420,7 +445,25 @@ def test__fileinfo_check_function(  # type:ignore[no-untyped-def]
                     summary="Conjunction: size at 12 B AND newest age below 1 day 0 hours",
                 )
             ],
-        )
+        ),
+        (
+            [
+                ("Count", "count", 0, saveint),
+                ("Size", "size", 0, get_filesize_human_readable),
+                ("Largest size", "size_largest", None, get_filesize_human_readable),
+                ("Smallest size", "size_smallest", None, get_filesize_human_readable),
+                ("Oldest age", "age_oldest", None, get_age_human_readable),
+                ("Newest age", "age_newest", None, get_age_human_readable),
+            ],
+            {"conjunctions": [(2, [("age_oldest_lower", 129600)])], "maxcount": (10, 20)},
+            [
+                Result(
+                    state=None,   # These None assertions are not allowed, but would be correct,
+                    summary=None, # as _fileinfo_check_conjunctions will not yield any result,
+                                  # when no file matches
+                )
+            ],
+        ),
     ],
 )
 def test__fileinfo_check_conjunctions(  # type:ignore[no-untyped-def]

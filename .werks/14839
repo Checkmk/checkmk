@@ -1,0 +1,23 @@
+Title: oracle_dataguard_stats: Bufix for wrong Recovery Status on RAC Standby
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1667554915
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+The check results in false CRITs on RAC standby databases with multiple running
+instances.  Some more changes are done, due to wrong design in old code.
+
+The option to monitor the MRP process has been removed, because it is not
+needed. The apply_lag is more important than the recovery process itself.  If
+recovery has been stopped, the monitoring of apply_lag will lead to WARN/CRIT,
+which is the most important metric in a Data-Guard environment.
+
+BREAKING Change:
+The option mrp state has been removed, because it is not needed. A missing
+recovery process (MRP0) is not an issue, until the apply_lag has a proper
+WARN/CRIT definition - that is more important than a stopped recovery in the
+standby database.

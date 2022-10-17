@@ -22,7 +22,6 @@ factory_settings["oracle_dataguard_stats"] = {
     "missing_apply_lag_state": 1,
     "active_dataguard_option": 1,
     "primary_broker_state": False,
-    "mrp_option": (0, 2),
 }
 
 
@@ -118,16 +117,14 @@ def check_oracle_dataguard_stats(item, params, parsed):  # pylint: disable=too-m
     if dgdata["database_role"] != "PHYSICAL STANDBY":
         return
 
-    mrp_status = dgdata.get("mrp_status")
-
-    mrp_started_state, mrp_stopped_state = params.get("mrp_option", (0, 2))
-    if mrp_status:
-        yield mrp_started_state, "Managed Recovery Process state %s" % mrp_status.lower()
+    if mrp_status := dgdata.get("mrp_status"):
+        yield 0, "Managed Recovery Process state %s" % mrp_status.lower()
 
         if dgdata.get("open_mode", "") == "READ ONLY WITH APPLY":
             yield params.get("active_dataguard_option"), "Active Data-Guard found"
+
     elif mrp_status is not None:
-        yield mrp_stopped_state, "Managed Recovery Process not started"
+        yield 0, "Managed Recovery Process not started"
 
     for dgstat_param in ("apply finish time", "apply lag", "transport lag"):
         raw_value = dgdata["dgstat"][dgstat_param]

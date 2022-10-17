@@ -3,14 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# REMOVE THIS:
-# type: ignore[import]
-# pylint: disable=import-error
-
 from typing import Any, Mapping
 
-from .agent_based_api.v1 import HostLabel, register, Result, RuleSetType, Service, State
-from .agent_based_api.v1.type_defs import HostLabelGenerator, StringTable
+from .agent_based_api.v1 import (  # type: ignore[import] # pylint: disable=import-error
+    HostLabel,
+    register,
+    Result,
+    RuleSetType,
+    Service,
+    State,
+)
+from .agent_based_api.v1.type_defs import (  # type: ignore[import] # pylint: disable=import-error
+    CheckResult,
+    DiscoveryResult,
+    HostLabelGenerator,
+    StringTable,
+)
 
 
 # define an appropriate section type
@@ -42,11 +50,11 @@ register.snmp_section(
 )
 
 
-def discover_norris(params: Mapping[str, Any], section: Section):
+def discover_norris(params: Mapping[str, Any], section: Section) -> DiscoveryResult:
     yield Service(...)
 
 
-def check_norris(item: str, params: Mapping[str, Any], section: Section):
+def check_norris(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     yield Result(
         state=State.UNKNOWN,
         summary="Check not implemented",
@@ -59,7 +67,9 @@ def check_norris(item: str, params: Mapping[str, Any], section: Section):
     )
 
 
-def cluster_check_norris(item: str, params: Mapping[str, Any], section: Mapping[str, Section]):
+def cluster_check_norris(
+    item: str, params: Mapping[str, Any], section: Mapping[str, Section]
+) -> CheckResult:
     """This is just an example."""
     aggregated_data = Section()
     for _node_name, _node_section in section.items():

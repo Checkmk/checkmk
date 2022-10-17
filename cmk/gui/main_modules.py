@@ -141,9 +141,7 @@ def _call_load_plugins_hooks(main_modules: List[ModuleType]) -> None:
             continue  # has no load_plugins hook, nothing to do
 
         logger.debug("Executing load_plugins hook for %s", name)
-
-        # hasattr above ensures the function is available. Mypy does not understand this.
-        module.load_plugins()  # type: ignore[attr-defined]
+        module.load_plugins()
 
     logger.debug("Finished executing load_plugin hooks")
 

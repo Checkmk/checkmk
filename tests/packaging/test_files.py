@@ -100,9 +100,7 @@ def test_package_sizes(package_path: str, pkg_format: str, min_size: int, max_si
     )
 
 
-def test_files_not_in_version_path(  # type:ignore[no-untyped-def]
-    package_path: str, cmk_version: str
-) -> None:
+def test_files_not_in_version_path(package_path: str, cmk_version: str) -> None:
     if not package_path.endswith(".rpm") and not package_path.endswith(".deb"):
         pytest.skip("%s is another package type" % os.path.basename(package_path))
 

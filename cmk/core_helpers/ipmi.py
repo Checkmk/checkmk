@@ -91,7 +91,7 @@ class IPMIFetcher(Fetcher[AgentRawData]):
         )
 
         # Performance: See header.
-        import pyghmi.ipmi.command as ipmi_cmd  # type: ignore[import]
+        import pyghmi.ipmi.command as ipmi_cmd
 
         try:
             self._command = ipmi_cmd.Command(
@@ -146,7 +146,7 @@ class IPMIFetcher(Fetcher[AgentRawData]):
         self._logger.debug("Fetching sensor data via UDP from %s:623", self._command.bmc)
 
         # Performance: See header.
-        import pyghmi.ipmi.sdr as ipmi_sdr  # type: ignore[import]
+        import pyghmi.ipmi.sdr as ipmi_sdr
 
         try:
             sdr = ipmi_sdr.SDR(self._command)

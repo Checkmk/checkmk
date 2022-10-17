@@ -36,21 +36,19 @@ exclude_folders = ["plugins/build", "plugins/build_32", "chroot"]
 exclude_files = ["bin/mkeventd_open514", "bin/mkevent"]
 
 
-def find_debugs(line):
+def find_debugs(line: str) -> re.Match[str] | None:
     return re.match(r"(pprint\.)?pp?rint[( ]", line.lstrip())
 
 
 @pytest.mark.parametrize(
     "line", ['  print "hello Word"', 'print("variable")', "  pprint(dict)", "  pprint.pprint(list)"]
 )
-def test_find_debugs(changed_files: ChangedFiles, line) -> None:  # type:ignore[no-untyped-def]
+def test_find_debugs(changed_files: ChangedFiles, line: str) -> None:
     assert find_debugs(line)
 
 
 @pytest.mark.parametrize("line", ['sys.stdout.write("message")', "# print(variable)"])
-def test_find_debugs_false(  # type:ignore[no-untyped-def]
-    changed_files: ChangedFiles, line
-) -> None:  # type:ignore[no-untyped-def]
+def test_find_debugs_false(changed_files: ChangedFiles, line: str) -> None:
     assert find_debugs(line) is None
 
 

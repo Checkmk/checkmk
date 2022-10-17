@@ -11,7 +11,7 @@ import re
 import subprocess
 from typing import List
 
-import pkg_resources as pkg  # type: ignore[import]
+import pkg_resources as pkg
 import pytest
 from pipfile import Pipfile  # type: ignore[import]
 from semver import VersionInfo  # type: ignore[import]

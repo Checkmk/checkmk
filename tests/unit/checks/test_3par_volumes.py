@@ -9,11 +9,12 @@ import pytest
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.type_defs import CheckPluginName, SectionName
+from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.threepar_volumes import parse_threepar_volumes
 from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 
 STRING_TABLE = [
@@ -47,12 +48,12 @@ def _3par_volumes_check_plugin(fix_register: FixRegister) -> CheckPlugin:
 )
 def test_discover_3par_volumes(
     check: CheckPlugin,
-    fix_register: FixRegister,
     section: StringTable,
     expected_discovery_result: Sequence[Service],
 ) -> None:
-    parse_3par_volumes = fix_register.agent_sections[SectionName("3par_volumes")].parse_function
-    assert list(check.discovery_function(parse_3par_volumes(section))) == expected_discovery_result
+    assert (
+        list(check.discovery_function(parse_threepar_volumes(section))) == expected_discovery_result
+    )
 
 
 @pytest.mark.parametrize(
@@ -205,13 +206,13 @@ def test_check_3par_volumes(
     parameters: Mapping[str, tuple[float, float]],
     expected_check_result: Sequence[Result | Metric],
 ) -> None:
-    parse_3par_volumes = fix_register.agent_sections[SectionName("3par_volumes")].parse_function
+
     assert (
         list(
             check.check_function(
                 item=item,
                 params=parameters,
-                section=parse_3par_volumes(section),
+                section=parse_threepar_volumes(section),
             )
         )
         == expected_check_result

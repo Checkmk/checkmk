@@ -3,79 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, MutableMapping
-from dataclasses import dataclass
+from collections.abc import Mapping
 from typing import Any
-
-from cmk.base.api.agent_based.type_defs import StringTable
 
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.plugins.agent_based.utils.threepar import parse_3par
+from cmk.base.plugins.agent_based.threepar_volumes import ThreeParVolumeSection
 
 factory_settings["filesystem_default_levels"] = FILESYSTEM_DEFAULT_PARAMS
-
-STATES = {
-    1: 0,
-    2: 1,
-    3: 2,
-}
-
-PROVISIONING_MAP = {
-    1: "FULL",
-    2: "TPVV",
-    3: "SNP",
-    4: "PEER",
-    5: "UNKNOWN",
-    6: "TDVV",
-    7: "DDS",
-}
-
-
-@dataclass
-class ThreePortVolume:
-    name: str | None
-    is_system_volume: bool
-    total_capacity: int
-    free_capacity: int
-    deduplication: float | None
-    compaction: float | None
-    provisioning: int
-    provisioning_type: str
-    state: int
-    wwn: str
-
-
-ThreeParVolumeSection = Mapping[str, ThreePortVolume]
-
-
-def parse_3par_volumes(string_table: StringTable) -> ThreeParVolumeSection:
-    threepar_volumes: MutableMapping[str, ThreePortVolume] = {}
-
-    for volume in parse_3par(string_table).get("members", {}):
-        total_capacity = volume["sizeMiB"]
-        capacity_efficiency = volume.get("capacityEfficiency")
-
-        threepar_volumes.setdefault(
-            volume.get("name"),
-            ThreePortVolume(
-                name=volume.get("name"),
-                is_system_volume=volume["policies"]["system"],
-                total_capacity=total_capacity,
-                free_capacity=total_capacity - volume["userSpace"]["usedMiB"],
-                deduplication=capacity_efficiency.get("deduplication")
-                if capacity_efficiency
-                else None,
-                compaction=capacity_efficiency.get("compaction") if capacity_efficiency else None,
-                provisioning=volume["userSpace"]["rawReservedMiB"] * 1024**2,
-                provisioning_type=PROVISIONING_MAP[volume["provisioningType"]],
-                state=STATES.get(volume["state"], 3),
-                wwn=volume["wwn"],
-            ),
-        )
-
-    return threepar_volumes
 
 
 def inventory_3par_volumes(section: ThreeParVolumeSection):
@@ -115,7 +51,7 @@ def check_3par_volumes(
 
 
 check_info["3par_volumes"] = {
-    "parse_function": parse_3par_volumes,
+    # Section already migrated!
     "inventory_function": inventory_3par_volumes,
     "check_function": check_3par_volumes,
     "service_description": "Volume %s",

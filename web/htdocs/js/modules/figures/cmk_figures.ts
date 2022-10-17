@@ -252,7 +252,7 @@ export interface FigureData {
     plot_definitions;
 }
 
-export class FigureBase<T extends FigureData> {
+export abstract class FigureBase<T extends FigureData> {
     _div_selector;
     _div_selection;
     svg;
@@ -323,9 +323,7 @@ export class FigureBase<T extends FigureData> {
         );
     }
 
-    getEmptyData(): T {
-        throw new Error("Method not implemented");
-    }
+    abstract getEmptyData(): T;
 
     initialize(with_debugging) {
         if (with_debugging) this._add_scheduler_debugging();

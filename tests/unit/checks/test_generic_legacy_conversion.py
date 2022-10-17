@@ -802,7 +802,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "3par_hosts",
         "3par_remotecopy",
         "3par_system",
-        "3par_volumes",
         "3ware_disks",
         "3ware_info",
         "3ware_units",

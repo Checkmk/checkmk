@@ -168,7 +168,8 @@ def _show_custom_user_attr(
             if not permission or user.may(permission):
                 vs.render_input("ua_" + name, value)
                 h = vs.help()
-                assert isinstance(h, str)  # Hmmm...
-                html.help(_u(h))
+                if isinstance(h, str):
+                    h = _u(h)
+                html.help((h))
             else:
                 html.write_text(vs.value_to_html(value))

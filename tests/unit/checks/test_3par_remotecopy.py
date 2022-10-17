@@ -9,11 +9,12 @@ import pytest
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.type_defs import CheckPluginName, SectionName
+from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.threepar_remotecopy import parse_3par_remotecopy
 
 STRING_TABLE = [['{"mode":2,"status":1,"asyncEnabled":false}']]
 
@@ -58,13 +59,9 @@ def _3par_remotecopy_check_plugin(fix_register: FixRegister) -> CheckPlugin:
 )
 def test_discover_3par_remotecopy(
     check: CheckPlugin,
-    fix_register: FixRegister,
     section: StringTable,
     expected_discovery_result: Sequence[Service],
 ) -> None:
-    parse_3par_remotecopy = fix_register.agent_sections[
-        SectionName("3par_remotecopy")
-    ].parse_function
     assert (
         list(check.discovery_function(parse_3par_remotecopy(section))) == expected_discovery_result
     )
@@ -109,13 +106,9 @@ def test_discover_3par_remotecopy(
 )
 def test_check_3par_remotecopy(
     check: CheckPlugin,
-    fix_register: FixRegister,
     section: StringTable,
     expected_check_result: Sequence[Result],
 ) -> None:
-    parse_3par_remotecopy = fix_register.agent_sections[
-        SectionName("3par_remotecopy")
-    ].parse_function
     assert (
         list(
             check.check_function(

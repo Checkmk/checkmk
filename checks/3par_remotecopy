@@ -3,12 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping
-from dataclasses import dataclass
 
-from cmk.base.api.agent_based.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils.threepar import parse_3par
-
-# example output
+from cmk.base.plugins.agent_based.threepar_remotecopy import ThreeparRemoteCopy
 
 factory_settings["threepar_remotecopy_default_levels"] = {
     1: 0,  # NORMAL
@@ -26,34 +22,6 @@ MODES = {
     2: (0, "STARTED"),
     3: (2, "STOPPED"),
 }
-
-STATUSES = {
-    1: "NORMAL",
-    2: "STARTUP",
-    3: "SHUTDOWN",
-    4: "ENABLE",
-    5: "DISABLE",
-    6: "INVALID",
-    7: "NODEDUP",
-    8: "UPGRADE",
-}
-
-
-@dataclass
-class ThreeparRemoteCopy:
-    mode: int
-    status: int
-    status_readable: str
-
-
-def parse_3par_remotecopy(string_table: StringTable) -> ThreeparRemoteCopy:
-    pre_parsed = parse_3par(string_table)
-
-    return ThreeparRemoteCopy(
-        mode=pre_parsed.get("mode", 1),
-        status=pre_parsed.get("status", 6),
-        status_readable=STATUSES[pre_parsed.get("status", 6)],
-    )
 
 
 def inventory_3par_remotecopy(section: ThreeparRemoteCopy):
@@ -75,7 +43,7 @@ def check_3par_remotecopy(
 
 
 check_info["3par_remotecopy"] = {
-    "parse_function": parse_3par_remotecopy,
+    # Section already migrated!
     "inventory_function": inventory_3par_remotecopy,
     "check_function": check_3par_remotecopy,
     "service_description": "Remote copy",

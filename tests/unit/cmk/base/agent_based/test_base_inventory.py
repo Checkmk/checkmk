@@ -12,13 +12,15 @@ from tests.testlib.base import Scenario
 import cmk.utils.debug
 from cmk.utils.structured_data import RetentionIntervals, SDFilterFunc, SDPath, StructuredDataNode
 
-from cmk.base.agent_based import inventory
+import cmk.base.agent_based.inventory._inventory as _inventory
+import cmk.base.agent_based.inventory.active as active_inventory
 from cmk.base.agent_based.inventory._retentions import (
     AttributesUpdater,
     RetentionInfo,
     RetentionsTracker,
     TableUpdater,
 )
+from cmk.base.agent_based.inventory._tree_aggregator import TreeAggregator
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 from cmk.base.config import HostConfig
 
@@ -33,7 +35,7 @@ def test_aggregator_raises_collision() -> None:
     # it runs in debug mode.  So let us explicitly disable that here.
     cmk.utils.debug.disable()
 
-    result = inventory.TreeAggregator().aggregate_results(
+    result = TreeAggregator().aggregate_results(
         inventory_generator=inventory_items,
         retentions_tracker=RetentionsTracker([]),
         raw_cache_info=None,
@@ -65,7 +67,7 @@ def test__tree_nodes_are_not_equal(
     old_tree: StructuredDataNode,
     inv_tree: StructuredDataNode | None,
 ) -> None:
-    assert inventory._tree_nodes_are_equal(old_tree, inv_tree, "edge") is False
+    assert active_inventory._tree_nodes_are_equal(old_tree, inv_tree, "edge") is False
 
 
 @pytest.mark.parametrize(
@@ -76,7 +78,7 @@ def test__tree_nodes_are_not_equal(
     ],
 )
 def test__tree_nodes_are_equal(old_tree: StructuredDataNode, inv_tree: StructuredDataNode) -> None:
-    assert inventory._tree_nodes_are_equal(old_tree, inv_tree, "edge") is True
+    assert active_inventory._tree_nodes_are_equal(old_tree, inv_tree, "edge") is True
 
 
 def test_integrate_attributes() -> None:
@@ -90,7 +92,7 @@ def test_integrate_attributes() -> None:
         ),
     ]
 
-    tree_aggr = inventory.TreeAggregator()
+    tree_aggr = TreeAggregator()
     tree_aggr.aggregate_results(
         inventory_generator=inventory_items,
         retentions_tracker=RetentionsTracker([]),
@@ -154,7 +156,7 @@ def test_integrate_table_row() -> None:
         ),
     ]
 
-    tree_aggr = inventory.TreeAggregator()
+    tree_aggr = TreeAggregator()
     tree_aggr.aggregate_results(
         inventory_generator=inventory_items,
         retentions_tracker=RetentionsTracker([]),
@@ -1465,10 +1467,10 @@ def test__execute_active_check_inventory(
     ts.apply(monkeypatch)
 
     monkeypatch.setattr(
-        inventory,
-        "_inventorize_host",
-        lambda host_config, selected_sections, run_plugin_names, retentions_tracker: inventory.ActiveInventoryResult(
-            trees=inventory.InventoryTrees(
+        active_inventory,
+        "inventorize_host",
+        lambda host_config, selected_sections, run_plugin_names, retentions_tracker: _inventory.ActiveInventoryResult(
+            trees=_inventory.InventoryTrees(
                 inventory=StructuredDataNode(),
                 status_data=StructuredDataNode(),
             ),
@@ -1478,7 +1480,7 @@ def test__execute_active_check_inventory(
         ),
     )
 
-    result = inventory._execute_active_check_inventory(
+    result = active_inventory._execute_active_check_inventory(
         HostConfig.make_host_config(hostname),
         {} if failed_state is None else {"inv-fail-status": failed_state},
     )

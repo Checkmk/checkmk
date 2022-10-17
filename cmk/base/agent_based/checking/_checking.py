@@ -21,12 +21,14 @@ from typing import (
 )
 
 import cmk.utils.debug
+import cmk.utils.paths
 from cmk.utils.check_utils import ActiveCheckResult, ServiceCheckResult
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import MKTimeout
 from cmk.utils.log import console
 from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.regex import regex
+from cmk.utils.structured_data import TreeStore
 from cmk.utils.type_defs import (
     AgentRawData,
     CheckPluginName,
@@ -44,7 +46,6 @@ from cmk.utils.type_defs import (
 from cmk.core_helpers.protocol import FetcherMessage, FetcherType
 from cmk.core_helpers.type_defs import HostMeta, SectionNameCollection
 
-import cmk.base.agent_based.inventory as inventory
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_table as check_table
 import cmk.base.config as config
@@ -58,6 +59,7 @@ from cmk.base.agent_based.data_provider import (
     ParsedSectionsBroker,
     store_piggybacked_sections,
 )
+from cmk.base.agent_based.inventory import do_inv_for_realhost, RetentionsTracker
 from cmk.base.agent_based.utils import (
     check_parsing_errors,
     get_section_cluster_kwargs,
@@ -121,7 +123,7 @@ def execute_checkmk_checks(
             rtc_package=None,
         )
         if run_plugin_names is EVERYTHING:
-            inventory.do_inventory_actions_during_checking_for(
+            _do_inventory_actions_during_checking_for(
                 host_config,
                 parsed_sections_broker=broker,
             )
@@ -147,6 +149,28 @@ def execute_checkmk_checks(
         *timed_results,
         _timing_results(tracker.duration, [fetched_entry[1] for fetched_entry in fetched]),
     )
+
+
+def _do_inventory_actions_during_checking_for(
+    host_config: HostConfig,
+    *,
+    parsed_sections_broker: ParsedSectionsBroker,
+) -> None:
+    tree_store = TreeStore(cmk.utils.paths.status_data_dir)
+
+    if not host_config.do_status_data_inventory:
+        # includes cluster case
+        tree_store.remove(host_name=host_config.hostname)
+        return  # nothing to do here
+
+    trees = do_inv_for_realhost(
+        host_config=host_config,
+        parsed_sections_broker=parsed_sections_broker,
+        run_plugin_names=EVERYTHING,
+        retentions_tracker=RetentionsTracker([]),
+    )
+    if trees.status_data and not trees.status_data.is_empty():
+        tree_store.save(host_name=host_config.hostname, tree=trees.status_data)
 
 
 def _timing_results(

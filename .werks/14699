@@ -1,0 +1,16 @@
+Title: aws_agent: Remove Lambda and Route53 from CEE and CRE config
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1665993318
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+In version 2.1, Lambda and Route53 service configuration was
+visible in the CRE and CEE editions. The configuration was
+useless because the services themselves weren't released.
+With this werk the configuration is removed from CRE and CEE
+editions. The services are fully functional in the CPE edition.
+

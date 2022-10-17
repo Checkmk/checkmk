@@ -7,32 +7,16 @@ from collections.abc import Sequence
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
-from cmk.utils.type_defs import CheckPluginName
-
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-from cmk.base.plugins.agent_based.threepar_remotecopy import parse_3par_remotecopy
+from cmk.base.plugins.agent_based.threepar_remotecopy import (
+    check_threepar_remotecopy,
+    discover_threepar_remotecopy,
+    parse_threepar_remotecopy,
+    THREEPAR_REMOTECOPY_DEFAULT_LEVELS,
+)
 
 STRING_TABLE = [['{"mode":2,"status":1,"asyncEnabled":false}']]
-
-THREEPAR_REMOTECOPY_DEFAULT_LEVELS = {
-    1: 0,  # NORMAL
-    2: 1,  # STARTUP
-    3: 1,  # SHUTDOWN
-    4: 0,  # ENABLE
-    5: 2,  # DISABLE
-    6: 2,  # INVALID
-    7: 1,  # NODEDUP
-    8: 0,  # UPGRADE
-}
-
-
-@pytest.fixture(name="check")
-def _3par_remotecopy_check_plugin(fix_register: FixRegister) -> CheckPlugin:
-    return fix_register.check_plugins[CheckPluginName("3par_remotecopy")]
 
 
 @pytest.mark.parametrize(
@@ -58,12 +42,12 @@ def _3par_remotecopy_check_plugin(fix_register: FixRegister) -> CheckPlugin:
     ],
 )
 def test_discover_3par_remotecopy(
-    check: CheckPlugin,
     section: StringTable,
     expected_discovery_result: Sequence[Service],
 ) -> None:
     assert (
-        list(check.discovery_function(parse_3par_remotecopy(section))) == expected_discovery_result
+        list(discover_threepar_remotecopy(parse_threepar_remotecopy(section)))
+        == expected_discovery_result
     )
 
 
@@ -105,16 +89,14 @@ def test_discover_3par_remotecopy(
     ],
 )
 def test_check_3par_remotecopy(
-    check: CheckPlugin,
     section: StringTable,
     expected_check_result: Sequence[Result],
 ) -> None:
     assert (
         list(
-            check.check_function(
-                item="",
+            check_threepar_remotecopy(
                 params=THREEPAR_REMOTECOPY_DEFAULT_LEVELS,
-                section=parse_3par_remotecopy(section),
+                section=parse_threepar_remotecopy(section),
             )
         )
         == expected_check_result

@@ -84,7 +84,6 @@ def execute_tests_in_container(
             logger.info("| Next steps:")
             logger.info("| ")
             logger.info("| /git/scripts/run-pipenv shell")
-            logger.info("| cd /git")
             logger.info("| ")
             logger.info("| ... start whatever test you want, for example:")
             logger.info("| ")

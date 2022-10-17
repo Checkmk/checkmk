@@ -84,6 +84,10 @@ def _run_cmd(debug: bool, cmd: str) -> List[str]:
     ).stdout.splitlines(keepends=True)
 
 
+def normalize_str(line: str) -> str:
+    return line.rstrip("\n").rstrip("\r")
+
+
 def main(sys_argv=None):  # pylint: disable=too-many-branches
     if sys_argv is None:
         replace_passwords()
@@ -219,7 +223,7 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
     if fetch_agent_info:
         print("<<<emcvnx_agent:sep(58)>>>")
         for line in run("getagent"):
-            print(line, end=" ")
+            print(normalize_str(line))
 
     #
     # all other sections of agent output
@@ -236,7 +240,7 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
                 if header is not None:
                     print("[[[%s]]]" % header)
                 for line in run(cmd_option):
-                    print(line, end=" ")
+                    print(normalize_str(line))
 
     if g_profile:
         g_profile_path = Path("emcvnx_profile.out")

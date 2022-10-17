@@ -1,0 +1,14 @@
+Title: Fix crash in fileinfo groups plugin if no matching pattern is found
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1666077870
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p15
+
+If no matching pattern is found in the fileinfo check it used to crash with a "TypeError". This has been fixed now.
+No user interaction required.
+

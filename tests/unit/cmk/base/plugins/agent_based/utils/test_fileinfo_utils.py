@@ -409,6 +409,34 @@ def test__filename_matches(filename, reftime, inclusion, exclusion, expected_res
                 Metric("age_newest", 98209582),
             ],
         ),
+        pytest.param(
+            "my_folder/*.dat",
+            {
+                "group_patterns": [("~my_folder/*.dat", "")],
+                "conjunctions": [(2, [("age_oldest_lower", 129600)])],
+                "maxcount": (10, 20),
+            },
+            Fileinfo(
+                reftime=1563288717,
+                files={
+                    "my_folder/*.dat": FileinfoItem(
+                        name="my_folder/*.dat",
+                        missing=True,  # no files found
+                        failed=True,
+                        size=None,
+                        time=1563288717,
+                    ),
+                },
+            ),
+            [
+                Result(state=State.OK, notice="Include patterns: ~my_folder/*.dat"),
+                Result(state=State.OK, summary="Count: 0"),
+                Metric("count", 0.0, levels=(10.0, 20.0)),
+                Result(state=State.OK, summary="Size: 0 B"),
+                Metric("size", 0),
+            ],
+            id="test no matching pattern for conjunction",
+        ),
     ],
 )
 def test_check_fileinfo_groups_data(item, params, parsed, expected_result):
@@ -453,7 +481,7 @@ def test__fileinfo_check_function(check_definition, params, expected_result):
                     state=State.CRIT, summary="Conjunction: size at 12 B AND newest age below 24 h"
                 )
             ],
-        )
+        ),
     ],
 )
 def test__fileinfo_check_conjunctions(check_definition, params, expected_result):

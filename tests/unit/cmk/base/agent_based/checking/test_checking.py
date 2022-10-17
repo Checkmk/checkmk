@@ -13,7 +13,7 @@ from cmk.utils.check_utils import ServiceCheckResult
 from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.utils.type_defs import LegacyCheckParameters
 
-import cmk.base.agent_based.checking as checking
+import cmk.base.agent_based.checking._checking as checking
 from cmk.base.api.agent_based.checking_classes import Metric, Result, State
 
 

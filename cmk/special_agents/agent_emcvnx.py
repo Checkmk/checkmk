@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -21,10 +20,14 @@
 
 import cProfile
 import getopt
-import os
+import shlex
+import shutil
+import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, List
+
+from cmk.utils.password_store import replace_passwords
 
 
 def usage():
@@ -68,8 +71,26 @@ OPTIONS:
 #############################################################################
 
 
-def main(sys_argv=None):
+def _run_cmd(debug: bool, cmd: str) -> List[str]:
+    if debug:
+        sys.stderr.write("executing external command: %s\n" % cmd)
+
+    return subprocess.run(
+        shlex.split(cmd),
+        stderr=subprocess.STDOUT,
+        stdout=subprocess.PIPE,
+        check=False,
+        encoding="utf-8",
+    ).stdout.splitlines(keepends=True)
+
+
+def normalize_str(line: str) -> str:
+    return line.rstrip("\n").rstrip("\r")
+
+
+def main(sys_argv=None):  # pylint: disable=too-many-branches
     if sys_argv is None:
+        replace_passwords()
         sys_argv = sys.argv[1:]
 
     short_options = "hu:p:t:m:i:"
@@ -158,6 +179,10 @@ def main(sys_argv=None):
     except ValueError:
         pass
 
+    if not shutil.which("naviseccli"):
+        sys.stderr.write('The command "naviseccli" could not be found. Terminating.\n')
+        sys.exit(1)
+
     #############################################################################
     # fetch information by calling naviseccli
     #############################################################################
@@ -176,39 +201,29 @@ def main(sys_argv=None):
     # check_mk section of agent output
     #
 
-    cmd = basecmd + "getall -sp"
-    if opt_debug:
-        sys.stderr.write("executing external command: %s\n" % cmd)
+    def run(cmd):
+        return _run_cmd(opt_debug, basecmd + cmd)
 
     # Now read the whole output of the command
-    cmdout = [l.strip() for l in os.popen(cmd + " 2>&1").readlines()]  # nosec
+    cmdout = run("getall -sp")
 
-    if cmdout:
-        if "naviseccli: not found" in cmdout[0]:
-            sys.stderr.write('The command "naviseccli" could not be found. Terminating.\n')
-            sys.exit(1)
-
-        elif cmdout[0].startswith("Security file not found"):
-            sys.stderr.write(
-                "Could not find security file. Please provide valid user "
-                "credentials if you don't have a security file.\n"
-            )
-            sys.exit(1)
+    if cmdout and cmdout[0].startswith("Security file not found"):
+        sys.stderr.write(
+            "Could not find security file. Please provide valid user "
+            "credentials if you don't have a security file.\n"
+        )
+        sys.exit(1)
 
     print("<<<emcvnx_info:sep(58)>>>")
     for line in cmdout:
-        print(line)
+        print(line.strip())
 
     # if module "agent" was requested, fetch additional information about the
     # agent, e. g. Model and Revision
     if fetch_agent_info:
         print("<<<emcvnx_agent:sep(58)>>>")
-        cmd = basecmd + "getagent"
-        if opt_debug:
-            sys.stderr.write("executing external command: %s\n" % cmd)
-
-        for line in os.popen(cmd).readlines():  # nosec
-            print(line, end=" ")
+        for line in run("getagent"):
+            print(normalize_str(line))
 
     #
     # all other sections of agent output
@@ -224,11 +239,8 @@ def main(sys_argv=None):
             for header, cmd_option in module_options["cmd_options"]:
                 if header is not None:
                     print("[[[%s]]]" % header)
-                cmd = basecmd + cmd_option
-                if opt_debug:
-                    sys.stderr.write("executing external command: %s\n" % cmd)
-                for line in os.popen(cmd).readlines():  # nosec
-                    print(line, end=" ")
+                for line in run(cmd_option):
+                    print(normalize_str(line))
 
     if g_profile:
         g_profile_path = Path("emcvnx_profile.out")

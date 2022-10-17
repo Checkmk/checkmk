@@ -1,0 +1,16 @@
+Title: EMC VNX Section fix
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1665999477
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p15
+
+The EMC VNX agent would sometimes begin an agent section with a leading space, " <<<" instead of "<<<".
+This lead to a "ValueError" during discovery.
+
+This has been fixed now. No user interaction required.
+

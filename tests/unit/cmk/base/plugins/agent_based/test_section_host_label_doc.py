@@ -39,7 +39,6 @@ ALL_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
 
 
 KNOWN_MISSING_DOCSTRING: Final = {  # TODO CMK-7660
-    "esx_vsphere_vm",
     "k8s_daemon_pods",
     "k8s_ingress_infos",
     "k8s_job_info",

@@ -18,7 +18,7 @@ from cmk.gui.userdb import htpasswd
 
 @pytest.fixture(autouse=True)
 def reduce_bcrypt_rounds(monkeypatch: MonkeyPatch) -> None:
-    """Reduce the number of rounds for hashing bcrypt"""
+    """Reduce the number of rounds for bcrypt hashing"""
     monkeypatch.setattr("cmk.utils.crypto.password_hashing.BCRYPT_ROUNDS", 4)
 
 
@@ -46,30 +46,6 @@ def htpasswd_file_fixture(tmp_path: Path) -> Path:
         encoding="utf-8",
     )
     return Path(htpasswd_file_path)
-
-
-def test_htpasswd_exists(htpasswd_file: Path) -> None:
-    assert htpasswd.Htpasswd(htpasswd_file).exists("cmkadmin")
-    assert htpasswd.Htpasswd(htpasswd_file).exists("locked")
-    assert not htpasswd.Htpasswd(htpasswd_file).exists("not-existing")
-    assert not htpasswd.Htpasswd(htpasswd_file).exists("")
-    assert htpasswd.Htpasswd(htpasswd_file).exists("bärnd")
-
-
-def test_htpasswd_load(htpasswd_file: Path) -> None:
-    credentials = htpasswd.Htpasswd(htpasswd_file).load()
-    assert credentials[UserId("cmkadmin")] == "NEr3kqi287FQc"
-    assert isinstance(credentials[UserId("cmkadmin")], str)
-    assert credentials[UserId("bärnd")] == "$apr1$/FU.SwEZ$Ye0XG1Huf2j7Jws7KD.h2/"
-
-
-def test_htpasswd_save(htpasswd_file: Path) -> None:
-    credentials = htpasswd.Htpasswd(htpasswd_file).load()
-
-    saved_file = htpasswd_file.with_suffix(".saved")
-    htpasswd.Htpasswd(saved_file).save(credentials)
-
-    assert htpasswd_file.open(encoding="utf-8").read() == saved_file.open(encoding="utf-8").read()
 
 
 @pytest.mark.parametrize(
@@ -106,7 +82,8 @@ def test_truncation_error() -> None:
 
 def test_user_connector_verify_password(htpasswd_file: Path, monkeypatch: MonkeyPatch) -> None:
     c = htpasswd.HtpasswdUserConnector({})
-    monkeypatch.setattr(c, "_get_htpasswd", lambda: htpasswd.Htpasswd(htpasswd_file))
+    mock_htpwd = htpasswd.Htpasswd(htpasswd_file)
+    monkeypatch.setattr(c, "_htpasswd", mock_htpwd)
 
     assert c.check_credentials(UserId("cmkadmin"), "cmk") == "cmkadmin"
     assert c.check_credentials(UserId("bärnd"), "cmk") == "bärnd"

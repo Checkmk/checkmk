@@ -551,7 +551,7 @@ def test_check_credentials_local_user_create_htpasswd_user_ad_hoc() -> None:
     assert not userdb._user_exists_according_to_profile(user_id)
     assert user_id not in _load_users_uncached(lock=False)
 
-    htpasswd.Htpasswd(Path(cmk.utils.paths.htpasswd_file)).save(
+    htpasswd.Htpasswd(Path(cmk.utils.paths.htpasswd_file)).save_all(
         {user_id: htpasswd.hash_password("cmk")}
     )
     # Once a user exists in the htpasswd, the GUI treats the user as existing user and will

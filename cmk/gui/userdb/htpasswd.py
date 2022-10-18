@@ -6,8 +6,8 @@
 from pathlib import Path
 
 import cmk.utils.paths
-import cmk.utils.store as store
 from cmk.utils.crypto import password_hashing
+from cmk.utils.store.htpasswd import Htpasswd
 from cmk.utils.type_defs import UserId
 
 from cmk.gui.exceptions import MKUserError
@@ -18,39 +18,6 @@ from cmk.gui.plugins.userdb.utils import (
     UserConnector,
 )
 from cmk.gui.type_defs import UserSpec
-
-
-class Htpasswd:
-    """Thin wrapper for loading and saving the htpasswd file"""
-
-    def __init__(self, path: Path) -> None:
-        super().__init__()
-        self._path = path
-
-    def load(self) -> dict[UserId, str]:
-        """Loads the contents of a valid htpasswd file into a dictionary and returns the dictionary"""
-        entries = {}
-
-        with self._path.open(encoding="utf-8") as f:
-            for l in f:
-                if ":" not in l:
-                    continue
-
-                user_id, pw_hash = l.split(":", 1)
-                entries[UserId(user_id)] = pw_hash.rstrip("\n")
-
-        return entries
-
-    def exists(self, user_id: str) -> bool:
-        """Whether or not a user exists according to the htpasswd file"""
-        return user_id in self.load()
-
-    def save(self, entries: dict[UserId, str]) -> None:
-        """Save the dictionary entries (unicode username and hash) to the htpasswd file"""
-        output = (
-            "\n".join(f"{username}:{hash_}" for username, hash_ in sorted(entries.items())) + "\n"
-        )
-        store.save_text_to_file("%s" % self._path, output)
 
 
 # Checkmk supports different authentication frontends for verifying the
@@ -98,6 +65,10 @@ class HtpasswdUserConnector(UserConnector):
     def short_title(cls) -> str:
         return _("htpasswd")
 
+    def __init__(self, cfg) -> None:  # type:ignore[no-untyped-def]
+        super().__init__(cfg)
+        self._htpasswd = Htpasswd(Path(cmk.utils.paths.htpasswd_file))
+
     #
     # USERDB API METHODS
     #
@@ -106,28 +77,21 @@ class HtpasswdUserConnector(UserConnector):
         return True
 
     def check_credentials(self, user_id: UserId, password: str) -> CheckCredentialsResult:
-        users = self._get_htpasswd().load()
-        if user_id not in users:
-            return None  # not existing user, skip over
+        if not (pw_hash := self._htpasswd.get_hash(user_id)):
+            return None  # not user in htpasswd, skip so other connectors can try
 
         if self._is_automation_user(user_id):
             raise MKUserError(None, _("Automation user rejected"))
 
-        if self._password_valid(users[user_id], password):
-            return user_id
-        return False
-
-    # ? the exact type of user_id is unclear, str, maybe, based on the line "if user_id not in users" ?
-    def _is_automation_user(self, user_id: UserId) -> bool:
-        return Path(cmk.utils.paths.var_dir, "web", str(user_id), "automation.secret").is_file()
-
-    def _password_valid(self, pwhash: str, password: str) -> bool:
         try:
-            password_hashing.verify(password, pwhash)
+            password_hashing.verify(password, pw_hash)
         except (password_hashing.PasswordInvalidError, ValueError):
             return False
         else:
-            return True
+            return user_id
+
+    def _is_automation_user(self, user_id: UserId) -> bool:
+        return Path(cmk.utils.paths.var_dir, "web", str(user_id), "automation.secret").is_file()
 
     def save_users(self, users: dict[UserId, UserSpec]) -> None:
         # Apache htpasswd. We only store passwords here. During
@@ -145,7 +109,4 @@ class HtpasswdUserConnector(UserConnector):
             if user.get("password"):
                 entries[uid] = "%s%s" % ("!" if user.get("locked", False) else "", user["password"])
 
-        self._get_htpasswd().save(entries)
-
-    def _get_htpasswd(self) -> Htpasswd:
-        return Htpasswd(Path(cmk.utils.paths.htpasswd_file))
+        self._htpasswd.save_all(entries)

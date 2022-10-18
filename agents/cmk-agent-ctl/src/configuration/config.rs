@@ -17,14 +17,6 @@ use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 use string_enum::StringEnum;
 
-#[derive(StringEnum, PartialEq, Eq)]
-pub enum ConnectionType {
-    /// `push-agent`
-    Push,
-    /// `pull-agent`
-    Pull,
-}
-
 pub trait JSONLoader: DeserializeOwned {
     fn load(path: &Path) -> AnyhowResult<Self> {
         Ok(serde_json::from_str(&fs::read_to_string(path)?)?)
@@ -189,43 +181,6 @@ pub struct RuntimeConfig {
 impl TOMLLoader for RuntimeConfig {}
 impl TOMLLoaderMissingSafe for RuntimeConfig {}
 
-#[derive(Debug, Clone)]
-struct LegacyPullMarker(std::path::PathBuf);
-
-impl LegacyPullMarker {
-    fn new<P>(path: P) -> Self
-    where
-        P: AsRef<Path>,
-    {
-        Self(path.as_ref().to_owned())
-    }
-
-    fn exists(&self) -> bool {
-        self.0.exists()
-    }
-
-    fn remove(&self) -> std::io::Result<()> {
-        if !&self.exists() {
-            return Ok(());
-        }
-
-        fs::remove_file(&self.0)
-    }
-
-    fn create(&self) -> std::io::Result<()> {
-        fs::write(
-            &self.0,
-            "This file has been placed as a marker for cmk-agent-ctl\n\
-            to allow unencrypted legacy agent pull mode.\n\
-            It will be removed automatically on first successful agent registration.\n\
-            You can remove it manually to disallow legacy mode, but note that\n\
-            for regular operation you need to register the agent anyway.\n\
-            \n\
-            To secure the connection run `cmk-agent-ctl register`.\n",
-        )
-    }
-}
-
 #[derive(Clone)]
 pub struct ClientConfig {
     pub use_proxy: bool,
@@ -291,86 +246,6 @@ impl PullConfig {
     pub fn has_connections(&self) -> bool {
         !self.registry.pull_is_empty()
     }
-}
-
-#[serde_with::serde_as]
-#[derive(Serialize, Deserialize, Eq, Debug, Clone)]
-pub struct TrustedConnection {
-    #[serde_as(as = "DisplayFromStr")]
-    pub uuid: uuid::Uuid,
-    pub private_key: String,
-    pub certificate: String,
-    pub root_cert: String,
-}
-
-impl PartialEq for TrustedConnection {
-    fn eq(&self, other: &Self) -> bool {
-        self.uuid == other.uuid
-    }
-}
-
-impl std::hash::Hash for TrustedConnection {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.uuid.hash(state);
-    }
-}
-
-impl std::borrow::Borrow<uuid::Uuid> for TrustedConnection {
-    fn borrow(&self) -> &uuid::Uuid {
-        &self.uuid
-    }
-}
-
-impl TrustedConnection {
-    pub fn tls_handshake_credentials(&self) -> AnyhowResult<certs::HandshakeCredentials> {
-        Ok(certs::HandshakeCredentials {
-            server_root_cert: &self.root_cert,
-            client_identity: Some(self.identity()?),
-        })
-    }
-
-    fn identity(&self) -> AnyhowResult<certs::TLSIdentity> {
-        Ok(certs::TLSIdentity {
-            cert_chain: vec![certs::rustls_certificate(&self.certificate)?],
-            key_der: certs::rustls_private_key(&self.private_key)?,
-        })
-    }
-}
-
-#[derive(Serialize, Deserialize, Eq, Debug, Clone)]
-pub struct TrustedConnectionWithRemote {
-    #[serde(flatten)]
-    pub trust: TrustedConnection,
-    pub receiver_port: u16,
-}
-
-impl PartialEq for TrustedConnectionWithRemote {
-    fn eq(&self, other: &Self) -> bool {
-        self.trust == other.trust
-    }
-}
-
-#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone, Default)]
-struct RegisteredConnections {
-    #[serde(default)]
-    push: HashMap<site_spec::SiteID, TrustedConnectionWithRemote>,
-
-    #[serde(default)]
-    pull: HashMap<site_spec::SiteID, TrustedConnectionWithRemote>,
-
-    #[serde(default)]
-    pull_imported: std::collections::HashSet<TrustedConnection>,
-}
-
-impl JSONLoader for RegisteredConnections {}
-impl JSONLoaderMissingSafe for RegisteredConnections {}
-
-fn mtime(path: &Path) -> AnyhowResult<Option<SystemTime>> {
-    Ok(if path.exists() {
-        Some(fs::metadata(&path)?.modified()?)
-    } else {
-        None
-    })
 }
 
 #[derive(Clone)]
@@ -586,6 +461,131 @@ impl Registry {
         self.last_reload = mtime(&self.path)?;
         Ok(())
     }
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone, Default)]
+struct RegisteredConnections {
+    #[serde(default)]
+    push: HashMap<site_spec::SiteID, TrustedConnectionWithRemote>,
+
+    #[serde(default)]
+    pull: HashMap<site_spec::SiteID, TrustedConnectionWithRemote>,
+
+    #[serde(default)]
+    pull_imported: std::collections::HashSet<TrustedConnection>,
+}
+
+impl JSONLoader for RegisteredConnections {}
+impl JSONLoaderMissingSafe for RegisteredConnections {}
+
+#[derive(Serialize, Deserialize, Eq, Debug, Clone)]
+pub struct TrustedConnectionWithRemote {
+    #[serde(flatten)]
+    pub trust: TrustedConnection,
+    pub receiver_port: u16,
+}
+
+impl PartialEq for TrustedConnectionWithRemote {
+    fn eq(&self, other: &Self) -> bool {
+        self.trust == other.trust
+    }
+}
+
+#[serde_with::serde_as]
+#[derive(Serialize, Deserialize, Eq, Debug, Clone)]
+pub struct TrustedConnection {
+    #[serde_as(as = "DisplayFromStr")]
+    pub uuid: uuid::Uuid,
+    pub private_key: String,
+    pub certificate: String,
+    pub root_cert: String,
+}
+
+impl PartialEq for TrustedConnection {
+    fn eq(&self, other: &Self) -> bool {
+        self.uuid == other.uuid
+    }
+}
+
+impl std::hash::Hash for TrustedConnection {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.uuid.hash(state);
+    }
+}
+
+impl std::borrow::Borrow<uuid::Uuid> for TrustedConnection {
+    fn borrow(&self) -> &uuid::Uuid {
+        &self.uuid
+    }
+}
+
+impl TrustedConnection {
+    pub fn tls_handshake_credentials(&self) -> AnyhowResult<certs::HandshakeCredentials> {
+        Ok(certs::HandshakeCredentials {
+            server_root_cert: &self.root_cert,
+            client_identity: Some(self.identity()?),
+        })
+    }
+
+    fn identity(&self) -> AnyhowResult<certs::TLSIdentity> {
+        Ok(certs::TLSIdentity {
+            cert_chain: vec![certs::rustls_certificate(&self.certificate)?],
+            key_der: certs::rustls_private_key(&self.private_key)?,
+        })
+    }
+}
+
+#[derive(Debug, Clone)]
+struct LegacyPullMarker(std::path::PathBuf);
+
+impl LegacyPullMarker {
+    fn new<P>(path: P) -> Self
+    where
+        P: AsRef<Path>,
+    {
+        Self(path.as_ref().to_owned())
+    }
+
+    fn exists(&self) -> bool {
+        self.0.exists()
+    }
+
+    fn remove(&self) -> std::io::Result<()> {
+        if !&self.exists() {
+            return Ok(());
+        }
+
+        fs::remove_file(&self.0)
+    }
+
+    fn create(&self) -> std::io::Result<()> {
+        fs::write(
+            &self.0,
+            "This file has been placed as a marker for cmk-agent-ctl\n\
+            to allow unencrypted legacy agent pull mode.\n\
+            It will be removed automatically on first successful agent registration.\n\
+            You can remove it manually to disallow legacy mode, but note that\n\
+            for regular operation you need to register the agent anyway.\n\
+            \n\
+            To secure the connection run `cmk-agent-ctl register`.\n",
+        )
+    }
+}
+
+#[derive(StringEnum, PartialEq, Eq)]
+pub enum ConnectionType {
+    /// `push-agent`
+    Push,
+    /// `pull-agent`
+    Pull,
+}
+
+fn mtime(path: &Path) -> AnyhowResult<Option<SystemTime>> {
+    Ok(if path.exists() {
+        Some(fs::metadata(&path)?.modified()?)
+    } else {
+        None
+    })
 }
 
 #[cfg(test)]

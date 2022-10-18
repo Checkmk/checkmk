@@ -16,6 +16,7 @@ from typing import DefaultDict, Dict, Final, List, Optional, Sequence
 from cmk.utils.type_defs import SectionName
 
 ALL_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
+    "cmk/check_mk_server",
     "cmk/device_type",
     "cmk/docker_image",
     "cmk/docker_image_name",
@@ -47,7 +48,6 @@ KNOWN_MISSING_DOCSTRING: Final = {  # TODO CMK-7660
     "k8s_replicas",
     "k8s_service_port",
     "k8s_stateful_set_replicas",
-    "omd_info",
 }
 
 KNOWN_NON_BUILTIN_LABEL_PRODUCERS: Final = {

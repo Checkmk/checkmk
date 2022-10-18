@@ -55,6 +55,14 @@ def parse_omd_info(string_table: StringTable) -> Section:
 
 
 def host_label_omd_info(section: Section) -> HostLabelGenerator:
+    """Host label function
+
+    Labels:
+
+        cmk/check_mk_server:
+            This label is set to "yes" if the section contains site information
+
+    """
     if section.get("sites"):
         yield HostLabel("cmk/check_mk_server", "yes")
 

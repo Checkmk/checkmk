@@ -48,8 +48,8 @@ def hash_password(password: str) -> str:
 
     :param password: The password to hash. The password must not be longer than 72 bytes.
 
-    :return: The hashed password Modular Crypto Format (see module docstring). The identifier for
-             bcrypt is "2b".
+    :return: The hashed password Modular Crypto Format (see module docstring). The identifier used
+             for bcrypt is "2y" for compatibility with htpasswd.
 
     :raise: PasswordTooLongError if the provided password is longer than 72 bytes.
     :raise: ValueError if the input password contains null bytes.

@@ -82,3 +82,28 @@ def test_delete_partially_existing_multiple_events(
     status_server.handle_client(s, True, "127.0.0.1")
 
     assert len(event_status.events()) == 0
+
+
+def test_delete_events_of_host(event_status: EventStatus, status_server: StatusServer) -> None:
+    """Delete all events of host"""
+    events: list[Event] = [
+        {
+            "host": "ABC1",
+            "text": "event1 text",
+            "core_host": "ABC",
+        },
+        {
+            "host": "ABC1",
+            "text": "event2 text",
+            "core_host": "ABC",
+        },
+    ]
+    for event in events:
+        event_status.new_event(CMKEventConsole.new_event(event))
+
+    assert len(event_status.events()) == 2
+
+    s = FakeStatusSocket(b"COMMAND DELETE_EVENTS_OF_HOST;ABC1;testuser")
+    status_server.handle_client(s, True, "127.0.0.1")
+
+    assert len(event_status.events()) == 0

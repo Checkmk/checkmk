@@ -12,7 +12,6 @@ from cmk.utils.defines import short_service_state_name
 from cmk.utils.type_defs import HostName
 
 import cmk.gui.mkeventd as mkeventd
-import cmk.gui.sites as sites
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config, builtin_role_ids
 from cmk.gui.data_source import ABCDataSource, data_source_registry, row_id
@@ -1384,23 +1383,7 @@ class CommandECArchiveEventsOfHost(ECCommand):
         self, cmdtag: str, spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.var("_archive_events_of_hosts"):
-            if cmdtag == "HOST":
-                tag: Optional[str] = "host"
-            elif cmdtag == "SVC":
-                tag = "service"
-            else:
-                tag = None
-
-            commands = []
-            if tag and row.get("%s_check_command" % tag, "").startswith("check_mk_active-mkevents"):
-                data = sites.live().query(
-                    "GET eventconsoleevents\n"
-                    + "Columns: event_id\n"
-                    + "Filter: host_name = %s" % row["host_name"]
-                )
-                events = ",".join([str(entry[0]) for entry in data])
-                commands = ["DELETE;%s;%s" % (events, user.id)]
-
+            commands = [f"DELETE_EVENTS_OF_HOST;{row['host_name']};{user.id}"]
             return commands, "<b>archive all events</b> of"
         return None
 

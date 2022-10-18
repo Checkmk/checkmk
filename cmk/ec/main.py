@@ -2654,6 +2654,8 @@ class StatusServer(ECServerThread):
         arguments = parts[1:]
         if command == "DELETE":
             self.handle_command_delete(arguments)
+        elif command == "DELETE_EVENTS_OF_HOST":
+            self.handle_command_delete_events_of_host(arguments)
         elif command == "RELOAD":
             self.handle_command_reload()
         elif command == "SHUTDOWN":
@@ -2686,6 +2688,12 @@ class StatusServer(ECServerThread):
         event_ids, user = arguments
         ids = {int(event_id) for event_id in event_ids.split(",")}
         self._event_status.delete_events_by(lambda event: event["id"] in ids, user)
+
+    def handle_command_delete_events_of_host(self, arguments: list[str]) -> None:
+        if len(arguments) != 2:
+            raise MKClientError("Wrong number of arguments for DELETE_EVENTS_OF_HOST")
+        hostname, user = arguments
+        self._event_status.delete_events_by(lambda event: event["host"] == hostname, user)
 
     def handle_command_update(self, arguments: list[str]) -> None:
         event_id, user, acknowledged, comment, contact = arguments

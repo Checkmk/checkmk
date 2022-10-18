@@ -72,3 +72,7 @@ class MKInternalError(MKHTTPException):
 
 class MKMissingDataError(MKHTTPException):
     status = 400
+
+
+class MKNotFound(MKHTTPException):
+    status = 404

@@ -50,8 +50,10 @@ import socket
 import binascii
 import platform
 import locale
+
 if os.name == "nt":
-    import win_inet_pton 
+    # pylint: disable=import-error
+    import win_inet_pton  # pylint: disable=unused-import
 
 MK_VARDIR = os.getenv("LOGWATCH_DIR") or os.getenv("MK_VARDIR") or os.getenv("MK_STATEDIR") or "."
 

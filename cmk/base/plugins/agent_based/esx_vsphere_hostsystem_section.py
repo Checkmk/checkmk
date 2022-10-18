@@ -44,7 +44,8 @@ def host_label_function(section: Section) -> HostLabelGenerator:
 
         cmk/vsphere_object:
             This label is set to "vcenter" if the corresponding host is a
-            VMware vCenter, and to "server" if the host is an ESXi hostsystem.
+            VMware vCenter, to "server" if the host is an ESXi hostsystem
+            and to "vm" if the host is a virtual machine.
 
     """
     yield HostLabel("cmk/vsphere_object", "server")

@@ -11,7 +11,6 @@ from cmk.utils.defines import short_service_state_name
 
 import cmk.gui.escaping as escaping
 import cmk.gui.config as config
-import cmk.gui.sites as sites
 from cmk.gui.type_defs import HTTPVariables, ViewSpec
 
 import cmk.gui.mkeventd as mkeventd
@@ -1297,20 +1296,7 @@ class CommandECArchiveEventsOfHost(ECCommand):
 
     def _action(self, cmdtag, spec, row, row_index, action_rows):
         if html.request.var("_archive_events_of_hosts"):
-            if cmdtag == "HOST":
-                tag: Optional[str] = "host"
-            elif cmdtag == "SVC":
-                tag = "service"
-            else:
-                tag = None
-
-            commands = []
-            if tag and row.get("%s_check_command" % tag, "").startswith("check_mk_active-mkevents"):
-                data = sites.live().query("GET eventconsoleevents\n" + "Columns: event_id\n" +
-                                          "Filter: host_name = %s" % row["host_name"])
-                events = ",".join([str(entry[0]) for entry in data])
-                commands = ["DELETE;%s;%s" % (events, config.user.id)]
-
+            commands = [f"DELETE_EVENTS_OF_HOST;{row['host_name']};{config.user.id}"]
             return commands, "<b>archive all events</b> of"
 
 

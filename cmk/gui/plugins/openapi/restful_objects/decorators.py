@@ -53,6 +53,7 @@ from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.permissions import permission_registry
 from cmk.gui.plugins.openapi.restful_objects import permissions
+from cmk.gui.plugins.openapi.restful_objects.api_error import ApiError
 from cmk.gui.plugins.openapi.restful_objects.code_examples import code_samples
 from cmk.gui.plugins.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
 from cmk.gui.plugins.openapi.restful_objects.parameters import (
@@ -61,7 +62,6 @@ from cmk.gui.plugins.openapi.restful_objects.parameters import (
     ETAG_IF_MATCH_HEADER,
 )
 from cmk.gui.plugins.openapi.restful_objects.params import path_parameters, to_openapi, to_schema
-from cmk.gui.plugins.openapi.restful_objects.response_schemas import ApiError
 from cmk.gui.plugins.openapi.restful_objects.specification import SPEC
 from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     ContentObject,

@@ -53,6 +53,7 @@ from cmk.gui.http import Response
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.openapi.endpoints.utils import folder_slug
 from cmk.gui.plugins.openapi.restful_objects import (
+    api_error,
     constructors,
     Endpoint,
     permissions,
@@ -195,7 +196,7 @@ class FailedHosts(BaseSchema):
     )
 
 
-class BulkHostActionWithFailedHosts(response_schemas.ApiError):
+class BulkHostActionWithFailedHosts(api_error.ApiError):
     ext = fields.Nested(
         FailedHosts,
         description="Details for which hosts have failed",

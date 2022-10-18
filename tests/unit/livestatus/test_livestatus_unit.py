@@ -220,6 +220,7 @@ def test_create_socket_no_cert(tmpdir):
         ("1234", True),
         ("cmkadmin", True),
         (u"ädmin", True),
+        ("$pecial-chars_$", True),  # cannot be configured via Wato, but allowed in LDAP users
         ("12 34", False),
         (u"🙈🙉🙊", False),
         ("12\n34", False),

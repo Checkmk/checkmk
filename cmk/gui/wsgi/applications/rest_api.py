@@ -16,7 +16,7 @@ import re
 import traceback
 import urllib.parse
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, Type, TYPE_CHECKING
+from typing import Any, Callable, Mapping, TYPE_CHECKING
 
 from apispec.yaml_utils import dict_to_yaml
 from werkzeug.exceptions import HTTPException, NotFound
@@ -56,7 +56,7 @@ ARGS_KEY = "CHECK_MK_REST_API_ARGS"
 
 logger = logging.getLogger("cmk.gui.wsgi.rest_api")
 
-EXCEPTION_STATUS: Dict[Type[Exception], int] = {
+EXCEPTION_STATUS: dict[type[Exception], int] = {
     MKUserError: 400,
     MKAuthException: 401,
 }
@@ -66,7 +66,7 @@ def _verify_user(  # pylint: disable=too-many-branches
     environ: WSGIEnvironment,
     now: datetime,
 ) -> RFC7662:
-    verified: List[RFC7662] = []
+    verified: list[RFC7662] = []
 
     auth_header = environ.get("HTTP_AUTHORIZATION", "")
     basic_user = None
@@ -128,7 +128,7 @@ def _verify_user(  # pylint: disable=too-many-branches
     return final_candidate
 
 
-def user_from_basic_header(auth_header: str) -> Tuple[UserId, str]:
+def user_from_basic_header(auth_header: str) -> tuple[UserId, str]:
     """Decode a Basic Authorization header
 
     Examples:
@@ -174,7 +174,7 @@ def user_from_basic_header(auth_header: str) -> Tuple[UserId, str]:
     return UserId(user_id), secret
 
 
-def user_from_bearer_header(auth_header: str) -> Tuple[UserId, str]:
+def user_from_bearer_header(auth_header: str) -> tuple[UserId, str]:
     """
 
     Examples:
@@ -288,7 +288,7 @@ def serve_spec(
     target: EndpointTarget,
     url: str,
     content_type: str,
-    serializer: Callable[[Dict[str, Any]], str],
+    serializer: Callable[[dict[str, Any]], str],
 ) -> Response:
     data = generate_data(target=target)
     data.setdefault("servers", [])
@@ -338,7 +338,7 @@ def _url(environ: WSGIEnvironment) -> str:
 class ServeSwaggerUI:
     def __init__(self, prefix="") -> None:  # type:ignore[no-untyped-def]
         self.prefix = prefix
-        self.data: Optional[Dict[str, Any]] = None
+        self.data: dict[str, Any] | None = None
 
     def _relative_path(self, environ: WSGIEnvironment) -> str:
         path_info = environ["PATH_INFO"]
@@ -389,14 +389,14 @@ class CheckmkRESTAPI:
         self.debug = debug
         # This intermediate data structure is necessary because `Rule`s can't contain anything
         # other than str anymore. Technically they could, but the typing is now fixed to str.
-        self.endpoints: Dict[str, WSGIApplication] = {
+        self.endpoints: dict[str, WSGIApplication] = {
             "swagger-ui": ServeSwaggerUI(prefix="/[^/]+/check_mk/api/[^/]+/ui"),
             "swagger-ui-yaml": ServeSpec("swagger-ui", "yaml"),
             "swagger-ui-json": ServeSpec("swagger-ui", "json"),
             "doc-yaml": ServeSpec("doc", "yaml"),
             "doc-json": ServeSpec("doc", "json"),
         }
-        rules: List[Rule] = []
+        rules: list[Rule] = []
         endpoint: Endpoint
         for endpoint in ENDPOINT_REGISTRY:
             if self.debug:
@@ -437,7 +437,7 @@ class CheckmkRESTAPI:
         urls = self.url_map.bind_to_environ(environ)
         endpoint: Endpoint | None
         try:
-            result: Tuple[str, Mapping[str, Any]] = urls.match(return_rule=False)
+            result: tuple[str, Mapping[str, Any]] = urls.match(return_rule=False)
             endpoint_ident, matched_path_args = result  # pylint: disable=unpacking-non-sequence
             wsgi_app = self.endpoints[endpoint_ident]
             if isinstance(wsgi_app, EndpointAdapter):

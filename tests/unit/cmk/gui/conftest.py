@@ -10,15 +10,15 @@ import json
 import threading
 from contextlib import contextmanager
 from http.cookiejar import CookieJar
-from typing import Any, Callable, ContextManager, Dict, Iterator, Literal, NamedTuple, Optional
+from typing import Any, Callable, ContextManager, Iterator, Literal, NamedTuple
+from unittest import mock
+from unittest.mock import MagicMock
 
-import mock
 import pytest
 import webtest  # type: ignore[import]
 
 # TODO: Change to pytest.MonkeyPatch. It will be available in future pytest releases.
 from _pytest.monkeypatch import MonkeyPatch
-from mock import MagicMock
 from mypy_extensions import KwArg
 
 from tests.testlib.plugin_registry import reset_registries
@@ -292,8 +292,8 @@ class WebTestAppForCMK(webtest.TestApp):
 
     def __init__(self, *args, **kw) -> None:  # type:ignore[no-untyped-def]
         super().__init__(*args, **kw)
-        self.username: Optional[str] = None
-        self.password: Optional[str] = None
+        self.username: str | None = None
+        self.password: str | None = None
 
     def set_credentials(self, username, password) -> None:  # type:ignore[no-untyped-def]
         self.username = username
@@ -317,7 +317,7 @@ class WebTestAppForCMK(webtest.TestApp):
         self,
         resp: webtest.TestResponse,
         rel,
-        json_data: Optional[Dict[str, Any]] = None,
+        json_data: dict[str, Any] | None = None,
         **kw,
     ) -> webtest.TestResponse:
         """Follow a link description as defined in a restful-objects entity"""

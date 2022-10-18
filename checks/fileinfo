@@ -33,7 +33,7 @@ fileinfo_groups = []
 
 
 def _cast_value(value, data_type):
-    '''
+    """
     >>> _cast_value('abc', str)
     'abc'
 
@@ -45,7 +45,7 @@ def _cast_value(value, data_type):
 
     >>> _cast_value(None, str)
     None
-    '''
+    """
     try:
         return data_type(value)
     except (ValueError, TypeError):
@@ -53,13 +53,13 @@ def _cast_value(value, data_type):
 
 
 def _get_field(row, index):
-    '''
+    """
     >>> _get_field(['monster', 'truck', 'races'], 1)
     'truck'
 
     >>> _get_field([], 5)
     None
-    '''
+    """
     try:
         return row[index]
     except IndexError:
@@ -73,21 +73,21 @@ def _parse_single_legacy_row(row, **kwargs):
         # support the very old solaris perl based version of fileinfo
         return {}
     file_stats_dict = {
-        'name': name,
-        'size': None,
-        'time': None,
-        'status': 'ok',
+        "name": name,
+        "size": None,
+        "time": None,
+        "status": "ok",
     }
     size = _get_field(row, 1)
-    if size == 'missing':
-        file_stats_dict['status'] = 'missing'
+    if size == "missing":
+        file_stats_dict["status"] = "missing"
         return file_stats_dict
-    if size in ('not readable', ''):
-        file_stats_dict['status'] = 'stat failed'
+    if size in ("not readable", ""):
+        file_stats_dict["status"] = "stat failed"
         return file_stats_dict
 
-    file_stats_dict['size'] = _cast_value(size, int)
-    file_stats_dict['time'] = _cast_value(_get_field(row, 2), int)
+    file_stats_dict["size"] = _cast_value(size, int)
+    file_stats_dict["time"] = _cast_value(_get_field(row, 2), int)
     return file_stats_dict
 
 
@@ -96,18 +96,18 @@ def _parse_single_row(row, **kwargs):
         header_stat[0],
         _cast_value(
             header_stat[1],
-            kwargs['file_stat_data_types'][header_stat[0]],
+            kwargs["file_stat_data_types"][header_stat[0]],
         ),
-    ) for header_stat in zip(kwargs['header'], row)])
+    ) for header_stat in zip(kwargs["header"], row)])
 
 
 def _construct_fileinfo_item(name, status, file_stats_dict, FileinfoItem):
     return FileinfoItem(
         name,
-        'missing' in status,
-        'stat failed' in status,
-        file_stats_dict.get('size'),
-        file_stats_dict.get('time'),
+        "missing" in status,
+        "stat failed" in status,
+        file_stats_dict.get("size"),
+        file_stats_dict.get("time"),
     )
 
 
@@ -116,8 +116,8 @@ def parse_fileinfo(info):
         return {}
 
     parsed = {
-        'reftime': _cast_value(info[0][0], int),
-        'files': {},
+        "reftime": _cast_value(info[0][0], int),
+        "files": {},
     }
 
     if len(info) == 1:
@@ -126,10 +126,10 @@ def parse_fileinfo(info):
     FileinfoItem = collections.namedtuple("FileinfoItem", "name missing failed size time")
 
     file_stat_data_types = {
-        'name': str,
-        'size': int,
-        'time': int,
-        'status': str,
+        "name": str,
+        "size": int,
+        "time": int,
+        "status": str,
     }
 
     iter_info = iter(info)
@@ -140,7 +140,7 @@ def parse_fileinfo(info):
             # legacy section appended to a current section, or vice versa.
             # we have seen this when users monitor both SAP HANA and "regular"
             # files.
-            if row == ['[[[header]]]']:
+            if row == ["[[[header]]]"]:
                 # non-legacy
                 parse_row_func = _parse_single_row
                 header = next(iter_info)
@@ -157,11 +157,11 @@ def parse_fileinfo(info):
             header=header,
             file_stat_data_types=file_stat_data_types,
         )
-        name = file_stats_dict.get('name')
-        status = file_stats_dict.get('status')
+        name = file_stats_dict.get("name")
+        status = file_stats_dict.get("status")
         if not name or not status:
             continue
-        parsed['files'][name] = _construct_fileinfo_item(
+        parsed["files"][name] = _construct_fileinfo_item(
             name,
             status,
             file_stats_dict,
@@ -172,15 +172,16 @@ def parse_fileinfo(info):
 
 
 def _match(name: str, pattern: str) -> typing.Union[bool, typing.Match]:
-    return (regex(pattern[1:]).match(name) if pattern.startswith("~") else  #
-            fnmatch.fnmatch(name, pattern))
+    return (regex(pattern[1:]).match(name) if pattern.startswith("~") else fnmatch.fnmatch(
+        name, pattern)  #
+           )
 
 
 def fileinfo_groups_get_group_name(group_patterns, filename, reftime):
     found_these_groups = {}
     for group_name, pattern in group_patterns:
         if isinstance(pattern, str):  # support old format
-            inclusion, exclusion = pattern, ''
+            inclusion, exclusion = pattern, ""
         else:
             inclusion, exclusion = pattern
 
@@ -229,21 +230,21 @@ def fileinfo_groups_get_group_name(group_patterns, filename, reftime):
 def inventory_fileinfo_common(parsed, case):
     inventory = []
 
-    reftime = parsed.get('reftime')
+    reftime = parsed.get("reftime")
     if reftime is None:
         return inventory
 
     inventory_groups = host_extra_conf(host_name(), fileinfo_groups)
 
-    for item in parsed['files'].values():
+    for item in parsed["files"].values():
         found_groups = {}
         for group_patterns in inventory_groups:
             found_groups.update(fileinfo_groups_get_group_name(group_patterns, item.name, reftime))
 
-        if not found_groups and case == 'single' and not item.missing:
+        if not found_groups and case == "single" and not item.missing:
             inventory.append((item.name, {}))
 
-        elif found_groups and case == 'group':
+        elif found_groups and case == "group":
             for group_name, patterns in found_groups.items():
                 inventory.append((group_name, {"group_patterns": patterns}))
 
@@ -252,7 +253,7 @@ def inventory_fileinfo_common(parsed, case):
 
 def fileinfo_process_date(pattern, reftime):
     for what, the_time in [("DATE", reftime), ("YESTERDAY", reftime - 86400)]:
-        the_regex = r'((?:/|[A-Za-z]).*)\$%s:((?:%%\w.?){1,})\$(.*)' % what
+        the_regex = r"((?:/|[A-Za-z]).*)\$%s:((?:%%\w.?){1,})\$(.*)" % what
         disect = re.match(the_regex, pattern)
         if disect:
             prefix = disect.group(1)
@@ -284,18 +285,18 @@ def fileinfo_in_timerange(now, range_from, range_to):
 
 def check_fileinfo(item, params, parsed):
 
-    reftime = parsed.get('reftime')
+    reftime = parsed.get("reftime")
     if reftime is None:
         return 3, "Missing reference timestamp"
 
     outof_range_txt = fileinfo_check_timeranges(params)
 
-    file_stat = parsed['files'].get(item)
+    file_stat = parsed["files"].get(item)
     if file_stat is not None and not file_stat.missing:
         if file_stat.failed:
             return 1, "File stat failed"
         if file_stat.time is None:
-            return 1, 'File stat time failed'
+            return 1, "File stat time failed"
         age = reftime - file_stat.time
         check_definition = [
             ("Size", "size", file_stat.size, get_filesize_human_readable),
@@ -348,8 +349,8 @@ def _update_minmax(new_value: float, current_minmax: typing.Optional[typing.Tupl
 
 
 def _check_individual_files(params, file_size, file_age):
-    '''This function checks individual files against levels defined for the file group.
-    This is done to generate information for the long output.'''
+    """This function checks individual files against levels defined for the file group.
+    This is done to generate information for the long output."""
     states = []
     for key, value in [
         ("age_oldest", file_age),
@@ -362,17 +363,19 @@ def _check_individual_files(params, file_size, file_age):
         states.append(state)
 
     overall_state = max(states)
-    return overall_state, 'Age: %s, Size: %s%s' % (get_age_human_readable(file_age),
-                                                   get_filesize_human_readable(file_size),
-                                                   state_markers[overall_state])
+    return overall_state, "Age: %s, Size: %s%s" % (
+        get_age_human_readable(file_age),
+        get_filesize_human_readable(file_size),
+        state_markers[overall_state],
+    )
 
 
 def _define_fileinfo_group_check(files_matching, date_inclusion):
-    size_smallest, size_largest = files_matching['size_minmax'] or (None, None)
-    age_newest, age_oldest = files_matching['age_minmax'] or (None, None)
+    size_smallest, size_largest = files_matching["size_minmax"] or (None, None)
+    age_newest, age_oldest = files_matching["age_minmax"] or (None, None)
     return [
-        ("Count", "count", files_matching['count_all'], saveint),
-        ("Size", "size", files_matching['size_all'], get_filesize_human_readable),
+        ("Count", "count", files_matching["count_all"], saveint),
+        ("Size", "size", files_matching["size_all"], get_filesize_human_readable),
         ("Largest size", "size_largest", size_largest, get_filesize_human_readable),
         ("Smallest size", "size_smallest", size_smallest, get_filesize_human_readable),
         ("Oldest age", "age_oldest", age_oldest, get_age_human_readable),
@@ -382,10 +385,10 @@ def _define_fileinfo_group_check(files_matching, date_inclusion):
 
 
 def _get_group_patterns_from_extra_conf(item):
-    '''Return patterns from host extra conf in the event that checks are configured as
+    """Return patterns from host extra conf in the event that checks are configured as
     enforced services. This means that the group patterns are not passed to the check
     as parameters.
-    '''
+    """
     # TODO: find a better way to handle this in the new API
     return [
         rule for e in host_extra_conf(host_name(), fileinfo_groups) for rule_name, rule in e
@@ -399,22 +402,22 @@ def check_fileinfo_groups(item, params, parsed):
     date_inclusion = None
     files_stat_failed = set()
     files_matching = {
-        'count_all': 0,
-        'size_all': 0,
-        'size_minmax': None,
-        'age_minmax': None,
-        'file_text': {},
+        "count_all": 0,
+        "size_all": 0,
+        "size_minmax": None,
+        "age_minmax": None,
+        "file_text": {},
     }
 
-    skip_ok_files = params.get('shorten_multiline_output', False)
+    skip_ok_files = params.get("shorten_multiline_output", False)
 
-    reftime = parsed.get('reftime')
+    reftime = parsed.get("reftime")
     if reftime is None:
         yield 3, "Missing reference timestamp"
         return
 
     raw_group_patterns = params.get(
-        'group_patterns',
+        "group_patterns",
         # group pattern is not available in autochecks for enforced services
         _get_group_patterns_from_extra_conf(item),
     )
@@ -423,10 +426,10 @@ def check_fileinfo_groups(item, params, parsed):
         yield 3, ("No group pattern found.")
         return
 
-    group_patterns = set((p, '') if isinstance(p, str) else p for p in raw_group_patterns)
+    group_patterns = set((p, "") if isinstance(p, str) else p for p in raw_group_patterns)
 
     # Start counting values on all files
-    for file_stat in parsed.get('files', {}).values():
+    for file_stat in parsed.get("files", {}).values():
         if file_stat.missing:
             continue
 
@@ -440,19 +443,19 @@ def check_fileinfo_groups(item, params, parsed):
                 files_stat_failed.add(file_stat.name)
                 break
 
-            files_matching['size_all'] += file_stat.size
-            files_matching['count_all'] += 1
+            files_matching["size_all"] += file_stat.size
+            files_matching["count_all"] += 1
 
-            files_matching['size_minmax'] = _update_minmax(file_stat.size,
-                                                           files_matching['size_minmax'])
+            files_matching["size_minmax"] = _update_minmax(file_stat.size,
+                                                           files_matching["size_minmax"])
 
             age = reftime - file_stat.time
-            files_matching['age_minmax'] = _update_minmax(age, files_matching['age_minmax'])
+            files_matching["age_minmax"] = _update_minmax(age, files_matching["age_minmax"])
 
             # Used for long ouput information
             state, text = _check_individual_files(params, file_stat.size, age)
             if not skip_ok_files or state:
-                files_matching['file_text'][file_stat.name] = text
+                files_matching["file_text"][file_stat.name] = text
             break
 
     # Start Checking
@@ -467,7 +470,7 @@ def check_fileinfo_groups(item, params, parsed):
 
     long_output = []
     include_patterns = [i for i, _e in group_patterns]
-    exclude_patterns = [e for _i, e in group_patterns if e != '']
+    exclude_patterns = [e for _i, e in group_patterns if e != ""]
 
     long_output.append("Include patterns: %s" % ", ".join(include_patterns))
 
@@ -475,7 +478,7 @@ def check_fileinfo_groups(item, params, parsed):
         long_output.append("Exclude patterns: %s" % ", ".join(exclude_patterns))
 
     long_output.extend(
-        ['[%s] %s' % file_text for file_text in sorted(files_matching['file_text'].items())])
+        ["[%s] %s" % file_text for file_text in sorted(files_matching["file_text"].items())])
 
     if long_output:
         yield 0, "\n%s" % "\n".join(long_output)
@@ -524,12 +527,12 @@ def _fileinfo_check_conjunctions(check_definition, params):
         matches = 0
         for title, key, value, readable_f in check_definition:
             level = levels.get(key)
-            if level is not None and value >= level:
+            if level is not None and value is not None and value >= level:
                 match_texts.append("%s at %s" % (title.lower(), readable_f(level)))
                 matches += 1
 
             level_lower = levels.get("%s_lower" % key)
-            if level_lower is not None and value < level_lower:
+            if level_lower is not None and value is not None and value < level_lower:
                 match_texts.append("%s below %s" % (title.lower(), readable_f(level_lower)))
                 matches += 1
 
@@ -551,7 +554,7 @@ def inventory_fileinfo_groups(parsed):
     return inventory_fileinfo_common(parsed, "group")
 
 
-check_info['fileinfo.groups'] = {
+check_info["fileinfo.groups"] = {
     "check_function": check_fileinfo_groups,
     "inventory_function": inventory_fileinfo_groups,
     "service_description": "File group %s",

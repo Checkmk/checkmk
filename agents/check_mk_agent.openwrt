@@ -848,6 +848,32 @@ section_veritas_vcs() {
 # BEGIN COMMON AGENT CODE
 #
 
+section_job() {
+    # Get statistics about monitored jobs.
+
+    _cat_files() {
+        # read file names from stdin and write like `head -n -0 -v file`
+        while read -r file; do
+            printf "==> %s <==\n" "${file##./}"
+            cat "${file}"
+        done
+    }
+
+    (
+        cd "${MK_VARDIR}/job" 2>/dev/null || return
+        printf "<<<job>>>\n"
+        for user in *; do
+            (
+                cd "${user}" 2>/dev/null || return # return from subshell only
+                # This folder is owned (and thus writable) by the user that ran the jobs.
+                # The agent (root) must not read files that are not owned by the user.
+                # This prevents symlink or hardlink attacks.
+                find -L . -user "${user}" | _cat_files
+            )
+        done
+    )
+}
+
 section_fileinfo() {
     # fileinfo check: put patterns for files into /etc/check_mk/fileinfo.cfg
     perl -e '
@@ -900,29 +926,6 @@ section_livestatus_status() {
             fi
         done
     fi
-}
-
-# Get statistics about monitored jobs. Below the job directory there
-# is a sub directory per user that ran a job. That directory must be
-# owned by the user so that a symlink or hardlink attack for reading
-# arbitrary files can be avoided.
-section_job() {
-    (
-        cd ${MK_VARDIR}/job 2>/dev/null || return
-        echo '<<<job>>>'
-        for username in *; do
-            (
-                # the return below only terminates the subshell, not the entire function
-                cd "${username}" 2>/dev/null || return
-                if [ "$(id -u)" -eq 0 ]; then
-                    su -s "${SHELL}" "${username}" -c "head -n -0 -v *"
-                else
-                    head -n -0 -v ./*
-                fi
-                cd ..
-            )
-        done
-    )
 }
 
 section_lnx_thermal() {

@@ -172,7 +172,7 @@ def make_persisted_section_dir(
     fetcher_type: FetcherType,
     ident: str,
 ) -> Path:
-    var_dir = Path(cmk.utils.paths.var_dir)
+    var_dir: Final = Path(cmk.utils.paths.var_dir)
     return {
         FetcherType.PIGGYBACK: var_dir / "persisted_sections" / ident,
         FetcherType.SNMP: var_dir / "persisted_sections" / ident,
@@ -180,6 +180,22 @@ def make_persisted_section_dir(
         FetcherType.PROGRAM: var_dir / "persisted",
         FetcherType.PUSH_AGENT: var_dir / "persisted_sections" / ident,
         FetcherType.TCP: var_dir / "persisted",
+    }[fetcher_type]
+
+
+def make_file_cache_dir(
+    *,
+    fetcher_type: FetcherType,
+    ident: str,
+) -> Path:
+    base_dir: Final = Path(cmk.utils.paths.data_source_cache_dir)
+    return {
+        FetcherType.PIGGYBACK: base_dir / ident,
+        FetcherType.SNMP: base_dir / ident,
+        FetcherType.IPMI: base_dir / ident,
+        FetcherType.PROGRAM: base_dir / ident,
+        FetcherType.PUSH_AGENT: base_dir / ident,
+        FetcherType.TCP: Path(cmk.utils.paths.tcp_cache_dir),
     }[fetcher_type]
 
 
@@ -377,10 +393,12 @@ class _Builder:
                     source_type=SourceType.HOST,
                     fetcher_type=FetcherType.PIGGYBACK,
                     id_="piggyback",
-                    cache_dir=Path(cmk.utils.paths.data_source_cache_dir) / "piggyback",
                     simulation_mode=self.simulation_mode,
                     time_settings=config.get_config_cache().get_piggybacked_hosts_time_settings(
                         piggybacked_hostname=self.host_config.hostname
+                    ),
+                    cache_dir=make_file_cache_dir(
+                        fetcher_type=FetcherType.PIGGYBACK, ident="piggyback"
                     ),
                     file_cache_max_age=self.file_cache_max_age,
                 )
@@ -428,7 +446,7 @@ class _Builder:
                 do_status_data_inventory=self.host_config.do_status_data_inventory,
                 cache=SNMPFileCache(
                     self.host_config.hostname,
-                    base_path=Path(cmk.utils.paths.data_source_cache_dir) / id_,
+                    base_path=make_file_cache_dir(fetcher_type=FetcherType.SNMP, ident=id_),
                     max_age=(
                         MaxAge.none() if self.force_snmp_cache_refresh else self.file_cache_max_age
                     ),
@@ -483,7 +501,7 @@ class _Builder:
                     do_status_data_inventory=self.host_config.do_status_data_inventory,
                     cache=SNMPFileCache(
                         self.host_config.hostname,
-                        base_path=Path(cmk.utils.paths.data_source_cache_dir) / id_,
+                        base_path=make_file_cache_dir(fetcher_type=FetcherType.SNMP, ident=id_),
                         max_age=(
                             MaxAge.none()
                             if self.force_snmp_cache_refresh
@@ -519,7 +537,7 @@ class _Builder:
                     source_type=SourceType.MANAGEMENT,
                     fetcher_type=FetcherType.IPMI,
                     id_="mgmt_ipmi",
-                    cache_dir=Path(cmk.utils.paths.data_source_cache_dir) / "mgmt_ipmi",
+                    cache_dir=make_file_cache_dir(fetcher_type=FetcherType.IPMI, ident="mgmt_ipmi"),
                     simulation_mode=self.simulation_mode,
                     management_credentials=self.host_config.ipmi_credentials,
                     file_cache_max_age=self.file_cache_max_age,
@@ -550,7 +568,7 @@ class _Builder:
                 source_type=SourceType.HOST,
                 fetcher_type=FetcherType.PROGRAM,
                 id_="agent",
-                cache_dir=Path(cmk.utils.paths.data_source_cache_dir) / "agent",
+                cache_dir=make_file_cache_dir(fetcher_type=FetcherType.PROGRAM, ident="agent"),
                 cmdline=core_config.translate_ds_program_source_cmdline(
                     datasource_program, self.host_config, self.ipaddress
                 ),
@@ -570,7 +588,9 @@ class _Builder:
                 source_type=SourceType.HOST,
                 fetcher_type=FetcherType.PUSH_AGENT,
                 id_="push-agent",
-                cache_dir=Path(cmk.utils.paths.data_source_cache_dir) / "push-agent",
+                cache_dir=make_file_cache_dir(
+                    fetcher_type=FetcherType.PUSH_AGENT, ident="push-agent"
+                ),
                 simulation_mode=self.simulation_mode,
                 file_cache_max_age=MaxAge(interval, interval, interval),
             )
@@ -581,7 +601,7 @@ class _Builder:
                 source_type=SourceType.HOST,
                 fetcher_type=FetcherType.TCP,
                 id_="agent",
-                cache_dir=Path(cmk.utils.paths.tcp_cache_dir),
+                cache_dir=make_file_cache_dir(fetcher_type=FetcherType.TCP, ident="unused"),
                 simulation_mode=self.simulation_mode,
                 address_family=self.host_config.default_address_family,
                 agent_port=self.host_config.agent_port,
@@ -614,7 +634,9 @@ class _Builder:
                     agentname,
                     params,
                 ),
-                cache_dir=Path(cmk.utils.paths.data_source_cache_dir) / make_id(agentname),
+                cache_dir=make_file_cache_dir(
+                    fetcher_type=FetcherType.PROGRAM, ident=make_id(agentname)
+                ),
                 simulation_mode=self.simulation_mode,
                 is_cmc=config.is_cmc(),
                 file_cache_max_age=self.file_cache_max_age,

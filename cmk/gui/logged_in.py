@@ -60,7 +60,7 @@ class LoggedInUser:
         explicitly_given_permissions: Container[str] = frozenset(),
     ) -> None:
         self.id = UserId(user_id) if user_id else None
-        self.transactions = TransactionManager(request, self)
+        self.transactions = TransactionManager(self)
 
         self.confdir = _confdir_for_user_id(self.id)
         self.role_ids = self._gather_roles(self.id)

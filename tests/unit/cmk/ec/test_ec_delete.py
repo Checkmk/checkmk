@@ -3,25 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """EC delete methods with one or more event IDs"""
-import pytest
-
 from tests.testlib import CMKEventConsole
 
 from tests.unit.cmk.ec.helpers import FakeStatusSocket
 
 from cmk.ec.main import Event, EventStatus, StatusServer
-from cmk.ec.query import MKClientError
-
-
-def test_delete_nonexistent_event(status_server: StatusServer) -> None:
-    """Exception on nonexistent event ID"""
-
-    s = FakeStatusSocket(b"COMMAND DELETE;1;testuser")
-
-    with pytest.raises(MKClientError) as excinfo:
-        status_server.handle_client(s, True, "127.0.0.1")
-
-    assert "No event with id 1" in str(excinfo.value)
 
 
 def test_delete_event(event_status: EventStatus, status_server: StatusServer) -> None:
@@ -93,8 +79,6 @@ def test_delete_partially_existing_multiple_events(
     assert len(event_status.events()) == 1
 
     s = FakeStatusSocket(b"COMMAND DELETE;1,2;testuser")
-
-    with pytest.raises(MKClientError):
-        status_server.handle_client(s, True, "127.0.0.1")
+    status_server.handle_client(s, True, "127.0.0.1")
 
     assert len(event_status.events()) == 0

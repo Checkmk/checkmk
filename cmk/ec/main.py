@@ -2684,8 +2684,8 @@ class StatusServer(ECServerThread):
         if len(arguments) != 2:
             raise MKClientError("Wrong number of arguments for DELETE")
         event_ids, user = arguments
-        for event_id in event_ids.split(","):
-            self._event_status.delete_event(int(event_id), user)
+        ids = {int(event_id) for event_id in event_ids.split(",")}
+        self._event_status.delete_events_by(lambda event: event["id"] in ids, user)
 
     def handle_command_update(self, arguments: list[str]) -> None:
         event_id, user, acknowledged, comment, contact = arguments
@@ -3446,17 +3446,15 @@ class EventStatus:
             return found  # do event action, return found copy of event
         return None  # do not do event action
 
-    # locked with self.lock
-    def delete_event(self, event_id: int, user: str) -> None:
-        for nr, event in enumerate(self._events):
-            if event["id"] == event_id:
+    def delete_events_by(self, predicate: Callable[[Event], bool], user: str) -> None:
+        for event in self._events[:]:
+            if predicate(event):
                 event["phase"] = "closed"
                 if user:
                     event["owner"] = user
                 self._history.add(event, "DELETE", user)
-                self._remove_event_by_nr(nr)
-                return
-        raise MKClientError(f"No event with id {event_id}")
+                self.remove_event(event)
+                self._count_event_remove(event)
 
     def get_events(self) -> list[Any]:
         return self._events

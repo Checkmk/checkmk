@@ -265,7 +265,7 @@ std::wstring BuildCommandLine(const fs::path &controller) {
     auto agent_channel = GetConfiguredAgentChannel(GetModus());
 
     return controller.wstring() +
-           wtools::ConvertToUTF16(fmt::format(" {} {} {} -vv",   //
+           wtools::ConvertToUTF16(fmt::format(" -vv {} {} {}",   //
                                               kCmdLineAsDaemon,  // daemon
                                               kCmdLineChannel, agent_channel));
 }

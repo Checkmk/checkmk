@@ -33,7 +33,7 @@ TEST(AgentController, BuildCommandLine) {
                                          "  port: {}\n",
                                          port)));
     EXPECT_EQ(wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
-              fmt::format("x daemon --agent-channel ms/{} -vv",
+              fmt::format("x -vv daemon --agent-channel ms/{}",
                           mailslot::BuildMailSlotNameStem(
                               GetModus(), ::GetCurrentProcessId())));
 }
@@ -133,7 +133,7 @@ TEST(AgentController, BuildCommandLineAgentChannelOk) {
                                              "    agent_channel: {}\n",
                                              ch_in)));
         EXPECT_EQ(wtools::ToUtf8(ac::BuildCommandLine(fs::path{"x"})),
-                  fmt::format("x daemon --agent-channel {} -vv", ch_out));
+                  fmt::format("x -vv daemon --agent-channel {}", ch_out));
         EXPECT_EQ(GetConfiguredAgentChannelPort(GetModus()), p);
     }
     EXPECT_EQ(GetConfiguredAgentChannelPort(Modus::integration), 0U);
@@ -149,7 +149,7 @@ TEST(AgentController, BuildCommandLineAgentChannelMailsLot) {
         "    run: yes\n"
         "    agent_channel: mailslot\n";
     const auto expected_command = fmt::format(
-        "x daemon --agent-channel {}{}{} -vv", ac::kCmdMailSlotPrefix,
+        "x -vv daemon --agent-channel {}{}{}", ac::kCmdMailSlotPrefix,
         kCmdPrefixSeparator,
         mailslot::BuildMailSlotNameStem(GetModus(), ::GetCurrentProcessId()));
 
@@ -177,7 +177,7 @@ TEST(AgentController, BuildCommandLineAgentChannelMalformed) {
                                          "    run: yes\n"
                                          "    agent_channel: ll\n")));
     EXPECT_EQ(wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
-              fmt::format("x daemon --agent-channel {}{}{} -vv",
+              fmt::format("x -vv daemon --agent-channel {}{}{}",
                           ac::kCmdMailSlotPrefix, ac::kCmdPrefixSeparator,
                           mailslot::BuildMailSlotNameStem(
                               GetModus(), ::GetCurrentProcessId())));
@@ -197,7 +197,7 @@ TEST(AgentController, BuildCommandLineAllowed) {
                                          "  port: {}\n",
                                          allowed, port)));
     EXPECT_EQ(wtools::ToUtf8(ac::BuildCommandLine(fs::path("x"))),
-              fmt::format("x daemon --agent-channel {}{}{} -vv",
+              fmt::format("x -vv daemon --agent-channel {}{}{}",
                           ac::kCmdMailSlotPrefix, ac::kCmdPrefixSeparator,
                           mailslot::BuildMailSlotNameStem(
                               GetModus(), ::GetCurrentProcessId())));

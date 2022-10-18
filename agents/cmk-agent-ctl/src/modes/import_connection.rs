@@ -44,8 +44,8 @@ fn _import(
     Ok(())
 }
 
-pub fn import(registry: &mut config::Registry, import_args: &cli::ImportArgs) -> AnyhowResult<()> {
-    match &import_args.conn_file {
+pub fn import(registry: &mut config::Registry, import_opts: &cli::ImportOpts) -> AnyhowResult<()> {
+    match &import_opts.conn_file {
         Some(path) => _import(
             registry,
             &ImportDataFromFile {

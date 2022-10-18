@@ -224,8 +224,8 @@ fn determine_paths() -> AnyhowResult<PathResolver> {
 }
 
 #[cfg(unix)]
-fn setup(args: &cli::Args) -> AnyhowResult<PathResolver> {
-    if let Err(err) = init_logging(&args.logging_level()) {
+fn setup(cli: &cli::Cli) -> AnyhowResult<PathResolver> {
+    if let Err(err) = init_logging(&cli.logging_level()) {
         io::stderr()
             .write_all(format!("Failed to initialize logging: {:?}", err).as_bytes())
             .unwrap_or(());
@@ -246,14 +246,14 @@ fn setup(args: &cli::Args) -> AnyhowResult<PathResolver> {
 }
 
 #[cfg(windows)]
-fn setup(args: &cli::Args) -> AnyhowResult<PathResolver> {
+fn setup(cli: &cli::Cli) -> AnyhowResult<PathResolver> {
     let paths = determine_paths()?;
-    let duplicate_level = if let cli::Args::Daemon(_) = args {
+    let duplicate_level = if let cli::Mode::Daemon(_) = cli.mode {
         flexi_logger::Duplicate::None
     } else {
         flexi_logger::Duplicate::All
     };
-    if let Err(err) = init_logging(&args.logging_level(), duplicate_level) {
+    if let Err(err) = init_logging(&cli.logging_level(), duplicate_level) {
         io::stderr()
             .write_all(format!("Failed to initialize logging: {:?}", err).as_bytes())
             .unwrap_or(());
@@ -261,18 +261,18 @@ fn setup(args: &cli::Args) -> AnyhowResult<PathResolver> {
     Ok(paths)
 }
 
-pub fn init() -> AnyhowResult<(cli::Args, PathResolver)> {
+pub fn init() -> AnyhowResult<(cli::Cli, PathResolver)> {
     if !is_os_supported() {
         eprintln!("This OS is unsupported");
         std::process::exit(1);
     }
     // Parse args as first action to directly exit from --help or malformatted arguments
-    let args = cli::Args::parse();
+    let cli = cli::Cli::parse();
     #[cfg(windows)]
     misc::validate_elevation()?;
 
-    let paths = setup(&args)?;
-    Ok((args, paths))
+    let paths = setup(&cli)?;
+    Ok((cli, paths))
 }
 
 #[cfg(test)]

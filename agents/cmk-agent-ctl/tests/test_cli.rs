@@ -82,8 +82,8 @@ async fn test_dump() -> AnyhowResult<()> {
     let mut cmd = common::controller_command();
 
     cmd.env("DEBUG_HOME_DIR", test_dir.path())
-        .arg("dump")
         .arg("-vv")
+        .arg("dump")
         .unwrap()
         .assert()
         .success()
@@ -201,9 +201,9 @@ fn build_status_command_with_log(
             "CMK_AGENT_CTL_LOG_TO_FILE",
             if with_log_file { "1" } else { "0" },
         )
+        .arg("-vv")
         .arg("status")
-        .arg("--no-query-remote")
-        .arg("-vv");
+        .arg("--no-query-remote");
     cmd
 }
 

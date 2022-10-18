@@ -63,14 +63,14 @@ pub struct RegistrationConfigHostName {
 impl RegistrationConfigHostName {
     pub fn new(
         runtime_config: RuntimeConfig,
-        reg_args_host_name: cli::RegistrationArgsHostName,
+        register_opts: cli::RegisterOpts,
     ) -> AnyhowResult<Self> {
         Ok(Self {
             connection_config: RegistrationConnectionConfig::new(
                 runtime_config,
-                reg_args_host_name.connection_args,
+                register_opts.connection_opts,
             )?,
-            host_name: reg_args_host_name.host_name,
+            host_name: register_opts.hostname,
         })
     }
 }
@@ -130,14 +130,15 @@ pub struct RegistrationConnectionConfig {
 impl RegistrationConnectionConfig {
     pub fn new(
         runtime_config: RuntimeConfig,
-        reg_args_conn: cli::RegistrationArgsConnection,
+        registration_conncection_opts: cli::RegistrationConnectionOpts,
     ) -> AnyhowResult<Self> {
         let site_id = site_spec::SiteID {
-            server: reg_args_conn.server_spec.server,
-            site: reg_args_conn.site,
+            server: registration_conncection_opts.server_spec.server,
+            site: registration_conncection_opts.site,
         };
-        let client_config = ClientConfig::new(runtime_config, reg_args_conn.client_opts);
-        let receiver_port = (if let Some(p) = reg_args_conn.server_spec.port {
+        let client_config =
+            ClientConfig::new(runtime_config, registration_conncection_opts.client_opts);
+        let receiver_port = (if let Some(p) = registration_conncection_opts.server_spec.port {
             Ok(p)
         } else {
             site_spec::discover_receiver_port(&site_id, &client_config)
@@ -145,10 +146,10 @@ impl RegistrationConnectionConfig {
         Ok(Self {
             site_id,
             receiver_port,
-            username: reg_args_conn.user,
-            password: reg_args_conn.password,
+            username: registration_conncection_opts.user,
+            password: registration_conncection_opts.password,
             root_certificate: None,
-            trust_server_cert: reg_args_conn.trust_server_cert,
+            trust_server_cert: registration_conncection_opts.trust_server_cert,
             client_config,
         })
     }
@@ -591,8 +592,8 @@ impl Registry {
 mod test_registration_config {
     use super::*;
 
-    fn registration_args_connection() -> cli::RegistrationArgsConnection {
-        cli::RegistrationArgsConnection {
+    fn registration_connection_opts() -> cli::RegistrationConnectionOpts {
+        cli::RegistrationConnectionOpts {
             server_spec: site_spec::ServerSpec {
                 server: String::from("server"),
                 port: Some(8000),
@@ -620,7 +621,7 @@ mod test_registration_config {
     #[test]
     fn test_connection_config() {
         let connection_config =
-            RegistrationConnectionConfig::new(runtime_config(), registration_args_connection())
+            RegistrationConnectionConfig::new(runtime_config(), registration_connection_opts())
                 .unwrap();
         assert_eq!(connection_config.site_id.server, "server");
         assert_eq!(connection_config.site_id.site, "site");
@@ -634,10 +635,9 @@ mod test_registration_config {
         assert_eq!(
             RegistrationConfigHostName::new(
                 runtime_config(),
-                cli::RegistrationArgsHostName {
-                    connection_args: registration_args_connection(),
-                    logging_opts: cli::LoggingOpts { verbose: 0 },
-                    host_name: String::from("host_name"),
+                cli::RegisterOpts {
+                    connection_opts: registration_connection_opts(),
+                    hostname: String::from("host_name"),
                 },
             )
             .unwrap()
@@ -649,7 +649,7 @@ mod test_registration_config {
     #[test]
     fn test_automatic_agent_labels() {
         let agent_labels = RegistrationConfigAgentLabels::new(
-            RegistrationConnectionConfig::new(runtime_config(), registration_args_connection())
+            RegistrationConnectionConfig::new(runtime_config(), registration_connection_opts())
                 .unwrap(),
             types::AgentLabels::new(),
         )
@@ -664,7 +664,7 @@ mod test_registration_config {
     #[test]
     fn test_user_defined_labels() {
         let agent_labels = RegistrationConfigAgentLabels::new(
-            RegistrationConnectionConfig::new(runtime_config(), registration_args_connection())
+            RegistrationConnectionConfig::new(runtime_config(), registration_connection_opts())
                 .unwrap(),
             types::AgentLabels::from([
                 (

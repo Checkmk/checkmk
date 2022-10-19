@@ -27,8 +27,6 @@ import cmk.base.config as config
 import cmk.base.modes
 import cmk.base.modes.check_mk
 import cmk.base.sources._checkers as checkers
-from cmk.base.sources import Source
-from cmk.base.sources.snmp import SNMPSource
 from cmk.base.submitters import get_submitter
 
 
@@ -86,15 +84,10 @@ def _patch_data_source(mocker, **kwargs):
     defaults.update(kwargs)
 
     def parse(self, *args, callback, **kwargs):
-        assert isinstance(self, Source), repr(self)
-
         file_cache = self._make_file_cache()
 
         assert file_cache.use_outdated == defaults["use_outdated"]
         assert file_cache.max_age == defaults["max_age"]
-
-        if isinstance(self, SNMPSource):
-            assert self.on_snmp_scan_error == defaults["on_error"]
 
         result = callback(self, *args, **kwargs)
         if result.is_error():

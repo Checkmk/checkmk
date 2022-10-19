@@ -349,7 +349,7 @@ DiscoveredHostLabelsDict = dict[str, HostLabelValueDict]
 
 InfluxDBConnectionSpec = dict[str, Any]
 
-# TODO(ml): IPMICredentials belongs with IPMISource but
+# TODO(ml): IPMICredentials belongs with IPMIFetcher but
 #           we need to fix the layering problem with the
 #           global config before this is safe.
 IPMICredentials = Mapping[str, str]

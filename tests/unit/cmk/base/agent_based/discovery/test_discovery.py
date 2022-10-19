@@ -27,6 +27,8 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
+from cmk.snmplib.type_defs import SNMPRawDataSection
+
 from cmk.core_helpers.agent import AgentRawDataSection
 from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.type_defs import NO_SELECTION
@@ -56,7 +58,6 @@ from cmk.base.agent_based.discovery.autodiscovery import (
 from cmk.base.agent_based.discovery.utils import DiscoveryMode
 from cmk.base.config import HostConfig
 from cmk.base.discovered_labels import HostLabel
-from cmk.base.sources.snmp import SNMPRawDataSection
 
 
 @pytest.fixture

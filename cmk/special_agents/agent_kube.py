@@ -394,14 +394,14 @@ def deployment_replicas(deployment_status: api.DeploymentStatus) -> section.Depl
 
 
 def _thin_containers(pods: Collection[api.Pod]) -> section.ThinContainers:
-    container_images = set()
-    container_names = []
+    containers: list[api.ContainerStatus] = []
     for pod in pods:
-        if containers := pod.containers:
-            container_images.update({container.image for container in containers.values()})
-            container_names.extend([container.name for container in containers.values()])
-    # CMK-10333
-    return section.ThinContainers(images=container_images, names=container_names)  # type: ignore[arg-type]
+        if container_map := pod.containers:
+            containers.extend(container_map.values())
+    return section.ThinContainers(
+        images=frozenset(container.image for container in containers),
+        names=[api.ContainerName(container.name) for container in containers],
+    )
 
 
 class DaemonSet(PodOwner):
@@ -567,15 +567,9 @@ class Node(PodOwner):
         if not self.status.conditions:
             return None
 
-        # CMK-10333
-        return section.NodeConditions(
-            **{  # type:ignore[arg-type]
-                condition.type_.lower(): section.NodeCondition(
-                    status=condition.status,
-                    reason=condition.reason,
-                    detail=condition.detail,
-                    last_transition_time=condition.last_transition_time,
-                )
+        return section.NodeConditions.parse_obj(
+            {
+                condition.type_.lower(): section.NodeCondition.parse_obj(condition)
                 for condition in self.status.conditions
                 if condition.type_ in NATIVE_NODE_CONDITION_TYPES
             }
@@ -587,13 +581,7 @@ class Node(PodOwner):
 
         return section.NodeCustomConditions(
             custom_conditions=[
-                section.FalsyNodeCustomCondition(
-                    type_=condition.type_,
-                    status=condition.status,
-                    reason=condition.reason,
-                    detail=condition.detail,
-                    last_transition_time=condition.last_transition_time,
-                )
+                section.FalsyNodeCustomCondition.parse_obj(condition)
                 for condition in self.status.conditions
                 if condition.type_ not in NATIVE_NODE_CONDITION_TYPES
             ]

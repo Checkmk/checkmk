@@ -246,7 +246,6 @@ class TestPodWithNoNode(TestCase):
                     custom_type=None,
                     reason="Unschedulable",
                     detail="0/1 nodes are available: 1 Too many pods.",
-                    # CMK-10333
                     last_transition_time=int(convert_to_timestamp(last_transition_time)),
                 )
             ],

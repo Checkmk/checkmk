@@ -152,7 +152,7 @@ def collect_attributes(
     #
     # We can not check the full collection of expected attributes here, so the easiest is to apply
     # some critical level of attributes we expect to have as first line of defense.
-    if len(result) < 11:
+    if len(result) < 9:
         raise RuntimeError(
             "Are we missing some host attributes? "
             f"Found the following: {[r.name for r in result]!r}"

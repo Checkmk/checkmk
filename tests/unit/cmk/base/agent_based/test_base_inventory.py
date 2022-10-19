@@ -1468,7 +1468,7 @@ def test__execute_active_check_inventory(
 
     monkeypatch.setattr(
         active_inventory,
-        "inventorize_host",
+        "inventorize_real_host",
         lambda host_config, selected_sections, run_plugin_names, retentions_tracker: _inventory.ActiveInventoryResult(
             trees=_inventory.InventoryTrees(
                 inventory=StructuredDataNode(),

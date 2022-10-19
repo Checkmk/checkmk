@@ -43,7 +43,7 @@ from cmk.base.sources import fetch_all, make_sources
 from ._retentions import RetentionsTracker
 from ._tree_aggregator import InventoryTrees, TreeAggregator
 
-__all__ = ["inventorize_host", "do_inv_for_realhost"]
+__all__ = ["inventorize_cluster", "inventorize_real_host", "do_inv_for_realhost"]
 
 
 class ActiveInventoryResult(NamedTuple):
@@ -53,21 +53,39 @@ class ActiveInventoryResult(NamedTuple):
     processing_failed: bool
 
 
-def inventorize_host(
+def inventorize_cluster(*, host_config: HostConfig) -> ActiveInventoryResult:
+    return ActiveInventoryResult(
+        trees=_do_inv_for_cluster(host_config.nodes or (), is_cluster=host_config.is_cluster),
+        source_results=(),
+        parsing_errors=(),
+        processing_failed=False,
+    )
+
+
+def _do_inv_for_cluster(nodes: Sequence[HostName], *, is_cluster: bool) -> InventoryTrees:
+    inventory_tree = StructuredDataNode()
+
+    _set_cluster_property(inventory_tree, is_cluster=True)
+
+    if not nodes:
+        return InventoryTrees(inventory_tree, StructuredDataNode())
+
+    node = inventory_tree.setdefault_node(
+        ("software", "applications", "check_mk", "cluster", "nodes")
+    )
+    node.table.add_key_columns(["name"])
+    node.table.add_rows([{"name": node_name} for node_name in nodes])
+
+    return InventoryTrees(inventory_tree, StructuredDataNode())
+
+
+def inventorize_real_host(
     *,
     host_config: HostConfig,
     run_plugin_names: Container[InventoryPluginName],
     selected_sections: SectionNameCollection,
     retentions_tracker: RetentionsTracker,
 ) -> ActiveInventoryResult:
-    if host_config.is_cluster:
-        return ActiveInventoryResult(
-            trees=_do_inv_for_cluster(host_config.nodes or (), is_cluster=host_config.is_cluster),
-            source_results=(),
-            parsing_errors=(),
-            processing_failed=False,
-        )
-
     ipaddress = config.lookup_ip_address(host_config)
     config_cache = config.get_config_cache()
 
@@ -129,22 +147,6 @@ def _sources_failed(
     return any(not host_section.is_ok() for host_section in host_sections)
 
 
-def _do_inv_for_cluster(nodes: Sequence[HostName], *, is_cluster: bool) -> InventoryTrees:
-    inventory_tree = StructuredDataNode()
-    _set_cluster_property(inventory_tree, is_cluster)
-
-    if not nodes:
-        return InventoryTrees(inventory_tree, StructuredDataNode())
-
-    node = inventory_tree.setdefault_node(
-        ("software", "applications", "check_mk", "cluster", "nodes")
-    )
-    node.table.add_key_columns(["name"])
-    node.table.add_rows([{"name": node_name} for node_name in nodes])
-
-    return InventoryTrees(inventory_tree, StructuredDataNode())
-
-
 def do_inv_for_realhost(
     host_config: HostConfig,
     *,
@@ -154,7 +156,7 @@ def do_inv_for_realhost(
 ) -> InventoryTrees:
     tree_aggregator = TreeAggregator()
 
-    _set_cluster_property(tree_aggregator.trees.inventory, host_config.is_cluster)
+    _set_cluster_property(tree_aggregator.trees.inventory, is_cluster=False)
 
     section.section_step("Executing inventory plugins")
     for inventory_plugin in agent_based_register.iter_all_inventory_plugins():
@@ -213,6 +215,7 @@ def do_inv_for_realhost(
 
 def _set_cluster_property(
     inventory_tree: StructuredDataNode,
+    *,
     is_cluster: bool,
 ) -> None:
     node = inventory_tree.setdefault_node(("software", "applications", "check_mk", "cluster"))

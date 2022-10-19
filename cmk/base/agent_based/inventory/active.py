@@ -22,7 +22,7 @@ import cmk.base.config as config
 from cmk.base.agent_based.utils import check_parsing_errors, summarize_host_sections
 from cmk.base.config import HostConfig
 
-from ._inventory import inventorize_host
+from ._inventory import inventorize_cluster, inventorize_real_host
 from ._retentions import Retentions, RetentionsTracker
 from ._tree_aggregator import InventoryTrees
 
@@ -56,14 +56,23 @@ def _execute_active_check_inventory(
     sw_missing = options.get("sw-missing", 0)
     fail_status = options.get("inv-fail-status", 1)
 
-    retentions_tracker = RetentionsTracker(host_config.inv_retention_intervals)
+    if host_config.is_cluster:
+        inv_result = inventorize_cluster(host_config=host_config)
+        retentions = Retentions(RetentionsTracker([]), do_update=False)
+    else:
+        retentions_tracker = RetentionsTracker(host_config.inv_retention_intervals)
+        inv_result = inventorize_real_host(
+            host_config=host_config,
+            selected_sections=NO_SELECTION,
+            run_plugin_names=EVERYTHING,
+            retentions_tracker=retentions_tracker,
+        )
+        retentions = Retentions(
+            retentions_tracker,
+            # If no intervals are configured then remove all known retentions
+            do_update=bool(host_config.inv_retention_intervals),
+        )
 
-    inv_result = inventorize_host(
-        host_config=host_config,
-        selected_sections=NO_SELECTION,
-        run_plugin_names=EVERYTHING,
-        retentions_tracker=retentions_tracker,
-    )
     trees = inv_result.trees
 
     if inv_result.processing_failed:
@@ -73,11 +82,7 @@ def _execute_active_check_inventory(
         old_tree = _save_inventory_tree(
             host_config.hostname,
             trees.inventory,
-            Retentions(
-                retentions_tracker,
-                # If no intervals are configured then remove all known retentions
-                do_update=bool(host_config.inv_retention_intervals),
-            ),
+            retentions,
         )
         active_check_result = ActiveCheckResult()
 

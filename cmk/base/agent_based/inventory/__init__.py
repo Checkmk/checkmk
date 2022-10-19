@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from ._inventory import do_inv_for_realhost, inventorize_host
+from ._inventory import do_inv_for_realhost
 from ._retentions import RetentionsTracker
 from .active import active_check_inventory
 from .commandline import commandline_inventory
@@ -11,7 +11,6 @@ from .commandline import commandline_inventory
 __all__ = [
     "commandline_inventory",
     "active_check_inventory",
-    "inventorize_host",
     "do_inv_for_realhost",
     "RetentionsTracker",
 ]

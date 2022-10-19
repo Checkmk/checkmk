@@ -18,7 +18,7 @@ import cmk.base.section as section
 from cmk.base.agent_based.utils import check_parsing_errors
 from cmk.base.config import HostConfig
 
-from ._inventory import inventorize_host
+from ._inventory import inventorize_cluster, inventorize_real_host
 from ._retentions import RetentionsTracker
 
 __all__ = ["commandline_inventory"]
@@ -60,12 +60,15 @@ def _commandline_inventory_on_host(
 
     section.section_step("Inventorizing")
 
-    inv_result = inventorize_host(
-        host_config=host_config,
-        selected_sections=selected_sections,
-        run_plugin_names=run_plugin_names,
-        retentions_tracker=RetentionsTracker([]),
-    )
+    if host_config.is_cluster:
+        inv_result = inventorize_cluster(host_config=host_config)
+    else:
+        inv_result = inventorize_real_host(
+            host_config=host_config,
+            selected_sections=selected_sections,
+            run_plugin_names=run_plugin_names,
+            retentions_tracker=RetentionsTracker(host_config.inv_retention_intervals),
+        )
 
     for subresult in check_parsing_errors(errors=inv_result.parsing_errors):
         for line in subresult.details:

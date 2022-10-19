@@ -39,7 +39,7 @@ class QueryException(Exception):
     pass
 
 
-def del_host_downtime(  # type:ignore[no-untyped-def]
+def _del_host_downtime(  # type:ignore[no-untyped-def]
     connection,
     downtime_id: int,
     site_id: SiteId,
@@ -65,15 +65,14 @@ def del_host_downtime(  # type:ignore[no-untyped-def]
         >>> expect = simple_expect("COMMAND [...] DEL_HOST_DOWNTIME;1", match_type="ellipsis")
         >>> with expect as live, SuperUserContext():
         ...     load_config()
-        ...     del_host_downtime(live, 1, "")
+        ...     _del_host_downtime(live, 1, "")
 
     """
-    _user.need_permission("action.downtimes")
 
     return send_command(connection, "DEL_HOST_DOWNTIME", [downtime_id], site_id)
 
 
-def del_service_downtime(  # type:ignore[no-untyped-def]
+def _del_service_downtime(  # type:ignore[no-untyped-def]
     connection,
     downtime_id: int,
     site_id: SiteId,
@@ -99,16 +98,17 @@ def del_service_downtime(  # type:ignore[no-untyped-def]
         >>> expect = simple_expect("COMMAND [...] DEL_SVC_DOWNTIME;1", match_type="ellipsis")
         >>> with expect as live, SuperUserContext():
         ...     load_config()
-        ...     del_service_downtime(live, 1, "")
+        ...     _del_service_downtime(live, 1, "")
 
     """
-    _user.need_permission("action.downtimes")
 
     return send_command(connection, "DEL_SVC_DOWNTIME", [downtime_id], site_id)
 
 
 def delete_downtime_with_query(connection, query):
     """Delete scheduled downtimes based upon a query"""
+    _user.need_permission("action.downtimes")
+
     q = Query([Downtimes.id, Downtimes.is_service]).filter(query)
 
     with detailed_connection(connection) as conn:
@@ -116,22 +116,24 @@ def delete_downtime_with_query(connection, query):
 
     for site_id, downtime_id, is_service in downtimes:
         if is_service:
-            del_service_downtime(connection, downtime_id, site_id)
+            _del_service_downtime(connection, downtime_id, site_id)
         else:
-            del_host_downtime(connection, downtime_id, site_id)
+            _del_host_downtime(connection, downtime_id, site_id)
 
 
 def delete_downtime(connection, downtime_id):
     """Delete a scheduled downtime based upon the downtime id"""
+    _user.need_permission("action.downtimes")
+
     with detailed_connection(connection) as conn:
         entry = Query(
             [Downtimes.is_service],
             Downtimes.id == downtime_id,
         ).fetchone(conn)
     if entry["is_service"]:
-        del_service_downtime(connection, downtime_id, entry["site"])
+        _del_service_downtime(connection, downtime_id, entry["site"])
     else:
-        del_host_downtime(connection, downtime_id, entry["site"])
+        _del_host_downtime(connection, downtime_id, entry["site"])
 
 
 def schedule_services_downtimes_with_query(  # type:ignore[no-untyped-def]

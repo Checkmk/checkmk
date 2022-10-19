@@ -469,11 +469,7 @@ def _snapshot_secret() -> bytes:
         return path.read_bytes()
     except IOError:
         # create a secret during first use
-        try:
-            s = os.urandom(256)
-        except NotImplementedError:
-            # TODO(This is not a save fall back!)
-            s = str(sha256(str(time.time()).encode())).encode()
+        s = os.urandom(256)
         path.write_bytes(s)
         return s
 

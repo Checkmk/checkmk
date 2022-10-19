@@ -68,7 +68,7 @@ def _execute_active_check_inventory(
 
     if inv_result.processing_failed:
         old_tree = None
-        update_result = ActiveCheckResult(fail_status, "Cannot update tree")
+        active_check_result = ActiveCheckResult(fail_status, "Cannot update tree")
     else:
         old_tree = _save_inventory_tree(
             host_config.hostname,
@@ -79,10 +79,10 @@ def _execute_active_check_inventory(
                 do_update=bool(host_config.inv_retention_intervals),
             ),
         )
-        update_result = ActiveCheckResult()
+        active_check_result = ActiveCheckResult()
 
     return ActiveCheckResult.from_subresults(
-        update_result,
+        active_check_result,
         *_check_inventory_tree(trees, old_tree, sw_missing, sw_changes, hw_changes),
         *summarize_host_sections(
             source_results=inv_result.source_results,

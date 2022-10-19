@@ -3,38 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
-from dataclasses import dataclass
-
-from cmk.base.api.agent_based.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils.threepar import parse_3par
-
-
-@dataclass
-class ThreeParHost:
-    name: str
-    id: int | str
-    os: str | None
-    fc_paths_number: int
-    iscsi_paths_number: int
-
-
-ThreeParHostsSection = Mapping[str, ThreeParHost]
-
-
-def parse_3par_hosts(string_table: StringTable) -> ThreeParHostsSection:
-
-    return {
-        host.get("name"): ThreeParHost(
-            name=host.get("name"),
-            id=host.get("id"),
-            os=host.get("descriptors", {}).get("os"),
-            fc_paths_number=len(host.get("FCPaths", [])),
-            iscsi_paths_number=len(host.get("iSCSIPaths", [])),
-        )
-        for host in parse_3par(string_table).get("members", {})
-        if host.get("name") is not None
-    }
+from cmk.base.plugins.agent_based.threepar_hosts import ThreeParHostsSection
 
 
 def inventory_3par_hosts(section: ThreeParHostsSection):
@@ -63,7 +32,7 @@ def check_3par_hosts(
 
 
 check_info["3par_hosts"] = {
-    "parse_function": parse_3par_hosts,
+    # Section already migrated!
     "inventory_function": inventory_3par_hosts,
     "check_function": check_3par_hosts,
     "service_description": "Host %s",

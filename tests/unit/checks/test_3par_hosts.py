@@ -9,11 +9,12 @@ import pytest
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.type_defs import CheckPluginName, SectionName
+from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.threepar_hosts import parse_threepar_hosts
 
 STRING_TABLE = [
     [
@@ -44,12 +45,12 @@ def _3par_hosts_check_plugin(fix_register: FixRegister) -> CheckPlugin:
 )
 def test_discover_3par_hosts(
     check: CheckPlugin,
-    fix_register: FixRegister,
     section: StringTable,
     expected_discovery_result: Sequence[Service],
 ) -> None:
-    parse_3par_hosts = fix_register.agent_sections[SectionName("3par_hosts")].parse_function
-    assert list(check.discovery_function(parse_3par_hosts(section))) == expected_discovery_result
+    assert (
+        list(check.discovery_function(parse_threepar_hosts(section))) == expected_discovery_result
+    )
 
 
 @pytest.mark.parametrize(
@@ -108,18 +109,16 @@ def test_discover_3par_hosts(
 )
 def test_check_3par_hosts(
     check: CheckPlugin,
-    fix_register: FixRegister,
     section: StringTable,
     item: str,
     expected_check_result: Sequence[Result],
 ) -> None:
-    parse_3par_hosts = fix_register.agent_sections[SectionName("3par_hosts")].parse_function
     assert (
         list(
             check.check_function(
                 item=item,
                 params={},
-                section=parse_3par_hosts(section),
+                section=parse_threepar_hosts(section),
             )
         )
         == expected_check_result

@@ -1656,11 +1656,6 @@ msgid "A Multisite view"
 msgstr "Un Multisite view"
 
 msgid ""
-"A bulk discovery job is already running. Please use the "
-"\"bulk_discovery_status\" call to get the curent status."
-msgstr ""
-
-msgid ""
 "A cache age limit on plugins and local checks. If set, the output of plugins "
 "is cached and reused until this much time has passed."
 msgstr ""
@@ -2803,6 +2798,10 @@ msgstr "Verificări active"
 #, fuzzy
 msgid "Active node"
 msgstr "Verificare activă"
+
+#, fuzzy
+msgid "Active on this site"
+msgstr "Conexiuni Active"
 
 msgid "Active paths"
 msgstr ""
@@ -5388,12 +5387,6 @@ msgstr ""
 msgid "Attribute"
 msgstr "Atribute personalizate"
 
-#, python-format
-msgid ""
-"Attribute \"%s\" of user \"%s\" can not be changed, because it is locked by "
-"the user connection."
-msgstr ""
-
 msgid "Attribute Sync Plugins"
 msgstr ""
 
@@ -5505,10 +5498,6 @@ msgid "Author"
 msgstr ""
 
 msgid "Authorization"
-msgstr ""
-
-#, python-format
-msgid "Authorization Error. Insufficent permissions for '%s'"
 msgstr ""
 
 #, fuzzy
@@ -6126,17 +6115,11 @@ msgstr ""
 msgid "Backend Conn. %s"
 msgstr ""
 
-msgid "Background Job"
-msgstr ""
-
 #, python-format
 msgid "Background Job %s already running"
 msgstr ""
 
 msgid "Background in status color and label"
-msgstr ""
-
-msgid "Background job"
 msgstr ""
 
 msgid "Background job acknowledged"
@@ -6991,7 +6974,11 @@ msgid ""
 "By default the server will try to contact the monitored host and pull the "
 "data by initializing a TCP connection. On the %s you can configure a push "
 "configuration, where the monitored host is expected to send the data to the "
-"monitoring server without being actively triggered."
+"monitoring server without being actively triggered.\n"
+"\n"
+"If you are configuring this, you might want to also set the \"%s\" attribute "
+"to \"%s\". The host not being reachable by the site is one of the main "
+"reason why you want to use the push connection in the first place."
 msgstr ""
 
 msgid ""
@@ -8549,12 +8536,6 @@ msgid ""
 "that support SNMPv2c may be buggy. In such cases, you may want to try "
 "disabling bulk walk using the ruleset \"Disable bulk walks on SNMPv2c/v3\"."
 msgstr ""
-
-#, fuzzy, python-format
-msgid ""
-"Checkmk exception: %s\n"
-"%s"
-msgstr "Perioada de timp Noua"
 
 #, fuzzy
 msgid "Checkmk fetcher usage"
@@ -11467,9 +11448,6 @@ msgstr ""
 msgid "Currently indexing, please try again shortly."
 msgstr ""
 
-msgid "Currently not supported with this Checkmk Edition"
-msgstr ""
-
 #, fuzzy
 msgid "Currently open connections"
 msgstr "Numarul maxim de conexiuni"
@@ -12552,6 +12530,10 @@ msgid "Default is Windows authentication"
 msgstr "trimite notificare"
 
 #, fuzzy
+msgid "Default language"
+msgstr "Matrice"
+
+#, fuzzy
 msgid "Default layout"
 msgstr "Matrice"
 
@@ -13111,10 +13093,6 @@ msgstr ""
 
 #, python-format
 msgid "Deleted rule pack %s"
-msgstr ""
-
-#, python-format
-msgid "Deleted ruleset '%s' for '%s'"
 msgstr ""
 
 #, python-format
@@ -13806,10 +13784,6 @@ msgstr "Dezactiveaza Notificarile"
 msgid "Disable configuration via WATO on this site"
 msgstr ""
 
-#, python-format
-msgid "Disable extension package %s"
-msgstr ""
-
 msgid "Disable flap detection"
 msgstr ""
 
@@ -13917,8 +13891,8 @@ msgstr "Grup nou"
 msgid "Disabled custom checks - defined via rule"
 msgstr ""
 
-#, fuzzy
-msgid "Disabled extensions"
+#, fuzzy, python-format
+msgid "Disabled extension package %s"
 msgstr "Dezactiveaza Notificarile"
 
 msgid "Disabled legacy services - defined in main.mk"
@@ -15092,9 +15066,10 @@ msgid ""
 "Do you really want to remove the TLS registration of the selected hosts?"
 msgstr "O agregare legată de un singur element"
 
-#, python-format
-msgid "Do you really want to remove the package <tt>%s</tt> from your system?"
-msgstr ""
+#, fuzzy, python-format
+msgid ""
+"Do you really want to remove the package file <tt>%s</tt> from your system?"
+msgstr "O agregare legată de un singur element"
 
 msgid ""
 "Do you really want to rename the following hosts? This involves a restart of "
@@ -16108,6 +16083,10 @@ msgid "Elastic Compute Cloud (EC2)"
 msgstr ""
 
 #, fuzzy
+msgid "Elastic Container Service (ECS)"
+msgstr "Setari"
+
+#, fuzzy
 msgid "Elastic IP Addresses"
 msgstr "Adresă"
 
@@ -16298,6 +16277,12 @@ msgstr ""
 msgid "Enable automatic host key acceptance"
 msgstr ""
 
+msgid "Enable community translated languages"
+msgstr ""
+
+msgid "Enable community translated languages (not supported)"
+msgstr ""
+
 msgid "Enable core dumps"
 msgstr ""
 
@@ -16442,9 +16427,9 @@ msgstr ""
 msgid "Enabled"
 msgstr "Tabel"
 
-#, python-format
-msgid "Enabled extension package %s"
-msgstr ""
+#, fuzzy
+msgid "Enabled (inactive on this site)"
+msgstr "Dezactiveaza Notificarile"
 
 msgid "Enabled in time range"
 msgstr ""
@@ -17849,10 +17834,6 @@ msgstr ""
 msgid "Failed to determine origin rule of %s / %s"
 msgstr ""
 
-#, python-format
-msgid "Failed to discover %s: %s"
-msgstr ""
-
 msgid "Failed to estimate the Apache process size"
 msgstr ""
 
@@ -18632,10 +18613,6 @@ msgstr ""
 
 #, fuzzy, python-format
 msgid "Folder %r does not exist."
-msgstr "Un utilizator cu id-ul \"%s\" nu există."
-
-#, fuzzy, python-format
-msgid "Folder %s does not exist"
 msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 #, python-format
@@ -20962,10 +20939,6 @@ msgid "Horizontal spacing"
 msgstr ""
 
 msgid "Host"
-msgstr ""
-
-#, python-format
-msgid "Host %s already exists in the folder %s"
 msgstr ""
 
 #, python-format
@@ -23895,10 +23868,6 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Install this package"
-msgstr "Dezactiveaza Notificarile"
-
-#, fuzzy
 msgid "Installation"
 msgstr "Adaugă instanță NGINX"
 
@@ -23916,10 +23885,6 @@ msgstr "Acces la Agenți"
 #, python-format
 msgid "Installed extension package %s-%s (%s)"
 msgstr ""
-
-#, fuzzy
-msgid "Installed extension packages"
-msgstr "Dezactiveaza Notificarile"
 
 msgid "Installed, stopped and running services"
 msgstr ""
@@ -24302,10 +24267,6 @@ msgstr ""
 
 #, python-format
 msgid "Invalid ident: %s"
-msgstr ""
-
-#, python-format
-msgid "Invalid key(s): %s"
 msgstr ""
 
 #, fuzzy
@@ -29257,10 +29218,8 @@ msgstr "sesiuni"
 msgid "Missing Prerequisite"
 msgstr ""
 
-msgid "Missing config file for agent {}"
-msgstr ""
-
-msgid "Missing config file for agent {}/{}"
+#, python-format
+msgid "Missing config file for agent %s%s"
 msgstr ""
 
 #, python-format
@@ -29326,10 +29285,6 @@ msgstr "Informații Adiționale"
 #, fuzzy
 msgid "Missing required context information"
 msgstr "Informații Adiționale"
-
-#, python-format
-msgid "Missing required key(s): %s"
-msgstr ""
 
 #, fuzzy
 msgid "Missing required selection."
@@ -31161,9 +31116,6 @@ msgstr ""
 msgid "No service level is set in event"
 msgstr ""
 
-msgid "No site given."
-msgstr ""
-
 #, fuzzy
 msgid "No status host"
 msgstr "(element fără element)"
@@ -31175,14 +31127,6 @@ msgstr "<li>Nici o sincronizare de succes până acum.</li"
 #, fuzzy
 msgid "No such file"
 msgstr "(element fără element)"
-
-#, fuzzy
-msgid "No such host"
-msgstr "(element fără element)"
-
-#, python-format
-msgid "No such host(s): %s"
-msgstr ""
 
 #, python-format
 msgid ""
@@ -33138,10 +33082,6 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Optional extension packages"
-msgstr "Dezactiveaza Notificarile"
-
-#, fuzzy
 msgid "Optional general information"
 msgstr "Informații Adiționale"
 
@@ -33651,8 +33591,9 @@ msgstr "Nume AP"
 msgid "Package name:"
 msgstr "Nume AP"
 
-msgid "Package not installed or corrupt"
-msgstr ""
+#, fuzzy
+msgid "Package not found"
+msgstr "de sus in jos"
 
 #, fuzzy
 msgid "Package properties"
@@ -34049,6 +33990,9 @@ msgid "Path to sapgenpse"
 msgstr ""
 
 msgid "Path to temporary directory (will be created)"
+msgstr ""
+
+msgid "Path to unix socket"
 msgstr ""
 
 msgid "Path-patterns where to search for Jar files"
@@ -36782,10 +36726,6 @@ msgid "Refreshed check configuration of host '%s'"
 msgstr ""
 
 #, python-format
-msgid "Refreshed check configuration of host [%s] with %d services"
-msgstr ""
-
-#, python-format
 msgid "Refusing to read file not owned by site user: \"%s\""
 msgstr ""
 
@@ -37177,10 +37117,6 @@ msgstr ""
 
 #, python-format
 msgid "Removed auxiliary tag %s (%s)"
-msgstr ""
-
-#, python-format
-msgid "Removed disabled extension package %s"
 msgstr ""
 
 msgid "Removed entries"
@@ -38914,10 +38850,6 @@ msgstr "Salveaza si mergi la"
 msgid "Saved check configuration of host '%s' with %d services"
 msgstr ""
 
-#, python-format
-msgid "Saved check configuration of host [%s] with %d services"
-msgstr ""
-
 msgid "Saved read only settings"
 msgstr ""
 
@@ -39822,12 +39754,6 @@ msgstr "(fără Nivel de serviciu)"
 msgid "Service discovery rules"
 msgstr "(fără Nivel de serviciu)"
 
-#, python-format
-msgid ""
-"Service discovery successful. Added %d, removed %d, kept %d, total %d "
-"services and %d new, %d total host labels"
-msgstr ""
-
 msgid "Service discovery triggers service discovery check"
 msgstr ""
 
@@ -40296,10 +40222,6 @@ msgstr ""
 msgid "Set roles"
 msgstr ""
 
-#, python-format
-msgid "Set ruleset '%s' for '%s' with %d rules"
-msgstr ""
-
 msgid ""
 "Set service names or regular expression patterns here to allow only matching "
 "services to be activated automatically. If you set both this and 'Don't "
@@ -40525,10 +40447,6 @@ msgid ""
 "tags will be replaced with the default value for the tag group (for hosts "
 "and folders). What rules concern, you have to decide how to proceed."
 msgstr ""
-
-#, fuzzy
-msgid "Setup is disabled on this site."
-msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
 msgid "Setup is disabled."
@@ -41041,6 +40959,14 @@ msgstr ""
 msgid "Show volume name in service output"
 msgstr "servicii"
 
+msgid ""
+"Show/Hide community translated languages in the \"Language\" dropdown (User "
+"> Edit profile). Note that these translations are contributed by the Checkmk "
+"community and thus no liability is assumed for their validity.<br>If this "
+"setting is turned from 'on' to 'off' while a user has set a community "
+"translated language, the user's language is changed to 'English'."
+msgstr ""
+
 #, fuzzy
 msgid "Show/Hide password"
 msgstr "Parola"
@@ -41317,10 +41243,6 @@ msgid "Site custom field ID"
 msgstr "Editeaza regulile de loguri"
 
 msgid "Site icon"
-msgstr ""
-
-#, python-format
-msgid "Site id not found: %s"
 msgstr ""
 
 #, fuzzy
@@ -43623,9 +43545,6 @@ msgstr ""
 msgid "Success"
 msgstr ""
 
-msgid "Successfully baked agents"
-msgstr ""
-
 #, fuzzy
 msgid "Successfully changed password."
 msgstr "Parola"
@@ -45022,10 +44941,6 @@ msgstr "foloseste descrierea"
 msgid "The SAP system ID."
 msgstr ""
 
-#, python-format
-msgid "The SLA id %s is unknown or not visible to this user"
-msgstr ""
-
 msgid ""
 "The SQL-statement or procedure name which is executed on the DBMS. It must "
 "return a result table with one row and at least two columns. The first "
@@ -45284,9 +45199,6 @@ msgstr ""
 msgid "The average utilization of memory on the active supervisor"
 msgstr ""
 
-msgid "The background job is missing a logger instance"
-msgstr ""
-
 msgid "The backup has been deleted."
 msgstr ""
 
@@ -45437,13 +45349,6 @@ msgid "The comment which is automatically sent with an adhoc downtime"
 msgstr ""
 
 msgid "The complete hardware- and software inventory of a host"
-msgstr ""
-
-msgid ""
-"The configuration has changed in the meantime. You need to load the "
-"configuration and start another update. If the existing configuration should "
-"not be checked, you can remove the configuration_hash value from the request "
-"object."
 msgstr ""
 
 msgid "The configuration is currently in read only mode. "
@@ -45947,10 +45852,6 @@ msgid ""
 "The full URL to the Kubernetes API server including the protocol (http or "
 "https) and the port. Be aware that a trailing slash at the end of the URL is "
 "likely to result in an error."
-msgstr ""
-
-#, python-format
-msgid "The function %s is not in the snapshotted functions."
 msgstr ""
 
 #, python-format
@@ -46734,9 +46635,11 @@ msgstr ""
 msgid "The number of elements in the tuple must be exactly %d."
 msgstr ""
 
+#, python-format
 msgid ""
 "The number of incoming and processed agent registration requests are not the "
-"same."
+"same:\n"
+"%s"
 msgstr ""
 
 msgid ""
@@ -46850,6 +46753,10 @@ msgid ""
 "etc.) of components of a device (e.g. rack unitsas components of a rack "
 "server as device) in the last check interval.The possible range is from 0% "
 "to 100%"
+msgstr ""
+
+#, python-format
+msgid "The package is now enabled, but could not be installed on this site: %s"
 msgstr ""
 
 msgid "The pager address is optional "
@@ -48760,9 +48667,6 @@ msgid ""
 "This is relevant for aggregations that are much larger than one minute."
 msgstr ""
 
-msgid "This is rule pack can be packaged with the Extension Packages module."
-msgstr ""
-
 msgid ""
 "This is the application name used in the URL. If you enter for example the "
 "application name <tt>foobar</tt>, this would result in the URL being used to "
@@ -49172,9 +49076,9 @@ msgid ""
 "username and client IP, the request is coming from, is logged."
 msgstr ""
 
-#, python-format
-msgid "This package cannot be installed: %s"
-msgstr ""
+#, fuzzy, python-format
+msgid "This package cannot be uploaded: %s"
+msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
 msgid "This package does not exist."
 msgstr ""
@@ -49829,6 +49733,9 @@ msgstr ""
 msgid "This rule matches: %s"
 msgstr "Un utilizator cu id-ul \"%s\" nu există."
 
+msgid "This rule pack can be packaged with the Extension Packages module."
+msgstr ""
+
 msgid ""
 "This rule pack is currently disabled. None of its rules will be applied."
 msgstr ""
@@ -50409,9 +50316,6 @@ msgstr "<b>șterge toți timpii morți programați</b> pentru "
 #, fuzzy
 msgid "This site is currently not reachable."
 msgstr "<b>șterge toți timpii morți programați</b> pentru "
-
-msgid "This site is not a distributed WATO site."
-msgstr ""
 
 msgid "This site is not responding."
 msgstr ""
@@ -52279,12 +52183,6 @@ msgid "Unable to analyze matching, because \"service\" parameter is missing"
 msgstr ""
 
 #, python-format
-msgid ""
-"Unable to apply new hosttag configuration. The following tags are still in "
-"use, but not mentioned in the updated configuration: %s"
-msgstr ""
-
-#, python-format
 msgid "Unable to authenticate with LDAP (%s)"
 msgstr ""
 
@@ -52300,14 +52198,8 @@ msgid ""
 "Settings."
 msgstr ""
 
-msgid "Unable to create parent folder(s)."
-msgstr ""
-
 #, python-format
 msgid "Unable to delete group. It is still in use by: %s"
-msgstr ""
-
-msgid "Unable to delete root folder"
 msgstr ""
 
 #, python-format
@@ -52509,9 +52401,6 @@ msgstr "Nivel-urile absolute de licențe neutilizate"
 msgid "Unidirectional UDP Traffic"
 msgstr ""
 
-msgid "Uninstall and remove this package"
-msgstr ""
-
 msgid ""
 "Uninstall the legacy (pre 1.6) agent after installation of the new Windows "
 "agent"
@@ -52543,6 +52432,9 @@ msgstr ""
 msgid "Unix Timestamp (Epoch)"
 msgstr ""
 
+msgid "Unix-Socket"
+msgstr ""
+
 msgid "Unknown"
 msgstr ""
 
@@ -52556,10 +52448,6 @@ msgstr ""
 #, fuzzy
 msgid "Unknown aggregation"
 msgstr "Agregare noua"
-
-#, python-format
-msgid "Unknown attribute: %s"
-msgstr ""
 
 msgid "Unknown configuration change"
 msgstr ""
@@ -52591,15 +52479,7 @@ msgid "Unknown site (%s)"
 msgstr ""
 
 #, python-format
-msgid "Unknown tag %s"
-msgstr ""
-
-#, python-format
 msgid "Unknown tag group \"%s\""
-msgstr ""
-
-#, python-format
-msgid "Unknown tag group %s"
 msgstr ""
 
 #, python-format
@@ -52764,9 +52644,6 @@ msgstr "Atribute personalizate"
 msgid "Updated discovered host labels of '%s' with %d labels"
 msgstr ""
 
-msgid "Updated host tags through Web-API"
-msgstr ""
-
 msgid ""
 "Updated metrics are written to disk in the configured interval. The write "
 "operation is only performed for metrics that are being updated. Old metrics "
@@ -52802,9 +52679,6 @@ msgstr ""
 
 #, python-format
 msgid "Upload %s"
-msgstr ""
-
-msgid "Upload & install"
 msgstr ""
 
 msgid "Upload CRT/PEM File"
@@ -52843,6 +52717,10 @@ msgstr ""
 
 msgid "Uploaded a custom GUI logo"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "Uploaded extension package %s-%s (%s)"
+msgstr "Dezactiveaza Notificarile"
 
 msgid "Upper"
 msgstr ""
@@ -53492,6 +53370,13 @@ msgstr ""
 msgid "Use Hard States"
 msgstr ""
 
+msgid "Use IP Address of assigned host"
+msgstr ""
+
+#, fuzzy
+msgid "Use IP address of assigned host"
+msgstr "Adresă"
+
 msgid "Use IPMItool"
 msgstr ""
 
@@ -53685,6 +53570,10 @@ msgstr ""
 
 msgid "Use host address"
 msgstr ""
+
+#, fuzzy
+msgid "Use host name of assigned host"
+msgstr "Numarul maxim de mesaje"
 
 #, fuzzy
 msgid "Use hostname"
@@ -57763,9 +57652,6 @@ msgstr ""
 msgid "You have to select at least one element."
 msgstr ""
 
-msgid "You have to specify some hosts"
-msgstr ""
-
 msgid "You have used an invalid character"
 msgstr ""
 
@@ -59513,6 +59399,14 @@ msgstr ""
 msgid "online canisters"
 msgstr "(fără elemente)"
 
+#, fuzzy
+msgid "only messages"
+msgstr "Mesajul Text"
+
+#, fuzzy
+msgid "only requests"
+msgstr "cereri"
+
 msgid "only v4"
 msgstr ""
 
@@ -60204,6 +60098,32 @@ msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~ msgid "Disabled extensions"
+#~ msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
+#~ msgid "Install this package"
+#~ msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy, python-format
+#~ msgid ""
+#~ "Checkmk exception: %s\n"
+#~ "%s"
+#~ msgstr "Perioada de timp Noua"
+
+#, fuzzy, python-format
+#~ msgid "Folder %s does not exist"
+#~ msgstr "Un utilizator cu id-ul \"%s\" nu există."
+
+#, fuzzy
+#~ msgid "No such host"
+#~ msgstr "(element fără element)"
+
+#, fuzzy
+#~ msgid "Setup is disabled on this site."
+#~ msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
 #~ msgid "Search result(s) preview"
 #~ msgstr "Cautare"
 
@@ -60863,10 +60783,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Cluster agent connection"
 #~ msgstr "Perioada de timp Noua"
-
-#, fuzzy
-#~ msgid "IP address of Kubernetes node"
-#~ msgstr "Adresă"
 
 #~ msgid "A matrix showing a colored square for each host"
 #~ msgstr "O matrice care arată un pătrat colorat pentru fiecare element"

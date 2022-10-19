@@ -8,6 +8,7 @@
 # - Checking doesn't work - as it was before. Maybe we can handle this in the future.
 
 import logging
+import os.path
 from functools import partial
 from pathlib import Path
 from typing import (
@@ -40,13 +41,7 @@ from cmk.snmplib.type_defs import (
 )
 
 from cmk.core_helpers import Fetcher, FetcherType, FileCache, get_raw_data, NoFetcher, Parser
-from cmk.core_helpers.agent import (
-    AgentFileCache,
-    AgentParser,
-    AgentRawData,
-    AgentRawDataSection,
-    PushAgentFileCache,
-)
+from cmk.core_helpers.agent import AgentFileCache, AgentParser, AgentRawData, AgentRawDataSection
 from cmk.core_helpers.cache import FileCacheGlobals, FileCacheMode, MaxAge, SectionStore
 from cmk.core_helpers.config import AgentParserConfig, SNMPParserConfig
 from cmk.core_helpers.host_sections import HostSections, TRawDataSection
@@ -172,19 +167,21 @@ def make_persisted_section_dir(
     }[fetcher_type]
 
 
-def make_file_cache_dir(
+def make_file_cache_path_template(
     *,
     fetcher_type: FetcherType,
     ident: str,
-) -> Path:
-    base_dir: Final = Path(cmk.utils.paths.data_source_cache_dir)
+) -> str:
+    # We create a *template* and not a path, so string manipulation
+    # is the right thing to do.
+    base_dir: Final = str(cmk.utils.paths.data_source_cache_dir)
     return {
-        FetcherType.PIGGYBACK: base_dir / ident,
-        FetcherType.SNMP: base_dir / ident,
-        FetcherType.IPMI: base_dir / ident,
-        FetcherType.PROGRAM: base_dir / ident,
-        FetcherType.PUSH_AGENT: base_dir / ident,
-        FetcherType.TCP: Path(cmk.utils.paths.tcp_cache_dir),
+        FetcherType.PIGGYBACK: os.path.join(base_dir, ident, "{hostname}"),
+        FetcherType.SNMP: os.path.join(base_dir, ident, "{mode}", "{hostname}"),
+        FetcherType.IPMI: os.path.join(base_dir, ident, "{hostname}"),
+        FetcherType.PROGRAM: os.path.join(base_dir, ident, "{hostname}"),
+        FetcherType.PUSH_AGENT: os.path.join(base_dir, ident, "{hostname}", "agent_output"),
+        FetcherType.TCP: os.path.join(cmk.utils.paths.tcp_cache_dir, "{hostname}"),
     }[fetcher_type]
 
 
@@ -394,7 +391,9 @@ class _Builder:
                 ),
                 AgentFileCache(
                     meta.hostname,
-                    base_path=make_file_cache_dir(fetcher_type=meta.fetcher_type, ident=meta.ident),
+                    path_template=make_file_cache_path_template(
+                        fetcher_type=meta.fetcher_type, ident=meta.ident
+                    ),
                     max_age=self.file_cache_max_age,
                     use_outdated=FileCacheGlobals.use_outdated,
                     simulation=False,  # TODO Quickfix for SUP-9912
@@ -449,7 +448,9 @@ class _Builder:
             ),
             SNMPFileCache(
                 meta.hostname,
-                base_path=make_file_cache_dir(fetcher_type=meta.fetcher_type, ident=meta.ident),
+                path_template=make_file_cache_path_template(
+                    fetcher_type=meta.fetcher_type, ident=meta.ident
+                ),
                 max_age=(
                     MaxAge.none() if self.force_snmp_cache_refresh else self.file_cache_max_age
                 ),
@@ -501,7 +502,9 @@ class _Builder:
                 ),
                 SNMPFileCache(
                     meta.hostname,
-                    base_path=make_file_cache_dir(fetcher_type=meta.fetcher_type, ident=meta.ident),
+                    path_template=make_file_cache_path_template(
+                        fetcher_type=meta.fetcher_type, ident=meta.ident
+                    ),
                     max_age=(
                         MaxAge.none() if self.force_snmp_cache_refresh else self.file_cache_max_age
                     ),
@@ -537,7 +540,9 @@ class _Builder:
                 ),
                 AgentFileCache(
                     meta.hostname,
-                    base_path=make_file_cache_dir(fetcher_type=meta.fetcher_type, ident=meta.ident),
+                    path_template=make_file_cache_path_template(
+                        fetcher_type=meta.fetcher_type, ident=meta.ident
+                    ),
                     max_age=self.file_cache_max_age,
                     use_outdated=self.simulation_mode or FileCacheGlobals.use_outdated,
                     simulation=self.simulation_mode,
@@ -577,7 +582,9 @@ class _Builder:
                 ),
                 AgentFileCache(
                     meta.hostname,
-                    base_path=make_file_cache_dir(fetcher_type=meta.fetcher_type, ident=meta.ident),
+                    path_template=make_file_cache_path_template(
+                        fetcher_type=meta.fetcher_type, ident=meta.ident
+                    ),
                     max_age=self.file_cache_max_age,
                     use_outdated=self.simulation_mode or FileCacheGlobals.use_outdated,
                     simulation=self.simulation_mode,
@@ -600,9 +607,11 @@ class _Builder:
             return (
                 meta,
                 NoFetcher(),
-                PushAgentFileCache(
+                AgentFileCache(
                     meta.hostname,
-                    base_path=make_file_cache_dir(fetcher_type=meta.fetcher_type, ident=meta.ident),
+                    path_template=make_file_cache_path_template(
+                        fetcher_type=meta.fetcher_type, ident=meta.ident
+                    ),
                     max_age=MaxAge(interval, interval, interval),
                     use_outdated=self.simulation_mode or FileCacheGlobals.use_outdated,
                     simulation=self.simulation_mode,
@@ -635,7 +644,9 @@ class _Builder:
                 ),
                 AgentFileCache(
                     meta.hostname,
-                    base_path=make_file_cache_dir(fetcher_type=meta.fetcher_type, ident=meta.ident),
+                    path_template=make_file_cache_path_template(
+                        fetcher_type=meta.fetcher_type, ident=meta.ident
+                    ),
                     max_age=self.file_cache_max_age,
                     use_outdated=self.simulation_mode or FileCacheGlobals.use_outdated,
                     simulation=self.simulation_mode,
@@ -675,7 +686,9 @@ class _Builder:
             )
             file_cache = AgentFileCache(
                 meta.hostname,
-                base_path=make_file_cache_dir(fetcher_type=meta.fetcher_type, ident=meta.ident),
+                path_template=make_file_cache_path_template(
+                    fetcher_type=meta.fetcher_type, ident=meta.ident
+                ),
                 max_age=self.file_cache_max_age,
                 use_outdated=self.simulation_mode or FileCacheGlobals.use_outdated,
                 simulation=self.simulation_mode,

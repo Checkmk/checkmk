@@ -46,7 +46,7 @@ class PiggybackSource(Source[AgentRawData, AgentRawDataSection]):
     def _make_file_cache(self) -> AgentFileCache:
         return AgentFileCache(
             self.hostname,
-            base_path=self.file_cache_base_path,
+            path_template="",
             max_age=self.file_cache_max_age,
             use_outdated=FileCacheGlobals.use_outdated,
             simulation=False,  # TODO Quickfix for SUP-9912, should be handled in a better way

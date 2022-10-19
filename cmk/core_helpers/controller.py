@@ -22,7 +22,7 @@ from cmk.utils.type_defs import HostName, SourceType
 from cmk.utils.type_defs.protocol import Serializer
 
 from . import Fetcher, FetcherFactory, get_raw_data, protocol
-from .agent import AgentFileCache, PushAgentFileCache
+from .agent import AgentFileCache
 from .cache import FileCache, MaxAge
 from .crash_reporting import create_fetcher_crash_dump
 from .snmp import SNMPFetcher, SNMPFileCache, SNMPPluginStore
@@ -219,8 +219,6 @@ def _parse_fetcher_config(
                     discovery=0,
                     inventory=file_cache.max_age.inventory,
                 )
-            case FetcherType.PUSH_AGENT:
-                file_cache = PushAgentFileCache.from_json(entry["file_cache_params"])
             case _:
                 file_cache = AgentFileCache.from_json(entry["file_cache_params"])
 

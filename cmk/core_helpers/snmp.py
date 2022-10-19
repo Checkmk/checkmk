@@ -146,9 +146,6 @@ class SNMPFileCache(FileCache[SNMPRawData]):
     def _to_cache_file(raw_data: SNMPRawData) -> bytes:
         return (repr({str(k): v for k, v in raw_data.items()}) + "\n").encode("utf-8")
 
-    def make_path(self, mode: Mode) -> Path:
-        return self.base_path / mode.name.lower() / self.hostname
-
 
 class SNMPFetcher(Fetcher[SNMPRawData]):
     CPU_SECTIONS_WITHOUT_CPU_IN_NAME = {

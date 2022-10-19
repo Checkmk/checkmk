@@ -60,7 +60,7 @@ def source_fixture():
         do_status_data_inventory=False,
         cache=SNMPFileCache(
             hostname=hostname,
-            base_path=Path(os.devnull),
+            path_template=os.devnull,
             max_age=MaxAge.none(),
             use_outdated=True,
             simulation=True,

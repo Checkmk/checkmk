@@ -37,7 +37,7 @@ def fetchers(host_config: HostConfig) -> Dict[str, Any]:
                 "fetcher_params": fetcher.to_json(),
                 "file_cache_params": type(file_cache)(
                     file_cache.hostname,
-                    base_path=file_cache.base_path,
+                    path_template=file_cache.path_template,
                     # During discovery, the allowed cache age defaults to 120 seconds,
                     # such that the discovery service won't steal data for TCP.
                     # For SNMP, we do want to see new services so we invalidate the cache

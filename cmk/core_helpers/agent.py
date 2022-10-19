@@ -8,7 +8,6 @@ from __future__ import annotations
 import abc
 import logging
 import time
-from pathlib import Path
 from typing import (
     Any,
     final,
@@ -45,9 +44,6 @@ class AgentFileCache(FileCache[AgentRawData]):
     def _to_cache_file(raw_data: AgentRawData) -> bytes:
         return raw_data
 
-    def make_path(self, mode: Mode) -> Path:
-        return self.base_path / self.hostname
-
 
 class NoFetcher(Fetcher[AgentRawData]):
     def __init__(self) -> None:
@@ -68,21 +64,6 @@ class NoFetcher(Fetcher[AgentRawData]):
 
     def _fetch_from_io(self, mode: Mode):  # type:ignore[no-untyped-def]
         raise TypeError(self)
-
-
-class PushAgentFileCache(FileCache[AgentRawData]):
-    # TODO(ml): The only difference with `AgentFileCache` is `make_path()`.  Make
-    #           them consistent/pass the path as an argument and nuke this class.
-    @staticmethod
-    def _from_cache_file(raw_data: bytes) -> AgentRawData:
-        return AgentRawData(raw_data)
-
-    @staticmethod
-    def _to_cache_file(raw_data: AgentRawData) -> bytes:
-        return raw_data
-
-    def make_path(self, mode: Mode) -> Path:
-        return self.base_path / self.hostname / "agent_output"
 
 
 class SectionWithHeader(NamedTuple):

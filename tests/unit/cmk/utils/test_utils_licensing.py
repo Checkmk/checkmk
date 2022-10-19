@@ -39,6 +39,12 @@ def test_update_license_usage(monkeypatch: MonkeyPatch) -> None:
 
     monkeypatch.setattr(
         licensing,
+        "_get_shadow_hosts_counter",
+        lambda: 7,
+    )
+
+    monkeypatch.setattr(
+        licensing,
         "_get_stats_from_livestatus",
         _mock_livestatus,
     )
@@ -60,6 +66,12 @@ def test_update_license_usage_livestatus_socket_error(
 ) -> None:
     def _mock_livestatus(query: str) -> Tuple[int, int]:
         raise livestatus.MKLivestatusSocketError()
+
+    monkeypatch.setattr(
+        licensing,
+        "_get_shadow_hosts_counter",
+        lambda: 7,
+    )
 
     monkeypatch.setattr(
         licensing,
@@ -87,6 +99,12 @@ def test_update_license_usage_livestatus_not_found_error(
 
     monkeypatch.setattr(
         licensing,
+        "_get_shadow_hosts_counter",
+        lambda: 7,
+    )
+
+    monkeypatch.setattr(
+        licensing,
         "_get_stats_from_livestatus",
         _mock_livestatus,
     )
@@ -110,6 +128,12 @@ def test_update_license_usage_next_run_ts_not_reached(
         if "GET hosts" in query:
             return 10, 5
         return 100, 10
+
+    monkeypatch.setattr(
+        licensing,
+        "_get_shadow_hosts_counter",
+        lambda: 7,
+    )
 
     monkeypatch.setattr(
         licensing,
@@ -153,9 +177,12 @@ def test_serialize_history_dump() -> None:
             ],
         }
     )
-    assert (
-        _serialize_dump(history_dump.for_report())
-        == b"LQ't#$x~}Qi Q`]bQ[ Q9:DE@CJQi ,LQG6CD:@?Qi QQ[ Q65:E:@?Qi QQ[ QA=2E7@C>Qi Qp G6CJ =@?8 DEC:?8 H:E9 =6?md_ 56D4C:3:?8 E96 A=2EQ[ Q:D04>2Qi 72=D6[ QD2>A=60E:>6Qi `[ QE:>6K@?6Qi QQ[ Q?F>09@DEDQi a[ Q?F>09@DED06I4=F565Qi b[ Q?F>0D6CG:46DQi c[ Q?F>0D6CG:46D06I4=F565Qi d[ Q6IE6?D:@?0?E@AQi ECF6N.N"
+    assert _serialize_dump(history_dump.for_report()) == (
+        b"LQ't#$x~}Qi Q`]cQ[ Q9:DE@CJQi ,LQG6CD:@?Qi QQ[ Q65:E:@?Qi QQ[ QA=2E7@C>Qi Qp"
+        b" G6CJ =@?8 DEC:?8 H:E9 =6?md_ 56D4C:3:?8 E96 A=2EQ[ Q:D04>2Qi 72=D6[ QD2>A=6"
+        b"0E:>6Qi `[ QE:>6K@?6Qi QQ[ Q?F>09@DEDQi a[ Q?F>09@DED06I4=F565Qi b[ Q?F>0D92"
+        b"5@H09@DEDQi _[ Q?F>0D6CG:46DQi c[ Q?F>0D6CG:46D06I4=F565Qi d[ Q6IE6?D:@?0?E@"
+        b"AQi ECF6N.N"
     )
 
 
@@ -210,6 +237,7 @@ def test_serialize_history_dump() -> None:
                             sample_time=1,
                             timezone="",
                             num_hosts=2,
+                            num_shadow_hosts=0,
                             num_services=4,
                             num_hosts_excluded=0,
                             num_services_excluded=0,
@@ -252,6 +280,7 @@ def test_serialize_history_dump() -> None:
                             sample_time=1,
                             timezone="",
                             num_hosts=2,
+                            num_shadow_hosts=0,
                             num_hosts_excluded=3,
                             num_services=4,
                             num_services_excluded=5,
@@ -297,6 +326,7 @@ def test_serialize_history_dump() -> None:
                             sample_time=1,
                             timezone="",
                             num_hosts=2,
+                            num_shadow_hosts=0,
                             num_hosts_excluded=3,
                             num_services=4,
                             num_services_excluded=5,
@@ -339,6 +369,7 @@ def test_serialize_history_dump() -> None:
                             sample_time=1,
                             timezone="",
                             num_hosts=2,
+                            num_shadow_hosts=0,
                             num_hosts_excluded=3,
                             num_services=4,
                             num_services_excluded=5,
@@ -384,6 +415,7 @@ def test_serialize_history_dump() -> None:
                             sample_time=1,
                             timezone="",
                             num_hosts=2,
+                            num_shadow_hosts=0,
                             num_hosts_excluded=3,
                             num_services=4,
                             num_services_excluded=5,
@@ -427,6 +459,52 @@ def test_serialize_history_dump() -> None:
                             sample_time=1,
                             timezone="",
                             num_hosts=2,
+                            num_shadow_hosts=0,
+                            num_hosts_excluded=3,
+                            num_services=4,
+                            num_services_excluded=5,
+                            extension_ntop=True,
+                        ),
+                    ]
+                ),
+            ),
+        ),
+        (
+            {
+                "VERSION": "1.4",
+                "history": [
+                    {
+                        "version": "",
+                        "edition": "",
+                        "platform": (
+                            "A very long string with len>50 describing the platform"
+                            " a Checkmk server is operating on."
+                        ),
+                        "is_cma": False,
+                        "sample_time": 1,
+                        "timezone": "",
+                        "num_hosts": 2,
+                        "num_shadow_hosts": 6,
+                        "num_hosts_excluded": 3,
+                        "num_services": 4,
+                        "num_services_excluded": 5,
+                        "extension_ntop": True,
+                    },
+                ],
+            },
+            LicenseUsageHistoryDump(
+                VERSION=LicenseUsageHistoryDumpVersion,
+                history=LicenseUsageHistory(
+                    [
+                        LicenseUsageSample(
+                            version="",
+                            edition="",
+                            platform="A very long string with len>50 describing the plat",
+                            is_cma=False,
+                            sample_time=1,
+                            timezone="",
+                            num_hosts=2,
+                            num_shadow_hosts=6,
                             num_hosts_excluded=3,
                             num_services=4,
                             num_services_excluded=5,
@@ -476,6 +554,7 @@ def test_history_dump_add_sample() -> None:
                 sample_time=idx,
                 timezone="timezone",
                 num_hosts=2,
+                num_shadow_hosts=0,
                 num_services=3,
                 num_hosts_excluded=4,
                 num_services_excluded=5,
@@ -491,6 +570,7 @@ def test_history_dump_add_sample() -> None:
         sample_time=449,
         timezone="timezone",
         num_hosts=2,
+        num_shadow_hosts=0,
         num_services=3,
         num_hosts_excluded=4,
         num_services_excluded=5,

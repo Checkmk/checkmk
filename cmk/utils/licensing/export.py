@@ -15,7 +15,7 @@ from typing import Any, NamedTuple
 
 from dateutil.relativedelta import relativedelta
 
-LicenseUsageHistoryDumpVersion = "1.3"
+LicenseUsageHistoryDumpVersion = "1.4"
 
 
 class LicenseUsageReportVersionError(Exception):
@@ -326,6 +326,7 @@ class LicenseUsageSample:
     timezone: str
     num_hosts: int
     num_hosts_excluded: int
+    num_shadow_hosts: int
     num_services: int
     num_services_excluded: int
     extension_ntop: bool
@@ -341,6 +342,9 @@ class LicenseUsageSample:
         if report_version in ["1.1", "1.2", "1.3"]:
             return cls._parse_sample_v1_1
 
+        if report_version == "1.4":
+            return cls._parse_sample_v1_4
+
         raise LicenseUsageReportVersionError(f"Unknown report version {report_version}")
 
     @classmethod
@@ -354,8 +358,9 @@ class LicenseUsageSample:
             sample_time=raw_sample["sample_time"],
             timezone=raw_sample["timezone"],
             num_hosts=raw_sample["num_hosts"],
-            num_services=raw_sample["num_services"],
             num_hosts_excluded=0,
+            num_shadow_hosts=0,
+            num_services=raw_sample["num_services"],
             num_services_excluded=0,
             extension_ntop=extensions.ntop,
         )
@@ -371,8 +376,27 @@ class LicenseUsageSample:
             sample_time=raw_sample["sample_time"],
             timezone=raw_sample["timezone"],
             num_hosts=raw_sample["num_hosts"],
-            num_services=raw_sample["num_services"],
             num_hosts_excluded=raw_sample["num_hosts_excluded"],
+            num_shadow_hosts=0,
+            num_services=raw_sample["num_services"],
+            num_services_excluded=raw_sample["num_services_excluded"],
+            extension_ntop=extensions.ntop,
+        )
+
+    @classmethod
+    def _parse_sample_v1_4(cls, raw_sample: Mapping[str, Any]) -> LicenseUsageSample:
+        extensions = LicenseUsageExtensions.parse(raw_sample)
+        return cls(
+            version=raw_sample["version"],
+            edition=raw_sample["edition"],
+            platform=cls._restrict_platform(raw_sample["platform"]),
+            is_cma=raw_sample["is_cma"],
+            sample_time=raw_sample["sample_time"],
+            timezone=raw_sample["timezone"],
+            num_hosts=raw_sample["num_hosts"],
+            num_hosts_excluded=raw_sample["num_hosts_excluded"],
+            num_shadow_hosts=raw_sample["num_shadow_hosts"],
+            num_services=raw_sample["num_services"],
             num_services_excluded=raw_sample["num_services_excluded"],
             extension_ntop=extensions.ntop,
         )
@@ -411,8 +435,9 @@ class LicenseUsageSampleWithSiteHash(LicenseUsageSample):
             sample_time=parsed_sample.sample_time,
             timezone=parsed_sample.timezone,
             num_hosts=parsed_sample.num_hosts,
-            num_services=parsed_sample.num_services,
             num_hosts_excluded=parsed_sample.num_hosts_excluded,
+            num_shadow_hosts=parsed_sample.num_shadow_hosts,
+            num_services=parsed_sample.num_services,
             num_services_excluded=parsed_sample.num_services_excluded,
             extension_ntop=parsed_sample.extension_ntop,
             site_hash=raw_sample["site_hash"],

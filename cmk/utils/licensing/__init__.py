@@ -100,6 +100,7 @@ def _try_update_license_usage(logger: logging.Logger) -> int:
 
 def _create_sample() -> LicenseUsageSample:
     hosts_counter = _get_hosts_counter()
+    shadow_hosts_counter = _get_shadow_hosts_counter()
     services_counter = _get_services_counter()
 
     general_infos = cmk_version.get_general_version_infos()
@@ -112,6 +113,7 @@ def _create_sample() -> LicenseUsageSample:
         is_cma=cmk_version.is_cma(),
         num_hosts=hosts_counter.included,
         num_hosts_excluded=hosts_counter.excluded,
+        num_shadow_hosts=shadow_hosts_counter,
         num_services=services_counter.included,
         num_services_excluded=services_counter.excluded,
         sample_time=int(time.time()),
@@ -141,6 +143,11 @@ def _get_hosts_counter() -> EntityCounter:
         included=included_num_hosts,
         excluded=excluded_num_hosts,
     )
+
+
+def _get_shadow_hosts_counter() -> int:
+    "Shadow objects: 0: active, 1: passive, 2: shadow"
+    return int(livestatus.LocalConnection().query("GET hosts\nStats: check_type = 2")[0][0])
 
 
 def _get_services_counter() -> EntityCounter:
@@ -287,8 +294,9 @@ class LicenseUsageHistory:
                     sample_time=sample.sample_time,
                     timezone=sample.timezone,
                     num_hosts=sample.num_hosts,
-                    num_services=sample.num_services,
                     num_hosts_excluded=sample.num_hosts_excluded,
+                    num_shadow_hosts=sample.num_shadow_hosts,
+                    num_services=sample.num_services,
                     num_services_excluded=sample.num_services_excluded,
                     extension_ntop=sample.extension_ntop,
                     site_hash=site_hash,

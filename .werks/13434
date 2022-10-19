@@ -1,0 +1,14 @@
+Title: Fix 500 status when deleting non existing downtimes
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1666177030
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p15
+
+It was possible that checkmk returned an error message like "Permission
+mismatch. See the server logs for more information." when trying to delete a
+non existing downtime.

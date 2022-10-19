@@ -846,6 +846,46 @@ def test_openapi_delete_downtime_with_params(
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_delete_downtime_with_params_but_missing_downtime(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus,
+):
+    live: MockLiveStatusConnection = mock_livestatus
+
+    base = "/NO_SITE/check_mk/api/1.0"
+
+    live.add_table(
+        "downtimes",
+        [],
+    )
+
+    live.expect_query(
+        [
+            "GET downtimes",
+            "Columns: id is_service",
+            "Filter: host_name = heute",
+            "Filter: service_description = CPU load",
+            "And: 2",
+        ]
+    )
+
+    with live:
+        aut_user_auth_wsgi_app.post(
+            base + "/domain-types/downtime/actions/delete/invoke",
+            content_type="application/json",
+            params=json.dumps(
+                {
+                    "delete_type": "params",
+                    "host_name": "heute",
+                    "service_descriptions": ["CPU load"],
+                }
+            ),
+            headers={"Accept": "application/json"},
+            status=204,
+        )
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_downtime_non_existing_instance(
     aut_user_auth_wsgi_app: WebTestAppForCMK, mock_livestatus: MockLiveStatusConnection
 ):

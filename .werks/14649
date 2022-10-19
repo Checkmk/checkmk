@@ -1,0 +1,35 @@
+Title: Extension packages: Support different versions in distributed setups
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1666178963
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p15
+
+This feature affects users that maintain a distributed setup where not all sites run the same Checkmk version.
+Users can now simultaneously manage conflicting MKPs for different Checkmk versions.
+
+MKPs that are uploaded to a site can now have one of three states:
+
+<b>Available:</b>
+The MKP is uploaded to the site.
+It is not even unpacked, it just sits on disk.
+Every MKP will be shown in this list, regardles of its deployment status.
+From here you can download or delete it.
+
+<b>Active on this site:</b>
+The MKP is installed, and the code distributed with it is currently active on this site.
+
+<b>Enabled (inactive on this site):</b>
+This is the bit that is new.
+There are reasons why we may not be able to install an MKP: It might not be suitable for this Checkmk version, or collide with another package.
+In this case, the MKP is marked as <i>"enabled"</i>, but it is not installed.
+In a distributed setup this information is passed to the remote sites.
+
+During a version upgrade or after a new configuration has been pushed to a remote site, every site re-evaluates all enabled (and active) MKPs.
+The outdated ones are disabled, and all applicable ones are installed.
+This way users can maintain MKPs for different Checkmk versions providing the same functionality.
+

@@ -33,7 +33,6 @@ from reportlab.pdfgen import canvas  # type: ignore[import]
 from six import ensure_str
 
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
 
 from cmk.gui.exceptions import MKInternalError
 from cmk.gui.http import response
@@ -980,6 +979,8 @@ class Document:
 
 
 class CellRenderer(Protocol):
+    supports_stepwise_rendering: bool
+
     def render(
         self,
         pdfdoc: Document,
@@ -991,6 +992,11 @@ class CellRenderer(Protocol):
         y_padding: SizeMM,
         row_oddeven: Optional[OddEven],
     ) -> None:
+        ...
+
+    def get_render_steps(
+        self, pdfdoc: Document, headers: Sequence[CellRenderer], y_padding: SizeMM
+    ) -> Sequence[CellRenderer]:
         ...
 
     def maximal_width(self, pdfdoc: Document) -> SizeMM:
@@ -1188,7 +1194,7 @@ class TableRenderer:
         for row_index, row in enumerate(rows):
             row_oddeven = "odd" if row_oddeven == "even" else "even"
 
-            if self._paint_graph_row(
+            if self._paint_stepwise(
                 row,
                 column_widths,
                 y_padding,
@@ -1361,7 +1367,7 @@ class TableRenderer:
                 left, self.pdf._linepos, left, self.pdf._linepos - row_height - 2 * y_padding
             )
 
-    def _paint_graph_row(
+    def _paint_stepwise(
         self,
         row: Sequence[CellRenderer],
         column_widths: Sequence[SizeMM],
@@ -1388,35 +1394,22 @@ class TableRenderer:
         solution we should drop the approach of trying to build our own table rendering solution and
         find something more battle tested.
         """
-        if cmk_version.is_raw_edition():
-            return False
-
-        # This import hack is needed because this module is part of the raw edition while
-        # the PainterPrinterTimeGraph class is not (also we don't have a base class
-        # available in CRE to use instead).
-        # pylint: disable=no-name-in-module
-        from cmk.gui.cee.plugins.reporting.pnp_graphs import PainterPrinterTimeGraph
-
         is_single_dataset = (
-            len(row) == 2
-            and isinstance(row[0], TitleCell)
-            and isinstance(row[1], PainterPrinterTimeGraph)
+            len(row) == 2 and isinstance(row[0], TitleCell) and row[1].supports_stepwise_rendering
         )
-        is_single_column = len(row) == 1 and isinstance(row[0], PainterPrinterTimeGraph)
+        is_single_column = len(row) == 1 and row[0].supports_stepwise_rendering
 
         if not is_single_dataset and not is_single_column:
             return False
 
-        graph_column = row[-1]
-        assert isinstance(graph_column, PainterPrinterTimeGraph)
-
-        if self.pdf.fits_on_remaining_page(graph_column.height(self.pdf) * mm):
+        column = row[-1]
+        if self.pdf.fits_on_remaining_page(column.height(self.pdf) * mm):
             return False
 
-        if self.pdf.fits_on_empty_page(graph_column.height(self.pdf) * mm):
+        if self.pdf.fits_on_empty_page(column.height(self.pdf) * mm):
             return False
 
-        for index, step in enumerate(graph_column.get_render_steps(self.pdf, headers, y_padding)):
+        for index, step in enumerate(column.get_render_steps(self.pdf, headers, y_padding)):
             if is_single_dataset:
                 step_row = [row[0] if index == 0 else TitleCell("lefheading", ""), step]
             else:
@@ -1445,6 +1438,7 @@ class TableRenderer:
 # to the fact that this API is also available externally
 class TextCell(CellRenderer):
     def __init__(self, csses: Optional[str], text: str) -> None:
+        self.supports_stepwise_rendering = False
         self._text = text
         self._bold = False
         self._color = black
@@ -1474,6 +1468,11 @@ class TextCell(CellRenderer):
                 self._alignment = "center"
 
         self._narrow = "narrow" in csses or "state" in csses
+
+    def get_render_steps(
+        self, pdfdoc: Document, headers: Sequence[CellRenderer], y_padding: SizeMM
+    ) -> Sequence[TextCell]:
+        return []
 
     def minimal_width(self, pdfdoc: Document) -> SizeMM:  # without padding
         # TODO: consider bold here!
@@ -1539,7 +1538,13 @@ class IconCell(CellRenderer):
     """Rendering *one* UI icon"""
 
     def __init__(self, path: str) -> None:
+        self.supports_stepwise_rendering = False
         self._image_path = path
+
+    def get_render_steps(
+        self, pdfdoc: Document, headers: Sequence[CellRenderer], y_padding: SizeMM
+    ) -> Sequence[TextCell]:
+        return []
 
     def minimal_width(self, pdfdoc: Document) -> SizeMM:
         return self.height(pdfdoc)

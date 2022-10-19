@@ -15,11 +15,12 @@ from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.watolib.appendstore import ABCAppendStore
 from cmk.gui.watolib.objref import ObjectRef
 from cmk.gui.watolib.paths import wato_var_dir
 
-LogMessage = Union[str, HTML]
+LogMessage = Union[str, HTML, LazyString]
 
 
 class AuditLogStore(ABCAppendStore["AuditLogStore.Entry"]):
@@ -91,15 +92,19 @@ def log_audit(
 ) -> None:
     if active_config.wato_use_git:
         if isinstance(message, HTML):
-            message = escaping.strip_tags(message.value)
-        cmk.gui.watolib.git.add_message(message)
+            git_message = escaping.strip_tags(message.value)
+        elif isinstance(message, LazyString):
+            git_message = str(message)
+        else:
+            git_message = message
+        cmk.gui.watolib.git.add_message(git_message)
 
     _log_entry(action, message, object_ref, user_id, diff_text)
 
 
 def _log_entry(
     action: str,
-    message: Union[HTML, str],
+    message: LogMessage,
     object_ref: Optional[ObjectRef],
     user_id: Optional[UserId],
     diff_text: Optional[str],

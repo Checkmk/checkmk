@@ -116,6 +116,20 @@ def test_lazy_localization() -> None:
         assert lazy_str == "Age"
 
 
+def test_lazy_with_args() -> None:
+    with application_and_request_context():
+        lazy_str = i18n._l("Edit foreign %s") % "zeugs"
+        assert lazy_str == "Edit foreign zeugs"
+
+    with application_and_request_context():
+        i18n.localize("de")
+        assert lazy_str == "Fremde(n) zeugs editieren"
+
+    with application_and_request_context():
+        i18n._unlocalize()
+        assert lazy_str == "Edit foreign zeugs"
+
+
 def test_init_language_not_existing() -> None:
     assert i18n._init_language("xz") is None
 

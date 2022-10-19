@@ -1394,7 +1394,8 @@ class AutomationDiagHost(Automation):
             if meta.fetcher_type is FetcherType.SNMP:
                 continue
 
-            if isinstance(fetcher, ProgramFetcher) and fetcher.stdin is None and cmd:
+            if meta.fetcher_type is FetcherType.PROGRAM and cmd:
+                assert isinstance(fetcher, ProgramFetcher)
                 fetcher = ProgramFetcher(
                     ident=fetcher.ident,
                     cmdline=core_config.translate_ds_program_source_cmdline(
@@ -1403,7 +1404,8 @@ class AutomationDiagHost(Automation):
                     stdin=fetcher.stdin,
                     is_cmc=fetcher.is_cmc,
                 )
-            elif isinstance(fetcher, TCPFetcher):
+            elif meta.fetcher_type is FetcherType.TCP:
+                assert isinstance(fetcher, TCPFetcher)
                 port = agent_port or fetcher.address[1]
                 timeout = tcp_connect_timeout or fetcher.timeout
                 fetcher = TCPFetcher(

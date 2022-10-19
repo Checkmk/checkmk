@@ -32,6 +32,7 @@ class FetcherType(enum.Enum):
     IPMI = enum.auto()
     PIGGYBACK = enum.auto()
     PROGRAM = enum.auto()
+    SPECIAL_AGENT = enum.auto()
     SNMP = enum.auto()
     TCP = enum.auto()
 

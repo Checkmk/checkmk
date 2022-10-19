@@ -199,6 +199,7 @@ def _timing_results(
                 {
                     FetcherType.PIGGYBACK: "agent",
                     FetcherType.PROGRAM: "ds",
+                    FetcherType.SPECIAL_AGENT: "ds",
                     FetcherType.SNMP: "snmp",
                     FetcherType.TCP: "agent",
                 }[msg.fetcher_type]

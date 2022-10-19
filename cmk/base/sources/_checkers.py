@@ -139,6 +139,7 @@ def make_persisted_section_dir(meta: HostMeta) -> Path:
         FetcherType.SNMP: var_dir / "persisted_sections" / meta.ident / str(meta.hostname),
         FetcherType.IPMI: var_dir / "persisted_sections" / meta.ident / str(meta.hostname),
         FetcherType.PROGRAM: var_dir / "persisted" / str(meta.hostname),
+        FetcherType.SPECIAL_AGENT: var_dir / "persisted_sections" / meta.ident / str(meta.hostname),
         FetcherType.PUSH_AGENT: var_dir / "persisted_sections" / meta.ident / str(meta.hostname),
         FetcherType.TCP: var_dir / "persisted" / str(meta.hostname),
     }[meta.fetcher_type]
@@ -156,7 +157,8 @@ def make_file_cache_path_template(
         FetcherType.PIGGYBACK: os.path.join(base_dir, ident, "{hostname}"),
         FetcherType.SNMP: os.path.join(base_dir, ident, "{mode}", "{hostname}"),
         FetcherType.IPMI: os.path.join(base_dir, ident, "{hostname}"),
-        FetcherType.PROGRAM: os.path.join(base_dir, ident, "{hostname}"),
+        FetcherType.SPECIAL_AGENT: os.path.join(base_dir, ident, "{hostname}"),
+        FetcherType.PROGRAM: os.path.join(cmk.utils.paths.tcp_cache_dir, "{hostname}"),
         FetcherType.PUSH_AGENT: os.path.join(base_dir, ident, "{hostname}", "agent_output"),
         FetcherType.TCP: os.path.join(cmk.utils.paths.tcp_cache_dir, "{hostname}"),
     }[fetcher_type]
@@ -636,7 +638,7 @@ class _Builder:
                 self.host_config.hostname,
                 self.ipaddress,
                 make_id(agentname),
-                FetcherType.PROGRAM,
+                FetcherType.SPECIAL_AGENT,
                 SourceType.HOST,
             )
             fetcher = ProgramFetcher(

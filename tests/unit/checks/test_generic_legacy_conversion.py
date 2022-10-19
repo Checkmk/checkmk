@@ -798,7 +798,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
     expected_legacy_checks = {
         "3par_cpgs",
         "3par_cpgs.usage",
-        "3par_hosts",
         "3par_system",
         "3ware_disks",
         "3ware_info",

@@ -135,7 +135,7 @@ def test_cfg_fixture(web: CMKWebSession, site: Site, backup_path: str) -> Iterat
     site.ensure_running()
 
 
-def _execute_backup(site: Site, job_id: str = "testjob") -> str:
+def _execute_backup(site: Site, job_id="testjob"):  # type:ignore[no-untyped-def]
     # Perform the backup
     p = site.execute(
         ["mkbackup", "backup", job_id],
@@ -172,12 +172,12 @@ def _execute_backup(site: Site, job_id: str = "testjob") -> str:
     assert matches is not None
     backup_id = matches.groups()[0]
 
-    return str(backup_id)
+    return backup_id
 
 
-def _execute_restore(
-    site: Site, backup_id: str, env: object = None, restore_site: bool = True
-) -> None:
+def _execute_restore(  # type:ignore[no-untyped-def]
+    site: Site, backup_id, env=None, restore_site=True
+):
     p = site.execute(
         ["mkbackup", "restore", "test-target", backup_id],
         stdout=subprocess.PIPE,
@@ -230,8 +230,7 @@ def test_mkbackup_list_unconfigured(site: Site) -> None:
     assert p.wait() == 3
 
 
-@pytest.mark.usefixtures("test_cfg")
-def test_mkbackup_list_targets(site: Site) -> None:
+def test_mkbackup_list_targets(site: Site, test_cfg) -> None:  # type:ignore[no-untyped-def]
     p = site.execute(
         ["mkbackup", "targets"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8"
     )
@@ -242,8 +241,7 @@ def test_mkbackup_list_targets(site: Site) -> None:
     assert "tärget" in stdout
 
 
-@pytest.mark.usefixtures("test_cfg")
-def test_mkbackup_list_backups(site: Site) -> None:
+def test_mkbackup_list_backups(site: Site, test_cfg) -> None:  # type:ignore[no-untyped-def]
     p = site.execute(
         ["mkbackup", "list", "test-target"],
         stdout=subprocess.PIPE,
@@ -257,8 +255,9 @@ def test_mkbackup_list_backups(site: Site) -> None:
     assert "Details" in stdout
 
 
-@pytest.mark.usefixtures("test_cfg")
-def test_mkbackup_list_backups_invalid_target(site: Site) -> None:
+def test_mkbackup_list_backups_invalid_target(  # type:ignore[no-untyped-def]
+    site: Site, test_cfg
+) -> None:
     p = site.execute(
         ["mkbackup", "list", "xxx"],
         stdout=subprocess.PIPE,
@@ -271,8 +270,7 @@ def test_mkbackup_list_backups_invalid_target(site: Site) -> None:
     assert stdout == ""
 
 
-@pytest.mark.usefixtures("test_cfg")
-def test_mkbackup_list_jobs(site: Site) -> None:
+def test_mkbackup_list_jobs(site: Site, test_cfg) -> None:  # type:ignore[no-untyped-def]
     p = site.execute(
         ["mkbackup", "jobs"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8"
     )
@@ -283,25 +281,24 @@ def test_mkbackup_list_jobs(site: Site) -> None:
     assert "Tästjob" in stdout
 
 
-@pytest.mark.usefixtures("test_cfg")
-@pytest.mark.usefixtures("backup_lock_dir")
-def test_mkbackup_simple_backup(site: Site) -> None:
+def test_mkbackup_simple_backup(  # type:ignore[no-untyped-def]
+    site: Site, test_cfg, backup_lock_dir
+) -> None:
     _execute_backup(site)
 
 
-@pytest.mark.usefixtures("test_cfg")
-def test_mkbackup_simple_restore(site: Site) -> None:
+def test_mkbackup_simple_restore(site: Site, test_cfg) -> None:  # type:ignore[no-untyped-def]
     backup_id = _execute_backup(site)
     _execute_restore(site, backup_id)
 
 
-@pytest.mark.usefixtures("test_cfg")
-def test_mkbackup_encrypted_backup(site: Site) -> None:
+def test_mkbackup_encrypted_backup(site: Site, test_cfg) -> None:  # type:ignore[no-untyped-def]
     _execute_backup(site, job_id="testjob-encrypted")
 
 
-@pytest.mark.usefixtures("test_cfg")
-def test_mkbackup_encrypted_backup_and_restore(site: Site) -> None:
+def test_mkbackup_encrypted_backup_and_restore(  # type:ignore[no-untyped-def]
+    site, test_cfg
+) -> None:
     backup_id = _execute_backup(site, job_id="testjob-encrypted")
 
     env = os.environ.copy()
@@ -310,14 +307,16 @@ def test_mkbackup_encrypted_backup_and_restore(site: Site) -> None:
     _execute_restore(site, backup_id, env)
 
 
-@pytest.mark.usefixtures("test_cfg")
-def test_mkbackup_compressed_backup_and_restore(site: Site) -> None:
+def test_mkbackup_compressed_backup_and_restore(  # type:ignore[no-untyped-def]
+    site, test_cfg
+) -> None:
     backup_id = _execute_backup(site, job_id="testjob-compressed")
     _execute_restore(site, backup_id)
 
 
-@pytest.mark.usefixtures("test_cfg")
-def test_mkbackup_no_history_backup_and_restore(site: Site, backup_path: str) -> None:
+def test_mkbackup_no_history_backup_and_restore(  # type:ignore[no-untyped-def]
+    site, test_cfg, backup_path
+) -> None:
     backup_id = _execute_backup(site, job_id="testjob-no-history")
 
     tar_path = os.path.join(backup_path, backup_id, "site-%s.tar" % site.id)
@@ -335,8 +334,7 @@ def test_mkbackup_no_history_backup_and_restore(site: Site, backup_path: str) ->
     _execute_restore(site, backup_id)
 
 
-@pytest.mark.usefixtures("test_cfg")
-def test_mkbackup_locking(site: Site) -> None:
+def test_mkbackup_locking(site, test_cfg) -> None:  # type:ignore[no-untyped-def]
     backup_id = _execute_backup(site, job_id="testjob-no-history")
     with simulate_backup_lock(site.id):
         for what in (

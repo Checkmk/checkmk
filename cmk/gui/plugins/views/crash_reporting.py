@@ -7,10 +7,10 @@ import json
 from typing import Dict, List, Optional, Sequence
 
 import livestatus
-from livestatus import SiteId
+from livestatus import OnlySites, SiteId
 
 import cmk.gui.sites as sites
-from cmk.gui.data_source import data_source_registry, RowTable
+from cmk.gui.data_source import ABCDataSource, data_source_registry, RowTable
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -28,8 +28,9 @@ from cmk.gui.plugins.views.utils import (
     Painter,
     painter_registry,
 )
+from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.sorter import Sorter, sorter_registry
-from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos
+from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, VisualContext
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.view_utils import CellSpec
 
@@ -63,7 +64,17 @@ class DataSourceCrashReports(DataSourceLivestatus):
 
 class CrashReportsRowTable(RowTable):
     # TODO: Handle headers / all_active_filters, limit, ...
-    def query(self, view, columns, headers, only_sites, limit, all_active_filters):
+    def query(
+        self,
+        datasource: ABCDataSource,
+        cells: Sequence[Cell],
+        columns: list[ColumnName],
+        context: VisualContext,
+        headers: str,
+        only_sites: OnlySites,
+        limit: int | None,
+        all_active_filters: list[Filter],
+    ) -> Rows | tuple[Rows, int]:
         rows = []
         for raw_row in self.get_crash_report_rows(only_sites, filter_headers=""):
             crash_info = raw_row.get("crash_info")

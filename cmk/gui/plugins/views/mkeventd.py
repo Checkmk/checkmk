@@ -52,13 +52,13 @@ from cmk.gui.type_defs import (
     SingleInfos,
     SorterSpec,
     ViewSpec,
+    VisualContext,
     VisualLinkSpec,
 )
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless, urlencode_vars
 from cmk.gui.valuespec import MonitoringState
-from cmk.gui.view import View
 from cmk.gui.view_store import get_permitted_views, multisite_builtin_views
 from cmk.gui.view_utils import CellSpec
 
@@ -75,8 +75,10 @@ from cmk.gui.view_utils import CellSpec
 class RowTableEC(RowTableLivestatus):
     def query(
         self,
-        view: View,
+        datasource: ABCDataSource,
+        cells: Sequence[Cell],
         columns: List[ColumnName],
+        context: VisualContext,
         headers: str,
         only_sites: OnlySites,
         limit: Optional[int],
@@ -86,7 +88,9 @@ class RowTableEC(RowTableLivestatus):
             if c not in columns:
                 columns.append(c)
 
-        row_data = super().query(view, columns, headers, only_sites, limit, all_active_filters)
+        row_data = super().query(
+            datasource, cells, columns, context, headers, only_sites, limit, all_active_filters
+        )
 
         if isinstance(row_data, tuple):
             rows, _unfiltered_amount_of_rows = row_data

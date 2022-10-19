@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Sequence
 
-from livestatus import LivestatusColumn, Query, QuerySpecification
+from livestatus import LivestatusColumn, OnlySites, Query, QuerySpecification
 
 from cmk.gui.data_source import ABCDataSource, data_source_registry, RowTable
 from cmk.gui.i18n import _
@@ -13,7 +13,9 @@ from cmk.gui.livestatus_data_source import (
     query_livestatus,
     RowTableLivestatus,
 )
-from cmk.gui.type_defs import SingleInfos
+from cmk.gui.plugins.views.utils import Cell
+from cmk.gui.plugins.visuals.utils import Filter
+from cmk.gui.type_defs import ColumnName, Rows, SingleInfos, VisualContext
 
 
 @data_source_registry.register
@@ -479,12 +481,21 @@ class ServiceDiscoveryRowTable(RowTable):
             )
         )
 
-    def query(self, view, columns, headers, only_sites, limit, all_active_filters):
-
+    def query(
+        self,
+        datasource: ABCDataSource,
+        cells: Sequence[Cell],
+        columns: list[ColumnName],
+        context: VisualContext,
+        headers: str,
+        only_sites: OnlySites,
+        limit: int | None,
+        all_active_filters: list[Filter],
+    ) -> Rows | tuple[Rows, int]:
         if "long_plugin_output" not in columns:
             columns.append("long_plugin_output")
 
-        columns = [c for c in columns if c not in view.datasource.add_columns]
+        columns = [c for c in columns if c not in datasource.add_columns]
         data = query_livestatus(
             self.create_livestatus_query(columns, headers), only_sites, limit, "read"
         )

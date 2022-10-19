@@ -7,25 +7,27 @@ from __future__ import annotations
 
 import abc
 import hashlib
-from typing import Dict, List, Optional, Tuple, Type, TYPE_CHECKING, Union
+from typing import Dict, List, Optional, Sequence, Tuple, Type, TYPE_CHECKING, Union
 
 from livestatus import OnlySites
 
 from cmk.utils.plugin_registry import Registry
 
 from cmk.gui.plugins.visuals.utils import Filter
-from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos
+from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, VisualContext
 
 if TYPE_CHECKING:
-    from cmk.gui.view import View
+    from cmk.gui.plugins.views.utils import Cell
 
 
 class RowTable(abc.ABC):
     @abc.abstractmethod
     def query(
         self,
-        view: "View",
+        datasource: ABCDataSource,
+        cells: Sequence[Cell],
         columns: List[ColumnName],
+        context: VisualContext,
         headers: str,
         only_sites: OnlySites,
         limit: Optional[int],

@@ -1498,7 +1498,14 @@ def _fetch_view_rows(
         # for rendering limits.
         query_row_limit = None if view.datasource.ignore_limit else view.row_limit
         row_data: Union[Rows, _Tuple[Rows, int]] = view.datasource.table.query(
-            view, columns, headers, view.only_sites, query_row_limit, all_active_filters
+            view.datasource,
+            view.row_cells,
+            columns,
+            view.context,
+            headers,
+            view.only_sites,
+            query_row_limit,
+            all_active_filters,
         )
 
         if isinstance(row_data, tuple):
@@ -1767,8 +1774,10 @@ def _do_table_join(
     join_filters.append("Or: %d" % len(join_filters))
     headers = "%s%s\n" % (master_filters, "\n".join(join_filters))
     row_data = slave_ds.table.query(
-        view,
+        view.datasource,
+        view.row_cells,
         columns=list(set([join_master_column, join_slave_column] + join_columns)),
+        context=view.context,
         headers=headers,
         only_sites=view.only_sites,
         limit=None,

@@ -33,7 +33,7 @@ from cmk.gui.permissions import (
     PermissionSection,
 )
 from cmk.gui.plugins.visuals.utils import Filter, get_livestatus_filter_headers
-from cmk.gui.type_defs import ColumnName, VisualContext
+from cmk.gui.type_defs import ColumnName, Rows, VisualContext
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.theme import theme
@@ -909,7 +909,7 @@ def compute_bi_aggregation_filter(
 
 def table(
     context: VisualContext,
-    columns: List[ColumnName],
+    columns: list[ColumnName],
     query: str,
     only_sites: OnlySites,
     limit: Optional[int],
@@ -921,36 +921,84 @@ def table(
     return bi_manager.computer.compute_legacy_result_for_filter(bi_aggregation_filter)
 
 
-def hostname_table(view, columns, query, only_sites, limit, all_active_filters):
+def hostname_table(
+    context: VisualContext,
+    columns: list[ColumnName],
+    query: str,
+    only_sites: OnlySites,
+    limit: int | None,
+    all_active_filters: Iterable[Filter],
+) -> Rows:
     """Table of all host aggregations, i.e. aggregations using data from exactly one host"""
     return singlehost_table(
-        view, columns, query, only_sites, limit, all_active_filters, joinbyname=True, bygroup=False
+        context,
+        columns,
+        query,
+        only_sites,
+        limit,
+        all_active_filters,
+        joinbyname=True,
+        bygroup=False,
     )
 
 
-def hostname_by_group_table(view, columns, query, only_sites, limit, all_active_filters):
+def hostname_by_group_table(
+    context: VisualContext,
+    columns: list[ColumnName],
+    query: str,
+    only_sites: OnlySites,
+    limit: int | None,
+    all_active_filters: Iterable[Filter],
+) -> Rows:
     return singlehost_table(
-        view, columns, query, only_sites, limit, all_active_filters, joinbyname=True, bygroup=True
+        context,
+        columns,
+        query,
+        only_sites,
+        limit,
+        all_active_filters,
+        joinbyname=True,
+        bygroup=True,
     )
 
 
-def host_table(view, columns, query, only_sites, limit, all_active_filters):
+def host_table(
+    context: VisualContext,
+    columns: list[ColumnName],
+    query: str,
+    only_sites: OnlySites,
+    limit: int | None,
+    all_active_filters: Iterable[Filter],
+) -> Rows:
     return singlehost_table(
-        view, columns, query, only_sites, limit, all_active_filters, joinbyname=False, bygroup=False
+        context,
+        columns,
+        query,
+        only_sites,
+        limit,
+        all_active_filters,
+        joinbyname=False,
+        bygroup=False,
     )
 
 
 def singlehost_table(
-    view, columns, query, only_sites, limit, all_active_filters, joinbyname, bygroup
-):
-
-    filterheaders = "".join(get_livestatus_filter_headers(view.context, all_active_filters))
+    context: VisualContext,
+    columns: list[ColumnName],
+    query: str,
+    only_sites: OnlySites,
+    limit: int | None,
+    all_active_filters: Iterable[Filter],
+    joinbyname: bool,
+    bygroup: bool,
+) -> Rows:
+    filterheaders = "".join(get_livestatus_filter_headers(context, all_active_filters))
     host_columns = [c for c in columns if c.startswith("host_")]
 
     rows = []
     bi_manager = BIManager()
     bi_manager.status_fetcher.set_assumed_states(user.bi_assumptions)
-    bi_aggregation_filter = compute_bi_aggregation_filter(view.context, all_active_filters)
+    bi_aggregation_filter = compute_bi_aggregation_filter(context, all_active_filters)
     required_aggregations = bi_manager.computer.get_required_aggregations(bi_aggregation_filter)
     bi_manager.status_fetcher.update_states_filtered(
         filterheaders, only_sites, limit, host_columns, bygroup, required_aggregations

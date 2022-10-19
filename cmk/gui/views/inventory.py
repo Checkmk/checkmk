@@ -115,7 +115,6 @@ from cmk.gui.view_utils import CellSpec, render_labels
 
 if TYPE_CHECKING:
     from cmk.gui.plugins.visuals.utils import Filter
-    from cmk.gui.view import View
 
 
 PaintResult = tuple[str, str | HTML]
@@ -253,8 +252,10 @@ class ABCRowTable(RowTable):
 
     def query(
         self,
-        view: View,
+        datasource: ABCDataSource,
+        cells: Sequence[Cell],
         columns: Sequence[ColumnName],
+        context: VisualContext,
         headers: str,
         only_sites: OnlySites,
         limit: object,
@@ -272,7 +273,7 @@ class ABCRowTable(RowTable):
         query = "GET hosts\n"
         query += "Columns: " + (" ".join(host_columns)) + "\n"
 
-        query += "".join(get_livestatus_filter_headers(view.context, all_active_filters))
+        query += "".join(get_livestatus_filter_headers(context, all_active_filters))
 
         if (
             active_config.debug_livestatus_queries

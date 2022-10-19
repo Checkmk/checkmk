@@ -40,8 +40,10 @@ def test_row_table_object(mock_livestatus, request_context) -> None:  # type:ign
     # der host_ prefix, passend angepasst generiert eine extra query?
     with live(expect_status_query=True):
         rt.query(
-            view=view,
+            view.datasource,
+            view.row_cells,
             columns=["name"],
+            context=view.context,
             headers="Filter: name = heute",
             only_sites=None,
             limit=None,

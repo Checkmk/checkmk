@@ -18,9 +18,9 @@ from cmk.gui.data_source import ABCDataSource, RowTable
 from cmk.gui.display_options import display_options
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
+from cmk.gui.plugins.views.utils import Cell
 from cmk.gui.plugins.visuals.utils import Filter
-from cmk.gui.type_defs import ColumnName, Rows
-from cmk.gui.view import View
+from cmk.gui.type_defs import ColumnName, Rows, VisualContext
 
 
 class DataSourceLivestatus(ABCDataSource):
@@ -42,15 +42,16 @@ class RowTableLivestatus(RowTable):
 
     @staticmethod
     def _prepare_columns(
-        columns: List[ColumnName], view: View
+        datasource: ABCDataSource,
+        cells: Sequence[Cell],
+        columns: List[ColumnName],
     ) -> Tuple[List[ColumnName], Dict[int, List[ColumnName]]]:
         dynamic_columns = {}
-        for index, cell in enumerate(view.row_cells):
+        for index, cell in enumerate(cells):
             dyn_col = cell.painter().dynamic_columns(cell)
             dynamic_columns[index] = dyn_col
             columns += dyn_col
 
-        datasource = view.datasource
         # Prevent merge column from being duplicated in the query
         columns = list(set(columns + ([datasource.merge_by] if datasource.merge_by else [])))
 
@@ -80,8 +81,10 @@ class RowTableLivestatus(RowTable):
 
     def query(
         self,
-        view: View,
+        datasource: ABCDataSource,
+        cells: Sequence[Cell],
         columns: List[ColumnName],
+        context: VisualContext,
         headers: str,
         only_sites: OnlySites,
         limit: Optional[int],
@@ -89,17 +92,14 @@ class RowTableLivestatus(RowTable):
     ) -> Union[Rows, Tuple[Rows, int]]:
         """Retrieve data via livestatus, convert into list of dicts,
 
-        view: view object
+        datasource: The data source to query
         columns: the list of livestatus columns to query
         headers: query headers
         only_sites: list of sites the query is limited to
         limit: maximum number of data rows to query
         all_active_filters: Momentarily unused
         """
-
-        datasource = view.datasource
-
-        columns, dynamic_columns = self._prepare_columns(columns, view)
+        columns, dynamic_columns = self._prepare_columns(datasource, cells, columns)
         data = query_livestatus(
             self.create_livestatus_query(columns, headers + datasource.add_headers),
             only_sites,
@@ -115,7 +115,7 @@ class RowTableLivestatus(RowTable):
         columns = ["site"] + columns + datasource.add_columns
         rows: Rows = datasource.post_process([dict(zip(columns, row)) for row in data])
 
-        for index, cell in enumerate(view.row_cells):
+        for index, cell in enumerate(cells):
             painter = cell.painter()
             painter.derive(rows, cell, dynamic_columns.get(index))
 

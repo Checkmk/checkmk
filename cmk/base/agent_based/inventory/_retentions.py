@@ -154,21 +154,23 @@ class Retentions:
     def __init__(
         self,
         tracker: RetentionsTracker,
-        inv_tree: StructuredDataNode,
         do_update: bool,
     ) -> None:
         self._tracker = tracker
-        self._inv_tree = inv_tree
         self._do_update = do_update
 
-    def may_update(self, now: int, previous_tree: StructuredDataNode) -> UpdateResult:
+    def may_update(
+        self, now: int, inventory_tree: StructuredDataNode, previous_tree: StructuredDataNode
+    ) -> UpdateResult:
         if not self._do_update:
-            self._inv_tree.remove_retentions()
+            inventory_tree.remove_retentions()
             return UpdateResult(save_tree=False, reason="No retention intervals found.")
 
         results = []
         for retention_key, retention_info in self._tracker.retention_infos.items():
-            updater = self._make_updater(retention_key, retention_info, previous_tree)
+            updater = self._make_updater(
+                retention_key, retention_info, inventory_tree, previous_tree
+            )
             results.append(updater.filter_and_merge(now))
 
         return UpdateResult(
@@ -180,18 +182,19 @@ class Retentions:
         self,
         retention_key: RetentionKey,
         retention_info: RetentionInfo,
+        inventory_tree: StructuredDataNode,
         previous_tree: StructuredDataNode,
     ) -> NodeUpdater:
         node_path, node_name = retention_key
 
-        inv_node = self._inv_tree.get_node(node_path)
+        inv_node = inventory_tree.get_node(node_path)
         previous_node = previous_tree.get_node(node_path)
 
         if previous_node is None:
             previous_node = StructuredDataNode()
 
         if inv_node is None:
-            inv_node = self._inv_tree.setdefault_node(node_path)
+            inv_node = inventory_tree.setdefault_node(node_path)
 
         if node_name == ATTRIBUTES_KEY:
             return AttributesUpdater(

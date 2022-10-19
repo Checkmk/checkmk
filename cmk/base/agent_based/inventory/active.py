@@ -66,18 +66,19 @@ def _execute_active_check_inventory(
     )
     trees = inv_result.trees
 
-    retentions = Retentions(
-        retentions_tracker,
-        trees.inventory,
-        # If no intervals are configured then remove all known retentions
-        do_update=bool(host_config.inv_retention_intervals),
-    )
-
     if inv_result.processing_failed:
         old_tree = None
         update_result = ActiveCheckResult(fail_status, "Cannot update tree")
     else:
-        old_tree = _save_inventory_tree(host_config.hostname, trees.inventory, retentions)
+        old_tree = _save_inventory_tree(
+            host_config.hostname,
+            trees.inventory,
+            Retentions(
+                retentions_tracker,
+                # If no intervals are configured then remove all known retentions
+                do_update=bool(host_config.inv_retention_intervals),
+            ),
+        )
         update_result = ActiveCheckResult()
 
     return ActiveCheckResult.from_subresults(
@@ -169,7 +170,7 @@ def _save_inventory_tree(
         return None
 
     old_tree = tree_or_archive_store.load(host_name=hostname)
-    update_result = retentions.may_update(int(time.time()), old_tree)
+    update_result = retentions.may_update(int(time.time()), inventory_tree, old_tree)
 
     if old_tree.is_empty():
         console.verbose("New inventory tree.\n")

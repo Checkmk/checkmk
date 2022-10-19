@@ -71,7 +71,7 @@ def create(params):
           request_schema=request_schemas.BulkInputContactGroup,
           response_schema=response_schemas.DomainObjectCollection)
 def bulk_create(params):
-    """Bulk create host groups"""
+    """Bulk create contact groups"""
     user.need_permission("wato.edit")
     user.need_permission("wato.users")
     body = params['body']

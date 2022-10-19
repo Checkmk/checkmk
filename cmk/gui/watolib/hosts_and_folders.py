@@ -111,6 +111,7 @@ from cmk.gui.watolib.utils import (
 )
 
 if cmk_version.is_managed_edition():
+    import cmk.gui.cme.helpers as managed_helpers  # pylint: disable=no-name-in-module
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
 HostAttributes = Mapping[str, Any]
@@ -3557,7 +3558,9 @@ class CMEFolder(CREFolder):
         # The parents customer id may be the default customer or the same customer
         customer_id = self._get_customer_id()
         if customer_id not in [managed.default_customer_id(), new_customer_id]:
-            folder_sites = ", ".join(list(managed.get_sites_of_customer(customer_id).keys()))
+            folder_sites = ", ".join(
+                list(managed_helpers.get_sites_of_customer(customer_id).keys())
+            )
             raise MKUserError(
                 None,
                 _(
@@ -3671,7 +3674,7 @@ class CMEFolder(CREFolder):
         if customer_id != managed.default_customer_id():
             host_customer_id = managed.get_customer_of_site(attributes["site"])
             if host_customer_id != customer_id:
-                folder_sites = ", ".join(managed.get_sites_of_customer(customer_id))
+                folder_sites = ", ".join(managed_helpers.get_sites_of_customer(customer_id))
                 raise MKUserError(
                     None,
                     _(
@@ -3695,7 +3698,7 @@ class CMEFolder(CREFolder):
         # Check if the hosts are moved to a provider folder
         target_customer_id = managed.get_customer_of_site(target_site_id)
         if target_customer_id != managed.default_customer_id():
-            allowed_sites = managed.get_sites_of_customer(target_customer_id)
+            allowed_sites = managed_helpers.get_sites_of_customer(target_customer_id)
             for hostname in host_names:
                 host = self.load_host(hostname)
                 host_site = host.attributes().get("site")

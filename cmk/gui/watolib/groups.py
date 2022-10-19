@@ -49,6 +49,7 @@ from cmk.gui.watolib.rulesets import AllRulesets
 from cmk.gui.watolib.utils import convert_cgroups_from_tuple
 
 if cmk_version.is_managed_edition():
+    import cmk.gui.cme.helpers as managed_helpers  # pylint: disable=no-name-in-module
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
 
@@ -149,7 +150,7 @@ def _add_group_change(group: GroupSpec, action_name: str, text: str) -> None:
         if not managed.is_global(cid):
             if cid is None:  # conditional caused by bad typing
                 raise Exception("cannot happen: no customer ID")
-            group_sites = list(managed.get_sites_of_customer(cid).keys())
+            group_sites = list(managed_helpers.get_sites_of_customer(cid).keys())
 
     add_change(action_name, text, sites=group_sites)
 

@@ -196,9 +196,11 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
 
     if is_managed_edition():
         # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
-        import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
+        from cmk.gui.cme.livestatus import (  # pylint: disable=no-name-in-module
+            CMEMultiSiteConnection,
+        )
 
-        g.live = managed.CMEMultiSiteConnection(enabled_sites, disabled_sites)
+        g.live = CMEMultiSiteConnection(enabled_sites, disabled_sites)
     else:
         g.live = MultiSiteConnection(enabled_sites, disabled_sites)
 

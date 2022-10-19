@@ -79,9 +79,8 @@ from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 
 if cmk_version.is_managed_edition():
+    import cmk.gui.cme.helpers as managed_helpers  # pylint: disable=no-name-in-module
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
-else:
-    managed = None  # type: ignore[assignment]
 
 # .
 #   .--Valuespec-----------------------------------------------------------.
@@ -700,7 +699,7 @@ class LDAPMode(WatoMode):
 
     def _get_affected_sites(self, connection: UserConnectionSpec) -> List[SiteId]:
         if cmk_version.is_managed_edition():
-            return list(managed.get_sites_of_customer(connection["customer"]).keys())
+            return list(managed_helpers.get_sites_of_customer(connection["customer"]).keys())
         return get_login_sites()
 
 

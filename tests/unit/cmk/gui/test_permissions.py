@@ -503,6 +503,7 @@ def test_registered_permissions() -> None:
     if not cmk_version.is_raw_edition():
         expected_permissions += [
             "agent_registration.edit",
+            "agent_registration.register_new_hosts",
             "dashboard.kubernetes_cluster",
             "dashboard.kubernetes_daemonset",
             "dashboard.kubernetes_deployment",

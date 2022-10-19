@@ -1,0 +1,126 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+from collections.abc import Sequence
+
+import pytest
+
+from tests.unit.conftest import FixRegister
+
+from cmk.utils.type_defs import CheckPluginName, SectionName
+
+from cmk.base.api.agent_based.checking_classes import CheckPlugin
+from cmk.base.api.agent_based.type_defs import StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+
+STRING_TABLE = [
+    [
+        '{"total":24,"members":[{"id":0,"name":"host-name","descriptors":{"os":"RHELinux"},"FCPaths":[{"wwn":"1000FABEF2D00030"},{"wwn":"1000FABEF2D00032"}],"iSCSIPaths":[]}]}'
+    ]
+]
+
+
+@pytest.fixture(name="check")
+def _3par_hosts_check_plugin(fix_register: FixRegister) -> CheckPlugin:
+    return fix_register.check_plugins[CheckPluginName("3par_hosts")]
+
+
+@pytest.mark.parametrize(
+    "section, expected_discovery_result",
+    [
+        pytest.param(
+            STRING_TABLE,
+            [Service(item="host-name")],
+            id="For every host that has a name, a Service is discovered.",
+        ),
+        pytest.param(
+            [],
+            [],
+            id="If there are no items in the input, nothing is discovered.",
+        ),
+    ],
+)
+def test_discover_3par_hosts(
+    check: CheckPlugin,
+    fix_register: FixRegister,
+    section: StringTable,
+    expected_discovery_result: Sequence[Service],
+) -> None:
+    parse_3par_hosts = fix_register.agent_sections[SectionName("3par_hosts")].parse_function
+    assert list(check.discovery_function(parse_3par_hosts(section))) == expected_discovery_result
+
+
+@pytest.mark.parametrize(
+    "section, item, expected_check_result",
+    [
+        pytest.param(
+            STRING_TABLE,
+            "not_found",
+            [],
+            id="If the item is not found, there are no results.",
+        ),
+        pytest.param(
+            [['{"total":24,"members":[{"id":0,"name":"host-name"}]}']],
+            "host-name",
+            [Result(state=State.OK, summary="ID: 0")],
+            id="If only the name is available, the check result is OK and it's indicated what the ID of the host is.",
+        ),
+        pytest.param(
+            [
+                [
+                    '{"total":24,"members":[{"id":0,"name":"host-name","descriptors":{"os":"RHELinux"}}]}'
+                ]
+            ],
+            "host-name",
+            [
+                Result(state=State.OK, summary="ID: 0"),
+                Result(state=State.OK, summary="OS: RHELinux"),
+            ],
+            id="If there are desciptors for the operating system available, the check result is OK and information about the OS is given.",
+        ),
+        pytest.param(
+            STRING_TABLE,
+            "host-name",
+            [
+                Result(state=State.OK, summary="ID: 0"),
+                Result(state=State.OK, summary="OS: RHELinux"),
+                Result(state=State.OK, summary="FC Paths: 2"),
+            ],
+            id="If there are FC paths available, the check result is OK and it is indicated how many FC paths are available.",
+        ),
+        pytest.param(
+            [
+                [
+                    '{"total":24,"members":[{"id":0,"name":"host-name","descriptors":{"os":"RHELinux"},"iSCSIPaths":[{"wwn":"1000FABEF2D00030"},{"wwn":"1000FABEF2D00032"}]}]}'
+                ]
+            ],
+            "host-name",
+            [
+                Result(state=State.OK, summary="ID: 0"),
+                Result(state=State.OK, summary="OS: RHELinux"),
+                Result(state=State.OK, summary="iSCSI Paths: 2"),
+            ],
+            id="If there are iSCSI paths available, but no FC paths, the check result is OK and it is indicated how many iSCSI paths are available.",
+        ),
+    ],
+)
+def test_check_3par_hosts(
+    check: CheckPlugin,
+    fix_register: FixRegister,
+    section: StringTable,
+    item: str,
+    expected_check_result: Sequence[Result],
+) -> None:
+    parse_3par_hosts = fix_register.agent_sections[SectionName("3par_hosts")].parse_function
+    assert (
+        list(
+            check.check_function(
+                item=item,
+                params={},
+                section=parse_3par_hosts(section),
+            )
+        )
+        == expected_check_result
+    )

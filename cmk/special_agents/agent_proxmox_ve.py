@@ -23,6 +23,7 @@ information about VMs and nodes:
 # - https://pypi.org/project/proxmoxer/
 """
 
+from json import JSONDecodeError
 import logging
 import re
 from pathlib import Path
@@ -71,8 +72,7 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
 
 
 class BackupTask:
-    """Handles a bunch of log lines and turns them into a set of data needed from the log
-    """
+    """Handles a bunch of log lines and turns them into a set of data needed from the log"""
     class LogParseError(RuntimeError):
         def __init__(self, line: int, msg: str) -> None:
             super().__init__(msg)
@@ -97,7 +97,10 @@ class BackupTask:
             erroneous_log_file = LogCacheFilePath / ("erroneous-%s.log" % task["upid"])
             LOGGER.error(
                 "Parsing the log for UPID=%r resulted in a error(s) - "
-                "write log content to %r", task["upid"], erroneous_log_file)
+                "write log content to %r",
+                task["upid"],
+                erroneous_log_file,
+            )
             with erroneous_log_file.open("w") as file:
                 file.write("\n".join(line["t"] for line in logs))
                 for linenr, text in errors:
@@ -105,7 +108,7 @@ class BackupTask:
 
     @staticmethod
     def _to_lines(lines_with_numbers: LogData) -> Sequence[str]:
-        """ Gets list of dict containing a line number an a line [{"n": int, "t": str}*]
+        """Gets list of dict containing a line number an a line [{"n": int, "t": str}*]
         Returns List of lines only"""
         # this has been true all the time and is left here for documentation
         # assert all((int(elem["n"]) - 1 == i) for i, elem in enumerate(lines_with_numbers))
@@ -134,7 +137,6 @@ class BackupTask:
                 #     "start_job",
                 #     r"^INFO: starting new backup job: vzdump (.*)",
                 # ),
-
                 # those for pattern must exist for every VM
                 (
                     "start_vm",
@@ -183,13 +185,13 @@ class BackupTask:
             )
         }
         required_keys = (
-            {'started_time', 'total_duration', 'bytes_written_bandwidth', 'bytes_written_size'},
-            {'started_time', 'total_duration', 'transfer_size', 'transfer_time'},
-            {'started_time', 'total_duration', 'upload_amount', 'upload_time', 'upload_total'},
-            {'started_time', 'total_duration', 'backup_amount', 'backup_time', 'backup_total'},
+            {"started_time", "total_duration", "bytes_written_bandwidth", "bytes_written_size"},
+            {"started_time", "total_duration", "transfer_size", "transfer_time"},
+            {"started_time", "total_duration", "upload_amount", "upload_time", "upload_total"},
+            {"started_time", "total_duration", "backup_amount", "backup_time", "backup_total"},
         )
 
-        #required_keys = {"transfer_time", "archive_name", "archive_size", "started_time"}
+        # required_keys = {"transfer_time", "archive_name", "archive_size", "started_time"}
         result: Dict[str, BackupInfo] = {}
         current_vmid = ""
         current_dataset: BackupInfo = {}
@@ -364,8 +366,10 @@ def fetch_backup_data(args: Args, session: "ProxmoxVeAPI",
     # Fetching log files is by far the most time consuming process issued by the ProxmoxVE agent.
     # Since logs have a unique UPID we can safely cache them
     cutoff_date = int((datetime.now() - timedelta(weeks=args.log_cutoff_weeks)).timestamp())
-    with JsonCachedData(LogCacheFilePath / args.hostname / "upid.log.cache.json",
-                        cutoff_condition=lambda k, v: v[0] < cutoff_date) as cached:
+    with JsonCachedData(
+            LogCacheFilePath / args.hostname / "upid.log.cache.json",
+            cutoff_condition=lambda k, v: v[0] < cutoff_date,
+    ) as cached:
 
         def fetch_backup_log(task, node):
             """Make a call to session.get_tree() to get a log only if it's not cached
@@ -385,7 +389,8 @@ def fetch_backup_data(args: Args, session: "ProxmoxVeAPI",
                             }
                         }
                     }})["nodes"][n["node"]]["tasks"][t["upid"]]["log"],
-                ))
+                ),
+            )
 
         # todo: check vmid, typefilter source
         #       https://pve.proxmox.com/pve-docs/api-viewer/#/nodes/{node}/tasks
@@ -402,7 +407,8 @@ def fetch_backup_data(args: Args, session: "ProxmoxVeAPI",
             LOGGER.info("%s", task)
             LOGGER.debug("%r", task.backup_data)
             for vmid, bdata in task.backup_data.items():
-                if vmid in backup_data and backup_data[vmid]['started_time'] > bdata['started_time']:
+                if (vmid in backup_data and
+                        backup_data[vmid]["started_time"] > bdata["started_time"]):
                     continue
                 backup_data[vmid] = bdata
 
@@ -493,6 +499,7 @@ def agent_proxmox_ve_main(args: Args) -> None:
                     "lxc": [vmid for vmid in all_vms if all_vms[vmid]["type"] == "lxc"],
                     "qemu": [vmid for vmid in all_vms if all_vms[vmid]["type"] == "qemu"],
                     "proxmox_ve_version": node["version"],
+                    "time_info": node["time"],
                     "subscription": {
                         key: value for key, value in node["subscription"].items() if key in {
                             "status",
@@ -505,13 +512,15 @@ def agent_proxmox_ve_main(args: Args) -> None:
                         }
                     },
                 })
-            with SectionWriter("proxmox_ve_mem_usage") as writer:
-                writer.append_json({
-                    "mem": node["mem"],
-                    "max_mem": node["maxmem"],
-                })
-            with SectionWriter("uptime", separator=None) as writer:
-                writer.append(node["uptime"])
+            if "mem" in node and "maxmem" in node:
+                with SectionWriter("proxmox_ve_mem_usage") as writer:
+                    writer.append_json({
+                        "mem": node["mem"],
+                        "max_mem": node["maxmem"],
+                    })
+            if "uptime" in node:
+                with SectionWriter("uptime", separator=None) as writer:
+                    writer.append(node["uptime"])
 
     for vmid, vm in all_vms.items():
         with ConditionalPiggybackSection(vm["name"]):
@@ -622,7 +631,13 @@ class ProxmoxVeSession:
 
     def get_api_element(self, path: str) -> Any:
         """do an API GET request"""
-        response_json = self.get_raw("api2/json/" + path).json()
+        response = self.get_raw("api2/json/" + path)
+        if response.status_code != requests.codes.ok:
+            return []
+        try:
+            response_json = response.json()
+        except JSONDecodeError as e:
+            raise RuntimeError("Couldn't parse API element %r" % path) from e
         if "errors" in response_json:
             raise RuntimeError("Could not fetch %r (%r)" % (path, response_json["errors"]))
         return response_json.get("data")
@@ -654,7 +669,7 @@ class ProxmoxVeAPI:
         self._session.close()
 
     def get(self, path: Union[str, List[str], Tuple[str]]) -> Any:
-        """Handle request items in form of 'path/to/item' or ['path', 'to', 'item'] """
+        """Handle request items in form of 'path/to/item' or ['path', 'to', 'item']"""
         return self._session.get_api_element("/".join(
             str(p) for p in path) if isinstance(path, (list, tuple)) else path)
 
@@ -675,9 +690,9 @@ class ProxmoxVeAPI:
             def extract_request_subtree(request_tree: ListOrDict) -> ListOrDict:
                 """If list if given return first (and only) element return the provided data tree"""
                 return (request_tree  #
-                        if not isinstance(request_tree, list) else  #
-                        next(iter(request_tree)) if len(request_tree) > 0 else  #
-                        {})
+                        if not isinstance(request_tree, list) else next(iter(request_tree))  #
+                        if len(request_tree) > 0 else {}  #
+                       )
 
             def extract_variable(st: ListOrDict) -> Optional[Dict[str, Any]]:
                 """Check if there is exactly one root element with a variable name,
@@ -718,10 +733,9 @@ class ProxmoxVeAPI:
                 if all(isinstance(elem, dict) for elem in response):
                     if variable is None:
                         assert isinstance(subtree, dict)
-                        return ({
-                            key: rec_get_tree(key, subtree[key], next_path)  #
-                            for key in subtree
-                        } if isinstance(requested_structure, dict) else response)
+                        return (
+                            {key: rec_get_tree(key, subtree[key], next_path) for key in subtree}  #
+                            if isinstance(requested_structure, dict) else response)
 
                     assert isinstance(requested_structure, list)
                     return [{
@@ -730,7 +744,7 @@ class ProxmoxVeAPI:
                             elem[variable["name"]],
                             variable["subtree"],
                             next_path,
-                        ) or {})
+                        ) or {}),
                     } for elem in response]
 
             return response
@@ -739,7 +753,7 @@ class ProxmoxVeAPI:
 
 
 def main() -> None:
-    """Main entry point to be used """
+    """Main entry point to be used"""
     special_agent_main(parse_arguments, agent_proxmox_ve_main)
 
 

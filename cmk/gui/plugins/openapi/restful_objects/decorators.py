@@ -644,6 +644,8 @@ class Endpoint:
         def _validating_wrapper(param: typing.Mapping[str, Any]) -> cmk_http.Response:
             # TODO: Better error messages, pointing to the location where variables are missing
 
+            self._used_permissions = set()
+
             _params = dict(param)
             del param
 

@@ -1,0 +1,14 @@
+Title: 3par_hosts: Check plugin would crash if no FC paths or no iSCSI paths were available
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1666185693
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p17
+
+The check plugin used to crash if there were no FC paths or no iSCSI paths available in the output.
+This has now been fixed.
+

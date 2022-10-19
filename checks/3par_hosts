@@ -26,9 +26,9 @@ def check_3par_hosts(item, _no_params, parsed):
             if os is not None:
                 yield 0, "OS: %s" % os
 
-            if len(entry.get("FCPaths", 0)) > 0:
+            if len(entry.get("FCPaths", [])) > 0:
                 yield 0, "FC Paths: %s" % len(entry["FCPaths"])
-            elif len(entry.get("iSCSIPaths", 0)) > 0:
+            elif len(entry.get("iSCSIPaths", [])) > 0:
                 yield 0, "iSCSI Paths: %s" % len(entry["iSCSIPaths"])
 
 

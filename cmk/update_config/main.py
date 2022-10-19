@@ -76,9 +76,13 @@ def _parse_arguments(args: Sequence[str]) -> argparse.Namespace:
 
 
 def _setup_logging(arguments: argparse.Namespace) -> logging.Logger:
+    level = log.verbosity_to_log_level(arguments.verbose)
+
     log.setup_console_logging()
-    log.logger.setLevel(log.verbosity_to_log_level(arguments.verbose))
+    log.logger.setLevel(level)
+
     logger = logging.getLogger("cmk.update_config")
+    logger.setLevel(level)
     logger.debug("parsed arguments: %s", arguments)
 
     # TODO: Fix this cruel hack caused by our funny mix of GUI + console

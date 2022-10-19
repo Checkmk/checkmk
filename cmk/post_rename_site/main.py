@@ -96,8 +96,13 @@ def parse_arguments(args: List[str]) -> argparse.Namespace:
 
 
 def setup_logging(arguments: argparse.Namespace) -> None:
+    level = log.verbosity_to_log_level(arguments.verbose)
+
     log.setup_console_logging()
-    log.logger.setLevel(log.verbosity_to_log_level(arguments.verbose))
+    log.logger.setLevel(level)
+
+    logger.setLevel(level)
+    logger.debug("parsed arguments: %s", arguments)
 
     # TODO: Fix this cruel hack caused by our funny mix of GUI + console
     # stuff. Currently, we just move the console handler to the top, so

@@ -95,7 +95,7 @@ def create(params):
     permissions_required=RW_PERMISSIONS,
 )
 def bulk_create(params):
-    """Bulk create host groups"""
+    """Bulk create contact groups"""
     user.need_permission("wato.edit")
     user.need_permission("wato.users")
     body = params["body"]

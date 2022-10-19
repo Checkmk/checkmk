@@ -7,6 +7,8 @@ from typing import Sequence
 
 import pytest
 
+from tests.testlib import on_time
+
 from cmk.base.plugins.agent_based import cisco_meraki_org_sensor_readings
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
@@ -72,7 +74,7 @@ def test_discover_sensor_temperature(
                     state=State.OK,
                     notice="Configuration: prefer user levels over device levels (no levels found)",
                 ),
-                Result(state=State.OK, summary="Time since last report: 22 years 281 days"),
+                Result(state=State.OK, summary="Time since last report: 15 days 0 hours"),
             ],
         ),
     ],
@@ -81,7 +83,8 @@ def test_check_sensor_temperature(
     string_table: StringTable, expected_results: Sequence[Result]
 ) -> None:
     section = cisco_meraki_org_sensor_readings.parse_sensor_readings(string_table)
-    assert (
-        list(cisco_meraki_org_sensor_readings.check_sensor_temperature("Sensor", {}, section))
-        == expected_results
-    )
+    with on_time("2000-01-30 12:00:00", "UTC"):
+        assert (
+            list(cisco_meraki_org_sensor_readings.check_sensor_temperature("Sensor", {}, section))
+            == expected_results
+        )

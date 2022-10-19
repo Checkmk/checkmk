@@ -92,7 +92,7 @@ timeout(time: 12, unit: 'HOURS') {
                         def filename = versioning.get_docker_artifact_name(EDITION, CMK_VERS)
                         upload.upload(
                                 NAME: filename,
-                                FILE_PATH: "${PACKAGE_DIR}/download/${CMK_VERS_RC_AWARE}",
+                                FILE_PATH: "${PACKAGE_DIR}/${CMK_VERS_RC_AWARE}/${filename}",
                                 FILE_NAME: filename,
                                 CMK_VERS: CMK_VERS_RC_AWARE,
                                 UPLOAD_DEST: INTERNAL_DEPLOY_DEST,
@@ -103,7 +103,7 @@ timeout(time: 12, unit: 'HOURS') {
                         if (!BRANCH.contains("sandbox")) {
                             upload.upload(
                                     NAME: filename,
-                                    FILE_PATH: "${PACKAGE_DIR}/download/${CMK_VERS_RC_AWARE}",
+                                    FILE_PATH: "${PACKAGE_DIR}/${CMK_VERS_RC_AWARE}/${filename}",
                                     FILE_NAME: filename,
                                     CMK_VERS: CMK_VERS_RC_AWARE,
                                     UPLOAD_DEST: WEB_DEPLOY_DEST,

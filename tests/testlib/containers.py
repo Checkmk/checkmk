@@ -20,6 +20,7 @@ import requests
 from docker.models.images import Image  # type: ignore[import]
 
 import tests.testlib as testlib
+from tests.testlib import get_cmk_download_credentials
 from tests.testlib.version import CMKVersion
 
 import docker  # type: ignore[import]
@@ -337,20 +338,41 @@ def _is_using_current_cmk_package(image: Image, version: CMKVersion) -> bool:
         logger.info("  Checkmk package hash label missing (org.tribe29.cmk_hash). Trigger rebuild.")
         return False
 
-    current_cmk_hashes = _get_current_cmk_hashes(version)
-    if cmk_hash_entry not in current_cmk_hashes:
-        logger.info("  Did not find image hash entry (%s) in current hashes", cmk_hash_entry)
-        logger.info(current_cmk_hashes)
+    cmk_hash_image, package_name_image = cmk_hash_entry.split()
+    logger.info(
+        "  CMK hash of image (%s): %s (%s)", image.short_id, cmk_hash_image, package_name_image
+    )
+    cmk_hash_current = get_current_cmk_hash_for_artifact(version, package_name_image)
+    logger.info("  Current CMK Hash of artifact: %s (%s)", cmk_hash_current, package_name_image)
+    if cmk_hash_current != cmk_hash_image:
+        logger.info("  Hashes of docker image and artifact do not match.")
         return False
 
-    logger.info("  Used package hash (%s) matches the current one", cmk_hash_entry)
+    logger.info(
+        "  Used package hash of image (%s) matches the current one: %s",
+        package_name_image,
+        cmk_hash_image,
+    )
     return True
 
 
-def _get_current_cmk_hashes(version: CMKVersion) -> str:
-    r = requests.get(f"https://download.checkmk.com/checkmk/{version.version}/HASHES", timeout=30)
+def get_current_cmk_hash_for_artifact(version: CMKVersion, package_name: str) -> str:
+    hash_file_name = f"{package_name}.hash"
+    r = requests.get(
+        f"https://tstbuilds-artifacts.lan.tribe29.com/{version.version}/{hash_file_name}",
+        auth=get_cmk_download_credentials(),
+        timeout=30,
+    )
     r.raise_for_status()
-    return r.text
+    hash_name = r.text.split()
+    assert len(hash_name) == 2, (
+        f"Received multiple entries in hash file for {package_name}: \n" f"{r.text}"
+    )
+    _hash, package_name_from_hash_file = hash_name
+    assert (
+        package_name_from_hash_file == package_name
+    ), f"The hash file {hash_file_name}'s content ({package_name_from_hash_file}) does not match the expected package name ({package_name})"
+    return _hash
 
 
 def _image_build_volumes():

@@ -38,7 +38,7 @@ from cmk.gui.login import check_auth_by_cookie
 from cmk.gui.openapi import add_once, ENDPOINT_REGISTRY, generate_data
 from cmk.gui.permissions import load_dynamic_permissions
 from cmk.gui.plugins.openapi.utils import problem, ProblemException
-from cmk.gui.utils.logging import PrependURLFilter
+from cmk.gui.utils.logging_filters import PrependURLFilter
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.wsgi.auth import automation_auth, gui_user_auth, rfc7662_subject, set_user_context
 from cmk.gui.wsgi.middleware import OverrideRequestMethod

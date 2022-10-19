@@ -39,7 +39,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInNobody
 from cmk.gui.utils.json import patch_json
-from cmk.gui.utils.logging import PrependURLFilter
+from cmk.gui.utils.logging_filters import PrependURLFilter
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.theme import Theme

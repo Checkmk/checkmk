@@ -76,11 +76,9 @@ __all__ = [
 
 @overload
 def parse(
+    meta: HostMeta,
     raw_data: result.Result[AgentRawData, Exception],
     *,
-    hostname: HostName,
-    fetcher_type: FetcherType,
-    ident: str,
     selection: SectionNameCollection,
     logger: logging.Logger,
 ) -> result.Result[HostSections[AgentRawDataSection], Exception]:
@@ -89,11 +87,9 @@ def parse(
 
 @overload
 def parse(
+    meta: HostMeta,
     raw_data: result.Result[SNMPRawData, Exception],
     *,
-    hostname: HostName,
-    fetcher_type: FetcherType,
-    ident: str,
     selection: SectionNameCollection,
     logger: logging.Logger,
 ) -> result.Result[HostSections[SNMPRawDataSection], Exception]:
@@ -101,47 +97,32 @@ def parse(
 
 
 def parse(
+    meta: HostMeta,
     raw_data: result.Result[TRawData, Exception],
     *,
-    hostname: HostName,
-    fetcher_type: FetcherType,
-    ident: str,
     selection: SectionNameCollection,
     logger: logging.Logger,
 ) -> result.Result[HostSections[TRawDataSection], Exception]:
-    parser = _make_parser(
-        hostname,
-        fetcher_type=fetcher_type,
-        ident=ident,
-        logger=logger,
-    )
+    parser = _make_parser(meta, logger=logger)
     try:
         return raw_data.map(partial(parser.parse, selection=selection))
     except Exception as exc:
         return result.Error(exc)
 
 
-def _make_parser(
-    hostname: HostName, *, fetcher_type: FetcherType, ident: str, logger: logging.Logger
-) -> Parser:
-    if fetcher_type is FetcherType.SNMP:
+def _make_parser(meta: HostMeta, *, logger: logging.Logger) -> Parser:
+    if meta.fetcher_type is FetcherType.SNMP:
         return SNMPParser(
-            hostname,
-            SectionStore[SNMPRawDataSection](
-                make_persisted_section_dir(fetcher_type=fetcher_type, ident=ident) / hostname,
-                logger=logger,
-            ),
-            **_make_snmp_parser_config(hostname)._asdict(),
+            meta.hostname,
+            SectionStore[SNMPRawDataSection](make_persisted_section_dir(meta), logger=logger),
+            **_make_snmp_parser_config(meta.hostname)._asdict(),
             logger=logger,
         )
 
-    agent_parser_config = _make_agent_parser_config(hostname)
+    agent_parser_config = _make_agent_parser_config(meta.hostname)
     return AgentParser(
-        hostname,
-        SectionStore[AgentRawDataSection](
-            make_persisted_section_dir(fetcher_type=fetcher_type, ident=ident) / hostname,
-            logger=logger,
-        ),
+        meta.hostname,
+        SectionStore[AgentRawDataSection](make_persisted_section_dir(meta), logger=logger),
         check_interval=agent_parser_config.check_interval,
         keep_outdated=agent_parser_config.keep_outdated,
         translation=agent_parser_config.translation,
@@ -151,20 +132,16 @@ def _make_parser(
     )
 
 
-def make_persisted_section_dir(
-    *,
-    fetcher_type: FetcherType,
-    ident: str,
-) -> Path:
+def make_persisted_section_dir(meta: HostMeta) -> Path:
     var_dir: Final = Path(cmk.utils.paths.var_dir)
     return {
-        FetcherType.PIGGYBACK: var_dir / "persisted_sections" / ident,
-        FetcherType.SNMP: var_dir / "persisted_sections" / ident,
-        FetcherType.IPMI: var_dir / "persisted_sections" / ident,
-        FetcherType.PROGRAM: var_dir / "persisted",
-        FetcherType.PUSH_AGENT: var_dir / "persisted_sections" / ident,
-        FetcherType.TCP: var_dir / "persisted",
-    }[fetcher_type]
+        FetcherType.PIGGYBACK: var_dir / "persisted_sections" / meta.ident / str(meta.hostname),
+        FetcherType.SNMP: var_dir / "persisted_sections" / meta.ident / str(meta.hostname),
+        FetcherType.IPMI: var_dir / "persisted_sections" / meta.ident / str(meta.hostname),
+        FetcherType.PROGRAM: var_dir / "persisted" / str(meta.hostname),
+        FetcherType.PUSH_AGENT: var_dir / "persisted_sections" / meta.ident / str(meta.hostname),
+        FetcherType.TCP: var_dir / "persisted" / str(meta.hostname),
+    }[meta.fetcher_type]
 
 
 def make_file_cache_path_template(
@@ -440,10 +417,7 @@ class _Builder:
                 on_error=self.on_scan_error,
                 missing_sys_description=self.missing_sys_description,
                 do_status_data_inventory=self.host_config.do_status_data_inventory,
-                section_store_path=make_persisted_section_dir(
-                    fetcher_type=meta.fetcher_type, ident=meta.ident
-                )
-                / meta.hostname,
+                section_store_path=make_persisted_section_dir(meta),
                 snmp_config=self.host_config.snmp_config(meta.ipaddress),
             ),
             SNMPFileCache(
@@ -494,10 +468,7 @@ class _Builder:
                     on_error=self.on_scan_error,
                     missing_sys_description=self.missing_sys_description,
                     do_status_data_inventory=self.host_config.do_status_data_inventory,
-                    section_store_path=make_persisted_section_dir(
-                        fetcher_type=meta.fetcher_type, ident=meta.ident
-                    )
-                    / meta.hostname,
+                    section_store_path=make_persisted_section_dir(meta),
                     snmp_config=self.host_config.snmp_config(meta.ipaddress),
                 ),
                 SNMPFileCache(

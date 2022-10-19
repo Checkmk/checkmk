@@ -445,12 +445,7 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
 
             raw_data = get_raw_data(file_cache, fetcher, FetchMode.CHECKING)
             host_sections = parse_raw_data(
-                raw_data,
-                hostname=meta.hostname,
-                fetcher_type=meta.fetcher_type,
-                ident=meta.ident,
-                selection=NO_SELECTION,
-                logger=log.logger,
+                meta, raw_data, selection=NO_SELECTION, logger=log.logger
             )
             source_results = summarize(
                 meta.hostname,

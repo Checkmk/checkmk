@@ -1734,10 +1734,8 @@ class AutomationGetAgentOutput(Automation):
 
                     raw_data = get_raw_data(file_cache, fetcher, Mode.CHECKING)
                     host_sections = parse_raw_data(
+                        meta,
                         raw_data,
-                        hostname=meta.hostname,
-                        fetcher_type=meta.fetcher_type,
-                        ident=meta.ident,
                         selection=NO_SELECTION,
                         logger=logging.getLogger("cmk.base.checking"),
                     )

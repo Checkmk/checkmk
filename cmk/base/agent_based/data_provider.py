@@ -325,10 +325,8 @@ def parse_messages(
         collected_host_sections.setdefault(host_key, HostSections())
 
         source_result = parse_raw_data(
+            source,
             fetcher_message.raw_data,
-            hostname=fetcher_message.host_name,
-            fetcher_type=fetcher_message.fetcher_type,
-            ident=fetcher_message.ident,
             selection=selected_sections,
             logger=logger,
         )

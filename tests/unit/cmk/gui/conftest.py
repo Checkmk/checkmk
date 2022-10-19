@@ -320,14 +320,14 @@ class WebTestAppForCMK(webtest.TestApp):
             resp = self.call_method(link["method"], link["href"], **params)
         return resp
 
-    def login(self, username: UserId, password: str) -> WebTestAppForCMK:
+    def login(self, username: UserId, password: str) -> webtest.TestResponse:
         self.username = username
         login = self.get("/NO_SITE/check_mk/login.py")
         login.form["_username"] = username
         login.form["_password"] = password
         resp = login.form.submit("_login", index=1)
         assert "Invalid credentials." not in resp.text
-        return self
+        return resp
 
 
 def _make_webtest(debug):
@@ -356,12 +356,14 @@ def avoid_search_index_update_background(monkeypatch):
 
 @pytest.fixture()
 def logged_in_wsgi_app(wsgi_app, with_user):
-    return wsgi_app.login(with_user[0], with_user[1])
+    _ = wsgi_app.login(with_user[0], with_user[1])
+    return wsgi_app
 
 
 @pytest.fixture()
 def logged_in_admin_wsgi_app(wsgi_app, with_admin):
-    return wsgi_app.login(with_admin[0], with_admin[1])
+    _ = wsgi_app.login(with_admin[0], with_admin[1])
+    return wsgi_app
 
 
 @pytest.fixture()

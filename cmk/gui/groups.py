@@ -76,3 +76,7 @@ def _load_gui_groups() -> Dict[str, GroupSpecs]:
     return store.load_mk_file(
         cmk.utils.paths.default_config_dir + "/multisite.d/wato/groups.mk", default=group_specs
     )
+
+
+def clear_group_information_request_cache() -> None:
+    load_group_information.cache_clear()  # type: ignore[attr-defined]

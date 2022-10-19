@@ -9,6 +9,7 @@ Please try to find a better place for the things you want to put here."""
 
 import itertools
 import marshal
+import os
 import urllib.parse
 import uuid
 from pathlib import Path
@@ -86,32 +87,21 @@ def saveint(x: Any) -> int:
         return 0
 
 
-# We should use /dev/random here for cryptographic safety. But
-# that involves the great problem that the system might hang
-# because of loss of entropy. So we hope /dev/urandom is enough.
-# Furthermore we filter out non-printable characters. The byte
-# 0x00 for example does not make it through HTTP and the URL.
+# We filter out non-printable characters. The byte 0x00 for example does not
+# make it through HTTP and the URL.
 def get_random_string(size: int, from_ascii: int = 48, to_ascii: int = 90) -> str:
     """Generate a random string (no cryptographic safety)"""
     secret = ""
-    with Path("/dev/urandom").open("rb") as urandom:
-        while len(secret) < size:
-            c = urandom.read(1)
-            if ord(c) >= from_ascii and ord(c) <= to_ascii:
-                secret += c.decode()
+    while len(secret) < size:
+        c = os.urandom(1)
+        if ord(c) >= from_ascii and ord(c) <= to_ascii:
+            secret += c.decode()
     return secret
 
 
 def gen_id() -> str:
     """Generates a unique id"""
-    try:
-        with Path("/proc/sys/kernel/random/uuid").open("r", encoding="utf-8") as f:
-            return f.read().strip()
-    except IOError:
-        # On platforms where the above file does not exist we try to
-        # use the python uuid module which seems to be a good fallback
-        # for those systems.
-        return str(uuid.uuid4())
+    return str(uuid.uuid4())
 
 
 # This may not be moved to g, because this needs to be request independent

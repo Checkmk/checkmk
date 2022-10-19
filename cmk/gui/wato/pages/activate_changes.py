@@ -267,8 +267,8 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         return None
 
     # TODO: Remove once new changes mechanism has been implemented
-    def _get_snapshots(self):
-        snapshots = []
+    def _get_snapshots(self) -> list[str]:
+        snapshots: list[str] = []
         try:
             for f in os.listdir(_snapshots.snapshot_dir):
                 if os.path.isfile(_snapshots.snapshot_dir + f):

@@ -15,7 +15,7 @@ def _snapshot_files() -> Generator[pathlib.Path, None, None]:
 
 
 def test_create_snapshot() -> None:
-    snapshots.create_snapshot(None)
+    snapshots.create_snapshot("")
     assert list(_snapshot_files())
 
 
@@ -28,7 +28,7 @@ def test_snapshot_status() -> None:
 
 
 def test_extract_snapshot() -> None:
-    snapshots.create_snapshot(None)
+    snapshots.create_snapshot("")
     with tarfile.open(next(_snapshot_files()), mode="r") as snapshot_tar:
         snapshots.extract_snapshot(
             snapshot_tar,

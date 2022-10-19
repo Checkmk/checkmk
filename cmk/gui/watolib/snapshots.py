@@ -14,11 +14,14 @@ import time
 import traceback
 from hashlib import sha256
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Callable, IO, Literal, TypeVar
+
+from typing_extensions import NotRequired, TypedDict
 
 import cmk.utils
 import cmk.utils.paths
 import cmk.utils.store as store
+from cmk.utils.type_defs import UserId
 
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException
@@ -27,16 +30,47 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.audit_log import log_audit
 
-DomainSpec = Dict
+DomainSpec = dict
 
 var_dir = cmk.utils.paths.var_dir + "/wato/"
 snapshot_dir = var_dir + "snapshots/"
 
-backup_domains: Dict[str, Dict[str, Any]] = {}
+backup_domains: dict[str, dict[str, Any]] = {}
+
+
+class SnapshotData(TypedDict, total=False):
+    comment: str
+    created_by: Literal[""] | UserId
+    type: Literal["automatic"]
+    snapshot_name: str
+
+
+class FileInfo(TypedDict, total=False):
+    checksum: None | bool
+    size: int
+    text: str
+
+
+class SnapshotStatus(TypedDict):
+    broken: bool
+    comment: str
+    created_by: str
+    files: dict[str, FileInfo]
+    name: str
+    progress_status: str
+    total_size: int
+    type: None | Literal["automatic", "legacy"]
+
+    broken_text: NotRequired[str]
+    # checksums field might contain three states:
+    # a) None  - This is a legacy snapshot, no checksum file available
+    # b) False - No or invalid checksums
+    # c) True  - Checksums successfully validated
+    checksums: NotRequired[None | bool]
 
 
 # TODO: Remove once new changes mechanism has been implemented
-def create_snapshot(comment):
+def create_snapshot(comment: str) -> None:
     logger.debug("Start creating backup snapshot")
     start = time.time()
     store.mkdir(snapshot_dir)
@@ -45,7 +79,7 @@ def create_snapshot(comment):
         "%Y-%m-%d-%H-%M-%S", time.localtime(time.time())
     )
 
-    data: Dict[str, Any] = {}
+    data: SnapshotData = {}
     data["comment"] = _("Activated changes by %s.") % user.id
 
     if comment:
@@ -64,7 +98,7 @@ def create_snapshot(comment):
 
 
 # TODO: Remove once new changes mechanism has been implemented
-def _do_create_snapshot(data):
+def _do_create_snapshot(data: SnapshotData) -> None:
     snapshot_name = data["snapshot_name"]
     work_dir = snapshot_dir.rstrip("/") + "/workdir/%s" % snapshot_name
 
@@ -79,7 +113,7 @@ def _do_create_snapshot(data):
         with open(filename_target, "wb"):
             pass
 
-        def get_basic_tarinfo(name):
+        def get_basic_tarinfo(name: str) -> tarfile.TarInfo:
             tarinfo = tarfile.TarInfo(name)
             tarinfo.mtime = int(time.time())
             tarinfo.uid = 0
@@ -91,14 +125,16 @@ def _do_create_snapshot(data):
         # Initialize the snapshot tar file and populate with initial information
         with tarfile.open(filename_work, "w") as tar_in_progress:
 
-            for key in ["comment", "created_by", "type"]:
+            for key in ("comment", "created_by", "type"):
                 tarinfo = get_basic_tarinfo(key)
-                encoded_value = data[key].encode("utf-8")
+                # key is basically Literal["comment", "created_by", "type"] but
+                # the assignment from the tuple confuses mypy
+                encoded_value = data[key].encode("utf-8")  # type: ignore[literal-required]
                 tarinfo.size = len(encoded_value)
                 tar_in_progress.addfile(tarinfo, io.BytesIO(encoded_value))
 
         # Process domains (sorted)
-        subtar_info = {}
+        subtar_info: dict[str, tuple[str, str]] = {}
 
         for name, info in sorted(_get_default_backup_domains().items()):
             prefix = info.get("prefix", "")
@@ -136,6 +172,7 @@ def _do_create_snapshot(data):
             with open(path_subtar, "rb") as subtar:
                 subtar_hash = sha256(subtar.read()).hexdigest()
 
+            # TODO(Replace with HMAC?)
             subtar_signed = sha256(subtar_hash.encode() + _snapshot_secret()).hexdigest()
             subtar_info[filename_subtar] = (subtar_hash, subtar_signed)
 
@@ -151,12 +188,12 @@ def _do_create_snapshot(data):
 
         # Now add the info file which contains hashes and signed hashes for
         # each of the subtars
-        info = "".join(["%s %s %s\n" % (k, v[0], v[1]) for k, v in subtar_info.items()]) + "\n"
+        info_str = "".join(["%s %s %s\n" % (k, v[0], v[1]) for k, v in subtar_info.items()]) + "\n"
 
         with tarfile.open(filename_work, "a") as tar_in_progress:
             tarinfo = get_basic_tarinfo("checksums")
-            tarinfo.size = len(info)
-            tar_in_progress.addfile(tarinfo, io.BytesIO(info.encode()))
+            tarinfo.size = len(info_str)
+            tar_in_progress.addfile(tarinfo, io.BytesIO(info_str.encode()))
 
         shutil.move(filename_work, filename_target)
 
@@ -165,7 +202,7 @@ def _do_create_snapshot(data):
 
 
 # TODO: Remove once new changes mechanism has been implemented
-def _do_snapshot_maintenance():
+def _do_snapshot_maintenance() -> None:
     snapshots = []
     for f in os.listdir(snapshot_dir):
         if f.startswith("wato-snapshot-"):
@@ -184,10 +221,10 @@ def _do_snapshot_maintenance():
 # Returns status information for snapshots or snapshots in progress
 # TODO: Remove once new changes mechanism has been implemented
 def get_snapshot_status(  # pylint: disable=too-many-branches
-    snapshot,
-    validate_checksums=False,
-    check_correct_core=True,
-):
+    snapshot: str,
+    validate_checksums: bool = False,
+    check_correct_core: bool = True,
+) -> SnapshotStatus:
     if isinstance(snapshot, tuple):
         name, file_stream = snapshot
     else:
@@ -195,7 +232,7 @@ def get_snapshot_status(  # pylint: disable=too-many-branches
         file_stream = None
 
     # Defaults of available keys
-    status: Dict[str, Any] = {
+    status: SnapshotStatus = {
         "name": "",
         "total_size": 0,
         "type": None,
@@ -205,14 +242,15 @@ def get_snapshot_status(  # pylint: disable=too-many-branches
         "broken": False,
         "progress_status": "",
     }
+    T = TypeVar("T")
 
-    def access_snapshot(handler):
+    def access_snapshot(handler: Callable[[IO | str], T]) -> T:
         if file_stream:
             file_stream.seek(0)
             return handler(file_stream)
         return handler(snapshot_dir + name)
 
-    def check_size():
+    def check_size() -> None:
         if file_stream:
             file_stream.seek(0, os.SEEK_END)
             size = file_stream.tell()
@@ -223,7 +261,7 @@ def get_snapshot_status(  # pylint: disable=too-many-branches
             raise MKGeneralException(_("Invalid snapshot (too small)"))
         status["total_size"] = size
 
-    def check_extension():
+    def check_extension() -> None:
         # Check snapshot extension: tar or tar.gz
         if name.endswith(".tar.gz"):
             status["type"] = "legacy"
@@ -231,7 +269,7 @@ def get_snapshot_status(  # pylint: disable=too-many-branches
         elif not name.endswith(".tar"):
             raise MKGeneralException(_("Invalid snapshot (incorrect file extension)"))
 
-    def check_content():
+    def check_content() -> None:
         status["files"] = access_snapshot(_list_tar_content)
 
         if status.get("type") == "legacy":
@@ -242,17 +280,18 @@ def get_snapshot_status(  # pylint: disable=too-many-branches
                         _("Invalid snapshot (contains invalid tarfile %s)") % tarname
                     )
         else:  # new snapshots
-            for entry in ["comment", "created_by", "type"]:
+            for entry in ("comment", "created_by", "type"):
                 if entry in status["files"]:
 
-                    def handler(x, entry=entry):
+                    def handler(x: str | IO[bytes], entry: str = entry) -> str:
                         return _get_file_content(x, entry).decode("utf-8")
 
-                    status[entry] = access_snapshot(handler)
+                    # entry is assigned from a tuple, mypy does not get that this is Literal...
+                    status[entry] = access_snapshot(handler)  # type: ignore[literal-required]
                 else:
                     raise MKGeneralException(_("Invalid snapshot (missing file: %s)") % entry)
 
-    def check_core():
+    def check_core() -> None:
         if "check_mk.tar.gz" not in status["files"]:
             return
 
@@ -277,14 +316,10 @@ def get_snapshot_status(  # pylint: disable=too-many-branches
                 )
             )
 
-    def check_checksums():
+    def check_checksums() -> None:
         for f in status["files"].values():
             f["checksum"] = None
 
-        # checksums field might contain three states:
-        # a) None  - This is a legacy snapshot, no checksum file available
-        # b) False - No or invalid checksums
-        # c) True  - Checksums successfully validated
         if status["type"] == "legacy":
             status["checksums"] = None
             return
@@ -294,7 +329,7 @@ def get_snapshot_status(  # pylint: disable=too-many-branches
             return
 
         # Extract all available checksums from the snapshot
-        checksums_raw = access_snapshot(lambda x: _get_file_content(x, "checksums"))
+        checksums_raw = access_snapshot(lambda x: _get_file_content(x, "checksums")).decode()
         checksums = {}
         for l in checksums_raw.split("\n"):
             line = l.strip()
@@ -317,17 +352,17 @@ def get_snapshot_status(  # pylint: disable=too-many-branches
             checksum, signed = checksums[filename]
 
             # Get hashes of file in question
-            def handler(x, filename=filename):
+            def handler(x: str | IO[bytes], filename: str = filename) -> bytes:
                 return _get_file_content(x, filename)
 
             subtar = access_snapshot(handler)
             subtar_hash = sha256(subtar).hexdigest()
             subtar_signed = sha256(subtar_hash.encode() + _snapshot_secret()).hexdigest()
 
-            status["files"][filename]["checksum"] = (
-                checksum == subtar_hash and signed == subtar_signed
-            )
-            status["checksums"] &= status["files"][filename]["checksum"]
+            checksum_result = checksum == subtar_hash and signed == subtar_signed
+            status["files"][filename]["checksum"] = checksum_result
+            assert status["checksums"] is not None  # We set it right in front of the loop...
+            status["checksums"] &= checksum_result
 
     try:
         if len(name) > 35:
@@ -360,7 +395,7 @@ def get_snapshot_status(  # pylint: disable=too-many-branches
                     lines = f.readlines()
 
                 status["comment"] = lines[0].split(":", 1)[1]
-                file_info = {}
+                file_info: dict[str, FileInfo] = {}
                 for filename in lines[1:]:
                     name, info = filename.split(":", 1)
                     text, size = info[:-1].split(":", 1)
@@ -388,8 +423,8 @@ def get_snapshot_status(  # pylint: disable=too-many-branches
     return status
 
 
-def _list_tar_content(the_tarfile: Union[str, io.BytesIO]) -> Dict[str, Dict[str, int]]:
-    files = {}
+def _list_tar_content(the_tarfile: str | IO[bytes]) -> dict[str, FileInfo]:
+    files: dict[str, FileInfo] = {}
     try:
         if not isinstance(the_tarfile, str):
             the_tarfile.seek(0)
@@ -406,7 +441,7 @@ def _list_tar_content(the_tarfile: Union[str, io.BytesIO]) -> Dict[str, Dict[str
     return files
 
 
-def _get_file_content(the_tarfile: Union[str, io.BytesIO], filename: str) -> bytes:
+def _get_file_content(the_tarfile: str | IO[bytes], filename: str) -> bytes:
     if not isinstance(the_tarfile, str):
         the_tarfile.seek(0)
         with tarfile.open("r", fileobj=the_tarfile) as tar:
@@ -420,7 +455,7 @@ def _get_file_content(the_tarfile: Union[str, io.BytesIO], filename: str) -> byt
     raise MKGeneralException(_("Failed to extract %s") % filename)
 
 
-def _get_default_backup_domains():
+def _get_default_backup_domains() -> dict[str, dict[str, Any]]:
     domains = {}
     for domain, value in backup_domains.items():
         if "default" in value and not value.get("deprecated"):
@@ -437,6 +472,7 @@ def _snapshot_secret() -> bytes:
         try:
             s = os.urandom(256)
         except NotImplementedError:
+            # TODO(This is not a save fall back!)
             s = str(sha256(str(time.time()).encode())).encode()
         path.write_bytes(s)
         return s
@@ -444,7 +480,7 @@ def _snapshot_secret() -> bytes:
 
 def extract_snapshot(  # pylint: disable=too-many-branches
     tar: tarfile.TarFile,
-    domains: Dict[str, DomainSpec],
+    domains: dict[str, DomainSpec],
 ) -> None:
     """Used to restore a configuration snapshot for "discard changes"""
     tar_domains = {}
@@ -460,12 +496,12 @@ def extract_snapshot(  # pylint: disable=too-many-branches
     if not os.path.exists(restore_dir):
         os.makedirs(restore_dir)
 
-    def check_domain(domain: DomainSpec, tar_member: tarfile.TarInfo) -> List[str]:
+    def check_domain(domain: DomainSpec, tar_member: tarfile.TarInfo) -> list[str]:
         errors = []
 
         prefix = domain["prefix"]
 
-        def check_exists_or_writable(path_tokens: List[str]) -> bool:
+        def check_exists_or_writable(path_tokens: list[str]) -> bool:
             if not path_tokens:
                 return False
             if os.path.exists("/".join(path_tokens)):
@@ -503,7 +539,7 @@ def extract_snapshot(  # pylint: disable=too-many-branches
 
         return errors
 
-    def cleanup_domain(domain: DomainSpec) -> List[str]:
+    def cleanup_domain(domain: DomainSpec) -> list[str]:
         # Some domains, e.g. authorization, do not get a cleanup
         if domain.get("cleanup") is False:
             return []
@@ -531,7 +567,7 @@ def extract_snapshot(  # pylint: disable=too-many-branches
                     os.remove(full_path)
         return []
 
-    def extract_domain(domain: DomainSpec, tar_member: tarfile.TarInfo) -> List[str]:
+    def extract_domain(domain: DomainSpec, tar_member: tarfile.TarInfo) -> list[str]:
         try:
             target_dir = domain.get("prefix")
             if not target_dir:
@@ -555,7 +591,7 @@ def extract_snapshot(  # pylint: disable=too-many-branches
 
         return []
 
-    def execute_restore(domain: DomainSpec, is_pre_restore: bool = True) -> List[str]:
+    def execute_restore(domain: DomainSpec, is_pre_restore: bool = True) -> list[str]:
         if is_pre_restore:
             if "pre_restore" in domain:
                 return domain["pre_restore"]()
@@ -582,7 +618,7 @@ def extract_snapshot(  # pylint: disable=too-many-branches
             lambda domain, tar_member: execute_restore(domain, is_pre_restore=False),
         ),
     ]:
-        errors: List[str] = []
+        errors: list[str] = []
         for name, tar_member in tar_domains.items():
             if name in domains:
                 try:
@@ -630,7 +666,7 @@ def extract_snapshot(  # pylint: disable=too-many-branches
 
 # Try to cleanup everything starting from the root_path
 # except the specific exclude files
-def _cleanup_dir(root_path: str, exclude_files: Optional[List[str]] = None) -> None:
+def _cleanup_dir(root_path: str, exclude_files: list[str] | None = None) -> None:
     if exclude_files is None:
         exclude_files = []
 

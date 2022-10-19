@@ -163,7 +163,7 @@ class ConfigVariableEnableCommunityTranslations(ConfigVariable):
             ),
         )
 
-    def need_restart(self):
+    def need_restart(self) -> bool:
         return True
 
 

@@ -61,7 +61,7 @@ class ConfigVariableEnableRBN(ConfigVariable):
         )
 
     # TODO: Duplicate with domain specification. Drop this?
-    def need_restart(self):
+    def need_restart(self) -> bool:
         return True
 
 
@@ -171,7 +171,7 @@ class ConfigVariableNotificationBulkInterval(ConfigVariable):
         )
 
     # TODO: Duplicate with domain specification. Drop this?
-    def need_restart(self):
+    def need_restart(self) -> bool:
         return True
 
 
@@ -264,7 +264,7 @@ class ConfigVariableServiceLevels(ConfigVariable):
             allow_empty=False,
         )
 
-    def allow_reset(self):
+    def allow_reset(self) -> bool:
         return False
 
 

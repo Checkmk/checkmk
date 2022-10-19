@@ -1183,6 +1183,8 @@ class AggregationIcon(Icon):
             start = args.find("-a' '") + 5
             end = args.find("' ", start)
             aggr_name = args[start:end]
+            aggr_name = aggr_name.replace("$HOSTADDRESS$", row["host_address"])
+            aggr_name = aggr_name.replace("$HOSTNAME$", row["host_name"])
 
             url = "%s/check_mk/view.py?view_name=aggr_single&aggr_name=%s" % (
                 base_url,

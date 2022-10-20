@@ -8,25 +8,28 @@ from tests.unit.cmk.special_agents.agent_kube.factory import (
 )
 
 from cmk.special_agents.utils_kubernetes.performance import (
-    _determine_rate_metrics,
+    _determine_cpu_rate_metrics,
     _kube_object_performance_sections,
 )
 from cmk.special_agents.utils_kubernetes.schemata.section import PerformanceUsage
 
 
-def test_determine_rate_metrics() -> None:
+def test_determine_cpu_rate_metrics() -> None:
     current_cpu_metric = PerformanceMetricFactory.build(timestamp=1)
     old_cpu_metric = current_cpu_metric.copy()
     old_cpu_metric.timestamp = 0
-    containers_rate_metrics = _determine_rate_metrics([current_cpu_metric], [old_cpu_metric])
+    containers_rate_metrics = _determine_cpu_rate_metrics([current_cpu_metric], [old_cpu_metric])
     assert len(containers_rate_metrics) == 1
-    assert len(containers_rate_metrics[current_cpu_metric.container_name]) == 1
+    assert (
+        containers_rate_metrics[0].pod_lookup_from_metric()
+        == current_cpu_metric.pod_lookup_from_metric()
+    )
 
 
-def test_determine_rate_metrics_for_containers_with_same_timestamp() -> None:
+def test_determine_cpu_rate_metrics_for_containers_with_same_timestamp() -> None:
     """Test that no rate metrics are returned if no rates can be determined."""
     cpu_metric = PerformanceMetricFactory.build()
-    containers_rate_metrics = _determine_rate_metrics([cpu_metric], [cpu_metric])
+    containers_rate_metrics = _determine_cpu_rate_metrics([cpu_metric], [cpu_metric])
     assert len(containers_rate_metrics) == 0
 
 

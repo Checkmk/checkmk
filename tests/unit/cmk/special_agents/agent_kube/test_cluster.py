@@ -38,10 +38,6 @@ class PerformanceMetricFactory(ModelFactory):
     __model__ = performance.PerformanceMetric
 
 
-class RateMetricFactory(ModelFactory):
-    __model__ = performance.RateMetric
-
-
 def cluster_api_sections() -> Sequence[str]:
     return [
         "kube_pod_resources_v1",

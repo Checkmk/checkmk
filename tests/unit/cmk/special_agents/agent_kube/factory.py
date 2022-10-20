@@ -158,6 +158,10 @@ class PerformanceMetricFactory(ModelFactory):
     __model__ = performance.PerformanceMetric
 
 
+class MemoryMetricFactory(ModelFactory):
+    __model__ = performance.MemoryMetric
+
+
 # Node related Factories
 
 

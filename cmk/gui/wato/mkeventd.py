@@ -2406,20 +2406,23 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         )
         return menu
 
-    def action(self) -> ActionResult:
+    def action(self) -> ActionResult:  # pyxlint: disable=too-many-branches
         if not transactions.check_transaction():
             return redirect(mode_url("mkeventd_rule_packs"))
 
-        if not self._new:
-            existing_rules = self._rule_pack["rules"]
-        else:
-            existing_rules = []
+        existing_rules = [] if self._new else self._rule_pack["rules"]
 
         vs = self._valuespec()
-        self._rule_pack = vs.from_html_vars("rule_pack")
-        vs.validate_value(self._rule_pack, "rule_pack")
+        rule_pack_dict = vs.from_html_vars("rule_pack")
+        vs.validate_value(rule_pack_dict, "rule_pack")
+        self._rule_pack = ec.ECRulePackSpec(
+            id=rule_pack_dict["id"],
+            title=rule_pack_dict["title"],
+            disabled=rule_pack_dict["disabled"],
+            rules=existing_rules,
+            hits=0,
+        )
 
-        self._rule_pack["rules"] = existing_rules
         new_id = self._rule_pack["id"]
 
         # Make sure that ID is unique
@@ -2454,7 +2457,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         html.begin_form("rule_pack")
         vs = self._valuespec()
         assert not isinstance(self._rule_pack, ec.MkpRulePackProxy)
-        vs.render_input("rule_pack", self._rule_pack)
+        vs.render_input("rule_pack", dict(self._rule_pack))
         vs.set_focus("rule_pack")
         html.hidden_fields()
         html.end_form()

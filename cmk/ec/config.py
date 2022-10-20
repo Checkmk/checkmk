@@ -3,7 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Iterator, KeysView, Mapping, MutableMapping, Sequence
+from collections.abc import (
+    Collection,
+    Iterable,
+    Iterator,
+    KeysView,
+    Mapping,
+    MutableMapping,
+    Sequence,
+)
 from re import Pattern
 from typing import Any, Literal, TypedDict, Union
 
@@ -173,7 +181,12 @@ class Rule(TypedDict, total=False):
     state: State
 
 
-ECRulePackSpec = dict[str, Any]  # TODO: improve this type
+class ECRulePackSpec(TypedDict, total=False):
+    id: str
+    title: str
+    disabled: bool
+    rules: Collection[Any]  # TODO: Improve this!
+    hits: int
 
 
 class MkpRulePackBindingError(MKException):
@@ -202,17 +215,17 @@ class MkpRulePackProxy(MutableMapping[str, Any]):  # pylint: disable=too-many-an
     def __getitem__(self, key: str) -> Any:
         if self.rule_pack is None:
             raise MkpRulePackBindingError("Proxy is not bound")
-        return self.rule_pack[key]
+        return self.rule_pack[key]  # type: ignore[literal-required] # TODO: Nuke this!
 
     def __setitem__(self, key: str, value: Any) -> None:
         if self.rule_pack is None:
             raise MkpRulePackBindingError("Proxy is not bound")
-        self.rule_pack[key] = value
+        self.rule_pack[key] = value  # type: ignore[literal-required] # TODO: Nuke this!
 
     def __delitem__(self, key: str) -> None:
         if self.rule_pack is None:
             raise MkpRulePackBindingError("Proxy is not bound")
-        del self.rule_pack[key]
+        del self.rule_pack[key]  # type: ignore[misc] # TODO: Nuke this!
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}("{self.id_}")'
@@ -311,7 +324,7 @@ class ConfigFromWATO(TypedDict):
     retention_interval: int
     rule_optimizer: bool
     rule_packs: Sequence[ECRulePack]
-    rules: Iterable[Rule]
+    rules: Collection[Rule]
     snmp_credentials: Iterable[SNMPCredential]
     socket_queue_len: int
     statistics_interval: int

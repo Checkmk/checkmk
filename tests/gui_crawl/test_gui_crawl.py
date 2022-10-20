@@ -637,14 +637,23 @@ def mutate_url_with_xss_payload(url: Url, payload: str) -> Generator[Url, None, 
 @pytest.fixture
 def site() -> Site:
     version = os.environ.get("VERSION", CMKVersion.DAILY)
+    reuse = os.environ.get("REUSE")
+    # if REUSE is undefined, a site will neither be reused nor be dropped
+    reuse_site = reuse == "1"
+    drop_site = reuse == "0"
     sf = get_site_factory(
         prefix="crawl_", update_from_git=version == "git", install_test_python_modules=False
     )
 
-    site = None
-    if os.environ.get("REUSE", "0") == "1":
+    site = sf.get_existing_site("central")
+    if site.exists() and reuse_site:
+        logger.info("Reuse existing site (REUSE=1)")
         site = sf.get_existing_site("central")
-    if site is None or not site.exists():
+    else:
+        if site.exists() and drop_site:
+            logger.info("Dropping existing site (REUSE=0)")
+            site.rm()
+        logger.info("Creating new site")
         site = sf.get_site("central")
     logger.info("Site %s is ready!", site.id)
 

@@ -15,19 +15,29 @@ from tests.testlib.playwright.helpers import PPage
 from tests.testlib.site import get_site_factory, Site
 from tests.testlib.version import CMKVersion
 
+logger = logging.getLogger()
+
 
 @pytest.fixture(name="test_site", scope="session", autouse=True)
 def site() -> Site:
     logging.info("Setting up testsite")
     version = os.environ.get("VERSION", CMKVersion.DAILY)
+    reuse = os.environ.get("REUSE")
+    # if REUSE is undefined, a site will neither be reused nor be dropped
+    reuse_site = reuse == "1"
+    drop_site = reuse == "0"
     sf = get_site_factory(
         prefix="gui_e2e_", update_from_git=version == "git", install_test_python_modules=False
     )
 
-    site_to_return = None
-    if os.environ.get("REUSE", "0") == "1":
-        site_to_return = sf.get_existing_site("central")
-    if site_to_return is None or not site_to_return.exists():
+    site_to_return = sf.get_existing_site("central")
+    if site_to_return.exists() and reuse_site:
+        logger.info("Reuse existing site (REUSE=1)")
+    else:
+        if site_to_return.exists() and drop_site:
+            logger.info("Dropping existing site (REUSE=0)")
+            site_to_return.rm()
+        logger.info("Creating new site")
         site_to_return = sf.get_site("central")
     logging.info("Testsite %s is up", site_to_return.id)
 

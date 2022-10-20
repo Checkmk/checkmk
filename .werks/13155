@@ -1,4 +1,4 @@
-Title: Network topology and BI visualization: fix node highlighting and selection
+Title: Network topology and BI visualization: fix search menu
 Class: fix
 Compatible: compat
 Component: multisite
@@ -8,6 +8,8 @@ Knowledge: doc
 Level: 1
 Version: 2.1.0b1
 
-Nodes are now highlighted again, if the mouse hovers over entries in the
-dropdown of search results. Additionally, it is possible to select a node
-with a click on an entry in the search results, again.
+The following issues in the dropdown of the search menu are fixed:
+
+LI:The correct background colors for entries are used
+LI:Nodes are highlighted, if the mouse hovers over entries
+LI:It is possible to select a node with a click on an entry

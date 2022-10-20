@@ -379,6 +379,12 @@ metric_info["num_user"] = {
     "color": "23/a",
 }
 
+metric_info["max_user"] = {
+    "title": _l("Maximum allowed users"),
+    "unit": "count",
+    "color": "25/a",
+}
+
 # DRBD metrics
 metric_info["activity_log_updates"] = {
     "title": _l("Activity log updates"),
@@ -700,6 +706,16 @@ graph_info["current_users"] = {
         "current_users:crit",
     ],
 }
+
+
+graph_info["firewall_users"] = {
+    "title": _l("Number of active users"),
+    "metrics": [
+        ("num_user", "line"),
+        ("max_user", "line"),
+    ],
+}
+
 
 graph_info["mobileiron_compliances"] = {
     "title": _l("Total non-compliant devices"),

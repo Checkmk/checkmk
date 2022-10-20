@@ -274,6 +274,12 @@ def test_not_rc_tag(package_path: str, cmk_version: str) -> None:
     )
     assert os.path.isfile(msi_file_path)
 
+    if os.stat(msi_file_path).st_size == 0:
+        pytest.skip(
+            f"The file {msi_file_path} was most likely faked by fake-windows-artifacts, "
+            f"so there is no reason to check it with msiinfo"
+        )
+
     output = subprocess.check_output(["msiinfo", "export", msi_file_path, "Property"], text=True)
     assert "ProductVersion" in output
 

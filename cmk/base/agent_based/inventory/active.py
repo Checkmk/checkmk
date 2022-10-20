@@ -75,13 +75,20 @@ def _execute_active_check_inventory(
 
     trees = inv_result.trees
 
+    tree_or_archive_store = TreeOrArchiveStore(
+        cmk.utils.paths.inventory_output_dir,
+        cmk.utils.paths.inventory_archive_dir,
+    )
+    old_tree = tree_or_archive_store.load(host_name=host_config.hostname)
+
     if inv_result.processing_failed:
-        old_tree = None
         active_check_result = ActiveCheckResult(fail_status, "Cannot update tree")
     else:
-        old_tree = _save_inventory_tree(
+        _save_inventory_tree(
             host_config.hostname,
+            tree_or_archive_store,
             trees.inventory,
+            old_tree,
             retentions,
         )
         active_check_result = ActiveCheckResult()
@@ -109,7 +116,7 @@ def _execute_active_check_inventory(
 
 def _check_inventory_tree(
     trees: InventoryTrees,
-    old_tree: StructuredDataNode | None,
+    old_tree: StructuredDataNode,
     sw_missing: ServiceState,
     sw_changes: ServiceState,
     hw_changes: ServiceState,
@@ -125,12 +132,11 @@ def _check_inventory_tree(
     if swp_table is not None and swp_table.is_empty() and sw_missing:
         subresults.append(ActiveCheckResult(sw_missing, "software packages information is missing"))
 
-    if old_tree is not None:
-        if not _tree_nodes_are_equal(old_tree, trees.inventory, "software"):
-            subresults.append(ActiveCheckResult(sw_changes, "software changes"))
+    if not _tree_nodes_are_equal(old_tree, trees.inventory, "software"):
+        subresults.append(ActiveCheckResult(sw_changes, "software changes"))
 
-        if not _tree_nodes_are_equal(old_tree, trees.inventory, "hardware"):
-            subresults.append(ActiveCheckResult(hw_changes, "hardware changes"))
+    if not _tree_nodes_are_equal(old_tree, trees.inventory, "hardware"):
+        subresults.append(ActiveCheckResult(hw_changes, "hardware changes"))
 
     if not trees.status_data.is_empty():
         subresults.append(
@@ -142,12 +148,9 @@ def _check_inventory_tree(
 
 def _tree_nodes_are_equal(
     old_tree: StructuredDataNode,
-    inv_tree: StructuredDataNode | None,
+    inv_tree: StructuredDataNode,
     edge: str,
 ) -> bool:
-    if inv_tree is None:
-        return False
-
     old_node = old_tree.get_node((edge,))
     inv_node = inv_tree.get_node((edge,))
     if old_node is None:
@@ -161,20 +164,16 @@ def _tree_nodes_are_equal(
 
 def _save_inventory_tree(
     hostname: HostName,
+    tree_or_archive_store: TreeOrArchiveStore,
     inventory_tree: StructuredDataNode,
+    old_tree: StructuredDataNode,
     retentions: Retentions,
-) -> StructuredDataNode | None:
-    tree_or_archive_store = TreeOrArchiveStore(
-        cmk.utils.paths.inventory_output_dir,
-        cmk.utils.paths.inventory_archive_dir,
-    )
-
+) -> None:
     if inventory_tree.is_empty():
         # Remove empty inventory files. Important for host inventory icon
         tree_or_archive_store.remove(host_name=hostname)
-        return None
+        return
 
-    old_tree = tree_or_archive_store.load(host_name=hostname)
     update_result = retentions.may_update(int(time.time()), inventory_tree, old_tree)
 
     if old_tree.is_empty():
@@ -194,7 +193,6 @@ def _save_inventory_tree(
             "Inventory tree not updated%s.\n"
             % (" (%s)" % update_result.reason if update_result.reason else "")
         )
-        return None
+        return
 
     tree_or_archive_store.save(host_name=hostname, tree=inventory_tree)
-    return old_tree

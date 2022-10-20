@@ -57,15 +57,13 @@ _TREE_WITH_EDGE.setdefault_node(("edge",))
 @pytest.mark.parametrize(
     "old_tree, inv_tree",
     [
-        (_TREE_WITH_OTHER, None),
-        (_TREE_WITH_EDGE, None),
         (_TREE_WITH_EDGE, _TREE_WITH_OTHER),
         (_TREE_WITH_OTHER, _TREE_WITH_EDGE),
     ],
 )
 def test__tree_nodes_are_not_equal(
     old_tree: StructuredDataNode,
-    inv_tree: StructuredDataNode | None,
+    inv_tree: StructuredDataNode,
 ) -> None:
     assert active_inventory._tree_nodes_are_equal(old_tree, inv_tree, "edge") is False
 

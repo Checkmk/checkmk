@@ -12,8 +12,6 @@ pub const CONNECTION_TIMEOUT: u64 = 20;
 pub const CMK_AGENT_USER: &str = "cmk-agent";
 #[cfg(unix)]
 pub const UNIX_AGENT_SOCKET: &str = "/run/check-mk-agent.socket";
-#[cfg(windows)]
-pub const WINDOWS_INTERNAL_PORT: &str = "28250";
 
 // FILES
 pub const REGISTRATION_PRESET_FILE: &str = "registration_preset.json";
@@ -37,8 +35,6 @@ pub const WIN_AGENT_HOME_DIR: &str = "\\checkmk\\agent";
 pub const ENV_HOME_DIR: &str = "DEBUG_HOME_DIR";
 pub const ENV_MAX_CONNECTIONS: &str = "DEBUG_MAX_CONNECTIONS";
 pub const ENV_CONNECTION_TIMEOUT: &str = "DEBUG_CONNECTION_TIMEOUT";
-#[cfg(windows)]
-pub const ENV_WINDOWS_INTERNAL_PORT: &str = "DEBUG_WINDOWS_INTERNAL_PORT";
 #[cfg(windows)]
 pub const ENV_PROGRAM_DATA: &str = "ProgramData";
 

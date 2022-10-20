@@ -137,19 +137,11 @@ pub fn agent_channel() -> types::AgentChannel {
 }
 
 #[cfg(windows)]
-fn agent_port() -> String {
-    match env::var(constants::ENV_WINDOWS_INTERNAL_PORT) {
-        Err(_) => String::from(constants::WINDOWS_INTERNAL_PORT),
-        Ok(port) => {
-            debug!("Using debug WINDOWS_INTERNAL_PORT: {}", port);
-            port
-        }
-    }
-}
-
-#[cfg(windows)]
 pub fn agent_channel() -> types::AgentChannel {
-    types::AgentChannel::from(format!("ip/localhost:{}", agent_port()).as_str())
+    use crate::mailslot_transport;
+    types::AgentChannel::from(
+        format!("ms/{}", mailslot_transport::service_mailslot_name()).as_ref(),
+    )
 }
 
 #[cfg(unix)]

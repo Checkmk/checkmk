@@ -7,9 +7,11 @@
 #![allow(dead_code)]
 mod common;
 
+#[cfg(unix)]
 use anyhow::Result as AnyhowResult;
 use assert_cmd::prelude::OutputAssertExt;
 use cmk_agent_ctl::configuration::config;
+#[cfg(unix)]
 use predicates::prelude::predicate;
 use std::fs;
 use std::path::Path;
@@ -63,36 +65,14 @@ fn test_help() {
     output.assert().success();
 }
 
-/// Generates `random` port in the range 30'000..32'000
-/// The reason is to avoid re-using expiring ports which may make troubles
-/// if we are testing too often
-/// `/ 4` - in windows PID is multiple of 4
-fn get_pseudo_random_port() -> u16 {
-    (std::process::id() / 4 % 2_000u32) as u16 + 30_000u16
-}
-
+#[cfg(unix)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_dump() -> AnyhowResult<()> {
-    #[cfg(windows)]
-    if !is_elevated::is_elevated() {
-        // SK: There is no better method to avoid annoying failures if your
-        // IDE is not elevated. Do not worry, that you may occasionally do not
-        // test something - the testing script will require elevation in any case.
-        println!("Test is skipped, must be in elevated mode");
-        return Ok(());
-    }
-    let port = get_pseudo_random_port();
     let test_dir = common::setup_test_dir("cmk_agent_ctl_test_dump-");
 
     let test_agent_output = "some test agent output";
-    #[cfg(unix)]
     let agent_socket_address = common::setup_agent_socket_path(test_dir.path());
-    #[cfg(unix)]
     let expected_remote_address = Some("\n");
-    #[cfg(windows)]
-    let agent_socket_address = format!("localhost:{}", &port);
-    #[cfg(windows)]
-    let expected_remote_address: Option<&str> = None;
     let agent_stream_thread = tokio::spawn(common::agent::one_time_agent_response(
         agent_socket_address,
         test_agent_output,
@@ -102,7 +82,6 @@ async fn test_dump() -> AnyhowResult<()> {
     let mut cmd = common::controller_command();
 
     cmd.env("DEBUG_HOME_DIR", test_dir.path())
-        .env("DEBUG_WINDOWS_INTERNAL_PORT", port.to_string())
         .arg("dump")
         .arg("-vv")
         .unwrap()

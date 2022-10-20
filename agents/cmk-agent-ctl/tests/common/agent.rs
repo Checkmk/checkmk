@@ -14,15 +14,13 @@ use tokio::net::{TcpListener, TcpStream};
 #[cfg(unix)]
 use tokio::net::{UnixListener, UnixStream};
 
+#[cfg(unix)]
 pub async fn one_time_agent_response(
     socket_address: String,
     output: &str,
     expected_input: Option<&str>,
 ) -> AnyhowResult<()> {
-    #[cfg(unix)]
     let socket = UnixListener::bind(socket_address).unwrap();
-    #[cfg(windows)]
-    let socket = TcpListener::bind(socket_address).await?;
     let (stream, _) = socket.accept().await?;
     agent_response(stream, output.into(), expected_input).await
 }

@@ -157,11 +157,9 @@ fn collect_from_ip(agent_ip: &str) -> IoResult<Vec<u8>> {
     ))
 }
 
-fn collect_from_mailslot(mailslot: &str) -> IoResult<Vec<u8>> {
-    async_std::task::block_on(async_collect_from_mailslot(
-        mailslot,
-        IpAddr::from([127, 0, 0, 1]),
-    ))
+#[tokio::main(flavor = "current_thread")]
+async fn collect_from_mailslot(mailslot: &str) -> IoResult<Vec<u8>> {
+    async_collect_from_mailslot(mailslot, IpAddr::from([127, 0, 0, 1])).await
 }
 
 pub fn collect(agent_channel: &AgentChannel) -> IoResult<Vec<u8>> {

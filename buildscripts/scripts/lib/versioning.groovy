@@ -73,6 +73,10 @@ def get_docker_tag(scm) {
     return BRANCH + '-' + DATE + '-' + HASH
 }
 
+def get_docker_artifact_name(edition, cmk_version) {
+    return "check-mk-${edition}-docker-${cmk_version}.tar.gz"
+}
+
 def select_docker_tag(BRANCH, BUILD_TAG, FOLDER_TAG) {
     // Empty folder prperties are null pointers
     // Other emput string variables have the value ''

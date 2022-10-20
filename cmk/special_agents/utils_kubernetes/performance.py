@@ -398,27 +398,11 @@ def _kube_object_performance_sections(
     return [
         (
             SectionName("kube_performance_memory_v1"),
-            SectionJson(
-                section.PerformanceUsage(
-                    resource=section.Memory(
-                        usage=_aggregate_metric(
-                            performance_containers, MetricName("memory_working_set_bytes")
-                        )
-                    ),
-                ).json()
-            ),
+            _section_memory(performance_containers),
         ),
         (
             SectionName("kube_performance_cpu_v1"),
-            SectionJson(
-                section.PerformanceUsage(
-                    resource=section.Cpu(
-                        usage=_aggregate_rate_metric(
-                            performance_containers, MetricName("cpu_usage_seconds_total")
-                        ),
-                    ),
-                ).json()
-            ),
+            _section_cpu(performance_containers),
         ),
     ]
 
@@ -435,48 +419,45 @@ def _resource_quota_performance_sections(
     return [
         (
             SectionName("kube_resource_quota_performance_memory_v1"),
-            SectionJson(
-                section.PerformanceUsage(
-                    resource=section.Memory(
-                        usage=_aggregate_metric(
-                            performance_containers, MetricName("memory_working_set_bytes")
-                        )
-                    ),
-                ).json()
-            ),
+            _section_memory(performance_containers),
         ),
         (
             SectionName("kube_resource_quota_performance_cpu_v1"),
-            SectionJson(
-                section.PerformanceUsage(
-                    resource=section.Cpu(
-                        usage=_aggregate_rate_metric(
-                            performance_containers, MetricName("cpu_usage_seconds_total")
-                        ),
-                    ),
-                ).json()
-            ),
+            _section_cpu(performance_containers),
         ),
     ]
 
 
-def _aggregate_metric(
-    containers: Collection[PerformanceContainer],
-    metric: MetricName,
-) -> float:
+def _section_memory(containers: Collection[PerformanceContainer]) -> SectionJson:
     """Aggregate a metric across all containers"""
-    return 0.0 + sum(
-        container.metrics[metric].value for container in containers if metric in container.metrics
+    metric = MetricName("memory_working_set_bytes")
+
+    return SectionJson(
+        section.PerformanceUsage(
+            resource=section.Memory(
+                usage=0.0
+                + sum(
+                    container.metrics[metric].value
+                    for container in containers
+                    if metric in container.metrics
+                ),
+            ),
+        ).json()
     )
 
 
-def _aggregate_rate_metric(
-    containers: Collection[PerformanceContainer],
-    rate_metric: MetricName,
-) -> float:
+def _section_cpu(containers: Collection[PerformanceContainer]) -> SectionJson:
     """Aggregate a rate metric across all containers"""
-    return 0.0 + sum(
-        container.rate_metrics[rate_metric].rate
-        for container in containers
-        if container.rate_metrics is not None and rate_metric in container.rate_metrics
+    rate_metric = MetricName("cpu_usage_seconds_total")
+    return SectionJson(
+        section.PerformanceUsage(
+            resource=section.Cpu(
+                usage=0.0
+                + sum(
+                    container.rate_metrics[rate_metric].rate
+                    for container in containers
+                    if container.rate_metrics is not None and rate_metric in container.rate_metrics
+                ),
+            ),
+        ).json()
     )

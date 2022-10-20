@@ -23,10 +23,3 @@ def try_bake_agents_for_hosts(hosts: List[HostName]) -> None:
             agent_bakery.start_bake_agents(host_names=hosts, signing_credentials=None)
         except BackgroundJobAlreadyRunning:
             pass
-
-
-def ruleset_changed(name: str) -> None:
-    if has_agent_bakery():
-        import cmk.gui.cee.agent_bakery as agent_bakery  # pylint: disable=no-name-in-module
-
-        agent_bakery.ruleset_changed(name)

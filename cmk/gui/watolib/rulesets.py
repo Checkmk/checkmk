@@ -47,8 +47,7 @@ from cmk.utils.type_defs import (
 # e.g. by trying to move the common code to a common place
 import cmk.base.export  # pylint: disable=cmk-module-layer-violation
 
-import cmk.gui.watolib.bakery as bakery
-from cmk.gui import utils
+from cmk.gui import hooks, utils
 from cmk.gui.config import active_config, register_post_config_load_hook
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.htmllib.html import html
@@ -818,7 +817,7 @@ class Ruleset:
         return self.rulespec.is_optional
 
     def _on_change(self) -> None:
-        bakery.ruleset_changed(self.name)
+        hooks.call("ruleset-changed", self.name)
 
     # Returns the outcoming value or None and a list of matching rules. These are pairs
     # of rule_folder and rule_number

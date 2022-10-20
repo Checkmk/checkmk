@@ -23,8 +23,7 @@ Details:
 <ul>
 <li>The plugin is now able to detect the installation folder</li>
 <li>On distros without systemd you can keep the plugin below {{../check_mk_agent/plugins/}}</li>
-<li>On distros with systemd you have to install the plugin to {{../check_mk_agent/plugins/NUMBER/}}<
-li>
+<li>On distros with systemd you have to install the plugin to {{../check_mk_agent/plugins/NUMBER/}}</li>
 <li>The recommended NUMBER for this folder is 60</li>
 </ul>
 

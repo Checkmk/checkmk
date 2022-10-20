@@ -34856,7 +34856,15 @@ msgid "Order"
 msgstr "Ordina"
 
 #, fuzzy
+msgid "Organisation device statuses"
+msgstr "Utilizzare gli stati del dispositivo"
+
+#, fuzzy
 msgid "Organisation licenses overview"
+msgstr "Panoramica delle applicazioni"
+
+#, fuzzy
+msgid "Organisation sensor readings"
 msgstr "Panoramica delle applicazioni"
 
 #, fuzzy

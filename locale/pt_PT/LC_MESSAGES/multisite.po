@@ -34583,7 +34583,15 @@ msgid "Order"
 msgstr "Encomenda"
 
 #, fuzzy
+msgid "Organisation device statuses"
+msgstr "Use os estados do dispositivo"
+
+#, fuzzy
 msgid "Organisation licenses overview"
+msgstr "Visão geral das aplicações"
+
+#, fuzzy
+msgid "Organisation sensor readings"
 msgstr "Visão geral das aplicações"
 
 #, fuzzy

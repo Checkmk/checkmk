@@ -32910,7 +32910,15 @@ msgid "Order"
 msgstr "注文"
 
 #, fuzzy
+msgid "Organisation device statuses"
+msgstr "デバイスの状態を使用する"
+
+#, fuzzy
 msgid "Organisation licenses overview"
+msgstr "アプリケーションの概要"
+
+#, fuzzy
+msgid "Organisation sensor readings"
 msgstr "アプリケーションの概要"
 
 #, fuzzy

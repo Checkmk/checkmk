@@ -34553,7 +34553,15 @@ msgid "Order"
 msgstr "Pida"
 
 #, fuzzy
+msgid "Organisation device statuses"
+msgstr "Utilizar los estados del dispositivo"
+
+#, fuzzy
 msgid "Organisation licenses overview"
+msgstr "Resumen de aplicaciones"
+
+#, fuzzy
+msgid "Organisation sensor readings"
 msgstr "Resumen de aplicaciones"
 
 #, fuzzy

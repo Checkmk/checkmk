@@ -33171,7 +33171,15 @@ msgid "Order"
 msgstr ""
 
 #, fuzzy
+msgid "Organisation device statuses"
+msgstr "Numele Aplicatiei"
+
+#, fuzzy
 msgid "Organisation licenses overview"
+msgstr "Numele Aplicatiei"
+
+#, fuzzy
+msgid "Organisation sensor readings"
 msgstr "Numele Aplicatiei"
 
 #, fuzzy

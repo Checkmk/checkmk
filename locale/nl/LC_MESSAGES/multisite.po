@@ -34276,7 +34276,15 @@ msgid "Order"
 msgstr "Bestel"
 
 #, fuzzy
+msgid "Organisation device statuses"
+msgstr "Apparaattoestanden gebruiken"
+
+#, fuzzy
 msgid "Organisation licenses overview"
+msgstr "Overzicht toepassingen"
+
+#, fuzzy
+msgid "Organisation sensor readings"
 msgstr "Overzicht toepassingen"
 
 #, fuzzy

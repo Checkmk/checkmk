@@ -34713,7 +34713,15 @@ msgid "Order"
 msgstr "Commandez"
 
 #, fuzzy
+msgid "Organisation device statuses"
+msgstr "Utiliser les états du dispositif"
+
+#, fuzzy
 msgid "Organisation licenses overview"
+msgstr "Aperçu des applications"
+
+#, fuzzy
+msgid "Organisation sensor readings"
 msgstr "Aperçu des applications"
 
 #, fuzzy

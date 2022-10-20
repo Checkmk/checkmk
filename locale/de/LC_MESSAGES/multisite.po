@@ -34341,7 +34341,15 @@ msgid "Order"
 msgstr "Ordnung"
 
 #, fuzzy
+msgid "Organisation device statuses"
+msgstr "Nutze Gerätestatus"
+
+#, fuzzy
 msgid "Organisation licenses overview"
+msgstr "Anwendungsübersicht"
+
+#, fuzzy
+msgid "Organisation sensor readings"
 msgstr "Anwendungsübersicht"
 
 #, fuzzy

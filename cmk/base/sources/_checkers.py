@@ -20,35 +20,27 @@ from typing import (
     List,
     Mapping,
     Optional,
-    overload,
     Sequence,
     Tuple,
 )
 
 import cmk.utils.paths
 import cmk.utils.tty as tty
-from cmk.utils.cpu_tracking import CPUTracker
+from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
 from cmk.utils.type_defs import HostAddress, HostName, result, SectionName, SourceType
 
-from cmk.snmplib.type_defs import (
-    BackendSNMPTree,
-    SNMPDetectSpec,
-    SNMPRawData,
-    SNMPRawDataSection,
-    TRawData,
-)
+from cmk.snmplib.type_defs import BackendSNMPTree, SNMPDetectSpec, SNMPRawData, SNMPRawDataSection
 
 from cmk.core_helpers import Fetcher, FetcherType, FileCache, get_raw_data, NoFetcher, Parser
 from cmk.core_helpers.agent import AgentFileCache, AgentParser, AgentRawData, AgentRawDataSection
 from cmk.core_helpers.cache import FileCacheGlobals, FileCacheMode, MaxAge, SectionStore
 from cmk.core_helpers.config import AgentParserConfig, SNMPParserConfig
-from cmk.core_helpers.host_sections import HostSections, TRawDataSection
+from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.ipmi import IPMIFetcher
 from cmk.core_helpers.piggyback import PiggybackFetcher
 from cmk.core_helpers.program import ProgramFetcher
-from cmk.core_helpers.protocol import FetcherMessage
 from cmk.core_helpers.snmp import (
     SectionMeta,
     SNMPFetcher,
@@ -74,35 +66,13 @@ __all__ = [
 ]
 
 
-@overload
 def parse(
     meta: HostMeta,
-    raw_data: result.Result[AgentRawData, Exception],
+    raw_data: result.Result[AgentRawData | SNMPRawData, Exception],
     *,
     selection: SectionNameCollection,
     logger: logging.Logger,
-) -> result.Result[HostSections[AgentRawDataSection], Exception]:
-    ...
-
-
-@overload
-def parse(
-    meta: HostMeta,
-    raw_data: result.Result[SNMPRawData, Exception],
-    *,
-    selection: SectionNameCollection,
-    logger: logging.Logger,
-) -> result.Result[HostSections[SNMPRawDataSection], Exception]:
-    ...
-
-
-def parse(
-    meta: HostMeta,
-    raw_data: result.Result[TRawData, Exception],
-    *,
-    selection: SectionNameCollection,
-    logger: logging.Logger,
-) -> result.Result[HostSections[TRawDataSection], Exception]:
+) -> result.Result[HostSections[AgentRawDataSection | SNMPRawDataSection], Exception]:
     parser = _make_parser(meta, logger=logger)
     try:
         return raw_data.map(partial(parser.parse, selection=selection))
@@ -699,27 +669,15 @@ def fetch_all(
     sources: Iterable[Tuple[HostMeta, FileCache, Fetcher]],
     *,
     mode: Mode,
-) -> Sequence[Tuple[HostMeta, FetcherMessage]]:
+) -> Sequence[Tuple[HostMeta, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]]:
     console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
-    out: List[Tuple[HostMeta, FetcherMessage]] = []
+    out: List[Tuple[HostMeta, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]] = []
     for meta, file_cache, fetcher in sources:
         console.vverbose("  Source: %s\n" % (meta,))
 
         with CPUTracker() as tracker:
             raw_data = get_raw_data(file_cache, fetcher, mode)
-        out.append(
-            (
-                meta,
-                FetcherMessage.from_raw_data(
-                    meta.hostname,
-                    meta.ident,
-                    raw_data,
-                    tracker.duration,
-                    meta.fetcher_type,
-                    meta.source_type,
-                ),
-            )
-        )
+        out.append((meta, raw_data, tracker.duration))
     return out
 
 

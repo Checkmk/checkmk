@@ -9,15 +9,19 @@ from typing import Dict, Literal, Optional, Sequence, Tuple, Union
 import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.paths
+from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
 from cmk.utils.parameters import TimespecificParameters
-from cmk.utils.type_defs import HostName, RulesetName, ServiceName
+from cmk.utils.type_defs import AgentRawData, HostName, RulesetName, ServiceName
+from cmk.utils.type_defs.result import Result
 
 from cmk.automations.results import CheckPreviewEntry
 
+from cmk.snmplib.type_defs import SNMPRawData
+
 import cmk.core_helpers.cache
-from cmk.core_helpers.type_defs import Mode, NO_SELECTION
+from cmk.core_helpers.type_defs import HostMeta, Mode, NO_SELECTION
 
 import cmk.base.agent_based.checking as checking
 import cmk.base.api.agent_based.register as agent_based_register
@@ -69,7 +73,9 @@ def get_check_preview(
     cmk.core_helpers.cache.FileCacheGlobals.use_outdated = True
     cmk.core_helpers.cache.FileCacheGlobals.maybe = use_cached_snmp_data
 
-    fetched = fetch_all(
+    fetched: Sequence[
+        Tuple[HostMeta, Result[AgentRawData | SNMPRawData, Exception], Snapshot]
+    ] = fetch_all(
         make_sources(
             host_config,
             ip_address,
@@ -89,7 +95,7 @@ def get_check_preview(
         mode=Mode.DISCOVERY,
     )
     host_sections, _source_results = parse_messages(
-        fetched,
+        ((f[0], f[1]) for f in fetched),
         selected_sections=NO_SELECTION,
         logger=logging.getLogger("cmk.base.discovery"),
     )

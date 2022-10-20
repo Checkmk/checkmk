@@ -34,9 +34,11 @@ import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.caching import config_cache as _config_cache
+from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
+    AgentRawData,
     CheckPluginName,
     DiscoveryResult,
     EVERYTHING,
@@ -45,9 +47,12 @@ from cmk.utils.type_defs import (
     ServiceID,
     ServiceName,
 )
+from cmk.utils.type_defs.result import Result
+
+from cmk.snmplib.type_defs import SNMPRawData
 
 import cmk.core_helpers.cache
-from cmk.core_helpers.type_defs import Mode, NO_SELECTION
+from cmk.core_helpers.type_defs import HostMeta, Mode, NO_SELECTION
 
 import cmk.base.autochecks as autochecks
 import cmk.base.check_utils
@@ -186,7 +191,9 @@ def automation_discovery(
 
         ipaddress = None if host_config.is_cluster else config.lookup_ip_address(host_config)
 
-        fetched = fetch_all(
+        fetched: Sequence[
+            Tuple[HostMeta, Result[AgentRawData | SNMPRawData, Exception], Snapshot]
+        ] = fetch_all(
             make_sources(
                 host_config,
                 ipaddress,
@@ -206,7 +213,7 @@ def automation_discovery(
             mode=Mode.DISCOVERY,
         )
         host_sections, _results = parse_messages(
-            fetched,
+            ((f[0], f[1]) for f in fetched),
             selected_sections=NO_SELECTION,
             logger=logging.getLogger("cmk.base.discovery"),
         )

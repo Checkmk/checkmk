@@ -12,16 +12,19 @@ CL:
 """
 
 import logging
-from typing import Container, Iterable, NamedTuple, Sequence
+from typing import Container, Iterable, NamedTuple, Sequence, Tuple
 
 import cmk.utils.tty as tty
+from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
 from cmk.utils.structured_data import StructuredDataNode
-from cmk.utils.type_defs import HostName, InventoryPluginName, result
+from cmk.utils.type_defs import AgentRawData, HostName, InventoryPluginName, result
+
+from cmk.snmplib.type_defs import SNMPRawData
 
 from cmk.core_helpers.host_sections import HostSections
-from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
+from cmk.core_helpers.type_defs import HostMeta, Mode, NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
@@ -68,7 +71,9 @@ def inventorize_host(
     ipaddress = config.lookup_ip_address(host_config)
     config_cache = config.get_config_cache()
 
-    fetched = fetch_all(
+    fetched: Sequence[
+        Tuple[HostMeta, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
+    ] = fetch_all(
         make_sources(
             host_config,
             ipaddress,
@@ -88,7 +93,7 @@ def inventorize_host(
         mode=(Mode.INVENTORY if selected_sections is NO_SELECTION else Mode.FORCE_SECTIONS),
     )
     host_sections, results = parse_messages(
-        fetched,
+        ((f[0], f[1]) for f in fetched),
         selected_sections=selected_sections,
         logger=logging.getLogger("cmk.base.inventory"),
     )

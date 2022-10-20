@@ -6,19 +6,30 @@
 
 import logging
 from functools import partial
-from typing import Callable, Container, Counter, Optional, Set
+from typing import Callable, Container, Counter, Optional, Sequence, Set, Tuple
 
 import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.check_utils import ActiveCheckResult
+from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import MKGeneralException, OnError
 from cmk.utils.log import console
-from cmk.utils.type_defs import CheckPluginName, HostAddress, HostKey, HostName, ServiceState
+from cmk.utils.type_defs import (
+    AgentRawData,
+    CheckPluginName,
+    HostAddress,
+    HostKey,
+    HostName,
+    ServiceState,
+)
+from cmk.utils.type_defs.result import Result
+
+from cmk.snmplib.type_defs import SNMPRawData
 
 import cmk.core_helpers.cache
-from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
+from cmk.core_helpers.type_defs import HostMeta, Mode, NO_SELECTION, SectionNameCollection
 
 import cmk.base.agent_based.error_handling as error_handling
 import cmk.base.autochecks as autochecks
@@ -71,7 +82,9 @@ def commandline_discovery(
         host_config = config_cache.get_host_config(host_name)
         section.section_begin(host_name)
         try:
-            fetched = fetch_all(
+            fetched: Sequence[
+                Tuple[HostMeta, Result[AgentRawData | SNMPRawData, Exception], Snapshot]
+            ] = fetch_all(
                 make_sources(
                     host_config,
                     config.lookup_ip_address(host_config),
@@ -91,7 +104,7 @@ def commandline_discovery(
                 mode=mode,
             )
             host_sections, _results = parse_messages(
-                fetched,
+                ((f[0], f[1]) for f in fetched),
                 selected_sections=selected_sections,
                 logger=logging.getLogger("cmk.base.discovery"),
             )

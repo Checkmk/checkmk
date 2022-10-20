@@ -6,9 +6,11 @@
 from functools import partial
 from typing import Callable, Sequence, Tuple
 
-from cmk.utils.type_defs import HostName, ServiceState
+from cmk.utils.cpu_tracking import Snapshot
+from cmk.utils.type_defs import AgentRawData, HostName, result, ServiceState
 
-from cmk.core_helpers.protocol import FetcherMessage
+from cmk.snmplib.type_defs import SNMPRawData
+
 from cmk.core_helpers.type_defs import HostMeta
 
 import cmk.base.agent_based.error_handling as error_handling
@@ -22,7 +24,9 @@ __all__ = ["active_check_discovery"]
 def active_check_discovery(
     host_name: HostName,
     *,
-    fetched: Sequence[Tuple[HostMeta, FetcherMessage]],
+    fetched: Sequence[
+        Tuple[HostMeta, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
+    ],
     active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,
 ) -> ServiceState:

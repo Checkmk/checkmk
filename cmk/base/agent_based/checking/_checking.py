@@ -42,8 +42,11 @@ from cmk.utils.type_defs import (
     state_markers,
     TimeperiodName,
 )
+from cmk.utils.type_defs.result import Result
 
-from cmk.core_helpers.protocol import FetcherMessage, FetcherType
+from cmk.snmplib.type_defs import SNMPRawData
+
+from cmk.core_helpers.protocol import FetcherType
 from cmk.core_helpers.type_defs import HostMeta, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -89,7 +92,7 @@ class _AggregatedResult(NamedTuple):
 def execute_checkmk_checks(
     *,
     hostname: HostName,
-    fetched: Sequence[Tuple[HostMeta, FetcherMessage]],
+    fetched: Sequence[Tuple[HostMeta, Result[AgentRawData | SNMPRawData, Exception], Snapshot]],
     run_plugin_names: Container[CheckPluginName],
     selected_sections: SectionNameCollection,
     submitter: Submitter,
@@ -106,7 +109,7 @@ def execute_checkmk_checks(
         ),
     )
     host_sections, source_results = parse_messages(
-        fetched,
+        ((f[0], f[1]) for f in fetched),
         selected_sections=selected_sections,
         logger=logging.getLogger("cmk.base.checking"),
     )
@@ -147,7 +150,7 @@ def execute_checkmk_checks(
         ]
     return ActiveCheckResult.from_subresults(
         *timed_results,
-        _timing_results(tracker.duration, [fetched_entry[1] for fetched_entry in fetched]),
+        _timing_results(tracker.duration, tuple((f[0], f[2]) for f in fetched)),
     )
 
 
@@ -174,17 +177,16 @@ def _do_inventory_actions_during_checking_for(
 
 
 def _timing_results(
-    total_times: Snapshot, fetcher_messages: Sequence[FetcherMessage]
+    total_times: Snapshot, fetched: Sequence[Tuple[HostMeta, Snapshot]]
 ) -> ActiveCheckResult:
-    for msg in fetcher_messages:
-        total_times += msg.stats.duration
+    for duration in (f[1] for f in fetched):
+        total_times += duration
 
     infotext = "execution time %.1f sec" % total_times.process.elapsed
     if not config.check_mk_perfdata_with_times:
         return ActiveCheckResult(
             0, infotext, (), ("execution_time=%.3f" % total_times.process.elapsed,)
         )
-
     perfdata = [
         "execution_time=%.3f" % total_times.process.elapsed,
         "user_time=%.3f" % total_times.process.user,
@@ -192,8 +194,9 @@ def _timing_results(
         "children_user_time=%.3f" % total_times.process.children_user,
         "children_system_time=%.3f" % total_times.process.children_system,
     ]
+
     summary: DefaultDict[str, Snapshot] = defaultdict(Snapshot.null)
-    for msg in fetcher_messages:
+    for meta, duration in fetched:
         with suppress(KeyError):
             summary[
                 {
@@ -202,8 +205,8 @@ def _timing_results(
                     FetcherType.SPECIAL_AGENT: "ds",
                     FetcherType.SNMP: "snmp",
                     FetcherType.TCP: "agent",
-                }[msg.fetcher_type]
-            ] += msg.stats.duration
+                }[meta.fetcher_type]
+            ] += duration
 
     for phase, duration in summary.items():
         perfdata.append("cmk_time_%s=%.3f" % (phase, duration.idle))

@@ -3,12 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 from functools import partial
 from typing import Callable, Container, Sequence, Tuple
 
-from cmk.utils.type_defs import CheckPluginName, EVERYTHING, HostName, ServiceState
+from cmk.utils.cpu_tracking import Snapshot
+from cmk.utils.type_defs import (
+    AgentRawData,
+    CheckPluginName,
+    EVERYTHING,
+    HostName,
+    result,
+    ServiceState,
+)
 
-from cmk.core_helpers.protocol import FetcherMessage
+from cmk.snmplib.type_defs import SNMPRawData
+
 from cmk.core_helpers.type_defs import HostMeta, NO_SELECTION, SectionNameCollection
 
 import cmk.base.agent_based.error_handling as error_handling
@@ -22,7 +33,9 @@ def active_check_checking(
     hostname: HostName,
     *,
     submitter: Submitter,
-    fetched: Sequence[Tuple[HostMeta, FetcherMessage]],
+    fetched: Sequence[
+        Tuple[HostMeta, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
+    ],
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
     selected_sections: SectionNameCollection = NO_SELECTION,
     active_check_handler: Callable[[HostName, str], object],

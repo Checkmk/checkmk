@@ -26,6 +26,7 @@ import cmk.utils.piggyback
 import cmk.utils.tty as tty
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
+    AgentRawData,
     HostKey,
     HostName,
     ParsedSectionName,
@@ -33,6 +34,8 @@ from cmk.utils.type_defs import (
     SectionName,
     SourceType,
 )
+
+from cmk.snmplib.type_defs import SNMPRawData
 
 from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.type_defs import HostMeta
@@ -43,7 +46,6 @@ from cmk.base.crash_reporting import create_section_crash_dump
 from cmk.base.sources import parse as parse_raw_data
 
 if TYPE_CHECKING:
-    from cmk.core_helpers.protocol import FetcherMessage
     from cmk.core_helpers.type_defs import SectionNameCollection
 
 
@@ -297,7 +299,7 @@ class ParsedSectionsBroker:
 
 
 def parse_messages(
-    fetched: Sequence[Tuple[HostMeta, FetcherMessage]],
+    fetched: Iterable[Tuple[HostMeta, result.Result[AgentRawData | SNMPRawData, Exception]]],
     *,
     selected_sections: SectionNameCollection,
     logger: logging.Logger,
@@ -318,15 +320,15 @@ def parse_messages(
     results: List[Tuple[HostMeta, result.Result[HostSections, Exception]]] = []
     # Special agents can produce data for the same check_plugin_name on the same host, in this case
     # the section lines need to be extended
-    for source, fetcher_message in fetched:
-        host_key = HostKey(fetcher_message.host_name, fetcher_message.source_type)
+    for source, raw_data in fetched:
+        host_key = HostKey(source.hostname, source.source_type)
 
         console.vverbose(f"  {host_key!s}")
         collected_host_sections.setdefault(host_key, HostSections())
 
         source_result = parse_raw_data(
             source,
-            fetcher_message.raw_data,
+            raw_data,
             selection=selected_sections,
             logger=logger,
         )

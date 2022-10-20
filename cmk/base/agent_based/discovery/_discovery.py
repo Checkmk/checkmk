@@ -12,11 +12,13 @@ import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils.check_utils import ActiveCheckResult
+from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import OnError
-from cmk.utils.type_defs import CheckPluginName, HostName
+from cmk.utils.type_defs import AgentRawData, CheckPluginName, HostName, result
+
+from cmk.snmplib.type_defs import SNMPRawData
 
 import cmk.core_helpers.cache
-from cmk.core_helpers.protocol import FetcherMessage
 from cmk.core_helpers.type_defs import HostMeta, NO_SELECTION
 
 import cmk.base.check_utils
@@ -43,7 +45,9 @@ __all__ = ["execute_check_discovery"]
 def execute_check_discovery(
     host_name: HostName,
     *,
-    fetched: Sequence[Tuple[HostMeta, FetcherMessage]],
+    fetched: Sequence[
+        Tuple[HostMeta, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
+    ],
 ) -> ActiveCheckResult:
     # Note: '--cache' is set in core_cmc, nagios template or even on CL and means:
     # 1. use caches as default:
@@ -58,7 +62,7 @@ def execute_check_discovery(
     discovery_mode = DiscoveryMode(params.rediscovery.get("mode"))
 
     host_sections, source_results = parse_messages(
-        fetched,
+        ((f[0], f[1]) for f in fetched),
         selected_sections=NO_SELECTION,
         logger=logging.getLogger("cmk.base.discovery"),
     )

@@ -3,10 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Iterator, KeysView, Mapping, MutableMapping, Sequence
 from re import Pattern
 from typing import Any, Literal, TypedDict, Union
 
+from cmk.utils.exceptions import MKException
 from cmk.utils.type_defs import Seconds
 
 TextPattern = str | Pattern[str] | None
@@ -172,6 +173,81 @@ class Rule(TypedDict, total=False):
     state: State
 
 
+ECRulePackSpec = dict[str, Any]  # TODO: improve this type
+
+
+class MkpRulePackBindingError(MKException):
+    """Base class for exceptions related to rule pack binding"""
+
+
+class MkpRulePackProxy(MutableMapping[str, Any]):  # pylint: disable=too-many-ancestors
+    """
+    An object of this class represents an entry (i.e. a rule pack) in
+    mkp_rule_packs. It is used as a reference to an EC rule pack
+    that either can be exported or is already exported in a MKP.
+
+    A newly created instance is not yet connected to a specific rule pack.
+    This is achieved via the method bind_to.
+    """
+
+    def __init__(self, rule_pack_id: str) -> None:
+        super().__init__()
+        # Ideally the 'id_' would not be necessary and the proxy object would
+        # be bound to it's referenced object upon initialization. Unfortunately,
+        # this is not possible because the mknotifyd.mk could specify referenced
+        # objects as well.
+        self.id_ = rule_pack_id
+        self.rule_pack: ECRulePackSpec | None = None
+
+    def __getitem__(self, key: str) -> Any:
+        if self.rule_pack is None:
+            raise MkpRulePackBindingError("Proxy is not bound")
+        return self.rule_pack[key]
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        if self.rule_pack is None:
+            raise MkpRulePackBindingError("Proxy is not bound")
+        self.rule_pack[key] = value
+
+    def __delitem__(self, key: str) -> None:
+        if self.rule_pack is None:
+            raise MkpRulePackBindingError("Proxy is not bound")
+        del self.rule_pack[key]
+
+    def __repr__(self) -> str:
+        return f'{self.__class__.__name__}("{self.id_}")'
+
+    # __iter__ and __len__ are only defined as a workaround for a buggy entry
+    # in the typeshed
+    def __iter__(self) -> Iterator[str]:
+        yield from self.keys()
+
+    def __len__(self) -> int:
+        return len(self.keys())
+
+    def keys(self) -> KeysView[str]:
+        """List of keys of this rule pack"""
+        if self.rule_pack is None:
+            raise MkpRulePackBindingError("Proxy is not bound")
+        return self.rule_pack.keys()
+
+    def bind_to(self, mkp_rule_pack: ECRulePackSpec) -> None:
+        """Binds this rule pack to the given MKP rule pack"""
+        if self.id_ != mkp_rule_pack["id"]:
+            raise MkpRulePackBindingError(
+                f"The IDs of {self} and {mkp_rule_pack} cannot be different."
+            )
+
+        self.rule_pack = mkp_rule_pack
+
+    @property
+    def is_bound(self) -> bool:
+        """Has this rule pack been bound via bind_to()?"""
+        return self.rule_pack is not None
+
+
+ECRulePack = ECRulePackSpec | MkpRulePackProxy
+
 AuthenticationProtocol = Union[
     Literal["md5"],
     Literal["sha"],
@@ -234,7 +310,7 @@ class ConfigFromWATO(TypedDict):
     replication: Replication | None
     retention_interval: int
     rule_optimizer: bool
-    rule_packs: Sequence[dict[str, Any]]  # TODO: Mutable??? TypedDict
+    rule_packs: Sequence[ECRulePack]
     rules: Iterable[Rule]
     snmp_credentials: Iterable[SNMPCredential]
     socket_queue_len: int

@@ -203,30 +203,33 @@ else
 fi
 
 
-# Get statistics about monitored jobs. Below the job directory there
-# is a sub directory per user that ran a job. That directory must be
-# owned by the user so that a symlink or hardlink attack for reading
-# arbitrary files can be avoided.
-if pushd $MK_VARDIR/job >/dev/null; then
-    echo '<<<job>>>'
-    for username in *
-    do
-        if [ -d "$username" ] && cd "$username" ; then
-            count=$(su "$username" -c "ls -1 * | wc -l")
+section_job() {
+    # Get statistics about monitored jobs.
 
-            if [ "$count" -eq "1" ]; then
-                filename=$(su "$username" -c "ls -1 *")
-                echo "==> $filename <=="
-            fi
+    _cat_files() {
+        # read file names from stdin and write like `head -n -0 -v file`
+        while read -r file; do
+            printf "==> %s <==\n" "${file##./}"
+            cat "${file}"
+        done
+    }
 
-            su "$username" -c "head -n1000 *"
-            cd ..
-        fi
-    done
-    popd > /dev/null
-fi
+    (
+        cd "${MK_VARDIR}/job" 2>/dev/null || return
+        printf "<<<job>>>\n"
+        for user in *; do
+            (
+                cd "${user}" 2>/dev/null || return # return from subshell only
+                # This folder is owned (and thus writable) by the user that ran the jobs.
+                # The agent (root) must not read files that are not owned by the user.
+                # This prevents symlink or hardlink attacks.
+                find -L . -user "${user}" | _cat_files
+            )
+        done
+    )
+}
 
-
+section_job
 
 
 # Filesystem usage for UFS and VXFS

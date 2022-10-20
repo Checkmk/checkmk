@@ -9,7 +9,7 @@ from typing import Final, FrozenSet, NamedTuple, Optional, Sequence, Union
 
 from cmk.utils.type_defs import HostAddress, HostName, SectionName, SourceType
 
-__all__ = ["Mode", "NO_SELECTION", "SectionNameCollection", "HostMeta", "FetcherType"]
+__all__ = ["Mode", "NO_SELECTION", "SectionNameCollection", "SourceInfo", "FetcherType"]
 
 
 class Mode(enum.Enum):
@@ -37,8 +37,7 @@ class FetcherType(enum.Enum):
     TCP = enum.auto()
 
 
-class HostMeta(NamedTuple):
-    # TODO(ml): Rename that to Source once the current Sources are gone?
+class SourceInfo(NamedTuple):
     hostname: HostName
     ipaddress: Optional[HostAddress]
     ident: str

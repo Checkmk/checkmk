@@ -52,7 +52,7 @@ from cmk.utils.type_defs.result import Result
 from cmk.snmplib.type_defs import SNMPRawData
 
 import cmk.core_helpers.cache
-from cmk.core_helpers.type_defs import HostMeta, Mode, NO_SELECTION
+from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SourceInfo
 
 import cmk.base.autochecks as autochecks
 import cmk.base.check_utils
@@ -192,7 +192,7 @@ def automation_discovery(
         ipaddress = None if host_config.is_cluster else config.lookup_ip_address(host_config)
 
         fetched: Sequence[
-            Tuple[HostMeta, Result[AgentRawData | SNMPRawData, Exception], Snapshot]
+            Tuple[SourceInfo, Result[AgentRawData | SNMPRawData, Exception], Snapshot]
         ] = fetch_all(
             make_sources(
                 host_config,

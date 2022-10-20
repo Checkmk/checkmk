@@ -38,7 +38,7 @@ from cmk.utils.type_defs import (
 from cmk.snmplib.type_defs import SNMPRawData
 
 from cmk.core_helpers.host_sections import HostSections
-from cmk.core_helpers.type_defs import HostMeta
+from cmk.core_helpers.type_defs import SourceInfo
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.type_defs import SectionPlugin
@@ -54,7 +54,7 @@ CacheInfo = Optional[Tuple[int, int]]
 ParsedSectionContent = object  # the parse function may return *anything*.
 
 
-SourceResults = Sequence[Tuple[HostMeta, result.Result[HostSections, Exception]]]
+SourceResults = Sequence[Tuple[SourceInfo, result.Result[HostSections, Exception]]]
 
 
 class ParsingResult(NamedTuple):
@@ -299,13 +299,13 @@ class ParsedSectionsBroker:
 
 
 def parse_messages(
-    fetched: Iterable[Tuple[HostMeta, result.Result[AgentRawData | SNMPRawData, Exception]]],
+    fetched: Iterable[Tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception]]],
     *,
     selected_sections: SectionNameCollection,
     logger: logging.Logger,
 ) -> Tuple[
     Mapping[HostKey, HostSections],
-    Sequence[Tuple[HostMeta, result.Result[HostSections, Exception]]],
+    Sequence[Tuple[SourceInfo, result.Result[HostSections, Exception]]],
 ]:
     """Gather ALL host info data for any host (hosts, nodes, clusters) in Checkmk.
 
@@ -317,7 +317,7 @@ def parse_messages(
     console.vverbose("%s+%s %s\n", tty.yellow, tty.normal, "Parse fetcher results".upper())
 
     collected_host_sections: Dict[HostKey, HostSections] = {}
-    results: List[Tuple[HostMeta, result.Result[HostSections, Exception]]] = []
+    results: List[Tuple[SourceInfo, result.Result[HostSections, Exception]]] = []
     # Special agents can produce data for the same check_plugin_name on the same host, in this case
     # the section lines need to be extended
     for source, raw_data in fetched:

@@ -23,7 +23,7 @@ from cmk.core_helpers import (
     SNMPFetcher,
     TCPFetcher,
 )
-from cmk.core_helpers.type_defs import HostMeta
+from cmk.core_helpers.type_defs import SourceInfo
 
 import cmk.base.check_table as check_table
 import cmk.base.config as config
@@ -34,7 +34,7 @@ from cmk.base.check_utils import LegacyCheckParameters
 from cmk.base.config import HostConfig
 
 
-def dump_source(meta: HostMeta, fetcher: Fetcher) -> str:
+def dump_source(source: SourceInfo, fetcher: Fetcher) -> str:
     # pylint: disable=too-many-branches
     if isinstance(fetcher, IPMIFetcher):
         description = "Management board - IPMI"
@@ -79,7 +79,7 @@ def dump_source(meta: HostMeta, fetcher: Fetcher) -> str:
             bulk = "no"
 
         return "%s (%s, Bulk walk: %s, Port: %d, Backend: %s)" % (
-            "SNMP" if meta.source_type is SourceType.HOST else "Management board - SNMP",
+            "SNMP" if source.source_type is SourceType.HOST else "Management board - SNMP",
             credentials_text,
             bulk,
             snmp_config.port,
@@ -171,8 +171,8 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
     )
 
     agenttypes = [
-        dump_source(meta, fetcher)
-        for meta, _file_cache, fetcher in sources.make_non_cluster_sources(
+        dump_source(source, fetcher)
+        for source, _file_cache, fetcher in sources.make_non_cluster_sources(
             host_config,
             ipaddress,
             simulation_mode=config.simulation_mode,

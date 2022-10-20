@@ -21,7 +21,7 @@ from cmk.automations.results import CheckPreviewEntry
 from cmk.snmplib.type_defs import SNMPRawData
 
 import cmk.core_helpers.cache
-from cmk.core_helpers.type_defs import HostMeta, Mode, NO_SELECTION
+from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SourceInfo
 
 import cmk.base.agent_based.checking as checking
 import cmk.base.api.agent_based.register as agent_based_register
@@ -74,7 +74,7 @@ def get_check_preview(
     cmk.core_helpers.cache.FileCacheGlobals.maybe = use_cached_snmp_data
 
     fetched: Sequence[
-        Tuple[HostMeta, Result[AgentRawData | SNMPRawData, Exception], Snapshot]
+        Tuple[SourceInfo, Result[AgentRawData | SNMPRawData, Exception], Snapshot]
     ] = fetch_all(
         make_sources(
             host_config,

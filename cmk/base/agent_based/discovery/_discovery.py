@@ -19,7 +19,7 @@ from cmk.utils.type_defs import AgentRawData, CheckPluginName, HostName, result
 from cmk.snmplib.type_defs import SNMPRawData
 
 import cmk.core_helpers.cache
-from cmk.core_helpers.type_defs import HostMeta, NO_SELECTION
+from cmk.core_helpers.type_defs import NO_SELECTION, SourceInfo
 
 import cmk.base.check_utils
 import cmk.base.config as config
@@ -46,7 +46,7 @@ def execute_check_discovery(
     host_name: HostName,
     *,
     fetched: Sequence[
-        Tuple[HostMeta, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
+        Tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
     ],
 ) -> ActiveCheckResult:
     # Note: '--cache' is set in core_cmc, nagios template or even on CL and means:

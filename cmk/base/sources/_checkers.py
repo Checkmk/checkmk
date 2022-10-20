@@ -50,7 +50,7 @@ from cmk.core_helpers.snmp import (
     SNMPPluginStoreItem,
 )
 from cmk.core_helpers.tcp import TCPFetcher
-from cmk.core_helpers.type_defs import HostMeta, Mode, NO_SELECTION, SectionNameCollection
+from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection, SourceInfo
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_table as check_table
@@ -67,32 +67,32 @@ __all__ = [
 
 
 def parse(
-    meta: HostMeta,
+    source: SourceInfo,
     raw_data: result.Result[AgentRawData | SNMPRawData, Exception],
     *,
     selection: SectionNameCollection,
     logger: logging.Logger,
 ) -> result.Result[HostSections[AgentRawDataSection | SNMPRawDataSection], Exception]:
-    parser = _make_parser(meta, logger=logger)
+    parser = _make_parser(source, logger=logger)
     try:
         return raw_data.map(partial(parser.parse, selection=selection))
     except Exception as exc:
         return result.Error(exc)
 
 
-def _make_parser(meta: HostMeta, *, logger: logging.Logger) -> Parser:
-    if meta.fetcher_type is FetcherType.SNMP:
+def _make_parser(source: SourceInfo, *, logger: logging.Logger) -> Parser:
+    if source.fetcher_type is FetcherType.SNMP:
         return SNMPParser(
-            meta.hostname,
-            SectionStore[SNMPRawDataSection](make_persisted_section_dir(meta), logger=logger),
-            **_make_snmp_parser_config(meta.hostname)._asdict(),
+            source.hostname,
+            SectionStore[SNMPRawDataSection](make_persisted_section_dir(source), logger=logger),
+            **_make_snmp_parser_config(source.hostname)._asdict(),
             logger=logger,
         )
 
-    agent_parser_config = _make_agent_parser_config(meta.hostname)
+    agent_parser_config = _make_agent_parser_config(source.hostname)
     return AgentParser(
-        meta.hostname,
-        SectionStore[AgentRawDataSection](make_persisted_section_dir(meta), logger=logger),
+        source.hostname,
+        SectionStore[AgentRawDataSection](make_persisted_section_dir(source), logger=logger),
         check_interval=agent_parser_config.check_interval,
         keep_outdated=agent_parser_config.keep_outdated,
         translation=agent_parser_config.translation,
@@ -102,17 +102,23 @@ def _make_parser(meta: HostMeta, *, logger: logging.Logger) -> Parser:
     )
 
 
-def make_persisted_section_dir(meta: HostMeta) -> Path:
+def make_persisted_section_dir(source: SourceInfo) -> Path:
     var_dir: Final = Path(cmk.utils.paths.var_dir)
     return {
-        FetcherType.PIGGYBACK: var_dir / "persisted_sections" / meta.ident / str(meta.hostname),
-        FetcherType.SNMP: var_dir / "persisted_sections" / meta.ident / str(meta.hostname),
-        FetcherType.IPMI: var_dir / "persisted_sections" / meta.ident / str(meta.hostname),
-        FetcherType.PROGRAM: var_dir / "persisted" / str(meta.hostname),
-        FetcherType.SPECIAL_AGENT: var_dir / "persisted_sections" / meta.ident / str(meta.hostname),
-        FetcherType.PUSH_AGENT: var_dir / "persisted_sections" / meta.ident / str(meta.hostname),
-        FetcherType.TCP: var_dir / "persisted" / str(meta.hostname),
-    }[meta.fetcher_type]
+        FetcherType.PIGGYBACK: var_dir / "persisted_sections" / source.ident / str(source.hostname),
+        FetcherType.SNMP: var_dir / "persisted_sections" / source.ident / str(source.hostname),
+        FetcherType.IPMI: var_dir / "persisted_sections" / source.ident / str(source.hostname),
+        FetcherType.PROGRAM: var_dir / "persisted" / str(source.hostname),
+        FetcherType.SPECIAL_AGENT: var_dir
+        / "persisted_sections"
+        / source.ident
+        / str(source.hostname),
+        FetcherType.PUSH_AGENT: var_dir
+        / "persisted_sections"
+        / source.ident
+        / str(source.hostname),
+        FetcherType.TCP: var_dir / "persisted" / str(source.hostname),
+    }[source.fetcher_type]
 
 
 def make_file_cache_path_template(
@@ -271,12 +277,12 @@ class _Builder:
         self.simulation_mode: Final = simulation_mode
         self.missing_sys_description: Final = missing_sys_description
         self.file_cache_max_age: Final = file_cache_max_age
-        self._elems: Dict[str, Tuple[HostMeta, FileCache, Fetcher]] = {}
+        self._elems: Dict[str, Tuple[SourceInfo, FileCache, Fetcher]] = {}
 
         self._initialize()
 
     @property
-    def sources(self) -> Sequence[Tuple[HostMeta, FileCache, Fetcher]]:
+    def sources(self) -> Sequence[Tuple[SourceInfo, FileCache, Fetcher]]:
         # Always execute piggyback at the end
         return sorted(
             self._elems.values(),
@@ -321,7 +327,7 @@ class _Builder:
                 self._add(*self._get_agent())
 
         if "no-piggyback" not in self.host_config.tags:
-            meta = HostMeta(
+            source = SourceInfo(
                 self.host_config.hostname,
                 self.ipaddress,
                 "piggyback",
@@ -329,19 +335,19 @@ class _Builder:
                 SourceType.HOST,
             )
             self._add(
-                meta,
+                source,
                 PiggybackFetcher(
-                    ident=meta.ident,
-                    hostname=meta.hostname,
-                    address=meta.ipaddress,
+                    ident=source.ident,
+                    hostname=source.hostname,
+                    address=source.ipaddress,
                     time_settings=config.get_config_cache().get_piggybacked_hosts_time_settings(
                         piggybacked_hostname=self.host_config.hostname
                     ),
                 ),
                 AgentFileCache(
-                    meta.hostname,
+                    source.hostname,
                     path_template=make_file_cache_path_template(
-                        fetcher_type=meta.fetcher_type, ident=meta.ident
+                        fetcher_type=source.fetcher_type, ident=source.ident
                     ),
                     max_age=self.file_cache_max_age,
                     use_outdated=FileCacheGlobals.use_outdated,
@@ -371,7 +377,7 @@ class _Builder:
         if not self.host_config.is_snmp_host:
             return
         self._initialize_snmp_plugin_store()
-        meta = HostMeta(
+        source = SourceInfo(
             self.host_config.hostname,
             self.ipaddress,
             "snmp",
@@ -379,9 +385,9 @@ class _Builder:
             SourceType.HOST,
         )
         self._add(
-            meta,
+            source,
             SNMPFetcher(
-                ident=meta.ident,
+                ident=source.ident,
                 sections=make_sections(
                     self.host_config,
                     selected_sections=self.selected_sections,
@@ -389,13 +395,13 @@ class _Builder:
                 on_error=self.on_scan_error,
                 missing_sys_description=self.missing_sys_description,
                 do_status_data_inventory=self.host_config.do_status_data_inventory,
-                section_store_path=make_persisted_section_dir(meta),
-                snmp_config=self.host_config.snmp_config(meta.ipaddress),
+                section_store_path=make_persisted_section_dir(source),
+                snmp_config=self.host_config.snmp_config(source.ipaddress),
             ),
             SNMPFileCache(
-                meta.hostname,
+                source.hostname,
                 path_template=make_file_cache_path_template(
-                    fetcher_type=meta.fetcher_type, ident=meta.ident
+                    fetcher_type=source.fetcher_type, ident=source.ident
                 ),
                 max_age=(
                     MaxAge.none() if self.force_snmp_cache_refresh else self.file_cache_max_age
@@ -423,7 +429,7 @@ class _Builder:
             # See above.
             return
         if protocol == "snmp":
-            meta = HostMeta(
+            source = SourceInfo(
                 self.host_config.hostname,
                 self.ipaddress,
                 "mgmt_snmp",
@@ -431,22 +437,22 @@ class _Builder:
                 SourceType.MANAGEMENT,
             )
             self._add(
-                meta,
+                source,
                 SNMPFetcher(
-                    ident=meta.ident,
+                    ident=source.ident,
                     sections=make_sections(
                         self.host_config, selected_sections=self.selected_sections
                     ),
                     on_error=self.on_scan_error,
                     missing_sys_description=self.missing_sys_description,
                     do_status_data_inventory=self.host_config.do_status_data_inventory,
-                    section_store_path=make_persisted_section_dir(meta),
-                    snmp_config=self.host_config.snmp_config(meta.ipaddress),
+                    section_store_path=make_persisted_section_dir(source),
+                    snmp_config=self.host_config.snmp_config(source.ipaddress),
                 ),
                 SNMPFileCache(
-                    meta.hostname,
+                    source.hostname,
                     path_template=make_file_cache_path_template(
-                        fetcher_type=meta.fetcher_type, ident=meta.ident
+                        fetcher_type=source.fetcher_type, ident=source.ident
                     ),
                     max_age=(
                         MaxAge.none() if self.force_snmp_cache_refresh else self.file_cache_max_age
@@ -465,26 +471,26 @@ class _Builder:
                 ),
             )
         elif protocol == "ipmi":
-            meta = HostMeta(
+            source = SourceInfo(
                 self.host_config.hostname,
                 ip_address,
                 "mgmt_ipmi",
                 FetcherType.IPMI,
                 SourceType.MANAGEMENT,
             )
-            assert meta.ipaddress
+            assert source.ipaddress
             self._add(
-                meta,
+                source,
                 IPMIFetcher(
-                    ident=meta.ident,
-                    address=meta.ipaddress,
+                    ident=source.ident,
+                    address=source.ipaddress,
                     username=self.host_config.ipmi_credentials.get("username"),
                     password=self.host_config.ipmi_credentials.get("password"),
                 ),
                 AgentFileCache(
-                    meta.hostname,
+                    source.hostname,
                     path_template=make_file_cache_path_template(
-                        fetcher_type=meta.fetcher_type, ident=meta.ident
+                        fetcher_type=source.fetcher_type, ident=source.ident
                     ),
                     max_age=self.file_cache_max_age,
                     use_outdated=self.simulation_mode or FileCacheGlobals.use_outdated,
@@ -496,17 +502,17 @@ class _Builder:
         else:
             raise LookupError()
 
-    def _add(self, meta: HostMeta, fetcher: Fetcher, file_cache: FileCache) -> None:
-        self._elems[meta.ident] = (
-            meta,
+    def _add(self, source: SourceInfo, fetcher: Fetcher, file_cache: FileCache) -> None:
+        self._elems[source.ident] = (
+            source,
             file_cache,
             fetcher,
         )
 
-    def _get_agent(self) -> Tuple[HostMeta, Fetcher, FileCache]:
+    def _get_agent(self) -> Tuple[SourceInfo, Fetcher, FileCache]:
         datasource_program = self.host_config.datasource_program
         if datasource_program is not None:
-            meta = HostMeta(
+            source = SourceInfo(
                 self.host_config.hostname,
                 self.ipaddress,
                 "agent",
@@ -514,9 +520,9 @@ class _Builder:
                 SourceType.HOST,
             )
             return (
-                meta,
+                source,
                 ProgramFetcher(
-                    ident=meta.ident,
+                    ident=source.ident,
                     cmdline=core_config.translate_ds_program_source_cmdline(
                         datasource_program, self.host_config, self.ipaddress
                     ),
@@ -524,9 +530,9 @@ class _Builder:
                     is_cmc=config.is_cmc(),
                 ),
                 AgentFileCache(
-                    meta.hostname,
+                    source.hostname,
                     path_template=make_file_cache_path_template(
-                        fetcher_type=meta.fetcher_type, ident=meta.ident
+                        fetcher_type=source.fetcher_type, ident=source.ident
                     ),
                     max_age=self.file_cache_max_age,
                     use_outdated=self.simulation_mode or FileCacheGlobals.use_outdated,
@@ -538,7 +544,7 @@ class _Builder:
 
         connection_mode = self.host_config.agent_connection_mode()
         if connection_mode == "push-agent":
-            meta = HostMeta(
+            source = SourceInfo(
                 self.host_config.hostname,
                 self.ipaddress,
                 "push-agent",
@@ -548,12 +554,12 @@ class _Builder:
             # convert to seconds and add grace period
             interval = int(1.5 * 60 * self.host_config.check_mk_check_interval)
             return (
-                meta,
+                source,
                 NoFetcher(),
                 AgentFileCache(
-                    meta.hostname,
+                    source.hostname,
                     path_template=make_file_cache_path_template(
-                        fetcher_type=meta.fetcher_type, ident=meta.ident
+                        fetcher_type=source.fetcher_type, ident=source.ident
                     ),
                     max_age=MaxAge(interval, interval, interval),
                     use_outdated=self.simulation_mode or FileCacheGlobals.use_outdated,
@@ -568,7 +574,7 @@ class _Builder:
                 ),
             )
         if connection_mode == "pull-agent":
-            meta = HostMeta(
+            source = SourceInfo(
                 self.host_config.hostname,
                 self.ipaddress,
                 "agent",
@@ -576,19 +582,19 @@ class _Builder:
                 SourceType.HOST,
             )
             return (
-                meta,
+                source,
                 TCPFetcher(
-                    ident=meta.ident,
+                    ident=source.ident,
                     family=self.host_config.default_address_family,
-                    address=(meta.ipaddress, self.host_config.agent_port),
-                    host_name=meta.hostname,
+                    address=(source.ipaddress, self.host_config.agent_port),
+                    host_name=source.hostname,
                     timeout=self.host_config.tcp_connect_timeout,
                     encryption_settings=self.host_config.agent_encryption,
                 ),
                 AgentFileCache(
-                    meta.hostname,
+                    source.hostname,
                     path_template=make_file_cache_path_template(
-                        fetcher_type=meta.fetcher_type, ident=meta.ident
+                        fetcher_type=source.fetcher_type, ident=source.ident
                     ),
                     max_age=self.file_cache_max_age,
                     use_outdated=self.simulation_mode or FileCacheGlobals.use_outdated,
@@ -599,12 +605,12 @@ class _Builder:
             )
         raise NotImplementedError(f"connection mode {connection_mode!r}")
 
-    def _get_special_agents(self) -> Iterable[Tuple[HostMeta, Fetcher, FileCache]]:
+    def _get_special_agents(self) -> Iterable[Tuple[SourceInfo, Fetcher, FileCache]]:
         def make_id(agentname: str) -> str:
             return f"special_{agentname}"
 
         for agentname, params in self.host_config.special_agents:
-            meta = HostMeta(
+            source = SourceInfo(
                 self.host_config.hostname,
                 self.ipaddress,
                 make_id(agentname),
@@ -612,7 +618,7 @@ class _Builder:
                 SourceType.HOST,
             )
             fetcher = ProgramFetcher(
-                ident=meta.ident,
+                ident=source.ident,
                 cmdline=core_config.make_special_agent_cmdline(
                     self.host_config.hostname,
                     self.ipaddress,
@@ -628,9 +634,9 @@ class _Builder:
                 is_cmc=config.is_cmc(),
             )
             file_cache = AgentFileCache(
-                meta.hostname,
+                source.hostname,
                 path_template=make_file_cache_path_template(
-                    fetcher_type=meta.fetcher_type, ident=meta.ident
+                    fetcher_type=source.fetcher_type, ident=source.ident
                 ),
                 max_age=self.file_cache_max_age,
                 use_outdated=self.simulation_mode or FileCacheGlobals.use_outdated,
@@ -638,7 +644,7 @@ class _Builder:
                 use_only_cache=False,
                 file_cache_mode=FileCacheGlobals.file_cache_mode(),
             )
-            yield meta, fetcher, file_cache
+            yield source, fetcher, file_cache
 
 
 def make_non_cluster_sources(
@@ -651,7 +657,7 @@ def make_non_cluster_sources(
     simulation_mode: bool,
     missing_sys_description: bool,
     file_cache_max_age: MaxAge,
-) -> Sequence[Tuple[HostMeta, FileCache, Fetcher]]:
+) -> Sequence[Tuple[SourceInfo, FileCache, Fetcher]]:
     """Sequence of sources available for `host_config`."""
     return _Builder(
         host_config,
@@ -666,18 +672,20 @@ def make_non_cluster_sources(
 
 
 def fetch_all(
-    sources: Iterable[Tuple[HostMeta, FileCache, Fetcher]],
+    sources: Iterable[Tuple[SourceInfo, FileCache, Fetcher]],
     *,
     mode: Mode,
-) -> Sequence[Tuple[HostMeta, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]]:
+) -> Sequence[Tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]]:
     console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
-    out: List[Tuple[HostMeta, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]] = []
-    for meta, file_cache, fetcher in sources:
-        console.vverbose("  Source: %s\n" % (meta,))
+    out: List[
+        Tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
+    ] = []
+    for source, file_cache, fetcher in sources:
+        console.vverbose("  Source: %s\n" % (source,))
 
         with CPUTracker() as tracker:
             raw_data = get_raw_data(file_cache, fetcher, mode)
-        out.append((meta, raw_data, tracker.duration))
+        out.append((source, raw_data, tracker.duration))
     return out
 
 
@@ -692,7 +700,7 @@ def make_sources(
     simulation_mode: bool,
     missing_sys_description: bool,
     file_cache_max_age: MaxAge,
-) -> Sequence[Tuple[HostMeta, FileCache, Fetcher]]:
+) -> Sequence[Tuple[SourceInfo, FileCache, Fetcher]]:
     if host_config.nodes is None:
         # Not a cluster
         host_configs = [host_config]

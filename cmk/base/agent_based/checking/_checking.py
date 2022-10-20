@@ -47,7 +47,7 @@ from cmk.utils.type_defs.result import Result
 from cmk.snmplib.type_defs import SNMPRawData
 
 from cmk.core_helpers import FetcherType
-from cmk.core_helpers.type_defs import HostMeta, SectionNameCollection
+from cmk.core_helpers.type_defs import SectionNameCollection, SourceInfo
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_table as check_table
@@ -92,7 +92,7 @@ class _AggregatedResult(NamedTuple):
 def execute_checkmk_checks(
     *,
     hostname: HostName,
-    fetched: Sequence[Tuple[HostMeta, Result[AgentRawData | SNMPRawData, Exception], Snapshot]],
+    fetched: Sequence[Tuple[SourceInfo, Result[AgentRawData | SNMPRawData, Exception], Snapshot]],
     run_plugin_names: Container[CheckPluginName],
     selected_sections: SectionNameCollection,
     submitter: Submitter,
@@ -177,7 +177,7 @@ def _do_inventory_actions_during_checking_for(
 
 
 def _timing_results(
-    total_times: Snapshot, fetched: Sequence[Tuple[HostMeta, Snapshot]]
+    total_times: Snapshot, fetched: Sequence[Tuple[SourceInfo, Snapshot]]
 ) -> ActiveCheckResult:
     for duration in (f[1] for f in fetched):
         total_times += duration
@@ -196,7 +196,7 @@ def _timing_results(
     ]
 
     summary: DefaultDict[str, Snapshot] = defaultdict(Snapshot.null)
-    for meta, duration in fetched:
+    for source, duration in fetched:
         with suppress(KeyError):
             summary[
                 {
@@ -205,7 +205,7 @@ def _timing_results(
                     FetcherType.SPECIAL_AGENT: "ds",
                     FetcherType.SNMP: "snmp",
                     FetcherType.TCP: "agent",
-                }[meta.fetcher_type]
+                }[source.fetcher_type]
             ] += duration
 
     for phase, duration in summary.items():

@@ -29,7 +29,7 @@ from cmk.utils.type_defs.result import Result
 from cmk.snmplib.type_defs import SNMPRawData
 
 import cmk.core_helpers.cache
-from cmk.core_helpers.type_defs import HostMeta, Mode, NO_SELECTION, SectionNameCollection
+from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection, SourceInfo
 
 import cmk.base.agent_based.error_handling as error_handling
 import cmk.base.autochecks as autochecks
@@ -83,7 +83,7 @@ def commandline_discovery(
         section.section_begin(host_name)
         try:
             fetched: Sequence[
-                Tuple[HostMeta, Result[AgentRawData | SNMPRawData, Exception], Snapshot]
+                Tuple[SourceInfo, Result[AgentRawData | SNMPRawData, Exception], Snapshot]
             ] = fetch_all(
                 make_sources(
                     host_config,

@@ -24,7 +24,7 @@ from cmk.utils.type_defs import AgentRawData, HostName, InventoryPluginName, res
 from cmk.snmplib.type_defs import SNMPRawData
 
 from cmk.core_helpers.host_sections import HostSections
-from cmk.core_helpers.type_defs import HostMeta, Mode, NO_SELECTION, SectionNameCollection
+from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection, SourceInfo
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
@@ -90,7 +90,7 @@ def inventorize_real_host(
     config_cache = config.get_config_cache()
 
     fetched: Sequence[
-        Tuple[HostMeta, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
+        Tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
     ] = fetch_all(
         make_sources(
             host_config,
@@ -129,7 +129,8 @@ def inventorize_real_host(
         source_results=results,
         parsing_errors=parsing_errors,
         processing_failed=(
-            _sources_failed(host_section for _meta, host_section in results) or bool(parsing_errors)
+            _sources_failed(host_section for _source, host_section in results)
+            or bool(parsing_errors)
         ),
     )
 

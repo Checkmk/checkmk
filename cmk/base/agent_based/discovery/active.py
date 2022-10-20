@@ -11,7 +11,7 @@ from cmk.utils.type_defs import AgentRawData, HostName, result, ServiceState
 
 from cmk.snmplib.type_defs import SNMPRawData
 
-from cmk.core_helpers.type_defs import HostMeta
+from cmk.core_helpers.type_defs import SourceInfo
 
 import cmk.base.agent_based.error_handling as error_handling
 from cmk.base.config import HostConfig
@@ -25,7 +25,7 @@ def active_check_discovery(
     host_name: HostName,
     *,
     fetched: Sequence[
-        Tuple[HostMeta, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
+        Tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
     ],
     active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,

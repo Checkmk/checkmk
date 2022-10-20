@@ -20,7 +20,7 @@ from cmk.utils.type_defs import (
 
 from cmk.snmplib.type_defs import SNMPRawData
 
-from cmk.core_helpers.type_defs import HostMeta, NO_SELECTION, SectionNameCollection
+from cmk.core_helpers.type_defs import NO_SELECTION, SectionNameCollection, SourceInfo
 
 import cmk.base.agent_based.error_handling as error_handling
 from cmk.base.config import HostConfig
@@ -34,7 +34,7 @@ def active_check_checking(
     *,
     submitter: Submitter,
     fetched: Sequence[
-        Tuple[HostMeta, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
+        Tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
     ],
     run_plugin_names: Container[CheckPluginName] = EVERYTHING,
     selected_sections: SectionNameCollection = NO_SELECTION,

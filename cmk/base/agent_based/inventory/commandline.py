@@ -25,7 +25,6 @@ from ._inventory import (
     inventorize_cluster,
     inventorize_real_host,
 )
-from ._retentions import RetentionsTracker
 
 __all__ = ["commandline_inventory"]
 
@@ -83,8 +82,7 @@ def _commandline_inventory_on_host(
             host_config=host_config,
             parsed_sections_broker=fetched_data_result.parsed_sections_broker,
             run_plugin_names=run_plugin_names,
-            retentions_tracker=RetentionsTracker(host_config.inv_retention_intervals),
-        )
+        ).trees
 
     for subresult in check_parsing_errors(errors=fetched_data_result.parsing_errors):
         for line in subresult.details:

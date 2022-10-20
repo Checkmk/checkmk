@@ -29,8 +29,7 @@ from ._inventory import (
     inventorize_cluster,
     inventorize_real_host,
 )
-from ._retentions import Retentions, RetentionsTracker
-from ._tree_aggregator import InventoryTrees
+from ._tree_aggregator import InventoryTrees, TreeAggregator
 
 __all__ = ["active_check_inventory"]
 
@@ -69,25 +68,19 @@ def _execute_active_check_inventory(
             parsing_errors=(),
             processing_failed=False,
         )
+        tree_aggregator = TreeAggregator([])
         trees = inventorize_cluster(host_config=host_config)
-        retentions = Retentions(RetentionsTracker([]), do_update=False)
     else:
         fetched_data_result = fetch_real_host_data(
             host_config=host_config,
             selected_sections=NO_SELECTION,
         )
-        retentions_tracker = RetentionsTracker(host_config.inv_retention_intervals)
-        trees = inventorize_real_host(
+        tree_aggregator = inventorize_real_host(
             host_config=host_config,
             parsed_sections_broker=fetched_data_result.parsed_sections_broker,
             run_plugin_names=EVERYTHING,
-            retentions_tracker=retentions_tracker,
         )
-        retentions = Retentions(
-            retentions_tracker,
-            # If no intervals are configured then remove all known retentions
-            do_update=bool(host_config.inv_retention_intervals),
-        )
+        trees = tree_aggregator.trees
 
     tree_or_archive_store = TreeOrArchiveStore(
         cmk.utils.paths.inventory_output_dir,
@@ -103,7 +96,7 @@ def _execute_active_check_inventory(
             tree_or_archive_store,
             trees.inventory,
             old_tree,
-            retentions,
+            tree_aggregator,
         )
         active_check_result = ActiveCheckResult()
 
@@ -181,14 +174,14 @@ def _save_inventory_tree(
     tree_or_archive_store: TreeOrArchiveStore,
     inventory_tree: StructuredDataNode,
     old_tree: StructuredDataNode,
-    retentions: Retentions,
+    tree_aggregator: TreeAggregator,
 ) -> None:
     if inventory_tree.is_empty():
         # Remove empty inventory files. Important for host inventory icon
         tree_or_archive_store.remove(host_name=hostname)
         return
 
-    update_result = retentions.may_update(int(time.time()), inventory_tree, old_tree)
+    update_result = tree_aggregator.may_update(int(time.time()), old_tree)
 
     if old_tree.is_empty():
         console.verbose("New inventory tree.\n")

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ._inventory import inventorize_real_host
-from ._retentions import RetentionsTracker
 from .active import active_check_inventory
 from .commandline import commandline_inventory
 
@@ -12,5 +11,4 @@ __all__ = [
     "commandline_inventory",
     "active_check_inventory",
     "inventorize_real_host",
-    "RetentionsTracker",
 ]

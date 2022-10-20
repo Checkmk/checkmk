@@ -15,13 +15,12 @@ from cmk.utils.structured_data import RetentionIntervals, SDFilterFunc, SDPath, 
 import cmk.base.agent_based.inventory._inventory as _inventory
 import cmk.base.agent_based.inventory.active as active_inventory
 from cmk.base.agent_based.data_provider import ParsedSectionsBroker
-from cmk.base.agent_based.inventory._retentions import (
+from cmk.base.agent_based.inventory._tree_aggregator import (
     AttributesUpdater,
     RetentionInfo,
-    RetentionsTracker,
     TableUpdater,
+    TreeAggregator,
 )
-from cmk.base.agent_based.inventory._tree_aggregator import TreeAggregator
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 from cmk.base.config import HostConfig
 
@@ -36,9 +35,8 @@ def test_aggregator_raises_collision() -> None:
     # it runs in debug mode.  So let us explicitly disable that here.
     cmk.utils.debug.disable()
 
-    result = TreeAggregator().aggregate_results(
+    result = TreeAggregator([]).aggregate_results(
         inventory_generator=inventory_items,
-        retentions_tracker=RetentionsTracker([]),
         raw_cache_info=None,
         is_legacy_plugin=False,
     )
@@ -91,10 +89,9 @@ def test_integrate_attributes() -> None:
         ),
     ]
 
-    tree_aggr = TreeAggregator()
+    tree_aggr = TreeAggregator([])
     tree_aggr.aggregate_results(
         inventory_generator=inventory_items,
-        retentions_tracker=RetentionsTracker([]),
         raw_cache_info=None,
         is_legacy_plugin=False,
     )
@@ -155,10 +152,9 @@ def test_integrate_table_row() -> None:
         ),
     ]
 
-    tree_aggr = TreeAggregator()
+    tree_aggr = TreeAggregator([])
     tree_aggr.aggregate_results(
         inventory_generator=inventory_items,
-        retentions_tracker=RetentionsTracker([]),
         raw_cache_info=None,
         is_legacy_plugin=False,
     )
@@ -508,14 +504,14 @@ def test_retentions_add_cache_info_no_match(
     raw_cache_info: tuple[int, int] | None,
 ) -> None:
     now = 100
-    retentions_tracker = RetentionsTracker(raw_intervals)
-    retentions_tracker.may_add_cache_info(
+    tree_aggregator = TreeAggregator(raw_intervals)
+    tree_aggregator._may_add_cache_info(
         now=now,
         node_name=node_name,
         path=path,
         raw_cache_info=raw_cache_info,
     )
-    assert retentions_tracker.retention_infos == {}
+    assert tree_aggregator._retention_infos == {}
 
 
 @pytest.mark.parametrize(
@@ -682,15 +678,15 @@ def test_retentions_add_cache_info(
     match_other_keys: bool,
 ) -> None:
     now = 100
-    retentions_tracker = RetentionsTracker(raw_intervals)
-    retentions_tracker.may_add_cache_info(
+    tree_aggregator = TreeAggregator(raw_intervals)
+    tree_aggregator._may_add_cache_info(
         now=now,
         node_name=node_name,
         path=("path-to", "node"),
         raw_cache_info=raw_cache_info,
     )
 
-    retention_info = retentions_tracker.retention_infos.get((("path-to", "node"), node_name))
+    retention_info = tree_aggregator._retention_infos.get((("path-to", "node"), node_name))
     assert retention_info is not None
 
     assert retention_info.intervals == expected_intervals
@@ -1479,10 +1475,7 @@ def test__execute_active_check_inventory(
     monkeypatch.setattr(
         active_inventory,
         "inventorize_real_host",
-        lambda host_config, parsed_sections_broker, run_plugin_names, retentions_tracker: _inventory.InventoryTrees(
-            inventory=StructuredDataNode(),
-            status_data=StructuredDataNode(),
-        ),
+        lambda host_config, parsed_sections_broker, run_plugin_names: TreeAggregator([]),
     )
 
     result = active_inventory._execute_active_check_inventory(

@@ -40,7 +40,6 @@ from cmk.base.agent_based.utils import get_section_kwargs
 from cmk.base.config import HostConfig
 from cmk.base.sources import fetch_all, make_sources
 
-from ._retentions import RetentionsTracker
 from ._tree_aggregator import InventoryTrees, TreeAggregator
 
 __all__ = ["inventorize_cluster", "fetch_real_host_data", "inventorize_real_host"]
@@ -137,9 +136,8 @@ def inventorize_real_host(
     host_config: HostConfig,
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[InventoryPluginName],
-    retentions_tracker: RetentionsTracker,
-) -> InventoryTrees:
-    tree_aggregator = TreeAggregator()
+) -> TreeAggregator:
+    tree_aggregator = TreeAggregator(host_config.inv_retention_intervals)
 
     _set_cluster_property(tree_aggregator.trees.inventory, is_cluster=False)
 
@@ -176,7 +174,6 @@ def inventorize_real_host(
 
             exception = tree_aggregator.aggregate_results(
                 inventory_generator=inventory_plugin.inventory_function(**kwargs),
-                retentions_tracker=retentions_tracker,
                 raw_cache_info=parsed_sections_broker.get_cache_info(inventory_plugin.sections),
                 is_legacy_plugin=inventory_plugin.module is None,
             )
@@ -195,7 +192,7 @@ def inventorize_real_host(
                 console.vverbose(": ok\n")
 
     console.verbose("\n")
-    return tree_aggregator.trees
+    return tree_aggregator
 
 
 def _set_cluster_property(

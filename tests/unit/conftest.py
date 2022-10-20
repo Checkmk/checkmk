@@ -390,3 +390,9 @@ def initialised_item_state():
         mock_vs,
     ):
         yield
+
+
+@pytest.fixture(autouse=True)
+def reduce_password_hashing_rounds(monkeypatch):
+    """Reduce the number of rounds for hashing with bcrypt to the allowed minimum"""
+    monkeypatch.setattr("cmk.utils.crypto.password_hashing.BCRYPT_ROUNDS", 4)

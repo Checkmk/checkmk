@@ -19,6 +19,7 @@ sudo install -m 755 \
     mkbackup \
     cmk-update-config \
     cmk-update-license-usage \
+    cmk-passwd \
     post-rename-site \
     init-redis \
     "$ROOT"/bin/

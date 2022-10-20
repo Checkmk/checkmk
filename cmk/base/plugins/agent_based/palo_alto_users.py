@@ -18,10 +18,6 @@ class Section:
 
 
 def parse(string_table: StringTable) -> Section | None:
-    """
-    >>> parse([["40"]])
-    Section(num_users=40)
-    """
     return Section(int(string_table[0][0])) if string_table else None
 
 
@@ -39,29 +35,15 @@ register.snmp_section(
 
 
 def discover(section: Section) -> DiscoveryResult:
-    """
-    >>> list(discover(Section(num_users=41)))
-    [Service()]
-    """
     yield Service()
 
 
 def check(section: Section) -> CheckResult:
-    """
-    >>> list(check(Section(num_users=42)))
-    [Result(state=<State.OK: 0>, summary='Number of logged in users: 42'), Metric('num_user', 42.0)]
-    """
     yield Result(state=State.OK, summary=f"Number of logged in users: {section.num_users}")
     yield Metric("num_user", section.num_users)
 
 
 def cluster_check(section: Mapping[str, Optional[Section]]) -> CheckResult:
-    """
-    >>> list(cluster_check({'cluster_a': Section(num_users=1), 'cluster_b': Section(num_users=2)}))
-    [Result(state=<State.OK: 0>, summary='Number of logged in users: 3'), Metric('num_user', 3.0)]
-    >>> list(cluster_check({'cluster_a': Section(num_users=1), 'cluster_b': None}))
-    [Result(state=<State.OK: 0>, summary='Number of logged in users: 1'), Metric('num_user', 1.0)]
-    """
     yield from check(
         Section(
             num_users=sum(

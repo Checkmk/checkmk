@@ -9,6 +9,6 @@ Level: 1
 State: unknown
 Version: 2.1.0b6
 
-On a Kubernetes Cluster host, the Cluster Collector service would not report the data processing,
-even if it was readily available. This werk fixes this. The issue was caused by an incorrect section
-header.
+Previously, the Cluster collector service did not report any data processing
+messages. This werk fixes this and displays the messages if they are available.
+The issue was caused by an incorrect section header.

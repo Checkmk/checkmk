@@ -967,6 +967,11 @@ metric_info["aws_cloudfront_5xx_error_rate"] = {
     "color": "42/a",
 }
 
+metric_info["aws_ecs_clusters"] = {
+    "title": _l("Clusters"),
+    "unit": "count",
+    "color": "35/a",
+}
 
 # .
 #   .--Graphs--------------------------------------------------------------.

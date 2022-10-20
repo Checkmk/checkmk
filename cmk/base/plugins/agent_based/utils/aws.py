@@ -30,6 +30,9 @@ exclude_aws_limits_perf_vars = [
     "vpc_sec_group_rules",
     "vpc_sec_groups",
     "if_vpc_sec_group",
+    "capacity_providers",
+    "container_instances",
+    "services",
 ]
 
 

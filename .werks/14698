@@ -10,13 +10,13 @@ Version: 2.2.0i1
 
 It's now possible to monitor AWS Elastic Container Service
 (ECS) in Checkmk.
-Five new checks have been added:
+Six new checks have been added:
 LI: AWS ECS: Clusters Summary
 LI: AWS ECS: CPU Utilization
 LI: AWS ECS: CPU Reservation
 LI: AWS ECS: Memory Utilization
 LI: AWS ECS: Memory Reservation
+LI: AWS ECS: Limits
 
 To monitor ECS you have to configure the related
 special agent Amazon Web Services (AWS).
-

@@ -46,9 +46,9 @@ void SetModus(Modus m) {
 }
 }  // namespace details
 
-Modus GetModus() { return details::g_modus; }
+Modus GetModus() noexcept { return details::g_modus; }
 
-};  // namespace cma
+}  // namespace cma
 
 namespace cma::cfg {
 

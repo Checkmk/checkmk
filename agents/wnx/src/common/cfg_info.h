@@ -26,7 +26,7 @@ enum class Modus {
     test,
     integration,
 };
-Modus GetModus();
+Modus GetModus() noexcept;
 namespace details {
 void SetModus(Modus m);
 }  // namespace details

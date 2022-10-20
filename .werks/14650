@@ -1,0 +1,19 @@
+Title: mk_job: No longer mount volumes on monitored hosts
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1666272215
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p15
+
+We recently observed problems on Checkmk appliances caused by the agent mounting volumes.
+
+This was in turn caused by the section responsible to output the statistics created by the <tt>mk-job</tt> wrapper.
+
+For every existing <tt>/var/lib/check_mk_agent/job/[USER]</tt> folder, the agent started a login shell for <i>USER</i>.
+This in turn made systemd automatically mount a volume under certain circumstances.
+
+The agents use of <tt>su</tt> was a measure to prevent symlink and hardlink attacks -- this is now done differently, without the use of <tt>su</tt>.

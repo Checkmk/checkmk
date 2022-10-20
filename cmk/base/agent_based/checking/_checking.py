@@ -62,7 +62,7 @@ from cmk.base.agent_based.data_provider import (
     ParsedSectionsBroker,
     store_piggybacked_sections,
 )
-from cmk.base.agent_based.inventory import do_inv_for_realhost, RetentionsTracker
+from cmk.base.agent_based.inventory import inventorize_real_host, RetentionsTracker
 from cmk.base.agent_based.utils import (
     check_parsing_errors,
     get_section_cluster_kwargs,
@@ -166,12 +166,13 @@ def _do_inventory_actions_during_checking_for(
         tree_store.remove(host_name=host_config.hostname)
         return  # nothing to do here
 
-    trees = do_inv_for_realhost(
+    trees = inventorize_real_host(
         host_config=host_config,
         parsed_sections_broker=parsed_sections_broker,
         run_plugin_names=EVERYTHING,
         retentions_tracker=RetentionsTracker([]),
     )
+
     if trees.status_data and not trees.status_data.is_empty():
         tree_store.save(host_name=host_config.hostname, tree=trees.status_data)
 

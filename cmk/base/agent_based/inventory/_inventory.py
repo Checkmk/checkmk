@@ -19,7 +19,7 @@ from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
 from cmk.utils.structured_data import StructuredDataNode
-from cmk.utils.type_defs import AgentRawData, HostName, InventoryPluginName, result
+from cmk.utils.type_defs import AgentRawData, InventoryPluginName, result
 
 from cmk.snmplib.type_defs import SNMPRawData
 
@@ -43,31 +43,22 @@ from cmk.base.sources import fetch_all, make_sources
 from ._retentions import RetentionsTracker
 from ._tree_aggregator import InventoryTrees, TreeAggregator
 
-__all__ = ["inventorize_cluster", "inventorize_real_host", "do_inv_for_realhost"]
+__all__ = ["inventorize_cluster", "fetch_real_host_data", "inventorize_real_host"]
 
 
-class ActiveInventoryResult(NamedTuple):
-    trees: InventoryTrees
+class FetchedDataResult(NamedTuple):
+    parsed_sections_broker: ParsedSectionsBroker
     source_results: SourceResults
     parsing_errors: Sequence[str]
     processing_failed: bool
 
 
-def inventorize_cluster(*, host_config: HostConfig) -> ActiveInventoryResult:
-    return ActiveInventoryResult(
-        trees=_do_inv_for_cluster(host_config.nodes or (), is_cluster=host_config.is_cluster),
-        source_results=(),
-        parsing_errors=(),
-        processing_failed=False,
-    )
-
-
-def _do_inv_for_cluster(nodes: Sequence[HostName], *, is_cluster: bool) -> InventoryTrees:
+def inventorize_cluster(*, host_config: HostConfig) -> InventoryTrees:
     inventory_tree = StructuredDataNode()
 
     _set_cluster_property(inventory_tree, is_cluster=True)
 
-    if not nodes:
+    if not (nodes := host_config.nodes):
         return InventoryTrees(inventory_tree, StructuredDataNode())
 
     node = inventory_tree.setdefault_node(
@@ -79,13 +70,11 @@ def _do_inv_for_cluster(nodes: Sequence[HostName], *, is_cluster: bool) -> Inven
     return InventoryTrees(inventory_tree, StructuredDataNode())
 
 
-def inventorize_real_host(
+def fetch_real_host_data(
     *,
     host_config: HostConfig,
-    run_plugin_names: Container[InventoryPluginName],
     selected_sections: SectionNameCollection,
-    retentions_tracker: RetentionsTracker,
-) -> ActiveInventoryResult:
+) -> FetchedDataResult:
     ipaddress = config.lookup_ip_address(host_config)
     config_cache = config.get_config_cache()
 
@@ -119,13 +108,8 @@ def inventorize_real_host(
     broker = make_broker(host_sections)
 
     parsing_errors = broker.parsing_errors()
-    return ActiveInventoryResult(
-        trees=do_inv_for_realhost(
-            host_config,
-            parsed_sections_broker=broker,
-            run_plugin_names=run_plugin_names,
-            retentions_tracker=retentions_tracker,
-        ),
+    return FetchedDataResult(
+        parsed_sections_broker=broker,
         source_results=results,
         parsing_errors=parsing_errors,
         processing_failed=(
@@ -148,9 +132,9 @@ def _sources_failed(
     return any(not host_section.is_ok() for host_section in host_sections)
 
 
-def do_inv_for_realhost(
-    host_config: HostConfig,
+def inventorize_real_host(
     *,
+    host_config: HostConfig,
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[InventoryPluginName],
     retentions_tracker: RetentionsTracker,

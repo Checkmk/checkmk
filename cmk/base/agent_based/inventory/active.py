@@ -19,10 +19,16 @@ from cmk.core_helpers.type_defs import NO_SELECTION
 
 import cmk.base.agent_based.error_handling as error_handling
 import cmk.base.config as config
+from cmk.base.agent_based.data_provider import ParsedSectionsBroker
 from cmk.base.agent_based.utils import check_parsing_errors, summarize_host_sections
 from cmk.base.config import HostConfig
 
-from ._inventory import inventorize_cluster, inventorize_real_host
+from ._inventory import (
+    fetch_real_host_data,
+    FetchedDataResult,
+    inventorize_cluster,
+    inventorize_real_host,
+)
 from ._retentions import Retentions, RetentionsTracker
 from ._tree_aggregator import InventoryTrees
 
@@ -57,13 +63,23 @@ def _execute_active_check_inventory(
     fail_status = options.get("inv-fail-status", 1)
 
     if host_config.is_cluster:
-        inv_result = inventorize_cluster(host_config=host_config)
+        fetched_data_result = FetchedDataResult(
+            parsed_sections_broker=ParsedSectionsBroker({}),
+            source_results=(),
+            parsing_errors=(),
+            processing_failed=False,
+        )
+        trees = inventorize_cluster(host_config=host_config)
         retentions = Retentions(RetentionsTracker([]), do_update=False)
     else:
-        retentions_tracker = RetentionsTracker(host_config.inv_retention_intervals)
-        inv_result = inventorize_real_host(
+        fetched_data_result = fetch_real_host_data(
             host_config=host_config,
             selected_sections=NO_SELECTION,
+        )
+        retentions_tracker = RetentionsTracker(host_config.inv_retention_intervals)
+        trees = inventorize_real_host(
+            host_config=host_config,
+            parsed_sections_broker=fetched_data_result.parsed_sections_broker,
             run_plugin_names=EVERYTHING,
             retentions_tracker=retentions_tracker,
         )
@@ -73,15 +89,13 @@ def _execute_active_check_inventory(
             do_update=bool(host_config.inv_retention_intervals),
         )
 
-    trees = inv_result.trees
-
     tree_or_archive_store = TreeOrArchiveStore(
         cmk.utils.paths.inventory_output_dir,
         cmk.utils.paths.inventory_archive_dir,
     )
     old_tree = tree_or_archive_store.load(host_name=host_config.hostname)
 
-    if inv_result.processing_failed:
+    if fetched_data_result.processing_failed:
         active_check_result = ActiveCheckResult(fail_status, "Cannot update tree")
     else:
         _save_inventory_tree(
@@ -97,7 +111,7 @@ def _execute_active_check_inventory(
         active_check_result,
         *_check_inventory_tree(trees, old_tree, sw_missing, sw_changes, hw_changes),
         *summarize_host_sections(
-            source_results=inv_result.source_results,
+            source_results=fetched_data_result.source_results,
             # Do not use source states which would overwrite "State when inventory fails" in the
             # ruleset "Do hardware/software Inventory". These are handled by the "Check_MK" service
             override_non_ok_state=fail_status,
@@ -108,7 +122,7 @@ def _execute_active_check_inventory(
             is_piggyback=host_config.is_piggyback_host,
         ),
         *check_parsing_errors(
-            errors=inv_result.parsing_errors,
+            errors=fetched_data_result.parsing_errors,
             error_state=fail_status,
         ),
     )

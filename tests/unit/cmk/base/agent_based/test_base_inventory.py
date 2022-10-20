@@ -14,6 +14,7 @@ from cmk.utils.structured_data import RetentionIntervals, SDFilterFunc, SDPath, 
 
 import cmk.base.agent_based.inventory._inventory as _inventory
 import cmk.base.agent_based.inventory.active as active_inventory
+from cmk.base.agent_based.data_provider import ParsedSectionsBroker
 from cmk.base.agent_based.inventory._retentions import (
     AttributesUpdater,
     RetentionInfo,
@@ -1466,15 +1467,21 @@ def test__execute_active_check_inventory(
 
     monkeypatch.setattr(
         active_inventory,
-        "inventorize_real_host",
-        lambda host_config, selected_sections, run_plugin_names, retentions_tracker: _inventory.ActiveInventoryResult(
-            trees=_inventory.InventoryTrees(
-                inventory=StructuredDataNode(),
-                status_data=StructuredDataNode(),
-            ),
+        "fetch_real_host_data",
+        lambda host_config, selected_sections: _inventory.FetchedDataResult(
+            parsed_sections_broker=ParsedSectionsBroker({}),
             source_results=[],
             parsing_errors=[],
             processing_failed=True,
+        ),
+    )
+
+    monkeypatch.setattr(
+        active_inventory,
+        "inventorize_real_host",
+        lambda host_config, parsed_sections_broker, run_plugin_names, retentions_tracker: _inventory.InventoryTrees(
+            inventory=StructuredDataNode(),
+            status_data=StructuredDataNode(),
         ),
     )
 

@@ -9,15 +9,23 @@ from cmk.gui.plugins.wato.utils import (
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-from cmk.gui.valuespec import Dictionary, Float, TextInput, Tuple
+from cmk.gui.valuespec import Dictionary, Filesize, Float, TextInput, Tuple
 
 
 def _parameter_valuespec_postgres_stat_database():
     return Dictionary(
-        help=_(
-            "This check monitors how often database objects in a PostgreSQL Database are accessed"
-        ),
+        help=_("This check monitors the size of and the accesses to a PostgreSQL database."),
         elements=[
+            (
+                "database_size",
+                Tuple(
+                    title=_("Database size"),
+                    elements=[
+                        Filesize(title=_("warning at")),
+                        Filesize(title=_("critical at")),
+                    ],
+                ),
+            ),
             (
                 "blocks_read",
                 Tuple(

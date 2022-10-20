@@ -92,16 +92,22 @@ check_info["postgres_stat_database"] = {
 }
 
 
-def check_postgres_stat_database_size(item, _no_params, parsed):
+def check_postgres_stat_database_size(item, params, parsed):
     if item not in parsed:
         # In case of missing information we assume that the login into
         # the database has failed and we simply skip this check. It won't
         # switch to UNKNOWN, but will get stale.
         raise MKCounterWrapped("Login into database failed")
-
+    levels = params.get("database_size")
     stats = parsed[item]
     size = stats["datsize"]
-    return (0, "Size is %s" % get_bytes_human_readable(size), [("size", size)])
+    yield check_levels(
+        size,
+        "size",
+        levels,
+        human_readable_func=get_bytes_human_readable,
+        infoname="Size",
+    )
 
 
 check_info["postgres_stat_database.size"] = {
@@ -109,4 +115,5 @@ check_info["postgres_stat_database.size"] = {
     "inventory_function": inventory_postgres_stat_database,
     "service_description": "PostgreSQL DB %s Size",
     "has_perfdata": True,
+    "group": "postgres_stat_database",
 }

@@ -55,7 +55,7 @@ class MkpRulePackProxy(MutableMapping[str, Any]):  # pylint: disable=too-many-an
         self.id_ = rule_pack_id
         self.rule_pack: ECRulePackSpec | None = None
 
-    def __getitem__(self, key: str) -> ECRulePackSpec:
+    def __getitem__(self, key: str) -> Any:
         if self.rule_pack is None:
             raise MkpRulePackBindingError("Proxy is not bound")
         return self.rule_pack[key]

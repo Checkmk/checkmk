@@ -9,13 +9,11 @@ import os
 import re
 import time
 import zipfile
-from collections.abc import Mapping
+from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from html import escape as html_escape
 from pathlib import Path
-from typing import Any, Callable, Collection, Iterable, Iterator, List
-from typing import Optional as _Optional
-from typing import overload, Type, TypeVar, Union
+from typing import Any, overload, TypeVar
 
 from pysmi.codegen.pysnmp import PySnmpCodeGen  # type: ignore[import]
 from pysmi.compiler import MibCompiler  # type: ignore[import]
@@ -265,8 +263,13 @@ def ActionList(vs: ValueSpec, **kwargs: Any) -> ListOf:
 
 
 class RuleState(CascadingDropdown):
-    def __init__(self, **kwargs) -> None:  # type: ignore[no-untyped-def]
-        choices: List[CascadingDropdownChoice] = [
+    def __init__(  # pylint: disable=redefined-builtin
+        self,
+        title: str,
+        help: str,
+        default_value: int,
+    ) -> None:
+        choices: list[CascadingDropdownChoice] = [
             (0, _("OK")),
             (1, _("WARN")),
             (2, _("CRIT")),
@@ -324,11 +327,15 @@ class RuleState(CascadingDropdown):
                 ),
             ),
         ]
-        CascadingDropdown.__init__(self, choices=choices, **kwargs)
+        CascadingDropdown.__init__(
+            self, choices=choices, title=title, help=help, default_value=default_value
+        )
 
 
-def vs_mkeventd_rule_pack(fixed_id=None, fixed_title=None) -> Dictionary:  # type: ignore[no-untyped-def]
-    elements: List[DictionaryEntry] = []
+def vs_mkeventd_rule_pack(
+    fixed_id: str | None = None, fixed_title: str | None = None
+) -> Dictionary:
+    elements: list[DictionaryEntry] = []
     if fixed_id:
         elements.append(
             (
@@ -1935,8 +1942,8 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 hits = rule_pack.get("hits")
                 table.cell(_("Hits"), str(hits) if hits else "", css=["number"])
 
-    def _filter_mkeventd_rule_packs(  # type: ignore[no-untyped-def]
-        self, search_expression: str, rule_packs
+    def _filter_mkeventd_rule_packs(
+        self, search_expression: str, rule_packs: Sequence[ec.ECRulePackSpec]
     ) -> dict[str, list[ec.ECRuleSpec]]:
         found_packs: dict[str, list[ec.ECRuleSpec]] = {}
         for rule_pack in rule_packs:
@@ -1962,7 +1969,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 T = TypeVar("T")
 
 
-def _deref(x: Union[T, Callable[[], T]]) -> T:
+def _deref(x: T | Callable[[], T]) -> T:
     return x() if callable(x) else x
 
 
@@ -1977,7 +1984,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         return ["mkeventd.edit"]
 
     @classmethod
-    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEventConsoleRulePacks
 
     # pylint does not understand this overloading
@@ -2332,20 +2339,18 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 html.hidden_fields()
                 html.end_form()
 
-    def _filter_mkeventd_rules(  # type: ignore[no-untyped-def]
-        self,
-        search_expression: str,
-        rule_pack,
-    ) -> list:
-        found_rules = []
-        for rule in rule_pack.get("rules", []):
+    def _filter_mkeventd_rules(
+        self, search_expression: str, rule_pack: ec.ECRulePackSpec
+    ) -> list[ec.ECRulePackSpec]:
+        return [
+            rule
+            for rule in rule_pack.get("rules", [])
             if (
                 search_expression in rule["id"].lower()
                 or search_expression in rule.get("description", "").lower()
                 or search_expression in rule.get("match", "").lower()
-            ):
-                found_rules.append(rule)
-        return found_rules
+            )
+        ]
 
 
 @mode_registry.register
@@ -2359,7 +2364,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         return ["mkeventd.edit"]
 
     @classmethod
-    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEventConsoleRulePacks
 
     def _from_vars(self) -> None:
@@ -2473,7 +2478,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         return ["mkeventd.edit"]
 
     @classmethod
-    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEventConsoleRules
 
     def _from_vars(self) -> None:
@@ -2667,7 +2672,7 @@ class ModeEventConsoleStatus(ABCEventConsoleMode):
         return []
 
     @classmethod
-    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEventConsoleRulePacks
 
     def title(self) -> str:
@@ -2775,7 +2780,7 @@ class ModeEventConsoleSettings(ABCEventConsoleMode, ABCGlobalSettingsMode):
         return ["mkeventd.config"]
 
     @classmethod
-    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEventConsoleRulePacks
 
     def __init__(self) -> None:
@@ -2905,7 +2910,7 @@ class ModeEventConsoleEditGlobalSetting(ABCEditGlobalSettingMode):
         return ["mkeventd.config"]
 
     @classmethod
-    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEventConsoleSettings
 
     def __init__(self) -> None:
@@ -2945,7 +2950,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         return ["mkeventd.config"]
 
     @classmethod
-    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEventConsoleRulePacks
 
     def title(self) -> str:
@@ -3144,7 +3149,7 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
         return ["mkeventd.config"]
 
     @classmethod
-    def parent_mode(cls) -> _Optional[Type[WatoMode]]:
+    def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEventConsoleMIBs
 
     def title(self) -> str:
@@ -3539,10 +3544,10 @@ class MainModuleEventConsole(ABCMainModule):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleRemoteStatus(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -3603,10 +3608,10 @@ class ConfigVariableEventConsoleRemoteStatus(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleReplication(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -3727,10 +3732,10 @@ class ConfigVariableEventConsoleReplication(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleRetentionInterval(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -3749,10 +3754,10 @@ class ConfigVariableEventConsoleRetentionInterval(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleHousekeepingInterval(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -3772,10 +3777,10 @@ class ConfigVariableEventConsoleHousekeepingInterval(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleStatisticsInterval(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -3795,10 +3800,10 @@ class ConfigVariableEventConsoleStatisticsInterval(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleLogMessages(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -3820,10 +3825,10 @@ class ConfigVariableEventConsoleLogMessages(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleRuleOptimizer(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -3839,10 +3844,10 @@ class ConfigVariableEventConsoleRuleOptimizer(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleActions(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -3978,10 +3983,10 @@ class ConfigVariableEventConsoleActions(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleArchiveOrphans(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -4002,10 +4007,10 @@ class ConfigVariableEventConsoleArchiveOrphans(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableHostnameTranslation(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -4033,7 +4038,7 @@ def vs_ec_event_limit_actions(notify_txt: str) -> DropdownChoice:
             ("stop_overflow", _("Stop creating new events, create overflow event")),
             (
                 "stop_overflow_notify",
-                "%s, %s" % (_("Stop creating new events, create overflow event"), notify_txt),
+                "{}, {}".format(_("Stop creating new events, create overflow event"), notify_txt),
             ),
             ("delete_oldest", _("Delete oldest event, create new event")),
         ],
@@ -4103,10 +4108,10 @@ def vs_ec_host_limit(title: str) -> Dictionary:
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleEventLimit(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -4158,10 +4163,10 @@ class ConfigVariableEventConsoleEventLimit(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleHistoryRotation(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -4179,10 +4184,10 @@ class ConfigVariableEventConsoleHistoryRotation(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleHistoryLifetime(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -4199,10 +4204,10 @@ class ConfigVariableEventConsoleHistoryLifetime(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleSocketQueueLength(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -4226,10 +4231,10 @@ class ConfigVariableEventConsoleSocketQueueLength(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleEventSocketQueueLength(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleGeneric
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -4253,10 +4258,10 @@ class ConfigVariableEventConsoleEventSocketQueueLength(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleTranslateSNMPTraps(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleSNMP
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -4295,10 +4300,10 @@ class ConfigVariableEventConsoleTranslateSNMPTraps(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleSNMPCredentials(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleSNMP
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -4356,10 +4361,10 @@ class ConfigVariableEventConsoleSNMPCredentials(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleDebugRules(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleLogging
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -4380,10 +4385,10 @@ class ConfigVariableEventConsoleDebugRules(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleLogLevel(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleLogging
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -4456,10 +4461,10 @@ class ConfigVariableEventConsoleLogLevel(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventLogRuleHits(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupEventConsoleLogging
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainEventConsole
 
     def ident(self) -> str:
@@ -4481,10 +4486,10 @@ class ConfigVariableEventLogRuleHits(ConfigVariable):
 # TODO: Isn't this variable deprecated since 1.5? Investigate and drop/mark as deprecated
 @config_variable_registry.register
 class ConfigVariableEventConsoleConnectTimeout(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupUserInterface
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainGUI
 
     def ident(self) -> str:
@@ -4506,10 +4511,10 @@ class ConfigVariableEventConsoleConnectTimeout(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsolePrettyPrintRules(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupWATO
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainGUI
 
     def ident(self) -> str:
@@ -4532,10 +4537,10 @@ class ConfigVariableEventConsolePrettyPrintRules(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleNotifyContactgroup(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainGUI
 
     def ident(self) -> str:
@@ -4562,10 +4567,10 @@ class ConfigVariableEventConsoleNotifyContactgroup(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleNotifyRemoteHost(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainGUI
 
     def ident(self) -> str:
@@ -4595,10 +4600,10 @@ class ConfigVariableEventConsoleNotifyRemoteHost(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableEventConsoleNotifyFacility(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupNotifications
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainGUI
 
     def ident(self) -> str:
@@ -5052,17 +5057,15 @@ class MatchItemGeneratorECRulePacksAndRules(ABCMatchItemGenerator):
         )
 
     def _rule_pack_from_rule_pack_or_mkp(
-        self,
-        rule_pack_or_mkp: ec.ECRulePack,
-    ) -> _Optional[ec.ECRulePackSpec]:
+        self, rule_pack_or_mkp: ec.ECRulePack
+    ) -> ec.ECRulePackSpec | None:
         if isinstance(rule_pack_or_mkp, ec.MkpRulePackProxy):
             return self._unpack_mkp_rule_pack(rule_pack_or_mkp.rule_pack)
         return rule_pack_or_mkp
 
     def _unpack_mkp_rule_pack(
-        self,
-        mkp_rule_pack: _Optional[ec.ECRulePack],
-    ) -> _Optional[ec.ECRulePackSpec]:
+        self, mkp_rule_pack: ec.ECRulePack | None
+    ) -> ec.ECRulePackSpec | None:
         if isinstance(mkp_rule_pack, ec.MkpRulePackProxy):
             return self._unpack_mkp_rule_pack(mkp_rule_pack.rule_pack)
         return mkp_rule_pack

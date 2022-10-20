@@ -46,7 +46,7 @@ from cmk.utils.type_defs.result import Result
 
 from cmk.snmplib.type_defs import SNMPRawData
 
-from cmk.core_helpers.protocol import FetcherType
+from cmk.core_helpers import FetcherType
 from cmk.core_helpers.type_defs import HostMeta, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register

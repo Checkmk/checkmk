@@ -24,8 +24,8 @@ import cmk.utils.log as log
 from cmk.utils.config_path import LATEST_CONFIG
 from cmk.utils.observer import FetcherMemoryObserver
 
-import cmk.core_helpers.controller as controller
-from cmk.core_helpers.protocol import CMCMessage
+import cmk.core_helpers.cee.controller as controller
+from cmk.core_helpers.cee.protocol import CMCMessage
 
 import cmk.base.utils
 

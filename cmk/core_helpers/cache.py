@@ -396,7 +396,7 @@ class FileCache(Generic[TRawData], abc.ABC):
             raise MKFetcherError("Got no data (Simulation mode enabled and no cached data present)")
 
         if self.use_only_cache:
-            raise MKFetcherError("Got not data (use_only_cache)")
+            raise MKFetcherError("Got no data (use_only_cache)")
 
         return raw_data
 

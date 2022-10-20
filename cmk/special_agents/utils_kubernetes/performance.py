@@ -30,7 +30,7 @@ from typing import (
     Union,
 )
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 import cmk.utils
 
@@ -192,12 +192,11 @@ def _pod_lookup_from_metric(metric: Mapping[str, str]) -> PodLookupName:
 def _load_containers_store(path: Path, file_name: str) -> ContainersStore:
     LOGGER.debug("Load previous cycle containers store from %s", file_name)
     try:
-        with open(f"{path}/{file_name}", "r") as f:
-            return ContainersStore(**json.loads(f.read()))
+        return ContainersStore.parse_file(f"{path}/{file_name}")
     except FileNotFoundError as e:
         LOGGER.info("Could not find metrics file. This is expected if the first run.")
         LOGGER.debug("Exception: %s", e)
-    except SyntaxError:
+    except (ValidationError, json.decoder.JSONDecodeError):
         LOGGER.exception("Found metrics file, but could not parse it.")
 
     return ContainersStore(containers={})

@@ -5,6 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
+    RulespecGroupCheckParametersStorage,
+)
 from cmk.gui.valuespec import (
     Alternative,
     Dictionary,
@@ -14,12 +19,6 @@ from cmk.gui.valuespec import (
     MonitoringState,
     TextAscii,
     Tuple,
-)
-
-from cmk.gui.plugins.wato import (
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersStorage,
 )
 
 
@@ -82,6 +81,7 @@ def _parameter_valuespec_drbd():
                                         ("secondary_DUnknown", _("Secondary - DUnknown")),
                                         ("secondary_Consistent", _("Secondary - Consistent")),
                                         ("secondary_UpToDate", _("Secondary - UpToDate")),
+                                        ("unknown_DUnknown", _("Unknown - DUnknown")),
                                     ],
                                 ),
                                 MonitoringState(title=_("Resulting state"))

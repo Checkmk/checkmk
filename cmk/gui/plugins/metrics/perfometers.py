@@ -2104,3 +2104,11 @@ perfometer_info.append(
         "total": 100.0,
     }
 )
+
+perfometer_info.append(
+    {
+        "type": "linear",
+        "segments": ["num_user"],
+        "total": "max_user",
+    }
+)

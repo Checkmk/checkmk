@@ -5,7 +5,7 @@
 
 
 from dataclasses import dataclass
-from typing import Mapping, Optional
+from typing import Any, Mapping, Optional, Tuple
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -19,6 +19,8 @@ from .agent_based_api.v1 import (
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.palo_alto import DETECT_PALO_ALTO
+
+LEVEL_TYPE = Optional[Tuple[float, float]]
 
 
 @dataclass(frozen=True)
@@ -53,7 +55,18 @@ def discover(section: Section) -> DiscoveryResult:
     yield Service()
 
 
-def check(section: Section) -> CheckResult:
+def _abs_and_rel_levels(levels: Tuple[str, LEVEL_TYPE]) -> Tuple[LEVEL_TYPE, LEVEL_TYPE]:
+    match levels:
+        case "ignore":
+            return None, None
+        case ("abs_user", thresholds):
+            return thresholds, None
+        case ("perc_user", thresholds):
+            return None, thresholds
+    return None, None  # needed for pylint due to https://github.com/PyCQA/pylint/issues/5288
+
+
+def check(params: Mapping[str, Any], section: Section) -> CheckResult:
     user_perc = section.num_users / section.max_users * 100
 
     yield Result(
@@ -62,8 +75,11 @@ def check(section: Section) -> CheckResult:
         f"{render.percent(user_perc)} - {section.num_users} of {section.max_users}",
     )
 
+    abs_levels, perc_levels = _abs_and_rel_levels(params["levels"])
+
     yield from check_levels(
         section.num_users,
+        levels_upper=abs_levels,
         metric_name="num_user",
         render_func=str,
         label="Absolute number of users",
@@ -71,6 +87,7 @@ def check(section: Section) -> CheckResult:
     )
     yield from check_levels(
         user_perc,
+        levels_upper=perc_levels,
         render_func=render.percent,
         label="Relative number of users",
         notice_only=True,
@@ -79,8 +96,12 @@ def check(section: Section) -> CheckResult:
     yield Metric("max_user", section.max_users)
 
 
-def cluster_check(section: Mapping[str, Optional[Section]]) -> CheckResult:
+def cluster_check(
+    params: Mapping[str, Any],
+    section: Mapping[str, Optional[Section]],
+) -> CheckResult:
     yield from check(
+        params,
         Section(
             num_users=sum(
                 (node_section.num_users if node_section else 0 for node_section in section.values())
@@ -98,4 +119,6 @@ register.check_plugin(
     discovery_function=discover,
     check_function=check,
     cluster_check_function=cluster_check,
+    check_ruleset_name="palo_alto_users_rule",
+    check_default_parameters={"levels": "ignore"},
 )

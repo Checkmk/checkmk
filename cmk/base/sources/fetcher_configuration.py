@@ -32,8 +32,8 @@ def fetchers(host_config: HostConfig) -> Dict[str, Any]:
     return {
         "fetchers": [
             {
-                "fetcher_type": meta.fetcher_type.name,
-                "source_type": meta.source_type.name,
+                "fetcher_type": source.fetcher_type.name,
+                "source_type": source.source_type.name,
                 "fetcher_params": fetcher.to_json(),
                 "file_cache_params": type(file_cache)(
                     file_cache.hostname,
@@ -47,7 +47,7 @@ def fetchers(host_config: HostConfig) -> Dict[str, Any]:
                     # cached data during the discovery.
                     max_age=(
                         MaxAge.none()
-                        if meta.fetcher_type is FetcherType.SNMP
+                        if source.fetcher_type is FetcherType.SNMP
                         else file_cache.max_age
                     ),
                     use_outdated=file_cache.use_outdated,
@@ -56,7 +56,7 @@ def fetchers(host_config: HostConfig) -> Dict[str, Any]:
                     file_cache_mode=file_cache.file_cache_mode,
                 ).to_json(),
             }
-            for meta, file_cache, fetcher in make_non_cluster_sources(
+            for source, file_cache, fetcher in make_non_cluster_sources(
                 host_config,
                 ipaddress,
                 simulation_mode=config.simulation_mode,

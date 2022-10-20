@@ -1381,7 +1381,7 @@ class AutomationDiagHost(Automation):
         tcp_connect_timeout: Optional[float],
     ) -> Tuple[int, str]:
         state, output = 0, ""
-        for meta, file_cache, fetcher in sources.make_non_cluster_sources(
+        for source, file_cache, fetcher in sources.make_non_cluster_sources(
             host_config,
             ipaddress,
             simulation_mode=config.simulation_mode,
@@ -1391,10 +1391,10 @@ class AutomationDiagHost(Automation):
             ),
             file_cache_max_age=config.max_cachefile_age(),
         ):
-            if meta.fetcher_type is FetcherType.SNMP:
+            if source.fetcher_type is FetcherType.SNMP:
                 continue
 
-            if meta.fetcher_type is FetcherType.PROGRAM and cmd:
+            if source.fetcher_type is FetcherType.PROGRAM and cmd:
                 assert isinstance(fetcher, ProgramFetcher)
                 fetcher = ProgramFetcher(
                     ident=fetcher.ident,
@@ -1404,7 +1404,7 @@ class AutomationDiagHost(Automation):
                     stdin=fetcher.stdin,
                     is_cmc=fetcher.is_cmc,
                 )
-            elif meta.fetcher_type is FetcherType.TCP:
+            elif source.fetcher_type is FetcherType.TCP:
                 assert isinstance(fetcher, TCPFetcher)
                 port = agent_port or fetcher.address[1]
                 timeout = tcp_connect_timeout or fetcher.timeout
@@ -1721,7 +1721,7 @@ class AutomationGetAgentOutput(Automation):
             ipaddress = config.lookup_ip_address(host_config)
             if ty == "agent":
                 FileCacheGlobals.maybe = not FileCacheGlobals.disabled
-                for meta, file_cache, fetcher in sources.make_non_cluster_sources(
+                for source, file_cache, fetcher in sources.make_non_cluster_sources(
                     host_config,
                     ipaddress,
                     simulation_mode=config.simulation_mode,
@@ -1731,31 +1731,33 @@ class AutomationGetAgentOutput(Automation):
                     ),
                     file_cache_max_age=config.max_cachefile_age(),
                 ):
-                    if meta.fetcher_type is FetcherType.SNMP:
+                    if source.fetcher_type is FetcherType.SNMP:
                         continue
 
                     raw_data = get_raw_data(file_cache, fetcher, Mode.CHECKING)
                     host_sections = parse_raw_data(
-                        meta,
+                        source,
                         raw_data,
                         selection=NO_SELECTION,
                         logger=logging.getLogger("cmk.base.checking"),
                     )
                     source_results = summarize(
-                        meta.hostname,
-                        meta.ipaddress,
+                        source.hostname,
+                        source.ipaddress,
                         host_sections,
-                        exit_spec=host_config.exit_code_spec(meta.ident),
+                        exit_spec=host_config.exit_code_spec(source.ident),
                         time_settings=config.get_config_cache().get_piggybacked_hosts_time_settings(
                             piggybacked_hostname=hostname,
                         ),
                         is_piggyback=host_config.is_piggyback_host,
-                        fetcher_type=meta.fetcher_type,
+                        fetcher_type=source.fetcher_type,
                     )
                     if any(r.state != 0 for r in source_results):
                         # Optionally show errors of problematic data sources
                         success = False
-                        output += f"[{meta.ident}] {', '.join(r.summary for r in source_results)}\n"
+                        output += (
+                            f"[{source.ident}] {', '.join(r.summary for r in source_results)}\n"
+                        )
                     assert raw_data.ok is not None
                     info += raw_data.ok
             else:

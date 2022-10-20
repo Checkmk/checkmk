@@ -700,24 +700,24 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
         WaitForNetwork(std::chrono::seconds{wait_period});
     }
 
-    auto controller_params = OptionallyStartAgentController(1000ms);
-    ON_OUT_OF_SCOPE(ac::KillAgentController());
-    OpenFirewall(controller_params.has_value());
-    if (cap_installed) {
-        ac::CreateArtifacts(
-            fs::path{tools::win::GetSomeSystemFolder(FOLDERID_ProgramData)} /
-                ac::kCmkAgentUnistall,
-            controller_params.has_value());
-    }
-    mailslot::Slot mailbox(GetModus(), ::GetCurrentProcessId());
-    internal_port_ = carrier::BuildPortName(carrier::kCarrierMailslotName,
-                                            mailbox.GetName());
     try {
+        mailslot::Slot mailbox(GetModus(), ::GetCurrentProcessId());
+        internal_port_ = carrier::BuildPortName(carrier::kCarrierMailslotName,
+                                                mailbox.GetName());
         mailbox.ConstructThread(SystemMailboxCallback, 20, this,
                                 is_service ? wtools::SecurityLevel::admin
                                            : wtools::SecurityLevel::standard);
         ON_OUT_OF_SCOPE(mailbox.DismantleThread());
 
+        auto controller_params = OptionallyStartAgentController(1000ms);
+        ON_OUT_OF_SCOPE(ac::KillAgentController());
+        OpenFirewall(controller_params.has_value());
+        if (cap_installed) {
+            ac::CreateArtifacts(fs::path{tools::win::GetSomeSystemFolder(
+                                    FOLDERID_ProgramData)} /
+                                    ac::kCmkAgentUnistall,
+                                controller_params.has_value());
+        }
         if (is_service) {
             mc_.InstallDefault(cfg::modules::InstallMode::normal);
             install::ClearPostInstallFlag();

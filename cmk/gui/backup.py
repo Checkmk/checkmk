@@ -29,6 +29,7 @@ from typing_extensions import assert_never
 import cmk.utils.render as render
 import cmk.utils.version as cmk_version
 from cmk.utils.backup.config import Config as RawConfig
+from cmk.utils.backup.targets.aws_s3_bucket import S3Bucket, S3Target
 from cmk.utils.backup.targets.local import LocalTarget
 from cmk.utils.backup.targets.protocol import Target as TargetProtocol
 from cmk.utils.backup.targets.remote_interface import RemoteTarget, TRemoteStorage
@@ -36,6 +37,7 @@ from cmk.utils.backup.type_defs import (
     JobConfig,
     LocalTargetParams,
     RemoteTargetParams,
+    S3Params,
     ScheduleConfig,
     SiteBackupInfo,
     TargetConfig,
@@ -68,6 +70,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
+from cmk.gui.plugins.wato.utils import IndividualOrStoredPassword
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.flashed_messages import flash
@@ -1214,6 +1217,49 @@ class ABCBackupTargetRemote(ABCBackupTargetType, Generic[TRemoteParams, TRemoteS
     @abc.abstractmethod
     def _remote_dictionary_elements() -> DictionaryElements:
         ...
+
+
+@target_type_registry.register
+class BackupTargetAWSS3Bucket(ABCBackupTargetRemote[S3Params, S3Bucket]):
+    @staticmethod
+    def ident() -> str:
+        return "aws_s3_bucket"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("AWS S3 Bucket")
+
+    @staticmethod
+    def _instantiate_target(params: RemoteTargetParams[S3Params]) -> S3Target:
+        return S3Target(TargetId(""), params)
+
+    @staticmethod
+    def _remote_dictionary_elements() -> DictionaryElements:
+        yield (
+            "access_key",
+            TextInput(
+                title=_("Access key"),
+                help=_("The access key for your AWS account"),
+                allow_empty=False,
+                size=50,
+            ),
+        )
+        yield (
+            "secret",
+            IndividualOrStoredPassword(
+                title=_("Secret key"),
+                help=_("The secret key for your AWS account"),
+                allow_empty=False,
+            ),
+        )
+        yield (
+            "bucket",
+            TextInput(
+                title=_("Bucket name"),
+                allow_empty=False,
+                size=50,
+            ),
+        )
 
 
 def _check_if_target_ready(target: TargetProtocol, varprefix: str | None = None) -> None:

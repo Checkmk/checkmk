@@ -34,9 +34,10 @@ import cmk.utils.render as render
 import cmk.utils.schedule as schedule
 import cmk.utils.store as store
 from cmk.utils.backup.config import Config
+from cmk.utils.backup.targets.aws_s3_bucket import S3Target
 from cmk.utils.backup.targets.local import LocalTarget
 from cmk.utils.backup.targets.protocol import Target
-from cmk.utils.backup.type_defs import Backup, Job, JobConfig, SiteBackupInfo, TargetId
+from cmk.utils.backup.type_defs import Backup, Job, SiteBackupInfo, TargetId
 from cmk.utils.backup.utils import (
     current_site_id,
     log,
@@ -60,7 +61,7 @@ VERSION = "2.2.0i1"
 g_state: dict[str, Any] | None = None
 
 
-# The state file is in JSON format because it is 1:1 transfered
+# The state file is in JSON format because it is 1:1 transferred
 # to the Checkmk server through the Checkmk agent.
 class State:
     def __init__(self, path: Path) -> None:
@@ -345,7 +346,7 @@ class BackupStream(MKBackupStream):
         # Write out a file version marker and  the encrypted secret key, preceded by
         # a length indication. All separated by \0.
         # Version 1: Encrypted secret key written with pubkey.encrypt(). Worked with
-        #            early versions of 1.4 until moving from PyCryto to PyCryptodome
+        #            early versions of 1.4 until moving from PyCrypto to PyCryptodome
         # Version 2: Use PKCS1_OAEP for encrypting the encrypted_secret_key.
         return b"%d\0%d\0%s\0" % (2, len(encrypted_secret_key), encrypted_secret_key)
 
@@ -380,7 +381,7 @@ class BackupStream(MKBackupStream):
         pub: crypto.PKey = cert.get_pubkey()
         pub_pem = dump_publickey_pem(pub)
 
-        # Now constuct the public key object
+        # Now construct the public key object
         return RSA.importKey(pub_pem)
 
     # logic from http://stackoverflow.com/questions/6309958/encrypting-a-file-with-rsa-in-python
@@ -519,7 +520,7 @@ def local_lock_file_path(site_name: str) -> Path:
     return mkbackup_lock_dir / Path(f"mkbackup-{site_name}.lock")
 
 
-def get_needed_lock_files(opts: Mapping[str, str], job_config: JobConfig) -> Sequence[Path]:
+def get_needed_lock_files() -> Sequence[Path]:
     site_id = current_site_id()
     return [local_lock_file_path(site_id)]
 
@@ -529,7 +530,7 @@ def get_needed_lock_files(opts: Mapping[str, str], job_config: JobConfig) -> Seq
 ######################
 
 
-target_classes: Mapping[str, type[Target]] = {"local": LocalTarget}
+target_classes: Mapping[str, type[Target]] = {"local": LocalTarget, "aws_s3_bucket": S3Target}
 
 
 def load_target(config: Config, target_id: TargetId) -> Target:
@@ -681,8 +682,7 @@ def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None
 
     with ExitStack() as stack:
         for cm in [
-            acquire_single_lock(lock_file_path)
-            for lock_file_path in get_needed_lock_files(opts, job.config)
+            acquire_single_lock(lock_file_path) for lock_file_path in get_needed_lock_files()
         ]:
             stack.enter_context(cm)
 
@@ -717,7 +717,7 @@ def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None
         except Exception:
             if opt_debug:
                 raise
-            sys.stderr.write("An exception occured:\n")
+            sys.stderr.write("An exception occurred:\n")
             sys.stderr.write(traceback.format_exc())
 
         finally:
@@ -781,10 +781,10 @@ def do_site_backup(backup_path: Path, job: Job, state: State) -> SiteBackupInfo:
                 is_alive=lambda: p.poll() is None,
                 key_ident=job.config["encrypt"],
             )
-            progess_logger = ProgressLogger(state)
+            progress_logger = ProgressLogger(state)
             for chunk in s.process():
                 backup_file.write(chunk)
-                progess_logger.update(len(chunk))
+                progress_logger.update(len(chunk))
                 info.update(chunk)
 
         err = p.stderr.read().decode()
@@ -868,13 +868,11 @@ def cleanup_backup_job_states() -> None:
 def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: Config) -> None:
     target = load_target(config, TargetId(target_id))
     target.check_ready()
-    backup = target.get_backup(backup_id)
     state = restore_state()
 
     with ExitStack() as stack:
         for cm in [
-            acquire_single_lock(lock_file_path)
-            for lock_file_path in get_needed_lock_files(opts, backup.info.config)
+            acquire_single_lock(lock_file_path) for lock_file_path in get_needed_lock_files()
         ]:
             stack.enter_context(cm)
 
@@ -885,6 +883,9 @@ def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: C
             state.save({"pid": os.getpid()})
 
         start_logging(state)
+
+        log("--- Collecting data for restore (%s) ---" % backup_id)
+        backup = target.get_backup(backup_id)
 
         log("--- Starting restore (%s) ---" % backup_id)
 
@@ -908,7 +909,7 @@ def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: C
         except Exception:
             if opt_debug:
                 raise
-            sys.stderr.write("An exception occured:\n")
+            sys.stderr.write("An exception occurred:\n")
             sys.stderr.write(traceback.format_exc())
 
         finally:

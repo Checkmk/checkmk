@@ -7,7 +7,7 @@ from logging import getLogger
 from pathlib import Path
 
 from cmk.utils.backup.config import CMASystemConfig, Config, SiteConfig
-from cmk.utils.backup.type_defs import TargetId
+from cmk.utils.backup.type_defs import LocalTargetParams, TargetId
 from cmk.utils.paths import default_config_dir
 
 from cmk.update_config.plugins.actions.backup import UpdateBackupConfig
@@ -19,7 +19,13 @@ def test_update_backup_config() -> None:
             targets={
                 TargetId("t1"): {
                     "title": "Target1",
-                    "remote": ("local", {"path": "/tmp/heute_backup", "is_mountpoint": False}),
+                    "remote": (
+                        "local",
+                        LocalTargetParams(
+                            path="/tmp/heute_backup",
+                            is_mountpoint=False,
+                        ),
+                    ),
                 }
             },
             jobs={

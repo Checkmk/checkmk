@@ -12,6 +12,8 @@ from typing import Generic, IO, Literal, NewType, TypeVar
 # pydantic needs TypedDict from typing_extensions for < 3.11
 from typing_extensions import NotRequired, TypedDict
 
+from cmk.utils.password_store import PasswordId
+
 #########################################
 # Schemas to share with CMA Backup tool #
 # DO NOT CHANGE!                        #
@@ -51,12 +53,27 @@ class RemoteTargetParams(TypedDict, Generic[TRemoteParams]):
     temp_folder: LocalTargetParams
 
 
+class S3Params(TypedDict):
+    access_key: str
+    secret: PasswordId
+    bucket: str
+
+
+# these classes are only needed to make pydantic understand TargetConfig, otherwise we could
+# simple use RemoteTargetParams[...]
+
+
+class _S3TargetParams(RemoteTargetParams[S3Params]):
+    ...
+
+
 LocalTargetConfig = tuple[Literal["local"], LocalTargetParams]
+S3TargetConfig = tuple[Literal["aws_s3_bucket"], _S3TargetParams]
 
 
 class TargetConfig(TypedDict):
     title: str
-    remote: LocalTargetConfig
+    remote: LocalTargetConfig | S3TargetConfig
 
 
 class CMACluster(TypedDict):

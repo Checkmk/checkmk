@@ -154,6 +154,10 @@ class PerformancePodFactory(ModelFactory):
     __model__ = performance.PerformancePod
 
 
+class PerformanceMetricFactory(ModelFactory):
+    __model__ = performance.PerformanceMetric
+
+
 # Node related Factories
 
 

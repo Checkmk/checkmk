@@ -3,67 +3,32 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
-from typing import Sequence
 
-from tests.unit.cmk.special_agents.agent_kube.factory import PerformancePodFactory
+from tests.unit.cmk.special_agents.agent_kube.factory import (
+    PerformanceMetricFactory,
+    PerformancePodFactory,
+)
 
 from cmk.special_agents.utils_kubernetes.performance import (
     _determine_rate_metrics,
     _kube_object_performance_sections,
-    ContainerMetricsStore,
-    ContainerName,
-    CounterMetric,
-    MetricName,
 )
 from cmk.special_agents.utils_kubernetes.schemata.section import PerformanceUsage
 
 
-def counter_metric(metric_name: str, value: float, timestamp: float) -> CounterMetric:
-    return CounterMetric(name=MetricName(metric_name), value=value, timestamp=timestamp)
-
-
-def container_metrics_store(
-    container_name: ContainerName, metrics: Sequence[CounterMetric]
-) -> ContainerMetricsStore:
-    return ContainerMetricsStore(
-        name=container_name,
-        metrics={metric.name: metric for metric in metrics},
-    )
-
-
 def test_determine_rate_metrics() -> None:
-    metric_name = "metric"
-    current_containers = container_metrics_store(
-        container_name=ContainerName("container"),
-        metrics=[counter_metric(metric_name=metric_name, value=1, timestamp=1)],
-    )
-    old_containers = container_metrics_store(
-        container_name=ContainerName("container"),
-        metrics=[counter_metric(metric_name=metric_name, value=1, timestamp=0)],
-    )
-    containers_rate_metrics = _determine_rate_metrics(
-        {current_containers.name: current_containers}, {old_containers.name: old_containers}
-    )
+    current_cpu_metric = PerformanceMetricFactory.build(timestamp=1)
+    old_cpu_metric = current_cpu_metric.copy()
+    old_cpu_metric.timestamp = 0
+    containers_rate_metrics = _determine_rate_metrics([current_cpu_metric], [old_cpu_metric])
     assert len(containers_rate_metrics) == 1
-    assert len(containers_rate_metrics[ContainerName("container")]) == 1
+    assert len(containers_rate_metrics[current_cpu_metric.container_name]) == 1
 
 
 def test_determine_rate_metrics_for_containers_with_same_timestamp() -> None:
     """Test that no rate metrics are returned if no rates can be determined."""
-    timestamp = 0
-    metric_name = "metric"
-    current_containers = container_metrics_store(
-        container_name=ContainerName("container"),
-        metrics=[counter_metric(metric_name=metric_name, value=1, timestamp=timestamp)],
-    )
-    old_containers = container_metrics_store(
-        container_name=ContainerName("container"),
-        metrics=[counter_metric(metric_name=metric_name, value=1, timestamp=timestamp)],
-    )
-
-    containers_rate_metrics = _determine_rate_metrics(
-        {current_containers.name: current_containers}, {old_containers.name: old_containers}
-    )
+    cpu_metric = PerformanceMetricFactory.build()
+    containers_rate_metrics = _determine_rate_metrics([cpu_metric], [cpu_metric])
     assert len(containers_rate_metrics) == 0
 
 

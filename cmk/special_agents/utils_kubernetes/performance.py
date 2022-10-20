@@ -89,7 +89,7 @@ class ContainerMetricsStore(BaseModel):
 
 
 class ContainersStore(BaseModel):
-    containers: Mapping[ContainerName, ContainerMetricsStore]
+    cpu: Sequence[PerformanceMetric]
 
 
 class ContainerMetadata(BaseModel):
@@ -104,26 +104,17 @@ def parse_and_group_containers_performance_metrics(
     """Parse container performance metrics and group them by pod"""
 
     performance_metrics = _parse_performance_metrics(container_metrics)
-    relevant_counter_metrics = [MetricName("cpu_usage_seconds_total")]
-    performance_counter_metrics = _filter_specific_metrics(
-        performance_metrics, metric_names=relevant_counter_metrics
-    )
-    containers_counter_metrics = _group_metrics_by_container(performance_counter_metrics)
+    cpu_metric_name = MetricName("cpu_usage_seconds_total")
+    cpu_metrics = _filter_specific_metrics(performance_metrics, metric_names=[cpu_metric_name])
     # We only persist the relevant counter metrics (not all metrics)
-    current_cycle_store = ContainersStore(
-        containers={
-            # CMK-10333
-            container_name: ContainerMetricsStore(name=container_name, metrics=metrics)  # type: ignore[arg-type]
-            for container_name, metrics in containers_counter_metrics.items()
-        }
-    )
+    current_cycle_store = ContainersStore(cpu=list(cpu_metrics))
     store_file_name = f"{cluster_name}_containers_counters.json"
     previous_cycle_store = _load_containers_store(
         path=AGENT_TMP_PATH,
         file_name=store_file_name,
     )
     containers_rate_metrics = _determine_rate_metrics(
-        current_cycle_store.containers, previous_cycle_store.containers
+        current_cycle_store.cpu, previous_cycle_store.cpu
     )
 
     # The agent will store the latest counter values returned by the collector overwriting the
@@ -134,7 +125,7 @@ def parse_and_group_containers_performance_metrics(
     # value, etc.)
     _persist_containers_store(current_cycle_store, path=AGENT_TMP_PATH, file_name=store_file_name)
     containers_metrics = _group_metrics_by_container(
-        performance_metrics, omit_metrics=relevant_counter_metrics
+        performance_metrics, omit_metrics=[cpu_metric_name]
     )
     containers_metadata = _parse_containers_metadata(container_metrics, _pod_lookup_from_metric)
     performance_containers = _group_container_components(
@@ -199,7 +190,7 @@ def _load_containers_store(path: Path, file_name: str) -> ContainersStore:
     except (ValidationError, json.decoder.JSONDecodeError):
         LOGGER.exception("Found metrics file, but could not parse it.")
 
-    return ContainersStore(containers={})
+    return ContainersStore(cpu=[])
 
 
 def _persist_containers_store(
@@ -252,48 +243,27 @@ def _filter_specific_metrics(
 
 
 def _determine_rate_metrics(
-    containers_counters: Mapping[ContainerName, ContainerMetricsStore],
-    containers_counters_old: Mapping[ContainerName, ContainerMetricsStore],
+    cpu_metrics: Sequence[PerformanceMetric],
+    cpu_metrics_old: Sequence[PerformanceMetric],
 ) -> Mapping[ContainerName, Mapping[MetricName, RateMetric]]:
     """Determine the rate metrics for each container based on the current and previous
     counter metric values"""
 
     LOGGER.debug("Determine rate metrics from the latest containers counters stores")
+    cpu_metrics_old_map = {metric.container_name: metric for metric in cpu_metrics_old}
     containers = {}
-    for container in containers_counters.values():
-        if (old_container := containers_counters_old.get(container.name)) is None:
+    for metric in cpu_metrics:
+        old_metric = cpu_metrics_old_map.get(metric.container_name)
+        if old_metric is None or old_metric.timestamp == metric.timestamp:
             continue
-
-        container_rate_metrics = _container_available_rate_metrics(
-            container.metrics, old_container.metrics
-        )
-
-        if not container_rate_metrics:
-            continue
-
-        containers[container.name] = container_rate_metrics
+        containers[metric.container_name] = {
+            MetricName("cpu_usage_seconds_total"): RateMetric(
+                name=metric.name,
+                # CMK-10333
+                rate=_calculate_rate(metric, old_metric),  # type: ignore[arg-type]
+            )
+        }
     return containers
-
-
-def _container_available_rate_metrics(
-    counter_metrics: Mapping[MetricName, CounterMetric],
-    old_counter_metrics: Mapping[MetricName, CounterMetric],
-) -> Mapping[MetricName, RateMetric]:
-    rate_metrics = {}
-    for counter_metric in counter_metrics.values():
-        if counter_metric.name not in old_counter_metrics:
-            continue
-
-        try:
-            rate_value = _calculate_rate(counter_metric, old_counter_metrics[counter_metric.name])
-        except ZeroDivisionError:
-            continue
-
-        rate_metrics[counter_metric.name] = RateMetric(
-            name=counter_metric.name,
-            rate=rate_value,
-        )
-    return rate_metrics
 
 
 def _calculate_rate(counter_metric: CounterMetric, old_counter_metric: CounterMetric) -> float:

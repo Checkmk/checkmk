@@ -1,6 +1,8 @@
 // library for uploading packages
 package lib
 
+hashfile_extension = ".hash"
+
 def upload(Map args) {
     // needed args + desc:
     // NAME: Name of the artifact to display
@@ -12,10 +14,11 @@ def upload(Map args) {
     def FILE_BASE = get_file_base(args.FILE_PATH)
     def ARCHIVE_BASE = get_archive_base(FILE_BASE)
 
-    create_hashes(ARCHIVE_BASE)
+    create_hash(args.FILE_PATH)
 
-    stage(args.NAME + ' upload package') {
+    stage(args.FILE_NAME + ' upload package and hash file') {
         via_rsync(ARCHIVE_BASE, args.CMK_VERS, args.FILE_NAME, args.UPLOAD_DEST, args.PORT)
+        via_rsync(ARCHIVE_BASE, args.CMK_VERS, args.FILE_NAME + hashfile_extension, args.UPLOAD_DEST, args.PORT)
     }
 }
 
@@ -48,7 +51,6 @@ def download_version_dir(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST, PATT
 
 def upload_version_dir(SOURCE_PATH, UPLOAD_DEST, PORT)
 {
-    create_hashes(SOURCE_PATH)
     stage('Upload to download server') {
         withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
             sh """
@@ -85,10 +87,12 @@ def via_rsync(ARCHIVE_BASE, CMK_VERS, FILE_NAME, UPLOAD_DEST, PORT) {
     }
 }
 
-def create_hashes(ARCHIVE_DIR) {
-    stage("Create file hashes") {
-        def HASHES_PATH = ARCHIVE_DIR + "/HASHES"
-        sh("cd ${ARCHIVE_DIR} ; sha256sum -- *.{tar.gz,rpm,deb,cma,cmk} | sort -k 2 > ${HASHES_PATH}")
+def create_hash(FILE_PATH) {
+    stage("Create file hash") {
+        sh("""
+            cd \$(dirname ${FILE_PATH});
+            sha256sum -- \$(basename ${FILE_PATH}) > "\$(basename ${FILE_PATH})${hashfile_extension}}";
+        """);
     }
 }
 

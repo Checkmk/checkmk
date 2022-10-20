@@ -1,0 +1,12 @@
+Title: One hash file per package
+Class: feature
+Compatible: compat
+Component: packages
+Date: 1665569181
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0p30
+
+The HASHES file is split into one PACKAGE_NAME.PACKAGE_EXTENSION.hash file per package.

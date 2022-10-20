@@ -97,7 +97,7 @@ def create_hash(FILE_PATH) {
     stage("Create file hash") {
         sh("""
             cd \$(dirname ${FILE_PATH});
-            sha256sum -- \$(basename ${FILE_PATH}) > "\$(basename ${FILE_PATH}).hash";
+            sha256sum -- \$(basename ${FILE_PATH}) > "\$(basename ${FILE_PATH})${hashfile_extension}";
         """);
     }
 }

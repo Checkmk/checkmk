@@ -43,7 +43,7 @@ def main() {
     /// don't add $WORKSPACE based values here, since $docker_args is being
     /// used on different nodes
     def docker_args = "${mount_reference_repo_dir} --ulimit nofile=1024:1024";
-    
+
     def (jenkins_base_folder, distro_key, omd_env_vars, upload_path_suffix) = (
         env.JOB_BASE_NAME == "testbuild" ? [
             new File(currentBuild.fullProjectName).parent,
@@ -96,7 +96,7 @@ def main() {
         |agent_list:............... │${agent_list}│
         |jenkins_base_folder:...... │${jenkins_base_folder}│
         |===================================================
-        """.stripMargin()); 
+        """.stripMargin());
 
     currentBuild.description = (
         """
@@ -119,7 +119,7 @@ def main() {
         }
         return;
     }
-    
+
     shout("cleanup");
     stage("Cleanup") {
         cleanup_directory("${WORKSPACE}/versions");
@@ -131,8 +131,8 @@ def main() {
             }
         }
     }
-    
-    /// NOTE: the images referenced in the next step can only be concidered 
+
+    /// NOTE: the images referenced in the next step can only be concidered
     ///       up to date if the same node is being used as for the
     ///       `build-build-images` job. For some reasons we can't just pull the
     ///       latest image though, see
@@ -148,7 +148,7 @@ def main() {
 
 
     shout("agents");
-    
+
     // TODO iterate over all agent variants and put the condition per edition
     //      in the conditional_stage
     def agent_builds = agent_list.collectEntries { agent ->
@@ -158,12 +158,12 @@ def main() {
                         def win_project_name = "${jenkins_base_folder}/windows-agent-build";
                         def win_py_project_name = "${jenkins_base_folder}/windows-agent-modules-build";
                         def win_project_build, win_py_project_build;
-                        
+
                         /// TODO: these builds do not depend on the edition, so we could also just take
                         ///       nightly builds as well (those can be selected based on parameters, too)
                         on_dry_run_omit(LONG_RUNNING, "BUILD agent=${agent}") {
                             win_project_build = build(
-                                job: win_project_name, 
+                                job: win_project_name,
                                 parameters: [string(name: 'VERSION', value: VERSION)]);
                             win_py_project_build = build(
                                 job: win_py_project_name,
@@ -211,7 +211,7 @@ def main() {
         def BUILD_SOURCE_PACKAGE_PATH = "${checkout_dir}/${SOURCE_PACKAGE_NAME}";
         def node_version_dir = "${WORKSPACE}/versions";
         def FINAL_SOURCE_PACKAGE_PATH = "${node_version_dir}/${cmk_version}/${SOURCE_PACKAGE_NAME}";
-        
+
         print("SOURCE_PACKAGE_NAME ${SOURCE_PACKAGE_NAME}");
         print("BUILD_SOURCE_PACKAGE_PATH ${BUILD_SOURCE_PACKAGE_PATH}");
         print("FINAL_SOURCE_PACKAGE_PATH ${FINAL_SOURCE_PACKAGE_PATH}");
@@ -251,16 +251,16 @@ def main() {
                 // of the first workspace, which contains the prepared git repo.
 
                 /// For now make sure, we're on the SAME node (but different WORKDIR)
-                /// To make the builds run across different nodes we have to 
-                /// use `stash` to distribute the source 
+                /// To make the builds run across different nodes we have to
+                /// use `stash` to distribute the source
                 node(env.NODE_NAME) {
                     /// $WORKSPACE is different now - we must not use variables
                     /// like $checkout_dir which are based on the parent
                     /// workspace accidentally (and
                     assert "${WORKSPACE}/checkout" != checkout_dir;
-                    
+
                     def distro_dir = "${WORKSPACE}/checkout";
-                    
+
                     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                         docker.image("${distro}:${docker_tag}").inside(
                                 "${docker_args} -v ${checkout_dir}:${checkout_dir}:ro --hostname ${distro}") {
@@ -299,7 +299,7 @@ def main() {
                             stage("${distro} copy package") {
                                 copy_package(build_package_path, distro, final_package_path);
                             }
-                            
+
                             stage("${distro} upload package") {
                                 artifacts_helper.upload_via_rsync(
                                     "${node_version_dir}",
@@ -327,7 +327,6 @@ def main() {
                 artifacts_helper.download_version_dir(
                     upload_path,
                     INTERNAL_DEPLOY_PORT, cmk_version, "${WORKSPACE}/versions/${cmk_version}")
-                artifacts_helper.create_hashes("${WORKSPACE}/versions/${cmk_version}");
                 artifacts_helper.upload_version_dir(
                     "${WORKSPACE}/versions/${cmk_version}", WEB_DEPLOY_DEST, WEB_DEPLOY_PORT);
                 if (deploy_to_website) {
@@ -345,7 +344,7 @@ def main() {
 def get_agent_list(edition) {
     return (edition == "raw" ?
         ["windows"] :
-        ["au-linux-64bit", "au-linux-32bit", "windows"]); 
+        ["au-linux-64bit", "au-linux-32bit", "windows"]);
 }
 
 
@@ -410,7 +409,7 @@ def create_and_upload_bom(workspace, branch_version, version) {
         }
         stage('Upload BOM') {
             withCredentials([string(
-                    credentialsId: 'dtrack', 
+                    credentialsId: 'dtrack',
                     variable: 'DTRACK_API_KEY')]) {
                 withEnv(["DTRACK_URL=${DTRACK_URL}"]) {
                     on_dry_run_omit(LONG_RUNNING, "Upload BOM") {
@@ -472,7 +471,7 @@ def create_source_package(workspace, source_dir, cmk_version) {
 def get_source_package_name(source_dir, edition, cmk_version) {
     print("FN get_source_package_name(source_dir=${source_dir}, edition=${edition}, cmk_version=${cmk_version})");
     dir("${source_dir}") {
-        return (cmd_output("ls check-mk-${edition}-${cmk_version}.c?e*.tar.gz") 
+        return (cmd_output("ls check-mk-${edition}-${cmk_version}.c?e*.tar.gz")
                 ?: error("Found no source package path matching ${source_dir}/check-mk-${edition}-${cmk_version}.c?e*.tar.gz"));
     }
 }
@@ -500,7 +499,7 @@ def build_package(package_type, build_dir, env) {
 def get_package_name(base_dir, package_type, edition, cmk_version) {
     print("FN get_package_name(base_dir=${base_dir}, package_type=${package_type}, cmk_version=${cmk_version})");
     dir(base_dir) {
-        def file_pattern = (package_type == "deb" ? 
+        def file_pattern = (package_type == "deb" ?
             "check-mk-$edition-${cmk_version}_*.${package_type}" :  // FIXME do we need this?
             "check-mk-$edition-${cmk_version}-*.${package_type}");
         return (cmd_output("ls ${file_pattern}")

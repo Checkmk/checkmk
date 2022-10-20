@@ -27,12 +27,13 @@ def run_make_targets(Map args) {
             --ulimit nofile=1024:1024 \
             --env HOME=/home/jenkins \
             ${mount_reference_repo_dir} \
+            -v /home/jenkins/.cmk-credentials:/home/jenkins/.cmk-credentials:ro \
             -v /var/run/docker.sock:/var/run/docker.sock") {
 
             // TODO dir + set WORKSPACE is needed due to nested dependency
             dir("${checkout_dir}") {
                 withEnv(["WORKSPACE=${checkout_dir}"]) {
-                
+
                     // TODO preprocess values in top level scripts
                     def versioning = load "${checkout_dir}/buildscripts/scripts/utils/versioning.groovy"
                     def artifacts_helper = load "${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy"

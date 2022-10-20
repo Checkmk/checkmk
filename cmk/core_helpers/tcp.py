@@ -173,7 +173,10 @@ class TCPFetcher(AgentFetcher):
         if is_registered:
             raise MKFetcherError("Host is registered for TLS but not using it")
 
-        enc_setting = self.encryption_settings["use_regular"]
+        # Using 'get' here is a quick fix.
+        # The key is missing if a rule "Encryption" is set up without configuring anything.
+        # Fixing this is not worth it at the moment, the ruleset needs a makeover anyway.
+        enc_setting = self.encryption_settings.get("use_regular", "allow")
         if enc_setting == "tls":
             raise MKFetcherError("Refused: TLS not supported by agent")
 

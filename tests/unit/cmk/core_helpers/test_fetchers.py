@@ -899,6 +899,21 @@ class TestTCPFetcher:
         with pytest.raises(MKFetcherError):
             fetcher._validate_protocol(TransportProtocol.PLAIN, is_registered=False)
 
+    def test_validate_protocol_missing_use_regular_key_allows_plaintext(
+        self, file_cache: DefaultAgentFileCache
+    ) -> None:
+        # The key is missing if a rule "Encryption" is set up without configuring anything.
+        # Fixing this is not worth it at the moment, the ruleset needs a makeover anyway.
+        TCPFetcher(
+            file_cache,
+            family=socket.AF_INET,
+            address=("1.2.3.4", 0),
+            host_name=HostName("irrelevant_for_this_test"),
+            timeout=0.0,
+            encryption_settings={},  # key use_regular is missing here
+            use_only_cache=False,
+        )._validate_protocol(TransportProtocol.PLAIN, is_registered=False)
+
     def test_validate_protocol_no_tls_with_registered_host_raises(
         self, file_cache: DefaultAgentFileCache
     ) -> None:

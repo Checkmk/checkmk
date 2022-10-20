@@ -1,0 +1,26 @@
+Title: Add cmk-passwd utility
+Class: feature
+Compatible: compat
+Component: setup
+Date: 1666785092
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p16
+
+This Werk adds the tool cmk-passwd.
+cmk-passwd can add and change Checkmk user passwords via the commandline, as could previously be achieved using htpasswd.
+Users are advised to use cmk-passwd instead of htpasswd to manage Checkmk user passwords from now on.
+
+To change a password with cmk-passwd, for example the password of cmkadmin, simply run
+C+:
+cmk-passwd cmkadmin
+C-:
+The tool will then prompt the password and ask you to re-type it for verification.
+See <tt>cmk-passwd -h</tt> for further options.
+
+cmk-passwd selects the correct password file location and password hashing algorithm for the installed version of Checkmk.
+Behind the scenes it currently still writes to the same file (<tt>etc/htpasswd</tt>) in htpasswd-compatible format.
+This might be changed in the future though.
+

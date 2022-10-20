@@ -1,0 +1,113 @@
+#!/usr/bin/env python3
+# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+from io import StringIO
+from pathlib import Path
+from typing import Callable
+from unittest.mock import patch
+
+import pytest
+from _pytest.monkeypatch import MonkeyPatch
+
+from cmk.cmkpasswd import _run_cmkpasswd, InvalidPasswordError, main, VerificationError
+
+
+def _get_pw(pw: str = "hunter2") -> Callable[[], str]:
+    return lambda: pw
+
+
+@pytest.mark.parametrize(
+    "user,password",
+    [
+        ("testuser", "hunter2"),
+        ("", ""),
+        ("unicode", "🙈 🙉 🙊"),
+    ],
+)
+def test_print(capsys: pytest.CaptureFixture[str], user: str, password: str) -> None:
+    _run_cmkpasswd(user, _get_pw(password), None)
+    captured = capsys.readouterr()
+    assert captured.err == ""
+    assert captured.out.startswith(f"{user}:$")
+
+
+@pytest.mark.parametrize("old_content", ["", "cmkadmin:nimdakmc\nauto:mation"])
+def test_write_file(tmp_path: Path, old_content: str) -> None:
+    f = tmp_path / "htpasswd"
+    f.touch()
+    f.write_text(old_content, encoding="utf-8")
+
+    _run_cmkpasswd("testuser", _get_pw(), f)
+
+    new = f.read_text(encoding="utf-8").splitlines()
+    old = old_content.splitlines()
+    assert len(new) == len(old) + 1
+    assert any(l.startswith("testuser:$") for l in new)
+    assert all(l in new for l in old)
+
+
+def test_filenotfound(tmp_path: Path) -> None:
+    with pytest.raises(OSError):
+        _run_cmkpasswd("testuser", _get_pw(), tmp_path / "not" / "here")
+
+
+def test_verification_error() -> None:
+    def raise_err() -> str:
+        raise VerificationError("test error")
+
+    # This basically only tests that the error is propagated from the get_password function
+    with pytest.raises(VerificationError, match="test error"):
+        _run_cmkpasswd("testuser", raise_err, None)
+
+
+def test_invalid_password() -> None:
+    with pytest.raises(InvalidPasswordError, match="Password too long"):
+        # This test will break if we switch from bcrypt.
+        _run_cmkpasswd("testuser", _get_pw(73 * "a"), None)
+
+    with pytest.raises(InvalidPasswordError, match="NULL byte"):
+        # This test might break if we switch from bcrypt and start allowing
+        # null bytes in passwords. More likely we'll continue to forbid these though.
+        _run_cmkpasswd("testuser", _get_pw("null\0byte"), None)
+
+
+@pytest.fixture(name="htpasswd_path")
+def fixture_htpasswd_path(monkeypatch: MonkeyPatch, tmp_path: Path) -> Path:
+    file_ = tmp_path / "htpasswd"
+    monkeypatch.setattr("cmk.cmkpasswd.HTPASSWD_FILE", file_)
+    return file_
+
+
+def test_main_success(htpasswd_path: Path) -> None:
+    htpasswd_path.touch()
+    with patch("sys.stdin", StringIO("hunter2")):
+        assert main(args=["-i", "testuser"]) == 0
+
+
+@pytest.mark.parametrize(
+    "user,password,reason",
+    [
+        ("", "\0", "password"),  # Null byte not allowed
+        ("longcat", 73 * "|", "password"),  # Too long for bcrypt
+    ],
+)
+def test_main_errors(
+    capsys: pytest.CaptureFixture[str], user: str, password: str, reason: str
+) -> None:
+    with patch("sys.stdin", StringIO(password)):
+        assert main(args=["-i", user]) != 0
+
+        captured = capsys.readouterr()
+        assert captured.out == ""
+        assert reason in captured.err.lower()
+
+
+def test_file_not_found(capsys: pytest.CaptureFixture[str], htpasswd_path: Path) -> None:
+    with patch("sys.stdin", StringIO("hunter2")):
+        assert main(args=["testuser", "-i"]) != 0
+
+        captured = capsys.readouterr()
+        assert captured.out == ""
+        assert "No such file" in captured.err and htpasswd_path.name in captured.err

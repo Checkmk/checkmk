@@ -20,6 +20,7 @@ fi
 echo "Update site $SITE..."
 
 PYTHON3_PATHS=(
+    .
     gui
     snmplib
     utils

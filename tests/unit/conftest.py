@@ -12,6 +12,7 @@ from typing import Any, Iterable, Mapping, NamedTuple
 from unittest import mock
 
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 from fakeredis import FakeRedis  # type: ignore[import]
 
 from tests.testlib import is_enterprise_repo, is_managed_repo, is_plus_repo
@@ -419,3 +420,9 @@ def registry_reset():
             for entry in list(registry):  # type: ignore[call-overload]
                 if entry not in defaults:
                     registry.unregister(entry)  # type: ignore[attr-defined]
+
+
+@pytest.fixture(autouse=True)
+def reduce_password_hashing_rounds(monkeypatch: MonkeyPatch) -> None:
+    """Reduce the number of rounds for hashing with bcrypt to the allowed minimum"""
+    monkeypatch.setattr("cmk.utils.crypto.password_hashing.BCRYPT_ROUNDS", 4)

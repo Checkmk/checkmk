@@ -4,15 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
 
 from cmk.utils.crypto import password_hashing as ph
-
-
-@pytest.fixture(autouse=True)
-def reduce_rounds(monkeypatch: MonkeyPatch) -> None:
-    """Reduce the number of rounds for hashing bcrypt to the allowed minimum"""
-    monkeypatch.setattr("cmk.utils.crypto.password_hashing.BCRYPT_ROUNDS", 4)
 
 
 @pytest.mark.parametrize("password", ["", "blä", "😀", "😀" * 18, "a" * 72])

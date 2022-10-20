@@ -370,9 +370,10 @@ class AWSSpecialAgentValuespecBuilder:
                     title=_("Elastic Container Service (ECS)"),
                     elements=[
                         _vs_element_aws_service_selection(),
+                        _vs_element_aws_limits(),
                     ],
-                    optional_keys=[],
-                    default_keys=[],
+                    optional_keys=["limits"],
+                    default_keys=["limits"],
                 ),
             ),
         ]

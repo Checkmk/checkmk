@@ -35,6 +35,7 @@ from cmk.utils.aws_constants import (
     AWSEC2InstTypes,
     AWSEC2LimitsDefault,
     AWSEC2LimitsSpecial,
+    AWSECSQuotaDefaults,
     AWSRegions,
 )
 from cmk.utils.exceptions import MKException
@@ -208,9 +209,11 @@ T = TypeVar("T")
 
 # SNSLimits
 
-# ECSSummary
+# ECSLimits
 # |
-# '-- ECS
+# '-- ECSSummary
+#     |
+#     '-- ECS
 
 
 class AWSConfig:
@@ -5387,6 +5390,122 @@ class Cluster(BaseModel):
     clusterName: str
     status: StatusEnum
     tags: Sequence[Tag]
+    registeredContainerInstancesCount: int
+    activeServicesCount: int
+    capacityProviders: Sequence[str]
+
+
+class Quota(BaseModel):
+    QuotaName: str
+    Value: float
+
+
+def get_ecs_cluster_arns(ecs_client: BaseClient) -> Iterable[str]:
+    for page in ecs_client.get_paginator("list_clusters").paginate():
+        yield from page["clusterArns"]
+
+
+def get_ecs_clusters(ecs_client: BaseClient, cluster_ids: Sequence[str]) -> Iterable[Cluster]:
+    # the ECS.Client API allows fetching up to 100 clusters at once
+    for chunk in _chunks(cluster_ids, length=100):
+        clusters = ecs_client.describe_clusters(clusters=chunk, include=["TAGS"])
+        yield from [Cluster(**cluster_data) for cluster_data in clusters["clusters"]]
+
+
+class ECSLimits(AWSSectionLimits):
+    @property
+    def name(self) -> str:
+        return "ecs_limits"
+
+    @property
+    def cache_interval(self) -> int:
+        return 300
+
+    @property
+    def granularity(self) -> int:
+        return 300
+
+    def _get_colleague_contents(self) -> AWSColleagueContents:
+        return AWSColleagueContents(None, 0.0)
+
+    def get_live_data(
+        self, *args: AWSColleagueContents
+    ) -> tuple[Sequence[object], Sequence[object]]:
+        quota_list = (
+            self._get_response_content(
+                self._quota_client.list_service_quotas(ServiceCode="ecs"), "Quotas"
+            )
+            if self._quota_client is not None
+            else []
+        )
+        quota_dicts = [Quota(**q).dict() for q in quota_list]
+
+        cluster_ids = list(get_ecs_cluster_arns(self._client))
+        cluster_dicts = [c.dict() for c in get_ecs_clusters(self._client, cluster_ids)]
+
+        return quota_dicts, cluster_dicts
+
+    @staticmethod
+    def _get_quota_limit(quotas: Sequence[Quota], quota_name: str) -> int:
+        for quota in quotas:
+            if quota_name == quota.QuotaName:
+                return int(quota.Value)
+
+        return AWSECSQuotaDefaults[quota_name]
+
+    def _compute_content(
+        self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
+    ) -> AWSComputedContent:
+        quota_dicts, cluster_dicts = raw_content.content
+        quotas = [Quota(**c) for c in quota_dicts]
+        clusters = [Cluster(**c) for c in cluster_dicts]
+
+        self._add_limit(
+            "",
+            AWSLimit(
+                key="clusters",
+                title="Clusters",
+                limit=ECSLimits._get_quota_limit(quotas, "Clusters per account"),
+                amount=len(clusters),
+            ),
+            region=self._region,
+        )
+
+        for cluster in clusters:
+            self._add_limit(
+                "",
+                AWSLimit(
+                    key="capacity_providers",
+                    title=f"Capacity providers of {cluster.clusterName}",
+                    limit=ECSLimits._get_quota_limit(quotas, "Capacity providers per cluster"),
+                    amount=len(cluster.capacityProviders),
+                ),
+                region=self._region,
+            )
+
+            self._add_limit(
+                "",
+                AWSLimit(
+                    key="container_instances",
+                    title=f"Container instances of {cluster.clusterName}",
+                    limit=ECSLimits._get_quota_limit(quotas, "Container instances per cluster"),
+                    amount=cluster.registeredContainerInstancesCount,
+                ),
+                region=self._region,
+            )
+
+            self._add_limit(
+                "",
+                AWSLimit(
+                    key="services",
+                    title=f"Services of {cluster.clusterName}",
+                    limit=ECSLimits._get_quota_limit(quotas, "Services per cluster"),
+                    amount=cluster.activeServicesCount,
+                ),
+                region=self._region,
+            )
+
+        return AWSComputedContent(clusters, raw_content.cache_timestamp)
 
 
 class ECSSummary(AWSSection):
@@ -5414,24 +5533,27 @@ class ECSSummary(AWSSection):
         return 300
 
     def _get_colleague_contents(self) -> AWSColleagueContents:
-        return AWSColleagueContents(None, 0.0)
+        colleague = self._received_results.get("ecs_limits")
+        if colleague and colleague.content:
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents({}, 0.0)
 
     def _get_cluster_ids(self) -> Iterable[str]:
         if self._names is not None:
             yield from self._names
             return
 
-        for page in self._client.get_paginator("list_clusters").paginate():
-            yield from self._get_response_content(page, "clusterArns")
+        yield from get_ecs_cluster_arns(self._client)
 
-    def _get_clusters(self, cluster_ids: Sequence[str]) -> Iterable[Cluster]:
-        # the ECS.Client API allows fetching up to 100 clusters at once
-        for chunk in _chunks(cluster_ids, length=100):
-            clusters = self._client.describe_clusters(clusters=chunk, include=["TAGS"])
-            yield from [
-                Cluster(**cluster_data)
-                for cluster_data in self._get_response_content(clusters, "clusters")
-            ]
+    def _fetch_clusters(self, clusters: Sequence[Cluster]) -> Iterable[Cluster]:
+        if clusters:
+            if self._names is not None:
+                yield from (c for c in clusters if c.clusterName in self._names)
+            else:
+                yield from clusters
+        else:
+            cluster_ids = list(self._get_cluster_ids())
+            yield from get_ecs_clusters(self._client, cluster_ids)
 
     def _filter_clusters_by_tags(
         self, clusters: Iterable[Cluster]
@@ -5442,8 +5564,8 @@ class ECSSummary(AWSSection):
                     yield cluster.dict()
 
     def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping[str, object]]:
-        cluster_ids = list(self._get_cluster_ids())
-        clusters = self._get_clusters(cluster_ids)
+        (colleague_contents,) = args
+        clusters = self._fetch_clusters(colleague_contents.content)
 
         if self._tags is not None:
             return list(self._filter_clusters_by_tags(clusters))
@@ -5997,7 +6119,19 @@ class AWSSectionsGeneric(AWSSections):
 
         if "ecs" in services:
             ecs_client = self._init_client("ecs")
+            if config.service_config.get("ecs_limits"):
+                self._sections.append(
+                    ECSLimits(
+                        ecs_client,
+                        region,
+                        config,
+                        distributor,
+                        self._init_client("service-quotas"),
+                    )
+                )
+
             ecs_summary = ECSSummary(ecs_client, region, config, distributor)
+            distributor.add("ecs_limits", ecs_summary)
             self._sections.append(ecs_summary)
 
             ecs = ECS(cloudwatch_client, region, config)
@@ -6152,7 +6286,7 @@ AWSServices = [
         global_service=False,
         filter_by_names=True,
         filter_by_tags=True,
-        limits=False,
+        limits=True,
     ),
 ]
 
@@ -6442,7 +6576,7 @@ def _configure_aws(args: Args, sys_argv: Sequence[str]) -> AWSConfig:
             (args.cloudfront_tag_key, args.cloudfront_tag_values),
             None,
         ),
-        ("ecs", args.ecs_names, (args.ecs_tag_key, args.ecs_tag_values), None),
+        ("ecs", args.ecs_names, (args.ecs_tag_key, args.ecs_tag_values), args.ecs_limits),
     ]:
         aws_config.add_single_service_config("%s_names" % service_key, service_names)
         aws_config.add_service_tags("%s_tags" % service_key, service_tags)

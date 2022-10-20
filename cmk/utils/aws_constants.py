@@ -559,3 +559,10 @@ AWSEC2LimitsSpecial = {
     "x_vcpu": (128, None, None),
     "__vcpu": (1152, None, None),
 }
+
+AWSECSQuotaDefaults = {
+    "Clusters per account": 10000,
+    "Services per cluster": 5000,
+    "Container instances per cluster": 5000,
+    "Capacity providers per cluster": 10,
+}

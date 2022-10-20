@@ -337,7 +337,6 @@ class _Builder:
             self._add(
                 source,
                 PiggybackFetcher(
-                    ident=source.ident,
                     hostname=source.hostname,
                     address=source.ipaddress,
                     time_settings=config.get_config_cache().get_piggybacked_hosts_time_settings(
@@ -387,7 +386,6 @@ class _Builder:
         self._add(
             source,
             SNMPFetcher(
-                ident=source.ident,
                 sections=make_sections(
                     self.host_config,
                     selected_sections=self.selected_sections,
@@ -439,7 +437,6 @@ class _Builder:
             self._add(
                 source,
                 SNMPFetcher(
-                    ident=source.ident,
                     sections=make_sections(
                         self.host_config, selected_sections=self.selected_sections
                     ),
@@ -482,7 +479,6 @@ class _Builder:
             self._add(
                 source,
                 IPMIFetcher(
-                    ident=source.ident,
                     address=source.ipaddress,
                     username=self.host_config.ipmi_credentials.get("username"),
                     password=self.host_config.ipmi_credentials.get("password"),
@@ -522,7 +518,6 @@ class _Builder:
             return (
                 source,
                 ProgramFetcher(
-                    ident=source.ident,
                     cmdline=core_config.translate_ds_program_source_cmdline(
                         datasource_program, self.host_config, self.ipaddress
                     ),
@@ -584,7 +579,6 @@ class _Builder:
             return (
                 source,
                 TCPFetcher(
-                    ident=source.ident,
                     family=self.host_config.default_address_family,
                     address=(source.ipaddress, self.host_config.agent_port),
                     host_name=source.hostname,
@@ -618,7 +612,6 @@ class _Builder:
                 SourceType.HOST,
             )
             fetcher = ProgramFetcher(
-                ident=source.ident,
                 cmdline=core_config.make_special_agent_cmdline(
                     self.host_config.hostname,
                     self.ipaddress,

@@ -47,7 +47,7 @@ class AgentFileCache(FileCache[AgentRawData]):
 
 class NoFetcher(Fetcher[AgentRawData]):
     def __init__(self) -> None:
-        super().__init__("", logger=logging.getLogger("cmk.helper.noop"))
+        super().__init__(logger=logging.getLogger("cmk.helper.noop"))
 
     @classmethod
     def _from_json(cls, serialized: object) -> NoFetcher:

@@ -1397,7 +1397,6 @@ class AutomationDiagHost(Automation):
             if source.fetcher_type is FetcherType.PROGRAM and cmd:
                 assert isinstance(fetcher, ProgramFetcher)
                 fetcher = ProgramFetcher(
-                    ident=fetcher.ident,
                     cmdline=core_config.translate_ds_program_source_cmdline(
                         cmd, host_config, ipaddress
                     ),
@@ -1409,7 +1408,6 @@ class AutomationDiagHost(Automation):
                 port = agent_port or fetcher.address[1]
                 timeout = tcp_connect_timeout or fetcher.timeout
                 fetcher = TCPFetcher(
-                    ident=fetcher.ident,
                     family=fetcher.family,
                     address=(fetcher.address[0], port),
                     timeout=timeout,

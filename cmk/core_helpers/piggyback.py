@@ -19,12 +19,11 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
     def __init__(
         self,
         *,
-        ident: str,  # Literal["piggyback"],
         hostname: HostName,
         address: Optional[HostAddress],
         time_settings: Sequence[Tuple[Optional[str], str, int]],
     ) -> None:
-        super().__init__(ident, logger=logging.getLogger("cmk.helper.piggyback"))
+        super().__init__(logger=logging.getLogger("cmk.helper.piggyback"))
         self.hostname: Final = hostname
         self.address: Final = address
         self.time_settings: Final = time_settings
@@ -52,7 +51,6 @@ class PiggybackFetcher(Fetcher[AgentRawData]):
             "hostname": self.hostname,
             "address": self.address,
             "time_settings": self.time_settings,
-            "ident": self.ident,
         }
 
     def open(self) -> None:

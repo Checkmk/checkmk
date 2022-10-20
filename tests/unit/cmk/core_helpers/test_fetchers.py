@@ -191,7 +191,7 @@ class StubFileCache(FileCache[TRawData]):
 class TestIPMIFetcher:
     @pytest.fixture
     def fetcher(self) -> IPMIFetcher:
-        return IPMIFetcher(address="1.2.3.4", username="us3r", password="secret", ident="mgmt_ipmi")
+        return IPMIFetcher(address="1.2.3.4", username="us3r", password="secret")
 
     def test_repr(self, fetcher: IPMIFetcher) -> None:
         assert isinstance(repr(fetcher), str)
@@ -220,9 +220,7 @@ class TestIPMIFetcher:
         )
         file_cache.write(AgentRawData(b"<<<whatever>>>"), Mode.CHECKING)
 
-        with IPMIFetcher(
-            address="127.0.0.1", username="", password="", ident="mgmt_ipmi"
-        ) as fetcher:
+        with IPMIFetcher(address="127.0.0.1", username="", password="") as fetcher:
             assert get_raw_data(file_cache, fetcher, Mode.CHECKING).is_ok()
 
     def test_command_raises_IpmiException_handling(self, monkeypatch: MonkeyPatch) -> None:
@@ -241,9 +239,7 @@ class TestIPMIFetcher:
             file_cache_mode=FileCacheMode.DISABLED,
         )
 
-        with IPMIFetcher(
-            address="127.0.0.1", username="", password="", ident="mgmt_ipmi"
-        ) as fetcher:
+        with IPMIFetcher(address="127.0.0.1", username="", password="") as fetcher:
             raw_data = get_raw_data(file_cache, fetcher, Mode.CHECKING)
 
         assert isinstance(raw_data.error, MKFetcherError)
@@ -282,7 +278,6 @@ class TestPiggybackFetcher:
             hostname=HostName("host"),
             address=HostAddress("1.2.3.4"),
             time_settings=[],
-            ident="piggyback",
         )
 
     def test_repr(self, fetcher: PiggybackFetcher) -> None:
@@ -303,7 +298,6 @@ class TestProgramFetcher:
             cmdline="/bin/true",
             stdin=None,
             is_cmc=False,
-            ident="program",
         )
 
     def test_repr(self, fetcher: ProgramFetcher) -> None:
@@ -381,7 +375,6 @@ class TestSNMPFetcherDeserialization:
     @pytest.fixture
     def fetcher(self) -> SNMPFetcher:
         return SNMPFetcher(
-            ident="snmp",
             sections={},
             on_error=OnError.RAISE,
             missing_sys_description=False,
@@ -408,7 +401,6 @@ class TestSNMPFetcherDeserialization:
     @pytest.fixture
     def fetcher_inline(self) -> SNMPFetcher:
         return SNMPFetcher(
-            ident="snmp",
             sections={},
             on_error=OnError.RAISE,
             missing_sys_description=False,
@@ -513,7 +505,6 @@ class TestSNMPFetcherFetch:
     @pytest.fixture
     def fetcher(self) -> SNMPFetcher:
         return SNMPFetcher(
-            ident="snmp",
             sections={},
             on_error=OnError.RAISE,
             missing_sys_description=False,
@@ -752,7 +743,6 @@ class TestSNMPFetcherFetchCache:
     @pytest.fixture
     def fetcher(self, monkeypatch: MonkeyPatch) -> SNMPFetcher:
         fetcher = SNMPFetcher(
-            ident="snmp",
             sections={},
             on_error=OnError.RAISE,
             missing_sys_description=False,
@@ -832,7 +822,6 @@ class TestTCPFetcher:
     @pytest.fixture
     def fetcher(self) -> TCPFetcher:
         return TCPFetcher(
-            ident="agent",
             family=socket.AF_INET,
             address=("1.2.3.4", 6556),
             host_name=HostName("irrelevant_for_this_test"),
@@ -863,7 +852,6 @@ class TestTCPFetcher:
         )
         file_cache.cache = AgentRawData(b"cached_section")
         with TCPFetcher(
-            ident="agent",
             family=socket.AF_INET,
             address=("This is not an IP address. Connecting would fail.", 6556),
             host_name=HostName("irrelevant_for_this_test"),
@@ -886,7 +874,6 @@ class TestTCPFetcher:
             file_cache_mode=FileCacheMode.READ_WRITE,
         )
         with TCPFetcher(
-            ident="agent",
             family=socket.AF_INET,
             address=("127.0.0.1", 6556),
             host_name=HostName("irrelevant_for_this_test"),
@@ -910,7 +897,6 @@ class TestTCPFetcher:
             file_cache_mode=FileCacheMode.DISABLED,
         )
         with TCPFetcher(
-            ident="agent",
             family=socket.AF_INET,
             address=("This is not an IP address. Connecting fails.", 6556),
             host_name=HostName("irrelevant_for_this_test"),
@@ -925,7 +911,6 @@ class TestTCPFetcher:
         settings = {"use_regular": "allow"}
         output = b"<<<section:sep(0)>>>\nbody\n"
         fetcher = TCPFetcher(
-            ident="agent",
             family=socket.AF_INET,
             address=("1.2.3.4", 0),
             host_name=HostName("irrelevant_for_this_test"),
@@ -937,7 +922,6 @@ class TestTCPFetcher:
     def test_validate_protocol_plaintext_with_enforce_raises(self) -> None:
         settings = {"use_regular": "enforce"}
         fetcher = TCPFetcher(
-            ident="agent",
             family=socket.AF_INET,
             address=("1.2.3.4", 0),
             host_name=HostName("irrelevant_for_this_test"),
@@ -950,7 +934,6 @@ class TestTCPFetcher:
 
     def test_validate_protocol_no_tls_with_registered_host_raises(self) -> None:
         fetcher = TCPFetcher(
-            ident="agent",
             family=socket.AF_INET,
             address=("1.2.3.4", 0),
             host_name=HostName("irrelevant_for_this_test"),
@@ -969,7 +952,6 @@ class TestTCPFetcher:
             (True, False),
         ):
             TCPFetcher(
-                ident="agent",
                 family=socket.AF_INET,
                 address=("1.2.3.4", 0),
                 host_name=HostName("irrelevant_for_this_test"),
@@ -980,7 +962,6 @@ class TestTCPFetcher:
     def test_validate_protocol_encryption_with_disabled_raises(self) -> None:
         settings = {"use_regular": "disable"}
         fetcher = TCPFetcher(
-            ident="agent",
             family=socket.AF_INET,
             address=("1.2.3.4", 0),
             host_name=HostName("irrelevant_for_this_test"),
@@ -993,7 +974,6 @@ class TestTCPFetcher:
     def test_validate_protocol_tls_required(self) -> None:
         settings = {"use_regular": "tls"}
         fetcher = TCPFetcher(
-            ident="agent",
             family=socket.AF_INET,
             address=("1.2.3.4", 0),
             host_name=HostName("irrelevant_for_this_test"),
@@ -1050,7 +1030,6 @@ class TestFetcherCaching:
     def fetcher(self, monkeypatch: MonkeyPatch) -> TCPFetcher:
         # We use the TCPFetcher to test a general feature of the fetchers.
         fetcher = TCPFetcher(
-            ident="agent",
             family=socket.AF_INET,
             address=("1.2.3.4", 0),
             timeout=0.0,

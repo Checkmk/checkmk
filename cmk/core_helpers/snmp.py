@@ -157,7 +157,6 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
     def __init__(
         self,
         *,
-        ident: str,  # Literal["snmp", "mgmt_snmp"],
         sections: Mapping[SectionName, SectionMeta],
         on_error: OnError,
         missing_sys_description: bool,
@@ -165,7 +164,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         section_store_path: Union[Path, str],
         snmp_config: SNMPHostConfig,
     ) -> None:
-        super().__init__(ident, logger=logging.getLogger("cmk.helper.snmp"))
+        super().__init__(logger=logging.getLogger("cmk.helper.snmp"))
         self.sections: Final = sections
         self.on_error: Final = on_error
         self.missing_sys_description: Final = missing_sys_description
@@ -231,7 +230,6 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             do_status_data_inventory=serialized_["do_status_data_inventory"],
             section_store_path=serialized_["section_store_path"],
             snmp_config=SNMPHostConfig.deserialize(serialized_["snmp_config"]),
-            ident=serialized["ident"],
         )
 
     def to_json(self) -> Mapping[str, Any]:
@@ -242,7 +240,6 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             "do_status_data_inventory": self.do_status_data_inventory,
             "section_store_path": str(self._section_store.path),
             "snmp_config": self.snmp_config.serialize(),
-            "ident": self.ident,
         }
 
     def open(self) -> None:

@@ -26,14 +26,13 @@ class TCPFetcher(Fetcher[AgentRawData]):
     def __init__(
         self,
         *,
-        ident: str,  # Literal["agent"],
         family: socket.AddressFamily,
         address: Tuple[Optional[HostAddress], int],
         timeout: float,
         host_name: HostName,
         encryption_settings: Mapping[str, str],
     ) -> None:
-        super().__init__(ident, logger=logging.getLogger("cmk.helper.tcp"))
+        super().__init__(logger=logging.getLogger("cmk.helper.tcp"))
         self.family: Final = socket.AddressFamily(family)
         # json has no builtin tuple, we have to convert
         self.address: Final[Tuple[Optional[HostAddress], int]] = (address[0], address[1])
@@ -71,7 +70,6 @@ class TCPFetcher(Fetcher[AgentRawData]):
 
     def to_json(self) -> Mapping[str, Any]:
         return {
-            "ident": self.ident,
             "family": self.family,
             "address": self.address,
             "timeout": self.timeout,

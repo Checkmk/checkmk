@@ -32,6 +32,7 @@ def fetchers(host_config: HostConfig) -> Dict[str, Any]:
     return {
         "fetchers": [
             {
+                "ident": source.ident,
                 "fetcher_type": source.fetcher_type.name,
                 "source_type": source.source_type.name,
                 "fetcher_params": fetcher.to_json(),

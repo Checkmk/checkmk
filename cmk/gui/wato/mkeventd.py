@@ -3103,7 +3103,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
     def _load_snmp_mibs(self, directory: Path) -> Mapping[Path, MIBInfo]:
         return {
             path: self._parse_snmp_mib_header(path)
-            for path in directory.iterdir()
+            for path in directory.glob("*")
             if not path.is_dir() and not path.name.startswith(".")
         }
 

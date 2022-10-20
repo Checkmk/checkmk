@@ -181,6 +181,7 @@ drbd_ds_map = {
     "secondary_Consistent": 2,
     "primary_UpToDate": 0,
     "secondary_UpToDate": 0,
+    "unknown_DUnknown": 2,
 }
 
 

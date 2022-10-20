@@ -94,6 +94,7 @@ def _parameter_valuespec_drbd():
                                             ("secondary_DUnknown", _("Secondary - DUnknown")),
                                             ("secondary_Consistent", _("Secondary - Consistent")),
                                             ("secondary_UpToDate", _("Secondary - UpToDate")),
+                                            ("unknown_DUnknown", _("Unknown - DUnknown")),
                                         ],
                                     ),
                                     MonitoringState(title=_("Resulting state")),

@@ -1,0 +1,13 @@
+Title: drbd: If the resource role was Unknown and disk state was DUnknown check result is now CRIT
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1666261059
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p15
+
+If the resource role was 'Unknown' and the disk state was 'DUnknown' the check result used to be UNKNOWN.
+Now the check result will be CRIT, if not otherwise set in the appropriate ruleset.

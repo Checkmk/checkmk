@@ -26,7 +26,7 @@ import cmk.base.automations.check_mk
 import cmk.base.config as config
 import cmk.base.modes
 import cmk.base.modes.check_mk
-import cmk.base.sources._checkers as checkers
+import cmk.base.sources as sources
 from cmk.base.submitters import get_submitter
 
 
@@ -95,10 +95,10 @@ def _patch_data_source(mocker, **kwargs):
         return result
 
     mocker.patch.object(
-        checkers,
+        sources,
         "parse",
         autospec=True,
-        side_effect=partial(parse, callback=checkers.parse),
+        side_effect=partial(parse, callback=sources.parse),
     )
 
 
@@ -174,7 +174,7 @@ def test_mode_inventory_caching(hosts, cache, force, mocker) -> None:  # type:ig
     if force[0]:
         options["force"] = True
 
-    assert checkers.parse.call_count == 0  # type: ignore[attr-defined]
+    assert sources.parse.call_count == 0  # type: ignore[attr-defined]
     cmk.base.modes.check_mk.mode_inventory(options, hosts[0])
 
     # run() has to be called once for each requested host
@@ -186,7 +186,7 @@ def test_mode_inventory_caching(hosts, cache, force, mocker) -> None:  # type:ig
 
     num_runs = len([h for h in valid_hosts if not config_cache.get_host_config(h).is_cluster]) * 2
 
-    assert checkers.parse.call_count == num_runs  # type: ignore[attr-defined]
+    assert sources.parse.call_count == num_runs  # type: ignore[attr-defined]
 
 
 @pytest.mark.usefixtures("scenario")
@@ -202,7 +202,7 @@ def test_mode_inventory_as_check() -> None:
         )
         == 0
     )
-    assert checkers.parse.call_count == 2  # type: ignore[attr-defined]
+    assert sources.parse.call_count == 2  # type: ignore[attr-defined]
 
 
 @pytest.mark.usefixtures("scenario")
@@ -213,7 +213,7 @@ def test_mode_discover_marked_hosts(mocker) -> None:  # type:ignore[no-untyped-d
     )  # inventory_max_cachefile_age
     # TODO: First configure auto discovery to make this test really work
     cmk.base.modes.check_mk.mode_discover_marked_hosts({})
-    # assert checkers.parse.call_count == 2  # type: ignore[attr-defined]
+    # assert sources.parse.call_count == 2  # type: ignore[attr-defined]
 
 
 @pytest.mark.usefixtures("fix_register")
@@ -229,7 +229,7 @@ def test_mode_check_discovery_default(mocker) -> None:  # type:ignore[no-untyped
         )
         == 1
     )
-    assert checkers.parse.call_count == 2  # type: ignore[attr-defined]
+    assert sources.parse.call_count == 2  # type: ignore[attr-defined]
 
 
 @pytest.mark.usefixtures("fix_register")
@@ -253,7 +253,7 @@ def test_mode_check_discovery_cached(mocker) -> None:  # type:ignore[no-untyped-
         )
         == 1
     )
-    assert checkers.parse.call_count == 2  # type: ignore[attr-defined]
+    assert sources.parse.call_count == 2  # type: ignore[attr-defined]
 
 
 @pytest.mark.usefixtures("scenario")
@@ -266,7 +266,7 @@ def test_mode_discover_all_hosts(mocker) -> None:  # type:ignore[no-untyped-def]
     )
     cmk.base.modes.check_mk.mode_discover({"discover": 1}, [])
     active_real_hosts = config.get_config_cache().all_active_realhosts()
-    assert checkers.parse.call_count == (len(active_real_hosts) * 2)  # type: ignore[attr-defined]
+    assert sources.parse.call_count == (len(active_real_hosts) * 2)  # type: ignore[attr-defined]
 
 
 @pytest.mark.usefixtures("scenario")
@@ -274,7 +274,7 @@ def test_mode_discover_explicit_hosts(mocker) -> None:  # type:ignore[no-untyped
     # TODO: Is it correct that no cache is used here?
     _patch_data_source(mocker, max_age=config.max_cachefile_age())
     cmk.base.modes.check_mk.mode_discover({"discover": 1}, ["ds-test-host1"])
-    assert checkers.parse.call_count == 2  # type: ignore[attr-defined]
+    assert sources.parse.call_count == 2  # type: ignore[attr-defined]
 
 
 @pytest.mark.usefixtures("scenario")
@@ -292,7 +292,7 @@ def test_mode_discover_explicit_hosts_cache(mocker) -> None:  # type:ignore[no-u
         },
         ["ds-test-host1"],
     )
-    assert checkers.parse.call_count == 2  # type: ignore[attr-defined]
+    assert sources.parse.call_count == 2  # type: ignore[attr-defined]
 
 
 @pytest.mark.usefixtures("scenario")
@@ -305,7 +305,7 @@ def test_mode_discover_explicit_hosts_no_cache(mocker) -> None:  # type:ignore[n
         },
         ["ds-test-host1"],
     )
-    assert checkers.parse.call_count == 2  # type: ignore[attr-defined]
+    assert sources.parse.call_count == 2  # type: ignore[attr-defined]
 
 
 @pytest.mark.usefixtures("scenario")
@@ -318,7 +318,7 @@ def test_mode_check_explicit_host() -> None:
         active_check_handler=lambda *args: None,
         keepalive=False,
     )
-    assert checkers.parse.call_count == 2  # type: ignore[attr-defined]
+    assert sources.parse.call_count == 2  # type: ignore[attr-defined]
 
 
 @pytest.mark.usefixtures("scenario")
@@ -333,7 +333,7 @@ def test_mode_check_explicit_host_cache(mocker) -> None:  # type:ignore[no-untyp
         active_check_handler=lambda *args: None,
         keepalive=False,
     )
-    assert checkers.parse.call_count == 2  # type: ignore[attr-defined]
+    assert sources.parse.call_count == 2  # type: ignore[attr-defined]
 
 
 @pytest.mark.usefixtures("scenario")
@@ -352,14 +352,14 @@ def test_mode_check_explicit_host_no_cache(mocker) -> None:  # type:ignore[no-un
         active_check_handler=lambda *args: None,
         keepalive=False,
     )
-    assert checkers.parse.call_count == 2  # type: ignore[attr-defined]
+    assert sources.parse.call_count == 2  # type: ignore[attr-defined]
 
 
 @pytest.mark.usefixtures("scenario")
 def test_mode_dump_agent_explicit_host(mocker, capsys) -> None:  # type:ignore[no-untyped-def]
     _patch_data_source(mocker, max_age=config.max_cachefile_age())
     cmk.base.modes.check_mk.mode_dump_agent({}, HostName("ds-test-host1"))
-    assert checkers.parse.call_count == 2  # type: ignore[attr-defined]
+    assert sources.parse.call_count == 2  # type: ignore[attr-defined]
     assert "<<<check_mk>>>" in capsys.readouterr().out
 
 
@@ -377,7 +377,7 @@ def test_mode_dump_agent_explicit_host_cache(mocker, capsys) -> None:  # type:ig
         },
         HostName("ds-test-host1"),
     )
-    assert checkers.parse.call_count == 2  # type: ignore[attr-defined]
+    assert sources.parse.call_count == 2  # type: ignore[attr-defined]
     assert "<<<check_mk>>>" in capsys.readouterr().out
 
 
@@ -392,7 +392,7 @@ def test_mode_dump_agent_explicit_host_no_cache(  # type:ignore[no-untyped-def]
         },
         HostName("ds-test-host1"),
     )
-    assert checkers.parse.call_count == 2  # type: ignore[attr-defined]
+    assert sources.parse.call_count == 2  # type: ignore[attr-defined]
     assert "<<<check_mk>>>" in capsys.readouterr().out
 
 
@@ -443,7 +443,7 @@ def test_automation_try_discovery_caching(  # type:ignore[no-untyped-def]
     args.append("ds-test-host1")
 
     cmk.base.automations.check_mk.AutomationTryDiscovery().execute(args)
-    assert checkers.parse.call_count == 2  # type: ignore[attr-defined]
+    assert sources.parse.call_count == 2  # type: ignore[attr-defined]
 
 
 @pytest.mark.parametrize(
@@ -484,7 +484,7 @@ def test_automation_discovery_caching(  # type:ignore[no-untyped-def]
 
     args += ["fixall", "ds-test-host1"]
     cmk.base.automations.check_mk.AutomationDiscovery().execute(args)
-    assert checkers.parse.call_count == 2  # type: ignore[attr-defined]
+    assert sources.parse.call_count == 2  # type: ignore[attr-defined]
 
 
 # Globale Optionen:

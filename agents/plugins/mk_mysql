@@ -40,6 +40,20 @@ do_query() {
 
 }
 
+if ! type mysqladmin >/dev/null 2>&1; then
+    # Try some default mysql client binary paths if they aren't in $PATH already
+    # HINT: If yours is not in the list you may add a symlink with "ln -s /usr/local/mysql <your installation path>"
+    if [ -e "/usr/local/mysql/bin/mysqladmin" ]; then
+        PATH=${PATH}:/usr/local/mysql/bin/
+    elif [ -e "/var/lib/mysql/bin/mysqladmin" ]; then
+        PATH=${PATH}:/var/lib/mysql/bin/
+    elif [ -e "/opt/mysql/bin/mysqladmin" ]; then
+        PATH=${PATH}:/opt/mysql/bin/
+    elif [ -e "/usr/local/libexec/mysqladmin" ]; then
+        PATH=${PATH}:/usr/local/libexec
+    fi
+fi
+
 if [ ! -f "${MK_CONFDIR}/mysql.local.cfg" ]; then
     cat <<EOF >"${MK_CONFDIR}/mysql.local.cfg"
 # This file is created because some versions of mysqladmin

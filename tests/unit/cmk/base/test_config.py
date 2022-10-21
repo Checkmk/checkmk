@@ -143,8 +143,8 @@ def test_config_cache_tag_to_group_map(monkeypatch: MonkeyPatch) -> None:
             ],
         },
     )
-    config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_tag_to_group_map() == {
+    ts.apply(monkeypatch)
+    assert ConfigCache.get_tag_to_group_map() == {
         "all-agents": "agent",
         "auto-piggyback": "piggyback",
         "cmk-agent": "agent",
@@ -2392,9 +2392,9 @@ def test_config_cache_service_discovery_name(
     ts = Scenario()
     if use_new_descr:
         ts.set_option("use_new_descriptions_for", ["cmk_inventory"])
-    config_cache = ts.apply(monkeypatch)
+    ts.apply(monkeypatch)
 
-    assert config_cache.service_discovery_name() == result
+    assert ConfigCache.service_discovery_name() == result
 
 
 def test_config_cache_get_clustered_service_node_keys_no_cluster(monkeypatch: MonkeyPatch) -> None:

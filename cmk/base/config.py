@@ -932,7 +932,7 @@ def _filter_active_hosts(
         return [
             hostname
             for hostname in hostlist
-            if _host_is_member_of_site(config_cache, hostname, distributed_wato_site)
+            if _host_is_member_of_site(hostname, distributed_wato_site)
         ]
 
     if distributed_wato_site is None:
@@ -947,15 +947,15 @@ def _filter_active_hosts(
     return [
         hostname
         for hostname in hostlist
-        if _host_is_member_of_site(config_cache, hostname, distributed_wato_site)
+        if _host_is_member_of_site(hostname, distributed_wato_site)
         and (keep_offline_hosts or config_cache.in_binary_hostlist(hostname, only_hosts))
     ]
 
 
-def _host_is_member_of_site(config_cache: ConfigCache, hostname: HostName, site: str) -> bool:
+def _host_is_member_of_site(hostname: HostName, site: str) -> bool:
     # hosts without a site: tag belong to all sites
     return (
-        config_cache.tags_of_host(hostname).get("site", distributed_wato_site)
+        ConfigCache.tags_of_host(hostname).get("site", distributed_wato_site)
         == distributed_wato_site
     )
 
@@ -2434,7 +2434,7 @@ class HostConfig:
 
         # TODO: Rename self.tags to self.tag_list and self.tag_groups to self.tags
         self.tags = self._config_cache.tag_list_of_host(hostname)
-        self.tag_groups = self._config_cache.tags_of_host(hostname)
+        self.tag_groups = ConfigCache.tags_of_host(hostname)
 
         self.labels = self._config_cache.ruleset_matcher.labels_of_host(hostname)
         self.label_sources = self._config_cache.ruleset_matcher.label_sources_of_host(hostname)
@@ -2718,11 +2718,12 @@ class HostConfig:
 
         return not self._config_cache.in_binary_hostlist(self.hostname, snmpv2c_hosts)
 
-    def _is_inline_backend_supported(self) -> bool:
+    @staticmethod
+    def _is_inline_backend_supported() -> bool:
         return "netsnmp" in sys.modules and not cmk_version.is_raw_edition()
 
     def _get_snmp_backend(self) -> SNMPBackendEnum:
-        with_inline_snmp = self._is_inline_backend_supported()
+        with_inline_snmp = HostConfig._is_inline_backend_supported()
 
         host_backend_config = self._config_cache.host_extra_conf(self.hostname, snmp_backend_hosts)
 
@@ -2956,7 +2957,7 @@ class HostConfig:
 
     def discovery_check_parameters(self) -> DiscoveryCheckParameters:
         """Compute the parameters for the discovery check for a host"""
-        service_discovery_name = self._config_cache.service_discovery_name()
+        service_discovery_name = ConfigCache.service_discovery_name()
         if self.is_ping_host or service_ignored(self.hostname, None, service_discovery_name):
             return DiscoveryCheckParameters.commandline_only_defaults()
 
@@ -3221,11 +3222,11 @@ class HostConfig:
         for entry in specs[::-1]:
             spec.update(entry)
 
-        merged_spec = self._extract_data_source_exit_code_spec(spec, data_source_id)
-        return self._merge_with_optional_exit_code_parameters(spec, merged_spec)
+        merged_spec = HostConfig._extract_data_source_exit_code_spec(spec, data_source_id)
+        return HostConfig._merge_with_optional_exit_code_parameters(spec, merged_spec)
 
+    @staticmethod
     def _extract_data_source_exit_code_spec(
-        self,
         spec: _NestedExitSpec,
         data_source_id: Optional[str],
     ) -> ExitSpec:
@@ -3243,8 +3244,8 @@ class HostConfig:
         # Old configuration format
         return spec
 
+    @staticmethod
     def _merge_with_optional_exit_code_parameters(
-        self,
         spec: _NestedExitSpec,
         merged_spec: ExitSpec,
     ) -> ExitSpec:
@@ -3413,11 +3414,11 @@ class ConfigCache:
         self._initialize_caches()
         self._setup_clusters_nodes_cache()
 
-        self._all_configured_clusters = self._get_all_configured_clusters()
-        self._all_configured_realhosts = self._get_all_configured_realhosts()
+        self._all_configured_clusters = ConfigCache._get_all_configured_clusters()
+        self._all_configured_realhosts = ConfigCache._get_all_configured_realhosts()
         self._all_configured_hosts = self._get_all_configured_hosts()
 
-        tag_to_group_map = self.get_tag_to_group_map()
+        tag_to_group_map = ConfigCache.get_tag_to_group_map()
         self._collect_hosttags(tag_to_group_map)
 
         self.labels = LabelManager(
@@ -3463,7 +3464,7 @@ class ConfigCache:
         self._all_active_realhosts = set()
 
         # Reference hostname -> dirname including /
-        self._host_paths: Dict[HostName, str] = self._get_host_paths(host_paths)
+        self._host_paths: Dict[HostName, str] = ConfigCache._get_host_paths(host_paths)
 
         # Host tags
         self._hosttags: Dict[HostName, TagIDs] = {}
@@ -3494,7 +3495,8 @@ class ConfigCache:
             ).values()
         }
 
-    def get_tag_to_group_map(self) -> TagIDToTaggroupID:
+    @staticmethod
+    def get_tag_to_group_map() -> TagIDToTaggroupID:
         tags = cmk.utils.tags.get_effective_tag_config(tag_config)
         return ruleset_matcher.get_tag_to_group_map(tags)
 
@@ -3514,7 +3516,8 @@ class ConfigCache:
         except KeyError:
             pass
 
-    def _get_host_paths(self, config_host_paths: Dict[HostName, str]) -> Dict[HostName, str]:
+    @staticmethod
+    def _get_host_paths(config_host_paths: Dict[HostName, str]) -> Dict[HostName, str]:
         """Reference hostname -> dirname including /"""
         host_dirs = {}
         for hostname, filename in config_host_paths.items():
@@ -3542,13 +3545,13 @@ class ConfigCache:
 
             if hostname in host_tags:
                 # New dict host_tags are available: only need to compute the tag list
-                self._hosttags[hostname] = self._tag_groups_to_tag_list(
+                self._hosttags[hostname] = ConfigCache._tag_groups_to_tag_list(
                     self._host_paths.get(hostname, "/"), host_tags[hostname]
                 )
             else:
                 # Only tag list available. Use it and compute the tag groups.
                 self._hosttags[hostname] = set(parts[1:])
-                host_tags[hostname] = self._tag_list_to_tag_groups(
+                host_tags[hostname] = ConfigCache._tag_list_to_tag_groups(
                     tag_to_group_map, self._hosttags[hostname]
                 )
 
@@ -3556,15 +3559,12 @@ class ConfigCache:
             self._hosttags[shadow_host_name] = set(
                 shadow_host_spec.get("custom_variables", {}).get("TAGS", "").split()
             )
-            host_tags[shadow_host_name] = self._tag_list_to_tag_groups(
+            host_tags[shadow_host_name] = ConfigCache._tag_list_to_tag_groups(
                 tag_to_group_map, self._hosttags[shadow_host_name]
             )
 
-    def _tag_groups_to_tag_list(
-        self,
-        host_path: str,
-        tag_groups: TaggroupIDToTagID,
-    ) -> TagIDs:
+    @staticmethod
+    def _tag_groups_to_tag_list(host_path: str, tag_groups: TaggroupIDToTagID) -> TagIDs:
         # The pre 1.6 tags contained only the tag group values (-> chosen tag id),
         # but there was a single tag group added with it's leading tag group id. This
         # was the internal "site" tag that is created by HostAttributeSite.
@@ -3573,10 +3573,9 @@ class ConfigCache:
         tags.add("site:%s" % tag_groups["site"])
         return tags
 
+    @staticmethod
     def _tag_list_to_tag_groups(
-        self,
-        tag_to_group_map: TagIDToTaggroupID,
-        tag_list: TagIDs,
+        tag_to_group_map: TagIDToTaggroupID, tag_list: TagIDs
     ) -> TaggroupIDToTagID:
         # This assumes all needed aux tags of grouped are already in the tag_list
 
@@ -3607,10 +3606,11 @@ class ConfigCache:
             return self._hosttags[hostname]
 
         # Handle not existing hosts (No need to performance optimize this)
-        return self._tag_groups_to_tag_list("/", self.tags_of_host(hostname))
+        return ConfigCache._tag_groups_to_tag_list("/", ConfigCache.tags_of_host(hostname))
 
     # TODO: check all call sites and remove this or make it private?
-    def tags_of_host(self, hostname: HostName) -> TaggroupIDToTagID:
+    @staticmethod
+    def tags_of_host(hostname: HostName) -> TaggroupIDToTagID:
         """Returns the dict of all configured tag groups and values of a host
 
         In case you have a HostConfig object available better use HostConfig.tag_groups"""
@@ -3772,8 +3772,9 @@ class ConfigCache:
             return None
         return entry
 
+    @staticmethod
     def get_explicit_service_custom_variables(
-        self, hostname: HostName, description: ServiceName
+        hostname: HostName, description: ServiceName
     ) -> Dict[str, str]:
         try:
             return explicit_service_custom_variables[(hostname, description)]
@@ -3949,12 +3950,14 @@ class ConfigCache:
     def all_configured_realhosts(self) -> Set[HostName]:
         return self._all_configured_realhosts
 
-    def _get_all_configured_realhosts(self) -> Set[HostName]:
+    @staticmethod
+    def _get_all_configured_realhosts() -> Set[HostName]:
         """Returns a set of all host names, regardless if currently disabled or
         monitored on a remote site. Does not return cluster hosts."""
         return set(strip_tags(all_hosts))
 
-    def _get_all_configured_shadow_hosts(self) -> Set[HostName]:
+    @staticmethod
+    def _get_all_configured_shadow_hosts() -> Set[HostName]:
         """Returns a set of all shadow host names, regardless if currently disabled or
         monitored on a remote site"""
         return set(get_shadow_hosts())
@@ -3968,7 +3971,7 @@ class ConfigCache:
         hosts.update(
             self.all_configured_realhosts(),
             self.all_configured_clusters(),
-            self._get_all_configured_shadow_hosts(),
+            ConfigCache._get_all_configured_shadow_hosts(),
         )
         return hosts
 
@@ -4006,7 +4009,8 @@ class ConfigCache:
         """
         return self._all_configured_clusters
 
-    def _get_all_configured_clusters(self) -> Set[HostName]:
+    @staticmethod
+    def _get_all_configured_clusters() -> Set[HostName]:
         return set(strip_tags(list(clusters)))
 
     def host_of_clustered_service(
@@ -4123,7 +4127,8 @@ class ConfigCache:
         return time_settings
 
     # TODO: Remove old name one day
-    def service_discovery_name(self) -> ServiceName:
+    @staticmethod
+    def service_discovery_name() -> ServiceName:
         if "cmk_inventory" in use_new_descriptions_for:
             return "Check_MK Discovery"
         return "Check_MK inventory"
@@ -4252,7 +4257,7 @@ class CEEConfigCache(ConfigCache):
     def matched_agent_config_entries(self, hostname: HostName) -> Dict[str, Any]:
         return {
             varname: self.host_extra_conf(hostname, ruleset)
-            for varname, ruleset in self._agent_config_rulesets()
+            for varname, ruleset in CEEConfigCache._agent_config_rulesets()
         }
 
     def generic_agent_config_entries(self) -> Iterable[tuple[str, Mapping[str, Any]]]:
@@ -4261,14 +4266,15 @@ class CEEConfigCache(ConfigCache):
                 match_path,
                 {
                     varname: self.ruleset_matcher.get_values_for_generic_agent(ruleset, match_path)
-                    for varname, ruleset in self._agent_config_rulesets()
+                    for varname, ruleset in CEEConfigCache._agent_config_rulesets()
                 },
             )
             for match_path, attributes in folder_attributes.items()
             if attributes.get("bake_agent_package", False)
         )
 
-    def _agent_config_rulesets(self) -> Iterable[tuple[str, Any]]:
+    @staticmethod
+    def _agent_config_rulesets() -> Iterable[tuple[str, Any]]:
         return list(agent_config.items()) + [
             ("agent_port", agent_ports),
             ("agent_encryption", agent_encryption),

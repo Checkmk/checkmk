@@ -569,7 +569,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
             # write service dependencies for custom checks
             cfg.write(get_dependencies(hostname, description))
 
-    service_discovery_name = config_cache.service_discovery_name()
+    service_discovery_name = ConfigCache.service_discovery_name()
 
     # Inventory checks - if user has configured them.
     if not (disco_params := host_config.discovery_check_parameters()).commandline_only:

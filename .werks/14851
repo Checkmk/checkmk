@@ -1,0 +1,16 @@
+Title: Improve performance of "Archive events" actions
+Class: feature
+Compatible: compat
+Component: ec
+Date: 1666360024
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p15
+
+This change makes the "Archive events" actions in the
+Event Console faster and more reliable.
+This concerns both the selected events and all events of one host.
+Especially if you have remote sites configured,
+since there is no more query round-trip.

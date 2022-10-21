@@ -124,7 +124,7 @@ from omdlib.version_info import VersionInfo
 
 import cmk.utils.log
 import cmk.utils.tty as tty
-from cmk.utils.certs import cert_dir, root_cert_path, RootCA
+from cmk.utils.certs import cert_dir, CN_TEMPLATE, root_cert_path, RootCA
 from cmk.utils.crypto.password_hashing import hash_password
 from cmk.utils.exceptions import MKTerminate
 from cmk.utils.log import VERBOSE
@@ -1291,7 +1291,7 @@ def initialize_site_ca(site: SiteContext) -> None:
     This will be used e.g. for serving SSL secured livestatus"""
     ca_path = cert_dir(Path(site.dir))
     ca = omdlib.certs.CertificateAuthority(
-        root_ca=RootCA.load_or_create(root_cert_path(ca_path), f"Site '{site.name}' local CA"),
+        root_ca=RootCA.load_or_create(root_cert_path(ca_path), CN_TEMPLATE.format(site.name)),
         ca_path=ca_path,
     )
     if not ca.site_certificate_exists(site.name):

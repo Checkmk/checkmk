@@ -15,9 +15,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from cryptography.x509 import Certificate, load_pem_x509_certificate
+
+from livestatus import SiteId
+
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils.certs import CN_TEMPLATE, RemoteSiteCertsStore
 from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.process import pid_from_file, send_signal
 from cmk.utils.site import omd_site
@@ -300,6 +305,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
         # errors - this must be enough for the moment.
         if not site_specific and custom_site_path is None:
             self._update_trusted_cas(current_config)
+            self._update_remote_sites_cas(current_config["trusted_cas"])
 
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
         try:
@@ -336,6 +342,22 @@ class ConfigDomainCACertificates(ABCConfigDomain):
             "\n".join(sorted(trusted_cas)),
         )
         return errors
+
+    def _update_remote_sites_cas(self, trusted_cas: list[str]) -> None:
+        remote_cas_store = RemoteSiteCertsStore(cmk.utils.paths.remote_sites_cas_dir)
+        for site, cert in self._remote_sites_cas(trusted_cas).items():
+            remote_cas_store.save(site, cert)
+
+    @staticmethod
+    def _remote_sites_cas(trusted_cas: list[str]) -> Mapping[SiteId, Certificate]:
+        return {
+            site_id: cert
+            for cert in sorted(
+                (load_pem_x509_certificate(raw.encode()) for raw in trusted_cas),
+                key=lambda cert: cert.not_valid_after,
+            )
+            if (site_id := CN_TEMPLATE.extract_site(cert.subject.rfc4514_string()))
+        }
 
     def _get_system_wide_trusted_ca_certificates(self) -> tuple[list[str], list[str]]:
         trusted_cas: set[str] = set()

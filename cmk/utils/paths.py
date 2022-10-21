@@ -37,6 +37,7 @@ rrd_single_dir = _opt_root / "var/check_mk/rrd"
 
 mkbackup_lock_dir = Path("/run/lock/mkbackup")
 trusted_ca_file = _omd_path("var/ssl/ca-certificates.crt")
+remote_sites_cas_dir = _omd_path("var/ssl/remote_sites_cas")
 root_cert_file = _omd_path("etc/ssl/ca.pem")
 site_cert_file = _omd_path(f"etc/ssl/sites/{os.environ.get('OMD_SITE')}.pem")
 default_config_dir = _omd_path_str("etc/check_mk")

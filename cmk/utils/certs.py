@@ -3,9 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
+import re
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Iterable, NamedTuple, Tuple, Union
+from typing import Final, Iterable, NamedTuple, Tuple, Union
 
 from cryptography.hazmat.primitives.asymmetric.rsa import (
     generate_private_key,
@@ -35,6 +38,25 @@ from cryptography.x509 import (
     SubjectKeyIdentifier,
 )
 from cryptography.x509.oid import NameOID
+
+from livestatus import SiteId
+
+
+class _CNTemplate:
+    """Template used to create the certs CN containing the sites name"""
+
+    def __init__(self, template: str) -> None:
+        self._temp = template
+        self._match = re.compile("CN=" + template % "([^=+,]*)").match
+
+    def format(self, site: SiteId | str) -> str:
+        return self._temp % site
+
+    def extract_site(self, rfc4514_string: str) -> SiteId | None:
+        return None if (m := self._match(rfc4514_string)) is None else SiteId(m.group(1))
+
+
+CN_TEMPLATE = _CNTemplate("Site '%s' local CA")
 
 _DEFAULT_VALIDITY = 999 * 365
 
@@ -253,3 +275,18 @@ def _rsa_public_key_from_cert_or_csr(
         RSAPublicKey,
     )
     return public_key
+
+
+class RemoteSiteCertsStore:
+    def __init__(self, path: Path) -> None:
+        self.path: Final = path
+
+    def save(self, site_id: SiteId, cert: Certificate) -> None:
+        self.path.mkdir(parents=True, exist_ok=True)
+        self._make_file_name(site_id).write_bytes(cert.public_bytes(Encoding.PEM))
+
+    def load(self, site_id: SiteId) -> Certificate:
+        return load_pem_x509_certificate(self._make_file_name(site_id).read_bytes())
+
+    def _make_file_name(self, site_id: SiteId) -> Path:
+        return self.path / f"{site_id}.pem"

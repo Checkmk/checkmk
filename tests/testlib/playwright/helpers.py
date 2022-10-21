@@ -5,6 +5,7 @@
 """Wrapper for a page, with some often used functionality"""
 
 from abc import ABC, abstractmethod
+from enum import Enum
 
 from playwright.sync_api import expect, Locator, Page
 
@@ -48,6 +49,17 @@ class LocatorHelper(ABC):
 
     def get_attribute_label(self, attribute: str) -> Locator:
         return self.locator(f"#attr_{attribute} label")
+
+
+class Keys(Enum):
+    """Keys to control the virtual keyboard in playwright."""
+
+    Enter = "Enter"
+    Escape = "Escape"
+    ArrowUp = "ArrowUp"
+    ArrowDown = "ArrowDown"
+    ArrowLeft = "ArrowLeft"
+    ArrowRight = "ArrowRight"
 
 
 class MainMenu(LocatorHelper):
@@ -117,6 +129,10 @@ class PPage(LocatorHelper):
     def megamenu_monitoring(self) -> Locator:
         return self.main_menu.locator("#popup_trigger_mega_menu_monitoring")
 
+    @property
+    def monitor_searchbar(self) -> Locator:
+        return self.megamenu_monitoring.locator("#mk_side_search_field_monitoring_search")
+
     def goto_monitoring_all_hosts(self) -> None:
         """main menu -> monitoring -> All hosts"""
         self.megamenu_monitoring.click()
@@ -128,3 +144,6 @@ class PPage(LocatorHelper):
     def goto_add_sidebar_element(self) -> None:
         self.locator("div#check_mk_sidebar >> div#add_snapin > a").click()
         self.main_frame.check_page_title("Add sidebar element")
+
+    def press_keyboard(self, key: Keys) -> None:
+        self.page.keyboard.press(str(key.value))

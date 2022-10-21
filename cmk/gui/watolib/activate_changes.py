@@ -58,7 +58,6 @@ import cmk.gui.watolib.automations
 import cmk.gui.watolib.config_domain_name as config_domain_name
 import cmk.gui.watolib.git
 import cmk.gui.watolib.sidebar_reload
-import cmk.gui.watolib.snapshots
 import cmk.gui.watolib.utils
 from cmk.gui.background_job import (
     BackgroundJob,
@@ -94,6 +93,7 @@ from cmk.gui.sites import SiteStatus
 from cmk.gui.sites import states as sites_states
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.ntop import is_ntop_configured
+from cmk.gui.watolib import backup_snapshots
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.config_domain_name import ConfigDomainName
@@ -852,7 +852,7 @@ class ActivateChangesManager(ActivateChanges):
                 )
 
             backup_snapshot_proc = multiprocessing.Process(
-                target=cmk.gui.watolib.snapshots.create_snapshot, args=(self._comment,)
+                target=backup_snapshots.create_snapshot, args=(self._comment,)
             )
             backup_snapshot_proc.start()
 

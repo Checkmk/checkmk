@@ -69,7 +69,6 @@ class SnapshotStatus(TypedDict):
     checksums: NotRequired[None | bool]
 
 
-# TODO: Remove once new changes mechanism has been implemented
 def create_snapshot(comment: str) -> None:
     logger.debug("Start creating backup snapshot")
     start = time.time()
@@ -97,7 +96,6 @@ def create_snapshot(comment: str) -> None:
     logger.debug("Backup snapshot creation took %.4f", time.time() - start)
 
 
-# TODO: Remove once new changes mechanism has been implemented
 def _do_create_snapshot(data: SnapshotData) -> None:
     snapshot_name = data["snapshot_name"]
     work_dir = snapshot_dir.rstrip("/") + "/workdir/%s" % snapshot_name
@@ -201,7 +199,6 @@ def _do_create_snapshot(data: SnapshotData) -> None:
         shutil.rmtree(work_dir)
 
 
-# TODO: Remove once new changes mechanism has been implemented
 def _do_snapshot_maintenance() -> None:
     snapshots = []
     for f in os.listdir(snapshot_dir):
@@ -219,7 +216,6 @@ def _do_snapshot_maintenance() -> None:
 
 
 # Returns status information for snapshots or snapshots in progress
-# TODO: Remove once new changes mechanism has been implemented
 def get_snapshot_status(  # pylint: disable=too-many-branches
     snapshot: str,
     validate_checksums: bool = False,

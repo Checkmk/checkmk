@@ -22,7 +22,6 @@ from cmk.utils.license_usage import get_license_usage_report_validity, LicenseUs
 import cmk.gui.forms as forms
 import cmk.gui.watolib.changes as _changes
 import cmk.gui.watolib.read_only as read_only
-import cmk.gui.watolib.snapshots as _snapshots
 import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
@@ -55,7 +54,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import Checkbox, Dictionary, DictionaryEntry, TextAreaUnicode
-from cmk.gui.watolib import activate_changes
+from cmk.gui.watolib import activate_changes, backup_snapshots
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import MKAutomationException
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link, Host
@@ -249,29 +248,31 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         return FinalizeRequest(code=200)
 
     def _extract_snapshot(self, snapshot_file):
-        self._extract_from_file(_snapshots.snapshot_dir + snapshot_file, _snapshots.backup_domains)
+        self._extract_from_file(
+            backup_snapshots.snapshot_dir + snapshot_file, backup_snapshots.backup_domains
+        )
 
-    def _extract_from_file(self, filename: str, elements: Dict[str, _snapshots.DomainSpec]) -> None:
+    def _extract_from_file(
+        self, filename: str, elements: Dict[str, backup_snapshots.DomainSpec]
+    ) -> None:
         if not isinstance(elements, dict):
             raise NotImplementedError()
 
         with tarfile.open(filename, "r") as opened_file:
-            _snapshots.extract_snapshot(opened_file, elements)
+            backup_snapshots.extract_snapshot(opened_file, elements)
 
-    # TODO: Remove once new changes mechanism has been implemented
     def _get_last_wato_snapshot_file(self):
         for snapshot_file in self._get_snapshots():
-            status = _snapshots.get_snapshot_status(snapshot_file)
+            status = backup_snapshots.get_snapshot_status(snapshot_file)
             if status["type"] == "automatic" and not status["broken"]:
                 return snapshot_file
         return None
 
-    # TODO: Remove once new changes mechanism has been implemented
     def _get_snapshots(self) -> list[str]:
         snapshots: list[str] = []
         try:
-            for f in os.listdir(_snapshots.snapshot_dir):
-                if os.path.isfile(_snapshots.snapshot_dir + f):
+            for f in os.listdir(backup_snapshots.snapshot_dir):
+                if os.path.isfile(backup_snapshots.snapshot_dir + f):
                     snapshots.append(f)
             snapshots.sort(reverse=True)
         except OSError:

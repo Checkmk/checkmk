@@ -7,6 +7,7 @@ import abc
 import io
 import os
 import re
+import sys
 import time
 import zipfile
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
@@ -3044,22 +3045,16 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
 
     def _delete_mib(self, filename: str, mib_name: str) -> None:
         self._add_change("delete-mib", _("Deleted MIB %s") % filename)
-
-        # Delete the uploaded mib file
-        (cmk.gui.mkeventd.mib_upload_dir() / filename).unlink()
-
-        # Also delete the compiled files
-        def append_suffix(path: Path, suffix: str) -> Path:
-            return path.with_suffix(path.suffix + suffix)
-
-        compiled_mibs_dir = _compiled_mibs_dir()
-        for f in [
-            append_suffix(compiled_mibs_dir / mib_name, ".py"),
-            append_suffix(compiled_mibs_dir / mib_name, ".pyc"),
-            (compiled_mibs_dir / filename.upper()).with_suffix(".py"),
-            (compiled_mibs_dir / filename.upper()).with_suffix(".pyc"),
-        ]:
-            f.unlink(missing_ok=True)
+        pyc_suffix = f".cpython-{sys.version_info.major}{sys.version_info.minor}.pyc"
+        for path in {
+            _compiled_mibs_dir() / p
+            for f in (Path(filename), Path(mib_name))
+            for p in (
+                f.with_suffix(".py"),
+                ("__pycache__" / f).with_suffix(pyc_suffix),
+            )
+        } | {cmk.gui.mkeventd.mib_upload_dir() / filename}:
+            path.unlink(missing_ok=True)
 
     def page(self) -> None:
         self._verify_ec_enabled()

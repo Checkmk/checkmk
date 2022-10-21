@@ -14,10 +14,11 @@ echo version_info = %PY_VER%.%PY_SUBVER%>>.venv\pyvenv.cfg
 echo include-system-site-packages = false>>.venv\pyvenv.cfg
 
 :: postinstall
+if "%PY_VER%" == "3.4" ( 
+  copy /Y %cur_dir%\postinstall-3.4.4.cmd .\postinstall.cmd
+  exit /b 0
+)
 copy /Y %cur_dir%\postinstall.cmd .\postinstall.cmd
-if "%PY_VER%" == "3.4" exit /b 0
-
-:: runtime
 copy /Y %cur_dir%\runtime\*.dll .venv\Scripts\
 
 exit /b 0

@@ -8,9 +8,10 @@ from __future__ import annotations
 
 import json
 import threading
+from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager
 from http.cookiejar import CookieJar
-from typing import Any, Callable, ContextManager, Iterator, Literal, NamedTuple
+from typing import Any, ContextManager, Literal, NamedTuple
 from unittest import mock
 from unittest.mock import MagicMock
 
@@ -263,7 +264,7 @@ def with_automation_user(request_context: None, load_config: None) -> Iterator[t
         yield user
 
 
-def get_link(resp: dict, rel: str):  # type:ignore[no-untyped-def]
+def get_link(resp: dict, rel: str) -> Mapping:
     for link in resp.get("links", []):
         if link["rel"].startswith(rel):
             return link
@@ -295,7 +296,7 @@ class WebTestAppForCMK(webtest.TestApp):
         self.username: str | None = None
         self.password: str | None = None
 
-    def set_credentials(self, username, password) -> None:  # type:ignore[no-untyped-def]
+    def set_credentials(self, username: str | None, password: str | None) -> None:
         self.username = username
         self.password = password
 
@@ -304,7 +305,7 @@ class WebTestAppForCMK(webtest.TestApp):
     ) -> webtest.TestResponse:
         return getattr(self, method.lower())(url, *args, **kw)
 
-    def has_link(self, resp: webtest.TestResponse, rel) -> bool:  # type:ignore[no-untyped-def]
+    def has_link(self, resp: webtest.TestResponse, rel: str) -> bool:
         if resp.status_code == 204:
             return False
         try:
@@ -313,12 +314,12 @@ class WebTestAppForCMK(webtest.TestApp):
         except KeyError:
             return False
 
-    def follow_link(  # type:ignore[no-untyped-def]
+    def follow_link(
         self,
         resp: webtest.TestResponse,
-        rel,
+        rel: str,
         json_data: dict[str, Any] | None = None,
-        **kw,
+        **kw: object,
     ) -> webtest.TestResponse:
         """Follow a link description as defined in a restful-objects entity"""
         params = dict(kw)

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Sequence
+from collections.abc import Sequence
 
 import pytest
 
@@ -47,7 +47,7 @@ class TestHostSections:
                 == 2 * host_sections.piggybacked_raw_data[host_name]
             )
 
-    def test_add_other_adds_sections(self, host_sections) -> None:  # type:ignore[no-untyped-def]
+    def test_add_other_adds_sections(self, host_sections: HostSections) -> None:
         other = HostSections[Sequence[AgentRawDataSection]](
             {
                 SectionName("section2"): [["first", "line"], ["second", "line"]],

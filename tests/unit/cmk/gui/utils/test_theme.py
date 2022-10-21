@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 import pytest
+from pytest import MonkeyPatch
 
 import cmk.utils.paths
 
@@ -14,7 +15,7 @@ from cmk.gui.utils.theme import theme, Theme, theme_choices
 
 
 @pytest.fixture(name="theme_dirs")
-def fixture_theme_dirs(tmp_path, monkeypatch):
+def fixture_theme_dirs(tmp_path: Path, monkeypatch: MonkeyPatch) -> tuple[Path, Path]:
     theme_path = tmp_path / "htdocs" / "themes"
     theme_path.mkdir(parents=True)
 
@@ -28,7 +29,7 @@ def fixture_theme_dirs(tmp_path, monkeypatch):
 
 
 @pytest.fixture(name="my_theme")
-def fixture_my_theme(theme_dirs, monkeypatch):
+def fixture_my_theme(theme_dirs: tuple[Path, Path], monkeypatch: MonkeyPatch) -> Path:
     theme_path = theme_dirs[0]
     my_dir = theme_path / "my_theme"
     my_dir.mkdir()
@@ -42,9 +43,9 @@ def fixture_my_theme(theme_dirs, monkeypatch):
     return my_dir
 
 
-def test_theme_request_context_integration(  # type:ignore[no-untyped-def]
-    my_theme, request_context
-) -> None:
+@pytest.mark.usefixtures("my_theme")
+@pytest.mark.usefixtures("request_context")
+def test_theme_request_context_integration() -> None:
     theme.from_config("facelift")
 
     theme.set("")
@@ -103,8 +104,8 @@ def test_base_dir(th: Theme) -> None:
     ],
 )
 @pytest.mark.parametrize("with_logo", [True, False])
-def test_has_custom_logo(  # type:ignore[no-untyped-def]
-    monkeypatch, th: Theme, edition: cmk.utils.version.Edition, with_logo: bool
+def test_has_custom_logo(
+    monkeypatch: MonkeyPatch, th: Theme, edition: cmk.utils.version.Edition, with_logo: bool
 ) -> None:
     monkeypatch.setattr(
         "cmk.gui.utils.theme.is_managed_edition", lambda: edition is cmk.utils.version.Edition.CME
@@ -115,15 +116,18 @@ def test_has_custom_logo(  # type:ignore[no-untyped-def]
     assert th.has_custom_logo() is (edition is cmk.utils.version.Edition.CME and with_logo)
 
 
-def test_theme_choices_empty(theme_dirs) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("theme_dirs")
+def test_theme_choices_empty() -> None:
     assert theme_choices() == []
 
 
-def test_theme_choices_normal(my_theme) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("my_theme")
+def test_theme_choices_normal() -> None:
     assert theme_choices() == [("my_theme", "Määh Theme :-)")]
 
 
-def test_theme_choices_local_theme(theme_dirs, my_theme) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("my_theme")
+def test_theme_choices_local_theme(theme_dirs: tuple[Path, Path]) -> None:
     local_theme_path = theme_dirs[1]
 
     my_dir = local_theme_path / "my_improved_theme"
@@ -140,7 +144,8 @@ def test_theme_choices_local_theme(theme_dirs, my_theme) -> None:  # type:ignore
     )
 
 
-def test_theme_choices_override(theme_dirs, my_theme) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("my_theme")
+def test_theme_choices_override(theme_dirs: tuple[Path, Path]) -> None:
     local_theme_path = theme_dirs[1]
 
     my_dir = local_theme_path / "my_theme"
@@ -156,7 +161,7 @@ def test_theme_choices_override(theme_dirs, my_theme) -> None:  # type:ignore[no
     )
 
 
-def test_theme_broken_meta(my_theme) -> None:  # type:ignore[no-untyped-def]
+def test_theme_broken_meta(my_theme: Path) -> None:
     (my_theme / "theme.json").open(mode="w", encoding="utf-8").write(
         str('{"titlewrong": xyz"bla"}')
     )

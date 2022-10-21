@@ -25,7 +25,7 @@ class TestSNMPDetectSpec:
             ]
         )
 
-    def test_serialization(self, specs) -> None:  # type:ignore[no-untyped-def]
+    def test_serialization(self, specs: SNMPDetectSpec) -> None:
         assert SNMPDetectSpec.from_json(specs.to_json()) == specs
 
 
@@ -70,5 +70,5 @@ def test_snmptree_from_frontend() -> None:
         ),
     ],
 )
-def test_serialize_snmptree(tree) -> None:  # type:ignore[no-untyped-def]
+def test_serialize_snmptree(tree: BackendSNMPTree) -> None:
     assert tree.from_json(json.loads(json.dumps(tree.to_json()))) == tree

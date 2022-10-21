@@ -66,9 +66,7 @@ def test_node_timestamps_non_utc() -> None:
         ),
     ],
 )
-def test_node_metadata_creation_timestamp(  # type:ignore[no-untyped-def]
-    metadata, parsed_time
-) -> None:
+def test_node_metadata_creation_timestamp(metadata: V1ObjectMeta, parsed_time: float) -> None:
     assert Node(V1Node(metadata=metadata), "").creation_timestamp == parsed_time
 
 
@@ -137,5 +135,8 @@ def test_node_metadata_creation_timestamp(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_init_node_stats(raw_node_stats, parsed_stats) -> None:  # type:ignore[no-untyped-def]
+def test_init_node_stats(
+    raw_node_stats: str,
+    parsed_stats: object,
+) -> None:
     assert Node(V1Node(metadata=V1ObjectMeta(name="mynode")), raw_node_stats).stats == parsed_stats

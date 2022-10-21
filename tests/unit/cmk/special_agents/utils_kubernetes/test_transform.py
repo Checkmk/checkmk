@@ -18,7 +18,7 @@ from cmk.special_agents.utils_kubernetes.transform import convert_to_timestamp
         datetime.datetime(1970, 1, 1, 0, 0, 0),
     ],
 )
-def test_convert_to_timestamp_raises_error(kube_date_time) -> None:  # type:ignore[no-untyped-def]
+def test_convert_to_timestamp_raises_error(kube_date_time: str) -> None:
     with pytest.raises(Exception):
         convert_to_timestamp(kube_date_time)
 
@@ -30,7 +30,7 @@ def test_convert_to_timestamp_raises_error(kube_date_time) -> None:  # type:igno
         datetime.datetime(1970, 1, 1, 0, 0, 0, tzinfo=datetime.timezone.utc),
     ],
 )
-def test_convert_to_timestamp_correct_conversion(  # type:ignore[no-untyped-def]
-    kube_date_time,
+def test_convert_to_timestamp_correct_conversion(
+    kube_date_time: str,
 ) -> None:
     assert api.Timestamp(0.0) == convert_to_timestamp(kube_date_time)

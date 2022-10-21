@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
+from pytest import MonkeyPatch
 
 import cmk.utils.version as cmk_version
 
@@ -28,8 +29,8 @@ def cache_clear() -> None:
         ("2.1.0p3.cpe", cmk_version.Edition.CPE),
     ],
 )
-def test_is_enterprise_edition(  # type:ignore[no-untyped-def]
-    monkeypatch,
+def test_is_enterprise_edition(
+    monkeypatch: MonkeyPatch,
     omd_version_str: str,
     expected: cmk_version.Edition,
 ) -> None:

@@ -62,6 +62,7 @@ __all__ = [
     "fetch_all",
     "make_non_cluster_sources",
     "make_sources",
+    "make_plugin_store",
     "parse",
 ]
 

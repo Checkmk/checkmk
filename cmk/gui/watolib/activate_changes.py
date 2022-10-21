@@ -14,7 +14,6 @@ SnapshotCreator          - Packing the snapshots into snapshot archives
 ActivateChangesSite      - Executes the activation procedure for a single site.
 """
 
-import abc
 import ast
 import errno
 import hashlib
@@ -30,7 +29,7 @@ import traceback
 from dataclasses import asdict, dataclass
 from itertools import filterfalse
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, NamedTuple, Optional, Set, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, NamedTuple, Optional, Tuple, Union
 
 import psutil  # type: ignore[import]
 from setproctitle import setthreadtitle  # type: ignore[import] # pylint: disable=no-name-in-module
@@ -78,14 +77,12 @@ from cmk.gui.http import request as _request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.userdb.utils import user_sync_default_config
 from cmk.gui.plugins.watolib.utils import (
     DomainRequest,
     DomainRequests,
     get_always_activate_domains,
     get_config_domain,
     SerializedSettings,
-    wato_fileheader,
 )
 from cmk.gui.site_config import allsites, get_site_config, is_single_local_site, site_is_local
 from cmk.gui.sites import disconnect as sites_disconnect
@@ -97,7 +94,13 @@ from cmk.gui.watolib import backup_snapshots
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.config_domain_name import ConfigDomainName
-from cmk.gui.watolib.config_sync import ReplicationPath
+from cmk.gui.watolib.config_sync import (
+    ABCSnapshotDataCollector,
+    create_distributed_wato_files,
+    get_site_globals,
+    ReplicationPath,
+    SnapshotSettings,
+)
 from cmk.gui.watolib.global_settings import save_site_global_settings
 from cmk.gui.watolib.hosts_and_folders import (
     collect_all_hosts,
@@ -130,17 +133,6 @@ ACTIVATION_TIME_SYNC = "sync"
 ACTIVATION_TIME_PROFILE_SYNC = "profile-sync"
 
 var_dir = cmk.utils.paths.var_dir + "/wato/"
-
-
-class SnapshotSettings(NamedTuple):
-    # TODO: Refactor to Path
-    snapshot_path: str
-    # TODO: Refactor to Path
-    work_dir: str
-    # TODO: Clarify naming (-> replication path or snapshot component?)
-    snapshot_components: List[ReplicationPath]
-    component_names: Set[str]
-    site_config: SiteConfiguration
 
 
 # Directories and files to synchronize during replication
@@ -1031,39 +1023,6 @@ class SnapshotManager:
 
         # 2. Allow hooks to further modify the reference data for the remote site
         hooks.call("post-snapshot-creation", self._site_snapshot_settings)
-
-
-class ABCSnapshotDataCollector(abc.ABC):
-    """Prepares files to be synchronized to the remote sites"""
-
-    def __init__(self, site_snapshot_settings: Dict[SiteId, SnapshotSettings]) -> None:
-        super().__init__()
-        self._site_snapshot_settings = site_snapshot_settings
-        self._logger = logger.getChild(self.__class__.__name__)
-
-    @abc.abstractmethod
-    def prepare_snapshot_files(self) -> None:
-        """Site independent preparation of files to be used for the sync snapshots
-        This will be called once before iterating over all sites.
-        """
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def get_generic_components(self) -> List[ReplicationPath]:
-        """Return the site independent snapshot components
-        These will be collected by the SnapshotManager once when entering the context manager
-        """
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def get_site_components(
-        self, snapshot_settings: SnapshotSettings
-    ) -> Tuple[List[ReplicationPath], List[ReplicationPath]]:
-        """Split the snapshot components into generic and site specific components
-
-        The generic components have the advantage that they only need to be created once for all
-        sites and can be shared between the sites to optimize processing."""
-        raise NotImplementedError()
 
 
 class CRESnapshotDataCollector(ABCSnapshotDataCollector):
@@ -2170,50 +2129,6 @@ def verify_remote_site_config(site_id: SiteId) -> None:
         message += ", ".join(change["text"] for _change_id, change in pending[:10])
 
         raise MKGeneralException(message)
-
-
-def create_distributed_wato_files(base_dir: Path, site_id: SiteId, is_remote: bool) -> None:
-    _create_distributed_wato_file_for_base(base_dir, site_id, is_remote)
-    _create_distributed_wato_file_for_dcd(base_dir, is_remote)
-
-
-def _create_distributed_wato_file_for_base(
-    base_dir: Path, site_id: SiteId, is_remote: bool
-) -> None:
-    output = wato_fileheader()
-    output += (
-        "# This file has been created by the master site\n"
-        "# push the configuration to us. It makes sure that\n"
-        "# we only monitor hosts that are assigned to our site.\n\n"
-    )
-    output += "distributed_wato_site = '%s'\n" % site_id
-    output += "is_wato_slave_site = %r\n" % is_remote
-
-    store.save_text_to_file(base_dir.joinpath("etc/check_mk/conf.d/distributed_wato.mk"), output)
-
-
-def _create_distributed_wato_file_for_dcd(base_dir: Path, is_remote: bool) -> None:
-    if cmk_version.is_raw_edition():
-        return
-
-    output = wato_fileheader()
-    output += "dcd_is_wato_remote_site = %r\n" % is_remote
-
-    store.save_text_to_file(base_dir.joinpath("etc/check_mk/dcd.d/wato/distributed.mk"), output)
-
-
-def get_site_globals(site_id: SiteId, site_config: SiteConfiguration) -> dict[str, Any]:
-    site_globals = site_config.get("globals", {}).copy()
-    site_globals.update(
-        {
-            "wato_enabled": not site_config.get("disable_wato", True),
-            "userdb_automatic_sync": site_config.get(
-                "user_sync", user_sync_default_config(site_id)
-            ),
-            "user_login": site_config.get("user_login", False),
-        }
-    )
-    return site_globals
 
 
 def _get_replication_components(site_config: SiteConfiguration) -> List[ReplicationPath]:

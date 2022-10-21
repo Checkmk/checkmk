@@ -3,32 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import socket
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Iterable, Tuple
 
-from cmk.utils.type_defs import HostAddress
+from cmk.utils.type_defs import HostName
 
-from cmk.core_helpers import FetcherType
-from cmk.core_helpers.cache import MaxAge
-
-import cmk.base.config as config
-import cmk.base.core_config as core_config
-from cmk.base.config import HostConfig
-
-from ._checkers import make_non_cluster_sources
+from cmk.core_helpers import Fetcher, FetcherType
+from cmk.core_helpers.cache import FileCache, MaxAge
+from cmk.core_helpers.type_defs import SourceInfo
 
 __all__ = ["fetchers", "clusters"]
 
 
-def get_ip_address(host_config: HostConfig) -> Optional[HostAddress]:
-    if host_config.is_ipv6_primary:
-        return core_config.ip_address_of(host_config, socket.AF_INET6)
-
-    return core_config.ip_address_of(host_config, socket.AF_INET)
-
-
-def fetchers(host_config: HostConfig) -> Dict[str, Any]:
-    ipaddress = get_ip_address(host_config)
+def fetchers(sources: Iterable[Tuple[SourceInfo, FileCache, Fetcher]]) -> Dict[str, Any]:
     return {
         "fetchers": [
             {
@@ -61,19 +47,10 @@ def fetchers(host_config: HostConfig) -> Dict[str, Any]:
                     file_cache_mode=file_cache.file_cache_mode,
                 ).to_json(),
             }
-            for source, file_cache, fetcher in make_non_cluster_sources(
-                host_config,
-                ipaddress,
-                simulation_mode=config.simulation_mode,
-                missing_sys_description=config.get_config_cache().in_binary_hostlist(
-                    host_config.hostname,
-                    config.snmp_without_sys_descr,
-                ),
-                file_cache_max_age=config.max_cachefile_age(),
-            )
+            for source, file_cache, fetcher in sources
         ]
     }
 
 
-def clusters(host_config: HostConfig) -> Dict[str, Any]:
-    return {"clusters": {"nodes": host_config.nodes or ()}}
+def clusters(nodes: Iterable[HostName]) -> Dict[str, Any]:
+    return {"clusters": {"nodes": list(nodes)}}

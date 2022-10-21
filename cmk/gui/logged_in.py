@@ -23,7 +23,7 @@ from cmk.utils.version import __version__, Version
 
 import cmk.gui.permissions as permissions
 import cmk.gui.site_config as site_config
-from cmk.gui.config import active_config, builtin_role_ids
+from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import request
@@ -64,8 +64,6 @@ class LoggedInUser:
 
         self.confdir = _confdir_for_user_id(self.id)
         self.role_ids = self._gather_roles(self.id)
-        baserole_ids = _baserole_ids_from_role_ids(self.role_ids)
-        self.baserole_id = _most_permissive_baserole_id(baserole_ids)
         self._attributes = self._load_attributes(self.id, self.role_ids)
         self.alias = self._attributes.get("alias", self.id)
         self.email = self._attributes.get("email", self.id)
@@ -543,24 +541,6 @@ def _confdir_for_user_id(user_id: UserId | None) -> str | None:
     confdir = cmk.utils.paths.profile_dir / user_id
     store.mkdir(confdir)
     return str(confdir)
-
-
-def _baserole_ids_from_role_ids(role_ids: list[str]) -> list[str]:
-    base_roles = set()
-    for r in role_ids:
-        if r in builtin_role_ids:
-            base_roles.add(r)
-        else:
-            base_roles.add(active_config.roles[r]["basedon"])
-    return list(base_roles)
-
-
-def _most_permissive_baserole_id(baserole_ids: list[str]) -> str:
-    if "admin" in baserole_ids:
-        return "admin"
-    if "user" in baserole_ids:
-        return "user"
-    return "guest"
 
 
 def save_user_file(name: str, data: Any, user_id: UserId) -> None:

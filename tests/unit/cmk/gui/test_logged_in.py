@@ -111,7 +111,6 @@ def test_unauthenticated_users(
 
     assert user.role_ids == role_ids
     assert user.get_attribute("roles") == role_ids
-    assert user.baserole_id == baserole_id
 
     assert user.get_attribute("baz", "default") == "default"
     assert user.get_attribute("foo") is None
@@ -261,7 +260,6 @@ def test_monitoring_user(monitoring_user: LoggedInUser) -> None:
 
     assert monitoring_user.role_ids == ["user"]
     assert monitoring_user.get_attribute("roles") == ["user"]
-    assert monitoring_user.baserole_id == "user"
 
     assert monitoring_user.get_attribute("ui_theme") == "modern-dark"
 

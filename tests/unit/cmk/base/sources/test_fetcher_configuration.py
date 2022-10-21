@@ -55,4 +55,4 @@ def test_generates_correct_sections(  # type:ignore[no-untyped-def]
 ) -> None:
     make_scenario(hostname, tags).apply(monkeypatch)
     conf = fetcher_configuration.fetchers(HostConfig.make_host_config(hostname))
-    assert [FetcherType[f["fetcher_type"]] for f in conf["fetchers"]] == fetchers
+    assert [FetcherType[f["source"]["fetcher_type"]] for f in conf["fetchers"]] == fetchers

@@ -53,7 +53,7 @@ from cmk.gui.plugins.wato.utils import (
     WatoMode,
 )
 from cmk.gui.table import show_row_count, table_element
-from cmk.gui.type_defs import ActionResult, Choices, PermissionName, UserSpec
+from cmk.gui.type_defs import ActionResult, Choices, PermissionName, UserObject, UserSpec
 from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.userdb.htpasswd import hash_password
 from cmk.gui.utils.escaping import escape_to_html
@@ -611,23 +611,26 @@ class ModeEditUser(WatoMode):
         self._contact_groups = load_contact_group_information()
         self._timeperiods = watolib.timeperiods.load_timeperiods()
         self._roles = userdb_utils.load_roles()
+        self._user_id: UserId | None
 
         if cmk_version.is_managed_edition():
             self._vs_customer = managed.vs_customer()
 
     def _from_vars(self):
         # TODO: Should we turn the both fields below into Optional[UserId]?
-        self._user_id = request.get_str_input("edit")  # missing -> new user
+        self._user_id = (
+            UserId(_uid) if (_uid := request.get_str_input("edit")) is not None else None
+        )
         # This is needed for the breadcrumb computation:
         # When linking from user notification rules page the request variable is "user"
         # instead of "edit". We should also change that variable to "user" on this page,
         # then we can simply use self._user_id.
         if not self._user_id and request.has_var("user"):
-            self._user_id = request.get_str_input_mandatory("user")
+            self._user_id = UserId(request.get_str_input_mandatory("user"))
 
         self._cloneid = request.get_str_input("clone")  # Only needed in 'new' mode
         # TODO: Nuke the field below? It effectively hides facts about _user_id for mypy.
-        self._is_new_user = self._user_id is None
+        self._is_new_user: bool = self._user_id is None
         self._users = userdb.load_users(lock=transactions.is_transaction())
         new_user = userdb.new_user_template("htpasswd")
         if self._user_id is not None:
@@ -722,7 +725,7 @@ class ModeEditUser(WatoMode):
             self._user_id = UserID(allow_empty=False).from_html_vars("user_id")
             user_attrs: UserSpec = {}
         else:
-            self._user_id = request.get_str_input_mandatory("edit").strip()
+            self._user_id = UserId(request.get_str_input_mandatory("edit").strip())
             user_attrs = self._users[UserId(self._user_id)].copy()
 
         # Full name
@@ -876,7 +879,12 @@ class ModeEditUser(WatoMode):
             user_attrs[name] = value  # type: ignore[literal-required]
 
         # Generate user "object" to update
-        user_object = {self._user_id: {"attributes": user_attrs, "is_new_user": self._is_new_user}}
+        user_object: UserObject = {
+            self._user_id: {
+                "attributes": user_attrs,
+                "is_new_user": self._is_new_user,
+            }
+        }
         # The following call validates and updated the users
         edit_users(user_object)
         return redirect(mode_url("users"))

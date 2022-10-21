@@ -120,8 +120,8 @@ def create_user(params: Mapping[str, Any]) -> Response:
     api_attrs = params["body"]
     username = api_attrs["username"]
 
-    # The interface options must be set for a new user but we restrict the setting through the API
-    internal_attrs: dict[str, Any] = {
+    # The interface options must be set for a new user, but we restrict the setting through the API
+    internal_attrs: UserSpec = {
         "start_url": None,
         "force_authuser": False,
     }

@@ -15,7 +15,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.userdb.utils import add_internal_attributes
-from cmk.gui.type_defs import UserId
+from cmk.gui.type_defs import UserId, UserObject, Users, UserSpec
 from cmk.gui.valuespec import (
     Age,
     Alternative,
@@ -72,7 +72,7 @@ def delete_users(users_to_delete):
         userdb.save_users(all_users, datetime.now())
 
 
-def edit_users(changed_users):
+def edit_users(changed_users: UserObject) -> None:
     if user:
         user.need_permission("wato.users")
         user.need_permission("wato.edit")
@@ -80,7 +80,7 @@ def edit_users(changed_users):
     new_users_info = []
     modified_users_info = []
     for user_id, settings in changed_users.items():
-        user_attrs = settings.get("attributes")
+        user_attrs = settings.get("attributes", {})
         is_new_user = settings.get("is_new_user", True)
         _validate_user_attributes(all_users, user_id, user_attrs, is_new_user=is_new_user)
         if is_new_user:
@@ -111,7 +111,7 @@ def edit_users(changed_users):
     userdb.save_users(all_users, datetime.now())
 
 
-def make_user_audit_log_object(attributes):
+def make_user_audit_log_object(attributes: UserSpec) -> UserSpec:
     """The resulting object is used for building object diffs"""
     obj = attributes.copy()
 
@@ -136,11 +136,11 @@ def make_user_object_ref(user_id: UserId) -> ObjectRef:
     return ObjectRef(ObjectRefType.User, str(user_id))
 
 
-def _validate_user_attributes(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branches
-    all_users,
-    user_id,
-    user_attrs,
-    is_new_user=True,
+def _validate_user_attributes(  # pylint: disable=too-many-branches
+    all_users: Users,
+    user_id: UserId,
+    user_attrs: UserSpec,
+    is_new_user: bool = True,
 ) -> None:
     # Check user_id
     if is_new_user:
@@ -178,8 +178,9 @@ def _validate_user_attributes(  # type:ignore[no-untyped-def] # pylint: disable=
 
     # Email
     email = user_attrs.get("email")
-    vs_email = EmailAddress()
-    vs_email.validate_value(email, "email")
+    if "email" in user_attrs and email is not None:
+        vs_email = EmailAddress()
+        vs_email.validate_value(email, "email")
 
     # Idle timeout
     idle_timeout = user_attrs.get("idle_timeout")
@@ -189,7 +190,7 @@ def _validate_user_attributes(  # type:ignore[no-untyped-def] # pylint: disable=
     # Notification settings are only active if we do *not* have rule based notifications!
     if not global_settings.rulebased_notifications_enabled():
         # Notifications
-        notifications_enabled = user_attrs.get("notification_enabled")
+        notifications_enabled = user_attrs.get("notifications_enabled")
 
         # Check if user can receive notifications
         if notifications_enabled:

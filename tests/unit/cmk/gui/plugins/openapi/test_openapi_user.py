@@ -26,7 +26,7 @@ from cmk.gui.plugins.openapi.endpoints.user_config import (
     _load_user,
 )
 from cmk.gui.plugins.openapi.endpoints.utils import complement_customer
-from cmk.gui.type_defs import UserRole
+from cmk.gui.type_defs import UserObject, UserRole
 from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file, update_user_custom_attrs
 from cmk.gui.watolib.userroles import clone_role, RoleID
 from cmk.gui.watolib.users import edit_users
@@ -99,31 +99,30 @@ def test_openapi_user_minimal_settings(
     )
 
     with freeze_time("2021-09-24 12:36:00"), run_as_superuser():
-        edit_users(
-            {
-                "user": {
-                    "attributes": {
-                        "ui_theme": None,
-                        "ui_sidebar_position": None,
-                        "nav_hide_icons_title": None,
-                        "icons_per_item": None,
-                        "show_mode": None,
-                        "start_url": None,
-                        "force_authuser": False,
-                        "enforce_pw_change": False,
-                        "alias": "User Name",
-                        "locked": False,
-                        "pager": "",
-                        "roles": [],
-                        "contactgroups": [],
-                        "email": "",
-                        "fallback_contact": False,
-                        "disable_notifications": {},
-                    },
-                    "is_new_user": True,
-                }
+        user_object: UserObject = {
+            UserId("user"): {
+                "attributes": {
+                    "ui_theme": None,
+                    "ui_sidebar_position": None,
+                    "nav_hide_icons_title": None,
+                    "icons_per_item": None,
+                    "show_mode": None,
+                    "start_url": None,
+                    "force_authuser": False,
+                    "enforce_pw_change": False,
+                    "alias": "User Name",
+                    "locked": False,
+                    "pager": "",
+                    "roles": [],
+                    "contactgroups": [],
+                    "email": "",
+                    "fallback_contact": False,
+                    "disable_notifications": {},
+                },
+                "is_new_user": True,
             }
-        )
+        }
+        edit_users(user_object)
 
     user_attributes = _load_internal_attributes(UserId("user"))
 
@@ -321,9 +320,9 @@ def test_openapi_user_internal_with_notifications(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
     )
 
-    name = _random_string(10)
+    name = UserId(_random_string(10))
 
-    user_data = {
+    user_object: UserObject = {
         name: {
             "attributes": {
                 "ui_theme": None,
@@ -350,9 +349,9 @@ def test_openapi_user_internal_with_notifications(
         }
     }
     with run_as_superuser():
-        edit_users(user_data)
+        edit_users(user_object)
 
-    assert _load_internal_attributes(UserId(name)) == {
+    assert _load_internal_attributes(name) == {
         "alias": "KPECYCq79E",
         "customer": "provider",
         "pager": "",
@@ -498,7 +497,7 @@ def test_openapi_user_internal_auth_handling(
 
     name = UserId("foo")
 
-    user_data = {
+    user_object: UserObject = {
         name: {
             "attributes": {
                 "ui_theme": None,
@@ -526,7 +525,7 @@ def test_openapi_user_internal_auth_handling(
     }
 
     with run_as_superuser():
-        edit_users(user_data)
+        edit_users(user_object)
 
     assert _load_internal_attributes(name) == {
         "alias": "Foo Bar",
@@ -653,8 +652,8 @@ def test_managed_global_internal(
         "cmk.gui.watolib.global_settings.rulebased_notifications_enabled", lambda: True
     )
 
-    user_data = {
-        "user": {
+    user_object: UserObject = {
+        UserId("user"): {
             "attributes": {
                 "ui_theme": None,
                 "ui_sidebar_position": None,
@@ -678,7 +677,7 @@ def test_managed_global_internal(
         }
     }
     with run_as_superuser():
-        edit_users(user_data)
+        edit_users(user_object)
     user_internal = _load_user(UserId("user"))
     user_endpoint_attrs = complement_customer(_internal_to_api_format(user_internal))
     assert user_endpoint_attrs["customer"] == "global"
@@ -758,8 +757,8 @@ def test_managed_idle_internal(
     )
     username, _secret = with_automation_user
 
-    user_data = {
-        "user": {
+    user_object: UserObject = {
+        UserId("user"): {
             "attributes": {
                 "ui_theme": None,
                 "ui_sidebar_position": None,
@@ -783,7 +782,7 @@ def test_managed_idle_internal(
         }
     }
     with run_as_superuser():
-        edit_users(user_data)
+        edit_users(user_object)
 
     user_internal = _load_user(UserId("user"))
     user_endpoint_attrs = complement_customer(_internal_to_api_format(user_internal))

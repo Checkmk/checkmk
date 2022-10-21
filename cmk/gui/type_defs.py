@@ -141,14 +141,23 @@ class UserSpec(TypedDict, total=False):
     serial: int
     service_notification_options: str
     session_info: dict[SessionId, SessionInfo]
-    show_mode: str
-    start_url: str
+    show_mode: str | None
+    start_url: str | None
     two_factor_credentials: TwoFactorCredentials
     ui_sidebar_position: Any  # TODO: Improve this
     ui_theme: Any  # TODO: Improve this
     user_id: UserId
     user_scheme_serial: int
+    nav_hide_icons_title: Literal["hide"] | None
+    icons_per_item: Literal["entry"] | None
 
+
+class UserObjectValue(TypedDict, total=True):
+    attributes: UserSpec
+    is_new_user: bool
+
+
+UserObject = dict[UserId, UserObjectValue]
 
 Users = dict[UserId, UserSpec]  # TODO: Improve this type
 

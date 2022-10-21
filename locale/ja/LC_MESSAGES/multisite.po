@@ -48515,13 +48515,6 @@ msgstr ""
 msgid "This check monitors count and age of mails in mailboxes."
 msgstr "このチェックは、メールボックス内のメールの数と経過時間を監視します。"
 
-msgid ""
-"This check monitors how often database objects in a PostgreSQL Database are "
-"accessed"
-msgstr ""
-"このチェックは、PostgreSQLデータベース内のデータベースオブジェクトがアクセス"
-"される頻度を監視します"
-
 msgid "This check monitors locking related information of MSSQL tablespaces."
 msgstr "このチェックは、MSSQLテーブルスペースのロック関連情報を監視します。"
 
@@ -48555,6 +48548,13 @@ msgid ""
 msgstr ""
 "このチェックは、過去60分間のORACLEデータベースインスタンスのログスイッチの数"
 "を監視します。上限と下限のレベルを設定できます。"
+
+#, fuzzy
+msgid ""
+"This check monitors the size of and the accesses to a PostgreSQL database."
+msgstr ""
+"このチェックは、PostgreSQLのアクティブセッションとアイドルセッションの現在の"
+"数を監視します"
 
 msgid "This check returns CRIT if the connection to the remote site failed."
 msgstr "このチェックは、リモートサイトへの接続が失敗した場合にCRITを返します。"
@@ -61222,6 +61222,13 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#~ msgid ""
+#~ "This check monitors how often database objects in a PostgreSQL Database "
+#~ "are accessed"
+#~ msgstr ""
+#~ "このチェックは、PostgreSQLデータベース内のデータベースオブジェクトがアクセ"
+#~ "スされる頻度を監視します"
 
 #~ msgid "Disabled extensions"
 #~ msgstr "無効にされた拡張機能"

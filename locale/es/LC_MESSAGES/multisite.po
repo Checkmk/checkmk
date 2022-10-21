@@ -51249,13 +51249,6 @@ msgstr ""
 "Esta comprobación controla el recuento y la antigüedad de los correos en los "
 "buzones."
 
-msgid ""
-"This check monitors how often database objects in a PostgreSQL Database are "
-"accessed"
-msgstr ""
-"Esta comprobación controla la frecuencia con la que se accede a los objetos "
-"de la base de datos PostgreSQL"
-
 msgid "This check monitors locking related information of MSSQL tablespaces."
 msgstr ""
 "Esta comprobación supervisa la información relacionada con el bloqueo de los "
@@ -51293,6 +51286,13 @@ msgstr ""
 "Esta comprobación monitoriza el número de cambios de registro de una "
 "instancia de base de datos ORACLE en los últimos 60 minutos. Se pueden "
 "establecer niveles para los límites superior e inferior."
+
+#, fuzzy
+msgid ""
+"This check monitors the size of and the accesses to a PostgreSQL database."
+msgstr ""
+"Esta comprobación monitoriza el número actual de sesiones activas e "
+"inactivas en PostgreSQL"
 
 msgid "This check returns CRIT if the connection to the remote site failed."
 msgstr ""
@@ -65110,6 +65110,13 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Todos los derechos reservados."
+
+#~ msgid ""
+#~ "This check monitors how often database objects in a PostgreSQL Database "
+#~ "are accessed"
+#~ msgstr ""
+#~ "Esta comprobación controla la frecuencia con la que se accede a los "
+#~ "objetos de la base de datos PostgreSQL"
 
 #~ msgid "Disabled extensions"
 #~ msgstr "Extensiones deshabilitadas"

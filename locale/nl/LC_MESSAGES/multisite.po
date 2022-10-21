@@ -50821,13 +50821,6 @@ msgstr ""
 "Deze controle controleert het aantal en de leeftijd van de mails in de "
 "mailboxen."
 
-msgid ""
-"This check monitors how often database objects in a PostgreSQL Database are "
-"accessed"
-msgstr ""
-"Deze controle controleert hoe vaak databaseobjecten in een PostgreSQL "
-"Database worden benaderd"
-
 msgid "This check monitors locking related information of MSSQL tablespaces."
 msgstr ""
 "Deze controle controleert locking gerelateerde informatie van MSSQL "
@@ -50864,6 +50857,13 @@ msgstr ""
 "Deze controle controleert het aantal logboekwisselingen van een ORACLE "
 "database instantie in de laatste 60 minuten. U kunt niveaus instellen voor "
 "boven- en ondergrenzen."
+
+#, fuzzy
+msgid ""
+"This check monitors the size of and the accesses to a PostgreSQL database."
+msgstr ""
+"Deze controle controleert het huidige aantal actieve en inactieve sessies op "
+"PostgreSQL"
 
 msgid "This check returns CRIT if the connection to the remote site failed."
 msgstr ""
@@ -64584,6 +64584,13 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid ""
+#~ "This check monitors how often database objects in a PostgreSQL Database "
+#~ "are accessed"
+#~ msgstr ""
+#~ "Deze controle controleert hoe vaak databaseobjecten in een PostgreSQL "
+#~ "Database worden benaderd"
 
 #~ msgid "Disabled extensions"
 #~ msgstr "Uitgeschakelde extensies"

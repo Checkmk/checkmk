@@ -48331,11 +48331,6 @@ msgstr ""
 msgid "This check monitors count and age of mails in mailboxes."
 msgstr ""
 
-msgid ""
-"This check monitors how often database objects in a PostgreSQL Database are "
-"accessed"
-msgstr ""
-
 msgid "This check monitors locking related information of MSSQL tablespaces."
 msgstr ""
 
@@ -48360,6 +48355,10 @@ msgid ""
 "This check monitors the number of log switches of an ORACLE database "
 "instance in the last 60 minutes. You can set levels for upper and lower "
 "bounds."
+msgstr ""
+
+msgid ""
+"This check monitors the size of and the accesses to a PostgreSQL database."
 msgstr ""
 
 msgid "This check returns CRIT if the connection to the remote site failed."

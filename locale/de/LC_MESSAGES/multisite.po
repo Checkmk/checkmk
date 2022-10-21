@@ -50893,13 +50893,6 @@ msgstr "Dieser Check überwacht konfigurierte Domain-Backups in Plesk."
 msgid "This check monitors count and age of mails in mailboxes."
 msgstr "Dieser Check überwacht Anzahl und Alter von Mails in Maiulboxen."
 
-msgid ""
-"This check monitors how often database objects in a PostgreSQL Database are "
-"accessed"
-msgstr ""
-"Dieser Check überwacht wie oft auf Datenbankobjekte in PostgreSQL "
-"Datenbanken zugegriffen wird"
-
 msgid "This check monitors locking related information of MSSQL tablespaces."
 msgstr "Dieser Check überwacht Sperrinformationen von MSSQL Tabellen."
 
@@ -50934,6 +50927,13 @@ msgstr ""
 "Dieser Check überwacht die Anzahl von Log Switches von ORACLE Datenbanken "
 "innerhalb der letzten 60 Minuten. Sie können Schwellwerte für hoch und tief "
 "setzen."
+
+#, fuzzy
+msgid ""
+"This check monitors the size of and the accesses to a PostgreSQL database."
+msgstr ""
+"Dieser Check überwacht die Anzahl von aktiven und unbeschäftigten Sitzungen "
+"von PostgreSQL"
 
 msgid "This check returns CRIT if the connection to the remote site failed."
 msgstr ""
@@ -64654,6 +64654,13 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid ""
+#~ "This check monitors how often database objects in a PostgreSQL Database "
+#~ "are accessed"
+#~ msgstr ""
+#~ "Dieser Check überwacht wie oft auf Datenbankobjekte in PostgreSQL "
+#~ "Datenbanken zugegriffen wird"
 
 #~ msgid "Disabled extensions"
 #~ msgstr "Deaktivierte Erweiterungen"

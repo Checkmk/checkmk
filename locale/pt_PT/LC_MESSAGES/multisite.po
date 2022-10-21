@@ -51203,13 +51203,6 @@ msgid "This check monitors count and age of mails in mailboxes."
 msgstr ""
 "Este cheque monitora a contagem e a idade dos e-mails nas caixas de correio."
 
-msgid ""
-"This check monitors how often database objects in a PostgreSQL Database are "
-"accessed"
-msgstr ""
-"Esta verificação monitora a freqüência com que os objetos de banco de dados "
-"em um banco de dados PostgreSQL são acessados"
-
 msgid "This check monitors locking related information of MSSQL tablespaces."
 msgstr ""
 "Esta verificação monitoriza a informação relacionada com o bloqueio de "
@@ -51246,6 +51239,13 @@ msgstr ""
 "Esta verificação monitoriza o número de interruptores de registo de uma "
 "instância da base de dados ORACLE nos últimos 60 minutos. Você pode definir "
 "níveis para os limites superior e inferior."
+
+#, fuzzy
+msgid ""
+"This check monitors the size of and the accesses to a PostgreSQL database."
+msgstr ""
+"Esta verificação monitora o número atual de sessões ativas e ociosas no "
+"PostgreSQL"
 
 msgid "This check returns CRIT if the connection to the remote site failed."
 msgstr "Esta verificação devolve o CRIT se a ligação ao local remoto falhar."
@@ -64920,6 +64920,13 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
+
+#~ msgid ""
+#~ "This check monitors how often database objects in a PostgreSQL Database "
+#~ "are accessed"
+#~ msgstr ""
+#~ "Esta verificação monitora a freqüência com que os objetos de banco de "
+#~ "dados em um banco de dados PostgreSQL são acessados"
 
 #~ msgid "Disabled extensions"
 #~ msgstr "Extensões para deficientes"

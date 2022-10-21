@@ -17,7 +17,7 @@ from six import ensure_str
 from livestatus import SiteConfiguration, SiteId
 
 import cmk.utils.render as render
-from cmk.utils.license_usage import get_license_usage_report_validity, LicenseUsageReportValidity
+from cmk.utils.licensing import get_license_usage_report_validity, LicenseUsageReportValidity
 
 import cmk.gui.forms as forms
 import cmk.gui.watolib.changes as _changes

@@ -43,8 +43,8 @@ import cmk.utils.paths
 import cmk.utils.render as render
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
-from cmk.utils.license_usage import save_extensions
-from cmk.utils.license_usage.export import LicenseUsageExtensions
+from cmk.utils.licensing import save_extensions
+from cmk.utils.licensing.export import LicenseUsageExtensions
 from cmk.utils.site import omd_site
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation

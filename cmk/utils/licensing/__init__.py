@@ -22,7 +22,7 @@ import livestatus
 
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
-from cmk.utils.license_usage.export import (
+from cmk.utils.licensing.export import (
     LicenseUsageExtensions,
     LicenseUsageHistoryDumpVersion,
     LicenseUsageHistoryWithSiteHash,

@@ -4,6 +4,7 @@
 
 use crate::{agent_receiver_api, certs, config, constants, site_spec};
 use anyhow::{Context, Result as AnyhowResult};
+use log::debug;
 use serde::ser::SerializeStruct;
 use serde_with::DisplayFromStr;
 
@@ -383,6 +384,7 @@ pub fn status(
     json: bool,
     query_remote: bool,
 ) -> AnyhowResult<()> {
+    debug!("Mode status started");
     println!(
         "{}",
         _status(
@@ -397,6 +399,7 @@ pub fn status(
             }
         )?
     );
+    debug!("Mode status finished");
     Ok(())
 }
 

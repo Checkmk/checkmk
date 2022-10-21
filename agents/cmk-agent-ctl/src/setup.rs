@@ -9,6 +9,8 @@ use super::{cli, constants, types};
 use anyhow::Context;
 use anyhow::Result as AnyhowResult;
 use clap::Parser;
+#[cfg(windows)]
+use flexi_logger::FileSpec;
 use log::debug;
 #[cfg(windows)]
 use log::info;
@@ -159,6 +161,14 @@ fn init_logging(level: &str) -> Result<flexi_logger::LoggerHandle, flexi_logger:
 }
 
 #[cfg(windows)]
+fn make_log_file_spec() -> FileSpec {
+    FileSpec::default()
+        .directory(env::var(constants::ENV_AGENT_LOG_DIR).unwrap_or_else(|_| ".".to_owned()))
+        .suppress_timestamp()
+        .basename("cmk-agent-ctl")
+}
+
+#[cfg(windows)]
 fn init_logging(
     level: &str,
     duplicate_level: flexi_logger::Duplicate,
@@ -171,6 +181,9 @@ fn init_logging(
         }
         _ => logger.log_to_stderr(),
     };
+    if env::var(constants::ENV_LOG_TO_FILE).unwrap_or_default() == "1" {
+        logger = logger.log_to_file(make_log_file_spec());
+    }
     logger
         .append()
         .format(flexi_logger::detailed_format)
@@ -300,5 +313,14 @@ mod tests {
             p.legacy_pull_path,
             std::path::PathBuf::from(&home).join("allow-legacy-pull")
         );
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn test_make_log_file_spec() {
+        assert_eq!(
+            make_log_file_spec().as_pathbuf(None).to_str().unwrap(),
+            ".\\cmk-agent-ctl.log".to_owned()
+        )
     }
 }

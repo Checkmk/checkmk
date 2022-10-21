@@ -11,6 +11,7 @@ use anyhow::Result as AnyhowResult;
 use assert_cmd::prelude::OutputAssertExt;
 use cmk_agent_ctl::configuration::config;
 use predicates::prelude::predicate;
+use std::fs;
 use std::path::Path;
 
 const SUPPORTED_MODES: [&str; 12] = [
@@ -169,7 +170,7 @@ fn test_fail_socket_missing() {
 }
 
 fn write_legacy_registry(path: impl AsRef<Path>) {
-    std::fs::write(
+    fs::write(
         path,
         r#"{
         "push": {},
@@ -212,4 +213,36 @@ fn test_migration_is_always_triggered() {
             .assert();
         assert!(config::Registry::from_file(&path_registry).is_ok())
     }
+}
+
+fn build_status_command_with_log(
+    test_dir: &tempfile::TempDir,
+    with_log_file: bool,
+) -> assert_cmd::Command {
+    let mut cmd = common::controller_command();
+    cmd.timeout(std::time::Duration::from_secs(5))
+        .env("DEBUG_HOME_DIR", test_dir.path())
+        .env("MK_LOGDIR", test_dir.path())
+        .env(
+            "CMK_AGENT_CTL_LOG_TO_FILE",
+            if with_log_file { "1" } else { "0" },
+        )
+        .arg("status")
+        .arg("--no-query-remote")
+        .arg("-vv");
+    cmd
+}
+
+#[cfg(windows)]
+#[test]
+fn test_log_to_file() {
+    let test_dir = common::setup_test_dir("cmk-agent-ctl-logging");
+    let log_file = test_dir.path().join("cmk-agent-ctl_rCURRENT.log");
+
+    build_status_command_with_log(&test_dir, false).assert();
+    assert!(!log_file.exists());
+    build_status_command_with_log(&test_dir, true).assert();
+    assert!(fs::read_to_string(&log_file)
+        .unwrap()
+        .contains("Mode status"));
 }

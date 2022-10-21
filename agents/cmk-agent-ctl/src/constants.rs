@@ -21,6 +21,12 @@ pub const REGISTRY_FILE: &str = "registered_connections.json";
 pub const LEGACY_PULL_FILE: &str = "allow-legacy-pull";
 pub const CONFIG_FILE: &str = "cmk-agent-ctl.toml";
 
+// ENVIRONMENT
+#[cfg(windows)]
+pub const ENV_AGENT_LOG_DIR: &str = "MK_LOGDIR";
+#[cfg(windows)]
+pub const ENV_LOG_TO_FILE: &str = "CMK_AGENT_CTL_LOG_TO_FILE";
+
 // DIRS
 #[cfg(unix)]
 pub const ETC_DIR: &str = "/etc/check_mk";

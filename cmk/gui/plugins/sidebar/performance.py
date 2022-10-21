@@ -10,6 +10,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.plugins.sidebar.utils import SidebarSnapin, snapin_registry, snapin_site_choice
+from cmk.gui.type_defs import RoleName
 
 
 @snapin_registry.register
@@ -85,7 +86,7 @@ class Performance(SidebarSnapin):
         return True
 
     @classmethod
-    def allowed_roles(cls):
+    def allowed_roles(cls) -> list[RoleName]:
         return [
             "admin",
         ]

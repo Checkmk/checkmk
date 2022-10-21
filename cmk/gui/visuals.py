@@ -48,7 +48,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.utils as utils
 from cmk.gui import hooks
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_main_menu_breadcrumb
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, default_authorized_builtin_role_ids
 from cmk.gui.ctx_stack import g
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKGeneralException, MKUserError
@@ -235,7 +235,7 @@ def declare_visual_permissions(what: VisualTypeName, what_plural: str) -> None:
         "general.see_user_" + what,
         _("See user %s") % what_plural,
         _("Is needed for seeing %s that other users have created.") % what_plural,
-        ["admin", "user", "guest"],
+        default_authorized_builtin_role_ids,
     )
 
     declare_permission(
@@ -552,7 +552,7 @@ def declare_visual_permission(what: VisualTypeName, name: str, visual: T) -> Non
     permname = PermissionName("%s.%s" % (what[:-1], name))
     if visual["public"] and permname not in permission_registry:
         declare_permission(
-            permname, visual["title"], visual["description"], ["admin", "user", "guest"]
+            permname, visual["title"], visual["description"], default_authorized_builtin_role_ids
         )
 
 

@@ -22,6 +22,7 @@ from cmk.gui.plugins.sidebar.utils import (
     SidebarSnapin,
     snapin_registry,
 )
+from cmk.gui.type_defs import RoleName
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri_contextless
@@ -127,7 +128,7 @@ class SiteStatus(SidebarSnapin):
         end_footnote_links()
 
     @classmethod
-    def allowed_roles(cls):
+    def allowed_roles(cls) -> list[RoleName]:
         return ["user", "admin"]
 
     def page_handlers(self):

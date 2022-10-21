@@ -19,7 +19,12 @@ import cmk.utils.paths
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.permissions as permissions
-from cmk.gui.config import active_config, builtin_role_ids
+from cmk.gui.config import (
+    active_config,
+    builtin_role_ids,
+    default_authorized_builtin_role_ids,
+    default_unauthorized_builtin_role_ids,
+)
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.logged_in import LoggedInNobody, LoggedInSuperUser, LoggedInUser
 from cmk.gui.logged_in import user as global_user
@@ -244,6 +249,8 @@ def fixture_monitoring_user() -> Iterator[LoggedInUser]:
     # Favorites set in the commands menu:
     user_dir.joinpath("favorites.mk").write_text(str(MONITORING_USER_FAVORITES))
 
+    assert default_authorized_builtin_role_ids == ["user", "admin", "guest"]
+    assert default_unauthorized_builtin_role_ids == []
     assert builtin_role_ids == ["user", "admin", "guest"]
     assert "test" not in active_config.admin_users
 

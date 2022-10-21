@@ -10,6 +10,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.plugins.sidebar.utils import SidebarSnapin, snapin_registry, snapin_width
+from cmk.gui.type_defs import RoleName
 from cmk.gui.utils.theme import theme
 
 
@@ -41,7 +42,7 @@ class Speedometer(SidebarSnapin):
         html.javascript("cmk.sidebar.speedometer_show_speed(0, 0, 0);")
 
     @classmethod
-    def allowed_roles(cls):
+    def allowed_roles(cls) -> list[RoleName]:
         return ["admin"]
 
     def page_handlers(self):

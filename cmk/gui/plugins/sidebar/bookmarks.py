@@ -24,7 +24,6 @@ from cmk.gui.plugins.sidebar.utils import (
     SidebarSnapin,
     snapin_registry,
 )
-from cmk.gui.type_defs import RoleName
 from cmk.gui.utils import is_allowed_url
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import (
@@ -326,10 +325,6 @@ class Bookmarks(SidebarSnapin):
                     bookmark_list = topics.setdefault(topic, [])
                     bookmark_list += bookmarks
         return sorted(topics.items())
-
-    @classmethod
-    def allowed_roles(cls) -> list[RoleName]:
-        return ["admin", "user", "guest"]
 
     def _ajax_add_bookmark(self) -> None:
         title = request.var("title")

@@ -40,6 +40,7 @@ import cmk.gui.sites as sites
 import cmk.gui.userdb as userdb
 import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_main_menu_breadcrumb
+from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.default_permissions import PermissionSectionGeneral
 from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
@@ -732,7 +733,7 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
                 title=_l("See user %s") % title_lower,
                 description=_l("Is needed for seeing %s that other users have created.")
                 % title_lower,
-                defaults=["admin", "user", "guest"],
+                defaults=default_authorized_builtin_role_ids,
             )
         )
 
@@ -870,7 +871,7 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
                     name=page.name(),
                     title=page.title(),
                     description=page.description(),
-                    defaults=["admin", "user", "guest"],
+                    defaults=default_authorized_builtin_role_ids,
                 )
             )
 

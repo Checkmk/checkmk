@@ -45,7 +45,7 @@ PermissionGeneralUse = permission_registry.register(
         name="use",
         title=_l("Use the GUI at all"),
         description=_l("Users without this permission are not let in at all"),
-        defaults=config.builtin_role_ids,
+        defaults=config.default_authorized_builtin_role_ids,
     )
 )
 
@@ -85,7 +85,7 @@ permission_registry.register(
         description=_l(
             "Interactively change the number of columns being displayed by a view (does not edit or customize the view)"
         ),
-        defaults=config.builtin_role_ids,
+        defaults=config.default_authorized_builtin_role_ids,
     )
 )
 
@@ -111,7 +111,7 @@ permission_registry.register(
             "For example time stamp columns can be displayed absolute, relative or "
             "in a mixed style. This permission allows the user to modify display options"
         ),
-        defaults=config.builtin_role_ids,
+        defaults=config.default_authorized_builtin_role_ids,
     )
 )
 
@@ -134,7 +134,7 @@ permission_registry.register(
         name="see_sidebar",
         title=_l("Use Checkmk sidebar"),
         description=_l("Without this permission the Checkmk sidebar will be invisible"),
-        defaults=config.builtin_role_ids,
+        defaults=config.default_authorized_builtin_role_ids,
     )
 )
 
@@ -164,7 +164,7 @@ permission_registry.register(
         name="see_availability",
         title=_l("See the availability"),
         description=_l("See the availability views of hosts and services"),
-        defaults=config.builtin_role_ids,
+        defaults=config.default_authorized_builtin_role_ids,
     )
 )
 
@@ -174,7 +174,7 @@ permission_registry.register(
         name="csv_export",
         title=_l("Use CSV export"),
         description=_l("Export data of views using the CSV export"),
-        defaults=config.builtin_role_ids,
+        defaults=config.default_authorized_builtin_role_ids,
     )
 )
 
@@ -245,7 +245,7 @@ permission_registry.register(
         name="logout",
         title=_l("Logout"),
         description=_l("Permits the user to logout."),
-        defaults=config.builtin_role_ids,
+        defaults=config.default_authorized_builtin_role_ids,
     )
 )
 
@@ -325,7 +325,7 @@ permission_registry.register(
         description=_l(
             "Show the column for stale host and service checks in the tactical overview snapin."
         ),
-        defaults=config.builtin_role_ids,
+        defaults=config.default_authorized_builtin_role_ids,
     )
 )
 
@@ -352,6 +352,6 @@ permission_registry.register(
             "This dashboard uses the parent relationships of your hosts to "
             "display a hierarchical map."
         ),
-        defaults=config.builtin_role_ids,
+        defaults=config.default_authorized_builtin_role_ids,
     )
 )

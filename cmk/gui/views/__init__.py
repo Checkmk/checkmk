@@ -43,7 +43,11 @@ import cmk.gui.utils as utils
 import cmk.gui.view_utils
 import cmk.gui.views.datasource_selection as _datasource_selection
 import cmk.gui.visuals as visuals
-from cmk.gui.config import active_config, builtin_role_ids, register_post_config_load_hook
+from cmk.gui.config import (
+    active_config,
+    default_authorized_builtin_role_ids,
+    register_post_config_load_hook,
+)
 from cmk.gui.ctx_stack import g
 from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.display_options import display_options
@@ -366,7 +370,7 @@ def load_plugins() -> None:
             "view.%s" % name,
             format_view_title(name, view_spec),
             "%s - %s" % (name, _u(str(view_spec["description"]))),
-            builtin_role_ids,
+            default_authorized_builtin_role_ids,
         )
 
     # Make sure that custom views also have permissions

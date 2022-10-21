@@ -40,7 +40,7 @@ from cmk.gui.breadcrumb import (
     make_current_page_breadcrumb_item,
     make_topic_breadcrumb,
 )
-from cmk.gui.config import builtin_role_ids
+from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.exceptions import (
     HTTPRedirect,
@@ -314,7 +314,7 @@ def load_plugins() -> None:
             # would have to manually adjust the permissions on the main dashboard on his own.
             default_permissions = permission_registry["general.see_all"].defaults
         else:
-            default_permissions = builtin_role_ids
+            default_permissions = default_authorized_builtin_role_ids
 
         declare_permission(
             "dashboard.%s" % name,

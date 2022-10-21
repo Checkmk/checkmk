@@ -25,10 +25,6 @@ class NagVisMaps(SidebarSnapin):
         return _("List of available NagVis maps")
 
     @classmethod
-    def allowed_roles(cls):
-        return ["admin", "user", "guest"]
-
-    @classmethod
     def refresh_regularly(cls):
         return False
 

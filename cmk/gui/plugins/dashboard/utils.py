@@ -41,7 +41,7 @@ from cmk.utils.type_defs import UserId
 import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
-from cmk.gui.config import active_config, builtin_role_ids
+from cmk.gui.config import active_config, default_authorized_builtin_role_ids
 from cmk.gui.exceptions import MKGeneralException, MKMissingDataError, MKTimeout, MKUserError
 from cmk.gui.figures import create_figures_response, FigureResponseData
 from cmk.gui.hooks import request_memoize
@@ -61,6 +61,7 @@ from cmk.gui.type_defs import (
     Icon,
     LinkFromSpec,
     PainterSpec,
+    RoleName,
     Row,
     SingleInfos,
     SorterSpec,
@@ -334,8 +335,8 @@ class Dashlet(abc.ABC, Generic[T]):
         return None
 
     @classmethod
-    def allowed_roles(cls) -> List[str]:
-        return builtin_role_ids
+    def allowed_roles(cls) -> list[RoleName]:
+        return default_authorized_builtin_role_ids
 
     @classmethod
     def add_url(cls) -> str:

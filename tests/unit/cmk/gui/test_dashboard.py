@@ -11,7 +11,7 @@ from _pytest.monkeypatch import MonkeyPatch
 import cmk.utils.version as cmk_version
 
 import cmk.gui.dashboard as dashboard  # pylint: disable=reimported
-from cmk.gui.config import builtin_role_ids
+from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.htmllib.html import html
 from cmk.gui.plugins.dashboard.utils import DashboardConfig, DashletConfig
 
@@ -192,7 +192,7 @@ def test_dashlet_type_defaults() -> None:
     assert dashboard.Dashlet.validate_parameters_func() is None
     assert dashboard.Dashlet.styles() is None
     assert dashboard.Dashlet.script() is None
-    assert dashboard.Dashlet.allowed_roles() == builtin_role_ids
+    assert dashboard.Dashlet.allowed_roles() == default_authorized_builtin_role_ids
 
     assert DummyDashlet.add_url() == "edit_dashlet.py?back=index.py%3Fedit%3D1&type=dummy"
 

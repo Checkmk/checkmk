@@ -8,7 +8,7 @@ from typing import Callable, Sequence, Type, Union
 
 import cmk.utils.plugin_registry
 
-from cmk.gui.type_defs import PermissionName
+from cmk.gui.type_defs import PermissionName, RoleName
 from cmk.gui.utils.speaklater import LazyString
 
 
@@ -58,7 +58,7 @@ class Permission(abc.ABC):
         name: str,
         title: Union[str, LazyString],
         description: Union[str, LazyString],
-        defaults: Sequence[str],
+        defaults: Sequence[RoleName],
     ) -> None:
         self._section = section
         self._name = name
@@ -152,7 +152,7 @@ def declare_permission(
     name: PermissionName,
     title: str | LazyString,
     description: str | LazyString,
-    defaults: Sequence[PermissionName],
+    defaults: Sequence[RoleName],
 ) -> None:
     section_name, permission_name = name.split(".", 1)
 

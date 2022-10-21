@@ -11,7 +11,7 @@ from dataclasses import asdict, dataclass, field, fields, make_dataclass
 from functools import partial
 from pathlib import Path
 from types import ModuleType
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, Final, List
 
 from livestatus import SiteConfiguration, SiteConfigurations
 
@@ -26,7 +26,7 @@ from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKConfigError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.config.base import CREConfig
-from cmk.gui.type_defs import Key
+from cmk.gui.type_defs import Key, RoleName
 
 if not cmk_version.is_raw_edition():
     from cmk.gui.cee.plugins.config.cee import CEEConfig  # pylint: disable=no-name-in-module
@@ -57,7 +57,12 @@ else:
 #   '----------------------------------------------------------------------'
 
 # hard coded in various permissions
-builtin_role_ids: List[str] = ["user", "admin", "guest"]
+default_authorized_builtin_role_ids: Final[list[RoleName]] = ["user", "admin", "guest"]
+default_unauthorized_builtin_role_ids: Final[list[RoleName]] = []
+builtin_role_ids: Final[list[RoleName]] = [
+    *default_authorized_builtin_role_ids,
+    *default_unauthorized_builtin_role_ids,
+]
 
 
 @dataclass

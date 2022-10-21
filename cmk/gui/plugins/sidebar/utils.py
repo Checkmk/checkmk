@@ -14,6 +14,7 @@ from cmk.utils.site import url_prefix
 
 import cmk.gui.pages
 import cmk.gui.pagetypes as pagetypes
+from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -105,8 +106,8 @@ class SidebarSnapin(abc.ABC):
         return "sidesnap.%s" % cls.type_name()
 
     @classmethod
-    def allowed_roles(cls) -> List[RoleName]:
-        return ["admin", "user", "guest"]
+    def allowed_roles(cls) -> list[RoleName]:
+        return default_authorized_builtin_role_ids
 
     @classmethod
     def may_see(cls) -> bool:

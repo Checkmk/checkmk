@@ -13,7 +13,7 @@ from cmk.utils.type_defs import HostName
 
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.config import active_config, builtin_role_ids
+from cmk.gui.config import active_config, default_authorized_builtin_role_ids
 from cmk.gui.data_source import ABCDataSource, data_source_registry, row_id
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -172,7 +172,7 @@ permission_registry.register(
             "If a user lacks this permission then he/she can see only those events that "
             "originate from a host that he/she is a contact for."
         ),
-        defaults=builtin_role_ids,
+        defaults=default_authorized_builtin_role_ids,
     )
 )
 
@@ -186,7 +186,7 @@ permission_registry.register(
             "controls wether he/she can see events that are not related to a host in the monitoring "
             "and that do not have been assigned specific contact groups to via the event rule."
         ),
-        defaults=builtin_role_ids,
+        defaults=default_authorized_builtin_role_ids,
     )
 )
 
@@ -199,7 +199,7 @@ permission_registry.register(
             "Whether or not the user is permitted to see the number of open events in the "
             "sidebar element 'Overview'."
         ),
-        defaults=builtin_role_ids,
+        defaults=default_authorized_builtin_role_ids,
     )
 )
 

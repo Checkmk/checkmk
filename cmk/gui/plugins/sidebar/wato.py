@@ -24,7 +24,7 @@ from cmk.gui.plugins.sidebar.utils import (
     snapin_registry,
 )
 from cmk.gui.plugins.wato.utils.main_menu import main_module_registry, MainModuleTopic
-from cmk.gui.type_defs import Choices, MegaMenu, TopicMenuItem, TopicMenuTopic, ViewSpec
+from cmk.gui.type_defs import Choices, MegaMenu, RoleName, TopicMenuItem, TopicMenuTopic, ViewSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.view_store import get_permitted_views
 from cmk.gui.watolib.activate_changes import ActivateChanges
@@ -178,7 +178,7 @@ class SidebarSnapinWATOMini(SidebarSnapin):
         return _("Access to the setup menu with only icons (saves space)")
 
     @classmethod
-    def allowed_roles(cls):
+    def allowed_roles(cls) -> list[RoleName]:
         return ["admin", "user"]
 
     # refresh pending changes, if other user modifies something

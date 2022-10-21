@@ -261,7 +261,7 @@ def add_rule_pack_proxies(file_names: Iterable[str]) -> None:
     save_rule_packs(rule_packs)
 
 
-def override_rule_pack_proxy(rule_pack_nr: str, rule_packs: dict[str, Any]) -> None:
+def override_rule_pack_proxy(rule_pack_nr: int, rule_packs: list[ECRulePack]) -> None:
     """
     Replaces a MkpRulePackProxy by a working copy of the underlying rule pack.
     """
@@ -271,6 +271,7 @@ def override_rule_pack_proxy(rule_pack_nr: str, rule_packs: dict[str, Any]) -> N
             "Expected an instance of %s got %s"
             % (MkpRulePackProxy.__name__, proxy.__class__.__name__)
         )
+    assert proxy.rule_pack is not None
     rule_packs[rule_pack_nr] = copy.deepcopy(proxy.rule_pack)
 
 

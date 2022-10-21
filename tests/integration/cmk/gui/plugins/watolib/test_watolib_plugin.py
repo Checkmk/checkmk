@@ -28,7 +28,7 @@ class ConfigDomainTest(ABCConfigDomain):
     def activate(self):
         pass
 
-    def default_globals(self) -> Mapping[str, Any]:
+    def default_globals(self):
         return {}
 """
 

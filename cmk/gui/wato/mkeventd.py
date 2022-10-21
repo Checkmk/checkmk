@@ -3023,7 +3023,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
             return redirect(self.mode_url())
 
         if filename := request.var("_delete"):
-            if info := self._load_snmp_mibs(cmk.gui.mkeventd.mib_upload_dir()).get(Path(filename)):
+            if info := self._load_snmp_mibs(cmk.gui.mkeventd.mib_upload_dir()).get(filename):
                 self._delete_mib(filename, info.name)
         elif request.var("_bulk_delete_custom_mibs"):
             self._bulk_delete_custom_mibs_after_confirm()
@@ -3032,15 +3032,15 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
 
     def _bulk_delete_custom_mibs_after_confirm(self) -> None:
         custom_mibs = self._load_snmp_mibs(cmk.gui.mkeventd.mib_upload_dir())
-        selected_custom_mibs: list[Path] = []
+        selected_custom_mibs: list[str] = []
         for varname, _value in request.itervars(prefix="_c_mib_"):
             if html.get_checkbox(varname):
-                filename = Path(varname.split("_c_mib_")[-1])
+                filename = varname.split("_c_mib_")[-1]
                 if filename in custom_mibs:
                     selected_custom_mibs.append(filename)
 
         for filename in selected_custom_mibs:
-            self._delete_mib(str(filename), custom_mibs[filename].name)
+            self._delete_mib(filename, custom_mibs[filename].name)
 
     def _delete_mib(self, filename: str, mib_name: str) -> None:
         self._add_change("delete-mib", _("Deleted MIB %s") % filename)
@@ -3091,15 +3091,13 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                 table.cell(_("Actions"), css=["buttons"])
                 if is_custom_dir:
                     delete_url = make_confirm_link(
-                        url=make_action_link(
-                            [("mode", "mkeventd_mibs"), ("_delete", str(filename))]
-                        ),
+                        url=make_action_link([("mode", "mkeventd_mibs"), ("_delete", filename)]),
                         message=_("Do you really want to delete the MIB file <b>%s</b>?")
-                        % str(filename),
+                        % filename,
                     )
                     html.icon_button(delete_url, _("Delete this MIB"), "delete")
 
-                table.cell(_("Filename"), str(filename))
+                table.cell(_("Filename"), filename)
                 table.cell(_("MIB"), mib.name)
                 table.cell(_("Organization"), mib.organization)
                 table.cell(_("Size"), cmk.utils.render.fmt_bytes(mib.size), css=["number"])
@@ -3108,9 +3106,9 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
             html.hidden_fields()
             html.end_form()
 
-    def _load_snmp_mibs(self, directory: Path) -> Mapping[Path, MIBInfo]:
+    def _load_snmp_mibs(self, directory: Path) -> Mapping[str, MIBInfo]:
         return {
-            path: self._parse_snmp_mib_header(path)
+            path.name: self._parse_snmp_mib_header(path)
             for path in directory.glob("*")
             if not path.is_dir() and not path.name.startswith(".")
         }

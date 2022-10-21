@@ -157,7 +157,10 @@ class Rule(TypedDict, total=False):
     cancel_application: str
     cancel_priority: tuple[int, int]
     contact_groups: ContactGroups
+    count: int
+    disabled: bool
     expect: Expect
+    hits: int
     id: str
     invert_matching: bool
     livetime: tuple[Seconds, Iterable[Literal["open", "ack"]]]
@@ -185,8 +188,9 @@ class ECRulePackSpec(TypedDict, total=False):
     id: str
     title: str
     disabled: bool
-    rules: Collection[Any]  # TODO: Improve this!
-    hits: int
+    rules: Collection[Any]  # TODO: This should acutally be Collection[Rule]
+    hits: int  # TODO: This is a GUI-only feature, which doesn't belong here at all.
+    customer: str  # TODO: This is a GUI-only feature, which doesn't belong here at all.
 
 
 class MkpRulePackBindingError(MKException):

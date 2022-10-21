@@ -86,7 +86,7 @@ from cmk.gui.site_config import (  # noqa: F401 # pylint: disable=unused-import
     get_site_config,
     is_wato_slave_site,
 )
-from cmk.gui.type_defs import Choices
+from cmk.gui.type_defs import Choices, ChoiceText
 from cmk.gui.user_sites import get_activation_site_choices
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.flashed_messages import flash  # noqa: F401 # pylint: disable=unused-import
@@ -290,8 +290,12 @@ def _list_user_icons_and_actions() -> DropdownChoiceEntries:
 # TODO: Refactor this and all other childs of ElementSelection() to base on
 #       DropdownChoice(). Then remove ElementSelection()
 class _GroupSelection(ElementSelection):
-    def __init__(  # type:ignore[no-untyped-def]
-        self, what, choices, no_selection=None, **kwargs
+    def __init__(
+        self,
+        what: str,
+        choices: Callable[[], Choices],
+        no_selection: ChoiceText | None = None,
+        **kwargs: Any,
     ) -> None:
         kwargs.setdefault(
             "empty_text",
@@ -315,32 +319,32 @@ class _GroupSelection(ElementSelection):
         return dict(elements)
 
 
-def ContactGroupSelection(**kwargs):
+def ContactGroupSelection(**kwargs: Any) -> ElementSelection:
     """Select a single contact group"""
     return _GroupSelection("contact", choices=_sorted_contact_group_choices, **kwargs)
 
 
-def ServiceGroupSelection(**kwargs):
+def ServiceGroupSelection(**kwargs: Any) -> ElementSelection:
     """Select a single service group"""
     return _GroupSelection("service", choices=_sorted_service_group_choices, **kwargs)
 
 
-def HostGroupSelection(**kwargs):
+def HostGroupSelection(**kwargs: Any) -> ElementSelection:
     """Select a single host group"""
     return _GroupSelection("host", choices=_sorted_host_group_choices, **kwargs)
 
 
-def ContactGroupChoice(**kwargs):
+def ContactGroupChoice(**kwargs: Any) -> DualListChoice:
     """Select multiple contact groups"""
     return DualListChoice(choices=_sorted_contact_group_choices, **kwargs)  # type: ignore[arg-type]
 
 
-def ServiceGroupChoice(**kwargs):
+def ServiceGroupChoice(**kwargs: Any) -> DualListChoice:
     """Select multiple service groups"""
     return DualListChoice(choices=_sorted_service_group_choices, **kwargs)  # type: ignore[arg-type]
 
 
-def HostGroupChoice(**kwargs):
+def HostGroupChoice(**kwargs: Any) -> DualListChoice:
     """Select multiple host groups"""
     return DualListChoice(choices=_sorted_host_group_choices, **kwargs)  # type: ignore[arg-type]
 

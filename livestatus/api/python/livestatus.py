@@ -1091,7 +1091,7 @@ class MultiSiteConnection(Helpers):
     def set_prepend_site(self, p: bool) -> None:
         self.prepend_site = p
 
-    def set_only_sites(self, sites: OnlySites | None = None) -> None:
+    def set_only_sites(self, sites: OnlySites = None) -> None:
         """Make future queries only contact the given sites.
 
         Provide a list of site IDs to not contact all configured sites, but only the listed

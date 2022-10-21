@@ -6,9 +6,8 @@
 import os
 import subprocess
 import traceback
-from typing import Any, Dict
-from typing import Optional as _Optional
-from typing import Type
+from collections.abc import Mapping
+from typing import Any
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -59,10 +58,10 @@ from cmk.gui.watolib.sites import LivestatusViaTCP
 
 @config_variable_registry.register
 class ConfigVariableSiteAutostart(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainOMD
 
     def ident(self) -> str:
@@ -80,10 +79,10 @@ class ConfigVariableSiteAutostart(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableSiteCore(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainOMD
 
     def ident(self) -> str:
@@ -116,10 +115,10 @@ class ConfigVariableSiteCore(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableSiteLivestatusTCP(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainOMD
 
     def ident(self) -> str:
@@ -141,10 +140,10 @@ class ConfigVariableSiteLivestatusTCP(ConfigVariable):
 
 @config_variable_registry.register
 class ConfigVariableSiteEventConsole(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainOMD
 
     def ident(self) -> str:
@@ -199,7 +198,7 @@ class ConfigDomainDiskspace(ABCConfigDomain):
     def ident(cls) -> ConfigDomainName:
         return "diskspace"
 
-    def activate(self, settings: _Optional[SerializedSettings] = None) -> ConfigurationWarnings:
+    def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
         return []
 
     def config_dir(self):
@@ -253,8 +252,8 @@ class ConfigDomainDiskspace(ABCConfigDomain):
 
         store.save_text_to_file(self.diskspace_config, output)
 
-    def default_globals(self):
-        diskspace_context: Dict[str, Any] = {}
+    def default_globals(self) -> Mapping[str, Any]:
+        diskspace_context: dict[str, Any] = {}
         filename = cmk.utils.paths.omd_root / "bin/diskspace"
         with filename.open(encoding="utf-8") as f:
             code = compile(f.read(), str(filename), "exec")
@@ -266,10 +265,10 @@ class ConfigDomainDiskspace(ABCConfigDomain):
 
 @config_variable_registry.register
 class ConfigVariableSiteDiskspaceCleanup(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainDiskspace
 
     def ident(self) -> str:
@@ -396,7 +395,7 @@ class ConfigDomainApache(ABCConfigDomain):
     def config_dir(self):
         return cmk.utils.paths.default_config_dir + "/apache.d/wato/"
 
-    def activate(self, settings: _Optional[SerializedSettings] = None) -> ConfigurationWarnings:
+    def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
         try:
             self._write_config_file()
 
@@ -437,7 +436,7 @@ class ConfigDomainApache(ABCConfigDomain):
         config.update(self.load(site_specific=True))
         return config
 
-    def default_globals(self):
+    def default_globals(self) -> Mapping[str, Any]:
         return {
             "apache_process_tuning": {
                 "number_of_processes": self._get_value_from_config("MaxClients", int, 64),
@@ -464,10 +463,10 @@ class ConfigDomainApache(ABCConfigDomain):
 
 @config_variable_registry.register
 class ConfigVariableSiteApacheProcessTuning(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainApache
 
     def ident(self) -> str:
@@ -520,7 +519,7 @@ class ConfigDomainRRDCached(ABCConfigDomain):
     def config_dir(self):
         return cmk.utils.paths.default_config_dir + "/rrdcached.d/wato/"
 
-    def activate(self, settings: _Optional[SerializedSettings] = None) -> ConfigurationWarnings:
+    def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
         try:
             self._write_config_file()
 
@@ -559,7 +558,7 @@ class ConfigDomainRRDCached(ABCConfigDomain):
         config.update(self.load(site_specific=True))
         return config
 
-    def default_globals(self):
+    def default_globals(self) -> Mapping[str, Any]:
         return {
             "rrdcached_tuning": {
                 "TIMEOUT": self._get_value_from_config("TIMEOUT", int, 3600),
@@ -589,10 +588,10 @@ class ConfigDomainRRDCached(ABCConfigDomain):
 
 @config_variable_registry.register
 class ConfigVariableSiteRRDCachedTuning(ConfigVariable):
-    def group(self) -> Type[ConfigVariableGroup]:
+    def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
 
-    def domain(self) -> Type[ABCConfigDomain]:
+    def domain(self) -> type[ABCConfigDomain]:
         return ConfigDomainRRDCached
 
     def ident(self) -> str:

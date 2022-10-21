@@ -150,7 +150,7 @@ def check_command_autocompleter(value: str, params: Dict) -> Choices:
 def service_levels_autocompleter(value: str, params: Dict) -> Choices:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get the list of choices"""
-    choices: Choices = mkeventd.service_levels()
+    choices: Choices = [(str(level), descr) for level, descr in mkeventd.service_levels()]
     empty_choices: Choices = [("", "")]
     return empty_choices + _filter_choices(value, choices)
 

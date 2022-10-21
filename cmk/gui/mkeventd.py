@@ -7,11 +7,19 @@ import ast
 import re
 import socket
 import time
+from collections.abc import Iterator, Sequence
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Any
 
-import livestatus
-from livestatus import SiteId
+from livestatus import (
+    LocalConnection,
+    MKLivestatusBadGatewayError,
+    MKLivestatusSocketError,
+    MKLivestatusTableNotFoundError,
+    OnlySites,
+    Query,
+    SiteId,
+)
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
@@ -35,7 +43,7 @@ def mib_upload_dir() -> Path:
     return cmk.utils.paths.local_mib_dir
 
 
-def mib_dirs() -> List[Tuple[Path, str]]:
+def mib_dirs() -> list[tuple[Path, str]]:
     # ASN1 MIB source directory candidates. Non existing dirs are ok.
     return [
         (mib_upload_dir(), _("Custom MIBs")),
@@ -98,11 +106,11 @@ class PermissionSectionEventConsole(PermissionSection):
         return _("Event Console")
 
 
-def service_levels():
+def service_levels() -> Sequence[tuple[int, str]]:
     return active_config.mkeventd_service_levels
 
 
-def action_choices(omit_hidden=False) -> List[Tuple[str, str]]:  # type:ignore[no-untyped-def]
+def action_choices(omit_hidden: bool = False) -> list[tuple[str, str]]:
     # The possible actions are configured in mkeventd.mk,
     # not in multisite.mk (like the service levels). That
     # way we have not direct access to them but need
@@ -125,7 +133,8 @@ def daemon_running() -> bool:
     return _socket_path().exists()
 
 
-def send_event(event) -> str:  # type:ignore[no-untyped-def]
+# TODO: Shouldn't the parameter be an ec.Event? But that has no "site" attribute?!
+def send_event(event: dict[str, Any]) -> str:
     syslog_message_str = repr(
         ec.SyslogMessage(
             facility=event["facility"],
@@ -144,25 +153,25 @@ def send_event(event) -> str:  # type:ignore[no-untyped-def]
     return syslog_message_str
 
 
-def get_local_ec_status():
-    response = livestatus.LocalConnection().query("GET eventconsolestatus")
+def get_local_ec_status() -> dict[str, Any] | None:
+    response = LocalConnection().query("GET eventconsolestatus")
     if len(response) == 1:
         return None  # In case the EC is not running, there may be some
     return dict(zip(response[0], response[1]))
 
 
-def replication_mode():
+def replication_mode() -> str:
     try:
         status = get_local_ec_status()
         if not status:
             return "stopped"
         return status["status_replication_slavemode"]
-    except livestatus.MKLivestatusSocketError:
+    except MKLivestatusSocketError:
         return "stopped"
 
 
 # Only use this for master/slave replication. For status queries use livestatus
-def query_ec_directly(query):
+def query_ec_directly(query: bytes) -> dict[str, Any]:
     try:
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         sock.settimeout(active_config.mkeventd_connect_timeout)
@@ -189,9 +198,7 @@ def query_ec_directly(query):
         )
 
 
-def execute_command(
-    name: str, args: Optional[List[str]] = None, site: Optional[SiteId] = None
-) -> None:
+def execute_command(name: str, args: list[str] | None = None, site: SiteId | None = None) -> None:
     if args:
         formated_args = ";" + ";".join(args)
     else:
@@ -201,26 +208,12 @@ def execute_command(
     sites.live().command(query, site)
 
 
-def get_total_stats(only_sites):
-    stats_keys = [
-        "status_average_message_rate",
-        "status_average_rule_trie_rate",
-        "status_average_rule_hit_rate",
-        "status_average_event_rate",
-        "status_average_connect_rate",
-        "status_average_overflow_rate",
-        "status_average_rule_trie_rate",
-        "status_average_rule_hit_rate",
-        "status_average_processing_time",
-        "status_average_request_time",
-        "status_average_sync_time",
-    ]
-
-    stats_per_site = list(get_stats_per_site(only_sites, stats_keys))
+def get_total_stats(only_sites: OnlySites) -> dict[str, float]:
+    stats_per_site = list(get_stats_per_site(only_sites))
 
     # First simply add rates. Times must then be averaged
     # weighted by message rate or connect rate
-    total_stats: Dict[str, float] = {}
+    total_stats: dict[str, float] = {}
     for row in stats_per_site:
         for key, value in row.items():
             if key.endswith("rate"):
@@ -256,16 +249,26 @@ def get_total_stats(only_sites):
     return total_stats
 
 
-def get_stats_per_site(only_sites, stats_keys):
+def get_stats_per_site(only_sites: OnlySites) -> Iterator[dict[str, float]]:
+    stats_keys = [
+        "status_average_message_rate",
+        "status_average_rule_trie_rate",
+        "status_average_rule_hit_rate",
+        "status_average_event_rate",
+        "status_average_connect_rate",
+        "status_average_overflow_rate",
+        "status_average_rule_trie_rate",
+        "status_average_rule_hit_rate",
+        "status_average_processing_time",
+        "status_average_request_time",
+        "status_average_sync_time",
+    ]
     try:
         sites.live().set_only_sites(only_sites)
         # Do not mark the site as dead in case the Event Console is not available.
-        query = livestatus.Query(
+        query = Query(
             "GET eventconsolestatus\nColumns: %s" % " ".join(stats_keys),
-            suppress_exceptions=(
-                livestatus.MKLivestatusTableNotFoundError,
-                livestatus.MKLivestatusBadGatewayError,
-            ),
+            suppress_exceptions=(MKLivestatusTableNotFoundError, MKLivestatusBadGatewayError),
         )
         for list_row in sites.live().query(query):
             yield dict(zip(stats_keys, list_row))
@@ -277,7 +280,11 @@ def get_stats_per_site(only_sites, stats_keys):
 # here. But it does not make sense to query the live eventd here since it
 # does not know anything about the currently configured but not yet activated
 # rules. And also we do not want to have shared code.
-def event_rule_matches(rule_pack, rule, event):
+def event_rule_matches(
+    rule_pack: ec.ECRulePack,
+    rule: ec.Rule,
+    event: dict[str, Any],
+) -> str | tuple[bool, tuple]:
     result = event_rule_matches_non_inverted(rule_pack, rule, event)
     if rule.get("invert_matching"):
         if isinstance(result, tuple):
@@ -286,7 +293,11 @@ def event_rule_matches(rule_pack, rule, event):
     return result
 
 
-def event_rule_matches_non_inverted(rule_pack, rule, event):  # pylint: disable=too-many-branches
+def event_rule_matches_non_inverted(  # pylint: disable=too-many-branches
+    rule_pack: ec.ECRulePack,
+    rule: ec.Rule,
+    event: dict[str, Any],
+) -> str | tuple[bool, tuple]:
     if not match_ipv4_network(rule.get("match_ipaddress", "0.0.0.0/0"), event["ipaddress"]):
         return _("The source IP address does not match.")
 
@@ -362,7 +373,7 @@ def event_rule_matches_non_inverted(rule_pack, rule, event):  # pylint: disable=
     return False, match_groups
 
 
-def check_timeperiod(tpname):
+def check_timeperiod(tpname: str) -> str | None:
     try:
         livesock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         livesock.connect(cmk.utils.paths.livestatus_unix_socket)
@@ -380,9 +391,10 @@ def check_timeperiod(tpname):
         return _("Cannot update timeperiod information for %s: %s") % (tpname, e)
 
 
-def match(pattern, text, complete=True):
+def match(pattern: ec.TextPattern, text: str, complete: bool = True) -> bool | tuple:
     if pattern is None:
         return True
+    assert not isinstance(pattern, re.Pattern)  # Hmmm...
     if complete:
         if not pattern.endswith("$"):
             pattern += "$"
@@ -394,7 +406,7 @@ def match(pattern, text, complete=True):
     return False
 
 
-def match_ipv4_network(pattern, ipaddress_text):
+def match_ipv4_network(pattern: str, ipaddress_text: str) -> bool:
     network, network_bits = parse_ipv4_network(pattern)  # is validated by valuespec
     if network_bits == 0:
         return True  # event if ipaddress is empty
@@ -417,12 +429,12 @@ def match_ipv4_network(pattern, ipaddress_text):
     return (network & bitmask) == (ipaddress & bitmask)
 
 
-def parse_ipv4_address(text):
+def parse_ipv4_address(text: str) -> int:
     parts = tuple(map(int, text.split(".")))
     return (parts[0] << 24) + (parts[1] << 16) + (parts[2] << 8) + parts[3]
 
 
-def parse_ipv4_network(text):
+def parse_ipv4_network(text: str) -> tuple[int, int]:
     if "/" not in text:
         return parse_ipv4_address(text), 32
 

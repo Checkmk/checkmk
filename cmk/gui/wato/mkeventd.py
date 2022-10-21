@@ -1702,7 +1702,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         return redirect(self.mode_url())
 
     def _copy_rules_from_master(self) -> None:
-        answer = cmk.gui.mkeventd.query_ec_directly("REPLICATE 0")
+        answer = cmk.gui.mkeventd.query_ec_directly(b"REPLICATE 0")
         if "rules" not in answer:
             raise MKGeneralException(_("Cannot get rules from local event daemon."))
         rule_packs = answer["rules"]
@@ -2341,7 +2341,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
 
     def _filter_mkeventd_rules(
         self, search_expression: str, rule_pack: ec.ECRulePackSpec
-    ) -> list[ec.ECRulePackSpec]:
+    ) -> list[ec.Rule]:
         return [
             rule
             for rule in rule_pack.get("rules", [])
@@ -2406,7 +2406,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         )
         return menu
 
-    def action(self) -> ActionResult:  # pyxlint: disable=too-many-branches
+    def action(self) -> ActionResult:
         if not transactions.check_transaction():
             return redirect(mode_url("mkeventd_rule_packs"))
 

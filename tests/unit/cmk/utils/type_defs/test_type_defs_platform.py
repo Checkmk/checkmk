@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.cee.bakery.type_defs import AgentPackagePlatform
+from cmk.utils.type_defs import AgentPackagePlatform
 
 
 @pytest.mark.parametrize(

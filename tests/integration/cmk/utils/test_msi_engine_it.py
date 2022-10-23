@@ -11,7 +11,7 @@ import pytest
 
 from tests.testlib.site import Site
 
-from cmk.cee.bakery import msi_engine
+import cmk.utils.msi_engine as msi_engine
 
 MSI_LOCATION: Final = "share/check_mk/agents/windows"
 EXPECTED_EXECUTABLES: Final = ["msiinfo", "msibuild", "lcab"]

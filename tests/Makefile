@@ -58,6 +58,7 @@ SHELL_FILES_REL = $(shell cd ..; grep -rl \
 # Due to https://github.com/pypa/pypi-support/issues/978, we need to disable Plugin tests for py2.6
 # until we have a feasible solution or we drop the support for 2.6 completly.
 PYTHON_VERSIONS := 2.7 3.3 3.4 3.5 3.6 3.7 3.8 3.9
+BROWSER_ENGINES = "chromium" "firefox"
 
 .PHONY: clean sync-legacy-checks format-shell help prepare-protobuf-files prepare-playwright  bandit.ini \
 	$(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
@@ -202,8 +203,10 @@ prepare-protobuf-files:
 	$(MAKE) -C .. protobuf-files
 
 prepare-playwright:
-	../scripts/run-pipenv run playwright install-deps chromium
-	../scripts/run-pipenv run playwright install chromium
+	@for browser_engine in $(BROWSER_ENGINES); do \
+		../scripts/run-pipenv run playwright install-deps $$browser_engine; \
+		../scripts/run-pipenv run playwright install $$browser_engine; \
+	done
 
 test-integration-docker-debug test-composition-docker-debug:
 	$(PIPENV) run scripts/run-dockerized.py debug

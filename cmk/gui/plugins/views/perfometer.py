@@ -11,13 +11,13 @@ from cmk.gui.config import active_config
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.painters.v1.helpers import is_stale
 from cmk.gui.plugins.views.graphs import cmk_graph_url
 from cmk.gui.plugins.views.perfometers.utils import perfometers, render_metricometer
 from cmk.gui.plugins.views.utils import (
     Cell,
     CellSpec,
     display_options,
-    is_stale,
     Painter,
     painter_registry,
     Row,

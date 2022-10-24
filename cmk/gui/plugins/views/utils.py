@@ -27,6 +27,7 @@ import cmk.utils.render
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.type_defs import HostName, LabelSources, ServiceName, TaggroupIDToTagID, TimeRange
 
+import cmk.gui.painters.v1.painters
 import cmk.gui.sites as sites
 import cmk.gui.utils
 import cmk.gui.utils.escaping as escaping
@@ -45,6 +46,14 @@ from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.num_split import cmp_num_split as _cmp_num_split
 from cmk.gui.pagetypes import PagetypeTopics
+from cmk.gui.painters.v1.helpers import (  # pylint: disable=unused-import
+    get_perfdata_nth_value,
+    is_stale,
+    paint_stalified,
+)
+from cmk.gui.painters.v1.painter_lib import experimental_painter_registry
+from cmk.gui.painters.v1.painter_lib import Painter as V1Painter
+from cmk.gui.painters.v1.painter_lib import PainterConfiguration
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.metrics.utils import CombinedGraphMetricSpec
 from cmk.gui.sorter import register_sorter, sorter_registry
@@ -69,7 +78,7 @@ from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view_store import get_permitted_views
-from cmk.gui.view_utils import CellContent, CellSpec
+from cmk.gui.view_utils import CellSpec, get_host_list_links  # pylint: disable=unused-import
 from cmk.gui.visual_link import render_link_to_view
 from cmk.gui.visuals import view_title
 
@@ -628,21 +637,10 @@ def transform_action_url(url_spec: tuple[str, str] | str) -> tuple[str, str | No
     return (url_spec, None)
 
 
-def is_stale(row: Row) -> bool:
-    staleness = row.get("service_staleness", row.get("host_staleness", 0)) or 0
-    return staleness >= active_config.staleness_threshold
-
-
-def paint_stalified(row: Row, text: CellContent) -> CellSpec:
-    if is_stale(row):
-        return "stale", text
-    return "", text
-
-
 def paint_host_list(site: SiteId, hosts: list[HostName]) -> CellSpec:
     return "", HTML(
         ", ".join(
-            cmk.gui.view_utils.get_host_list_links(
+            get_host_list_links(
                 site,
                 [str(host) for host in hosts],
             )
@@ -766,25 +764,6 @@ def compare_ips(ip1: str, ip2: str) -> int:
 
 def get_custom_var(row: Row, key: str) -> str:
     return row["custom_variables"].get(key, "")
-
-
-def get_perfdata_nth_value(row: Row, n: int, remove_unit: bool = False) -> str:
-    perfdata = row.get("service_perf_data")
-    if not perfdata:
-        return ""
-    try:
-        parts = perfdata.split()
-        if len(parts) <= n:
-            return ""  # too few values in perfdata
-        _varname, rest = parts[n].split("=")
-        number = rest.split(";")[0]
-        # Remove unit. Why should we? In case of sorter (numeric)
-        if remove_unit:
-            while len(number) > 0 and not number[-1].isdigit():
-                number = number[:-1]
-        return number
-    except Exception as e:
-        return str(e)
 
 
 def join_row(row: Row, cell: "Cell") -> Row:
@@ -920,7 +899,10 @@ class Cell:
             return None
 
     def painter(self) -> Painter:
-        return painter_registry[self.painter_name()]()
+        try:
+            return PainterAdapter(experimental_painter_registry[self.painter_name()])
+        except KeyError:
+            return painter_registry[self.painter_name()]()
 
     def painter_name(self) -> PainterName:
         assert self._painter_name is not None
@@ -1418,3 +1400,45 @@ def make_host_breadcrumb(host_name: HostName) -> Breadcrumb:
     )
 
     return breadcrumb
+
+
+class PainterAdapter(Painter):
+    def __init__(self, painter: V1Painter):
+        self._painter = painter
+
+    @property
+    def ident(self) -> str:
+        return self._painter.ident
+
+    def title(self, cell: Cell) -> str:
+        return str(self._painter.title)
+
+    def short_title(self, cell: Cell) -> str:
+        return str(self._painter.short_title)
+
+    @property
+    def columns(self) -> Sequence[ColumnName]:
+        return self._painter.columns
+
+    def dynamic_columns(self, cell: "Cell") -> list[ColumnName]:
+        # TODO: the dynamic columns/derive functionality is added, once we migrate painters using it
+        if self._painter.dynamic_columns is None:
+            return []
+        return list(self._painter.dynamic_columns(cell.painter_parameters()))
+
+    @property
+    def painter_options(self) -> list[str]:
+        """Returns a list of painter option names that affect this painter"""
+        return self._painter.painter_options or []
+
+    def title_classes(self) -> list[str]:
+        return self._painter.title_classes or []
+
+    def render(self, row: Row, cell: Cell) -> CellSpec:
+        config = PainterConfiguration(
+            parameters=cell.painter_parameters(), columns=self._painter.columns
+        )
+        return self._painter.formatters.html(
+            list(self._painter.computer([row], config))[0],
+            cell.painter_parameters(),
+        )

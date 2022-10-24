@@ -11,6 +11,7 @@ import cmk.gui.utils as utils
 from cmk.gui.config import active_config
 from cmk.gui.derived_columns_sorter import DerivedColumnsSorter
 from cmk.gui.i18n import _
+from cmk.gui.painters.v1.helpers import get_perfdata_nth_value
 from cmk.gui.plugins.views.utils import (
     cmp_custom_variable,
     cmp_insensitive_string,
@@ -22,7 +23,6 @@ from cmk.gui.plugins.views.utils import (
     cmp_string_list,
     compare_ips,
     declare_1to1_sorter,
-    get_perfdata_nth_value,
     get_tag_groups,
 )
 from cmk.gui.site_config import get_site_config

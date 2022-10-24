@@ -15,11 +15,11 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.painter_options import PainterOptions
+from cmk.gui.painters.v1.helpers import is_stale
 from cmk.gui.plugins.views.utils import (
     Cell,
     EmptyCell,
     group_value,
-    is_stale,
     Layout,
     layout_registry,
     output_csv_headers,

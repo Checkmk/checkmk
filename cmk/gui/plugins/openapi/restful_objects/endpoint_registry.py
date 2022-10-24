@@ -167,6 +167,26 @@ class EndpointRegistry:
             "parameters": parameters,
         }
 
+    def remove_endpoint(  # type:ignore[no-untyped-def]
+        self,
+        endpoint,  # not typed due to cyclical imports. need to refactor modules first.
+    ) -> None:
+        """
+        Removes an endpoint. This is currently only used in tests.
+        The implementation is not optimized for performance.
+        """
+        self._endpoint_list.remove(endpoint)
+        parameter_key = None
+        endpoint_key = None
+        for e_key, e_value in self._endpoints.items():
+            for p_key, p_value in e_value.items():
+                if p_value["endpoint"] == endpoint:
+                    parameter_key = p_key
+                    endpoint_key = e_key
+        if parameter_key is None or endpoint_key is None:
+            raise ValueError(f"Could not find endpoint {endpoint}")
+        self._endpoints[endpoint_key].pop(parameter_key)
+
 
 def _make_url(
     path: str,

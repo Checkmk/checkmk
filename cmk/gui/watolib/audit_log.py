@@ -90,14 +90,13 @@ def log_audit(
     user_id: Optional[UserId] = None,
     diff_text: Optional[str] = None,
 ) -> None:
+    if isinstance(message, LazyString):
+        message = str(message)
+
     if active_config.wato_use_git:
         if isinstance(message, HTML):
-            git_message = escaping.strip_tags(message.value)
-        elif isinstance(message, LazyString):
-            git_message = str(message)
-        else:
-            git_message = message
-        cmk.gui.watolib.git.add_message(git_message)
+            message = escaping.strip_tags(message.value)
+        cmk.gui.watolib.git.add_message(message)
 
     _log_entry(action, message, object_ref, user_id, diff_text)
 

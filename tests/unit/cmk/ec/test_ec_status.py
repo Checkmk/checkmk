@@ -206,3 +206,75 @@ def test_mkevent_query_filters(
     status_server.handle_client(status_socket, True, '127.0.0.1')
     response = status_socket.get_response()
     assert (len(response) == 2) is is_match
+
+
+def test_delete_event(event_status, status_server):
+    """Delete 1 event"""
+    event = {
+        "host": "ABC1",
+        "text": "not important",
+        "core_host": "ABC",
+    }
+    event_status.new_event(CMKEventConsole.new_event(event))
+
+    assert len(event_status.events()) == 1
+
+    s = FakeStatusSocket(b"COMMAND DELETE;1;testuser")
+    status_server.handle_client(s, True, "127.0.0.1")
+
+    assert len(event_status.events()) == 0
+
+
+def test_delete_multiple_events(event_status, status_server):
+    """Delete event list"""
+    events = [
+        {
+            "host": "ABC1",
+            "text": "event1 text",
+            "core_host": "ABC",
+        },
+        {
+            "host": "ABC2",
+            "text": "event2 text",
+            "core_host": "ABC",
+        },
+    ]
+    for event in events:
+        event_status.new_event(CMKEventConsole.new_event(event))
+
+    assert len(event_status.events()) == 2
+
+    s = FakeStatusSocket(b"COMMAND DELETE;1,2;testuser")
+    status_server.handle_client(s, True, "127.0.0.1")
+
+    assert len(event_status.events()) == 0
+
+
+def test_delete_partially_existing_multiple_events(event_status, status_server):
+    """Event list with a missing ID still deletes the existing ID"""
+    events = [
+        {
+            "host": "ABC1",
+            "text": "event1 text",
+            "core_host": "ABC",
+        },
+        {
+            "host": "ABC2",
+            "text": "event2 text",
+            "core_host": "ABC",
+        },
+    ]
+    for event in events:
+        event_status.new_event(CMKEventConsole.new_event(event))
+
+    assert len(event_status.events()) == 2
+
+    s = FakeStatusSocket(b"COMMAND DELETE;2;testuser")
+    status_server.handle_client(s, True, "127.0.0.1")
+
+    assert len(event_status.events()) == 1
+
+    s = FakeStatusSocket(b"COMMAND DELETE;1,2;testuser")
+    status_server.handle_client(s, True, "127.0.0.1")
+
+    assert len(event_status.events()) == 0

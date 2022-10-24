@@ -2675,6 +2675,6 @@ def test_view_page(  # type:ignore[no-untyped-def]
     live.expect_query("GET hosts\nColumns: filename\nStats: state >= 0")
     with live():
         resp = wsgi_app.get("/NO_SITE/check_mk/view.py?view_name=allhosts", status=200)
-        assert "heute" in resp
-        assert "query=null" not in resp
+        assert "heute" in resp.text
+        assert "query=null" not in resp.text
         assert str(resp).count("/domain-types/host/collections/all") == 1

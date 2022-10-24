@@ -292,7 +292,6 @@ def load(
     what: VisualTypeName,
     builtin_visuals: dict[VisualName, T],
     internal_to_runtime_transformer: Callable[[dict[str, Any]], T],
-    skip_func: Callable[[T], bool] = lambda _v: False,
 ) -> dict[tuple[UserId, VisualName], T]:
     visuals: dict[tuple[UserId, VisualName], T] = {}
 
@@ -314,7 +313,6 @@ def load(
     visuals.update(
         _CombinedVisualsCache[T](what).load(
             internal_to_runtime_transformer,
-            skip_func,
         )
     )
 
@@ -429,13 +427,12 @@ class _CombinedVisualsCache(Generic[T]):
     def load(
         self,
         internal_to_runtime_transformer: Callable[[dict[str, Any]], T],
-        skip_func: Callable[[T], bool],
     ) -> CustomUserVisuals:
 
         if self._may_use_cache():
             if (content := self._read_from_cache()) is not None:
                 return content
-        return self._compute_and_write_cache(internal_to_runtime_transformer, skip_func)
+        return self._compute_and_write_cache(internal_to_runtime_transformer)
 
     def _may_use_cache(self) -> bool:
         if not self._content_filename.exists():
@@ -454,11 +451,8 @@ class _CombinedVisualsCache(Generic[T]):
     def _compute_and_write_cache(
         self,
         internal_to_runtime_transformer: Callable[[dict[str, Any]], T],
-        skip_func: Callable[[T], bool],
     ) -> CustomUserVisuals:
-        visuals = _load_custom_user_visuals(
-            self._visual_type, internal_to_runtime_transformer, skip_func
-        )
+        visuals = _load_custom_user_visuals(self._visual_type, internal_to_runtime_transformer)
         self._write_to_cache(visuals)
         return visuals
 
@@ -481,7 +475,6 @@ hooks.register_builtin("users-saved", lambda x: _CombinedVisualsCache.invalidate
 def _load_custom_user_visuals(
     what: VisualTypeName,
     internal_to_runtime_transformer: Callable[[dict[str, Any]], T],
-    skip_func: Callable[[T], bool],
 ) -> CustomUserVisuals:
     """Note: Try NOT to use pathlib.Path functionality in this function, as pathlib is
     measurably slower (7 times), due to path object creation and concatenation. This function
@@ -512,7 +505,6 @@ def _load_custom_user_visuals(
                 load_visuals_of_a_user(
                     what,
                     internal_to_runtime_transformer,
-                    skip_func,
                     Path(visual_path),
                     UserId(user_id),
                 )
@@ -527,16 +519,12 @@ def _load_custom_user_visuals(
 def load_visuals_of_a_user(
     what: VisualTypeName,
     internal_to_runtime_transformer: Callable[[dict[str, Any]], T],
-    skip_func: Callable[[T], bool],
     path: Path,
     user_id: UserId,
 ) -> CustomUserVisuals[T]:
     user_visuals: CustomUserVisuals[T] = {}
     for name, raw_visual in store.try_load_file_from_pickle_cache(path, default={}).items():
         visual = internal_to_runtime_transformer(raw_visual)
-        if skip_func(visual):
-            continue
-
         visual["owner"] = user_id
         visual["name"] = name
 

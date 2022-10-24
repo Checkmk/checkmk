@@ -10,13 +10,13 @@ export function getFirstElementByNameAsInput(name: string): HTMLInputElement {
 }
 
 export function start_test(ident: string, hostname: string, transid: string) {
-    var log = document.getElementById(ident + "_log") as HTMLImageElement;
-    var img = document.getElementById(ident + "_img") as HTMLImageElement;
-    var retry = document.getElementById(ident + "_retry") as HTMLImageElement;
+    const log = document.getElementById(ident + "_log") as HTMLImageElement;
+    const img = document.getElementById(ident + "_img") as HTMLImageElement;
+    const retry = document.getElementById(ident + "_retry") as HTMLImageElement;
 
     retry!.style.display = "none";
 
-    var vars = "";
+    let vars = "";
     vars = "&_transid=" + encodeURIComponent(transid);
     vars +=
         "&ipaddress=" +
@@ -31,7 +31,7 @@ export function start_test(ident: string, hostname: string, transid: string) {
                 getFirstElementByNameAsInput("vs_host_p_snmp_community").value
             );
 
-    var v3_use;
+    let v3_use;
     if (
         getFirstElementByNameAsInput("vs_host_p_snmp_v3_credentials_USE")
             .checked
@@ -136,7 +136,7 @@ export function start_test(ident: string, hostname: string, transid: string) {
 
     log.innerHTML = "...";
 
-    var data =
+    const data =
         "host=" +
         encodeURIComponent(hostname) +
         "&_test=" +
@@ -155,17 +155,21 @@ function handle_host_diag_result(
     data: {hostname: string; ident: string},
     response_json: string
 ) {
-    var response = JSON.parse(response_json);
+    const response = JSON.parse(response_json);
 
-    var img = document.getElementById(data.ident + "_img") as HTMLImageElement;
-    var log = document.getElementById(data.ident + "_log") as HTMLImageElement;
-    var retry = document.getElementById(
+    const img = document.getElementById(
+        data.ident + "_img"
+    ) as HTMLImageElement;
+    const log = document.getElementById(
+        data.ident + "_log"
+    ) as HTMLImageElement;
+    const retry = document.getElementById(
         data.ident + "_retry"
     ) as HTMLImageElement;
     utils.remove_class(img, "reloading");
 
-    var text = "";
-    var new_icon = "";
+    let text = "";
+    let new_icon = "";
     if (response.result_code == 1) {
         new_icon = "cancel";
         log.className = "log diag_failed";

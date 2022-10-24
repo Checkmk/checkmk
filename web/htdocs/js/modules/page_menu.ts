@@ -14,10 +14,10 @@ export function close_active_dropdown() {
 }
 
 export function set_checkbox_entry(id_stem, checked) {
-    var oEntryChecked = document.getElementById(
+    const oEntryChecked = document.getElementById(
         "menu_entry_" + id_stem + "_checked"
     );
-    var oEntryUnhecked = document.getElementById(
+    const oEntryUnhecked = document.getElementById(
         "menu_entry_" + id_stem + "_unchecked"
     );
 
@@ -41,7 +41,7 @@ export function disable_dropdown(id) {
 }
 
 function toggle_dropdown_enabled(id, enabled) {
-    var dropdown = document.getElementById("page_menu_dropdown_" + id);
+    const dropdown = document.getElementById("page_menu_dropdown_" + id);
     if (enabled) {
         utils.remove_class(dropdown, "disabled");
     } else {
@@ -50,7 +50,7 @@ function toggle_dropdown_enabled(id, enabled) {
 }
 
 export function enable_menu_entry(id, enabled) {
-    var from, to;
+    let from, to;
     if (enabled) {
         from = "disabled";
         to = "enabled";
@@ -58,17 +58,17 @@ export function enable_menu_entry(id, enabled) {
         from = "enabled";
         to = "disabled";
     }
-    var oEntry = document.getElementById("menu_entry_" + id);
+    const oEntry = document.getElementById("menu_entry_" + id);
     utils.change_class(oEntry, from, to);
 
     if (enabled && oEntry?.getAttribute("title")) {
         oEntry.removeAttribute("title");
     }
 
-    var oShortCut = document.getElementById("menu_shortcut_" + id);
+    const oShortCut = document.getElementById("menu_shortcut_" + id);
     if (oShortCut) utils.change_class(oShortCut, from, to);
 
-    var oSuggestion = document.getElementById("menu_suggestion_" + id);
+    const oSuggestion = document.getElementById("menu_suggestion_" + id);
     if (oSuggestion) utils.change_class(oSuggestion.parentElement, from, to);
 }
 
@@ -96,8 +96,8 @@ export function enable_menu_entries(css_class, enabled) {
 
 // Toggles a PageMenuEntryPopup from a page menu entry
 export function toggle_popup(popup_id) {
-    let popup = document.getElementById(popup_id);
-    let was_open = utils.has_class(popup, "active");
+    const popup = document.getElementById(popup_id);
+    const was_open = utils.has_class(popup, "active");
 
     close_active_dropdown();
     close_active_popups();
@@ -169,15 +169,15 @@ export function register_on_close_handler(popup_id, handler) {
     on_close[popup_id] = handler;
 }
 
-var on_toggle_suggestions: null | Function = null;
+let on_toggle_suggestions: null | (() => void) = null;
 
 export function register_on_toggle_suggestions_handler(handler) {
     on_toggle_suggestions = handler;
 }
 
 export function toggle_suggestions() {
-    var oPageMenuBar = document.getElementById("page_menu_bar");
-    var open;
+    const oPageMenuBar = document.getElementById("page_menu_bar");
+    let open;
     if (utils.has_class(oPageMenuBar, "hide_suggestions")) {
         utils.remove_class(oPageMenuBar, "hide_suggestions");
         open = "on";
@@ -194,8 +194,8 @@ export function toggle_suggestions() {
 }
 
 export function form_submit(form_name, button_name) {
-    var form = document.getElementById("form_" + form_name);
-    var field = document.createElement("input");
+    const form = document.getElementById("form_" + form_name);
+    const field = document.createElement("input");
     field.type = "submit";
     field.name = button_name;
     field.value = "SET";
@@ -236,8 +236,8 @@ export function on_filter_popup_close() {
 
 // Scroll to the top after adding new filters
 export function update_filter_list_scroll(filter_list_id) {
-    let filter_list = document.getElementById(filter_list_id);
-    let scrollable = filter_list!.getElementsByClassName(
+    const filter_list = document.getElementById(filter_list_id);
+    const scrollable = filter_list!.getElementsByClassName(
         "simplebar-content-wrapper"
     )[0];
     try {
@@ -251,8 +251,8 @@ export function update_filter_list_scroll(filter_list_id) {
 }
 
 export function side_popup_add_simplebar_scrollbar(popup_id) {
-    let popup = document.getElementById(popup_id);
-    let content = popup!.getElementsByClassName(
+    const popup = document.getElementById(popup_id);
+    const content = popup!.getElementsByClassName(
         "side_popup_content"
     )[0] as HTMLElement;
     utils.add_simplebar_scrollbar_to_object(content);

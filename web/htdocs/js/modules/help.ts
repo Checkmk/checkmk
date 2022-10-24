@@ -33,18 +33,17 @@ export function toggle(title_show: string, title_hide: string) {
 
 function switch_help(how: boolean) {
     // recursive scan for all div class=help elements
-    var helpdivs = document.getElementsByClassName(
+    const helpdivs = document.getElementsByClassName(
         "help"
     ) as HTMLCollectionOf<HTMLElement>;
-
-    var i;
+    let i;
     for (i = 0; i < helpdivs.length; i++) {
         helpdivs[i].style.display = how ? "flex" : "none";
     }
 
     // small hack for wato ruleset lists, toggle the "float" and "nofloat"
     // classes on those objects to make the layout possible
-    var rulesetdivs = utils.querySelectorAllByClassName("ruleset");
+    const rulesetdivs = utils.querySelectorAllByClassName("ruleset");
     for (i = 0; i < rulesetdivs.length; i++) {
         if (how) {
             if (utils.has_class(rulesetdivs[i], "float")) {

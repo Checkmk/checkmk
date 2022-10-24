@@ -9,7 +9,7 @@ import * as utils from "utils";
 //#   '--------------------------------------------------------------------'
 
 type ContainerSize = {height: number | null; width: number | null};
-var g_hover_menu: HTMLDivElement | null;
+let g_hover_menu: HTMLDivElement | null;
 
 export function hide() {
     if (!g_hover_menu) {
@@ -110,7 +110,7 @@ export function update_position(event_: MouseEvent) {
         }
     }
 
-    let hoverTop = parseInt(g_hover_menu.style.top.replace("px", ""));
+    const hoverTop = parseInt(g_hover_menu.style.top.replace("px", ""));
     if (
         hoverTop + g_hover_menu.clientHeight >
         scrollTop + container_size.height!

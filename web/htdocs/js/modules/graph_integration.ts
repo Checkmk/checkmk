@@ -19,7 +19,7 @@ export function show_hover_graphs(
 }
 
 function show_check_mk_hover_graphs(site_id, host_name, service, event_) {
-    var url =
+    const url =
         "host_service_graph_popup.py?site=" +
         encodeURIComponent(site_id) +
         "&host_name=" +
@@ -40,6 +40,6 @@ function handle_check_mk_hover_graphs_response(handler_data, code) {
 }
 
 function handle_hover_graphs_error(handler_data, status_code) {
-    var code = "<div class=error>Update failed (" + status_code + ")</div>";
+    const code = "<div class=error>Update failed (" + status_code + ")</div>";
     hover.update_content(code, handler_data.event_);
 }

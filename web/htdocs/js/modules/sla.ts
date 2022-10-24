@@ -13,8 +13,8 @@ export function details_period_hover(
         return;
     }
 
-    var sla_period_elements = utils.querySelectorAllByClassName(sla_period);
-    for (var i = 0; i < sla_period_elements.length; i++) {
+    const sla_period_elements = utils.querySelectorAllByClassName(sla_period);
+    for (let i = 0; i < sla_period_elements.length; i++) {
         if (onoff) {
             utils.add_class(sla_period_elements[i], "sla_hilite");
         } else {
@@ -27,9 +27,9 @@ export function details_period_click(
     td: HTMLTableCellElement,
     sla_period: string
 ) {
-    var sla_period_elements = utils.querySelectorAllByClassName(sla_period);
-    var onoff = utils.has_class(td, "lock_hilite");
-    for (var i = 0; i < sla_period_elements.length; i++) {
+    const sla_period_elements = utils.querySelectorAllByClassName(sla_period);
+    const onoff = utils.has_class(td, "lock_hilite");
+    for (let i = 0; i < sla_period_elements.length; i++) {
         if (onoff) {
             utils.remove_class(sla_period_elements[i], "sla_hilite");
             utils.remove_class(sla_period_elements[i], "lock_hilite");
@@ -45,11 +45,11 @@ export function details_table_hover(
     row_id: string,
     onoff: 1 | 0
 ) {
-    var sla_period_elements = tr
+    const sla_period_elements = tr
         .closest("table")!
         .closest("tbody")!
         .getElementsByClassName(row_id) as HTMLCollectionOf<HTMLElement>;
-    for (var i = 0; i < sla_period_elements.length; i++) {
+    for (let i = 0; i < sla_period_elements.length; i++) {
         if (onoff) {
             utils.add_class(sla_period_elements[i], "sla_hilite");
             utils.add_class(sla_period_elements[i], "sla_error_hilite");

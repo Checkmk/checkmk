@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 declare global {
-    var global_csrf_token: string;
+    let global_csrf_token: string;
 }
 
 interface Args {
@@ -14,7 +14,7 @@ interface Args {
     error_handler?: (
         handler_data: any,
         status: number,
-        staus_text: string,
+        status_text: string,
         response_text?: string
     ) => void;
     add_ajax_id?: boolean;
@@ -35,12 +35,12 @@ export function call_ajax(url: string, optional_args?: any) {
         sync: false,
         authorization: undefined,
     };
-    var args: Args = {
+    const args: Args = {
         ...default_args,
         ...optional_args,
     };
 
-    var AJAX = window.XMLHttpRequest
+    const AJAX = window.XMLHttpRequest
         ? new window.XMLHttpRequest()
         : new window.ActiveXObject("Microsoft.XMLHTTP");
     if (!AJAX) return null;

@@ -4,13 +4,13 @@
 
 import {call_ajax} from "ajax";
 
-var iCurrent: number | null = null;
-var oCurrent: HTMLAnchorElement | null = null;
-var oldValue = "";
+let iCurrent: number | null = null;
+let oCurrent: HTMLAnchorElement | null = null;
+let oldValue = "";
 
 // Register an input field to be a search field and add eventhandlers
 export function register_search_field(field) {
-    var oField = document.getElementById(field);
+    const oField = document.getElementById(field);
     if (oField) {
         oField.onkeydown = function (e) {
             return mkSearchKeyDown(e, oField);
@@ -32,7 +32,7 @@ export function register_search_field(field) {
 
 // On key release event handler
 function mkSearchKeyUp(e, oField) {
-    var keyCode = e.which || e.keyCode;
+    const keyCode = e.which || e.keyCode;
 
     switch (keyCode) {
         // 18: Return/Enter
@@ -59,8 +59,8 @@ function mkSearchKeyUp(e, oField) {
 
 // On key press down event handler
 export function on_search_click() {
-    var oField = document.getElementById("mk_side_search_field");
-    var ev = {which: 0, keyCode: 13};
+    const oField = document.getElementById("mk_side_search_field");
+    const ev = {which: 0, keyCode: 13};
     return mkSearchKeyDown(ev, oField);
 }
 
@@ -70,7 +70,7 @@ function search_dropdown_value() {
 }
 
 function mkSearchKeyDown(e, oField) {
-    var keyCode = e.which || e.keyCode;
+    const keyCode = e.which || e.keyCode;
 
     switch (keyCode) {
         // Return/Enter
@@ -134,7 +134,7 @@ function mkSearchMoveElement(step) {
 
     iCurrent += step;
 
-    var oResults: HTMLElement | null | HTMLElement[] =
+    let oResults: HTMLElement | null | HTMLElement[] =
         document.getElementById("mk_search_results");
 
     if (!oResults) return;
@@ -145,8 +145,8 @@ function mkSearchMoveElement(step) {
 
     oResults = Array.from(oResults.childNodes) as HTMLElement[];
 
-    var a = 0;
-    for (var i = 0; i < oResults.length; i++) {
+    let a = 0;
+    for (let i = 0; i < oResults.length; i++) {
         if (oResults[i].tagName == "A") {
             if (a == iCurrent) {
                 oCurrent = oResults[i] as HTMLAnchorElement;
@@ -175,7 +175,7 @@ function toggle_popup(oField) {
 
 // Close the result list
 export function close_popup() {
-    var oContainer = document.getElementById("mk_search_results");
+    const oContainer = document.getElementById("mk_search_results");
     if (oContainer) {
         oContainer.parentNode?.removeChild(oContainer);
     }
@@ -186,7 +186,7 @@ export function close_popup() {
 
 function handle_search_response(oField, code) {
     if (code != "") {
-        var oContainer = document.getElementById("mk_search_results");
+        let oContainer = document.getElementById("mk_search_results");
         if (!oContainer) {
             oContainer = document.createElement("div");
             oContainer.setAttribute("id", "mk_search_results");
@@ -203,7 +203,7 @@ function handle_search_response(oField, code) {
 function mkSearch(oField) {
     if (oField == null) return;
 
-    var val = oField.value;
+    const val = oField.value;
     if (mkSearchResultShown() && val == oldValue) return; // nothing changed, no new search
     oldValue = val;
 

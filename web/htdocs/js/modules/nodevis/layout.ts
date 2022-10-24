@@ -36,7 +36,6 @@ import {
     StyleOptionValues,
 } from "nodevis/layout_utils";
 import {LayoutStyleFixed} from "nodevis/layout_styles";
-import {LayeredNodesLayer} from "./layers";
 import {
     DefaultTransition,
     get_bounding_rect,

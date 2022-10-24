@@ -11,7 +11,7 @@ require("script-loader!jquery");
 require("script-loader!../jquery/jquery.mobile-1.4.5.min.js");
 
 // Optional import is currently not possible using the ES6 imports
-var graphs;
+let graphs;
 try {
     graphs = require("graphs");
 } catch (e) {

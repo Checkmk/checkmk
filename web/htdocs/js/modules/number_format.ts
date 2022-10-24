@@ -18,12 +18,12 @@ abstract class UnitPrefixes {
 }
 
 export class SIUnitPrefixes extends UnitPrefixes {
-    static _BASE: number = 1000;
+    static _BASE = 1000;
     static _PREFIXES: string[] = ["", "k", "M", "G", "T", "P", "E", "Z", "Y"];
 }
 
 export class IECUnitPrefixes extends UnitPrefixes {
-    static _BASE: number = 1024;
+    static _BASE = 1024;
     static _PREFIXES: string[] = [
         "",
         "Ki",
@@ -44,9 +44,9 @@ export function drop_dotzero(value: number, digits = 2) {
 export function fmt_number_with_precision(
     v: number,
     unit_prefix_type: typeof UnitPrefixes = SIUnitPrefixes,
-    precision: number = 2,
-    drop_zeroes: boolean = false,
-    unit: string = ""
+    precision = 2,
+    drop_zeroes = false,
+    unit = ""
 ) {
     const [factor, prefix] = unit_prefix_type.scale_factor_and_prefix(v);
     const value = v / factor;
@@ -59,8 +59,8 @@ export function fmt_number_with_precision(
 export function fmt_bytes(
     b: number,
     unit_prefix_type: typeof UnitPrefixes = IECUnitPrefixes,
-    precision: number = 2,
-    unit: string = "B"
+    precision = 2,
+    unit = "B"
 ) {
     return fmt_number_with_precision(
         b,
@@ -78,7 +78,7 @@ export function fmt_nic_speed(speed: string) {
     return fmt_number_with_precision(speedi, SIUnitPrefixes, 2, false, "bit/s");
 }
 
-export function percent(perc: number, scientific_notation: boolean = false) {
+export function percent(perc: number, scientific_notation = false) {
     if (perc == 0) return "0%";
     let result = "";
     if (scientific_notation && Math.abs(perc) >= 100000) {
@@ -107,7 +107,7 @@ export function scientific(v: number, precision: number): string {
     if (v == 0) return "0";
     if (v < 0) return "-" + scientific(-1 * v, precision);
 
-    let [mantissa, exponent] = frexpb(v, 10);
+    const exponent = frexpb(v, 10)[1];
     if (-3 <= exponent && exponent <= 4) {
         return v.toFixed(
             Math.min(precision, Math.max(0, precision - exponent))
@@ -121,8 +121,7 @@ export function calculate_physical_precision(
     precision: number
 ): [string, number, number] {
     if (v == 0) return ["", precision - 1, 1];
-
-    let [_mantissa, exponent] = frexpb(v, 10);
+    let exponent = frexpb(v, 10)[1];
 
     if (Number.isInteger(v)) precision = Math.min(precision, exponent + 1);
 

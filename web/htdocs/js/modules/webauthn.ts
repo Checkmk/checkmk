@@ -21,8 +21,8 @@ export function register() {
             return navigator.credentials.create(options);
         })
         .then(function (attestation) {
-            var attestationPkc = attestation as PublicKeyCredential;
-            var attestationPkcResponse =
+            const attestationPkc = attestation as PublicKeyCredential;
+            const attestationPkcResponse =
                 attestationPkc.response as AuthenticatorAttestationResponse;
             return fetch("user_webauthn_register_complete.py", {
                 method: "POST",
@@ -86,7 +86,7 @@ function show_error(text) {
 }
 
 function show_message(text, cls) {
-    var msg = document.getElementById("webauthn_message")!;
+    const msg = document.getElementById("webauthn_message")!;
     utils.remove_class(msg, "error");
     utils.remove_class(msg, "success");
     utils.add_class(msg, cls);
@@ -110,8 +110,8 @@ export function login() {
             return navigator.credentials.get(options);
         })
         .then(function (assertion) {
-            var assertionPkc = assertion as PublicKeyCredential;
-            var assertionResponse =
+            const assertionPkc = assertion as PublicKeyCredential;
+            const assertionResponse =
                 assertionPkc.response as AuthenticatorAssertionResponse;
             return fetch("user_webauthn_login_complete.py", {
                 method: "POST",

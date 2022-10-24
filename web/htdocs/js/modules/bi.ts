@@ -12,9 +12,9 @@ export function toggle_subtree(oImg, lazy) {
         // clicked on title,
         oImg = oImg.previousElementSibling;
     }
-    var oSubtree = oImg.parentNode.getElementsByTagName("ul")[0];
-    var url = "bi_save_treestate.py?path=" + encodeURIComponent(oSubtree.id);
-    var do_open;
+    const oSubtree = oImg.parentNode.getElementsByTagName("ul")[0];
+    let url = "bi_save_treestate.py?path=" + encodeURIComponent(oSubtree.id);
+    let do_open;
 
     if (utils.has_class(oImg, "closed")) {
         utils.change_class(oSubtree, "closed", "open");
@@ -44,7 +44,7 @@ function bi_update_tree(container) {
     container.onclick = null;
 
     // First find enclosding <div class=bi_tree_container>
-    var bi_container = container;
+    let bi_container = container;
     while (
         bi_container &&
         !utils.has_class(bi_container, "bi_tree_container")
@@ -65,8 +65,8 @@ function bi_update_tree_response(bi_container, code) {
 }
 
 export function toggle_box(container, lazy) {
-    var url = "bi_save_treestate.py?path=" + encodeURIComponent(container.id);
-    var do_open;
+    let url = "bi_save_treestate.py?path=" + encodeURIComponent(container.id);
+    let do_open;
 
     if (utils.has_class(container, "open")) {
         if (lazy) return; // do not close in lazy mode
@@ -90,9 +90,9 @@ export function toggle_box(container, lazy) {
         // find child nodes that belong to this node and
         // control visibility of those. Note: the BI child nodes
         // are *no* child nodes in HTML but siblings!
-        var found = 0;
-        for (var i in container.parentNode.children) {
-            var onode = container.parentNode.children[i];
+        let found = 0;
+        for (const i in container.parentNode.children) {
+            const onode = container.parentNode.children[i];
 
             if (onode == container) found = 1;
             else if (found) {
@@ -105,12 +105,12 @@ export function toggle_box(container, lazy) {
 }
 
 export function toggle_assumption(link, site, host, service) {
-    var img = link.getElementsByTagName("img")[0];
+    const img = link.getElementsByTagName("img")[0];
 
     // get current state
-    var path_parts = img.src.split("/");
-    var file_part = path_parts.pop();
-    var current = file_part.replace(/icon_assume_/, "").replace(/.png/, "");
+    const path_parts = img.src.split("/");
+    const file_part = path_parts.pop();
+    let current = file_part.replace(/icon_assume_/, "").replace(/.png/, "");
 
     if (current == "none")
         // Assume WARN when nothing assumed yet
@@ -124,7 +124,7 @@ export function toggle_assumption(link, site, host, service) {
     // In all other cases increase the assumption
     else current = parseInt(current) + 1;
 
-    var url =
+    let url =
         "bi_set_assumption.py?site=" +
         encodeURIComponent(site) +
         "&host=" +
@@ -140,14 +140,14 @@ export function toggle_assumption(link, site, host, service) {
 export function update_argument_hints() {
     d3.selectAll("select[onchange='cmk.bi.update_argument_hints();']").each(
         (d, idx, nodes) => {
-            let node = d3.select(nodes[idx]);
-            let rule_arguments =
+            const node = d3.select(nodes[idx]);
+            const rule_arguments =
                 window["bi_rule_argument_lookup"][node.property("value")];
-            let rule_body = node.select(function () {
+            const rule_body = node.select(function () {
                 // @ts-ignore
                 return this.closest("tbody");
             });
-            let required_inputs = rule_arguments.length;
+            const required_inputs = rule_arguments.length;
 
             // Create nodes
             nodes = rule_body
@@ -165,13 +165,13 @@ export function update_argument_hints() {
             }
 
             // Update placeholder
-            let input_nodes = rule_body
+            const input_nodes = rule_body
                 .selectAll("div.listofstrings")
                 .selectAll("input.text");
             input_nodes.attr("placeholder", "");
             input_nodes.each((d, idx, nodes) => {
                 if (idx >= rule_arguments.length) return;
-                let argument_input = d3.select(nodes[idx]);
+                const argument_input = d3.select(nodes[idx]);
                 argument_input.attr("placeholder", rule_arguments[idx]);
             });
         }
@@ -196,21 +196,23 @@ export class BIPreview {
         setInterval(() => this._check_update(), this._update_interval);
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     _create_search_preview() {}
 
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     _check_update() {}
 
     _get_update_url() {
         return encodeURI("ajax_bi_node_preview.py");
     }
 
-    _update_previews(json_data) {
+    _update_previews(_json_data?) {
         this._update_active = false;
         this._check_update();
     }
 
     _trigger_update_if_required(params) {
-        let body = this._dict_to_url(params);
+        const body = this._dict_to_url(params);
         if (this._last_body == body) {
             return;
         }
@@ -234,10 +236,10 @@ export class BIPreview {
     }
 
     _update_preview_of_node(data_rows, title, node_preview_div) {
-        let headers = Object.keys(data_rows[0]);
+        const headers = Object.keys(data_rows[0]);
         node_preview_div.selectAll("*").remove();
         node_preview_div.append("h3").text(title);
-        let node_preview_table = node_preview_div.append("table");
+        const node_preview_table = node_preview_div.append("table");
 
         // Header row
         node_preview_table
@@ -259,7 +261,7 @@ export class BIPreview {
             .join("tr")
             .selectAll("td")
             .data(d => {
-                let cells = Array();
+                const cells: string[] = [];
                 headers.forEach(header => {
                     cells.push(d[header]);
                 });
@@ -275,18 +277,18 @@ export class BIPreview {
     }
 
     _determine_params() {
-        let inputs = this._root_node.selectAll("input,select");
-        let params = {varprefix: this._varprefix};
+        const inputs = this._root_node.selectAll("input,select");
+        const params = {varprefix: this._varprefix};
         inputs.each((d, idx, nodes) => {
-            let input = nodes[idx];
+            const input = nodes[idx];
             params[input.name] = input.value;
         });
         return params;
     }
 
     _dict_to_url(dict) {
-        let url_tokens: string[] = [];
-        for (var p in dict) {
+        const url_tokens: string[] = [];
+        for (const p in dict) {
             url_tokens.push(
                 encodeURIComponent(p) + "=" + encodeURIComponent(dict[p])
             );
@@ -298,7 +300,7 @@ export class BIPreview {
 export class BIRulePreview extends BIPreview {
     _check_update() {
         BIPreview.prototype._check_update.call(this);
-        let display = this._preview_active ? null : "none";
+        const display = this._preview_active ? null : "none";
         // @ts-ignore
         d3.selectAll("span.title").style("display", display);
         // @ts-ignore
@@ -309,7 +311,7 @@ export class BIRulePreview extends BIPreview {
             return;
         }
 
-        let params = this._determine_params();
+        const params = this._determine_params();
         params["example_arguments"] = JSON.stringify(
             this._get_example_arguments()
         );
@@ -321,7 +323,7 @@ export class BIRulePreview extends BIPreview {
     }
 
     _get_example_arguments() {
-        let example_arguments: String[] = [];
+        const example_arguments: string[] = [];
         this._root_node
             .select("span.arguments")
             .selectAll("input")
@@ -333,11 +335,11 @@ export class BIRulePreview extends BIPreview {
 
     _update_previews(json_data) {
         this._update_simulated_parameters(json_data.result.params);
-        let nodes = d3
+        const nodes = d3
             .selectAll("#rule_p_nodes_container > tr")
             .data(json_data.result.data);
 
-        let node_previews = nodes
+        const node_previews = nodes
             .select(".vlof_content")
             .selectAll("div.node_preview")
             .data(d => [d])
@@ -357,7 +359,7 @@ export class BIRulePreview extends BIPreview {
     }
 
     _update_simulated_parameters(params) {
-        let preview_toggle = this._root_node.select("div.preview_toggle");
+        const preview_toggle = this._root_node.select("div.preview_toggle");
         preview_toggle
             .select("span.title")
             .selectAll("label")
@@ -373,7 +375,7 @@ export class BIRulePreview extends BIPreview {
     }
 
     _create_search_preview() {
-        let preview_toggle = this._root_node
+        const preview_toggle = this._root_node
             .select("#rule_d_nodes")
             .insert("div", "div");
         preview_toggle.classed("preview_toggle", true);
@@ -386,7 +388,7 @@ export class BIRulePreview extends BIPreview {
             .attr("type", "button")
             .attr("value", "Toggle Search Preview")
             .classed("button", true)
-            .on("click", event => {
+            .on("click", () => {
                 this._preview_active = !this._preview_active;
                 d3.selectAll("div.node_preview").style(
                     "display",
@@ -404,7 +406,7 @@ export class BIAggregationPreview extends BIPreview {
             return;
         }
 
-        let params = this._determine_params();
+        const params = this._determine_params();
         this._trigger_update_if_required(params);
     }
 
@@ -423,7 +425,7 @@ export class BIAggregationPreview extends BIPreview {
     }
 
     _update_previews(json_data) {
-        let node_preview_div = this._get_preview_div(
+        const node_preview_div = this._get_preview_div(
             d3.select("div#aggr_d_node")
         );
         this._update_preview_of_node(

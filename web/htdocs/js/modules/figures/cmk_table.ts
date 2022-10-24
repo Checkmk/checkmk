@@ -55,11 +55,11 @@ export class TableFigure extends cmk_figures.FigureBase<TableFigureData> {
 
     update_gui() {
         // TODO: clear table when no rows exist
-        let data = this._data;
+        const data = this._data;
         if (!data.rows) return;
         if (data.classes) this._table.classed(data.classes.join(" "), true);
 
-        let rows = this._table
+        const rows = this._table
             .selectAll("tr")
             .data(data.rows)
             .join("tr")
@@ -77,7 +77,7 @@ export class TableFigure extends cmk_figures.FigureBase<TableFigureData> {
             .attr("colspan", d => d.colspan || null)
             .attr("rowspan", d => d.rowspan || null)
             .each(function (d) {
-                let cell = d3.select(this);
+                const cell = d3.select(this);
                 if (d.text != null) cell.text(d.text);
                 if (d.html != null) cell.html(d.html);
             });
@@ -91,16 +91,16 @@ export class TableFigure extends cmk_figures.FigureBase<TableFigureData> {
 
 function _update_figures_in_selection(selection) {
     selection.selectAll(".figure_cell").each((d, idx, nodes) => {
-        let figure_config = d["figure_config"];
+        const figure_config = d["figure_config"];
         if (nodes[idx].__figure_instance__ == undefined) {
-            let figure_class = cmk_figures.figure_registry.get_figure(
+            const figure_class = cmk_figures.figure_registry.get_figure(
                 figure_config["figure_type"]
             );
             if (figure_class == undefined)
                 // unknown figure type
                 return;
 
-            let new_figure = new figure_class(
+            const new_figure = new figure_class(
                 figure_config["selector"],
                 figure_config["size"]
             );
@@ -122,13 +122,16 @@ function _update_dc_graphs_in_selection(selection, graph_group) {
             // new format, not to be handled by this legacy block
             return;
 
-        let node = d3.select(nodes[idx]);
-        let svg = node.select("svg");
+        const node = d3.select(nodes[idx]);
+        const svg = node.select("svg");
         if (svg.empty()) {
-            let new_crossfilter = crossfilter<any>(d.figure_config.data);
-            let label_dimension = new_crossfilter.dimension(d => d.label);
-            let label_group = label_dimension.group().reduceSum(d => d.value);
-            let pie_chart = dc.pieChart(d.figure_config.selector, graph_group);
+            const new_crossfilter = crossfilter<any>(d.figure_config.data);
+            const label_dimension = new_crossfilter.dimension(d => d.label);
+            const label_group = label_dimension.group().reduceSum(d => d.value);
+            const pie_chart = dc.pieChart(
+                d.figure_config.selector,
+                graph_group
+            );
             pie_chart
                 .width(450)
                 .height(200)
@@ -143,7 +146,7 @@ function _update_dc_graphs_in_selection(selection, graph_group) {
                 .on("postRender", chart => {
                     _pie_chart_custom_renderlet(chart, d);
                 });
-
+            // eslint-disable-next-line @typescript-eslint/no-empty-function
             pie_chart.filter = function () {};
             pie_chart.render();
             nodes[idx].__crossfilter__ = new_crossfilter;
@@ -171,7 +174,7 @@ function _pie_chart_custom_renderlet(chart, d) {
     if (chart.svg().select(".empty-chart").empty()) return;
 
     // TODO: WIP
-    let labels_data: Selection[] = [];
+    const labels_data: Selection[] = [];
     chart.selectAll("text.pie-label").each((d, idx, nodes) => {
         // @ts-ignore
         labels_data.push(d3.select(nodes[idx]));
@@ -191,11 +194,11 @@ function _pie_chart_custom_renderlet(chart, d) {
     labels_key.exit().remove();
     labels_key
         .attr("transform", d => {
-            let coords = _get_translation(d.attr("transform"));
+            const coords = _get_translation(d.attr("transform"));
             return "translate(" + coords[0] + "," + (coords[1] + 10) + ")";
         })
         .text(d => {
-            let data = d.datum();
+            const data = d.datum();
             return (
                 Math.round(((data.endAngle - data.startAngle) / Math.PI) * 50) +
                 "%"
@@ -208,7 +211,7 @@ function _get_translation(transform) {
     // Create a dummy g for calculation purposes only. This will never
     // be appended to the DOM and will be discarded once this function
     // returns.
-    var g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
 
     // Set the transform attribute to the provided string value.
     g.setAttributeNS(null, "transform", transform);
@@ -216,7 +219,7 @@ function _get_translation(transform) {
     // consolidate the SVGTransformList containing all transformations
     // to a single SVGTransform of type SVG_TRANSFORM_MATRIX and get
     // its SVGMatrix.
-    var matrix = g.transform.baseVal.consolidate()!.matrix;
+    const matrix = g.transform.baseVal.consolidate()!.matrix;
 
     // As per definition values e and f are the ones for the translation.
     return [matrix.e, matrix.f];

@@ -12,22 +12,22 @@ interface SiteState {
 export function fetch_site_status() {
     ajax.call_ajax("wato_ajax_fetch_site_status.py", {
         response_handler: function (handler_data, response_json) {
-            let response = JSON.parse(response_json);
-            let success = response.result_code === 0;
-            let site_states: Record<string, SiteState> = response.result;
+            const response = JSON.parse(response_json);
+            const success = response.result_code === 0;
+            const site_states: Record<string, SiteState> = response.result;
 
             if (!success) {
                 show_error("Site status update failed: " + site_states);
                 return;
             }
 
-            for (let [site_id, site_status] of Object.entries(site_states)) {
-                var livestatus_container = document.getElementById(
+            for (const [site_id, site_status] of Object.entries(site_states)) {
+                const livestatus_container = document.getElementById(
                     "livestatus_status_" + site_id
                 )!;
                 livestatus_container.innerHTML = site_status.livestatus;
 
-                var replication_container = document.getElementById(
+                const replication_container = document.getElementById(
                     "replication_status_" + site_id
                 )!;
                 replication_container.innerHTML = site_status.replication;
@@ -49,7 +49,7 @@ export function fetch_site_status() {
 }
 
 function show_error(msg) {
-    var o = document.getElementById("message_container");
+    const o = document.getElementById("message_container");
     o!.innerHTML = "<div class=error>" + msg + "</div>";
 
     // Remove all loading icons

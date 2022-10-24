@@ -2,26 +2,26 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-var width;
-var height;
-var netto_width;
-var netto_height;
-var from_time;
-var until_time;
-var v_min;
-var v_max;
-var canvas_id;
+let width;
+let height;
+let netto_width;
+let netto_height;
+let from_time;
+let until_time;
+let v_min;
+let v_max;
+let canvas_id;
 
-var left_border = 90;
-var right_border = 50;
-var top_border = 40;
-var bottom_border = 50;
+const left_border = 90;
+const right_border = 50;
+const top_border = 40;
+const bottom_border = 50;
 
 export function create_graph(cid, ft, ut, vmi, vma) {
     // Keep important data as global variables, needed by
     // render_curve()
     canvas_id = cid;
-    var canvas = <HTMLCanvasElement>document.getElementById(canvas_id);
+    const canvas = <HTMLCanvasElement>document.getElementById(canvas_id);
     from_time = ft;
     until_time = ut;
     v_min = vmi;
@@ -59,14 +59,14 @@ function arrow_right(c, cx, cy, length, size, color) {
     c.fill();
 }
 
-var linea = "#888888";
-var lineb = "#bbbbbb";
-var linec = "#bbbbbb";
+const linea = "#888888";
+const lineb = "#bbbbbb";
+const linec = "#bbbbbb";
 
 export function render_coordinates(v_scala, t_scala) {
     // Create canvas
-    var canvas = <HTMLCanvasElement>document.getElementById(canvas_id);
-    var c = canvas.getContext("2d")!;
+    const canvas = <HTMLCanvasElement>document.getElementById(canvas_id);
+    const c = canvas.getContext("2d")!;
     c.font = "20px sans-serif";
 
     // Convert the coordinate system in a way, that we can directly
@@ -76,7 +76,7 @@ export function render_coordinates(v_scala, t_scala) {
     // c.scale(x_scale, y_scale);
     // c.translate(-from_time, -v_max);
 
-    var t;
+    let t;
     c.strokeStyle = linec;
     c.lineWidth = 0.5;
     for (t = from_time; t <= until_time; t += 1800) {
@@ -92,11 +92,11 @@ export function render_coordinates(v_scala, t_scala) {
         line(c, t, v_min, t, v_max);
     }
 
-    var i;
+    let i;
     c.fillStyle = "#000000";
 
     // Value scala (vertical)
-    var val, txt, p, w;
+    let val, txt, p, w;
     for (i = 0; i < v_scala.length; i++) {
         val = v_scala[i][0];
         txt = v_scala[i][1];
@@ -144,8 +144,8 @@ function point(t, v) {
 }
 
 function line(c, t0, v0, t1, v1) {
-    var p0 = point(t0, v0);
-    var p1 = point(t1, v1);
+    const p0 = point(t0, v0);
+    const p1 = point(t1, v1);
     c.beginPath();
     c.moveTo(p0[0], p0[1]);
     c.lineTo(p1[0], p1[1]);
@@ -153,9 +153,9 @@ function line(c, t0, v0, t1, v1) {
 }
 
 export function render_point(t, v, color) {
-    var canvas = <HTMLCanvasElement>document.getElementById(canvas_id);
-    var c = canvas.getContext("2d")!;
-    var p = point(t, v);
+    const canvas = <HTMLCanvasElement>document.getElementById(canvas_id);
+    const c = canvas.getContext("2d")!;
+    const p = point(t, v);
     c.beginPath();
     c.lineWidth = 4;
     c.strokeStyle = color;
@@ -167,23 +167,23 @@ export function render_point(t, v, color) {
 }
 
 export function render_curve(points, color, w, square) {
-    var canvas = <HTMLCanvasElement>document.getElementById(canvas_id);
-    var c = canvas.getContext("2d")!;
+    const canvas = <HTMLCanvasElement>document.getElementById(canvas_id);
+    const c = canvas.getContext("2d")!;
 
     c.beginPath();
     c.strokeStyle = color;
     c.lineWidth = w;
 
-    var op;
-    var time_step = (until_time - from_time) / points.length;
-    var first = true;
-    for (var i = 0; i < points.length; i++) {
+    let op;
+    const time_step = (until_time - from_time) / points.length;
+    let first = true;
+    for (let i = 0; i < points.length; i++) {
         if (points[i] == null) {
             c.stroke();
             first = true;
             continue;
         }
-        var p = point(from_time + time_step * i, points[i]);
+        const p = point(from_time + time_step * i, points[i]);
         if (first) {
             c.moveTo(p[0], p[1]);
             first = false;
@@ -205,20 +205,20 @@ export function render_area_reverse(points, color, alpha) {
 }
 
 export function render_dual_area(lower_points, upper_points, color, alpha) {
-    var canvas = <HTMLCanvasElement>document.getElementById(canvas_id);
-    var c = canvas.getContext("2d")!;
+    const canvas = <HTMLCanvasElement>document.getElementById(canvas_id);
+    const c = canvas.getContext("2d")!;
 
     c.fillStyle = color;
     c.globalAlpha = alpha;
-    var num_points;
+    let num_points;
     if (lower_points) num_points = lower_points.length;
     else num_points = upper_points.length;
 
-    var time_step = (1.0 * (until_time - from_time)) / num_points;
-    var pix_step = (1.0 * netto_width) / num_points;
+    const time_step = (1.0 * (until_time - from_time)) / num_points;
+    const pix_step = (1.0 * netto_width) / num_points;
 
-    var x, yl, yu, h;
-    for (var i = 0; i < num_points; i++) {
+    let x, yl, yu, h;
+    for (let i = 0; i < num_points; i++) {
         x = point(from_time + time_step * i, 0)[0];
         if (lower_points) yl = point(0, lower_points[i])[1];
         else yl = height - bottom_border;

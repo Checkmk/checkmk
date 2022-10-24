@@ -31,7 +31,7 @@ class FigureRegistry<T extends FigureData> {
     }
 }
 
-export let figure_registry = new FigureRegistry();
+export const figure_registry = new FigureRegistry();
 
 // Data update scheduler
 // Receives one function pointer which is regularly called
@@ -42,7 +42,7 @@ export let figure_registry = new FigureRegistry();
 // - suspend_for (seconds)
 // - update_if_older_than (seconds)
 class Scheduler {
-    _scheduled_function: Function;
+    _scheduled_function: () => void;
     _update_interval: number;
     _enabled: boolean;
     _last_update: number;
@@ -79,24 +79,24 @@ class Scheduler {
     }
 
     update_if_older_than(seconds) {
-        let now = Math.floor(new Date().getTime() / 1000);
+        const now = Math.floor(new Date().getTime() / 1000);
         if (now > this._last_update + seconds) {
             this._scheduled_function();
-            let now = Math.floor(new Date().getTime() / 1000);
+            const now = Math.floor(new Date().getTime() / 1000);
             this._last_update = now;
         }
     }
 
     force_update() {
         this._scheduled_function();
-        let now = Math.floor(new Date().getTime() / 1000);
+        const now = Math.floor(new Date().getTime() / 1000);
         this._last_update = now;
     }
 
     _schedule() {
         if (!this._enabled) return;
         if (!utils.is_window_active()) return;
-        let now = Math.floor(new Date().getTime() / 1000);
+        const now = Math.floor(new Date().getTime() / 1000);
         if (now < this._suspend_updates_until) return;
         // This function is called every second. Add 0.5 seconds grace time
         // for function which expect an update every second
@@ -108,7 +108,7 @@ class Scheduler {
 }
 
 interface BodyContent {
-    interval: number | Function[];
+    interval: number | (() => void)[];
 }
 
 interface URLBody {
@@ -177,16 +177,16 @@ export class MultiDataFetcher {
 
     _schedule_operations() {
         if (!utils.is_window_active()) return;
-        for (let url_id in this._fetch_operations) {
-            for (let body_id in this._fetch_operations[url_id]) {
+        for (const url_id in this._fetch_operations) {
+            for (const body_id in this._fetch_operations[url_id]) {
                 this._process_operation(url_id, body_id);
             }
         }
     }
 
     _process_operation(post_url, post_body) {
-        let now = Math.floor(new Date().getTime() / 1000);
-        let operation = this._fetch_operations[post_url][post_body];
+        const now = Math.floor(new Date().getTime() / 1000);
+        const operation = this._fetch_operations[post_url][post_body];
         if (!operation.active || operation.fetch_in_progress) return;
 
         if (operation.last_update + operation.interval > now) return;
@@ -211,10 +211,10 @@ export class MultiDataFetcher {
     }
 
     _fetch_callback(post_url, post_body, api_response) {
-        let response = api_response.result;
-        let data = response.figure_response;
+        const response = api_response.result;
+        const data = response.figure_response;
 
-        let now = Math.floor(new Date().getTime() / 1000);
+        const now = Math.floor(new Date().getTime() / 1000);
 
         if (
             this._fetch_operations[post_url] == undefined ||
@@ -261,8 +261,8 @@ export abstract class FigureBase<T extends FigureData> {
     _fetch_start: number;
     _fetch_data_latency: number;
     _data_pre_processor_hooks;
-    _pre_render_hooks: Function[];
-    _post_render_hooks: Function[];
+    _pre_render_hooks: ((data?) => void)[];
+    _post_render_hooks: ((data?) => void)[];
     _post_url: string;
     _post_body: string;
     _dashlet_spec;
@@ -339,9 +339,9 @@ export abstract class FigureBase<T extends FigureData> {
     }
 
     remove_plot_definition(plot_definition) {
-        let plot_id = plot_definition.id;
-        for (let idx in this._data.plot_definitions) {
-            let plot_def = this._data.plot_definitions[idx];
+        const plot_id = plot_definition.id;
+        for (const idx in this._data.plot_definitions) {
+            const plot_def = this._data.plot_definitions[idx];
             if (plot_def.id == plot_id) {
                 this._data.plot_definitions.splice(+idx, 1);
                 return;
@@ -386,7 +386,7 @@ export abstract class FigureBase<T extends FigureData> {
     }
 
     unsubscribe_data_pre_processor_hook(func) {
-        let idx = this._data_pre_processor_hooks.indexOf(func);
+        const idx = this._data_pre_processor_hooks.indexOf(func);
         this._data_pre_processor_hooks.splice(idx, 1);
     }
 
@@ -395,7 +395,7 @@ export abstract class FigureBase<T extends FigureData> {
     }
 
     unsubscribe_pre_render_hook(func) {
-        let idx = this._pre_render_hooks.indexOf(func);
+        const idx = this._pre_render_hooks.indexOf(func);
         this._pre_render_hooks.splice(idx, 1);
     }
 
@@ -404,7 +404,7 @@ export abstract class FigureBase<T extends FigureData> {
     }
 
     unsubscribe_post_render_hook(func) {
-        let idx = this._post_render_hooks.indexOf(func);
+        const idx = this._post_render_hooks.indexOf(func);
         this._post_render_hooks.splice(idx, 1);
     }
 
@@ -429,7 +429,7 @@ export abstract class FigureBase<T extends FigureData> {
     }
 
     _fetch_data() {
-        let post_settings = this.get_post_settings();
+        const post_settings = this.get_post_settings();
 
         if (!post_settings.url) return;
 
@@ -443,7 +443,7 @@ export abstract class FigureBase<T extends FigureData> {
             },
         })
             .then(json_data => this._process_api_response(json_data))
-            .catch(e => {
+            .catch(() => {
                 this._show_error_info("Error fetching data", "error");
                 this.remove_loading_image();
             });
@@ -510,15 +510,19 @@ export abstract class FigureBase<T extends FigureData> {
     }
 
     // Triggers gui update mechanics in a figure, e.g. rendering
+    // TOSOLVE should this method become abstract?
+    //in some cases it's not implemented in other classes
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     update_gui() {}
 
     // Simple re-rendering of existing data
     // TODO: merge with update_gui?
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     render() {}
 
     // Adds some basic debug features for the scheduler
     _add_scheduler_debugging() {
-        let debugging = this._div_selection.append("div");
+        const debugging = this._div_selection.append("div");
         // Stop button
         debugging
             .append("input")
@@ -555,7 +559,7 @@ export abstract class FigureBase<T extends FigureData> {
             .join("g")
             .classed("title", true);
 
-        let highlight_container = this._dashlet_spec.show_title == true;
+        const highlight_container = this._dashlet_spec.show_title == true;
 
         title_component
             .selectAll("rect")
@@ -575,7 +579,7 @@ export abstract class FigureBase<T extends FigureData> {
                 .attr("xlink:href", d => d.url || "#");
         }
 
-        let text_element = title_component
+        const text_element = title_component
             .selectAll("text")
             .data(d => [d])
             .join("text")
@@ -620,7 +624,7 @@ export abstract class FigureBase<T extends FigureData> {
         let text = node_sel.text();
         d3.select(node.parentNode)
             .selectAll("title")
-            .data(d => [text])
+            .data(() => [text])
             .join("title")
             .text(d => d)
             .classed("svg_text_tooltip", true);
@@ -710,7 +714,8 @@ export type Levels = {
 };
 
 export function make_levels(domain, bounds): [Levels, Levels, Levels] | [] {
-    let [dmin, dmax] = domain;
+    let dmin = domain[0];
+    const dmax = domain[1];
     if (bounds.warn == null || bounds.crit == null) return [];
 
     if (bounds.warn >= dmax) bounds.warn = dmax;
@@ -774,7 +779,7 @@ export class FigureTooltip {
     update_position(event) {
         if (!this.active()) return;
 
-        let tooltip_size = {
+        const tooltip_size = {
             width: this._tooltip.node().offsetWidth,
             height: this._tooltip.node().offsetHeight,
         };
@@ -802,7 +807,7 @@ export class FigureTooltip {
     }
 
     add_support(node) {
-        let element = d3.select(node);
+        const element = d3.select(node);
         element
             .on("mouseover", event => this._mouseover(event))
             .on("mouseleave", event => this._mouseleave(event))
@@ -830,14 +835,14 @@ export class FigureTooltip {
     }
 
     _mouseover(event) {
-        let node_data = d3.select(event.target).datum();
+        const node_data = d3.select(event.target).datum();
         // @ts-ignore
         if (node_data == undefined || node_data.tooltip == undefined) return;
         this.activate();
     }
 
     _mousemove(event) {
-        let node_data = d3.select(event.target).datum();
+        const node_data = d3.select(event.target).datum();
         // @ts-ignore
         if (node_data == undefined || node_data.tooltip == undefined) return;
         // @ts-ignore
@@ -845,7 +850,7 @@ export class FigureTooltip {
         this.update_position(event);
     }
 
-    _mouseleave(event) {
+    _mouseleave(_event) {
         this.deactivate();
     }
 }
@@ -867,8 +872,8 @@ export function state_component(figurebase, options) {
         return;
     }
     //hard fix for the moment
-    let font_size = options.font_size ? options.font_size : 14;
-    let state_component = figurebase.svg
+    const font_size = options.font_size ? options.font_size : 14;
+    const state_component = figurebase.svg
         .selectAll(".state_component")
         .data([options])
         .join("g")
@@ -881,7 +886,7 @@ export function state_component(figurebase, options) {
                 (figurebase.figure_size.height - font_size * 2) +
                 ")"
         );
-    let label_box = state_component
+    state_component
         .selectAll("rect.status_label")
         .data(d => [d])
         .join("rect")
@@ -893,7 +898,7 @@ export function state_component(figurebase, options) {
         .style("height", font_size * 1.5)
         .attr("rx", 2);
 
-    let the_text = state_component
+    state_component
         .selectAll("text")
         .data(d => [d])
         .join("text")
@@ -919,7 +924,7 @@ export function renderable_value(value, domain, plot) {
 export function split_unit(formatted_value) {
     if (!formatted_value) return {};
     // Separated by space, most rendered quantities
-    let splitted_text = formatted_value.split(" ");
+    const splitted_text = formatted_value.split(" ");
     if (splitted_text.length == 2)
         return {value: splitted_text[0], unit: splitted_text[1]};
 
@@ -940,7 +945,7 @@ export function get_function(render_string) {
 }
 
 export function plot_render_function(plot) {
-    let js_render = getIn(plot, "metric", "unit", "js_render");
+    const js_render = getIn(plot, "metric", "unit", "js_render");
     if (js_render) return get_function(js_render);
     return get_function(
         "function(v) { return cmk.number_format.fmt_number_with_precision(v, cmk.number_format.SIUnitPrefixes, 2, true); }"
@@ -948,7 +953,7 @@ export function plot_render_function(plot) {
 }
 
 export function svc_status_css(paint, params) {
-    let status_cls =
+    const status_cls =
         getIn(params, "paint") === paint ? getIn(params, "css") || "" : "";
     if (status_cls.endsWith("0") && getIn(params, "status") === "not_ok")
         return "";
@@ -976,13 +981,13 @@ export function svc_status_css(paint, params) {
 export function background_status_component(selection, options) {
     const data = options.visible ? [null] : [];
 
-    let path_callback =
+    const path_callback =
         options.path_callback ||
         function (path) {
             path.rect(0, 0, options.size.width, options.size.height);
         };
 
-    let background_path = d3.path();
+    const background_path = d3.path();
     path_callback(background_path);
 
     selection
@@ -1011,13 +1016,13 @@ export function metric_value_component(selection, options) {
     const font_size = clamp(options.font_size, [12, 50]);
     const data = options.visible ? [options.value] : [];
 
-    let link = selection
+    const link = selection
         .selectAll("a.single_value")
         .data(data)
         .join("a")
         .classed("single_value", true)
         .attr("xlink:href", d => d.url || null);
-    let text = link
+    const text = link
         .selectAll("text")
         .data(d => [d])
         .join("text")
@@ -1029,7 +1034,7 @@ export function metric_value_component(selection, options) {
         .style("font-weight", "bold")
         .style("font-size", font_size + "px");
 
-    let unit = text
+    const unit = text
         .selectAll("tspan")
         .data(d => [d])
         .join("tspan")

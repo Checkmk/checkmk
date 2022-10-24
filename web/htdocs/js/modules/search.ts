@@ -5,7 +5,7 @@
 import {call_ajax} from "ajax";
 import {add_class, remove_class} from "utils";
 import {toggle_popup, resize_mega_menu_popup} from "popup_menu";
-var g_call_ajax_obj: null | XMLHttpRequest = null;
+let g_call_ajax_obj: null | XMLHttpRequest = null;
 
 class Search {
     id: string;
@@ -120,7 +120,7 @@ const monitoring_search = new Search("monitoring");
 const setup_search = new Search("setup");
 
 export function on_input_search(id) {
-    let current_search: Search = get_current_search(id)!;
+    const current_search: Search = get_current_search(id)!;
     if (current_search) {
         if (current_search.previous_timeout_id !== null) {
             clearTimeout(current_search.previous_timeout_id);
@@ -137,8 +137,8 @@ export function on_input_search(id) {
 }
 
 export function on_click_show_all_topics(topic) {
-    let current_topic = document.getElementById(topic)!;
-    let topic_results = current_topic.getElementsByTagName("li");
+    const current_topic = document.getElementById(topic)!;
+    const topic_results = current_topic.getElementsByTagName("li");
     remove_class(current_topic, "extended");
     add_class(current_topic, "extendable");
     remove_class(
@@ -155,8 +155,8 @@ export function on_click_show_all_topics(topic) {
 }
 
 export function on_click_show_all_results(topic, popup_menu_id) {
-    let current_topic = document.getElementById(topic)!;
-    let topic_results = current_topic.getElementsByTagName("li");
+    const current_topic = document.getElementById(topic)!;
+    const topic_results = current_topic.getElementsByTagName("li");
     remove_class(current_topic, "extendable");
     add_class(current_topic, "extended");
     add_class(
@@ -190,7 +190,7 @@ function get_current_search(id) {
     return current_search;
 }
 export function on_click_reset(id) {
-    let current_search = get_current_search(id)!;
+    const current_search = get_current_search(id)!;
     if (current_search.has_search_query()) {
         (
             document.getElementById(current_search.input_id) as HTMLInputElement
@@ -208,8 +208,8 @@ export function on_click_reset(id) {
     resize_mega_menu_popup(document.getElementById("popup_menu_" + id));
 }
 export function on_key_down(id) {
-    let current_search = get_current_search(id);
-    let current_key = (event as KeyboardEvent).key;
+    const current_search = get_current_search(id);
+    const current_key = (window.event as KeyboardEvent).key;
 
     if (!(current_key || current_search)) {
         return;
@@ -278,7 +278,7 @@ function move_current_search_position(step, current_search) {
 
     current_search.current_search_position += step;
 
-    let result_list = document
+    const result_list = document
         .getElementById(current_search.search_id)!
         .getElementsByTagName("li");
     if (!result_list) return;

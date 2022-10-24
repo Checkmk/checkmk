@@ -15,10 +15,10 @@ import * as utils from "utils";
 //#   | Code for detecting the visibility of the current browser window/tab  |
 //#   '----------------------------------------------------------------------'
 
-var g_visibility_detection_enabled = true;
+let g_visibility_detection_enabled = true;
 
 export function initialize() {
-    var hidden_attr_name = "hidden";
+    let hidden_attr_name = "hidden";
 
     // Standards:
     if (hidden_attr_name in document)
@@ -54,7 +54,7 @@ export function initialize() {
     }
 
     function on_visibility_change(evt) {
-        var v = "visible",
+        const v = "visible",
             h = "hidden",
             evtMap = {
                 focus: v,
@@ -70,7 +70,7 @@ export function initialize() {
         utils.remove_class(document.body, "visible");
         utils.remove_class(document.body, "hidden");
 
-        var new_class;
+        let new_class;
         if (evt.type in evtMap) {
             new_class = evtMap[evt.type];
         } else {

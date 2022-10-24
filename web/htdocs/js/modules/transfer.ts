@@ -5,7 +5,7 @@
 import * as ajax from "ajax";
 
 // @ts-ignore
-declare var XDomainRequest;
+declare let XDomainRequest;
 //# +--------------------------------------------------------------------+
 //# | Posting crash report to official Checkmk crash reporting API      |
 //# '--------------------------------------------------------------------'
@@ -43,18 +43,19 @@ function has_cross_domain_ajax_support() {
 
 // @ts-ignore
 function submit_with_ie(url, post_data) {
-    var handler_data = {
+    const handler_data = {
         base_url: url,
     };
     //not sure if this is the best solution
     //see for another solution: https://stackoverflow.com/questions/66120513/property-does-not-exist-on-type-window-typeof-globalthis
-    var xdr = new (window as any).XDomainRequest();
+    const xdr = new (window as any).XDomainRequest();
     xdr.onload = function () {
         handle_report_response(handler_data, xdr.responseText);
     };
     xdr.onerror = function () {
         handle_report_error(handler_data, null, xdr.responseText);
     };
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     xdr.onprogress = function () {};
     xdr.open("post", url);
     xdr.send(post_data);
@@ -67,15 +68,15 @@ function handle_report_response(
     hide_report_processing_msg();
 
     if (response_body.substr(0, 2) == "OK") {
-        var id = response_body.split(" ")[1];
-        var success_container = document.getElementById("success_msg")!;
+        const id = response_body.split(" ")[1];
+        const success_container = document.getElementById("success_msg")!;
         success_container.style.display = "block";
         success_container.innerHTML = success_container.innerHTML.replace(
             /###ID###/,
             id
         );
     } else {
-        var fail_container = document.getElementById("fail_msg")!;
+        const fail_container = document.getElementById("fail_msg")!;
         fail_container.style.display = "block";
         fail_container.children[0].innerHTML += " (" + response_body + ").";
     }
@@ -88,7 +89,7 @@ function handle_report_error(
 ) {
     hide_report_processing_msg();
 
-    var fail_container = document.getElementById("fail_msg")!;
+    const fail_container = document.getElementById("fail_msg")!;
     fail_container.style.display = "block";
     if (status_code) {
         fail_container.children[0].innerHTML += " (HTTP: " + status_code + ").";
@@ -103,14 +104,14 @@ function handle_report_error(
 }
 
 function hide_report_processing_msg() {
-    var msg = document.getElementById("pending_msg")!;
+    const msg = document.getElementById("pending_msg")!;
     msg.parentNode?.removeChild(msg);
 }
 
 // Download function only for crash reports
 
 export function download(data_url: string) {
-    var link = document.createElement("a");
+    const link = document.createElement("a");
     link.download =
         "Check_MK_GUI_Crash-" + new Date().toISOString() + ".tar.gz";
     link.href = data_url;

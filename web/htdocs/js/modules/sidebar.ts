@@ -6,8 +6,8 @@ import * as utils from "utils";
 import * as ajax from "ajax";
 import * as quicksearch from "quicksearch";
 
-var g_content_loc: null | string = null;
-var g_scrollbar: SimpleBar | null | undefined = null;
+let g_content_loc: null | string = null;
+let g_scrollbar: SimpleBar | null | undefined = null;
 
 export function initialize_sidebar(update_interval, refresh, restart, static_) {
     if (restart) {
@@ -76,10 +76,10 @@ function on_mouse_leave() {
  * snapin drag/drop code
  *************************************************/
 
-var g_snapin_dragging: false | HTMLElement = false;
-var g_snapin_offset = [0, 0];
-var g_snapin_start_pos = [0, 0];
-var g_snapin_scroll_top = 0;
+let g_snapin_dragging: false | HTMLElement = false;
+let g_snapin_offset = [0, 0];
+let g_snapin_start_pos = [0, 0];
+let g_snapin_scroll_top = 0;
 
 export function snapin_start_drag(event: MouseEvent) {
     const target = event.target;
@@ -154,7 +154,6 @@ function snapinDrop(event, targetpos) {
     if (g_snapin_dragging === false) return true;
 
     // Reset properties
-    g_snapin_dragging = g_snapin_dragging;
     utils.remove_class(g_snapin_dragging, "dragging");
     g_snapin_dragging.style.top = "";
     g_snapin_dragging.style.left = "";
@@ -214,7 +213,7 @@ function getSnapinList() {
     g_snapin_dragging = g_snapin_dragging as HTMLElement;
     for (const child of getDivChildNodes(g_snapin_dragging.parentNode)) {
         // Skip non snapin objects and the currently dragged object
-        var id = (child as HTMLElement).id;
+        const id = (child as HTMLElement).id;
         if (id && id.substr(0, 7) == "snapin_" && id != g_snapin_dragging.id) {
             l.push(child);
         }
@@ -337,7 +336,7 @@ export function update_content_location() {
     }
 }
 
-var g_scrolling = true;
+const g_scrolling = true;
 
 export function scroll_window(speed) {
     const c = document.getElementById("side_content");
@@ -377,15 +376,15 @@ function unfold_sidebar() {
 //
 
 // The refresh snapins do reload after a defined amount of time
-var refresh_snapins: string[][] = [];
+let refresh_snapins: string[][] = [];
 // The restart snapins are notified about the restart of the nagios instance(s)
-var restart_snapins: string[] = [];
+let restart_snapins: string[] = [];
 // Snapins that only have to be reloaded on demand
-var static_snapins: string[] = [];
+let static_snapins: string[] = [];
 // Contains a timestamp which holds the time of the last nagios restart handling
-var sidebar_restart_time: number | null = null;
+let sidebar_restart_time: number | null = null;
 // Configures the number of seconds to reload all snapins which request it
-var sidebar_update_interval = null;
+let sidebar_update_interval = null;
 
 export function add_snapin(name) {
     ajax.call_ajax("sidebar_ajax_add_snapin.py?name=" + name, {
@@ -497,7 +496,7 @@ function remove_snapin(id) {
 
 export function toggle_sidebar_snapin(oH2, url) {
     // oH2 is a <b> if it is the snapin title otherwise it is the minimize button.
-    let childs = oH2.parentNode.parentNode.childNodes;
+    const childs = oH2.parentNode.parentNode.childNodes;
 
     let oContent, oHead;
     for (const i in childs) {
@@ -560,9 +559,9 @@ function bulk_update_contents(ids, codes) {
     }
 }
 
-var g_seconds_to_update: null | number = null;
-var g_sidebar_scheduler_timer: null | number = null;
-var g_sidebar_full_reload = false;
+let g_seconds_to_update: null | number = null;
+let g_sidebar_scheduler_timer: null | number = null;
+let g_sidebar_full_reload = false;
 
 export function refresh_single_snapin(name) {
     const url = "sidebar_snapin.py?names=" + name;
@@ -709,8 +708,8 @@ function getCookie(cookieName) {
 }
 
 export function initialize_scroll_position() {
-    var scrollPosFromCookie = getCookie("sidebarScrollPos");
-    var scrollPos: number = scrollPosFromCookie
+    const scrollPosFromCookie = getCookie("sidebarScrollPos");
+    const scrollPos: number = scrollPosFromCookie
         ? parseInt(scrollPosFromCookie)
         : 0;
     g_scrollbar!.getScrollElement().scrollTop = scrollPos;
@@ -729,8 +728,8 @@ function store_scroll_position() {
  *************************************************/
 
 // FIXME: Make this somehow configurable - use the start url?
-var g_last_view = "dashboard.py?name=main";
-var g_last_folder = "";
+let g_last_view = "dashboard.py?name=main";
+let g_last_folder = "";
 
 // highlight the followed link (when both needed snapins are available)
 function highlight_link(link_obj, container_id) {
@@ -856,7 +855,7 @@ export function set_snapin_site(event, ident, select_field) {
             "&site=" +
             encodeURIComponent(select_field.value),
         {
-            response_handler: function (handler_data, response_body) {
+            response_handler: function (_handler_data, _response_body) {
                 refresh_single_snapin(ident);
             },
         }
@@ -869,7 +868,7 @@ export function set_snapin_site(event, ident, select_field) {
  *************************************************/
 
 export function fetch_nagvis_snapin_contents() {
-    var nagvis_snapin_update_interval = 30;
+    const nagvis_snapin_update_interval = 30;
 
     // Stop reload of the snapin content in case the browser window / tab is
     // not visible for the user. Retry after short time.
@@ -946,7 +945,7 @@ export function add_bookmark() {
  * Speedometer snapin
  *************************************************/
 
-var g_needle_timeout: null | number = null;
+let g_needle_timeout: null | number = null;
 
 export function speedometer_show_speed(
     last_perc,
@@ -997,7 +996,7 @@ export function speedometer_show_speed(
                 5000
             );
         },
-        error_handler: function (handler_data, status_code, error_msg) {
+        error_handler: function (handler_data, _status_code, _error_msg) {
             setTimeout(
                 (function (data) {
                     return function () {
@@ -1076,8 +1075,8 @@ function move_needle(from_perc, to_perc) {
  *************************************************/
 
 // integer representing interval in seconds or <null> when disabled.
-var g_sidebar_notify_interval;
-var g_may_ack = false;
+let g_sidebar_notify_interval;
+let g_may_ack = false;
 
 export function init_messages_and_werks(interval, may_ack) {
     g_sidebar_notify_interval = interval;
@@ -1123,7 +1122,7 @@ function update_messages() {
 }
 
 export function update_message_trigger(msg_text, msg_count) {
-    let l = document.getElementById("messages_label")!;
+    const l = document.getElementById("messages_label")!;
     if (msg_count === 0) {
         l.style.display = "none";
         return;
@@ -1132,8 +1131,8 @@ export function update_message_trigger(msg_text, msg_count) {
     l.innerText = msg_count.toString();
     l.style.display = "inline";
 
-    let user_messages = document.getElementById("messages_link_to")!;
-    let text_content = msg_count + " " + msg_text;
+    const user_messages = document.getElementById("messages_link_to")!;
+    const text_content = msg_count + " " + msg_text;
     user_messages.textContent = text_content;
 }
 
@@ -1161,7 +1160,7 @@ function update_unack_incomp_werks() {
 }
 
 export function update_werks_trigger(werks_count, text, tooltip) {
-    let l = document.getElementById("werks_label")!;
+    const l = document.getElementById("werks_label")!;
     if (werks_count === 0) {
         l.style.display = "none";
         return;
@@ -1170,7 +1169,7 @@ export function update_werks_trigger(werks_count, text, tooltip) {
     l.innerText = werks_count.toString();
     l.style.display = "inline";
 
-    let werks_link = document.getElementById("werks_link_to");
+    const werks_link = document.getElementById("werks_link_to");
     if (werks_link) {
         werks_link.textContent = text;
         werks_link.setAttribute("title", tooltip.toString());

@@ -19,14 +19,13 @@ export function enable_dynamic_form_elements(
     enable_label_input_fields(container);
 }
 
-var g_previous_timeout_id: number | null = null;
-var g_ajax_obj;
+let g_previous_timeout_id: number | null = null;
+let g_ajax_obj;
 
 export function enable_select2_dropdowns(container) {
-    let elements;
     if (!container) container = $(document);
 
-    elements = $(container)
+    const elements = $(container)
         .find(".select2-enable")
         .not(".vlof_prototype .select2-enable");
     elements.select2({
@@ -60,17 +59,17 @@ export function enable_select2_dropdowns(container) {
 function enable_label_input_fields(container) {
     if (!container) container = document;
 
-    let elements = container.querySelectorAll("input.labels");
+    const elements = container.querySelectorAll("input.labels");
     elements.forEach(element => {
         // Do not tagify objects that are part of a ListOf valuespec template
         if (element.closest(".vlof_prototype") !== null) {
             return;
         }
 
-        let max_labels = element.getAttribute("data-max-labels");
-        let world = element.getAttribute("data-world");
+        const max_labels = element.getAttribute("data-max-labels");
+        const world = element.getAttribute("data-world");
 
-        let tagify_args = {
+        const tagify_args = {
             pattern: /^[^:]+:[^:]+$/,
             dropdown: {
                 enabled: 1, // show dropdown on first character
@@ -86,23 +85,23 @@ function enable_label_input_fields(container) {
             tagify_args["maxTags"] = max_labels;
         }
 
-        let tagify = new Tagify(element, tagify_args);
+        const tagify = new Tagify(element, tagify_args);
 
         // Add custom validation function that ensures that a single label key is only used once
         tagify.settings.validate = (t => {
             return add_label => {
-                let label_key = add_label.value.split(":", 1)[0];
-                let key_error_msg =
+                const label_key = add_label.value.split(":", 1)[0];
+                const key_error_msg =
                     "Only one value per KEY can be used at a time.";
                 if (tagify.settings.maxTags == 1) {
-                    let label_type = element.getAttribute("class");
-                    let existing_tags = document.querySelectorAll(
+                    const label_type = element.getAttribute("class");
+                    const existing_tags = document.querySelectorAll(
                         `.tagify.${label_type.replace(
                             " ",
                             "."
                         )} .tagify__tag-text`
                     );
-                    let existing_keys_array = Array.prototype.map.call(
+                    const existing_keys_array = Array.prototype.map.call(
                         existing_tags,
                         function (x) {
                             return x.textContent.split(":")[0];
@@ -122,7 +121,7 @@ function enable_label_input_fields(container) {
                         if (t.state.editing) {
                             continue;
                         }
-                        let existing_key = existing_label.value.split(
+                        const existing_key = existing_label.value.split(
                             ":",
                             1
                         )[0];
@@ -160,7 +159,7 @@ function enable_label_input_fields(container) {
             $("div.label_error").remove(); // Remove all previous errors
 
             // Print a validation error message
-            var msg = document.createElement("div");
+            const msg = document.createElement("div");
             msg.classList.add("message", "error", "label_error");
 
             msg.innerHTML = message;
@@ -175,13 +174,13 @@ function enable_label_input_fields(container) {
         tagify.on("input", function (e) {
             $("div.label_error").remove(); // Remove all previous errors
 
-            var value = e.detail.value;
+            const value = e.detail.value;
             tagify.settings.whitelist.length = 0; // reset the whitelist
 
             // show loading animation and hide the suggestions dropdown
             tagify.loading(true).dropdown.hide.call(tagify);
 
-            var post_data =
+            const post_data =
                 "request=" +
                 encodeURIComponent(
                     JSON.stringify({
@@ -219,7 +218,7 @@ function ajax_call_autocomplete_labels(post_data, tagify, value, element) {
         method: "POST",
         post_data: post_data,
         response_handler: function (handler_data, ajax_response) {
-            var response = JSON.parse(ajax_response);
+            const response = JSON.parse(ajax_response);
             if (response.result_code != 0) {
                 console.log(
                     "Error [" + response.result_code + "]: " + response.result
@@ -227,7 +226,7 @@ function ajax_call_autocomplete_labels(post_data, tagify, value, element) {
                 return;
             }
 
-            let result_objects: Object[] = [];
+            const result_objects: {value: string}[] = [];
             response.result.choices.forEach((entry: string[]) => {
                 result_objects.push({value: entry[1]});
             });
@@ -244,20 +243,20 @@ function ajax_call_autocomplete_labels(post_data, tagify, value, element) {
                 handler_data.value
             );
 
-            let tagify__input =
+            const tagify__input =
                 element?.parentElement?.querySelector(".tagify__input");
             if (tagify__input) {
                 let max = value.length;
                 handler_data.tagify.suggestedListItems.forEach(entry => {
                     max = Math.max(entry.value.length, max);
                 });
-                let fontSize = parseInt(
+                const fontSize = parseInt(
                     window
                         .getComputedStyle(tagify__input, null)
                         .getPropertyValue("font-size")
                 );
                 // Minimum width set by tagify
-                let size = Math.max(110, max * (fontSize / 2 + 1));
+                const size = Math.max(110, max * (fontSize / 2 + 1));
                 tagify__input.style.width = size.toString() + "px";
                 tagify__input.parentElement.style.width =
                     (size + 10).toString() + "px";
@@ -272,10 +271,10 @@ function ajax_call_autocomplete_labels(post_data, tagify, value, element) {
 
 // Handle Enter key in textfields
 export function textinput_enter_submit(event, submit) {
-    var keyCode = event.which || event.keyCode;
+    const keyCode = event.which || event.keyCode;
     if (keyCode == 13) {
         if (submit) {
-            var button = document.getElementById(submit);
+            const button = document.getElementById(submit);
             if (button) button.click();
         }
         return utils.prevent_default_events(event);
@@ -329,7 +328,7 @@ export function confirm_dialog(optional_args, confirm_handler) {
         customClass: custom_class_args,
     };
 
-    let args = {
+    const args = {
         ...default_args,
         ...optional_args,
     };
@@ -343,7 +342,7 @@ export function confirm_dialog(optional_args, confirm_handler) {
 
 // Makes a form submittable after explicit confirmation
 export function add_confirm_on_submit(form_id, message) {
-    let form = document.getElementById(form_id);
+    const form = document.getElementById(form_id);
     if (form instanceof HTMLElement) {
         form.addEventListener("submit", e => {
             confirm_dialog({html: message}, () => {

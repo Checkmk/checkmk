@@ -32,7 +32,7 @@ export function monitor(handler_data) {
 }
 
 function handle_update(handler_data, response_json) {
-    var response = JSON.parse(response_json);
+    const response = JSON.parse(response_json);
     if (response.result_code == 1) {
         handler_data.error_function(response.result);
         return; // Abort on error!
@@ -76,9 +76,9 @@ function handle_error(handler_data, status_code, error_msg) {
 }
 
 export function show_error(text) {
-    var container = document.getElementById("async_progress_msg")!;
+    const container = document.getElementById("async_progress_msg")!;
     container.style.display = "block";
-    var msg = container.childNodes[0] as HTMLElement;
+    const msg = container.childNodes[0] as HTMLElement;
 
     utils.add_class(msg, "error");
     utils.remove_class(msg, "success");
@@ -103,6 +103,6 @@ export function show_info(text) {
 }
 
 export function hide_msg() {
-    var msg = document.getElementById("async_progress_msg");
+    const msg = document.getElementById("async_progress_msg");
     if (msg) msg.style.display = "none";
 }

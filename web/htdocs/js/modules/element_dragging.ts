@@ -21,16 +21,16 @@ interface element_dragging {
     moved: boolean;
     drop_handler: any;
 }
-var g_element_dragging: null | element_dragging = null;
+let g_element_dragging: null | element_dragging = null;
 
 export function start(event, dragger, dragging_tag, drop_handler) {
-    var button = utils.get_button(event);
+    const button = utils.get_button(event);
 
     // Skip calls when already dragging or other button than left mouse
     if (g_element_dragging !== null || button != "LEFT") return true;
 
     // Find the first parent of the given tag type
-    var dragging = dragger;
+    let dragging = dragger;
     while (dragging && dragging.tagName != dragging_tag)
         dragging = dragging.parentNode;
 
@@ -60,11 +60,11 @@ function element_dragging(event) {
 }
 
 function position_dragging_object(event) {
-    var dragging = g_element_dragging?.dragging,
+    const dragging = g_element_dragging?.dragging,
         container = g_element_dragging?.dragging.parentNode;
 
-    var get_previous = function (node) {
-        var previous = node.previousElementSibling;
+    const get_previous = function (node) {
+        const previous = node.previousElementSibling;
 
         // In case this is a header TR, don't move it above this!
         // TODO: Does not work with all tables! See comment in finalize_dragging()
@@ -80,12 +80,12 @@ function position_dragging_object(event) {
         return previous;
     };
 
-    var get_next = function (node) {
+    const get_next = function (node) {
         return node.nextElementSibling;
     };
 
     // Move it up?
-    var previous = get_previous(dragging);
+    let previous = get_previous(dragging);
     while (previous && mouse_offset_to_middle(previous, event).y < 0) {
         g_element_dragging!.moved = true;
         container.insertBefore(dragging, previous);
@@ -93,7 +93,7 @@ function position_dragging_object(event) {
     }
 
     // Move it down?
-    var next = get_next(dragging);
+    let next = get_next(dragging);
     while (next && mouse_offset_to_middle(next, event).y > 0) {
         g_element_dragging!.moved = true;
         container.insertBefore(dragging, next.nextElementSibling);
@@ -103,8 +103,8 @@ function position_dragging_object(event) {
 
 // mouse offset to the middle coordinates of an object
 function mouse_offset_to_middle(obj, event) {
-    var obj_pos = obj.getBoundingClientRect();
-    var mouse_pos = utils.mouse_position(event);
+    const obj_pos = obj.getBoundingClientRect();
+    const mouse_pos = utils.mouse_position(event);
     return {
         x: mouse_pos.x - (obj_pos.left + obj_pos.width / 2),
         y: mouse_pos.y - (obj_pos.top + obj_pos.height / 2),
@@ -121,23 +121,23 @@ function element_drag_stop(event) {
 }
 
 function finalize_dragging() {
-    var dragging = g_element_dragging?.dragging;
+    const dragging = g_element_dragging?.dragging;
     utils.remove_class(dragging, "dragging");
 
     if (!g_element_dragging?.moved) return; // Nothing changed. Fine.
 
-    var elements = dragging.parentNode.children;
+    const elements = dragging.parentNode.children;
 
-    var index = Array.prototype.slice.call(elements).indexOf(dragging);
+    let index = Array.prototype.slice.call(elements).indexOf(dragging);
 
     // This currently makes the draggig work with tables having:
     // - no header
     // - one header line
-    var has_header = elements[0].children[0].tagName == "TH";
+    const has_header = elements[0].children[0].tagName == "TH";
     if (has_header) index -= 1;
 
     // - possible existing "table.py" second header (actions in tables)
-    var has_action_row =
+    const has_action_row =
         elements.length > 1 && utils.has_class(elements[1], "actions");
     if (has_action_row) index -= 1;
 
@@ -145,7 +145,7 @@ function finalize_dragging() {
 }
 
 export function url_drop_handler(base_url, index) {
-    var url = base_url + "&_index=" + encodeURIComponent(index);
+    const url = base_url + "&_index=" + encodeURIComponent(index);
     location.href = url;
 }
 

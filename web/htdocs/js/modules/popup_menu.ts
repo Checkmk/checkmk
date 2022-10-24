@@ -84,7 +84,7 @@ class PopUp {
     }
 }
 
-var active_popup = new PopUp();
+const active_popup = new PopUp();
 
 export function close_popup() {
     active_popup.close();
@@ -191,7 +191,7 @@ export function toggle_popup(
     open_popup();
 }
 
-var switch_popup_timeout: null | number = null;
+let switch_popup_timeout: null | number = null;
 
 // When one of the popups of a group is open, open other popups once hovering over another popups
 // trigger. This currently only works on PopupMethodInline based popups.
@@ -261,17 +261,17 @@ function generate_menu(container, resizable) {
 }
 
 function generate_colorpicker_body(content, varprefix, value) {
-    var picker = document.createElement("div");
+    const picker = document.createElement("div");
     picker.className = "cp-small";
     picker.setAttribute("id", varprefix + "_picker");
     content.appendChild(picker);
 
-    var cp_input = document.createElement("div");
+    const cp_input = document.createElement("div");
     cp_input.className = "cp-input";
     cp_input.innerHTML = "Hex color:";
     content.appendChild(cp_input);
 
-    var input_field = document.createElement("input");
+    const input_field = document.createElement("input");
     input_field.setAttribute("id", varprefix + "_input");
     input_field.setAttribute("type", "text");
     cp_input.appendChild(input_field);
@@ -300,7 +300,7 @@ function handle_render_popup_contents(data, response_text) {
 }
 
 function fix_popup_menu_position(event, menu) {
-    var rect = menu.getBoundingClientRect();
+    const rect = menu.getBoundingClientRect();
 
     // Check whether or not the menu is out of the bottom border
     // -> if so, move the menu up
@@ -308,7 +308,7 @@ function fix_popup_menu_position(event, menu) {
         rect.bottom >
         (window.innerHeight || document.documentElement.clientHeight)
     ) {
-        var height = rect.bottom - rect.top;
+        const height = rect.bottom - rect.top;
         if (rect.top - height < 0) {
             // would hit the top border too, then put the menu to the top border
             // and hope that it fits within the screen
@@ -326,7 +326,7 @@ function fix_popup_menu_position(event, menu) {
     if (
         rect.right > (window.innerWidth || document.documentElement.clientWidth)
     ) {
-        var width = rect.right - rect.left;
+        const width = rect.right - rect.left;
         if (rect.left - width < 0) {
             // would hit the left border too, then put the menu to the left border
             // and hope that it fits within the screen
@@ -342,16 +342,16 @@ function fix_popup_menu_position(event, menu) {
 // TODO: Remove this function as soon as all visuals have been
 // converted to pagetypes.py
 export function add_to_visual(visual_type, visual_name) {
-    var element_type = active_popup.data![0];
-    var create_info = {
+    const element_type = active_popup.data![0];
+    const create_info = {
         context: active_popup.data![1],
         params: active_popup.data![2],
     };
-    var create_info_json = JSON.stringify(create_info);
+    const create_info_json = JSON.stringify(create_info);
 
     close_popup();
 
-    var url =
+    const url =
         "ajax_add_visual.py" +
         "?visual_type=" +
         visual_type +
@@ -377,17 +377,17 @@ export function add_to_visual(visual_type, visual_name) {
 
 // FIXME: Adapt error handling which has been addded to add_to_visual() in the meantime
 export function pagetype_add_to_container(page_type, page_name) {
-    var element_type = active_popup.data![0]; // e.g. "pnpgraph"
+    const element_type = active_popup.data![0]; // e.g. "pnpgraph"
     // complex JSON struct describing the thing
-    var create_info = {
+    const create_info = {
         context: active_popup.data![1],
         parameters: active_popup.data![2],
     };
-    var create_info_json = JSON.stringify(create_info);
+    const create_info_json = JSON.stringify(create_info);
 
     close_popup();
 
-    var url =
+    const url =
         "ajax_pagetype_add_element.py" +
         "?page_type=" +
         page_type +
@@ -404,7 +404,7 @@ export function pagetype_add_to_container(page_type, page_name) {
             // redirected to. The second is "true" if we should reload the
             // sidebar.
             if (response_body) {
-                var parts = response_body.split("\n");
+                const parts = response_body.split("\n");
                 if (parts[1] == "true") {
                     if (parts[0]) utils.reload_whole_page(parts[0]);
                     else utils.reload_whole_page();
@@ -416,7 +416,7 @@ export function pagetype_add_to_container(page_type, page_name) {
 }
 
 export function graph_export(page) {
-    var request = {
+    const request = {
         specification: active_popup.data![2]["definition"]["specification"],
         data_range: active_popup.data![2]["data_range"],
     };
@@ -548,7 +548,7 @@ function maximum_popup_width() {
 }
 
 export function mega_menu_show_all_items(current_topic_id) {
-    let current_topic = document.getElementById(current_topic_id);
+    const current_topic = document.getElementById(current_topic_id);
     utils.remove_class(current_topic, "extendable");
     utils.add_class(current_topic, "extended");
     utils.add_class(current_topic!.closest(".main_menu"), "extended_topic");
@@ -556,28 +556,28 @@ export function mega_menu_show_all_items(current_topic_id) {
 }
 
 export function mega_menu_show_all_topics(current_topic_id) {
-    let current_topic = document.getElementById(current_topic_id);
+    const current_topic = document.getElementById(current_topic_id);
     utils.remove_class(current_topic, "extended");
     utils.remove_class(current_topic!.closest(".main_menu"), "extended_topic");
     mega_menu_hide_entries(current_topic!.closest(".main_menu")?.id);
-    current_topic?.getElementsByTagName("ul")[0].removeAttribute("style");
-    resize_mega_menu_popup(current_topic?.closest(".main_menu_popup")!);
+    current_topic!.getElementsByTagName("ul")[0].removeAttribute("style");
+    resize_mega_menu_popup(current_topic!.closest(".main_menu_popup")!);
 }
 
 export function mega_menu_hide_entries(menu_id) {
-    let menu = document.getElementById(menu_id);
-    let more_is_active = menu?.classList.contains("more");
-    let topics = menu?.getElementsByClassName(
+    const menu = document.getElementById(menu_id);
+    const more_is_active = menu?.classList.contains("more");
+    const topics = menu?.getElementsByClassName(
         "topic"
     ) as HTMLCollectionOf<HTMLElement>;
-    Array.from(topics).forEach(topic => {
+    Array.from(topics!).forEach(topic => {
         if (topic.classList.contains("extended")) return;
-        let max_entry_number = Number(topic.getAttribute("data-max-entries"));
+        const max_entry_number = Number(topic.getAttribute("data-max-entries"));
         if (!max_entry_number) {
             return;
         }
-        let entries = topic.getElementsByTagName("li");
-        let show_all_items_entry = entries[entries.length - 1];
+        const entries = topic.getElementsByTagName("li");
+        const show_all_items_entry = entries[entries.length - 1];
         if (entries.length > max_entry_number + 1) {
             // + 1 is needed for the show_all_items entry
             let counter = 0;
@@ -598,7 +598,7 @@ export function mega_menu_hide_entries(menu_id) {
             else utils.remove_class(topic, "extendable");
         }
     });
-    resize_mega_menu_popup(menu?.parentElement!);
+    resize_mega_menu_popup(menu!.parentElement!);
 }
 
 export function focus_search_field(input_id) {

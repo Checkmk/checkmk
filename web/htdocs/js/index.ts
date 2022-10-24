@@ -50,56 +50,58 @@ import "cmk_figures_plugins";
 
 try {
     require("cmk_figures_plugins_cee");
-} catch (e) {}
+} catch (e) {
+    // eslint-disable-next-line no-empty
+}
+
 import * as graphs from "graphs";
 
 import * as nodevis from "./modules/nodevis/main";
-import {fetch} from "whatwg-fetch";
 
 // Optional import is currently not possible using the ES6 imports
-var graphs_cee;
+let graphs_cee;
 try {
     graphs_cee = require("graphs_cee");
 } catch (e) {
     graphs_cee = null;
 }
 
-var ntop_host_details;
+let ntop_host_details;
 try {
     ntop_host_details = require("ntop_host_details");
 } catch (e) {
     ntop_host_details = null;
 }
 
-var ntop_alerts;
+let ntop_alerts;
 try {
     ntop_alerts = require("ntop_alerts");
 } catch (e) {
     ntop_alerts = null;
 }
 
-var ntop_flows;
+let ntop_flows;
 try {
     ntop_flows = require("ntop_flows");
 } catch (e) {
     ntop_flows = null;
 }
 
-var ntop_top_talkers;
+let ntop_top_talkers;
 try {
     ntop_top_talkers = require("ntop_top_talkers");
 } catch (e) {
     ntop_top_talkers = null;
 }
 
-var ntop_utils;
+let ntop_utils;
 try {
     ntop_utils = require("ntop_utils");
 } catch (e) {
     ntop_utils = null;
 }
 
-var license_usage_timeseries_graph;
+let license_usage_timeseries_graph;
 try {
     license_usage_timeseries_graph = require("license_usage_timeseries_graph");
 } catch (e) {

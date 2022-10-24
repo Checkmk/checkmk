@@ -5,9 +5,9 @@
 import * as utils from "utils";
 import * as ajax from "ajax";
 
-var g_num_replsites = 0;
-var g_back_url = "";
-var profile_replication_progress = {};
+let g_num_replsites = 0;
+let g_back_url = "";
+const profile_replication_progress = {};
 
 export function prepare(num, back_url) {
     g_num_replsites = num;
@@ -17,9 +17,9 @@ export function prepare(num, back_url) {
 export function start(siteid, est, progress_text) {
     ajax.call_ajax("wato_ajax_profile_repl.py", {
         response_handler: function (handler_data, response_json) {
-            var response = JSON.parse(response_json);
-            var success = response.result_code === 0;
-            var msg = response.result;
+            const response = JSON.parse(response_json);
+            const success = response.result_code === 0;
+            const msg = response.result;
 
             set_result(handler_data["site_id"], success, msg);
         },
@@ -52,7 +52,7 @@ export function start(siteid, est, progress_text) {
 }
 
 function set_status(siteid, image, text) {
-    var icon = document
+    const icon = document
         .getElementById("site-" + siteid)!
         .getElementsByClassName("repl_status")[0];
     (icon as HTMLElement).title = text;
@@ -62,8 +62,8 @@ function set_status(siteid, image, text) {
 export function step(siteid, est, progress_text) {
     if (profile_replication_progress[siteid] > 0) {
         profile_replication_progress[siteid]--;
-        var perc = ((20.0 - profile_replication_progress[siteid]) * 100) / 20;
-        var img;
+        const perc = ((20.0 - profile_replication_progress[siteid]) * 100) / 20;
+        let img;
         if (perc >= 75) img = "repl_75";
         else if (perc >= 50) img = "repl_50";
         else if (perc >= 25) img = "repl_25";
@@ -76,7 +76,7 @@ export function step(siteid, est, progress_text) {
 function set_result(site_id, success, msg) {
     profile_replication_progress[site_id] = 0;
 
-    var icon_name = success ? "repl_success" : "repl_failed";
+    const icon_name = success ? "repl_success" : "repl_failed";
 
     set_status(site_id, icon_name, msg);
 

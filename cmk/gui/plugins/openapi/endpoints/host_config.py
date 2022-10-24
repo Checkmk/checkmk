@@ -611,18 +611,18 @@ def serialize_host(host: CREHost, effective_attributes: bool) -> dict[str, Any]:
 
     agent_links = []
     if not cmk_version.is_raw_edition():
-        import cmk.gui.cee.agent_bakery as agent_bakery  # pylint: disable=no-name-in-module
+        from cmk.cee.bakery.type_defs import AgentPackagePlatform
 
-        for agent_type in sorted(agent_bakery.agent_package_types().keys()):
+        for platform in sorted(AgentPackagePlatform, key=lambda p: p.value):
             agent_links.append(
                 constructors.link_rel(
                     rel="cmk/download",
                     href="{}?{}".format(
                         constructors.domain_type_action_href("agent", "download"),
-                        urlencode({"os_type": agent_type, "host_name": host.id()}),
+                        urlencode({"os_type": platform.value, "host_name": host.id()}),
                     ),
                     method="get",
-                    title=f"Download the {agent_type} agent of the host.",
+                    title=f"Download the {platform.value} agent of the host.",
                 )
             )
 

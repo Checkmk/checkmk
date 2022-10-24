@@ -923,7 +923,7 @@ class TableRenderer:
         # ( "number", "0.75" ), or ("", ("icon", "/bar/foo.png") )
         # The headers come *without* the css field and are always texts.
         headers: List[Union[TextCell, IconCell]] = [
-            TitleCell("heading", header_text) for header_text in header_texts  #
+            TitleCell(["heading"], header_text) for header_text in header_texts  #
         ]
 
         rows: List[List[Union[TextCell, IconCell]]] = []
@@ -931,6 +931,7 @@ class TableRenderer:
             row: List[Union[TextCell, IconCell]] = []
             rows.append(row)
             for css, entry in raw_row:
+                css_list: List[str] = css.split()
                 if isinstance(entry, tuple):
                     if entry[0] == "icon":
                         row.append(IconCell(entry[1]))
@@ -939,9 +940,9 @@ class TableRenderer:
                     else:
                         raise Exception("Invalid table entry %r in add_table()" % entry)
                 elif css == "leftheading":
-                    row.append(TitleCell(css, entry))
+                    row.append(TitleCell(css_list, entry))
                 else:
-                    row.append(TextCell(css, entry))
+                    row.append(TextCell(css_list, entry))
 
         # Now we balance the widths of the columns. Each render object has an
         # absolute minimum width (e.g. the width of the longest word) and
@@ -1260,7 +1261,7 @@ class TableRenderer:
 
         for index, step in enumerate(graph_column.get_render_steps(self.pdf, headers, y_padding)):
             if is_single_dataset:
-                step_row = [row[0] if index == 0 else TitleCell("lefheading", ""), step]
+                step_row = [row[0] if index == 0 else TitleCell(["lefheading"], ""), step]
             else:
                 step_row = [step]
 
@@ -1286,7 +1287,7 @@ class TableRenderer:
 # Note: all dimensions this objects handles with are in mm! This is due
 # to the fact that this API is also available externally
 class TextCell:
-    def __init__(self, csses, text):
+    def __init__(self, csses: list[str], text):
         self._text = text
         self._bold = False
         self._color = black

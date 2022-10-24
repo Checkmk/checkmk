@@ -17,11 +17,22 @@ class Htpasswd:
     def __init__(self, path: Path) -> None:
         self._path = path
 
-    def load(self) -> Entries:
-        """Loads the contents of a valid htpasswd file into a dictionary and returns the dictionary"""
+    def load(self, allow_missing_file: bool = False) -> Entries:
+        """Loads the contents of a valid htpasswd file into a dictionary and returns the dictionary
+
+        If the file does not exist, an empty result is returned if allow_missing_file is True,
+        otherwise an OSError is raised.
+        """
         entries = {}
 
-        for entry in self._path.read_text(encoding="utf-8").splitlines():
+        try:
+            filecontent = self._path.read_text(encoding="utf-8").splitlines()
+        except OSError:
+            if not allow_missing_file:
+                raise
+            return {}
+
+        for entry in filecontent:
             try:
                 user_id, pw_hash = entry.split(":", 1)
                 entries[UserId(user_id)] = pw_hash

@@ -188,7 +188,7 @@ pub struct RuntimeConfig {
 impl TOMLLoader for RuntimeConfig {}
 impl TOMLLoaderMissingSafe for RuntimeConfig {}
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Clone)]
 struct LegacyPullMarker(std::path::PathBuf);
 
 impl LegacyPullMarker {
@@ -371,7 +371,8 @@ fn mtime(path: &Path) -> AnyhowResult<Option<SystemTime>> {
         None
     })
 }
-#[derive(PartialEq, Debug, Clone)]
+
+#[derive(Clone)]
 pub struct Registry {
     connections: RegisteredConnections,
     path: PathBuf,

@@ -15,19 +15,7 @@ import traceback
 from contextlib import suppress
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import (
-    Any,
-    Callable,
-    cast,
-    Dict,
-    Iterable,
-    List,
-    Literal,
-    Mapping,
-    Optional,
-    Tuple,
-    Union,
-)
+from typing import Any, Callable, cast, Dict, List, Literal, Mapping, Optional, Tuple, Union
 
 from six import ensure_str
 
@@ -832,49 +820,42 @@ def load_users(lock: bool = False) -> Users:
     # they are getting according to the multisite old-style
     # configuration variables.
 
-    def readlines(f: str) -> Iterable[str]:
-        try:
-            return Path(f).open(encoding="utf-8")
-        except IOError:
-            return []
+    htpwd_entries = Htpasswd(Path(cmk.utils.paths.htpasswd_file)).load(allow_missing_file=True)
+    for uid, password in htpwd_entries.items():
+        if password.startswith("!"):
+            locked = True
+            password = password[1:]
+        else:
+            locked = False
 
-    # FIXME TODO: Consolidate with htpasswd user connector
-    for line in readlines(cmk.utils.paths.htpasswd_file):
-        line = line.strip()
-        if ":" in line:
-            uid, password = line.strip().split(":")[:2]
-            if password.startswith("!"):
-                locked = True
-                password = password[1:]
-            else:
-                locked = False
-            if uid in result:
-                result[uid]["password"] = password
-                result[uid]["locked"] = locked
-            else:
-                # Create entry if this is an admin user
-                new_user = UserSpec(
-                    roles=roles_of_user(uid),
-                    password=password,
-                    locked=False,
-                    connector="htpasswd",
-                )
+        if uid in result:
+            result[uid]["password"] = password
+            result[uid]["locked"] = locked
+        else:
+            # Create entry if this is an admin user
+            new_user = UserSpec(
+                roles=roles_of_user(uid),
+                password=password,
+                locked=False,
+                connector="htpasswd",
+            )
 
-                add_internal_attributes(new_user)
+            add_internal_attributes(new_user)
 
-                result[uid] = new_user
-            # Make sure that the user has an alias
-            result[uid].setdefault("alias", uid)
-        # Other unknown entries will silently be dropped. Sorry...
+            result[uid] = new_user
+        # Make sure that the user has an alias
+        result[uid].setdefault("alias", uid)
 
     # Now read the serials, only process for existing users
-    serials_file = "%s/auth.serials" % os.path.dirname(cmk.utils.paths.htpasswd_file)
-    for line in readlines(serials_file):
-        line = line.strip()
-        if ":" in line:
-            user_id, serial = line.split(":")[:2]
-            if user_id in result:
-                result[user_id]["serial"] = utils.saveint(serial)
+    serials_file = Path(cmk.utils.paths.htpasswd_file).with_name("auth.serials")
+    try:
+        for line in serials_file.read_text(encoding="utf-8").splitlines():
+            if ":" in line:
+                user_id, serial = line.split(":")[:2]
+                if user_id in result:
+                    result[user_id]["serial"] = utils.saveint(serial)
+    except OSError:  # file not found
+        pass
 
     attributes: List[Tuple[str, Callable]] = [
         ("num_failed_logins", utils.saveint),

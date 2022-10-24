@@ -2446,13 +2446,7 @@ def test_host_ruleset_match_object_of_service(monkeypatch: MonkeyPatch) -> None:
     config_cache = ts.apply(monkeypatch)
 
     obj = config_cache.ruleset_match_object_of_service(xyz_host, "bla blä")
-    assert isinstance(obj, RulesetMatchObject)
-    assert obj.to_dict() == {
-        "host_name": "xyz",
-        "service_description": "bla blä",
-        "service_labels": {},
-        "service_cache_id": ("bla blä", hash(frozenset([]))),
-    }
+    assert obj == RulesetMatchObject("xyz", "bla blä", {})
 
     # Funny service description because the plugin isn't loaded.
     # We could patch config.service_description, but this is easier:
@@ -2460,13 +2454,7 @@ def test_host_ruleset_match_object_of_service(monkeypatch: MonkeyPatch) -> None:
 
     obj = config_cache.ruleset_match_object_of_service(test_host, description)
     service_labels = {"abc": "xä"}
-    assert isinstance(obj, RulesetMatchObject)
-    assert obj.to_dict() == {
-        "host_name": "test-host",
-        "service_description": description,
-        "service_labels": service_labels,
-        "service_cache_id": (description, hash(frozenset(service_labels.items()))),
-    }
+    assert obj == RulesetMatchObject("test-host", description, service_labels)
 
 
 @pytest.mark.parametrize(

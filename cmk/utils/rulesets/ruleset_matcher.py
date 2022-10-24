@@ -67,22 +67,32 @@ class RulesetMatchObject:
         self.service_labels = service_labels
         self.service_cache_id = (
             self.service_description,
-            self._generate_service_labels_hash(self.service_labels),
+            hash(None if service_labels is None else frozenset(service_labels.items())),
         )
 
-    def _generate_service_labels_hash(self, service_labels: Labels | None) -> int:
-        return hash(None if service_labels is None else frozenset(service_labels.items()))
-
-    def to_dict(self) -> dict:
-        # TODO: Two getattr()?
-        return {k: getattr(self, k) for k in self.__slots__ if getattr(self, k) is not None}
-
     def copy(self) -> "RulesetMatchObject":
-        return RulesetMatchObject(**self.to_dict())
+        return RulesetMatchObject(
+            host_name=self.host_name,
+            service_description=self.service_description,
+            service_labels=self.service_labels,
+        )
 
     def __repr__(self) -> str:
-        kwargs = ", ".join("%s=%r" % e for e in self.to_dict().items())
-        return "RulesetMatchObject(%s)" % kwargs
+        return (
+            "RulesetMatchObject("
+            f"host_name={self.host_name!r}, "
+            f"service_description={self.service_description!r}, "
+            f"service_labels={self.service_labels!r})"
+        )
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, RulesetMatchObject):
+            return False
+        return (
+            self.host_name == other.host_name
+            and self.service_description == other.service_description
+            and self.service_labels == other.service_labels
+        )
 
 
 class RulesetMatchObjectHostCache:

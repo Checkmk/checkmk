@@ -697,10 +697,10 @@ class AutomationGetServicesLabels(Automation):
 
     def execute(self, args: List[str]) -> automation_results.GetServicesLabelsResult:
         hostname, services = HostName(args[0]), args[1:]
-        config_cache = config.get_config_cache()
+        ruleset_matcher = config.get_config_cache().ruleset_matcher
 
         return automation_results.GetServicesLabelsResult(
-            {service: config_cache.labels_of_service(hostname, service) for service in services}
+            {service: ruleset_matcher.labels_of_service(hostname, service) for service in services}
         )
 
 
@@ -719,8 +719,10 @@ class AutomationAnalyseServices(Automation):
         return (
             automation_results.AnalyseServiceResult(
                 service_info=service_info,
-                labels=config_cache.labels_of_service(hostname, servicedesc),
-                label_sources=config_cache.label_sources_of_service(hostname, servicedesc),
+                labels=config_cache.ruleset_matcher.labels_of_service(hostname, servicedesc),
+                label_sources=config_cache.ruleset_matcher.label_sources_of_service(
+                    hostname, servicedesc
+                ),
             )
             if (
                 service_info := self._get_service_info(

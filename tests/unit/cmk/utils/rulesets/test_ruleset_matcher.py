@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from pathlib import Path
 from typing import List, Sequence
 
 import pytest
@@ -10,6 +11,7 @@ from _pytest.monkeypatch import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
+import cmk.utils.paths
 from cmk.utils.rulesets.ruleset_matcher import matches_tag_condition, RulesetMatchObject
 from cmk.utils.tags import TagConfig
 from cmk.utils.type_defs import (
@@ -169,6 +171,77 @@ def test_ruleset_matcher_get_host_ruleset_values_labels(
         )
         == expected_result
     )
+
+
+def test_labels_of_service(monkeypatch: MonkeyPatch) -> None:
+    test_host = HostName("test-host")
+    xyz_host = HostName("xyz")
+    ts = Scenario()
+    ts.set_ruleset(
+        "service_label_rules",
+        [
+            {
+                "condition": {
+                    "service_description": [{"$regex": "CPU load$"}],
+                    "host_tags": {"agent": "no-agent"},
+                },
+                "value": {"label1": "val1"},
+            },
+            {
+                "condition": {
+                    "service_description": [{"$regex": "CPU load$"}],
+                    "host_tags": {"agent": "no-agent"},
+                },
+                "value": {"label2": "val2"},
+            },
+        ],
+    )
+
+    ts.add_host(test_host, tags={"agent": "no-agent"})
+    ruleset_matcher = ts.apply(monkeypatch).ruleset_matcher
+
+    assert ruleset_matcher.labels_of_service(xyz_host, "CPU load") == {}
+    assert ruleset_matcher.label_sources_of_service(xyz_host, "CPU load") == {}
+
+    assert ruleset_matcher.labels_of_service(test_host, "CPU load") == {
+        "label1": "val1",
+        "label2": "val2",
+    }
+    assert ruleset_matcher.label_sources_of_service(test_host, "CPU load") == {
+        "label1": "ruleset",
+        "label2": "ruleset",
+    }
+
+
+@pytest.mark.usefixtures("fix_register")
+def test_labels_of_service_discovered_labels(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
+    test_host = HostName("test-host")
+    xyz_host = HostName("xyz")
+    ts = Scenario()
+    ts.add_host(test_host)
+
+    monkeypatch.setattr(cmk.utils.paths, "autochecks_dir", str(tmp_path))
+    autochecks_file = Path(cmk.utils.paths.autochecks_dir, "test-host.mk")
+    with autochecks_file.open("w", encoding="utf-8") as f:
+        f.write(
+            """[
+    {'check_plugin_name': 'cpu_loads', 'item': None, 'parameters': (5.0, 10.0), 'service_labels': {u'äzzzz': u'eeeeez'}},
+]"""
+        )
+
+    config_cache = ts.apply(monkeypatch)
+    ruleset_matcher = config_cache.ruleset_matcher
+
+    service = config_cache.get_autochecks_of(test_host)[0]
+    assert service.description == "CPU load"
+
+    assert ruleset_matcher.labels_of_service(xyz_host, "CPU load") == {}
+    assert ruleset_matcher.label_sources_of_service(xyz_host, "CPU load") == {}
+
+    assert ruleset_matcher.labels_of_service(test_host, service.description) == {"äzzzz": "eeeeez"}
+    assert ruleset_matcher.label_sources_of_service(test_host, service.description) == {
+        "äzzzz": "discovered"
+    }
 
 
 def test_basic_get_host_ruleset_values(monkeypatch: MonkeyPatch) -> None:

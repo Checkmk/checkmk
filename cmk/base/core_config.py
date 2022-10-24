@@ -723,11 +723,14 @@ def get_service_attributes(
     attrs.update(_get_tag_attributes(config_cache.tags_of_service(hostname, description), "TAG"))
 
     attrs.update(
-        _get_tag_attributes(config_cache.labels_of_service(hostname, description), "LABEL")
+        _get_tag_attributes(
+            config_cache.ruleset_matcher.labels_of_service(hostname, description), "LABEL"
+        )
     )
     attrs.update(
         _get_tag_attributes(
-            config_cache.label_sources_of_service(hostname, description), "LABELSOURCE"
+            config_cache.ruleset_matcher.label_sources_of_service(hostname, description),
+            "LABELSOURCE",
         )
     )
     return attrs

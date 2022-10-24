@@ -88,7 +88,6 @@ from cmk.utils.type_defs import (
     IPMICredentials,
     Item,
     Labels,
-    LabelSources,
     Ruleset,
     RuleSetName,
     Seconds,
@@ -3615,21 +3614,6 @@ class ConfigCache:
             for entry in self.service_extra_conf(hostname, svc_desc, service_tag_rules)
             for k, v in entry
         }
-
-    def labels_of_service(self, hostname: HostName, svc_desc: ServiceName) -> Labels:
-        """Returns the effective set of service labels from all available sources
-
-        1. Discovered labels
-        2. Ruleset "Service labels"
-
-        Last one wins.
-        """
-        return self.ruleset_matcher.labels_of_service(hostname, svc_desc)
-
-    def label_sources_of_service(self, hostname: HostName, svc_desc: ServiceName) -> LabelSources:
-        """Returns the effective set of service label keys with their source identifier instead of the value
-        Order and merging logic is equal to labels_of_service()"""
-        return self.ruleset_matcher.label_sources_of_service(hostname, svc_desc)
 
     def extra_attributes_of_service(
         self, hostname: HostName, description: ServiceName

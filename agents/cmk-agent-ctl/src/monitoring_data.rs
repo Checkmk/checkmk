@@ -11,6 +11,8 @@ use async_std::net::TcpStream as AsyncTcpStream;
 #[cfg(windows)]
 use async_std::prelude::*;
 #[cfg(windows)]
+use std::io::Error;
+#[cfg(windows)]
 use std::net::IpAddr;
 
 use std::io::{Result as IoResult, Write};
@@ -24,11 +26,17 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt};
 #[cfg(unix)]
 use tokio::net::UnixStream as AsyncUnixStream;
 
+#[cfg(windows)]
+fn is_error_acceptable(error: &Error) -> bool {
+    // special case for Windows related to server/clients with strange behavior
+    error.kind() == Error::from_raw_os_error(10054).kind()
+}
+
 // TODO(sk): add logging and unit testing(using local server)
 #[cfg(windows)]
 async fn async_collect_from_ip(
     agent_channel: &types::AgentChannel,
-    remote_ip: std::net::IpAddr,
+    remote_ip: IpAddr,
 ) -> IoResult<Vec<u8>> {
     let mut data: Vec<u8> = vec![];
     debug!("connect to {}", agent_channel.as_ref());
@@ -37,10 +45,19 @@ async fn async_collect_from_ip(
         .write_all(format!("{}", remote_ip).as_bytes())
         .await?;
     stream.flush().await?;
-    stream.read_to_end(&mut data).await?;
-    stream.shutdown(std::net::Shutdown::Both)?;
-    debug!("delivered {}", data.len());
-    Ok(data)
+    let result = stream.read_to_end(&mut data).await;
+    let _ = stream.shutdown(std::net::Shutdown::Both); // can't return here, error could be ignored
+    match result {
+        Ok(_) => Ok(data),
+        Err(some_err) => {
+            if is_error_acceptable(&some_err) {
+                debug!("error during receive");
+                Ok(data)
+            } else {
+                Err(some_err)
+            }
+        }
+    }
 }
 
 #[cfg(windows)]

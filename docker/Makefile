@@ -45,7 +45,15 @@ check-mk-$(EDITION)-docker-$(VERSION).tar.gz: image
   		echo "VERSION_TAG is not set, please pass this environment variable during make target call."; \
   		exit 1; \
   	fi; \
-	docker save $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION_TAG) | gzip > check-mk-$(EDITION)-docker-$(VERSION).tar.gz
+
+	@if [[ "${VERSION_TAG}" == *"-rc"* ]]; then \
+  		echo "VERSION_TAG contains rc information, do a retagging before docker save."; \
+    	  	docker tag $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION_TAG) $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION); \
+		docker save $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION) | gzip > check-mk-$(EDITION)-docker-$(VERSION).tar.gz; \
+    	  	docker image rm $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION); \
+    	else \
+		docker save $(DOCKER_REPO_NAME)/check-mk-$(EDITION):$(VERSION_TAG) | gzip > check-mk-$(EDITION)-docker-$(VERSION).tar.gz; \
+    	fi; \
 
 image: needed-packages
 	@if [ -z ${VERSION_TAG} ]; then \

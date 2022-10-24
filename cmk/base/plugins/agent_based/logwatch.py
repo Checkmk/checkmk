@@ -56,7 +56,6 @@ GroupingPattern = Tuple[str, str]
 DiscoveredGroupParams = Mapping[Literal["group_patterns"], Iterable[GroupingPattern]]
 
 _LOGWATCH_MAX_FILESIZE = 500000  # do not save more than 500k of messages
-LOGWATCH_SERVICE_OUTPUT = "default"
 
 
 def _get_discovery_groups(params: AllParams) -> Sequence[List[Tuple[str, GroupingPattern]]]:
@@ -522,8 +521,7 @@ def check_logwatch_generic(  # type:ignore[no-untyped-def] # pylint: disable=too
         return
 
     info = block_collector.get_count_info()
-    if LOGWATCH_SERVICE_OUTPUT == "default":
-        info += ' (Last worst: "%s")' % block_collector.last_worst_line
+    info += ' (Last worst: "%s")' % block_collector.last_worst_line
 
     summary, details = info, None
     if "\n" in info.strip():

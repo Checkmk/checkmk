@@ -8,11 +8,24 @@ use anyhow::Result as AnyhowResult;
 use std::sync::mpsc;
 use std::thread;
 
+/// Send panic information in log.
+/// This is critically important for daemon mode
+fn register_panic_handler() {
+    let default_panic = std::panic::take_hook();
+
+    std::panic::set_hook(Box::new(move |panic_info| {
+        log::error!("Panic in controller '{:?}'", panic_info);
+        default_panic(panic_info);
+    }));
+}
+
 pub fn daemon(
     registry: config::Registry,
     pull_config: config::PullConfig,
     client_config: config::ClientConfig,
 ) -> AnyhowResult<()> {
+    register_panic_handler();
+
     let (tx_push, rx) = mpsc::channel();
     let tx_pull = tx_push.clone();
     let agent_channel = pull_config.agent_channel.clone();

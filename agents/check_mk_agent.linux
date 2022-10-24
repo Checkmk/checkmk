@@ -1328,7 +1328,7 @@ section_job() {
                 # This folder is owned (and thus writable) by the user that ran the jobs.
                 # The agent (root) must not read files that are not owned by the user.
                 # This prevents symlink or hardlink attacks.
-                find -L . -user "${user}" | _cat_files
+                find -L . -type f -user "${user}" | _cat_files
             )
         done
     )

@@ -103,7 +103,7 @@ def log_audit(
 
 def _log_entry(
     action: str,
-    message: LogMessage,
+    message: Union[HTML, str],
     object_ref: Optional[ObjectRef],
     user_id: Optional[UserId],
     diff_text: Optional[str],

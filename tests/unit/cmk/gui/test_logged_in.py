@@ -16,6 +16,7 @@ from tests.testlib.users import create_and_destroy_user
 from livestatus import SiteConfigurations, SiteId
 
 import cmk.utils.paths
+from cmk.utils import version as cmk_version
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.permissions as permissions
@@ -250,8 +251,12 @@ def fixture_monitoring_user() -> Iterator[LoggedInUser]:
     user_dir.joinpath("favorites.mk").write_text(str(MONITORING_USER_FAVORITES))
 
     assert default_authorized_builtin_role_ids == ["user", "admin", "guest"]
-    assert default_unauthorized_builtin_role_ids == ["agent_registration"]
-    assert builtin_role_ids == ["user", "admin", "guest", "agent_registration"]
+    assert default_unauthorized_builtin_role_ids == (
+        ["agent_registration"] if cmk_version.is_plus_edition() else []
+    )
+    assert builtin_role_ids == ["user", "admin", "guest"] + (
+        ["agent_registration"] if cmk_version.is_plus_edition() else []
+    )
     assert "test" not in active_config.admin_users
 
     with create_and_destroy_user(username="test") as user:

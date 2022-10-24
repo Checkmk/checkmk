@@ -8,6 +8,8 @@ from typing import Mapping
 
 from pytest_mock import MockerFixture
 
+import cmk.utils.version as cmk_version
+
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.type_defs import UserRole
 from cmk.gui.watolib import userroles
@@ -39,10 +41,10 @@ def test_deleting_cloned_user_roles() -> None:
     userroles.clone_role(RoleID("admin"))
 
     all_roles: Mapping[RoleID, UserRole] = userroles.get_all_roles()
-    assert len(all_roles) == 5
+    assert len(all_roles) == 5 if cmk_version.is_plus_edition() else 4
     userroles.delete_role(RoleID("adminx"))
     roles_after_deletion: Mapping[RoleID, UserRole] = userroles.get_all_roles()
-    assert len(roles_after_deletion) == 4
+    assert len(roles_after_deletion) == 4 if cmk_version.is_plus_edition() else 3
 
 
 def test_cloning_user_roles() -> None:
@@ -52,23 +54,27 @@ def test_cloning_user_roles() -> None:
         userroles.clone_role(roleid)
 
     all_roles: Mapping[RoleID, UserRole] = userroles.get_all_roles()
-    assert len(all_roles) == 8
-    assert {roleid for roleid in all_roles.keys() if roleid.endswith("x")} == {
-        "adminx",
-        "guestx",
-        "userx",
-        "agent_registrationx",
-    }
+    assert len(all_roles) == 8 if cmk_version.is_plus_edition() else 6
+    assert {roleid for roleid in all_roles.keys() if roleid.endswith("x")} == set(
+        (
+            "adminx",
+            "guestx",
+            "userx",
+        )
+        + (("agent_registrationx",) if cmk_version.is_plus_edition() else ())
+    )
 
 
 def test_get_default_user_roles() -> None:
     default_roles: Mapping[RoleID, UserRole] = userroles.get_all_roles()
-    assert {role.name for role in default_roles.values()} == {
-        "admin",
-        "guest",
-        "user",
-        "agent_registration",
-    }
+    assert {role.name for role in default_roles.values()} == set(
+        (
+            "admin",
+            "guest",
+            "user",
+        )
+        + (("agent_registration",) if cmk_version.is_plus_edition() else ())
+    )
 
 
 def test_get_non_existent_user_roles() -> None:

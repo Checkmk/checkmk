@@ -11,17 +11,26 @@ from tests.testlib.site import Site
 from cmk.utils import version as cmk_version
 
 
-def test_www_dir(site: Site) -> None:
+@pytest.mark.parametrize(
+    "file_path,url",
+    [
+        ("var/www/testfile", "/%s/testfile"),
+        ("local/share/check_mk/web/htdocs/testfile", "/%s/check_mk/local/testfile"),
+    ],
+)
+def test_www_dir(site: Site, file_path: str, url: str) -> None:
     web = CMKWebSession(site)
 
+    url = url % site.id
     # unauthenticated = denied
-    web.get("/%s/testfile" % site.id, expected_code=401)
+    web.get(url, expected_code=401)
+    web.get(url, auth=("cmkadmin", site.admin_password), expected_code=404)
 
     try:
-        site.write_text_file("var/www/testfile.html", "123")
-        assert web.get("/%s/testfile.html" % site.id, auth=("cmkadmin", "cmk")).text == "123"
+        site.write_text_file(file_path, "123")
+        assert web.get(url, auth=("cmkadmin", site.admin_password)).text == "123"
     finally:
-        site.delete_file("var/www/testfile.html")
+        site.delete_file(file_path)
 
 
 def test_base_path_redirects(site: Site) -> None:

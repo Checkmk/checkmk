@@ -982,7 +982,7 @@ def cre_sites_options() -> SitesOptions:
 
 def sites_options() -> SitesOptions:
     if cmk_version.is_managed_edition():
-        from cmk.gui.cme.plugins.visuals.managed import (  # pylint: disable=no-name-in-module
+        from cmk.gui.cme.plugins.visuals.managed_site_filters import (  # pylint: disable=no-name-in-module
             filter_cme_choices,
         )
 

@@ -48,7 +48,7 @@ from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import DualListChoice, Labels
 
 if cmk_version.is_managed_edition():
-    from cmk.gui.cme.plugins.visuals.managed import (  # pylint: disable=no-name-in-module
+    from cmk.gui.cme.plugins.visuals.managed_site_filters import (  # pylint: disable=no-name-in-module
         filter_cme_heading_info,
     )
 

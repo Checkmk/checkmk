@@ -19,7 +19,6 @@ import socket
 import struct
 import sys
 from collections import Counter, OrderedDict
-from functools import lru_cache
 from importlib.util import MAGIC_NUMBER as _MAGIC_NUMBER
 from pathlib import Path
 from typing import (
@@ -61,7 +60,7 @@ import cmk.utils.translations
 import cmk.utils.version as cmk_version
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.check_utils import maincheckify, section_name_of, unwrap_parameters
-from cmk.utils.config_path import ConfigPath, LATEST_CONFIG
+from cmk.utils.config_path import ConfigPath
 from cmk.utils.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate
 from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTTPProxyConfig
 from cmk.utils.labels import LabelManager
@@ -841,26 +840,10 @@ class PackedConfigStore:
             return pickle.load(f)  # nosec B301 # BNS:c3c5e9
 
 
-@lru_cache
-def make_core_autochecks_dir(config_path: ConfigPath) -> Path:
-    return Path(config_path) / "autochecks"
-
-
-def make_core_autochecks_file(config_path: ConfigPath, hostname: HostName) -> Path:
-    return make_core_autochecks_dir(Path(config_path)) / f"{hostname}.mk"
-
-
-@lru_cache
-def make_core_discovered_host_labels_dir(config_path: ConfigPath) -> Path:
-    return Path(config_path) / "discovered_host_labels"
-
-
-def make_core_discovered_host_labels_file(config_path: ConfigPath, hostname: HostName) -> Path:
-    return make_core_discovered_host_labels_dir(config_path) / f"{hostname}.mk"
-
-
 @contextlib.contextmanager
-def set_use_core_config(use_core_config: bool) -> Iterator[None]:
+def set_use_core_config(
+    *, autochecks_dir: Path, discovered_host_labels_dir: Path
+) -> Iterator[None]:
     """The keepalive helpers should always use the core configuration that
     has been created with "cmk -U". This includes the dynamic configuration
     parts like the autochecks.
@@ -871,23 +854,15 @@ def set_use_core_config(use_core_config: bool) -> Iterator[None]:
 
     We ensure this by changing the global paths in cmk.utils.paths to point
     to the helper paths."""
-    _orig_autochecks_dir = cmk.utils.paths.autochecks_dir
-    _orig_discovered_host_labels_dir = cmk.utils.paths.discovered_host_labels_dir
+    orig_autochecks_dir: Final = cmk.utils.paths.autochecks_dir
+    orig_discovered_host_labels_dir: Final = cmk.utils.paths.discovered_host_labels_dir
     try:
-        if use_core_config:
-            cmk.utils.paths.autochecks_dir = str(make_core_autochecks_dir(LATEST_CONFIG))
-            cmk.utils.paths.discovered_host_labels_dir = make_core_discovered_host_labels_dir(
-                LATEST_CONFIG
-            )
-        else:
-            cmk.utils.paths.autochecks_dir = cmk.utils.paths.base_autochecks_dir
-            cmk.utils.paths.discovered_host_labels_dir = (
-                cmk.utils.paths.base_discovered_host_labels_dir
-            )
+        cmk.utils.paths.autochecks_dir = str(autochecks_dir)
+        cmk.utils.paths.discovered_host_labels_dir = discovered_host_labels_dir
         yield
     finally:
-        cmk.utils.paths.autochecks_dir = _orig_autochecks_dir
-        cmk.utils.paths.discovered_host_labels_dir = _orig_discovered_host_labels_dir
+        cmk.utils.paths.autochecks_dir = orig_autochecks_dir
+        cmk.utils.paths.discovered_host_labels_dir = orig_discovered_host_labels_dir
 
 
 # .

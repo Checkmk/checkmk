@@ -456,7 +456,10 @@ def discover_marked_hosts(
         return
 
     console.verbose("\nRestarting monitoring core with updated configuration...\n")
-    with config.set_use_core_config(use_core_config=False):
+    with config.set_use_core_config(
+        autochecks_dir=Path(cmk.utils.paths.base_autochecks_dir),
+        discovered_host_labels_dir=cmk.utils.paths.base_discovered_host_labels_dir,
+    ):
         try:
             _config_cache.clear_all()
             config.get_config_cache().initialize()

@@ -136,6 +136,7 @@ from cmk.base.api.agent_based.checking_classes import (  # noqa: F401 # pylint: 
 )
 from cmk.base.api.agent_based.section_classes import OIDBytes as _OIDBytes
 from cmk.base.api.agent_based.section_classes import OIDCached as _OIDCached
+from cmk.base.config import ConfigCache
 from cmk.base.plugin_contexts import check_type
 from cmk.base.plugin_contexts import (
     host_name as _internal_host_name,  # pylint: disable=unused-import
@@ -263,17 +264,32 @@ def service_extra_conf(hostname: HostName, service: ServiceName, ruleset: _confi
 
 # Compatibility wrapper for the pre 1.6 existant config.host_extra_conf()
 def host_extra_conf(hostname: str, ruleset: _config.Ruleset) -> List:
-    return _config.get_config_cache().host_extra_conf(HostName(hostname), ruleset)
+    config_cache = _config.get_config_cache()
+    return ConfigCache.host_extra_conf(
+        config_cache.ruleset_matcher,
+        config_cache.ruleset_match_object_host.get(HostName(hostname)),
+        ruleset,
+    )
 
 
 # Compatibility wrapper for the pre 1.6 existant config.in_binary_hostlist()
 def in_binary_hostlist(hostname: HostName, ruleset: _config.Ruleset) -> bool:
-    return _config.get_config_cache().in_binary_hostlist(hostname, ruleset)
+    config_cache = _config.get_config_cache()
+    return ConfigCache.in_binary_hostlist(
+        config_cache.ruleset_matcher,
+        config_cache.ruleset_match_object_host.get(HostName(hostname)),
+        ruleset,
+    )
 
 
 # Compatibility wrapper for the pre 1.6 existant conf.host_extra_conf_merged()
 def host_extra_conf_merged(hostname: str, conf: _config.Ruleset) -> Dict[str, Any]:
-    return _config.get_config_cache().host_extra_conf_merged(HostName(hostname), conf)
+    config_cache = _config.get_config_cache()
+    return ConfigCache.host_extra_conf_merged(
+        config_cache.ruleset_matcher,
+        config_cache.ruleset_match_object_host.get(HostName(hostname)),
+        conf,
+    )
 
 
 # These functions were used in some specific checks until 1.6. Don't add it to

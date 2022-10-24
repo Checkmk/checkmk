@@ -37,7 +37,7 @@ from cmk.base.agent_based.data_provider import (
     store_piggybacked_sections,
 )
 from cmk.base.agent_based.utils import get_section_kwargs
-from cmk.base.config import HostConfig
+from cmk.base.config import ConfigCache, HostConfig
 from cmk.base.sources import fetch_all, make_sources
 
 from ._retentions import RetentionsTracker
@@ -91,8 +91,9 @@ def fetch_real_host_data(
             force_snmp_cache_refresh=False,
             on_scan_error=OnError.RAISE,
             simulation_mode=config.simulation_mode,
-            missing_sys_description=config.get_config_cache().in_binary_hostlist(
-                host_config.hostname,
+            missing_sys_description=ConfigCache.in_binary_hostlist(
+                config_cache.ruleset_matcher,
+                config_cache.ruleset_match_object_host.get(host_config.hostname),
                 config.snmp_without_sys_descr,
             ),
             file_cache_max_age=host_config.max_cachefile_age,

@@ -95,8 +95,9 @@ def commandline_discovery(
                     force_snmp_cache_refresh=False,
                     on_scan_error=on_error,
                     simulation_mode=config.simulation_mode,
-                    missing_sys_description=config.get_config_cache().in_binary_hostlist(
-                        host_config.hostname,
+                    missing_sys_description=ConfigCache.in_binary_hostlist(
+                        config_cache.ruleset_matcher,
+                        config_cache.ruleset_match_object_host.get(host_config.hostname),
                         config.snmp_without_sys_descr,
                     ),
                     file_cache_max_age=config.max_cachefile_age(),
@@ -261,8 +262,9 @@ def _commandline_check_discovery(
             force_snmp_cache_refresh=False,
             on_scan_error=OnError.RAISE,
             simulation_mode=config.simulation_mode,
-            missing_sys_description=config.get_config_cache().in_binary_hostlist(
-                host_config.hostname,
+            missing_sys_description=ConfigCache.in_binary_hostlist(
+                config_cache.ruleset_matcher,
+                config_cache.ruleset_match_object_host.get(host_config.hostname),
                 config.snmp_without_sys_descr,
             ),
             file_cache_max_age=config.max_cachefile_age(

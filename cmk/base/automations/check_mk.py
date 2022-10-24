@@ -1383,12 +1383,14 @@ class AutomationDiagHost(Automation):
         tcp_connect_timeout: Optional[float],
     ) -> Tuple[int, str]:
         state, output = 0, ""
+        config_cache = config.get_config_cache()
         for source, file_cache, fetcher in sources.make_non_cluster_sources(
             host_config,
             ipaddress,
             simulation_mode=config.simulation_mode,
-            missing_sys_description=config.get_config_cache().in_binary_hostlist(
-                host_config.hostname,
+            missing_sys_description=ConfigCache.in_binary_hostlist(
+                config_cache.ruleset_matcher,
+                config_cache.ruleset_match_object_host.get(host_config.hostname),
                 config.snmp_without_sys_descr,
             ),
             file_cache_max_age=config.max_cachefile_age(),
@@ -1712,6 +1714,7 @@ class AutomationGetAgentOutput(Automation):
         hostname = HostName(args[0])
         ty = args[1]
         host_config = HostConfig.make_host_config(hostname)
+        config_cache = config.get_config_cache()
 
         success = True
         output = ""
@@ -1725,8 +1728,9 @@ class AutomationGetAgentOutput(Automation):
                     host_config,
                     ipaddress,
                     simulation_mode=config.simulation_mode,
-                    missing_sys_description=config.get_config_cache().in_binary_hostlist(
-                        host_config.hostname,
+                    missing_sys_description=ConfigCache.in_binary_hostlist(
+                        config_cache.ruleset_matcher,
+                        config_cache.ruleset_match_object_host.get(host_config.hostname),
                         config.snmp_without_sys_descr,
                     ),
                     file_cache_max_age=config.max_cachefile_age(),

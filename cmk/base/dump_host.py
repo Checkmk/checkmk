@@ -31,7 +31,7 @@ import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
 import cmk.base.sources as sources
 from cmk.base.check_utils import LegacyCheckParameters
-from cmk.base.config import HostConfig
+from cmk.base.config import ConfigCache, HostConfig
 
 
 def dump_source(source: SourceInfo, fetcher: Fetcher) -> str:
@@ -176,8 +176,9 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
             host_config,
             ipaddress,
             simulation_mode=config.simulation_mode,
-            missing_sys_description=config.get_config_cache().in_binary_hostlist(
-                host_config.hostname,
+            missing_sys_description=ConfigCache.in_binary_hostlist(
+                config_cache.ruleset_matcher,
+                config_cache.ruleset_match_object_host.get(host_config.hostname),
                 config.snmp_without_sys_descr,
             ),
             file_cache_max_age=file_cache.MaxAge.none(),

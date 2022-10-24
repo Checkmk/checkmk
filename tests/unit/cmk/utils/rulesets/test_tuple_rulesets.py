@@ -18,6 +18,7 @@ import cmk.utils.rulesets.tuple_rulesets as tuple_rulesets
 import cmk.utils.version as cmk_version
 
 import cmk.base.config as config
+from cmk.base.config import ConfigCache
 
 
 @pytest.fixture(autouse=True)
@@ -116,7 +117,11 @@ def host_ruleset():
 
 
 def test_host_extra_conf(ts, host_ruleset) -> None:  # type:ignore[no-untyped-def]
-    assert ts.config_cache.host_extra_conf("host1", host_ruleset) == [
+    assert ConfigCache.host_extra_conf(
+        ts.config_cache.ruleset_matcher,
+        ts.config_cache.ruleset_match_object_host.get("host1"),
+        host_ruleset,
+    ) == [
         {"1": True},
         {"2": True},
         {"3": True},
@@ -126,7 +131,11 @@ def test_host_extra_conf(ts, host_ruleset) -> None:  # type:ignore[no-untyped-de
         {"9": True},
     ]
 
-    assert ts.config_cache.host_extra_conf("host2", host_ruleset) == [
+    assert ConfigCache.host_extra_conf(
+        ts.config_cache.ruleset_matcher,
+        ts.config_cache.ruleset_match_object_host.get("host2"),
+        host_ruleset,
+    ) == [
         {"1": True},
         {"2": True},
         {"8": True},
@@ -134,7 +143,11 @@ def test_host_extra_conf(ts, host_ruleset) -> None:  # type:ignore[no-untyped-de
 
 
 def test_host_extra_conf_merged(ts, host_ruleset) -> None:  # type:ignore[no-untyped-def]
-    assert ts.config_cache.host_extra_conf_merged("host1", host_ruleset) == {
+    assert ConfigCache.host_extra_conf_merged(
+        ts.config_cache.ruleset_matcher,
+        ts.config_cache.ruleset_match_object_host.get("host1"),
+        host_ruleset,
+    ) == {
         "1": True,
         "2": True,
         "3": True,
@@ -144,7 +157,11 @@ def test_host_extra_conf_merged(ts, host_ruleset) -> None:  # type:ignore[no-unt
         "9": True,
     }
 
-    assert ts.config_cache.host_extra_conf_merged("host2", host_ruleset) == {
+    assert ts.config_cache.host_extra_conf_merged(
+        ts.config_cache.ruleset_matcher,
+        ts.config_cache.ruleset_match_object_host.get("host2"),
+        host_ruleset,
+    ) == {
         "1": True,
         "2": True,
         "8": True,

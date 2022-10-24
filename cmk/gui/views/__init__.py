@@ -50,6 +50,7 @@ from cmk.gui.config import (
 )
 from cmk.gui.ctx_stack import g
 from cmk.gui.data_source import ABCDataSource, data_source_registry
+from cmk.gui.derived_columns_sorter import DerivedColumnsSorter
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKGeneralException, MKInternalError, MKMissingDataError, MKUserError
 from cmk.gui.exporter import exporter_registry
@@ -104,14 +105,7 @@ from cmk.gui.plugins.visuals.utils import (
     visual_type_registry,
     VisualType,
 )
-from cmk.gui.sorter import (
-    DerivedColumnsSorter,
-    register_sorter,
-    Sorter,
-    sorter_registry,
-    SorterEntry,
-    SorterRegistry,
-)
+from cmk.gui.sorter import register_sorter, Sorter, sorter_registry, SorterEntry, SorterRegistry
 from cmk.gui.type_defs import (
     ColumnName,
     HTTPVariables,
@@ -431,12 +425,12 @@ def _register_pre_21_plugin_api() -> None:
 
     for name in (
         "declare_simple_sorter",
-        "DerivedColumnsSorter",
         "register_sorter",
         "Sorter",
         "sorter_registry",
     ):
         api_module.__dict__[name] = sorter.__dict__[name]
+    api_module.__dict__["DerivedColumnsSorter"] = DerivedColumnsSorter
 
     for name in (
         "get_permitted_views",

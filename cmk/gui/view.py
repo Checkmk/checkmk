@@ -14,6 +14,7 @@ import cmk.gui.pagetypes as pagetypes
 import cmk.gui.visuals as visuals
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.data_source import ABCDataSource, data_source_registry
+from cmk.gui.derived_columns_sorter import DerivedColumnsSorter
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -27,7 +28,7 @@ from cmk.gui.plugins.views.utils import (
     make_service_breadcrumb,
     painter_exists,
 )
-from cmk.gui.sorter import DerivedColumnsSorter, sorter_registry, SorterEntry
+from cmk.gui.sorter import sorter_registry, SorterEntry
 from cmk.gui.type_defs import (
     FilterName,
     HTTPVariables,

@@ -5,10 +5,11 @@
 
 import abc
 import time
-from typing import List, Optional, Sequence, Tuple, TYPE_CHECKING
+from typing import List, Optional, Sequence, Tuple
 
 import cmk.gui.utils as utils
 from cmk.gui.config import active_config
+from cmk.gui.derived_columns_sorter import DerivedColumnsSorter
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.utils import (
     cmp_custom_variable,
@@ -25,13 +26,10 @@ from cmk.gui.plugins.views.utils import (
     get_tag_groups,
 )
 from cmk.gui.site_config import get_site_config
-from cmk.gui.sorter import declare_simple_sorter, DerivedColumnsSorter, Sorter, sorter_registry
+from cmk.gui.sorter import declare_simple_sorter, Sorter, sorter_registry
 from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.valuespec import Dictionary, DropdownChoice, ValueSpec
 from cmk.gui.view_utils import get_labels
-
-if TYPE_CHECKING:
-    from cmk.gui.view import View
 
 
 def cmp_state_equiv(r):

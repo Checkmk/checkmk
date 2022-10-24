@@ -50,6 +50,13 @@ def register(name: str, func: Callable, is_builtin: bool = False) -> None:
     hooks.setdefault(name, []).append(Hook(handler=func, is_builtin=is_builtin))
 
 
+def unregister(name: str, func: Callable) -> None:
+    registered_hooks = hooks.get(name, [])
+    for hook in registered_hooks:
+        if hook.handler == func:
+            registered_hooks.remove(hook)
+
+
 def get(name: str) -> List[Hook]:
     return hooks.get(name, [])
 

@@ -19,7 +19,6 @@ from cmk.gui.display_options import DisplayOptions
 from cmk.gui.htmllib.html import HTMLGenerator
 from cmk.gui.i18n import Translation
 from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.plugins.openapi.restful_objects import Endpoint
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.theme import Theme
 from cmk.gui.utils.timeout_manager import TimeoutManager
@@ -115,7 +114,6 @@ class RequestContext:
         theme: Theme = Theme(),  # pylint: disable=redefined-outer-name
         display_options: Optional[DisplayOptions] = None,  # pylint: disable=redefined-outer-name
         prefix_logs_with_url: bool = True,
-        endpoint: Optional[Endpoint] = None,  # pylint: disable=redefined-outer-name
         *,
         stack: LocalStack,
         url_filter: logging.Filter,
@@ -130,7 +128,6 @@ class RequestContext:
         self.translation: Optional[Translation] = None
         self._prefix_logs_with_url = prefix_logs_with_url
 
-        self.endpoint = endpoint
         self.request = req
         self.response = resp
         self.output_funnel = funnel

@@ -16,14 +16,15 @@ import hashlib
 import http.client
 import json
 import logging
-import typing
 import warnings
 from types import FunctionType
 from typing import (
     Any,
     Callable,
     Dict,
+    Final,
     Generator,
+    Iterator,
     List,
     Literal,
     Mapping,
@@ -32,6 +33,7 @@ from typing import (
     Set,
     Tuple,
     Type,
+    TYPE_CHECKING,
     TypeVar,
     Union,
 )
@@ -47,11 +49,15 @@ from werkzeug.utils import import_string
 
 from cmk.utils import store
 
-from cmk.gui import fields
+from cmk.gui import fields, hooks
 from cmk.gui import http as cmk_http
 from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.permissions import permission_registry
+from cmk.gui.plugins.openapi.permission_tracking import (
+    enable_permission_tracking,
+    is_permission_tracking_enabled,
+)
 from cmk.gui.plugins.openapi.restful_objects import permissions
 from cmk.gui.plugins.openapi.restful_objects.api_error import ApiError
 from cmk.gui.plugins.openapi.restful_objects.code_examples import code_samples
@@ -87,7 +93,7 @@ from cmk.gui.watolib.activate_changes import (
 )
 from cmk.gui.watolib.git import do_git_commit
 
-if typing.TYPE_CHECKING:
+if TYPE_CHECKING:
     # TODO: Directly import from wsgiref.types in Python 3.11, without any import guard
     from _typeshed.wsgi import WSGIApplication
 
@@ -97,7 +103,7 @@ T = TypeVar("T")
 K = TypeVar("K")
 V = TypeVar("V")
 
-WrappedFunc = Callable[[typing.Mapping[str, Any]], cmk_http.Response]
+WrappedFunc = Callable[[Mapping[str, Any]], cmk_http.Response]
 
 
 _logger = logging.getLogger(__name__)
@@ -109,11 +115,11 @@ class WrappedEndpoint:
         endpoint: Endpoint,
         func: WrappedFunc,
     ) -> None:
-        self.endpoint: typing.Final = endpoint
-        self.path: typing.Final = endpoint.path
-        self.func: typing.Final = func
+        self.endpoint: Final = endpoint
+        self.path: Final = endpoint.path
+        self.func: Final = func
 
-    def __call__(self, param: typing.Mapping[str, Any]) -> cmk_http.Response:
+    def __call__(self, param: Mapping[str, Any]) -> cmk_http.Response:
         return self.func(param)
 
 
@@ -431,11 +437,10 @@ class Endpoint:
 
         self.operation_id: str
         self.func: WrappedFunc
-        self.wrapped: Callable[[typing.Mapping[str, Any]], WSGIApplication]
+        self.wrapped: Callable[[Mapping[str, Any]], WSGIApplication]
 
         self.permissions_required = permissions_required
         self._used_permissions: Set[str] = set()
-        self.track_permissions = True
 
         self._expected_status_codes = self.additional_status_codes.copy()
 
@@ -501,10 +506,42 @@ class Endpoint:
         return schema()
 
     @contextlib.contextmanager
-    def do_not_track_permissions(self) -> typing.Iterator[None]:
-        self.track_permissions = False
-        yield
-        self.track_permissions = True
+    def register_permission_tracking(self) -> Iterator[None]:
+        hooks.register_builtin("permission-checked", self._on_permission_checked)
+        try:
+            with enable_permission_tracking():
+                yield
+        finally:
+            hooks.unregister("permission-checked", self._on_permission_checked)
+
+    def _on_permission_checked(self, pname: str) -> None:
+        """Collect all checked permissions during execution
+
+        We need to remember this, in oder to later check if the set of required permissions
+        actually fits the declared permission schema.
+        """
+        if not is_permission_tracking_enabled():
+            return
+
+        self.remember_checked_permission(pname)
+        permission_not_declared = (
+            self.permissions_required is not None and pname not in self.permissions_required
+        )
+        if permission_not_declared:
+            _logger.error(
+                "Permission mismatch: Endpoint %r Use of undeclared permission %s",
+                self,
+                pname,
+            )
+
+            if request.environ.get("paste.testing"):
+                raise PermissionError(
+                    f"Required permissions not declared for this endpoint.\n"
+                    f"Endpoint: {self}\n"
+                    f"Permission: {pname}\n"
+                    f"Used permission: {self._used_permissions}\n"
+                    f"Declared: {self.permissions_required}\n"
+                )
 
     def remember_checked_permission(self, permission: str) -> None:
         """Remember that a permission has been required (used)
@@ -651,7 +688,7 @@ class Endpoint:
 
         @functools.wraps(self.func)
         def _validating_wrapper(  # pylint: disable=too-many-branches
-            param: typing.Mapping[str, Any]
+            param: Mapping[str, Any]
         ) -> cmk_http.Response:
             # TODO: Better error messages, pointing to the location where variables are missing
 
@@ -890,7 +927,7 @@ class Endpoint:
             # a cache-load, which - without locking - could become inconsistent. This is obviously
             # a deeper problem of those components which needs to be fixed as well.
             @functools.wraps(func)
-            def _wrapper(param: typing.Mapping[str, Any]) -> cmk_http.Response:
+            def _wrapper(param: Mapping[str, Any]) -> cmk_http.Response:
                 if not self.skip_locking and self.method != "get":
                     with store.lock_checkmk_configuration():
                         response = func(param)

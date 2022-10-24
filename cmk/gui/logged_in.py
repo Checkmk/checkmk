@@ -23,25 +23,13 @@ from cmk.utils.version import __version__, Version
 
 import cmk.gui.permissions as permissions
 import cmk.gui.site_config as site_config
+from cmk.gui import hooks
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.utils.roles import may_with_roles, roles_of_user
 from cmk.gui.utils.transaction_manager import TransactionManager
-
-# TODO(ml): Any is but a stop gab.  The type should actually be
-#           `cmk.gui.plugins.openapi.restful_objects.Endpoint`.
-#           However, this pulls the REST API into our GUI code and
-#           is responsible for a huge layering violation resulting
-#           in 100+ cyclic dependencies.
-#
-#           Also note that the Endpoint is only used in a branch of
-#           the `may()` method.  The proper solution would be to keep
-#           the code under `is_rest_api_call` in the openapi plugin.
-#
-endpoint: Any = request_local_attr("endpoint")
 
 _logger = logging.getLogger(__name__)
 
@@ -385,32 +373,7 @@ class LoggedInUser:
         they_may = (pname in self.explicitly_given_permissions) or may_with_roles(
             self.role_ids, pname
         )
-
-        is_rest_api_call = bool(endpoint)  # we can't check if "is None" because it's a LocalProxy
-        if is_rest_api_call and endpoint.track_permissions:
-            # We need to remember this, in oder to later check if the set of required permissions
-            # actually fits the declared permission schema.
-            endpoint.remember_checked_permission(pname)
-            permission_not_declared = (
-                endpoint.permissions_required is not None
-                and pname not in endpoint.permissions_required
-            )
-            if permission_not_declared:
-                _logger.error(
-                    "Permission mismatch: Endpoint %r Use of undeclared permission %s",
-                    endpoint,
-                    pname,
-                )
-
-                if request.environ.get("paste.testing"):
-                    raise PermissionError(
-                        f"Required permissions not declared for this endpoint.\n"
-                        f"Endpoint: {endpoint}\n"
-                        f"Permission: {pname}\n"
-                        f"Used permission: {endpoint._used_permissions}\n"
-                        f"Declared: {endpoint.permissions_required}\n"
-                    )
-
+        hooks.call("permission-checked", pname)
         return they_may
 
     def need_permission(self, pname: str) -> None:

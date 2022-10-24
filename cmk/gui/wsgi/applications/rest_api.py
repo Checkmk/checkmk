@@ -15,6 +15,7 @@ import os
 import re
 import traceback
 import urllib.parse
+from contextlib import nullcontext
 from datetime import datetime
 from typing import Any, Callable, Mapping, TYPE_CHECKING
 
@@ -459,7 +460,6 @@ class CheckmkRESTAPI:
                 resp=resp,
                 funnel=OutputFunnel(resp),
                 config_obj=config.make_config_object(config.get_default_config()),
-                endpoint=endpoint,
                 user=LoggedInNobody(),
                 display_options=DisplayOptions(),
                 stack=request_stack(),
@@ -477,7 +477,9 @@ class CheckmkRESTAPI:
                         title=str(exc),
                     )(environ, start_response)
 
-                with set_user_context(rfc7662["sub"], rfc7662):
+                with set_user_context(rfc7662["sub"], rfc7662), (
+                    endpoint.register_permission_tracking() if endpoint else nullcontext(None)
+                ):
                     return wsgi_app(environ, start_response)
         except ProblemException as exc:
             return exc(environ, start_response)

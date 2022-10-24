@@ -19,7 +19,7 @@ from cmk.gui.plugins.views.utils import painter_registry
 from cmk.gui.type_defs import PainterSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.view import View
-from cmk.gui.views import painters_of_datasource
+from cmk.gui.views.page_edit_view import painters_of_datasource
 
 
 @pytest.fixture(name="live")

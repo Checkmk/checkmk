@@ -29,6 +29,12 @@ from cmk.gui.valuespec import DictionaryEntry, DropdownChoice
 from cmk.gui.view import View
 from cmk.gui.view_renderer import GUIViewRenderer
 from cmk.gui.view_store import get_permitted_views
+from cmk.gui.views.page_edit_view import (
+    create_view_from_valuespec,
+    render_view_config,
+    transform_view_to_valuespec_value,
+    view_choices,
+)
 
 VT = TypeVar("VT", bound=ABCViewDashletConfig)
 
@@ -131,11 +137,11 @@ class ViewDashlet(ABCViewDashlet[ViewDashletConfig]):
     ]:
         def _render_input(dashlet: ViewDashletConfig) -> None:
             # TODO: Don't modify the self._dashlet data structure here!
-            views.transform_view_to_valuespec_value(dashlet)
+            transform_view_to_valuespec_value(dashlet)
             # We are only interested in the ViewSpec specific attributes here. Once we have the full
             # picture (dashlets typed (already done) and reports typed), we can better decide how to do
             # it
-            views.render_view_config(dashlet)  # type: ignore[arg-type]
+            render_view_config(dashlet)  # type: ignore[arg-type]
 
         def _handle_input(
             ident: DashletId, old_dashlet: ViewDashletConfig, dashlet: ViewDashletConfig
@@ -150,7 +156,7 @@ class ViewDashlet(ABCViewDashlet[ViewDashletConfig]):
             dashlet.setdefault("add_context_to_title", True)
             dashlet.setdefault("is_show_more", False)
 
-            return views.create_view_from_valuespec(old_dashlet, dashlet)
+            return create_view_from_valuespec(old_dashlet, dashlet)
 
         return _render_input, _handle_input
 
@@ -205,7 +211,7 @@ class LinkedViewDashlet(ABCViewDashlet[LinkedViewDashletConfig]):
                         "In case a user is not permitted to see a view, an error message will be "
                         "displayed."
                     ),
-                    choices=views.view_choices,
+                    choices=view_choices,
                     sorted=True,
                 ),
             ),

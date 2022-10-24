@@ -2382,11 +2382,12 @@ TEST(CmaMain, MiniBoxStartMode) {
 
     CreatePluginInTemp(path, 0, "aaa");
 
-    for (auto mode :
-         {TheMiniBox::StartMode::job, TheMiniBox::StartMode::detached}) {
+    for (auto start_mode :
+         {TheMiniBox::StartMode::job, TheMiniBox::StartMode::detached,
+          TheMiniBox::StartMode::controller}) {
         TheMiniBox mb;
 
-        auto started = mb.startStd(L"x", path, mode);
+        auto started = mb.startStd(L"x", path, start_mode);
         ASSERT_TRUE(started);
 
         auto pid = mb.getProcessId();
@@ -2394,14 +2395,15 @@ TEST(CmaMain, MiniBoxStartMode) {
         auto success = mb.waitForEnd(std::chrono::seconds(3));
         ASSERT_TRUE(success);
         // we have probably data, try to get and and store
-        mb.processResults([&](const std::wstring CmdLine, uint32_t Pid,
-                              uint32_t Code, const std::vector<char> &Data) {
-            auto data = wtools::ConditionallyConvertFromUTF16(Data);
+        mb.processResults([&](const std::wstring &cmd_line, uint32_t _pid,
+                              uint32_t _code, const std::vector<char> &data) {
+            auto result = wtools::ConditionallyConvertFromUTF16(data);
 
-            cma::tools::AddVector(accu, data);
+            cma::tools::AddVector(accu, result);
         });
 
-        EXPECT_TRUE(!accu.empty());
+        EXPECT_TRUE(accu.empty() ==
+                    (start_mode == TheMiniBox::StartMode::controller));
     }
 }
 

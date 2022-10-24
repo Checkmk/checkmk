@@ -175,7 +175,7 @@ public:
 
         return false;
     }
-    enum class StartMode { job, detached };
+    enum class StartMode { job, detached, controller };
     bool startEx(std::wstring_view Id, const std::wstring &exec,
                  StartMode start_mode,
                  const wtools::InternalUser &internal_user);

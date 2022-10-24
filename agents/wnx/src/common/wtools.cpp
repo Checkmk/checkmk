@@ -243,14 +243,14 @@ uint32_t AppRunner::goExecAsJobAndUser(
     return 0;
 }
 
-// returns process id
-uint32_t AppRunner::goExecAsDetached(std::wstring_view command_line) noexcept {
+uint32_t AppRunner::goExec(std::wstring_view command_line, UsePipe use_pipe,
+                           DWORD flags) noexcept {
     try {
         if (process_id_ != 0) {
             XLOG::l.bp("Attempt to reuse AppRunner/updater");
             return 0;
         }
-        prepareResources(command_line, true);
+        prepareResources(command_line, use_pipe == UsePipe::yes);
 
         process_id_ = cma::tools::RunStdCommand(
             command_line, false, TRUE, stdio_.getWrite(), stderr_.getWrite(),
@@ -267,6 +267,16 @@ uint32_t AppRunner::goExecAsDetached(std::wstring_view command_line) noexcept {
         XLOG::l.crit(XLOG_FLINE + " unexpected exception: '{}'", e.what());
     }
     return 0;
+}
+
+uint32_t AppRunner::goExecAsDetached(std::wstring_view command_line) noexcept {
+    return goExec(command_line, UsePipe::yes,
+                  CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS);
+}
+
+uint32_t AppRunner::goExecAsController(
+    std::wstring_view command_line) noexcept {
+    return goExec(command_line, UsePipe::no, CREATE_NEW_PROCESS_GROUP);
 }
 
 std::mutex ServiceController::s_lock_;                          // NOLINT

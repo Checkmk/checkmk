@@ -304,7 +304,7 @@ std::optional<uint32_t> StartAgentController() {
     }
     const auto cmdline = BuildCommandLine(controller_name);
 
-    if (auto proc_id = ar.goExecAsDetached(cmdline); proc_id != 0) {
+    if (auto proc_id = ar.goExecAsController(cmdline); proc_id != 0) {
         XLOG::l.i("Agent controller '{}' started pid [{}]",
                   wtools::ToUtf8(cmdline), proc_id);
         return proc_id;

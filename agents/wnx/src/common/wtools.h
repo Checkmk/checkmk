@@ -334,12 +334,14 @@ public:
     // returns process id
     uint32_t goExecAsJob(std::wstring_view command_line) noexcept;
 
-    // returns process id
+    /// returns process id
     uint32_t goExecAsJobAndUser(std::wstring_view user,
                                 std::wstring_view password,
                                 std::wstring_view command_line) noexcept;
-    // returns process id
+    /// returns process id
     uint32_t goExecAsDetached(std::wstring_view command_line) noexcept;
+    /// returns process id
+    uint32_t goExecAsController(std::wstring_view command_line) noexcept;
 
     void kill(bool kill_tree_too) {
         auto proc_id = process_id_.exchange(0);
@@ -395,6 +397,10 @@ public:
     }
 
 private:
+    enum class UsePipe { yes, no };
+    uint32_t goExec(std::wstring_view command_line, UsePipe use_pipe,
+                    DWORD flags) noexcept;
+
     void prepareResources(std::wstring_view command_line,
                           bool create_pipe) noexcept;
     void cleanResources() noexcept;

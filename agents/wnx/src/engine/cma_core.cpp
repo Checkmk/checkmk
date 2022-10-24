@@ -781,6 +781,9 @@ bool TheMiniBox::startEx(std::wstring_view uniq_id, const std::wstring &exec,
             case StartMode::detached:
                 proc_id_ = ar->goExecAsDetached(exec);
                 break;
+            case StartMode::controller:
+                proc_id_ = ar->goExecAsController(exec);
+                break;
         }
 
         if (proc_id_ != 0) {

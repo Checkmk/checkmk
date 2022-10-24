@@ -53,10 +53,7 @@ def main() {
     def build_image = !(edition in ["free"]);
     def build_ami_image = edition == "free";
 
-    // TODO
-    // Enable this for 'plus' later when we have CPE specific integration tests.
-    // Until then it's similar to the CEE.
-    def run_integration_tests = !(edition in ["free", "plus"]);
+    def run_integration_tests = !(edition in ["free"]);
     def run_image_tests = !(edition in ["free"]);
 
     print(
@@ -70,7 +67,7 @@ def main() {
         |run_image_tests:....... │${run_image_tests}│
         |===================================================
         """.stripMargin());
-    
+
     stage('Build Packages') {
         on_dry_run_omit(LONG_RUNNING, "trigger build-cmk-packages") {
             build(job: "${base_folder}/build-cmk-packages", parameters: job_parameters);
@@ -114,4 +111,3 @@ def main() {
     }
 }
 return this;
-

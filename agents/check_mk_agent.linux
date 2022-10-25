@@ -1397,6 +1397,10 @@ section_timesyncd() {
     echo "<<<timesyncd>>>"
     timedatectl timesync-status
     get_file_mtime /var/lib/systemd/timesync/clock | awk '{print "[[["$1"]]]"}'
+
+    echo "<<<timesyncd_ntpmessage:sep(10)>>>"
+    timedatectl show-timesync | awk '/NTPMessage/{print $0}'
+    timedatectl show | awk '/Timezone/{print $0}'
     return 0 # intended not to execute section_ntp even in the case where get_file_mtime fails
 }
 

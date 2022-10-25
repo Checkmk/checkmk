@@ -73,30 +73,45 @@ STRING_TABLE_SERVER_NO_SYNC = [
     ["[[[1569922392.37]]]"],
 ]
 
+STRING_TABLE_SERVER_NTP_MESSAGE = [
+    [
+        "NTPMessage={ Leap=0, Version=4, Mode=4, Stratum=2, Precision=-24, RootDelay=87.096ms, RootDispersion=26.397ms, Reference=C0248F97, OriginateTimestamp=Tue 2019-10-01 11:33:12 CEST, ReceiveTimestamp=Tue 2019-10-01 11:33:12 CEST, TransmitTimestamp=Tue 2019-10-01 11:33:12 CEST, DestinationTimestamp=Tue 2019-10-01 11:33:12 CEST, Ignored=no PacketCount=1, Jitter=0ms }"
+    ],
+    ["Timezone=Europe/Berlin"],
+]
+
+STRING_TABLE_NO_SYNC_NTP_MESSAGE = [
+    ["Timezone=Europe/Berlin"],
+]
+
 
 @pytest.mark.parametrize(
-    "string_table, result",
+    "string_table, string_table_ntpmessage,  result",
     [
-        (STRING_TABLE_STANDARD, [Service()]),
-        (STRING_TABLE_LARGE_OFFSET, [Service()]),
-        (STRING_TABLE_NO_SERVER, [Service()]),
-        (STRING_TABLE_SERVER_NO_SYNC, [Service()]),
-        ([], []),
+        (STRING_TABLE_STANDARD, [], [Service()]),
+        (STRING_TABLE_LARGE_OFFSET, [], [Service()]),
+        (STRING_TABLE_NO_SERVER, STRING_TABLE_NO_SYNC_NTP_MESSAGE, [Service()]),
+        (STRING_TABLE_SERVER_NO_SYNC, STRING_TABLE_NO_SYNC_NTP_MESSAGE, [Service()]),
+        (STRING_TABLE_STANDARD, STRING_TABLE_SERVER_NTP_MESSAGE, [Service()]),
+        ([], [], []),
     ],
 )
 def test_discover_timesyncd(  # type:ignore[no-untyped-def]
     string_table: StringTable,
+    string_table_ntpmessage: StringTable,
     result: DiscoveryResult,
 ):
     section = timesyncd.parse_timesyncd(string_table)
-    assert list(timesyncd.discover_timesyncd(section)) == result
+    section_ntpmessage = timesyncd.parse_timesyncd_ntpmessage(string_table_ntpmessage)
+    assert list(timesyncd.discover_timesyncd(section, section_ntpmessage)) == result
 
 
 @pytest.mark.parametrize(
-    "string_table, params, result",
+    "string_table, string_table_ntpmessage, params, result",
     [
         (
             STRING_TABLE_STANDARD,
+            [],
             timesyncd.default_check_parameters,
             [
                 Result(state=State.OK, summary="Offset: 54 milliseconds"),
@@ -114,6 +129,7 @@ def test_discover_timesyncd(  # type:ignore[no-untyped-def]
         ),
         (
             STRING_TABLE_LARGE_OFFSET,
+            [],
             timesyncd.default_check_parameters,
             [
                 Result(
@@ -134,6 +150,7 @@ def test_discover_timesyncd(  # type:ignore[no-untyped-def]
         ),
         (
             STRING_TABLE_NO_SERVER,
+            [],
             timesyncd.default_check_parameters,
             [
                 Result(
@@ -146,6 +163,7 @@ def test_discover_timesyncd(  # type:ignore[no-untyped-def]
         ),
         (
             STRING_TABLE_SERVER_NO_SYNC,
+            [],
             timesyncd.default_check_parameters,
             [
                 Result(
@@ -156,24 +174,50 @@ def test_discover_timesyncd(  # type:ignore[no-untyped-def]
                 Result(state=State.CRIT, summary="Found no time server"),
             ],
         ),
+        (
+            STRING_TABLE_STANDARD,
+            STRING_TABLE_SERVER_NTP_MESSAGE,
+            timesyncd.default_check_parameters,
+            [
+                Result(state=State.OK, summary="Offset: 54 milliseconds"),
+                Metric("time_offset", 0.053991, levels=(0.2, 0.5)),
+                Result(
+                    state=State.CRIT,
+                    summary="Time since last sync: 22 hours 1 minute (warn/crit at 2 hours 5 minutes/3 hours 0 minutes)",
+                ),
+                Metric("last_sync_time", 79260.0, levels=(7500.0, 10800.0)),
+                Result(
+                    state=State.CRIT,
+                    summary="Time since last NTPMessage: 22 hours 1 minute (warn/crit at 1 hour 0 minutes/2 hours 0 minutes)",
+                ),
+                Metric("last_sync_receive_time", 79260.36999988556, levels=(3600.0, 7200.0)),
+                Result(state=State.OK, summary="Stratum: 2.00"),
+                Result(state=State.OK, summary="Jitter: 0 seconds"),
+                Metric("jitter", 0.0, levels=(0.2, 0.5)),
+                Result(state=State.OK, summary="Synchronized on 91.189.91.157"),
+            ],
+        ),
     ],
 )
 def test_check_timesyncd_freeze(  # type:ignore[no-untyped-def]
     string_table: StringTable,
+    string_table_ntpmessage: StringTable,
     params: timesyncd.CheckParams,
     result: CheckResult,
 ):
     server_time = 1569922392.37 + 60 * 60 * 22 + 60, "UTC"
     section = timesyncd.parse_timesyncd(string_table)
+    section_ntpmessage = timesyncd.parse_timesyncd_ntpmessage(string_table_ntpmessage)
     with on_time(*server_time):
-        assert list(timesyncd.check_timesyncd(params, section)) == result
+        assert list(timesyncd.check_timesyncd(params, section, section_ntpmessage)) == result
 
 
 @pytest.mark.parametrize(
-    "string_table, params, result",
+    "string_table, string_table_ntpmessage, params, result",
     [
         (
             STRING_TABLE_NO_SERVER,
+            [],
             timesyncd.default_check_parameters,
             [
                 Result(
@@ -187,10 +231,12 @@ def test_check_timesyncd_freeze(  # type:ignore[no-untyped-def]
 )
 def test_check_timesyncd_negative_time(  # type:ignore[no-untyped-def]
     string_table: StringTable,
+    string_table_ntpmessage: StringTable,
     params: timesyncd.CheckParams,
     result: CheckResult,
 ):
     wrong_server_time = 1569922392.37 - 60, "UTC"
     section = timesyncd.parse_timesyncd(string_table)
+    section_ntpmessage = timesyncd.parse_timesyncd_ntpmessage(string_table_ntpmessage)
     with on_time(*wrong_server_time):
-        assert list(timesyncd.check_timesyncd(params, section)) == result
+        assert list(timesyncd.check_timesyncd(params, section, section_ntpmessage)) == result

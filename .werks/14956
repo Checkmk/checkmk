@@ -1,0 +1,19 @@
+Title: mk_logwatch: Make regular expression for logfiles configurable in agent bakery
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1666705082
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+When configuring the mk_logwatch agent plugin, it's possible to specify the file
+matching patterns more precisely by defining a regular expression pattern within
+the applying options.
+You can choose among the keywords <tt>regex</tt> or <tt>iregex</tt> for a case
+sensitive or insensitive matching, respectively.
+
+While this option already exists for a long time, it can now be specified via
+agent bakery by configuring the "Text logfiles" agent rulespec.
+

@@ -21,7 +21,13 @@ import cmk.utils.log
 import cmk.utils.paths
 from cmk.utils import store
 
-from .config import ConfigFromWATO, ECRulePack, MkpRulePackBindingError, MkpRulePackProxy
+from .config import (
+    ConfigFromWATO,
+    ECRulePack,
+    ECRulePackSpec,
+    MkpRulePackBindingError,
+    MkpRulePackProxy,
+)
 from .defaults import default_config, default_rule_pack
 from .settings import Settings
 from .settings import settings as create_settings
@@ -98,35 +104,39 @@ def remove_exported_rule_pack(id_: str) -> None:
 
 
 def _bind_to_rule_pack_proxies(
-    rule_packs: Iterable[Any], mkp_rule_packs: Mapping[Any, Any]
+    rule_packs: Iterable[ECRulePack], mkp_rule_packs: Mapping[str, ECRulePackSpec]
 ) -> None:
     """
     Binds all proxy rule packs of the variable rule_packs to
     the corresponding mkp_rule_packs.
     """
     for rule_pack in rule_packs:
-        try:
-            if isinstance(rule_pack, MkpRulePackProxy):
-                rule_pack.bind_to(mkp_rule_packs[rule_pack.id_])
-        except KeyError:
-            raise MkpRulePackBindingError(
-                f'Exported rule pack with ID "{rule_pack.id_}" not found.'
-            )
+        if isinstance(rule_pack, MkpRulePackProxy):
+            if mkp_rule_pack := mkp_rule_packs.get(rule_pack.id_):
+                rule_pack.bind_to(mkp_rule_pack)
+            else:
+                raise MkpRulePackBindingError(
+                    f"Exported rule pack with ID '{rule_pack.id_}' not found."
+                )
 
 
 def load_config(settings: Settings) -> ConfigFromWATO:  # pylint: disable=too-many-branches
     """Load event console configuration."""
-    # TODO: Do not use exec and the funny MkpRulePackProxy Kung Fu, removing the need for the two casts below.
-    global_context = cast(dict[str, Any], default_config())
+    # TODO: Do not use exec and the funny MkpRulePackProxy Kung Fu, removing the need for the copy/assert/cast below.
+    global_context = dict(default_config())
     global_context["MkpRulePackProxy"] = MkpRulePackProxy
+    global_context["mkp_rule_packs"] = {}
     for path in [settings.paths.main_config_file.value] + sorted(
         settings.paths.config_dir.value.glob("**/*.mk")
     ):
         with open(str(path), mode="rb") as file_object:
             exec(file_object.read(), global_context)  # pylint: disable=exec-used
+    assert isinstance(global_context["rule_packs"], Iterable)
+    assert isinstance(global_context["mkp_rule_packs"], Mapping)
+    _bind_to_rule_pack_proxies(global_context["rule_packs"], global_context["mkp_rule_packs"])
+    global_context.pop("mkp_rule_packs", None)
     global_context.pop("MkpRulePackProxy", None)
     config = cast(ConfigFromWATO, global_context)
-    _bind_to_rule_pack_proxies(config["rule_packs"], config["mkp_rule_packs"])
 
     # Convert livetime fields in rules into new format
     for rule in config["rules"]:
@@ -230,16 +240,17 @@ def export_rule_pack(
         if rule_pack.rule_pack is None:
             raise MkpRulePackBindingError("Proxy is not bound")
         rule_pack = rule_pack.rule_pack
-
     repr_ = pprint.pformat(rule_pack) if pretty_print else repr(rule_pack)
-    output = (
-        "# Written by WATO\n" "# encoding: utf-8\n" "\n" "mkp_rule_packs['%s'] = \\\n" "%s\n"
-    ) % (rule_pack["id"], repr_)
+    output = f"""# Written by WATO
+# encoding: utf-8
 
+mkp_rule_packs['{rule_pack['id']}'] = \\
+{repr_}
+"""
     if not dir_:
         dir_ = mkp_rule_pack_dir()
     dir_.mkdir(parents=True, exist_ok=True)
-    store.save_text_to_file(dir_ / f"{rule_pack['id']}.mk", str(output))
+    store.save_text_to_file(dir_ / f"{rule_pack['id']}.mk", output)
 
 
 def add_rule_pack_proxies(file_names: Iterable[str]) -> None:

@@ -31,7 +31,6 @@ def default_config() -> ConfigFromWATO:
     return {
         "rules": [],  # old pre 1.2.7i1 format. Only used if rule_packs is empty
         "rule_packs": [],  # new format with rule packs
-        "mkp_rule_packs": {},  # rule packs provided by MKPs and referenced in rule_packs
         "actions": [],
         "debug_rules": False,
         "rule_optimizer": True,

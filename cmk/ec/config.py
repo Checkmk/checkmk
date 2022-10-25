@@ -322,7 +322,6 @@ class ConfigFromWATO(TypedDict):
     log_level: LogConfig  # TODO: Mutable???
     log_messages: bool
     log_rulehits: bool
-    mkp_rule_packs: Mapping[Any, Any]  # TODO: Move to Config (not from WATO!). TypedDict
     remote_status: tuple[int, bool, Sequence[str] | None] | None
     replication: Replication | None
     retention_interval: int

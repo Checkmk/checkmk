@@ -196,7 +196,7 @@ class ECArgumentParser(ArgumentParser):
             if file_desc < 0:
                 raise ValueError
         except ValueError:
-            raise ArgumentTypeError("invalid file descriptor value: %r" % value)
+            raise ArgumentTypeError(f"invalid file descriptor value: {repr(value)}")
         return FileDescriptor(file_desc)
 
 

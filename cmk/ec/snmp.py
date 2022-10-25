@@ -82,7 +82,7 @@ class SNMPTrapEngine:
             return pysnmp.entity.config.usmHMAC256SHA384AuthProtocol
         if proto_name == "SHA-512":
             return pysnmp.entity.config.usmHMAC384SHA512AuthProtocol
-        raise Exception("Invalid SNMP auth protocol: %s" % proto_name)
+        raise Exception(f"Invalid SNMP auth protocol: {proto_name}")
 
     @staticmethod
     def _priv_proto_for(proto_name: PrivacyProtocol) -> tuple[int, ...]:
@@ -100,7 +100,7 @@ class SNMPTrapEngine:
             return pysnmp.entity.config.usmAesBlumenthalCfb192Protocol
         if proto_name == "AES-256-Blumenthal":
             return pysnmp.entity.config.usmAesBlumenthalCfb256Protocol
-        raise Exception("Invalid SNMP priv protocol: %s" % proto_name)
+        raise Exception(f"Invalid SNMP priv protocol: {proto_name}")
 
     def _initialize_snmp_credentials(self, config: Config) -> None:
         user_num = 0
@@ -110,8 +110,8 @@ class SNMPTrapEngine:
 
             # SNMPv1/v2
             if not isinstance(credentials, tuple):
-                community_index = "snmpv2-%d" % user_num
-                self._logger.info("adding SNMPv1 system: communityIndex=%s" % community_index)
+                community_index = f"snmpv2-{user_num}"
+                self._logger.info("adding SNMPv1 system: communityIndex=%s", community_index)
                 pysnmp.entity.config.addV1System(self.snmp_engine, community_index, credentials)
                 continue
 
@@ -135,7 +135,7 @@ class SNMPTrapEngine:
                 priv_proto = self._priv_proto_for(credentials[4])
                 priv_key = credentials[5]
             else:
-                raise Exception("Invalid SNMP security level: %s" % credentials[0])
+                raise Exception(f"Invalid SNMP security level: {credentials[0]}")
 
             for engine_id in spec.get("engine_ids", []):
                 self._logger.info(
@@ -217,17 +217,15 @@ class SNMPTrapEngine:
             and variables["statusInformation"]["errorIndication"]
             == pysnmp.proto.errind.unknownCommunityName
         ):
-            msg = "Unknown community (%s)" % variables["statusInformation"].get("communityName", "")
+            msg = f"Unknown community ({variables['statusInformation'].get('communityName', '')})"
         elif (
             variables["securityLevel"] == 3
             and variables["statusInformation"]["errorIndication"]
             == pysnmp.proto.errind.unknownSecurityName
         ):
-            msg = "Unknown credentials (msgUserName: %s)" % variables["statusInformation"].get(
-                "msgUserName", ""
-            )
+            msg = f"Unknown credentials (msgUserName: {variables['statusInformation'].get('msgUserName', '')})"
         else:
-            msg = "%s" % variables["statusInformation"]
+            msg = f"{variables['statusInformation']}"
 
         self._logger.log(
             VERBOSE,
@@ -277,14 +275,14 @@ class SNMPTrapTranslator:
             builder.loadModules()
 
             loaded_mib_module_names = list(builder.mibSymbols.keys())
-            logger.info("Loaded %d SNMP MIB modules" % len(loaded_mib_module_names))
+            logger.info("Loaded %d SNMP MIB modules", len(loaded_mib_module_names))
             logger.log(VERBOSE, "Found modules: %s", ", ".join(loaded_mib_module_names))
 
             # This object maintains various indices built from MIBs data
             return pysnmp.smi.view.MibViewController(builder)
         except pysnmp.smi.error.SmiError as e:
             logger.info("Exception while loading MIB modules. Proceeding without modules!")
-            logger.exception("Exception: %s" % e)
+            logger.exception("Exception: %s", e)
             return None
 
     def _translate_simple(self, ipaddress: str, var_bind_list: VarBinds) -> list[tuple[str, str]]:
@@ -315,11 +313,14 @@ class SNMPTrapTranslator:
                 translated_oid, translated_value = self._translate_binding_via_mibs(oid, value)
             except (pysnmp.smi.error.SmiError, pyasn1.error.ValueConstraintError) as e:
                 self._logger.warning(
-                    "Failed to translate OID %s (in trap from %s): %s "
-                    "(enable debug logging for details)" % (oid.prettyPrint(), ipaddress, e)
+                    "Failed to translate OID %s (in trap from %s): %s (enable debug logging for details)",
+                    oid.prettyPrint(),
+                    ipaddress,
+                    e,
                 )
                 self._logger.debug(
-                    "Failed trap var binds:\n%s" % "\n".join(["%s: %r" % i for i in var_bind_list])
+                    "Failed trap var binds:\n%s",
+                    "\n".join([f"{i}: {repr(i)}" for i in var_bind_list]),
                 )
                 self._logger.debug(traceback.format_exc())
                 translated_oid = str(oid)
@@ -338,7 +339,7 @@ class SNMPTrapTranslator:
         translated_oid = mib_var[0].prettyPrint().replace('"', "")
         translated_value = mib_var[1].prettyPrint()
         if units := getattr(node, "getUnits", lambda: "")():
-            translated_value += " %s" % units
+            translated_value += f" {units}"
         if description := getattr(node, "getDescription", lambda: "")():
-            translated_value += "(%s)" % description
+            translated_value += f"({description})"
         return translated_oid, translated_value

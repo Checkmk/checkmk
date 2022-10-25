@@ -93,7 +93,7 @@ def remove_exported_rule_pack(id_: str) -> None:
     """
     Removes the .mk file representing the exported rule pack.
     """
-    export_file = mkp_rule_pack_dir() / ("%s.mk" % id_)
+    export_file = mkp_rule_pack_dir() / f"{id_}.mk"
     export_file.unlink()
 
 
@@ -110,7 +110,7 @@ def _bind_to_rule_pack_proxies(
                 rule_pack.bind_to(mkp_rule_packs[rule_pack.id_])
         except KeyError:
             raise MkpRulePackBindingError(
-                'Exported rule pack with ID "%s" not found.' % rule_pack.id_
+                f'Exported rule pack with ID "{rule_pack.id_}" not found.'
             )
 
 
@@ -201,7 +201,7 @@ def save_rule_packs(
     else:
         rule_packs_text = repr(rule_packs)
 
-    output += "rule_packs += \\\n%s\n" % rule_packs_text
+    output += f"rule_packs += \\\n{rule_packs_text}\n"
 
     if not dir_:
         dir_ = rule_pack_dir()
@@ -239,7 +239,7 @@ def export_rule_pack(
     if not dir_:
         dir_ = mkp_rule_pack_dir()
     dir_.mkdir(parents=True, exist_ok=True)
-    store.save_text_to_file(dir_ / ("%s.mk" % rule_pack["id"]), str(output))
+    store.save_text_to_file(dir_ / f"{rule_pack['id']}.mk", str(output))
 
 
 def add_rule_pack_proxies(file_names: Iterable[str]) -> None:

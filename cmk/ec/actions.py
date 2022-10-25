@@ -172,7 +172,7 @@ def _substitute_event_tags(
     text: str, event_columns: Iterable[tuple[str, Any]], event: Event
 ) -> str:
     for key, value in _get_event_tags(event_columns, event).items():
-        text = text.replace("$%s$" % key.upper(), value)
+        text = text.replace(f"${key.upper()}$", value)
     return text
 
 
@@ -187,7 +187,7 @@ def _send_email(config: Config, to: str, subject: str, body: str, logger: Logger
     ]
 
     if config["debug_rules"]:
-        logger.info("  Executing: %s" % " ".join(x.decode("utf-8") for x in command_utf8))
+        logger.info("  Executing: %s", " ".join(x.decode("utf-8") for x in command_utf8))
 
     # FIXME: This may lock on too large buffer. We should move all "mail sending" code
     # to a general place and fix this for all our components (notification plugins,
@@ -201,11 +201,11 @@ def _send_email(config: Config, to: str, subject: str, body: str, logger: Logger
         check=False,
     )
 
-    logger.info("  Exitcode: %d" % completed_process.returncode)
+    logger.info("  Exitcode: %d", completed_process.returncode)
     if completed_process.returncode:
         logger.info("  Error: Failed to send the mail.")
         for line in (completed_process.stdout + completed_process.stderr).splitlines():
-            logger.info("  Output: %s" % line.rstrip())
+            logger.info("  Output: %s", line.rstrip())
         return False
 
     return True
@@ -230,9 +230,9 @@ def _execute_script(
         input=body,
         check=False,
     )
-    logger.info("  Exit code: %d" % completed_process.returncode)
+    logger.info("  Exit code: %d", completed_process.returncode)
     if completed_process.stdout:
-        logger.info("  Output: '%s'" % completed_process.stdout)
+        logger.info("  Output: '%s'", completed_process.stdout)
 
 
 def _get_event_tags(
@@ -240,17 +240,15 @@ def _get_event_tags(
     event: Event,
 ) -> dict[str, str]:
     substs: list[tuple[str, Any]] = [
-        ("match_group_%d" % (nr + 1), g) for (nr, g) in enumerate(event.get("match_groups", ()))
+        (f"match_group_{nr + 1}", g) for nr, g in enumerate(event.get("match_groups", ()))
     ]
 
     for key, defaultvalue in event_columns:
         varname = key[6:]
         substs.append((varname, event.get(varname, defaultvalue)))
 
-    def to_string(v: Any) -> str:
-        if isinstance(v, str):
-            return v
-        return "%s" % v
+    def to_string(v: object) -> str:
+        return v if isinstance(v, str) else str(v)
 
     tags: dict[str, str] = {}
     for key, value in substs:
@@ -295,7 +293,7 @@ def do_notify(
 ) -> None:
     if not _core_has_notifications_enabled(logger):
         logger.info(
-            "Notifications are currently disabled. Skipped notification for event %d" % event["id"]
+            "Notifications are currently disabled. Skipped notification for event %d", event["id"]
         )
         return
 
@@ -308,8 +306,9 @@ def do_notify(
 
     if context["HOSTDOWNTIME"] != "0":
         logger.info(
-            "Host %s is currently in scheduled downtime. "
-            "Skipping notification of event %s." % (context["HOSTNAME"], event["id"])
+            "Host %s is currently in scheduled downtime. Skipping notification of event %s.",
+            context["HOSTNAME"],
+            event["id"],
         )
         return
 
@@ -332,9 +331,9 @@ def do_notify(
         check=False,
     )
     if completed_process.returncode:
-        logger.error("Error notifying via Check_MK: %s" % completed_process.stdout.strip())
+        logger.error("Error notifying via Check_MK: %s", completed_process.stdout.strip())
     else:
-        logger.info("Successfully forwarded notification for event %d to Check_MK" % event["id"])
+        logger.info("Successfully forwarded notification for event %d to Check_MK", event["id"])
 
 
 def _create_notification_context(
@@ -445,7 +444,7 @@ def _add_infos_from_monitoring_host(
     # Add custom variables to the notification context
     for key, val in config.custom_variables.items():
         # TypedDict with dynamic keys... The typing we have is worth the supression
-        context["HOST_%s" % key] = val  # type: ignore[literal-required]
+        context[f"HOST_{key}"] = val  # type: ignore[literal-required]
 
     context["HOSTDOWNTIME"] = "1" if event["host_in_downtime"] else "0"
 

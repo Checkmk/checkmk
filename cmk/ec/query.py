@@ -32,7 +32,7 @@ class Query:
             return QueryREPLICATE(status_server, raw_query, logger)
         if method == "COMMAND":
             return QueryCOMMAND(status_server, raw_query, logger)
-        raise MKClientError("Invalid method %s (allowed are GET, REPLICATE, COMMAND)" % method)
+        raise MKClientError(f"Invalid method {method} (allowed are GET, REPLICATE, COMMAND)")
 
     def __init__(self, status_server: _StatusServer, raw_query: list[str], logger: Logger) -> None:
         super().__init__()
@@ -75,7 +75,7 @@ _filter_operators: dict[str, tuple[OperatorName, Callable[[Any, Any], bool]]] = 
 def operator_for(name: str) -> tuple[OperatorName, Callable[[Any, Any], bool]]:
     name_and_func = _filter_operators.get(name)
     if name_and_func is None:
-        raise MKClientError("Unknown filter operator '%s'" % name)
+        raise MKClientError(f"Unknown filter operator '{name}'")
     return name_and_func
 
 
@@ -104,7 +104,7 @@ class QueryGET(Query):
         if header == "OutputFormat":
             if argument not in ["python", "plain", "json"]:
                 raise MKClientError(
-                    'Invalid output format "%s" (allowed are: python, plain, json)' % argument
+                    f'Invalid output format "{argument}" (allowed are: python, plain, json)'
                 )
             self.output_format = argument
         elif header == "Columns":
@@ -118,7 +118,7 @@ class QueryGET(Query):
         elif header == "Limit":
             self.limit = int(argument)
         else:
-            logger.info("Ignoring not-implemented header %s" % header)
+            logger.info("Ignoring not-implemented header %s", header)
 
     def _parse_filter(self, textspec: str) -> tuple[str, OperatorName, Callable[[Any], bool], Any]:
         # Examples:

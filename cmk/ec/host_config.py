@@ -77,4 +77,4 @@ class HostConfig:
             if info.alias:
                 self._hosts_by_designation[info.alias.lower()] = info.name
             self._hosts_by_designation[info.name.lower()] = info.name
-        self._logger.debug("Got %d hosts from core" % len(self._hosts_by_name))
+        self._logger.debug("Got %d hosts from core", len(self._hosts_by_name))

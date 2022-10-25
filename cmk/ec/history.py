@@ -211,7 +211,7 @@ def _log_event(
     config: Config, logger: Logger, event: Event, what: str, who: str, addinfo: str
 ) -> None:
     if config["debug_rules"]:
-        logger.info("Event %d: %s/%s/%s - %s" % (event["id"], what, who, addinfo, event["text"]))
+        logger.info("Event %d: %s/%s/%s - %s", event["id"], what, who, addinfo, event["text"])
 
 
 def _get_mongodb(  # pylint: disable=too-many-branches
@@ -259,7 +259,7 @@ def _get_mongodb(  # pylint: disable=too-many-branches
                 key = "_id"
             mongo_query[key] = mongo_filter
         else:
-            raise Exception("Filter %s not implemented for MongoDB" % column_name)
+            raise Exception(f"Filter {column_name} not implemented for MongoDB")
 
     result = history._mongodb.db.ec_archive.find(mongo_query).sort("time", -1)
 
@@ -384,7 +384,7 @@ def get_logfile(config: Config, log_dir: Path, active_history_period: ActiveHist
 
         active_history_period.value = timestamp
 
-    return log_dir / ("%d.log" % timestamp)
+    return log_dir / f"{timestamp}.log"
 
 
 # Return timestamp of the beginning of the current history
@@ -436,7 +436,7 @@ def _expire_logfiles(
         except Exception as e:
             if settings.options.debug:
                 raise
-            logger.exception("Error expiring log files: %s" % e)
+            logger.exception("Error expiring log files: %s", e)
 
 
 # Please note: Keep this in sync with livestatus/src/TableEventConsole.cc.

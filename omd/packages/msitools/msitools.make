@@ -22,7 +22,7 @@ MSITOOLS_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(MSITOOLS_DIR)
 MSITOOLS_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(MSITOOLS_DIR)
 #MSITOOLS_WORK_DIR := $(PACKAGE_WORK_DIR)/$(MSITOOLS_DIR)
 
-ifneq ($(filter $(DISTRO_CODE),sles15 sles15sp1 sles15sp2 sles15sp3),)
+ifneq ($(filter $(DISTRO_CODE),sles15 sles15sp1 sles15sp2 sles15sp3 sles15sp4),)
 GSF_CONFIGURE_VARS := GSF_LIBS="$(PACKAGE_LIBGSF_LDFLAGS)" GSF_CFLAGS="$(PACKAGE_LIBGSF_CFLAGS)"
 else
 GSF_CONFIGURE_VARS :=
@@ -52,10 +52,10 @@ $(MSITOOLS_INTERMEDIATE_INSTALL): $(MSITOOLS_BUILD)
 	install -m 755 $(MSITOOLS_BUILD_DIR)/.libs/msiinfo $(MSITOOLS_INSTALL_DIR)/bin
 	install -m 755 $(MSITOOLS_BUILD_DIR)/.libs/msibuild $(MSITOOLS_INSTALL_DIR)/bin
 	install -m 755 $(LCAB_BUILD_DIR)/lcab $(MSITOOLS_INSTALL_DIR)/bin
-	
+
 	$(MKDIR) $(MSITOOLS_INSTALL_DIR)/lib
 	install -m 755 $(MSITOOLS_BUILD_DIR)/libmsi/.libs/libmsi.so* $(MSITOOLS_INSTALL_DIR)/lib
-	
+
 	$(MKDIR) $(MSITOOLS_INSTALL_DIR)/share/check_mk/agents/windows
 	install -m 644 $(PACKAGE_DIR)/$(MSITOOLS)/*.msi $(MSITOOLS_INSTALL_DIR)/share/check_mk/agents/windows
 	$(TOUCH) $@

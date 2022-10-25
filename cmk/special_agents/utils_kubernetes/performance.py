@@ -42,16 +42,19 @@ class UsedMetrics(str, enum.Enum):
     container_cpu_usage_seconds_total = "container_cpu_usage_seconds_total"
 
 
-class PerformanceMetric(BaseModel):
-    container_name: ContainerName
-    name: UsedMetrics
-    value: float
-    timestamp: float
+class IdentifiableMetric(BaseModel):
     namespace: str
     pod_name: str
 
     def pod_lookup_from_metric(self) -> PodLookupName:
         return lookup_name(self.namespace, self.pod_name)
+
+
+class PerformanceMetric(IdentifiableMetric):
+    container_name: ContainerName
+    name: UsedMetrics
+    value: float
+    timestamp: float
 
 
 class MemoryMetric(PerformanceMetric):
@@ -66,13 +69,7 @@ class UnusedMetric(BaseModel):
     pass
 
 
-class CPURateMetric(BaseModel):
-    namespace: str
-    pod_name: str
-
-    def pod_lookup_from_metric(self) -> PodLookupName:
-        return lookup_name(self.namespace, self.pod_name)
-
+class CPURateMetric(IdentifiableMetric):
     rate: float
 
 

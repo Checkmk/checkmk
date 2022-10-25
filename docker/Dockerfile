@@ -28,6 +28,11 @@ ENV MAIL_RELAY_HOST=""
 # Used e.g. for omd update
 ENV CMK_CONTAINERIZED="TRUE"
 
+# The credentials for the download are provided by a sidecar container. For
+# local builds it is convenient to change this (e.g. to the docker host and
+# running `python -m http.simple`)
+ARG CREDENTIALS_URL="http://127.0.0.1:8000/secret"
+
 # Make the list of required packages available to the following command
 COPY needed-packages /needed-packages
 
@@ -76,7 +81,6 @@ RUN set -e \
     && export DEBIAN_FRONTEND=noninteractive \
     && PKG_NAME="check-mk-${CMK_EDITION}-${CMK_VERSION}" \
     && PKG_FILE="${PKG_NAME}_0.buster_$(dpkg --print-architecture).deb" \
-    && CREDENTIALS_URL="http://localhost:8000/secret" \
     && if [ ! -e "/${PKG_FILE}" ]; then \
         echo "Receive download credentials from ${CREDENTIALS_URL}..." && \
         CMK_DL_CREDENTIALS=$(curl -fsS "${CREDENTIALS_URL}") && \

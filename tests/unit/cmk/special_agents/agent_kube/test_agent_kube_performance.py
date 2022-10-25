@@ -2,8 +2,6 @@
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import json
-
 from tests.unit.cmk.special_agents.agent_kube.factory import (
     PerformanceMetricFactory,
     PerformancePodFactory,
@@ -44,4 +42,4 @@ def test_kube_object_performance_sections() -> None:
         "kube_performance_memory_v1",
         "kube_performance_cpu_v1",
     ]
-    assert [PerformanceUsage(**json.loads(section[1])) for section in performance_sections]
+    assert [PerformanceUsage.parse_raw(section[1]) for section in performance_sections]

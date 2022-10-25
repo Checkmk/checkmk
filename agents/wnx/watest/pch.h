@@ -51,8 +51,7 @@
 #include "common/cfg_info.h"
 
 // definitions required for gtest
-#define _SILENCE_CXX17_STRSTREAM_DEPRECATION_WARNING
-#define _CRT_SECURE_NO_WARNINGS
+#define _SILENCE_CXX17_STRSTREAM_DEPRECATION_WARNING // NOLINT
 #include "common/yaml.h"
 #include "gtest/gtest.h"
 

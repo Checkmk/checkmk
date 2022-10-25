@@ -35,7 +35,7 @@ TEST(ObjectRepo, CheckShared) {
         EXPECT_EQ(*a4, val);
         for (auto k = 0; k < 100000; k++) {
             auto a3 = fs.createObject("a", val);
-            ;
+            
         }
         EXPECT_TRUE(fs.count() == 5);
 

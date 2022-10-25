@@ -573,9 +573,9 @@ bool DeactivateLegacyAgent() {
                                      ServiceStartType::disable);
 }
 
-int WaitForStatus(std::function<int(const std::wstring &)> status_checker,
-                  std::wstring_view service_name, int expected_status,
-                  int millisecs) {
+int WaitForStatus(
+    const std::function<int(const std::wstring &)> &status_checker,
+    std::wstring_view service_name, int expected_status, int millisecs) {
     int status = -1;
     while (true) {
         status = status_checker(std::wstring(service_name));

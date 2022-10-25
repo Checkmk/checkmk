@@ -20,9 +20,9 @@ namespace {
 enum class FileType { ps1, cmd, vbs, py, other };
 
 size_t GetLength(std::ifstream &ifs) {
-    ifs.seekg(0, ifs.end);
+    ifs.seekg(0, std::ios_base::end);
     const auto length = ifs.tellg();
-    ifs.seekg(0, ifs.beg);
+    ifs.seekg(0, std::ios_base::beg);
     return static_cast<size_t>(length);
 }
 
@@ -32,7 +32,7 @@ std::string ReadFileToString(const fs::path &file) {
     if (ifs) {
         const auto length = GetLength(ifs);
         ret.resize(static_cast<size_t>(length));
-        ifs.read(ret.data(), length);
+        ifs.read(ret.data(), static_cast<std::streamsize>(length));
         if (ifs.good() || ifs.eof()) {
             return ret;
         }
@@ -72,7 +72,7 @@ std::string FindVersionInfo(const fs::path &file, FileType file_type) {
         if (offset == std::string::npos) {
             return fmt::format("{}:CMK_VERSION = unversioned", file);
         }
-        const auto end = ret.find("\n", offset);
+        const auto end = ret.find('\n', offset);
         if (end == std::string::npos) {
             XLOG::t("This file type '{}' strange!", file);
             return {};

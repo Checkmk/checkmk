@@ -51,7 +51,7 @@ T GetVal(YAML::Node yaml, const std::string &group_name,
     return dflt;
 }
 
-inline YAML::Node GetNode(YAML::Node yaml, const std::string &section,
+inline YAML::Node GetNode(const YAML::Node &yaml, const std::string &section,
                           const std::string &name) noexcept {
     auto ret = GetVal<YAML::Node>(yaml, section, name);
 

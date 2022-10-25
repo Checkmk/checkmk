@@ -113,7 +113,8 @@ public:
 
     void prepareToWork();
     bool isModuleScript(std::string_view filename);
-    std::wstring buildCommandLine(std::string_view filename) const;
+    [[nodiscard]] std::wstring buildCommandLine(
+        std::string_view filename) const;
 
     int findModuleFiles(const std::filesystem::path &root);
     void installModules(const std::filesystem::path &root,

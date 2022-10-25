@@ -463,7 +463,7 @@ std::wstring GenerateRandomRuleName() {
         run_once = true;
         srand(static_cast<unsigned int>(time(nullptr)));  // NOLINT
     }
-    auto random_int = rand();
+    auto random_int = rand();  // NOLINT
 
     std::wstring new_name{L"to_delete_"};
     new_name += std::to_wstring(random_int);

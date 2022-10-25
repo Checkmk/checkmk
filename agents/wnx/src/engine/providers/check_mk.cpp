@@ -22,8 +22,6 @@
 #include "install_api.h"
 #include "onlyfrom.h"
 
-namespace fs = std::filesystem;
-
 using namespace std::string_literals;
 
 namespace cma::provider {

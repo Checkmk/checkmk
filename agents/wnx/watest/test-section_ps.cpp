@@ -104,7 +104,7 @@ namespace {
 
 auto ToTm(const std::string &in) {
     auto check_time = ConvertWmiTimeToHumanTime(in);
-    return *std::localtime(&check_time);
+    return *std::localtime(&check_time);  // NOLINT
 }
 
 bool IsAccountExist(const std::string &account) {

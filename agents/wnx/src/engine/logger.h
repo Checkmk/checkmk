@@ -596,11 +596,11 @@ public:
     }
 
     bool isWinDbg() const noexcept {
-        return (log_param_.directions_ | xlog::Directions::kDebuggerPrint) != 0;
+        return (log_param_.directions_ & xlog::Directions::kDebuggerPrint) != 0;
     }
 
     bool isFileDbg() const noexcept {
-        return (log_param_.directions_ | xlog::Directions::kFilePrint) != 0;
+        return (log_param_.directions_ & xlog::Directions::kFilePrint) != 0;
     }
 
     const xlog::LogParam &getLogParam() const noexcept { return log_param_; }

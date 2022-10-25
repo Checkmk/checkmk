@@ -398,7 +398,7 @@ void WaitForPostInstall() {
         ++count;
         if (count > 240) {
             std::cout << "Service is failed or nor running";
-            ::exit(73);
+            ::exit(73);  // NOLINT
         }
     } while (cma::install::IsPostInstallRequired());
 }
@@ -513,7 +513,7 @@ int MainFunction(int argc, wchar_t const *argv[]) {
                 fmt::print(
                     L"Integration is requested, but env var '{}' is absent\n",
                     env::integration_base_dir);
-                ::exit(12);
+                ::exit(12);  // NOLINT
             } else {
                 cma::details::SetModus(cma::Modus::integration);
             }

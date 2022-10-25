@@ -33,7 +33,7 @@ bool IsHeaderless(std::string_view name) noexcept { return name == kMsExch; }
 std::string WmiCachedDataHelper(std::string &cache_data,
                                 const std::string &wmi_data, char separator) {
     // for very old servers
-    if (!g_add_wmi_status_column) {
+    if constexpr (!g_add_wmi_status_column) {
         return wmi_data;
     }
 
@@ -303,7 +303,7 @@ std::pair<std::string, wtools::WmiStatus> GenerateWmiTable(
 
     const auto object_name = wtools::ToUtf8(wmi_object);
     tools::TimeLog tl(object_name);  // start measure
-    const auto id = [&]() {
+    const auto id = [&] {
         return fmt::format(R"("{}\{}")", wtools::ToUtf8(wmi_namespace),
                            object_name);
     };
@@ -474,4 +474,4 @@ std::string SubSection::generateContent(Mode mode) {
     }
     return {};
 }
-};  // namespace cma::provider
+}  // namespace cma::provider

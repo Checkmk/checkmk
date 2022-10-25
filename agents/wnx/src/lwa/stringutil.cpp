@@ -120,7 +120,7 @@ void stringToIPv6(const char *value, uint16_t *address) {
 
         if (segment > 0xFFFFu) {
             std::cerr << "Invalid ipv6 address " << value << std::endl;
-            exit(1);
+            exit(1);  // NOLINT
         } else if (endpos == pos) {
             skip_offset = static_cast<int>(segments.size());
         } else {
@@ -155,7 +155,7 @@ void stringToIPv4(const char *value, uint32_t &address) {
     if (4 != sscanf(value, "%u.%u.%u.%u", &a, &b, &c, &d)) {
         std::cerr << "Invalid value " << value << " for only_hosts"
                   << std::endl;
-        exit(1);
+        exit(1);  // NOLINT
     }
 
     address = a + b * 0x100 + c * 0x10000 + d * 0x1000000;

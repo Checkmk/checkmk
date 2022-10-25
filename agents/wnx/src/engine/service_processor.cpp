@@ -234,7 +234,7 @@ void ServiceProcessor::kickWinPerf(AnswerId answer_id,
         // NOT TESTED with Automatic tests
         XLOG::d("No forking to get winperf data: may lead to handle leak.");
         vf_.emplace_back(std::async(
-            std::launch::async, [prefix, this, answer_id, timeout, cmd_line]() {
+            std::launch::async, [prefix, this, answer_id, timeout, cmd_line] {
                 auto cs = tools::SplitString(cmd_line, L" ");
                 std::vector<std::wstring_view> counters{cs.begin(), cs.end()};
                 return provider::RunPerf(prefix,
@@ -600,10 +600,10 @@ ServiceProcessor::Signal ServiceProcessor::mainWaitLoop(
 namespace {
 
 void WaitForNetwork(std::chrono::seconds period) noexcept {
-    constexpr std::chrono::seconds delay = 2s;
+    constexpr auto delay = 2s;
 
     DWORD networks = NETWORK_ALIVE_LAN | NETWORK_ALIVE_WAN;
-    for (std::chrono::seconds elapsed = 0s; elapsed < period;) {
+    for (auto elapsed = 0s; elapsed < period;) {
         auto ret = ::IsNetworkAlive(&networks);
         auto error = ::GetLastError();
         if (error == 0 && ret == TRUE) {
@@ -768,7 +768,7 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
                 break;
             }
             XLOG::l.i("restart main loop");
-        };
+        }
 
         // the end of the fun
         XLOG::l.i("Thread is stopped");
@@ -947,7 +947,7 @@ bool TheMiniProcess::stop() {
             return false;
         }
 
-        if (wtools::kProcessTreeKillAllowed) {
+        if constexpr (wtools::kProcessTreeKillAllowed) {
             wtools::KillProcessTree(pid);
         }
 

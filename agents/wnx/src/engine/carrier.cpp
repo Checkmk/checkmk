@@ -214,9 +214,10 @@ bool CoreCarrier::fileSlotSend(DataType data_type, const std::string &peer_name,
         }
 
         if (data != nullptr) {
-            f.write(static_cast<const char *>(data), length);
+            f.write(static_cast<const char *>(data),
+                    static_cast<std::streamsize>(length));
             if (data_type == DataType::kLog) {
-                const char c = '\n';
+                constexpr char c = '\n';
                 f.write(&c, 1);
             }
         }

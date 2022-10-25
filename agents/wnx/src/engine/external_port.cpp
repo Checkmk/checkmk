@@ -17,7 +17,6 @@
 using asio::ip::tcp;
 using namespace std::chrono_literals;
 namespace rs = std::ranges;
-namespace fs = std::filesystem;
 
 // This namespace contains classes used for external communication, for example
 // with Monitor
@@ -596,7 +595,8 @@ bool IsConnectionAllowed(ConnectionPorts cp, std::optional<uint32_t> ctl_pid) {
 
 }  // namespace
 
-void ExternalPort::server::run_accept(SinkFunc sink, ExternalPort *ext_port) {
+void ExternalPort::server::run_accept(const SinkFunc &sink,
+                                      ExternalPort *ext_port) {
     acceptor_.async_accept(socket_, [this, sink, ext_port](std::error_code ec) {
         if (ec) {
             XLOG::l("Error on connection [{}] '{}'", ec.value(), ec.message());

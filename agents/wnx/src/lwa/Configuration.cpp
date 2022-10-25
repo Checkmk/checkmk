@@ -7,7 +7,7 @@
 
 #include "Configuration.h"
 
-#include <inttypes.h>
+#include <cinttypes>
 #include <ws2spi.h>
 
 #include <algorithm>
@@ -360,8 +360,7 @@ public:
     Configurable(Configuration &config, const char *section, const char *key)
         : SuperT(config, section, key) {}
 
-    virtual void feed(const std::string &var,
-                      const std::string &value) override;
+    void feed(const std::string &var, const std::string &value) override;
 };
 }  // namespace eventlog
 
@@ -372,7 +371,7 @@ eventlog::config from_string<eventlog::config>(const std::string &value) {
     std::stringstream str(value);
 
     bool hide_context = false;
-    eventlog::Level level{eventlog::Level::All};
+    auto level{eventlog::Level::All};
 
     std::string entry;
     while (std::getline(str, entry, ' ')) {
@@ -398,7 +397,6 @@ eventlog::config from_string<eventlog::config>(const std::string &value) {
 
 template <>
 std::string ToYamlString(const eventlog::config &Entry, bool) {
-    namespace fs = std::filesystem;
     using namespace cma::cfg;
 
     std::string out = "- '";
@@ -432,8 +430,6 @@ std::string ToYamlString(const eventlog::config &Entry, bool) {
 
 template <>
 std::string ToYamlString(const globline_container &Entry, bool) {
-    namespace fs = std::filesystem;
-
     std::string out = "- glob: '";
     out += Entry.tokens[0].from_start ? "from_start " : "";
     out += Entry.tokens[0].rotated ? "rotated " : "";
@@ -487,7 +483,7 @@ std::ostream &operator<<(std::ostream &out, const config &val) {
 }
 
 void Configurable::feed(const std::string &var, const std::string &value) {
-    config entry = from_string<config>(value);
+    auto entry = from_string<config>(value);
     const auto tokens = tokenize(var, " ");
 
     if (tokens.size() < 2) {
@@ -515,8 +511,7 @@ public:
         config.reg(section, "ok", this);
     }
 
-    virtual void feed(const std::string &key,
-                      const std::string &value) override {
+    void feed(const std::string &key, const std::string &value) override {
         if (key == "textfile") {
             SuperT::feed(key, value);
         } else {
@@ -982,7 +977,7 @@ const Mapping &FindMapping(const std::string Section, const std::string Key) {
 
 void AddKeyedPattern(YAML::Node Node, const std::string Key,
                      const std::string &Pattern, const std::string &Value) {
-    for (YAML::iterator it = Node.begin(); it != Node.end(); ++it) {
+    for (auto it = Node.begin(); it != Node.end(); ++it) {
         auto entry = *it;
         if (entry["pattern"].as<std::string>() == Pattern) {
             entry[Key] = Value;

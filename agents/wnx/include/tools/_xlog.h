@@ -272,7 +272,7 @@ namespace xlog {
         const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
                             cur_time.time_since_epoch()) %
                         1000;
-        const auto *loc_time = std::localtime(&in_time_t);
+        const auto *loc_time = std::localtime(&in_time_t);  // NOLINT
         const auto p_time = std::put_time(loc_time, "%Y-%m-%d %T");
 
         std::stringstream sss;

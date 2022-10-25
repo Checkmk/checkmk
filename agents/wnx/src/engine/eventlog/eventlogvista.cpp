@@ -38,7 +38,7 @@ public:
     decltype(&EvtOpenPublisherMetadata) openPublisherMetadata;
     decltype(&EvtGetLogInfo) getLogInfo;
 
-    bool ready() const noexcept {
+    [[nodiscard]] bool ready() const noexcept {
         return module_handle_ != nullptr && openLog != nullptr &&
                close != nullptr;
     }
@@ -294,7 +294,7 @@ public:
         return values[index];
     }
 
-    uint16_t eventId() const override {
+    [[nodiscard]] uint16_t eventId() const override {
         // I believe type is always UInt16 but since MS can't do documentation
         // I'm not sure
         auto val = getValByType(kEventId);
@@ -308,7 +308,7 @@ public:
         }
     }
 
-    uint16_t eventQualifiers() const override {
+    [[nodiscard]] uint16_t eventQualifiers() const override {
         auto val = getValByType(kEventQualifiers);
         switch (val.Type) {
             case EvtVarTypeUInt16:
@@ -320,22 +320,22 @@ public:
         }
     }
 
-    uint64_t recordId() const override {
+    [[nodiscard]] uint64_t recordId() const override {
         return getValByType(kRecordId).UInt64Val;
     }
 
-    time_t timeGenerated() const override {
+    [[nodiscard]] time_t timeGenerated() const override {
         auto val = getValByType(kTimeGenerated);
         auto ullTimeStamp = val.FileTimeVal;
         constexpr ULONGLONG time_offset = 116444736000000000;
         return (ullTimeStamp - time_offset) / 10000000;
     }
 
-    std::wstring source() const override {
+    [[nodiscard]] std::wstring source() const override {
         return getValByType(kSource).StringVal;
     }
 
-    Level eventLevel() const override {
+    [[nodiscard]] Level eventLevel() const override {
         auto val = getValByType(kLevel);
         auto b = static_cast<WinEventLevel>(val.ByteVal);
         switch (b) {
@@ -355,14 +355,14 @@ public:
         }
     }
 
-    std::wstring makeMessage() const override {
+    [[nodiscard]] std::wstring makeMessage() const override {
         std::wstring result = formatMessage();
         postProcessMessage(result);
         return result;
     }
 
 private:
-    std::wstring formatMessage() const {
+    [[nodiscard]] std::wstring formatMessage() const {
         std::wstring result;
         auto publisher_meta = win::OpenPublisherMetadata(source());
 
@@ -394,7 +394,7 @@ private:
     }
 
     // logic from 1.5
-    std::wstring eventData() const {
+    [[nodiscard]] std::wstring eventData() const {
         constexpr size_t IDX = 6;  // six :)
 
         const auto *values =

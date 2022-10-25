@@ -223,7 +223,7 @@ int Slot::Get(void *data, unsigned int max_len) {
         return ErrCodes::SUCCESS;
     }
     if (data == nullptr) {
-        return message_size;
+        return static_cast<int>(message_size);
     }
     if (max_len < message_size) {
         return ErrCodes::TOO_SMALL;

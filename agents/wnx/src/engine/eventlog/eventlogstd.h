@@ -50,7 +50,7 @@ public:
         }
     }
 
-    virtual std::wstring getName() const override;
+    std::wstring getName() const override;
 
     /**
      * seek to the specified record on the next read or, if the
@@ -59,7 +59,7 @@ public:
      * seeking on large eventlogs. In this case this function will still
      * work as expected but the next read will be slow.
      */
-    virtual void seek(uint64_t record_id) override;
+    void seek(uint64_t record_number) override;
 
     /**
      * read the next eventlog record
@@ -67,14 +67,14 @@ public:
      * be quick most of the time but occasionally cause a fetch via api that
      * takes longer
      */
-    virtual EventLogRecordBase *readRecord() override;
+    EventLogRecordBase *readRecord() override;
 
     /**
      * return the ID of the last record in eventlog
      */
-    virtual uint64_t getLastRecordId() override;
+    uint64_t getLastRecordId() override;
 
-    virtual bool isLogValid() const override { return handle_ != nullptr; }
+    bool isLogValid() const override { return handle_ != nullptr; }
 
 private:
     bool fillBuffer();

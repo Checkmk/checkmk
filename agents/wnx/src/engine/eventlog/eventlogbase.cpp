@@ -129,7 +129,7 @@ std::string EventLogRecordBase::stringize(cfg::EventLevels required,
     }
 
     auto time_generated = timeGenerated();
-    const auto *t = ::localtime(&time_generated);
+    const auto *t = ::localtime(&time_generated);  // NOLINT
     char timestamp[64];
     ::strftime(timestamp, sizeof(timestamp), "%b %d %H:%M:%S", t);
 

@@ -4,9 +4,9 @@
 #include "realtime.h"
 
 #include <fmt/format.h>
-#include <time.h>
 
 #include <chrono>
+#include <ctime>
 #include <string>
 #include <string_view>
 

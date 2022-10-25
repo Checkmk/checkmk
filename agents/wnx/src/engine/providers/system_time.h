@@ -16,7 +16,7 @@ namespace cma::provider {
 
 class SystemTime : public Synchronous {
 public:
-    SystemTime() : Synchronous(cma::section::kSystemTime) {}
+    SystemTime() : Synchronous(section::kSystemTime) {}
     SystemTime(const std::string &name, char separator)
         : Synchronous(name, separator) {}
 

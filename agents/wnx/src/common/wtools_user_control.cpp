@@ -138,7 +138,9 @@ public:
         }
     }
 
-    const std::vector<std::wstring> &groups() const { return groups_; }
+    [[nodiscard]] const std::vector<std::wstring> &groups() const {
+        return groups_;
+    }
 
 private:
     std::vector<std::wstring> groups_;

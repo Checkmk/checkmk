@@ -52,6 +52,7 @@ public:
         started_ = false;
         return *this;
     }
+    ~StopWatch() = default;
 
     void start() {
         std::lock_guard lk(lock_);

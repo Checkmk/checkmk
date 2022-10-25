@@ -28,7 +28,7 @@ bool OnStart(AppType type, const std::wstring &config_file);
 inline bool OnStart() { return OnStart(AppType::automatic, L""); }
 inline bool OnStart(AppType type) { return OnStart(type, L""); }
 
-bool LoadConfigFull(const std::wstring &ConfigFile);
+bool LoadConfigFull(const std::wstring &config_file);
 bool LoadConfigBase(const std::vector<std::wstring> &config_filenames,
                     YamlCacheOp cache_op);
 bool ReloadConfig();

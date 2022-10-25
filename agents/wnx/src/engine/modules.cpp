@@ -473,7 +473,7 @@ std::vector<char> ReadFileBeginning(const fs::path &name, size_t count) {
         f.open(name, std::ios::binary);
         std::vector<char> data;
         data.resize(count);
-        f.read(data.data(), count);
+        f.read(data.data(), static_cast<std::streamsize>(count));
         f.close();
 
         return data;

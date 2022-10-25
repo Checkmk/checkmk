@@ -21,7 +21,7 @@ namespace cma::tools {
 namespace details {
 
 template <typename T>
-inline std::ifstream OpenFileStream(const T *FileName) {
+std::ifstream OpenFileStream(const T *FileName) {
 #if defined(_MSC_BUILD)
     std::ifstream f(FileName, std::ios::binary);
 #else

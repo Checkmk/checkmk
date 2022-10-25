@@ -192,7 +192,7 @@ time_t ConvertWmiTimeToHumanTime(const std::string &creation_date) {
 
     // fill default fields(time-day-saving!)
     time_t current_time = std::time(nullptr);
-    auto creation_tm = *std::localtime(&current_time);
+    auto creation_tm = *std::localtime(&current_time);  // NOLINT
 
     // fill variable fields data
     creation_tm.tm_year = std::strtol(year.c_str(), nullptr, 10) - 1900;
@@ -330,7 +330,7 @@ std::string ProducePsWmi(bool use_full_path) {
     std::string out;
     while (true) {
         IWbemClassObject *object{nullptr};
-        wtools::WmiStatus status{wtools::WmiStatus::ok};
+        auto status{wtools::WmiStatus::ok};
         std::tie(object, status) = wtools::WmiGetNextObject(
             processes, cfg::groups::global.getWmiTimeout());
         if (object == nullptr) {

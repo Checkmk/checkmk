@@ -22,8 +22,8 @@ enum {
     kDataOffset = kHeaderSize + kTimeStampSize
 };
 
-constexpr const std::string_view kEncryptedHeader{"00"};
-constexpr const std::string_view kPlainHeader{"99"};
+constexpr std::string_view kEncryptedHeader{"00"};
+constexpr std::string_view kPlainHeader{"99"};
 
 using RtBlock = std::vector<uint8_t>;
 using RtTable = std::vector<std::string_view>;

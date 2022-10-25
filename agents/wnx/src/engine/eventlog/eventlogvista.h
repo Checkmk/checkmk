@@ -31,11 +31,11 @@ public:
     EventLogVista(const std::wstring &path);
     ~EventLogVista();
 
-    virtual std::wstring getName() const override;
-    virtual void seek(uint64_t record_id) override;
-    virtual EventLogRecordBase *readRecord() override;
-    virtual uint64_t getLastRecordId() override;
-    virtual bool isLogValid() const override;
+    [[nodiscard]] std::wstring getName() const override;
+    [[nodiscard]] void seek(uint64_t record_id) override;
+    EventLogRecordBase *readRecord() override;
+    uint64_t getLastRecordId() override;
+    [[nodiscard]] bool isLogValid() const override;
 
 private:
     bool fillBuffer();

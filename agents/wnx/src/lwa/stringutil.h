@@ -6,7 +6,7 @@
 #ifndef stringutil_h
 #define stringutil_h
 
-#include <stdint.h>
+#include <cstdint>
 
 #include <codecvt>
 #include <iostream>

@@ -109,11 +109,12 @@ bool ActivateLegacyAgent();
 bool DeactivateLegacyAgent();
 
 // limited function, just to have for testing
-bool StartWindowsService(const std::wstring &Name);
+bool StartWindowsService(const std::wstring &service_name);
 
 // used to wait for some long starting/stopping drivers
-int WaitForStatus(std::function<int(const std::wstring &)> StatusChecker,
-                  std::wstring_view ServiceName, int ExpectedStatus, int Time);
+int WaitForStatus(
+    const std::function<int(const std::wstring &)> &status_checker,
+    std::wstring_view service_name, int expected_status, int millisecs);
 
 // used to copy folders from legacy agent to programdata
 int CopyFolderRecursive(

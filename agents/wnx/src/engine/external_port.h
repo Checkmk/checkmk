@@ -104,7 +104,7 @@ private:
     mutable std::mutex data_lock_;
     std::optional<std::string> remote_ip_;
 
-    const size_t segment_size_ = 48 * 1024;
+    const size_t segment_size_ = size_t{48} * 1024;
     std::vector<char> crypt_buf_;
 };
 
@@ -220,7 +220,7 @@ private:
 
         // this is the only entry point
         // based on the code example from asio
-        void run_accept(SinkFunc sink, ExternalPort *ext_port);
+        void run_accept(const SinkFunc &sink, ExternalPort *ext_port);
 
     private:
         uint16_t port_{0U};
@@ -296,8 +296,8 @@ protected:
     asio::io_context io_context_;  // may be used by ioThreadProc
 };
 
-bool SendDataToMailSlot(const std::string &mailslo_name,
-                        const std::vector<uint8_t> &data);
+bool SendDataToMailSlot(const std::string &mailslot_name,
+                        const std::vector<uint8_t> &data_block);
 
 }  // namespace cma::world
 

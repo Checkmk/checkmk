@@ -1875,7 +1875,7 @@ std::string ConstructTimeString() {
     const auto ms =
         duration_cast<std::chrono::milliseconds>(cur_time.time_since_epoch()) %
         k1000;
-    auto *loc_time = std::localtime(&in_time_t);
+    auto *loc_time = std::localtime(&in_time_t);  // NOLINT
     const auto p_time = std::put_time(loc_time, "%Y-%m-%d %T");
     sss << p_time << "." << std::setfill('0') << std::setw(3) << ms.count()
         << std::ends;

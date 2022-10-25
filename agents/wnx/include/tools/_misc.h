@@ -38,7 +38,7 @@ inline void sleep(int milliseconds) noexcept {
 }
 
 template <typename T, typename B>
-inline void sleep(std::chrono::duration<T, B> dur) noexcept {
+void sleep(std::chrono::duration<T, B> dur) noexcept {
     std::this_thread::sleep_until(std::chrono::steady_clock::now() + dur);
 }
 
@@ -61,19 +61,15 @@ concept UniStringLike = StringLike<T> || WideStringLike<T>;
 
 template <class T>
 requires StringLike<T>
-[[nodiscard]] inline auto AsView(const T &p) noexcept {
-    return std::string_view{p};
-}
+[[nodiscard]] auto AsView(const T &p) noexcept { return std::string_view{p}; }
 
 template <class T>
 requires WideStringLike<T>
-[[nodiscard]] inline auto AsView(const T &p) noexcept {
-    return std::wstring_view{p};
-}
+[[nodiscard]] auto AsView(const T &p) noexcept { return std::wstring_view{p}; }
 
 template <class T, class V>
 requires UniStringLike<T> && UniStringLike<V>
-[[nodiscard]] inline bool IsEqual(const T &lhs, const V &rhs) {
+[[nodiscard]] bool IsEqual(const T &lhs, const V &rhs) {
     return std::ranges::equal(AsView(lhs), AsView(rhs), [](auto l, auto r) {
         return CompareIgnoreCase(l, r);
     });
@@ -156,7 +152,7 @@ std::vector<std::wstring> ConstructVectorWstring(Args &&...args) {
 template <typename... Args>
 auto ConstructVector(Args &...str) {
     return std::vector{str...};
-};
+}
 
 inline bool IsValidRegularFile(const std::filesystem::path &filepath) noexcept {
     std::error_code ec;
@@ -165,7 +161,7 @@ inline bool IsValidRegularFile(const std::filesystem::path &filepath) noexcept {
 }
 
 template <typename T>
-inline void AddVector(std::vector<char> &accu, const T &add) noexcept {
+void AddVector(std::vector<char> &accu, const T &add) noexcept {
     const auto add_size = add.size();
     if (add_size == 0) {
         return;
@@ -176,7 +172,6 @@ inline void AddVector(std::vector<char> &accu, const T &add) noexcept {
         memcpy(accu.data() + old_size, add.data(), add_size);
     } catch (const std::exception &e) {
         xlog::l(XLOG_FLINE + " Exception %s", e.what());
-        return;
     }
 }
 
@@ -546,7 +541,7 @@ inline std::string TimeToString(
     std::chrono::system_clock::time_point time_point) {
     auto in_time_t = std::chrono::system_clock::to_time_t(time_point);
     std::stringstream sss;
-    const auto *loc_time = std::localtime(&in_time_t);
+    const auto *loc_time = std::localtime(&in_time_t);  // NOLINT
     auto p_time = std::put_time(loc_time, "%Y-%m-%d %T");
     sss << p_time << std::ends;
     return sss.str();

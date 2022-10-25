@@ -121,7 +121,7 @@ static void CheckForCommand(std::string &Command) {
     auto dir = fs::current_path(ec);
     std::cout << dir.u8string() << ": tick\n";
     try {
-        constexpr const char *kUpdateFileCommandDone = "update.command.done";
+        constexpr auto kUpdateFileCommandDone = "update.command.done";
         std::string done_file_name = kUpdateFileCommandDone;
         std::ifstream done_file(done_file_name.c_str(), std::ios::binary);
 
@@ -135,7 +135,7 @@ static void CheckForCommand(std::string &Command) {
                 return;
             }
         }
-        constexpr const char *kUpdateFileCommand = "update.command";
+        constexpr auto kUpdateFileCommand = "update.command";
         std::string command_file_name = kUpdateFileCommand;
         std::ifstream command_file(command_file_name.c_str(), std::ios::binary);
 

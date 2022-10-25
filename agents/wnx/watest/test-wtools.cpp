@@ -303,8 +303,8 @@ TEST(Wtools, ConditionallyConvert) {
         ret = wtools::ConditionallyConvertFromUTF16(a);
         EXPECT_EQ(0, ret.size());
 
-        const wchar_t *text = L"abcde";
-        auto data = reinterpret_cast<const uint8_t *>(text);
+        constexpr auto text = L"abcde";
+        const auto data = reinterpret_cast<const uint8_t *>(text);
         for (int i = 0; i < 10; ++i) {
             a.push_back(data[i]);
         }

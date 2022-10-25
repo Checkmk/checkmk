@@ -36,11 +36,11 @@ bool InstallFileAsCopy(std::wstring_view filename,    // checkmk.dat
                        std::wstring_view source_dir,  // @root/install
                        Mode mode);
 
-bool NeedReinstall(const std::filesystem::path &Target,
-                   const std::filesystem::path &Src);
+bool NeedReinstall(const std::filesystem::path &target,
+                   const std::filesystem::path &source);
 
-using ProcFunc = bool (*)(const std::filesystem::path &TargetCap,
-                          const std::filesystem::path &SrcCap);
+using ProcFunc = bool (*)(const std::filesystem::path &target_cap,
+                          const std::filesystem::path &source_cap);
 
 bool ReinstallCaps(const std::filesystem::path &target_cap,
                    const std::filesystem::path &source_cap);

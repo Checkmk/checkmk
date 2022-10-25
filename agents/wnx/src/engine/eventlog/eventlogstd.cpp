@@ -12,7 +12,7 @@
 namespace cma::evl {
 std::vector<std::wstring> MessageResolver::getMessageFiles(
     LPCWSTR source) const {
-    static const std::wstring base =
+    static const auto base =
         std::wstring(L"SYSTEM\\CurrentControlSet\\Services\\EventLog");
     std::wstring regpath = base + L"\\" + _name + L"\\" + source;
 
@@ -47,7 +47,7 @@ std::vector<std::wstring> MessageResolver::getMessageFiles(
 
     // result may be multiple dlls
     std::vector<std::wstring> result;
-    std::wstringstream str(reinterpret_cast<wchar_t *>(&buffer[0]));
+    std::wstringstream str(reinterpret_cast<wchar_t *>(buffer.data()));
     std::wstring dll_path;
     while (std::getline(str, dll_path, L';')) {
         result.push_back(dll_path);
@@ -69,7 +69,8 @@ std::wstring MessageResolver::resolveInt(DWORD event_id, LPCWSTR dllpath,
         }
 
         if (!dll) {
-            XLOG::l("Failed to load dll '{}' error = [{}]", wtools::ToUtf8(dllpath), ::GetLastError());
+            XLOG::l("Failed to load dll '{}' error = [{}]",
+                    wtools::ToUtf8(dllpath), ::GetLastError());
             return {};
         }
     }
@@ -82,10 +83,10 @@ std::wstring MessageResolver::resolveInt(DWORD event_id, LPCWSTR dllpath,
         dwFlags |= FORMAT_MESSAGE_FROM_HMODULE;
     }
 
-    DWORD len = ::FormatMessageW(dwFlags, dll, event_id,
-                                 0,  // accept any language
-                                 &result[0], static_cast<DWORD>(result.size()),
-                                 (char **)parameters);
+    DWORD len = ::FormatMessageW(
+        dwFlags, dll, event_id,
+        0,  // accept any language
+        result.data(), static_cast<DWORD>(result.size()), (char **)parameters);
 
     // this trims the result string or empties it if formatting failed
     result.resize(len);
@@ -123,27 +124,27 @@ public:
     EventLogRecord(EVENTLOGRECORD *record, const MessageResolver &resolver)
         : _record(record), _resolver(resolver) {}
 
-    virtual uint64_t recordId() const override {
+    [[nodiscard]] uint64_t recordId() const override {
         return static_cast<uint64_t>(_record->RecordNumber);
     }
 
-    virtual uint16_t eventId() const override {
+    [[nodiscard]] uint16_t eventId() const override {
         return _record->EventID % 65536;
     }
 
-    virtual uint16_t eventQualifiers() const override {
+    [[nodiscard]] uint16_t eventQualifiers() const override {
         return (uint16_t)(_record->EventID / 65536);
     }
 
-    virtual time_t timeGenerated() const override {
+    [[nodiscard]] time_t timeGenerated() const override {
         return _record->TimeGenerated;
     }
 
-    virtual std::wstring source() const override {
-        return std::wstring(reinterpret_cast<LPCWSTR>(_record + 1));
+    [[nodiscard]] std::wstring source() const override {
+        return {reinterpret_cast<LPCWSTR>(_record + 1)};
     }
 
-    virtual Level eventLevel() const override {
+    [[nodiscard]] Level eventLevel() const override {
         switch (_record->EventType) {
             case EVENTLOG_ERROR_TYPE:
                 return Level::error;
@@ -162,7 +163,7 @@ public:
         }
     }
 
-    virtual std::wstring makeMessage() const override {
+    [[nodiscard]] std::wstring makeMessage() const override {
         // prepare array of zero terminated strings to be inserted
         // into message template.
         std::vector<LPCWSTR> strings;
@@ -179,7 +180,7 @@ public:
         strings.push_back(nullptr);
 
         return _resolver.resolve(_record->EventID, source().c_str(),
-                                 &strings[0]);
+                                 strings.data());
     }
 
 private:

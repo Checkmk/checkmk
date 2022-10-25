@@ -203,7 +203,7 @@ std::string ProduceFormattedInfoForFixedDrive(std::string_view volume_id) {
 }
 
 std::pair<std::string, int> ProduceFormattedInfoForFixedDrives(
-    const std::vector<std::string> volumes) {
+    const std::vector<std::string> &volumes) {
     std::string out;
     int count = 0;
     for (const auto &v : volumes) {

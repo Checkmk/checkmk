@@ -18,7 +18,7 @@ namespace wtools {
 class TestProcessor : public wtools::BaseServiceProcessor {
 public:
     TestProcessor() { s_counter++; }
-    virtual ~TestProcessor() override { s_counter--; }
+    ~TestProcessor() override { s_counter--; }
 
     // Standard Windows API to Service hit here
     void stopService(wtools::StopMode /*stop_mode*/) override {

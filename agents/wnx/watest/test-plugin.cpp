@@ -3,16 +3,12 @@
 //
 #include "pch.h"
 
-#include <time.h>
-
 #include <chrono>
 #include <filesystem>
 #include <future>
 #include <regex>
-#include <string_view>
 
 #include "cfg.h"
-#include "cfg_details.h"
 #include "cma_core.h"
 #include "common/cfg_info.h"
 #include "providers/plugins.h"
@@ -1192,7 +1188,6 @@ TEST(PluginTest, DuplicatedFileRemove) {
 }
 
 TEST(PluginTest, DuplicatedUnitsRemove) {
-    namespace fs = std::filesystem;
     UnitMap um;
     const char *const paths[] = {
         "c:\\t\\1b\\abC", "c:\\t\\2b\\xxx", "c:\\t\\3b\\abc", "c:\\t\\4b\\XXX",
@@ -1487,8 +1482,8 @@ public:
     PathVector files_;
 
     bool waitForAllProcesses(std::chrono::milliseconds) {
-        constexpr std::chrono::milliseconds wait_max{5000ms};
-        std::chrono::milliseconds waiting{0ms};
+        constexpr auto wait_max{5000ms};
+        auto waiting{0ms};
         for (const auto &f : files_) {
             auto ready = GetEntrySafe(pm_, f);
             while (ready->running()) {

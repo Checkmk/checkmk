@@ -62,12 +62,11 @@ struct CarrierDataHeader {
         const void *data,           // data, nullptr is allowed
         uint64_t length             // data length
         ) noexcept {
-        return CarrierDataHeader::ptr(
-            createRaw(provider_name, answer_id, data_type, data, length),
-            CarrierDataHeader::destroy);
+        return {createRaw(provider_name, answer_id, data_type, data, length),
+                CarrierDataHeader::destroy};
     }
 
-    const char *asBuf() const noexcept {
+    [[nodiscard]] const char *asBuf() const noexcept {
         return static_cast<const char *>(static_cast<const void *>(this));
     }
 

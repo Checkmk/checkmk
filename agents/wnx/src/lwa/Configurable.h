@@ -61,17 +61,16 @@ public:
 
     const ValueT &operator*() const { return _value; }
 
-    virtual void startFile() override {}
-    virtual void startBlock() override {}
+    void startFile() override {}
+    void startBlock() override {}
 
-    virtual void feed(const std::string &, const std::string &value) override {
+    void feed(const std::string &, const std::string &value) override {
         startBlock();
         string_value_ = value;
         _value = from_string<ValueT>(value);
     }
 
-    virtual void output(const std::string &key,
-                        std::ostream &out) const override {
+    void output(const std::string &key, std::ostream &out) const override {
         out << key << " = " << _value << "\n";
     }
 
@@ -130,7 +129,7 @@ public:
 
     virtual void startBlock() { _block_mode.startBlock(_values); }
 
-    virtual void feed(const std::string &, const std::string &value) override {
+    void feed(const std::string &, const std::string &value) override {
         try {
             this->add(from_string<DataT>(value));
         } catch (const StringConversionError &e) {
@@ -138,8 +137,7 @@ public:
         }
     }
 
-    virtual void output(const std::string &key,
-                        std::ostream &out) const override {
+    void output(const std::string &key, std::ostream &out) const override {
         for (const DataT &data : _values) {
             auto v = RemoveFilesystemPath(data);
             out << key << " = " << v << "\n";
@@ -231,8 +229,7 @@ public:
         return out;
     }
 
-    virtual void feed(const std::string &var,
-                      const std::string &value) override {
+    void feed(const std::string &var, const std::string &value) override {
         size_t pos = var.find_first_of(" ");
         std::string key;
         if (pos != std::string::npos) {
@@ -260,8 +257,8 @@ public:
 
     const ContainerT &operator*() const { return _values; }
 
-    virtual void startFile() override { _add_mode.startFile(_values); }
-    virtual void startBlock() override {}
+    void startFile() override { _add_mode.startFile(_values); }
+    void startBlock() override {}
 
     void clear() { _values.clear(); }
 
@@ -300,8 +297,7 @@ public:
 
     virtual ~SplittingListConfigurable() = default;
 
-    virtual void feed(const std::string &key,
-                      const std::string &value) override {
+    void feed(const std::string &key, const std::string &value) override {
         SuperT::clear();
         std::stringstream str(value);
         std::string item;
@@ -310,8 +306,7 @@ public:
         }
     }
 
-    virtual void output(const std::string &key,
-                        std::ostream &out) const override {
+    void output(const std::string &key, std::ostream &out) const override {
         out << key << " =";
         for (const DataT &data : this->values()) {
             out << " " << data;

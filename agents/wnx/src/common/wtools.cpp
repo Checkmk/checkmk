@@ -996,7 +996,7 @@ DataSequence ReadPerformanceDataFromRegistry(
         delete[] buffer;  // realloc part one
     }
 
-    return DataSequence(static_cast<int>(buf_size), buffer);
+    return {static_cast<int>(buf_size), buffer};
 }
 
 const PERF_OBJECT_TYPE *FindPerfObject(const DataSequence &data_buffer,
@@ -1358,7 +1358,7 @@ std::wstring WmiGetWstring(const VARIANT &Var) {
 
     switch (Var.vt) {
         case VT_BSTR:
-            return std::wstring(Var.bstrVal);
+            return {Var.bstrVal};
         case VT_R4:
             return std::to_wstring(Var.fltVal);
         case VT_R8:
@@ -1768,13 +1768,13 @@ HMODULE LoadWindowsLibrary(const std::wstring &dll_path) {
     std::wstring dllpath_expanded;
     dllpath_expanded.resize(buffer_size, '\0');
     DWORD required =
-        ExpandEnvironmentStringsW(dll_path.c_str(), &dllpath_expanded[0],
+        ExpandEnvironmentStringsW(dll_path.c_str(), dllpath_expanded.data(),
                                   static_cast<DWORD>(dllpath_expanded.size()));
 
     if (required > dllpath_expanded.size()) {
         dllpath_expanded.resize(required + 1);
         required = ExpandEnvironmentStringsW(
-            dll_path.c_str(), &dllpath_expanded[0],
+            dll_path.c_str(), dllpath_expanded.data(),
             static_cast<DWORD>(dllpath_expanded.size()));
     } else if (required == 0) {
         dllpath_expanded = dll_path;
@@ -2544,7 +2544,7 @@ bool PatchFileLineEnding(const fs::path &fname) noexcept {
 
     try {
         std::ofstream tst(ToUtf8(fname.wstring()));  // text file
-        tst.write(result.c_str(), result.size());
+        tst.write(result.c_str(), static_cast<std::streamsize>(result.size()));
         return true;
     } catch (const std::exception &e) {
         XLOG::l("Error during patching file line ending {}", e.what());
@@ -2690,7 +2690,6 @@ void ProtectPathFromUserAccess(const fs::path &entry,
 namespace {
 fs::path MakeCmdFileInTemp(std::wstring_view name,
                            const std::vector<std::wstring> &commands) {
-    ;
     try {
         auto pid = ::GetCurrentProcessId();
         static int counter = 0;
@@ -2816,8 +2815,8 @@ std::wstring ToCanonical(std::wstring_view raw_app_name) {
 
 namespace {
 struct SidStore {
-    SID *sid() const noexcept { return sid_; }
-    size_t count() const noexcept { return count_; }
+    [[nodiscard]] SID *sid() const noexcept { return sid_; }
+    [[nodiscard]] size_t count() const noexcept { return count_; }
     bool makeAdmin() { return assignAdmin(); }
     bool makeCreator() { return assignCreator(); }
     bool makeEveryone() { return assignEveryone(); }
@@ -3124,12 +3123,12 @@ public:
 
     ~MibTcpTable2Wrapper() { delete static_cast<void *>(table_); }
 
-    const MIB_TCPROW2 *row(size_t index) const {
+    [[nodiscard]] const MIB_TCPROW2 *row(size_t index) const {
         return table_ == nullptr || index >= table_->dwNumEntries
                    ? nullptr
                    : table_->table + index;
     }
-    size_t count() const {
+    [[nodiscard]] size_t count() const {
         return table_ == nullptr ? 0U : table_->dwNumEntries;
     }
 
@@ -3306,7 +3305,7 @@ public:
             ::CloseServiceHandle(service_);
         }
     }
-    uint32_t getStatus() const noexcept;
+    [[nodiscard]] uint32_t getStatus() const noexcept;
 
 protected:
     void openService(std::wstring_view service_name, Mode mode);

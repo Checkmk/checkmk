@@ -234,7 +234,7 @@ void WinPerf::loadFromMainConfig() {
     trace_ = GetWinPerfVal(vars::kWinPerfTrace, cfg::kDefaultWinPerfTrace);
     enabled_in_cfg_ = GetWinPerfVal(vars::kEnabled, exist_in_cfg_.load());
     auto counters = GetPairArray(groups::kWinPerf, vars::kWinPerfCounters);
-    for (const auto [id, name] : counters) {
+    for (const auto &[id, name] : counters) {
         counters_.emplace_back(id, name);
     }
 }

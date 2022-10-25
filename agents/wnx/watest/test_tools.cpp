@@ -59,7 +59,6 @@ std::string GetFabricYmlContent() {
 class TestEnvironment : public ::testing::Environment {
 public:
     static constexpr std::string_view temp_test_prefix_{"tmp_watest"};
-    ~TestEnvironment() override = default;
 
     void SetUp() override {
         if (fs::path base_dir =

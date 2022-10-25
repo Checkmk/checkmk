@@ -240,6 +240,8 @@ public:
     ConfigInfo() = default;
     ConfigInfo(const ConfigInfo &) = delete;
     ConfigInfo &operator=(const ConfigInfo &) = delete;
+    ConfigInfo(ConfigInfo &&) = delete;
+    ConfigInfo &operator=(ConfigInfo &&) = delete;
     void initFolders(
         const std::wstring &service_valid_name,  // look in registry
         const std::wstring &root_folder,         // look in disk

@@ -57,7 +57,7 @@ check = MEM mrpe/check_mem -w 10 -c 20
  */
 class Configuration {
 public:
-    explicit Configuration() {}
+    explicit Configuration() = default;
     Configuration(Configuration &) = delete;
     Configuration &operator=(const Configuration &) = delete;
 

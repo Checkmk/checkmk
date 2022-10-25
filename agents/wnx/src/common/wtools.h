@@ -613,10 +613,10 @@ using DataSequence = cma::tools::DataBlock<BYTE>;
 // API:
 // 1. Read data from registry
 DataSequence ReadPerformanceDataFromRegistry(
-    const std::wstring &counter_list) noexcept;
+    const std::wstring &counter_name) noexcept;
 
 // 2. Find required object
-const PERF_OBJECT_TYPE *FindPerfObject(const DataSequence &data_sequence,
+const PERF_OBJECT_TYPE *FindPerfObject(const DataSequence &data_buffer,
                                        DWORD counter_index) noexcept;
 
 // 3. Get Instances and Names of Instances
@@ -917,7 +917,7 @@ enum class StatusColumn { ok, timeout };
 std::string StatusColumnText(StatusColumn exception_column) noexcept;
 
 /// "decorator" for WMI tables with OK, Timeout: WMIStatus
-std::string WmiPostProcess(const std::string &in, StatusColumn exception_column,
+std::string WmiPostProcess(const std::string &in, StatusColumn status_column,
                            char separator);
 
 // the class is thread safe
@@ -963,12 +963,12 @@ private:
     IWbemServices *services_{nullptr};
 };
 
-HMODULE LoadWindowsLibrary(const std::wstring &DllPath);
+HMODULE LoadWindowsLibrary(const std::wstring &dll_path);
 
 /// Look into the registry in order to find out, which
 /// event logs are available
 /// return false only when something wrong with registry
-std::vector<std::string> EnumerateAllRegistryKeys(const char *RegPath);
+std::vector<std::string> EnumerateAllRegistryKeys(const char *reg_path);
 
 /// returns data from the root machine registry
 uint32_t GetRegistryValue(std::wstring_view path, std::wstring_view value_name,

@@ -69,7 +69,7 @@ public:
         return process_id_ != 0;
     }
 
-    uint32_t processId() const noexcept { return process_id_; };
+    uint32_t processId() const noexcept { return process_id_; }
 
 private:
     mutable std::mutex lock_;
@@ -292,7 +292,7 @@ private:
     std::condition_variable stop_thread_;
     std::mutex lock_stopper_;
     bool stop_requested_ = false;
-    thread_callback callback_ = []() { return true; };  // nothing
+    thread_callback callback_ = [] { return true; };  // nothing
 
     uint16_t working_port_ = cma::cfg::kMainPort;
 
@@ -310,7 +310,7 @@ private:
         std::unique_lock l(lock_stopper_);
         auto stop_requested = stop_thread_.wait_until(
             l, std::chrono::steady_clock::now() + delay_,
-            [this]() { return stop_requested_; });
+            [this] { return stop_requested_; });
         return stop_requested;
     }
 
@@ -342,7 +342,7 @@ private:
     }
 
     //
-    int startProviders(AnswerId timestamp, const std::string &ip_addr);
+    int startProviders(AnswerId answer_id, const std::string &ip_addr);
 
     // all pre operation required for normal functionality
     void preStartBinaries();
@@ -436,7 +436,7 @@ private:
     }
 
     void logAnswerProcessing(bool success) const {
-        auto get_segments_text = [this]() {
+        auto get_segments_text = [this] {
             auto list = answer_.segmentNameList();
             std::string s;
             for (auto const &l : list) {
@@ -503,11 +503,10 @@ private:
                     if (block) {
                         XLOG::d("Provider '{}' added answer", name_);
                         return p->addSectionToAnswer(name_, answer, *block);
-                    } else {
-                        XLOG::l("Provider '{}' FAILED answer", name_);
-                        p->addSectionToAnswer(name_, answer);
-                        return false;
                     }
+                    XLOG::l("Provider '{}' FAILED answer", name_);
+                    p->addSectionToAnswer(name_, answer);
+                    return false;
                 },
                 stamp,  // param 1
                 proc    // param 2

@@ -60,10 +60,7 @@ private:
 
 void StartTestServer(asio::io_context *IoContext, int Port) {
     try {
-        ;
-
         UdpServer s(*IoContext, Port);
-
         IoContext->run();
     } catch (std::exception &e) {
         std::cerr << "Exception: " << e.what() << "\n";

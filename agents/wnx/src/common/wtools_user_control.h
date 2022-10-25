@@ -21,7 +21,7 @@ enum class Status { success, absent, exists, no_domain_service, error };
 enum class FindMode { local, automatic };
 class LdapControl {
 public:
-    LdapControl() {}
+    LdapControl() = default;
     Status chooseDomain(std::wstring_view server_name,
                         std::wstring_view domain_name);
     ~LdapControl();
@@ -49,7 +49,7 @@ public:
     // this is trash to access old Windows API
     wchar_t *name() { return primary_dc_name_; }
 
-    const wchar_t *name() const { return primary_dc_name_; }
+    [[nodiscard]] const wchar_t *name() const { return primary_dc_name_; }
 
     static bool setAsSpecialUser(std::wstring_view user_name);
     static bool clearAsSpecialUser(std::wstring_view user_name);

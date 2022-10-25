@@ -6,11 +6,8 @@
 #ifndef types_h
 #define types_h
 
-#include <limits.h>
-#include <stdint.h>
-
+#include <cstdint>
 #include <filesystem>
-#include <functional>
 #include <iostream>
 #include <stdexcept>
 #include <string>

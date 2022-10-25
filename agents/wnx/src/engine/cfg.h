@@ -642,8 +642,8 @@ public:
                 return true;
             }
         }
-
-        return false;
+        return std::ranges::any_of(only_from_,
+                                   [ip](auto o) { return of::IsValid(o, ip); });
     }
 
     std::vector<std::string> getOnlyFrom() const {

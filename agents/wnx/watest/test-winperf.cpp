@@ -144,8 +144,8 @@ TEST(WinPerf, MakeBodyForTSIntegration) {
     auto str = details::MakeWinPerfNakedList(object, key_index);
     auto table = cma::tools::SplitString(str, "\n");
     ASSERT_TRUE(table.size() > 0);
-    for (size_t pos = 0; pos < table.size(); ++pos) {
-        auto words = cma::tools::SplitString(table[pos], " ");
+    for (const auto& row : table) {
+        auto words = cma::tools::SplitString(row, " ");
         EXPECT_EQ(words.size(), 3);
         EXPECT_NE(cma::tools::ConvertToUint64(words[0], 12345), 12345)
             << "words[0] must be number";
@@ -231,8 +231,8 @@ TEST(WinPerf, TsCounter) {
     }
 
     {
-        constexpr const wchar_t *name = L"ts_sessions";
-        constexpr const wchar_t *index = L"Terminal Services";
+        constexpr auto name = L"ts_sessions";
+        constexpr auto index = L"Terminal Services";
         auto x = BuildWinPerfSection(L"winperf", name, index);
         ASSERT_TRUE(!x.empty());
 

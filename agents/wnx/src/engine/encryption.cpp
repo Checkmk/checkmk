@@ -203,7 +203,7 @@ HCRYPTKEY Commander::importKey(const BYTE *key, DWORD key_size) const {
     key_blob.insert(key_blob.end(), key, key + key_size);
 
     HCRYPTKEY crypt_key = 0;
-    if (::CryptImportKey(crypt_provider_, &key_blob[0],
+    if (::CryptImportKey(crypt_provider_, key_blob.data(),
                          static_cast<DWORD>(key_blob.size()), 0, 0,
                          &crypt_key) == FALSE) {
         XLOG::l.crit(XLOG_FLINE + " Cannot import key, error is [{}]",
@@ -361,13 +361,13 @@ HCRYPTKEY Commander::deriveOpenSSLKey(const std::string &password,
             std::min<size_t>(usable_bytes, key.size() - key_offset);
 
         if (key_bytes > 0) {
-            memcpy(&key[key_offset], &buffer[0], key_bytes);
+            memcpy(&key[key_offset], buffer.data(), key_bytes);
             key_offset += key_bytes;
             if (key_offset == key.size()) {
                 // apply key. we do this right away so that we can query the
                 // necessary
                 // size for the iv and don't need own logic to deduce it.
-                hkey = importKey(&key[0], static_cast<DWORD>(key.size()));
+                hkey = importKey(key.data(), static_cast<DWORD>(key.size()));
                 auto block_size = BlockSize(hkey);
                 if (!block_size) {
                     ::CryptDestroyKey(hkey);
@@ -386,7 +386,7 @@ HCRYPTKEY Commander::deriveOpenSSLKey(const std::string &password,
     }
 
     // apply iv
-    if (hkey != 0 && ::CryptSetKeyParam(hkey, KP_IV, &iv[0], 0) == FALSE) {
+    if (hkey != 0 && ::CryptSetKeyParam(hkey, KP_IV, iv.data(), 0) == FALSE) {
         ::CryptDestroyKey(hkey);
         XLOG::l("Failure applying key [{}]", GetLastError());
         return 0;
@@ -416,8 +416,8 @@ std::optional<cma::ByteVector> Commander::getKey() const {
 
     std::vector<BYTE> result;
     result.resize(key_size);
-    if (::CryptExportKey(key_, 0, PLAINTEXTKEYBLOB, 0, &result[0], &key_size) ==
-        FALSE) {
+    if (::CryptExportKey(key_, 0, PLAINTEXTKEYBLOB, 0, result.data(),
+                         &key_size) == FALSE) {
         XLOG::l("Failed to export key, error [{}]", GetLastError());
         return {};
     }

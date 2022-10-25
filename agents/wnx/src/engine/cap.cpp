@@ -104,14 +104,14 @@ std::string ReadFileName(std::ifstream &cap_file, uint32_t length) {
 
     XLOG::d.t("Processing file '{}'", dataBuffer.data());
 
-    return std::string(dataBuffer.data());
+    return {dataBuffer.data()};
 }
 
 // skips too big files or invalid data
-std::optional<std::vector<char>> ReadFileData(std::ifstream &CapFile) {
+std::optional<std::vector<char>> ReadFileData(std::ifstream &cap_file) {
     int32_t length = 0;
-    CapFile.read(reinterpret_cast<char *>(&length), sizeof(length));
-    if (!CapFile.good()) {
+    cap_file.read(reinterpret_cast<char *>(&length), sizeof(length));
+    if (!cap_file.good()) {
         XLOG::l("Unexpected problems with CAP-file data header");
         return {};
     }
@@ -128,9 +128,9 @@ std::optional<std::vector<char>> ReadFileData(std::ifstream &CapFile) {
     }
     const size_t buffer_length = length;
     std::vector<char> dataBuffer(buffer_length, 0);
-    CapFile.read(dataBuffer.data(), length);
+    cap_file.read(dataBuffer.data(), length);
 
-    if (!CapFile.good()) {
+    if (!cap_file.good()) {
         XLOG::l("Unexpected problems with CAP-file data body");
         return {};
     }
@@ -192,7 +192,7 @@ bool StoreFile(const std::wstring &name, const std::vector<char> &data) {
     try {
         std::ofstream ofs(name, std::ios::binary | std::ios::trunc);
         if (ofs.good()) {
-            ofs.write(data.data(), data.size());
+            ofs.write(data.data(), static_cast<std::streamsize>(data.size()));
             return true;
         }
         XLOG::l.crit("Cannot create file to '{}', status = {}", fpath,

@@ -57,8 +57,8 @@ public:
     }
 
     std::string generateContent(Mode mode);
-    auto object() const noexcept { return object_; }
-    auto nameSpace() const noexcept { return name_space_; }
+    [[nodiscard]] auto object() const noexcept { return object_; }
+    [[nodiscard]] auto nameSpace() const noexcept { return name_space_; }
 
 protected:
     // internal function which correctly sets all parameters
@@ -136,6 +136,6 @@ std::pair<std::string, wtools::WmiStatus> GenerateWmiTable(
 
 std::string WmiCachedDataHelper(std::string &cache_data,
                                 const std::string &wmi_data, char separator);
-};  // namespace cma::provider
+}  // namespace cma::provider
 
 #endif  // wmi_h__

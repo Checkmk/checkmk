@@ -73,7 +73,7 @@ ipspec from_string<ipspec>(const std::string &value) {
             result.ip.v4.address) {
             std::cerr << "Invalid only_hosts entry: host part not 0: " << value
                       << std::endl;
-            exit(1);
+            exit(1);  // NOLINT
         }
     }
     return result;

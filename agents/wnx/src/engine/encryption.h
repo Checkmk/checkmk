@@ -42,6 +42,10 @@ public:
         : Commander(key, Length::kDefault) {}
 
     Commander(const BYTE *key, DWORD length);
+    Commander(const Commander &) = delete;
+    Commander &operator=(const Commander &) = delete;
+    Commander(Commander &&) = delete;
+    Commander &operator=(Commander &&) = delete;
 
     ~Commander();
 

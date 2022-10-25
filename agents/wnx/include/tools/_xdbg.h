@@ -62,4 +62,4 @@ inline void bp() {}
     } while (0)
 #endif
 #endif
-};  // namespace xdbg
+}  // namespace xdbg

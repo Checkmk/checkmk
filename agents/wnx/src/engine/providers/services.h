@@ -24,6 +24,6 @@ private:
     std::string makeBody() override;
 };
 
-};  // namespace cma::provider
+}  // namespace cma::provider
 
 #endif  // services_h__

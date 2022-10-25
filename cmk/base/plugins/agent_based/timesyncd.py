@@ -166,7 +166,7 @@ def check_timesyncd(params: Mapping[str, Any], section: Section) -> CheckResult:
 
     server = section.get("server")
     if server is None or server == "null":
-        yield Result(state=State.OK, summary="Found no time server")
+        yield Result(state=State.CRIT, summary="Found no time server")
         return
 
     if (stratum := section.get("stratum")) is not None:
@@ -186,6 +186,11 @@ def check_timesyncd(params: Mapping[str, Any], section: Section) -> CheckResult:
             render_func=render.timespan,
             label="Jitter",
         )
+
+    # server is configured and can be resolved, but e.g. NTP blocked by firewall
+    if server is not None and all(item is None for item in [offset, stratum, jitter]):
+        yield Result(state=State.CRIT, summary="Found no time server")
+        return
 
     yield Result(state=State.OK, summary="Synchronized on %s" % server)
 

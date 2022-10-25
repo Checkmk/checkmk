@@ -59,9 +59,18 @@ STRING_TABLE_LARGE_OFFSET = [
     ["[[[1569922392.37]]]"],
 ]
 
-STRING_TABLE_NO_SYNC = [
+# server cannot be reached
+STRING_TABLE_NO_SERVER = [
     ["Server:", "(null)", "(ntp.ubuntu.com)"],
     ["Poll", "interval:", "0", "(min:", "32s;", "max", "34min", "8s)"],
+    ["Packet", "count:", "0"],
+    ["[[[1569922392.37]]]"],
+]
+
+# server is configured and can be resolved, but e.g. NTP blocked by firewall
+STRING_TABLE_SERVER_NO_SYNC = [
+    ["Server:", "10.200.0.1", "10.200.0.1"],
+    ["Poll", "interval:", "34min 8s", "(min:", "32s;", "max", "34min", "8s)"],
     ["Packet", "count:", "0"],
     ["[[[1569922392.37]]]"],
 ]
@@ -72,7 +81,8 @@ STRING_TABLE_NO_SYNC = [
     [
         (STRING_TABLE_STANDARD, [Service()]),
         (STRING_TABLE_LARGE_OFFSET, [Service()]),
-        (STRING_TABLE_NO_SYNC, [Service()]),
+        (STRING_TABLE_NO_SERVER, [Service()]),
+        (STRING_TABLE_SERVER_NO_SYNC, [Service()]),
         ([], []),
     ],
 )
@@ -125,7 +135,7 @@ def test_discover_timesyncd(
             ],
         ),
         (
-            STRING_TABLE_NO_SYNC,
+            STRING_TABLE_NO_SERVER,
             timesyncd.default_check_parameters,
             [
                 Result(
@@ -133,7 +143,19 @@ def test_discover_timesyncd(
                     summary="Time since last sync: 22 hours 1 minute (warn/crit at 2 hours 5 minutes/3 hours 0 minutes)",
                 ),
                 Metric("last_sync_time", 79260.0, levels=(7500.0, 10800.0)),
-                Result(state=state.OK, summary="Found no time server"),
+                Result(state=state.CRIT, summary="Found no time server"),
+            ],
+        ),
+        (
+            STRING_TABLE_SERVER_NO_SYNC,
+            timesyncd.default_check_parameters,
+            [
+                Result(
+                    state=state.CRIT,
+                    summary="Time since last sync: 22 hours 1 minute (warn/crit at 2 hours 5 minutes/3 hours 0 minutes)",
+                ),
+                Metric("last_sync_time", 79260.0, levels=(7500.0, 10800.0)),
+                Result(state=state.CRIT, summary="Found no time server"),
             ],
         ),
     ],
@@ -153,14 +175,14 @@ def test_check_timesyncd_freeze(
     "string_table, params, result",
     [
         (
-            STRING_TABLE_NO_SYNC,
+            STRING_TABLE_NO_SERVER,
             timesyncd.default_check_parameters,
             [
                 Result(
                     state=state.CRIT,
                     summary="Cannot reasonably calculate time since last synchronization (hosts time is running ahead)",
                 ),
-                Result(state=state.OK, summary="Found no time server"),
+                Result(state=state.CRIT, summary="Found no time server"),
             ],
         ),
     ],

@@ -6,7 +6,7 @@
 
 from collections.abc import Generator, Iterable
 from re import Pattern
-from typing import Any, cast, Dict
+from typing import Any, cast
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.labels import BuiltinHostLabelsStore, DiscoveredHostLabelsStore, LabelManager
@@ -92,16 +92,6 @@ class RulesetMatchObject:
             self.host_name == other.host_name
             and self.service_description == other.service_description
             and self.service_labels == other.service_labels
-        )
-
-
-class RulesetMatchObjectHostCache:
-    def __init__(self) -> None:
-        self._cache: Dict[HostName, RulesetMatchObject] = {}
-
-    def get(self, hostname: HostName) -> RulesetMatchObject:
-        return self._cache.setdefault(
-            hostname, RulesetMatchObject(hostname, service_description=None)
         )
 
 

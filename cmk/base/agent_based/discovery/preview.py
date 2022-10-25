@@ -38,7 +38,7 @@ from cmk.base.agent_based.data_provider import (
 from cmk.base.agent_based.utils import check_parsing_errors
 from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
 from cmk.base.check_utils import ConfiguredService, LegacyCheckParameters
-from cmk.base.config import ConfigCache, HostConfig
+from cmk.base.config import HostConfig
 from cmk.base.core_config import (
     get_active_check_descriptions,
     get_host_attributes,
@@ -86,9 +86,8 @@ def get_check_preview(
             force_snmp_cache_refresh=not use_cached_snmp_data,
             on_scan_error=on_error,
             simulation_mode=config.simulation_mode,
-            missing_sys_description=ConfigCache.in_binary_hostlist(
-                config_cache.ruleset_matcher,
-                config_cache.ruleset_match_object_host.get(host_config.hostname),
+            missing_sys_description=config.get_config_cache().in_binary_hostlist(
+                host_config.hostname,
                 config.snmp_without_sys_descr,
             ),
             file_cache_max_age=max_cachefile_age,

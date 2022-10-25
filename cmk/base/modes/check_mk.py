@@ -66,7 +66,7 @@ import cmk.base.parent_scan
 import cmk.base.profiling as profiling
 import cmk.base.sources as sources
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
-from cmk.base.config import ConfigCache, HostConfig
+from cmk.base.config import HostConfig
 from cmk.base.core_factory import create_core
 from cmk.base.modes import keepalive_option, Mode, modes, Option
 from cmk.base.sources import parse as parse_raw_data
@@ -430,14 +430,12 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
         output = []
         # Show errors of problematic data sources
         has_errors = False
-        config_cache = config.get_config_cache()
         for source, file_cache, fetcher in sources.make_non_cluster_sources(
             host_config,
             ipaddress,
             simulation_mode=config.simulation_mode,
-            missing_sys_description=ConfigCache.in_binary_hostlist(
-                config_cache.ruleset_matcher,
-                config_cache.ruleset_match_object_host.get(host_config.hostname),
+            missing_sys_description=config.get_config_cache().in_binary_hostlist(
+                host_config.hostname,
                 config.snmp_without_sys_descr,
             ),
             file_cache_max_age=config.max_cachefile_age(),

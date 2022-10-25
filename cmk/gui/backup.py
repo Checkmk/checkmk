@@ -21,7 +21,7 @@ import socket
 import subprocess
 import time
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Mapping, Optional, Tuple
+from typing import Any, Dict, Iterator, List, Mapping, Optional, Tuple, Type
 
 import cmk.utils.render as render
 import cmk.utils.store as store
@@ -1066,15 +1066,16 @@ class ABCBackupTargetType(abc.ABC):
         return sorted(choices, key=lambda x: x[1])
 
     @classmethod
-    def get_type(cls, type_ident):
+    def get_type(cls, type_ident: str) -> Type["ABCBackupTargetType"] | None:
         # TODO: subclasses with the same name may be registered multiple times, due to execfile
         for type_class in cls.__subclasses__():
-            if type_class.ident == type_ident:
+            # indent is an attribute in the implementations
+            if type_class.ident == type_ident:  # type: ignore[comparison-overlap]
                 return type_class
         return None
 
     @classmethod
-    def title(cls):
+    def title(cls) -> str:
         raise NotImplementedError()
 
     def __init__(self, params) -> None:  # type:ignore[no-untyped-def]
@@ -1082,11 +1083,11 @@ class ABCBackupTargetType(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def valuespec(cls):
+    def valuespec(cls) -> Dictionary:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def backups(self):
+    def backups(self) -> Mapping[str, BackupInfo]:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -1102,11 +1103,11 @@ class BackupTargetLocal(ABCBackupTargetType):
     ident = "local"
 
     @classmethod
-    def title(cls):
+    def title(cls) -> str:
         return _("Local path")
 
     @classmethod
-    def valuespec(cls):
+    def valuespec(cls) -> Dictionary:
         return Dictionary(
             elements=[
                 (
@@ -1253,13 +1254,16 @@ class BackupTargetLocal(ABCBackupTargetType):
 
 
 class Target(BackupEntity):
-    def type_ident(self):
+    def type_ident(self) -> str:
         return self._config["remote"][0]
 
-    def type_class(self):
-        return ABCBackupTargetType.get_type(self.type_ident())
+    def type_class(self) -> Type[ABCBackupTargetType]:
+        tclass = ABCBackupTargetType.get_type(self.type_ident())
+        if tclass is not None:
+            return tclass
+        raise NotImplementedError(f"unkown type {self.type_ident()}")
 
-    def type_params(self):
+    def type_params(self) -> Mapping:
         return self._config["remote"][1]
 
     def type(self) -> ABCBackupTargetType:

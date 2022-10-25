@@ -1175,9 +1175,8 @@ def _migrate_legacy_disabled_packages() -> None:
     """Migrate old "disabling" concept to new one.
 
     Old idea: uninstall the package, and move it to a dedicated folder.
-    New idea:
-        a) make sure the MKP is present in the store ([local_]optional_packages_dir)
-        b) mark it as "enabled", but do not install it. This is the new "disabled".
+    New idea: make sure the MKP is present in the store ([local_]optional_packages_dir),
+              but not installed.
     """
     try:
         disabled_packages_path = list(cmk.utils.paths.disabled_packages_dir.iterdir())
@@ -1190,7 +1189,5 @@ def _migrate_legacy_disabled_packages() -> None:
         else:
             store_path = cmk.utils.paths.local_optional_packages_dir / package_path.name
             package_path.rename(store_path)
-
-        mark_as_enabled(store_path)
 
     cmk.utils.paths.disabled_packages_dir.rmdir()

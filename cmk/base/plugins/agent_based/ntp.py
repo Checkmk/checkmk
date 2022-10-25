@@ -204,6 +204,9 @@ def check_ntp_summary(
             levels_upper=params.get("alert_delay"),
             notice_only=False,
             value_store=value_store,
+            metric_name=None,
+            label="Time since last sync",
+            value_store_key="time_server",
         )
         return
 
@@ -214,7 +217,7 @@ def check_ntp_summary(
         }
 
     yield from check_ntp(peer.name, params, section)
-    store_sync_time(value_store, time.time())
+    store_sync_time(value_store, time.time(), value_store_key="time_server")
     yield Result(state=State.OK, notice=f"Synchronized on {peer.name}")
 
 

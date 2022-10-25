@@ -37,6 +37,8 @@ Todo:
 
 from typing import Any, Mapping, Type
 
+from typing_extensions import assert_never
+
 from cmk.utils import version
 
 from cmk.core_helpers.summarize import summarize
@@ -74,15 +76,24 @@ class FetcherFactory:
         # The typing error comes from the use of `Fetcher[Any]`.
         # but we have tests to show that it still does what it
         # is supposed to do.
-        return {  # type: ignore[return-value]
-            FetcherType.IPMI: IPMIFetcher,
-            FetcherType.PIGGYBACK: PiggybackFetcher,
-            FetcherType.PUSH_AGENT: NoFetcher,
-            FetcherType.PROGRAM: ProgramFetcher,
-            FetcherType.SPECIAL_AGENT: ProgramFetcher,
-            FetcherType.SNMP: SNMPFetcher,
-            FetcherType.TCP: TCPFetcher,
-        }[fetcher_type]
+        match fetcher_type:
+            case FetcherType.NONE:
+                return NoFetcher
+            case FetcherType.IPMI:
+                return IPMIFetcher
+            case FetcherType.PIGGYBACK:
+                return PiggybackFetcher
+            case FetcherType.PUSH_AGENT:
+                return NoFetcher
+            case FetcherType.PROGRAM:
+                return ProgramFetcher
+            case FetcherType.SPECIAL_AGENT:
+                return ProgramFetcher
+            case FetcherType.SNMP:
+                return SNMPFetcher
+            case FetcherType.TCP:
+                return TCPFetcher
+        assert_never(fetcher_type)
 
     @staticmethod
     def from_json(fetcher_type: FetcherType, serialized: Mapping[str, Any]) -> Fetcher:

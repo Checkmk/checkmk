@@ -31,8 +31,8 @@ from cmk.snmplib.type_defs import (
     SNMPTable,
 )
 
-from cmk.core_helpers import FetcherType, get_raw_data, snmp
-from cmk.core_helpers.agent import AgentFileCache, NoFetcher
+from cmk.core_helpers import get_raw_data, snmp
+from cmk.core_helpers.agent import AgentFileCache
 from cmk.core_helpers.cache import FileCache, FileCacheMode, MaxAge, TRawData
 from cmk.core_helpers.ipmi import IPMIFetcher
 from cmk.core_helpers.piggyback import PiggybackFetcher
@@ -1070,20 +1070,3 @@ class TestFetcherCaching:
 
         assert get_raw_data(file_cache, fetcher, Mode.INVENTORY) == result.OK(b"cached_section")
         assert file_cache.cache == b"cached_section"
-
-
-_FACTORIES_CLASSES = (
-    (FetcherType.IPMI, IPMIFetcher),
-    (FetcherType.PIGGYBACK, PiggybackFetcher),
-    (FetcherType.PUSH_AGENT, NoFetcher),
-    (FetcherType.PROGRAM, ProgramFetcher),
-    (FetcherType.SPECIAL_AGENT, ProgramFetcher),
-    (FetcherType.SNMP, SNMPFetcher),
-    (FetcherType.TCP, TCPFetcher),
-)
-
-
-class TestFetcherType:
-    def test_all_fetchers_tested(self) -> None:
-        tested_fetcher_types = {factory for factory, cls in _FACTORIES_CLASSES}
-        assert set(FetcherType) - tested_fetcher_types == {FetcherType.NONE}

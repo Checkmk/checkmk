@@ -79,6 +79,7 @@ class FetcherFactory:
             FetcherType.PIGGYBACK: PiggybackFetcher,
             FetcherType.PUSH_AGENT: NoFetcher,
             FetcherType.PROGRAM: ProgramFetcher,
+            FetcherType.SPECIAL_AGENT: ProgramFetcher,
             FetcherType.SNMP: SNMPFetcher,
             FetcherType.TCP: TCPFetcher,
         }[fetcher_type]

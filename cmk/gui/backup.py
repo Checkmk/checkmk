@@ -1037,6 +1037,207 @@ class PageBackupJobState(PageAbstractBackupJobState):
 
 
 # .
+#   .--Target Types--------------------------------------------------------.
+#   |      _____                    _     _____                            |
+#   |     |_   _|_ _ _ __ __ _  ___| |_  |_   _|   _ _ __   ___  ___       |
+#   |       | |/ _` | '__/ _` |/ _ \ __|   | || | | | '_ \ / _ \/ __|      |
+#   |       | | (_| | | | (_| |  __/ |_    | || |_| | |_) |  __/\__ \      |
+#   |       |_|\__,_|_|  \__, |\___|\__|   |_| \__, | .__/ \___||___/      |
+#   |                    |___/                 |___/|_|                    |
+#   +----------------------------------------------------------------------+
+#   | A target type implements the handling of different protocols to use  |
+#   | for storing the backup to, like NFS, a local directory or SSH/SFTP.  |
+#   '----------------------------------------------------------------------'
+
+
+class ABCBackupTargetType(abc.ABC):
+    @property
+    @abc.abstractmethod
+    def ident(self) -> str:
+        raise NotImplementedError()
+
+    @classmethod
+    def choices(cls: Any) -> List[Tuple[str, str, ValueSpec]]:
+        choices = []
+        # TODO: subclasses with the same name may be registered multiple times, due to execfile
+        # TODO: DO NOT USE __subclasses__, EVER! (Unless you are writing a debugger etc.)
+        for type_class in cls.__subclasses__():
+            choices.append((type_class.ident, type_class.title(), type_class.valuespec()))
+        return sorted(choices, key=lambda x: x[1])
+
+    @classmethod
+    def get_type(cls, type_ident):
+        # TODO: subclasses with the same name may be registered multiple times, due to execfile
+        for type_class in cls.__subclasses__():
+            if type_class.ident == type_ident:
+                return type_class
+        return None
+
+    @classmethod
+    def title(cls):
+        raise NotImplementedError()
+
+    def __init__(self, params) -> None:  # type:ignore[no-untyped-def]
+        self._params = params
+
+    @classmethod
+    @abc.abstractmethod
+    def valuespec(cls):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def backups(self):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def get_backup(self, backup_ident: str) -> BackupInfo:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def remove_backup(self, backup_ident: str) -> None:
+        raise NotImplementedError()
+
+
+class BackupTargetLocal(ABCBackupTargetType):
+    ident = "local"
+
+    @classmethod
+    def title(cls):
+        return _("Local path")
+
+    @classmethod
+    def valuespec(cls):
+        return Dictionary(
+            elements=[
+                (
+                    "path",
+                    AbsoluteDirname(
+                        title=_("Directory to save the backup to"),
+                        help=_(
+                            "This can be a local directory of your choice. You can also use this "
+                            "option if you want to save your backup to a network share using "
+                            "NFS, Samba or similar. But you will have to care about mounting the "
+                            "network share on your own."
+                        ),
+                        allow_empty=False,
+                        validate=cls.validate_local_directory,
+                        size=64,
+                    ),
+                ),
+                (
+                    "is_mountpoint",
+                    Checkbox(
+                        title=_("Mountpoint"),
+                        label=_("Is mountpoint"),
+                        help=_(
+                            "When this is checked, the backup ensures that the configured path "
+                            "is a mountpoint. If there is no active mount on the path, the backup "
+                            "fails with an error message."
+                        ),
+                        default_value=True,
+                    ),
+                ),
+            ],
+            optional_keys=[],
+        )
+
+    @classmethod
+    def validate_local_directory(cls, value, varprefix):
+        if not is_canonical(value):
+            raise MKUserError(varprefix, _("You have to provide a canonical path."))
+
+        if cmk_version.is_cma() and not value.startswith("/mnt/"):
+            raise MKUserError(
+                varprefix,
+                _(
+                    "You can only use mountpoints below the <tt>/mnt</tt> "
+                    "directory as backup targets."
+                ),
+            )
+
+        if not os.path.isdir(value):
+            raise MKUserError(
+                varprefix,
+                _(
+                    "The path does not exist or is not a directory. You "
+                    "need to specify an already existing directory."
+                ),
+            )
+
+        # Check write access for the site user
+        try:
+            test_file_path = os.path.join(value, "write_test_%d" % time.time())
+            with open(test_file_path, "wb"):
+                pass
+            os.unlink(test_file_path)
+        except IOError:
+            if cmk_version.is_cma():
+                raise MKUserError(
+                    varprefix,
+                    _(
+                        "Failed to write to the configured directory. The target directory needs "
+                        "to be writable."
+                    ),
+                )
+            raise MKUserError(
+                varprefix,
+                _(
+                    "Failed to write to the configured directory. The site user needs to be able to "
+                    "write the target directory. The recommended way is to make it writable by the "
+                    'group "omd".'
+                ),
+            )
+
+    # TODO: Duplicate code with mkbackup
+    def backups(self) -> Mapping[str, BackupInfo]:
+        backups = {}
+
+        self.verify_target_is_ready()
+
+        for path in glob.glob("%s/*/mkbackup.info" % self._params["path"]):
+            try:
+                info = self._load_backup_info(path)
+            except IOError as e:
+                if e.errno == errno.EACCES:
+                    continue  # Silently skip not permitted files
+                raise
+
+            backups[info["backup_id"]] = info
+
+        return backups
+
+    # TODO: Duplocate code with mkbackup
+    def verify_target_is_ready(self):
+        if self._params["is_mountpoint"] and not os.path.ismount(self._params["path"]):
+            raise MKGeneralException(
+                "The backup target path is configured to be a mountpoint, "
+                "but nothing is mounted."
+            )
+
+    # TODO: Duplicate code with mkbackup
+    def _load_backup_info(self, path: str) -> BackupInfo:
+        with Path(path).open(encoding="utf-8") as f:
+            info = json.load(f)
+
+        # Load the backup_id from the second right path component. This is the
+        # base directory of the mkbackup.info file. The user might have moved
+        # the directory, e.g. for having multiple backups. Allow that.
+        # Maybe we need to changed this later when we allow multiple generations
+        # of backups.
+        info["backup_id"] = os.path.basename(os.path.dirname(path))
+
+        return info
+
+    def get_backup(self, backup_ident: str) -> BackupInfo:
+        backups = self.backups()
+        return backups[backup_ident]
+
+    def remove_backup(self, backup_ident: str) -> None:
+        self.verify_target_is_ready()
+        shutil.rmtree("%s/%s" % (self._params["path"], backup_ident))
+
+
+# .
 #   .--Targets-------------------------------------------------------------.
 #   |                  _____                    _                          |
 #   |                 |_   _|_ _ _ __ __ _  ___| |_ ___                    |
@@ -1061,7 +1262,7 @@ class Target(BackupEntity):
     def type_params(self):
         return self._config["remote"][1]
 
-    def type(self):
+    def type(self) -> ABCBackupTargetType:
         if self.type_ident() != "local":
             raise NotImplementedError()
         return self.type_class()(self.type_params())
@@ -1414,199 +1615,6 @@ class SystemBackupTargetsReadOnly(Targets):
     def show_list(self, title=None, editable=True):
         if cmk_version.is_cma():
             super().show_list(title, editable)
-
-
-# .
-#   .--Target Types--------------------------------------------------------.
-#   |      _____                    _     _____                            |
-#   |     |_   _|_ _ _ __ __ _  ___| |_  |_   _|   _ _ __   ___  ___       |
-#   |       | |/ _` | '__/ _` |/ _ \ __|   | || | | | '_ \ / _ \/ __|      |
-#   |       | | (_| | | | (_| |  __/ |_    | || |_| | |_) |  __/\__ \      |
-#   |       |_|\__,_|_|  \__, |\___|\__|   |_| \__, | .__/ \___||___/      |
-#   |                    |___/                 |___/|_|                    |
-#   +----------------------------------------------------------------------+
-#   | A target type implements the handling of different protocols to use  |
-#   | for storing the backup to, like NFS, a local directory or SSH/SFTP.  |
-#   '----------------------------------------------------------------------'
-
-
-class ABCBackupTargetType(abc.ABC):
-    @property
-    @abc.abstractmethod
-    def ident(self) -> str:
-        raise NotImplementedError()
-
-    @classmethod
-    def choices(cls: Any) -> List[Tuple[str, str, ValueSpec]]:
-        choices = []
-        # TODO: subclasses with the same name may be registered multiple times, due to execfile
-        # TODO: DO NOT USE __subclasses__, EVER! (Unless you are writing a debugger etc.)
-        for type_class in cls.__subclasses__():
-            choices.append((type_class.ident, type_class.title(), type_class.valuespec()))
-        return sorted(choices, key=lambda x: x[1])
-
-    @classmethod
-    def get_type(cls, type_ident):
-        # TODO: subclasses with the same name may be registered multiple times, due to execfile
-        for type_class in cls.__subclasses__():
-            if type_class.ident == type_ident:
-                return type_class
-        return None
-
-    @classmethod
-    def title(cls):
-        raise NotImplementedError()
-
-    def __init__(self, params) -> None:  # type:ignore[no-untyped-def]
-        self._params = params
-
-    @classmethod
-    @abc.abstractmethod
-    def valuespec(cls):
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def backups(self):
-        raise NotImplementedError()
-
-
-class BackupTargetLocal(ABCBackupTargetType):
-    ident = "local"
-
-    @classmethod
-    def title(cls):
-        return _("Local path")
-
-    @classmethod
-    def valuespec(cls):
-        return Dictionary(
-            elements=[
-                (
-                    "path",
-                    AbsoluteDirname(
-                        title=_("Directory to save the backup to"),
-                        help=_(
-                            "This can be a local directory of your choice. You can also use this "
-                            "option if you want to save your backup to a network share using "
-                            "NFS, Samba or similar. But you will have to care about mounting the "
-                            "network share on your own."
-                        ),
-                        allow_empty=False,
-                        validate=cls.validate_local_directory,
-                        size=64,
-                    ),
-                ),
-                (
-                    "is_mountpoint",
-                    Checkbox(
-                        title=_("Mountpoint"),
-                        label=_("Is mountpoint"),
-                        help=_(
-                            "When this is checked, the backup ensures that the configured path "
-                            "is a mountpoint. If there is no active mount on the path, the backup "
-                            "fails with an error message."
-                        ),
-                        default_value=True,
-                    ),
-                ),
-            ],
-            optional_keys=[],
-        )
-
-    @classmethod
-    def validate_local_directory(cls, value, varprefix):
-        if not is_canonical(value):
-            raise MKUserError(varprefix, _("You have to provide a canonical path."))
-
-        if cmk_version.is_cma() and not value.startswith("/mnt/"):
-            raise MKUserError(
-                varprefix,
-                _(
-                    "You can only use mountpoints below the <tt>/mnt</tt> "
-                    "directory as backup targets."
-                ),
-            )
-
-        if not os.path.isdir(value):
-            raise MKUserError(
-                varprefix,
-                _(
-                    "The path does not exist or is not a directory. You "
-                    "need to specify an already existing directory."
-                ),
-            )
-
-        # Check write access for the site user
-        try:
-            test_file_path = os.path.join(value, "write_test_%d" % time.time())
-            with open(test_file_path, "wb"):
-                pass
-            os.unlink(test_file_path)
-        except IOError:
-            if cmk_version.is_cma():
-                raise MKUserError(
-                    varprefix,
-                    _(
-                        "Failed to write to the configured directory. The target directory needs "
-                        "to be writable."
-                    ),
-                )
-            raise MKUserError(
-                varprefix,
-                _(
-                    "Failed to write to the configured directory. The site user needs to be able to "
-                    "write the target directory. The recommended way is to make it writable by the "
-                    'group "omd".'
-                ),
-            )
-
-    # TODO: Duplicate code with mkbackup
-    def backups(self) -> Mapping[str, BackupInfo]:
-        backups = {}
-
-        self.verify_target_is_ready()
-
-        for path in glob.glob("%s/*/mkbackup.info" % self._params["path"]):
-            try:
-                info = self._load_backup_info(path)
-            except IOError as e:
-                if e.errno == errno.EACCES:
-                    continue  # Silently skip not permitted files
-                raise
-
-            backups[info["backup_id"]] = info
-
-        return backups
-
-    # TODO: Duplocate code with mkbackup
-    def verify_target_is_ready(self):
-        if self._params["is_mountpoint"] and not os.path.ismount(self._params["path"]):
-            raise MKGeneralException(
-                "The backup target path is configured to be a mountpoint, "
-                "but nothing is mounted."
-            )
-
-    # TODO: Duplicate code with mkbackup
-    def _load_backup_info(self, path: str) -> BackupInfo:
-        with Path(path).open(encoding="utf-8") as f:
-            info = json.load(f)
-
-        # Load the backup_id from the second right path component. This is the
-        # base directory of the mkbackup.info file. The user might have moved
-        # the directory, e.g. for having multiple backups. Allow that.
-        # Maybe we need to changed this later when we allow multiple generations
-        # of backups.
-        info["backup_id"] = os.path.basename(os.path.dirname(path))
-
-        return info
-
-    def get_backup(self, backup_ident: str) -> BackupInfo:
-        backups = self.backups()
-        return backups[backup_ident]
-
-    def remove_backup(self, backup_ident: str) -> None:
-        self.verify_target_is_ready()
-        shutil.rmtree("%s/%s" % (self._params["path"], backup_ident))
 
 
 # .

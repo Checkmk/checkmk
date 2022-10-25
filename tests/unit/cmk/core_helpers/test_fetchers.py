@@ -936,7 +936,6 @@ class TestTCPFetcher:
         # The key is missing if a rule "Encryption" is set up without configuring anything.
         # Fixing this is not worth it at the moment, the ruleset needs a makeover anyway.
         TCPFetcher(
-            ident="agent",
             family=socket.AF_INET,
             address=("1.2.3.4", 0),
             host_name=HostName("irrelevant_for_this_test"),

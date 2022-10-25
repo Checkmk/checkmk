@@ -159,6 +159,9 @@ def check_timesyncd(params: Mapping[str, Any], section: Section) -> CheckResult:
         sync_time=synctime,
         levels_upper=levels_upper,
         value_store=get_value_store(),
+        metric_name="last_sync_time",
+        label="Time since last sync",
+        value_store_key="time_server",
     )
 
     server = section.get("server")

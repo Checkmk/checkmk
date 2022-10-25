@@ -4,6 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from unittest import mock
+
+from tests.testlib import on_time
+
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.ntp import (
     _ntp_fmt_time,
@@ -15,21 +19,35 @@ from cmk.base.plugins.agent_based.ntp import (
 )
 
 
-def test_check_ntp():
+def test_check_ntp() -> None:
     section: Section = {
         "42.202.61.100": Peer("-", "42.202.61.100", ".INIT.", 16, _ntp_fmt_time("-"), "0", 0.0, 0.0)
     }
     assert list(check_ntp("item", {}, section)) == []
 
 
-def test_check_ntp_summanry():
+def test_check_ntp_summanry() -> None:
     section: Section = {}
     assert list(check_ntp_summary({}, section)) == [
         Result(state=State.OK, summary="Time since last sync: N/A (started monitoring)")
     ]
 
 
-def test_parse_ntp():
+@mock.patch(
+    "cmk.base.plugins.agent_based.ntp.get_value_store",
+    mock.Mock(return_value={"time_server": 1570001652.37}),
+)
+def test_check_ntp_timeserver_stored() -> None:
+    server_time = 1569922392.37 + 60 * 60 * 22 + 60, "UTC"
+
+    section: Section = {}
+    with on_time(*server_time):
+        assert list(check_ntp_summary({}, section)) == [
+            Result(state=State.OK, summary="Time since last sync: 0 seconds")
+        ]
+
+
+def test_parse_ntp() -> None:
     assert parse_ntp(
         [
             [

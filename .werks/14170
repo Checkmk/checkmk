@@ -1,0 +1,12 @@
+Title: Fixed hanging activate changes on unfortunate error reporting
+Class: fix
+Compatible: compat
+Component: core
+Date: 1666692085
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0p15
+
+The config generation process could hang forever when an error was reported at the wrong time.
+This problem could only be solved by identifying and terminating the processes that were locking the file <tt>~/etc/check_mk/main.mk</tt>.

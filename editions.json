@@ -25,7 +25,7 @@
             "cma-3"
         ],
         "DISTROS_TESTBUILD": [
-            "ubuntu-20.04",
+            "ubuntu-22.04",
             "centos-7",
             "cma"
         ]

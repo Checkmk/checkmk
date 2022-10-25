@@ -14,7 +14,6 @@ import cmk.gui.views.datasource_selection as _datasource_selection
 import cmk.gui.visuals as visuals
 from cmk.gui.config import default_authorized_builtin_role_ids, register_post_config_load_hook
 from cmk.gui.derived_columns_sorter import DerivedColumnsSorter
-from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.i18n import _, _u
 from cmk.gui.pages import page_registry
 from cmk.gui.permissions import (
@@ -52,10 +51,7 @@ from cmk.gui.views.visual_type import VisualTypeViews
 
 # TODO: Kept for compatibility with pre 1.6 plugins. Plugins will not be used anymore, but an error
 # will be displayed.
-multisite_painter_options: Dict[str, Any] = {}
-multisite_layouts: Dict[str, Any] = {}
 multisite_commands: List[Dict[str, Any]] = []
-multisite_datasources: Dict[str, Any] = {}
 multisite_painters: Dict[str, Dict[str, Any]] = {}
 multisite_sorters: Dict[str, Any] = {}
 
@@ -100,24 +96,6 @@ def load_plugins() -> None:
     utils.load_web_plugins("perfometer", globals())
 
     transform_old_dict_based_icons()
-
-    # TODO: Kept for compatibility with pre 1.6 plugins. Plugins will not be used anymore, but an error
-    # will be displayed.
-    if multisite_painter_options:
-        raise MKGeneralException(
-            "Found legacy painter option plugins: %s. You will either have to "
-            "remove or migrate them." % ", ".join(multisite_painter_options.keys())
-        )
-    if multisite_layouts:
-        raise MKGeneralException(
-            "Found legacy layout plugins: %s. You will either have to "
-            "remove or migrate them." % ", ".join(multisite_layouts.keys())
-        )
-    if multisite_datasources:
-        raise MKGeneralException(
-            "Found legacy data source plugins: %s. You will either have to "
-            "remove or migrate them." % ", ".join(multisite_datasources.keys())
-        )
 
     # TODO: Kept for compatibility with pre 1.6 plugins
     for cmd_spec in multisite_commands:

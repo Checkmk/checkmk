@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+"""Provides the view editor dialog"""
+
 import ast
 from collections.abc import Iterator, Mapping, Sequence
 from typing import Any, overload

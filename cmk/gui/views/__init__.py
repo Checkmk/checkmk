@@ -113,11 +113,13 @@ from cmk.gui.view_store import get_all_views, get_permitted_views, multisite_bui
 from cmk.gui.view_utils import get_labels, render_labels, render_tag_groups
 from cmk.gui.views.builtin_views import builtin_views
 from cmk.gui.views.inventory import register_table_views_and_columns, update_paint_functions
+from cmk.gui.views.page_create_view import page_create_view
 from cmk.gui.views.page_edit_view import (
     format_view_title,
     page_edit_view,
     PageAjaxCascadingRenderPainterParameters,
 )
+from cmk.gui.views.page_edit_views import page_edit_views
 
 from . import availability
 
@@ -133,6 +135,8 @@ multisite_sorters: Dict[str, Any] = {}
 
 cmk.gui.pages.register("create_view")(_datasource_selection.page_create_view)
 cmk.gui.pages.register("edit_view")(page_edit_view)
+cmk.gui.pages.register("edit_views")(page_edit_views)
+cmk.gui.pages.register("create_view_infos")(page_create_view)
 page_registry.register_page("ajax_cascading_render_painer_parameters")(
     PageAjaxCascadingRenderPainterParameters
 )
@@ -587,51 +591,6 @@ def _get_tag_group_value(row, what, tag_group_id) -> str:  # type:ignore[no-unty
         label = tag_id or _("N/A")
 
     return label or _("N/A")
-
-
-# .
-#   .--Table of views------------------------------------------------------.
-#   |   _____     _     _               __         _                       |
-#   |  |_   _|_ _| |__ | | ___    ___  / _| __   _(_) _____      _____     |
-#   |    | |/ _` | '_ \| |/ _ \  / _ \| |_  \ \ / / |/ _ \ \ /\ / / __|    |
-#   |    | | (_| | |_) | |  __/ | (_) |  _|  \ V /| |  __/\ V  V /\__ \    |
-#   |    |_|\__,_|_.__/|_|\___|  \___/|_|     \_/ |_|\___| \_/\_/ |___/    |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Show list of all views with buttons for editing                      |
-#   '----------------------------------------------------------------------'
-
-
-@cmk.gui.pages.register("edit_views")
-def page_edit_views() -> None:
-    cols = [(_("Datasource"), lambda v: data_source_registry[v["datasource"]]().title)]
-    # Intermediate step. Will be cleaned up once all visuals are TypedDicts
-    visuals.page_list("views", _("Edit Views"), get_all_views(), cols)  # type: ignore[arg-type]
-
-
-# .
-#   .--Create View---------------------------------------------------------.
-#   |        ____                _        __     ___                       |
-#   |       / ___|_ __ ___  __ _| |_ ___  \ \   / (_) _____      __        |
-#   |      | |   | '__/ _ \/ _` | __/ _ \  \ \ / /| |/ _ \ \ /\ / /        |
-#   |      | |___| | |  __/ (_| | ||  __/   \ V / | |  __/\ V  V /         |
-#   |       \____|_|  \___|\__,_|\__\___|    \_/  |_|\___| \_/\_/          |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Select the view type of the new view                                 |
-#   '----------------------------------------------------------------------'
-
-# First step: Select the data source
-
-
-@cmk.gui.pages.register("create_view_infos")
-def page_create_view_infos() -> None:
-    ds_class, ds_name = request.get_item_input("datasource", data_source_registry)
-    visuals.page_create_visual(
-        "views",
-        ds_class().infos,
-        next_url="edit_view.py?mode=create&datasource=%s&single_infos=%%s" % ds_name,
-    )
 
 
 # .

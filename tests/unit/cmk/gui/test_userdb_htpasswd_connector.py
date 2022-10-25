@@ -9,11 +9,12 @@ from pathlib import Path
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
-from passlib.hash import bcrypt  # type: ignore[import]
 
+from cmk.utils.crypto import password_hashing
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.plugins.userdb.htpasswd as htpasswd
+from cmk.gui.exceptions import MKUserError
 
 
 @pytest.fixture(name="htpasswd_file")
@@ -75,7 +76,18 @@ def test_hash_password() -> None:
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=DeprecationWarning)
         hashed_pw = htpasswd.hash_password("blä")
-    assert bcrypt.verify("blä", hashed_pw)
+    assert password_hashing.check_password("blä", hashed_pw)
+
+
+def test_truncation_error() -> None:
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
+        with pytest.raises(MKUserError):
+            htpasswd.hash_password("A" * 72 + "foo")
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=DeprecationWarning)
+        with pytest.raises(MKUserError):
+            htpasswd.hash_password("😀" * 19)
 
 
 def test_user_connector_verify_password(htpasswd_file: Path, monkeypatch: MonkeyPatch) -> None:

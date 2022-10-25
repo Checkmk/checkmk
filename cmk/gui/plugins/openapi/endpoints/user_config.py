@@ -454,6 +454,8 @@ def _auth_options_to_internal_format(
     if not auth_details:
         return internal_options
 
+    # Note: Use the htpasswd wrapper for hash_password below, so we get MKUserError if anything
+    #       goes wrong.
     if auth_details["auth_type"] == "automation":
         secret = auth_details["secret"]
         internal_options["automation_secret"] = secret

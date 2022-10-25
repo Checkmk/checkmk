@@ -9,7 +9,6 @@ import cmk.gui.pages
 import cmk.gui.utils
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.view_utils
-import cmk.gui.views as views
 import cmk.gui.visuals as visuals
 from cmk.gui.command_utils import core_command
 from cmk.gui.config import active_config
@@ -33,6 +32,14 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri, requested_file_name
 from cmk.gui.view import View
 from cmk.gui.view_store import get_permitted_views
+from cmk.gui.views.page_show_view import (
+    ABCViewRenderer,
+    get_limit,
+    get_row_count,
+    get_user_sorters,
+    get_want_checkboxes,
+    process_view,
+)
 from cmk.gui.visuals import view_title
 
 HeaderButton = Union[Tuple[str, str, str], Tuple[str, str, str, str]]
@@ -225,17 +232,17 @@ def page_index() -> None:
             context = visuals.active_context_from_request(datasource.infos, view_spec["context"])
 
             view = View(view_name, view_spec, context)
-            view.row_limit = views.get_limit()
+            view.row_limit = get_limit()
             view.only_sites = visuals.get_only_sites_from_context(context)
-            view.user_sorters = views.get_user_sorters()
-            view.want_checkboxes = views.get_want_checkboxes()
+            view.user_sorters = get_user_sorters()
+            view.want_checkboxes = get_want_checkboxes()
 
             url = "mobile_view.py?view_name=%s" % view_name
             count = ""
             if not view_spec.get("mustsearch"):
                 painter_options = PainterOptions.get_instance()
                 painter_options.load(view_name)
-                count = '<span class="ui-li-count">%d</span>' % views.get_row_count(view)
+                count = '<span class="ui-li-count">%d</span>' % get_row_count(view)
 
             topic = PagetypeTopics.get_topic(view_spec.get("topic", ""))
             items.append((topic.title(), url, "%s %s" % (view_spec["title"], count)))
@@ -276,10 +283,10 @@ def page_view() -> None:
     context = visuals.active_context_from_request(datasource.infos, view_spec["context"])
 
     view = View(view_name, view_spec, context)
-    view.row_limit = views.get_limit()
+    view.row_limit = get_limit()
     view.only_sites = visuals.get_only_sites_from_context(context)
-    view.user_sorters = views.get_user_sorters()
-    view.want_checkboxes = views.get_want_checkboxes()
+    view.user_sorters = get_user_sorters()
+    view.want_checkboxes = get_want_checkboxes()
 
     title = view_title(view.spec, view.context)
     mobile_html_head(title)
@@ -292,7 +299,7 @@ def page_view() -> None:
     painter_options.load(view_name)
 
     try:
-        views.process_view(MobileViewRenderer(view))
+        process_view(MobileViewRenderer(view))
     except Exception as e:
         logger.exception("error showing mobile view")
         if active_config.debug:
@@ -303,7 +310,7 @@ def page_view() -> None:
     return None
 
 
-class MobileViewRenderer(views.ABCViewRenderer):
+class MobileViewRenderer(ABCViewRenderer):
     def render(  # pylint: disable=too-many-branches
         self,
         rows: Rows,

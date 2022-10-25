@@ -19,7 +19,7 @@ from cmk.gui.plugins.views.utils import (
 )
 from cmk.gui.type_defs import PainterSpec, Row, SorterSpec, ViewSpec
 from cmk.gui.view_store import multisite_builtin_views
-from cmk.gui.views import _parse_url_sorters
+from cmk.gui.views.page_show_view import _parse_url_sorters
 
 
 @pytest.fixture(name="view_spec")

@@ -5,7 +5,6 @@
 
 from typing import Callable, TypeVar
 
-import cmk.gui.views as views
 import cmk.gui.visuals as visuals
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.display_options import display_options
@@ -35,6 +34,7 @@ from cmk.gui.views.page_edit_view import (
     transform_view_to_valuespec_value,
     view_choices,
 )
+from cmk.gui.views.page_show_view import get_limit, get_user_sorters, process_view
 
 VT = TypeVar("VT", bound=ABCViewDashletConfig)
 
@@ -99,11 +99,11 @@ class ABCViewDashlet(IFrameDashlet[VT]):
         # picture (dashlets typed (already done) and reports typed), we can better decide how to do
         # it
         view = View(self._dashlet_spec["name"], view_spec, context)  # type: ignore[arg-type]
-        view.row_limit = views.get_limit()
+        view.row_limit = get_limit()
         view.only_sites = visuals.get_only_sites_from_context(context)
-        view.user_sorters = views.get_user_sorters()
+        view.user_sorters = get_user_sorters()
 
-        views.process_view(GUIViewRenderer(view, show_buttons=False))
+        process_view(GUIViewRenderer(view, show_buttons=False))
 
         html.close_div()
 

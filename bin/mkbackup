@@ -27,7 +27,7 @@ from contextlib import contextmanager, ExitStack
 from dataclasses import dataclass
 from hashlib import md5
 from pathlib import Path
-from typing import Any, IO, Literal, NamedTuple, NewType, NoReturn, TypedDict
+from typing import Any, IO, NamedTuple, NoReturn
 
 from Cryptodome.Cipher import AES, PKCS1_OAEP
 from Cryptodome.Cipher._mode_cbc import CbcMode
@@ -38,6 +38,8 @@ import cmk.utils.daemon as daemon
 import cmk.utils.render as render
 import cmk.utils.schedule as schedule
 import cmk.utils.store as store
+from cmk.utils.backup.type_defs import BackupInfo as RawBackupInfo
+from cmk.utils.backup.type_defs import Config, JobConfig, TargetId
 from cmk.utils.exceptions import MKGeneralException, MKTerminate
 from cmk.utils.paths import mkbackup_lock_dir
 
@@ -576,60 +578,6 @@ class RestoreStream(MKBackupStream):
             )
         cipher_rsa = PKCS1_OAEP.new(private_key)
         return cipher_rsa.decrypt(encrypted_secret_key)
-
-
-#########################################
-# Schemas to share with CMA Backup tool #
-# DO NOT CHANGE!                        #
-#########################################
-
-TargetId = NewType("TargetId", str)
-
-
-class ScheduleConfig(TypedDict):
-    disabled: bool
-    period: str
-    timeofday: Sequence[tuple[int, int]]
-
-
-class JobConfig(TypedDict):
-    title: str
-    encrypt: str | None
-    target: TargetId
-    compress: bool
-    schedule: ScheduleConfig | None
-    no_history: bool
-    without_sites: bool
-
-
-class LocalTargetParams(TypedDict):
-    path: str
-    is_mountpoint: bool
-
-
-LocalTargetConfig = tuple[Literal["local"], LocalTargetParams]
-
-
-class TargetConfig(TypedDict):
-    title: str
-    remote: LocalTargetConfig
-
-
-class Config(TypedDict):
-    targets: dict[str, TargetConfig]
-    jobs: dict[str, JobConfig]
-
-
-class RawBackupInfo(TypedDict):
-    config: JobConfig
-    files: Sequence[tuple[str, int, str]]
-    finished: float
-    hostname: str
-    job_id: str
-    site_id: str
-    site_version: str
-    size: int
-    type: str
 
 
 #########################################################

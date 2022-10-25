@@ -21,11 +21,12 @@ import socket
 import subprocess
 import time
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional, Tuple
+from typing import Any, Dict, Iterator, List, Mapping, Optional, Tuple
 
 import cmk.utils.render as render
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils.backup.type_defs import BackupInfo
 from cmk.utils.schedule import next_scheduled_time
 from cmk.utils.site import omd_site
 
@@ -1130,13 +1131,13 @@ class Target(BackupEntity):
                         else:
                             html.write_text(" (%s)" % _("Standby node"))
 
-    def backups(self):
+    def backups(self) -> Mapping[str, BackupInfo]:
         return self.type().backups()
 
-    def get_backup(self, backup_ident):
+    def get_backup(self, backup_ident: str) -> BackupInfo:
         return self.type().get_backup(backup_ident)
 
-    def remove_backup(self, backup_ident):
+    def remove_backup(self, backup_ident: str) -> None:
         self.type().remove_backup(backup_ident)
 
 
@@ -1560,7 +1561,7 @@ class BackupTargetLocal(ABCBackupTargetType):
             )
 
     # TODO: Duplicate code with mkbackup
-    def backups(self):
+    def backups(self) -> Mapping[str, BackupInfo]:
         backups = {}
 
         self.verify_target_is_ready()
@@ -1586,7 +1587,7 @@ class BackupTargetLocal(ABCBackupTargetType):
             )
 
     # TODO: Duplicate code with mkbackup
-    def _load_backup_info(self, path):
+    def _load_backup_info(self, path: str) -> BackupInfo:
         with Path(path).open(encoding="utf-8") as f:
             info = json.load(f)
 
@@ -1599,11 +1600,11 @@ class BackupTargetLocal(ABCBackupTargetType):
 
         return info
 
-    def get_backup(self, backup_ident):
+    def get_backup(self, backup_ident: str) -> BackupInfo:
         backups = self.backups()
         return backups[backup_ident]
 
-    def remove_backup(self, backup_ident):
+    def remove_backup(self, backup_ident: str) -> None:
         self.verify_target_is_ready()
         shutil.rmtree("%s/%s" % (self._params["path"], backup_ident))
 

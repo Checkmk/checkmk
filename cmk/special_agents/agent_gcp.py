@@ -788,6 +788,12 @@ REDIS = Service(
             ),
         ),
         Metric(
+            name="redis.googleapis.com/stats/evicted_keys",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MAX,
+            ),
+        ),
+        Metric(
             name="redis.googleapis.com/stats/cache_hit_ratio",
             aggregation=Aggregation(
                 per_series_aligner=Aligner.ALIGN_MAX,

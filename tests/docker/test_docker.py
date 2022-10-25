@@ -19,11 +19,7 @@ from docker.models.containers import Container  # type: ignore[import]
 from docker.models.images import Image  # type: ignore[import]
 
 import tests.testlib as testlib
-from tests.testlib.utils import (
-    cmk_path,
-    get_cmk_download_credentials,
-    get_cmk_download_credentials_file,
-)
+from tests.testlib.utils import cmk_path, get_cmk_download_credentials_file
 
 import docker  # type: ignore[import]
 
@@ -141,7 +137,6 @@ def _build(
             buildargs={
                 "CMK_VERSION": version.version,
                 "CMK_EDITION": version.edition(),
-                "CMK_DL_CREDENTIALS": ":".join(get_cmk_download_credentials()),
                 "IMAGE_CMK_BASE": resolve_image_alias("IMAGE_CMK_BASE"),
             },
         )

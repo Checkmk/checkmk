@@ -73,6 +73,24 @@ def _parameter_valuespec_timesyncd_time():
                     ],
                 ),
             ),
+            (
+                "last_ntp_message",
+                Tuple(
+                    title=_("Allowed duration since last NTPMessage"),
+                    elements=[
+                        Age(
+                            title=_("Warning at"),
+                            display=["hours", "minutes"],
+                            default_value=3600,
+                        ),
+                        Age(
+                            title=_("Critical at"),
+                            display=["hours", "minutes"],
+                            default_value=7200,
+                        ),
+                    ],
+                ),
+            ),
         ]
     )
 

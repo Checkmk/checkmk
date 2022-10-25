@@ -243,6 +243,12 @@ metric_info["last_sync_time"] = {
     "color": "41/b",
 }
 
+metric_info["last_sync_receive_time"] = {
+    "title": _("Time since last NTPMessage"),
+    "unit": "s",
+    "color": "45/b",
+}
+
 metric_info["jitter"] = {
     "title": _("Time dispersion (jitter)"),
     "unit": "s",
@@ -1740,6 +1746,11 @@ graph_info["time_offset"] = {
     ],
     "range": ("0,time_offset:crit,-", "time_offset:crit"),
     "optional_metrics": ["jitter"],
+}
+
+graph_info["last_sync_time"] = {
+    "title": _("Time since last synchronisation"),
+    "metrics": [("last_sync_time", "line"), ("last_sync_receive_time", "line")],
 }
 
 graph_info["firewall_connections"] = {

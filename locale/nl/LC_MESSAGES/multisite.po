@@ -4222,6 +4222,10 @@ msgstr "Agent plugins: versies"
 msgid "Agent registration"
 msgstr "Agent registratie"
 
+#, fuzzy
+msgid "Agent registration user"
+msgstr "Agent registratie"
+
 msgid "Agent rules"
 msgstr "Agent regels"
 

@@ -4258,6 +4258,10 @@ msgstr "Corrispondenza richiesta (espressione regolare)"
 msgid "Agent registration"
 msgstr "Versione agente"
 
+#, fuzzy
+msgid "Agent registration user"
+msgstr "Versione agente"
+
 msgid "Agent rules"
 msgstr "Regole dell'agente"
 

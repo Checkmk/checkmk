@@ -4024,6 +4024,10 @@ msgstr "エージェントプラグイン: バージョン"
 msgid "Agent registration"
 msgstr "エージェント登録"
 
+#, fuzzy
+msgid "Agent registration user"
+msgstr "エージェント登録"
+
 msgid "Agent rules"
 msgstr "エージェントルール"
 

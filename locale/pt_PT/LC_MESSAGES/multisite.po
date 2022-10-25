@@ -4203,6 +4203,10 @@ msgstr "Partida necessária (expressão regular)"
 msgid "Agent registration"
 msgstr "Versão agente"
 
+#, fuzzy
+msgid "Agent registration user"
+msgstr "Versão agente"
+
 msgid "Agent rules"
 msgstr "Regras dos agentes"
 

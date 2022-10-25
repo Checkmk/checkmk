@@ -4247,6 +4247,10 @@ msgstr "Plugins del agente: versiones"
 msgid "Agent registration"
 msgstr "Registro de agentes"
 
+#, fuzzy
+msgid "Agent registration user"
+msgstr "Registro de agentes"
+
 msgid "Agent rules"
 msgstr "Normas de los agentes"
 

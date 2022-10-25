@@ -3975,6 +3975,10 @@ msgid "Agent registration"
 msgstr "Numele Elementului"
 
 #, fuzzy
+msgid "Agent registration user"
+msgstr "Numele Elementului"
+
+#, fuzzy
 msgid "Agent rules"
 msgstr "Editeaza regulile de loguri"
 

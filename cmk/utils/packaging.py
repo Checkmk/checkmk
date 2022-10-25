@@ -321,12 +321,12 @@ def disable(package_name: PackageName) -> None:
 
 
 def _find_path_and_package_info(package_name: PackageName) -> Tuple[Path, PackageInfo]:
+
+    enabled_packages = get_enabled_package_infos()
+
     for package_path in _get_enabled_package_paths():
-        tar = tarfile.open(name=str(package_path), mode="r:gz")
-        package_info_file = tar.extractfile("info")
-        if package_info_file is None:
+        if (package := enabled_packages.get(package_path.name)) is None:
             continue
-        package = parse_package_info(package_info_file.read().decode())
         if (package["name"] == package_name or
                 format_file_name(name=package["name"], version=package["version"]) == package_name):
             return package_path, package

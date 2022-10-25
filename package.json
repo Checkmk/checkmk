@@ -42,6 +42,8 @@
     "@typescript-eslint/parser": "^5.26.0",
     "autoprefixer": "^10.4.0",
     "babel-loader": "^8.2.3",
+    "browserslist": "^4.21.4",
+    "caniuse-lite": "^1.0.30001423",
     "css-loader": "^6.5.1",
     "cssnano": "^5.0.12",
     "eslint": "^8.3.0",

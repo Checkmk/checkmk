@@ -3,14 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pprint
 from typing import List, Tuple
 
 import cmk.utils.version as cmk_version
 
 import cmk.gui.dashboard as dashboard
+import cmk.gui.pages
 import cmk.gui.pagetypes as pagetypes
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
+from cmk.gui.http import response
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
@@ -55,6 +58,14 @@ class Views(SidebarSnapin):
                 links.append((_("Export"), "export_views.py"))
             links.append((_("Edit"), "edit_views.py"))
             footnotelinks(links)
+
+
+@cmk.gui.pages.register("export_views")
+def ajax_export_views() -> None:
+    for view in get_permitted_views().values():
+        view["owner"] = ""
+        view["public"] = True
+    response.set_data(pprint.pformat(get_permitted_views()))
 
 
 @request_memoize()

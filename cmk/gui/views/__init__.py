@@ -3,10 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import abc
 import functools
-import pprint
-import time
 from itertools import chain
 from typing import Any, Callable, Dict, Iterable, Iterator, List, Optional, Sequence, Set
 from typing import Tuple as _Tuple
@@ -18,14 +15,12 @@ from livestatus import SiteId
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
-from cmk.utils.prediction import livestatus_lql
 from cmk.utils.site import omd_site
 from cmk.utils.structured_data import SDPath, StructuredDataNode
-from cmk.utils.type_defs import HostName, ServiceName, UserId
+from cmk.utils.type_defs import HostName, UserId
 
 import cmk.gui.log as log
 import cmk.gui.pages
-import cmk.gui.sites as sites
 import cmk.gui.utils as utils
 import cmk.gui.view_utils
 import cmk.gui.views.datasource_selection as _datasource_selection
@@ -42,7 +37,7 @@ from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKGeneralException, MKMissingDataError, MKUserError
 from cmk.gui.exporter import exporter_registry
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request, response
+from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
 from cmk.gui.inventory import (
     get_short_inventory_filepath,
@@ -53,7 +48,7 @@ from cmk.gui.inventory import (
 )
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_external_link, PageMenuEntry, PageMenuTopic
-from cmk.gui.pages import AjaxPage, page_registry, PageResult
+from cmk.gui.pages import page_registry
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.permissions import (
     declare_dynamic_permissions,
@@ -62,13 +57,8 @@ from cmk.gui.permissions import (
     PermissionSection,
 )
 from cmk.gui.plugins.views.icons.utils import (
-    get_icons,
     Icon,
     icon_and_action_registry,
-    IconEntry,
-    IconObjectType,
-    iconpainter_columns,
-    LegacyIconEntry,
     multisite_icons_and_actions,
 )
 from cmk.gui.plugins.views.utils import (
@@ -80,8 +70,6 @@ from cmk.gui.plugins.views.utils import (
     painter_registry,
     register_legacy_command,
     register_painter,
-    replace_action_url_macros,
-    transform_action_url,
 )
 from cmk.gui.plugins.visuals.utils import (
     Filter,
@@ -100,19 +88,19 @@ from cmk.gui.type_defs import (
     SorterSpec,
     TranslatedMetrics,
     ViewSpec,
-    VisualContext,
 )
-from cmk.gui.utils.csrf_token import check_csrf_token
-from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
-from cmk.gui.valuespec import Hostname, IconSelector
+from cmk.gui.valuespec import Hostname
 from cmk.gui.view import View
 from cmk.gui.view_renderer import ABCViewRenderer, GUIViewRenderer
 from cmk.gui.view_store import get_all_views, get_permitted_views, multisite_builtin_views
 from cmk.gui.view_utils import get_labels, render_labels, render_tag_groups
 from cmk.gui.views.builtin_views import builtin_views
 from cmk.gui.views.inventory import register_table_views_and_columns, update_paint_functions
+from cmk.gui.views.page_ajax_filters import AjaxInitialViewFilters
+from cmk.gui.views.page_ajax_popup_action_menu import ajax_popup_action_menu
+from cmk.gui.views.page_ajax_reschedule import PageRescheduleCheck
 from cmk.gui.views.page_create_view import page_create_view
 from cmk.gui.views.page_edit_view import (
     format_view_title,
@@ -137,9 +125,12 @@ cmk.gui.pages.register("create_view")(_datasource_selection.page_create_view)
 cmk.gui.pages.register("edit_view")(page_edit_view)
 cmk.gui.pages.register("edit_views")(page_edit_views)
 cmk.gui.pages.register("create_view_infos")(page_create_view)
+cmk.gui.pages.register("ajax_popup_action_menu")(ajax_popup_action_menu)
 page_registry.register_page("ajax_cascading_render_painer_parameters")(
     PageAjaxCascadingRenderPainterParameters
 )
+page_registry.register_page("ajax_reschedule")(PageRescheduleCheck)
+page_registry.register_page("ajax_initial_view_filters")(AjaxInitialViewFilters)
 
 
 @visual_type_registry.register
@@ -604,44 +595,6 @@ def _get_tag_group_value(row, what, tag_group_id) -> str:  # type:ignore[no-unty
 #   +----------------------------------------------------------------------+
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
-
-class ABCAjaxInitialFilters(AjaxPage):
-    @abc.abstractmethod
-    def _get_context(self, page_name: str) -> VisualContext:
-        raise NotImplementedError()
-
-    def page(self) -> Dict[str, str]:
-        api_request = self.webapi_request()
-        varprefix = api_request.get("varprefix", "")
-        page_name = api_request.get("page_name", "")
-        context = self._get_context(page_name)
-        page_request_vars = api_request.get("page_request_vars")
-        assert isinstance(page_request_vars, dict)
-        vs_filters = visuals.VisualFilterListWithAddPopup(info_list=page_request_vars["infos"])
-        with output_funnel.plugged():
-            vs_filters.render_input(varprefix, context)
-            return {"filters_html": output_funnel.drain()}
-
-
-@page_registry.register_page("ajax_initial_view_filters")
-class AjaxInitialViewFilters(ABCAjaxInitialFilters):
-    def _get_context(self, page_name: str) -> VisualContext:
-        # Obtain the visual filters and the view context
-        view_name = page_name
-        try:
-            view_spec = get_permitted_views()[view_name]
-        except KeyError:
-            raise MKUserError("view_name", _("The requested item %s does not exist") % view_name)
-
-        datasource = data_source_registry[view_spec["datasource"]]()
-        show_filters = visuals.filters_of_visual(
-            view_spec, datasource.infos, link_filters=datasource.link_filters
-        )
-        view_context = view_spec.get("context", {})
-
-        # Return a visual filters dict filled with the view context values
-        return {f.ident: view_context.get(f.ident, {}) for f in show_filters if f.available()}
 
 
 @cmk.gui.pages.register("view")
@@ -1328,234 +1281,3 @@ def _sort_data(view: View, data: "Rows", sorters: List[SorterEntry]) -> None:
         return 0  # equal
 
     data.sort(key=functools.cmp_to_key(multisort))
-
-
-@cmk.gui.pages.register("export_views")
-def ajax_export() -> None:
-    for view in get_permitted_views().values():
-        view["owner"] = ""
-        view["public"] = True
-    response.set_data(pprint.pformat(get_permitted_views()))
-
-
-# .
-#   .--Icon Selector-------------------------------------------------------.
-#   |      ___                  ____       _           _                   |
-#   |     |_ _|___ ___  _ __   / ___|  ___| | ___  ___| |_ ___  _ __       |
-#   |      | |/ __/ _ \| '_ \  \___ \ / _ \ |/ _ \/ __| __/ _ \| '__|      |
-#   |      | | (_| (_) | | | |  ___) |  __/ |  __/ (__| || (_) | |         |
-#   |     |___\___\___/|_| |_| |____/ \___|_|\___|\___|\__\___/|_|         |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | AJAX API call for rendering the icon selector                        |
-#   '----------------------------------------------------------------------'
-
-
-@cmk.gui.pages.register("ajax_popup_icon_selector")
-def ajax_popup_icon_selector() -> None:
-    varprefix = request.var("varprefix")
-    value = request.var("value")
-    allow_empty = request.var("allow_empty") == "1"
-    show_builtin_icons = request.var("show_builtin_icons") == "1"
-
-    vs = IconSelector(allow_empty=allow_empty, show_builtin_icons=show_builtin_icons)
-    assert varprefix is not None  # Hmmm...
-    vs.render_popup_input(varprefix, value)
-
-
-# .
-#   .--Action Menu---------------------------------------------------------.
-#   |          _        _   _               __  __                         |
-#   |         / \   ___| |_(_) ___  _ __   |  \/  | ___ _ __  _   _        |
-#   |        / _ \ / __| __| |/ _ \| '_ \  | |\/| |/ _ \ '_ \| | | |       |
-#   |       / ___ \ (__| |_| | (_) | | | | | |  | |  __/ | | | |_| |       |
-#   |      /_/   \_\___|\__|_|\___/|_| |_| |_|  |_|\___|_| |_|\__,_|       |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Realizes the popup action menu for hosts/services in views           |
-#   '----------------------------------------------------------------------'
-
-
-def query_action_data(
-    what: IconObjectType, host: HostName, site: SiteId, svcdesc: Optional[ServiceName]
-) -> Row:
-    # Now fetch the needed data from livestatus
-    columns = list(iconpainter_columns(what, toplevel=False))
-    try:
-        columns.remove("site")
-    except KeyError:
-        pass
-
-    query = livestatus_lql([host], columns, svcdesc)
-
-    with sites.prepend_site(), sites.only_sites(site):
-        row = sites.live().query_row(query)
-
-    return dict(zip(["site"] + columns, row))
-
-
-@cmk.gui.pages.register("ajax_popup_action_menu")
-def ajax_popup_action_menu() -> None:
-    site = SiteId(request.get_ascii_input_mandatory("site"))
-    host = HostName(request.get_ascii_input_mandatory("host"))
-    svcdesc = request.get_str_input("service")
-    what: IconObjectType = "service" if svcdesc else "host"
-
-    display_options.load_from_html(request, html)
-
-    row = query_action_data(what, host, site, svcdesc)
-    icons = get_icons(what, row, toplevel=False)
-
-    html.open_ul()
-    for icon in icons:
-        if isinstance(icon, LegacyIconEntry):
-            html.open_li()
-            html.write_text(icon.code)
-            html.close_li()
-        elif isinstance(icon, IconEntry):
-            html.open_li()
-            if icon.url_spec:
-                url, target_frame = transform_action_url(icon.url_spec)
-                url = replace_action_url_macros(url, what, row)
-                onclick = None
-                if url.startswith("onclick:"):
-                    onclick = url[8:]
-                    url = "javascript:void(0);"
-                html.open_a(href=url, target=target_frame, onclick=onclick)
-
-            html.icon(icon.icon_name)
-            if icon.title:
-                html.write_text(icon.title)
-            else:
-                html.write_text(_("No title"))
-            if icon.url_spec:
-                html.close_a()
-            html.close_li()
-    html.close_ul()
-
-
-# .
-#   .--Reschedule----------------------------------------------------------.
-#   |          ____                _              _       _                |
-#   |         |  _ \ ___  ___  ___| |__   ___  __| |_   _| | ___           |
-#   |         | |_) / _ \/ __|/ __| '_ \ / _ \/ _` | | | | |/ _ \          |
-#   |         |  _ <  __/\__ \ (__| | | |  __/ (_| | |_| | |  __/          |
-#   |         |_| \_\___||___/\___|_| |_|\___|\__,_|\__,_|_|\___|          |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Ajax webservice for reschedulung host- and service checks            |
-#   '----------------------------------------------------------------------'
-
-
-@page_registry.register_page("ajax_reschedule")
-class PageRescheduleCheck(AjaxPage):
-    """Is called to trigger a host / service check"""
-
-    def page(self) -> PageResult:
-        api_request = request.get_request()
-        return self._do_reschedule(api_request)
-
-    @staticmethod
-    def _force_check(now: int, cmd: str, spec: str, site: SiteId) -> None:
-        sites.live().command(
-            "[%d] SCHEDULE_FORCED_%s_CHECK;%s;%d" % (now, cmd, livestatus.lqencode(spec), now), site
-        )
-
-    @staticmethod
-    def _wait_for(
-        site: SiteId, host: str, what: str, wait_spec: str, now: int, add_filter: str
-    ) -> livestatus.LivestatusRow:
-        with sites.only_sites(site):
-            return sites.live().query_row(
-                (
-                    "GET %ss\n"
-                    "WaitObject: %s\n"
-                    "WaitCondition: last_check >= %d\n"
-                    "WaitTimeout: %d\n"
-                    "WaitTrigger: check\n"
-                    "Columns: last_check state plugin_output\n"
-                    "Filter: host_name = %s\n%s"
-                )
-                % (
-                    what,
-                    livestatus.lqencode(wait_spec),
-                    now,
-                    active_config.reschedule_timeout * 1000,
-                    livestatus.lqencode(host),
-                    add_filter,
-                )
-            )
-
-    def _do_reschedule(self, api_request: Dict[str, Any]) -> PageResult:
-        if not user.may("action.reschedule"):
-            raise MKGeneralException("You are not allowed to reschedule checks.")
-
-        check_csrf_token()
-
-        site = api_request.get("site")
-        host = api_request.get("host")
-        if not host or not site:
-            raise MKGeneralException("Action reschedule: missing host name")
-
-        service = api_request.get("service", "")
-        wait_svc = api_request.get("wait_svc", "")
-
-        if service:
-            cmd = "SVC"
-            what = "service"
-            spec = "%s;%s" % (host, service)
-
-            if wait_svc:
-                wait_spec = "%s;%s" % (host, wait_svc)
-                add_filter = "Filter: service_description = %s\n" % livestatus.lqencode(wait_svc)
-            else:
-                wait_spec = spec
-                add_filter = "Filter: service_description = %s\n" % livestatus.lqencode(service)
-        else:
-            cmd = "HOST"
-            what = "host"
-            spec = host
-            wait_spec = spec
-            add_filter = ""
-
-        now = int(time.time())
-
-        if service in ("Check_MK Discovery", "Check_MK Inventory"):
-            # During discovery, the allowed cache age is (by default) 120 seconds, such that the
-            # discovery service won't steal data in the TCP case.
-            # But we do want to see new services, so for SNMP we set the cache age to zero.
-            # For TCP, we ensure updated caches by triggering the "Check_MK" service whenever the
-            # user manually triggers "Check_MK Discovery".
-            self._force_check(now, "SVC", f"{host};Check_MK", site)
-            self._wait_for(
-                site,
-                host,
-                "service",
-                f"{host};Check_MK",
-                now,
-                "Filter: service_description = Check_MK\n",
-            )
-
-        self._force_check(now, cmd, spec, site)
-        row = self._wait_for(site, host, what, wait_spec, now, add_filter)
-
-        last_check = row[0]
-        if last_check < now:
-            return {
-                "state": "TIMEOUT",
-                "message": _("Check not executed within %d seconds")
-                % (active_config.reschedule_timeout),
-            }
-
-        if service == "Check_MK":
-            # Passive services triggered by Check_MK often are updated
-            # a few ms later. We introduce a small wait time in order
-            # to increase the chance for the passive services already
-            # updated also when we return.
-            time.sleep(0.7)
-
-        # Row is currently not used by the frontend, but may be useful for debugging
-        return {
-            "state": "OK",
-            "row": row,
-        }

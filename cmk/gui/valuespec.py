@@ -7247,6 +7247,18 @@ class IconSelector(ValueSpec[IconSelectorModel]):
             raise MKUserError(varprefix, _("The selected emblem does not exist."))
 
 
+@cmk.gui.pages.register("ajax_popup_icon_selector")
+def ajax_popup_icon_selector() -> None:
+    """AJAX API call for rendering the icon selector"""
+    varprefix = request.get_ascii_input_mandatory("varprefix")
+    value = request.var("value")
+    allow_empty = request.var("allow_empty") == "1"
+    show_builtin_icons = request.var("show_builtin_icons") == "1"
+
+    vs = IconSelector(allow_empty=allow_empty, show_builtin_icons=show_builtin_icons)
+    vs.render_popup_input(varprefix, value)
+
+
 def ListOfTimeRanges(  # pylint: disable=redefined-builtin
     # ListOf
     totext: str | None = None,

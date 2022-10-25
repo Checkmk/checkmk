@@ -185,7 +185,7 @@ fn test_migration_is_always_triggered() {
         write_legacy_registry(&path_registry);
         assert!(config::Registry::from_file(&path_registry).is_err());
         let mut cmd = common::controller_command();
-        cmd.timeout(std::time::Duration::from_secs(2))
+        cmd.timeout(std::time::Duration::from_secs(5))
             .env("DEBUG_HOME_DIR", test_dir.path())
             .arg(mode)
             .args(REQUIRED_ARGUMENTS.get(mode).unwrap_or(&vec![]))
@@ -215,6 +215,11 @@ fn build_status_command_with_log(
 #[cfg(windows)]
 #[test]
 fn test_log_to_file() {
+    if !is_elevated::is_elevated() {
+        println!("Test is skipped, must be in elevated mode");
+        return;
+    }
+
     let test_dir = common::setup_test_dir("cmk-agent-ctl-logging");
     let log_file = test_dir.path().join("cmk-agent-ctl_rCURRENT.log");
 

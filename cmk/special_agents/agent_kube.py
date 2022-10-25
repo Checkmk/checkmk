@@ -71,7 +71,8 @@ from cmk.special_agents.utils_kubernetes.common import (
     RawMetrics,
 )
 from cmk.special_agents.utils_kubernetes.performance import (
-    parse_and_group_containers_performance_metrics,
+    group_containers_performance_metrics,
+    parse_performance_metrics,
     write_sections_based_on_performance_pods,
 )
 from cmk.special_agents.utils_kubernetes.schemata import api, section
@@ -2193,7 +2194,7 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
                 container_metrics = request_cluster_collector(
                     query.CollectorPath.container_metrics,
                     usage_config,
-                    _parse_raw_metrics,
+                    parse_performance_metrics,
                 )
 
                 if not container_metrics:
@@ -2203,7 +2204,7 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
                     )
 
                 try:
-                    performance_pods = parse_and_group_containers_performance_metrics(
+                    performance_pods = group_containers_performance_metrics(
                         cluster_name=arguments.cluster,
                         container_metrics=container_metrics,
                     )

@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Container, List, Literal, Mapping, NewType, Sequence, Tuple
 
-from pydantic import BaseModel, parse_obj_as, ValidationError
+from pydantic import BaseModel, parse_raw_as, ValidationError
 
 import cmk.utils
 
@@ -26,7 +26,6 @@ from cmk.special_agents.utils_kubernetes.common import (
     lookup_name,
     PodLookupName,
     PodsToHost,
-    RawMetrics,
     SectionJson,
     SectionName,
 )
@@ -97,14 +96,17 @@ class PerformancePod:
 _AllMetrics = MemoryMetric | CPUMetric | UnusedMetric
 
 
-def parse_and_group_containers_performance_metrics(
+def parse_performance_metrics(cluster_collector_metrics: bytes) -> Sequence[_AllMetrics]:
+    return parse_raw_as(list[_AllMetrics], cluster_collector_metrics)
+
+
+def group_containers_performance_metrics(
     cluster_name: str,
-    container_metrics: Sequence[RawMetrics],
+    container_metrics: Sequence[_AllMetrics],
 ) -> Mapping[PodLookupName, PerformancePod]:
     """Parse container performance metrics and group them by pod"""
 
-    performance_metrics = _parse_performance_metrics(container_metrics)
-    metrics = _group_metric_types(performance_metrics)
+    metrics = _group_metric_types(container_metrics)
     # We only persist the relevant counter metrics (not all metrics)
     current_cycle_store = ContainersStore(cpu=metrics.cpu)
     store_file_name = f"{cluster_name}_containers_counters.json"
@@ -201,12 +203,6 @@ def _persist_containers_store(
     LOGGER.debug("Persisting current containers store under %s", file_path)
     with open(file_path, "w") as f:
         f.write(containers_store.json())
-
-
-def _parse_performance_metrics(
-    cluster_collector_metrics: Sequence[RawMetrics],
-) -> Sequence[_AllMetrics]:
-    return parse_obj_as(list[_AllMetrics], cluster_collector_metrics)
 
 
 def _determine_cpu_rate_metrics(

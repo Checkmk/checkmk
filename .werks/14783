@@ -1,0 +1,11 @@
+Title: Add Support for SLES15sp4
+Class: feature
+Compatible: compat
+Component: omd
+Date: 1666705212
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0p16
+
+With this werk, Checkmk is build for SUSE Linux Enterprise Server 15SP4.

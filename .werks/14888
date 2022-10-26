@@ -1,0 +1,12 @@
+Title: Fix wrong color for down hosts
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1666619618
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p30
+
+Down hosts were colored yellow in reports.

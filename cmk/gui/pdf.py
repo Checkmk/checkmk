@@ -901,7 +901,7 @@ class TableRenderer:
         # ( "number", "0.75" ), or ("", ("icon", "/bar/foo.png") )
         # The headers come *without* the css field and are always texts.
         headers: List[Union[TextCell, IconCell]] = [
-            TitleCell("heading", header_text)  #
+            TitleCell(["heading"], header_text)  #
             for header_text in header_texts
         ]
 
@@ -910,6 +910,7 @@ class TableRenderer:
             row: List[Union[TextCell, IconCell]] = []
             rows.append(row)
             for css, entry in raw_row:
+                css_list: List[str] = [] if css is None else css.split()
                 if isinstance(entry, tuple):
                     if entry[0] == "icon":
                         row.append(IconCell(entry[1]))
@@ -918,9 +919,9 @@ class TableRenderer:
                     else:
                         raise Exception("Invalid table entry %r in add_table()" % entry)
                 elif css == "leftheading":
-                    row.append(TitleCell(css, entry))
+                    row.append(TitleCell(css_list, entry))
                 else:
-                    row.append(TextCell(css, entry))
+                    row.append(TextCell(css_list, entry))
 
         # Now we balance the widths of the columns. Each render object has an
         # absolute minimum width (e.g. the width of the longest word) and
@@ -1222,7 +1223,7 @@ class TableRenderer:
 
         for index, step in enumerate(graph_column.get_render_steps(self.pdf, headers, y_padding)):
             if is_single_dataset:
-                step_row = [row[0] if index == 0 else TitleCell("lefheading", ""), step]
+                step_row = [row[0] if index == 0 else TitleCell(["lefheading"], ""), step]
             else:
                 step_row = [step]
 
@@ -1246,7 +1247,7 @@ class TableRenderer:
 # Note: all dimensions this objects handles with are in mm! This is due
 # to the fact that this API is also available externally
 class TextCell:
-    def __init__(self, csses, text):
+    def __init__(self, csses: Optional[List[str]], text):
         self._text = text
         self._bold = False
         self._color = black
@@ -1254,15 +1255,22 @@ class TextCell:
         self._alignment = "left"
 
         if csses is None:
-            csses = ""
+            csses = []
+
+        state_in_css: bool = any(
+            css.startswith("hstate") or css.startswith("state") or css.startswith("svcstate") or
+            css.startswith("if_state") for css in csses)
 
         # TODO: Sollte das nicht lieber raus aus dem allgemeinen pdf.py? Ist eigentlich
         # Spezifisch für Views, etc.
-        if "heading" in csses or "state" in csses:
+        if "heading" in csses or state_in_css:
             self._bold = True
 
         if "number" in csses:
             self._alignment = "right"
+
+        if "count" in csses:
+            self._alignment = "center"
 
         if "unused" in csses:
             self._color = (0.6, 0.6, 0.6)
@@ -1275,7 +1283,7 @@ class TextCell:
                 self._bg_color = color
                 self._alignment = "center"
 
-        self._narrow = "narrow" in csses or "state" in csses
+        self._narrow = "narrow" in csses or state_in_css
 
     def minimal_width(self, pdfdoc):  # without padding
         # TODO: consider bold here!

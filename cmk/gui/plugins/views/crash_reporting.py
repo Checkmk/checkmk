@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Dict, List, Optional, Sequence
+from collections.abc import Sequence
+from typing import Literal
 
 import livestatus
 from livestatus import OnlySites, SiteId
@@ -101,8 +102,8 @@ class CrashReportsRowTable(RowTable):
         return sorted(rows, key=lambda r: r["crash_time"])
 
     def get_crash_report_rows(
-        self, only_sites: Optional[List[SiteId]], filter_headers: str
-    ) -> List[Dict[str, str]]:
+        self, only_sites: list[SiteId] | None, filter_headers: str
+    ) -> list[dict[str, str]]:
 
         # First fetch the information that is needed to query for the dynamic columns (crash_info,
         # ...)
@@ -144,8 +145,8 @@ class CrashReportsRowTable(RowTable):
         return rows
 
     def _get_crash_report_info(
-        self, only_sites: Optional[List[SiteId]], filter_headers: Optional[str] = None
-    ) -> List[Dict[str, str]]:
+        self, only_sites: list[SiteId] | None, filter_headers: str | None = None
+    ) -> list[dict[str, str]]:
         try:
             sites.live().set_prepend_site(True)
             sites.live().set_only_sites(only_sites)
@@ -319,7 +320,9 @@ class CommandDeleteCrashReports(Command):
     def tables(self):
         return ["crash"]
 
-    def user_dialog_suffix(self, title: str, len_action_rows: int, cmdtag: str) -> str:
+    def user_dialog_suffix(
+        self, title: str, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
+    ) -> str:
         return title + _(" the following %d crash %s") % (
             len_action_rows,
             ungettext("report", "reports", len_action_rows),
@@ -329,7 +332,12 @@ class CommandDeleteCrashReports(Command):
         html.button("_delete_crash_reports", _("Delete"))
 
     def _action(
-        self, cmdtag: str, spec: str, row: dict, row_index: int, action_rows: Rows
+        self,
+        cmdtag: Literal["HOST", "SVC"],
+        spec: str,
+        row: dict,
+        row_index: int,
+        action_rows: Rows,
     ) -> CommandActionResult:
         if request.has_var("_delete_crash_reports"):
             commands = [("DEL_CRASH_REPORT;%s" % row["crash_id"])]

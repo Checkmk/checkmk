@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List, Optional, Sequence, Tuple, Type
+from collections.abc import Sequence
+from typing import Literal
 
 from livestatus import SiteId
 
@@ -45,7 +46,7 @@ from cmk.gui.utils.confirm_with_preview import confirm_with_preview
 
 def core_command(
     what: str, row: Row, row_nr: int, action_rows: Rows
-) -> Tuple[Sequence[CommandSpec], List[Tuple[str, str]], str, CommandExecutor]:
+) -> tuple[Sequence[CommandSpec], list[tuple[str, str]], str, CommandExecutor]:
     """Examine the current HTML variables in order determine, which command the user has selected.
     The fetch ids from a data row (host name, service description, downtime/commands id) and
     construct one or several core command lines and a descriptive title."""
@@ -55,24 +56,21 @@ def core_command(
     if what == "host":
         assert isinstance(host, str)
         spec: str = host
-        cmdtag = "HOST"
+        cmdtag: Literal["HOST", "SVC"] = "HOST"
 
     elif what == "service":
         assert isinstance(host, str)
         assert isinstance(descr, str)
-        spec = "%s;%s" % (host, descr)
+        spec = f"{host};{descr}"
         cmdtag = "SVC"
 
     else:
         # e.g. downtime_id for downtimes may be int, same for acknowledgements
         spec = str(row[what + "_id"])
-        if descr:
-            cmdtag = "SVC"
-        else:
-            cmdtag = "HOST"
-    assert isinstance(spec, str)
+        cmdtag = "SVC" if descr else "HOST"
 
-    commands, title = None, None
+    commands: Sequence[CommandSpec] | None = None
+    title: str | None = None
     # Call all command actions. The first one that detects
     # itself to be executed (by examining the HTML variables)
     # will return a command to execute and a title for the
@@ -125,8 +123,8 @@ def should_show_command_form(
     return False
 
 
-def get_command_groups(info_name: InfoName) -> Dict[Type[CommandGroup], List[Command]]:
-    by_group: Dict[Type[CommandGroup], List[Command]] = {}
+def get_command_groups(info_name: InfoName) -> dict[type[CommandGroup], list[Command]]:
+    by_group: dict[type[CommandGroup], list[Command]] = {}
 
     for command_class in command_registry.values():
         command = command_class()
@@ -187,7 +185,7 @@ def do_actions(  # pylint: disable=too-many-branches
             action_rows,
         )
         for command_entry in core_commands:
-            site: Optional[str] = row.get(
+            site: str | None = row.get(
                 "site"
             )  # site is missing for BI rows (aggregations can spawn several sites)
             if (site, command_entry) not in already_executed:

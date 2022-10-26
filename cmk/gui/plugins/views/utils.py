@@ -13,24 +13,10 @@ import os
 import re
 import time
 import traceback
+from collections.abc import Callable, Hashable, Iterable, Mapping, Sequence
 from html import unescape
 from pathlib import Path
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Hashable,
-    Iterable,
-    List,
-    Literal,
-    Mapping,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
-    Type,
-    Union,
-)
+from typing import Any, Literal, Union
 
 import livestatus
 from livestatus import SiteId
@@ -87,20 +73,20 @@ from cmk.gui.view_utils import CellContent, CellSpec
 from cmk.gui.visual_link import render_link_to_view
 from cmk.gui.visuals import view_title
 
-ExportCellContent = Union[str, Dict[str, Any]]
-PDFCellContent = Union[str, Tuple[Literal["icon"], str]]
+ExportCellContent = str | dict[str, Any]
+PDFCellContent = Union[str | tuple[Literal["icon"], str]]
 PDFCellSpec = tuple[str, PDFCellContent]
 CommandSpecWithoutSite = str
-CommandSpecWithSite = Tuple[Optional[str], CommandSpecWithoutSite]
-CommandSpec = Union[CommandSpecWithoutSite, CommandSpecWithSite]
-CommandActionResult = Optional[Tuple[Union[CommandSpecWithoutSite, Sequence[CommandSpec]], str]]
-CommandExecutor = Callable[[CommandSpec, Optional[SiteId]], None]
-InventoryHintSpec = Dict[str, Any]
+CommandSpecWithSite = tuple[str | None, CommandSpecWithoutSite]
+CommandSpec = CommandSpecWithoutSite | CommandSpecWithSite
+CommandActionResult = Union[tuple[CommandSpecWithoutSite | Sequence[CommandSpec], str], None]
+CommandExecutor = Callable[[CommandSpec, SiteId | None], None]
+InventoryHintSpec = dict[str, Any]
 
 
 # Load the options to be used for this view
 def load_used_options(view_spec: ViewSpec, cells: Iterable[Cell]) -> Sequence[str]:
-    options: Set[str] = set()
+    options: set[str] = set()
 
     for cell in cells:
         options.update(cell.painter_options())
@@ -184,7 +170,7 @@ class Layout(abc.ABC):
         raise NotImplementedError()
 
     @property
-    def painter_options(self) -> List[str]:
+    def painter_options(self) -> list[str]:
         """Returns the painter option identities used by this layout"""
         return []
 
@@ -199,11 +185,11 @@ class Layout(abc.ABC):
         """Render the given data using this layout for CSV"""
 
 
-class ViewLayoutRegistry(cmk.utils.plugin_registry.Registry[Type[Layout]]):
-    def plugin_name(self, instance: Type[Layout]) -> str:
+class ViewLayoutRegistry(cmk.utils.plugin_registry.Registry[type[Layout]]):
+    def plugin_name(self, instance: type[Layout]) -> str:
         return instance().ident
 
-    def get_choices(self) -> List[Tuple[str, str]]:
+    def get_choices(self) -> list[tuple[str, str]]:
         choices = []
         for plugin_class in self.values():
             layout = plugin_class()
@@ -233,8 +219,8 @@ class CommandGroup(abc.ABC):
         raise NotImplementedError()
 
 
-class CommandGroupRegistry(cmk.utils.plugin_registry.Registry[Type[CommandGroup]]):
-    def plugin_name(self, instance: Type[CommandGroup]) -> str:
+class CommandGroupRegistry(cmk.utils.plugin_registry.Registry[type[CommandGroup]]):
+    def plugin_name(self, instance: type[CommandGroup]) -> str:
         return instance().ident
 
 
@@ -277,11 +263,13 @@ class Command(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def tables(self) -> List[str]:
+    def tables(self) -> list[str]:
         """List of livestatus table identities the action may be used with"""
         raise NotImplementedError()
 
-    def user_dialog_suffix(self, title: str, len_action_rows: int, cmdtag: str) -> str:
+    def user_dialog_suffix(
+        self, title: str, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
+    ) -> str:
         return title + " the following %(count)d %(what)s?" % {
             "count": len_action_rows,
             "what": ungettext(
@@ -297,14 +285,16 @@ class Command(abc.ABC):
             ),
         }
 
-    def user_confirm_options(self, len_rows: int, cmdtag: str) -> List[Tuple[str, str]]:
+    def user_confirm_options(
+        self, len_rows: int, cmdtag: Literal["HOST", "SVC"]
+    ) -> list[tuple[str, str]]:
         return [(_("Confirm"), "_do_confirm")]
 
     def render(self, what: str) -> None:
         raise NotImplementedError()
 
     def action(
-        self, cmdtag: str, spec: str, row: Row, row_index: int, action_rows: Rows
+        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         result = self._action(cmdtag, spec, row, row_index, action_rows)
         if result:
@@ -314,17 +304,17 @@ class Command(abc.ABC):
 
     @abc.abstractmethod
     def _action(
-        self, cmdtag: str, spec: str, row: Row, row_index: int, action_rows: Rows
+        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         raise NotImplementedError()
 
     @property
-    def group(self) -> Type[CommandGroup]:
+    def group(self) -> type[CommandGroup]:
         """The command group the commmand belongs to"""
         return command_group_registry["various"]
 
     @property
-    def only_view(self) -> Optional[str]:
+    def only_view(self) -> str | None:
         """View name to show a view exclusive command for"""
         return None
 
@@ -344,7 +334,7 @@ class Command(abc.ABC):
     def is_suggested(self) -> bool:
         return False
 
-    def executor(self, command: CommandSpec, site: Optional[SiteId]) -> None:
+    def executor(self, command: CommandSpec, site: SiteId | None) -> None:
         """Function that is called to execute this action"""
         # We only get CommandSpecWithoutSite here. Can be cleaned up once we have a dedicated
         # object type for the command
@@ -352,8 +342,8 @@ class Command(abc.ABC):
         sites.live().command("[%d] %s" % (int(time.time()), command), site)
 
 
-class CommandRegistry(cmk.utils.plugin_registry.Registry[Type[Command]]):
-    def plugin_name(self, instance: Type[Command]) -> str:
+class CommandRegistry(cmk.utils.plugin_registry.Registry[type[Command]]):
+    def plugin_name(self, instance: type[Command]) -> str:
         return instance().ident
 
 
@@ -361,7 +351,7 @@ command_registry = CommandRegistry()
 
 
 # TODO: Kept for pre 1.6 compatibility
-def register_legacy_command(spec: Dict[str, Any]) -> None:
+def register_legacy_command(spec: dict[str, Any]) -> None:
     ident = re.sub("[^a-zA-Z]", "", spec["title"]).lower()
     cls = type(
         "LegacyCommand%s" % str(ident).title(),
@@ -429,7 +419,7 @@ class Painter(abc.ABC):
         """Used as display string for the painter in the GUI (e.g. views using this painter)"""
         raise NotImplementedError()
 
-    def title_classes(self) -> List[str]:
+    def title_classes(self) -> list[str]:
         """Additional css classes used to render the title"""
         return []
 
@@ -439,7 +429,7 @@ class Painter(abc.ABC):
         """Livestatus columns needed for this painter"""
         raise NotImplementedError()
 
-    def dynamic_columns(self, cell: "Cell") -> List[ColumnName]:
+    def dynamic_columns(self, cell: "Cell") -> list[ColumnName]:
         """Return list of dynamically generated column as specified by Cell
 
         Some columns for the Livestatus query need to be generated at
@@ -447,7 +437,7 @@ class Painter(abc.ABC):
         generated the required column names."""
         return []
 
-    def derive(self, rows: Rows, cell: "Cell", dynamic_columns: Optional[List[ColumnName]]) -> None:
+    def derive(self, rows: Rows, cell: "Cell", dynamic_columns: list[ColumnName] | None) -> None:
         """Post process query according to cell
 
         This function processes data immediately after it is handled back
@@ -461,7 +451,7 @@ class Painter(abc.ABC):
              generating new columns.
         cell: Cell
             Used to retrieve configuration parameters
-        dynamic_columns: List[str]
+        dynamic_columns: list[str]
             The exact dynamic columns generated by the painter before the
             query. As they might be required to find them again within the
             data."""
@@ -484,22 +474,22 @@ class Painter(abc.ABC):
         self,
         row: Row,
         cell: "Cell",
-    ) -> Union[None, str, Tuple[str, ...], Tuple[Tuple[str, str], ...]]:
+    ) -> None | str | tuple[str, ...] | tuple[tuple[str, str], ...]:
         """When a value is returned, this is used instead of the value produced by self.paint()"""
         return None
 
     @property
-    def parameters(self) -> Optional[ValueSpec]:
+    def parameters(self) -> ValueSpec | None:
         """Returns either the valuespec of the painter parameters or None"""
         return None
 
     @property
-    def painter_options(self) -> List[str]:
+    def painter_options(self) -> list[str]:
         """Returns a list of painter option names that affect this painter"""
         return []
 
     @property
-    def printable(self) -> Union[bool, str]:
+    def printable(self) -> bool | str:
         """
         True       : Is printable in PDF
         False      : Is not printable at all
@@ -513,7 +503,7 @@ class Painter(abc.ABC):
         return True
 
     @property
-    def sorter(self) -> Optional[SorterName]:
+    def sorter(self) -> SorterName | None:
         """Returns the optional name of the sorter for this painter"""
         return None
 
@@ -575,13 +565,13 @@ class Painter(abc.ABC):
 
 class Painter2(Painter):
     # Poor man's composition:  Renderer differs between CRE and non-CRE.
-    resolve_combined_single_metric_spec: Optional[
-        Callable[[CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]]
-    ] = None
+    resolve_combined_single_metric_spec: Callable[
+        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+    ] | None = None
 
 
-class PainterRegistry(cmk.utils.plugin_registry.Registry[Type[Painter]]):
-    def plugin_name(self, instance: Type[Painter]) -> str:
+class PainterRegistry(cmk.utils.plugin_registry.Registry[type[Painter]]):
+    def plugin_name(self, instance: type[Painter]) -> str:
         return instance().ident
 
 
@@ -590,7 +580,7 @@ painter_registry = PainterRegistry()
 
 # Kept for pre 1.6 compatibility. But also the inventory.py uses this to
 # register some painters dynamically
-def register_painter(ident: str, spec: Dict[str, Any]) -> None:
+def register_painter(ident: str, spec: dict[str, Any]) -> None:
     paint_function = spec["paint"]
     cls = type(
         "LegacyPainter%s" % ident.title(),
@@ -625,14 +615,14 @@ def register_painter(ident: str, spec: Dict[str, Any]) -> None:
 
 
 # TODO: Refactor to plugin_registries
-view_hooks: Dict = {}
-inventory_displayhints: Dict[str, InventoryHintSpec] = {}
+view_hooks: dict = {}
+inventory_displayhints: dict[str, InventoryHintSpec] = {}
 # For each view a function can be registered that has to return either True
 # or False to show a view as context link
-view_is_enabled: Dict = {}
+view_is_enabled: dict = {}
 
 
-def transform_action_url(url_spec: Union[Tuple[str, str], str]) -> Tuple[str, Optional[str]]:
+def transform_action_url(url_spec: tuple[str, str] | str) -> tuple[str, str | None]:
     if isinstance(url_spec, tuple):
         return url_spec
     return (url_spec, None)
@@ -649,7 +639,7 @@ def paint_stalified(row: Row, text: CellContent) -> CellSpec:
     return "", text
 
 
-def paint_host_list(site: SiteId, hosts: List[HostName]) -> CellSpec:
+def paint_host_list(site: SiteId, hosts: list[HostName]) -> CellSpec:
     return "", HTML(
         ", ".join(
             cmk.gui.view_utils.get_host_list_links(
@@ -763,7 +753,7 @@ def cmp_ip_address(column: ColumnName, r1: Row, r2: Row) -> int:
 
 
 def compare_ips(ip1: str, ip2: str) -> int:
-    def split_ip(ip: str) -> Tuple:
+    def split_ip(ip: str) -> tuple:
         try:
             return tuple(int(part) for part in ip.split("."))
         except ValueError:
@@ -869,16 +859,16 @@ class Cell:
     def __init__(
         self,
         view_spec: ViewSpec,
-        view_user_sorters: Optional[List[SorterSpec]],
-        painter_spec: Optional[PainterSpec] = None,
+        view_user_sorters: list[SorterSpec] | None,
+        painter_spec: PainterSpec | None = None,
     ) -> None:
         self._view_spec = view_spec
         self._view_user_sorters = view_user_sorters
-        self._painter_name: Optional[PainterName] = None
-        self._painter_params: Optional[PainterParameters] = None
-        self._link_spec: Optional[VisualLinkSpec] = None
-        self._tooltip_painter_name: Optional[PainterName] = None
-        self._custom_title: Optional[str] = None
+        self._painter_name: PainterName | None = None
+        self._painter_params: PainterParameters | None = None
+        self._link_spec: VisualLinkSpec | None = None
+        self._tooltip_painter_name: PainterName | None = None
+        self._custom_title: str | None = None
 
         if painter_spec:
             self._from_view(painter_spec)
@@ -895,7 +885,7 @@ class Cell:
         if tooltip_painter_name is not None and tooltip_painter_name in painter_registry:
             self._tooltip_painter_name = tooltip_painter_name
 
-    def needed_columns(self) -> Set[ColumnName]:
+    def needed_columns(self) -> set[ColumnName]:
         """Get a list of columns we need to fetch in order to render this cell"""
 
         columns = set(self.painter().columns)
@@ -917,10 +907,10 @@ class Cell:
     def is_joined(self) -> bool:
         return False
 
-    def join_service(self) -> Optional[ServiceName]:
+    def join_service(self) -> ServiceName | None:
         return None
 
-    def _link_view(self) -> Optional[ViewSpec]:
+    def _link_view(self) -> ViewSpec | None:
         if self._link_spec is None:
             return None
 
@@ -941,7 +931,7 @@ class Cell:
             return re.sub(r"[^\w]", "_", self._custom_title.lower())
         return self.painter().export_title(self)
 
-    def painter_options(self) -> List[str]:
+    def painter_options(self) -> list[str]:
         return self.painter().painter_options
 
     def painter_parameters(self) -> Any:
@@ -976,7 +966,7 @@ class Cell:
     # True       : Is printable in PDF
     # False      : Is not printable at all
     # "<string>" : ID of a painter_printer (Reporting module)
-    def printable(self) -> Union[bool, str]:
+    def printable(self) -> bool | str:
         return self.painter().printable
 
     def has_tooltip(self) -> bool:
@@ -996,7 +986,7 @@ class Cell:
         # Important for links:
         # - Add the display options (Keeping the same display options as current)
         # - Link to _self (Always link to the current frame)
-        classes: List[str] = []
+        classes: list[str] = []
         onclick = ""
         title = ""
         if (
@@ -1221,7 +1211,7 @@ class Cell:
         painter = self.painter()
         return painter.render(row, self)
 
-    def paint(self, row: Row, colspan: Optional[int] = None) -> bool:
+    def paint(self, row: Row, colspan: int | None = None) -> bool:
         tdclass, content = self.render(row)
         assert isinstance(content, (str, HTML))
         html.td(content, class_=tdclass, colspan=colspan)
@@ -1229,7 +1219,7 @@ class Cell:
 
 
 def _encode_sorter_url(sorters: Iterable[SorterSpec]) -> str:
-    p: List[str] = []
+    p: list[str] = []
     for s in sorters:
         sorter_name = s.sorter
         if not isinstance(sorter_name, str):
@@ -1251,10 +1241,10 @@ class JoinCell(Cell):
     def __init__(
         self,
         view_spec: ViewSpec,
-        view_user_sorters: Optional[List[SorterSpec]],
+        view_user_sorters: list[SorterSpec] | None,
         painter_spec: PainterSpec,
     ) -> None:
-        self._join_service_descr: Optional[ServiceName] = None
+        self._join_service_descr: ServiceName | None = None
         super().__init__(view_spec, view_user_sorters, painter_spec)
 
     def _from_view(self, painter_spec: PainterSpec) -> None:
@@ -1290,7 +1280,7 @@ class EmptyCell(Cell):
     def render(self, row: Row) -> tuple[str, str]:
         return "", ""
 
-    def paint(self, row: Row, colspan: Optional[int] = None) -> bool:
+    def paint(self, row: Row, colspan: int | None = None) -> bool:
         return False
 
 
@@ -1303,8 +1293,8 @@ def output_csv_headers(view: ViewSpec) -> None:
 
 
 def _get_sorter_name_of_painter(
-    painter_name_or_spec: Union[PainterName, PainterSpec]
-) -> Optional[SorterName]:
+    painter_name_or_spec: PainterName | PainterSpec,
+) -> SorterName | None:
     painter_name = (
         painter_name_or_spec.name
         if isinstance(painter_name_or_spec, PainterSpec)
@@ -1320,7 +1310,7 @@ def _get_sorter_name_of_painter(
     return None
 
 
-def _substract_sorters(base: List[SorterSpec], remove: List[SorterSpec]) -> None:
+def _substract_sorters(base: list[SorterSpec], remove: list[SorterSpec]) -> None:
     for s in remove:
         negated_sorter = SorterSpec(sorter=s.sorter, negate=not s.negate, join_key=None)
 
@@ -1330,8 +1320,8 @@ def _substract_sorters(base: List[SorterSpec], remove: List[SorterSpec]) -> None
             base.remove(negated_sorter)
 
 
-def _get_group_sorters(view_spec: ViewSpec) -> List[SorterSpec]:
-    group_sort: List[SorterSpec] = []
+def _get_group_sorters(view_spec: ViewSpec) -> list[SorterSpec]:
+    group_sort: list[SorterSpec] = []
     for p in view_spec["group_painters"]:
         if not painter_exists(p):
             continue
@@ -1345,8 +1335,8 @@ def _get_group_sorters(view_spec: ViewSpec) -> List[SorterSpec]:
 
 def _get_separated_sorters(
     view_spec: ViewSpec,
-    view_user_sorters: Optional[List[SorterSpec]],
-) -> Tuple[List[SorterSpec], List[SorterSpec], List[SorterSpec]]:
+    view_user_sorters: list[SorterSpec] | None,
+) -> tuple[list[SorterSpec], list[SorterSpec], list[SorterSpec]]:
     group_sort = _get_group_sorters(view_spec)
     view_sort = [
         s for s in view_spec["sorters"] if not any(s.sorter == gs.sorter for gs in group_sort)

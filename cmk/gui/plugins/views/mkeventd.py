@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import urllib.parse
-from typing import Callable, List, Optional, Sequence, Tuple, TypeGuard, TypeVar, Union
+from collections.abc import Callable, Sequence
+from typing import Literal, TypeGuard, TypeVar
 
 from livestatus import OnlySites, SiteId
 
@@ -77,13 +78,13 @@ class RowTableEC(RowTableLivestatus):
         self,
         datasource: ABCDataSource,
         cells: Sequence[Cell],
-        columns: List[ColumnName],
+        columns: list[ColumnName],
         context: VisualContext,
         headers: str,
         only_sites: OnlySites,
-        limit: Optional[int],
-        all_active_filters: List[Filter],
-    ) -> Union[Rows, Tuple[Rows, int]]:
+        limit: int | None,
+        all_active_filters: list[Filter],
+    ) -> Rows | tuple[Rows, int]:
         for c in ["event_contact_groups", "host_contact_groups", "event_host"]:
             if c not in columns:
                 columns.append(c)
@@ -639,7 +640,7 @@ class PainterEventPid(Painter):
 T = TypeVar("T")
 
 
-def _deref(x: Union[T, Callable[[], T]]) -> T:
+def _deref(x: T | Callable[[], T]) -> T:
     return x() if callable(x) else x
 
 
@@ -787,7 +788,7 @@ def render_delete_event_icons(row) -> str | HTML:  # type:ignore[no-untyped-def]
 
     # Found no cleaner way to get the view. Sorry.
     # TODO: This needs to be cleaned up with the new view implementation.
-    filename: Optional[str] = None
+    filename: str | None = None
     if _is_rendered_from_view_dashlet():
         ident = request.get_integer_input_mandatory("id")
 
@@ -1119,7 +1120,7 @@ class ECCommand(Command):
     def tables(self):
         return ["event"]
 
-    def executor(self, command: CommandSpec, site: Optional[SiteId]) -> None:
+    def executor(self, command: CommandSpec, site: SiteId | None) -> None:
         # We only get CommandSpecWithoutSite here. Can be cleaned up once we have a dedicated
         # object type for the command
         assert isinstance(command, str)
@@ -1140,7 +1141,9 @@ class CommandECUpdateEvent(ECCommand):
     def permission(self) -> Permission:
         return PermissionECUpdateEvent
 
-    def user_dialog_suffix(self, title: str, len_action_rows: int, cmdtag: str) -> str:
+    def user_dialog_suffix(
+        self, title: str, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
+    ) -> str:
         return title + _(" the following %d Event Console %s") % (
             len_action_rows,
             ungettext("event", "events", len_action_rows),
@@ -1172,7 +1175,7 @@ class CommandECUpdateEvent(ECCommand):
         html.button("_mkeventd_update", _("Update"))
 
     def _action(
-        self, cmdtag: str, spec: str, row: Row, row_index: int, action_rows: Rows
+        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.var("_mkeventd_update"):
             if user.may("mkeventd.update_comment"):
@@ -1230,7 +1233,9 @@ class CommandECChangeState(ECCommand):
     def permission(self) -> Permission:
         return PermissionECChangeEventState
 
-    def user_dialog_suffix(self, title: str, len_action_rows: int, cmdtag: str) -> str:
+    def user_dialog_suffix(
+        self, title: str, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
+    ) -> str:
         return title + _(" of the following %d Event Console %s") % (
             len_action_rows,
             ungettext("event", "events", len_action_rows),
@@ -1242,7 +1247,7 @@ class CommandECChangeState(ECCommand):
         MonitoringState().render_input("_mkeventd_state", 2)
 
     def _action(
-        self, cmdtag: str, spec: str, row: Row, row_index: int, action_rows: Rows
+        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.var("_mkeventd_changestate"):
             state = MonitoringState().from_html_vars("_mkeventd_state")
@@ -1278,7 +1283,9 @@ class CommandECCustomAction(ECCommand):
     def permission(self) -> Permission:
         return PermissionECCustomActions
 
-    def user_dialog_suffix(self, title: str, len_action_rows: int, cmdtag: str) -> str:
+    def user_dialog_suffix(
+        self, title: str, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
+    ) -> str:
         return title + _(" for the following %d Event Console  %s") % (
             len_action_rows,
             ungettext("event", "events", len_action_rows),
@@ -1290,7 +1297,7 @@ class CommandECCustomAction(ECCommand):
             html.br()
 
     def _action(
-        self, cmdtag: str, spec: str, row: Row, row_index: int, action_rows: Rows
+        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         for action_id, title in mkeventd.action_choices(omit_hidden=True):
             if request.var("_action_" + action_id):
@@ -1324,7 +1331,9 @@ class CommandECArchiveEvent(ECCommand):
     def permission(self) -> Permission:
         return PermissionECArchiveEvent
 
-    def user_dialog_suffix(self, title: str, len_action_rows: int, cmdtag: str) -> str:
+    def user_dialog_suffix(
+        self, title: str, len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
+    ) -> str:
         return title + _(" the following %d Event Console %s") % (
             len_action_rows,
             ungettext("event", "events", len_action_rows),
@@ -1334,7 +1343,7 @@ class CommandECArchiveEvent(ECCommand):
         html.button("_delete_event", _("Archive Event"))
 
     def _action(
-        self, cmdtag: str, spec: str, row: Row, row_index: int, action_rows: Rows
+        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.var("_delete_event"):
             events = ",".join([str(entry["event_id"]) for entry in action_rows])
@@ -1384,7 +1393,7 @@ class CommandECArchiveEventsOfHost(ECCommand):
         html.button("_archive_events_of_hosts", _("Archive events"), cssclass="hot")
 
     def _action(
-        self, cmdtag: str, spec: str, row: Row, row_index: int, action_rows: Rows
+        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.var("_archive_events_of_hosts"):
             commands = [f"DELETE_EVENTS_OF_HOST;{row['host_name']};{user.id}"]

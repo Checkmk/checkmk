@@ -40,7 +40,7 @@ from cmk.base.agent_based.utils import get_section_kwargs
 from cmk.base.config import HostConfig
 from cmk.base.sources import fetch_all, make_sources
 
-from ._tree_aggregator import InventoryTrees, TreeAggregator
+from ._tree_aggregator import TreeAggregator
 
 __all__ = ["inventorize_cluster", "fetch_real_host_data", "inventorize_real_host"]
 
@@ -52,13 +52,14 @@ class FetchedDataResult(NamedTuple):
     processing_failed: bool
 
 
-def inventorize_cluster(*, host_config: HostConfig) -> InventoryTrees:
-    inventory_tree = StructuredDataNode()
+def inventorize_cluster(*, host_config: HostConfig) -> TreeAggregator:
+    tree_aggregator = TreeAggregator([])
+    inventory_tree = tree_aggregator.trees.inventory
 
     _set_cluster_property(inventory_tree, is_cluster=True)
 
     if not (nodes := host_config.nodes):
-        return InventoryTrees(inventory_tree, StructuredDataNode())
+        return tree_aggregator
 
     node = inventory_tree.setdefault_node(
         ("software", "applications", "check_mk", "cluster", "nodes")
@@ -66,7 +67,7 @@ def inventorize_cluster(*, host_config: HostConfig) -> InventoryTrees:
     node.table.add_key_columns(["name"])
     node.table.add_rows([{"name": node_name} for node_name in nodes])
 
-    return InventoryTrees(inventory_tree, StructuredDataNode())
+    return tree_aggregator
 
 
 def fetch_real_host_data(

@@ -19,16 +19,10 @@ from cmk.core_helpers.type_defs import NO_SELECTION
 
 import cmk.base.agent_based.error_handling as error_handling
 import cmk.base.config as config
-from cmk.base.agent_based.data_provider import ParsedSectionsBroker
 from cmk.base.agent_based.utils import check_parsing_errors, summarize_host_sections
 from cmk.base.config import HostConfig
 
-from ._inventory import (
-    fetch_real_host_data,
-    FetchedDataResult,
-    inventorize_cluster,
-    inventorize_real_host,
-)
+from ._inventory import fetch_real_host_data, inventorize_cluster, inventorize_real_host
 from ._tree_aggregator import TreeAggregator
 
 __all__ = ["active_check_inventory"]
@@ -58,32 +52,38 @@ def _execute_active_check_inventory(
 ) -> ActiveCheckResult:
     parameters = config.HWSWInventoryParameters.from_raw(options)
 
-    if host_config.is_cluster:
-        fetched_data_result = FetchedDataResult(
-            parsed_sections_broker=ParsedSectionsBroker({}),
-            source_results=(),
-            parsing_errors=(),
-            processing_failed=False,
-        )
-        tree_aggregator = TreeAggregator([])
-        trees = inventorize_cluster(host_config=host_config)
-    else:
-        fetched_data_result = fetch_real_host_data(
-            host_config=host_config,
-            selected_sections=NO_SELECTION,
-        )
-        tree_aggregator = inventorize_real_host(
-            host_config=host_config,
-            parsed_sections_broker=fetched_data_result.parsed_sections_broker,
-            run_plugin_names=EVERYTHING,
-        )
-        trees = tree_aggregator.trees
-
     tree_or_archive_store = TreeOrArchiveStore(
         cmk.utils.paths.inventory_output_dir,
         cmk.utils.paths.inventory_archive_dir,
     )
     old_tree = tree_or_archive_store.load(host_name=host_config.hostname)
+
+    if host_config.is_cluster:
+        tree_aggregator = inventorize_cluster(host_config=host_config)
+        _save_inventory_tree(
+            host_config.hostname,
+            tree_or_archive_store,
+            tree_aggregator,
+            old_tree,
+        )
+        return ActiveCheckResult.from_subresults(
+            *_check_trees(
+                parameters=parameters,
+                inventory_tree=tree_aggregator.trees.inventory,
+                status_data_tree=tree_aggregator.trees.status_data,
+                old_tree=old_tree,
+            ),
+        )
+
+    fetched_data_result = fetch_real_host_data(
+        host_config=host_config,
+        selected_sections=NO_SELECTION,
+    )
+    tree_aggregator = inventorize_real_host(
+        host_config=host_config,
+        parsed_sections_broker=fetched_data_result.parsed_sections_broker,
+        run_plugin_names=EVERYTHING,
+    )
 
     if fetched_data_result.processing_failed:
         active_check_result = ActiveCheckResult(parameters.fail_status, "Cannot update tree")
@@ -91,9 +91,8 @@ def _execute_active_check_inventory(
         _save_inventory_tree(
             host_config.hostname,
             tree_or_archive_store,
-            trees.inventory,
-            old_tree,
             tree_aggregator,
+            old_tree,
         )
         active_check_result = ActiveCheckResult()
 
@@ -101,8 +100,8 @@ def _execute_active_check_inventory(
         active_check_result,
         *_check_trees(
             parameters=parameters,
-            inventory_tree=trees.inventory,
-            status_data_tree=trees.status_data,
+            inventory_tree=tree_aggregator.trees.inventory,
+            status_data_tree=tree_aggregator.trees.status_data,
             old_tree=old_tree,
         ),
         *summarize_host_sections(
@@ -169,10 +168,11 @@ def _tree_nodes_are_equal(
 def _save_inventory_tree(
     hostname: HostName,
     tree_or_archive_store: TreeOrArchiveStore,
-    inventory_tree: StructuredDataNode,
-    old_tree: StructuredDataNode,
     tree_aggregator: TreeAggregator,
+    old_tree: StructuredDataNode,
 ) -> None:
+    inventory_tree = tree_aggregator.trees.inventory
+
     if inventory_tree.is_empty():
         # Remove empty inventory files. Important for host inventory icon
         tree_or_archive_store.remove(host_name=hostname)

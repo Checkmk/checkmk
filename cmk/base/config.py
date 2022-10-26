@@ -20,6 +20,7 @@ import struct
 import sys
 from collections import Counter, OrderedDict
 from dataclasses import dataclass
+from enum import Enum
 from importlib.util import MAGIC_NUMBER as _MAGIC_NUMBER
 from pathlib import Path
 from typing import (
@@ -43,6 +44,8 @@ from typing import (
     TypedDict,
     Union,
 )
+
+from typing_extensions import assert_never
 
 import cmk.utils
 import cmk.utils.check_utils
@@ -4090,6 +4093,69 @@ def get_config_cache() -> ConfigCache:
     return config_cache["cache"]
 
 
+# TODO(au): Find a way to retreive the matchtype_information directly from the
+# rulespecs. This is not possible atm because they live in cmk.gui
+class _Matchtype(Enum):
+    LIST = "list"
+    FIRST = "first"
+    DICT = "dict"
+    ALL = "all"
+
+
+_BAKERY_PLUGINS_WITH_SPECIAL_MATCHTYPES = {
+    "agent_paths": _Matchtype.DICT,
+    "cmk_update_agent": _Matchtype.DICT,
+    "custom_files": _Matchtype.LIST,
+    "fileinfo": _Matchtype.LIST,
+    "logging": _Matchtype.DICT,
+    "lnx_remote_alert_handlers": _Matchtype.ALL,
+    "mk_logwatch": _Matchtype.ALL,
+    "mk_oracle": _Matchtype.DICT,
+    "mrpe": _Matchtype.LIST,
+    "bakery_packages": _Matchtype.DICT,
+    "real_time_checks": _Matchtype.DICT,
+    "runas": _Matchtype.LIST,
+    "win_script_cache_age": _Matchtype.ALL,
+    "win_script_execution": _Matchtype.ALL,
+    "win_script_retry_count": _Matchtype.ALL,
+    "win_script_runas": _Matchtype.ALL,
+    "win_script_timeout": _Matchtype.ALL,
+    "unix_plugins_cache_age": _Matchtype.ALL,
+}
+
+
+def _boil_down_agent_rules(
+    *, defaults: Mapping[str, Any], rulesets: Mapping[str, Any]
+) -> Mapping[str, Any]:
+    boiled_down = {**defaults}
+
+    # TODO: Better move whole computation to cmk.base.config for making
+    # ruleset matching transparent
+    for varname, entries in rulesets.items():
+
+        if not entries:
+            continue
+
+        match_type = _BAKERY_PLUGINS_WITH_SPECIAL_MATCHTYPES.get(varname, _Matchtype.FIRST)
+        if match_type is _Matchtype.FIRST:
+            boiled_down[varname] = entries[0]
+        elif match_type is _Matchtype.LIST:
+            boiled_down[varname] = [it for entry in entries for it in entry]
+        elif match_type is _Matchtype.DICT:
+            # Watch out! In this case we have to merge all rules on top of the defaults!
+            # Compare #14868
+            boiled_down[varname] = {
+                **defaults.get(varname, {}),
+                **{k: v for entry in entries[::-1] for k, v in entry.items()},
+            }
+        elif match_type is _Matchtype.ALL:
+            boiled_down[varname] = entries
+        else:
+            assert_never(match_type)
+
+    return boiled_down
+
+
 # TODO: Find a clean way to move this to cmk.base.cee. This will be possible once the
 # configuration settings are not held in cmk.base.config namespace anymore.
 class CEEConfigCache(ConfigCache):
@@ -4208,14 +4274,21 @@ class CEEConfigCache(ConfigCache):
             for varname, ruleset in CEEConfigCache._agent_config_rulesets()
         }
 
-    def generic_agent_config_entries(self) -> Iterable[tuple[str, Mapping[str, Any]]]:
+    def generic_agent_config_entries(
+        self, *, defaults: Mapping[str, Any]
+    ) -> Iterable[tuple[str, Mapping[str, Any]]]:
         yield from (
             (
                 match_path,
-                {
-                    varname: self.ruleset_matcher.get_values_for_generic_agent(ruleset, match_path)
-                    for varname, ruleset in CEEConfigCache._agent_config_rulesets()
-                },
+                _boil_down_agent_rules(
+                    defaults=defaults,
+                    rulesets={
+                        varname: self.ruleset_matcher.get_values_for_generic_agent(
+                            ruleset, match_path
+                        )
+                        for varname, ruleset in CEEConfigCache._agent_config_rulesets()
+                    },
+                ),
             )
             for match_path, attributes in folder_attributes.items()
             if attributes.get("bake_agent_package", False)
@@ -4297,3 +4370,13 @@ class CEEHostConfig(HostConfig):
         return self._config_cache.host_extra_conf(
             self.hostname, agent_config.get("lnx_remote_alert_handlers", default)
         )
+
+    def agent_config(self, default: Mapping[str, Any]) -> Mapping[str, Any]:
+        assert isinstance(self._config_cache, CEEConfigCache)
+        return {
+            **_boil_down_agent_rules(
+                defaults=default,
+                rulesets=self._config_cache.matched_agent_config_entries(self.hostname),
+            ),
+            "is_ipv6_primary": self.is_ipv6_primary,
+        }

@@ -44,7 +44,9 @@ sudo rsync \
     --exclude=cme.py \
     --exclude=cpe \
     --exclude=cpe.py \
-    -aR \
+    --archive \
+    --relative \
+    --delete \
     "${PYTHON3_PATHS[@]}" \
     "$ROOT"/lib/python3/cmk/
 

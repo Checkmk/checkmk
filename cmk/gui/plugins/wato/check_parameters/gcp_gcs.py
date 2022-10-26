@@ -109,7 +109,7 @@ def _vs_sql_status() -> ValueSpec:
             ("PENDING_CREATE", MonitoringState(title=_("Pending create"), default_value=3)),
             ("MAINTENANCE", MonitoringState(title=_("Maintenance"), default_value=3)),
             ("FAILED", MonitoringState(title=_("Failed"), default_value=2)),
-            ("UNKOWN_STATE", MonitoringState(title=_("Unkown"), default_value=3)),
+            ("UNKOWN_STATE", MonitoringState(title=_("Unknown"), default_value=3)),
         ],
     )
 
@@ -146,7 +146,7 @@ def _vs_run_memory() -> ValueSpec:
         elements=[
             (
                 "memory_util",
-                SimpleLevels(Percentage, title=_("Memory utilitzation"), default_value=(80, 90)),
+                SimpleLevels(Percentage, title=_("Memory utilization"), default_value=(80, 90)),
             ),
         ],
     )
@@ -156,7 +156,7 @@ def _vs_run_cpu() -> ValueSpec:
     return Dictionary(
         title=_("Levels CPU"),
         elements=[
-            ("util", SimpleLevels(Percentage, title=_("CPU utilitzation"), default_value=(80, 90))),
+            ("util", SimpleLevels(Percentage, title=_("CPU utilization"), default_value=(80, 90))),
         ],
     )
 
@@ -264,10 +264,10 @@ def _vs_gce_disk() -> Dictionary:
             ),
             (
                 "disk_write_throughput",
-                SimpleLevels(Filesize, title=_("Disk read throughput per second")),
+                SimpleLevels(Filesize, title=_("Disk write throughput per second")),
             ),
-            ("disk_read_ios", SimpleLevels(Integer, title=_("Disk read opertions"), unit="ops")),
-            ("disk_write_ios", SimpleLevels(Integer, title=_("Disk read opertions"), unit="ops")),
+            ("disk_read_ios", SimpleLevels(Integer, title=_("Disk read operations"), unit="ops")),
+            ("disk_write_ios", SimpleLevels(Integer, title=_("Disk write operations"), unit="ops")),
         ],
     )
 

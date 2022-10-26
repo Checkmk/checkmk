@@ -1,0 +1,13 @@
+Title: Fix possible error on filtering service level of hosts
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1666781724
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p16
+
+Using the filter "Host service level" for views with hosts with configured
+custom attributes could lead to an error message like "Internal error: invalid
+literal for int() with base 10".

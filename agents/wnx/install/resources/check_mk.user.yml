@@ -360,7 +360,9 @@ system:
     enabled: yes
 
     #controller:
-    #    run: yes        # start controller if controller presented
+    #    run: yes                            # start controller if present
+    #    detect_proxy: no                    # controller runtime option, see CLI for more information
+    #    validate_api_cert: no               # controller runtime option, see CLI for more information
     #    check: yes                          # if yes that only the controller process connections could access agent monitoring data
                                              # set no if monitoring is lost and in log you find 'Connection forbidden: address'
     #    force_legacy: no                    # if yes always created for version with controller

@@ -89,6 +89,8 @@ TEST_F(AgentControllerCreateToml, Port) {
     }
     EXPECT_TRUE(table[3].empty());
     EXPECT_EQ(table[4], fmt::format("pull_port = {}", port));
+    EXPECT_EQ(table[5], "detect_proxy = false");
+    EXPECT_EQ(table[6], "validate_api_cert = false");
 }
 
 TEST_F(AgentControllerCreateToml, PortAndAllowed) {
@@ -105,12 +107,35 @@ TEST_F(AgentControllerCreateToml, PortAndAllowed) {
     EXPECT_EQ(table[4], fmt::format("pull_port = {}", port));
 
     auto all = std::accumulate(
-        table.begin() + 5, table.end(), std::string{},
+        table.begin() + 5, table.end() - 2, std::string{},
         [](const std::string &a, const std::string &b) { return a + b; });
     auto actual_ips = convertTomlToIps(all);
     auto expected_ips = tools::SplitString(std::string{allowed}, " ");
     EXPECT_TRUE(rs::is_permutation(actual_ips, expected_ips));
     EXPECT_EQ(actual_ips.size(), expected_ips.size());
+
+    EXPECT_EQ(table[table.size() - 2], "detect_proxy = false");
+    EXPECT_EQ(table[table.size() - 1], "validate_api_cert = false");
+}
+
+TEST_F(AgentControllerCreateToml, PortAndRuntimeOpts) {
+    auto table =
+        loadConfigAndGetResult(fmt::format("global:\n"
+                                           "  enabled: yes\n"
+                                           "  only_from: \n"
+                                           "  port: {}\n"
+                                           "system:\n"
+                                           "  controller:\n"
+                                           "    detect_proxy: yes\n"
+                                           "    validate_api_cert: yes\n",
+                                           port));
+    for (auto index : {0, 1, 2}) {
+        EXPECT_EQ(table[index][0], '#');
+    }
+    EXPECT_TRUE(table[3].empty());
+    EXPECT_EQ(table[4], fmt::format("pull_port = {}", port));
+    EXPECT_EQ(table[5], "detect_proxy = true");
+    EXPECT_EQ(table[6], "validate_api_cert = true");
 }
 
 TEST(AgentController, BuildCommandLineAgentChannelOk) {

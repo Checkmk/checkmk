@@ -196,14 +196,16 @@ constexpr std::string_view kModulesPython = "python";  // string
 constexpr std::string_view kModulesQuickReinstall = "quick_reinstall";  // bool
 
 // group "system"
-constexpr std::string_view kController = "controller";  // dictionary
-constexpr std::string_view kControllerRun = "run";      // bool
-constexpr std::string_view kControllerCheck = "check";  // bool
-constexpr std::string_view kControllerForceLegacy = "force_legacy";    // bool
-constexpr std::string_view kControllerAgentChannel = "agent_channel";  // str
-constexpr std::string_view kControllerLocalOnly = "local_only";        // bool
-constexpr std::string_view kControllerOnCrash = "on_crash";            // string
-constexpr std::string_view kControllerAllowElevated = "allow_elevated";  // bool
+constexpr std::string_view kController = "controller";                    // dictionary
+constexpr std::string_view kControllerRun = "run";                        // bool
+constexpr std::string_view kControllerDetectProxy = "detect_proxy";       // bool
+constexpr std::string_view kControllerValidApiCert = "validate_api_cert"; // bool
+constexpr std::string_view kControllerCheck = "check";                    // bool
+constexpr std::string_view kControllerForceLegacy = "force_legacy";       // bool
+constexpr std::string_view kControllerAgentChannel = "agent_channel";     // str
+constexpr std::string_view kControllerLocalOnly = "local_only";           // bool
+constexpr std::string_view kControllerOnCrash = "on_crash";               // string
+constexpr std::string_view kControllerAllowElevated = "allow_elevated";   // bool
 
 constexpr const char *const kFirewall = "firewall";  // dictionary
 constexpr const char *const kFirewallMode = "mode";  // string

@@ -12,6 +12,7 @@ CL:
 """
 
 import logging
+from dataclasses import dataclass
 from typing import Container, Iterable, Iterator, NamedTuple, Sequence, Tuple
 
 import cmk.utils.tty as tty
@@ -37,13 +38,20 @@ from cmk.base.agent_based.data_provider import (
     SourceResults,
     store_piggybacked_sections,
 )
-from cmk.base.agent_based.utils import get_section_kwargs
+from cmk.base.agent_based.utils import (
+    check_parsing_errors,
+    get_section_kwargs,
+    summarize_host_sections,
+)
 from cmk.base.config import HostConfig
 from cmk.base.sources import fetch_all, make_sources
 
 from ._tree_aggregator import TreeAggregator
 
-__all__ = ["inventorize_cluster", "fetch_real_host_data", "inventorize_real_host", "check_trees"]
+__all__ = [
+    "inventorize_real_host",
+    "check_inventory_tree",
+]
 
 
 class FetchedDataResult(NamedTuple):
@@ -53,7 +61,82 @@ class FetchedDataResult(NamedTuple):
     processing_failed: bool
 
 
-def inventorize_cluster(*, host_config: HostConfig) -> TreeAggregator:
+@dataclass(frozen=True)
+class CheckInventoryTreeResult:
+    check_result: ActiveCheckResult
+    tree_aggregator: TreeAggregator
+    processing_failed: bool
+
+
+def check_inventory_tree(
+    *,
+    host_config: HostConfig,
+    selected_sections: SectionNameCollection,
+    run_plugin_names: Container[InventoryPluginName],
+    parameters: config.HWSWInventoryParameters,
+    old_tree: StructuredDataNode,
+) -> CheckInventoryTreeResult:
+    if host_config.is_cluster:
+        tree_aggregator = _inventorize_cluster(host_config=host_config)
+        return CheckInventoryTreeResult(
+            check_result=ActiveCheckResult.from_subresults(
+                *_check_trees(
+                    parameters=parameters,
+                    inventory_tree=tree_aggregator.trees.inventory,
+                    status_data_tree=tree_aggregator.trees.status_data,
+                    old_tree=old_tree,
+                ),
+            ),
+            tree_aggregator=tree_aggregator,
+            processing_failed=False,
+        )
+
+    fetched_data_result = _fetch_real_host_data(
+        host_config=host_config,
+        selected_sections=selected_sections,
+    )
+    tree_aggregator = inventorize_real_host(
+        host_config=host_config,
+        parsed_sections_broker=fetched_data_result.parsed_sections_broker,
+        run_plugin_names=run_plugin_names,
+    )
+
+    if fetched_data_result.processing_failed:
+        active_check_result = ActiveCheckResult(parameters.fail_status, "Cannot update tree")
+    else:
+        active_check_result = ActiveCheckResult()
+
+    return CheckInventoryTreeResult(
+        check_result=ActiveCheckResult.from_subresults(
+            active_check_result,
+            *_check_trees(
+                parameters=parameters,
+                inventory_tree=tree_aggregator.trees.inventory,
+                status_data_tree=tree_aggregator.trees.status_data,
+                old_tree=old_tree,
+            ),
+            *summarize_host_sections(
+                source_results=fetched_data_result.source_results,
+                # Do not use source states which would overwrite "State when inventory fails" in the
+                # ruleset "Do hardware/software Inventory". These are handled by the "Check_MK" service
+                override_non_ok_state=parameters.fail_status,
+                exit_spec_cb=host_config.exit_code_spec,
+                time_settings_cb=lambda hostname: config.get_config_cache().get_piggybacked_hosts_time_settings(
+                    piggybacked_hostname=hostname,
+                ),
+                is_piggyback=host_config.is_piggyback_host,
+            ),
+            *check_parsing_errors(
+                errors=fetched_data_result.parsing_errors,
+                error_state=parameters.fail_status,
+            ),
+        ),
+        tree_aggregator=tree_aggregator,
+        processing_failed=fetched_data_result.processing_failed,
+    )
+
+
+def _inventorize_cluster(*, host_config: HostConfig) -> TreeAggregator:
     tree_aggregator = TreeAggregator([])
     inventory_tree = tree_aggregator.trees.inventory
 
@@ -71,7 +154,7 @@ def inventorize_cluster(*, host_config: HostConfig) -> TreeAggregator:
     return tree_aggregator
 
 
-def fetch_real_host_data(
+def _fetch_real_host_data(
     *,
     host_config: HostConfig,
     selected_sections: SectionNameCollection,
@@ -206,7 +289,7 @@ def _set_cluster_property(
     node.attributes.add_pairs({"is_cluster": is_cluster})
 
 
-def check_trees(
+def _check_trees(
     *,
     parameters: config.HWSWInventoryParameters,
     inventory_tree: StructuredDataNode,

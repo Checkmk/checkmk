@@ -11,9 +11,12 @@ from tests.testlib.base import Scenario
 
 import cmk.utils.debug
 from cmk.utils.structured_data import RetentionIntervals, SDFilterFunc, SDPath, StructuredDataNode
+from cmk.utils.type_defs import EVERYTHING
+
+from cmk.core_helpers.type_defs import NO_SELECTION
 
 import cmk.base.agent_based.inventory._inventory as _inventory
-import cmk.base.agent_based.inventory.active as active_inventory
+import cmk.base.config as config
 from cmk.base.agent_based.data_provider import ParsedSectionsBroker
 from cmk.base.agent_based.inventory._tree_aggregator import (
     AttributesUpdater,
@@ -1451,7 +1454,7 @@ def test_updater_merge_tables_outdated(
         (3, 3),
     ],
 )
-def test__execute_active_check_inventory(
+def test_check_inventory_tree(
     monkeypatch: pytest.MonkeyPatch,
     failed_state: int | None,
     expected: int,
@@ -1462,8 +1465,8 @@ def test__execute_active_check_inventory(
     ts.apply(monkeypatch)
 
     monkeypatch.setattr(
-        active_inventory,
-        "fetch_real_host_data",
+        _inventory,
+        "_fetch_real_host_data",
         lambda host_config, selected_sections: _inventory.FetchedDataResult(
             parsed_sections_broker=ParsedSectionsBroker({}),
             source_results=[],
@@ -1473,15 +1476,20 @@ def test__execute_active_check_inventory(
     )
 
     monkeypatch.setattr(
-        active_inventory,
+        _inventory,
         "inventorize_real_host",
         lambda host_config, parsed_sections_broker, run_plugin_names: TreeAggregator([]),
     )
 
-    result = active_inventory._execute_active_check_inventory(
-        HostConfig.make_host_config(hostname),
-        {} if failed_state is None else {"inv-fail-status": failed_state},
-    )
+    check_result = _inventory.check_inventory_tree(
+        host_config=HostConfig.make_host_config(hostname),
+        selected_sections=NO_SELECTION,
+        run_plugin_names=EVERYTHING,
+        parameters=config.HWSWInventoryParameters.from_raw(
+            {} if failed_state is None else {"inv-fail-status": failed_state}
+        ),
+        old_tree=StructuredDataNode(),
+    ).check_result
 
-    assert expected == result.state
-    assert "Cannot update tree" in result.summary
+    assert expected == check_result.state
+    assert "Cannot update tree" in check_result.summary

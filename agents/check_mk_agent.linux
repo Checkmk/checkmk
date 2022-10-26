@@ -1443,26 +1443,21 @@ run_real_time_checks() {
     # shellcheck source=agents/cfg_examples/real_time_checks.cfg
     . "${MK_CONFDIR}/real_time_checks.cfg" 2>/dev/null || return
 
-    # new mechanism to set the passphrase has priority
-    secret="${PASSPHRASE:-"${RTC_SECRET}"}"
-
-    if [ "${ENCRYPTED_RT}" != "no" ]; then
-        [ -n "${secret}" ] || {
-            echo "ERROR: Missing secret, but encryption is requested. Not sending real-time data." >&2
-            return
-        }
+    if [ -z "${RTC_SECRET}" ]; then
+        define_optionally_encrypt "no"
+    else
         inpath openssl || {
             echo "ERROR: openssl command is missing, but encryption is requested. Not sending real-time data." >&2
             return
         }
+        define_optionally_encrypt "yes"
     fi
 
-    define_optionally_encrypt "${ENCRYPTED_RT}"
     for trigger in "${MK_VARDIR}/rtc_remotes/"?*; do
         # no such file => no expansion of ?* => nothing to do
         # braces are needed so run_real_time_checks_for_remote can be forked away
         # otherwise async execution of check plugins is held off by activated realtime checks.
-        [ -e "${trigger}" ] && { run_real_time_checks_for_remote "${trigger}" "${secret}" >/dev/null & }
+        [ -e "${trigger}" ] && { run_real_time_checks_for_remote "${trigger}" "${RTC_SECRET}" >/dev/null & }
     done
 }
 

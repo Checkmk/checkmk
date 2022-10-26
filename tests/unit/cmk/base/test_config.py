@@ -668,8 +668,8 @@ def test_host_config_tcp_connect_timeout(
 @pytest.mark.parametrize(
     "hostname_str,result",
     [
-        ("testhost1", {"use_regular": "disable", "use_realtime": "enforce"}),
-        ("testhost2", {"use_regular": "enforce", "use_realtime": "disable"}),
+        ("testhost1", {"use_regular": "disable"}),
+        ("testhost2", {"use_regular": "enforce"}),
     ],
 )
 def test_host_config_agent_encryption(
@@ -683,7 +683,7 @@ def test_host_config_agent_encryption(
         [
             {
                 "condition": {"host_name": ["testhost2"]},
-                "value": {"use_regular": "enforce", "use_realtime": "disable"},
+                "value": {"use_regular": "enforce"},
             }
         ],
     )

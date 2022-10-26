@@ -53,6 +53,7 @@ import cmk.utils.cleanup
 import cmk.utils.config_path
 import cmk.utils.debug
 import cmk.utils.migrated_check_variables
+import cmk.utils.password_store as password_store
 import cmk.utils.paths
 import cmk.utils.piggyback as piggyback
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
@@ -2807,7 +2808,7 @@ class HostConfig:
     def agent_encryption(self) -> Mapping[str, str]:
         settings = self._config_cache.host_extra_conf(self.hostname, agent_encryption)
         if not settings:
-            return {"use_regular": "disable", "use_realtime": "enforce"}
+            return {"use_regular": "disable"}
         return settings[0]
 
     @property
@@ -4336,13 +4337,20 @@ class CEEHostConfig(HostConfig):
         )
 
     def rtc_secret(self) -> str | None:
-        if secret := self.agent_encryption.get("passphrase"):
-            return secret
-
-        if cmc_real_time_checks and (secret := cmc_real_time_checks.get("secret")):  # type: ignore[name-defined] # pylint: disable=undefined-variable
-            return secret
-
-        return ""
+        default: Ruleset[object] = []
+        if not (
+            settings := self._config_cache.host_extra_conf(
+                self.hostname, agent_config.get("real_time_checks", default)
+            )
+        ):
+            return None
+        match settings[0]["encryption"]:
+            case ("disabled", None):
+                return None
+            case ("enabled", password_spec):
+                return password_store.extract(password_spec)
+            case unknown_value:
+                raise ValueError(unknown_value)
 
     def agent_config(self, default: Mapping[str, Any]) -> Mapping[str, Any]:
         assert isinstance(self._config_cache, CEEConfigCache)

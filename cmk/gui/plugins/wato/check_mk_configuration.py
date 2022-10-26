@@ -5,7 +5,8 @@
 
 import logging
 import re
-from typing import Dict, List, Literal
+from collections.abc import Mapping
+from typing import Any, Dict, List, Literal
 from typing import Tuple as _Tuple
 from typing import Type
 
@@ -5172,22 +5173,6 @@ def _encryption_secret(title) -> _Tuple[str, PasswordSpec]:  # type:ignore[no-un
     return ("passphrase", PasswordSpec(title=title, pwlen=16, allow_empty=False))
 
 
-def _realtime_encryption() -> _Tuple[str, DropdownChoice]:
-    return (
-        "use_realtime",
-        DropdownChoice(
-            title=_("Encryption for Realtime Updates"),
-            help=_("Choose if realtime updates are sent/expected encrypted"),
-            default_value="enforce",
-            choices=[
-                ("enforce", _("Enforce (drop unencrypted data)")),
-                ("allow", _("Enable  (accept encrypted and unencrypted data)")),
-                ("disable", _("Disable (drop encrypted data)")),
-            ],
-        ),
-    )
-
-
 def _valuespec_agent_encryption_no_tls() -> Dictionary:
     return Dictionary(
         title=_("Allow non-TLS connections"),
@@ -5214,7 +5199,6 @@ def _valuespec_agent_encryption_no_tls() -> Dictionary:
                     ],
                 ),
             ),
-            _realtime_encryption(),
         ],
         optional_keys=[],
         help=_("Control encryption of data sent from agents to Checkmk.")
@@ -5228,36 +5212,43 @@ def _valuespec_agent_encryption_no_tls() -> Dictionary:
     )
 
 
-def _valuespec_agent_encryption():
+def _migrate_encryption_settings(p: Mapping[str, Any]) -> Mapping[str, Any]:
+    if set(p) == {"passphrase", "use_regular", "use_realtime"}:
+        # "passphrase" refers to agent encryption, leave it in!
+        return {
+            "passphrase": p["passphrase"],
+            "use_regular": p["use_regular"],
+        }
+    return {}
+
+
+def _valuespec_agent_encryption() -> Migrate:
     tls_alt_name_title = _("Use TLS encryption (Linux)")
-    return Alternative(
-        title=_("Encryption (Linux, Windows)"),
-        help=_("Control encryption of data sent from agents to Checkmk.")
-        + "<br>"
-        + _(
-            "<b>Note</b>: On the agent side, TLS is currently only supported on systemd based Linux machines. "
-            "However, when setting the Encryption settings to '%s', Checkmk will expect encrypted data from all matching hosts. "
-            "Please keep this in mind when configuring this ruleset."
-        )
-        % tls_alt_name_title,
-        elements=[
-            Dictionary(
-                title=tls_alt_name_title,
-                elements=[
-                    _realtime_encryption(),
-                    _encryption_secret(_("Encryption secret for Realtime Updates")),
-                ],
-                help=_("Control encryption of data sent from agents to Checkmk.")
-                + "<br>"
-                + _(
-                    "<b>Note</b>: On the agent side, this encryption is only supported by the Linux "
-                    "agent and the Windows agent. However, when setting the Encryption settings to "
-                    "<i>enforce</i>, Checkmk will expect encrypted data from all matching hosts. "
-                    "Please keep this in mind when configuring this ruleset."
+    return Migrate(
+        migrate=_migrate_encryption_settings,
+        valuespec=Alternative(
+            title=_("Encryption (Linux, Windows)"),
+            help=_("Control encryption of data sent from agents to Checkmk.")
+            + "<br>"
+            + _(
+                "<b>Note</b>: On the agent side, TLS is currently only supported on systemd based Linux machines. "
+                "However, when setting the Encryption settings to '%s', Checkmk will expect encrypted data from all matching hosts. "
+                "Please keep this in mind when configuring this ruleset."
+            )
+            % tls_alt_name_title,
+            elements=[
+                FixedValue(
+                    title=tls_alt_name_title,
+                    value={},
+                    totext="",
+                    help=_(
+                        "Rely on the TLS encryption provided by the agent controller."
+                        " No additional encryption is appied."
+                    ),
                 ),
-            ),
-            _valuespec_agent_encryption_no_tls(),
-        ],
+                _valuespec_agent_encryption_no_tls(),
+            ],
+        ),
     )
 
 

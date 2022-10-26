@@ -500,7 +500,7 @@ class Command(metaclass=abc.ABCMeta):
 
     def action(self, cmdtag: str, spec: str, row: dict, row_index: int,
                action_rows) -> Optional[Tuple[Union[str, List[str]], str]]:
-        result = self._action(cmdtag, spec, row, row_index, len(action_rows))
+        result = self._action(cmdtag, spec, row, row_index, action_rows)
         if result:
             commands, title = result
             return commands, self.user_dialog_suffix(title, len(action_rows), cmdtag)
@@ -508,7 +508,7 @@ class Command(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def _action(self, cmdtag: str, spec: str, row: dict, row_index: int,
-                action_rows) -> Optional[Tuple[Union[str, List[str]], str]]:
+                action_rows: Rows) -> Optional[Tuple[Union[str, List[str]], str]]:
         raise NotImplementedError()
 
     @property

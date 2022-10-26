@@ -1785,14 +1785,7 @@ class FilterECServiceLevelRange(Filter):
         assert lower_bound is not None
         assert upper_bound is not None
         for row in rows:
-            # Example lq output (99 = service level):
-            # host: [,4,127.0.0.1,/wato/hosts.mk,99,,,/wato/ auto-piggyback checkmk-agent ...]
-            # service: [custom_2, custom_1, 99]
-            service_level = (
-                int(row["%s_custom_variable_values" % self.info][4])
-                if self.info == "host"
-                else int(row["%s_custom_variable_values" % self.info][-1])
-            )
+            service_level = int(row["custom_variables"]["EC_SL"])
             if int(lower_bound) <= service_level <= int(upper_bound):
                 filtered_rows.append(row)
 
@@ -1803,6 +1796,10 @@ class FilterECServiceLevelRange(Filter):
             return ""
 
         return "Filter: %s_custom_variable_names >= EC_SL\n" % self.info
+
+    def columns_for_filter_table(self, context: VisualContext) -> Iterable[str]:
+        if self.ident in context:
+            yield "custom_variables"
 
 
 filter_registry.register(

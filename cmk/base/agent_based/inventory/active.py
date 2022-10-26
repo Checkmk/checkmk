@@ -5,7 +5,7 @@
 
 import time
 from functools import partial
-from typing import Callable, Sequence
+from typing import Callable, Iterator
 
 import cmk.utils.cleanup
 import cmk.utils.debug
@@ -29,14 +29,14 @@ from ._inventory import (
     inventorize_cluster,
     inventorize_real_host,
 )
-from ._tree_aggregator import InventoryTrees, TreeAggregator
+from ._tree_aggregator import TreeAggregator
 
 __all__ = ["active_check_inventory"]
 
 
 def active_check_inventory(
     hostname: HostName,
-    options: dict[str, int],
+    options: dict,
     *,
     active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,
@@ -54,12 +54,9 @@ def active_check_inventory(
 
 def _execute_active_check_inventory(
     host_config: HostConfig,
-    options: dict[str, int],
+    options: dict,
 ) -> ActiveCheckResult:
-    hw_changes = options.get("hw-changes", 0)
-    sw_changes = options.get("sw-changes", 0)
-    sw_missing = options.get("sw-missing", 0)
-    fail_status = options.get("inv-fail-status", 1)
+    parameters = config.HWSWInventoryParameters.from_raw(options)
 
     if host_config.is_cluster:
         fetched_data_result = FetchedDataResult(
@@ -89,7 +86,7 @@ def _execute_active_check_inventory(
     old_tree = tree_or_archive_store.load(host_name=host_config.hostname)
 
     if fetched_data_result.processing_failed:
-        active_check_result = ActiveCheckResult(fail_status, "Cannot update tree")
+        active_check_result = ActiveCheckResult(parameters.fail_status, "Cannot update tree")
     else:
         _save_inventory_tree(
             host_config.hostname,
@@ -102,12 +99,17 @@ def _execute_active_check_inventory(
 
     return ActiveCheckResult.from_subresults(
         active_check_result,
-        *_check_inventory_tree(trees, old_tree, sw_missing, sw_changes, hw_changes),
+        *_check_trees(
+            parameters=parameters,
+            inventory_tree=trees.inventory,
+            status_data_tree=trees.status_data,
+            old_tree=old_tree,
+        ),
         *summarize_host_sections(
             source_results=fetched_data_result.source_results,
             # Do not use source states which would overwrite "State when inventory fails" in the
             # ruleset "Do hardware/software Inventory". These are handled by the "Check_MK" service
-            override_non_ok_state=fail_status,
+            override_non_ok_state=parameters.fail_status,
             exit_spec_cb=host_config.exit_code_spec,
             time_settings_cb=lambda hostname: config.get_config_cache().get_piggybacked_hosts_time_settings(
                 piggybacked_hostname=hostname,
@@ -116,41 +118,36 @@ def _execute_active_check_inventory(
         ),
         *check_parsing_errors(
             errors=fetched_data_result.parsing_errors,
-            error_state=fail_status,
+            error_state=parameters.fail_status,
         ),
     )
 
 
-def _check_inventory_tree(
-    trees: InventoryTrees,
+def _check_trees(
+    *,
+    parameters: config.HWSWInventoryParameters,
+    inventory_tree: StructuredDataNode,
+    status_data_tree: StructuredDataNode,
     old_tree: StructuredDataNode,
-    sw_missing: ServiceState,
-    sw_changes: ServiceState,
-    hw_changes: ServiceState,
-) -> Sequence[ActiveCheckResult]:
-    if trees.inventory.is_empty() and trees.status_data.is_empty():
-        return [ActiveCheckResult(0, "Found no data")]
+) -> Iterator[ActiveCheckResult]:
+    if inventory_tree.is_empty() and status_data_tree.is_empty():
+        yield ActiveCheckResult(0, "Found no data")
+        return
 
-    subresults = [
-        ActiveCheckResult(0, f"Found {trees.inventory.count_entries()} inventory entries")
-    ]
+    yield ActiveCheckResult(0, f"Found {inventory_tree.count_entries()} inventory entries")
 
-    swp_table = trees.inventory.get_table(("software", "packages"))
-    if swp_table is not None and swp_table.is_empty() and sw_missing:
-        subresults.append(ActiveCheckResult(sw_missing, "software packages information is missing"))
+    swp_table = inventory_tree.get_table(("software", "packages"))
+    if swp_table is not None and swp_table.is_empty() and parameters.sw_missing:
+        yield ActiveCheckResult(parameters.sw_missing, "software packages information is missing")
 
-    if not _tree_nodes_are_equal(old_tree, trees.inventory, "software"):
-        subresults.append(ActiveCheckResult(sw_changes, "software changes"))
+    if not _tree_nodes_are_equal(old_tree, inventory_tree, "software"):
+        yield ActiveCheckResult(parameters.sw_changes, "software changes")
 
-    if not _tree_nodes_are_equal(old_tree, trees.inventory, "hardware"):
-        subresults.append(ActiveCheckResult(hw_changes, "hardware changes"))
+    if not _tree_nodes_are_equal(old_tree, inventory_tree, "hardware"):
+        yield ActiveCheckResult(parameters.hw_changes, "hardware changes")
 
-    if not trees.status_data.is_empty():
-        subresults.append(
-            ActiveCheckResult(0, f"Found {trees.status_data.count_entries()} status entries")
-        )
-
-    return subresults
+    if not status_data_tree.is_empty():
+        yield ActiveCheckResult(0, f"Found {status_data_tree.count_entries()} status entries")
 
 
 def _tree_nodes_are_equal(

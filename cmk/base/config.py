@@ -19,6 +19,7 @@ import socket
 import struct
 import sys
 from collections import Counter, OrderedDict
+from dataclasses import dataclass
 from importlib.util import MAGIC_NUMBER as _MAGIC_NUMBER
 from pathlib import Path
 from typing import (
@@ -200,6 +201,25 @@ class DiscoveryCheckParameters(NamedTuple):
             severity_new_host_labels=1,
             # TODO: defaults are currently all over the place :-(
             rediscovery={},
+        )
+
+
+@dataclass(frozen=True)
+class HWSWInventoryParameters:
+    hw_changes: int
+    sw_changes: int
+    sw_missing: int
+    fail_status: int
+    status_data_inventory: bool
+
+    @classmethod
+    def from_raw(cls, raw_parameters: dict) -> HWSWInventoryParameters:
+        return cls(
+            hw_changes=int(raw_parameters.get("hw-changes", 0)),
+            sw_changes=int(raw_parameters.get("sw-changes", 0)),
+            sw_missing=int(raw_parameters.get("sw-missing", 0)),
+            fail_status=int(raw_parameters.get("inv-fail-status", 1)),
+            status_data_inventory=bool(raw_parameters.get("status_data_inventory", False)),
         )
 
 
@@ -3232,26 +3252,28 @@ class HostConfig:
         return merged_spec
 
     @property
-    def do_status_data_inventory(self) -> bool:
+    def hwsw_inventory_parameters(self) -> HWSWInventoryParameters:
         if self.is_cluster:
-            return False
+            return HWSWInventoryParameters.from_raw({})
 
         # TODO: Use dict(self.active_checks).get("cmk_inv", [])?
         rules = active_checks.get("cmk_inv")
         if rules is None:
-            return False
+            return HWSWInventoryParameters.from_raw({})
 
         # 'host_extra_conf' is already cached thus we can
         # use it after every check cycle.
         entries = self._config_cache.host_extra_conf(self.hostname, rules)
 
         if not entries:
-            return False  # No matching rule -> disable
+            return HWSWInventoryParameters.from_raw({})  # No matching rule -> disable
 
         # Convert legacy rules to current dict format (just like the valuespec)
-        params = {} if entries[0] is None else entries[0]
+        return HWSWInventoryParameters.from_raw({} if entries[0] is None else entries[0])
 
-        return params.get("status_data_inventory", False)
+    @property
+    def do_status_data_inventory(self) -> bool:
+        return self.hwsw_inventory_parameters.status_data_inventory
 
     @property
     def inv_retention_intervals(self) -> RawIntervalsFromConfig:

@@ -62,7 +62,6 @@ def _commandline_inventory_on_host(
     run_plugin_names: Container[InventoryPluginName],
     selected_sections: SectionNameCollection,
 ) -> None:
-
     section.section_step("Inventorizing")
 
     if host_config.is_cluster:

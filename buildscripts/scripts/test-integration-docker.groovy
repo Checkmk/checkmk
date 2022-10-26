@@ -52,7 +52,7 @@ def main() {
                 EDITION,
                 "buster",  // TODO should be parametrized
             );
-            
+
             artifacts_helper.download_source_tar(
                 INTERNAL_DEPLOY_DEST,
                 INTERNAL_DEPLOY_PORT,
@@ -62,7 +62,7 @@ def main() {
             );
         }
     }
-    
+
     // TODO: don't run make-test-docker but use docker.inside() instead
     stage('test cmk-docker integration') {
         dir("${checkout_dir}/tests") {
@@ -74,4 +74,3 @@ def main() {
     }
 }
 return this;
-

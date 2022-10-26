@@ -30,7 +30,7 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 factory_settings["enviromux_default_levels"] = ENVIROMUX_CHECK_DEFAULT_PARAMETERS
 
 check_info["enviromux_external"] = {
-    "parse_function": parse_enviromux_external,
+    "parse_function": parse_enviromux,
     "inventory_function": inventory_enviromux_temperature,
     "check_function": check_enviromux_temperature,
     "service_description": "Sensor External %s",

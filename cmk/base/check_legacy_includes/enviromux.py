@@ -2,10 +2,15 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Mapping, MutableMapping
+from dataclasses import dataclass
+from typing import Any, Iterable
 
+from cmk.base.api.agent_based.type_defs import StringTable
+from cmk.base.check_api import check_levels
 
 from .humidity import check_humidity
-from .temperature import check_temperature
+from .temperature import check_temperature, TempParamType
 
 # .
 #   .--parse functions-----------------------------------------------------.
@@ -137,138 +142,74 @@ sensor_digital_value_names = {
 }
 
 ENVIROMUX_CHECK_DEFAULT_PARAMETERS = {
-    "levels": (15, 16),
-    "levels_lower": (10, 9),
+    "levels": (15.0, 16.0),
+    "levels_lower": (10.0, 9.0),
 }
 
 
-def parse_enviromux(info):
-    parsed = {}
+@dataclass
+class EnviromuxSensor:
+    type_: str
+    value: float
+    min_threshold: float
+    max_threshold: float
 
-    for line in info:
-        sensor_descr = line[2]
-        sensor_index = line[0]
-        item = sensor_descr + " " + sensor_index
 
-        sensor_type = sensor_type_names.get(line[1], "unknown")
+@dataclass
+class EnviromuxDigitalSensor:
+    value: str
+    normal_value: str
+
+
+EnviromuxDigitalSection = Mapping[str, EnviromuxDigitalSensor]
+EnviromuxSection = Mapping[str, EnviromuxSensor]
+
+
+def parse_enviromux(string_table: StringTable) -> EnviromuxSection:
+    enviromux_sensors: MutableMapping[str, EnviromuxSensor] = {}
+
+    for line in string_table:
+        sensor_name = f"{line[2]} {line[0]}"
+
         try:
-            sensor_value: int | float = int(line[3])
-            sensor_min: int | float = int(line[4])
-            sensor_max: int | float = int(line[5])
-            # Sensors without value have "Not configured" and can't be int casted
+            sensor_value: float = float(line[3])
+            sensor_min: float = float(line[4])
+            sensor_max: float = float(line[5])
+            # Sensors without value have "Not configured" and can't be float casted
             # skip the parse
         except ValueError:
             continue
 
-        # Observed in the wild: "power" may actually be a voltage m(
-        if sensor_type in ["temperature", "power", "current"]:
+        sensor_type = sensor_type_names.get(line[1], "unknown")
+        # Observed in the wild: "power" may actually be a voltage
+        if sensor_type in ["temperature", "power", "current", "temperatureCombo"]:
             # The MIB specifies that currents, voltages and temperatures have a scaling factor 10
             sensor_value /= 10.0
             sensor_min /= 10.0
             sensor_max /= 10.0
 
-        parsed[item] = {
-            "sensor_type": sensor_type,
-            "sensor_value": sensor_value,
-            "sensor_min": sensor_min,
-            "sensor_max": sensor_max,
-        }
+        enviromux_sensors.setdefault(
+            sensor_name,
+            EnviromuxSensor(
+                type_=sensor_type,
+                value=sensor_value,
+                min_threshold=sensor_min,
+                max_threshold=sensor_max,
+            ),
+        )
 
-    return parsed
-
-
-def parse_enviromux_sems_external(info):
-    parsed = {}
-
-    for line in info:
-        sensor_descr = line[2]
-        sensor_index = line[0]
-        item = sensor_descr + " " + sensor_index
-
-        sensor_type = sensor_type_names.get(line[1], "unknown")
-        # Observed in the wild: "power" may actually be a voltage m(
-        if sensor_type in ["temperature", "power", "current"]:
-            # The MIB specifies that currents, voltages and temperatures have a scaling factor 10
-            sensor_value = int(line[3]) / 10.0
-            sensor_min = int(line[4]) / 10.0
-            sensor_max = int(line[5]) / 10.0
-        else:
-            sensor_value = int(line[3])
-            sensor_min = int(line[4])
-            sensor_max = int(line[5])
-
-        parsed[item] = {
-            "sensor_type": sensor_type,
-            "sensor_value": sensor_value,
-            "sensor_min": sensor_min,
-            "sensor_max": sensor_max,
-        }
-
-    return parsed
+    return enviromux_sensors
 
 
-def parse_enviromux_external(info):
-    parsed = {}
+def parse_enviromux_digital(string_table: StringTable) -> EnviromuxDigitalSection:
 
-    for line in info:
-        sensor_descr = line[2]
-        sensor_index = line[0]
-        item = sensor_descr + " " + sensor_index
-
-        sensor_type = sensor_type_names.get(line[1], "unknown")
-        # Observed in the wild: "power" may actually be a voltage m(
-        if sensor_type in ["temperature", "power", "current", "temperatureCombo"]:
-            # The MIB specifies that currents, voltages and temperatures have a scaling factor 10
-            sensor_value = int(line[3]) / 10.0
-            sensor_min = int(line[4]) / 10.0
-            sensor_max = int(line[5]) / 10.0
-        else:
-            sensor_value = int(line[3])
-            sensor_min = int(line[4])
-            sensor_max = int(line[5])
-
-        parsed[item] = {
-            "sensor_type": sensor_type,
-            "sensor_value": sensor_value,
-            "sensor_min": sensor_min,
-            "sensor_max": sensor_max,
-        }
-
-    return parsed
-
-
-def parse_enviromux_digital(info):
-    parsed = {}
-
-    for line in info:
-        sensor_descr = line[1]
-        sensor_index = line[0]
-        sensor_normal_value = sensor_digital_value_names.get(line[3], "unknown")
-        sensor_value = sensor_digital_value_names.get(line[2], "unknown")
-        item = sensor_descr + " " + sensor_index
-        parsed[item] = {
-            "sensor_value": sensor_value,
-            "sensor_normal_value": sensor_normal_value,
-        }
-
-    return parsed
-
-
-def parse_enviromux_sems_digital(info):
-    parsed = {}
-
-    for line in info:
-        sensor_descr = line[1]
-        sensor_index = line[0]
-        sensor_normal_value = sensor_digital_value_names.get(line[3], "unknown")
-        sensor_value = sensor_digital_value_names.get(line[2], "unknown")
-        item = sensor_descr + " " + sensor_index
-        parsed[item] = {
-            "sensor_value": sensor_value,
-            "sensor_normal_value": sensor_normal_value,
-        }
-
-    return parsed
+    return {
+        f"{line[1]} {line[0]}": EnviromuxDigitalSensor(
+            value=sensor_digital_value_names.get(line[2], "unknown"),
+            normal_value=sensor_digital_value_names.get(line[3], "unknown"),
+        )
+        for line in string_table
+    }
 
 
 # .
@@ -290,21 +231,21 @@ def parse_enviromux_sems_digital(info):
 #   '----------------------------------------------------------------------'
 
 
-def inventory_enviromux_temperature(parsed):
-    for item, sensor_data in parsed.items():
-        if sensor_data["sensor_type"] in ["temperature", "temperatureCombo"]:
+def inventory_enviromux_temperature(section: EnviromuxSection) -> Iterable[Any]:
+    for item, sensor in section.items():
+        if sensor.type_ in ["temperature", "temperatureCombo"]:
             yield item, {}
 
 
-def inventory_enviromux_voltage(parsed):
-    for item, sensor_data in parsed.items():
-        if sensor_data["sensor_type"] == "power":
+def inventory_enviromux_voltage(section: EnviromuxSection) -> Iterable[Any]:
+    for item, sensor in section.items():
+        if sensor.type_ == "power":
             yield item, {}
 
 
-def inventory_enviromux_humidity(parsed):
-    for item, sensor_data in parsed.items():
-        if sensor_data["sensor_type"] in ["humidity", "humidityCombo"]:
+def inventory_enviromux_humidity(section: EnviromuxSection) -> Iterable[Any]:
+    for item, sensor in section.items():
+        if sensor.type_ in ["humidity", "humidityCombo"]:
             yield item, {}
 
 
@@ -348,47 +289,55 @@ def enviromux_sems_scan_function(oid):
 #   '----------------------------------------------------------------------'
 
 
-def check_enviromux_temperature(item, params, parsed):
-    dev_levels_lower = (parsed[item]["sensor_min"], parsed[item]["sensor_min"])
-    dev_levels = (parsed[item]["sensor_max"], parsed[item]["sensor_max"])
-    return check_temperature(
-        parsed[item]["sensor_value"],
+def check_enviromux_temperature(
+    item: str,
+    params: TempParamType,
+    section: EnviromuxSection,
+) -> Iterable[Any]:
+    if (sensor := section.get(item)) is None:
+        return
+
+    yield from check_temperature(
+        sensor.value,
         params,
         item,
-        dev_levels_lower=dev_levels_lower,
-        dev_levels=dev_levels,
+        dev_levels_lower=(sensor.min_threshold, sensor.min_threshold),
+        dev_levels=(sensor.max_threshold, sensor.max_threshold),
     )
 
 
-def check_enviromux_voltage(item, params, parsed):
-    sensor_value = parsed[item]["sensor_value"]
-    perf = [("voltage", sensor_value)]
-    infotext = "Input Voltage is %.1f V" % sensor_value
-    min_warn = params["levels_lower"][0]
-    min_crit = params["levels_lower"][1]
-    max_warn = params["levels"][0]
-    max_crit = params["levels"][1]
-    levelstext_lower = " (warn/crit below %s/%s)" % (min_warn, min_crit)
-    levelstext_upper = " (warn/crit at %s/%s)" % (max_warn, max_crit)
-    levelstext = ""
-    if sensor_value >= max_crit:
-        state = 2
-        levelstext = levelstext_upper
-    elif sensor_value < min_crit:
-        state = 2
-        levelstext = levelstext_lower
-    elif sensor_value < min_warn:
-        state = 1
-        levelstext = levelstext_lower
-    elif sensor_value >= max_warn:
-        state = 1
-        levelstext = levelstext_upper
-    else:
-        state = 0
-    if state:
-        infotext += levelstext
-    return state, infotext, perf
+def check_enviromux_voltage(
+    item: str,
+    params: Mapping[str, Any],
+    section: EnviromuxSection,
+) -> Iterable[Any]:
+
+    if (sensor := section.get(item)) is None:
+        return
+
+    yield from check_levels(
+        value=sensor.value,
+        dsname="voltage",
+        params=(
+            params["levels"][0],
+            params["levels"][1],
+            params["levels_lower"][0],
+            params["levels_lower"][1],
+        ),
+        unit="V",
+        infoname="Input Voltage is",
+    )
 
 
-def check_enviromux_humidity(item, params, parsed):
-    return check_humidity(parsed[item]["sensor_value"], params)
+def check_enviromux_humidity(
+    item: str,
+    params: Mapping[str, Any],
+    section: EnviromuxSection,
+) -> Iterable[Any]:
+    if (sensor := section.get(item)) is None:
+        return
+
+    yield from check_humidity(
+        humidity=sensor.value,
+        params=params,
+    )

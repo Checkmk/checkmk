@@ -16,6 +16,7 @@ from cmk.base.check_legacy_includes.enviromux import (
     inventory_enviromux_temperature,
     inventory_enviromux_voltage,
     parse_enviromux,
+    TempParamType,
 )
 
 STRING_TABLE = [
@@ -154,7 +155,7 @@ def test_discover_enviromux_voltage(
 )
 def test_check_enviromux_temperature(
     section: StringTable,
-    params: Mapping[str, tuple[float, float]],
+    params: TempParamType,
     expected_check_result: Sequence[tuple[str, Any]],
 ) -> None:
     assert (
@@ -162,7 +163,7 @@ def test_check_enviromux_temperature(
             check_enviromux_temperature(
                 item="Internal Temperature 0",
                 params=params,
-                parsed=parse_enviromux(section),
+                section=parse_enviromux(section),
             )
         )
         == expected_check_result
@@ -175,7 +176,7 @@ def test_check_enviromux_temperature(
         pytest.param(
             STRING_TABLE,
             {"levels": (20.0, 25.0), "levels_lower": (5.0, 3.0)},
-            [0, "Input Voltage is 14.0 V", [("voltage", 14.0)]],
+            [0, "Input Voltage is: 14.00 V", [("voltage", 14.0, 20.0, 25.0)]],
             id="If the voltage of the sensor is below the upper WARN/CRIT levels and above the lower WARN/CRIT levels, the result is OK.",
         ),
         pytest.param(
@@ -183,7 +184,11 @@ def test_check_enviromux_temperature(
                 ["2", "3", "Input Voltage", "220", "120", "150"],
             ],
             {"levels": (20.0, 25.0), "levels_lower": (5.0, 3.0)},
-            [1, "Input Voltage is 22.0 V (warn/crit at 20.0/25.0)", [("voltage", 22.0)]],
+            [
+                1,
+                "Input Voltage is: 22.00 V (warn/crit at 20.00 V/25.00 V)",
+                [("voltage", 22.0, 20.0, 25.0)],
+            ],
             id="If the voltage of the sensor is above the WARN level, the result is WARN.",
         ),
         pytest.param(
@@ -191,7 +196,11 @@ def test_check_enviromux_temperature(
                 ["2", "3", "Input Voltage", "260", "120", "150"],
             ],
             {"levels": (20.0, 25.0), "levels_lower": (5.0, 3.0)},
-            [2, "Input Voltage is 26.0 V (warn/crit at 20.0/25.0)", [("voltage", 26.0)]],
+            [
+                2,
+                "Input Voltage is: 26.00 V (warn/crit at 20.00 V/25.00 V)",
+                [("voltage", 26.0, 20.0, 25.0)],
+            ],
             id="If the voltage of the sensor is above the CRIT level, the result is CRIT.",
         ),
         pytest.param(
@@ -199,7 +208,11 @@ def test_check_enviromux_temperature(
                 ["2", "3", "Input Voltage", "40", "120", "150"],
             ],
             {"levels": (20.0, 25.0), "levels_lower": (5.0, 3.0)},
-            [1, "Input Voltage is 4.0 V (warn/crit below 5.0/3.0)", [("voltage", 4.0)]],
+            [
+                1,
+                "Input Voltage is: 4.00 V (warn/crit below 5.00 V/3.00 V)",
+                [("voltage", 4.0, 20.0, 25.0)],
+            ],
             id="If the voltage of the sensor is below the lower WARN level, the result is WARN.",
         ),
         pytest.param(
@@ -207,7 +220,11 @@ def test_check_enviromux_temperature(
                 ["2", "3", "Input Voltage", "20", "120", "150"],
             ],
             {"levels": (20.0, 25.0), "levels_lower": (5.0, 3.0)},
-            [2, "Input Voltage is 2.0 V (warn/crit below 5.0/3.0)", [("voltage", 2.0)]],
+            [
+                2,
+                "Input Voltage is: 2.00 V (warn/crit below 5.00 V/3.00 V)",
+                [("voltage", 2.0, 20.0, 25.0)],
+            ],
             id="If the voltage of the sensor is below the lower CRIT level, the result is CRIT.",
         ),
     ],
@@ -222,7 +239,7 @@ def test_check_enviromux_voltage(
             check_enviromux_voltage(
                 item="Input Voltage 2",
                 params=params,
-                parsed=parse_enviromux(section),
+                section=parse_enviromux(section),
             )
         )
         == expected_check_result
@@ -282,7 +299,7 @@ def test_check_enviromux_humidity(
             check_enviromux_humidity(
                 item="Internal Humidity 1",
                 params=params,
-                parsed=parse_enviromux(section),
+                section=parse_enviromux(section),
             )
         )
         == expected_check_result

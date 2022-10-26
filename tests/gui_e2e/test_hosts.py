@@ -2,6 +2,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import pytest
 
 from tests.testlib.playwright.helpers import PPage
 
@@ -12,10 +13,12 @@ class TestHost:
 
 
 class TestHosts:
-    def test_create_and_delete_a_host(self, logged_in_page: PPage) -> None:
+    def test_create_and_delete_a_host(self, logged_in_page: PPage, is_chromium: bool) -> None:
         """Creates a host and deletes it afterwards. Calling order of static methods
         is therefore essential!
         """
+        if not is_chromium:
+            pytest.skip("Test currently working with the chromium engine only.")
 
         self._create_host(logged_in_page)
 
@@ -24,8 +27,11 @@ class TestHosts:
 
         self._delete_host(logged_in_page)
 
-    def test_reschedule(self, logged_in_page: PPage) -> None:
+    def test_reschedule(self, logged_in_page: PPage, is_chromium: bool) -> None:
         """reschedules a check"""
+
+        if not is_chromium:
+            pytest.skip("Test currently working with the chromium engine only.")
 
         self._create_host(logged_in_page)
 

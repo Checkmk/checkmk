@@ -931,7 +931,7 @@ class TableRenderer:
             row: List[Union[TextCell, IconCell]] = []
             rows.append(row)
             for css, entry in raw_row:
-                css_list: List[str] = css.split()
+                css_list: list[str] = css.split()
                 if isinstance(entry, tuple):
                     if entry[0] == "icon":
                         row.append(IconCell(entry[1]))
@@ -1287,7 +1287,7 @@ class TableRenderer:
 # Note: all dimensions this objects handles with are in mm! This is due
 # to the fact that this API is also available externally
 class TextCell:
-    def __init__(self, csses: list[str], text):
+    def __init__(self, csses: Optional[list[str]], text):
         self._text = text
         self._bold = False
         self._color = black
@@ -1295,7 +1295,7 @@ class TextCell:
         self._alignment = "left"
 
         if csses is None:
-            csses = ""
+            csses = []
 
         # TODO: Sollte das nicht lieber raus aus dem allgemeinen pdf.py? Ist eigentlich
         # Spezifisch für Views, etc.

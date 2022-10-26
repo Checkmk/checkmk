@@ -64,7 +64,7 @@ def test__tree_nodes_are_not_equal(
     old_tree: StructuredDataNode,
     inv_tree: StructuredDataNode,
 ) -> None:
-    assert active_inventory._tree_nodes_are_equal(old_tree, inv_tree, "edge") is False
+    assert _inventory._tree_nodes_are_equal(old_tree, inv_tree, "edge") is False
 
 
 @pytest.mark.parametrize(
@@ -75,7 +75,7 @@ def test__tree_nodes_are_not_equal(
     ],
 )
 def test__tree_nodes_are_equal(old_tree: StructuredDataNode, inv_tree: StructuredDataNode) -> None:
-    assert active_inventory._tree_nodes_are_equal(old_tree, inv_tree, "edge") is True
+    assert _inventory._tree_nodes_are_equal(old_tree, inv_tree, "edge") is True
 
 
 def test_integrate_attributes() -> None:

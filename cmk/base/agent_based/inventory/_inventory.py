@@ -12,9 +12,10 @@ CL:
 """
 
 import logging
-from typing import Container, Iterable, NamedTuple, Sequence, Tuple
+from typing import Container, Iterable, Iterator, NamedTuple, Sequence, Tuple
 
 import cmk.utils.tty as tty
+from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
@@ -42,7 +43,7 @@ from cmk.base.sources import fetch_all, make_sources
 
 from ._tree_aggregator import TreeAggregator
 
-__all__ = ["inventorize_cluster", "fetch_real_host_data", "inventorize_real_host"]
+__all__ = ["inventorize_cluster", "fetch_real_host_data", "inventorize_real_host", "check_trees"]
 
 
 class FetchedDataResult(NamedTuple):
@@ -203,3 +204,46 @@ def _set_cluster_property(
 ) -> None:
     node = inventory_tree.setdefault_node(("software", "applications", "check_mk", "cluster"))
     node.attributes.add_pairs({"is_cluster": is_cluster})
+
+
+def check_trees(
+    *,
+    parameters: config.HWSWInventoryParameters,
+    inventory_tree: StructuredDataNode,
+    status_data_tree: StructuredDataNode,
+    old_tree: StructuredDataNode,
+) -> Iterator[ActiveCheckResult]:
+    if inventory_tree.is_empty() and status_data_tree.is_empty():
+        yield ActiveCheckResult(0, "Found no data")
+        return
+
+    yield ActiveCheckResult(0, f"Found {inventory_tree.count_entries()} inventory entries")
+
+    swp_table = inventory_tree.get_table(("software", "packages"))
+    if swp_table is not None and swp_table.is_empty() and parameters.sw_missing:
+        yield ActiveCheckResult(parameters.sw_missing, "software packages information is missing")
+
+    if not _tree_nodes_are_equal(old_tree, inventory_tree, "software"):
+        yield ActiveCheckResult(parameters.sw_changes, "software changes")
+
+    if not _tree_nodes_are_equal(old_tree, inventory_tree, "hardware"):
+        yield ActiveCheckResult(parameters.hw_changes, "hardware changes")
+
+    if not status_data_tree.is_empty():
+        yield ActiveCheckResult(0, f"Found {status_data_tree.count_entries()} status entries")
+
+
+def _tree_nodes_are_equal(
+    old_tree: StructuredDataNode,
+    inv_tree: StructuredDataNode,
+    edge: str,
+) -> bool:
+    old_node = old_tree.get_node((edge,))
+    inv_node = inv_tree.get_node((edge,))
+    if old_node is None:
+        return inv_node is None
+
+    if inv_node is None:
+        return False
+
+    return old_node.is_equal(inv_node)

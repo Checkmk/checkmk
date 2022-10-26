@@ -5,7 +5,7 @@
 
 import time
 from functools import partial
-from typing import Callable, Iterator
+from typing import Callable
 
 import cmk.utils.cleanup
 import cmk.utils.debug
@@ -22,7 +22,12 @@ import cmk.base.config as config
 from cmk.base.agent_based.utils import check_parsing_errors, summarize_host_sections
 from cmk.base.config import HostConfig
 
-from ._inventory import fetch_real_host_data, inventorize_cluster, inventorize_real_host
+from ._inventory import (
+    check_trees,
+    fetch_real_host_data,
+    inventorize_cluster,
+    inventorize_real_host,
+)
 from ._tree_aggregator import TreeAggregator
 
 __all__ = ["active_check_inventory"]
@@ -67,7 +72,7 @@ def _execute_active_check_inventory(
             old_tree,
         )
         return ActiveCheckResult.from_subresults(
-            *_check_trees(
+            *check_trees(
                 parameters=parameters,
                 inventory_tree=tree_aggregator.trees.inventory,
                 status_data_tree=tree_aggregator.trees.status_data,
@@ -98,7 +103,7 @@ def _execute_active_check_inventory(
 
     return ActiveCheckResult.from_subresults(
         active_check_result,
-        *_check_trees(
+        *check_trees(
             parameters=parameters,
             inventory_tree=tree_aggregator.trees.inventory,
             status_data_tree=tree_aggregator.trees.status_data,
@@ -120,49 +125,6 @@ def _execute_active_check_inventory(
             error_state=parameters.fail_status,
         ),
     )
-
-
-def _check_trees(
-    *,
-    parameters: config.HWSWInventoryParameters,
-    inventory_tree: StructuredDataNode,
-    status_data_tree: StructuredDataNode,
-    old_tree: StructuredDataNode,
-) -> Iterator[ActiveCheckResult]:
-    if inventory_tree.is_empty() and status_data_tree.is_empty():
-        yield ActiveCheckResult(0, "Found no data")
-        return
-
-    yield ActiveCheckResult(0, f"Found {inventory_tree.count_entries()} inventory entries")
-
-    swp_table = inventory_tree.get_table(("software", "packages"))
-    if swp_table is not None and swp_table.is_empty() and parameters.sw_missing:
-        yield ActiveCheckResult(parameters.sw_missing, "software packages information is missing")
-
-    if not _tree_nodes_are_equal(old_tree, inventory_tree, "software"):
-        yield ActiveCheckResult(parameters.sw_changes, "software changes")
-
-    if not _tree_nodes_are_equal(old_tree, inventory_tree, "hardware"):
-        yield ActiveCheckResult(parameters.hw_changes, "hardware changes")
-
-    if not status_data_tree.is_empty():
-        yield ActiveCheckResult(0, f"Found {status_data_tree.count_entries()} status entries")
-
-
-def _tree_nodes_are_equal(
-    old_tree: StructuredDataNode,
-    inv_tree: StructuredDataNode,
-    edge: str,
-) -> bool:
-    old_node = old_tree.get_node((edge,))
-    inv_node = inv_tree.get_node((edge,))
-    if old_node is None:
-        return inv_node is None
-
-    if inv_node is None:
-        return False
-
-    return old_node.is_equal(inv_node)
 
 
 def _save_inventory_tree(

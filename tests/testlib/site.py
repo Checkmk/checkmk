@@ -7,8 +7,8 @@ import ast
 import glob
 import logging
 import os
-import pipes
 import pwd
+import shlex
 import shutil
 import subprocess
 import sys
@@ -325,7 +325,7 @@ class Site:
                     "-l",
                     self.id,
                     "-c",
-                    pipes.quote(" ".join(pipes.quote(p) for p in cmd)),
+                    shlex.quote(" ".join(shlex.quote(p) for p in cmd)),
                 ]
             )
         )

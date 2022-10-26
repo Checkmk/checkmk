@@ -16,7 +16,7 @@ the test.
 
 import logging
 import os
-import pipes
+import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -94,7 +94,7 @@ def _execute_as_site_user(site: Site, args):  # type:ignore[no-untyped-def]
         if varname in os.environ:
             env_vars[varname] = os.environ[varname]
 
-    env_var_str = " ".join(["%s=%s" % (k, pipes.quote(v)) for k, v in env_vars.items()]) + " "
+    env_var_str = " ".join(["%s=%s" % (k, shlex.quote(v)) for k, v in env_vars.items()]) + " "
 
     cmd_parts = [
         "python3",
@@ -109,7 +109,7 @@ def _execute_as_site_user(site: Site, args):  # type:ignore[no-untyped-def]
         "integration",
     ] + args
 
-    cmd = "cd %s && " % pipes.quote(cmk_path())
+    cmd = "cd %s && " % shlex.quote(cmk_path())
     cmd += env_var_str + subprocess.list2cmdline(cmd_parts)
     args = ["/usr/bin/sudo", "--", "/bin/su", "-l", site.id, "-c", cmd]
     logger.info("Executing: %r", subprocess.list2cmdline(args))

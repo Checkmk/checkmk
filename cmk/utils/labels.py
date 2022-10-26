@@ -13,7 +13,7 @@ from typing import Callable, Dict, Final, List, Mapping, NamedTuple, Tuple
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.site import omd_site
-from cmk.utils.type_defs import HostLabelValueDict, HostName, Labels, ServiceName
+from cmk.utils.type_defs import HostLabelValueDict, HostName, Labels, Ruleset, ServiceName
 
 UpdatedHostLabelsEntry = Tuple[str, float, str]
 
@@ -21,9 +21,9 @@ UpdatedHostLabelsEntry = Tuple[str, float, str]
 class LabelManager(NamedTuple):
     """Helper class to manage access to the host and service labels"""
 
-    explicit_host_labels: Dict
-    host_label_rules: List
-    service_label_rules: List
+    explicit_host_labels: Dict[str, Labels]
+    host_label_rules: Ruleset[Dict[str, str]]
+    service_label_rules: Ruleset[Dict[str, str]]
     discovered_labels_of_service: Callable[[HostName, ServiceName], Labels]
 
 

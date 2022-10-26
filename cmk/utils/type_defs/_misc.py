@@ -11,7 +11,15 @@ import re
 import sys
 from collections.abc import Container, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Literal, NamedTuple, NewType, Optional, TypedDict, Union
+from typing import Any, Generic, Literal, NamedTuple, NewType, Optional, TypeVar, Union
+
+if sys.version_info < (3, 11):
+    # Generic typed dict
+    from typing_extensions import TypedDict
+else:
+    from typing import TypedDict
+
+T = TypeVar("T")
 
 HostName = str
 HostAddress = str
@@ -45,16 +53,13 @@ class RuleConditionsSpec(TypedDict, total=False):
     host_folder: Any
 
 
-# TODO: Improve this type
-class _RuleSpecBase(TypedDict):
-    id: str
-    # TODO: Make the TypedDict generic over the value once it is supported
-    # in mypy: https://github.com/python/mypy/issues/3863 (CMK-8632)
-    value: Any
+class _RuleSpecBase(TypedDict, Generic[T]):
+    value: T
     condition: RuleConditionsSpec
 
 
-class RuleSpec(_RuleSpecBase, total=False):
+class RuleSpec(Generic[T], _RuleSpecBase[T], total=False):
+    id: str  # Should not be optional but nearly not test has that attribute set!
     options: RuleOptionsSpec
 
 
@@ -117,7 +122,7 @@ HostOrServiceConditions = Union[
     HostOrServiceConditionsNegated,
 ]  # TODO: refine type
 
-Ruleset = list[RuleSpec]  # TODO: Improve this type
+Ruleset = list[RuleSpec[T]]
 CheckPluginNameStr = str
 ActiveCheckPluginName = str
 Item = Optional[str]

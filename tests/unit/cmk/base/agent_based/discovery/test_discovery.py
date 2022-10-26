@@ -21,6 +21,7 @@ from cmk.utils.type_defs import (
     EVERYTHING,
     HostKey,
     HostName,
+    Ruleset,
     RuleSetName,
     SectionName,
     ServiceID,
@@ -909,16 +910,18 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
 
     agent_based_register.set_discovery_ruleset(
         RuleSetName("inventory_df_rules"),
-        [
-            {
-                "id": "nobody-cares-about-the-id-in-this-test",
-                "value": {
-                    "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
-                    "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
-                },
-                "condition": {"host_labels": {"cmk/check_mk_server": "yes"}},
-            }
-        ],
+        Ruleset[Dict[str, List[str]]](
+            [
+                {
+                    "id": "nobody-cares-about-the-id-in-this-test",
+                    "value": {
+                        "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
+                        "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
+                    },
+                    "condition": {"host_labels": {"cmk/check_mk_server": "yes"}},
+                }
+            ]
+        ),
     )
     DiscoveredHostLabelsStore(hostname).save(
         {
@@ -1014,16 +1017,18 @@ def _cluster_scenario(monkeypatch) -> ClusterScenario:  # type:ignore[no-untyped
 
     agent_based_register.set_discovery_ruleset(
         RuleSetName("inventory_df_rules"),
-        [
-            {
-                "id": "nobody-cares-about-the-id-in-this-test",
-                "value": {
-                    "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
-                    "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
-                },
-                "condition": {"host_labels": {"cmk/check_mk_server": "yes"}},
-            }
-        ],
+        Ruleset[Dict[str, List[str]]](
+            [
+                {
+                    "id": "nobody-cares-about-the-id-in-this-test",
+                    "value": {
+                        "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
+                        "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
+                    },
+                    "condition": {"host_labels": {"cmk/check_mk_server": "yes"}},
+                }
+            ]
+        ),
     )
     DiscoveredHostLabelsStore(node1_hostname).save(
         {

@@ -2584,8 +2584,9 @@ class HostConfig:
             return alias
 
         # Alias by rule matching
+        default: Ruleset[HostName] = []
         aliases = self._config_cache.host_extra_conf(
-            self.hostname, extra_host_conf.get("alias", [])
+            self.hostname, extra_host_conf.get("alias", default)
         )
 
         # Fallback alias
@@ -2975,13 +2976,15 @@ class HostConfig:
         return CheckmkCheckParameters(enabled=not self.is_ping_host)
 
     def inventory_parameters(self, ruleset_name: RuleSetName) -> Dict:
+        default: Ruleset[object] = []
         return self._config_cache.host_extra_conf_merged(
-            self.hostname, inv_parameters.get(str(ruleset_name), [])
+            self.hostname, inv_parameters.get(str(ruleset_name), default)
         )
 
     def notification_plugin_parameters(self, plugin_name: CheckPluginNameStr) -> Dict:
+        default: Ruleset[object] = []
         return self._config_cache.host_extra_conf_merged(
-            self.hostname, notification_parameters.get(plugin_name, [])
+            self.hostname, notification_parameters.get(plugin_name, default)
         )
 
     @property
@@ -4290,6 +4293,7 @@ class CEEHostConfig(HostConfig):
 
     @property
     def lnx_remote_alert_handlers(self) -> List[Dict[str, str]]:
+        default: Ruleset[object] = []
         return self._config_cache.host_extra_conf(
-            self.hostname, agent_config.get("lnx_remote_alert_handlers", [])
+            self.hostname, agent_config.get("lnx_remote_alert_handlers", default)
         )

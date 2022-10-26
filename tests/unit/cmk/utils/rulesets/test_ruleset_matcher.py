@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import List, Sequence
+from typing import Dict, List, Sequence
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -18,6 +18,7 @@ from cmk.utils.type_defs import (
     CheckPluginName,
     HostName,
     RuleConditionsSpec,
+    Ruleset,
     RuleSpec,
     RuleValue,
     ServiceName,
@@ -63,7 +64,7 @@ def test_ruleset_match_object_service_cache_id_no_labels() -> None:
     assert obj.service_cache_id == ("svc", hash(None))
 
 
-ruleset: List[RuleSpec] = [
+ruleset: Ruleset[str] = [
     {
         "id": "1",
         "value": "BLA",
@@ -108,9 +109,10 @@ ruleset: List[RuleSpec] = [
     },
 ]
 
-host_label_ruleset = [
+host_label_ruleset: Ruleset[str] = [
     # test simple label match
     {
+        "id": "id0",
         "value": "os_linux",
         "condition": {
             "host_labels": {
@@ -121,6 +123,7 @@ host_label_ruleset = [
     },
     # test implicit AND and unicode value match
     {
+        "id": "id1",
         "value": "abc",
         "condition": {
             "host_labels": {
@@ -132,12 +135,14 @@ host_label_ruleset = [
     },
     # test negation of label
     {
+        "id": "id2",
         "value": "hu",
         "condition": {"host_labels": {"hu": {"$ne": "ha"}}},
         "options": {},
     },
     # test unconditional match
     {
+        "id": "id3",
         "value": "BLA",
         "condition": {},
         "options": {},
@@ -335,7 +340,7 @@ def test_basic_get_host_ruleset_values_subfolders(monkeypatch: MonkeyPatch) -> N
     )
 
 
-dict_ruleset: List[RuleSpec] = [
+dict_ruleset: Ruleset[Dict[str, str]] = [
     {
         "id": "1",
         "value": {"hu": "BLA"},
@@ -494,9 +499,10 @@ def test_basic_host_ruleset_is_matching_host_ruleset(monkeypatch: MonkeyPatch) -
     )
 
 
-tag_ruleset = [
+tag_ruleset: Ruleset[str] = [
     # test simple tag match
     {
+        "id": "id0",
         "value": "crit_prod",
         "condition": {
             "host_tags": {
@@ -507,6 +513,7 @@ tag_ruleset = [
     },
     # test implicit AND
     {
+        "id": "id1",
         "value": "prod_cmk-agent",
         "condition": {
             "host_tags": {
@@ -518,12 +525,14 @@ tag_ruleset = [
     },
     # test negation of tag
     {
+        "id": "id2",
         "value": "not_lan",
         "condition": {"host_tags": {"networking": {"$ne": "lan"}}},
         "options": {},
     },
     # test $or
     {
+        "id": "id3",
         "value": "wan_or_lan",
         "condition": {
             "host_tags": {
@@ -539,6 +548,7 @@ tag_ruleset = [
     },
     # test $nor
     {
+        "id": "id4",
         "value": "not_wan_and_not_lan",
         "condition": {
             "host_tags": {
@@ -554,6 +564,7 @@ tag_ruleset = [
     },
     # test unconditional match
     {
+        "id": "id5",
         "value": "BLA",
         "condition": {},
         "options": {},
@@ -695,7 +706,7 @@ def test_ruleset_matcher_get_host_ruleset_values_tags_duplicate_ids(
                     host_name=HostName("host"),
                     service_description=None,
                 ),
-                ruleset=[rule_spec],
+                ruleset=[rule_spec],  # type: ignore[arg-type]
                 is_binary=False,
             )
         )
@@ -703,9 +714,10 @@ def test_ruleset_matcher_get_host_ruleset_values_tags_duplicate_ids(
     )
 
 
-service_label_ruleset = [
+service_label_ruleset: Ruleset[str] = [
     # test simple label match
     {
+        "id": "id0",
         "value": "os_linux",
         "condition": {
             "service_labels": {
@@ -716,6 +728,7 @@ service_label_ruleset = [
     },
     # test implicit AND and unicode value match
     {
+        "id": "id1",
         "value": "abc",
         "condition": {
             "service_labels": {
@@ -727,12 +740,14 @@ service_label_ruleset = [
     },
     # test negation of label
     {
+        "id": "id2",
         "value": "hu",
         "condition": {"service_labels": {"hu": {"$ne": "ha"}}},
         "options": {},
     },
     # test unconditional match
     {
+        "id": "id3",
         "value": "BLA",
         "condition": {},
         "options": {},

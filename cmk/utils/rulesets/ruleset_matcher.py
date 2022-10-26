@@ -6,7 +6,7 @@
 
 from collections.abc import Generator, Iterable
 from re import Pattern
-from typing import Any, cast
+from typing import Any, cast, TypeVar
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.labels import BuiltinHostLabelsStore, DiscoveredHostLabelsStore, LabelManager
@@ -29,7 +29,6 @@ from cmk.utils.type_defs import (
     RuleConditionsSpec,
     Ruleset,
     RuleSpec,
-    RuleValue,
     ServiceName,
     TagCondition,
     TagConditionNE,
@@ -42,11 +41,13 @@ from cmk.utils.type_defs import (
     TagsOfHosts,
 )
 
+T = TypeVar("T")
+
 LabelConditions = dict  # TODO: Optimize this
-PreprocessedHostRuleset = dict[HostName, list[RuleValue]]
+PreprocessedHostRuleset = dict[HostName, list[T]]
 PreprocessedPattern = tuple[bool, Pattern[str]]
 PreprocessedServiceRuleset = list[
-    tuple[RuleValue, set[HostName], LabelConditions, tuple, PreprocessedPattern]
+    tuple[object, set[HostName], LabelConditions, tuple, PreprocessedPattern]
 ]
 
 
@@ -133,7 +134,9 @@ class RulesetMatcher:
 
         self._service_match_cache: dict = {}
 
-    def is_matching_host_ruleset(self, match_object: RulesetMatchObject, ruleset: Ruleset) -> bool:
+    def is_matching_host_ruleset(
+        self, match_object: RulesetMatchObject, ruleset: Ruleset[bool]
+    ) -> bool:
         """Compute outcome of a ruleset set that just says yes/no
 
         The binary match only cares about the first matching rule of an object.
@@ -141,12 +144,16 @@ class RulesetMatcher:
 
         Replaces in_binary_hostlist / in_boolean_serviceconf_list"""
         for value in self.get_host_ruleset_values(match_object, ruleset, is_binary=True):
+            # Next line may be controlled by `is_binary` in which case we
+            # should overload the function instead of asserting to check
+            # during typing instead of runtime.
+            assert isinstance(value, bool)
             return value
         return False  # no match. Do not ignore
 
     def get_host_ruleset_merged_dict(
-        self, match_object: RulesetMatchObject, ruleset: Ruleset
-    ) -> dict[str, Any]:
+        self, match_object: RulesetMatchObject, ruleset: Ruleset[dict[str, T]]
+    ) -> dict[str, T]:
         """Returns a dictionary of the merged dict values of the matched rules
         The first dict setting a key defines the final value.
 
@@ -158,7 +165,7 @@ class RulesetMatcher:
         return merged
 
     def get_host_ruleset_values(
-        self, match_object: RulesetMatchObject, ruleset: list, is_binary: bool
+        self, match_object: RulesetMatchObject, ruleset: Ruleset[T], is_binary: bool
     ) -> Generator:
         """Returns a generator of the values of the matched rules
         Replaces host_extra_conf"""
@@ -175,11 +182,12 @@ class RulesetMatcher:
         )
 
         assert match_object.host_name is not None
-        for value in optimized_ruleset.get(match_object.host_name, []):
+        default: PreprocessedHostRuleset[T] = {}
+        for value in optimized_ruleset.get(match_object.host_name, default):
             yield value
 
     def is_matching_service_ruleset(
-        self, match_object: RulesetMatchObject, ruleset: Ruleset
+        self, match_object: RulesetMatchObject, ruleset: Ruleset[T]
     ) -> bool:
         """Compute outcome of a ruleset set that just says yes/no
 
@@ -188,12 +196,14 @@ class RulesetMatcher:
 
         Replaces in_binary_hostlist / in_boolean_serviceconf_list"""
         for value in self.get_service_ruleset_values(match_object, ruleset, is_binary=True):
+            # See `is_matching_host_ruleset()`.
+            assert isinstance(value, bool)
             return value
         return False  # no match. Do not ignore
 
     def get_service_ruleset_merged_dict(
-        self, match_object: RulesetMatchObject, ruleset: Ruleset
-    ) -> dict[str, Any]:
+        self, match_object: RulesetMatchObject, ruleset: Ruleset[dict[str, T]]
+    ) -> dict[str, T]:
         """Returns a dictionary of the merged dict values of the matched rules
         The first dict setting a key defines the final value.
 
@@ -205,7 +215,7 @@ class RulesetMatcher:
         return merged
 
     def get_service_ruleset_values(
-        self, match_object: RulesetMatchObject, ruleset: list, is_binary: bool
+        self, match_object: RulesetMatchObject, ruleset: Ruleset[T], is_binary: bool
     ) -> Generator:
         """Returns a generator of the values of the matched rules
         Replaces service_extra_conf"""
@@ -281,8 +291,8 @@ class RulesetMatcher:
         return negate
 
     def get_values_for_generic_agent(
-        self, ruleset: Ruleset, path_for_rule_matching: str
-    ) -> list[RuleValue]:
+        self, ruleset: Ruleset[object], path_for_rule_matching: str
+    ) -> list[object]:
         """Compute rulesets for "generic" hosts
 
         This fictious host has no name and no tags.
@@ -291,7 +301,7 @@ class RulesetMatcher:
         """
         self.tuple_transformer.transform_in_place(ruleset, is_service=False, is_binary=False)
 
-        entries = []
+        entries: list[object] = []
         for rule in ruleset:
             if _is_disabled(rule):
                 continue
@@ -416,8 +426,8 @@ class RulesetOptimizer:
         )
 
     def get_host_ruleset(
-        self, ruleset: Ruleset, with_foreign_hosts: bool, is_binary: bool
-    ) -> PreprocessedHostRuleset:
+        self, ruleset: Ruleset[T], with_foreign_hosts: bool, is_binary: bool
+    ) -> PreprocessedHostRuleset[T]:
         cache_id = id(ruleset), with_foreign_hosts
 
         if cache_id in self._host_ruleset_cache:
@@ -428,14 +438,14 @@ class RulesetOptimizer:
         return host_ruleset
 
     def _convert_host_ruleset(
-        self, ruleset: Ruleset, with_foreign_hosts: bool, is_binary: bool
-    ) -> PreprocessedHostRuleset:
+        self, ruleset: Ruleset[T], with_foreign_hosts: bool, is_binary: bool
+    ) -> PreprocessedHostRuleset[T]:
         """Precompute host lookup map
 
         Instead of a ruleset like list structure with precomputed host lists we compute a
         direct map for hostname based lookups for the matching rule values
         """
-        host_values: PreprocessedHostRuleset = {}
+        host_values: PreprocessedHostRuleset[T] = {}
         for rule in ruleset:
             if _is_disabled(rule):
                 continue
@@ -446,7 +456,7 @@ class RulesetOptimizer:
         return host_values
 
     def get_service_ruleset(
-        self, ruleset: Ruleset, with_foreign_hosts: bool, is_binary: bool
+        self, ruleset: Ruleset[T], with_foreign_hosts: bool, is_binary: bool
     ) -> PreprocessedServiceRuleset:
         cache_id = id(ruleset), with_foreign_hosts
 
@@ -460,7 +470,7 @@ class RulesetOptimizer:
         return cached_ruleset
 
     def _convert_service_ruleset(
-        self, ruleset: Ruleset, with_foreign_hosts: bool, is_binary: bool
+        self, ruleset: Ruleset[T], with_foreign_hosts: bool, is_binary: bool
     ) -> PreprocessedServiceRuleset:
         new_rules: PreprocessedServiceRuleset = []
         for rule in ruleset:
@@ -1153,6 +1163,7 @@ def get_tag_to_group_map(tag_config: TagConfig) -> TagIDToTaggroupID:
     return tag_id_to_tag_group_id_map
 
 
-def _is_disabled(rule: RuleSpec) -> bool:
+def _is_disabled(rule: RuleSpec[T]) -> bool:
+    # TODO(ml): RuleSpec[object] should be good enough.
     # TODO consolidate with cmk.gui.watolib.rulesets.py::Rule::is_disabled
     return "options" in rule and bool(rule["options"].get("disabled", False))

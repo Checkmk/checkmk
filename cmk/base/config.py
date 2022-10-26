@@ -3410,9 +3410,11 @@ class ConfigCache:
         self._initialize_caches()
         self._setup_clusters_nodes_cache()
 
-        self._all_configured_clusters = ConfigCache._get_all_configured_clusters()
-        self._all_configured_realhosts = ConfigCache._get_all_configured_realhosts()
-        self._all_configured_hosts = self._get_all_configured_hosts()
+        self._all_configured_clusters = set(strip_tags(list(clusters)))
+        self._all_configured_realhosts = set(strip_tags(all_hosts))
+        self._all_configured_hosts = (
+            self._all_configured_realhosts | self._all_configured_clusters | set(get_shadow_hosts())
+        )
 
         tag_to_group_map = ConfigCache.get_tag_to_group_map()
         self._collect_hosttags(tag_to_group_map)
@@ -3431,10 +3433,9 @@ class ConfigCache:
             all_configured_hosts=self._all_configured_hosts,
         )
 
-        # Warning: do not change call order. all_active_hosts relies on the other values
-        self._all_active_clusters = self._get_all_active_clusters()
-        self._all_active_realhosts = self._get_all_active_realhosts()
-        self._all_active_hosts = self._get_all_active_hosts()
+        self._all_active_clusters = set(_filter_active_hosts(self, self._all_configured_clusters))
+        self._all_active_realhosts = set(_filter_active_hosts(self, self._all_configured_realhosts))
+        self._all_active_hosts = self._all_active_realhosts | self._all_active_clusters
 
         self.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(self._all_active_hosts)
 
@@ -3916,45 +3917,15 @@ class ConfigCache:
         """Returns a set of all active hosts"""
         return self._all_active_hosts
 
-    def _get_all_active_hosts(self) -> Set[HostName]:
-        hosts: Set[HostName] = set()
-        hosts.update(self.all_active_realhosts(), self.all_active_clusters())
-        return hosts
-
     def all_active_realhosts(self) -> Set[HostName]:
         """Returns a set of all host names to be handled by this site hosts of other sites or disabled hosts are excluded"""
         return self._all_active_realhosts
 
-    def _get_all_active_realhosts(self) -> Set[HostName]:
-        return set(_filter_active_hosts(self, self._all_configured_realhosts))
-
     def all_configured_realhosts(self) -> Set[HostName]:
         return self._all_configured_realhosts
 
-    @staticmethod
-    def _get_all_configured_realhosts() -> Set[HostName]:
-        """Returns a set of all host names, regardless if currently disabled or
-        monitored on a remote site. Does not return cluster hosts."""
-        return set(strip_tags(all_hosts))
-
-    @staticmethod
-    def _get_all_configured_shadow_hosts() -> Set[HostName]:
-        """Returns a set of all shadow host names, regardless if currently disabled or
-        monitored on a remote site"""
-        return set(get_shadow_hosts())
-
     def all_configured_hosts(self) -> Set[HostName]:
         return self._all_configured_hosts
-
-    def _get_all_configured_hosts(self) -> Set[HostName]:
-        """Returns a set of all hosts, regardless if currently disabled or monitored on a remote site."""
-        hosts: Set[HostName] = set()
-        hosts.update(
-            self.all_configured_realhosts(),
-            self.all_configured_clusters(),
-            ConfigCache._get_all_configured_shadow_hosts(),
-        )
-        return hosts
 
     def _setup_clusters_nodes_cache(self) -> None:
         for cluster, hosts in clusters.items():
@@ -3981,18 +3952,11 @@ class ConfigCache:
         """Returns a set of all cluster host names to be handled by this site hosts of other sites or disabled hosts are excluded"""
         return self._all_active_clusters
 
-    def _get_all_active_clusters(self) -> Set[HostName]:
-        return set(_filter_active_hosts(self, self.all_configured_clusters()))
-
     def all_configured_clusters(self) -> Set[HostName]:
         """Returns a set of all cluster names
         Regardless if currently disabled or monitored on a remote site. Does not return normal hosts.
         """
         return self._all_configured_clusters
-
-    @staticmethod
-    def _get_all_configured_clusters() -> Set[HostName]:
-        return set(strip_tags(list(clusters)))
 
     def host_of_clustered_service(
         self,

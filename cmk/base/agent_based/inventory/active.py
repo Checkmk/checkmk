@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
+from dataclasses import dataclass
 from functools import partial
 from typing import Callable
 
@@ -63,21 +64,50 @@ def _execute_active_check_inventory(
     )
     old_tree = tree_or_archive_store.load(host_name=host_config.hostname)
 
-    if host_config.is_cluster:
-        tree_aggregator = inventorize_cluster(host_config=host_config)
+    result = _check_inventory_tree(
+        host_config,
+        parameters,
+        tree_or_archive_store,
+        old_tree,
+    )
+
+    if result.do_save_tree:
         _save_inventory_tree(
             host_config.hostname,
             tree_or_archive_store,
-            tree_aggregator,
+            result.tree_aggregator,
             old_tree,
         )
-        return ActiveCheckResult.from_subresults(
-            *check_trees(
-                parameters=parameters,
-                inventory_tree=tree_aggregator.trees.inventory,
-                status_data_tree=tree_aggregator.trees.status_data,
-                old_tree=old_tree,
+
+    return result.check_result
+
+
+@dataclass(frozen=True)
+class CheckInventoryTreeResult:
+    check_result: ActiveCheckResult
+    tree_aggregator: TreeAggregator
+    do_save_tree: bool
+
+
+def _check_inventory_tree(
+    host_config: HostConfig,
+    parameters: config.HWSWInventoryParameters,
+    tree_or_archive_store: TreeOrArchiveStore,
+    old_tree: StructuredDataNode,
+) -> CheckInventoryTreeResult:
+    if host_config.is_cluster:
+        tree_aggregator = inventorize_cluster(host_config=host_config)
+        return CheckInventoryTreeResult(
+            check_result=ActiveCheckResult.from_subresults(
+                *check_trees(
+                    parameters=parameters,
+                    inventory_tree=tree_aggregator.trees.inventory,
+                    status_data_tree=tree_aggregator.trees.status_data,
+                    old_tree=old_tree,
+                ),
             ),
+            tree_aggregator=tree_aggregator,
+            do_save_tree=True,
         )
 
     fetched_data_result = fetch_real_host_data(
@@ -93,37 +123,35 @@ def _execute_active_check_inventory(
     if fetched_data_result.processing_failed:
         active_check_result = ActiveCheckResult(parameters.fail_status, "Cannot update tree")
     else:
-        _save_inventory_tree(
-            host_config.hostname,
-            tree_or_archive_store,
-            tree_aggregator,
-            old_tree,
-        )
         active_check_result = ActiveCheckResult()
 
-    return ActiveCheckResult.from_subresults(
-        active_check_result,
-        *check_trees(
-            parameters=parameters,
-            inventory_tree=tree_aggregator.trees.inventory,
-            status_data_tree=tree_aggregator.trees.status_data,
-            old_tree=old_tree,
-        ),
-        *summarize_host_sections(
-            source_results=fetched_data_result.source_results,
-            # Do not use source states which would overwrite "State when inventory fails" in the
-            # ruleset "Do hardware/software Inventory". These are handled by the "Check_MK" service
-            override_non_ok_state=parameters.fail_status,
-            exit_spec_cb=host_config.exit_code_spec,
-            time_settings_cb=lambda hostname: config.get_config_cache().get_piggybacked_hosts_time_settings(
-                piggybacked_hostname=hostname,
+    return CheckInventoryTreeResult(
+        check_result=ActiveCheckResult.from_subresults(
+            active_check_result,
+            *check_trees(
+                parameters=parameters,
+                inventory_tree=tree_aggregator.trees.inventory,
+                status_data_tree=tree_aggregator.trees.status_data,
+                old_tree=old_tree,
             ),
-            is_piggyback=host_config.is_piggyback_host,
+            *summarize_host_sections(
+                source_results=fetched_data_result.source_results,
+                # Do not use source states which would overwrite "State when inventory fails" in the
+                # ruleset "Do hardware/software Inventory". These are handled by the "Check_MK" service
+                override_non_ok_state=parameters.fail_status,
+                exit_spec_cb=host_config.exit_code_spec,
+                time_settings_cb=lambda hostname: config.get_config_cache().get_piggybacked_hosts_time_settings(
+                    piggybacked_hostname=hostname,
+                ),
+                is_piggyback=host_config.is_piggyback_host,
+            ),
+            *check_parsing_errors(
+                errors=fetched_data_result.parsing_errors,
+                error_state=parameters.fail_status,
+            ),
         ),
-        *check_parsing_errors(
-            errors=fetched_data_result.parsing_errors,
-            error_state=parameters.fail_status,
-        ),
+        tree_aggregator=tree_aggregator,
+        do_save_tree=not fetched_data_result.processing_failed,
     )
 
 

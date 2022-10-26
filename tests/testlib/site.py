@@ -769,9 +769,7 @@ class Site:
             )
 
     def rm(self, site_id: str | None = None) -> None:
-        # TODO: LM: Temporarily disabled until "omd rm" issue is fixed.
-        # assert subprocess.Popen(["/usr/bin/sudo", "/usr/bin/omd",
-        subprocess.run(
+        completed_process = subprocess.run(
             [
                 "/usr/bin/sudo",
                 "/usr/bin/omd",
@@ -783,6 +781,7 @@ class Site:
             ],
             check=False,
         )
+        assert completed_process.returncode == 0
 
     def start(self) -> None:
         if not self.is_running():

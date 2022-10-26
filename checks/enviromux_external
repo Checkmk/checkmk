@@ -40,18 +40,9 @@ check_info["enviromux_external"] = {
             "1",  # extSensorIndex
             "2",  # extSensorType
             "3",  # extSensorDescription
-            "4",  # extSensorConnector
-            "5",  # extSensorGroupNB
-            "6",  # extSensorGroup
             "7",  # extSensorValue
-            "8",  # extSensorUnit
-            "9",  # extSensorUnitName
-            "10",  # extSensorStatus
             "11",  # extSensorMinThreshold
             "12",  # extSensorMaxThreshold
-            #  These appear to only return bogus values
-            # "12", # intSensorMinWarnThreshold
-            # "13", # intSensorMaxWarnThreshold
         ],
     ),
     "has_perfdata": True,

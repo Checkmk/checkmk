@@ -38,11 +38,8 @@ check_info["enviromux_sems_digital"] = {
         [
             "1",  # digIntputIndex
             "2",  # digIntputDescription
-            "3",  # digIntputGroupNB
-            "4",  # digIntputGroup
             "5",  # digIntputValue
             "6",  # digIntputNormalValue
-            "7",  # digIntputStatus
         ],
     ),
     "has_perfdata": True,

@@ -34,17 +34,9 @@ check_info["enviromux_aux"] = {
             "1",  # intSensorIndex
             "2",  # intSensorType
             "3",  # intSensorDescription
-            "4",  # intSensorGroupNb
-            "5",  # intSensorGroup
             "6",  # intSensorValue
-            "7",  # intSensorUnit
-            "8",  # intSensorUnitName
-            "9",  # intSensorStatus
             "10",  # intSensorMinThreshold
             "11",  # intSensorMaxThreshold
-            # These appear to only return bogus values
-            # "12", # intSensorMinWarnThreshold
-            # "13", # intSensorMaxWarnThreshold
         ],
     ),
     "has_perfdata": True,

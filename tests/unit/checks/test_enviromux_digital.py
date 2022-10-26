@@ -16,9 +16,9 @@ from cmk.base.check_legacy_includes.enviromux import parse_enviromux_digital
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 
 STRING_TABLE = [
-    ["0", "18", "Digital Input #1", "1", "1", "2", "1", "0", "1"],
-    ["1", "18", "Digital Input #2", "2", "1", "2", "1", "0", "1"],
-    ["2", "18", "Digital Input #3", "3", "1", "2", "1", "0", "1"],
+    ["0", "Digital Input #1", "1", "1"],
+    ["1", "Digital Input #2", "1", "1"],
+    ["2", "Digital Input #3", "1", "1"],
 ]
 
 
@@ -66,7 +66,7 @@ def test_discover_enviromux_digital(
             id="If the sensor value is equal to the normal/expected value, the check result is OK.",
         ),
         pytest.param(
-            [["0", "18", "Digital Input #1", "1", "1", "2", "0", "0", "1"]],
+            [["0", "Digital Input #1", "0", "1"]],
             [
                 Result(
                     state=State.CRIT,

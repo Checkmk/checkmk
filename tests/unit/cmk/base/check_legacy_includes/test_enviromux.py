@@ -19,9 +19,9 @@ from cmk.base.check_legacy_includes.enviromux import (
 )
 
 STRING_TABLE = [
-    ["0", "1", "Internal Temperature", "1", "2", "292", "0", "C", "1", "100", "500"],
-    ["1", "2", "Internal Humidity", "1", "2", "17", "0", "%", "1", "10", "75"],
-    ["2", "3", "Input Voltage", "1", "2", "140", "0", "V", "1", "120", "150"],
+    ["0", "1", "Internal Temperature", "292", "100", "500"],
+    ["1", "2", "Internal Humidity", "17", "10", "75"],
+    ["2", "3", "Input Voltage", "140", "120", "150"],
 ]
 
 
@@ -104,7 +104,7 @@ def test_discover_enviromux_voltage(
         ),
         pytest.param(
             [
-                ["0", "1", "Internal Temperature", "1", "2", "402", "0", "C", "1", "400", "500"],
+                ["0", "1", "Internal Temperature", "402", "400", "500"],
             ],
             {"levels": (35.0, 45.0)},
             [
@@ -116,7 +116,7 @@ def test_discover_enviromux_voltage(
         ),
         pytest.param(
             [
-                ["0", "1", "Internal Temperature", "1", "2", "462", "0", "C", "1", "400", "500"],
+                ["0", "1", "Internal Temperature", "462", "400", "500"],
             ],
             {"levels": (35.0, 45.0)},
             [
@@ -128,7 +128,7 @@ def test_discover_enviromux_voltage(
         ),
         pytest.param(
             [
-                ["0", "1", "Internal Temperature", "1", "2", "240", "0", "C", "1", "400", "500"],
+                ["0", "1", "Internal Temperature", "240", "400", "500"],
             ],
             {"levels_lower": (25.0, 20.0)},
             [
@@ -140,7 +140,7 @@ def test_discover_enviromux_voltage(
         ),
         pytest.param(
             [
-                ["0", "1", "Internal Temperature", "1", "2", "190", "0", "C", "1", "400", "500"],
+                ["0", "1", "Internal Temperature", "190", "400", "500"],
             ],
             {"levels_lower": (25.0, 20.0)},
             [
@@ -180,7 +180,7 @@ def test_check_enviromux_temperature(
         ),
         pytest.param(
             [
-                ["2", "3", "Input Voltage", "1", "2", "220", "0", "V", "1", "120", "150"],
+                ["2", "3", "Input Voltage", "220", "120", "150"],
             ],
             {"levels": (20.0, 25.0), "levels_lower": (5.0, 3.0)},
             [1, "Input Voltage is 22.0 V (warn/crit at 20.0/25.0)", [("voltage", 22.0)]],
@@ -188,7 +188,7 @@ def test_check_enviromux_temperature(
         ),
         pytest.param(
             [
-                ["2", "3", "Input Voltage", "1", "2", "260", "0", "V", "1", "120", "150"],
+                ["2", "3", "Input Voltage", "260", "120", "150"],
             ],
             {"levels": (20.0, 25.0), "levels_lower": (5.0, 3.0)},
             [2, "Input Voltage is 26.0 V (warn/crit at 20.0/25.0)", [("voltage", 26.0)]],
@@ -196,7 +196,7 @@ def test_check_enviromux_temperature(
         ),
         pytest.param(
             [
-                ["2", "3", "Input Voltage", "1", "2", "40", "0", "V", "1", "120", "150"],
+                ["2", "3", "Input Voltage", "40", "120", "150"],
             ],
             {"levels": (20.0, 25.0), "levels_lower": (5.0, 3.0)},
             [1, "Input Voltage is 4.0 V (warn/crit below 5.0/3.0)", [("voltage", 4.0)]],
@@ -204,7 +204,7 @@ def test_check_enviromux_temperature(
         ),
         pytest.param(
             [
-                ["2", "3", "Input Voltage", "1", "2", "20", "0", "V", "1", "120", "150"],
+                ["2", "3", "Input Voltage", "20", "120", "150"],
             ],
             {"levels": (20.0, 25.0), "levels_lower": (5.0, 3.0)},
             [2, "Input Voltage is 2.0 V (warn/crit below 5.0/3.0)", [("voltage", 2.0)]],
@@ -240,7 +240,7 @@ def test_check_enviromux_voltage(
         ),
         pytest.param(
             [
-                ["1", "2", "Internal Humidity", "1", "2", "24", "0", "%", "1", "10", "75"],
+                ["1", "2", "Internal Humidity", "24", "10", "75"],
             ],
             {"levels": (20.0, 25.0), "levels_lower": (5.0, 3.0)},
             [1, "24.00% (warn/crit at 20.00%/25.00%)", [("humidity", 24, 20.0, 25.0, 0.0, 100.0)]],
@@ -248,7 +248,7 @@ def test_check_enviromux_voltage(
         ),
         pytest.param(
             [
-                ["1", "2", "Internal Humidity", "1", "2", "27", "0", "%", "1", "10", "75"],
+                ["1", "2", "Internal Humidity", "27", "10", "75"],
             ],
             {"levels": (20.0, 25.0), "levels_lower": (5.0, 3.0)},
             [2, "27.00% (warn/crit at 20.00%/25.00%)", [("humidity", 27, 20.0, 25.0, 0.0, 100.0)]],
@@ -256,7 +256,7 @@ def test_check_enviromux_voltage(
         ),
         pytest.param(
             [
-                ["1", "2", "Internal Humidity", "1", "2", "4", "0", "%", "1", "10", "75"],
+                ["1", "2", "Internal Humidity", "4", "10", "75"],
             ],
             {"levels": (20.0, 25.0), "levels_lower": (5.0, 3.0)},
             [1, "4.00% (warn/crit below 5.00%/3.00%)", [("humidity", 4, 20.0, 25.0, 0.0, 100.0)]],
@@ -264,7 +264,7 @@ def test_check_enviromux_voltage(
         ),
         pytest.param(
             [
-                ["1", "2", "Internal Humidity", "1", "2", "2", "0", "%", "1", "10", "75"],
+                ["1", "2", "Internal Humidity", "2", "10", "75"],
             ],
             {"levels": (20.0, 25.0), "levels_lower": (5.0, 3.0)},
             [2, "2.00% (warn/crit below 5.00%/3.00%)", [("humidity", 2, 20.0, 25.0, 0.0, 100.0)]],

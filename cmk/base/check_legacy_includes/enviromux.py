@@ -151,11 +151,10 @@ def parse_enviromux(info):
         item = sensor_descr + " " + sensor_index
 
         sensor_type = sensor_type_names.get(line[1], "unknown")
-        sensor_status = sensor_status_names.get(line[8], "unknown")
         try:
-            sensor_value: int | float = int(line[5])
-            sensor_min: int | float = int(line[9])
-            sensor_max: int | float = int(line[10])
+            sensor_value: int | float = int(line[3])
+            sensor_min: int | float = int(line[4])
+            sensor_max: int | float = int(line[5])
             # Sensors without value have "Not configured" and can't be int casted
             # skip the parse
         except ValueError:
@@ -170,11 +169,9 @@ def parse_enviromux(info):
 
         parsed[item] = {
             "sensor_type": sensor_type,
-            "sensor_status": sensor_status,
             "sensor_value": sensor_value,
             "sensor_min": sensor_min,
             "sensor_max": sensor_max,
-            "sensor_unit": line[6],  # e.g. V, C, %
         }
 
     return parsed
@@ -189,25 +186,22 @@ def parse_enviromux_sems_external(info):
         item = sensor_descr + " " + sensor_index
 
         sensor_type = sensor_type_names.get(line[1], "unknown")
-        sensor_status = sensor_status_names.get(line[8], "unknown")
         # Observed in the wild: "power" may actually be a voltage m(
         if sensor_type in ["temperature", "power", "current"]:
             # The MIB specifies that currents, voltages and temperatures have a scaling factor 10
-            sensor_value = int(line[6]) / 10.0
-            sensor_min = int(line[10]) / 10.0
-            sensor_max = int(line[11]) / 10.0
+            sensor_value = int(line[3]) / 10.0
+            sensor_min = int(line[4]) / 10.0
+            sensor_max = int(line[5]) / 10.0
         else:
-            sensor_value = int(line[6])
-            sensor_min = int(line[10])
-            sensor_max = int(line[11])
+            sensor_value = int(line[3])
+            sensor_min = int(line[4])
+            sensor_max = int(line[5])
 
         parsed[item] = {
             "sensor_type": sensor_type,
-            "sensor_status": sensor_status,
             "sensor_value": sensor_value,
             "sensor_min": sensor_min,
             "sensor_max": sensor_max,
-            "sensor_unit": line[6],  # e.g. V, C, %
         }
 
     return parsed
@@ -222,25 +216,22 @@ def parse_enviromux_external(info):
         item = sensor_descr + " " + sensor_index
 
         sensor_type = sensor_type_names.get(line[1], "unknown")
-        sensor_status = sensor_status_names.get(line[8], "unknown")
         # Observed in the wild: "power" may actually be a voltage m(
         if sensor_type in ["temperature", "power", "current", "temperatureCombo"]:
             # The MIB specifies that currents, voltages and temperatures have a scaling factor 10
-            sensor_value = int(line[6]) / 10.0
-            sensor_min = int(line[10]) / 10.0
-            sensor_max = int(line[11]) / 10.0
+            sensor_value = int(line[3]) / 10.0
+            sensor_min = int(line[4]) / 10.0
+            sensor_max = int(line[5]) / 10.0
         else:
-            sensor_value = int(line[6])
-            sensor_min = int(line[10])
-            sensor_max = int(line[11])
+            sensor_value = int(line[3])
+            sensor_min = int(line[4])
+            sensor_max = int(line[5])
 
         parsed[item] = {
             "sensor_type": sensor_type,
-            "sensor_status": sensor_status,
             "sensor_value": sensor_value,
             "sensor_min": sensor_min,
             "sensor_max": sensor_max,
-            "sensor_unit": line[6],  # e.g. V, C, %
         }
 
     return parsed
@@ -250,14 +241,12 @@ def parse_enviromux_digital(info):
     parsed = {}
 
     for line in info:
-        sensor_descr = line[2]
+        sensor_descr = line[1]
         sensor_index = line[0]
-        sensor_normal_value = sensor_digital_value_names.get(line[8], "unknown")
-        sensor_value = sensor_digital_value_names.get(line[6], "unknown")
+        sensor_normal_value = sensor_digital_value_names.get(line[3], "unknown")
+        sensor_value = sensor_digital_value_names.get(line[2], "unknown")
         item = sensor_descr + " " + sensor_index
-        sensor_status = sensor_status_names.get(line[7], "unknown")
         parsed[item] = {
-            "sensor_status": sensor_status,
             "sensor_value": sensor_value,
             "sensor_normal_value": sensor_normal_value,
         }
@@ -271,12 +260,10 @@ def parse_enviromux_sems_digital(info):
     for line in info:
         sensor_descr = line[1]
         sensor_index = line[0]
-        sensor_normal_value = sensor_digital_value_names.get(line[5], "unknown")
-        sensor_value = sensor_digital_value_names.get(line[4], "unknown")
+        sensor_normal_value = sensor_digital_value_names.get(line[3], "unknown")
+        sensor_value = sensor_digital_value_names.get(line[2], "unknown")
         item = sensor_descr + " " + sensor_index
-        sensor_status = sensor_status_names.get(line[6], "unknown")
         parsed[item] = {
-            "sensor_status": sensor_status,
             "sensor_value": sensor_value,
             "sensor_normal_value": sensor_normal_value,
         }

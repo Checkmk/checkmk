@@ -37,13 +37,8 @@ check_info["enviromux_digital"] = {
         ".1.3.6.1.4.1.3699.1.1.11.1.6.1.1",
         [
             "1",  # digInputIndex
-            "2",  # digInputType
             "3",  # digInputDescription
-            "4",  # digInputConnector
-            "5",  # digInputGroupNB
-            "6",  # digInputGroup
             "7",  # digInputValue
-            "8",  # digInputStatus
             "9",  # digInputNormalValue
         ],
     ),

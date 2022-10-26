@@ -1619,10 +1619,9 @@ class EventServer(ECServerThread):
     # There is still no common library. Please keep this in sync with the
     # original code
     def translate_hostname(self, backedhost: str) -> str:
-        translation = self._config["hostname_translation"]
 
         # Here comes the original code from modules/check_mk_base.py
-        if translation:
+        if translation := self._config["hostname_translation"]:
             # 1. Case conversion
             caseconf = translation.get("case")
             if caseconf == "upper":
@@ -1819,8 +1818,7 @@ class EventServer(ECServerThread):
 
     def _get_rule_event_limit(self, rule_id: str | None) -> tuple[int, str]:
         """Prefer the rule individual limit for by_rule limit (in case there is some)"""
-        rule_limit = self._rule_by_id.get(rule_id, {}).get("event_limit")
-        if rule_limit:
+        if rule_limit := self._rule_by_id.get(rule_id, {}).get("event_limit"):
             return rule_limit["limit"], rule_limit["action"]
 
         return (

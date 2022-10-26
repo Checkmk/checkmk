@@ -931,7 +931,7 @@ class TableRenderer:
             row: List[Union[TextCell, IconCell]] = []
             rows.append(row)
             for css, entry in raw_row:
-                css_list: list[str] = css.split()
+                css_list: list[str] = [] if css is None else css.split()
                 if isinstance(entry, tuple):
                     if entry[0] == "icon":
                         row.append(IconCell(entry[1]))
@@ -1297,13 +1297,24 @@ class TextCell:
         if csses is None:
             csses = []
 
+        state_in_css: bool = any(
+            css.startswith("hstate")
+            or css.startswith("state")
+            or css.startswith("svcstate")
+            or css.startswith("if_state")
+            for css in csses
+        )
+
         # TODO: Sollte das nicht lieber raus aus dem allgemeinen pdf.py? Ist eigentlich
         # Spezifisch für Views, etc.
-        if "heading" in csses or "state" in csses:
+        if "heading" in csses or state_in_css:
             self._bold = True
 
         if "number" in csses:
             self._alignment = "right"
+
+        if "count" in csses:
+            self._alignment = "center"
 
         if "unused" in csses:
             self._color = (0.6, 0.6, 0.6)
@@ -1316,7 +1327,7 @@ class TextCell:
                 self._bg_color = color
                 self._alignment = "center"
 
-        self._narrow = "narrow" in csses or "state" in csses
+        self._narrow = "narrow" in csses or state_in_css
 
     def minimal_width(self, pdfdoc):  # without padding
         # TODO: consider bold here!

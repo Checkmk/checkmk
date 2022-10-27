@@ -13,9 +13,7 @@ echo "Copy CRE files..."
 sudo rsync \
     --exclude="*.pyc" \
     --exclude="flycheck*" \
-    --archive \
-    --relative \
-    --delete \
+    -aR \
     . \
     "$ROOT"/lib/python3/cmk/gui/plugins/openapi
 

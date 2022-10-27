@@ -20,9 +20,7 @@ sudo rsync \
     --exclude="cee" \
     --exclude="cpe" \
     --exclude="cme" \
-    --archive \
-    --delete \
-    ./* "$DESTDIR"
+    -a ./* "$DESTDIR"
 
 # Also deploy all other directories of same type
 if [ "${ALL_EDITIONS:-1}" != 0 ]; then

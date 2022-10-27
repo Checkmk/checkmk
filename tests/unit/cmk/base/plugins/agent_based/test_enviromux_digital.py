@@ -6,25 +6,19 @@ from collections.abc import Sequence
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
-from cmk.utils.type_defs import CheckPluginName
-
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import StringTable
-from cmk.base.check_legacy_includes.enviromux import parse_enviromux_digital
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.enviromux_digital import (
+    check_enviromux_digital,
+    discover_enviromux_digital,
+    parse_enviromux_digital,
+)
 
 STRING_TABLE = [
     ["0", "Digital Input #1", "1", "1"],
     ["1", "Digital Input #2", "1", "1"],
     ["2", "Digital Input #3", "1", "1"],
 ]
-
-
-@pytest.fixture(name="check")
-def _enviromux_digital_check_plugin(fix_register: FixRegister) -> CheckPlugin:
-    return fix_register.check_plugins[CheckPluginName("enviromux_digital")]
 
 
 @pytest.mark.parametrize(
@@ -47,12 +41,11 @@ def _enviromux_digital_check_plugin(fix_register: FixRegister) -> CheckPlugin:
     ],
 )
 def test_discover_enviromux_digital(
-    check: CheckPlugin,
     section: StringTable,
     expected_discovery_result: Sequence[Service],
 ) -> None:
     assert (
-        list(check.discovery_function(parse_enviromux_digital(section)))
+        list(discover_enviromux_digital(parse_enviromux_digital(section)))
         == expected_discovery_result
     )
 
@@ -78,15 +71,13 @@ def test_discover_enviromux_digital(
     ],
 )
 def test_check_enviromux_digital(
-    check: CheckPlugin,
     section: StringTable,
     expected_discovery_result: Sequence[Result],
 ) -> None:
     assert (
         list(
-            check.check_function(
+            check_enviromux_digital(
                 item="Digital Input #1 0",
-                params={},
                 section=parse_enviromux_digital(section),
             )
         )

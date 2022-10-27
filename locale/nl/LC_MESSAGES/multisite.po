@@ -3117,10 +3117,6 @@ msgstr "Actieve modems"
 msgid "Active node"
 msgstr "Actief knooppunt"
 
-#, fuzzy
-msgid "Active on this site"
-msgstr "Activeren op geselecteerde sites"
-
 msgid "Active paths"
 msgstr "Actieve paden"
 
@@ -4639,6 +4635,9 @@ msgstr "Alle online gebruikers"
 #, python-format
 msgid "All package types are signed with the key '%s'"
 msgstr "Alle pakkettypes zijn ondertekend met de sleutel '%s'"
+
+msgid "All packages (enabled or disabled)"
+msgstr ""
 
 msgid "All pages"
 msgstr "Alle pagina's"
@@ -8116,6 +8115,13 @@ msgstr ""
 "Kan deze weergave niet in matrix layout weergeven. U hebt ten minste twee "
 "kolommen nodig!"
 
+#, fuzzy
+msgid ""
+"Cannot download license usage report due to missing subscription settings."
+msgstr ""
+"Voor het downloaden van licentie gebruiksrapporten moet u "
+"abonnementsgegevens toevoegen."
+
 #, python-format
 msgid ""
 "Cannot download license usage report.<br>Please add subscription details in "
@@ -8316,6 +8322,14 @@ msgid "Case"
 msgstr "Zaak"
 
 msgid "Case insensitive"
+msgstr "Hoofdletterongevoelig"
+
+#, fuzzy
+msgid "Case sensitive"
+msgstr "Hoofdletterongevoelig"
+
+#, fuzzy
+msgid "Case sensitivity"
 msgstr "Hoofdletterongevoelig"
 
 msgid "Case translation"
@@ -16915,6 +16929,10 @@ msgstr "Inschakelen/uitschakelen verwerking van perfdata voor diensten"
 
 msgid "Enabled"
 msgstr "Ingeschakeld"
+
+#, fuzzy
+msgid "Enabled (active on this site)"
+msgstr "deze site inschakelen"
 
 #, fuzzy
 msgid "Enabled (inactive on this site)"
@@ -37955,6 +37973,10 @@ msgstr "Registersleutels om naar software te zoeken (Windows)"
 msgid "Regular expression"
 msgstr "Reguliere uitdrukking"
 
+#, fuzzy
+msgid "Regular expression for logfile filtering"
+msgstr "Reguliere uitdrukkingen voor berichtclassificatie"
+
 msgid "Regular expression for matching the syslog tag (case insenstive)"
 msgstr ""
 "Reguliere uitdrukking voor het matchen van de syslog tag "
@@ -37995,6 +38017,11 @@ msgstr "Reguliere uitdrukking om plugins uit te sluiten"
 
 msgid "Regular expression to expect in content"
 msgstr "Reguliere uitdrukking te verwachten in de inhoud"
+
+msgid ""
+"Regular expression which is used to narrow down the selected files further. "
+"Applies to the selected logfile paths."
+msgstr ""
 
 msgid "Regular expression: "
 msgstr "Reguliere uitdrukking: "
@@ -56010,6 +56037,10 @@ msgstr "Onbekend"
 msgid "Unknown %s group: %s"
 msgstr "Onbekende %s groep: %s"
 
+#, fuzzy
+msgid "Unknown - DUnknown"
+msgstr "Secundair - DUnknown"
+
 msgid "Unknown agent configuration"
 msgstr "Onbekende agent configuratie"
 
@@ -64588,6 +64619,11 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
+
+#, fuzzy
+#~| msgid "Activate on selected sites"
+#~ msgid "Active on this site"
+#~ msgstr "Activeren op geselecteerde sites"
 
 #~ msgid ""
 #~ "This check monitors how often database objects in a PostgreSQL Database "

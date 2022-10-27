@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2022-10-07 06:00+0000\n"
+"PO-Revision-Date: 2022-10-26 06:00+0000\n"
 "Last-Translator: Marc Nerreter <marc.nerreter@tribe29.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
@@ -3108,23 +3108,17 @@ msgstr "Aktive Verbindungen"
 msgid "Active guest memory"
 msgstr "Aktiver Speicher auf dem Gast"
 
-#, fuzzy
 msgid "Active in time period"
-msgstr "Aktiv in Zeitperiode"
+msgstr "Aktiv in Zeitraum"
 
-#, fuzzy
 msgid "Active jobs"
-msgstr "Aktive Hosts"
+msgstr "Aktive Jobs"
 
 msgid "Active modems"
 msgstr "Aktive Modems"
 
 msgid "Active node"
 msgstr "Aktiver Knoten"
-
-#, fuzzy
-msgid "Active on this site"
-msgstr "Auf ausgewählten Instanzen aktivieren"
 
 msgid "Active paths"
 msgstr "Aktive Pfade"
@@ -4640,6 +4634,9 @@ msgstr "Alle gerade aktiven Benutzer"
 msgid "All package types are signed with the key '%s'"
 msgstr "Alle Pakettypen sind signiert mit dem Schlüssel '%s'"
 
+msgid "All packages (enabled or disabled)"
+msgstr ""
+
 msgid "All pages"
 msgstr "Alle Seiten"
 
@@ -4723,9 +4720,8 @@ msgstr "reserviert"
 msgid "Allocate Requests Exceeding Port Limit"
 msgstr "Überschreitung des Port Limits bei Allokationsanfragen"
 
-#, fuzzy
 msgid "Allocated SNAT ports"
-msgstr "Erlaubte Protokolle"
+msgstr "Zugewiesene SNAT-Ports"
 
 msgid "Allocated for document storage"
 msgstr "Zugewiesen für Dokumnetenspeicher"
@@ -4991,9 +4987,8 @@ msgstr "Alias/Beschreibung der Rolle"
 msgid "An alias or description of the site."
 msgstr "Alias/Beschreibung dieser Instanz"
 
-#, fuzzy
 msgid "An alias or description of the time period"
-msgstr "Alias/Beschreibung der Zeitperiode"
+msgstr "Ein Alias oder eine Beschreibung des Zeitraums"
 
 msgid "An alias or description of this group."
 msgstr "Alias/Beschreibung der Gruppe."
@@ -6258,16 +6253,14 @@ msgstr "Azure DB-Speicher"
 msgid "Azure Databases"
 msgstr "Azure Datenbanken"
 
-#, fuzzy
 msgid "Azure Load Balancer Health"
-msgstr "Load-Balancer-IP"
+msgstr "Azure Load Balancer Zustand"
 
 msgid "Azure Storage"
 msgstr "Azure Speicher"
 
-#, fuzzy
 msgid "Azure Traffic Manager Probe State"
-msgstr "Zustand der Alert-Manager-Regel"
+msgstr "Azure Traffic Manager Probe Status"
 
 msgid "Azure Traffic Manager Qps"
 msgstr ""
@@ -6305,25 +6298,20 @@ msgstr "B/d"
 msgid "B/s"
 msgstr "B/s"
 
-#, fuzzy
 msgid "BAR1 memory usage"
-msgstr "DB2-Speicherverbrauch"
+msgstr "BAR1 Speicherauslastung"
 
-#, fuzzy
 msgid "BAR1 memory usage (free)"
-msgstr "DB2-Speicherverbrauch"
+msgstr "BAR1 Speicherauslastung (frei)"
 
-#, fuzzy
 msgid "BAR1 memory usage (total)"
-msgstr "DB2-Speicherverbrauch"
+msgstr "BAR1 Speicherauslastung (gesamt)"
 
-#, fuzzy
 msgid "BAR1 memory usage (used)"
-msgstr "DB2-Speicherverbrauch"
+msgstr "BAR1 Speicherauslastung (verwendet)"
 
-#, fuzzy
 msgid "BAR1 memory utilization"
-msgstr "Speicherauslastung"
+msgstr "BAR1 Speicherauslastung"
 
 msgid "BBcredit zero"
 msgstr "BBcredit-Zero"
@@ -6489,14 +6477,14 @@ msgid "Bad Requests Received"
 msgstr "Ungültige Anfragen empfangen"
 
 msgid "Bake a generic agent package for this folder."
-msgstr ""
+msgstr "Backen Sie ein generisches Agentenpaket für diesen Ordner."
 
 #, fuzzy
 msgid "Bake agent packages"
 msgstr "Agenten backen"
 
 msgid "Bake agent packages for this folder even if it is empty."
-msgstr ""
+msgstr "Backen Sie Agentenpakete für diesen Ordner, auch wenn er leer ist."
 
 msgid "Bake agents"
 msgstr "Agenten backen"
@@ -6950,9 +6938,8 @@ msgstr "Massenentdeckung gestartet..."
 msgid "Bulk discovery successful"
 msgstr "Massenentdeckung erfolgreich"
 
-#, fuzzy
 msgid "Bulk during time period"
-msgstr "Innerhalb der Zeitperiode"
+msgstr "Bulk innerhalb des Zeitraums"
 
 msgid "Bulk edit hosts"
 msgstr "Massenbearbeitung von Hosts"
@@ -7612,13 +7599,11 @@ msgstr ""
 "der entfernten Instanz festlegen. Details finden Sie hier: <a target=_blank "
 "href='%s'>Online Dokumentation</a>."
 
-#, fuzzy
 msgid "Byte Count"
-msgstr "Gesendete Bytes"
+msgstr "Byte Anzahl"
 
-#, fuzzy
 msgid "Byte count"
-msgstr "Gesendete Bytes"
+msgstr "Byte Anzahl"
 
 #, fuzzy
 msgid "Byte count lower levels"
@@ -8115,6 +8100,13 @@ msgstr ""
 "Diese Ansicht ist nicht im Matrix-Layout anzeigbar. Sie brauchen mindestens "
 "zwei Spalten!"
 
+#, fuzzy
+msgid ""
+"Cannot download license usage report due to missing subscription settings."
+msgstr ""
+"Um Lizenzverwendungsreports herunterzuladen müssen zuerst "
+"Subskriptionsdetails hinzugefügt werden."
+
 #, python-format
 msgid ""
 "Cannot download license usage report.<br>Please add subscription details in "
@@ -8326,6 +8318,14 @@ msgid "Case"
 msgstr "Fall"
 
 msgid "Case insensitive"
+msgstr "Groß-/Kleinschreibung"
+
+#, fuzzy
+msgid "Case sensitive"
+msgstr "Groß-/Kleinschreibung"
+
+#, fuzzy
+msgid "Case sensitivity"
 msgstr "Groß-/Kleinschreibung"
 
 msgid "Case translation"
@@ -16953,6 +16953,10 @@ msgid "Enabled"
 msgstr "Eingeschaltet"
 
 #, fuzzy
+msgid "Enabled (active on this site)"
+msgstr "Diese Instanz aktivieren"
+
+#, fuzzy
 msgid "Enabled (inactive on this site)"
 msgstr "Diese Instanz aktivieren"
 
@@ -20762,7 +20766,7 @@ msgid "Height"
 msgstr "Höhe"
 
 msgid "Help"
-msgstr "Hilfe-Text"
+msgstr "Hilfe"
 
 msgid "Help Text"
 msgstr "Hilfe-Text"
@@ -38050,6 +38054,10 @@ msgstr "Registrierungsschlüssel, in denen nach Software gesucht wird (Windows)"
 msgid "Regular expression"
 msgstr "Regulärer Ausdruck"
 
+#, fuzzy
+msgid "Regular expression for logfile filtering"
+msgstr "Reguläre Ausdrücke zur Eintragsklassifikation"
+
 msgid "Regular expression for matching the syslog tag (case insenstive)"
 msgstr "Regulärer Ausdruck der auf Syslog Tag (Groß-/Kleinschreibung) passt"
 
@@ -38088,6 +38096,11 @@ msgstr "Regulärer Ausdruck zum Ausschluss von Plugins"
 
 msgid "Regular expression to expect in content"
 msgstr "Im Inhalt erwarteter regulärer Ausdruck"
+
+msgid ""
+"Regular expression which is used to narrow down the selected files further. "
+"Applies to the selected logfile paths."
+msgstr ""
 
 msgid "Regular expression: "
 msgstr "Regulärer Ausdruck: "
@@ -56084,6 +56097,10 @@ msgstr "Unbekannt"
 msgid "Unknown %s group: %s"
 msgstr "Unbekannte %s-Gruppe: %s"
 
+#, fuzzy
+msgid "Unknown - DUnknown"
+msgstr "Secondary - DUnknown"
+
 msgid "Unknown agent configuration"
 msgstr "Unbekannte Agentenkonfiguration"
 
@@ -64658,6 +64675,9 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Active on this site"
+#~ msgstr "Aktiv auf dieser Instanz"
 
 #~ msgid ""
 #~ "This check monitors how often database objects in a PostgreSQL Database "

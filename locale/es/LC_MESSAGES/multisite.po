@@ -3134,10 +3134,6 @@ msgstr "Módems activos"
 msgid "Active node"
 msgstr "Nodo activo"
 
-#, fuzzy
-msgid "Active on this site"
-msgstr "Activar en los sitios seleccionados"
-
 msgid "Active paths"
 msgstr "Vías activas"
 
@@ -4662,6 +4658,9 @@ msgstr "Todos los usuarios en línea"
 #, python-format
 msgid "All package types are signed with the key '%s'"
 msgstr "Todos los tipos de paquetes están firmados con la clave '%s'"
+
+msgid "All packages (enabled or disabled)"
+msgstr ""
 
 msgid "All pages"
 msgstr "Todas las páginas"
@@ -8154,6 +8153,13 @@ msgstr ""
 "No se puede mostrar esta vista en diseño de matriz. Necesita al menos dos "
 "columnas."
 
+#, fuzzy
+msgid ""
+"Cannot download license usage report due to missing subscription settings."
+msgstr ""
+"Para descargar los informes de uso de las licencias debe añadir los detalles "
+"de la suscripción."
+
 #, python-format
 msgid ""
 "Cannot download license usage report.<br>Please add subscription details in "
@@ -8368,6 +8374,14 @@ msgid "Case"
 msgstr "Caso"
 
 msgid "Case insensitive"
+msgstr "No distingue entre mayúsculas y minúsculas"
+
+#, fuzzy
+msgid "Case sensitive"
+msgstr "No distingue entre mayúsculas y minúsculas"
+
+#, fuzzy
+msgid "Case sensitivity"
 msgstr "No distingue entre mayúsculas y minúsculas"
 
 msgid "Case translation"
@@ -17054,6 +17068,10 @@ msgstr "Habilitar/deshabilitar el procesamiento de perfdata para los servicios"
 
 msgid "Enabled"
 msgstr "Activado"
+
+#, fuzzy
+msgid "Enabled (active on this site)"
+msgstr "habilitar este sitio"
 
 #, fuzzy
 msgid "Enabled (inactive on this site)"
@@ -38278,6 +38296,10 @@ msgstr "Claves del registro para buscar software (Windows)"
 msgid "Regular expression"
 msgstr "Expresión regular"
 
+#, fuzzy
+msgid "Regular expression for logfile filtering"
+msgstr "Expresiones regulares para la clasificación de mensajes"
+
 msgid "Regular expression for matching the syslog tag (case insenstive)"
 msgstr ""
 "Expresión regular para la coincidencia de la etiqueta syslog (insensible a "
@@ -38318,6 +38340,11 @@ msgstr "Expresión regular para excluir plugins"
 
 msgid "Regular expression to expect in content"
 msgstr "Expresión regular que se espera en el contenido"
+
+msgid ""
+"Regular expression which is used to narrow down the selected files further. "
+"Applies to the selected logfile paths."
+msgstr ""
 
 msgid "Regular expression: "
 msgstr "Expresión regular: "
@@ -56477,6 +56504,10 @@ msgstr "Desconocido"
 msgid "Unknown %s group: %s"
 msgstr "Grupo %s desconocido: %s"
 
+#, fuzzy
+msgid "Unknown - DUnknown"
+msgstr "Secundaria - Ddesconocido"
+
 msgid "Unknown agent configuration"
 msgstr "Configuración desconocida del agente"
 
@@ -65114,6 +65145,11 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Todos los derechos reservados."
+
+#, fuzzy
+#~| msgid "Activate on selected sites"
+#~ msgid "Active on this site"
+#~ msgstr "Activar en los sitios seleccionados"
 
 #~ msgid ""
 #~ "This check monitors how often database objects in a PostgreSQL Database "

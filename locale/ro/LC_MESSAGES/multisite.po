@@ -2799,10 +2799,6 @@ msgstr "Verificări active"
 msgid "Active node"
 msgstr "Verificare activă"
 
-#, fuzzy
-msgid "Active on this site"
-msgstr "Conexiuni Active"
-
 msgid "Active paths"
 msgstr ""
 
@@ -4396,6 +4392,9 @@ msgstr ""
 
 #, python-format
 msgid "All package types are signed with the key '%s'"
+msgstr ""
+
+msgid "All packages (enabled or disabled)"
 msgstr ""
 
 msgid "All pages"
@@ -7627,6 +7626,10 @@ msgid ""
 "Cannot display this view in matrix layout. You need at least two columns!"
 msgstr ""
 
+msgid ""
+"Cannot download license usage report due to missing subscription settings."
+msgstr ""
+
 #, python-format
 msgid ""
 "Cannot download license usage report.<br>Please add subscription details in "
@@ -7809,6 +7812,12 @@ msgid "Case"
 msgstr ""
 
 msgid "Case insensitive"
+msgstr ""
+
+msgid "Case sensitive"
+msgstr ""
+
+msgid "Case sensitivity"
 msgstr ""
 
 msgid "Case translation"
@@ -16430,6 +16439,10 @@ msgstr ""
 #, fuzzy
 msgid "Enabled"
 msgstr "Tabel"
+
+#, fuzzy
+msgid "Enabled (active on this site)"
+msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
 msgid "Enabled (inactive on this site)"
@@ -36825,6 +36838,9 @@ msgstr ""
 msgid "Regular expression"
 msgstr ""
 
+msgid "Regular expression for logfile filtering"
+msgstr ""
+
 msgid "Regular expression for matching the syslog tag (case insenstive)"
 msgstr ""
 
@@ -36862,6 +36878,11 @@ msgid "Regular expression to exclude plugins"
 msgstr ""
 
 msgid "Regular expression to expect in content"
+msgstr ""
+
+msgid ""
+"Regular expression which is used to narrow down the selected files further. "
+"Applies to the selected logfile paths."
 msgstr ""
 
 msgid "Regular expression: "
@@ -52453,6 +52474,9 @@ msgstr ""
 msgid "Unknown %s group: %s"
 msgstr ""
 
+msgid "Unknown - DUnknown"
+msgstr ""
+
 msgid "Unknown agent configuration"
 msgstr ""
 
@@ -60107,6 +60131,10 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
+
+#, fuzzy
+#~ msgid "Active on this site"
+#~ msgstr "Conexiuni Active"
 
 #, fuzzy
 #~ msgid "Disabled extensions"

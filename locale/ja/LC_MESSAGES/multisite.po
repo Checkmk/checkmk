@@ -2958,10 +2958,6 @@ msgstr "アクティブモデム"
 msgid "Active node"
 msgstr "アクティブノード"
 
-#, fuzzy
-msgid "Active on this site"
-msgstr "選択したサイトでアクティブ化"
-
 msgid "Active paths"
 msgstr "アクティブパス"
 
@@ -4436,6 +4432,9 @@ msgstr "すべてのオンラインユーザー"
 #, python-format
 msgid "All package types are signed with the key '%s'"
 msgstr "すべてのパッケージタイプは、キー '%s' で署名されています"
+
+msgid "All packages (enabled or disabled)"
+msgstr ""
 
 msgid "All pages"
 msgstr "すべてのページ"
@@ -7731,6 +7730,13 @@ msgstr ""
 "このビューをマトリックスレイアウトで表示することはできません。少なくとも2つの"
 "列が必要です!"
 
+#, fuzzy
+msgid ""
+"Cannot download license usage report due to missing subscription settings."
+msgstr ""
+"ライセンス使用状況レポートをダウンロードするには、サブスクリプションの詳細を"
+"追加する必要があります。"
+
 #, python-format
 msgid ""
 "Cannot download license usage report.<br>Please add subscription details in "
@@ -7930,6 +7936,14 @@ msgid "Case"
 msgstr ""
 
 msgid "Case insensitive"
+msgstr "大文字小文字を区別しません"
+
+#, fuzzy
+msgid "Case sensitive"
+msgstr "大文字小文字を区別しません"
+
+#, fuzzy
+msgid "Case sensitivity"
 msgstr "大文字小文字を区別しません"
 
 msgid "Case translation"
@@ -16264,6 +16278,10 @@ msgstr "サービスのperfdataの処理を有効/無効にする"
 
 msgid "Enabled"
 msgstr "有効"
+
+#, fuzzy
+msgid "Enabled (active on this site)"
+msgstr "このサイトを有効にする"
 
 #, fuzzy
 msgid "Enabled (inactive on this site)"
@@ -36468,6 +36486,10 @@ msgstr "ソフトウェアを検索するためのレジストリキー(Windows)
 msgid "Regular expression"
 msgstr "正規表現"
 
+#, fuzzy
+msgid "Regular expression for logfile filtering"
+msgstr "メッセージ分類の正規表現"
+
 msgid "Regular expression for matching the syslog tag (case insenstive)"
 msgstr "Syslogタグを照合するための正規表現(大文字と小文字を区別しない)"
 
@@ -36506,6 +36528,11 @@ msgstr "プラグインを除外するための正規表現"
 
 msgid "Regular expression to expect in content"
 msgstr "コンテンツに期待される正規表現"
+
+msgid ""
+"Regular expression which is used to narrow down the selected files further. "
+"Applies to the selected logfile paths."
+msgstr ""
 
 msgid "Regular expression: "
 msgstr "正規表現: "
@@ -53217,6 +53244,10 @@ msgstr "不明"
 msgid "Unknown %s group: %s"
 msgstr "不明な %s グループ: %s"
 
+#, fuzzy
+msgid "Unknown - DUnknown"
+msgstr "二次 - Dunknown"
+
 msgid "Unknown agent configuration"
 msgstr "不明なエージェント構成"
 
@@ -61226,6 +61257,11 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#, fuzzy
+#~| msgid "Activate on selected sites"
+#~ msgid "Active on this site"
+#~ msgstr "選択したサイトでアクティブ化"
 
 #~ msgid ""
 #~ "This check monitors how often database objects in a PostgreSQL Database "

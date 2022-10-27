@@ -33,6 +33,7 @@ exclude_aws_limits_perf_vars = [
     "capacity_providers",
     "container_instances",
     "services",
+    "nodes_per_cluster",
 ]
 
 

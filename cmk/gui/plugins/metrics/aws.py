@@ -973,6 +973,24 @@ metric_info["aws_ecs_clusters"] = {
     "color": "35/a",
 }
 
+metric_info["aws_elasticache_nodes"] = {
+    "title": _l("Nodes"),
+    "unit": "count",
+    "color": "21/a",
+}
+
+metric_info["aws_elasticache_parameter_groups"] = {
+    "title": _l("Parameter groups"),
+    "unit": "count",
+    "color": "32/a",
+}
+
+metric_info["aws_elasticache_subnet_groups"] = {
+    "title": _l("Subnet groups"),
+    "unit": "count",
+    "color": "42/a",
+}
+
 # .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |

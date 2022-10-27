@@ -37,7 +37,7 @@ catch {
 
 try
 {
-$tapeJobs = Get-VBRTapeJob
+$tapeJobs = [Veeam.Backup.Core.CBackupJob]::GetAllBackupSyncAndTape()
 write-host "<<<veeam_tapejobs:sep(124)>>>"
 write-host "JobName|JobID|LastResult|LastState"
 foreach ($tapeJob in $tapeJobs)

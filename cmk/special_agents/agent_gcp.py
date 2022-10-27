@@ -794,6 +794,20 @@ REDIS = Service(
                 per_series_aligner=Aligner.ALIGN_MAX,
             ),
         ),
+        Metric(
+            name="redis.googleapis.com/replication/master/slaves/lag",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MAX,
+                group_by_fields=["metric.slave"],
+            ),
+        ),
+        Metric(
+            name="redis.googleapis.com/replication/role",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_MAX,
+                group_by_fields=["resource.node_id"],
+            ),
+        ),
     ],
 )
 

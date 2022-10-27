@@ -180,6 +180,9 @@ def get_value(results: Sequence[GCPResult], spec: MetricSpec) -> float:
             return r.metric_type == spec.metric_type
 
     results = list(r for r in results if filter_func(r))
+    # normally, only one result should be retrieved. The aggregation over several results is
+    # currently only needed for getting the total request count over the response classes for
+    # Google Cloud Run applications
     ret_val = 0.0
     for result in results:
         proto_value = result.points[0]["value"]
@@ -192,6 +195,24 @@ def get_value(results: Sequence[GCPResult], spec: MetricSpec) -> float:
                 raise NotImplementedError("unknown dtype")
         ret_val += value * spec.scale
     return ret_val
+
+
+def get_boolean_value(results: Sequence[GCPResult], spec: MetricSpec) -> bool | None:
+    def filter_func(r: GCPResult) -> bool:
+        type_match = r.metric_type == spec.metric_type
+        if spec.filter_by is None:
+            return type_match
+        return type_match and r.labels[spec.filter_by.key] == spec.filter_by.value
+
+    ret_vals = [int(r.points[-1]["value"]["int64_value"]) for r in results if filter_func(r)]
+    if len(ret_vals) > 1:
+        raise RuntimeError(
+            f"More than one result found when extracting boolean value for {spec.metric_type} with "
+            f"filter {spec.filter_by}. Aggregation of boolean values currently not supported"
+        )
+    if len(ret_vals) == 0:
+        return None
+    return bool(ret_vals[0])
 
 
 def generic_check(

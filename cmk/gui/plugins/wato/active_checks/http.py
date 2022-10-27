@@ -380,6 +380,7 @@ def _valuespec_active_checks_http() -> Migrate:
                                                     ("DELETE", "DELETE"),
                                                     ("HEAD", "HEAD"),
                                                     ("CONNECT", "CONNECT"),
+                                                    ("CONNECT:POST", "CONNECT:POST"),
                                                     ("PROPFIND", "PROPFIND"),
                                                 ],
                                             ),

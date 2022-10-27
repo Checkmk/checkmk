@@ -430,10 +430,10 @@ test-iwyu-docker:
 	../scripts/run-in-docker.sh make -C .. iwyu IWYU_EXTRA_ARGS="--gcc-toolchain=$(GCC_TOOLCHAIN)"
 
 test-unit-livestatus:
-	cd ../livestatus/src && ./.f12
+	cd ../livestatus/src/test && ./.f12
 
 test-unit-core:
-	cd ../enterprise/core/src && ./.f12
+	cd ../enterprise/core/src/test && ./.f12
 
 test-cargo-check:
 	$(SCRIPTS)/run-cargo-command-in-projects check --all-targets

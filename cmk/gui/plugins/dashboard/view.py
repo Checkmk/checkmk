@@ -56,7 +56,6 @@ class ABCViewDashlet(IFrameDashlet):
         # valued filters(UX). Those need to be cleared out. Otherwise those
         # empty filters are the highest priority filters and the user can never
         # filter the view.
-
         view_context = {
             filtername: filtervalues
             for filtername, filtervalues in view_spec["context"].items()
@@ -70,7 +69,9 @@ class ABCViewDashlet(IFrameDashlet):
                 or (not var.startswith("is_") and value)  # Rest of filters with some value
             }
         }
-        context = visuals.get_merged_context(self.context, view_context)
+        # context of dashlet has to be merged after view context, otherwise the
+        # context of the view is always used
+        context = visuals.get_merged_context(view_context, self.context)
 
         view = views.View(self._dashlet_spec["name"], view_spec, context)
         view.row_limit = views.get_limit()

@@ -1,0 +1,18 @@
+Title: Fix context filter of linked view dashlets
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1666872673
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p16
+
+If you added a dashlet, via "Link to existing view" to a dashboard (e.g. the
+"events" view) and configured a "Log Entry" filter, the shown dashlet always
+used the defined filter of the source view, ignoring the configured options of
+the dashlet.
+
+Other views/filters used as linked view dashlet may also be affected because of
+the former order of context processing.
+

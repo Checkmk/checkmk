@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from pathlib import Path
 
 import pytest
 
@@ -165,3 +166,18 @@ def test_theme_broken_meta(my_theme) -> None:  # type:ignore[no-untyped-def]
             ("my_theme", "my_theme"),
         ]
     )
+
+
+def test_modern_dark_images(th: Theme) -> None:
+    """For each modern dark image there must be a (default) facelift variant, i.e. a file under the
+    same name within the facelift images dir. This holds only for the root theme dirs where the
+    builtin images are located, not for the local theme dirs (th.base_dir())."""
+    root_themes_dir: Path = Path(cmk.utils.paths.web_dir, "htdocs/themes")
+    md_images_dir: Path = root_themes_dir / th.get() / "images"
+    fl_images_dir: Path = root_themes_dir / "facelift" / "images"
+
+    for md_image in md_images_dir.iterdir():
+        if md_image.is_file():
+            assert Path(
+                fl_images_dir, md_image.name
+            ).is_file(), f"Missing image '{md_image.name}' in the facelift theme"

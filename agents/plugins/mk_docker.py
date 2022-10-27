@@ -94,6 +94,7 @@ DEFAULT_CFG_SECTION = {
     "base_url": "unix://var/run/docker.sock",
     "skip_sections": "",
     "container_id": "short",
+    "only_running": False,
 }
 
 LOGGER = logging.getLogger(__name__)
@@ -145,6 +146,7 @@ def get_config(cfg_file):
     LOGGER.info("read configration file(s): %r", files_read)
     section_name = "DOCKER" if config.sections() else "DEFAULT"
     conf_dict = dict(config.items(section_name))  # type: Dict[str, Union[str, Tuple]]
+    conf_dict["only_running"] = config.getboolean(section_name, "only_running")
     skip_sections = conf_dict.get("skip_sections", "")
     if isinstance(skip_sections, str):
         skip_list = skip_sections.split(",")
@@ -274,7 +276,10 @@ class MKDockerClient(docker.DockerClient):
 
     def __init__(self, config):
         super(MKDockerClient, self).__init__(config["base_url"], version=MKDockerClient.API_VERSION)
-        all_containers = self.containers.list(all=True, ignore_removed=True)
+        filters = {}
+        if config["only_running"]:
+            filters["status"] = "running"
+        all_containers = self.containers.list(all=True, ignore_removed=True, filters=filters)
         if config["container_id"] == "name":
             self.all_containers = {c.attrs["Name"].lstrip("/"): c for c in all_containers}
         elif config["container_id"] == "long":

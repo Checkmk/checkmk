@@ -70,7 +70,7 @@ class Theme:
 
         Priority:
         1. In case the modern-dark theme is active: <theme> = modern-dark -> priorities 3-6
-        2. In case the modern-dark theme is active: <theme> = facelift -> priorities 3-6
+        2. In case the facelift theme is active: <theme> = facelift -> priorities 3-6
         3. In case a theme is active: themes/<theme>/images/icon_[name].svg in site local hierarchy
         4. In case a theme is active: themes/<theme>/images/icon_[name].svg in standard hierarchy
         5. In case a theme is active: themes/<theme>/images/icon_[name].png in site local hierarchy

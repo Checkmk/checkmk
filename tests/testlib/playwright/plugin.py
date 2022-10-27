@@ -6,7 +6,7 @@
 """some fixtures
 
 the pytest-playwright addon's fixtures are too "aggressive" and are loaded in
-all tests. So some functionality is inspierd from this module
+all tests. So some functionality is inspired from this module
 See: https://github.com/microsoft/playwright-pytest
 """
 import logging
@@ -76,7 +76,7 @@ def _context(
     request: pytest.FixtureRequest,
 ) -> t.Generator[BrowserContext, None, None]:
     pages: t.List[Page] = []
-    context = browser.new_context()
+    context = browser.new_context(locale=pytestconfig.getoption("--locale"))
     context.on("page", lambda page: pages.append(page))  # pylint: disable=unnecessary-lambda
     yield context
     try:
@@ -198,3 +198,4 @@ def pytest_addoption(parser: t.Any) -> None:
         help="Whether to automatically capture a screenshot after each test. "
         "If you choose only-on-failure, a screenshot of the failing page only will be created.",
     )
+    group.addoption("--locale", default="en-US", help="The default locale of the browser.")

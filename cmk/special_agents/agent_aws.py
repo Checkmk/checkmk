@@ -20,7 +20,7 @@ from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
 from time import sleep
-from typing import Any, Callable, Literal, NamedTuple, TypedDict, TypeVar
+from typing import Any, Callable, Literal, NamedTuple, Type, TypedDict, TypeVar
 
 import boto3  # type: ignore[import]
 import botocore  # type: ignore[import]
@@ -36,6 +36,7 @@ from cmk.utils.aws_constants import (
     AWSEC2LimitsDefault,
     AWSEC2LimitsSpecial,
     AWSECSQuotaDefaults,
+    AWSElastiCacheQuotaDefaults,
     AWSRegions,
 )
 from cmk.utils.exceptions import MKException
@@ -95,6 +96,11 @@ Buckets = Sequence[Mapping[Literal["Name", "CreationDate"], str | datetime]]
 Results = dict[tuple[str, float, float], Sequence["AWSSectionResult"]]
 
 T = TypeVar("T")
+
+
+class Quota(BaseModel):
+    QuotaName: str
+    Value: float
 
 
 # TODO
@@ -214,6 +220,12 @@ T = TypeVar("T")
 # '-- ECSSummary
 #     |
 #     '-- ECS
+
+# ElastiCacheLimits
+# |
+# '-- ElastiCacheSummary
+#     |
+#     '-- ElastiCache
 
 
 class AWSConfig:
@@ -5395,11 +5407,6 @@ class Cluster(BaseModel):
     capacityProviders: Sequence[str]
 
 
-class Quota(BaseModel):
-    QuotaName: str
-    Value: float
-
-
 def get_ecs_cluster_arns(ecs_client: BaseClient) -> Iterable[str]:
     for page in ecs_client.get_paginator("list_clusters").paginate():
         yield from page["clusterArns"]
@@ -5644,6 +5651,285 @@ class ECS(AWSSectionCloudwatch):
 
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         return [AWSSectionResult("", computed_content.content)]
+
+
+#   .--ElastiCache---------------------------------------------------------.
+#   |         _____ _           _   _  ____           _                    |
+#   |        | ____| | __ _ ___| |_(_)/ ___|__ _  ___| |__   ___           |
+#   |        |  _| | |/ _` / __| __| | |   / _` |/ __| '_ \ / _ \          |
+#   |        | |___| | (_| \__ \ |_| | |__| (_| | (__| | | |  __/          |
+#   |        |_____|_|\__,_|___/\__|_|\____\__,_|\___|_| |_|\___|          |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+# .
+
+
+class ElastiCacheNode(BaseModel):
+    CacheClusterId: str
+    Engine: str
+    ARN: str
+
+
+class ElastiCacheCluster(BaseModel):
+    ReplicationGroupId: str
+    Status: str
+    MemberClusters: Sequence[str]
+    ARN: str
+
+
+class SubnetGroup(BaseModel):
+    CacheSubnetGroupName: str
+    ARN: str
+
+
+class ParameterGroup(BaseModel):
+    CacheParameterGroupName: str
+    ARN: str
+
+
+def get_paginated_resources(
+    client: BaseClient, paginator_name: str, resource_name: str, resource_type: Type[BaseModel]
+) -> Iterable[BaseModel]:
+    for page in client.get_paginator(paginator_name).paginate():
+        for resource_dict in page[resource_name]:
+            yield resource_type(**resource_dict)
+
+
+class ElastiCacheLimits(AWSSectionLimits):
+    @property
+    def name(self) -> str:
+        return "elasticache_limits"
+
+    @property
+    def cache_interval(self) -> int:
+        return 300
+
+    @property
+    def granularity(self) -> int:
+        return 300
+
+    def _get_colleague_contents(self) -> AWSColleagueContents:
+        return AWSColleagueContents(None, 0.0)
+
+    def get_live_data(
+        self, *args: AWSColleagueContents
+    ) -> tuple[
+        Sequence[Mapping[str, object]],
+        Sequence[Mapping[str, object]],
+        Sequence[Mapping[str, object]],
+        int,
+        int,
+    ]:
+        quota_list = (
+            self._get_response_content(
+                self._quota_client.list_service_quotas(ServiceCode="elasticache"), "Quotas"
+            )
+            if self._quota_client is not None
+            else []
+        )
+        quota_dicts = [Quota(**q).dict() for q in quota_list]
+
+        cluster_dicts = [
+            c.dict()
+            for c in get_paginated_resources(
+                self._client, "describe_replication_groups", "ReplicationGroups", ElastiCacheCluster
+            )
+        ]
+
+        node_dicts = [
+            n.dict()
+            for n in get_paginated_resources(
+                self._client, "describe_cache_clusters", "CacheClusters", ElastiCacheNode
+            )
+        ]
+
+        subnet_groups = list(
+            get_paginated_resources(
+                self._client, "describe_cache_subnet_groups", "CacheSubnetGroups", SubnetGroup
+            )
+        )
+
+        parameter_groups = list(
+            get_paginated_resources(
+                self._client,
+                "describe_cache_parameter_groups",
+                "CacheParameterGroups",
+                ParameterGroup,
+            )
+        )
+
+        return (
+            quota_dicts,
+            cluster_dicts,
+            node_dicts,
+            len(subnet_groups),
+            len(parameter_groups),
+        )
+
+    @staticmethod
+    def _get_quota_limit(quotas: Sequence[Quota], quota_name: str) -> int:
+        for quota in quotas:
+            if quota_name == quota.QuotaName:
+                return int(quota.Value)
+        return AWSElastiCacheQuotaDefaults[quota_name]
+
+    def _compute_content(
+        self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
+    ) -> AWSComputedContent:
+        quotas = [Quota(**q) for q in raw_content.content[0]]
+        clusters = [ElastiCacheCluster(**c) for c in raw_content.content[1]]
+        nodes = [ElastiCacheNode(**c) for c in raw_content.content[2]]
+        subnet_group_count, parameter_group_count = raw_content.content[3:]
+
+        for cluster in clusters:
+            self._add_limit(
+                "",
+                AWSLimit(
+                    key="nodes_per_cluster",
+                    title=f"Nodes of {cluster.ReplicationGroupId}",
+                    limit=ElastiCacheLimits._get_quota_limit(
+                        quotas, "Nodes per cluster per instance type (Redis cluster mode enabled)"
+                    ),
+                    amount=len(cluster.MemberClusters),
+                ),
+                region=self._region,
+            )
+
+        self._add_limit(
+            "",
+            AWSLimit(
+                key="nodes",
+                title="Nodes",
+                limit=ElastiCacheLimits._get_quota_limit(quotas, "Nodes per Region"),
+                amount=len(nodes),
+            ),
+            region=self._region,
+        )
+        self._add_limit(
+            "",
+            AWSLimit(
+                key="subnet_groups",
+                title="Subnet groups",
+                limit=ElastiCacheLimits._get_quota_limit(quotas, "Subnet groups per Region"),
+                amount=subnet_group_count,
+            ),
+            region=self._region,
+        )
+        self._add_limit(
+            "",
+            AWSLimit(
+                key="parameter_groups",
+                title="Parameter groups",
+                limit=ElastiCacheLimits._get_quota_limit(quotas, "Parameter groups per Region"),
+                amount=parameter_group_count,
+            ),
+            region=self._region,
+        )
+
+        return AWSComputedContent((clusters, nodes), raw_content.cache_timestamp)
+
+
+class ElastiCacheSummary(AWSSection):
+    def __init__(
+        self,
+        client: BaseClient,
+        region: str,
+        config: AWSConfig,
+        distributor: ResultDistributor | None = None,
+    ) -> None:
+        super().__init__(client, region, config, distributor=distributor)
+        self._names = self._config.service_config["elasticache_names"]
+        self._tags = self._prepare_tags_for_api_response(
+            self._config.service_config["elasticache_tags"]
+        )
+
+    @property
+    def name(self) -> str:
+        return "elasticache_summary"
+
+    @property
+    def cache_interval(self) -> int:
+        return 300
+
+    @property
+    def granularity(self) -> int:
+        return 300
+
+    def _get_colleague_contents(self) -> AWSColleagueContents:
+        colleague = self._received_results.get("elasticache_limits")
+        if colleague and colleague.content:
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents((), 0.0)
+
+    def _fetch_data(
+        self, colleague_content: tuple[Sequence[ElastiCacheCluster], Sequence[ElastiCacheNode]]
+    ) -> tuple[Sequence[ElastiCacheCluster], Sequence[ElastiCacheNode]]:
+        if colleague_content:
+            return colleague_content
+
+        clusters = list(
+            get_paginated_resources(
+                self._client, "describe_replication_groups", "ReplicationGroups", ElastiCacheCluster
+            )
+        )
+
+        nodes = list(
+            get_paginated_resources(
+                self._client, "describe_cache_clusters", "CacheClusters", ElastiCacheNode
+            )
+        )
+
+        return clusters, nodes
+
+    def _filter_clusters(
+        self, clusters: Iterable[ElastiCacheCluster]
+    ) -> Iterable[ElastiCacheCluster]:
+        if self._names is not None:
+            for cluster in clusters:
+                if cluster.ReplicationGroupId in self._names:
+                    yield cluster
+            return
+
+        if self._tags is not None:
+            for cluster in clusters:
+                cluster_tags = self._client.list_tags_for_resource(ResourceName=cluster.ARN)
+
+                for cluster_tag in cluster_tags["TagList"]:
+                    if cluster_tag in self._tags:
+                        yield cluster
+            return
+
+        yield from clusters
+
+    def _filter_nodes(
+        self, nodes: Sequence[ElastiCacheNode], clusters: Iterable[ElastiCacheCluster]
+    ) -> Iterable[Mapping[str, object]]:
+        for node in nodes:
+            for cluster in clusters:
+                if node.CacheClusterId in cluster.MemberClusters:
+                    yield node.dict()
+                    break
+
+    def get_live_data(
+        self, *args: AWSColleagueContents
+    ) -> tuple[Sequence[Mapping[str, object]], Sequence[Mapping[str, object]]]:
+        (colleague_contents,) = args
+        clusters, nodes = self._fetch_data(colleague_contents.content)
+
+        filtered_clusters = list(self._filter_clusters(clusters))
+        filtered_node_dicts = list(self._filter_nodes(nodes, filtered_clusters))
+
+        return [c.dict() for c in filtered_clusters], filtered_node_dicts
+
+    def _compute_content(
+        self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
+    ) -> AWSComputedContent:
+        clusters = [ElastiCacheCluster(**c) for c in raw_content.content[0]]
+        nodes = [ElastiCacheNode(**n) for n in raw_content.content[1]]
+        return AWSComputedContent((clusters, nodes), raw_content.cache_timestamp)
+
+    def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
+        return [AWSSectionResult("", [c.dict() for c in computed_content.content[0]])]
 
 
 # .
@@ -6138,6 +6424,23 @@ class AWSSectionsGeneric(AWSSections):
             distributor.add("ecs_summary", ecs)
             self._sections.append(ecs)
 
+        if "elasticache" in services:
+            elasticache_client = self._init_client("elasticache")
+            if config.service_config.get("elasticache_limits"):
+                self._sections.append(
+                    ElastiCacheLimits(
+                        elasticache_client,
+                        region,
+                        config,
+                        distributor,
+                        self._init_client("service-quotas"),
+                    )
+                )
+
+        elasticache_summary = ElastiCacheSummary(elasticache_client, region, config, distributor)
+        distributor.add("elasticache_limits", elasticache_summary)
+        self._sections.append(elasticache_summary)
+
 
 # .
 #   .--main----------------------------------------------------------------.
@@ -6283,6 +6586,14 @@ AWSServices = [
     AWSServiceAttributes(
         key="ecs",
         title="ECS",
+        global_service=False,
+        filter_by_names=True,
+        filter_by_tags=True,
+        limits=True,
+    ),
+    AWSServiceAttributes(
+        key="elasticache",
+        title="ElastiCache",
         global_service=False,
         filter_by_names=True,
         filter_by_tags=True,
@@ -6577,6 +6888,12 @@ def _configure_aws(args: Args, sys_argv: Sequence[str]) -> AWSConfig:
             None,
         ),
         ("ecs", args.ecs_names, (args.ecs_tag_key, args.ecs_tag_values), args.ecs_limits),
+        (
+            "elasticache",
+            args.elasticache_names,
+            (args.elasticache_tag_key, args.elasticache_tag_values),
+            args.elasticache_limits,
+        ),
     ]:
         aws_config.add_single_service_config("%s_names" % service_key, service_names)
         aws_config.add_service_tags("%s_tags" % service_key, service_tags)

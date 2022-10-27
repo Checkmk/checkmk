@@ -376,6 +376,18 @@ class AWSSpecialAgentValuespecBuilder:
                     default_keys=["limits"],
                 ),
             ),
+            (
+                "elasticache",
+                Dictionary(
+                    title=_("ElastiCache"),
+                    elements=[
+                        _vs_element_aws_service_selection(),
+                        _vs_element_aws_limits(),
+                    ],
+                    optional_keys=["limits"],
+                    default_keys=["limits"],
+                ),
+            ),
         ]
 
 

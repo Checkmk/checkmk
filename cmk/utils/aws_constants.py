@@ -566,3 +566,10 @@ AWSECSQuotaDefaults = {
     "Container instances per cluster": 5000,
     "Capacity providers per cluster": 10,
 }
+
+AWSElastiCacheQuotaDefaults = {
+    "Nodes per cluster per instance type (Redis cluster mode enabled)": 90,
+    "Nodes per Region": 300,
+    "Parameter groups per Region": 150,
+    "Subnet groups per Region": 150,
+}

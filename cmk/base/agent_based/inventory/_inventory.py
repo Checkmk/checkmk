@@ -101,16 +101,11 @@ def check_inventory_tree(
         run_plugin_names=run_plugin_names,
     )
 
-    if fetched_data_result.processing_failed:
-        active_check_result = ActiveCheckResult(parameters.fail_status, "Cannot update tree")
-    else:
-        active_check_result = ActiveCheckResult()
-
     return CheckInventoryTreeResult(
         check_result=ActiveCheckResult.from_subresults(
-            active_check_result,
-            *_check_trees(
+            *_check_fetched_data_or_trees(
                 parameters=parameters,
+                fetched_data_result=fetched_data_result,
                 inventory_tree=tree_aggregator.trees.inventory,
                 status_data_tree=tree_aggregator.trees.status_data,
                 old_tree=old_tree,
@@ -287,6 +282,25 @@ def _set_cluster_property(
 ) -> None:
     node = inventory_tree.setdefault_node(("software", "applications", "check_mk", "cluster"))
     node.attributes.add_pairs({"is_cluster": is_cluster})
+
+
+def _check_fetched_data_or_trees(
+    *,
+    parameters: config.HWSWInventoryParameters,
+    fetched_data_result: FetchedDataResult,
+    inventory_tree: StructuredDataNode,
+    status_data_tree: StructuredDataNode,
+    old_tree: StructuredDataNode,
+) -> Iterator[ActiveCheckResult]:
+    if fetched_data_result.processing_failed:
+        yield ActiveCheckResult(parameters.fail_status, "Cannot update tree")
+
+    yield from _check_trees(
+        parameters=parameters,
+        inventory_tree=inventory_tree,
+        status_data_tree=status_data_tree,
+        old_tree=old_tree,
+    )
 
 
 def _check_trees(

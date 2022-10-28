@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from pathlib import Path
 from typing import Container
 
 import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils.structured_data import TreeOrArchiveStore
+from cmk.utils.structured_data import load_tree
 from cmk.utils.type_defs import EVERYTHING, HostName, InventoryPluginName
 
 from cmk.core_helpers.type_defs import SectionNameCollection
@@ -57,11 +58,7 @@ def _commandline_inventory_on_host(
 ) -> None:
     section.section_step("Inventorizing")
 
-    tree_or_archive_store = TreeOrArchiveStore(
-        cmk.utils.paths.inventory_output_dir,
-        cmk.utils.paths.inventory_archive_dir,
-    )
-    old_tree = tree_or_archive_store.load(host_name=host_config.hostname)
+    old_tree = load_tree(Path(cmk.utils.paths.inventory_output_dir, host_config.hostname))
 
     check_result = check_inventory_tree(
         host_config=host_config,

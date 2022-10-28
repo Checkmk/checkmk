@@ -50,11 +50,7 @@ def logged_in(test_site: Site, page: Page) -> PPage:
     password = "cmk"
 
     page.goto(test_site.internal_url)
-    ppage = PPage(
-        page,
-        site_id=test_site.id,
-        site_url=test_site.internal_url,
-    )
+    ppage = PPage(page, site_id=test_site.id)
 
     ppage.login(username, password)
 

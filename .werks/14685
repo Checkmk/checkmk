@@ -1,0 +1,17 @@
+Title: Fixed real-time checks with encryption
+Class: fix
+Compatible: compat
+Component: cmc
+Date: 1666944966
+Edition: cee
+Knowledge: doc
+Level: 2
+State: unknown
+Version: 2.1.0p16
+
+Real-time check data which contains a 0-byte was not processed correctly, so
+this mainly affected encrypted RTC data. This has been fixed.
+
+Note that even normal check results were affected, but these are normally
+text-only without any 0-bytes, so they worked basically all the time.
+

@@ -1,0 +1,15 @@
+#!/bin/bash
+# Call executable named like the file without LD_LIBRARY_PATH set, such that the system openssl is used.
+# Currently we're using that for ssh and pdftoppm, see omd/packages/omd/omd.make
+
+exec_to_be_replaced="${BASH_SOURCE[0]}"
+exec_name="$(basename "${exec_to_be_replaced}")"
+for exec in $(type -ap "${exec_name}"); do
+        if [ "$exec" != "${exec_to_be_replaced}" ]; then
+                unset LD_LIBRARY_PATH
+                exec "$exec" "$@"
+        fi
+done
+
+echo "No executable other than ${BASH_SOURCE[0]} found, aborting" 1>&2
+exit 1

@@ -1,0 +1,12 @@
+Title: Add outlet label for raritan px outlet check
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1668672693
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+We now add the outlet label in the "raritan_px_outlets" check.
+

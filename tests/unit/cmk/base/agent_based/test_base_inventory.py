@@ -1472,6 +1472,7 @@ def test_check_inventory_tree(
             source_results=[],
             parsing_errors=[],
             processing_failed=True,
+            no_data_or_files=False,
         ),
     )
 
@@ -1493,3 +1494,43 @@ def test_check_inventory_tree(
 
     assert expected == check_result.state
     assert "Cannot update tree" in check_result.summary
+
+
+@pytest.mark.parametrize("processing_failed", [True, False])
+def test_check_inventory_tree_no_data_or_files(
+    monkeypatch: pytest.MonkeyPatch,
+    processing_failed: bool,
+) -> None:
+    hostname = "my-host"
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.apply(monkeypatch)
+
+    monkeypatch.setattr(
+        _inventory,
+        "_fetch_real_host_data",
+        lambda host_config, selected_sections: _inventory.FetchedDataResult(
+            parsed_sections_broker=ParsedSectionsBroker({}),
+            source_results=[],
+            parsing_errors=[],
+            processing_failed=processing_failed,
+            no_data_or_files=True,
+        ),
+    )
+
+    monkeypatch.setattr(
+        _inventory,
+        "inventorize_real_host",
+        lambda host_config, parsed_sections_broker, run_plugin_names: RealHostTreeAggregator([]),
+    )
+
+    check_result = _inventory.check_inventory_tree(
+        host_config=HostConfig.make_host_config(hostname),
+        selected_sections=NO_SELECTION,
+        run_plugin_names=EVERYTHING,
+        parameters=config.HWSWInventoryParameters.from_raw({}),
+        old_tree=StructuredDataNode(),
+    ).check_result
+
+    assert check_result.state == 0
+    assert check_result.summary == "No data yet, please be patient"

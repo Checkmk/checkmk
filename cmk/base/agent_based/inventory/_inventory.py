@@ -14,8 +14,10 @@ CL:
 import logging
 import time
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Container, Iterable, Iterator, NamedTuple, Sequence, Tuple
 
+import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.cpu_tracking import Snapshot
@@ -60,6 +62,7 @@ class FetchedDataResult(NamedTuple):
     source_results: SourceResults
     parsing_errors: Sequence[str]
     processing_failed: bool
+    no_data_or_files: bool
 
 
 @dataclass(frozen=True)
@@ -130,7 +133,9 @@ def check_inventory_tree(
             ),
         ),
         tree_aggregator=tree_aggregator,
-        processing_failed=fetched_data_result.processing_failed,
+        processing_failed=(
+            fetched_data_result.processing_failed or fetched_data_result.no_data_or_files
+        ),
     )
 
 
@@ -191,6 +196,7 @@ def _fetch_real_host_data(
             _sources_failed(host_section for _source, host_section in results)
             or bool(parsing_errors)
         ),
+        no_data_or_files=_no_data_or_files(host_config, host_sections.values()),
     )
 
 
@@ -205,6 +211,26 @@ def _sources_failed(
     """
     # If a result is not OK, that means the corresponding sections have not been added.
     return any(not host_section.is_ok() for host_section in host_sections)
+
+
+def _no_data_or_files(host_config: HostConfig, host_sections: Iterable[HostSections]) -> bool:
+    host_name = host_config.hostname
+
+    if any(host_sections):
+        return False
+
+    if Path(cmk.utils.paths.inventory_output_dir, str(host_name)).exists():
+        return False
+
+    if Path(cmk.utils.paths.status_data_dir, str(host_name)).exists():
+        return False
+
+    if (archive := Path(cmk.utils.paths.inventory_archive_dir, str(host_name))).exists() and any(
+        archive.iterdir()
+    ):
+        return False
+
+    return True
 
 
 def inventorize_real_host(
@@ -289,6 +315,10 @@ def _check_fetched_data_or_trees(
     status_data_tree: StructuredDataNode,
     old_tree: StructuredDataNode,
 ) -> Iterator[ActiveCheckResult]:
+    if fetched_data_result.no_data_or_files:
+        yield ActiveCheckResult(0, "No data yet, please be patient")
+        return
+
     if fetched_data_result.processing_failed:
         yield ActiveCheckResult(parameters.fail_status, "Cannot update tree")
 

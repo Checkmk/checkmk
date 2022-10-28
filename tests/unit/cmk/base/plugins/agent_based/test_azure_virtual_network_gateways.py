@@ -7,12 +7,18 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
-from cmk.utils.type_defs import CheckPluginName, SectionName
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
-from cmk.base.plugins.agent_based.utils.azure import AzureMetric, Resource, Section
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.azure_virtual_network_gateways import (
+    check_azure_virtual_network_gateways,
+)
+from cmk.base.plugins.agent_based.utils.azure import (
+    AzureMetric,
+    discover_azure_by_metrics,
+    parse_resources,
+    Resource,
+    Section,
+)
 
 RESOURCE = {
     "TestGateway": Resource(
@@ -51,7 +57,7 @@ RESOURCE = {
 
 
 @pytest.mark.parametrize(
-    "info,expected_parsed",
+    "string_table,expected_parsed",
     [
         (
             [
@@ -75,13 +81,10 @@ RESOURCE = {
     ],
 )
 def test_parse_virtual_network_gateways(
-    fix_register: FixRegister,
-    info: Sequence[Sequence[str]],
+    string_table: StringTable,
     expected_parsed: Section,
 ) -> None:
-    section_plugin = fix_register.agent_sections[SectionName("azure_virtualnetworkgateways")]
-    result = section_plugin.parse_function(info)
-    assert result == expected_parsed
+    assert parse_resources(string_table) == expected_parsed
 
 
 @pytest.mark.parametrize(
@@ -94,12 +97,13 @@ def test_parse_virtual_network_gateways(
     ],
 )
 def test_discovery_virtual_network_gateways(
-    fix_register: FixRegister,
     section: Section,
     expected_discovery: Sequence[Service],
 ) -> None:
-    check_plugin = fix_register.check_plugins[CheckPluginName("azure_virtualnetworkgateways")]
-    assert list(check_plugin.discovery_function(section)) == expected_discovery
+    discovery_function = discover_azure_by_metrics(
+        "maximum_P2SConnectionCount", "average_P2SBandwidth", "average_AverageBandwidth"
+    )
+    assert list(discovery_function(section)) == expected_discovery
 
 
 @pytest.mark.parametrize(
@@ -125,14 +129,9 @@ def test_discovery_virtual_network_gateways(
     ],
 )
 def test_check_virtual_network_gateways(
-    fix_register: FixRegister,
     section: Section,
     item: str,
     params: Mapping[str, tuple[float, float]],
     expected_result: Sequence[Result | Metric],
 ) -> None:
-    check_plugin = fix_register.check_plugins[CheckPluginName("azure_virtualnetworkgateways")]
-    assert (
-        list(check_plugin.check_function(item=item, params=params, section=section))
-        == expected_result
-    )
+    assert list(check_azure_virtual_network_gateways(item, params, section)) == expected_result

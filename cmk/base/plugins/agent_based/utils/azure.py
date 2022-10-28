@@ -40,6 +40,7 @@ class MetricData(NamedTuple):
     render_func: Callable[[float], str]
     upper_levels_param: str = ""
     lower_levels_param: str = ""
+    boundaries: tuple[float | None, float | None] | None = None
 
 
 Section = Mapping[str, Resource]
@@ -208,6 +209,7 @@ def check_azure_metrics(
                 metric_name=metric_data.metric_name,
                 label=metric_data.metric_label,
                 render_func=metric_data.render_func,
+                boundaries=metric_data.boundaries,
             )
 
     return check_metric

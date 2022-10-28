@@ -51,14 +51,15 @@ IntervalsFromConfig = dict[RetentionKey, IntervalFromConfig]
 class TreeAggregator:
     def __init__(self) -> None:
         self._inventory_tree = StructuredDataNode()
+        self._update_result = UpdateResult(save_tree=False, reason="")
 
     @property
     def inventory_tree(self) -> StructuredDataNode:
         return self._inventory_tree
 
-    def may_update(self, now: int, previous_tree: StructuredDataNode) -> UpdateResult:
-        # TODO Need this in an intermediate step. Will be removed later
-        return UpdateResult(save_tree=False, reason="")
+    @property
+    def update_result(self) -> UpdateResult:
+        return self._update_result
 
     # ---static data from config--------------------------------------------
 
@@ -273,17 +274,21 @@ class RealHostTreeAggregator(TreeAggregator):
             retention_interval=retention_interval,
         )
 
-    def may_update(self, now: int, previous_tree: StructuredDataNode) -> UpdateResult:
+    def may_update(self, now: int, previous_tree: StructuredDataNode) -> None:
         if not self._from_config:
             self._inventory_tree.remove_retentions()
-            return UpdateResult(save_tree=False, reason="No retention intervals found.")
+            self._update_result = UpdateResult(
+                save_tree=False,
+                reason="No retention intervals found.",
+            )
+            return
 
         results = []
         for retention_key, retention_info in self._retention_infos.items():
             updater = self._make_updater(retention_key, retention_info, previous_tree)
             results.append(updater.filter_and_merge(now))
 
-        return UpdateResult(
+        self._update_result = UpdateResult(
             save_tree=any(result.save_tree for result in results),
             reason=", ".join(result.reason for result in results if result.reason),
         )

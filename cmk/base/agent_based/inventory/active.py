@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
 from functools import partial
 from typing import Callable
 
@@ -86,7 +85,7 @@ def _save_inventory_tree(
         tree_or_archive_store.remove(host_name=hostname)
         return
 
-    update_result = tree_aggregator.may_update(int(time.time()), old_tree)
+    update_result = tree_aggregator.update_result
 
     if old_tree.is_empty():
         console.verbose("New inventory tree.\n")

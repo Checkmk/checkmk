@@ -12,6 +12,7 @@ CL:
 """
 
 import logging
+import time
 from dataclasses import dataclass
 from typing import Container, Iterable, Iterator, NamedTuple, Sequence, Tuple
 
@@ -211,10 +212,14 @@ def inventorize_real_host(
     host_config: HostConfig,
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[InventoryPluginName],
+    # TODO This will be cleaned up by splitting inventorize_real_host into
+    #   - _inventorize_real_host
+    #   - inventorize_real_host_by_plugins
+    # Reason: In checking/_checking.py we only inventorize status data tree and there is no need to
+    # update the inventory tree from the old tree.
+    old_tree: StructuredDataNode | None = None,
 ) -> RealHostTreeAggregator:
     tree_aggregator = RealHostTreeAggregator(host_config.inv_retention_intervals)
-
-    tree_aggregator.add_cluster_property()
 
     section.section_step("Executing inventory plugins")
     for inventory_plugin in agent_based_register.iter_all_inventory_plugins():
@@ -265,6 +270,12 @@ def inventorize_real_host(
             else:
                 console.verbose(" %s%s%s%s", tty.green, tty.bold, inventory_plugin.name, tty.normal)
                 console.vverbose(": ok\n")
+
+    if old_tree is not None:
+        tree_aggregator.may_update(now=int(time.time()), previous_tree=old_tree)
+
+    if not tree_aggregator.inventory_tree.is_empty():
+        tree_aggregator.add_cluster_property()
 
     console.verbose("\n")
     return tree_aggregator

@@ -203,7 +203,7 @@ pub struct PullConfig {
     pub max_connections: usize,
     pub connection_timeout: u64,
     pub agent_channel: types::AgentChannel,
-    pub registry: Registry,
+    registry: Registry,
 }
 
 impl PullConfig {

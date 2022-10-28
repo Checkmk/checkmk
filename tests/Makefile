@@ -327,7 +327,7 @@ test-code-quality-docker:
 	../scripts/run-in-docker.sh make --quiet test-code-quality
 
 test-mypy: prepare-protobuf-files sync-legacy-checks
-	cd .. ; scripts/run-mypy $(MYPY_ADDOPTS) $(ADDITIONAL_MYPY_ARGS) $$($(FIND_PYTHON_FILES) --omit-legacy-checks)
+	cd .. ; scripts/run-mypy --no-incremental $(MYPY_ADDOPTS) $(ADDITIONAL_MYPY_ARGS) $$($(FIND_PYTHON_FILES) --omit-legacy-checks)
 
 test-mypy-raw:
 	$(MAKE) test-mypy ADDITIONAL_MYPY_ARGS="--config-file=$(realpath ../mypy-raw.ini)"

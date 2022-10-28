@@ -4371,6 +4371,15 @@ class CEEHostConfig(HostConfig):
             self.hostname, agent_config.get("lnx_remote_alert_handlers", default)
         )
 
+    def rtc_secret(self) -> str | None:
+        if secret := self.agent_encryption.get("passphrase"):
+            return secret
+
+        if cmc_real_time_checks and (secret := cmc_real_time_checks.get("secret")):
+            return secret
+
+        return ""
+
     def agent_config(self, default: Mapping[str, Any]) -> Mapping[str, Any]:
         assert isinstance(self._config_cache, CEEConfigCache)
         return {

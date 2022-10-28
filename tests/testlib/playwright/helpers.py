@@ -66,12 +66,12 @@ class MainMenu(LocatorHelper):
     """functionality to find items from the main menu"""
 
     def locator(self, selector: str) -> Locator:
-        return self.page.locator("#check_mk_navigation").locator(selector)
+        return self.page.locator(selector)
 
     @property
     def user(self) -> Locator:
         """main menu -> User"""
-        return self.locator("a.popup_trigger:has-text('User')")
+        return self.page.locator("a.popup_trigger:has-text('User')")
 
 
 class MainFrame(LocatorHelper):

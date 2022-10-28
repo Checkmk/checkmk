@@ -6,9 +6,51 @@
 // may be some unused functions in the common module
 #![allow(dead_code)]
 mod common;
+use self::certs::X509Certs;
 use anyhow::Result as AnyhowResult;
+use cmk_agent_ctl::{certs as lib_certs, configuration::config, site_spec, types};
+use common::certs;
 use std::io::{Read, Write};
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
+use std::path::Path;
+use std::str::FromStr;
+
+fn registry(
+    path: &Path,
+    certs: &certs::X509Certs,
+    controller_uuid: uuid::Uuid,
+) -> config::Registry {
+    let mut registry = config::Registry::from_file(path).unwrap();
+    registry.register_connection(
+        &config::ConnectionType::Pull,
+        &site_spec::SiteID::from_str("some_server/some_site").unwrap(),
+        config::TrustedConnectionWithRemote {
+            trust: config::TrustedConnection {
+                uuid: controller_uuid,
+                private_key: String::from_utf8(certs.controller_private_key.clone()).unwrap(),
+                certificate: String::from_utf8(certs.controller_cert.clone()).unwrap(),
+                root_cert: String::from_utf8(certs.ca_cert.clone()).unwrap(),
+            },
+            receiver_port: 1234,
+        },
+    );
+    registry
+}
+
+fn pull_config(
+    port: u16,
+    agent_channel: types::AgentChannel,
+    registry: config::Registry,
+) -> config::PullConfig {
+    config::PullConfig {
+        allowed_ip: vec![],
+        port,
+        max_connections: 3,
+        connection_timeout: 1,
+        agent_channel,
+        registry,
+    }
+}
 
 #[test]
 fn test_pull_inconsistent_cert() -> AnyhowResult<()> {
@@ -18,26 +60,47 @@ fn test_pull_inconsistent_cert() -> AnyhowResult<()> {
     let controller_uuid = uuid::Uuid::new_v4();
     let x509_certs =
         common::certs::X509Certs::new("Test CA", "Test receiver", "some certainly wrong uuid");
-    let registry = common::testing_registry(
+    let registry = registry(
         &test_path.join("registered_connections.json"),
         &x509_certs,
         controller_uuid,
     );
 
-    let error = cmk_agent_ctl::modes::pull::pull(common::testing_pull_config(
-        1234,
-        "dummy".into(),
-        registry,
-    ))
-    .unwrap_err();
+    let error =
+        cmk_agent_ctl::modes::pull::pull(pull_config(1234, "dummy".into(), registry)).unwrap_err();
 
     assert!(error.to_string().contains("Could not initialize TLS"));
 
     Ok(())
 }
 
+fn tls_client_connection(certs: X509Certs, address: &str) -> rustls::ClientConnection {
+    let root_cert =
+        lib_certs::rustls_certificate(&String::from_utf8(certs.ca_cert).unwrap()).unwrap();
+    let client_cert =
+        lib_certs::rustls_certificate(&String::from_utf8(certs.receiver_cert).unwrap()).unwrap();
+    let private_key =
+        lib_certs::rustls_private_key(&String::from_utf8(certs.receiver_private_key).unwrap())
+            .unwrap();
+
+    let mut root_cert_store = rustls::RootCertStore::empty();
+    root_cert_store.add(&root_cert).unwrap();
+
+    let client_chain = vec![client_cert, root_cert];
+
+    let client_config = std::sync::Arc::new(
+        rustls::ClientConfig::builder()
+            .with_safe_defaults()
+            .with_root_certificates(root_cert_store)
+            .with_single_cert(client_chain, private_key)
+            .unwrap(),
+    );
+    let server_name = rustls::client::ServerName::try_from(address).unwrap();
+
+    rustls::ClientConnection::new(client_config, server_name).unwrap()
+}
+
 struct PullFixture {
-    test_port: u16,
     test_agent_output: String,
     uuid: String,
     certs: common::certs::X509Certs,
@@ -60,7 +123,7 @@ impl PullFixture {
         #[cfg(windows)]
         let agent_socket_address = "localhost:7999".to_string();
         let (uuid, pull_config, certs) =
-            common::testing_pull_setup(test_path, test_port, agent_socket_address.as_str().into());
+            Self::pull_setup(test_path, test_port, agent_socket_address.as_str().into());
         if save_legacy {
             pull_config.registry.save()?;
         }
@@ -72,7 +135,6 @@ impl PullFixture {
         let pull_thread = tokio::task::spawn(cmk_agent_ctl::modes::pull::async_pull(pull_config));
 
         Ok(PullFixture {
-            test_port: port,
             test_agent_output: test_agent_output.to_string(),
             uuid,
             certs,
@@ -80,6 +142,27 @@ impl PullFixture {
             pull_thread,
             test_dir,
         })
+    }
+
+    fn pull_setup(
+        path: &Path,
+        port: u16,
+        agent_channel: types::AgentChannel,
+    ) -> (String, config::PullConfig, certs::X509Certs) {
+        let controller_uuid = uuid::Uuid::new_v4();
+        let x509_certs =
+            certs::X509Certs::new("Test CA", "Test receiver", &controller_uuid.to_string());
+        let registry = registry(
+            &path.join("registered_connections.json"),
+            &x509_certs,
+            controller_uuid,
+        );
+
+        (
+            controller_uuid.to_string(),
+            pull_config(port, agent_channel, registry),
+            x509_certs,
+        )
     }
 
     fn compressed_agent_output(&self) -> AnyhowResult<Vec<u8>> {
@@ -123,8 +206,7 @@ async fn _test_pull_tls_main(socket_addr: SocketAddr) -> AnyhowResult<()> {
 
     // Talk to the pull thread successfully
     let mut message_buf: Vec<u8> = vec![];
-    let mut client_connection =
-        common::testing_tls_client_connection(fixture.certs.clone(), &fixture.uuid);
+    let mut client_connection = tls_client_connection(fixture.certs.clone(), &fixture.uuid);
     let mut tcp_stream = std::net::TcpStream::connect(socket_addr)?;
     tcp_stream.read_exact(&mut id_buf)?;
     assert_eq!(&id_buf, b"16");
@@ -134,7 +216,7 @@ async fn _test_pull_tls_main(socket_addr: SocketAddr) -> AnyhowResult<()> {
 
     // Talk to the pull thread using an unknown uuid
     let mut client_connection =
-        common::testing_tls_client_connection(fixture.certs.clone(), "certainly_wrong_uuid");
+        tls_client_connection(fixture.certs.clone(), "certainly_wrong_uuid");
     let mut tcp_stream = std::net::TcpStream::connect(socket_addr)?;
     tcp_stream.read_exact(&mut id_buf)?;
     assert_eq!(&id_buf, b"16");

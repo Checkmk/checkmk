@@ -17,6 +17,7 @@ from cmk.base.check_api import (
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 from cmk.base.plugins.agent_based.utils.azure import (  # pylint: disable=unused-import
     AZURE_AGENT_SEPARATOR,
+    iter_resource_attributes,
     parse_resources,
 )
 
@@ -44,20 +45,6 @@ def get_data_or_go_stale(check_function):
         return check_function(item, params, parsed[item])
 
     return wrapped_check_function
-
-
-def azure_iter_informative_attrs(resource, include_keys=("location",)):
-    def cap(string):  # not quite what str.title() does
-        return string[0].upper() + string[1:]
-
-    for key in include_keys:
-        value = getattr(resource, key)
-        if value is not None:
-            yield cap(key), value
-
-    for key, value in sorted(resource.tags.items()):
-        if not key.startswith("hidden-"):
-            yield cap(key), value
 
 
 def check_azure_metric(  # pylint: disable=too-many-locals

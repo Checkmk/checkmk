@@ -25,6 +25,7 @@ from cmk.base.plugins.agent_based.utils.azure import (
     check_network,
     check_storage,
     discover_azure_by_metrics,
+    iter_resource_attributes,
     parse_resources,
     Resource,
     Section,
@@ -33,7 +34,7 @@ from cmk.base.plugins.agent_based.utils.azure import (
 RESOURCES = [
     ["Resource"],
     [
-        '{"id": "/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforMySQL/servers/checkmk-mysql-server", "name": "checkmk-mysql-server", "type": "Microsoft.DBforMySQL/servers", "sku": {"name": "B_Gen5_1", "tier": "Basic", "family": "Gen5", "capacity": 1}, "location": "westeurope", "tags": {}, "subscription": "2fac104f-cb9c-461d-be57-037039662426", "group": "BurningMan", "provider": "Microsoft.DBforMySQL"}'
+        '{"id": "/subscriptions/1234/resourceGroups/BurningMan/providers/Microsoft.DBforMySQL/servers/checkmk-mysql-server", "name": "checkmk-mysql-server", "type": "Microsoft.DBforMySQL/servers", "sku": {"name": "B_Gen5_1", "tier": "Basic", "family": "Gen5", "capacity": 1}, "location": "westeurope", "tags": {"tag1": "value1", "tag2": "value2"}, "subscription": "2fac104f-cb9c-461d-be57-037039662426", "group": "BurningMan", "provider": "Microsoft.DBforMySQL"}'
     ],
     ["metrics following", "9"],
     [
@@ -72,7 +73,7 @@ PARSED_RESOURCES = {
         group="BurningMan",
         kind=None,
         location="westeurope",
-        tags={},
+        tags={"tag1": "value1", "tag2": "value2"},
         properties={},
         specific_info={},
         metrics={
@@ -220,6 +221,42 @@ def test_discover_azure_by_metrics() -> None:
         "average_storage_percent", "average_active_connections"
     )
     assert list(discovery_func(PARSED_RESOURCES)) == [Service(item="checkmk-mysql-server")]
+
+
+@pytest.mark.parametrize(
+    "resource,include_keys,expected_result",
+    [
+        (
+            PARSED_RESOURCES["checkmk-mysql-server"],
+            ("kind", "group", "type"),
+            [
+                ("Group", "BurningMan"),
+                ("Type", "Microsoft.DBforMySQL/servers"),
+                ("Tag1", "value1"),
+                ("Tag2", "value2"),
+            ],
+        ),
+    ],
+)
+def test_iter_resource_attributes(
+    resource: Resource, include_keys: tuple[str], expected_result: list[tuple[str, str | None]]
+) -> None:
+    assert list(iter_resource_attributes(resource, include_keys=include_keys)) == expected_result
+
+
+@pytest.mark.parametrize(
+    "resource,expected_result",
+    [
+        (
+            PARSED_RESOURCES["checkmk-mysql-server"],
+            [("Location", "westeurope"), ("Tag1", "value1"), ("Tag2", "value2")],
+        ),
+    ],
+)
+def test_iter_resource_attributes_default_keys(
+    resource: Resource, expected_result: list[tuple[str, str | None]]
+) -> None:
+    assert list(iter_resource_attributes(resource)) == expected_result
 
 
 @pytest.mark.parametrize(

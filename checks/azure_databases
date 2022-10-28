@@ -145,7 +145,7 @@ check_info["azure_databases.connections"] = {
 
 @get_data_or_go_stale
 def check_azure_databases(_item, _no_params, resource):
-    for k, v in azure_iter_informative_attrs(resource):
+    for k, v in iter_resource_attributes(resource):
         yield 0, "%s: %s" % (k, v)
 
 

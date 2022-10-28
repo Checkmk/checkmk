@@ -170,6 +170,21 @@ def discover_azure_by_metrics(
 #   +----------------------------------------------------------------------+
 
 
+def iter_resource_attributes(
+    resource: Resource, include_keys: tuple[str] = ("location",)
+) -> Iterable[tuple[str, str | None]]:
+    def capitalize(string):
+        return string[0].upper() + string[1:]
+
+    for key in include_keys:
+        if (value := getattr(resource, key)) is not None:
+            yield capitalize(key), value
+
+    for key, value in sorted(resource.tags.items()):
+        if not key.startswith("hidden-"):
+            yield capitalize(key), value
+
+
 def check_azure_metrics(
     metrics_data: Sequence[MetricData],
 ) -> Callable[[str, Mapping[str, Any], Section], CheckResult]:

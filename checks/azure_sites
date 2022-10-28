@@ -31,7 +31,7 @@ def check_azure_sites(_item, params, resource):
         if mcheck:
             yield mcheck
 
-    for kv_pair in azure_iter_informative_attrs(resource):
+    for kv_pair in iter_resource_attributes(resource):
         yield 0, "%s: %s" % kv_pair
 
 

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
+from pathlib import Path
 
 import pytest
 
@@ -207,8 +208,8 @@ NAGIOS_SERVICE_XML_MULTIPLE_METRIC_RENAME = """<?xml version="1.0" encoding="UTF
         )
     ],
 )
-def test_update_metric_pnp_xml_info_file(  # type:ignore[no-untyped-def]
-    tmp_path, perfvar, newvar, xml_file, result
+def test_update_metric_pnp_xml_info_file(
+    tmp_path: Path, perfvar: str, newvar: str, xml_file: str, result: str
 ) -> None:
     filepath = tmp_path / "pnp.xml"
     with filepath.open("w") as fid:

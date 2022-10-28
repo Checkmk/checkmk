@@ -2,6 +2,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Sequence
 from typing import Optional, Tuple
 
 import pytest
@@ -59,9 +60,9 @@ def test_service_label() -> None:
         (None, None, ["foo:bar"]),
     ],
 )
-def test_service_invalid(item, parameters, labels) -> None:  # type:ignore[no-untyped-def]
+def test_service_invalid(item: object, parameters: object, labels: object) -> None:
     with pytest.raises(TypeError):
-        _ = Service(item=item, parameters=parameters, labels=labels)
+        _ = Service(item=item, parameters=parameters, labels=labels)  # type: ignore[arg-type]
 
 
 def test_service_kwargs_only() -> None:
@@ -139,7 +140,10 @@ def test_state() -> None:
         ((0, 1, 2, 3, State.UNKNOWN), State.OK),
     ],
 )
-def test_best_state(states, best_state) -> None:  # type:ignore[no-untyped-def]
+def test_best_state(
+    states: Sequence[State],
+    best_state: State,
+) -> None:
     assert State.best(*states) is best_state
 
 
@@ -159,9 +163,9 @@ def test_metric_kwarg() -> None:
         ("name", 7, (23, 42), (None, "max")),
     ],
 )
-def test_metric_invalid(name, value, levels, boundaries) -> None:  # type:ignore[no-untyped-def]
+def test_metric_invalid(name: object, value: object, levels: object, boundaries: object) -> None:
     with pytest.raises(TypeError):
-        _ = Metric(name, value, levels=levels, boundaries=boundaries)
+        _ = Metric(name, value, levels=levels, boundaries=boundaries)  # type: ignore[arg-type]
 
 
 def test_metric() -> None:
@@ -188,7 +192,7 @@ def test_metric() -> None:
         (State.OK, "summary", None, {"at the moment": "impossible", "someday": "maybe"}),
     ],
 )
-def test_result_invalid(state_, summary, notice, details) -> None:  # type:ignore[no-untyped-def]
+def test_result_invalid(state_: object, summary: object, notice: object, details: object) -> None:
     with pytest.raises((TypeError, ValueError)):
         _ = Result(
             state=state_,

@@ -3,7 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
 import pytest
+
+from tests.unit.conftest import FixRegister
 
 from cmk.utils.type_defs import SectionName
 
@@ -69,8 +73,11 @@ from cmk.snmplib.utils import evaluate_snmp_detection
         ),
     ],
 )
-def test_cisco_related_snmp_detection(  # type:ignore[no-untyped-def]
-    fix_register, oid_data, detected, not_detected
+def test_cisco_related_snmp_detection(
+    fix_register: FixRegister,
+    oid_data: Mapping[str, str],
+    detected: set[str],
+    not_detected: set[str],
 ) -> None:
 
     for name in detected | not_detected:

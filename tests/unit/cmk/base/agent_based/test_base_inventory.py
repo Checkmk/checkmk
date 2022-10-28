@@ -20,9 +20,9 @@ import cmk.base.config as config
 from cmk.base.agent_based.data_provider import ParsedSectionsBroker
 from cmk.base.agent_based.inventory._tree_aggregator import (
     AttributesUpdater,
+    RealHostTreeAggregator,
     RetentionInfo,
     TableUpdater,
-    TreeAggregator,
 )
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 from cmk.base.config import HostConfig
@@ -38,7 +38,7 @@ def test_aggregator_raises_collision() -> None:
     # it runs in debug mode.  So let us explicitly disable that here.
     cmk.utils.debug.disable()
 
-    result = TreeAggregator([]).aggregate_results(
+    result = RealHostTreeAggregator([]).aggregate_results(
         inventory_generator=inventory_items,
         raw_cache_info=None,
         is_legacy_plugin=False,
@@ -92,7 +92,7 @@ def test_integrate_attributes() -> None:
         ),
     ]
 
-    tree_aggr = TreeAggregator([])
+    tree_aggr = RealHostTreeAggregator([])
     tree_aggr.aggregate_results(
         inventory_generator=inventory_items,
         raw_cache_info=None,
@@ -155,7 +155,7 @@ def test_integrate_table_row() -> None:
         ),
     ]
 
-    tree_aggr = TreeAggregator([])
+    tree_aggr = RealHostTreeAggregator([])
     tree_aggr.aggregate_results(
         inventory_generator=inventory_items,
         raw_cache_info=None,
@@ -507,7 +507,7 @@ def test_retentions_add_cache_info_no_match(
     raw_cache_info: tuple[int, int] | None,
 ) -> None:
     now = 100
-    tree_aggregator = TreeAggregator(raw_intervals)
+    tree_aggregator = RealHostTreeAggregator(raw_intervals)
     tree_aggregator._may_add_cache_info(
         now=now,
         node_name=node_name,
@@ -681,7 +681,7 @@ def test_retentions_add_cache_info(
     match_other_keys: bool,
 ) -> None:
     now = 100
-    tree_aggregator = TreeAggregator(raw_intervals)
+    tree_aggregator = RealHostTreeAggregator(raw_intervals)
     tree_aggregator._may_add_cache_info(
         now=now,
         node_name=node_name,
@@ -1478,7 +1478,7 @@ def test_check_inventory_tree(
     monkeypatch.setattr(
         _inventory,
         "inventorize_real_host",
-        lambda host_config, parsed_sections_broker, run_plugin_names: TreeAggregator([]),
+        lambda host_config, parsed_sections_broker, run_plugin_names: RealHostTreeAggregator([]),
     )
 
     check_result = _inventory.check_inventory_tree(

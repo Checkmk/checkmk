@@ -20,7 +20,7 @@ import cmk.base.config as config
 from cmk.base.config import HostConfig
 
 from ._inventory import check_inventory_tree
-from ._tree_aggregator import TreeAggregator
+from ._tree_aggregator import ClusterTreeAggregator, RealHostTreeAggregator
 
 __all__ = ["active_check_inventory"]
 
@@ -76,7 +76,7 @@ def _save_inventory_tree(
     *,
     hostname: HostName,
     tree_or_archive_store: TreeOrArchiveStore,
-    tree_aggregator: TreeAggregator,
+    tree_aggregator: ClusterTreeAggregator | RealHostTreeAggregator,
     old_tree: StructuredDataNode,
 ) -> None:
     inventory_tree = tree_aggregator.inventory_tree

@@ -21,6 +21,7 @@ from cmk.utils.structured_data import (
     TABLE_KEY,
     UpdateResult,
 )
+from cmk.utils.type_defs import HostName
 
 from cmk.base.api.agent_based.inventory_classes import (
     AttrDict,
@@ -48,16 +49,48 @@ IntervalsFromConfig = dict[RetentionKey, IntervalFromConfig]
 
 
 class TreeAggregator:
-    def __init__(self, raw_intervals_from_config: RawIntervalsFromConfig) -> None:
-        self._from_config = _get_intervals_from_config(raw_intervals_from_config)
-        self._retention_infos: RetentionInfos = {}
+    def __init__(self) -> None:
         self._inventory_tree = StructuredDataNode()
-        self._status_data_tree = StructuredDataNode()
-        self._class_mutex: dict[tuple, str] = {}
 
     @property
     def inventory_tree(self) -> StructuredDataNode:
         return self._inventory_tree
+
+    def may_update(self, now: int, previous_tree: StructuredDataNode) -> UpdateResult:
+        # TODO Need this in an intermediate step. Will be removed later
+        return UpdateResult(save_tree=False, reason="")
+
+    # ---static data from config--------------------------------------------
+
+    def _add_cluster_property(self, *, is_cluster: bool) -> None:
+        node = self._inventory_tree.setdefault_node(
+            ("software", "applications", "check_mk", "cluster")
+        )
+        node.attributes.add_pairs({"is_cluster": is_cluster})
+
+
+class ClusterTreeAggregator(TreeAggregator):
+
+    # ---static data from config--------------------------------------------
+
+    def add_cluster_property(self) -> None:
+        self._add_cluster_property(is_cluster=True)
+
+    def add_cluster_nodes(self, *, nodes: list[HostName]) -> None:
+        node = self._inventory_tree.setdefault_node(
+            ("software", "applications", "check_mk", "cluster", "nodes")
+        )
+        node.table.add_key_columns(["name"])
+        node.table.add_rows([{"name": node_name} for node_name in nodes])
+
+
+class RealHostTreeAggregator(TreeAggregator):
+    def __init__(self, raw_intervals_from_config: RawIntervalsFromConfig) -> None:
+        super().__init__()
+        self._from_config = _get_intervals_from_config(raw_intervals_from_config)
+        self._retention_infos: RetentionInfos = {}
+        self._status_data_tree = StructuredDataNode()
+        self._class_mutex: dict[tuple, str] = {}
 
     @property
     def status_data_tree(self) -> StructuredDataNode:
@@ -287,6 +320,11 @@ class TreeAggregator:
             )
 
         raise NotImplementedError()
+
+    # ---static data from config--------------------------------------------
+
+    def add_cluster_property(self) -> None:
+        self._add_cluster_property(is_cluster=False)
 
 
 #   .--config--------------------------------------------------------------.

@@ -46,7 +46,7 @@ from cmk.base.agent_based.utils import (
 from cmk.base.config import HostConfig
 from cmk.base.sources import fetch_all, make_sources
 
-from ._tree_aggregator import TreeAggregator
+from ._tree_aggregator import ClusterTreeAggregator, RealHostTreeAggregator
 
 __all__ = [
     "inventorize_real_host",
@@ -64,7 +64,7 @@ class FetchedDataResult(NamedTuple):
 @dataclass(frozen=True)
 class CheckInventoryTreeResult:
     check_result: ActiveCheckResult
-    tree_aggregator: TreeAggregator
+    tree_aggregator: ClusterTreeAggregator | RealHostTreeAggregator
     processing_failed: bool
 
 
@@ -76,6 +76,7 @@ def check_inventory_tree(
     parameters: config.HWSWInventoryParameters,
     old_tree: StructuredDataNode,
 ) -> CheckInventoryTreeResult:
+    tree_aggregator: ClusterTreeAggregator | RealHostTreeAggregator
     if host_config.is_cluster:
         tree_aggregator = _inventorize_cluster(host_config=host_config)
         return CheckInventoryTreeResult(
@@ -83,7 +84,7 @@ def check_inventory_tree(
                 *_check_trees(
                     parameters=parameters,
                     inventory_tree=tree_aggregator.inventory_tree,
-                    status_data_tree=tree_aggregator.status_data_tree,
+                    status_data_tree=StructuredDataNode(),
                     old_tree=old_tree,
                 ),
             ),
@@ -95,6 +96,7 @@ def check_inventory_tree(
         host_config=host_config,
         selected_sections=selected_sections,
     )
+
     tree_aggregator = inventorize_real_host(
         host_config=host_config,
         parsed_sections_broker=fetched_data_result.parsed_sections_broker,
@@ -131,20 +133,13 @@ def check_inventory_tree(
     )
 
 
-def _inventorize_cluster(*, host_config: HostConfig) -> TreeAggregator:
-    tree_aggregator = TreeAggregator([])
-    inventory_tree = tree_aggregator.inventory_tree
+def _inventorize_cluster(*, host_config: HostConfig) -> ClusterTreeAggregator:
+    tree_aggregator = ClusterTreeAggregator()
 
-    _set_cluster_property(inventory_tree, is_cluster=True)
+    tree_aggregator.add_cluster_property()
 
-    if not (nodes := host_config.nodes):
-        return tree_aggregator
-
-    node = inventory_tree.setdefault_node(
-        ("software", "applications", "check_mk", "cluster", "nodes")
-    )
-    node.table.add_key_columns(["name"])
-    node.table.add_rows([{"name": node_name} for node_name in nodes])
+    if nodes := host_config.nodes:
+        tree_aggregator.add_cluster_nodes(nodes=nodes)
 
     return tree_aggregator
 
@@ -216,10 +211,10 @@ def inventorize_real_host(
     host_config: HostConfig,
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[InventoryPluginName],
-) -> TreeAggregator:
-    tree_aggregator = TreeAggregator(host_config.inv_retention_intervals)
+) -> RealHostTreeAggregator:
+    tree_aggregator = RealHostTreeAggregator(host_config.inv_retention_intervals)
 
-    _set_cluster_property(tree_aggregator.inventory_tree, is_cluster=False)
+    tree_aggregator.add_cluster_property()
 
     section.section_step("Executing inventory plugins")
     for inventory_plugin in agent_based_register.iter_all_inventory_plugins():
@@ -273,15 +268,6 @@ def inventorize_real_host(
 
     console.verbose("\n")
     return tree_aggregator
-
-
-def _set_cluster_property(
-    inventory_tree: StructuredDataNode,
-    *,
-    is_cluster: bool,
-) -> None:
-    node = inventory_tree.setdefault_node(("software", "applications", "check_mk", "cluster"))
-    node.attributes.add_pairs({"is_cluster": is_cluster})
 
 
 def _check_fetched_data_or_trees(

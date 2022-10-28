@@ -12,7 +12,14 @@ import cmk.utils.paths
 from cmk.utils.check_utils import unwrap_parameters
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.log import console
-from cmk.utils.type_defs import CheckPluginName, HostKey, ParsedSectionName, ServiceID, SourceType
+from cmk.utils.type_defs import (
+    CheckPluginName,
+    HostKey,
+    HostName,
+    ParsedSectionName,
+    ServiceID,
+    SourceType,
+)
 
 import cmk.core_helpers.cache
 
@@ -30,8 +37,7 @@ from .utils import QualifiedDiscovery
 
 def analyse_discovered_services(
     *,
-    host_key: HostKey,
-    host_key_mgmt: HostKey,
+    host_name: HostName,
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[CheckPluginName],
     forget_existing: bool,
@@ -40,10 +46,9 @@ def analyse_discovered_services(
 ) -> QualifiedDiscovery[AutocheckEntry]:
 
     return _analyse_discovered_services(
-        existing_services=AutochecksStore(host_key.hostname).read(),
+        existing_services=AutochecksStore(host_name).read(),
         discovered_services=_discover_services(
-            host_key=host_key,
-            host_key_mgmt=host_key_mgmt,
+            host_name=host_name,
             parsed_sections_broker=parsed_sections_broker,
             run_plugin_names=run_plugin_names,
             on_error=on_error,
@@ -121,8 +126,7 @@ def _drop_plugins_services(
 
 def _discover_services(
     *,
-    host_key: HostKey,
-    host_key_mgmt: HostKey,
+    host_name: HostName,
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[CheckPluginName],
     on_error: OnError,
@@ -136,7 +140,7 @@ def _discover_services(
 
     service_table: MutableMapping[ServiceID, AutocheckEntry] = {}
     try:
-        with plugin_contexts.current_host(host_key.hostname):
+        with plugin_contexts.current_host(host_name):
             for check_plugin_name in plugin_candidates:
                 try:
                     service_table.update(
@@ -144,10 +148,13 @@ def _discover_services(
                             entry.id(): entry
                             for entry in _discover_plugins_services(
                                 check_plugin_name=check_plugin_name,
-                                host_key=(
-                                    host_key_mgmt
-                                    if check_plugin_name.is_management_name()
-                                    else host_key
+                                host_key=HostKey(
+                                    host_name,
+                                    (
+                                        SourceType.MANAGEMENT
+                                        if check_plugin_name.is_management_name()
+                                        else SourceType.HOST
+                                    ),
                                 ),
                                 parsed_sections_broker=parsed_sections_broker,
                                 on_error=on_error,

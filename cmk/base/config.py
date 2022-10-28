@@ -3197,14 +3197,6 @@ class HostConfig:
         )
 
     @property
-    def host_key(self) -> HostKey:
-        return HostKey(self.hostname, SourceType.HOST)
-
-    @property
-    def host_key_mgmt(self) -> HostKey:
-        return HostKey(self.hostname, SourceType.MANAGEMENT)
-
-    @property
     def additional_ipaddresses(self) -> Tuple[List[HostAddress], List[HostAddress]]:
         # TODO Regarding the following configuration variables from WATO
         # there's no inheritance, thus we use 'host_attributes'.

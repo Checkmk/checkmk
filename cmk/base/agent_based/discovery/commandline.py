@@ -16,14 +16,7 @@ from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import MKGeneralException, OnError
 from cmk.utils.log import console
-from cmk.utils.type_defs import (
-    AgentRawData,
-    CheckPluginName,
-    HostAddress,
-    HostKey,
-    HostName,
-    ServiceState,
-)
+from cmk.utils.type_defs import AgentRawData, CheckPluginName, HostAddress, HostName, ServiceState
 from cmk.utils.type_defs.result import Result
 
 from cmk.snmplib.type_defs import SNMPRawData
@@ -111,8 +104,7 @@ def commandline_discovery(
             store_piggybacked_sections(host_sections)
             parsed_sections_broker = make_broker(host_sections)
             _commandline_discovery_on_host(
-                host_key=host_config.host_key,
-                host_key_mgmt=host_config.host_key_mgmt,
+                host_name=host_config.hostname,
                 parsed_sections_broker=parsed_sections_broker,
                 run_plugin_names=run_plugin_names,
                 only_new=arg_only_new,
@@ -165,8 +157,7 @@ def _preprocess_hostnames(
 
 def _commandline_discovery_on_host(
     *,
-    host_key: HostKey,
-    host_key_mgmt: HostKey,
+    host_name: HostName,
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[CheckPluginName],
     only_new: bool,
@@ -178,8 +169,7 @@ def _commandline_discovery_on_host(
     section.section_step("Analyse discovered host labels")
 
     host_labels = analyse_node_labels(
-        host_key=host_key,
-        host_key_mgmt=host_key_mgmt,
+        host_name=host_name,
         parsed_sections_broker=parsed_sections_broker,
         load_labels=load_labels,
         save_labels=True,
@@ -195,8 +185,7 @@ def _commandline_discovery_on_host(
     section.section_step("Analyse discovered services")
 
     service_result = analyse_discovered_services(
-        host_key=host_key,
-        host_key_mgmt=host_key_mgmt,
+        host_name=host_name,
         parsed_sections_broker=parsed_sections_broker,
         run_plugin_names=run_plugin_names,
         forget_existing=not only_new,
@@ -206,7 +195,7 @@ def _commandline_discovery_on_host(
 
     # TODO (mo): for the labels the corresponding code is in _host_labels.
     # We should put the persisting in one place.
-    autochecks.AutochecksStore(host_key.hostname).write(service_result.present)
+    autochecks.AutochecksStore(host_name).write(service_result.present)
 
     new_per_plugin = Counter(s.check_plugin_name for s in service_result.new)
     for name, count in sorted(new_per_plugin.items()):

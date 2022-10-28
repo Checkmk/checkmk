@@ -42,7 +42,6 @@ from cmk.utils.type_defs import (
     CheckPluginName,
     DiscoveryResult,
     EVERYTHING,
-    HostKey,
     HostName,
     ServiceID,
     ServiceName,
@@ -289,8 +288,7 @@ def _get_host_services(
     else:
         services = {
             **_get_node_services(
-                host_key=host_config.host_key,
-                host_key_mgmt=host_config.host_key_mgmt,
+                host_name=host_config.hostname,
                 parsed_sections_broker=parsed_sections_broker,
                 on_error=on_error,
                 host_of_clustered_service=config.get_config_cache().host_of_clustered_service,
@@ -652,8 +650,7 @@ def get_host_services(
     else:
         services = {
             **_get_node_services(
-                host_key=host_config.host_key,
-                host_key_mgmt=host_config.host_key_mgmt,
+                host_name=host_config.hostname,
                 parsed_sections_broker=parsed_sections_broker,
                 on_error=on_error,
                 host_of_clustered_service=config.get_config_cache().host_of_clustered_service,
@@ -669,16 +666,14 @@ def get_host_services(
 
 # Do the actual work for a non-cluster host or node
 def _get_node_services(
-    host_key: HostKey,
-    host_key_mgmt: HostKey,
+    host_name: HostName,
     parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
     host_of_clustered_service: Callable[[HostName, ServiceName], HostName],
 ) -> ServicesTable[_Transition]:
 
     service_result = analyse_discovered_services(
-        host_key=host_key,
-        host_key_mgmt=host_key_mgmt,
+        host_name=host_name,
         parsed_sections_broker=parsed_sections_broker,
         run_plugin_names=EVERYTHING,
         forget_existing=False,
@@ -690,16 +685,16 @@ def _get_node_services(
         entry.id(): (
             _node_service_source(
                 check_source=check_source,
-                host_name=host_key.hostname,
-                cluster_name=host_of_clustered_service(host_key.hostname, service_name),
+                host_name=host_name,
+                cluster_name=host_of_clustered_service(host_name, service_name),
                 check_plugin_name=entry.check_plugin_name,
                 service_name=service_name,
             ),
             entry,
-            [host_key.hostname],
+            [host_name],
         )
         for check_source, entry in service_result.chain_with_qualifier()
-        if (service_name := config.service_description(host_key.hostname, *entry.id()))
+        if (service_name := config.service_description(host_name, *entry.id()))
     }
 
 
@@ -767,11 +762,8 @@ def _get_cluster_services(
     # Get services of the nodes. We are only interested in "old", "new" and "vanished"
     # From the states and parameters of these we construct the final state per service.
     for node in host_config.nodes:
-        node_config = config_cache.get_host_config(node)
-
         entries = analyse_discovered_services(
-            host_key=node_config.host_key,
-            host_key_mgmt=node_config.host_key_mgmt,
+            host_name=node,
             parsed_sections_broker=parsed_sections_broker,
             run_plugin_names=EVERYTHING,
             forget_existing=False,

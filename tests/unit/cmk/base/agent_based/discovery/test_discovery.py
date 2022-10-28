@@ -1487,8 +1487,7 @@ def test__discover_host_labels_and_services_on_realhost(
 
     # we're depending on the changed host labels:
     _ = analyse_node_labels(
-        host_key=scenario.host_key,
-        host_key_mgmt=scenario.host_key_mgmt,
+        host_name=scenario.hostname,
         parsed_sections_broker=scenario.parsed_sections_broker,
         load_labels=discovery_test_case.load_labels,
         save_labels=discovery_test_case.save_labels,
@@ -1496,8 +1495,7 @@ def test__discover_host_labels_and_services_on_realhost(
     )
 
     discovered_services = discovery._discovered_services._discover_services(
-        host_key=scenario.host_key,
-        host_key_mgmt=scenario.host_key_mgmt,
+        host_name=scenario.hostname,
         parsed_sections_broker=scenario.parsed_sections_broker,
         on_error=OnError.RAISE,
         run_plugin_names=EVERYTHING,
@@ -1516,8 +1514,7 @@ def test__perform_host_label_discovery_on_realhost(
     scenario = realhost_scenario
 
     host_label_result = analyse_node_labels(
-        host_key=scenario.host_key,
-        host_key_mgmt=scenario.host_key_mgmt,
+        host_name=scenario.hostname,
         parsed_sections_broker=scenario.parsed_sections_broker,
         load_labels=discovery_test_case.load_labels,
         save_labels=discovery_test_case.save_labels,
@@ -1640,8 +1637,7 @@ def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
     )
 
     assert _get_node_services(
-        HostKey(HostName("horst"), SourceType.HOST),
-        HostKey(HostName("horst"), SourceType.MANAGEMENT),
+        HostName("horst"),
         ParsedSectionsBroker({}),
         OnError.RAISE,
         lambda hn, _svcdescr: hn,

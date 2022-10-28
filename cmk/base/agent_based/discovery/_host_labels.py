@@ -15,7 +15,7 @@ from typing import Dict, Mapping, Sequence
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.log import console
-from cmk.utils.type_defs import HostKey, HostName
+from cmk.utils.type_defs import HostKey, HostName, SourceType
 
 import cmk.base.config as config
 from cmk.base.agent_based.data_provider import ParsedSectionsBroker
@@ -43,8 +43,7 @@ def analyse_host_labels(
         )
         if host_config.is_cluster
         else analyse_node_labels(
-            host_key=host_config.host_key,
-            host_key_mgmt=host_config.host_key_mgmt,
+            host_name=host_config.hostname,
             parsed_sections_broker=parsed_sections_broker,
             load_labels=load_labels,
             save_labels=save_labels,
@@ -55,8 +54,7 @@ def analyse_host_labels(
 
 def analyse_node_labels(
     *,
-    host_key: HostKey,
-    host_key_mgmt: HostKey,
+    host_name: HostName,
     parsed_sections_broker: ParsedSectionsBroker,
     load_labels: bool,
     save_labels: bool,
@@ -75,14 +73,13 @@ def analyse_node_labels(
     optimizer caches have to be cleared if new host labels are found.
     """
     return _analyse_host_labels(
-        host_name=host_key.hostname,
+        host_name=host_name,
         discovered_host_labels=_discover_host_labels(
-            host_key=host_key,
-            host_key_mgmt=host_key_mgmt,
+            host_name=host_name,
             parsed_sections_broker=parsed_sections_broker,
             on_error=on_error,
         ),
-        existing_host_labels=_load_existing_host_labels(host_key.hostname) if load_labels else (),
+        existing_host_labels=_load_existing_host_labels(host_name) if load_labels else (),
         save_labels=save_labels,
     )
 
@@ -111,14 +108,9 @@ def analyse_cluster_labels(
         return QualifiedDiscovery.empty()
 
     nodes_host_labels: Dict[str, HostLabel] = {}
-    config_cache = config.get_config_cache()
-
     for node in host_config.nodes:
-        node_config = config_cache.get_host_config(node)
-
         node_result = analyse_node_labels(
-            host_key=node_config.host_key,
-            host_key_mgmt=node_config.host_key_mgmt,
+            host_name=node,
             parsed_sections_broker=parsed_sections_broker,
             load_labels=load_labels,
             save_labels=save_labels,
@@ -203,8 +195,7 @@ def _load_existing_host_labels(host_name: HostName) -> Sequence[HostLabel]:
 
 def _discover_host_labels(
     *,
-    host_key: HostKey,
-    host_key_mgmt: HostKey,
+    host_name: HostName,
     parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
 ) -> Sequence[HostLabel]:
@@ -212,12 +203,12 @@ def _discover_host_labels(
     # make names unique
     labels_by_name = {
         **_discover_host_labels_for_source_type(
-            host_key=host_key,
+            host_key=HostKey(host_name, SourceType.HOST),
             parsed_sections_broker=parsed_sections_broker,
             on_error=on_error,
         ),
         **_discover_host_labels_for_source_type(
-            host_key=host_key_mgmt,
+            host_key=HostKey(host_name, SourceType.MANAGEMENT),
             parsed_sections_broker=parsed_sections_broker,
             on_error=on_error,
         ),

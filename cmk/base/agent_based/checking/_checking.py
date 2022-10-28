@@ -34,6 +34,7 @@ from cmk.utils.type_defs import (
     CheckPluginName,
     EVERYTHING,
     ExitSpec,
+    HostKey,
     HostName,
     MetricTuple,
     ParsedSectionName,
@@ -477,9 +478,7 @@ def _get_monitoring_data_kwargs(
     return (
         get_section_kwargs(
             parsed_sections_broker,
-            host_config.host_key_mgmt
-            if source_type is SourceType.MANAGEMENT
-            else host_config.host_key,
+            HostKey(host_config.hostname, source_type),
             sections,
         ),
         ServiceCheckResult.received_no_data(),

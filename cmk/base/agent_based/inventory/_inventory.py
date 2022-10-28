@@ -21,7 +21,7 @@ from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
 from cmk.utils.structured_data import StructuredDataNode
-from cmk.utils.type_defs import AgentRawData, InventoryPluginName, result
+from cmk.utils.type_defs import AgentRawData, HostKey, InventoryPluginName, result, SourceType
 
 from cmk.snmplib.type_defs import SNMPRawData
 
@@ -221,10 +221,10 @@ def inventorize_real_host(
         if inventory_plugin.name not in run_plugin_names:
             continue
 
-        for host_key in (host_config.host_key, host_config.host_key_mgmt):
+        for source_type in (SourceType.HOST, SourceType.MANAGEMENT):
             kwargs = get_section_kwargs(
                 parsed_sections_broker,
-                host_key,
+                HostKey(host_config.hostname, source_type),
                 inventory_plugin.sections,
             )
             if not kwargs:

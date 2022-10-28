@@ -52,7 +52,7 @@ from cmk.base.sources import fetch_all, make_sources
 from ._tree_aggregator import ClusterTreeAggregator, RealHostTreeAggregator
 
 __all__ = [
-    "inventorize_real_host",
+    "inventorize_real_host_via_plugins",
     "check_inventory_tree",
 ]
 
@@ -101,10 +101,11 @@ def check_inventory_tree(
         selected_sections=selected_sections,
     )
 
-    tree_aggregator = inventorize_real_host(
+    tree_aggregator = _inventorize_real_host(
         host_config=host_config,
         parsed_sections_broker=fetched_data_result.parsed_sections_broker,
         run_plugin_names=run_plugin_names,
+        old_tree=old_tree,
     )
 
     return CheckInventoryTreeResult(
@@ -233,17 +234,32 @@ def _no_data_or_files(host_config: HostConfig, host_sections: Iterable[HostSecti
     return True
 
 
-def inventorize_real_host(
+def _inventorize_real_host(
     *,
     host_config: HostConfig,
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[InventoryPluginName],
-    # TODO This will be cleaned up by splitting inventorize_real_host into
-    #   - _inventorize_real_host
-    #   - inventorize_real_host_by_plugins
-    # Reason: In checking/_checking.py we only inventorize status data tree and there is no need to
-    # update the inventory tree from the old tree.
-    old_tree: StructuredDataNode | None = None,
+    old_tree: StructuredDataNode,
+) -> RealHostTreeAggregator:
+    tree_aggregator = inventorize_real_host_via_plugins(
+        host_config=host_config,
+        parsed_sections_broker=parsed_sections_broker,
+        run_plugin_names=run_plugin_names,
+    )
+
+    tree_aggregator.may_update(now=int(time.time()), previous_tree=old_tree)
+
+    if not tree_aggregator.inventory_tree.is_empty():
+        tree_aggregator.add_cluster_property()
+
+    return tree_aggregator
+
+
+def inventorize_real_host_via_plugins(
+    *,
+    host_config: HostConfig,
+    parsed_sections_broker: ParsedSectionsBroker,
+    run_plugin_names: Container[InventoryPluginName],
 ) -> RealHostTreeAggregator:
     tree_aggregator = RealHostTreeAggregator(host_config.inv_retention_intervals)
 
@@ -296,12 +312,6 @@ def inventorize_real_host(
             else:
                 console.verbose(" %s%s%s%s", tty.green, tty.bold, inventory_plugin.name, tty.normal)
                 console.vverbose(": ok\n")
-
-    if old_tree is not None:
-        tree_aggregator.may_update(now=int(time.time()), previous_tree=old_tree)
-
-    if not tree_aggregator.inventory_tree.is_empty():
-        tree_aggregator.add_cluster_property()
 
     console.verbose("\n")
     return tree_aggregator

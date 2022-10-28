@@ -1478,8 +1478,10 @@ def test_check_inventory_tree(
 
     monkeypatch.setattr(
         _inventory,
-        "inventorize_real_host",
-        lambda host_config, parsed_sections_broker, run_plugin_names: RealHostTreeAggregator([]),
+        "_inventorize_real_host",
+        lambda host_config, parsed_sections_broker, run_plugin_names, old_tree: (
+            RealHostTreeAggregator([])
+        ),
     )
 
     check_result = _inventory.check_inventory_tree(
@@ -1520,8 +1522,10 @@ def test_check_inventory_tree_no_data_or_files(
 
     monkeypatch.setattr(
         _inventory,
-        "inventorize_real_host",
-        lambda host_config, parsed_sections_broker, run_plugin_names: RealHostTreeAggregator([]),
+        "_inventorize_real_host",
+        lambda host_config, parsed_sections_broker, run_plugin_names, old_tree: (
+            RealHostTreeAggregator([])
+        ),
     )
 
     check_result = _inventory.check_inventory_tree(

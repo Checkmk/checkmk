@@ -3725,6 +3725,9 @@ msgstr "Extra IPv6-adressen"
 msgid "Additional Plugin Output"
 msgstr "Extra plug-in uitgang"
 
+msgid "Additional agent labels to send during registration"
+msgstr ""
+
 msgid "Additional header lines"
 msgstr "Extra kopregels"
 
@@ -4182,6 +4185,10 @@ msgstr "Agent-gebaseerde plugins (Controles, Inventaris)"
 msgid "Agent controller"
 msgstr "Agent controller"
 
+#, fuzzy
+msgid "Agent controller auto-registration"
+msgstr "Agent registratie"
+
 msgid "Agent deployment"
 msgstr "Agent inzet"
 
@@ -4206,14 +4213,15 @@ msgstr "Agent-labelsimulator"
 msgid "Agent output"
 msgstr "Agent uitgang"
 
-msgid "Agent pairing"
-msgstr "Agent koppeling"
-
 msgid "Agent plugins: Regular expression to exclude plugins"
 msgstr "Agent plugins: Reguliere uitdrukking om plugins uit te sluiten"
 
 msgid "Agent plugins: versions"
 msgstr "Agent plugins: versies"
+
+#, fuzzy
+msgid "Agent receiver port"
+msgstr "Agent Fout"
 
 msgid "Agent registration"
 msgstr "Agent registratie"
@@ -4656,6 +4664,10 @@ msgstr "Alle protocollen"
 
 msgid "All queues listed here will be skipped."
 msgstr "Alle wachtrijen die hier staan, worden overgeslagen."
+
+#, fuzzy
+msgid "All related licensing information of Checkmk sites."
+msgstr "Toon licentie gebruiksinformatie van Checkmk sites."
 
 msgid "All resource groups are running on a different node (none)"
 msgstr "Alle resource groepen draaien op een andere node (geen)"
@@ -5905,13 +5917,6 @@ msgstr "Automatisch herladen van pagina's"
 msgid "Automatic page reload in %d seconds."
 msgstr "Automatische pagina herladen in %d seconden."
 
-msgid ""
-"Automatic pairing will fail if some data is missing. TODO: Concept for "
-"handling this situation"
-msgstr ""
-"Automatisch koppelen zal mislukken als sommige gegevens ontbreken. TODO: "
-"Concept voor het omgaan met deze situatie"
-
 msgid "Automatic takeover"
 msgstr "Automatische overname"
 
@@ -5940,9 +5945,6 @@ msgstr ""
 "Voer automatisch een service discovery uit op alle nieuwe hosts die door "
 "deze verbinding worden aangemaakt. Nieuwe diensten zullen in deze stap aan "
 "de bewaking worden toegevoegd."
-
-msgid "Automatically execute pairing"
-msgstr "Automatisch koppelen uitvoeren"
 
 msgid "Automatically recreate the sensor data repository (SDR) cache"
 msgstr ""
@@ -5996,10 +5998,6 @@ msgstr "Automatiseringsgeheim voor machinerekeningen"
 
 msgid "Automation user rejected"
 msgstr "Automatisering gebruiker afgewezen"
-
-msgid "Automation user that is used to perform pairing."
-msgstr ""
-"Automatiseringsgebruiker die wordt gebruikt om de koppeling uit te voeren."
 
 msgid "Autostart Services"
 msgstr "Autostart diensten"
@@ -15277,6 +15275,9 @@ msgstr "Geen niveaus opleggen"
 msgid "Do not impose levels, always be OK"
 msgstr "Geen niveaus opleggen, altijd OK zijn"
 
+msgid "Do not manage the controllers auto-registration"
+msgstr ""
+
 msgid "Do not match Event Console alerts"
 msgstr "Komen niet overeen met waarschuwingen van de gebeurtenissenconsole"
 
@@ -16410,6 +16411,10 @@ msgstr "Wijzig dienst groep"
 msgid "Edit services"
 msgstr "Diensten bewerken"
 
+#, fuzzy
+msgid "Edit settings"
+msgstr "%d Filter instellingen"
+
 #, python-format
 msgid "Edit site connection %s"
 msgstr "Siteverbinding %s bewerken"
@@ -16420,9 +16425,6 @@ msgstr "Bewerk site specifieke globale instellingen van %s"
 
 msgid "Edit stored report"
 msgstr "Bewerk opgeslagen rapport"
-
-msgid "Edit subscription settings"
-msgstr "Abonnementsinstellingen bewerken"
 
 msgid "Edit tag group"
 msgstr "Bewerk tag groep"
@@ -16585,6 +16587,10 @@ msgstr ""
 "Ofwel verifieert u het servercertificaat met de lokale CA van de site, ofwel "
 "aanvaardt u elk certificaat dat door de server wordt aangeboden. Het wordt "
 "sterk aangeraden om dit ingeschakeld te laten."
+
+#, fuzzy
+msgid "ElastiCache"
+msgstr "Elasticsearch"
 
 msgid "Elastic Block Storage (EBS)"
 msgstr "Elastische blokopslag (EBS)"
@@ -21816,9 +21822,6 @@ msgstr "Gastadres gezinnen"
 msgid "Host address family (Primary)"
 msgstr "Gastheeradres familie (Primair)"
 
-msgid "Host address of the monitoring server"
-msgstr "Host adres van de monitoring server"
-
 msgid "Host addresses (IPv4/IPv6)"
 msgstr "Hostadressen (IPv4/IPv6)"
 
@@ -23331,6 +23334,11 @@ msgstr ""
 "aggregatie dat doet. Deze downtime wordt ook automatisch opgeruimd wanneer "
 "de aggregatie de downtime verlaat. Downtime die u handmatig instelt voor "
 "deze controle wordt niet beïnvloed."
+
+msgid ""
+"If this is active, the controller will keep all other connections, that "
+"might have been created manually."
+msgstr ""
 
 msgid ""
 "If this is option is enabled the actual check plugin will not be run every "
@@ -26408,6 +26416,10 @@ msgstr "Service level van bericht behouden (indien beschikbaar)"
 msgid "Keep special characters"
 msgstr "Bewaar speciale tekens"
 
+#, fuzzy
+msgid "Keep vanished connections"
+msgstr "Gevestigde verbindingen"
+
 msgid "Keepalived Parameters"
 msgstr "Keepalived Parameters"
 
@@ -26728,9 +26740,6 @@ msgid ""
 msgstr ""
 "Labels moeten in het formaat <tt>[KEY]:[VALUE]</tt> zijn. Bijvoorbeeld "
 "<tt>cmk/os_family:linux</tt>."
-
-msgid "Labels to set on the paired hosts"
-msgstr "Labels in te stellen op de gekoppelde hosts"
 
 msgid "Lambda"
 msgstr "Lambda"
@@ -27567,6 +27576,10 @@ msgstr "Licentie staat"
 
 msgid "License usage"
 msgstr "Licentiegebruik"
+
+#, fuzzy
+msgid "Licensing"
+msgstr "Licentiestatus"
 
 msgid "Licensing Status"
 msgstr "Licentiestatus"
@@ -29067,6 +29080,10 @@ msgstr ""
 
 msgid "Manage the Dynamic configuration connections"
 msgstr "Beheer de dynamische configuratieverbindingen"
+
+#, fuzzy
+msgid "Manage the controllers auto-registration"
+msgstr "Windows agent controller problemen oplossen"
 
 msgid "Manage users of the monitoring system."
 msgstr "Beheer van de gebruikers van het bewakingssysteem."
@@ -30876,6 +30893,10 @@ msgstr "Monitoring van container- en containerorchestratiesoftware"
 
 msgid "Monitoring of forwarded logfiles"
 msgstr "Bewaking van doorgestuurde logfiles"
+
+#, fuzzy
+msgid "Monitoring server address"
+msgstr "Controle staat"
 
 msgid "Monitoring state"
 msgstr "Controle staat"
@@ -34873,12 +34894,6 @@ msgstr "Pagina's"
 
 msgid "Pages per second"
 msgstr "Pagina's per seconde"
-
-msgid "Pair manually"
-msgstr "Handmatig paren"
-
-msgid "Pair on installation"
-msgstr "Paar op installatie"
 
 msgid "Palo Alto Active Sessions"
 msgstr "Palo Alto Actieve Sessies"
@@ -41867,9 +41882,6 @@ msgstr "Toon legende"
 msgid "Show less"
 msgstr "Minder tonen"
 
-msgid "Show license usage information of Checkmk sites."
-msgstr "Toon licentie gebruiksinformatie van Checkmk sites."
-
 msgid "Show margin round the graph"
 msgstr "Toon marge rond de grafiek"
 
@@ -42395,6 +42407,10 @@ msgstr "De staat van de site is onbekend"
 msgid "Site status"
 msgstr "Plaats Status"
 
+#, fuzzy
+msgid "Site to register with"
+msgstr "Site-to-site bandbreedte"
+
 #, python-format
 msgid "Site-specific global configuration for %s"
 msgstr "Locatiespecifieke globale configuratie voor %s"
@@ -42410,6 +42426,10 @@ msgstr "Sitenaam"
 
 msgid "Sites"
 msgstr "Sites"
+
+#, fuzzy
+msgid "Sites to register with"
+msgstr "Site-to-site bandbreedte"
 
 msgid "Size"
 msgstr "Maat"
@@ -43416,6 +43436,11 @@ msgstr ""
 
 msgid "Specify the site that should monitor this host."
 msgstr "Specificeer de site die deze host moet monitoren."
+
+msgid ""
+"Specify the site that this connections should be initiated with. You must "
+"have a matching rule to create the host in a folder monitored on that site."
+msgstr ""
 
 msgid ""
 "Specify the site, this connector should run on. Only piggyback data from "
@@ -45357,9 +45382,6 @@ msgstr "TLS/SSL/Https uitgeschakeld"
 msgid "TNS Alias %s"
 msgstr "TNS Alias %s"
 
-msgid "TODO"
-msgstr "TODO"
-
 msgid "TP Link: Used memory via SNMP"
 msgstr "TP Link: Gebruikt geheugen via SNMP"
 
@@ -47072,6 +47094,12 @@ msgstr ""
 "een andere site wordt gemonitord. Als je deze host wilt wijzigen, moet je "
 "het site attribuut veranderen in de lokale site. Maar dit kan er voor zorgen "
 "dat de host vanuit meerdere sites gemonitord wordt."
+
+msgid ""
+"The configured site is not known to this site. You can only register to "
+"sites known to the central site, because the controller will only trust "
+"certificates signed by the central sites CA."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -50232,6 +50260,12 @@ msgstr ""
 msgid "These hosts have installed the correct version of their agent."
 msgstr "Deze hosts hebben de juiste versie van hun agent geïnstalleerd."
 
+#, python-format
+msgid ""
+"These labels can be refered to by the ruleset \"%s\", to control the "
+"behaviour during host creation."
+msgstr ""
+
 msgid ""
 "These levels make the check go warning or critical whenever the "
 "<b>percentual error rate</b> or the <b>absolute error rate</b> of the "
@@ -52494,6 +52528,19 @@ msgstr ""
 "dezelfde locatie - de agent installatie dir. Meerdere regels kunnen van "
 "toepassing zijn, dit betekent dat de pakketten van meerdere regels worden "
 "samengevoegd."
+
+#, python-format
+msgid ""
+"This rule allows you to bake controller connections into an agent package. "
+"Upon start, the controller daemon will make sure connections to the "
+"specified sites exist. If they don't, the controller will try to issue the "
+"'register-new' command using the specified parameters.\n"
+"\n"
+"For this to work, you have to configure a corresponding rule \"%s\".\n"
+"\n"
+"You can choose to keep or to delete all other connections that may be known "
+"to the controller."
+msgstr ""
 
 msgid ""
 "This rule allows you to check multiple BI aggregations from multiple sites "
@@ -62935,6 +62982,10 @@ msgstr "betrouwbaarheidsinterval"
 msgid "configuration"
 msgstr "configuratie"
 
+#, fuzzy
+msgid "configure"
+msgstr "Configureer"
+
 msgid "connection"
 msgstr "aansluiting"
 
@@ -63052,6 +63103,10 @@ msgstr "vertraagd"
 
 msgid "demand"
 msgstr "vraag"
+
+#, fuzzy
+msgid "detect automatically"
+msgstr "Gebeurtenis werd automatisch verwijderd"
 
 msgid "detections/s"
 msgstr "detecties/s"
@@ -64619,6 +64674,41 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Agent pairing"
+#~ msgstr "Agent koppeling"
+
+#~ msgid ""
+#~ "Automatic pairing will fail if some data is missing. TODO: Concept for "
+#~ "handling this situation"
+#~ msgstr ""
+#~ "Automatisch koppelen zal mislukken als sommige gegevens ontbreken. TODO: "
+#~ "Concept voor het omgaan met deze situatie"
+
+#~ msgid "Automatically execute pairing"
+#~ msgstr "Automatisch koppelen uitvoeren"
+
+#~ msgid "Automation user that is used to perform pairing."
+#~ msgstr ""
+#~ "Automatiseringsgebruiker die wordt gebruikt om de koppeling uit te voeren."
+
+#~ msgid "Edit subscription settings"
+#~ msgstr "Abonnementsinstellingen bewerken"
+
+#~ msgid "Host address of the monitoring server"
+#~ msgstr "Host adres van de monitoring server"
+
+#~ msgid "Labels to set on the paired hosts"
+#~ msgstr "Labels in te stellen op de gekoppelde hosts"
+
+#~ msgid "Pair manually"
+#~ msgstr "Handmatig paren"
+
+#~ msgid "Pair on installation"
+#~ msgstr "Paar op installatie"
+
+#~ msgid "TODO"
+#~ msgstr "TODO"
 
 #, fuzzy
 #~| msgid "Activate on selected sites"
@@ -67778,9 +67868,6 @@ msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
 #~ msgstr ""
 #~ "Gebeurtenis werd gearchiveerd omdat geen regel overeenkwam en archivering "
 #~ "is geactiveerd in de globale instellingen."
-
-#~ msgid "Event was deleted automatically"
-#~ msgstr "Gebeurtenis werd automatisch verwijderd"
 
 #~ msgid "Exchanges"
 #~ msgstr "Uitwisselingen"

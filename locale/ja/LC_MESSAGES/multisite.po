@@ -3559,6 +3559,9 @@ msgstr "追加のIPv6アドレス"
 msgid "Additional Plugin Output"
 msgstr "追加のプラグイン出力"
 
+msgid "Additional agent labels to send during registration"
+msgstr ""
+
 msgid "Additional header lines"
 msgstr "追加のヘッダー行"
 
@@ -3984,6 +3987,10 @@ msgstr "エージェントベースのプラグイン(チェック、インベ�
 msgid "Agent controller"
 msgstr "エージェントコントローラー"
 
+#, fuzzy
+msgid "Agent controller auto-registration"
+msgstr "エージェント登録"
+
 msgid "Agent deployment"
 msgstr "エージェントのデプロイ"
 
@@ -4008,14 +4015,15 @@ msgstr "エージェントラベルシミュレータ"
 msgid "Agent output"
 msgstr "エージェント出力"
 
-msgid "Agent pairing"
-msgstr "エージェントペアリング"
-
 msgid "Agent plugins: Regular expression to exclude plugins"
 msgstr "エージェントプラグイン: プラグイン除外のための正規表現"
 
 msgid "Agent plugins: versions"
 msgstr "エージェントプラグイン: バージョン"
+
+#, fuzzy
+msgid "Agent receiver port"
+msgstr "エージェントエラー"
 
 msgid "Agent registration"
 msgstr "エージェント登録"
@@ -4453,6 +4461,10 @@ msgstr "すべてのプロトコル"
 
 msgid "All queues listed here will be skipped."
 msgstr "ここにリストされているすべてのキューはスキップされます。"
+
+#, fuzzy
+msgid "All related licensing information of Checkmk sites."
+msgstr "Checkmkサイトのライセンス使用情報を表示します。"
 
 msgid "All resource groups are running on a different node (none)"
 msgstr "すべてのリソースグループが別のノードで実行されています(なし)"
@@ -5652,11 +5664,6 @@ msgstr "自動ページリロード"
 msgid "Automatic page reload in %d seconds."
 msgstr "%d 秒での自動ページリロード。"
 
-msgid ""
-"Automatic pairing will fail if some data is missing. TODO: Concept for "
-"handling this situation"
-msgstr ""
-
 msgid "Automatic takeover"
 msgstr "自動テイクオーバー"
 
@@ -5682,9 +5689,6 @@ msgid ""
 "Automatically execute a service discovery on all new hosts created by this "
 "connection. New services will be added to the monitoring in this step."
 msgstr ""
-
-msgid "Automatically execute pairing"
-msgstr "ペアリングの自動実行"
 
 msgid "Automatically recreate the sensor data repository (SDR) cache"
 msgstr ""
@@ -5733,9 +5737,6 @@ msgstr "マシンアカウントの自動化の秘密"
 
 msgid "Automation user rejected"
 msgstr "自動化ユーザーが拒否されました"
-
-msgid "Automation user that is used to perform pairing."
-msgstr ""
 
 msgid "Autostart Services"
 msgstr "自動開始サービス"
@@ -14662,6 +14663,9 @@ msgstr "レベルを課さないでください"
 msgid "Do not impose levels, always be OK"
 msgstr "レベルを課さないでください、常に大丈夫です"
 
+msgid "Do not manage the controllers auto-registration"
+msgstr ""
+
 msgid "Do not match Event Console alerts"
 msgstr "イベントコンソールのアラートと一致しない"
 
@@ -15761,6 +15765,10 @@ msgstr "サービスグループの編集"
 msgid "Edit services"
 msgstr "サービスの編集"
 
+#, fuzzy
+msgid "Edit settings"
+msgstr "%d フィルター設定"
+
 #, python-format
 msgid "Edit site connection %s"
 msgstr "サイト接続 %sを編集します"
@@ -15771,9 +15779,6 @@ msgstr "%s のサイト固有のグローバル設定を編集します"
 
 msgid "Edit stored report"
 msgstr "保存されたレポートを編集する"
-
-msgid "Edit subscription settings"
-msgstr "サブスクリプション設定の編集"
 
 msgid "Edit tag group"
 msgstr "タググループを編集する"
@@ -15936,6 +15941,10 @@ msgid ""
 msgstr ""
 "サイトのローカルCAを使用してサーバー証明書を確認するか、サーバーから提供され"
 "た証明書を受け入れます。これを有効のままにしておくことを強くお勧めします。"
+
+#, fuzzy
+msgid "ElastiCache"
+msgstr "Elasticsearch"
 
 msgid "Elastic Block Storage (EBS)"
 msgstr "Elastic Block Storage(EBS)"
@@ -20945,9 +20954,6 @@ msgstr "ホストアドレスファミリ"
 msgid "Host address family (Primary)"
 msgstr "ホストアドレスファミリ(プライマリ)"
 
-msgid "Host address of the monitoring server"
-msgstr "監視サーバーのホストアドレス"
-
 msgid "Host addresses (IPv4/IPv6)"
 msgstr "ホストアドレス(IPv4/IPv6)"
 
@@ -22361,6 +22367,11 @@ msgstr ""
 "ムになります。このダウンタイムは、集計がダウンタイムを離れたときにも自動的に"
 "クリーンアップされます。このチェックのために手動で設定したダウンタイムは影響"
 "を受けません。"
+
+msgid ""
+"If this is active, the controller will keep all other connections, that "
+"might have been created manually."
+msgstr ""
 
 msgid ""
 "If this is option is enabled the actual check plugin will not be run every "
@@ -25231,6 +25242,10 @@ msgstr "メッセージからサービスレベルを維持する(利用可能�
 msgid "Keep special characters"
 msgstr "特殊文字を保持する"
 
+#, fuzzy
+msgid "Keep vanished connections"
+msgstr "確立された接続"
+
 msgid "Keepalived Parameters"
 msgstr "キープアライブパラメータ"
 
@@ -25548,9 +25563,6 @@ msgid ""
 msgstr ""
 "ラベルは<tt> [KEY]:[VALUE] </tt>の形式である必要があります。たとえば、 "
 "<tt>cmk/os_family:linux</tt>です。"
-
-msgid "Labels to set on the paired hosts"
-msgstr "ペアリングされたホストに設定するラベル"
 
 msgid "Lambda"
 msgstr ""
@@ -26374,6 +26386,10 @@ msgstr "ライセンスの状態"
 
 msgid "License usage"
 msgstr "ライセンスの使用法"
+
+#, fuzzy
+msgid "Licensing"
+msgstr "ライセンスステータス"
 
 msgid "Licensing Status"
 msgstr "ライセンスステータス"
@@ -27835,6 +27851,10 @@ msgstr "監視対象のホストとサービス、およびホストのフォル
 
 msgid "Manage the Dynamic configuration connections"
 msgstr "動的な構成接続を管理する"
+
+#, fuzzy
+msgid "Manage the controllers auto-registration"
+msgstr "Windowsエージェントコントローラーのトラブルシューティング"
 
 msgid "Manage users of the monitoring system."
 msgstr "監視システムのユーザーを管理します。"
@@ -29610,6 +29630,10 @@ msgstr "コンテナおよびコンテナオーケストレーションソフト
 
 msgid "Monitoring of forwarded logfiles"
 msgstr "転送されたログファイルの監視"
+
+#, fuzzy
+msgid "Monitoring server address"
+msgstr "モニター状態"
 
 msgid "Monitoring state"
 msgstr "モニター状態"
@@ -33491,12 +33515,6 @@ msgstr "ページ"
 
 msgid "Pages per second"
 msgstr "1秒あたりのページ数"
-
-msgid "Pair manually"
-msgstr "手動でペアリングする"
-
-msgid "Pair on installation"
-msgstr "ペアでインストール"
 
 msgid "Palo Alto Active Sessions"
 msgstr "Palo Altoアクティブセッション"
@@ -40257,9 +40275,6 @@ msgstr "凡例を表示"
 msgid "Show less"
 msgstr "表示を減らす"
 
-msgid "Show license usage information of Checkmk sites."
-msgstr "Checkmkサイトのライセンス使用情報を表示します。"
-
 msgid "Show margin round the graph"
 msgstr "グラフの周りにマージンを表示する"
 
@@ -40761,6 +40776,10 @@ msgstr "サイトの状態は不明です"
 msgid "Site status"
 msgstr "サイトのステータス"
 
+#, fuzzy
+msgid "Site to register with"
+msgstr "サイト間の帯域幅"
+
 #, python-format
 msgid "Site-specific global configuration for %s"
 msgstr "%sのサイト固有のグローバル構成"
@@ -40776,6 +40795,10 @@ msgstr "サイト名"
 
 msgid "Sites"
 msgstr "サイト"
+
+#, fuzzy
+msgid "Sites to register with"
+msgstr "サイト間の帯域幅"
 
 msgid "Size"
 msgstr "サイズ"
@@ -41710,6 +41733,11 @@ msgstr "管理ボードへの接続に使用するプロトコルを指定しま
 
 msgid "Specify the site that should monitor this host."
 msgstr "このホストを監視するサイトを指定します。"
+
+msgid ""
+"Specify the site that this connections should be initiated with. You must "
+"have a matching rule to create the host in a folder monitored on that site."
+msgstr ""
 
 msgid ""
 "Specify the site, this connector should run on. Only piggyback data from "
@@ -43604,9 +43632,6 @@ msgstr "TLS/SSL/Httpsが無効になっています"
 msgid "TNS Alias %s"
 msgstr "TNSエイリアス %s"
 
-msgid "TODO"
-msgstr ""
-
 msgid "TP Link: Used memory via SNMP"
 msgstr "TP Link: SNMP経由で使用されたメモリ"
 
@@ -45153,6 +45178,12 @@ msgstr ""
 "場合、これは別のサイトによって監視されているホストである可能性があります。こ"
 "のホストを変更する場合は、サイト属性をローカルサイトに変更する必要がありま"
 "す。ただし、これにより、ホストが複数のサイトから監視される可能性があります。"
+
+msgid ""
+"The configured site is not known to this site. You can only register to "
+"sites known to the central site, because the controller will only trust "
+"certificates signed by the central sites CA."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -47988,6 +48019,12 @@ msgid "These hosts have installed the correct version of their agent."
 msgstr ""
 "これらのホストは、正しいバージョンのエージェントをインストールしています。"
 
+#, python-format
+msgid ""
+"These labels can be refered to by the ruleset \"%s\", to control the "
+"behaviour during host creation."
+msgstr ""
+
 msgid ""
 "These levels make the check go warning or critical whenever the "
 "<b>percentual error rate</b> or the <b>absolute error rate</b> of the "
@@ -49973,6 +50010,19 @@ msgstr ""
 "されます。注意:Windowsエージェントを使用する場合、すべての論理パスは同じ場所"
 "(エージェントのインストールディレクトリ)を指します。複数のルールを適用できま"
 "す。これは、複数のルールのパッケージがマージされることを意味します。"
+
+#, python-format
+msgid ""
+"This rule allows you to bake controller connections into an agent package. "
+"Upon start, the controller daemon will make sure connections to the "
+"specified sites exist. If they don't, the controller will try to issue the "
+"'register-new' command using the specified parameters.\n"
+"\n"
+"For this to work, you have to configure a corresponding rule \"%s\".\n"
+"\n"
+"You can choose to keep or to delete all other connections that may be known "
+"to the controller."
+msgstr ""
 
 msgid ""
 "This rule allows you to check multiple BI aggregations from multiple sites "
@@ -59583,6 +59633,10 @@ msgstr "信頼区間"
 msgid "configuration"
 msgstr "構成"
 
+#, fuzzy
+msgid "configure"
+msgstr "設定"
+
 msgid "connection"
 msgstr "接続"
 
@@ -59700,6 +59754,10 @@ msgstr "遅延"
 
 msgid "demand"
 msgstr "要求する"
+
+#, fuzzy
+msgid "detect automatically"
+msgstr "イベントは自動的に削除されました"
 
 msgid "detections/s"
 msgstr ""
@@ -61257,6 +61315,27 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Agent pairing"
+#~ msgstr "エージェントペアリング"
+
+#~ msgid "Automatically execute pairing"
+#~ msgstr "ペアリングの自動実行"
+
+#~ msgid "Edit subscription settings"
+#~ msgstr "サブスクリプション設定の編集"
+
+#~ msgid "Host address of the monitoring server"
+#~ msgstr "監視サーバーのホストアドレス"
+
+#~ msgid "Labels to set on the paired hosts"
+#~ msgstr "ペアリングされたホストに設定するラベル"
+
+#~ msgid "Pair manually"
+#~ msgstr "手動でペアリングする"
+
+#~ msgid "Pair on installation"
+#~ msgstr "ペアでインストール"
 
 #, fuzzy
 #~| msgid "Activate on selected sites"
@@ -64163,9 +64242,6 @@ msgstr "© %s tribe29 GmbH. All Rights Reserved."
 #~ msgstr ""
 #~ "キャンセルイベントが到着するまでに遅延時間が経過したため、イベントが開始さ"
 #~ "れました。"
-
-#~ msgid "Event was deleted automatically"
-#~ msgstr "イベントは自動的に削除されました"
 
 #~ msgid "Exchanges"
 #~ msgstr "Exchanges"

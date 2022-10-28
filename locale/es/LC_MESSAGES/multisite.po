@@ -3746,6 +3746,9 @@ msgstr "Direcciones IPv6 adicionales"
 msgid "Additional Plugin Output"
 msgstr "Salida adicional de plugins"
 
+msgid "Additional agent labels to send during registration"
+msgstr ""
+
 msgid "Additional header lines"
 msgstr "Líneas de cabecera adicionales"
 
@@ -4206,6 +4209,10 @@ msgstr "Plugins basados en agentes (Cheques, Inventario)"
 msgid "Agent controller"
 msgstr "Agente controlador"
 
+#, fuzzy
+msgid "Agent controller auto-registration"
+msgstr "Registro de agentes"
+
 msgid "Agent deployment"
 msgstr "Despliegue de agentes"
 
@@ -4231,14 +4238,15 @@ msgstr "Simulador de etiquetas de agentes"
 msgid "Agent output"
 msgstr "Salida del agente"
 
-msgid "Agent pairing"
-msgstr "Emparejamiento de agentes"
-
 msgid "Agent plugins: Regular expression to exclude plugins"
 msgstr "Plugins del agente: Expresión regular para excluir plugins"
 
 msgid "Agent plugins: versions"
 msgstr "Plugins del agente: versiones"
+
+#, fuzzy
+msgid "Agent receiver port"
+msgstr "Error de agente"
 
 msgid "Agent registration"
 msgstr "Registro de agentes"
@@ -4679,6 +4687,11 @@ msgstr "Todos los protocolos"
 
 msgid "All queues listed here will be skipped."
 msgstr "Todas las colas que aparecen aquí serán omitidas."
+
+#, fuzzy
+msgid "All related licensing information of Checkmk sites."
+msgstr ""
+"Mostrar información sobre el uso de la licencia de los sitios de Checkmk."
 
 msgid "All resource groups are running on a different node (none)"
 msgstr ""
@@ -5936,13 +5949,6 @@ msgstr "Recarga automática de la página"
 msgid "Automatic page reload in %d seconds."
 msgstr "Recarga automática de la página en %d segundos."
 
-msgid ""
-"Automatic pairing will fail if some data is missing. TODO: Concept for "
-"handling this situation"
-msgstr ""
-"El emparejamiento automático fallará si faltan algunos datos. TODO: Concepto "
-"para manejar esta situación"
-
 msgid "Automatic takeover"
 msgstr "Adquisición automática"
 
@@ -5971,9 +5977,6 @@ msgstr ""
 "Ejecuta automáticamente un descubrimiento de servicios en todos los nuevos "
 "hosts creados por esta conexión. Los nuevos servicios se añadirán a la "
 "monitorización en este paso."
-
-msgid "Automatically execute pairing"
-msgstr "Ejecutar automáticamente el emparejamiento"
 
 msgid "Automatically recreate the sensor data repository (SDR) cache"
 msgstr ""
@@ -6029,10 +6032,6 @@ msgstr "El secreto de la automatización de las cuentas de las máquinas"
 
 msgid "Automation user rejected"
 msgstr "Usuario de automatización rechazado"
-
-msgid "Automation user that is used to perform pairing."
-msgstr ""
-"Usuario de automatización que se utiliza para realizar el emparejamiento."
 
 msgid "Autostart Services"
 msgstr "Servicios de arranque automático"
@@ -15403,6 +15402,9 @@ msgstr "No imponer niveles"
 msgid "Do not impose levels, always be OK"
 msgstr "No imponer niveles, siempre estar bien"
 
+msgid "Do not manage the controllers auto-registration"
+msgstr ""
+
 msgid "Do not match Event Console alerts"
 msgstr "No coincide con las alertas de la Consola de Eventos"
 
@@ -16540,6 +16542,10 @@ msgstr "Editar grupo de servicios"
 msgid "Edit services"
 msgstr "Editar servicios"
 
+#, fuzzy
+msgid "Edit settings"
+msgstr "%d Configuración del filtro"
+
 #, python-format
 msgid "Edit site connection %s"
 msgstr "Editar la conexión del sitio %s"
@@ -16550,9 +16556,6 @@ msgstr "Editar la configuración global específica del sitio de %s"
 
 msgid "Edit stored report"
 msgstr "Editar el informe almacenado"
-
-msgid "Edit subscription settings"
-msgstr "Editar la configuración de la suscripción"
 
 msgid "Edit tag group"
 msgstr "Editar grupo de etiquetas"
@@ -16716,6 +16719,10 @@ msgstr ""
 "Verifique el certificado del servidor utilizando la CA local del sitio o "
 "acepte cualquier certificado ofrecido por el servidor. Se recomienda "
 "encarecidamente dejar esta opción activada."
+
+#, fuzzy
+msgid "ElastiCache"
+msgstr "Elasticsearch"
 
 msgid "Elastic Block Storage (EBS)"
 msgstr "Elastic Block Storage (EBS)"
@@ -21994,9 +22001,6 @@ msgstr "Familias de acogida"
 msgid "Host address family (Primary)"
 msgstr "Familia de la dirección de acogida (principal)"
 
-msgid "Host address of the monitoring server"
-msgstr "Dirección del servidor de vigilancia"
-
 msgid "Host addresses (IPv4/IPv6)"
 msgstr "Direcciones de host (IPv4/IPv6)"
 
@@ -23520,6 +23524,11 @@ msgstr ""
 "también se limpia automáticamente cuando la agregación sale del tiempo de "
 "inactividad. Los tiempos de inactividad que establezca manualmente para esta "
 "comprobación no se verán afectados."
+
+msgid ""
+"If this is active, the controller will keep all other connections, that "
+"might have been created manually."
+msgstr ""
 
 msgid ""
 "If this is option is enabled the actual check plugin will not be run every "
@@ -26617,6 +26626,10 @@ msgstr "Mantener el nivel de servicio del mensaje (si está disponible)"
 msgid "Keep special characters"
 msgstr "Mantener los caracteres especiales"
 
+#, fuzzy
+msgid "Keep vanished connections"
+msgstr "Conexiones establecidas"
+
 msgid "Keepalived Parameters"
 msgstr "Parámetros de mantenimiento"
 
@@ -26936,9 +26949,6 @@ msgid ""
 msgstr ""
 "Las etiquetas deben tener el formato <tt>[CLAVE]:[VALOR]</tt>. Por ejemplo "
 "<tt>cmk/os_family:linux</tt>."
-
-msgid "Labels to set on the paired hosts"
-msgstr "Etiquetas a establecer en los hosts emparejados"
 
 msgid "Lambda"
 msgstr "Lambda"
@@ -27783,6 +27793,10 @@ msgstr "Estado de la licencia"
 
 msgid "License usage"
 msgstr "Uso de la licencia"
+
+#, fuzzy
+msgid "Licensing"
+msgstr "Estado de las licencias"
 
 msgid "Licensing Status"
 msgstr "Estado de las licencias"
@@ -29305,6 +29319,10 @@ msgstr ""
 
 msgid "Manage the Dynamic configuration connections"
 msgstr "Gestionar las conexiones de configuración dinámica"
+
+#, fuzzy
+msgid "Manage the controllers auto-registration"
+msgstr "Solución de problemas del controlador de agentes de Windows"
 
 msgid "Manage users of the monitoring system."
 msgstr "Gestionar los usuarios del sistema de vigilancia."
@@ -31129,6 +31147,10 @@ msgstr ""
 
 msgid "Monitoring of forwarded logfiles"
 msgstr "Supervisión de los archivos de registro reenviados"
+
+#, fuzzy
+msgid "Monitoring server address"
+msgstr "Estado de la supervisión"
 
 msgid "Monitoring state"
 msgstr "Estado de la supervisión"
@@ -35157,12 +35179,6 @@ msgstr "Páginas"
 
 msgid "Pages per second"
 msgstr "Páginas por segundo"
-
-msgid "Pair manually"
-msgstr "Emparejar manualmente"
-
-msgid "Pair on installation"
-msgstr "Par en la instalación"
 
 msgid "Palo Alto Active Sessions"
 msgstr "Sesiones activas en Palo Alto"
@@ -42241,10 +42257,6 @@ msgstr "Mostrar leyenda"
 msgid "Show less"
 msgstr "Mostrar menos"
 
-msgid "Show license usage information of Checkmk sites."
-msgstr ""
-"Mostrar información sobre el uso de la licencia de los sitios de Checkmk."
-
 msgid "Show margin round the graph"
 msgstr "Mostrar el margen alrededor del gráfico"
 
@@ -42773,6 +42785,10 @@ msgstr "El estado del sitio es desconocido"
 msgid "Site status"
 msgstr "Estado del sitio"
 
+#, fuzzy
+msgid "Site to register with"
+msgstr "Ancho de banda de sitio a sitio"
+
 #, python-format
 msgid "Site-specific global configuration for %s"
 msgstr "Configuración global específica del sitio para %s"
@@ -42788,6 +42804,10 @@ msgstr "Nombre del sitio"
 
 msgid "Sites"
 msgstr "Sitios"
+
+#, fuzzy
+msgid "Sites to register with"
+msgstr "Ancho de banda de sitio a sitio"
 
 msgid "Size"
 msgstr "Tamaño"
@@ -43811,6 +43831,11 @@ msgstr ""
 
 msgid "Specify the site that should monitor this host."
 msgstr "Especifique el sitio que debe supervisar este host."
+
+msgid ""
+"Specify the site that this connections should be initiated with. You must "
+"have a matching rule to create the host in a folder monitored on that site."
+msgstr ""
 
 msgid ""
 "Specify the site, this connector should run on. Only piggyback data from "
@@ -45768,9 +45793,6 @@ msgstr "TLS/SSL/Https desactivado"
 msgid "TNS Alias %s"
 msgstr "TNS Alias %s"
 
-msgid "TODO"
-msgstr "TODO"
-
 msgid "TP Link: Used memory via SNMP"
 msgstr "Enlace TP: Memoria utilizada a través de SNMP"
 
@@ -47483,6 +47505,12 @@ msgstr ""
 "por otro sitio. Si quiere modificar este host, tendrá que cambiar el "
 "atributo de sitio al sitio local. Pero esto puede hacer que el host sea "
 "monitoreado desde múltiples sitios."
+
+msgid ""
+"The configured site is not known to this site. You can only register to "
+"sites known to the central site, because the controller will only trust "
+"certificates signed by the central sites CA."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -50655,6 +50683,12 @@ msgstr ""
 msgid "These hosts have installed the correct version of their agent."
 msgstr "Estos hosts han instalado la versión correcta de su agente."
 
+#, python-format
+msgid ""
+"These labels can be refered to by the ruleset \"%s\", to control the "
+"behaviour during host creation."
+msgstr ""
+
 msgid ""
 "These levels make the check go warning or critical whenever the "
 "<b>percentual error rate</b> or the <b>absolute error rate</b> of the "
@@ -52946,6 +52980,19 @@ msgstr ""
 "de windows, todas las rutas lógicas apuntan a la misma ubicación: el dir de "
 "instalación del agente. Se pueden aplicar múltiples reglas, esto significa "
 "que los paquetes de múltiples reglas se fusionan."
+
+#, python-format
+msgid ""
+"This rule allows you to bake controller connections into an agent package. "
+"Upon start, the controller daemon will make sure connections to the "
+"specified sites exist. If they don't, the controller will try to issue the "
+"'register-new' command using the specified parameters.\n"
+"\n"
+"For this to work, you have to configure a corresponding rule \"%s\".\n"
+"\n"
+"You can choose to keep or to delete all other connections that may be known "
+"to the controller."
+msgstr ""
 
 msgid ""
 "This rule allows you to check multiple BI aggregations from multiple sites "
@@ -63456,6 +63503,10 @@ msgstr "intervalo de confianza"
 msgid "configuration"
 msgstr "configuración"
 
+#, fuzzy
+msgid "configure"
+msgstr "Configurar"
+
 msgid "connection"
 msgstr "conexión"
 
@@ -63573,6 +63624,10 @@ msgstr "retrasado"
 
 msgid "demand"
 msgstr "demanda"
+
+#, fuzzy
+msgid "detect automatically"
+msgstr "El evento se eliminó automáticamente"
 
 msgid "detections/s"
 msgstr "detecciones/s"
@@ -65145,6 +65200,41 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Todos los derechos reservados."
+
+#~ msgid "Agent pairing"
+#~ msgstr "Emparejamiento de agentes"
+
+#~ msgid ""
+#~ "Automatic pairing will fail if some data is missing. TODO: Concept for "
+#~ "handling this situation"
+#~ msgstr ""
+#~ "El emparejamiento automático fallará si faltan algunos datos. TODO: "
+#~ "Concepto para manejar esta situación"
+
+#~ msgid "Automatically execute pairing"
+#~ msgstr "Ejecutar automáticamente el emparejamiento"
+
+#~ msgid "Automation user that is used to perform pairing."
+#~ msgstr ""
+#~ "Usuario de automatización que se utiliza para realizar el emparejamiento."
+
+#~ msgid "Edit subscription settings"
+#~ msgstr "Editar la configuración de la suscripción"
+
+#~ msgid "Host address of the monitoring server"
+#~ msgstr "Dirección del servidor de vigilancia"
+
+#~ msgid "Labels to set on the paired hosts"
+#~ msgstr "Etiquetas a establecer en los hosts emparejados"
+
+#~ msgid "Pair manually"
+#~ msgstr "Emparejar manualmente"
+
+#~ msgid "Pair on installation"
+#~ msgstr "Par en la instalación"
+
+#~ msgid "TODO"
+#~ msgstr "TODO"
 
 #, fuzzy
 #~| msgid "Activate on selected sites"
@@ -68358,9 +68448,6 @@ msgstr "© %s tribe29 GmbH. Todos los derechos reservados."
 #~ msgstr ""
 #~ "El evento ha sido archivado porque ninguna regla ha coincidido y el "
 #~ "archivo está activado en la configuración global."
-
-#~ msgid "Event was deleted automatically"
-#~ msgstr "El evento se eliminó automáticamente"
 
 #~ msgid "Exchanges"
 #~ msgstr "Intercambios"

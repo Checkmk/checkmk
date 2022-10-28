@@ -3530,6 +3530,10 @@ msgstr "Linii de header adiționale"
 msgid "Additional Plugin Output"
 msgstr "Output adițional de la Plugin"
 
+#, fuzzy
+msgid "Additional agent labels to send during registration"
+msgstr "Linii de header adiționale"
+
 msgid "Additional header lines"
 msgstr "Linii de header adiționale"
 
@@ -3930,6 +3934,10 @@ msgid "Agent controller"
 msgstr "trimite notificare"
 
 #, fuzzy
+msgid "Agent controller auto-registration"
+msgstr "Numele Elementului"
+
+#, fuzzy
 msgid "Agent deployment"
 msgstr "cu comentariu"
 
@@ -3955,16 +3963,15 @@ msgstr "Simularea unui Eveniment"
 msgid "Agent output"
 msgstr ""
 
-#, fuzzy
-msgid "Agent pairing"
-msgstr "actualizare"
-
 msgid "Agent plugins: Regular expression to exclude plugins"
 msgstr ""
 
 #, fuzzy
 msgid "Agent plugins: versions"
 msgstr "Numarul maxim de conexiuni"
+
+msgid "Agent receiver port"
+msgstr ""
 
 #, fuzzy
 msgid "Agent registration"
@@ -4416,6 +4423,10 @@ msgstr "rapoarte"
 
 msgid "All queues listed here will be skipped."
 msgstr ""
+
+#, fuzzy
+msgid "All related licensing information of Checkmk sites."
+msgstr " pe siteul de monitorizare: "
 
 msgid "All resource groups are running on a different node (none)"
 msgstr ""
@@ -5594,11 +5605,6 @@ msgstr ""
 msgid "Automatic page reload in %d seconds."
 msgstr ""
 
-msgid ""
-"Automatic pairing will fail if some data is missing. TODO: Concept for "
-"handling this situation"
-msgstr ""
-
 msgid "Automatic takeover"
 msgstr ""
 
@@ -5626,10 +5632,6 @@ msgid ""
 "Automatically execute a service discovery on all new hosts created by this "
 "connection. New services will be added to the monitoring in this step."
 msgstr ""
-
-#, fuzzy
-msgid "Automatically execute pairing"
-msgstr "Activare Schimbări!"
 
 msgid "Automatically recreate the sensor data repository (SDR) cache"
 msgstr ""
@@ -5679,9 +5681,6 @@ msgid "Automation secret for machine accounts"
 msgstr ""
 
 msgid "Automation user rejected"
-msgstr ""
-
-msgid "Automation user that is used to perform pairing."
 msgstr ""
 
 msgid "Autostart Services"
@@ -14794,6 +14793,9 @@ msgstr "doua nivele"
 msgid "Do not impose levels, always be OK"
 msgstr ""
 
+msgid "Do not manage the controllers auto-registration"
+msgstr ""
+
 msgid "Do not match Event Console alerts"
 msgstr ""
 
@@ -15908,6 +15910,10 @@ msgstr ""
 msgid "Edit services"
 msgstr ""
 
+#, fuzzy
+msgid "Edit settings"
+msgstr "%d setări de Filtrare"
+
 #, python-format
 msgid "Edit site connection %s"
 msgstr ""
@@ -15918,10 +15924,6 @@ msgstr ""
 
 msgid "Edit stored report"
 msgstr ""
-
-#, fuzzy
-msgid "Edit subscription settings"
-msgstr "foloseste descrierea"
 
 msgid "Edit tag group"
 msgstr ""
@@ -16088,6 +16090,10 @@ msgid ""
 "certificate offered by the server. It is highly recommended to leave this "
 "enabled."
 msgstr ""
+
+#, fuzzy
+msgid "ElastiCache"
+msgstr "Cautare rapida"
 
 msgid "Elastic Block Storage (EBS)"
 msgstr ""
@@ -21045,10 +21051,6 @@ msgstr ""
 msgid "Host address family (Primary)"
 msgstr ""
 
-#, fuzzy
-msgid "Host address of the monitoring server"
-msgstr " pe siteul de monitorizare: "
-
 msgid "Host addresses (IPv4/IPv6)"
 msgstr ""
 
@@ -22409,6 +22411,11 @@ msgid ""
 "the aggregation does. This downtime is also cleaned up automatically when "
 "the aggregation leaves downtime. Downtimes you set manually for this check "
 "are unaffected."
+msgstr ""
+
+msgid ""
+"If this is active, the controller will keep all other connections, that "
+"might have been created manually."
 msgstr ""
 
 msgid ""
@@ -24938,6 +24945,10 @@ msgstr ""
 msgid "Keep special characters"
 msgstr ""
 
+#, fuzzy
+msgid "Keep vanished connections"
+msgstr "Conexiuni Active"
+
 msgid "Keepalived Parameters"
 msgstr ""
 
@@ -25280,9 +25291,6 @@ msgstr ""
 msgid ""
 "Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. For example <tt>cmk/"
 "os_family:linux</tt>."
-msgstr ""
-
-msgid "Labels to set on the paired hosts"
 msgstr ""
 
 msgid "Lambda"
@@ -26214,6 +26222,10 @@ msgstr "Stare adiministrativă"
 #, fuzzy
 msgid "License usage"
 msgstr "% utilizare"
+
+#, fuzzy
+msgid "Licensing"
+msgstr "licente nefolosite"
 
 msgid "Licensing Status"
 msgstr ""
@@ -27749,6 +27761,10 @@ msgstr ""
 
 msgid "Manage the Dynamic configuration connections"
 msgstr ""
+
+#, fuzzy
+msgid "Manage the controllers auto-registration"
+msgstr "trimite notificare"
 
 msgid "Manage users of the monitoring system."
 msgstr ""
@@ -29705,6 +29721,10 @@ msgstr ""
 
 msgid "Monitoring of forwarded logfiles"
 msgstr ""
+
+#, fuzzy
+msgid "Monitoring server address"
+msgstr " pe siteul de monitorizare: "
 
 #, fuzzy
 msgid "Monitoring state"
@@ -33757,13 +33777,6 @@ msgstr ""
 #, fuzzy
 msgid "Pages per second"
 msgstr " secunde "
-
-msgid "Pair manually"
-msgstr ""
-
-#, fuzzy
-msgid "Pair on installation"
-msgstr "Adaugă instanță NGINX"
 
 msgid "Palo Alto Active Sessions"
 msgstr ""
@@ -40803,9 +40816,6 @@ msgstr ""
 msgid "Show less"
 msgstr "afiseaza toate"
 
-msgid "Show license usage information of Checkmk sites."
-msgstr ""
-
 msgid "Show margin round the graph"
 msgstr ""
 
@@ -41329,6 +41339,10 @@ msgstr ""
 msgid "Site status"
 msgstr "Statusul Serverului"
 
+#, fuzzy
+msgid "Site to register with"
+msgstr "Conexiune Noua"
+
 #, python-format
 msgid "Site-specific global configuration for %s"
 msgstr ""
@@ -41345,6 +41359,10 @@ msgstr "Nume nou"
 
 msgid "Sites"
 msgstr ""
+
+#, fuzzy
+msgid "Sites to register with"
+msgstr "Conexiune Noua"
 
 msgid "Size"
 msgstr ""
@@ -42159,6 +42177,11 @@ msgid "Specify the protocol used to connect to the management board."
 msgstr ""
 
 msgid "Specify the site that should monitor this host."
+msgstr ""
+
+msgid ""
+"Specify the site that this connections should be initiated with. You must "
+"have a matching rule to create the host in a folder monitored on that site."
 msgstr ""
 
 msgid ""
@@ -44123,9 +44146,6 @@ msgstr "Notificari"
 msgid "TNS Alias %s"
 msgstr "Arata in masa"
 
-msgid "TODO"
-msgstr ""
-
 msgid "TP Link: Used memory via SNMP"
 msgstr ""
 
@@ -45443,6 +45463,12 @@ msgid ""
 "in a distributed slave, this may be a host monitored by another site. If you "
 "want to modify this host, you will have to change the site attribute to the "
 "local site. But this may make the host be monitored from multiple sites."
+msgstr ""
+
+msgid ""
+"The configured site is not known to this site. You can only register to "
+"sites known to the central site, because the controller will only trust "
+"certificates signed by the central sites CA."
 msgstr ""
 
 #, python-format
@@ -47933,6 +47959,12 @@ msgstr ""
 msgid "These hosts have installed the correct version of their agent."
 msgstr ""
 
+#, python-format
+msgid ""
+"These labels can be refered to by the ruleset \"%s\", to control the "
+"behaviour during host creation."
+msgstr ""
+
 msgid ""
 "These levels make the check go warning or critical whenever the "
 "<b>percentual error rate</b> or the <b>absolute error rate</b> of the "
@@ -49493,6 +49525,19 @@ msgid ""
 "agent, all logical paths point to the same location - the agent installation "
 "dir. Multiple rules can apply, this means that the packages of multiple "
 "rules are merged."
+msgstr ""
+
+#, python-format
+msgid ""
+"This rule allows you to bake controller connections into an agent package. "
+"Upon start, the controller daemon will make sure connections to the "
+"specified sites exist. If they don't, the controller will try to issue the "
+"'register-new' command using the specified parameters.\n"
+"\n"
+"For this to work, you have to configure a corresponding rule \"%s\".\n"
+"\n"
+"You can choose to keep or to delete all other connections that may be known "
+"to the controller."
 msgstr ""
 
 msgid ""
@@ -58365,6 +58410,10 @@ msgid "configuration"
 msgstr "Activare Configurare"
 
 #, fuzzy
+msgid "configure"
+msgstr "Adaugă un snapin pe sidebar"
+
+#, fuzzy
 msgid "connection"
 msgstr "Conexiuni Active"
 
@@ -58483,6 +58532,10 @@ msgstr ""
 
 msgid "demand"
 msgstr ""
+
+#, fuzzy
+msgid "detect automatically"
+msgstr "(fără Nivel de serviciu)"
 
 #, fuzzy
 msgid "detections/s"
@@ -60133,6 +60186,26 @@ msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~ msgid "Agent pairing"
+#~ msgstr "actualizare"
+
+#, fuzzy
+#~ msgid "Automatically execute pairing"
+#~ msgstr "Activare Schimbări!"
+
+#, fuzzy
+#~ msgid "Edit subscription settings"
+#~ msgstr "foloseste descrierea"
+
+#, fuzzy
+#~ msgid "Host address of the monitoring server"
+#~ msgstr " pe siteul de monitorizare: "
+
+#, fuzzy
+#~ msgid "Pair on installation"
+#~ msgstr "Adaugă instanță NGINX"
+
+#, fuzzy
 #~ msgid "Active on this site"
 #~ msgstr "Conexiuni Active"
 
@@ -61476,10 +61549,6 @@ msgstr ""
 #~ msgstr "Vechimea maxima a backup-urilor"
 
 #, fuzzy
-#~ msgid "Licenses"
-#~ msgstr "licente nefolosite"
-
-#, fuzzy
 #~ msgid "Link Priority"
 #~ msgstr "Prioritatea Syslog"
 
@@ -62185,10 +62254,6 @@ msgstr ""
 #~ msgstr "Numele elementului pentru eveniment"
 
 #, fuzzy
-#~ msgid "<i>Generated automatically</i>"
-#~ msgstr "(fără Nivel de serviciu)"
-
-#, fuzzy
 #~ msgid "Hide checkboxes"
 #~ msgstr "Verificări active"
 
@@ -62605,10 +62670,6 @@ msgstr ""
 
 #~ msgid "Add this view to..."
 #~ msgstr "Adaugă acesta vedere la..."
-
-#, fuzzy
-#~ msgid "Additional messages describing rule state"
-#~ msgstr "Linii de header adiționale"
 
 #, fuzzy
 #~ msgid "Aggregation output"

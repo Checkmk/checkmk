@@ -151,6 +151,7 @@ def _valuespec_special_agents_kube():
                         ("namespaces", _("Namespaces")),
                         ("nodes", _("Nodes")),
                         ("pods", _("Pods")),
+                        ("cronjobs", _("CronJobs")),
                         ("cronjobs_pods", _("Pods of CronJobs")),
                     ],
                     default_value=[

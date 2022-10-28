@@ -114,6 +114,7 @@ class MonitoredObject(enum.Enum):
     namespaces = "namespaces"
     nodes = "nodes"
     pods = "pods"
+    cronjobs = "cronjobs"
     cronjobs_pods = "cronjobs_pods"
 
 
@@ -155,6 +156,7 @@ def parse_arguments(args: List[str]) -> argparse.Namespace:
             MonitoredObject.pods,
             MonitoredObject.namespaces,
             MonitoredObject.nodes,
+            MonitoredObject.cronjobs,
         ],
         help="The Kubernetes objects which are supposed to be monitored. Available objects: "
         "deployments, nodes, pods, daemonsets, statefulsets, cronjobs_pods",
@@ -1699,7 +1701,7 @@ def determine_pods_to_host(
             filter_pods_by_phase(cluster.cluster_aggregation_pods, api.Phase.RUNNING),
         )
     )
-    if MonitoredObject.cronjobs_pods in monitored_objects:
+    if MonitoredObject.cronjobs in monitored_objects:
         piggybacks.extend(
             Piggyback(
                 piggyback=piggyback_formatter(
@@ -2086,24 +2088,23 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
                 for pod in pods_from_namespaces(api_data.pods, monitored_namespace_names)
             }
 
-            # TODO: Currently there is no possibility for the user to specify whether to monitor CronJobs or not
-            # The piggyback hosts will always be created, if there are any CronJobs in the cluster
-            # Namespace filtering also needs to be added to the CronJobs
+            # TODO: Namespace filtering also needs to be added to the CronJobs
             monitored_api_cron_job_pods = [
                 api_pod
                 for cron_job in api_data.cron_jobs
                 for api_pod in api_data.pods
                 if api_pod.uid in cron_job.pod_uids
             ]
-            write_cronjobs_api_sections(
-                arguments.cluster,
-                arguments.annotation_key_pattern,
-                api_data.cron_jobs,
-                monitored_api_cron_job_pods,
-                {job.uid: job for job in api_data.jobs},
-                kubernetes_cluster_hostname=arguments.kubernetes_cluster_hostname,
-                piggyback_formatter=functools.partial(piggyback_formatter, "cronjob"),
-            )
+            if MonitoredObject.cronjobs in arguments.monitored_objects:
+                write_cronjobs_api_sections(
+                    arguments.cluster,
+                    arguments.annotation_key_pattern,
+                    api_data.cron_jobs,
+                    monitored_api_cron_job_pods,
+                    {job.uid: job for job in api_data.jobs},
+                    kubernetes_cluster_hostname=arguments.kubernetes_cluster_hostname,
+                    piggyback_formatter=functools.partial(piggyback_formatter, "cronjob"),
+                )
 
             if MonitoredObject.cronjobs_pods in arguments.monitored_objects:
                 LOGGER.info("Write cronjob pods sections based on API data")

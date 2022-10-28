@@ -10,8 +10,6 @@ use assert_cmd::Command;
 #[cfg(windows)]
 pub use is_elevated;
 
-use anyhow::{anyhow, Result as AnyhowResult};
-
 use self::certs::X509Certs;
 
 pub fn testing_registry(
@@ -96,14 +94,6 @@ pub fn testing_tls_client_connection(certs: X509Certs, address: &str) -> rustls:
     let server_name = rustls::client::ServerName::try_from(address).unwrap();
 
     rustls::ClientConnection::new(client_config, server_name).unwrap()
-}
-
-pub async fn flatten(handle: tokio::task::JoinHandle<AnyhowResult<()>>) -> AnyhowResult<()> {
-    match handle.await {
-        Ok(Ok(result)) => Ok(result),
-        Ok(Err(err)) => Err(err),
-        Err(_) => Err(anyhow!("handling failed")),
-    }
 }
 
 pub fn setup_test_dir(prefix: &str) -> tempfile::TempDir {

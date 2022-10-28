@@ -44,9 +44,10 @@ def parse_raritan_px_outlets(info):
         "2": (0, "cycling"),
     }
     parsed = {}
-    for index, state, current_str, voltage_str, power_str, appower_str, energy_str in info:
+    for index, label, state, current_str, voltage_str, power_str, appower_str, energy_str in info:
         parsed[index] = {
-            "state": map_state.get(state, (3, "unknown")),
+            "device_state": map_state.get(state, (3, "unknown")),
+            "label": label,
             "current": float(current_str) / 1000,
             "voltage": float(voltage_str) / 1000,
             "power": float(power_str),
@@ -58,15 +59,14 @@ def parse_raritan_px_outlets(info):
 
 
 def inventory_raritan_px_outlets(parsed):
-    return [(index, {}) for index, values in parsed.items() if values["state"][1] == "on"]
+    return [(index, {}) for index, values in parsed.items() if values["device_state"][1] == "on"]
 
 
 def check_raritan_px_outlets(item, params, parsed):
     if item in parsed:
-        state, state_readable = parsed[item]["state"]
-        yield state, "Operational status: %s" % state_readable
-        for result in check_elphase(item, params, parsed):
-            yield result
+        if parsed[item]["label"]:
+            yield 0, "[%s]" % parsed[item]["label"]
+        yield from check_elphase(item, params, parsed)
 
 
 check_info["raritan_px_outlets"] = {
@@ -79,6 +79,7 @@ check_info["raritan_px_outlets"] = {
         ".1.3.6.1.4.1.13742.4.1.2.2.1",
         [
             "1",  # outletIndex
+            "2",  # outletLabel
             "3",  # outletOperationalState
             "4",  # outletCurrent
             "6",  # outletVoltage

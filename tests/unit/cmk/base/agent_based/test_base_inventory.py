@@ -99,7 +99,7 @@ def test_integrate_attributes() -> None:
         is_legacy_plugin=False,
     )
 
-    assert tree_aggr.trees.inventory.serialize() == {
+    assert tree_aggr.inventory_tree.serialize() == {
         "Attributes": {},
         "Nodes": {
             "a": {
@@ -162,7 +162,7 @@ def test_integrate_table_row() -> None:
         is_legacy_plugin=False,
     )
 
-    assert tree_aggr.trees.inventory.serialize() == {
+    assert tree_aggr.inventory_tree.serialize() == {
         "Attributes": {},
         "Nodes": {
             "a": {

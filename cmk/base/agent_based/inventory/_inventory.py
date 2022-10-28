@@ -82,8 +82,8 @@ def check_inventory_tree(
             check_result=ActiveCheckResult.from_subresults(
                 *_check_trees(
                     parameters=parameters,
-                    inventory_tree=tree_aggregator.trees.inventory,
-                    status_data_tree=tree_aggregator.trees.status_data,
+                    inventory_tree=tree_aggregator.inventory_tree,
+                    status_data_tree=tree_aggregator.status_data_tree,
                     old_tree=old_tree,
                 ),
             ),
@@ -106,8 +106,8 @@ def check_inventory_tree(
             *_check_fetched_data_or_trees(
                 parameters=parameters,
                 fetched_data_result=fetched_data_result,
-                inventory_tree=tree_aggregator.trees.inventory,
-                status_data_tree=tree_aggregator.trees.status_data,
+                inventory_tree=tree_aggregator.inventory_tree,
+                status_data_tree=tree_aggregator.status_data_tree,
                 old_tree=old_tree,
             ),
             *summarize_host_sections(
@@ -133,7 +133,7 @@ def check_inventory_tree(
 
 def _inventorize_cluster(*, host_config: HostConfig) -> TreeAggregator:
     tree_aggregator = TreeAggregator([])
-    inventory_tree = tree_aggregator.trees.inventory
+    inventory_tree = tree_aggregator.inventory_tree
 
     _set_cluster_property(inventory_tree, is_cluster=True)
 
@@ -219,7 +219,7 @@ def inventorize_real_host(
 ) -> TreeAggregator:
     tree_aggregator = TreeAggregator(host_config.inv_retention_intervals)
 
-    _set_cluster_property(tree_aggregator.trees.inventory, is_cluster=False)
+    _set_cluster_property(tree_aggregator.inventory_tree, is_cluster=False)
 
     section.section_step("Executing inventory plugins")
     for inventory_plugin in agent_based_register.iter_all_inventory_plugins():

@@ -47,11 +47,6 @@ RetentionInfos = dict[RetentionKey, RetentionInfo]
 IntervalsFromConfig = dict[RetentionKey, IntervalFromConfig]
 
 
-class InventoryTrees(NamedTuple):
-    inventory: StructuredDataNode
-    status_data: StructuredDataNode
-
-
 class TreeAggregator:
     def __init__(self, raw_intervals_from_config: RawIntervalsFromConfig) -> None:
         self._from_config = _get_intervals_from_config(raw_intervals_from_config)
@@ -61,11 +56,12 @@ class TreeAggregator:
         self._class_mutex: dict[tuple, str] = {}
 
     @property
-    def trees(self) -> InventoryTrees:
-        return InventoryTrees(
-            inventory=self._inventory_tree,
-            status_data=self._status_data_tree,
-        )
+    def inventory_tree(self) -> StructuredDataNode:
+        return self._inventory_tree
+
+    @property
+    def status_data_tree(self) -> StructuredDataNode:
+        return self._status_data_tree
 
     # ---from inventory plugins---------------------------------------------
 

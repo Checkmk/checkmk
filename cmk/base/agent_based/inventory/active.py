@@ -79,7 +79,7 @@ def _save_inventory_tree(
     tree_aggregator: TreeAggregator,
     old_tree: StructuredDataNode,
 ) -> None:
-    inventory_tree = tree_aggregator.trees.inventory
+    inventory_tree = tree_aggregator.inventory_tree
 
     if inventory_tree.is_empty():
         # Remove empty inventory files. Important for host inventory icon

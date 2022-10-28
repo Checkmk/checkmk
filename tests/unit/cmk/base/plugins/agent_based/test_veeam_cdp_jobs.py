@@ -31,10 +31,10 @@ DATA = [
         ),
     ],
 )
-def test_veeam_cdp_jobs_discovery(  # type:ignore[no-untyped-def]
+def test_veeam_cdp_jobs_discovery(
     data: type_defs.StringTable,
     result: DiscoveryResult,
-):
+) -> None:
     section = veeam_cdp_jobs.parse_veeam_cdp_jobs(data)
     assert list(veeam_cdp_jobs.discovery_veeam_cdp_jobs(section)) == result
 
@@ -77,12 +77,12 @@ def test_veeam_cdp_jobs_discovery(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_veeam_cdp_jobs_check(  # type:ignore[no-untyped-def]
+def test_veeam_cdp_jobs_check(
     item: str,
     params: veeam_cdp_jobs.CheckParams,
     data: type_defs.StringTable,
     result: CheckResult,
-):
+) -> None:
     with on_time(1632216660, "UTC"):
         section = veeam_cdp_jobs.parse_veeam_cdp_jobs(data)
         assert list(veeam_cdp_jobs.check_veeam_cdp_jobs(item, params, section)) == result

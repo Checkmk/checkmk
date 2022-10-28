@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
-from typing import Any
+from typing import Any, Type
 
 import pytest
 from freezegun import freeze_time
 
+from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.check_api import get_age_human_readable, get_filesize_human_readable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
@@ -38,7 +39,7 @@ pytestmark = pytest.mark.checks
         ("some string", int),
     ],
 )
-def test__cast_value(value, cast_type) -> None:  # type:ignore[no-untyped-def]
+def test__cast_value(value: str | None, cast_type: Type[float] | Type[int]) -> None:
     cast_value = _cast_value(value, cast_type)
     assert cast_value is None
 
@@ -131,7 +132,7 @@ def test__parse_single_legacy_row() -> None:
         ),
     ],
 )
-def test_parse_fileinfo(info, expected_result) -> None:  # type:ignore[no-untyped-def]
+def test_parse_fileinfo(info: StringTable, expected_result: Fileinfo) -> None:
     assert parse_fileinfo(info) == expected_result
 
 
@@ -158,8 +159,11 @@ def test_parse_fileinfo(info, expected_result) -> None:  # type:ignore[no-untype
         ),
     ],
 )
-def test_fileinfo_groups_get_group_name(  # type:ignore[no-untyped-def]
-    group_patterns, filename, reftime, expected_result
+def test_fileinfo_groups_get_group_name(
+    group_patterns: list[tuple[str, str | tuple[str, str]]],
+    filename: str,
+    reftime: int,
+    expected_result: Mapping[str, Sequence[str | tuple[str, str]]],
 ) -> None:
     result = fileinfo_groups_get_group_name(group_patterns, filename, reftime)
     assert result == expected_result
@@ -176,8 +180,11 @@ def test_fileinfo_groups_get_group_name(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_fileinfo_groups_get_group_name_error(  # type:ignore[no-untyped-def]
-    group_patterns, filename, reftime, expected_result
+def test_fileinfo_groups_get_group_name_error(
+    group_patterns: list[tuple[str, str | tuple[str, str]]],
+    filename: str,
+    reftime: int,
+    expected_result: Mapping[str, Sequence[str]],
 ) -> None:
     with pytest.raises(RuntimeError) as e:
         fileinfo_groups_get_group_name(group_patterns, filename, reftime)
@@ -250,9 +257,9 @@ def test_fileinfo_groups_get_group_name_error(  # type:ignore[no-untyped-def]
     ],
 )
 @freeze_time("2021-07-12 12:00")
-def test_check_fileinfo_data(  # type:ignore[no-untyped-def]
+def test_check_fileinfo_data(
     file_stat: FileinfoItem, reftime: int, params: dict[str, Any], expected_result: CheckResult
-):
+) -> None:
     result = list(check_fileinfo_data(file_stat, reftime, params))
 
     assert result == expected_result
@@ -277,8 +284,8 @@ def test_check_fileinfo_data(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test__filename_matches(  # type:ignore[no-untyped-def]
-    filename, reftime, inclusion, exclusion, expected_result
+def test__filename_matches(
+    filename: str, reftime: int, inclusion: str, exclusion: str, expected_result: tuple[bool, str]
 ) -> None:
     result = _filename_matches(filename, reftime, inclusion, exclusion)
     assert result == expected_result
@@ -409,7 +416,9 @@ def test_check_fileinfo_groups_data(
     expected_result: Sequence[Result | Metric],
 ) -> None:
     reftime = parsed.reftime
+
     assert isinstance(reftime, int)
+
     result = list(check_fileinfo_groups_data(item, params, parsed, reftime))
     assert result == expected_result
 

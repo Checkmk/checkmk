@@ -96,11 +96,11 @@ STRING_TABLE_NO_SYNC_NTP_MESSAGE = [
         ([], [], []),
     ],
 )
-def test_discover_timesyncd(  # type:ignore[no-untyped-def]
+def test_discover_timesyncd(
     string_table: StringTable,
     string_table_ntpmessage: StringTable,
     result: DiscoveryResult,
-):
+) -> None:
     section = timesyncd.parse_timesyncd(string_table)
     section_ntpmessage = timesyncd.parse_timesyncd_ntpmessage(string_table_ntpmessage)
     assert list(timesyncd.discover_timesyncd(section, section_ntpmessage)) == result
@@ -199,12 +199,12 @@ def test_discover_timesyncd(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_timesyncd_freeze(  # type:ignore[no-untyped-def]
+def test_check_timesyncd_freeze(
     string_table: StringTable,
     string_table_ntpmessage: StringTable,
     params: timesyncd.CheckParams,
     result: CheckResult,
-):
+) -> None:
     server_time = 1569922392.37 + 60 * 60 * 22 + 60, "UTC"
     section = timesyncd.parse_timesyncd(string_table)
     section_ntpmessage = timesyncd.parse_timesyncd_ntpmessage(string_table_ntpmessage)
@@ -229,12 +229,12 @@ def test_check_timesyncd_freeze(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_timesyncd_negative_time(  # type:ignore[no-untyped-def]
+def test_check_timesyncd_negative_time(
     string_table: StringTable,
     string_table_ntpmessage: StringTable,
     params: timesyncd.CheckParams,
     result: CheckResult,
-):
+) -> None:
     wrong_server_time = 1569922392.37 - 60, "UTC"
     section = timesyncd.parse_timesyncd(string_table)
     section_ntpmessage = timesyncd.parse_timesyncd_ntpmessage(string_table_ntpmessage)

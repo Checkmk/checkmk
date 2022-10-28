@@ -3,7 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
+
+from collections.abc import Iterable, Mapping, Sequence
 from typing import Any
 
 import pytest
@@ -39,7 +40,10 @@ from cmk.base.plugins.agent_based.utils import df
         ),
     ],
 )
-def test_df_discovery(params, expected) -> None:  # type:ignore[no-untyped-def]
+def test_df_discovery(
+    params: Iterable[Mapping[str, object]],
+    expected: Sequence[Service],
+) -> None:
     actual = list(df.df_discovery(params, ["SUMMARY", "ceph_foo", "ceph_bar"]))
 
     assert len(actual) == len(expected)

@@ -3,10 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 import pytest
 
 from tests.testlib import on_time
 
+from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based import uptime
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.utils import uptime as uptime_utils
@@ -26,7 +29,7 @@ pytestmark = pytest.mark.checks
         ("2 hr(s)", 7200),
     ],
 )
-def test_human_read_uptime(string, result) -> None:  # type:ignore[no-untyped-def]
+def test_human_read_uptime(string: str, result: float) -> None:
     assert uptime.parse_human_read_uptime(string) == result
 
 
@@ -37,7 +40,7 @@ def test_human_read_uptime(string, result) -> None:  # type:ignore[no-untyped-de
         (uptime_utils.Section(None, None), False),
     ],
 )
-def test_uptime_discovery(section, do_discover) -> None:  # type:ignore[no-untyped-def]
+def test_uptime_discovery(section: uptime_utils.Section, do_discover: bool) -> None:
     assert bool(list(uptime_utils.discover(section))) is do_discover
 
 
@@ -217,7 +220,7 @@ def test_uptime_check_zero() -> None:
         ),
     ],
 )
-def test_uptime_solaris_inputs(info, reference) -> None:  # type:ignore[no-untyped-def]
+def test_uptime_solaris_inputs(info: StringTable, reference: Sequence[Result]) -> None:
 
     section = uptime.parse_uptime(info)
     assert section is not None

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable
 from typing import Final
 
 import pytest
@@ -12,6 +13,7 @@ from tests.testlib import on_time
 from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from cmk.base.plugins.agent_based.suseconnect import (
     inventory_suseconnect,
     parse_suseconnect,
@@ -52,11 +54,15 @@ def _get_section_1() -> Section:
     return parse_suseconnect(STRING_TABLE_1)
 
 
-def test_discovery(discover_suseconnect, section_1: Section) -> None:  # type:ignore[no-untyped-def]
+def test_discovery(
+    discover_suseconnect: Callable[[Section], DiscoveryResult], section_1: Section
+) -> None:
     assert list(discover_suseconnect(section_1)) == [Service()]
 
 
-def test_check(check_suseconnect, section_1: Section) -> None:  # type:ignore[no-untyped-def]
+def test_check(
+    check_suseconnect: Callable[[object, Section], CheckResult], section_1: Section
+) -> None:
     with on_time("2020-07-15 00:00:00", "UTC"):
         assert list(
             check_suseconnect(
@@ -78,7 +84,9 @@ def test_check(check_suseconnect, section_1: Section) -> None:  # type:ignore[no
         ]
 
 
-def test_agent_output_parsable(check_suseconnect) -> None:  # type:ignore[no-untyped-def]
+def test_agent_output_parsable(
+    check_suseconnect: Callable[[object, Section], DiscoveryResult]
+) -> None:
     with on_time("2020-07-15 00:00:00", "UTC"):
         assert list(
             check_suseconnect(

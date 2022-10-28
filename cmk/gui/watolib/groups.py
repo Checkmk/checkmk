@@ -29,10 +29,11 @@ from cmk.gui.groups import (
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.watolib.utils import config_variable_registry
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import DualListChoice
 from cmk.gui.watolib.changes import add_change
@@ -73,7 +74,7 @@ def add_group(name: GroupName, group_type: GroupType, extra_info: GroupSpec) -> 
 
     _set_group(all_groups, group_type, name, extra_info)
     _add_group_change(
-        extra_info, "edit-%sgroups" % group_type, _("Create new %s group %s") % (group_type, name)
+        extra_info, "edit-%sgroups" % group_type, _l("Create new %s group %s") % (group_type, name)
     )
 
 
@@ -95,26 +96,26 @@ def edit_group(name: GroupName, group_type: GroupType, extra_info: GroupSpec) ->
             _add_group_change(
                 old_group_backup,
                 "edit-%sgroups" % group_type,
-                _("Removed %sgroup %s from customer %s")
+                _l("Removed %sgroup %s from customer %s")
                 % (group_type, name, managed.get_customer_name_by_id(old_customer)),
             )
             _add_group_change(
                 extra_info,
                 "edit-%sgroups" % group_type,
-                _("Moved %sgroup %s to customer %s. Additional properties may have changed.")
+                _l("Moved %sgroup %s to customer %s. Additional properties may have changed.")
                 % (group_type, name, managed.get_customer_name_by_id(new_customer)),
             )
         else:
             _add_group_change(
                 old_group_backup,
                 "edit-%sgroups" % group_type,
-                _("Updated properties of %sgroup %s") % (group_type, name),
+                _l("Updated properties of %sgroup %s") % (group_type, name),
             )
     else:
         _add_group_change(
             extra_info,
             "edit-%sgroups" % group_type,
-            _("Updated properties of %s group %s") % (group_type, name),
+            _l("Updated properties of %s group %s") % (group_type, name),
         )
 
 
@@ -138,12 +139,12 @@ def delete_group(name: GroupName, group_type: GroupType) -> None:
     # Delete group
     group = groups.pop(name)
     save_group_information(all_groups)
-    _add_group_change(group, "edit-%sgroups", _("Deleted %s group %s") % (group_type, name))
+    _add_group_change(group, "edit-%sgroups", _l("Deleted %s group %s") % (group_type, name))
 
 
 # TODO: Consolidate all group change related functions in a class that can be overriden
 # by the CME code for better encapsulation.
-def _add_group_change(group: GroupSpec, action_name: str, text: str) -> None:
+def _add_group_change(group: GroupSpec, action_name: str, text: LazyString) -> None:
     group_sites = None
     if cmk_version.is_managed_edition():
         cid = managed.get_customer_id(group)

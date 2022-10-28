@@ -80,7 +80,7 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.watolib.utils import generate_hosts_to_update_settings, SerializedSettings
@@ -2298,7 +2298,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         new_subfolder.save_hosts()
         add_change(
             "new-folder",
-            _("Created new folder %s") % new_subfolder.alias_path(),
+            _l("Created new folder %s") % new_subfolder.alias_path(),
             object_ref=new_subfolder.object_ref(),
             sites=[new_subfolder.site_id()],
             diff_text=make_diff_text(
@@ -2338,7 +2338,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         hooks.call("folder-deleted", subfolder)
         add_change(
             "delete-folder",
-            _("Deleted folder %s") % subfolder.alias_path(),
+            _l("Deleted folder %s") % subfolder.alias_path(),
             object_ref=self.object_ref(),
             sites=subfolder.all_site_ids(),
         )
@@ -2406,7 +2406,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         affected_sites = list(set(affected_sites + moved_subfolder.all_site_ids()))
         add_change(
             "move-folder",
-            _("Moved folder %s to %s") % (original_alias_path, target_folder.alias_path()),
+            _l("Moved folder %s to %s") % (original_alias_path, target_folder.alias_path()),
             object_ref=moved_subfolder.object_ref(),
             sites=affected_sites,
         )
@@ -2457,7 +2457,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         affected_sites = list(set(affected_sites + self.all_site_ids()))
         add_change(
             "edit-folder",
-            _("Edited properties of folder %s") % self.title(),
+            _l("Edited properties of folder %s") % self.title(),
             object_ref=self.object_ref(),
             sites=affected_sites,
             diff_text=make_diff_text(old_object, make_folder_audit_log_object(self._attributes)),
@@ -2538,7 +2538,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         self._num_hosts = len(self._hosts)
         add_change(
             "create-host",
-            _("Created new host %s.") % host_name,
+            _l("Created new host %s.") % host_name,
             object_ref=host.object_ref(),
             sites=[host.site_id()],
             diff_text=make_diff_text(
@@ -2579,7 +2579,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             self._num_hosts = len(self._hosts)
             add_change(
                 "delete-host",
-                _("Deleted host %s") % host_name,
+                _l("Deleted host %s") % host_name,
                 object_ref=host.object_ref(),
                 sites=[host.site_id()],
             )
@@ -2651,7 +2651,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             new_folder_text = target_folder.path() or self.root_folder().title()
             add_change(
                 "move-host",
-                _('Moved host from "%s" (ID: %s) to "%s" (ID: %s)')
+                _l('Moved host from "%s" (ID: %s) to "%s" (ID: %s)')
                 % (
                     old_folder_text,
                     self._id,
@@ -2685,7 +2685,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         self._hosts[newname] = host
         add_change(
             "rename-host",
-            _("Renamed host from %s to %s") % (oldname, newname),
+            _l("Renamed host from %s to %s") % (oldname, newname),
             object_ref=host.object_ref(),
             sites=[host.site_id()],
         )
@@ -2704,7 +2704,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
         add_change(
             "rename-parent",
-            _('Renamed parent from %s to %s in folder "%s"')
+            _l('Renamed parent from %s to %s in folder "%s"')
             % (oldname, newname, self.alias_path()),
             object_ref=self.object_ref(),
             sites=self.all_site_ids(),
@@ -3337,7 +3337,7 @@ class CREHost(WithPermissions, WithAttributes):
         self.folder().save_hosts()
         add_change(
             "edit-host",
-            _("Modified host %s.") % self.name(),
+            _l("Modified host %s.") % self.name(),
             object_ref=self.object_ref(),
             sites=affected_sites,
             diff_text=make_diff_text(old_object, new_object),
@@ -3366,7 +3366,7 @@ class CREHost(WithPermissions, WithAttributes):
         self.folder().save_hosts()
         add_change(
             "edit-host",
-            _("Removed explicit attributes of host %s.") % self.name(),
+            _l("Removed explicit attributes of host %s.") % self.name(),
             object_ref=self.object_ref(),
             sites=affected_sites,
             diff_text=make_diff_text(
@@ -3416,7 +3416,7 @@ class CREHost(WithPermissions, WithAttributes):
 
         add_change(
             "rename-node",
-            _("Renamed cluster node from %s into %s.") % (oldname, newname),
+            _l("Renamed cluster node from %s into %s.") % (oldname, newname),
             object_ref=self.object_ref(),
             sites=[self.site_id()],
         )
@@ -3431,7 +3431,7 @@ class CREHost(WithPermissions, WithAttributes):
 
         add_change(
             "rename-parent",
-            _("Renamed parent from %s into %s.") % (oldname, newname),
+            _l("Renamed parent from %s into %s.") % (oldname, newname),
             object_ref=self.object_ref(),
             sites=[self.site_id()],
         )
@@ -3441,7 +3441,7 @@ class CREHost(WithPermissions, WithAttributes):
     def rename(self, new_name):
         add_change(
             "rename-host",
-            _("Renamed host from %s into %s.") % (self.name(), new_name),
+            _l("Renamed host from %s into %s.") % (self.name(), new_name),
             object_ref=self.object_ref(),
             sites=[self.site_id()],
         )

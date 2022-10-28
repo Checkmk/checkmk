@@ -92,3 +92,8 @@ class LazyString:
 
     def to_json(self) -> str:
         return str(self)
+
+    def unlocalized_str(self) -> str:
+        if self._args is None:
+            return self._text
+        return self._text % self._args

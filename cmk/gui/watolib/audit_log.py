@@ -91,7 +91,7 @@ def log_audit(
     diff_text: Optional[str] = None,
 ) -> None:
     if isinstance(message, LazyString):
-        message = str(message)
+        message = message.unlocalized_str()
 
     if active_config.wato_use_git:
         if isinstance(message, HTML):

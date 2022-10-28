@@ -935,7 +935,7 @@ class ActivateChangesManager(ActivateChanges):
         job.start(job.schedule_sites)
 
     def _log_activation(self):
-        log_msg = _("Starting activation (Sites: %s)") % ",".join(self._sites)
+        log_msg = "Starting activation (Sites: %s)" % ",".join(self._sites)
         log_audit("activate-changes", log_msg)
 
         if self._comment:

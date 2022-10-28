@@ -17,7 +17,7 @@ from cmk.gui import userdb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.htmllib.html import html
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.site_config import get_site_config, sitenames
@@ -92,7 +92,7 @@ def _add_profile_replication_change(site_id: SiteId, result: Union[bool, str]) -
     """Add pending change entry to make sync possible later for admins"""
     add_change(
         "edit-users",
-        _("Profile changed (sync failed: %s)") % result,
+        _l("Profile changed (sync failed: %s)") % result,
         sites=[site_id],
         need_restart=False,
     )

@@ -12,7 +12,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.watolib.global_settings as global_settings
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.userdb.utils import add_internal_attributes
 from cmk.gui.type_defs import UserId
@@ -68,7 +68,7 @@ def delete_users(users_to_delete):
                 "Deleted user: %s" % user_id,
                 object_ref=make_user_object_ref(user_id),
             )
-        add_change("edit-users", _("Deleted user: %s") % ", ".join(deleted_users))
+        add_change("edit-users", _l("Deleted user: %s") % ", ".join(deleted_users))
         userdb.save_users(all_users, datetime.now())
 
 
@@ -104,9 +104,9 @@ def edit_users(changed_users):
         all_users[user_id] = user_attrs
 
     if new_users_info:
-        add_change("edit-users", _("Created new users: %s") % ", ".join(new_users_info))
+        add_change("edit-users", _l("Created new users: %s") % ", ".join(new_users_info))
     if modified_users_info:
-        add_change("edit-users", _("Modified users: %s") % ", ".join(modified_users_info))
+        add_change("edit-users", _l("Modified users: %s") % ", ".join(modified_users_info))
 
     userdb.save_users(all_users, datetime.now())
 

@@ -21,7 +21,7 @@ from cmk.gui.config import active_config, load_config
 from cmk.gui.context import RequestContext
 from cmk.gui.exceptions import MKGeneralException, RequestTimeout
 from cmk.gui.http import request
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, _l
 from cmk.gui.site_config import get_login_slave_sites, get_site_config, is_wato_slave_site
 from cmk.gui.utils.script_helpers import make_request_context
 from cmk.gui.utils.urls import urlencode_vars
@@ -109,7 +109,7 @@ def _synchronize_profiles_to_sites(logger, profiles_to_synchronize):
             if active_config.wato_enabled:
                 add_change(
                     "edit-users",
-                    _("Password changed (sync failed: %s)") % result.error_text,
+                    _l("Password changed (sync failed: %s)") % result.error_text,
                     add_user=False,
                     sites=[result.site_id],
                     need_restart=False,

@@ -51,7 +51,7 @@ from cmk.gui import hooks, utils
 from cmk.gui.config import active_config, register_post_config_load_hook
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.htmllib.html import html
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import DropdownChoiceEntries, ValueSpec
@@ -557,7 +557,7 @@ class Ruleset:
 
         add_change(
             "new-rule",
-            _('Cloned rule from rule %s in ruleset "%s" in folder "%s"')
+            _l('Cloned rule from rule %s in ruleset "%s" in folder "%s"')
             % (orig_rule.id, self.title(), rule.folder.alias_path()),
             sites=rule.folder.all_site_ids(),
             diff_text=self.diff_rules(None, rule),
@@ -747,7 +747,7 @@ class Ruleset:
 
         add_change(
             "edit-rule",
-            _('Changed properties of rule #%d in ruleset "%s" in folder "%s"')
+            _l('Changed properties of rule #%d in ruleset "%s" in folder "%s"')
             % (index, self.title(), rule.folder.alias_path()),
             sites=rule.folder.all_site_ids(),
             diff_text=self.diff_rules(orig_rule, rule),
@@ -765,7 +765,7 @@ class Ruleset:
         if create_change:
             add_change(
                 "edit-rule",
-                _('Deleted rule #%d in ruleset "%s" in folder "%s"')
+                _l('Deleted rule #%d in ruleset "%s" in folder "%s"')
                 % (index, self.title(), rule.folder.alias_path()),
                 sites=rule.folder.all_site_ids(),
                 object_ref=rule.object_ref(),
@@ -779,7 +779,7 @@ class Ruleset:
         rules.insert(index, rule)
         add_change(
             "edit-ruleset",
-            _('Moved rule %s from position #%d to #%d in ruleset "%s" in folder "%s"')
+            _l('Moved rule %s from position #%d to #%d in ruleset "%s" in folder "%s"')
             % (rule.id, old_index, index, self.title(), rule.folder.alias_path()),
             sites=rule.folder.all_site_ids(),
             object_ref=self.object_ref(),

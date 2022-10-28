@@ -74,15 +74,15 @@ class ClusterTreeAggregator(TreeAggregator):
 
     # ---static data from config--------------------------------------------
 
-    def add_cluster_property(self) -> None:
+    def add_cluster_properties(self, *, nodes: list[HostName]) -> None:
         self._add_cluster_property(is_cluster=True)
 
-    def add_cluster_nodes(self, *, nodes: list[HostName]) -> None:
-        node = self._inventory_tree.setdefault_node(
-            ("software", "applications", "check_mk", "cluster", "nodes")
-        )
-        node.table.add_key_columns(["name"])
-        node.table.add_rows([{"name": node_name} for node_name in nodes])
+        if nodes:
+            node = self._inventory_tree.setdefault_node(
+                ("software", "applications", "check_mk", "cluster", "nodes")
+            )
+            node.table.add_key_columns(["name"])
+            node.table.add_rows([{"name": node_name} for node_name in nodes])
 
 
 class RealHostTreeAggregator(TreeAggregator):

@@ -82,7 +82,8 @@ def check_inventory_tree(
 ) -> CheckInventoryTreeResult:
     tree_aggregator: ClusterTreeAggregator | RealHostTreeAggregator
     if host_config.is_cluster:
-        tree_aggregator = _inventorize_cluster(host_config=host_config)
+        tree_aggregator = ClusterTreeAggregator()
+        tree_aggregator.add_cluster_properties(nodes=host_config.nodes or [])
         return CheckInventoryTreeResult(
             check_result=ActiveCheckResult.from_subresults(
                 *_check_trees(
@@ -138,17 +139,6 @@ def check_inventory_tree(
             fetched_data_result.processing_failed or fetched_data_result.no_data_or_files
         ),
     )
-
-
-def _inventorize_cluster(*, host_config: HostConfig) -> ClusterTreeAggregator:
-    tree_aggregator = ClusterTreeAggregator()
-
-    tree_aggregator.add_cluster_property()
-
-    if nodes := host_config.nodes:
-        tree_aggregator.add_cluster_nodes(nodes=nodes)
-
-    return tree_aggregator
 
 
 def _fetch_real_host_data(

@@ -304,3 +304,5 @@ legacy_checks: Ruleset[object] = []
 status_data_inventory: Ruleset[object] = []
 logwatch_rules: Ruleset[object] = []
 config_storage_format: _Literal["standard", "raw", "pickle"] = "pickle"
+
+automatic_host_removal: Ruleset[object] = []

@@ -13,7 +13,7 @@ from typing import Type
 import cmk.utils.paths
 from cmk.utils.tags import TagGroup
 from cmk.utils.type_defs import TagID
-from cmk.utils.version import is_raw_edition
+from cmk.utils.version import is_plus_edition, is_raw_edition
 
 from cmk.snmplib.type_defs import SNMPBackendEnum  # pylint: disable=cmk-module-layer-violation
 
@@ -4551,6 +4551,68 @@ rulespec_registry.register(
         item_type="service",
         name="extra_service_conf:notes_url",
         valuespec=_valuespec_extra_service_conf_notes_url,
+    )
+)
+
+
+def _valuespec_automatic_host_removal() -> CascadingDropdown:
+    return CascadingDropdown(
+        title=_("Automatic host removal"),
+        help=_("Configure the automatic removal of monitored hosts.")
+        + (
+            (
+                _(
+                    " <b>Note</b>: To restrict this rule to hosts created via "
+                    '<a href="%s">auto-registration</a>, use the host label '
+                    "<tt>cmk/agent_auto_registered:yes</tt>."
+                )
+                % makeuri_contextless(
+                    request,
+                    [("mode", "agent_registration")],
+                    filename="wato.py",
+                )
+            )
+            if is_plus_edition()
+            else ""
+        ),
+        sorted=False,
+        choices=[
+            (
+                "enabled",
+                _("Enable automatic host removal"),
+                Dictionary(
+                    elements=[
+                        (
+                            "checkmk_service_crit",
+                            Age(
+                                title=_("Duration of CRITICAL state of Check_MK service"),
+                                help=_(
+                                    "Automatically remove hosts whose Check_MK service has been in the state "
+                                    "CRITICAL for longer than the configured time period."
+                                ),
+                            ),
+                        ),
+                    ],
+                    optional_keys=False,
+                ),
+            ),
+            (
+                "disabled",
+                _("Disable automatic host removal"),
+                FixedValue(
+                    value=None,
+                    totext="",
+                ),
+            ),
+        ],
+    )
+
+
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupHostsMonitoringRulesVarious,
+        name="automatic_host_removal",
+        valuespec=_valuespec_automatic_host_removal,
     )
 )
 

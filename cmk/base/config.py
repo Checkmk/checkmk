@@ -4375,7 +4375,7 @@ class CEEHostConfig(HostConfig):
         if secret := self.agent_encryption.get("passphrase"):
             return secret
 
-        if cmc_real_time_checks and (secret := cmc_real_time_checks.get("secret")):
+        if cmc_real_time_checks and (secret := cmc_real_time_checks.get("secret")):  # type: ignore[name-defined] # pylint: disable=undefined-variable
             return secret
 
         return ""

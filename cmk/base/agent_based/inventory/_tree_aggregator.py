@@ -99,7 +99,6 @@ class RealHostTreeAggregator(TreeAggregator):
         *,
         inventory_generator: InventoryResult,
         raw_cache_info: RawCacheInfo | None,
-        is_legacy_plugin: bool,
     ) -> Exception | None:
 
         try:
@@ -115,14 +114,6 @@ class RealHostTreeAggregator(TreeAggregator):
         now = int(time.time())
         for tabr in table_rows:
             self._integrate_table_row(tabr)
-
-            if is_legacy_plugin:
-                # For old, legacy table plugins the retention intervals feature for HW/SW entries
-                # is not supported because we do not have a clear, defined row identifier.
-                # The consequences would be incomprehensible and non-transparent, eg. additional
-                # history entries, delta tree calculation, filtering or merging does not work
-                # reliable.
-                continue
 
             self._may_add_cache_info(
                 now=now,

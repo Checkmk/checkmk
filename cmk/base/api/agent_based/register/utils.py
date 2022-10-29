@@ -32,14 +32,11 @@ ITEM_VARIABLE = "%s"
 _NONE_TYPE = type(None)
 
 
-def get_validated_plugin_module_name() -> Optional[str]:
+def get_validated_plugin_module_name() -> str:
     """Find out which module registered the plugin and make sure its in the right place"""
     # We used this before, but it was a performance killer. The method below is a lot faster.
     # calling_from = inspect.stack()[2].filename
-    frame = sys._getframe(2)
-    if not frame:
-        return None
-    calling_from = frame.f_code.co_filename
+    calling_from = sys._getframe(2).f_code.co_filename
 
     path = pathlib.Path(calling_from)
     if not path.parent.parts[-3:] == agent_based_plugins_dir.parts[-3:]:

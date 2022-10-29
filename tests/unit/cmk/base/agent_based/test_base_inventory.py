@@ -41,7 +41,6 @@ def test_aggregator_raises_collision() -> None:
     result = RealHostTreeAggregator([]).aggregate_results(
         inventory_generator=inventory_items,
         raw_cache_info=None,
-        is_legacy_plugin=False,
     )
 
     assert isinstance(result, TypeError)
@@ -96,7 +95,6 @@ def test_integrate_attributes() -> None:
     tree_aggr.aggregate_results(
         inventory_generator=inventory_items,
         raw_cache_info=None,
-        is_legacy_plugin=False,
     )
 
     assert tree_aggr.inventory_tree.serialize() == {
@@ -159,7 +157,6 @@ def test_integrate_table_row() -> None:
     tree_aggr.aggregate_results(
         inventory_generator=inventory_items,
         raw_cache_info=None,
-        is_legacy_plugin=False,
     )
 
     assert tree_aggr.inventory_tree.serialize() == {

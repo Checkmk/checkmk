@@ -13,7 +13,6 @@
 #include <chrono>
 #include <filesystem>
 #include <string>
-#include <string_view>
 
 #include "common/cfg_yaml.h"
 #include "common/yaml.h"
@@ -107,7 +106,7 @@ const wchar_t *const kDefaultConfigCacheFileName = L"check_mk.cached.yml";
 
 // section with folder names, file names and some textual app defaults
 namespace cma::cfg {
-constexpr const wchar_t kAppDataCompanyName[] = L"checkmk";
+constexpr wchar_t kAppDataCompanyName[] = L"checkmk";
 
 // defines default behavior of the main thread
 constexpr bool IsOneShotMode() { return true; }
@@ -162,7 +161,7 @@ constexpr const wchar_t *kUpdate = L"update";  // owned by agent
 constexpr const wchar_t *kMrpe = L"mrpe";      // owned by user(!) for mrpe
 constexpr const wchar_t *kLog = L"log";        // owned by agent
 
-};  // namespace dirs
+}  // namespace dirs
 namespace envs {
 
 // to inform plugins where place state file
@@ -180,7 +179,7 @@ constexpr std::string_view kMkInstallDirName{"MK_INSTALLDIR"};
 constexpr std::string_view kMkModulesDirName{"MK_MODULESDIR"};
 constexpr std::string_view kMkMsiPathName{"MK_MSI_PATH"};
 
-};  // namespace envs
+}  // namespace envs
 
 // internal and stable representation of the [logwatch] event levels
 enum class EventLevels { kIgnore = -2, kOff = -1, kAll = 0, kWarn, kCrit };
@@ -213,4 +212,4 @@ constexpr const char *const kServiceMailSlot = "WinAgent";      // production
 constexpr const char *const kTestingMailSlot = "WinAgentTest";  // testing
 constexpr const char *const kAppMailSlot = "WinAgentApp";  // app/integration
 
-};  // namespace cma::cfg
+}  // namespace cma::cfg

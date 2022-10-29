@@ -7,7 +7,6 @@
 
 #include "logger.h"
 #include "tools/_misc.h"
-#include "tools/_raii.h"
 
 /////////////////////////////////////////////////////////////
 // Careful! All Evt-Functions have to be used through the

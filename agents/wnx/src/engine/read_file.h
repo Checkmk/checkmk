@@ -80,7 +80,6 @@ std::optional<std::vector<uint8_t>> ReadFileInVector(
         XLOG::l(XLOG_FUNC + "Exception '{}' generated in read file", e.what());
         return {};
     }
-    return {};
 }
 
 inline std::optional<std::string> ReadFileInString(
@@ -95,7 +94,7 @@ inline std::optional<std::string> ReadFileInString(
         const auto fsize = details::GetFileStreamSize(f);
         std::string v;
         v.resize(fsize);
-        f.read(reinterpret_cast<char *>(v.data()), fsize);
+        f.read(v.data(), fsize);
         return v;
     } catch (const std::exception &e) {
         // catching possible exceptions in the
@@ -103,7 +102,6 @@ inline std::optional<std::string> ReadFileInString(
         XLOG::l(XLOG_FUNC + "Exception '{}' generated in read file", e.what());
         return {};
     }
-    return {};
 }
 
 inline std::optional<std::string> ReadFileInString(
@@ -126,7 +124,7 @@ inline std::optional<std::string> ReadFileInString(
         XLOG::l(XLOG_FUNC + "Exception '{}' generated in read file", e.what());
         return {};
     }
-    return {};
+
 }
 
 inline std::optional<std::vector<uint8_t>> ReadFileInVector(

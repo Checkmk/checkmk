@@ -6,16 +6,12 @@
 // API "Internal transport"
 
 #pragma once
-#include <chrono>       // timestamps
-#include <cstdint>      // wchar_t when compiler options set weird
-#include <functional>   // callback in the main function
-#include <string_view>  // callback in the main function
+#include <cstdint>     // wchar_t when compiler options set weird
+#include <functional>  // callback in the main function
 
-#include "common/cfg_info.h"  // default logfile name
-#include "common/wtools.h"    // conversion
+#include "common/wtools.h"  // conversion
 #include "logger.h"
 #include "tools/_misc.h"
-#include "tools/_xlog.h"
 
 namespace cma::carrier {
 enum class DataType {
@@ -185,7 +181,7 @@ public:
         return carrier_address_;
     }
 
-    static inline bool FireSend(
+    static bool FireSend(
         const std::wstring &peer_name,  // assigned by caller
         const std::wstring &port_name,  // standard format
         const std::wstring &answer_id,  // identifies Answer
@@ -263,4 +259,4 @@ void InformByMailSlot(std::string_view mail_slot, std::string_view cmd);
 std::string AsString(const CarrierDataHeader *dh) noexcept;
 
 std::vector<unsigned char> AsDataBlock(const CarrierDataHeader *dh) noexcept;
-};  // namespace cma::carrier
+}  // namespace cma::carrier

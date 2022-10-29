@@ -13,11 +13,9 @@
 #include "common/cfg_info.h"
 #include "common/wtools.h"
 #include "providers/p_perf_counters.h"
-#include "read_file.h"
 #include "service_processor.h"
 #include "test_tools.h"
 #include "tools/_misc.h"
-#include "tools/_process.h"
 
 namespace wtools {
 extern std::vector<int> TsValues;
@@ -144,7 +142,7 @@ TEST(WinPerf, MakeBodyForTSIntegration) {
     auto str = details::MakeWinPerfNakedList(object, key_index);
     auto table = cma::tools::SplitString(str, "\n");
     ASSERT_TRUE(table.size() > 0);
-    for (const auto& row : table) {
+    for (const auto &row : table) {
         auto words = cma::tools::SplitString(row, " ");
         EXPECT_EQ(words.size(), 3);
         EXPECT_NE(cma::tools::ConvertToUint64(words[0], 12345), 12345)

@@ -2,18 +2,17 @@
 #include "stdafx.h"
 
 #include <shellapi.h>
-#include <shlobj.h>  // known path
 
 #include <filesystem>
 #include <ranges>
 #include <string>
 
 #include "cfg.h"
+#include "cfg_details.h"
 #include "common/cfg_info.h"
 #include "common/wtools.h"
 #include "common/yaml.h"
-#include "tools/_raii.h"  // on out
-#include "tools/_tgt.h"   // we need IsDebug
+#include "tools/_tgt.h"  // we need IsDebug
 
 using namespace std::string_literals;
 namespace fs = std::filesystem;

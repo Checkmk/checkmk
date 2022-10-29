@@ -160,9 +160,9 @@ char EventLogRecordBase::getEventSymbol(cfg::EventLevels required) const {
                        : '.';  // potential drop of context
         case Level::audit_failure:
             return 'C';
-        default:
-            return 'u';
     }
+    // unreachable
+    return ' ';
 }
 
 /// decode windows level to universal
@@ -178,9 +178,9 @@ cfg::EventLevels EventLogRecordBase::calcEventLevel() const {
             return cfg::EventLevels::kAll;
         case Level::audit_failure:
             return cfg::EventLevels::kCrit;
-        default:
-            return cfg::EventLevels::kWarn;
     }
+    // unreachable
+    return cfg::EventLevels::kCrit;
 }
 
 }  // namespace cma::evl

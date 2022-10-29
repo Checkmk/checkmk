@@ -233,7 +233,7 @@ DWORD GetInteractiveSessionID() {
         for (DWORD i = 0; i < count; i++) {
             if (session_info[i].State == WTSActive)  // Here is
                 return session_info[i].SessionId;
-        };
+        }
     }
 
     static WTSGetActiveConsoleSessionIdProc

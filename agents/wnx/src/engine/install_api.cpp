@@ -8,6 +8,7 @@
 #include <msi.h>
 
 #include <filesystem>
+#include <fstream>
 #include <ranges>
 #include <string>
 
@@ -726,4 +727,4 @@ void Register(const std::string &error) {
 void Clean() { DeleteInstallApiLog(); }
 }  // namespace api_err
 
-};  // namespace cma::install
+}  // namespace cma::install

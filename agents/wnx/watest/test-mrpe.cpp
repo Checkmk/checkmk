@@ -150,10 +150,8 @@ TEST(SectionProviderMrpe, ConfigLoad) {
 
     EXPECT_EQ(mrpe.includes().size(), 3);
     EXPECT_EQ(mrpe.checks().size(), 2);
-    if (kMrpeRemoveAbsentFiles)
-        EXPECT_EQ(mrpe.entries().size(), 4);
-    else
-        EXPECT_EQ(mrpe.entries().size(), 5);
+    constexpr size_t count = kMrpeRemoveAbsentFiles ? 4 : 5;
+    EXPECT_EQ(mrpe.entries().size(), count);
 }
 
 TEST(SectionProviderMrpe, YmlCheck) {

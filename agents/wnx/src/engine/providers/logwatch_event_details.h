@@ -9,14 +9,10 @@
 #ifndef fileinfo_details_h__
 #define logwatch_event_details_h__
 
-#include <filesystem>
-#include <regex>
 #include <string>
 
 #include "cma_core.h"
-#include "providers/internal.h"
 #include "providers/logwatch_event.h"
-#include "section_header.h"
 
 namespace cma::provider::details {
 State ParseStateLine(const std::string &line);

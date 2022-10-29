@@ -75,7 +75,7 @@ void RemoveForbiddenNames(PathVector &paths);
 PathVector FilterPathVector(const PathVector &found_files,
                             const std::vector<cfg::Plugins::ExeUnit> &units,
                             bool check_exists);
-};  // namespace cma
+}  // namespace cma
 
 namespace cma {
 bool IsValidFile(const std::filesystem::path &file_to_exec);
@@ -199,7 +199,7 @@ public:
         std::lock_guard lk(lock_);
 
         auto *h = process_->getStdioRead();
-        if ((h != nullptr) && h == handle) {
+        if (h != nullptr && h == handle) {
             tools::AddVector(process_->getData(), buf);
             return true;
         }
@@ -247,7 +247,7 @@ public:
 
     // stupid wrapper
     void processResults(
-        const std::function<void(const std::wstring cmd_line, uint32_t pid,
+        const std::function<void(const std::wstring &cmd_line, uint32_t pid,
                                  uint32_t code,
                                  const std::vector<char> &data_block)> &func) {
         std::unique_lock lk(lock_);
@@ -320,7 +320,7 @@ private:
         return true;
     }
 
-    static inline bool isExecValid(const std::filesystem::path &file_exec) {
+    static bool isExecValid(const std::filesystem::path &file_exec) {
         if (!IsValidFile(file_exec)) {
             return false;
         }
@@ -428,7 +428,7 @@ public:
     /// retry_ is set(not 0)
     bool isTooManyRetries() const {
         std::lock_guard lk(lock_);
-        return (retry_ != 0) && failures_ > retry_;
+        return retry_ != 0 && failures_ > retry_;
     }
 
     bool running() const {
@@ -529,7 +529,7 @@ public:
     // cache_age means always async, we have no guarantee that
     // invariant is ok 100% time, because bakery delivers us sync plugins
     // with cache age
-    bool isRealAsync() const noexcept { return async() || (cacheAge() != 0); }
+    bool isRealAsync() const noexcept { return async() || cacheAge() != 0; }
 
     void removeFromExecution() noexcept { path_ = ""; }
 

@@ -13,7 +13,6 @@
 #include <utility>
 
 #include "cma_core.h"
-#include "logger.h"
 #include "providers/internal.h"
 #include "section_header.h"
 

@@ -11,9 +11,9 @@
 
 #define FMT_HEADER_ONLY
 
-#define _CRT_SECURE_NO_WARNINGS  // NOLINT(bugprone-reserved-identifier)
+#define _CRT_SECURE_NO_WARNINGS  // NOLINT
 
-#define _SILENCE_CXX17_STRSTREAM_DEPRECATION_WARNING  // NOLINT(bugprone-reserved-identifier)
+#define _SILENCE_CXX17_STRSTREAM_DEPRECATION_WARNING  // NOLINT
 
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN

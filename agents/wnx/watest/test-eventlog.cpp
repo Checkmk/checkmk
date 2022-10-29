@@ -10,14 +10,11 @@
 #include "cfg_engine.h"
 #include "common/wtools.h"
 #include "eventlog/eventlogbase.h"
-#include "eventlog/eventlogstd.h"
 #include "eventlog/eventlogvista.h"
-#include "providers/logwatch_event.h"
 #include "providers/logwatch_event_details.h"
 #include "service_processor.h"
 #include "test_tools.h"
 #include "tools/_misc.h"
-#include "tools/_process.h"
 
 using namespace std::string_literals;
 
@@ -166,7 +163,6 @@ TEST(EventLogTest, BeginningOfTheApplicationLogIntegration) {
                                   str += in;
                                   return false;
                               });
-    EXPECT_TRUE(last >= 0);
     EXPECT_FALSE(str.empty());
 }
 

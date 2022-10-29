@@ -3,8 +3,6 @@
 
 #include "object_repo.h"
 
-#include "logger.h"
-
 namespace cma {
 void RepoStub() {
     //

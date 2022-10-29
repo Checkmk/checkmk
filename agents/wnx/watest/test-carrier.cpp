@@ -8,7 +8,6 @@
 #include "common/cfg_info.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
-#include "logger.h"
 #include "service_processor.h"
 #include "test_tools.h"
 #include "tools/_misc.h"
@@ -80,7 +79,6 @@ protected:
 
             case DataType::kSegment: {
                 nanoseconds duration_since_epoch(dt->answerId());
-                time_point<steady_clock> tp(duration_since_epoch);
                 auto data_source = static_cast<const uint8_t *>(dt->data());
                 auto data_end = data_source + dt->length();
                 std::vector<uint8_t> vectorized_data(data_source, data_end);
@@ -218,7 +216,7 @@ bool TestRunCommand(std::string_view peer, std::string_view cmd) {
     g_last_command = cmd;
     return true;
 }
-};  // namespace
+}  // namespace
 
 class CarrierTestInformFixture : public ::testing::Test {
 public:

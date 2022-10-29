@@ -6,19 +6,15 @@
 
 #include <cstdint>
 #include <filesystem>
+#include <fstream>
 #include <string>
-#include <string_view>
-#include <unordered_set>
 
 #include "cfg.h"
 #include "cma_core.h"
 #include "common/cma_yml.h"
 #include "common/yaml.h"
-#include "cvt.h"
 #include "logger.h"
-#include "tools/_raii.h"
 #include "tools/_win.h"
-#include "tools/_xlog.h"
 #include "upgrade.h"
 namespace fs = std::filesystem;
 namespace rs = std::ranges;
@@ -60,7 +56,7 @@ namespace cma::cfg::cap {
 std::wstring ProcessPluginPath(const std::string &name) {
     // Extract basename and dirname from path
     fs::path fpath(name);
-    fs::path plugin_folder = cma::cfg::GetUserDir();
+    fs::path plugin_folder = GetUserDir();
 
     plugin_folder /= fpath;
 
@@ -109,7 +105,7 @@ std::string ReadFileName(std::ifstream &cap_file, uint32_t length) {
 
 // skips too big files or invalid data
 std::optional<std::vector<char>> ReadFileData(std::ifstream &cap_file) {
-    int32_t length = 0;
+    uint32_t length = 0;
     cap_file.read(reinterpret_cast<char *>(&length), sizeof(length));
     if (!cap_file.good()) {
         XLOG::l("Unexpected problems with CAP-file data header");
@@ -281,7 +277,7 @@ const std::array<std::wstring, 3> TryToKillAllowedNames = {
 }
 
 [[nodiscard]] bool IsStoreFileAgressive() noexcept {
-    return GetTryKillMode() != cfg::values::kTryKillNo;
+    return GetTryKillMode() != values::kTryKillNo;
 }
 
 bool CheckAllFilesWritable(const std::string &directory) {
@@ -504,7 +500,7 @@ bool ReinstallYaml(const fs::path &bakery_yaml, const fs::path &target_yaml,
             return false;
         }
 
-        auto install = cma::yml::GetVal(global, vars::kInstall, false);
+        auto install = yml::GetVal(global, vars::kInstall, false);
         XLOG::l.i("Supplied yaml '{}' {}", source_yaml,
                   install ? "to be installed" : "will not be installed");
         if (!install) return false;
@@ -545,7 +541,7 @@ void InstallYmlFile() {
     XLOG::l.t("Installing yml file '{}'", source_yml);
     if (NeedReinstall(target_yml, source_yml)) {
         XLOG::l.i("Reinstalling '{}' with '{}'", target_yml, source_yml);
-        fs::path bakery_yml = cma::cfg::GetBakeryDir();
+        fs::path bakery_yml = GetBakeryDir();
 
         bakery_yml /= files::kBakeryYmlFile;
         ReinstallYaml(bakery_yml, target_yml, source_yml);
@@ -651,7 +647,7 @@ static void UpdateUserYmlExample(const fs::path &tgt, const fs::path &src) {
     if (!ec) {
         XLOG::l.i("User Example '{}' have been updated successfully from '{}'",
                   tgt, src);
-        if (G_PatchLineEnding) {
+        if constexpr (G_PatchLineEnding) {
             wtools::PatchFileLineEnding(tgt);
         }
     } else {
@@ -695,9 +691,9 @@ bool Install() {
 
 // Re-install all files as is from the root-install
 bool ReInstall() {
-    fs::path root_dir = cfg::GetRootInstallDir();
-    fs::path user_dir = cfg::GetUserInstallDir();
-    fs::path bakery_dir = cfg::GetBakeryDir();
+    const fs::path root_dir = GetRootInstallDir();
+    const fs::path user_dir = GetUserInstallDir();
+    const fs::path bakery_dir = GetBakeryDir();
 
     std::vector<std::pair<const std::wstring_view, const ProcFunc>> data_vector{
         {files::kCapFile, ReinstallCaps},

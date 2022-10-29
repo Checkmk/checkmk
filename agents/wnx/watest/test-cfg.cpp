@@ -9,19 +9,15 @@
 #include "cap.h"
 #include "cfg.h"
 #include "cfg_details.h"
-#include "commander.h"
 #include "common/cfg_info.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
-#include "common/yaml.h"
 #include "install_api.h"
-#include "providers/mrpe.h"
 #include "read_file.h"
 #include "service_processor.h"
 #include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
-#include "tools/_tgt.h"
 #include "upgrade.h"
 
 using namespace std::chrono_literals;
@@ -328,7 +324,6 @@ TEST(Cma, PushPop) {
     fs::path root{r.wstring()};
     fs::path user{u.wstring()};
     ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
-    std::error_code ec;
 
     auto old_root = GetRootDir();
     auto old_user = GetUserDir();

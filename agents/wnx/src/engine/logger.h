@@ -108,7 +108,7 @@ void LogWindowsEventInfo(int code, std::string_view format_str,
                     std::forward<Args>(args)...);
 }
 
-};  // namespace XLOG::details
+}  // namespace XLOG::details
 #endif
 
 #if defined(FMT_FORMAT_H_)
@@ -659,7 +659,7 @@ private:
     int mods_{Mods::kCopy};  // here we keep modifications to fixed base
 
     static constexpr bool bp_allowed_{tgt::IsDebug()};
-};  // namespace XLOG
+};
 
 // Global Log Engines
 

@@ -22,8 +22,6 @@
 
 #include <functional>
 
-#include "tools/_raii.h"
-
 namespace cma::fw {
 
 constexpr std::wstring_view kRuleGroup = L"Checkmk Agent";

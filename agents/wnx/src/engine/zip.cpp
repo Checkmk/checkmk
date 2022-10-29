@@ -136,16 +136,16 @@ zip::Type GetFileType(std::wstring_view name) noexcept {
     try {
         std::ifstream f(wtools::ToUtf8(name), std::ios::binary);
         if (!f.good()) {
-            return zip::Type::unknown;
+            return Type::unknown;
         }
 
         std::array<char, 2> header;
-        f.read(reinterpret_cast<char *>(header.data()), 2);
+        f.read(header.data(), 2);
         if (header == cab_header) {
-            return zip::Type::cab;
+            return Type::cab;
         }
         if (header == zip_header) {
-            return zip::Type::zip;
+            return Type::zip;
         }
         XLOG::l("Header is not known '{}{}'", header[0], header[1]);
     } catch (const std::exception &e) {
@@ -153,7 +153,7 @@ zip::Type GetFileType(std::wstring_view name) noexcept {
         // ifstream or memory allocations
         XLOG::l("Exception '{}' generated reading header", e.what());
     }
-    return zip::Type::unknown;
+    return Type::unknown;
 }
 
 bool UnzipFile(std::wstring_view file_src, std::wstring_view dir_dest) {
@@ -203,7 +203,7 @@ bool UnzipFile(std::wstring_view file_src, std::wstring_view dir_dest) {
 bool UncabFile(std::wstring_view file_src, std::wstring_view dir_dest) {
     auto command_line = fmt::format(L"expand {} -F:* {}", file_src, dir_dest);
     XLOG::l.i("Executing '{}'", wtools::ToUtf8(command_line));
-    return tools::RunCommandAndWait(command_line);
+    return RunCommandAndWait(command_line);
 }
 }  // namespace
 
@@ -214,11 +214,11 @@ bool Extract(const std::filesystem::path &file_src,
     }
 
     switch (GetFileType(file_src.wstring())) {
-        case zip::Type::zip:
+        case Type::zip:
             return UnzipFile(file_src.wstring(), dir_dest.wstring());
-        case zip::Type::cab:
+        case Type::cab:
             return UncabFile(file_src.wstring(), dir_dest.wstring());
-        case zip::Type::unknown:
+        case Type::unknown:
             return false;
     }
 

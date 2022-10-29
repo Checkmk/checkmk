@@ -37,6 +37,6 @@ std::vector<std::string> GetDriveVector();
 uint64_t CalcUsage(uint64_t avail, uint64_t total) noexcept;
 }  // namespace df
 
-};  // namespace cma::provider
+}  // namespace cma::provider
 
 #endif  // df_h__

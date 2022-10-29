@@ -7,7 +7,6 @@
 #ifndef plugins_h__
 #define plugins_h__
 
-#include <filesystem>
 #include <string>
 #include <string_view>
 
@@ -21,7 +20,7 @@ namespace config {
 // in future may be controlled using yml
 extern bool g_local_no_send_if_empty_body;
 extern bool g_local_send_empty_at_end;
-};  // namespace config
+}  // namespace config
 
 enum class PluginType { normal, local };
 

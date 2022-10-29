@@ -17,7 +17,6 @@
 #include "common/cfg_info.h"
 #include "encryption.h"
 #include "logger.h"
-#include "tools/_xlog.h"
 
 namespace cma::world {
 using ReplyFunc =

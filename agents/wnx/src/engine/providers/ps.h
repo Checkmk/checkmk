@@ -40,6 +40,6 @@ std::string ProducePsWmi(bool use_full_path);
 std::wstring GetProcessListFromWmi(std::wstring_view separator);
 std::string GetProcessOwner(uint64_t pid);
 
-};  // namespace cma::provider
+}  // namespace cma::provider
 
 #endif  // ps_h__

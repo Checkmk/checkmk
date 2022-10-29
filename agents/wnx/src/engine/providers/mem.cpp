@@ -36,4 +36,4 @@ std::string Mem::makeBody() {
         stat.ullAvailVirtual / kilobyte);  // virtual avail
 }
 
-};  // namespace cma::provider
+}  // namespace cma::provider

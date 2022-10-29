@@ -11,7 +11,6 @@ extern std::unordered_map<std::wstring, wtools::InternalUser> g_users;
 
 TEST(CmaCore, InternalUsers) {
     using namespace std::string_literals;
-    const wchar_t *t[] = {L"a.exe", L"b", L"c"};
 
     auto group_name = wtools::SidToName(L"S-1-5-32-545", SidTypeGroup);
     auto x = ObtainInternalUser(group_name);
@@ -29,7 +28,7 @@ TEST(CmaCore, InternalUsers) {
         KillAllInternalUsers();
         EXPECT_TRUE(g_users.empty());
     }
-};
+}
 
 TEST(CmaCore, PluginsExecutionUser2Iu) {
     {

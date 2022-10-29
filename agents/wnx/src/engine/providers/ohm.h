@@ -28,7 +28,7 @@ constexpr std::wstring_view kExeModuleWide = L"OpenHardwareMonitorCLI.exe";
 constexpr std::wstring_view kDriverNameWide = L"winring0_1_2_0";
 constexpr std::wstring_view kResetCommand =
     LR"(-command "Get-WmiObject -query \"Select * From __Namespace Where Name='OpenHardwareMonitor'\" -Namespace \"root\" | Remove-WmiObject")";
-};  // namespace ohm
+}  // namespace ohm
 
 class OhmProvider : public WmiBase {
 public:

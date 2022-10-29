@@ -12,11 +12,9 @@
 
 #include <filesystem>
 #include <string>
-#include <string_view>
 #include <tuple>
 
 #include "cfg.h"
-#include "common/cfg_info.h"
 
 namespace cma::cfg::cap {
 

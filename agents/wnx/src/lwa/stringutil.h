@@ -6,9 +6,8 @@
 #ifndef stringutil_h
 #define stringutil_h
 
-#include <cstdint>
-
 #include <codecvt>
+#include <cstdint>
 #include <iostream>
 //#include <locale>
 #include <array>

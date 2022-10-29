@@ -3,6 +3,7 @@
 
 #include "service_processor.h"
 
+#include <cfg_details.h>
 #include <fcntl.h>
 #include <io.h>
 #include <sensapi.h>
@@ -10,7 +11,6 @@
 
 #include <chrono>
 #include <cstdint>  // wchar_t when compiler options set weird
-#include <ranges>
 
 #include "agent_controller.h"
 #include "cap.h"

@@ -90,7 +90,7 @@ constexpr std::wstring_view kMsiMigrationRequest = L"1";
 inline std::wstring GetMsiRegistryPath() {
     return tgt::Is64bit() ? registry::kMsiInfoPath64 : registry::kMsiInfoPath32;
 }
-};  // namespace registry
+}  // namespace registry
 
 /// Returns command and success status
 /// set StartUpdateProcess to 'skip' for dry run

@@ -11,9 +11,9 @@
 #include <iterator>
 
 #include "cfg.h"
+#include "cfg_details.h"
 #include "modules.h"
 #include "test_tools.h"
-#include "zip.h"
 
 using namespace std::literals;
 namespace fs = std::filesystem;
@@ -44,8 +44,6 @@ bool Compare(const T &t, const T &v) {
 }
 
 TEST(ModuleCommander, CheckSystemAuto) {
-    namespace fs = std::filesystem;
-
     auto sys_exts = ModuleCommander::GetSystemExtensions();
     ASSERT_TRUE(sys_exts.size() == 1);
     ASSERT_TRUE(sys_exts[0].first == "python");
@@ -236,8 +234,6 @@ TEST(ModulesTest, Loader) {
 }
 
 TEST(ModulesTest, IsMyScript) {
-    namespace fs = std::filesystem;
-
     Module m;
     EXPECT_FALSE(m.isMyScript("z"));
     EXPECT_FALSE(m.isMyScript("z.ix"));

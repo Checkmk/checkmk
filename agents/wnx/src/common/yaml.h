@@ -8,6 +8,9 @@
 // No C++ file
 #pragma once
 
+#ifndef yaml_h__
+#define yaml_h__
+
 #include <yaml-cpp/yaml.h>
 
 #include <string>
@@ -33,3 +36,5 @@ inline bool Node::remove(const std::string_view &key) {
 }
 
 }  // namespace YAML
+
+#endif

@@ -5,10 +5,10 @@
 
 #include <cstdint>
 #include <filesystem>
+#include <fstream>
 #include <string>
-#include <string_view>
 
-#include "common/yaml.h"
+#include "cfg_details.h"
 #include "cvt.h"
 #include "glob_match.h"
 #include "install_api.h"
@@ -32,7 +32,7 @@ enum class ServiceStartType {
 // returns false if folder cannot be created
 [[nodiscard]] bool CreateFolderSmart(const fs::path &tgt) noexcept {
     std::error_code ec;
-    if (cma::tools::IsValidRegularFile(tgt)) {
+    if (tools::IsValidRegularFile(tgt)) {
         fs::remove(tgt, ec);
     }
     if (fs::exists(tgt, ec)) {
@@ -594,8 +594,7 @@ int WaitForStatus(
 }
 
 static void LogAndDisplayErrorMessage(int status) {
-    auto driver_body =
-        cma::cfg::details::FindServiceImagePath(L"winring0_1_2_0");
+    auto driver_body = cfg::details::FindServiceImagePath(L"winring0_1_2_0");
 
     using namespace xlog::internal;
     if (!driver_body.empty()) {

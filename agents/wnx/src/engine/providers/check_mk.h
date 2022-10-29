@@ -34,6 +34,6 @@ private:
     static std::string makeOnlyFrom();
 };
 
-};  // namespace cma::provider
+}  // namespace cma::provider
 
 #endif  // check_mk_h__

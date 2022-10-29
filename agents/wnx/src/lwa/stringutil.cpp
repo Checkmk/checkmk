@@ -31,13 +31,11 @@ std::wregex possiblyQuotedRegex<wchar_t>() {
 }
 
 int parse_boolean(const char *value) {
-    if (!strcmp(value, "yes"))
-        return 1;
-    else if (!strcmp(value, "no"))
-        return 0;
-    else
-        std::cerr << "Invalid boolean value. Only yes and no are allowed."
-                  << std::endl;
+    if (!strcmp(value, "yes")) return 1;
+    if (!strcmp(value, "no")) return 0;
+
+    std::cerr << "Invalid boolean value. Only yes and no are allowed."
+              << std::endl;
     return -1;
 }
 
@@ -121,7 +119,8 @@ void stringToIPv6(const char *value, uint16_t *address) {
         if (segment > 0xFFFFu) {
             std::cerr << "Invalid ipv6 address " << value << std::endl;
             exit(1);  // NOLINT
-        } else if (endpos == pos) {
+        }
+        if (endpos == pos) {
             skip_offset = static_cast<int>(segments.size());
         } else {
             segments.push_back((unsigned short)segment);

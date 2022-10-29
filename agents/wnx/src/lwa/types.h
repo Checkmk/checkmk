@@ -216,10 +216,8 @@ inline std::ostream &operator<<(std::ostream &os,
 template <>
 inline script_execution_mode from_string<script_execution_mode>(
     const std::string &value) {
-    if (value == "async")
-        return script_execution_mode::ASYNC;
-    else if (value == "sync")
-        return script_execution_mode::SYNC;
+    if (value == "async") return script_execution_mode::ASYNC;
+    if (value == "sync") return script_execution_mode::SYNC;
     throw std::runtime_error("invalid execution mode");
 }
 

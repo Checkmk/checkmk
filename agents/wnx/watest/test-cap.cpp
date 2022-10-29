@@ -14,7 +14,6 @@
 #include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
-#include "tools/_tgt.h"
 
 namespace fs = std::filesystem;
 using namespace std::chrono_literals;
@@ -44,7 +43,7 @@ TEST(CapTest, InstallFileAsCopyNoThrow) {
 /// \brief Keeps temporary folder and pair of file names and dirs
 class CapTestFixture : public ::testing::Test {
 public:
-    static constexpr std::string_view name() { return "a.txt"; };
+    static constexpr std::string_view name() { return "a.txt"; }
     void SetUp() override {}
 
     fs::path source() const { return source_dir() / name(); }
@@ -363,7 +362,7 @@ public:
         names_[1] = GetUserPluginsDir() + L"\\mk_inventory.vbs";
     }
 
-    const std::array<std::wstring, 2> &names() const { return names_; };
+    const std::array<std::wstring, 2> &names() const { return names_; }
 
     void makeFilesInPlugins() const {
         fs::create_directories(GetUserPluginsDir());
@@ -508,7 +507,6 @@ TEST(CapTest, ReInstallRestoreIntegration) {
         fs::path yml_w_base =
             tst::MakePathToConfigTestFiles() / "check_mk.wato.install.yml";
 
-        std::error_code ec;
         try {
             // Prepare installed files
             fs::create_directory(r / dirs::kInstall);

@@ -9,23 +9,18 @@
 
 #include <filesystem>
 #include <random>
-#include <ranges>
 #include <string>
-#include <string_view>
 
 #include "algorithm"  // for remove_if
 #include "cfg.h"
+#include "cfg_details.h"
 #include "corecrt_terminate.h"  // for terminate
-#include "exception"            // for terminate
 #include "firewall.h"
 #include "fmt/format.h"
 #include "fmt/xchar.h"
 #include "install_api.h"  // for terminate
 #include "on_start.h"
 #include "tools/_misc.h"
-#include "tools/_tgt.h"          // for IsDebug
-#include "yaml-cpp/emitter.h"    // for Emitter
-#include "yaml-cpp/node/emit.h"  // for operator<<
 #include "yaml-cpp/node/node.h"  // for Node
 
 namespace fs = std::filesystem;

@@ -8,6 +8,7 @@
 #include "providers/agent_plugins.h"
 
 #include <filesystem>
+#include <fstream>
 
 #include "cfg.h"
 #include "common/wtools.h"
@@ -128,4 +129,4 @@ std::string AgentPlugins::makeBody() {
     out.pop_back();
     return out;
 }
-};  // namespace cma::provider
+}  // namespace cma::provider

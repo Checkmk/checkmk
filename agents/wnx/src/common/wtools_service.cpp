@@ -4,7 +4,6 @@
 #include "wtools_service.h"
 
 #include <cstdint>
-#include <string_view>
 #include <vector>
 
 #include "logger.h"

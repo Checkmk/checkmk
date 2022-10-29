@@ -28,6 +28,6 @@ private:
     std::string makeBody() override;
 };
 
-};  // namespace cma::provider
+}  // namespace cma::provider
 
 #endif  // agent_plugins_h__

@@ -11,19 +11,19 @@
 namespace cma::cfg {
 
 namespace yml_var {
-constexpr const std::string_view kBuiltinPlugins = "$BUILTIN_PLUGINS_PATH$";
-constexpr const std::string_view kCore = "$BUILTIN_AGENT_PATH$";
-constexpr const std::string_view kLocal = "$CUSTOM_LOCAL_PATH$ ";
-constexpr const std::string_view kUserPlugins = "$CUSTOM_PLUGINS_PATH$";
-constexpr const std::string_view kAgent = "$CUSTOM_AGENT_PATH$";
+constexpr std::string_view kBuiltinPlugins = "$BUILTIN_PLUGINS_PATH$";
+constexpr std::string_view kCore = "$BUILTIN_AGENT_PATH$";
+constexpr std::string_view kLocal = "$CUSTOM_LOCAL_PATH$ ";
+constexpr std::string_view kUserPlugins = "$CUSTOM_PLUGINS_PATH$";
+constexpr std::string_view kAgent = "$CUSTOM_AGENT_PATH$";
 
-constexpr const std::string_view kBuiltinOld = "@builtin";
-constexpr const std::string_view kCoreOld = "@core";
-constexpr const std::string_view kLocalOld = "@local";
-constexpr const std::string_view kUserOld = "@user";
-constexpr const std::string_view kDataOld = "@data";
+constexpr std::string_view kBuiltinOld = "@builtin";
+constexpr std::string_view kCoreOld = "@core";
+constexpr std::string_view kLocalOld = "@local";
+constexpr std::string_view kUserOld = "@user";
+constexpr std::string_view kDataOld = "@data";
 
-};  // namespace yml_var
+}  // namespace yml_var
 
 namespace groups {
 constexpr std::string_view kGlobal = "global";
@@ -283,7 +283,8 @@ constexpr std::string_view kModuleUsageDefaultMode = values::kModuleUsageAuto;
 
 constexpr uint32_t kServiceWaitNetwork = 30;
 constexpr std::string_view kControllerAgentChannelMailSlot{"mailslot"};
-constexpr std::string_view kControllerAgentChannelDefault{kControllerAgentChannelMailSlot};
+constexpr std::string_view kControllerAgentChannelDefault{
+    kControllerAgentChannelMailSlot};
 constexpr std::string_view kControllerOnCrashDefault{
     values::kControllerOnCrashIgnore};
 constexpr bool kControllerLocalOnly{true};

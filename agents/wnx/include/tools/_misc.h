@@ -20,7 +20,6 @@
 #include <type_traits>
 #include <vector>
 
-#include "tools/_raii.h"
 #include "tools/_tgt.h"
 #include "tools/_xlog.h"
 

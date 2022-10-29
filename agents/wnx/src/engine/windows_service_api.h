@@ -12,11 +12,9 @@
 #include <windows.h>
 
 #include <chrono>
-#include <cstdint>  // wchar_t when compiler options set weird
 #include <functional>
 
 #include "common/wtools_service.h"
-#include "tools/_raii.h"
 #include "tools/_xlog.h"
 
 // Common Namespace for whole Windows Agent
@@ -104,6 +102,6 @@ bool ConfigureServiceAsRestartable(SC_HANDLE handle);
 bool IsGlobalStopSignaled() noexcept;
 void CancelAll(bool cancel) noexcept;
 
-};  // namespace cma::srv
+}  // namespace cma::srv
 
 #endif  // windows_service_api_h__

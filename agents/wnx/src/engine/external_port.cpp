@@ -5,7 +5,6 @@
 #include <chrono>
 #include <filesystem>
 #include <iostream>
-#include <ranges>
 
 #include "agent_controller.h"
 #include "asio.h"

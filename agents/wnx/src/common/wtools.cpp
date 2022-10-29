@@ -15,6 +15,7 @@
 #include <shellapi.h>
 
 #include <cstdint>
+#include <fstream>
 #include <numeric>
 #include <random>
 #include <string>
@@ -625,7 +626,6 @@ void ServiceController::Start(DWORD /*agc*/, wchar_t ** /*argv*/) {
 
         // crash here - we have rights
         throw ::GetLastError();  // NOLINT
-        return;
     }
     XLOG::l.i("Service handlers registered");
 
@@ -1395,9 +1395,9 @@ std::wstring WmiStringFromObject(IWbemClassObject *object,
     for (const auto &name : names) {
         VARIANT value;
         memset(&value, 0,
-               sizeof(value));  // prevents potential usage
-                                // of the non-initialized data
-                                // when converting I4 to UI4
+               sizeof value);  // prevents potential usage
+                               // of the non-initialized data
+                               // when converting I4 to UI4
         // Get the value of the Name property
         auto hres = object->Get(name.c_str(), 0, &value, nullptr, nullptr);
         if (SUCCEEDED(hres)) {
@@ -1651,8 +1651,8 @@ std::tuple<IWbemClassObject *, WmiStatus> WmiGetNextObject(
         case WBEM_S_FALSE:
             return {nullptr, WmiStatus::ok};  // no more data
         case WBEM_NO_ERROR:
-            return (returned == 0) ? std::tuple{nullptr, WmiStatus::ok}  // eof
-                                   : std::tuple{wmi_object, WmiStatus::ok};
+            return returned == 0 ? std::tuple{nullptr, WmiStatus::ok}  // eof
+                                 : std::tuple{wmi_object, WmiStatus::ok};
         default:
             XLOG::t("Return {:#X}. Object doesn't exist",
                     static_cast<uint64_t>(hres));
@@ -1833,7 +1833,7 @@ uint32_t GetRegistryValue(std::wstring_view path, std::wstring_view value_name,
         ON_OUT_OF_SCOPE(::RegCloseKey(hkey));
         DWORD type = REG_DWORD;
         uint32_t buffer = dflt;
-        DWORD count = sizeof(buffer);
+        DWORD count = sizeof buffer;
         ret = ::RegQueryValueExW(hkey, value_name.data(), nullptr, &type,
                                  reinterpret_cast<LPBYTE>(&buffer), &count);
         if (ret == ERROR_SUCCESS && 0 != count && type == REG_DWORD) {
@@ -1942,7 +1942,7 @@ std::wstring GetRegistryValue(std::wstring_view path,
     ON_OUT_OF_SCOPE(::RegCloseKey(hkey));
     DWORD type = REG_SZ;
     wchar_t buffer[512] = {0};
-    DWORD count = sizeof(buffer);
+    DWORD count = sizeof buffer;
     auto ret = ::RegQueryValueExW(hkey, value_name.data(), nullptr, &type,
                                   reinterpret_cast<LPBYTE>(buffer), &count);
 
@@ -1964,7 +1964,7 @@ std::wstring GetRegistryValue(std::wstring_view path,
         type = REG_SZ;
         auto *buffer_big = new wchar_t[count / sizeof(wchar_t) + 2];
         ON_OUT_OF_SCOPE(delete[] buffer_big);
-        count = sizeof(count);
+        count = sizeof count;
         ret = ::RegQueryValueExW(hkey, value_name.data(), nullptr, &type,
                                  reinterpret_cast<LPBYTE>(buffer_big), &count);
 
@@ -2026,7 +2026,7 @@ bool KillProcess(std::wstring_view process_name, int exit_code) noexcept {
     ON_OUT_OF_SCOPE(CloseHandle(snapshot));
 
     PROCESSENTRY32 entry32 = {0};
-    entry32.dwSize = sizeof(entry32);
+    entry32.dwSize = sizeof entry32;
     auto result = Process32First(snapshot, &entry32);
     while (result != 0) {
         if (cma::tools::IsEqual(std::wstring_view(entry32.szExeFile),
@@ -2120,7 +2120,7 @@ bool ScanProcessList(const std::function<bool(const PROCESSENTRY32 &)> &op) {
     auto current_process_id = ::GetCurrentProcessId();
     // scan...
     PROCESSENTRY32 entry32 = {0};
-    entry32.dwSize = sizeof(entry32);
+    entry32.dwSize = sizeof entry32;
     auto result = ::Process32First(snapshot, &entry32);
     while (result != FALSE) {
         if (entry32.th32ProcessID != current_process_id && !op(entry32)) {
@@ -2392,7 +2392,6 @@ HRESULT ACLInfo::query() noexcept {
         HRESULT hr = addAceToList(static_cast<ACE_HEADER *>(ace));
         if (FAILED(hr)) {
             XLOG::l("Failed to add ace {} to list", i);
-            continue;
         }
     }
     return S_OK;
@@ -2533,7 +2532,6 @@ std::string ReadWholeFile(const fs::path &fname) noexcept {
         XLOG::l(XLOG_FUNC + "Exception '{}' generated in read file", e.what());
         return {};
     }
-    return {};
 }
 
 bool PatchFileLineEnding(const fs::path &fname) noexcept {
@@ -3344,7 +3342,7 @@ void ServiceControl::openService(std::wstring_view service_name, Mode mode) {
         error_ = ::GetLastError();
         XLOG::l("OpenService '{}' failed [{}]", wtools::ToUtf8(service_name),
                 error_);
-        return;
+
     }
 }
 

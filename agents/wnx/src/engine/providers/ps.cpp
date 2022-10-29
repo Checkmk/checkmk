@@ -382,4 +382,4 @@ std::string Ps::makeBody() {
     return ProducePsWmi(full_path_);
 }
 
-};  // namespace cma::provider
+}  // namespace cma::provider

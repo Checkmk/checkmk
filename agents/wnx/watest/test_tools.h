@@ -8,13 +8,12 @@
 //
 
 #include <chrono>
+#include <fstream>
 #include <functional>
 #include <vector>
 
 #include "cfg.h"
-#include "common/yaml.h"
 #include "eventlog/eventlogbase.h"
-#include "eventlog/eventlogstd.h"
 #include "eventlog/eventlogvista.h"
 #include "iosfwd"                // for ofstream
 #include "on_start.h"            // for OnStart, AppType, AppType::test
@@ -227,7 +226,7 @@ public:
     [[nodiscard]] bool loadConfig(const std::filesystem::path &yml);
     [[nodiscard]] bool reloadConfig() const;
     [[nodiscard]] bool loadFactoryConfig();
-    [[nodiscard]] bool loadContent(std::string_view config);
+    [[nodiscard]] bool loadContent(std::string_view content);
 
     [[nodiscard]] bool createRootFile(const std::filesystem::path &relative_p,
                                       const std::string &content) const;

@@ -4,20 +4,14 @@
 
 #include "providers/check_mk.h"
 
-#include <chrono>
 #include <string>
 
 //
 #include "asio.h"
 //
-#include <asio/ip/address_v4.hpp>
-#include <asio/ip/address_v6.hpp>
-#include <asio/ip/network_v4.hpp>
-#include <asio/ip/network_v6.hpp>
 
 #include "agent_controller.h"
 #include "cfg.h"
-#include "check_mk.h"
 #include "common/version.h"
 #include "install_api.h"
 #include "onlyfrom.h"
@@ -134,4 +128,4 @@ std::string CheckMk::makeBody() {
     return out;
 }
 
-};  // namespace cma::provider
+}  // namespace cma::provider

@@ -14,7 +14,6 @@
 #include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
-#include "tools/_tgt.h"
 
 namespace fs = std::filesystem;
 
@@ -101,8 +100,6 @@ std::string type_name() {
 // { "mrpe", "check", std::vector<mrpe_entry>, BlockMode::Nop, AddMode::Append }
 // { "mrpe", "include", KeyedListConfigurable<std::string>}
 // clang-format on
-
-#include "cvt.h"
 
 template <typename T>
 void printType(T x) {

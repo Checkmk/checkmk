@@ -7,7 +7,6 @@
 #ifndef wmi_h__
 #define wmi_h__
 
-#include <chrono>
 #include <string>
 #include <string_view>
 

@@ -8,9 +8,7 @@
 #include "providers/perf_cpuload.h"
 
 #include <pdh.h>
-#include <pdhmsg.h>
 
-#include <ranges>
 #include <string_view>
 #include <unordered_map>
 
@@ -167,4 +165,4 @@ std::string PerfCpuLoad::makeBody() {
 
     return out;
 }
-};  // namespace cma::provider
+}  // namespace cma::provider

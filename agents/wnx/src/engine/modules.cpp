@@ -12,13 +12,13 @@
 #include <fmt/xchar.h>
 
 #include <filesystem>
+#include <fstream>
 #include <ranges>
 #include <string>
 
 #include "cfg.h"
 #include "cma_core.h"
 #include "common/cfg_info.h"
-#include "common/fmt_ext.h"
 #include "common/wtools.h"
 #include "logger.h"
 #include "tools/_misc.h"
@@ -479,7 +479,7 @@ std::vector<char> ReadFileBeginning(const fs::path &name, size_t count) {
         return data;
     } catch (const std::ifstream::failure &e) {
         XLOG::l("Exception '{}' reading file '{}'", e.what(), name);
-    };
+    }
 
     return {};
 }

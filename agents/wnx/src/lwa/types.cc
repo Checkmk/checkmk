@@ -204,11 +204,11 @@ inline bool quoted(QuoteType qt) { return qt != QuoteType::none; }
 inline QuoteType getQuoteType(const std::string &s) {
     if (s.front() == '\'' && s.back() == '\'') {
         return QuoteType::singleQuoted;
-    } else if (s.front() == '"' && s.back() == '"') {
-        return QuoteType::doubleQuoted;
-    } else {
-        return QuoteType::none;
     }
+    if (s.front() == '"' && s.back() == '"') {
+        return QuoteType::doubleQuoted;
+    }
+    return QuoteType::none;
 }
 
 void removeQuotes(std::string &s, QuoteType qt) {
@@ -289,8 +289,6 @@ std::string ToYamlString(const winperf_counter &WinPerfCounter, bool) {
 
 template <>
 std::string ToYamlString(const mrpe_entry &Entry, bool) {
-    namespace fs = std::filesystem;
-
     std::string out = "- check = ";
     std::string p = Entry.command_line;
     auto data_path = wtools::ToUtf8(cma::cfg::GetUserDir());

@@ -89,7 +89,7 @@ public:
                     break;
                 }
             }
-        };
+        }
         if (save_start_ !=
             WinService::ReadUint32(cma::srv::kServiceName, name_start_)) {
             SetRegistryValue(reg_path_, ConvertToUTF16(name_start_),

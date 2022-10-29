@@ -178,7 +178,7 @@ void WriteToSocket(const std::string &ip) {
     char text[] = "a";
     socket.write_some(asio::buffer(text, 1), error);
     socket.close();
-    tst::WaitForSuccessSilent(100ms, []() { return !ip_received.empty(); });
+    tst::WaitForSuccessSilent(100ms, [] { return !ip_received.empty(); });
 }
 auto RegisterIp(const std::string ip) -> std::vector<uint8_t> {
     std::error_code ec;
@@ -190,7 +190,7 @@ auto RegisterIp(const std::string ip) -> std::vector<uint8_t> {
         ip_received = "Forbidden";
     }
     return {};
-};
+}
 
 }  // namespace
 

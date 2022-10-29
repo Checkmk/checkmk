@@ -3,8 +3,6 @@
 //
 #include "pch.h"
 
-#include <time.h>
-
 #include <chrono>
 #include <filesystem>
 
@@ -20,7 +18,6 @@
 #include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
-#include "tools/_raii.h"
 
 namespace cma::player {  // to become friendly for wtools classes
 TEST(PlayerTest, Pipe) {

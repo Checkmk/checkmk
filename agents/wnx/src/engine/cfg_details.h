@@ -55,77 +55,77 @@ public:
     /// for reloading
     void cleanAll();
 
-    [[nodiscard]] inline std::filesystem::path getSystemPlugins() const {
+    [[nodiscard]] std::filesystem::path getSystemPlugins() const {
         return root_.empty() ? L"" : root_ / dirs::kAgentPlugins;
     }
 
-    [[nodiscard]] inline std::filesystem::path getUserPlugins() const {
+    [[nodiscard]] std::filesystem::path getUserPlugins() const {
         return getData() / dirs::kUserPlugins;
     }
 
-    [[nodiscard]] inline std::filesystem::path getProviders() const {
+    [[nodiscard]] std::filesystem::path getProviders() const {
         return root_.empty() ? L"" : root_ / dirs::kAgentProviders;
     }
 
-    [[nodiscard]] inline std::filesystem::path getMrpe() const {
+    [[nodiscard]] std::filesystem::path getMrpe() const {
         return root_.empty() ? L"" : root_ / dirs::kAgentMrpe;
     }
-    [[nodiscard]] inline std::filesystem::path getRoot() const { return root_; }
+    [[nodiscard]] std::filesystem::path getRoot() const { return root_; }
 
-    [[nodiscard]] inline std::filesystem::path getUser() const { return data_; }
+    [[nodiscard]] std::filesystem::path getUser() const { return data_; }
 
-    [[nodiscard]] inline std::filesystem::path getLocal() const {
+    [[nodiscard]] std::filesystem::path getLocal() const {
         return getData() / dirs::kLocal;
     }
 
-    [[nodiscard]] inline std::filesystem::path getSpool() const {
+    [[nodiscard]] std::filesystem::path getSpool() const {
         return getData() / dirs::kSpool;
     }
 
-    [[nodiscard]] inline std::filesystem::path getTemp() const {
+    [[nodiscard]] std::filesystem::path getTemp() const {
         return getData() / dirs::kTemp;
     }
 
-    [[nodiscard]] inline std::filesystem::path getBakery() const {
+    [[nodiscard]] std::filesystem::path getBakery() const {
         return data_ / dirs::kBakery;
     }
 
-    [[nodiscard]] inline std::filesystem::path getState() const {
+    [[nodiscard]] std::filesystem::path getState() const {
         return data_ / dirs::kState;
     }
 
-    [[nodiscard]] inline std::filesystem::path getAuState() const {
+    [[nodiscard]] std::filesystem::path getAuState() const {
         return data_ / dirs::kAuStateLocation;
     }
 
-    [[nodiscard]] inline std::filesystem::path getPluginConfigPath() const {
+    [[nodiscard]] std::filesystem::path getPluginConfigPath() const {
         return data_ / dirs::kPluginConfig;
     }
 
-    [[nodiscard]] inline std::filesystem::path getLog() const {
+    [[nodiscard]] std::filesystem::path getLog() const {
         return data_ / dirs::kLog;
     }
 
-    [[nodiscard]] inline std::filesystem::path getBackup() const {
+    [[nodiscard]] std::filesystem::path getBackup() const {
         return data_ / dirs::kBackup;
     }
 
-    [[nodiscard]] inline std::filesystem::path getUserBin() const {
+    [[nodiscard]] std::filesystem::path getUserBin() const {
         return data_ / dirs::kUserBin;
     }
 
-    [[nodiscard]] inline std::filesystem::path getUpdate() const {
+    [[nodiscard]] std::filesystem::path getUpdate() const {
         return data_ / dirs::kUpdate;
     }
 
-    [[nodiscard]] inline std::filesystem::path getPublicLogs() const {
+    [[nodiscard]] std::filesystem::path getPublicLogs() const {
         return public_logs_;
     }
-    [[nodiscard]] inline std::filesystem::path getPrivateLogs() const {
+    [[nodiscard]] std::filesystem::path getPrivateLogs() const {
         return private_logs_;
     }
 
-    [[nodiscard]] inline std::filesystem::path getData() const { return data_; }
+    [[nodiscard]] std::filesystem::path getData() const { return data_; }
 
 private:
     /// returns path if folder was created successfully
@@ -180,11 +180,10 @@ public:
                 return;
             }
 
-            auto raw_data = cma::tools::ReadFileInVector(path_.wstring());
+            auto raw_data = tools::ReadFileInVector(path_.wstring());
             if (raw_data.has_value()) {
                 data_ = wtools::ConditionallyConvertFromUTF16(raw_data.value());
                 checkData();
-                return;
             }
         }
 
@@ -454,8 +453,8 @@ private:
     mutable std::mutex lock_;
 
     YAML::Node yaml_;
-    details::Folders folders_;
-    std::stack<details::Folders> folders_stack_;
+    Folders folders_;
+    std::stack<Folders> folders_stack_;
 
     std::wstring root_yaml_path_;    // located in root
     std::wstring bakery_yaml_path_;  // located in bakery

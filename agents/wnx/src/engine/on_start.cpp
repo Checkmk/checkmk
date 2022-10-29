@@ -5,9 +5,9 @@
 
 #include <atomic>
 #include <string>
-#include <string_view>
 
 #include "cfg.h"
+#include "cfg_details.h"
 #include "cma_core.h"
 #include "common/cfg_info.h"
 #include "windows_service_api.h"
@@ -92,7 +92,7 @@ bool FindAndPrepareWorkingFolders(AppType app_type) {
             XLOG::l.crit("Invalid value of the AppType automatic [{}]",
                          static_cast<int>(app_type));
             return false;
-    };
+    }
     LogFolders();
     return true;
 }

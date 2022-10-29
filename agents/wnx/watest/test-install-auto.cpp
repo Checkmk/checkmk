@@ -138,8 +138,8 @@ protected:
                             "This is  script");
     }
 
-    tst::TempCfgFs *fs() const { return fs_.get(); };
-    ExecuteUpdate *eu() const { return eu_.get(); };
+    tst::TempCfgFs *fs() const { return fs_.get(); }
+    ExecuteUpdate *eu() const { return eu_.get(); }
 
 private:
     std::unique_ptr<tst::TempCfgFs> fs_;

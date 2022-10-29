@@ -256,14 +256,14 @@ namespace xlog {
     constexpr uint32_t kStdioPrint = 2;
     constexpr uint32_t kFilePrint = 4;
     constexpr uint32_t kEventPrint = 8;
-    };  // namespace Directions
+    }  // namespace Directions
     constexpr auto XLOG_DEFAULT_DIRECTIONS = Directions::kDebuggerPrint;
 
     namespace Flags {
     constexpr uint32_t kNoPrefix = 1;
     constexpr uint32_t kNoCr = 2;
     constexpr uint32_t kAddCr = 4;
-    };  // namespace Flags
+    }  // namespace Flags
 
     inline std::string CurrentTime() {
         using std::chrono::system_clock;
@@ -653,13 +653,13 @@ namespace xlog {
             val_ += ": ";
             val_ += y;
             return val_.c_str();
-        };
+        }
 
         Concatenator &operator+(const Concatenator &y) {
             val_ += " ";
             val_ += y.get();
             return *this;
-        };
+        }
         [[nodiscard]] const WorkString<T> &get() const { return val_; }
 
     private:

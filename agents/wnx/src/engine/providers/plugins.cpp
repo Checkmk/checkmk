@@ -16,7 +16,6 @@
 #include "common/wtools.h"
 #include "logger.h"
 #include "service_processor.h"
-#include "tools/_raii.h"
 
 using namespace std::literals;
 
@@ -231,7 +230,7 @@ namespace config {
 // i future may be controlled using yml
 bool g_local_no_send_if_empty_body = true;
 bool g_local_send_empty_at_end = false;
-};  // namespace config
+}  // namespace config
 
 void LocalProvider::updateSectionStatus() {
     std::string body;

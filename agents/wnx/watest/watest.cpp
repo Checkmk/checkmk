@@ -14,7 +14,6 @@
 #include "on_start.h"     // for OnStart, AppType, AppType::test
 
 using namespace std::chrono_literals;
-namespace carrier = cma::carrier;
 
 namespace cma {
 AppType AppDefaultType() { return AppType::test; }

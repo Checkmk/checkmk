@@ -6,8 +6,8 @@
 #include <VersionHelpers.h>
 
 #include <filesystem>
+#include <fstream>
 #include <iosfwd>
-#include <iostream>
 #include <ranges>
 
 #include "cfg.h"
@@ -16,6 +16,7 @@
 #include "common/cma_yml.h"
 #include "common/mailslot_transport.h"
 #include "common/wtools.h"
+#include "read_file.h"
 
 namespace fs = std::filesystem;
 namespace rs = std::ranges;

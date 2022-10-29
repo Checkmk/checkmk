@@ -7,11 +7,11 @@
 
 #include "Configuration.h"
 
-#include <cinttypes>
 #include <ws2spi.h>
 
 #include <algorithm>
 #include <cassert>
+#include <cinttypes>
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
@@ -53,10 +53,10 @@ inline CheckResult checkSpecialVariables(const std::string &variable,
     if (variable == "host") {
         if (checkHostRestriction(hostname, value)) {
             return CheckResult::Continue;
-        } else {
-            return CheckResult::Return;
         }
-    } else if (variable == "print") {
+        return CheckResult::Return;
+    }
+    if (variable == "print") {
         std::cout << value << std::endl;
         return CheckResult::Continue;
     }
@@ -83,7 +83,7 @@ bool assignVariable(const std::string &variable, const std::string &value,
 
 bool valueLoadOrder(const EntryPair &e1, const EntryPair &e2) {
     return Entry::LoadOrder()(e1.second, e2.second);
-};
+}
 
 std::vector<EntryPair> collectKeyValuePairs(const Entry &section,
                                             const CSimpleIniA &ini) {
@@ -970,9 +970,8 @@ const Mapping &FindMapping(const std::string Section, const std::string Key) {
     if (found == G_Mapper.end()) {
         XLOG::stdio("UNKNOWN KEY {}.{}", Section, Key);
         return G_MissingMapping;
-    } else {
-        return found->second;
     }
+    return found->second;
 }
 
 void AddKeyedPattern(YAML::Node Node, const std::string Key,

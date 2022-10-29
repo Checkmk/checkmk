@@ -7,7 +7,6 @@
 #include "cfg.h"
 #include "commander.h"
 #include "common/mailslot_transport.h"
-#include "logger.h"
 #include "service_processor.h"
 
 using namespace std::chrono_literals;

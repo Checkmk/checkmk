@@ -26,6 +26,6 @@ private:
     std::string makeBody() override;
 };
 
-};  // namespace cma::provider
+}  // namespace cma::provider
 
 #endif  // mem_h__

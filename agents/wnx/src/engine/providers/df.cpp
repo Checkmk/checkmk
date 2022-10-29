@@ -12,9 +12,7 @@
 #include <string>
 
 #include "common/wtools.h"
-#include "tools/_raii.h"
 #include "tools/_win.h"
-#include "tools/_xlog.h"
 
 namespace cma::provider {
 
@@ -231,4 +229,4 @@ std::string Df::makeBody() {
     return output;
 }
 
-};  // namespace cma::provider
+}  // namespace cma::provider

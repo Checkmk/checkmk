@@ -194,6 +194,6 @@ struct RawLogWatchData {
     LogWatchContext context_;
 };
 
-};  // namespace cma::provider
+}  // namespace cma::provider
 
 #endif  // logwatch_event_h__

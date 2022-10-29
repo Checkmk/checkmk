@@ -15,7 +15,6 @@
 
 #include "cma_core.h"
 #include "providers/internal.h"
-#include "section_header.h"
 
 namespace cma::provider::details {
 

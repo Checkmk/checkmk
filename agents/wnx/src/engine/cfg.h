@@ -9,12 +9,10 @@
 #include <optional>
 #include <ranges>
 #include <string>
-#include <string_view>
 #include <utility>
 
 #include "common/cfg_info.h"
 #include "common/wtools.h"
-#include "common/yaml.h"
 #include "logger.h"
 #include "on_start.h"
 #include "onlyfrom.h"
@@ -759,7 +757,7 @@ private:
     std::filesystem::path logfile_dir_;
     std::string logfile_as_string_;
     std::wstring logfile_as_wide_;
-};  // namespace cma::cfg
+};
 
 struct WinPerf : public Group {
 public:
@@ -1081,5 +1079,3 @@ bool UninstallProduct(std::string_view name);
 std::filesystem::path CreateWmicUninstallFile(
     const std::filesystem::path &temp_dir, std::string_view product_name);
 }  // namespace cma::cfg
-
-#include "cfg_details.h"

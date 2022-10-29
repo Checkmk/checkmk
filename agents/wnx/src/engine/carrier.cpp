@@ -2,7 +2,6 @@
 
 #include "carrier.h"
 
-#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <ranges>
@@ -200,14 +199,14 @@ bool CoreCarrier::fileSlotSend(DataType data_type, const std::string &peer_name,
                 f.open(carrier_address_ + ".log", std::ios::app);
                 break;
             case DataType::kCommand:
-                if (auto rcp = cma::commander::ObtainRunCommandProcessor();
+                if (auto rcp = commander::ObtainRunCommandProcessor();
                     rcp != nullptr) {
                     std::string cmd{static_cast<const char *>(data), length};
                     rcp(peer_name, cmd);
                 }
                 break;
 
-            default:
+            case DataType::kYaml:
                 f.open(carrier_address_ + ".unknown",
                        std::ios::app | std::ios::binary);
                 break;
@@ -245,7 +244,7 @@ bool CoreCarrier::asioSlotSend(DataType /*data_type*/,
 }
 
 void InformByMailSlot(std::string_view mail_slot, std::string_view cmd) {
-    carrier::CoreCarrier cc;
+    CoreCarrier cc;
 
     auto internal_port = BuildPortName(std::string{kCarrierMailslotName},
                                        std::string{mail_slot});

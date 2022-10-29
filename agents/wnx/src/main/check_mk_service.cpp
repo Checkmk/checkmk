@@ -6,15 +6,12 @@
 
 #include "check_mk_service.h"
 
-#include <process.h>  // for exit
-
 #include <iostream>
 
 #include "cfg.h"
 #include "cma_core.h"
 #include "common/cfg_info.h"
 #include "common/cmdline_info.h"
-#include "common/yaml.h"
 #include "cstdint"  // for int64_t, uint32_t, uint64_t
 #include "install_api.h"
 #include "logger.h"
@@ -35,7 +32,7 @@ void PrintBlock(std::string_view title, Colors title_color,
 }
 
 void PrintMain() {
-    PrintBlock("Normal Usage:\n", Colors::green, []() {
+    PrintBlock("Normal Usage:\n", Colors::green, [] {
         return fmt::format(
             "\t{1} <{2}|{3}|{4}|{5}|{6}>\n"
             "\t{2:<{0}} - generates test output\n"
@@ -52,7 +49,7 @@ void PrintMain() {
 }
 
 void PrintAgentUpdater() {
-    PrintBlock("Agent Updater Usage:\n", Colors::green, []() {
+    PrintBlock("Agent Updater Usage:\n", Colors::green, [] {
         return fmt::format(
             "\t{1} <{2}|{3}> [args]\n"
             "\t{2}|{3:<{0}} - register Agent using plugins\\cmk_update_agent.checmk.py\n",
@@ -64,7 +61,7 @@ void PrintAgentUpdater() {
 }
 
 void PrintSelfCheck() {
-    PrintBlock("Self Checking:\n", Colors::cyan, []() {
+    PrintBlock("Self Checking:\n", Colors::cyan, [] {
         return fmt::format(
             "\t{1} {2} <{3}|{4}|{5} [number of seconds]>\n"
             "\t{2:<{0}} - check test\n"
@@ -77,7 +74,7 @@ void PrintSelfCheck() {
 }
 
 void PrintAdHoc() {
-    PrintBlock("Ad Hoc Testing:\n", Colors::cyan, []() {
+    PrintBlock("Ad Hoc Testing:\n", Colors::cyan, [] {
         return fmt::format(
             "\t{1} <{2}> [{3}|{4}]\n"
             "\t{2:{0}} - run as application (adhoc mode)\n"
@@ -92,7 +89,7 @@ void PrintAdHoc() {
 
 // obsolete
 void PrintLegacyTesting() {
-    PrintBlock("Classic/Legacy Testing:\n", Colors::cyan, []() {
+    PrintBlock("Classic/Legacy Testing:\n", Colors::cyan, [] {
         return fmt::format(
             "\t{1} {2}\n"
             "\t{2:{0}} - legacy(standard) test\n",
@@ -105,7 +102,7 @@ void PrintLegacyTesting() {
 void PrintReinstallWATO() {
     PrintBlock(
         "Restore WATO Configuration(only for experienced users):\n",
-        Colors::pink, []() {
+        Colors::pink, [] {
             return fmt::format(
                 "\t{1} {2}\n"
                 "\t{2:{0}} - agent tries to restore configuration created by WATO(bakery)\n",
@@ -118,7 +115,7 @@ void PrintReinstallWATO() {
 void PrintInstallUninstall() {
     PrintBlock(
         "Install or remove service(only for experienced users):\n",
-        Colors::pink, []() {
+        Colors::pink, [] {
             return fmt::format(
                 "\t{1} <{2}|{3}>\n"
                 "\t{2:<{0}} - install as a service, Administrative Rights are required\n"
@@ -131,21 +128,20 @@ void PrintInstallUninstall() {
 }
 
 void PrintShowConfig() {
-    PrintBlock(
-        "Display Config and Environment Variables:\n", Colors::cyan, []() {
-            return fmt::format(
-                "\t{1} {2} [section]\n"
-                "\t{2:<{0}} - show configuration parameters\n"
-                "\tsection - optional parameter like global or ps\n"
-                "\t\tExample: {1} {2} fileinfo\n",
-                kParamShift,
-                kServiceExeName,  // service name from th project definitions
-                kShowConfigParam);
-        });
+    PrintBlock("Display Config and Environment Variables:\n", Colors::cyan, [] {
+        return fmt::format(
+            "\t{1} {2} [section]\n"
+            "\t{2:<{0}} - show configuration parameters\n"
+            "\tsection - optional parameter like global or ps\n"
+            "\t\tExample: {1} {2} fileinfo\n",
+            kParamShift,
+            kServiceExeName,  // service name from th project definitions
+            kShowConfigParam);
+    });
 }
 
 void PrintRealtimeTesting() {
-    PrintBlock("Realtime Testing:\n", Colors::cyan, []() {
+    PrintBlock("Realtime Testing:\n", Colors::cyan, [] {
         return fmt::format(
             "\t{1} {2}\n"
             "\t{2:{0}} - test realtime data with all sections and encryption\n",
@@ -158,7 +154,7 @@ void PrintRealtimeTesting() {
 void PrintCvt() {
     PrintBlock(
         "Convert Legacy Agent Ini File into Agent Yml file:\n", Colors::pink,
-        []() {
+        [] {
             return fmt::format(
                 "\t{0} {1} [{2}] <inifile> [yamlfile]\n"
                 "\tinifile - from Legacy Agent\n"
@@ -170,7 +166,7 @@ void PrintCvt() {
 }
 
 void PrintLwaActivate() {
-    PrintBlock("Activate/Deactivate Legacy Agent:\n", Colors::pink, []() {
+    PrintBlock("Activate/Deactivate Legacy Agent:\n", Colors::pink, [] {
         return fmt::format(
             "\t{1} <{2}|{3}>\n"
             "\t{2:{0}} - stop and deactivate legacy agent\n"
@@ -182,7 +178,7 @@ void PrintLwaActivate() {
 }
 
 void PrintFirewall() {
-    PrintBlock("Configure Firewall Rule:\n", Colors::pink, []() {
+    PrintBlock("Configure Firewall Rule:\n", Colors::pink, [] {
         return fmt::format(
             "\t{1} [{2}|{3}]\n"
             "\t{2:{0}} - configure firewall\n"
@@ -192,22 +188,21 @@ void PrintFirewall() {
 }
 
 void PrintUpgrade() {
-    PrintBlock("Upgrade Legacy Agent(migration):\n", Colors::pink, []() {
+    PrintBlock("Upgrade Legacy Agent(migration):\n", Colors::pink, [] {
         return fmt::format(
             "\t{1} {2} [{3}]\n"
             "\t{2:{0}} - upgrading/migration\n"
             "\t\t{3:{0}} - upgrading/migration is forced( file '{2}' is ignored)\n",
             kParamShift,
             kServiceExeName,  // service name from th project definitions
-            kUpgradeParam, kUpgradeParamForce,
-            cma::cfg::files::kUpgradeProtocol);
+            kUpgradeParam, kUpgradeParamForce, cfg::files::kUpgradeProtocol);
     });
 }
 
 void PrintCap() {
     PrintBlock(
         "Install Bakery Files and plugins.cap in install folder:\n",
-        Colors::pink, []() {
+        Colors::pink, [] {
             return fmt::format(
                 "\t{0} {1}\n",
                 kServiceExeName,  // service name from th project definitions
@@ -216,7 +211,7 @@ void PrintCap() {
 }
 
 void PrintSectionTesting() {
-    PrintBlock("Test sections individually:\n", Colors::pink, []() {
+    PrintBlock("Test sections individually:\n", Colors::pink, [] {
         return fmt::format(
             "\t{1} {2} {3} [{4} [{5}]] \n"
             "\t\t{3:{0}} - any section name(df, fileinfo and so on)\n"
@@ -332,38 +327,38 @@ auto ToUInt(const T value) noexcept {
 int CheckMainService(const std::wstring &param, int interval) {
     auto what = wtools::ToUtf8(param);
 
-    if (what == cma::cmdline::kCheckParamMt) {
-        return cma::srv::TestMt();
+    if (what == cmdline::kCheckParamMt) {
+        return srv::TestMt();
     }
 
-    if (what == cma::cmdline::kCheckParamIo) {
-        return cma::srv::TestIo();
+    if (what == cmdline::kCheckParamIo) {
+        return srv::TestIo();
     }
 
-    if (what == cma::cmdline::kCheckParamSelf) {
-        return cma::srv::TestMainServiceSelf(interval);
+    if (what == cmdline::kCheckParamSelf) {
+        return srv::TestMainServiceSelf(interval);
     }
 
     XLOG::setup::DuplicateOnStdio(true);
     XLOG::setup::ColoredOutputOnStdio(true);
     XLOG::l("Unsupported second parameter '{}'\n\t Allowed {}, {} or {}", what,
-            cma::cmdline::kCheckParamIo, cma::cmdline::kCheckParamMt,
-            cma::cmdline::kCheckParamSelf);
+            cmdline::kCheckParamIo, cmdline::kCheckParamMt,
+            cmdline::kCheckParamSelf);
 
     return 0;
 }
 
 namespace srv {
 int RunService(std::wstring_view app_name) {
-    cma::details::SetModus(Modus::service);  // we know that we are service
+    details::SetModus(Modus::service);  // we know that we are service
 
-    auto ret = ServiceAsService(app_name, 1000ms, []() {
+    auto ret = ServiceAsService(app_name, 1000ms, [] {
         // Auto Update when  MSI file is located by specified address
         // this part of code have to be tested manually
-        auto [command, started] = cma::install::CheckForUpdateFile(
-            cma::install::kDefaultMsiFileName,    // file we are looking for
-            cma::cfg::GetUpdateDir(),             // dir with file
-            cma::install::UpdateProcess::execute  // operation if file found
+        auto [command, started] = install::CheckForUpdateFile(
+            install::kDefaultMsiFileName,    // file we are looking for
+            cfg::GetUpdateDir(),             // dir with file
+            install::UpdateProcess::execute  // operation if file found
         );
 
         if (started) {
@@ -376,7 +371,7 @@ int RunService(std::wstring_view app_name) {
     });
 
     if (ret == 0) {
-        cma::cmdline::ServiceUsage(L"");
+        cmdline::ServiceUsage(L"");
     }
 
     return ret == 0 ? 0 : 1;
@@ -385,7 +380,7 @@ int RunService(std::wstring_view app_name) {
 
 namespace {
 void WaitForPostInstall() {
-    if (!cma::install::IsPostInstallRequired()) {
+    if (!install::IsPostInstallRequired()) {
         return;
     }
 
@@ -400,7 +395,7 @@ void WaitForPostInstall() {
             std::cout << "Service is failed or nor running";
             ::exit(73);  // NOLINT
         }
-    } while (cma::install::IsPostInstallRequired());
+    } while (install::IsPostInstallRequired());
 }
 
 int ProcessWinperf(const std::vector<std::wstring> &args) {
@@ -449,7 +444,7 @@ int ProcessWinperf(const std::vector<std::wstring> &args) {
 // we want to test main function too.
 // so we have main, but callable
 int MainFunction(int argc, wchar_t const *argv[]) {
-    std::set_terminate([]() {
+    std::set_terminate([] {
         //
         XLOG::details::LogWindowsEventCritical(999, "Win Agent is Terminated.");
         XLOG::l.bp("Win Agent is Terminated.");
@@ -457,7 +452,7 @@ int MainFunction(int argc, wchar_t const *argv[]) {
     });
 
     if (argc == 1) {
-        return cma::srv::RunService(argv[0]);
+        return srv::RunService(argv[0]);
     }
 
     WaitForPostInstall();
@@ -475,7 +470,7 @@ int MainFunction(int argc, wchar_t const *argv[]) {
         return ProcessWinperf(args);
     }
 
-    using namespace cma::cmdline;
+    using namespace cmdline;
 
     OnStartApp();  // path from EXE
 
@@ -509,14 +504,13 @@ int MainFunction(int argc, wchar_t const *argv[]) {
         } else if (second_param == kExecParamShowWarn) {
             log_on_screen = srv::StdioLog::yes;
         } else if (second_param == kExecParamIntegration) {
-            if (cma::tools::win::GetEnv(env::integration_base_dir).empty()) {
+            if (tools::win::GetEnv(env::integration_base_dir).empty()) {
                 fmt::print(
                     L"Integration is requested, but env var '{}' is absent\n",
                     env::integration_base_dir);
                 ::exit(12);  // NOLINT
-            } else {
-                cma::details::SetModus(cma::Modus::integration);
             }
+            details::SetModus(Modus::integration);
         }
 
         return srv::ExecMainService(log_on_screen);
@@ -658,7 +652,5 @@ int MainFunction(int argc, wchar_t const *argv[]) {
 }  // namespace cma
 
 #if !defined(CMK_TEST)
-int wmain(int argc, wchar_t const *argv[]) {
-    return cma::MainFunction(argc, argv);
-}
+int wmain(int argc, wchar_t const *argv[]) { return cma::MainFunction(argc, argv); }
 #endif

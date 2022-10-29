@@ -4,7 +4,6 @@
 //
 #include "pch.h"
 
-#include <chrono>
 #include <numeric>
 
 #include "agent_controller.h"
@@ -40,12 +39,11 @@ public:
     bool shutdowned_ = false;
     bool continued_ = false;
     static int s_counter;
-};  // namespace wtoolsclassTestProcessor:publiccma::srv::BaseServiceProcessor
+};
 int TestProcessor2::s_counter = 0;
 }  // namespace wtools
 
 namespace cma::world {  // to become friendly for wtools classes
-#include <iostream>
 
 TEST(ExternalPortTest, StartStop) {
     world::ReplyFunc reply =

@@ -13,19 +13,14 @@
 #include "providers/check_mk.h"
 #include "providers/df.h"
 #include "providers/internal.h"
-#include "providers/logwatch_event.h"
 #include "providers/mem.h"
-#include "providers/mrpe.h"
-#include "providers/ohm.h"
 #include "providers/p_perf_counters.h"
 #include "providers/plugins.h"
 #include "providers/services.h"
-#include "providers/skype.h"
-#include "providers/wmi.h"
 #include "service_processor.h"
 #include "test_tools.h"
 #include "tools/_misc.h"
-#include "tools/_process.h"
+
 namespace fs = std::filesystem;
 
 namespace cma::provider {
@@ -164,7 +159,7 @@ public:
         }
 
         return {};
-    };
+    }
 
 private:
     srv::SectionProvider<CheckMk> check_mk_provider_;

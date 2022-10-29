@@ -33,6 +33,6 @@ std::string AccumulateCounters(
 
 }  // namespace provider
 
-};  // namespace cma
+}  // namespace cma
 
 #endif  // perf_counters_cl_h__

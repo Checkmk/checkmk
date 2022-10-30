@@ -176,7 +176,7 @@ public:
         return false;
     }
     enum class StartMode { job, detached, controller };
-    bool startEx(std::wstring_view Id, const std::wstring &exec,
+    bool startEx(std::wstring_view uniq_id, const std::wstring &exec,
                  StartMode start_mode,
                  const wtools::InternalUser &internal_user);
     bool startStd(std::wstring_view Id, const std::wstring &exec,
@@ -565,7 +565,7 @@ private:
     void correctRetry();
     /// on reading box
     /// MUST BE CALLED INSIDE LOCK_GUARD!
-    void storeData(uint32_t Id, const std::vector<char> &Data);
+    void storeData(uint32_t proc_id, const std::vector<char> &data);
     /// on fail async
     /// MUST BE CALLED INSIDE LOCK_GUARD!
     void resetData();

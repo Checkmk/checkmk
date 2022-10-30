@@ -23,7 +23,7 @@ using std::chrono::steady_clock;
 namespace cma::srv {
 
 bool AsyncAnswer::isAnswerOlder(milliseconds period) const {
-    auto tp = steady_clock::now();
+    const auto tp = steady_clock::now();
 
     std::lock_guard lk(lock_);
     return duration_cast<milliseconds>(tp - tp_id_) > period;

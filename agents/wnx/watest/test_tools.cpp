@@ -69,7 +69,7 @@ public:
     }
 
     void TearDown() override {
-        if (temp_dir_.u8string().find(temp_test_prefix_)) {
+        if (wtools::ToStr(temp_dir_).find(temp_test_prefix_)) {
             std::error_code ec;
             fs::remove_all(temp_dir_, ec);
             if (ec) {

@@ -11,6 +11,7 @@
 #include "cfg.h"
 #include "common/mailslot_transport.h"
 #include "test_tools.h"
+#include "tools/_raii.h"
 
 using namespace std::chrono_literals;
 namespace fs = std::filesystem;

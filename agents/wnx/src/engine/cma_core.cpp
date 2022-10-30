@@ -1217,7 +1217,6 @@ void PluginEntry::correctRetry() {
         return;
     }
 
-    const auto retry = retry_;
     if (timeout_ > 0) {
         // add 1 to reserve time for start process
         auto max_retries = cache_age_ / (timeout_ + 1);
@@ -1400,9 +1399,8 @@ DataBlock RunSyncPlugins(PluginMap &plugins, int &total, int timeout) {
     return out;
 }
 
-void RunDetachedPlugins(const PluginMap &/*plugins_map*/, int &/*start_count*/) {
-
-}
+void RunDetachedPlugins(const PluginMap & /*plugins_map*/,
+                        int & /*start_count*/) {}
 
 // To get data from async plugins with cache_age=0
 void PickupAsync0data(int timeout, PluginMap &plugins, std::vector<char> &out,

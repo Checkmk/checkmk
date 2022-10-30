@@ -26,8 +26,8 @@ public:
     static constexpr std::string_view kRegStart = "Start";
 
     // API to simple access to configuration
-    static uint32_t ReadUint32(std::wstring_view service,
-                               std::string_view name);
+    static uint32_t ReadUint32(std::wstring_view service_name,
+                               std::string_view value_name);
 
     // no copy
     WinService(const WinService &rhs) = delete;

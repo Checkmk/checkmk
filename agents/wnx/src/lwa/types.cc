@@ -11,7 +11,6 @@
 
 #include <algorithm>
 #include <cstring>
-#include <sstream>
 #include <string>
 
 #include "cfg.h"

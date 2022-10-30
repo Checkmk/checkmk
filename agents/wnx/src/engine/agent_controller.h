@@ -4,8 +4,8 @@
 // source code package.
 
 #pragma once
-#ifndef agent_controller_h
-#define agent_controller_h
+#ifndef AGENT_CONTROLLER_H
+#define AGENT_CONTROLLER_H
 #include <cstdint>
 #include <filesystem>
 #include <optional>
@@ -79,4 +79,4 @@ void CreateArtifacts(const std::filesystem::path &marker,
                      bool controller_exists) noexcept;
 }  // namespace cma::ac
 
-#endif  // agent_controller_h
+#endif  // AGENT_CONTROLLER_H

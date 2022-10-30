@@ -138,8 +138,8 @@ protected:
                             "This is  script");
     }
 
-    tst::TempCfgFs *fs() const { return fs_.get(); }
-    ExecuteUpdate *eu() const { return eu_.get(); }
+    [[nodiscard]] tst::TempCfgFs *fs() const { return fs_.get(); }
+    [[nodiscard]] ExecuteUpdate *eu() const { return eu_.get(); }
 
 private:
     std::unique_ptr<tst::TempCfgFs> fs_;
@@ -286,8 +286,8 @@ protected:
         bak_file_ += ".bak";
     }
 
-    const auto &logFile() const noexcept { return log_file_; }
-    bool existsBak() const noexcept {
+    [[nodiscard]] const auto &logFile() const noexcept { return log_file_; }
+    [[nodiscard]] bool existsBak() const noexcept {
         std::error_code ec;
         return fs::exists(bak_file_, ec);
     }

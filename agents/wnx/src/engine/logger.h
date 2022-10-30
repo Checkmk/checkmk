@@ -16,6 +16,7 @@
 #include "common/fmt_ext.h"
 #include "common/wtools.h"
 #include "fmt/color.h"
+#include "tools/_tgt.h"
 #include "tools/_xlog.h"
 
 #if defined(WIN32) && defined(FMT_FORMAT_H_)
@@ -266,7 +267,7 @@ constexpr size_t factory_max_file_size = 256 * 1024 * 1024;
 
 namespace setup {
 void DuplicateOnStdio(bool on) noexcept;
-void ColoredOutputOnStdio(bool On) noexcept;
+void ColoredOutputOnStdio(bool on) noexcept;
 void SetContext(std::string_view context) noexcept;
 
 }  // namespace setup
@@ -415,7 +416,7 @@ public:
     }
     // **********************************
 
-    static inline std::string SafePrintToDebuggerAndEventLog(
+    static std::string SafePrintToDebuggerAndEventLog(
         const std::string &text) noexcept {
         try {
             return fmt::format(
@@ -429,14 +430,15 @@ public:
     }
 
     template <typename... Args>
-    auto operator()(const std::string &format, Args &&...args) const noexcept {
+    [[maybe_unused]] auto operator()(const std::string &format,
+                                     Args &&...args) const noexcept {
         const auto va = fmt::make_format_args(args...);
         return sendToLogModding({}, format, va);
     }
 
     template <typename... Args>
-    auto operator()(int mods, const std::string &format,
-                    Args &&...args) const noexcept {
+    [[maybe_unused]] auto operator()(int mods, const std::string &format,
+                                     Args &&...args) const noexcept {
         auto va = fmt::make_format_args(args...);
         return sendToLogModding(
             ModData{.mods = mods, .type = ModData::ModType::assign}, format,
@@ -690,7 +692,7 @@ void EnableTraceLog(bool enable) noexcept;
 void ChangeLogFileName(const std::string &log_file_name) noexcept;
 
 /// \brief change debug level
-void ChangeDebugLogLevel(int level) noexcept;
+void ChangeDebugLogLevel(int debug_level) noexcept;
 
 /// \brief disable enable windbg for all loggers
 void EnableWinDbg(bool enable) noexcept;

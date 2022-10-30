@@ -67,7 +67,8 @@ public:
         std::function<void(std::string, std::string, std::string, std::string)>
             Sink);
 
-    bool ReadSettings(const std::filesystem::path &Path, bool Local) noexcept;
+    bool ReadSettings(const std::filesystem::path &settings_file,
+                      bool local) noexcept;
 
     void reg(const char *section, const char *key, ConfigurableBase *cfg);
 

@@ -55,8 +55,8 @@ TEST(EncryptionTest, BigBlock) {
     // stub
     constexpr int sz = 32003;
     auto buf = std::make_unique<char[]>(sz);
-    for (int i = 0; i < sz; i++) {
-        buf[i] = i;
+    for (int i = 0; i < sz; ++i) {
+        buf[i] = static_cast<char>(i);
     }
     std::vector<char> out;
 

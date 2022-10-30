@@ -76,7 +76,7 @@ constexpr const wchar_t *kAgentToml = L"cmk-agent-ctl.toml";
 // we have to init folders depending from start type
 // test, exe or service
 // This is done once for whole life-cycle
-bool FindAndPrepareWorkingFolders(AppType Type);
+bool FindAndPrepareWorkingFolders(AppType app_type);
 
 // 2. Prepare List of possible config names
 std::vector<std::wstring> DefaultConfigArray();
@@ -388,7 +388,8 @@ std::vector<std::string> GetInternalArray(std::string_view section_name,
 void PutInternalArray(YAML::Node yaml_node, std::string_view value_name,
                       std::vector<std::string> &arr);
 
-void PutInternalArray(std::string_view section, std::string_view name,
+void PutInternalArray(std::string_view section_name,
+                      std::string_view value_name,
                       std::vector<std::string> &arr);
 
 // gets string from the yaml and split it in table using space as divider
@@ -923,10 +924,10 @@ public:
 
         auto pattern() const noexcept { return pattern_; }
         auto run() const noexcept { return run_; }
-        void assign(const YAML::Node &node);
+        void assign(const YAML::Node &entry);
         void assignGroup(std::string_view group);
         void assignUser(std::string_view user);
-        void apply(std::string_view filename, const YAML::Node &node);
+        void apply(std::string_view filename, const YAML::Node &entry);
         YAML::Node source() const noexcept { return source_; }
         std::string sourceText() const noexcept { return source_text_; }
 
@@ -1012,7 +1013,6 @@ public:
         std::lock_guard lk(lock_);
         return max_wait_;
     }
-    void go();
 
     bool isLocal() const noexcept { return local_; }
 

@@ -21,7 +21,6 @@
 #include <utility>
 
 #include "async_answer.h"
-#include "carrier.h"
 #include "cfg.h"
 #include "common/cfg_info.h"
 #include "common/mailslot_transport.h"
@@ -48,6 +47,7 @@
 #include "providers/wmi.h"
 #include "read_file.h"
 #include "realtime.h"
+#include "tools/_process.h"
 #include "tools/_win.h"
 
 namespace cma::srv {
@@ -200,9 +200,8 @@ public:
     ServiceProcessor(std::chrono::milliseconds delay,
                      const thread_callback &callback)
         : delay_(delay), callback_(callback), external_port_(this) {}
-    ServiceProcessor() noexcept : external_port_(this) {
-        delay_ = std::chrono::milliseconds{1000};
-    }
+    ServiceProcessor() noexcept
+        : delay_{std::chrono::milliseconds{1000}}, external_port_(this) {}
     ~ServiceProcessor() override {
         try {
             ohm_process_.stop();
@@ -558,7 +557,7 @@ private:
         std::string path_string;
         auto paths = cfg::GetExePaths();
         for (const auto &dir : paths) {
-            path_string += dir.u8string() + "\n";
+            path_string += wtools::ToStr(dir) + "\n";
         }
 
         XLOG::l("File '{}' not found on the path '{}'",

@@ -50,7 +50,7 @@ void LogWhenDebugging(const ByteVector &send_back) noexcept {
         return;
     }
 
-    std::string s(send_back.begin(), send_back.end());
+    const std::string s(send_back.begin(), send_back.end());
     auto t = tools::SplitString(s, "\n");
     XLOG::t.i("Send {} last string is {}", send_back.size(), t.back());
 }
@@ -64,13 +64,13 @@ void AsioSession::read_ip() {
         remote_ip_.reset();
     }
     socket_.async_read_some(asio::buffer(data_, kMaxLength - 1),
-                            [this, self](std::error_code ec, size_t length) {
+                            [this](std::error_code ec, size_t length) {
                                 std::scoped_lock l(data_lock_);
                                 received_ = ec ? 0U : length;
                                 cv_ready_.notify_one();
                             });
     std::unique_lock lk(data_lock_);
-    bool timeout = cv_ready_.wait_until(
+    const bool timeout = cv_ready_.wait_until(
         lk, std::chrono::steady_clock::now() + 1000ms,
         [this]() -> bool { return received_.has_value(); });
     if (received_.has_value() &&
@@ -112,7 +112,7 @@ static size_t WriteDataToSocket(asio::ip::tcp::socket &sock, const char *data,
 
     // asio execution
     std::error_code ec;
-    auto written_bytes =
+    const auto written_bytes =
         write(sock, buffer(data, sz), transfer_exactly(sz), ec);
 
     // error processing
@@ -137,7 +137,7 @@ void AsioSession::do_write(const void *data_block, std::size_t data_length,
     auto self(shared_from_this());
 
     const auto *data = static_cast<const char *>(data_block);
-    auto crypt_buf_len = allocCryptBuffer(crypto_commander);
+    const auto crypt_buf_len = allocCryptBuffer(crypto_commander);
 
     while (0 != data_length) {
         // we will send data in relatively small chunks
@@ -151,8 +151,7 @@ void AsioSession::do_write(const void *data_block, std::size_t data_length,
             // reference
             asio::async_write(
                 socket_, asio::buffer(data, to_send),
-                [self, to_send, data_length](std::error_code ec,
-                                             std::size_t length) {
+                [to_send, data_length](std::error_code ec, std::size_t length) {
                     XLOG::t.i(
                         "Send [{}] from [{}] data with code [{}] left to send [{}]",
                         length, to_send, ec.value(), data_length);
@@ -388,7 +387,7 @@ void ExternalPort::processRequest(const ReplyFunc &reply,
         return;
     }
 
-    auto send_back = reply(r.ip);
+    const auto send_back = reply(r.ip);
     if (send_back.empty()) {
         XLOG::d.i("No data to send");
         return;
@@ -558,7 +557,7 @@ bool IsElevatedProcess(std::optional<uint32_t> p) noexcept {
         return false;
     }
     const auto pid = *p;
-    wtools::UniqueHandle process_handle{
+    const wtools::UniqueHandle process_handle{
         ::OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid)};
     if (!process_handle) {
         return false;
@@ -605,7 +604,8 @@ void ExternalPort::server::run_accept(const SinkFunc &sink,
                 XLOG::d.i("Connected from '{}:{}' ipv6 :{} -> queue",
                           info.peer_ip, info.peer_port,
                           info.ip_mode == IpMode::ipv6 ? "ipv6" : "ipv4");
-                auto x = std::make_shared<AsioSession>(std::move(socket_));
+                const auto x =
+                    std::make_shared<AsioSession>(std::move(socket_));
 
                 if (IsConnectionAllowed(
                         {.port = port_, .peer_port = info.peer_port},

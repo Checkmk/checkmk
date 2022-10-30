@@ -29,8 +29,11 @@
 #include <thread>
 
 #include "common/mailslot_transport.h"
-#include "tools/_xlog.h"  // trace and log
+#include "tools/_process.h"
+#include "tools/_tgt.h"
+#include "tools/_xlog.h"
 #include "wtools.h"
+namespace fs = std::filesystem;
 
 namespace cma::mailslot {
 constexpr bool kUsePublicProfileLog = true;  // to Profile(not to Windows)
@@ -67,14 +70,13 @@ std::string BuildCustomMailSlotName(std::string_view slot_name, uint32_t id,
 
 std::string GetApiLog() {
     if (kUsePublicProfileLog) {
-        std::filesystem::path path{
-            tools::win::GetSomeSystemFolder(FOLDERID_Public)};
+        const fs::path path{tools::win::GetSomeSystemFolder(FOLDERID_Public)};
         if (!path.empty()) {
             return wtools::ToUtf8((path / kMailSlotLogFileName).wstring());
         }
     }
 
-    if (std::filesystem::path win_path =
+    if (const fs::path win_path =
             tools::win::GetSomeSystemFolder(FOLDERID_Windows);
         !win_path.empty()) {
         return wtools::ToUtf8(
@@ -213,11 +215,11 @@ int Slot::Get(void *data, unsigned int max_len) {
     if ((handle_ == nullptr) || IsClient()) {
         return ErrCodes::FAILED_INIT;
     }
-    auto msg_size = CheckMessageSize();
+    const auto msg_size = CheckMessageSize();
     if (!msg_size.has_value()) {
         return ErrCodes::FAILED_INFO;
     }
-    auto message_size = *msg_size;
+    const auto message_size = *msg_size;
 
     if (message_size == MAILSLOT_NO_MESSAGE) {
         return ErrCodes::SUCCESS;

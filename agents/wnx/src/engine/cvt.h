@@ -9,8 +9,6 @@
 #pragma once
 
 #include <filesystem>
-#include <string>
-#include <string_view>
 
 #include "cfg.h"
 #include "common/wtools.h"

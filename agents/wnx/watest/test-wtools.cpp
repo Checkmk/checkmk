@@ -11,6 +11,8 @@
 
 #include "common/wtools.h"
 #include "test_tools.h"
+#include "tools/_process.h"
+#include "tools/_raii.h"
 
 using namespace std::string_literals;
 using namespace std::chrono_literals;
@@ -182,8 +184,10 @@ protected:
         auto exe_b = temp_dir() / "b.cmd";
         auto exe_c = temp_dir() / "c.cmd";
 
-        tst::CreateTextFile(exe_a, "@echo start\n@call " + exe_b.u8string());
-        tst::CreateTextFile(exe_b, "@echo start\n@call " + exe_c.u8string());
+        tst::CreateTextFile(exe_a,
+                            "@echo start\n@call " + wtools::ToStr(exe_b));
+        tst::CreateTextFile(exe_b,
+                            "@echo start\n@call " + wtools::ToStr(exe_c));
         tst::CreateTextFile(exe_c,
                             "@echo start\n@powershell Start-Sleep 10000");
         return cma::tools::RunStdCommand(exe_a.wstring(), false);

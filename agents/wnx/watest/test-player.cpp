@@ -67,32 +67,32 @@ TEST(PlayerTest, ConfigFolders) {
     }
 }
 
-static void CreateFileInTemp(const std::filesystem::path &Path) {
-    std::ofstream ofs(Path.u8string());
+static void CreateFileInTemp(const std::filesystem::path &filename) {
+    std::ofstream ofs(wtools::ToStr(filename));
 
     if (!ofs) {
-        XLOG::l("Can't open file {} error {}", Path, GetLastError());
+        XLOG::l("Can't open file {} error {}", filename, GetLastError());
         return;
     }
 
-    ofs << Path.u8string() << std::endl;
+    ofs << wtools::ToStr(filename) << std::endl;
 }
 
 constexpr const char *SecondLine = "0, 1, 2, 3, 4, 5, 6, 7, 8";
 
-static void CreatePluginInTemp(const std::filesystem::path &Path, int Timeout,
-                               std::string Name) {
-    std::ofstream ofs(Path.u8string());
+static void CreatePluginInTemp(const std::filesystem::path &filename,
+                               int timeout, std::string &plugin_name) {
+    std::ofstream ofs(wtools::ToStr(filename));
 
     if (!ofs) {
-        XLOG::l("Can't open file {} error {}", Path, GetLastError());
+        XLOG::l("Can't open file {} error {}", filename, GetLastError());
         return;
     }
 
     ofs << "@echo off\n"
-        //<< "timeout /T " << Timeout << " /NOBREAK > nul\n"
-        << "powershell Start-Sleep " << Timeout << " \n"
-        << "@echo ^<^<^<" << Name << "^>^>^>\n"
+        //<< "timeout /T " << timeout << " /NOBREAK > nul\n"
+        << "powershell Start-Sleep " << timeout << " \n"
+        << "@echo ^<^<^<" << plugin_name << "^>^>^>\n"
         << "@echo " << SecondLine << "\n";
 }
 
@@ -110,8 +110,7 @@ static void RemoveFolder(const std::filesystem::path &Path) {
         }
     }
 
-    for (std::vector<fs::path>::reverse_iterator rit = directories.rbegin();
-         rit != directories.rend(); ++rit) {
+    for (auto rit = directories.rbegin(); rit != directories.rend(); ++rit) {
         if (fs::is_empty(*rit)) {
             fs::remove(*rit);
         }
@@ -126,11 +125,11 @@ static cma::PathVector GetFolderStructure() {
     namespace fs = std::filesystem;
     fs::path tmp = cma::cfg::GetTempDir();
     if (!fs::exists(tmp) || !fs::is_directory(tmp) ||
-        tmp.u8string().find("\\tmp") == 0 ||
-        tmp.u8string().find("\\tmp") == std::string::npos) {
+        wtools::ToStr(tmp).find("\\tmp") == 0 ||
+        wtools::ToStr(tmp).find("\\tmp") == std::string::npos) {
         XLOG::l(XLOG::kStdio)("Cant create folder structure {} {} {}",
                               fs::exists(tmp), fs::is_directory(tmp),
-                              tmp.u8string().find("\\tmp"));
+                              wtools::ToStr(tmp).find("\\tmp"));
         return {};
     }
     PathVector pv;
@@ -185,7 +184,7 @@ TEST(PlayerTest, All) {
     bool test_content_ok = false;
     bool test2_size_ok = false;
     bool test2_content_ok = false;
-    box.processResults([&](const std::wstring CmdLine, uint32_t Pid,
+    box.processResults([&](const std::wstring &CmdLine, uint32_t Pid,
                            uint32_t Code, const std::vector<char> &Data) {
         auto data = Data;
         if (data.size() == test_plugin_output->size()) {
@@ -235,7 +234,7 @@ TEST(PlayerTest, RealLifeInventory_Long) {
     exe.push_back((plugin_path.lexically_normal() / plugin).wstring());
     {
         cma::player::TheBox box;
-        EXPECT_TRUE(box.exec_array_.size() == 0);
+        EXPECT_TRUE(box.exec_array_.empty());
         box.tryAddToExecArray(exe[0]);
         EXPECT_TRUE(box.exec_array_.size() == 1);
         EXPECT_TRUE(box.exec_array_[0].find(plugin) != wstring::npos);
@@ -243,15 +242,15 @@ TEST(PlayerTest, RealLifeInventory_Long) {
 
     // folder prepare
     auto fs_state_path = GetCfg().getStateDir();
-    auto state_path = fs_state_path.u8string();
+    auto state_path = wtools::ToStr(fs_state_path);
     ASSERT_TRUE(!state_path.empty());
 
     // delete all file in folder
     std::filesystem::remove_all(state_path, ec);  // no exception here
     std::filesystem::create_directory(state_path, ec);
 
-    auto result = cma::tools::win::SetEnv(
-        std::string(cma::cfg::envs::kMkStateDirName), state_path);
+    auto result =
+        tools::win::SetEnv(std::string{envs::kMkStateDirName}, state_path);
     player::TheBox box;
     auto x = box.start(L"id", exe);
     box.waitForAllProcesses(20000ms, true);
@@ -259,25 +258,25 @@ TEST(PlayerTest, RealLifeInventory_Long) {
     vector<char> accu;
     int count = 0;
 
-    box.processResults([&](const std::wstring CmdLine, uint32_t Pid,
-                           uint32_t Code, const std::vector<char> &Data) {
+    box.processResults([&](const std::wstring cmd_line, uint32_t pid,
+                           uint32_t code, const std::vector<char> &result) {
         // we check for the UNICODE output(see msdn 0xFFFE, -xFEFF etc.)
-        bool convert_required =
-            Data.data()[0] == '\xFF' && Data.data()[1] == '\xFE';
+        bool convert_required = result[0] == '\xFF' && result[1] == '\xFE';
 
         std::string data;
         if (convert_required) {
-            auto raw_data = reinterpret_cast<const wchar_t *>(Data.data() + 2);
-            wstring wdata(raw_data, raw_data + (Data.size() - 2) / 2);
+            auto raw_data =
+                reinterpret_cast<const wchar_t *>(result.data() + 2);
+            wstring wdata(raw_data, raw_data + (result.size() - 2) / 2);
             if (wdata.back() != 0) wdata += L'\0';
             data = wtools::ToUtf8(wdata);
         } else {
-            data.assign(Data.begin(), Data.end());
+            data.assign(result.begin(), result.end());
         }
 
         if (data.back() != 0) data += '\0';
-        XLOG::d("Process [{}]\t Pid [{}]\t Code [{}]\n---\n{}\n---\n",
-                wtools::ToUtf8(CmdLine), Pid, Code, data.data());
+        XLOG::d("Process [{}]\t pid [{}]\t code [{}]\n---\n{}\n---\n",
+                wtools::ToUtf8(cmd_line), pid, code, data.data());
 
         cma::tools::AddVector(accu, data);
         count++;

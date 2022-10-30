@@ -411,7 +411,6 @@ std::wstring StoreFileToCache(const fs::path &file_name) {
             return cache_file.wstring();
         }
 
-        std::error_code ec;
         fs::copy(fs::path(file_name), cache_file,
                  fs::copy_options::overwrite_existing, ec);
         if (ec.value() == 0) {
@@ -1345,7 +1344,7 @@ bool ConfigInfo::popFolders() {
 }
 
 std::wstring FindMsiExec() {
-    fs::path p = cma::tools::win::GetSystem32Folder();
+    fs::path p = tools::win::GetSystem32Folder();
     p /= "msiexec.exe";
 
     std::error_code ec;
@@ -1889,7 +1888,7 @@ fs::path ConstructInstallFileName(const fs::path &dir) {
     }
 
     fs::path protocol_file = dir;
-    protocol_file /= cma::cfg::files::kInstallProtocol;
+    protocol_file /= files::kInstallProtocol;
     return protocol_file;
 }
 
@@ -1955,10 +1954,10 @@ std::string ReplacePredefinedMarkers(std::string_view work_path) {
     return f;
 }
 
-// converts "any/relative/path" into
-// "marker\\any\\relative\\path"
-// return false if yaml is not suitable for patching
-// normally used only by cvt
+/// converts "any/relative/path" into
+/// "marker\\any\\relative\\path"
+/// return false if yaml is not suitable for patching
+/// normally used only by cvt
 bool PatchRelativePath(YAML::Node yaml_config, std::string_view group_name,
                        std::string_view key_name, std::string_view subkey_name,
                        std::string_view marker) {
@@ -1991,16 +1990,16 @@ bool PatchRelativePath(YAML::Node yaml_config, std::string_view group_name,
             continue;
         }
 
-        fs::path path = entry;
-        auto p = path.lexically_normal();
-        if (p.u8string()[0] == fs::path::preferred_separator) {
+        fs::path path = fs::path{entry}.lexically_normal();
+        auto p = wtools::ToStr(path);
+        if (path.wstring()[0] == fs::path::preferred_separator) {
             continue;
         }
-        if (p.u8string()[0] == marker[0]) {
+        if (p[0] == marker[0]) {
             continue;
         }
-        if (p.is_relative()) {
-            key[k][name] = std::string(marker) + "\\" + entry;
+        if (path.is_relative()) {
+            key[k][name] = std::string{marker} + "\\" + entry;
         }
     }
     return true;
@@ -2042,7 +2041,7 @@ fs::path CreateWmicUninstallFile(const fs::path &temp_dir,
 }
 
 bool UninstallProduct(std::string_view name) {
-    fs::path temp{cfg::GetTempDir()};
+    fs::path temp{GetTempDir()};
     auto fname = CreateWmicUninstallFile(temp, name);
     if (fname.empty()) {
         return false;

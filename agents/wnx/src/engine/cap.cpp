@@ -88,19 +88,19 @@ std::string ReadFileName(std::ifstream &cap_file, uint32_t length) {
     size_t buffer_length = length;
     ++buffer_length;
 
-    std::vector<char> dataBuffer(buffer_length, 0);
-    cap_file.read(dataBuffer.data(), length);
+    std::vector<char> data_buffer(buffer_length, 0);
+    cap_file.read(data_buffer.data(), length);
 
     if (!cap_file.good()) {
         XLOG::l("Unexpected problems with CAP-file name body");
         return {};
     }
 
-    dataBuffer[length] = '\0';
+    data_buffer[length] = '\0';
 
-    XLOG::d.t("Processing file '{}'", dataBuffer.data());
+    XLOG::d.t("Processing file '{}'", data_buffer.data());
 
-    return {dataBuffer.data()};
+    return {data_buffer.data()};
 }
 
 // skips too big files or invalid data
@@ -123,14 +123,14 @@ std::optional<std::vector<char>> ReadFileData(std::ifstream &cap_file) {
         return {};
     }
     const size_t buffer_length = length;
-    std::vector<char> dataBuffer(buffer_length, 0);
-    cap_file.read(dataBuffer.data(), length);
+    std::vector<char> data_buffer(buffer_length, 0);
+    cap_file.read(data_buffer.data(), length);
 
     if (!cap_file.good()) {
         XLOG::l("Unexpected problems with CAP-file data body");
         return {};
     }
-    return dataBuffer;
+    return data_buffer;
 }
 
 constexpr uint32_t kInternalMax{256};
@@ -224,7 +224,7 @@ static std::string GetTryKillMode() {
 }
 
 namespace {
-const std::array<std::wstring, 3> TryToKillAllowedNames = {
+const std::array<std::wstring, 3> g_try_to_kill_allowed_names = {
     L"cmk-update-agent.exe", L"mk_logwatch.exe", L"mk_jolokia.exe"};
 }
 
@@ -232,7 +232,7 @@ const std::array<std::wstring, 3> TryToKillAllowedNames = {
     const auto try_kill_mode = GetTryKillMode();
     if (try_kill_mode == values::kTryKillSafe) {
         XLOG::d.i("Mode is safe, checking on list");
-        if (rs::any_of(TryToKillAllowedNames,
+        if (rs::any_of(g_try_to_kill_allowed_names,
                        [proc_name](const std::wstring &name) {
                            return tools::IsEqual(proc_name, name);
                        })) {
@@ -423,7 +423,7 @@ bool ReinstallCaps(const fs::path &target_cap, const fs::path &source_cap) {
     std::error_code ec;
     std::vector<std::wstring> files_left;
     if (fs::exists(target_cap, ec)) {
-        if (Process(target_cap.u8string(), ProcMode::remove, files_left)) {
+        if (Process(wtools::ToStr(target_cap), ProcMode::remove, files_left)) {
             XLOG::l.t("File '{}' uninstall-ed", target_cap);
             fs::remove(target_cap, ec);
             for (auto &name : files_left)
@@ -435,7 +435,7 @@ bool ReinstallCaps(const fs::path &target_cap, const fs::path &source_cap) {
 
     files_left.clear();
     if (fs::exists(source_cap, ec)) {
-        if (Process(source_cap.u8string(), ProcMode::install, files_left)) {
+        if (Process(wtools::ToStr(source_cap), ProcMode::install, files_left)) {
             XLOG::l.t("File '{}' installed", source_cap);
             fs::copy_file(source_cap, target_cap, ec);
             for (auto &name : files_left)
@@ -488,7 +488,7 @@ bool ReinstallYaml(const fs::path &bakery_yaml, const fs::path &target_yaml,
     }
 
     try {
-        auto yaml = YAML::LoadFile(source_yaml.u8string());
+        auto yaml = YAML::LoadFile(wtools::ToStr(source_yaml));
         if (!yaml.IsDefined() || !yaml.IsMap()) {
             XLOG::l("Supplied Yaml '{}' is bad", source_yaml);
             return false;
@@ -633,7 +633,7 @@ PairOfPath GetExampleYmlNames() {
     return {tgt_example, src_example};
 }
 
-constexpr bool G_PatchLineEnding =
+constexpr bool g_patch_line_ending =
     false;  // set to true to fix error during checkout git
 
 static void UpdateUserYmlExample(const fs::path &tgt, const fs::path &src) {
@@ -647,7 +647,7 @@ static void UpdateUserYmlExample(const fs::path &tgt, const fs::path &src) {
     if (!ec) {
         XLOG::l.i("User Example '{}' have been updated successfully from '{}'",
                   tgt, src);
-        if constexpr (G_PatchLineEnding) {
+        if constexpr (g_patch_line_ending) {
             wtools::PatchFileLineEnding(tgt);
         }
     } else {

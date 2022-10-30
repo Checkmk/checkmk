@@ -114,7 +114,7 @@ TEST(CmaTools, Trimmer) {
     }
 
     {
-        std::string a = "";
+        std::string a;
         LeftTrim(a);
         EXPECT_EQ(a, "");
         RightTrim(a);
@@ -203,7 +203,7 @@ TEST(CmaTools, WideUpper) {
     WideUpper(w);
     EXPECT_EQ(w, test_cyrillic_upper);
 
-    std::wstring nothing = L"";
+    std::wstring nothing;
     WideUpper(nothing);
     EXPECT_EQ(nothing, L"");
 }
@@ -213,7 +213,7 @@ TEST(CmaTools, WideLower) {
     WideLower(w);
     EXPECT_EQ(w, test_cyrillic_lower);
 
-    std::wstring nothing = L"";
+    std::wstring nothing;
     WideLower(w);
     EXPECT_EQ(nothing, L"");
 }

@@ -114,7 +114,7 @@ HCRYPTPROV Commander::obtainContext() const {
     const auto *provider =
         IsAesAlgorithm(algorithm_) ? MS_ENH_RSA_AES_PROV : MS_DEF_PROV;
 
-    auto provider_type =
+    const auto provider_type =
         IsAesAlgorithm(algorithm_) ? PROV_RSA_AES : PROV_RSA_FULL;
 
     if (::CryptAcquireContext(&handle, nullptr, provider, provider_type,
@@ -291,7 +291,7 @@ HCRYPTKEY Commander::deriveOpenSSLKey(const std::string &password,
 
     auto [base_hash, hash_size] = GetHash(crypt_provider_);
 
-    auto to_kill_base_hash = base_hash;
+    const auto to_kill_base_hash = base_hash;
     ON_OUT_OF_SCOPE(
         if (to_kill_base_hash)::CryptDestroyHash(to_kill_base_hash););
     if (hash_size == 0) {
@@ -306,9 +306,9 @@ HCRYPTKEY Commander::deriveOpenSSLKey(const std::string &password,
     size_t key_offset = 0;
     size_t iv_offset = 0;
 
-    auto key_size = (key_length == Length::kDefault)
-                        ? keySize(algorithm_) / kBlockALign
-                        : static_cast<size_t>(key_length);
+    const auto key_size = (key_length == Length::kDefault)
+                              ? keySize(algorithm_) / kBlockALign
+                              : static_cast<size_t>(key_length);
 
     std::vector<BYTE> key(key_size);
     std::vector<BYTE> iv;
@@ -356,7 +356,7 @@ HCRYPTKEY Commander::deriveOpenSSLKey(const std::string &password,
         }
 
         size_t usable_bytes = buffer.size();
-        size_t key_bytes =
+        const size_t key_bytes =
             std::min<size_t>(usable_bytes, key.size() - key_offset);
 
         if (key_bytes > 0) {
@@ -377,8 +377,8 @@ HCRYPTKEY Commander::deriveOpenSSLKey(const std::string &password,
         }
 
         if (usable_bytes > key_bytes) {
-            auto iv_bytes = std::min<size_t>(usable_bytes - key_bytes,
-                                             iv.size() - iv_offset);
+            const auto iv_bytes = std::min<size_t>(usable_bytes - key_bytes,
+                                                   iv.size() - iv_offset);
             memcpy(&iv[iv_offset], &buffer[key_bytes], iv_bytes);
             iv_offset += iv_bytes;
         }
@@ -461,7 +461,7 @@ std::optional<size_t> Commander::CalcBufferOverhead(size_t data_size) const {
         return {};
     }
 
-    auto block_size = blockSize().value();
+    const auto block_size = blockSize().value();
 
     return block_size - (data_size % block_size);
 }

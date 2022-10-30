@@ -130,7 +130,7 @@ TEST(CvtTest, CrLf) {
         std::ofstream ofs(p);
         ofs << yaml;
     }
-    std::ifstream in(p.u8string(), std::ios::binary);
+    std::ifstream in(wtools::ToStr(p), std::ios::binary);
     std::stringstream sstr;
     sstr << in.rdbuf();
     auto content = sstr.str();

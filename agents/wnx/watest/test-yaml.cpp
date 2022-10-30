@@ -28,7 +28,7 @@ namespace {
 fs::path CreateYamlnInTemp(const std::string &name, const std::string &text) {
     fs::path temp_folder{GetTempDir()};
     auto path = temp_folder / name;
-    std::ofstream ofs(path.u8string());
+    std::ofstream ofs(wtools::ToStr(path));
     if (!ofs) {
         XLOG::l("Can't open file {} error {}", path, GetLastError());
         return {};
@@ -39,7 +39,7 @@ fs::path CreateYamlnInTemp(const std::string &name, const std::string &text) {
 
 static fs::path CreateTestFile(const fs::path &name, const std::string &text) {
     auto path = name;
-    std::ofstream ofs(path.u8string(), std::ios::binary);
+    std::ofstream ofs(wtools::ToStr(path), std::ios::binary);
     if (!ofs) {
         XLOG::l("Can't open file {} error {}", path, GetLastError());
         return {};
@@ -243,7 +243,7 @@ TEST(AgentConfig, SmartMerge) {
                        "  disabled_sections: ~\n");  // no changes
 
         // prepare and check data
-        auto target_config = YAML::LoadFile(cfgs[0].u8string());
+        auto target_config = YAML::LoadFile(wtools::ToStr(cfgs[0]));
         target_config.remove(groups::kPs);
         target_config.remove(groups::kWinPerf);
         target_config.remove(groups::kPlugins);
@@ -253,7 +253,7 @@ TEST(AgentConfig, SmartMerge) {
         target_config.remove(groups::kLogWatchEvent);
         target_config.remove(groups::kFileInfo);
 
-        auto source_bakery = YAML::LoadFile(cfgs[1].u8string());
+        auto source_bakery = YAML::LoadFile(wtools::ToStr(cfgs[1]));
 
         // merge bakery to target
         ConfigInfo::smartMerge(target_config, source_bakery,
@@ -289,9 +289,8 @@ TEST(AgentConfig, SmartMerge) {
 
         std::swap(cfgs[1], cfgs[0]);
         // prepare and check data
-        target_config = YAML::LoadFile(cfgs[0].u8string());
-
-        source_bakery = YAML::LoadFile(cfgs[1].u8string());
+        target_config = YAML::LoadFile(wtools::ToStr(cfgs[0]));
+        source_bakery = YAML::LoadFile(wtools::ToStr(cfgs[1]));
 
         // merge and check output INTO core
         ConfigInfo::smartMerge(target_config, source_bakery,
@@ -364,12 +363,12 @@ TEST(AgentConfig, Aggregate) {
         // plugins
         {
             // prepare and check data
-            auto core_yaml = YAML::LoadFile(cfgs[0].u8string());
+            auto core_yaml = YAML::LoadFile(wtools::ToStr(cfgs[0]));
             auto core_plugin = core_yaml[groups::kPlugins];
             ASSERT_EQ(core_plugin[vars::kPluginsExecution].size(), 4);
             ASSERT_EQ(core_plugin[vars::kPluginsFolders].size(), 2);
 
-            auto bakery_yaml = YAML::LoadFile(cfgs[1].u8string());
+            auto bakery_yaml = YAML::LoadFile(wtools::ToStr(cfgs[1]));
             auto bakery_plugin = bakery_yaml[groups::kPlugins];
             ASSERT_EQ(bakery_plugin[vars::kPluginsExecution].size(), 2);
             ASSERT_EQ(bakery_plugin[vars::kPluginsFolders].size(), 1);
@@ -389,9 +388,9 @@ TEST(AgentConfig, Aggregate) {
 
         // winperf
         {
-            auto r = YAML::LoadFile(cfgs[0].u8string());
+            auto r = YAML::LoadFile(wtools::ToStr(cfgs[0]));
             ASSERT_EQ(r[groups::kWinPerf][vars::kWinPerfCounters].size(), 3);
-            auto b = YAML::LoadFile(cfgs[1].u8string());
+            auto b = YAML::LoadFile(wtools::ToStr(cfgs[1]));
             ASSERT_EQ(b[groups::kWinPerf][vars::kWinPerfCounters].size(), 4);
             ConfigInfo::smartMerge(r, b, Combine::overwrite);
             ASSERT_EQ(r[groups::kWinPerf][vars::kWinPerfCounters].size(),
@@ -956,9 +955,9 @@ TEST(AgentConfig, LoadingCheck) {
     auto temp_fs = tst::TempCfgFs::CreateNoIo();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
 
-    auto fname = std::string(XLOG::l.getLogParam().filename());
-    EXPECT_TRUE(fs::path{fname}.filename().u8string() ==
-                std::string{kDefaultLogFileName});
+    auto fname =
+        wtools::ToStr(fs::path{XLOG::l.getLogParam().filename()}.filename());
+    EXPECT_TRUE(fname == std::string{kDefaultLogFileName});
     EXPECT_TRUE(XLOG::d.isFileDbg());
     EXPECT_TRUE(XLOG::d.isWinDbg());
     EXPECT_TRUE(XLOG::l.isFileDbg());
@@ -1049,7 +1048,7 @@ TEST(AgentConfig, GlobalTest) {
     fs::path dir = GetUserDir();
     dir /= dirs::kLog;
     EXPECT_TRUE(
-        tools::IsEqual(fname, (dir / cfg::kDefaultLogFileName).u8string()));
+        tools::IsEqual(fname, wtools::ToStr(dir / cfg::kDefaultLogFileName)));
 
     EXPECT_TRUE(cfg::groups::global.allowedSection("check_mk"));
     EXPECT_TRUE(cfg::groups::global.allowedSection("winperf"));

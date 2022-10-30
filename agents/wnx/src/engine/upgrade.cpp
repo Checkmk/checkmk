@@ -15,6 +15,7 @@
 #include "logger.h"
 #include "providers/ohm.h"
 #include "tools/_misc.h"
+#include "tools/_process.h"
 #include "tools/_raii.h"
 #include "tools/_xlog.h"
 namespace fs = std::filesystem;
@@ -621,7 +622,7 @@ static void LogAndDisplayErrorMessage(int status) {
 
 bool FindStopDeactivateLegacyAgent() {
     XLOG::l.t("Find, stop and deactivate");
-    if (!cma::tools::win::IsElevated()) {
+    if (!tools::win::IsElevated()) {
         XLOG::l(
             "You have to be in elevated to use this function.\nPlease, run as Administrator");
         return false;
@@ -696,7 +697,7 @@ static bool RunOhm(const fs::path &lwa_path) noexcept {
 
 bool FindActivateStartLegacyAgent(AddAction action) {
     XLOG::l.t("Find, activate and start");
-    if (!cma::tools::win::IsElevated()) {
+    if (!tools::win::IsElevated()) {
         XLOG::l(
             "You have to be in elevated to use this function.\nPlease, run as Administrator");
         return false;
@@ -740,9 +741,9 @@ bool RunDetachedProcess(const std::wstring &Name) {
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
 
-    ZeroMemory(&si, sizeof(si));
-    si.cb = sizeof(si);
-    ZeroMemory(&pi, sizeof(pi));
+    ZeroMemory(&si, sizeof si);
+    si.cb = sizeof si;
+    ZeroMemory(&pi, sizeof pi);
     std::wstring name = Name;
     auto windows_name = const_cast<LPWSTR>(name.c_str());
 
@@ -1315,7 +1316,7 @@ fs::path FindOldState() {
 
 std::string GetNewHash(const fs::path &dat) noexcept {
     try {
-        auto yml = YAML::LoadFile(dat.u8string());
+        auto yml = YAML::LoadFile(wtools::ToStr(dat));
         auto hash = GetVal(yml, kHashName.data(), std::string());
         if (hash == cfg::kBuildHashValue) {
             XLOG::l.t("Hash is from packaged agent, ignoring");

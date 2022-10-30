@@ -19,6 +19,7 @@
 #include "common/cfg_info.h"
 #include "common/wtools.h"
 #include "logger.h"
+#include "tools/_process.h"
 
 namespace cma::tools::zip {
 // usually this pointer comes from Windows API

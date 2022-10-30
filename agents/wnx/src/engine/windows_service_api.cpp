@@ -119,7 +119,7 @@ static void CheckForCommand(std::string &Command) {
     Command = "";
     std::error_code ec;
     auto dir = fs::current_path(ec);
-    std::cout << dir.u8string() << ": tick\n";
+    std::cout << wtools::ToStr(dir) << ": tick\n";
     try {
         constexpr auto kUpdateFileCommandDone = "update.command.done";
         std::string done_file_name = kUpdateFileCommandDone;
@@ -306,8 +306,8 @@ int TestMt() {
     // to find file, read and start update POC.
     try {
         XLOG::setup::ColoredOutputOnStdio(true);
-        std::string command = "";
-        srv::ServiceProcessor sp(2000ms, [&command]() {
+        std::string command;
+        ServiceProcessor sp(2000ms, [&command]() {
             CheckForCommand(command);
             if (command[0]) {
                 tools::RunDetachedCommand(command);
@@ -450,8 +450,8 @@ int ExecExtractCap(std::wstring_view cap_file, std::wstring_view to) {
 // on -cvt
 // may be used as internal API function to convert ini to yaml
 // GTESTED internally
-int ExecCvtIniYaml(fs::path ini_file_name, fs::path yaml_file_name,
-                   StdioLog stdio_log) {
+int ExecCvtIniYaml(const fs::path &ini_file_name,
+                   const fs::path &yaml_file_name, StdioLog stdio_log) {
     auto flag = stdio_log == StdioLog::no ? 0 : XLOG::kStdio;
     if (stdio_log != StdioLog::no) {
         XLOG::setup::ColoredOutputOnStdio(true);
@@ -657,7 +657,7 @@ int ExecCmkUpdateAgent(const std::vector<std::wstring> &params) {
 
     cma::cfg::modules::ModuleCommander mc;
     mc.LoadDefault();
-    auto command_to_run = mc.buildCommandLine(updater_file.u8string());
+    auto command_to_run = mc.buildCommandLine(wtools::ToStr(updater_file));
     if (command_to_run.empty()) {
         ReportNoPythonModule(params);
         return 1;
@@ -927,8 +927,7 @@ int ExecResetOhm() {
     XLOG::setup::DuplicateOnStdio(true);
     XLOG::setup::ColoredOutputOnStdio(true);
     XLOG::SendStringToStdio("Resetting OHM internally\n", XLOG::Colors::yellow);
-    ServiceProcessor sp;
-    sp.resetOhm();
+    ServiceProcessor::resetOhm();
     return 0;
 }
 

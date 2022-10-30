@@ -13,6 +13,7 @@
 
 #include "logger.h"
 #include "tools/_misc.h"
+#include "tools/_process.h"
 
 #pragma comment(lib, "Wtsapi32.lib")
 #pragma comment(lib, "Userenv.lib")
@@ -60,7 +61,7 @@ void DisableFileRedirection() {
         return;
     }
 
-    auto b = g_disable_fs_redirection(&g_old_wow64_redir_val);
+    const auto b = g_disable_fs_redirection(&g_old_wow64_redir_val);
     if (b == TRUE)
         XLOG::d.i("Disabled WOW64 file system redirection");
     else
@@ -372,7 +373,6 @@ std::wstring GetTokenUserSID(HANDLE token_handle) {
 HANDLE GetLocalSystemProcessToken() {
     DWORD pids[1024 * 10] = {0};
     DWORD byte_count = 0;
-    DWORD process_count = 0;
 
     if (::EnumProcesses(pids, sizeof(pids), &byte_count) == TRUE) {
         XLOG::l("Can't enumProcesses - Failed to get token for Local System.");
@@ -380,10 +380,10 @@ HANDLE GetLocalSystemProcessToken() {
     }
 
     // Calculate how many process identifiers were returned.
-    process_count = byte_count / sizeof(DWORD);
+    auto process_count = byte_count / sizeof(DWORD);
     for (DWORD i = 0; i < process_count; ++i) {
-        DWORD pid = pids[i];
-        HANDLE proc_handle =
+        const DWORD pid = pids[i];
+        const HANDLE proc_handle =
             ::OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pid);
         if (proc_handle == nullptr) {
             continue;
@@ -492,7 +492,7 @@ bool GetUserHandlePredefinedUser(HANDLE &user_handle,
                                  std::wstring_view password) {
     auto [domain, user] = GetDomainUser(std::wstring(user_name));
 
-    auto logged_in = LogonUser(
+    const auto logged_in = LogonUser(
         user.data(), domain.empty() ? nullptr : domain.c_str(), password.data(),
         LOGON32_LOGON_INTERACTIVE, LOGON32_PROVIDER_WINNT50, &user_handle);
     if ((FALSE == logged_in) || wtools::IsBadHandle(user_handle)) {
@@ -559,7 +559,7 @@ bool LimitRights(HANDLE &hUser) {
     if ((nullptr == s_safer_close_level) ||
         (nullptr == s_safer_compute_token_from_level) ||
         (nullptr == s_safer_create_level)) {
-        HMODULE module_handle = LoadLibrary(L"advapi32.dll");  // GLOK
+        const HMODULE module_handle = LoadLibrary(L"advapi32.dll");  // GLOK
         if (nullptr != module_handle) {
             s_safer_create_level = reinterpret_cast<SaferCreateLevelProc>(
                 GetProcAddress(module_handle, "SaferCreateLevel"));
@@ -673,10 +673,12 @@ static void SetAffinityMask(HANDLE process,
     DWORD_PTR system_mask = 0;
     DWORD_PTR process_mask = 0;
     auto ret = ::GetProcessAffinityMask(process, &process_mask, &system_mask);
-    if (ret == FALSE) XLOG::l.bp(XLOG_FLINE + " hit1!");
+    if (ret == FALSE) {
+        XLOG::l(XLOG_FLINE + " failed affinity mask");
+    }
 
     process_mask = 0;
-    for (auto a : affinity) {
+    for (const auto a : affinity) {
         DWORD bit = 1;
         bit = bit << (a - 1);
         process_mask |= bit & system_mask;
@@ -693,7 +695,7 @@ std::wstring GetUserHomeDir(HANDLE token) {
         return buf;
     }
     XLOG::d("Fail to get user profile [{}]", ::GetLastError());
-    return cma::tools ::win::GetSomeSystemFolder(FOLDERID_Public);
+    return cma::tools::win::GetSomeSystemFolder(FOLDERID_Public);
 }
 }  // namespace
 

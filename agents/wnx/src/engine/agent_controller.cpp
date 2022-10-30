@@ -43,11 +43,11 @@ bool UseSpecialPort(Modus modus) {
 }  // namespace
 
 fs::path LegacyPullFile() {
-    return fs::path{cfg::GetUserDir()} / ac::kLegacyPullFile;
+    return fs::path{cfg::GetUserDir()} / kLegacyPullFile;
 }
 
 fs::path ControllerFlagFile() {
-    return fs::path{cfg::GetUserDir()} / ac::kControllerFlagFile;
+    return fs::path{cfg::GetUserDir()} / kControllerFlagFile;
 }
 
 fs::path TomlConfigFile() {
@@ -103,7 +103,7 @@ YAML::Node GetControllerNode() {
 }
 
 uint16_t GetPortFromString(const std::string &str) {
-    auto table = tools::SplitString(str, ":");
+    const auto table = tools::SplitString(str, ":");
     if (table.size() != 2) {
         return 0;
     }
@@ -134,7 +134,7 @@ std::string FormatAddressFor(AddrType ff, std::string_view addr) {
 }
 
 std::string GetConfiguredAgentChannel(Modus modus) {
-    auto controller_config = GetControllerNode();
+    const auto controller_config = GetControllerNode();
     auto result =
         cfg::GetVal(controller_config, cfg::vars::kControllerAgentChannel,
                     std::string{cfg::defaults::kControllerAgentChannelDefault});
@@ -158,7 +158,7 @@ std::string GetConfiguredAgentChannel(Modus modus) {
 }
 
 bool GetConfiguredForceLegacy() {
-    auto controller_config = GetControllerNode();
+    const auto controller_config = GetControllerNode();
     return cfg::GetVal(controller_config, cfg::vars::kControllerForceLegacy,
                        cfg::defaults::kControllerForceLegacy);
 }
@@ -170,26 +170,26 @@ uint16_t GetConfiguredAgentChannelPort(Modus modus) {
 }
 
 bool GetConfiguredLocalOnly() {
-    auto controller_config = GetControllerNode();
+    const auto controller_config = GetControllerNode();
     return cfg::GetVal(controller_config, cfg::vars::kControllerLocalOnly,
                        cfg::defaults::kControllerLocalOnly);
 }
 
 bool GetConfiguredAllowElevated() {
-    auto controller_config = GetControllerNode();
+    const auto controller_config = GetControllerNode();
     return cfg::GetVal(controller_config, cfg::vars::kControllerAllowElevated,
                        cfg::defaults::kControllerAllowElevated);
 }
 
 bool IsConfiguredEmergencyOnCrash() {
-    auto controller_config = GetControllerNode();
+    const auto controller_config = GetControllerNode();
     return cfg::GetVal(controller_config, cfg::vars::kControllerOnCrash,
                        std::string{cfg::defaults::kControllerOnCrashDefault}) ==
            cfg::values::kControllerOnCrashEmergency;
 }
 
 bool GetConfiguredCheck() {
-    auto controller_config = GetControllerNode();
+    const auto controller_config = GetControllerNode();
     return cfg::GetVal(controller_config, cfg::vars::kControllerCheck,
                        cfg::defaults::kControllerCheck);
 }
@@ -207,8 +207,9 @@ bool DeleteControllerInBin() {
 }
 
 bool IsRunController(const YAML::Node &node) {
-    auto controller = cma::yml::GetNode(node, std::string{cfg::groups::kSystem},
-                                        std::string{cfg::vars::kController});
+    const auto controller =
+        cma::yml::GetNode(node, std::string{cfg::groups::kSystem},
+                          std::string{cfg::vars::kController});
     return cfg::GetVal(controller, cfg::vars::kControllerRun, false);
 }
 
@@ -234,8 +235,8 @@ bool CreateTomlConfig(const fs::path &toml_file) {
         "# lose your changes next time when you update the agent.\n\n"};
     auto port =
         cfg::GetVal(cfg::groups::kGlobal, cfg::vars::kPort, cfg::kMainPort);
-    auto pull_port = fmt::format("pull_port = {}\n", port);
-    auto only_from =
+    const auto pull_port = fmt::format("pull_port = {}\n", port);
+    const auto only_from =
         cfg::GetInternalArray(cfg::groups::kGlobal, cfg::vars::kOnlyFrom);
     std::string allowed_ip;
     if (!only_from.empty()) {
@@ -374,11 +375,10 @@ bool KillAgentController() {
 
 namespace {
 void CreateLegacyFile() {
-    auto file_name = LegacyPullFile();
-    std::ofstream ofs(file_name.u8string());
+    std::ofstream ofs(wtools::ToStr(LegacyPullFile()));
     ofs << "Created by Windows agent";
 }
-const std::string legacy_pull_text{"File '{}'  {}, legacy pull mode {}"};
+const std::string g_legacy_pull_text{"File '{}'  {}, legacy pull mode {}"};
 
 bool ConditionallyCreateLegacyFile(const fs::path &marker,
                                    std::string_view message) {
@@ -387,7 +387,7 @@ bool ConditionallyCreateLegacyFile(const fs::path &marker,
         CreateLegacyFile();
         created = true;
     }
-    XLOG::l.i(legacy_pull_text, marker, message, created ? "ON" : "OFF");
+    XLOG::l.i(g_legacy_pull_text, marker, message, created ? "ON" : "OFF");
 
     return created;
 }
@@ -435,8 +435,7 @@ bool CreateLegacyModeFile(const fs::path &marker) {
 }
 
 void CreateControllerFlagFile() {
-    auto file_name = ControllerFlagFile();
-    std::ofstream ofs(file_name.u8string());
+    std::ofstream ofs(wtools::ToStr(ControllerFlagFile()));
     ofs << "Created by Windows agent";
 }
 
@@ -452,7 +451,7 @@ void CreateArtifacts(const fs::path &marker, bool controller_exists) noexcept {
         return;
     }
     if (GetConfiguredForceLegacy()) {
-        XLOG::l.i(legacy_pull_text, marker,
+        XLOG::l.i(g_legacy_pull_text, marker,
                   " is ignored, configured to always create file", "ON");
         CreateLegacyFile();
     } else if (!IsControllerFlagFileExists()) {

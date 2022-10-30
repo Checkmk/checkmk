@@ -99,8 +99,9 @@ std::pair<std::wstring, bool> CheckForUpdateFile(
     std::wstring_view msi_name, std::wstring_view msi_dir,
     UpdateProcess start_update_process);
 
-std::filesystem::path MakeTempFileNameInTempPath(std::wstring_view Name);
-std::filesystem::path GenerateTempFileNameInTempPath(std::wstring_view Name);
+std::filesystem::path MakeTempFileNameInTempPath(std::wstring_view file_name);
+std::filesystem::path GenerateTempFileNameInTempPath(
+    std::wstring_view msi_name);
 
 // internal API with diag published to simplify testing or for later use
 // ****************************************
@@ -133,7 +134,7 @@ namespace api_err {
 /// Returns string with error message if the install API failed.
 std::optional<std::wstring> Get();
 /// calls if something is going wrong during installation.
-void Register(const std::string &err);
+void Register(const std::string &error);
 void Clean();
 }  // namespace api_err
 

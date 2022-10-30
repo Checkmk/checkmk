@@ -379,7 +379,7 @@ TEST(UpgradeTest, LoggingSupport) {
         auto yaml_file = CreateBakeryYamlFromIni(ini, pd_dir, name);
         EXPECT_EQ(yaml_file.filename().wstring(),
                   wtools::ConvertToUTF16(name) + files::kDefaultBakeryExt);
-        auto yaml = YAML::LoadFile(yaml_file.u8string());
+        auto yaml = YAML::LoadFile(wtools::ToStr(yaml_file));
         EXPECT_TRUE(yaml.IsMap());
         auto yml_global = yaml[groups::kGlobal];
         ASSERT_TRUE(yml_global.IsMap());
@@ -689,7 +689,7 @@ TEST(UpgradeTest, LoadIni) {
         auto yaml_file = CreateBakeryYamlFromIni(ini, pd_dir, name);
         EXPECT_EQ(yaml_file.filename().wstring(),
                   wtools::ConvertToUTF16(name) + files::kDefaultBakeryExt);
-        auto yaml = YAML::LoadFile(yaml_file.u8string());
+        auto yaml = YAML::LoadFile(wtools::ToStr(yaml_file));
         EXPECT_TRUE(yaml.IsMap());
     }
 
@@ -701,7 +701,7 @@ TEST(UpgradeTest, LoadIni) {
         EXPECT_TRUE(IsBakeryIni(ini));
         EXPECT_EQ(yaml_file.filename().wstring(),
                   wtools::ConvertToUTF16(name) + files::kDefaultUserExt);
-        auto yaml = YAML::LoadFile(yaml_file.u8string());
+        auto yaml = YAML::LoadFile(wtools::ToStr(yaml_file));
         EXPECT_TRUE(yaml.IsMap());
     }
 
@@ -710,7 +710,7 @@ TEST(UpgradeTest, LoadIni) {
         auto ini = CreateIniFile(lwa_dir, not_bakeryfile, name);
         auto yaml_file = CreateBakeryYamlFromIni(ini, pd_dir, name);
         EXPECT_FALSE(IsBakeryIni(ini));
-        auto yaml = YAML::LoadFile(yaml_file.u8string());
+        auto yaml = YAML::LoadFile(wtools::ToStr(yaml_file));
         EXPECT_EQ(yaml_file.filename().wstring(),
                   wtools::ConvertToUTF16(name) + files::kDefaultBakeryExt);
         EXPECT_TRUE(yaml.IsMap());
@@ -721,7 +721,7 @@ TEST(UpgradeTest, LoadIni) {
         auto ini = CreateIniFile(lwa_dir, not_bakeryfile_strange, name);
         auto yaml_file = CreateUserYamlFromIni(ini, pd_dir, name);
         EXPECT_FALSE(IsBakeryIni(ini));
-        auto yaml = YAML::LoadFile(yaml_file.u8string());
+        auto yaml = YAML::LoadFile(wtools::ToStr(yaml_file));
         EXPECT_EQ(yaml_file.filename().wstring(),
                   wtools::ConvertToUTF16(name) + files::kDefaultUserExt);
         EXPECT_TRUE(yaml.IsMap());

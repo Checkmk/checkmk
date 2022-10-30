@@ -12,6 +12,8 @@
 #include "cma_core.h"
 #include "common/wtools.h"
 #include "logger.h"
+#include "tools/_process.h"
+
 namespace fs = std::filesystem;
 
 namespace cma::provider {

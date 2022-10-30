@@ -186,7 +186,7 @@ namespace xlog {
 
     /// Windows Specific log for App, mildly usable.
     template <typename T, typename... Args>
-    void SysLogEvent(const T *log_name, LogEvents event_level, int code,
+    void SysLogEvent(const T *log_name, LogEvents event_level, DWORD code,
                      const T *event_text, Args &&...args) {
         auto eventSource = ::RegisterEventSource(nullptr, log_name);
         if (eventSource == nullptr) {

@@ -28,7 +28,7 @@ public:
 
 private:
     std::vector<std::wstring> getMessageFiles(LPCWSTR source) const;
-    std::wstring resolveInt(DWORD eventID, LPCWSTR dllpath,
+    std::wstring resolveInt(DWORD event_id, LPCWSTR dllpath,
                             LPCWSTR *parameters) const;
 
     std::wstring _name;
@@ -42,7 +42,11 @@ public:
     /**
      * Construct a reader for the named eventlog
      */
-    EventLog(const std::wstring &Name);
+    explicit EventLog(const std::wstring &name);
+    EventLog(const EventLog &) = delete;
+    EventLog operator=(const EventLog &) = delete;
+    EventLog(EventLog &&) = delete;
+    EventLog operator=(EventLog &&) = delete;
     ~EventLog() {
         if (handle_ != nullptr) {
             ::CloseEventLog(handle_);

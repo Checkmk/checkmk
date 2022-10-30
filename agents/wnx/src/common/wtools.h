@@ -34,8 +34,6 @@
 #include <tuple>
 
 #include "datablock.h"
-#include "tools/_process.h"
-#include "tools/_tgt.h"
 #include "tools/_win.h"
 #include "tools/_xlog.h"
 
@@ -56,6 +54,12 @@ enum class SecurityLevel { standard, admin };
 class SecurityAttributeKeeper {
 public:
     explicit SecurityAttributeKeeper(SecurityLevel sl);
+    SecurityAttributeKeeper(const SecurityAttributeKeeper &) = delete;
+    SecurityAttributeKeeper &operator=(const SecurityAttributeKeeper &) =
+        delete;
+    SecurityAttributeKeeper(SecurityAttributeKeeper &&) = delete;
+    SecurityAttributeKeeper &operator=(SecurityAttributeKeeper &&) = delete;
+
     ~SecurityAttributeKeeper();
 
     [[nodiscard]] const SECURITY_ATTRIBUTES *get() const noexcept {
@@ -398,8 +402,7 @@ public:
 
 private:
     enum class UsePipe { yes, no };
-    uint32_t goExec(std::wstring_view command_line, UsePipe use_pipe,
-                    DWORD flags) noexcept;
+    uint32_t goExec(std::wstring_view command_line, UsePipe use_pipe) noexcept;
 
     void prepareResources(std::wstring_view command_line,
                           bool create_pipe) noexcept;
@@ -573,7 +576,12 @@ inline std::string ToUtf8(const std::wstring_view src) noexcept {
 }
 
 inline std::string ToUtf8(std::string_view src) noexcept {
-    return std::string(src);
+    return std::string{src};
+}
+
+/// Converts correctly path to string using conversion form wchar to utf8
+inline std::string ToStr(const std::filesystem::path &src) noexcept {
+    return ToUtf8(src.wstring());
 }
 
 std::wstring ToCanonical(std::wstring_view raw_app_name);
@@ -637,7 +645,7 @@ std::vector<const PERF_COUNTER_DEFINITION *> GenerateCounters(
 
 // NAMES
 std::vector<std::wstring> GenerateCounterNames(const PERF_OBJECT_TYPE *object,
-                                               const NameMap &map);
+                                               const NameMap &name_map);
 // 5. And Values!
 std::vector<uint64_t> GenerateValues(
     const PERF_COUNTER_DEFINITION &counter,
@@ -794,8 +802,7 @@ inline uint32_t WmiGetUint32(const VARIANT &var) noexcept {
         case VT_I2:
             return static_cast<uint32_t>(var.iVal);
             // 32 bits values
-        case VT_UI4:
-            return var.uintVal;  // no conversion here, we expect good type here
+        case VT_UI4:  // no conversion here, we expect good type here
         case VT_I4:
             return var.uintVal;
         default:
@@ -876,7 +883,6 @@ inline uint64_t WmiGetUint64(const VARIANT &var) noexcept {
         case VT_I2:
             return static_cast<uint64_t>(var.iVal);
         case VT_UI4:
-            return static_cast<uint64_t>(var.uintVal);
         case VT_I4:
             return static_cast<uint64_t>(var.uintVal);
         case VT_UI8:
@@ -937,8 +943,8 @@ public:
     // on error returns empty string and timeout status
     static std::tuple<std::wstring, WmiStatus> produceTable(
         IEnumWbemClassObject *enumerator,
-        const std::vector<std::wstring> &names, std::wstring_view separator,
-        uint32_t wmi_timeout) noexcept;
+        const std::vector<std::wstring> &existing_names,
+        std::wstring_view separator, uint32_t wmi_timeout) noexcept;
 
     /// work horse to ask certain names from the target
     /// on error returns empty string and timeout status
@@ -955,8 +961,8 @@ public:
 
 private:
     void close() noexcept;
-    static std::wstring makeQuery(const std::vector<std::wstring> &Names,
-                                  const std::wstring &Target) noexcept;
+    static std::wstring makeQuery(const std::vector<std::wstring> &names,
+                                  const std::wstring &target) noexcept;
 
     mutable std::mutex lock_;
     IWbemLocator *locator_{nullptr};
@@ -1004,6 +1010,10 @@ public:
     };
     /// \b bstrPath - path for which ACL info should be queried
     explicit ACLInfo(const _bstr_t &path) noexcept;
+    ACLInfo(const ACLInfo &) = delete;
+    ACLInfo operator=(const ACLInfo &) = delete;
+    ACLInfo(ACLInfo &&) = delete;
+    ACLInfo operator=(ACLInfo &&) = delete;
     virtual ~ACLInfo();
     /// \b Queries NTFS for ACL Info of the file/directory
     HRESULT query() noexcept;
@@ -1012,7 +1022,7 @@ public:
 
 private:
     void clearAceList() noexcept;
-    HRESULT addAceToList(ACE_HEADER *pAce) noexcept;
+    HRESULT addAceToList(ACE_HEADER *ace) noexcept;
     _bstr_t path_;
     AceList *ace_list_;  // list of Access Control Entries
 };

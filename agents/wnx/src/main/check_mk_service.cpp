@@ -352,7 +352,7 @@ namespace srv {
 int RunService(std::wstring_view app_name) {
     details::SetModus(Modus::service);  // we know that we are service
 
-    auto ret = ServiceAsService(app_name, 1000ms, [] {
+    const auto ret = ServiceAsService(app_name, 1000ms, [] {
         // Auto Update when  MSI file is located by specified address
         // this part of code have to be tested manually
         auto [command, started] = install::CheckForUpdateFile(
@@ -405,7 +405,7 @@ int ProcessWinperf(const std::vector<std::wstring> &args) {
     int offset = 0;
     if (args[0][0] == '@') {
         try {
-            std::filesystem::path p{args[0].c_str() + 1};
+            const std::filesystem::path p{args[0].c_str() + 1};
             XLOG::setup::ChangeLogFileName(wtools::ToUtf8(p.wstring()));
             XLOG::setup::EnableDebugLog(true);
             XLOG::setup::EnableTraceLog(true);
@@ -652,5 +652,7 @@ int MainFunction(int argc, wchar_t const *argv[]) {
 }  // namespace cma
 
 #if !defined(CMK_TEST)
-int wmain(int argc, wchar_t const *argv[]) { return cma::MainFunction(argc, argv); }
+int wmain(int argc, wchar_t const *argv[]) {
+    return cma::MainFunction(argc, argv);
+}
 #endif

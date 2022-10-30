@@ -30,6 +30,7 @@ public:
         setHeaderless();
         local_ = false;
         cfg_name_ = cfg::groups::kPlugins;
+        last_count_ = 0;
     }
 
     PluginsProvider(std::string_view name, char separator)

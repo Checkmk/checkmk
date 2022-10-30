@@ -108,8 +108,8 @@ public:
     TempDirPair &operator=(TempDirPair &&) = delete;
 
     ~TempDirPair();
-    std::filesystem::path in() const noexcept { return in_; }
-    std::filesystem::path out() const noexcept { return out_; }
+    [[nodiscard]] std::filesystem::path in() const noexcept { return in_; }
+    [[nodiscard]] std::filesystem::path out() const noexcept { return out_; }
 
 private:
     std::filesystem::path path_;
@@ -192,7 +192,7 @@ public:
     TempFolder &operator=(const TempFolder &) = delete;
     ~TempFolder();
 
-    std::filesystem::path path() const { return folder_name_; }
+    [[nodiscard]] std::filesystem::path path() const { return folder_name_; }
 
 private:
     std::filesystem::path folder_name_;
@@ -228,13 +228,13 @@ public:
     [[nodiscard]] bool loadFactoryConfig();
     [[nodiscard]] bool loadContent(std::string_view content);
 
-    [[nodiscard]] bool createRootFile(const std::filesystem::path &relative_p,
+    [[nodiscard]] bool createRootFile(const std::filesystem::path &filepath,
                                       const std::string &content) const;
-    [[nodiscard]] bool createDataFile(const std::filesystem::path &relative_p,
+    [[nodiscard]] bool createDataFile(const std::filesystem::path &filepath,
                                       const std::string &content) const;
 
-    void removeRootFile(const std::filesystem::path &relative_p) const;
-    void removeDataFile(const std::filesystem::path &relative_p) const;
+    void removeRootFile(const std::filesystem::path &filepath) const;
+    void removeDataFile(const std::filesystem::path &filepath) const;
 
     std::filesystem::path root() const { return root_; }
     std::filesystem::path data() const { return data_; }
@@ -317,19 +317,23 @@ public:
         , message_(data.message)
         , event_level_{data.event_level} {}
 
-    uint64_t recordId() const override { return record_id_; }
+    [[nodiscard]] uint64_t recordId() const override { return record_id_; }
 
-    uint16_t eventId() const override { return event_id_; }
+    [[nodiscard]] uint16_t eventId() const override { return event_id_; }
 
-    uint16_t eventQualifiers() const override { return event_qualifiers_; }
+    [[nodiscard]] uint16_t eventQualifiers() const override {
+        return event_qualifiers_;
+    }
 
-    time_t timeGenerated() const override { return time_generated_; }
+    [[nodiscard]] time_t timeGenerated() const override {
+        return time_generated_;
+    }
 
-    std::wstring source() const override { return source_; }
+    [[nodiscard]] std::wstring source() const override { return source_; }
 
-    Level eventLevel() const override { return event_level_; }
+    [[nodiscard]] Level eventLevel() const override { return event_level_; }
 
-    std::wstring makeMessage() const override { return message_; }
+    [[nodiscard]] std::wstring makeMessage() const override { return message_; }
 
 private:
     uint64_t record_id_;
@@ -347,7 +351,7 @@ public:
         : data_(data) {}
     ~EventLogDebug() override = default;
 
-    std::wstring getName() const override { return L"debug"; }
+    [[nodiscard]] std::wstring getName() const override { return L"debug"; }
     void seek(uint64_t record_id) override { pos_ = record_id; }
     EventLogRecordBase *readRecord() override {
         if (pos_ < data_.size()) {
@@ -357,7 +361,7 @@ public:
         return nullptr;
     }
     uint64_t getLastRecordId() override { return 0; }
-    bool isLogValid() const override { return true; }
+    [[nodiscard]] bool isLogValid() const override { return true; }
 
 private:
     uint64_t pos_{0U};

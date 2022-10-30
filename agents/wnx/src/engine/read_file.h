@@ -124,7 +124,6 @@ inline std::optional<std::string> ReadFileInString(
         XLOG::l(XLOG_FUNC + "Exception '{}' generated in read file", e.what());
         return {};
     }
-
 }
 
 inline std::optional<std::vector<uint8_t>> ReadFileInVector(

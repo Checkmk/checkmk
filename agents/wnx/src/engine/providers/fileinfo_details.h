@@ -33,7 +33,7 @@ void GatherMatchingFilesRecursive(
                                                 // funny recursive search
     const std::filesystem::path &file_pattern,  // full mask from yaml
                                                 // fileinfo.path
-    PathVector &Files);                         // input and output
+    PathVector &files);                         // input and output
 
 void GatherMatchingFilesAndDirs(
     const std::filesystem::path &search_dir,    // c:\windows

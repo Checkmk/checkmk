@@ -28,8 +28,8 @@ constexpr std::wstring_view kRuleGroup = L"Checkmk Agent";
 constexpr std::wstring_view kRuleDescription =
     L"Allow inbound network traffic to the Checkmk Agent";
 
-bool CreateInboundRule(std::wstring_view rule_name, std::wstring_view app_name,
-                       int port);
+bool CreateInboundRule(std::wstring_view rule_name,
+                       std::wstring_view raw_app_name, int port);
 
 /// Remove *one* rule by 'name'
 bool RemoveRule(std::wstring_view rule_name);
@@ -44,7 +44,7 @@ int CountRules(std::wstring_view name, std::wstring_view raw_app_name);
 INetFwRule *FindRule(std::wstring_view name);
 
 /// Find a rule by 'name' and 'app_name'
-INetFwRule *FindRule(std::wstring_view name, std::wstring_view app_name);
+INetFwRule *FindRule(std::wstring_view name, std::wstring_view raw_app_name);
 
 // "Proxy" class to keep Windows Firewall API isolated
 class Policy {

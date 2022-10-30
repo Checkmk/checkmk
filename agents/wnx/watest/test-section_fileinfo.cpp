@@ -324,7 +324,7 @@ TEST(FileInfoTest, CheckOutput) {
                 std::begin(data), std::end(data),
                 [values](std::tuple<fs::path, std::string_view> entry) {
                     auto const &[path, _] = entry;
-                    return tools::IsEqual(path.u8string(), values[0]);
+                    return tools::IsEqual(wtools::ToStr(path), values[0]);
                 });
             EXPECT_TRUE(f);
         }
@@ -361,7 +361,7 @@ TEST(FileInfoTest, CheckOutput) {
                 std::begin(data), std::end(data),
                 [values](std::tuple<fs::path, std::string_view> entry) {
                     auto const &[path, _] = entry;
-                    return tools::IsEqual(path.u8string(), values[0]);
+                    return tools::IsEqual(wtools::ToStr(path), values[0]);
                 });
             EXPECT_TRUE(f);
         }

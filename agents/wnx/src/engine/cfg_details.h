@@ -18,7 +18,6 @@
 
 #include "cfg.h"
 #include "read_file.h"
-#include "tools/_misc.h"
 
 namespace cma::cfg::details {
 
@@ -241,6 +240,7 @@ public:
     ConfigInfo &operator=(const ConfigInfo &) = delete;
     ConfigInfo(ConfigInfo &&) = delete;
     ConfigInfo &operator=(ConfigInfo &&) = delete;
+    ~ConfigInfo() = default;
     void initFolders(
         const std::wstring &service_valid_name,  // look in registry
         const std::wstring &root_folder,         // look in disk

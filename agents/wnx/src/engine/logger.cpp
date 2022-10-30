@@ -146,7 +146,7 @@ int Type2Marker(xlog::Type log_type) noexcept {
 // converter from low level log type
 // to some default mark
 uint32_t Mods2Directions(const xlog::LogParam &lp, uint32_t mods) noexcept {
-    int directions = lp.directions_;
+    auto directions = lp.directions_;
 
     if ((mods & Mods::kStdio) != 0) {
         directions |= xlog::Directions::kStdioPrint;

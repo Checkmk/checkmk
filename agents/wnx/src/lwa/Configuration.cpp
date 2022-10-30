@@ -132,16 +132,15 @@ bool feedSection(const std::string &hostname, ConfigurableMap &configurables,
 
 }  // namespace
 
-bool Configuration::ReadSettings(const std::filesystem::path &Path,
-                                 bool Local) noexcept {
+bool Configuration::ReadSettings(const fs::path &settings_file,
+                                 bool local) noexcept {
     try {
         for (const auto &cfg : _configurables) {
             for (auto &entry : cfg.second) {
                 entry->startFile();
             }
         }
-        const auto filename = Path.u8string();
-        std::ifstream ifs(filename);
+        std::ifstream ifs(wtools::ToStr(settings_file));
         return readConfigFile(ifs, cma::cfg::GetHostName(), _configurables);
     } catch (const std::exception &e) {
         XLOG::l(XLOG_FLINE + "Smart exception '{}'", e.what());

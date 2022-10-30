@@ -160,8 +160,7 @@ inline SocketInfo GetSocketInfo(const asio::ip::tcp::socket &sock) noexcept {
 class ExternalPort : public std::enable_shared_from_this<ExternalPort> {
 public:
     // ctor&dtor
-    explicit ExternalPort(wtools::BaseServiceProcessor *owner)
-        : owner_(owner) {}
+    explicit ExternalPort(wtools::BaseServiceProcessor * /* owner*/) {}
 
     virtual ~ExternalPort() = default;
 
@@ -196,7 +195,6 @@ public:
     size_t entriesInQueue() const;
 
 private:
-    wtools::BaseServiceProcessor *owner_ = nullptr;
     class server {
         static asio::ip::tcp::endpoint makeEndpoint(bool ipv6, uint16_t port,
                                                     LocalOnly local_only) {
@@ -268,8 +266,9 @@ protected:
         shutdown_thread_ = true;
     }
 
-    void ioThreadProc(const ReplyFunc &reply, uint16_t port,
-                      LocalOnly local_only, std::optional<uint32_t> pid);
+    void ioThreadProc(const ReplyFunc &reply_func, uint16_t port,
+                      LocalOnly local_only,
+                      std::optional<uint32_t> controllser_pid);
 
     void mailslotThreadProc(const ReplyFunc &reply, uint32_t pid);
 

@@ -12,7 +12,6 @@
 using namespace std::chrono_literals;
 
 namespace cma::commander {
-bool RunCommand(std::string_view peer, std::string_view cmd);
 
 static bool GetEnabledFlag(bool dflt) {
     auto yaml = cfg::GetLoadedConfig();

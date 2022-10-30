@@ -60,7 +60,7 @@ void CreateVbsPluginInTemp(const fs::path &path, const std::string &name) {
 }
 
 void CreateComplicatedPluginInTemp(const std::filesystem::path &path,
-                                   std::string name) {
+                                   const std::string &name) {
     std::ofstream ofs(wtools::ToUtf8(path.wstring()));
 
     if (!ofs) {
@@ -80,9 +80,9 @@ void CreateComplicatedPluginInTemp(const std::filesystem::path &path,
 }
 
 void CreatePluginInTemp(const std::filesystem::path &path, int timeout,
-                        std::string name, std::string_view code,
+                        const std::string &name, std::string_view code,
                         cma::provider::PluginType type) {
-    std::ofstream ofs(path.u8string());
+    std::ofstream ofs(wtools::ToStr(path));
 
     if (!ofs) {
         XLOG::l("Can't open file {} error {}", path, GetLastError());
@@ -110,8 +110,7 @@ void RemoveFolder(const std::filesystem::path &path) {
         }
     }
 
-    for (std::vector<fs::path>::reverse_iterator rit = directories.rbegin();
-         rit != directories.rend(); ++rit) {
+    for (auto rit = directories.rbegin(); rit != directories.rend(); ++rit) {
         if (fs::is_empty(*rit)) {
             fs::remove(*rit);
         }
@@ -433,14 +432,14 @@ TEST(PluginTest, ApplyConfig) {
 }
 
 static void CreateFileInTemp(const std::filesystem::path &path) {
-    std::ofstream ofs(path.u8string());
+    std::ofstream ofs(wtools::ToStr(path));
 
     if (!ofs) {
         XLOG::l("Can't open file {} error {}", path, GetLastError());
         return;
     }
 
-    ofs << path.u8string() << std::endl;
+    ofs << wtools::ToStr(path) << std::endl;
 }
 
 // returns folder where
@@ -481,8 +480,8 @@ static void MakeFolderStructure(cma::PathVector Paths) {
     }
 }
 
-static void RemoveFolderStructure(cma::PathVector Pv) {
-    for (auto &folder : Pv) {
+static void RemoveFolderStructure(cma::PathVector paths) {
+    for (const auto &folder : paths) {
         RemoveFolder(folder);
     }
 }
@@ -640,9 +639,9 @@ TEST(PluginTest, HackPluginWithPiggyBack) {
 TEST(PluginTest, RemoveForbiddenNames) {
     PathVector files;
 
-    auto forbidden_file{"c:\\dev\\sh\\CMK-UPDATE-AGENT.EXE"};
-    auto good_file{"c:\\dev\\sh\\CMK-UPDATE-AGENT.PY"};
-    auto ok_file{"c:\\dev\\sh\\CMK-UPDATE-AGENT.checkmk.py"};
+    auto forbidden_file{R"(c:\dev\sh\CMK-UPDATE-AGENT.EXE)"};
+    auto good_file{R"(c:\dev\sh\CMK-UPDATE-AGENT.PY)"};
+    auto ok_file{R"(c:\dev\sh\CMK-UPDATE-AGENT.checkmk.py)"};
     files.emplace_back(forbidden_file);
     files.emplace_back(good_file);
     files.emplace_back(ok_file);
@@ -1507,7 +1506,7 @@ private:
         PathVector pv;
         for (auto &pd : plugin_desc_arr) {
             pv.emplace_back(temp_folder / pd.file_name_);
-            std::ofstream ofs(pv.back().u8string());
+            std::ofstream ofs(wtools::ToStr(pv.back()));
             ofs << code << "\n";
         }
         return pv;

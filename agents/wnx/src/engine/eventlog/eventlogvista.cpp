@@ -324,10 +324,10 @@ public:
     }
 
     [[nodiscard]] time_t timeGenerated() const override {
-        auto val = getValByType(kTimeGenerated);
-        auto ullTimeStamp = val.FileTimeVal;
-        constexpr ULONGLONG time_offset = 116444736000000000;
-        return (ullTimeStamp - time_offset) / 10000000;
+        const auto val = getValByType(kTimeGenerated);
+        const auto time_stamp = val.FileTimeVal;
+        constexpr ULONGLONG time_offset = 116444736000000000ULL;
+        return (time_stamp - time_offset) / 10000000;
     }
 
     [[nodiscard]] std::wstring source() const override {
@@ -335,8 +335,8 @@ public:
     }
 
     [[nodiscard]] Level eventLevel() const override {
-        auto val = getValByType(kLevel);
-        auto b = static_cast<WinEventLevel>(val.ByteVal);
+        const auto val = getValByType(kLevel);
+        const auto b = static_cast<WinEventLevel>(val.ByteVal);
         switch (b) {
             case WinEventLevel::Error:
             case WinEventLevel::Critical:

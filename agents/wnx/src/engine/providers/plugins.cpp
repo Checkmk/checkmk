@@ -103,7 +103,7 @@ void PluginsProvider::UpdatePluginMapCmdLine(PluginMap &pm,
         }
 
         auto &mc = sp->getModuleCommander();
-        auto fname = entry.path().u8string();
+        auto fname = wtools::ToStr(entry.path());
         XLOG::t.i("checking our script");
 
         if (!mc.isModuleScript(fname)) {
@@ -196,10 +196,10 @@ std::string ToString(const std::vector<char> &v) {
 
 void PluginsProvider::gatherAllData(std::string &out) {
     int last_count = 0;
-    auto data_sync = RunSyncPlugins(pm_, last_count, timeout());
+    const auto data_sync = RunSyncPlugins(pm_, last_count, timeout());
     last_count_ += last_count;
 
-    auto data_async = RunAsyncPlugins(pm_, last_count, true);
+    const auto data_async = RunAsyncPlugins(pm_, last_count, true);
     last_count_ += last_count;
 
     out += ToString(data_sync);

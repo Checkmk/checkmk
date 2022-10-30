@@ -156,7 +156,6 @@ private:
     // DATA ENDED HERE *********************************************
 
     CarrierDataHeader() = default;
-    ~CarrierDataHeader() = default;
 };
 #pragma pack(pop)
 
@@ -181,11 +180,10 @@ public:
         return carrier_address_;
     }
 
-    static bool FireSend(
-        const std::wstring &peer_name,  // assigned by caller
-        const std::wstring &port_name,  // standard format
-        const std::wstring &answer_id,  // identifies Answer
-        const void *data, size_t length) {
+    static bool FireSend(const std::wstring &peer_name,  // assigned by caller
+                         const std::wstring &port_name,  // standard format
+                         const std::wstring &answer_id,  // identifies Answer
+                         const void *data, size_t length) {
         if (auto id = tools::ConvertToUint64(answer_id); id.has_value()) {
             auto port = wtools::ToUtf8(port_name);
             CoreCarrier cc;

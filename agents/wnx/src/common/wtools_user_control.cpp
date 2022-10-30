@@ -129,7 +129,7 @@ public:
             L"System Managed Accounts Group",
         };
 
-        for (auto sid : sids) {
+        for (const auto sid : sids) {
             auto name = wtools::SidToName(sid, SidTypeGroup);
             groups_.emplace_back(name);
         }
@@ -200,10 +200,10 @@ Status LdapControl::localGroupDel(std::wstring_view group_name) {
         return Status::error;
     }
 
-    auto g_name = const_cast<wchar_t *>(group_name.data());
+    const auto name = const_cast<wchar_t *>(group_name.data());
 
     auto err = ::NetLocalGroupDel(primary_dc_name_,  // PDC name
-                                  g_name);
+                                  name);
 
     switch (err) {
         case 0:

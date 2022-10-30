@@ -27,7 +27,7 @@ TEST(SectionProviderSpool, BaseApiIntegration) {
     EXPECT_FALSE(cma::provider::IsDirectoryValid(dir / "<GTEST>"));
 
     ASSERT_TRUE(!dir.empty() &&
-                dir.u8string().find("\\spool") != std::string::npos);
+                wtools::ToStr(dir).find("\\spool") != std::string::npos);
 
     const fs::path spool_dir{cfg::dirs::kSpool};
 

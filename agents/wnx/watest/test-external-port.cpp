@@ -31,7 +31,9 @@ public:
     void shutdownService(wtools::StopMode /*stop_mode*/) override {
         shutdowned_ = true;
     }
-    const wchar_t *getMainLogName() const override { return L"log.log"; }
+    [[nodiscard]] const wchar_t *getMainLogName() const override {
+        return L"log.log";
+    }
 
     bool stopped_ = false;
     bool started_ = false;
@@ -47,7 +49,7 @@ namespace cma::world {  // to become friendly for wtools classes
 
 TEST(ExternalPortTest, StartStop) {
     world::ReplyFunc reply =
-        [](const std::string /*ip */) -> std::vector<uint8_t> { return {}; };
+        [](const std::string & /*ip */) -> std::vector<uint8_t> { return {}; };
     wtools::TestProcessor2 tp;
     world::ExternalPort test_port(&tp);  //
 
@@ -70,8 +72,8 @@ TEST(ExternalPortTest, StartStop) {
 
 class ExternalPortCheckProcessFixture : public ::testing::Test {
 public:
-    ReplyFunc reply = [this](const std::string ip) -> std::vector<uint8_t> {
-        remote_ip = ip;
+    ReplyFunc reply = [this](const std::string &ip) -> std::vector<uint8_t> {
+        this->remote_ip = ip;
         return {};
     };
     void SetUp() override {
@@ -161,8 +163,9 @@ TEST_F(ExternalPortCheckProcessFixture, ValidProcessIntegration) {
 class ExternalPortTestFixture : public ::testing::Test {
 public:
     ReplyFunc reply = [this](const std::string & /*ip*/) {
-        std::vector<uint8_t> data(reply_text_.begin(), reply_text_.end());
-        if (delay_) {
+        std::vector<uint8_t> data(this->reply_text_.begin(),
+                                  this->reply_text_.end());
+        if (this->delay_) {
             std::this_thread::sleep_for(50ms);
         }
 
@@ -223,7 +226,7 @@ public:
             sessions_.emplace_back(std::make_shared<AsioSession>(std::move(s)));
         }
 
-        for (auto as : sessions_) {
+        for (const auto &as : sessions_) {
             test_port_.putOnQueue(as);
         }
     }

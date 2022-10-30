@@ -51,13 +51,13 @@ int ExecUninstallAlert();
 int ExecRemoveLegacyAgent();
 
 int ExecRealtimeTest(bool print);  // on rt
-int ExecCvtIniYaml(std::filesystem::path IniFile,
-                   std::filesystem::path YamlFile,
+int ExecCvtIniYaml(const std::filesystem::path &ini_file_name,
+                   const std::filesystem::path &yaml_file_name,
                    StdioLog stdio_log);  // on cvt
 int ExecExtractCap(std::wstring_view cap_file,
                    std::wstring_view to);  //
-int ExecSection(const std::wstring &SecName,
-                int RepeatPause,      // if 0 no repeat
+int ExecSection(const std::wstring &section,
+                int repeat_pause,     // if 0 no repeat
                 StdioLog stdio_log);  // on section
 int ServiceAsService(
     std::wstring_view app_name, std::chrono::milliseconds delay,
@@ -68,10 +68,11 @@ int GetFirewallPort();
 
 void ProcessFirewallConfiguration(std::wstring_view app_name, int port,
                                   std::wstring_view rule_name);
-[[maybe_unused]] bool ProcessServiceConfiguration(std::wstring_view app_name);
+[[maybe_unused]] bool ProcessServiceConfiguration(
+    std::wstring_view service_name);
 
 // Converter API from YML language to wtools
-wtools::WinService::ErrorMode GetServiceErrorModeFromCfg(std::string_view text);
+wtools::WinService::ErrorMode GetServiceErrorModeFromCfg(std::string_view mode);
 wtools::WinService::StartMode GetServiceStartModeFromCfg(std::string_view text);
 
 // NAMES

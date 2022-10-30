@@ -85,15 +85,15 @@ TEST(OnlyFromTest, Validness) {
     std::error_code ec;
     using namespace asio;
 
-    for (auto l : loopback_list) {
+    for (const auto &l : loopback_list) {
         EXPECT_TRUE(of::IsAddress(l));
         EXPECT_FALSE(of::IsNetwork(l));
     }
-    for (auto a : address_list) {
+    for (const auto &a : address_list) {
         EXPECT_TRUE(of::IsAddress(a));
         EXPECT_FALSE(of::IsNetwork(a));
     }
-    for (auto n : network_list) {
+    for (const auto &n : network_list) {
         EXPECT_TRUE(of::IsNetwork(n));
         EXPECT_FALSE(of::IsAddress(n));
     }
@@ -180,7 +180,8 @@ void WriteToSocket(const std::string &ip) {
     socket.close();
     tst::WaitForSuccessSilent(100ms, [] { return !ip_received.empty(); });
 }
-auto RegisterIp(const std::string ip) -> std::vector<uint8_t> {
+
+auto RegisterIp(const std::string &ip) -> std::vector<uint8_t> {
     std::error_code ec;
 
     if (groups::global.isIpAddressAllowed(ip)) {
@@ -286,7 +287,7 @@ TEST(OnlyFromTest, Ipv6Integration) {
 
     bool address_ok = true;
     cma::world::ReplyFunc reply =
-        [&address_ok](const std::string Ip) -> std::vector<uint8_t> {
+        [&address_ok](const std::string &Ip) -> std::vector<uint8_t> {
         std::error_code ec;
 
         if (!groups::global.isIpAddressAllowed(Ip)) {

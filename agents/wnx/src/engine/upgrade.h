@@ -37,21 +37,21 @@ bool UpdateProtocolFile(std::wstring_view new_location,
 // accepts only "checkmk\\agent" ending path as program data
 // return count of files copied
 enum class CopyFolderMode { keep_old, remove_old };
-int CopyAllFolders(const std::filesystem::path &LegacyRoot,
-                   const std::filesystem::path &ProgramData,
+int CopyAllFolders(const std::filesystem::path &legacy_root,
+                   const std::filesystem::path &program_data,
                    CopyFolderMode mode);
 
-int CopyRootFolder(const std::filesystem::path &LegacyRoot,
-                   const std::filesystem::path &ProgramData);
+int CopyRootFolder(const std::filesystem::path &legacy_root,
+                   const std::filesystem::path &program_data);
 
 // INI --------------------------------------------
 // Intermediate API used in indirectly in production
-bool ConvertIniFiles(const std::filesystem::path &LegacyRoot,
-                     const std::filesystem::path &ProgramData);
-bool ConvertLocalIniFile(const std::filesystem::path &LegacyRoot,
-                         const std::filesystem::path &ProgramData);
-bool ConvertUserIniFile(const std::filesystem::path &LegacyRoot,
-                        const std::filesystem::path &ProgramData,
+bool ConvertIniFiles(const std::filesystem::path &legacy_root,
+                     const std::filesystem::path &program_data);
+bool ConvertLocalIniFile(const std::filesystem::path &legacy_root,
+                         const std::filesystem::path &program_data);
+bool ConvertUserIniFile(const std::filesystem::path &legacy_root,
+                        const std::filesystem::path &program_data,
                         bool LocalFileExists);
 
 std::filesystem::path CreateUserYamlFromIni(

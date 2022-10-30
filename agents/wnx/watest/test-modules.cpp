@@ -186,7 +186,7 @@ TEST(ModulesTest, Loader) {
         "exec: {}\n"
         "{}\n";
 
-    for (auto s : good_sets) {
+    for (const auto &s : good_sets) {
         Module m;
         auto text = fmt::format(base, s.name, s.exts, s.exec, s.dir);
         auto node = YAML::Load(text);
@@ -220,7 +220,7 @@ TEST(ModulesTest, Loader) {
         EXPECT_EQ(m.exts()[0], ".e1");
     }
 
-    for (auto s : bad_sets) {
+    for (const auto &s : bad_sets) {
         Module m;
         auto text = fmt::format(base, s.name, s.exts, s.exec, s.dir);
         auto node = YAML::Load(text);
@@ -608,7 +608,7 @@ TEST_F(ModuleCommanderTest, InstallModulesIntegration) {
 
     tst::CreateTextFile(root / dirs::kFileInstallDir / "zzzz.zip",
                         "OKYYYYSSD");  // not null file should fail
-    (mc.InstallModule(bad_module, root, user, InstallMode::normal));
+    ModuleCommander::InstallModule(bad_module, root, user, InstallMode::normal);
 
     // Clean install store
     auto move_dir = ModuleCommander::GetMoveLocation(tst::install_cab_to_test);
@@ -699,7 +699,7 @@ TEST_F(ModuleCommanderTest, InstallModulesIntegration) {
                              move_dir / mc.modules_[0].name()));
 
         // Move modules to store, this is part of deinstall process
-        mc.moveModulesToStore(user);
+        ModuleCommander::moveModulesToStore(user);
         EXPECT_TRUE(IsAbsent(backup_file, target_folder));
 
         // Check that files removed from the quick uninstall

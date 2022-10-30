@@ -41,8 +41,6 @@ WinService::WinService(std::wstring_view name) {
 }
 
 LocalResource<SERVICE_FAILURE_ACTIONS> WinService::GetServiceFailureActions() {
-    SERVICE_FAILURE_ACTIONS *actions = nullptr;
-
     std::lock_guard lk(lock_);
     if (!IsGoodHandle(handle_)) {
         return nullptr;
@@ -63,8 +61,8 @@ LocalResource<SERVICE_FAILURE_ACTIONS> WinService::GetServiceFailureActions() {
     }
 
     // allocation
-    auto new_buf_size = bytes_needed;
-    actions = reinterpret_cast<SERVICE_FAILURE_ACTIONS *>(
+    const auto new_buf_size = bytes_needed;
+    const auto actions = reinterpret_cast<SERVICE_FAILURE_ACTIONS *>(
         ::LocalAlloc(LMEM_FIXED, new_buf_size));
 
     if (::QueryServiceConfig2(handle_, SERVICE_CONFIG_FAILURE_ACTIONS,
@@ -97,7 +95,7 @@ SERVICE_FAILURE_ACTIONS CreateServiceFailureAction(int delay) {
 
 /// \brief wraps low level win32 API-calls to make service restartable or not
 bool WinService::configureRestart(bool restart) {
-    auto action = restart ? SC_ACTION_RESTART : SC_ACTION_NONE;
+    const auto action = restart ? SC_ACTION_RESTART : SC_ACTION_NONE;
     constexpr int count_of_actions = 3;  // in windows service
     std::vector<SC_ACTION> fail_actions(count_of_actions,
                                         SC_ACTION{action, 2000});
@@ -107,12 +105,16 @@ bool WinService::configureRestart(bool restart) {
     service_fail_actions.lpsaActions = fail_actions.data();
 
     std::lock_guard lk(lock_);
-    if (!IsGoodHandle(handle_)) return false;
+    if (!IsGoodHandle(handle_)) {
+        return false;
+    }
 
-    auto result =
+    const auto result =
         ::ChangeServiceConfig2(handle_, SERVICE_CONFIG_FAILURE_ACTIONS,
                                &service_fail_actions);  // Apply above settings
-    if (result == TRUE) return true;
+    if (result == TRUE) {
+        return true;
+    }
 
     XLOG::l("Error [{}] configuring service", ::GetLastError());
     return false;
@@ -123,17 +125,17 @@ bool WinService::configureRestart(bool restart) {
 /// returns last error
 static uint32_t CallChangeServiceConfig(SC_HANDLE handle, DWORD start_type,
                                         DWORD error_control) {
-    auto ret = ::ChangeServiceConfig(handle,
-                                     SERVICE_NO_CHANGE,  // dwServiceType,
-                                     start_type,         // dwStartType,
-                                     error_control,      // dwErrorControl,
-                                     nullptr,            // lpBinaryPathName,
-                                     nullptr,            // lpLoadOrderGroup,
-                                     nullptr,            // lpdwTagId,
-                                     nullptr,            // lpDependencies,
-                                     nullptr,            // lpServiceStartName,
-                                     nullptr,            // lpPassword,
-                                     nullptr             // lpDisplayName
+    const auto ret = ::ChangeServiceConfig(handle,
+                                           SERVICE_NO_CHANGE,  // dwServiceType,
+                                           start_type,         // dwStartType,
+                                           error_control,  // dwErrorControl,
+                                           nullptr,        // lpBinaryPathName,
+                                           nullptr,        // lpLoadOrderGroup,
+                                           nullptr,        // lpdwTagId,
+                                           nullptr,        // lpDependencies,
+                                           nullptr,  // lpServiceStartName,
+                                           nullptr,  // lpPassword,
+                                           nullptr   // lpDisplayName
     );
 
     return ret == TRUE ? 0 : ::GetLastError();
@@ -145,7 +147,7 @@ static uint32_t CallChangeServiceConfig(SC_HANDLE handle, DWORD start_type,
 static uint32_t CallChangeServiceDelay(SC_HANDLE handle, bool delayed) {
     SERVICE_DELAYED_AUTO_START_INFO dasi;
     dasi.fDelayedAutostart = delayed ? TRUE : FALSE;
-    auto ret = ::ChangeServiceConfig2A(
+    const auto ret = ::ChangeServiceConfig2A(
         handle, SERVICE_CONFIG_DELAYED_AUTO_START_INFO, &dasi);
 
     return ret == TRUE ? 0 : ::GetLastError();

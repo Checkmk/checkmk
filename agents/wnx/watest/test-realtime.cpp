@@ -10,6 +10,7 @@
 #include "common/cfg_info.h"
 #include "realtime.h"
 #include "tools/_misc.h"
+#include "tools/_raii.h"
 
 namespace tst {
 void DisableSectionsNode(std::string_view str) {

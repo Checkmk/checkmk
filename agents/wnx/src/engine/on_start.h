@@ -24,7 +24,7 @@ constexpr std::wstring_view auto_reload{L"CMA_AUTO_RELOAD"};
 
 AppType AppDefaultType();  // defined by main
 
-bool OnStart(AppType type, const std::wstring &config_file);
+bool OnStart(AppType proposed_type, const std::wstring &config_file);
 inline bool OnStart() { return OnStart(AppType::automatic, L""); }
 inline bool OnStart(AppType type) { return OnStart(type, L""); }
 

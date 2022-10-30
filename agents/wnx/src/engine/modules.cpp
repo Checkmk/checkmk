@@ -22,6 +22,7 @@
 #include "common/wtools.h"
 #include "logger.h"
 #include "tools/_misc.h"
+#include "tools/_process.h"
 #include "zip.h"
 
 using namespace std::literals;

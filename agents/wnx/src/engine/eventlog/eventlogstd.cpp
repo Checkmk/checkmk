@@ -188,8 +188,8 @@ private:
     const MessageResolver &_resolver;
 };
 
-EventLog::EventLog(const std::wstring &Name)
-    : name_(Name), message_resolver_(Name) {
+EventLog::EventLog(const std::wstring &name)
+    : name_(name), message_resolver_(name) {
     handle_ = OpenEventLogW(nullptr, name_.c_str());
 
     if (handle_ == nullptr) {

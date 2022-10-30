@@ -518,7 +518,7 @@ bool FindProcessByPid(uint32_t pid) {
 bool ServiceProcessor::restartBinariesIfCfgChanged(uint64_t &last_cfg_id) {
     // this may race condition, still probability is zero
     // Config Reload is for manual usage
-    auto new_cfg_id = cfg::GetCfg().uniqId();
+    auto new_cfg_id = cfg::details::ConfigInfo::uniqId();
     if (last_cfg_id == new_cfg_id) {
         return false;
     }
@@ -536,7 +536,7 @@ ServiceProcessor::Signal ServiceProcessor::mainWaitLoop(
     // memorize vars to check for changes in loop below
     const auto ipv6 = cfg::groups::global.ipv6();
     const auto port = cfg::groups::global.port();
-    auto uniq_cfg_id = cfg::GetCfg().uniqId();
+    auto uniq_cfg_id = cfg::details::ConfigInfo::uniqId();
     if (GetModus() == Modus::service) {
         ProcessServiceConfiguration(kServiceName);
     }

@@ -10,6 +10,8 @@
 #include "on_start.h"
 #include "read_file.h"
 #include "test_tools.h"
+#include "tools/_raii.h"
+
 namespace fs = std::filesystem;
 using namespace std::string_literals;
 

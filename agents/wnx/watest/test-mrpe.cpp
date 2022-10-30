@@ -102,8 +102,11 @@ TEST(SectionProviderMrpe, SmallApi) {
 }
 
 TEST(SectionProviderMrpe, ConfigLoad) {
-    auto test_fs_ = tst::TempCfgFs::CreateNoIo();
+    auto test_fs_ = tst::TempCfgFs::Create();
     ASSERT_TRUE(test_fs_->loadFactoryConfig());
+    tst::CreateWorkFile(
+        std::filesystem::path{cfg::GetUserDir()} / "mrpe_checks.cfg",
+        R"(check = Type 'c:\windows\system32\chcp.com')");
     MrpeProvider mrpe;
     EXPECT_EQ(mrpe.getUniqName(), cma::section::kMrpe);
     auto yaml = cfg::GetLoadedConfig();

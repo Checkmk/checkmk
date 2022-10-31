@@ -87,7 +87,6 @@ from cmk.utils.type_defs import (
     ExitSpec,
     HostAddress,
     HostgroupName,
-    HostKey,
     HostName,
     IPMICredentials,
     Item,
@@ -99,7 +98,6 @@ from cmk.utils.type_defs import (
     ServicegroupName,
     ServiceID,
     ServiceName,
-    SourceType,
     TaggroupIDToTagID,
     TagIDs,
     TagIDToTaggroupID,
@@ -4031,32 +4029,6 @@ class ConfigCache:
             return "best", merged_cfg
 
         raise NotImplementedError(effective_mode)
-
-    def get_clustered_service_node_keys(
-        self,
-        host_config: HostConfig,
-        source_type: SourceType,
-        service_descr: ServiceName,
-    ) -> Sequence[HostKey]:
-        """Returns the node keys if a service is clustered, otherwise an empty sequence"""
-        used_nodes = (
-            [
-                nn
-                for nn in (host_config.nodes or ())
-                if host_config.hostname == self.host_of_clustered_service(nn, service_descr)
-            ]
-            or host_config.nodes
-            or ()
-        )
-
-        return [
-            HostKey(
-                nc.hostname,
-                source_type,
-            )
-            for nodename in used_nodes
-            if (nc := self.get_host_config(nodename))
-        ]
 
     def get_piggybacked_hosts_time_settings(
         self, piggybacked_hostname: Optional[HostName] = None

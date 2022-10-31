@@ -450,6 +450,33 @@ def get_aggregated_result(
     )
 
 
+def _get_clustered_service_node_keys(
+    config_cache: ConfigCache,
+    host_config: HostConfig,
+    source_type: SourceType,
+    service_descr: ServiceName,
+) -> Sequence[HostKey]:
+    """Returns the node keys if a service is clustered, otherwise an empty sequence"""
+    used_nodes = (
+        [
+            nn
+            for nn in (host_config.nodes or ())
+            if host_config.hostname == config_cache.host_of_clustered_service(nn, service_descr)
+        ]
+        or host_config.nodes
+        or ()
+    )
+
+    return [
+        HostKey(
+            nc.hostname,
+            source_type,
+        )
+        for nodename in used_nodes
+        if (nc := config_cache.get_host_config(nodename))
+    ]
+
+
 def _get_monitoring_data_kwargs(
     parsed_sections_broker: ParsedSectionsBroker,
     host_config: HostConfig,
@@ -466,7 +493,8 @@ def _get_monitoring_data_kwargs(
         )
 
     if host_config.is_cluster:
-        nodes = config_cache.get_clustered_service_node_keys(
+        nodes = _get_clustered_service_node_keys(
+            config_cache,
             host_config,
             source_type,
             service.description,

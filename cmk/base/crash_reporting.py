@@ -23,10 +23,6 @@ from cmk.utils.type_defs import (
     ServiceName,
 )
 
-from cmk.snmplib.type_defs import SNMPBackendEnum
-
-from cmk.base.config import HostConfig
-
 CrashReportStore = crash_reporting.CrashReportStore
 
 
@@ -84,12 +80,14 @@ def create_section_crash_dump(
 
 
 def create_check_crash_dump(
-    *,
-    host_config: HostConfig,
+    host_name: HostName,
     service_name: ServiceName,
+    *,
     plugin_name: Union[CheckPluginNameStr, CheckPluginName],
     plugin_kwargs: Mapping[str, Any],
+    is_cluster: bool,
     is_enforced: bool,
+    is_inline_snmp: bool,
     rtc_package: Optional[AgentRawData],
 ) -> str:
     """Create a crash dump from an exception occured during check execution
@@ -103,20 +101,17 @@ def create_check_crash_dump(
         crash = CheckCrashReport.from_exception(
             details={
                 "check_output": text,
-                "host": host_config.hostname,
-                "is_cluster": host_config.is_cluster,
+                "host": host_name,
+                "is_cluster": is_cluster,
                 "description": service_name,
                 "check_type": str(plugin_name),
-                "inline_snmp": (
-                    host_config.snmp_config(host_config.hostname).snmp_backend
-                    == SNMPBackendEnum.INLINE
-                ),
+                "inline_snmp": is_inline_snmp,
                 "enforced_service": is_enforced,
                 **plugin_kwargs,
             },
             type_specific_attributes={
-                "snmp_info": _read_snmp_info(host_config.hostname),
-                "agent_output": _read_agent_output(host_config.hostname)
+                "snmp_info": _read_snmp_info(host_name),
+                "agent_output": _read_agent_output(host_name)
                 if rtc_package is None
                 else rtc_package,
             },

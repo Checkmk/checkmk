@@ -45,7 +45,7 @@ from cmk.utils.type_defs import (
 )
 from cmk.utils.type_defs.result import Result
 
-from cmk.snmplib.type_defs import SNMPRawData
+from cmk.snmplib.type_defs import SNMPBackendEnum, SNMPRawData
 
 from cmk.core_helpers import FetcherType
 from cmk.core_helpers.type_defs import SectionNameCollection, SourceInfo
@@ -427,11 +427,16 @@ def get_aggregated_result(
         result = ServiceCheckResult(
             3,
             cmk.base.crash_reporting.create_check_crash_dump(
-                host_config=host_config,
-                service_name=service.description,
+                host_config.hostname,
+                service.description,
                 plugin_name=service.check_plugin_name,
                 plugin_kwargs={**item_kw, **params_kw, **section_kws},
+                is_cluster=host_config.is_cluster,
                 is_enforced=service.id() in table,
+                is_inline_snmp=(
+                    host_config.snmp_config(host_config.hostname).snmp_backend
+                    is SNMPBackendEnum.INLINE
+                ),
                 rtc_package=rtc_package,
             ),
         )

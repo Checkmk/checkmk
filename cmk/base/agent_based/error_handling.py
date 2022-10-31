@@ -25,6 +25,8 @@ from cmk.utils.type_defs import (
     ServiceState,
 )
 
+from cmk.snmplib.type_defs import SNMPBackendEnum
+
 import cmk.base.crash_reporting
 import cmk.base.obsolete_output as out
 from cmk.base.config import HostConfig
@@ -95,11 +97,15 @@ def _handle_failure(
     return (
         exit_spec.get("exception", 3),
         cmk.base.crash_reporting.create_check_crash_dump(
-            host_config=host_config,
-            service_name=service_name,
+            host_config.hostname,
+            service_name,
             plugin_name=plugin_name,
             plugin_kwargs={},
+            is_cluster=host_config.is_cluster,
             is_enforced=False,
+            is_inline_snmp=(
+                host_config.snmp_config(host_config.hostname).snmp_backend is SNMPBackendEnum.INLINE
+            ),
             rtc_package=rtc_package,
         ).replace("Crash dump:\n", "Crash dump:\\n"),
     )

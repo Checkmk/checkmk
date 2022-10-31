@@ -11,7 +11,12 @@ import pytest
 from pydantic_factories import ModelFactory
 
 from tests.unit.cmk.special_agents.agent_kube.factory import (
+    APIDeploymentFactory,
+    APINodeFactory,
     APIPodFactory,
+    ClusterDetailsFactory,
+    ContainerResourcesFactory,
+    ContainerSpecFactory,
     MetaDataFactory,
     pod_phase_generator,
     PodSpecFactory,
@@ -24,26 +29,6 @@ from cmk.special_agents.utils_kubernetes.api_server import LOWEST_FUNCTIONING_VE
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 
 
-class ContainerResourcesFactory(ModelFactory):
-    __model__ = api.ContainerResources
-
-
-class ClusterDetailsFactory(ModelFactory):
-    __model__ = api.ClusterDetails
-
-
-class ContainerSpecFactory(ModelFactory):
-    __model__ = api.ContainerSpec
-
-
-class APIDeployment(ModelFactory):
-    __model__ = api.Deployment
-
-
-class APINode(ModelFactory):
-    __model__ = api.Node
-
-
 class ResourcesRequirementsFactory(ModelFactory):
     __model__ = api.ResourcesRequirements
 
@@ -52,29 +37,10 @@ class CronJobFactory(ModelFactory):
     __model__ = api.CronJob
 
 
-@pytest.fixture
-def node_name():
-    return "node"
-
-
-@pytest.fixture
-def api_node(node_name):
-    node = APINode.build()
-    node.metadata.name = node_name
-    return node
-
-
-@pytest.fixture
-def api_pod(node_name):
-    pod = APIPodFactory.build()
-    pod.spec.node = node_name
-    return pod
-
-
-def test_pod_node_allocation_within_cluster(  # type:ignore[no-untyped-def]
-    api_node: api.Node, api_pod: api.Pod
-):
+def test_pod_node_allocation_within_cluster() -> None:
     """Test pod is correctly allocated to node within cluster"""
+    api_node = APINodeFactory.build()
+    api_pod = APIPodFactory.build(spec=PodSpecFactory.build(node=api_node.metadata.name))
     cluster = Cluster.from_api_resources(
         excluded_node_roles=[],
         pods=[api_pod],
@@ -88,20 +54,15 @@ def test_pod_node_allocation_within_cluster(  # type:ignore[no-untyped-def]
     assert len(cluster.nodes[0].pods) == 1
 
 
-def test_pod_deployment_allocation_within_cluster(  # type:ignore[no-untyped-def]
-    api_node, api_pod
-) -> None:
+def test_pod_deployment_allocation_within_cluster() -> None:
     """Test pod is correctly allocated to deployment within cluster"""
 
-    class APIDeployment(ModelFactory):
-        __model__ = api.Deployment
-
-    deployment = APIDeployment.build()
-    deployment.pods = [api_pod.uid]
+    api_pod = APIPodFactory.build()
+    deployment = APIDeploymentFactory.build(pods=[api_pod.uid])
     cluster = Cluster.from_api_resources(
         excluded_node_roles=[],
         pods=[api_pod],
-        nodes=[api_node],
+        nodes=[],
         statefulsets=[],
         daemon_sets=[],
         deployments=[deployment],

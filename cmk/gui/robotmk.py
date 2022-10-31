@@ -29,10 +29,10 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.plugins.views.utils import make_service_breadcrumb
 from cmk.gui.sites import live, only_sites
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
+from cmk.gui.view_breadcrumbs import make_service_breadcrumb
 
 
 @cmk.gui.pages.page_registry.register_page("robotmk")

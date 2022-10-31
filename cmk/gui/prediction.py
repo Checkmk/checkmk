@@ -20,7 +20,7 @@ from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.plugins.views.utils import make_service_breadcrumb
+from cmk.gui.view_breadcrumbs import make_service_breadcrumb
 
 graph_size = 2000, 700
 

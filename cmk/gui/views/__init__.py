@@ -240,10 +240,10 @@ def _register_pre_21_plugin_api() -> None:
         "Row",
         "transform_action_url",
         "view_is_enabled",
-        "view_title",
         "VisualLinkSpec",
     ):
         api_module.__dict__[name] = plugin_utils.__dict__[name]
+    api_module.__dict__["view_title"] = visuals.view_title
 
     for name in (
         "render_link_to_view",

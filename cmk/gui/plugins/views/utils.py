@@ -33,19 +33,16 @@ import cmk.gui.utils
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.view_utils
 import cmk.gui.visuals as visuals
-from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
-from cmk.gui.i18n import _, _u, ungettext
+from cmk.gui.i18n import _, ungettext
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.num_split import cmp_num_split as _cmp_num_split
-from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.painters.v1.helpers import (  # noqa: F401 # pylint: disable=unused-import
     get_perfdata_nth_value,
     is_stale,
@@ -76,11 +73,9 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.theme import theme
-from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
+from cmk.gui.utils.urls import makeuri, urlencode
 from cmk.gui.valuespec import ValueSpec
-from cmk.gui.view_store import get_permitted_views
 from cmk.gui.view_utils import CellSpec, get_host_list_links
-from cmk.gui.visuals import view_title
 
 ExportCellContent = str | dict[str, Any]
 PDFCellContent = Union[str | tuple[Literal["icon"], str]]
@@ -1323,77 +1318,6 @@ def _get_separated_sorters(
     _substract_sorters(view_sort, user_sort)
 
     return group_sort, user_sort, view_sort
-
-
-def make_service_breadcrumb(host_name: HostName, service_name: ServiceName) -> Breadcrumb:
-    permitted_views = get_permitted_views()
-    service_view_spec = permitted_views["service"]
-
-    breadcrumb = make_host_breadcrumb(host_name)
-
-    # Add service home page
-    breadcrumb.append(
-        BreadcrumbItem(
-            title=view_title(service_view_spec, context={}),
-            url=makeuri_contextless(
-                request,
-                [("view_name", "service"), ("host", host_name), ("service", service_name)],
-                filename="view.py",
-            ),
-        )
-    )
-
-    return breadcrumb
-
-
-def make_host_breadcrumb(host_name: HostName) -> Breadcrumb:
-    """Create the breadcrumb down to the "host home page" level"""
-    permitted_views = get_permitted_views()
-    allhosts_view_spec = permitted_views["allhosts"]
-
-    breadcrumb = make_topic_breadcrumb(
-        mega_menu_registry.menu_monitoring(),
-        PagetypeTopics.get_topic(allhosts_view_spec["topic"]).title(),
-    )
-
-    # 1. level: list of all hosts
-    breadcrumb.append(
-        BreadcrumbItem(
-            title=_u(str(allhosts_view_spec["title"])),
-            url=makeuri_contextless(
-                request,
-                [("view_name", "allhosts")],
-                filename="view.py",
-            ),
-        )
-    )
-
-    # 2. Level: hostname (url to status of host)
-    breadcrumb.append(
-        BreadcrumbItem(
-            title=host_name,
-            url=makeuri_contextless(
-                request,
-                [("view_name", "hoststatus"), ("host", host_name)],
-                filename="view.py",
-            ),
-        )
-    )
-
-    # 3. level: host home page
-    host_view_spec = permitted_views["host"]
-    breadcrumb.append(
-        BreadcrumbItem(
-            title=view_title(host_view_spec, context={}),
-            url=makeuri_contextless(
-                request,
-                [("view_name", "host"), ("host", host_name)],
-                filename="view.py",
-            ),
-        )
-    )
-
-    return breadcrumb
 
 
 class PainterAdapter(Painter):

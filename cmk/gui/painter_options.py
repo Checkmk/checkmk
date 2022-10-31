@@ -7,7 +7,8 @@ from __future__ import annotations
 
 import abc
 import time
-from typing import Any, Dict, Optional, Sequence, Type
+from collections.abc import Sequence
+from typing import Any, Dict, Optional, Type
 
 import cmk.utils.render
 from cmk.utils.plugin_registry import Registry

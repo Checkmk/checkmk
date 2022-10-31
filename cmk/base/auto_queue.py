@@ -23,7 +23,6 @@ from typing import (
 
 import livestatus
 
-import cmk.utils.paths
 from cmk.utils.exceptions import MKException
 from cmk.utils.log import console
 from cmk.utils.type_defs import HostName
@@ -80,7 +79,7 @@ class TimeLimitFilter:
                 raise _Timeout()
 
 
-class AutodiscoveryQueue:
+class AutoQueue:
     @staticmethod
     def _host_name(file_path: Path) -> HostName:
         return HostName(file_path.name)
@@ -88,8 +87,8 @@ class AutodiscoveryQueue:
     def _file_path(self, host_name: HostName) -> Path:
         return self._dir / str(host_name)
 
-    def __init__(self) -> None:
-        self._dir = Path(cmk.utils.paths.var_dir, "autodiscovery")
+    def __init__(self, directory: Path | str) -> None:
+        self._dir = Path(directory)
 
     def _ls(self) -> Sequence[Path]:
         try:

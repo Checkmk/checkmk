@@ -66,7 +66,7 @@ import cmk.base.parent_scan
 import cmk.base.profiling as profiling
 import cmk.base.sources as sources
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
-from cmk.base.auto_queue import AutodiscoveryQueue
+from cmk.base.auto_queue import AutoQueue
 from cmk.base.config import HostConfig
 from cmk.base.core_factory import create_core
 from cmk.base.modes import keepalive_option, Mode, modes, Option
@@ -1469,7 +1469,7 @@ modes.register(
 def mode_discover_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
     _handle_fetcher_options(options)
 
-    if not (queue := AutodiscoveryQueue()):
+    if not (queue := AutoQueue(cmk.utils.paths.autodiscovery_dir)):
         console.verbose("Autodiscovery: No hosts marked by discovery check\n")
         return
 

@@ -6,6 +6,7 @@
 import logging
 from typing import Counter, Sequence, Tuple
 
+import cmk.utils.paths
 from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import OnError
@@ -22,7 +23,7 @@ from cmk.base.agent_based.data_provider import (
     store_piggybacked_sections,
 )
 from cmk.base.agent_based.utils import check_parsing_errors, summarize_host_sections
-from cmk.base.auto_queue import AutodiscoveryQueue
+from cmk.base.auto_queue import AutoQueue
 from cmk.base.config import DiscoveryCheckParameters, HostConfig
 from cmk.base.discovered_labels import HostLabel
 
@@ -234,7 +235,7 @@ def _schedule_rediscovery(
     if not need_rediscovery:
         return ActiveCheckResult()
 
-    autodiscovery_queue = AutodiscoveryQueue()
+    autodiscovery_queue = AutoQueue(cmk.utils.paths.autodiscovery_dir)
     if host_config.is_cluster and host_config.nodes:
         for nodename in host_config.nodes:
             autodiscovery_queue.add(nodename)

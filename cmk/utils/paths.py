@@ -80,6 +80,7 @@ status_data_dir = _omd_path_str("tmp/check_mk/status_data")
 robotmk_html_log_dir = _omd_path_str("var/robotmk")
 base_discovered_host_labels_dir = _omd_path("var/check_mk/discovered_host_labels")
 discovered_host_labels_dir = base_discovered_host_labels_dir
+autodiscovery_dir = _omd_path_str("var/check_mk/autodiscovery")
 piggyback_dir = Path(tmp_dir, "piggyback")
 piggyback_source_dir = Path(tmp_dir, "piggyback_sources")
 profile_dir = Path(var_dir, "web")

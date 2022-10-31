@@ -59,7 +59,7 @@ from cmk.base.agent_based.data_provider import (
     ParsedSectionsBroker,
     store_piggybacked_sections,
 )
-from cmk.base.auto_queue import AutodiscoveryQueue, get_up_hosts, TimeLimitFilter
+from cmk.base.auto_queue import AutoQueue, get_up_hosts, TimeLimitFilter
 from cmk.base.config import ConfigCache, HostConfig
 from cmk.base.core_config import MonitoringCore
 from cmk.base.discovered_labels import HostLabel
@@ -370,7 +370,7 @@ def _make_diff(
 
 def discover_marked_hosts(
     core: MonitoringCore,
-    autodiscovery_queue: AutodiscoveryQueue,
+    autodiscovery_queue: AutoQueue,
 ) -> None:
     """Autodiscovery"""
 
@@ -440,7 +440,7 @@ def _discover_marked_host(
     *,
     config_cache: ConfigCache,
     host_config: HostConfig,
-    autodiscovery_queue: AutodiscoveryQueue,
+    autodiscovery_queue: AutoQueue,
     reference_time: float,
     oldest_queued: float,
 ) -> bool:

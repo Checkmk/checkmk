@@ -5,11 +5,11 @@
 
 import time
 from pathlib import Path
-from typing import Generator
+from typing import Generator, Iterator
 
 import pytest
 
-from cmk.base.auto_queue import AutodiscoveryQueue, TimeLimitFilter
+from cmk.base.auto_queue import AutoQueue, TimeLimitFilter
 
 
 def test_time_limit_filter_iterates() -> None:
@@ -29,9 +29,9 @@ def test_time_limit_filter_stops() -> None:
         assert not list(limiter(test_generator()))
 
 
-@pytest.fixture(name="autodiscovery_queue")
-def _mocked_queue(tmpdir):
-    adq = AutodiscoveryQueue()
+@pytest.fixture(name="auto_queue")
+def _mocked_queue(tmpdir: Path) -> Iterator[AutoQueue]:
+    adq = AutoQueue(tmpdir / "dir1")
     mockdir = Path(tmpdir)
     (mockdir / "most").touch()
     (mockdir / "lost").touch()
@@ -39,41 +39,37 @@ def _mocked_queue(tmpdir):
     yield adq
 
 
-class TestAutodiscoveryQueue:
-    def test_len(self, autodiscovery_queue) -> None:  # type:ignore[no-untyped-def]
-        assert len(AutodiscoveryQueue()) == 0
-        assert len(autodiscovery_queue) == 2
+class TestAutoQueue:
+    def test_len(self, tmpdir: Path, auto_queue: AutoQueue) -> None:
+        assert len(AutoQueue(tmpdir / "dir2")) == 0
+        assert len(auto_queue) == 2
 
-    def test_bool(self, autodiscovery_queue) -> None:  # type:ignore[no-untyped-def]
-        assert not AutodiscoveryQueue()
-        assert autodiscovery_queue
+    def test_bool(self, tmpdir: Path, auto_queue: AutoQueue) -> None:
+        assert not AutoQueue(tmpdir / "dir2")
+        assert auto_queue
 
-    def test_oldest_empty(self) -> None:
-        assert AutodiscoveryQueue().oldest() is None
+    def test_oldest_empty(self, tmpdir: Path) -> None:
+        assert AutoQueue(tmpdir).oldest() is None
 
-    def test_oldest_populated(self, autodiscovery_queue) -> None:  # type:ignore[no-untyped-def]
-        assert isinstance(autodiscovery_queue.oldest(), float)
+    def test_oldest_populated(self, auto_queue: AutoQueue) -> None:
+        assert isinstance(auto_queue.oldest(), float)
 
-    def test_queued_empty(  # type:ignore[no-untyped-def]
-        self, autodiscovery_queue, monkeypatch
-    ) -> None:
-        autodiscovery_queue = AutodiscoveryQueue()
-        assert not list(autodiscovery_queue.queued_hosts())
+    def test_queued_empty(self, tmpdir: Path, auto_queue: AutoQueue) -> None:
+        auto_queue = AutoQueue(tmpdir / "dir2")
+        assert not list(auto_queue.queued_hosts())
 
-    def test_queued_populated(  # type:ignore[no-untyped-def]
-        self, autodiscovery_queue, monkeypatch
-    ) -> None:
-        assert set(autodiscovery_queue.queued_hosts()) == {"most", "lost"}
+    def test_queued_populated(self, auto_queue: AutoQueue) -> None:
+        assert set(auto_queue.queued_hosts()) == {"most", "lost"}
 
-    def test_add(self, autodiscovery_queue, monkeypatch) -> None:  # type:ignore[no-untyped-def]
-        autodiscovery_queue = AutodiscoveryQueue()
-        autodiscovery_queue.add("most")
-        assert list(autodiscovery_queue.queued_hosts()) == ["most"]
+    def test_add(self, tmpdir: Path, auto_queue: AutoQueue) -> None:
+        auto_queue = AutoQueue(tmpdir / "dir2")
+        auto_queue.add("most")
+        assert list(auto_queue.queued_hosts()) == ["most"]
 
-    def test_remove(self, autodiscovery_queue, monkeypatch) -> None:  # type:ignore[no-untyped-def]
-        autodiscovery_queue.remove("lost")
-        assert list(autodiscovery_queue.queued_hosts()) == ["most"]
+    def test_remove(self, auto_queue: AutoQueue) -> None:
+        auto_queue.remove("lost")
+        assert list(auto_queue.queued_hosts()) == ["most"]
 
-    def test_cleanup(self, autodiscovery_queue) -> None:  # type:ignore[no-untyped-def]
-        autodiscovery_queue.cleanup(valid_hosts={"lost", "rost"}, logger=lambda x: None)
-        assert list(autodiscovery_queue.queued_hosts()) == ["lost"]
+    def test_cleanup(self, auto_queue: AutoQueue) -> None:
+        auto_queue.cleanup(valid_hosts={"lost", "rost"}, logger=lambda x: None)
+        assert list(auto_queue.queued_hosts()) == ["lost"]

@@ -1,0 +1,18 @@
+Title: Automatically update deprectated password hashes
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1667404954
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0p16
+
+Deprecated hashes of user passwords stored in the htpasswd file will now be automatically updated to a more modern hash format when the respective user logs in.
+Specifically, password hashes created with the sha256-crypt algorithm will be udpated to bcrypt hashes.
+
+sha256-crypt hashes are still considered secure for password hashing.
+However, we want to migrate all users' password hashes to the more modern bcrypt algorithm.
+For users whose passwords are hashed with sha256-crypt we can do so automatically in the background when they authenticate successfully.
+
+Older and less secure password hashes, such as MD5, are not updated automatically.

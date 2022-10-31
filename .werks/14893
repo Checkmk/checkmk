@@ -1,0 +1,13 @@
+Title: Fix localized entries in audit log
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1667206012
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+Entries in audit log were localized with the user language of the user that executed changes.
+These entries are now always written unlocalized.
+

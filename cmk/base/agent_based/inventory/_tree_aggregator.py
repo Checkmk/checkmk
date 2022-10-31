@@ -126,7 +126,7 @@ class RealHostTreeAggregator(TreeAggregator):
 
             self._may_add_cache_info(
                 now=now,
-                node_name=TABLE_KEY,
+                node_type=TABLE_KEY,
                 path=tuple(tabr.path),
                 raw_cache_info=raw_cache_info,
             )
@@ -135,7 +135,7 @@ class RealHostTreeAggregator(TreeAggregator):
             self._integrate_attributes(attr)
             self._may_add_cache_info(
                 now=now,
-                node_name=ATTRIBUTES_KEY,
+                node_type=ATTRIBUTES_KEY,
                 path=tuple(attr.path),
                 raw_cache_info=raw_cache_info,
             )
@@ -221,11 +221,11 @@ class RealHostTreeAggregator(TreeAggregator):
         self,
         *,
         now: int,
-        node_name: str,
+        node_type: str,
         path: SDPath,
         raw_cache_info: RawCacheInfo | None,
     ) -> None:
-        retention_key = (tuple(path), node_name)
+        retention_key = (tuple(path), node_type)
 
         if (from_config := self._from_config.get(retention_key)) is None:
             return
@@ -278,7 +278,7 @@ class RealHostTreeAggregator(TreeAggregator):
         retention_info: RetentionInfo,
         previous_tree: StructuredDataNode,
     ) -> NodeUpdater:
-        node_path, node_name = retention_key
+        node_path, node_type = retention_key
 
         inv_node = self._inventory_tree.get_node(node_path)
         previous_node = previous_tree.get_node(node_path)
@@ -289,14 +289,14 @@ class RealHostTreeAggregator(TreeAggregator):
         if inv_node is None:
             inv_node = self._inventory_tree.setdefault_node(node_path)
 
-        if node_name == ATTRIBUTES_KEY:
+        if node_type == ATTRIBUTES_KEY:
             return AttributesUpdater(
                 retention_info,
                 inv_node,
                 previous_node,
             )
 
-        if node_name == TABLE_KEY:
+        if node_type == TABLE_KEY:
             return TableUpdater(
                 retention_info,
                 inv_node,

@@ -204,7 +204,7 @@ def test_integrate_table_row() -> None:
 
 
 @pytest.mark.parametrize(
-    "raw_intervals, node_name, path, raw_cache_info",
+    "raw_intervals, node_type, path, raw_cache_info",
     [
         # === Attributes ===
         # empty config
@@ -502,7 +502,7 @@ def test_integrate_table_row() -> None:
 )
 def test_retentions_add_cache_info_no_match(
     raw_intervals: list[dict],
-    node_name: str,
+    node_type: str,
     path: SDPath,
     raw_cache_info: tuple[int, int] | None,
 ) -> None:
@@ -510,7 +510,7 @@ def test_retentions_add_cache_info_no_match(
     tree_aggregator = RealHostTreeAggregator(raw_intervals)
     tree_aggregator._may_add_cache_info(
         now=now,
-        node_name=node_name,
+        node_type=node_type,
         path=path,
         raw_cache_info=raw_cache_info,
     )
@@ -518,7 +518,7 @@ def test_retentions_add_cache_info_no_match(
 
 
 @pytest.mark.parametrize(
-    "raw_intervals, node_name, raw_cache_info, expected_intervals, match_some_keys, match_other_keys",
+    "raw_intervals, node_type, raw_cache_info, expected_intervals, match_some_keys, match_other_keys",
     [
         # === Attributes ===
         # config, right path, all attributes
@@ -674,7 +674,7 @@ def test_retentions_add_cache_info_no_match(
 )
 def test_retentions_add_cache_info(
     raw_intervals: list[dict],
-    node_name: str,
+    node_type: str,
     raw_cache_info: tuple[int, int] | None,
     expected_intervals: RetentionIntervals,
     match_some_keys: bool,
@@ -684,12 +684,12 @@ def test_retentions_add_cache_info(
     tree_aggregator = RealHostTreeAggregator(raw_intervals)
     tree_aggregator._may_add_cache_info(
         now=now,
-        node_name=node_name,
+        node_type=node_type,
         path=("path-to", "node"),
         raw_cache_info=raw_cache_info,
     )
 
-    retention_info = tree_aggregator._retention_infos.get((("path-to", "node"), node_name))
+    retention_info = tree_aggregator._retention_infos.get((("path-to", "node"), node_type))
     assert retention_info is not None
 
     assert retention_info.intervals == expected_intervals

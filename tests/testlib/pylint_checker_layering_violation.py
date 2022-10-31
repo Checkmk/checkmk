@@ -167,7 +167,7 @@ def load_layering_configuration(path: Path) -> IsImportOK:
 # PyYAML doesn't check for duplicate mapping keys, although it really should, see
 # https://github.com/yaml/pyyaml/issues/165 for a discussion and the workaround below.
 class UniqueKeyLoader(yaml.SafeLoader):  # pylint: disable=too-many-ancestors
-    def construct_mapping(self, node: yaml.Node, deep: bool = False) -> dict:
+    def construct_mapping(self, node: yaml.MappingNode, deep: bool = False) -> dict:
         mapping = set()
         for key_node, _value_node in node.value:
             key = self.construct_object(key_node, deep=deep)

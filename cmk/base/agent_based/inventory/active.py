@@ -12,6 +12,8 @@ from cmk.utils.log import console
 from cmk.utils.structured_data import StructuredDataNode, TreeOrArchiveStore, UpdateResult
 from cmk.utils.type_defs import EVERYTHING, HostName, ServiceState
 
+from cmk.snmplib.type_defs import SNMPBackendEnum
+
 from cmk.core_helpers.type_defs import NO_SELECTION
 
 import cmk.base.agent_based.error_handling as error_handling
@@ -33,9 +35,14 @@ def active_check_inventory(
     host_config = HostConfig.make_host_config(hostname)
     return error_handling.check_result(
         partial(_execute_active_check_inventory, host_config, options),
-        host_config=host_config,
-        plugin_name="check_mk_active-cmk_inv",
+        exit_spec=host_config.exit_code_spec(),
+        host_name=host_config.hostname,
         service_name="Check_MK HW/SW Inventory",
+        plugin_name="check_mk_active-cmk_inv",
+        is_cluster=host_config.is_cluster,
+        is_inline_snmp=(
+            host_config.snmp_config(host_config.hostname).snmp_backend is SNMPBackendEnum.INLINE
+        ),
         active_check_handler=active_check_handler,
         keepalive=keepalive,
     )

@@ -25,19 +25,19 @@ from cmk.utils.type_defs import (
     ServiceState,
 )
 
-from cmk.snmplib.type_defs import SNMPBackendEnum
-
 import cmk.base.crash_reporting
 import cmk.base.obsolete_output as out
-from cmk.base.config import HostConfig
 
 
 def check_result(
     callback: Callable[[], ActiveCheckResult],
     *,
-    host_config: HostConfig,
+    exit_spec: ExitSpec,
+    host_name: HostName,
     service_name: ServiceName,
     plugin_name: CheckPluginNameStr,
+    is_cluster: bool,
+    is_inline_snmp: bool,
     active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,
 ) -> ServiceState:
@@ -46,16 +46,18 @@ def check_result(
     except Exception as exc:
         state, text = _handle_failure(
             exc,
-            host_config.exit_code_spec(),
-            host_config=host_config,
+            exit_spec,
+            host_name=host_name,
             service_name=service_name,
             plugin_name=plugin_name,
+            is_cluster=is_cluster,
+            is_inline_snmp=is_inline_snmp,
             keepalive=keepalive,
             rtc_package=None,
         )
     _handle_output(
         text,
-        host_config.hostname,
+        host_name,
         active_check_handler=active_check_handler,
         keepalive=keepalive,
     )
@@ -75,9 +77,11 @@ def _handle_failure(
     exc: Exception,
     exit_spec: ExitSpec,
     *,
-    host_config: HostConfig,
+    host_name: HostName,
     service_name: ServiceName,
     plugin_name: CheckPluginNameStr,
+    is_cluster: bool,
+    is_inline_snmp: bool,
     rtc_package: Optional[AgentRawData],
     keepalive: bool,
 ) -> Tuple[ServiceState, str]:
@@ -97,15 +101,13 @@ def _handle_failure(
     return (
         exit_spec.get("exception", 3),
         cmk.base.crash_reporting.create_check_crash_dump(
-            host_config.hostname,
+            host_name,
             service_name,
             plugin_name=plugin_name,
             plugin_kwargs={},
-            is_cluster=host_config.is_cluster,
+            is_cluster=is_cluster,
             is_enforced=False,
-            is_inline_snmp=(
-                host_config.snmp_config(host_config.hostname).snmp_backend is SNMPBackendEnum.INLINE
-            ),
+            is_inline_snmp=is_inline_snmp,
             rtc_package=rtc_package,
         ).replace("Crash dump:\n", "Crash dump:\\n"),
     )

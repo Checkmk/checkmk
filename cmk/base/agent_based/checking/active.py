@@ -18,7 +18,7 @@ from cmk.utils.type_defs import (
     ServiceState,
 )
 
-from cmk.snmplib.type_defs import SNMPRawData
+from cmk.snmplib.type_defs import SNMPBackendEnum, SNMPRawData
 
 from cmk.core_helpers.type_defs import NO_SELECTION, SectionNameCollection, SourceInfo
 
@@ -57,9 +57,14 @@ def active_check_checking(
             selected_sections=selected_sections,
             submitter=submitter,
         ),
-        host_config=host_config,
+        exit_spec=host_config.exit_code_spec(),
+        host_name=host_config.hostname,
         service_name="Check_MK",
         plugin_name="mk",
+        is_cluster=host_config.is_cluster,
+        is_inline_snmp=(
+            host_config.snmp_config(host_config.hostname).snmp_backend is SNMPBackendEnum.INLINE
+        ),
         active_check_handler=active_check_handler,
         keepalive=keepalive,
     )

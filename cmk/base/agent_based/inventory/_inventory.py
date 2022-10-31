@@ -68,6 +68,7 @@ class FetchedDataResult(NamedTuple):
 @dataclass(frozen=True)
 class CheckInventoryTreeResult:
     processing_failed: bool
+    no_data_or_files: bool
     check_result: ActiveCheckResult
     inventory_tree: StructuredDataNode
     update_result: UpdateResult
@@ -87,6 +88,7 @@ def check_inventory_tree(
         tree_aggregator.add_cluster_properties(nodes=host_config.nodes or [])
         return CheckInventoryTreeResult(
             processing_failed=False,
+            no_data_or_files=False,
             check_result=ActiveCheckResult.from_subresults(
                 *_check_trees(
                     parameters=parameters,
@@ -112,9 +114,8 @@ def check_inventory_tree(
     )
 
     return CheckInventoryTreeResult(
-        processing_failed=(
-            fetched_data_result.processing_failed or fetched_data_result.no_data_or_files
-        ),
+        processing_failed=fetched_data_result.processing_failed,
+        no_data_or_files=fetched_data_result.no_data_or_files,
         check_result=ActiveCheckResult.from_subresults(
             *_check_fetched_data_or_trees(
                 parameters=parameters,

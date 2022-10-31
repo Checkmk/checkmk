@@ -18,11 +18,12 @@ from cmk.core_helpers.type_defs import NO_SELECTION
 
 import cmk.base.agent_based.error_handling as error_handling
 import cmk.base.config as config
+from cmk.base.auto_queue import AutoQueue
 from cmk.base.config import HostConfig
 
 from ._inventory import check_inventory_tree
 
-__all__ = ["active_check_inventory"]
+__all__ = ["active_check_inventory", "execute_active_check_inventory"]
 
 
 def active_check_inventory(
@@ -34,7 +35,11 @@ def active_check_inventory(
 ) -> ServiceState:
     host_config = HostConfig.make_host_config(hostname)
     return error_handling.check_result(
-        partial(_execute_active_check_inventory, host_config, options),
+        partial(
+            execute_active_check_inventory,
+            host_config,
+            config.HWSWInventoryParameters.from_raw(options),
+        ),
         exit_spec=host_config.exit_code_spec(),
         host_name=host_config.hostname,
         service_name="Check_MK HW/SW Inventory",
@@ -48,9 +53,9 @@ def active_check_inventory(
     )
 
 
-def _execute_active_check_inventory(
+def execute_active_check_inventory(
     host_config: HostConfig,
-    options: dict,
+    parameters: config.HWSWInventoryParameters,
 ) -> ActiveCheckResult:
     tree_or_archive_store = TreeOrArchiveStore(
         cmk.utils.paths.inventory_output_dir,
@@ -62,11 +67,14 @@ def _execute_active_check_inventory(
         host_config=host_config,
         selected_sections=NO_SELECTION,
         run_plugin_names=EVERYTHING,
-        parameters=config.HWSWInventoryParameters.from_raw(options),
+        parameters=parameters,
         old_tree=old_tree,
     )
 
-    if not result.processing_failed:
+    if result.no_data_or_files:
+        AutoQueue(cmk.utils.paths.autoinventory_dir).add(host_config.hostname)
+
+    if not (result.processing_failed or result.no_data_or_files):
         _save_inventory_tree(
             hostname=host_config.hostname,
             tree_or_archive_store=tree_or_archive_store,

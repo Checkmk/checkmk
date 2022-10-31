@@ -1,0 +1,2 @@
+# Every 5 minutes autoinventory hosts marked by inventory check
+*/5 * * * * cmk --inventorize-marked-hosts

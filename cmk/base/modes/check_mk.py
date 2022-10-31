@@ -2064,6 +2064,52 @@ if cmk_version.edition() is cmk_version.Edition.CRE:
     )
 
 # .
+#   .--inventorize-marked-hosts--------------------------------------------.
+#   |           _                      _             _                     |
+#   |          (_)_ ____   _____ _ __ | |_ ___  _ __(_)_______             |
+#   |          | | '_ \ \ / / _ \ '_ \| __/ _ \| '__| |_  / _ \            |
+#   |          | | | | \ V /  __/ | | | || (_) | |  | |/ /  __/            |
+#   |          |_|_| |_|\_/ \___|_| |_|\__\___/|_|  |_/___\___|            |
+#   |                                                                      |
+#   |                         _            _   _               _           |
+#   |    _ __ ___   __ _ _ __| | _____  __| | | |__   ___  ___| |_ ___     |
+#   |   | '_ ` _ \ / _` | '__| |/ / _ \/ _` | | '_ \ / _ \/ __| __/ __|    |
+#   |   | | | | | | (_| | |  |   <  __/ (_| | | | | | (_) \__ \ |_\__ \    |
+#   |   |_| |_| |_|\__,_|_|  |_|\_\___|\__,_| |_| |_|\___/|___/\__|___/    |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def mode_inventorize_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
+    _handle_fetcher_options(options)
+
+    if not (queue := AutoQueue(cmk.utils.paths.autoinventory_dir)):
+        console.verbose("Autoinventory: No hosts marked by inventory check\n")
+        return
+
+    config.load()
+    inventory.inventorize_marked_hosts(
+        create_core(config.monitoring_core),
+        config.get_config_cache(),
+        queue,
+    )
+
+
+modes.register(
+    Mode(
+        long_option="inventorize-marked-hosts",
+        handler_function=mode_inventorize_marked_hosts,
+        short_help="Run inventory for hosts which previously had no tree data",
+        long_help=[
+            "Run actual service HW/SW Inventory on all hosts that had no tree data",
+            "in the previous run",
+        ],
+        sub_options=_FETCHER_OPTIONS,
+        needs_config=False,
+    )
+)
+
+# .
 #   .--version-------------------------------------------------------------.
 #   |                                     _                                |
 #   |                 __   _____ _ __ ___(_) ___  _ __                     |

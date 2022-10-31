@@ -64,6 +64,7 @@ _STR_PATHS: Final = {
     "web_dir",
     "lib_dir",
     "autodiscovery_dir",
+    "autoinventory_dir",
 }
 
 

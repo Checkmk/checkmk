@@ -7,11 +7,9 @@
 import logging
 import socket
 import time
-from contextlib import suppress
 from pathlib import Path
 from typing import (
     Callable,
-    Container,
     Dict,
     Iterable,
     List,
@@ -19,15 +17,12 @@ from typing import (
     Mapping,
     Optional,
     Sequence,
-    Set,
     Tuple,
     TypeVar,
     Union,
 )
 
 from typing_extensions import assert_never
-
-import livestatus
 
 import cmk.utils.cleanup
 import cmk.utils.debug
@@ -64,6 +59,7 @@ from cmk.base.agent_based.data_provider import (
     ParsedSectionsBroker,
     store_piggybacked_sections,
 )
+from cmk.base.auto_queue import AutodiscoveryQueue, get_up_hosts, TimeLimitFilter
 from cmk.base.config import ConfigCache, HostConfig
 from cmk.base.core_config import MonitoringCore
 from cmk.base.discovered_labels import HostLabel
@@ -72,9 +68,9 @@ from cmk.base.sources import fetch_all, make_sources
 from ._discovered_services import analyse_discovered_services
 from ._filters import ServiceFilters as _ServiceFilters
 from ._host_labels import analyse_host_labels
-from .utils import DiscoveryMode, QualifiedDiscovery, TimeLimitFilter
+from .utils import DiscoveryMode, QualifiedDiscovery
 
-__all__ = ["schedule_discovery_check", "AutodiscoveryQueue", "get_host_services"]
+__all__ = ["schedule_discovery_check", "get_host_services"]
 
 _BasicTransition = Literal["old", "new", "vanished"]
 _Transition = Union[
@@ -88,48 +84,6 @@ _L = TypeVar("_L", bound=str)
 ServicesTableEntry = Tuple[_L, autochecks.AutocheckEntry, List[HostName]]
 ServicesTable = Dict[ServiceID, ServicesTableEntry[_L]]
 ServicesByTransition = Dict[_Transition, List[autochecks.AutocheckServiceWithNodes]]
-
-
-class AutodiscoveryQueue:
-    @staticmethod
-    def _host_name(file_path: Path) -> HostName:
-        return HostName(file_path.name)
-
-    def _file_path(self, host_name: HostName) -> Path:
-        return self._dir / str(host_name)
-
-    def __init__(self) -> None:
-        self._dir = Path(cmk.utils.paths.var_dir, "autodiscovery")
-
-    def _ls(self) -> Sequence[Path]:
-        try:
-            # we must consume the .iterdir generator to make sure
-            # the FileNotFoundError gets raised *here*.
-            return list(self._dir.iterdir())
-        except FileNotFoundError:
-            return []
-
-    def __len__(self) -> int:
-        return len(self._ls())
-
-    def oldest(self) -> Optional[float]:
-        return min((f.stat().st_mtime for f in self._ls()), default=None)
-
-    def queued_hosts(self) -> Iterable[HostName]:
-        return (self._host_name(f) for f in self._ls())
-
-    def add(self, host_name: HostName) -> None:
-        self._dir.mkdir(parents=True, exist_ok=True)
-        self._file_path(host_name).touch()
-
-    def remove(self, host_name: HostName) -> None:
-        with suppress(FileNotFoundError):
-            self._file_path(host_name).unlink()
-
-    def cleanup(self, *, valid_hosts: Container[HostName], logger: Callable[[str], None]) -> None:
-        for host_name in (hn for f in self._ls() if (hn := self._host_name(f)) not in valid_hosts):
-            logger(f"  Removing mark '{host_name}' (host not configured)\n")
-            self.remove(host_name)
 
 
 # TODO: Move to livestatus module!
@@ -432,7 +386,7 @@ def discover_marked_hosts(
         return
     console.verbose("Autodiscovery: Discovering all hosts marked by discovery check:\n")
 
-    process_hosts = EVERYTHING if (up_hosts := _get_up_hosts()) is None else up_hosts
+    process_hosts = EVERYTHING if (up_hosts := get_up_hosts()) is None else up_hosts
 
     activation_required = False
     rediscovery_reference_time = time.time()
@@ -480,16 +434,6 @@ def discover_marked_hosts(
         finally:
             _config_cache.clear_all()
             config.get_config_cache().initialize()
-
-
-def _get_up_hosts() -> Optional[Set[HostName]]:
-    query = "GET hosts\nColumns: name state"
-    try:
-        response = livestatus.LocalConnection().query(query)
-        return {HostName(name) for name, state in response if state == 0}
-    except (livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusSocketError):
-        pass
-    return None
 
 
 def _discover_marked_host(

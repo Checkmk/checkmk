@@ -4,13 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from contextlib import suppress
-from pathlib import Path
-from typing import Callable, Container, Counter, Iterable, Optional, Sequence, Tuple
+from typing import Counter, Sequence, Tuple
 
-import cmk.utils.cleanup
-import cmk.utils.debug
-import cmk.utils.paths
 from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import OnError
@@ -18,19 +13,16 @@ from cmk.utils.type_defs import AgentRawData, CheckPluginName, HostName, result
 
 from cmk.snmplib.type_defs import SNMPRawData
 
-import cmk.core_helpers.cache
 from cmk.core_helpers.type_defs import NO_SELECTION, SourceInfo
 
-import cmk.base.check_utils
 import cmk.base.config as config
-import cmk.base.core
-import cmk.base.crash_reporting
 from cmk.base.agent_based.data_provider import (
     make_broker,
     parse_messages,
     store_piggybacked_sections,
 )
 from cmk.base.agent_based.utils import check_parsing_errors, summarize_host_sections
+from cmk.base.auto_queue import AutodiscoveryQueue
 from cmk.base.config import DiscoveryCheckParameters, HostConfig
 from cmk.base.discovered_labels import HostLabel
 
@@ -250,45 +242,3 @@ def _schedule_rediscovery(
         autodiscovery_queue.add(host_config.hostname)
 
     return ActiveCheckResult(0, "rediscovery scheduled")
-
-
-class AutodiscoveryQueue:
-    @staticmethod
-    def _host_name(file_path: Path) -> HostName:
-        return HostName(file_path.name)
-
-    def _file_path(self, host_name: HostName) -> Path:
-        return self._dir / str(host_name)
-
-    def __init__(self) -> None:
-        self._dir = Path(cmk.utils.paths.var_dir, "autodiscovery")
-
-    def _ls(self) -> Sequence[Path]:
-        try:
-            # we must consume the .iterdir generator to make sure
-            # the FileNotFoundError gets raised *here*.
-            return list(self._dir.iterdir())
-        except FileNotFoundError:
-            return []
-
-    def __len__(self) -> int:
-        return len(self._ls())
-
-    def oldest(self) -> Optional[float]:
-        return min((f.stat().st_mtime for f in self._ls()), default=None)
-
-    def queued_hosts(self) -> Iterable[HostName]:
-        return (self._host_name(f) for f in self._ls())
-
-    def add(self, host_name: HostName) -> None:
-        self._dir.mkdir(parents=True, exist_ok=True)
-        self._file_path(host_name).touch()
-
-    def remove(self, host_name: HostName) -> None:
-        with suppress(FileNotFoundError):
-            self._file_path(host_name).unlink()
-
-    def cleanup(self, *, valid_hosts: Container[HostName], logger: Callable[[str], None]) -> None:
-        for host_name in (hn for f in self._ls() if (hn := self._host_name(f)) not in valid_hosts):
-            logger(f"  Removing mark '{host_name}' (host not configured)\n")
-            self.remove(host_name)

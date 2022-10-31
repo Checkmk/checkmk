@@ -3,16 +3,35 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import time
 from pathlib import Path
+from typing import Generator
 
 import pytest
 
-import cmk.base.agent_based.discovery as discovery
+from cmk.base.auto_queue import AutodiscoveryQueue, TimeLimitFilter
+
+
+def test_time_limit_filter_iterates() -> None:
+
+    with TimeLimitFilter(limit=42, grace=0) as limiter:
+        test_list = list(limiter(iter(range(3))))
+    assert test_list == [0, 1, 2]
+
+
+def test_time_limit_filter_stops() -> None:
+    def test_generator() -> Generator:
+        time.sleep(10)
+        yield
+
+    # sorry for for wasting one second of your time
+    with TimeLimitFilter(limit=1, grace=0) as limiter:
+        assert not list(limiter(test_generator()))
 
 
 @pytest.fixture(name="autodiscovery_queue")
 def _mocked_queue(tmpdir):
-    adq = discovery.AutodiscoveryQueue()
+    adq = AutodiscoveryQueue()
     mockdir = Path(tmpdir)
     (mockdir / "most").touch()
     (mockdir / "lost").touch()
@@ -22,15 +41,15 @@ def _mocked_queue(tmpdir):
 
 class TestAutodiscoveryQueue:
     def test_len(self, autodiscovery_queue) -> None:  # type:ignore[no-untyped-def]
-        assert len(discovery.AutodiscoveryQueue()) == 0
+        assert len(AutodiscoveryQueue()) == 0
         assert len(autodiscovery_queue) == 2
 
     def test_bool(self, autodiscovery_queue) -> None:  # type:ignore[no-untyped-def]
-        assert not discovery.AutodiscoveryQueue()
+        assert not AutodiscoveryQueue()
         assert autodiscovery_queue
 
     def test_oldest_empty(self) -> None:
-        assert discovery.AutodiscoveryQueue().oldest() is None
+        assert AutodiscoveryQueue().oldest() is None
 
     def test_oldest_populated(self, autodiscovery_queue) -> None:  # type:ignore[no-untyped-def]
         assert isinstance(autodiscovery_queue.oldest(), float)
@@ -38,7 +57,7 @@ class TestAutodiscoveryQueue:
     def test_queued_empty(  # type:ignore[no-untyped-def]
         self, autodiscovery_queue, monkeypatch
     ) -> None:
-        autodiscovery_queue = discovery.AutodiscoveryQueue()
+        autodiscovery_queue = AutodiscoveryQueue()
         assert not list(autodiscovery_queue.queued_hosts())
 
     def test_queued_populated(  # type:ignore[no-untyped-def]
@@ -47,7 +66,7 @@ class TestAutodiscoveryQueue:
         assert set(autodiscovery_queue.queued_hosts()) == {"most", "lost"}
 
     def test_add(self, autodiscovery_queue, monkeypatch) -> None:  # type:ignore[no-untyped-def]
-        autodiscovery_queue = discovery.AutodiscoveryQueue()
+        autodiscovery_queue = AutodiscoveryQueue()
         autodiscovery_queue.add("most")
         assert list(autodiscovery_queue.queued_hosts()) == ["most"]
 

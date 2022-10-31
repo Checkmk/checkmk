@@ -6,7 +6,6 @@
 from ._discovery import execute_check_discovery
 from .active import active_check_discovery
 from .autodiscovery import (
-    AutodiscoveryQueue,
     automation_discovery,
     discover_marked_hosts,
     get_host_services,
@@ -17,7 +16,6 @@ from .preview import get_check_preview
 from .utils import DiscoveryMode, QualifiedDiscovery
 
 __all__ = [
-    "AutodiscoveryQueue",
     "DiscoveryMode",
     "QualifiedDiscovery",
     "active_check_discovery",

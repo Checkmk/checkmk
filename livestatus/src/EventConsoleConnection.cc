@@ -31,14 +31,14 @@ void EventConsoleConnection::run() {
     asio::local::stream_protocol::endpoint ep(_path);
     // Attention, tricky timing-dependent stuff ahead: When we connect very
     // rapidly, a no_buffer_space (= ENOBUFS) error can happen. This is probably
-    // caused by some internal asio Kung Fu, remapping EGAIN to ENOBUFS, and
+    // caused by some internal asio Kung Fu, remapping EAGAIN to ENOBUFS, and
     // looks like a bug in asio, but that's a bit unclear. So instead of
     // relying on asio to retry under these circumstances, we do it ourselves.
     asio::local::stream_protocol::iostream stream;
+    stream.expires_after(10s);
     while (true) {
         stream.connect(ep);
-        if (stream.error() != asio::error_code(asio::error::no_buffer_space,
-                                               asio::system_category())) {
+        if (stream.error() != asio::error::no_buffer_space) {
             break;
         }
         Debug(_logger) << "retrying to connect";
@@ -66,7 +66,7 @@ std::string EventConsoleConnection::prefix(const std::string &message) const {
 void EventConsoleConnection::check(
     asio::local::stream_protocol::iostream &stream,
     const std::string &what) const {
-    if (!stream && !stream.eof()) {
+    if (stream.error() && stream.error() != asio::error::misc_errors::eof) {
         throw asio::system_error(stream.error(), prefix("cannot " + what));
     }
 }

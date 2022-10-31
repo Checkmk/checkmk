@@ -247,7 +247,7 @@ class PostgresBase:
         sql_cmd = (
             "SELECT datid, datname, numbackends, xact_commit, xact_rollback, blks_read, "
             "blks_hit, tup_returned, tup_fetched, tup_inserted, tup_updated, tup_deleted, "
-            "pg_database_size(datname) AS datsize FROM pg_stat_database;"
+            "pg_database_size(datname) AS datsize FROM pg_stat_database WHERE datname IS NOT NULL;"
         )
         return self.run_sql_as_db_user(sql_cmd, rows_only=False, extra_args="-P footer=off")
 

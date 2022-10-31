@@ -46,15 +46,10 @@ IntervalsFromConfig = dict[RetentionKey, IntervalFromConfig]
 class TreeAggregator:
     def __init__(self) -> None:
         self._inventory_tree = StructuredDataNode()
-        self._update_result = UpdateResult(save_tree=False, reason="")
 
     @property
     def inventory_tree(self) -> StructuredDataNode:
         return self._inventory_tree
-
-    @property
-    def update_result(self) -> UpdateResult:
-        return self._update_result
 
     # ---static data from config--------------------------------------------
 
@@ -86,11 +81,16 @@ class RealHostTreeAggregator(TreeAggregator):
         self._from_config = _get_intervals_from_config(raw_intervals_from_config)
         self._retention_infos: RetentionInfos = {}
         self._status_data_tree = StructuredDataNode()
+        self._update_result = UpdateResult(save_tree=False, reason="")
         self._class_mutex: dict[tuple, str] = {}
 
     @property
     def status_data_tree(self) -> StructuredDataNode:
         return self._status_data_tree
+
+    @property
+    def update_result(self) -> UpdateResult:
+        return self._update_result
 
     # ---from inventory plugins---------------------------------------------
 

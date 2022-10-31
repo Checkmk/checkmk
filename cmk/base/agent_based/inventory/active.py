@@ -9,7 +9,7 @@ from typing import Callable
 import cmk.utils.paths
 from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.log import console
-from cmk.utils.structured_data import StructuredDataNode, TreeOrArchiveStore
+from cmk.utils.structured_data import StructuredDataNode, TreeOrArchiveStore, UpdateResult
 from cmk.utils.type_defs import EVERYTHING, HostName, ServiceState
 
 from cmk.core_helpers.type_defs import NO_SELECTION
@@ -19,7 +19,6 @@ import cmk.base.config as config
 from cmk.base.config import HostConfig
 
 from ._inventory import check_inventory_tree
-from ._tree_aggregator import ClusterTreeAggregator, RealHostTreeAggregator
 
 __all__ = ["active_check_inventory"]
 
@@ -65,7 +64,8 @@ def _execute_active_check_inventory(
             hostname=host_config.hostname,
             tree_or_archive_store=tree_or_archive_store,
             old_tree=old_tree,
-            tree_aggregator=result.tree_aggregator,
+            inventory_tree=result.inventory_tree,
+            update_result=result.update_result,
         )
 
     return result.check_result
@@ -75,17 +75,14 @@ def _save_inventory_tree(
     *,
     hostname: HostName,
     tree_or_archive_store: TreeOrArchiveStore,
-    tree_aggregator: ClusterTreeAggregator | RealHostTreeAggregator,
     old_tree: StructuredDataNode,
+    inventory_tree: StructuredDataNode,
+    update_result: UpdateResult,
 ) -> None:
-    inventory_tree = tree_aggregator.inventory_tree
-
     if inventory_tree.is_empty():
         # Remove empty inventory files. Important for host inventory icon
         tree_or_archive_store.remove(host_name=hostname)
         return
-
-    update_result = tree_aggregator.update_result
 
     if old_tree.is_empty():
         console.verbose("New inventory tree.\n")

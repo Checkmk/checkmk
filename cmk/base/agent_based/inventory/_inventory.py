@@ -23,7 +23,7 @@ from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
-from cmk.utils.structured_data import StructuredDataNode
+from cmk.utils.structured_data import StructuredDataNode, UpdateResult
 from cmk.utils.type_defs import AgentRawData, HostKey, InventoryPluginName, result, SourceType
 
 from cmk.snmplib.type_defs import SNMPRawData
@@ -67,9 +67,10 @@ class FetchedDataResult(NamedTuple):
 
 @dataclass(frozen=True)
 class CheckInventoryTreeResult:
-    check_result: ActiveCheckResult
-    tree_aggregator: ClusterTreeAggregator | RealHostTreeAggregator
     processing_failed: bool
+    check_result: ActiveCheckResult
+    inventory_tree: StructuredDataNode
+    update_result: UpdateResult
 
 
 def check_inventory_tree(
@@ -85,6 +86,7 @@ def check_inventory_tree(
         tree_aggregator = ClusterTreeAggregator()
         tree_aggregator.add_cluster_properties(nodes=host_config.nodes or [])
         return CheckInventoryTreeResult(
+            processing_failed=False,
             check_result=ActiveCheckResult.from_subresults(
                 *_check_trees(
                     parameters=parameters,
@@ -93,8 +95,8 @@ def check_inventory_tree(
                     old_tree=old_tree,
                 ),
             ),
-            tree_aggregator=tree_aggregator,
-            processing_failed=False,
+            inventory_tree=tree_aggregator.inventory_tree,
+            update_result=UpdateResult(save_tree=False, reason=""),
         )
 
     fetched_data_result = _fetch_real_host_data(
@@ -110,6 +112,9 @@ def check_inventory_tree(
     )
 
     return CheckInventoryTreeResult(
+        processing_failed=(
+            fetched_data_result.processing_failed or fetched_data_result.no_data_or_files
+        ),
         check_result=ActiveCheckResult.from_subresults(
             *_check_fetched_data_or_trees(
                 parameters=parameters,
@@ -134,10 +139,8 @@ def check_inventory_tree(
                 error_state=parameters.fail_status,
             ),
         ),
-        tree_aggregator=tree_aggregator,
-        processing_failed=(
-            fetched_data_result.processing_failed or fetched_data_result.no_data_or_files
-        ),
+        inventory_tree=tree_aggregator.inventory_tree,
+        update_result=tree_aggregator.update_result,
     )
 
 

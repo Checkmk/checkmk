@@ -1507,7 +1507,9 @@ def pod_lookup_from_api_pod(api_pod: api.Pod) -> PodLookupName:
     return lookup_name(pod_namespace(api_pod), pod_name(api_pod))
 
 
-KubeNamespacedObj = TypeVar("KubeNamespacedObj", bound=Union[DaemonSet, Deployment, StatefulSet])
+KubeNamespacedObj = TypeVar(
+    "KubeNamespacedObj", bound=Union[DaemonSet, Deployment, StatefulSet, api.CronJob]
+)
 
 
 def kube_objects_from_namespaces(
@@ -2088,7 +2090,6 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
                 for pod in pods_from_namespaces(api_data.pods, monitored_namespace_names)
             }
 
-            # TODO: Namespace filtering also needs to be added to the CronJobs
             monitored_api_cron_job_pods = [
                 api_pod
                 for cron_job in api_data.cron_jobs
@@ -2099,7 +2100,7 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
                 write_cronjobs_api_sections(
                     arguments.cluster,
                     arguments.annotation_key_pattern,
-                    api_data.cron_jobs,
+                    kube_objects_from_namespaces(api_data.cron_jobs, monitored_namespace_names),
                     monitored_api_cron_job_pods,
                     {job.uid: job for job in api_data.jobs},
                     kubernetes_cluster_hostname=arguments.kubernetes_cluster_hostname,

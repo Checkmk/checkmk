@@ -26,6 +26,7 @@ from cmk.gui.inventory import (
 from cmk.gui.permissions import permission_section_registry as _permission_section_registry
 from cmk.gui.plugins.watolib.utils import config_domain_registry as _config_domain_registry
 from cmk.gui.utils import load_web_plugins as _load_web_plugins
+from cmk.gui.watolib import automatic_host_removal as _automatic_host_removal
 from cmk.gui.watolib._host_attributes import register as _register_host_attributes
 from cmk.gui.watolib.activate_changes import (
     execute_activation_cleanup_background_job as _execute_activation_cleanup_background_job,
@@ -43,14 +44,21 @@ _urllib3.disable_warnings(_urllib3.exceptions.InsecureRequestWarning)
 
 
 def _register_automation_commands() -> None:
-    clss = (_automation_commands.AutomationPing,)
+    clss: Sequence[Type[_automation_commands.AutomationCommand]] = (
+        _automation_commands.AutomationPing,
+        _automatic_host_removal.AutomationHostsForAutoRemoval,
+    )
     for cls in clss:
         _automation_commands.automation_command_registry.register(cls)
 
 
 def _register_gui_background_jobs() -> None:
-    cls = _config_domains.OMDConfigChangeBackgroundJob
-    _background_job.job_registry.register(cls)
+    clss: Sequence[Type[_background_job.BackgroundJob]] = (
+        _config_domains.OMDConfigChangeBackgroundJob,
+        _automatic_host_removal.HostRemovalBackgroundJob,
+    )
+    for cls in clss:
+        _background_job.job_registry.register(cls)
 
 
 def _register_config_domains() -> None:
@@ -136,6 +144,7 @@ def _register_cronjobs() -> None:
     _register_job(_userdb.execute_userdb_job)
     _register_job(_userdb.execute_user_profile_cleanup_job)
     _register_job(_rebuild_folder_lookup_cache)
+    _register_job(_automatic_host_removal.execute_host_removal_background_job)
 
 
 def load_watolib_plugins():

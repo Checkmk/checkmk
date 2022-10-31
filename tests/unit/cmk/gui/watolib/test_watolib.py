@@ -63,6 +63,7 @@ def test_registered_automation_commands() -> None:
         "discovered-host-label-sync",
         "remove-tls-registration",
         "get-audit-logs",
+        "hosts-for-auto-removal",
     ]
 
     if not cmk_version.is_raw_edition():

@@ -2418,64 +2418,73 @@ def _get_checkgroup_parameters(
 class HostConfig:
     def __init__(self, config_cache: ConfigCache, hostname: HostName) -> None:
         super().__init__()
-        self.hostname = hostname
+        self.hostname: Final = hostname
 
-        self._config_cache = config_cache
+        self._config_cache: Final = config_cache
 
         self._explicit_attributes_lookup = None
-        self.is_cluster = self._is_cluster()
+        self.is_cluster: Final = self._is_cluster()
         # TODO: Rename this to self.clusters?
-        self.part_of_clusters = self._config_cache.clusters_of(hostname)
-        self.nodes = self._config_cache.nodes_of(hostname)
+        self.part_of_clusters: Final = self._config_cache.clusters_of(hostname)
+        self.nodes: Final = self._config_cache.nodes_of(hostname)
 
         # TODO: Rename self.tags to self.tag_list and self.tag_groups to self.tags
-        self.tags = self._config_cache.tag_list_of_host(hostname)
-        self.tag_groups = ConfigCache.tags_of_host(hostname)
+        self.tags: Final = self._config_cache.tag_list_of_host(hostname)
+        self.tag_groups: Final = ConfigCache.tags_of_host(hostname)
 
-        self.labels = self._config_cache.ruleset_matcher.labels_of_host(hostname)
-        self.label_sources = self._config_cache.ruleset_matcher.label_sources_of_host(hostname)
+        self.labels: Final = self._config_cache.ruleset_matcher.labels_of_host(hostname)
+        self.label_sources: Final = self._config_cache.ruleset_matcher.label_sources_of_host(
+            hostname
+        )
 
-        self.computed_datasources = cmk.utils.tags.compute_datasources(self.tag_groups)
+        self.computed_datasources: Final = cmk.utils.tags.compute_datasources(self.tag_groups)
 
         # Basic types
-        self.is_tcp_host: bool = self.computed_datasources.is_tcp
-        self.is_snmp_host: bool = self.computed_datasources.is_snmp
-        self.is_usewalk_host: bool = self._config_cache.in_binary_hostlist(hostname, usewalk_hosts)
+        self.is_tcp_host: Final[bool] = self.computed_datasources.is_tcp
+        self.is_snmp_host: Final[bool] = self.computed_datasources.is_snmp
+        self.is_usewalk_host: Final[bool] = self._config_cache.in_binary_hostlist(
+            hostname, usewalk_hosts
+        )
 
-        if self.tag_groups["piggyback"] == "piggyback":
-            self.is_piggyback_host = True
-        elif self.tag_groups["piggyback"] == "no-piggyback":
-            self.is_piggyback_host = False
-        else:  # Legacy automatic detection
-            self.is_piggyback_host = self.has_piggyback_data
+        def get_is_piggyback_host() -> bool:
+            if self.tag_groups["piggyback"] == "piggyback":
+                return True
+            if self.tag_groups["piggyback"] == "no-piggyback":
+                return False
+            # Legacy automatic detection
+            return self.has_piggyback_data
+
+        self.is_piggyback_host: Final = get_is_piggyback_host()
 
         # Agent types
-        self.is_agent_host: bool = self.is_tcp_host or self.is_piggyback_host
-        self.management_protocol = management_protocol.get(hostname)
-        self.has_management_board: bool = self.management_protocol is not None
-        self.is_ping_host = not (
+        self.is_agent_host: Final[bool] = self.is_tcp_host or self.is_piggyback_host
+        self.management_protocol: Final = management_protocol.get(hostname)
+        self.has_management_board: Final[bool] = self.management_protocol is not None
+        self.is_ping_host: Final = not (
             self.is_snmp_host or self.is_agent_host or self.has_management_board
         )
 
-        self.is_dual_host = self.is_tcp_host and self.is_snmp_host
-        self.is_all_agents_host = self.computed_datasources.is_all_agents_host
-        self.is_all_special_agents_host = self.computed_datasources.is_all_special_agents_host
+        self.is_dual_host: Final = self.is_tcp_host and self.is_snmp_host
+        self.is_all_agents_host: Final = self.computed_datasources.is_all_agents_host
+        self.is_all_special_agents_host: Final = (
+            self.computed_datasources.is_all_special_agents_host
+        )
 
         # IP addresses
         # Whether or not the given host is configured not to be monitored via IP
-        self.is_no_ip_host = self.tag_groups["address_family"] == "no-ip"
-        self.is_ipv6_host = "ip-v6" in self.tag_groups
+        self.is_no_ip_host: Final = self.tag_groups["address_family"] == "no-ip"
+        self.is_ipv6_host: Final = "ip-v6" in self.tag_groups
         # Whether or not the given host is configured to be monitored via IPv4.
         # This is the case when it is set to be explicit IPv4 or implicit (when
         # host is not an IPv6 host and not a "No IP" host)
-        self.is_ipv4_host = "ip-v4" in self.tag_groups or (
+        self.is_ipv4_host: Final = "ip-v4" in self.tag_groups or (
             not self.is_ipv6_host and not self.is_no_ip_host
         )
 
-        self.is_ipv4v6_host = "ip-v6" in self.tag_groups and "ip-v4" in self.tag_groups
+        self.is_ipv4v6_host: Final = "ip-v6" in self.tag_groups and "ip-v4" in self.tag_groups
 
         # Whether or not the given host is configured to be monitored primarily via IPv6
-        self.is_ipv6_primary = (not self.is_ipv4v6_host and self.is_ipv6_host) or (
+        self.is_ipv6_primary: Final = (not self.is_ipv4v6_host and self.is_ipv6_host) or (
             self.is_ipv4v6_host and self._primary_ip_address_family_of() == "ipv6"
         )
 

@@ -4,7 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
 import argparse
 import io
 import os
@@ -30,6 +29,8 @@ import cmk.gui.config
 from cmk.gui.utils.script_helpers import application_and_request_context
 from cmk.gui.watolib.changes import AuditLogStore, ObjectRef, ObjectRefType
 from cmk.gui.watolib.hosts_and_folders import Folder
+
+# pylint: disable=redefined-outer-name
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.rulesets import Rule, Ruleset, RulesetCollection
 
@@ -1022,4 +1023,74 @@ def _read_sitespecific_mknotifyd_config() -> dict[str, Any]:
         path=Path(cmk.utils.paths.default_config_dir, "mknotifyd.d", "wato", "sitespecific.mk"),
         key="notification_spooler_config",
         default={},
+    )
+
+
+@pytest.fixture()
+def fixture_pre_2_1_servicenow_config():
+    sitespecific_file_path: Path = Path(
+        cmk.utils.paths.default_config_dir, "conf.d", "wato", "notifications.mk"
+    )
+    sitespecific_file_path.parent.mkdir(exist_ok=True, parents=True)
+    with sitespecific_file_path.open("w") as f:
+        f.write(
+            "notification_rules += %r"
+            % [
+                {
+                    "description": "Notify all contacts of a host/service via HTML email",
+                    "comment": "",
+                    "docu_url": "",
+                    "disabled": False,
+                    "allow_disable": True,
+                    "contact_object": True,
+                    "contact_all": False,
+                    "contact_all_with_email": False,
+                    "notify_plugin": (
+                        "servicenow",
+                        {
+                            "url": "http://https:/myservicenow.com",
+                            "username": "bla",
+                            "password": ("password", "bi"),
+                            "use_site_id": False,
+                            "caller": "calle",
+                        },
+                    ),
+                }
+            ]
+        )
+
+
+@pytest.mark.usefixtures("fixture_pre_2_1_servicenow_config", "request_context")
+def test_rewrite_servicenow_migrate(uc: update_config.UpdateConfig) -> None:
+    uc._rewrite_servicenow_notification_config()
+
+    assert _read_servicenow_config() == [
+        {
+            "description": "Notify all contacts of a host/service via HTML email",
+            "comment": "",
+            "docu_url": "",
+            "disabled": False,
+            "allow_disable": True,
+            "contact_object": True,
+            "contact_all": False,
+            "contact_all_with_email": False,
+            "notify_plugin": (
+                "servicenow",
+                {
+                    "url": "http://https:/myservicenow.com",
+                    "username": "bla",
+                    "password": ("password", "bi"),
+                    "use_site_id": False,
+                    "mgmt_type": ("incident", {"caller": "calle"}),
+                },
+            ),
+        }
+    ]
+
+
+def _read_servicenow_config() -> list[dict[str, Any]]:
+    return store.load_from_mk_file(
+        path=Path(cmk.utils.paths.default_config_dir, "conf.d", "wato", "notifications.mk"),
+        key="notification_rules",
+        default=[],
     )

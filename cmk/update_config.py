@@ -1631,7 +1631,7 @@ class UpdateConfig:
                 continue
 
             params = rule["notify_plugin"][1]
-            if "mgmt_types" in params:
+            if "mgmt_type" in params:
                 continue
 
             incident_params = {

@@ -1,0 +1,17 @@
+Title: ServiceNow: Fix empty notification rule after update
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1667202803
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0p16
+
+If you updated a 2.1.0 version to the next patch release and tried to edit an
+existing ServiceNow notification rule, the rule was shown empty.
+On next save, the rule was shown correcty.
+
+Note:
+This was just a visual bug on the rule edit page, the rule matched as
+configured.

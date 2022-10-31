@@ -1812,7 +1812,8 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
                 )
             raise
 
-        if any(request.name == omd_ident for request in domain_requests):
+        # If request.settings is empty no `omd-config-change` job is started
+        if any(request.name == omd_ident and request.settings for request in domain_requests):
             response.setdefault(omd_ident, []).extend(self._get_omd_domain_background_job_result())
 
         return response

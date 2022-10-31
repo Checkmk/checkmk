@@ -571,8 +571,9 @@ def _add_sla_data(view: View, rows: Rows) -> None:
 
 def columns_of_cells(cells: Sequence[Cell]) -> Set[ColumnName]:
     columns: Set[ColumnName] = set()
+    permitted_views = get_permitted_views()
     for cell in cells:
-        columns.update(cell.needed_columns())
+        columns.update(cell.needed_columns(permitted_views))
     return columns
 
 

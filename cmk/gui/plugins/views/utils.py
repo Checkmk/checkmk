@@ -46,7 +46,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.num_split import cmp_num_split as _cmp_num_split
 from cmk.gui.pagetypes import PagetypeTopics
-from cmk.gui.painters.v1.helpers import (  # pylint: disable=unused-import
+from cmk.gui.painters.v1.helpers import (  # noqa: F401 # pylint: disable=unused-import
     get_perfdata_nth_value,
     is_stale,
     paint_stalified,
@@ -70,6 +70,7 @@ from cmk.gui.type_defs import (
     SorterFunction,
     SorterName,
     SorterSpec,
+    ViewName,
     ViewSpec,
     VisualLinkSpec,
 )
@@ -78,7 +79,7 @@ from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view_store import get_permitted_views
-from cmk.gui.view_utils import CellSpec, get_host_list_links  # pylint: disable=unused-import
+from cmk.gui.view_utils import CellSpec, get_host_list_links
 from cmk.gui.visual_link import render_link_to_view
 from cmk.gui.visuals import view_title
 
@@ -864,12 +865,12 @@ class Cell:
         if tooltip_painter_name is not None and tooltip_painter_name in painter_registry:
             self._tooltip_painter_name = tooltip_painter_name
 
-    def needed_columns(self) -> set[ColumnName]:
+    def needed_columns(self, permitted_views: Mapping[ViewName, ViewSpec]) -> set[ColumnName]:
         """Get a list of columns we need to fetch in order to render this cell"""
 
         columns = set(self.painter().columns)
 
-        link_view = self._link_view()
+        link_view = self._link_view(permitted_views)
         if link_view:
             # TODO: Clean this up here
             for filt in [
@@ -889,12 +890,12 @@ class Cell:
     def join_service(self) -> ServiceName | None:
         return None
 
-    def _link_view(self) -> ViewSpec | None:
+    def _link_view(self, permitted_views: Mapping[ViewName, ViewSpec]) -> ViewSpec | None:
         if self._link_spec is None:
             return None
 
         try:
-            return get_permitted_views()[self._link_spec.name]
+            return permitted_views[self._link_spec.name]
         except KeyError:
             return None
 

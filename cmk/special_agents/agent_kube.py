@@ -1831,23 +1831,18 @@ def pod_conditions(pod_status: api.PodStatus) -> Optional[section.PodConditions]
 
 
 def pod_container_specs(pod_spec: api.PodSpec) -> section.ContainerSpecs:
-    return section.ContainerSpecs(
-        containers={
-            container_spec.name: section.ContainerSpec(
-                image_pull_policy=container_spec.image_pull_policy,
-            )
-            for container_spec in pod_spec.containers
-        }
-    )
+    return _pod_container_specs(pod_spec.containers)
 
 
 def pod_init_container_specs(pod_spec: api.PodSpec) -> section.ContainerSpecs:
+    return _pod_container_specs(pod_spec.init_containers)
+
+
+def _pod_container_specs(container_specs: Sequence[api.ContainerSpec]) -> section.ContainerSpecs:
     return section.ContainerSpecs(
         containers={
-            container_spec.name: section.ContainerSpec(
-                image_pull_policy=container_spec.image_pull_policy,
-            )
-            for container_spec in pod_spec.init_containers
+            spec.name: section.ContainerSpec(image_pull_policy=spec.image_pull_policy)
+            for spec in container_specs
         }
     )
 

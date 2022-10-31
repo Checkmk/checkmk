@@ -66,6 +66,7 @@ warn_unreachable = false  # 240 errors in 133 files
 
 [[tool.mypy.overrides]]
 module = [
+    "cmk.gui.painters",
     "cmk.gui.plugins.views.mobile",
     "cmk.gui.plugins.views.layouts",
     "cmk.gui.background_job",

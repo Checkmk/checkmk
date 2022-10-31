@@ -48,7 +48,7 @@ For other tasks, such as deleting or deactivating users, use the web interface.
         help="the username of the user whose password to add or change",
     )
     parser.add_argument(
-        "-v",
+        "-V",
         "--version",
         action="version",
         version=f"%(prog)s shipped with Checkmk version {cmk_version.__version__}",

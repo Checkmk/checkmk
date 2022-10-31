@@ -88,6 +88,14 @@ class HtpasswdUserConnector(UserConnector):
         except (password_hashing.PasswordInvalidError, ValueError):
             return False
         else:
+            if password_hashing.needs_update(pw_hash):
+                # The password is valid, but the currently stored hash uses a deprecated
+                # algorithm. Replace the hash.
+                # Since the old algorithm might have allowed passwords longer than 72 bytes
+                # (which bcrypt doesn't), we have to allow truncation here.
+                new_hash = password_hashing.hash_password(password, allow_truncation=True)
+                self._htpasswd.save(user_id, new_hash)
+
             return user_id
 
     def _is_automation_user(self, user_id: UserId) -> bool:

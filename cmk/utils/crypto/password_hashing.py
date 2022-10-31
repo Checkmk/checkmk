@@ -14,8 +14,6 @@ a salt, and the actual checksum -- which is all the information needed to verify
 given password (see `verify`).
 """
 
-from collections.abc import Sequence
-
 # Import errors from passlib are suppressed since stub files for mypy are not available.
 # pylint errors are suppressed since this is the only module that should import passlib.
 import passlib.context  # type: ignore[import]  # pylint: disable=passlib-module-import
@@ -27,6 +25,8 @@ from cmk.utils.exceptions import MKException
 # Using code should not be able to change the number of rounds (to unsafe values), but test code
 # has to run with reduced rounds. They can be monkeypatched here.
 BCRYPT_ROUNDS = 12
+# The default modern bcrypt identifier is "2b", but htpasswd will only accept "2y".
+BCRYPT_IDENT = "2y"
 
 
 class PasswordTooLongError(MKException):
@@ -41,12 +41,15 @@ class PasswordInvalidError(MKException):
     """Indicates that the provided password could not be verified"""
 
 
-def hash_password(password: str) -> str:
+def hash_password(password: str, *, allow_truncation: bool = False) -> str:
     """Hash a password using the preferred algorithm
 
     Uses bcrypt with 12 rounds to hash a password.
 
-    :param password: The password to hash. The password must not be longer than 72 bytes.
+    :param password: The password to hash. The password must not be longer than 72 bytes (except if
+                     allow_truncation is set).
+    :param allow_truncation: Allow passwords longer than 72 bytes and silently truncate them.
+                             This should be avoided but is required for some use cases.
 
     :return: The hashed password Modular Crypto Format (see module docstring). The identifier used
              for bcrypt is "2y" for compatibility with htpasswd.
@@ -56,28 +59,29 @@ def hash_password(password: str) -> str:
     """
     try:
         return passlib_hash.bcrypt.using(
-            rounds=BCRYPT_ROUNDS, truncate_error=True, ident="2y"
+            rounds=BCRYPT_ROUNDS, truncate_error=not allow_truncation, ident=BCRYPT_IDENT
         ).hash(password)
     except passlib.exc.PasswordTruncateError as e:
         raise PasswordTooLongError(e)
 
 
-def _allowed_schemes() -> Sequence[str]:
-    """List of hash algorithms allowed in `verify`
-
-    While using code should no longer select an algorithm itself (but use `hash_password` instead),
-    we still have to account for existing passwords created with now-deprecated schemes and created
-    by external tools (notably `htpasswd -m`).
-    """
-    return [
-        "bcrypt",  # Preferred and default for hashing
-        "sha256_crypt",  # Kept for compatibility with Checkmk < 2.1
-        # Kept for compatibility with Checkmk < 1.6
-        # htpasswd has still md5 as default, also the docs include the "-m" param
+_context = passlib.context.CryptContext(
+    # All new hashes we create (using hash_password() will use bcrypt. However, we still have to
+    # account for existing passwords created with now-deprecated schemes.
+    schemes=[
+        "bcrypt",
+        # Created by Checkmk < 2.1:
+        "sha256_crypt",
+        # Created by Checkmk < 1.6:
         "md5_crypt",
         "apr_md5_crypt",
         "des_crypt",
-    ]
+    ],
+    # Hashes marked "deprecated" will automatically be updated to bcrypt. We only update
+    # sha256-crypt. Older hashes are not auto-updated -- users should make a new password.
+    deprecated=["sha256_crypt"],
+    bcrypt__ident=BCRYPT_IDENT,
+)
 
 
 def verify(password: str, password_hash: str) -> None:
@@ -86,7 +90,7 @@ def verify(password: str, password_hash: str) -> None:
     :param password: The password to check.
     :param password_hash: The password hash to check.
 
-    :return: None
+    :return: None if the password is valid; raises an exception otherwise (see below).
 
     :raise: PasswordInvalidError if the password does not match the hash.
     :raise: ValueError - if the hash algorithm in `password_hash` could not be identified.
@@ -94,10 +98,16 @@ def verify(password: str, password_hash: str) -> None:
                        - if `password` or `password_hash` contain invalid characters (e.g. NUL).
     """
     try:
-        valid = passlib.context.CryptContext(schemes=_allowed_schemes()).verify(
-            password, password_hash
-        )
+        valid = _context.verify(password, password_hash)
     except passlib.exc.UnknownHashError:
         raise ValueError("Invalid hash")
     if not valid:
         raise PasswordInvalidError
+
+
+def needs_update(password_hash: str) -> bool:
+    """Check if a password hash should be re-calculated because the hash algorithm is deprecated.
+
+    See _context for the list of deprecated algorithms.
+    """
+    return _context.needs_update(password_hash)

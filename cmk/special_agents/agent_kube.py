@@ -15,7 +15,6 @@ endpoints monitored by Checkmk must be provided.
 
 from __future__ import annotations
 
-import abc
 import argparse
 import collections
 import contextlib
@@ -299,9 +298,9 @@ def setup_logging(verbosity: int) -> None:
     logging.basicConfig(level=lvl, format="%(asctime)s %(levelname)s %(message)s")
 
 
-class PodOwner(abc.ABC):
-    def __init__(self, pods: Sequence[api.Pod]) -> None:
-        self.pods: Sequence[api.Pod] = pods
+@dataclass(frozen=True)
+class PodOwner:
+    pods: Sequence[api.Pod]
 
     def pod_resources(self) -> section.PodResources:
         return _pod_resources_from_api_pods(self.pods)
@@ -340,19 +339,12 @@ def aggregate_resources(
 
 
 # TODO: addition of test framework for output sections
+@dataclass(frozen=True)
 class Deployment(PodOwner):
-    def __init__(
-        self,
-        metadata: api.MetaData[str],
-        spec: api.DeploymentSpec,
-        status: api.DeploymentStatus,
-        pods: Sequence[api.Pod],
-    ) -> None:
-        super().__init__(pods=pods)
-        self.metadata = metadata
-        self.spec = spec
-        self.status = status
-        self.type_: str = "deployment"
+    metadata: api.MetaData[str]
+    spec: api.DeploymentSpec
+    status: api.DeploymentStatus
+    type_: str = "deployment"
 
 
 def deployment_info(
@@ -407,29 +399,22 @@ def _thin_containers(pods: Collection[api.Pod]) -> section.ThinContainers:
     )
 
 
+@dataclass(frozen=True)
 class DaemonSet(PodOwner):
-    def __init__(
-        self,
-        metadata: api.MetaData[str],
-        spec: api.DaemonSetSpec,
-        status: api.DaemonSetStatus,
-        pods: Sequence[api.Pod],
-    ) -> None:
-        super().__init__(pods=pods)
-        self.metadata = metadata
-        self.spec = spec
-        self._status = status
-        self.type_: str = "daemonset"
+    metadata: api.MetaData[str]
+    spec: api.DaemonSetSpec
+    status: api.DaemonSetStatus
+    type_: str = "daemonset"
 
 
 def daemonset_replicas(
     daemonset: DaemonSet,
 ) -> section.DaemonSetReplicas:
     return section.DaemonSetReplicas(
-        desired=daemonset._status.desired_number_scheduled,
-        updated=daemonset._status.updated_number_scheduled,
-        misscheduled=daemonset._status.number_misscheduled,
-        ready=daemonset._status.number_ready,
+        desired=daemonset.status.desired_number_scheduled,
+        updated=daemonset.status.updated_number_scheduled,
+        misscheduled=daemonset.status.number_misscheduled,
+        ready=daemonset.status.number_ready,
     )
 
 
@@ -454,26 +439,19 @@ def daemonset_info(
     )
 
 
+@dataclass(frozen=True)
 class StatefulSet(PodOwner):
-    def __init__(
-        self,
-        metadata: api.MetaData[str],
-        spec: api.StatefulSetSpec,
-        status: api.StatefulSetStatus,
-        pods: Sequence[api.Pod],
-    ) -> None:
-        super().__init__(pods=pods)
-        self.metadata = metadata
-        self.spec = spec
-        self._status = status
-        self.type_: str = "statefulset"
+    metadata: api.MetaData[str]
+    spec: api.StatefulSetSpec
+    status: api.StatefulSetStatus
+    type_: str = "statefulset"
 
 
 def statefulset_replicas(statefulset: StatefulSet) -> section.StatefulSetReplicas:
     return section.StatefulSetReplicas(
         desired=statefulset.spec.replicas,
-        ready=statefulset._status.ready_replicas,
-        updated=statefulset._status.updated_replicas,
+        ready=statefulset.status.ready_replicas,
+        updated=statefulset.status.updated_replicas,
     )
 
 
@@ -498,23 +476,13 @@ def statefulset_info(
     )
 
 
+@dataclass(frozen=True)
 class Node(PodOwner):
-    def __init__(
-        self,
-        metadata: api.MetaDataNoNamespace[api.NodeName],
-        status: api.NodeStatus,
-        resources: Dict[str, api.NodeResources],
-        roles: Sequence[str],
-        kubelet_info: api.KubeletInfo,
-        pods: Sequence[api.Pod],
-    ) -> None:
-        super().__init__(pods=pods)
-        self.metadata = metadata
-        self.status = status
-        self.resources = resources
-        self.control_plane = "master" in roles or "control_plane" in roles
-        self.roles = roles
-        self.kubelet_info = kubelet_info
+    metadata: api.MetaDataNoNamespace[api.NodeName]
+    status: api.NodeStatus
+    resources: Dict[str, api.NodeResources]
+    roles: Sequence[str]
+    kubelet_info: api.KubeletInfo
 
     def allocatable_pods(self) -> section.AllocatablePods:
         return section.AllocatablePods(
@@ -617,6 +585,10 @@ def any_match_from_list_of_infix_patterns(infix_patterns: Sequence[str], string:
     return any(re.search(pattern, string) for pattern in infix_patterns)
 
 
+def _node_is_control_plane(node: Node) -> bool:
+    return "master" in node.roles or "control_plane" in node.roles
+
+
 @dataclass(frozen=True)
 class Cluster:
     cluster_details: api.ClusterDetails
@@ -647,9 +619,9 @@ class Cluster:
         uid_to_api_pod = {api_pod.uid: api_pod for api_pod in pods}
         agent_deployments = [
             Deployment(
-                api_deployment.metadata,
-                api_deployment.spec,
-                api_deployment.status,
+                metadata=api_deployment.metadata,
+                spec=api_deployment.spec,
+                status=api_deployment.status,
                 pods=[uid_to_api_pod[uid] for uid in api_deployment.pods],
             )
             for api_deployment in deployments
@@ -684,11 +656,11 @@ class Cluster:
         agent_nodes = []
         for node_api in nodes:
             node = Node(
-                node_api.metadata,
-                node_api.status,
-                node_api.resources,
-                node_api.roles,
-                node_api.kubelet_info,
+                metadata=node_api.metadata,
+                status=node_api.status,
+                resources=node_api.resources,
+                roles=node_api.roles,
+                kubelet_info=node_api.kubelet_info,
                 pods=node_to_api_pod[node_api.metadata.name],
             )
             agent_nodes.append(node)
@@ -751,7 +723,7 @@ class Cluster:
             ready = (
                 conditions := node.conditions()
             ) is not None and conditions.ready.status == api.NodeConditionStatus.TRUE
-            if node.control_plane:
+            if _node_is_control_plane(node):
                 if ready:
                     node_count.control_plane.ready += 1
                 else:
@@ -796,7 +768,7 @@ def _node_collector_daemons(daemonsets: Iterable[DaemonSet]) -> section.Collecto
     for daemonset in daemonsets:
         if (label := daemonset.metadata.labels.get(api.LabelName("node-collector"))) is not None:
             collector_type = label.value
-            collector_daemons[collector_type].append(daemonset._status)
+            collector_daemons[collector_type].append(daemonset.status)
     collector_daemons.default_factory = None
 
     # Only leave unknown collectors inside of `collector_daemons`

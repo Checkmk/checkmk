@@ -618,11 +618,10 @@ def test__node_collector_daemons_identify_container_collector(
     )
     assert collector_daemons.container is not None
     assert (
-        DAEMONSET_CONTAINER_METRICS._status.number_available
-        == collector_daemons.container.available
+        DAEMONSET_CONTAINER_METRICS.status.number_available == collector_daemons.container.available
     )
     assert (
-        DAEMONSET_CONTAINER_METRICS._status.desired_number_scheduled
+        DAEMONSET_CONTAINER_METRICS.status.desired_number_scheduled
         == collector_daemons.container.desired
     )
 
@@ -651,11 +650,9 @@ def test__node_collector_daemons_identify_machine_collector(
         unknown_collector=False,
     )
     assert collector_daemons.machine is not None
+    assert DAEMONSET_MACHINE_SECTIONS.status.number_available == collector_daemons.machine.available
     assert (
-        DAEMONSET_MACHINE_SECTIONS._status.number_available == collector_daemons.machine.available
-    )
-    assert (
-        DAEMONSET_MACHINE_SECTIONS._status.desired_number_scheduled
+        DAEMONSET_MACHINE_SECTIONS.status.desired_number_scheduled
         == collector_daemons.machine.desired
     )
 

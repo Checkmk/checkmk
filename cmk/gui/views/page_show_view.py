@@ -39,7 +39,7 @@ from cmk.gui.inventory import (
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_external_link, PageMenuEntry, PageMenuTopic
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.plugins.views.utils import Cell, JoinCell, load_used_options
+from cmk.gui.plugins.views.utils import Cell, JoinCell
 from cmk.gui.plugins.visuals.utils import Filter, get_livestatus_filter_headers
 from cmk.gui.sorter import SorterEntry
 from cmk.gui.type_defs import ColumnName, Row, Rows, SorterSpec, ViewSpec
@@ -86,9 +86,7 @@ def page_show_view() -> None:
 
         painter_options = PainterOptions.get_instance()
         painter_options.load(view.name)
-        painter_options.update_from_url(
-            view.name, load_used_options(view.spec, view.group_cells + view.row_cells)
-        )
+        painter_options.update_from_url(view.name, view.painter_options)
         process_view(GUIViewRenderer(view, show_buttons=True))
 
     _may_create_slow_view_log_entry(page_view_tracker, view)

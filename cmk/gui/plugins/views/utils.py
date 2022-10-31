@@ -93,32 +93,6 @@ CommandExecutor = Callable[[CommandSpec, SiteId | None], None]
 InventoryHintSpec = dict[str, Any]
 
 
-# Load the options to be used for this view
-def load_used_options(view_spec: ViewSpec, cells: Iterable[Cell]) -> Sequence[str]:
-    options: set[str] = set()
-
-    for cell in cells:
-        options.update(cell.painter_options())
-
-    # Also layouts can register painter options
-    layout_name = view_spec.get("layout")
-    if layout_name is not None:
-        layout_class = layout_registry.get(layout_name)
-        if layout_class:
-            options.update(layout_class().painter_options)
-
-    # Mandatory options for all views (if permitted)
-    if display_options.enabled(display_options.O):
-        if display_options.enabled(display_options.R) and user.may("general.view_option_refresh"):
-            options.add("refresh")
-
-        if user.may("general.view_option_columns"):
-            options.add("num_columns")
-
-    # TODO: Improve sorting. Add a sort index?
-    return sorted(options)
-
-
 def group_value(row: Row, group_cells: Sequence[Cell]) -> Hashable:
     """The Group-value of a row is used for deciding whether
     two rows are in the same group or not"""

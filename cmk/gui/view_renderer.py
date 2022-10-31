@@ -47,7 +47,7 @@ from cmk.gui.page_menu_utils import (
     get_ntop_page_menu_dropdown,
 )
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.plugins.views.utils import Command, load_used_options
+from cmk.gui.plugins.views.utils import Command
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import HTTPVariables, InfoName, Rows, ViewSpec
 from cmk.gui.utils.html import HTML
@@ -587,10 +587,7 @@ class GUIViewRenderer(ABCViewRenderer):
     def _render_painter_options_form(self) -> HTML:
         with output_funnel.plugged():
             painter_options = PainterOptions.get_instance()
-            painter_options.show_form(
-                self.view.spec,
-                load_used_options(self.view.spec, self.view.group_cells + self.view.row_cells),
-            )
+            painter_options.show_form(self.view.spec, self.view.painter_options)
             return HTML(output_funnel.drain())
 
     def _render_command_form(self, info_name: InfoName, command: Command) -> HTML:

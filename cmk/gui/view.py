@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from typing import List, Optional, Set
 
 from livestatus import SiteId
@@ -15,9 +15,11 @@ import cmk.gui.visuals as visuals
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.derived_columns_sorter import DerivedColumnsSorter
+from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.plugins.views.utils import (
     Cell,
@@ -218,6 +220,28 @@ class View:
         return self.layout.can_display_checkboxes and (
             self.checkboxes_enforced or self.want_checkboxes
         )
+
+    @property
+    def painter_options(self) -> Sequence[str]:
+        """Provides the painter options to be used for this view"""
+        options: set[str] = set()
+
+        for cell in self.group_cells + self.row_cells:
+            options.update(cell.painter_options())
+
+        options.update(self.layout.painter_options)
+
+        # Mandatory options for all views (if permitted)
+        if display_options.enabled(display_options.O):
+            if display_options.enabled(display_options.R) and user.may(
+                "general.view_option_refresh"
+            ):
+                options.add("refresh")
+
+            if user.may("general.view_option_columns"):
+                options.add("num_columns")
+
+        return sorted(options)
 
     def breadcrumb(self) -> Breadcrumb:
         """Render the breadcrumb for the current view

@@ -1,0 +1,15 @@
+Title: Added timeout to event console communication
+Class: fix
+Compatible: compat
+Component: livestatus
+Date: 1667223194
+Edition: cre
+Knowledge: doc
+Level: 2
+State: unknown
+Version: 2.1.0p16
+
+An unresponsive event console could eat up Livestatus connections and even
+cause a deadlock during the shutdown of the monitoring core.  Now there is
+timeout of 10s, after that you get a timeout error for the Livestatus
+query or action.

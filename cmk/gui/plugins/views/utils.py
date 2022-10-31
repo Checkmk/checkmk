@@ -80,7 +80,6 @@ from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view_store import get_permitted_views
 from cmk.gui.view_utils import CellSpec, get_host_list_links
-from cmk.gui.visual_link import render_link_to_view
 from cmk.gui.visuals import view_title
 
 ExportCellContent = str | dict[str, Any]
@@ -1050,7 +1049,11 @@ class Cell:
 
         return _encode_sorter_url(sorter)
 
-    def render(self, row: Row) -> tuple[str, str | HTML]:
+    def render(
+        self,
+        row: Row,
+        link_renderer: Callable[[str | HTML, Row, VisualLinkSpec], str | HTML] | None,
+    ) -> tuple[str, str | HTML]:
         row = join_row(row, self)
 
         try:
@@ -1067,14 +1070,16 @@ class Cell:
             return "", ""
 
         # Add the optional link to another view
-        if content and self._link_spec is not None and self._use_painter_link():
-            content = render_link_to_view(content, row, self._link_spec)
+        if content and self._link_spec is not None and self._use_painter_link() and link_renderer:
+            content = link_renderer(content, row, self._link_spec)
 
         # Add the optional mouseover tooltip
         if content and self.has_tooltip():
             assert isinstance(content, (str, HTML))
             tooltip_cell = Cell(
-                self._view_spec, self._view_user_sorters, PainterSpec(self.tooltip_painter_name())
+                self._view_spec,
+                self._view_user_sorters,
+                PainterSpec(self.tooltip_painter_name()),
             )
             _tooltip_tdclass, tooltip_content = tooltip_cell.render_content(row)
             assert not isinstance(tooltip_content, Mapping)
@@ -1194,8 +1199,13 @@ class Cell:
         painter = self.painter()
         return painter.render(row, self)
 
-    def paint(self, row: Row, colspan: int | None = None) -> bool:
-        tdclass, content = self.render(row)
+    def paint(
+        self,
+        row: Row,
+        link_renderer: Callable[[str | HTML, Row, VisualLinkSpec], str | HTML] | None,
+        colspan: int | None = None,
+    ) -> bool:
+        tdclass, content = self.render(row, link_renderer)
         assert isinstance(content, (str, HTML))
         html.td(content, class_=tdclass, colspan=colspan)
         return content != ""
@@ -1260,10 +1270,19 @@ class JoinCell(Cell):
 
 
 class EmptyCell(Cell):
-    def render(self, row: Row) -> tuple[str, str]:
+    def render(
+        self,
+        row: Row,
+        link_renderer: Callable[[str | HTML, Row, VisualLinkSpec], str | HTML] | None,
+    ) -> tuple[str, str]:
         return "", ""
 
-    def paint(self, row: Row, colspan: int | None = None) -> bool:
+    def paint(
+        self,
+        row: Row,
+        link_renderer: Callable[[str | HTML, Row, VisualLinkSpec], str | HTML] | None,
+        colspan: int | None = None,
+    ) -> bool:
         return False
 
 

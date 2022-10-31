@@ -23,12 +23,7 @@ from cmk.utils.structured_data import (
 )
 from cmk.utils.type_defs import HostName
 
-from cmk.base.api.agent_based.inventory_classes import (
-    AttrDict,
-    Attributes,
-    InventoryResult,
-    TableRow,
-)
+from cmk.base.api.agent_based.inventory_classes import Attributes, InventoryResult, TableRow
 
 RawCacheInfo = tuple[int, int]
 
@@ -184,31 +179,15 @@ class RealHostTreeAggregator(TreeAggregator):
             node.attributes.add_pairs(attributes.status_attributes)
 
     def _integrate_table_row(self, table_row: TableRow) -> None:
-        def _add_row(
-            tree: StructuredDataNode,
-            path: list[str],
-            key_columns: AttrDict,
-            columns: AttrDict,
-        ) -> None:
-            node = tree.setdefault_node(tuple(path))
-            node.table.add_key_columns(sorted(key_columns))
-            node.table.add_rows([{**key_columns, **columns}])
-
         # do this always, it sets key_columns!
-        _add_row(
-            self._inventory_tree,
-            table_row.path,
-            table_row.key_columns,
-            table_row.inventory_columns,
-        )
+        node = self._inventory_tree.setdefault_node(tuple(table_row.path))
+        node.table.add_key_columns(sorted(table_row.key_columns))
+        node.table.add_rows([{**table_row.key_columns, **table_row.inventory_columns}])
 
         if table_row.status_columns:
-            _add_row(
-                self._status_data_tree,
-                table_row.path,
-                table_row.key_columns,
-                table_row.status_columns,
-            )
+            node = self._status_data_tree.setdefault_node(tuple(table_row.path))
+            node.table.add_key_columns(sorted(table_row.key_columns))
+            node.table.add_rows([{**table_row.key_columns, **table_row.status_columns}])
 
     # ---from retention intervals-------------------------------------------
 

@@ -55,6 +55,7 @@ SENSOR_TYPE_NAMES = {
     "17": "keyStation",
     "18": "digInput",
     "22": "light",
+    "24": "dewpoint",
     "26": "tacDio",
     "36": "acVoltage",
     "37": "acCurrent",
@@ -97,14 +98,20 @@ ENVIROMUX_CHECK_DEFAULT_PARAMETERS = {
 class EnviromuxSensor:
     type_: str
     value: float
-    min_threshold: float
-    max_threshold: float
+    min_threshold: float | None = None  # This is not present for the EnviromuxMicro devices
+    max_threshold: float | None = None  # This is not present for the EnviromuxMicro devices
 
 
 @dataclass
 class EnviromuxDigitalSensor:
     value: str
     normal_value: str
+
+
+@dataclass
+class EnviromuxMicroSensor:
+    type_: str
+    value: float
 
 
 EnviromuxDigitalSection = Mapping[str, EnviromuxDigitalSensor]
@@ -155,6 +162,26 @@ def parse_enviromux_digital(string_table: StringTable) -> EnviromuxDigitalSectio
         )
         for line in string_table
     }
+
+
+def parse_enviromux_micro(
+    string_table: StringTable,
+) -> EnviromuxSection:
+    enviromux_micro_sensors: MutableMapping[str, EnviromuxSensor] = {}
+
+    for line in string_table:
+        try:
+            enviromux_micro_sensors.setdefault(
+                f"{line[2]} {line[0]}",
+                EnviromuxSensor(
+                    type_=SENSOR_TYPE_NAMES.get(line[1], "Unknown"),
+                    value=float(line[3]) / 10.0,
+                ),
+            )
+        except (IndexError, ValueError):
+            continue
+
+    return enviromux_micro_sensors
 
 
 # .
@@ -210,6 +237,8 @@ DETECT_ENVIROMUX = startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3699.1.1.11")
 
 DETECT_ENVIROMUX_SEMS = startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3699.1.1.2")
 
+DETECT_ENVIROMUX_MICRO = startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3699.1.1.12")
+
 # .
 #   .--check functions-----------------------------------------------------.
 #   |                           _               _                          |
@@ -240,8 +269,10 @@ def check_enviromux_temperature(
     yield from check_temperature(
         reading=sensor.value,
         params=params,
-        dev_levels_lower=(sensor.min_threshold, sensor.min_threshold),
-        dev_levels=(sensor.max_threshold, sensor.max_threshold),
+        dev_levels_lower=(sensor.min_threshold, sensor.min_threshold)
+        if sensor.min_threshold
+        else None,
+        dev_levels=(sensor.max_threshold, sensor.max_threshold) if sensor.max_threshold else None,
     )
 
 

@@ -22,9 +22,8 @@ class TableEventConsoleReplication;
 namespace {
 class ECTableConnection : public EventConsoleConnection {
 public:
-    ECTableConnection(MonitoringCore *mc, std::string command)
-        : EventConsoleConnection(mc->loggerLivestatus(),
-                                 mc->mkeventdSocketPath())
+    ECTableConnection(Logger *logger, std::string path, std::string command)
+        : EventConsoleConnection(logger, std::move(path))
         , command_(std::move(command)) {}
     [[nodiscard]] std::string getResult() const { return result_; }
 
@@ -47,8 +46,10 @@ std::unique_ptr<Column> DynamicEventConsoleReplicationColumn::createColumn(
     const std::string &name, const std::string &arguments) {
     std::string result;
     if (_mc->mkeventdEnabled()) {
+        auto command = "REPLICATE " + arguments;
         try {
-            ECTableConnection ec(_mc, "REPLICATE " + arguments);
+            ECTableConnection ec(_mc->loggerLivestatus(),
+                                 _mc->mkeventdSocketPath(), command);
             ec.run();
             result = ec.getResult();
         } catch (const std::runtime_error &err) {

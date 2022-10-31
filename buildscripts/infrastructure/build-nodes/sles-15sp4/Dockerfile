@@ -29,6 +29,7 @@ RUN zypper ref -s \
     && zypper -n in -y --force-resolution \
     apache2-devel \
     bind-utils \
+    bison \
     flex \
     freeradius-client-devel \
     freetype2-devel \

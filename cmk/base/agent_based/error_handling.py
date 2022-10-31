@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import sys
+from contextlib import suppress
 from typing import Callable, Optional, Tuple
 
 import cmk.utils.debug
@@ -26,7 +28,6 @@ from cmk.utils.type_defs import (
 )
 
 import cmk.base.crash_reporting
-import cmk.base.obsolete_output as out
 
 
 def check_result(
@@ -123,5 +124,7 @@ def _handle_output(
     active_check_handler(hostname, output_text)
     if keepalive:
         console.verbose(output_text)
-    else:
-        out.output(output_text)
+        return
+    with suppress(IOError):
+        sys.stdout.write(output_text)
+        sys.stdout.flush()

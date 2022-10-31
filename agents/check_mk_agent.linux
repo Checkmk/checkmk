@@ -1353,19 +1353,20 @@ section_fileinfo() {
     }
     exit if ! @patterns;
 
-    print "<<<fileinfo:sep(124)>>>\n", time, "\n[[[header]]]\nname|status|size|time\n[[[content]]]\n";
-
+    my $file_stats = "";
     foreach (@patterns) {
         foreach (bsd_glob("$_")) {
             if (! -f) {
-                print "$_|missing\n" if ! -d;
+                $file_stats .= "$_|missing\n" if ! -d;
             } elsif (my @infos = stat) {
-                print "$_|ok|$infos[7]|$infos[9]\n";
+                $file_stats .= "$_|ok|$infos[7]|$infos[9]\n";
             } else {
-                print "$_|stat failed: $!\n";
+                $file_stats .= "$_|stat failed: $!\n";
             }
         }
     }
+
+    print "<<<fileinfo:sep(124)>>>\n", time, "\n[[[header]]]\nname|status|size|time\n[[[content]]]\n$file_stats";
     ' -- "${MK_CONFDIR}"
 }
 

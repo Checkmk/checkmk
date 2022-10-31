@@ -115,7 +115,7 @@ def fixture_try_bake_agents_for_hosts(mocker: MockerFixture) -> MagicMock:
     return mocker.patch.object(
         bakery,
         "try_bake_agents_for_hosts",
-        side_effect=lambda _hosts: None,
+        side_effect=lambda *args, **kw: None,
     )
 
 

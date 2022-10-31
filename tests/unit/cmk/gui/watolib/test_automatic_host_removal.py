@@ -54,7 +54,6 @@ def fixture_setup_hosts() -> None:
                 "host_no_rule_match",
             )
         ],
-        bake=lambda _hosts: None,
     )
 
 

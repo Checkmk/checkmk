@@ -1014,8 +1014,6 @@ class BaseFolder:
     def create_hosts(
         self,
         entries: Iterable[Tuple[HostName, HostAttributes, object]],
-        *,
-        bake: Callable[[List[HostName]], object],
     ) -> None:
         raise NotImplementedError()
 
@@ -2471,8 +2469,6 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     def create_hosts(
         self,
         entries: Iterable[Tuple[HostName, HostAttributes, object]],
-        *,
-        bake: Callable[[List[HostName]], object],
     ) -> None:
         # 1. Check preconditions
         self.prepare_create_hosts()
@@ -2489,14 +2485,11 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                 )
                 for host_name, attributes, _cluster_nodes in entries
             ],
-            bake=bake,
         )
 
     def create_validated_hosts(
         self,
         entries: Collection[tuple[HostName, HostAttributes, object]],
-        *,
-        bake: Callable[[List[HostName]], object],
     ) -> None:
         # 2. Actual modification
         self._load_hosts_on_demand()
@@ -2505,14 +2498,6 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
         self.persist_instance()  # num_hosts has changed
         self.save_hosts()
-
-        # 3. Prepare agents for the new hosts
-        #
-        # Note:  CREFolder should not know *anything* about the bakery.
-        #        Instead, the enterprise edition should explicitly try
-        #        to bake *after* the call to `create_hosts()` or
-        #        `create_validated_hosts()`.
-        bake([e[0] for e in entries])
 
         folder_path = self.path()
         Folder.add_hosts_to_lookup_cache([(x[0], folder_path) for x in entries])
@@ -3656,15 +3641,13 @@ class CMEFolder(CREFolder):
     def create_hosts(
         self,
         entries: Iterable[Tuple[HostName, HostAttributes, object]],
-        *,
-        bake: Callable[[List[HostName]], object],
     ) -> None:
         customer_id = self._get_customer_id()
         if customer_id != managed.default_customer_id():
             for hostname, attributes, _cluster_nodes in entries:
                 self.check_modify_host(hostname, attributes)
 
-        super().create_hosts(entries, bake=bake)
+        super().create_hosts(entries)
 
     def check_modify_host(self, hostname, attributes):
         if "site" not in attributes:

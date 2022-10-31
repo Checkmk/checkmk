@@ -239,14 +239,10 @@ class ParentScanBackgroundJob(BackgroundJob):
         gw_folder = self._determine_gateway_folder(settings.where, folder)
         gw_host_name = self._determine_gateway_host_name(task, gateway)
         gw_host_attributes = self._determine_gateway_attributes(task, settings, gateway, gw_folder)
-
-        # Note:  `gw_folder` is a CREFolder but it will still try to bake,
-        # although the bakery is a CEE feature.  The code under
-        # `hosts_and_folders` is very convoluted.
         gw_folder.create_hosts(
             [(gw_host_name, gw_host_attributes, None)],
-            bake=bakery.try_bake_agents_for_hosts,
         )
+        bakery.try_bake_agents_for_hosts([gw_host_name])
         self._num_gateway_hosts_created += 1
 
         return [gw_host_name]

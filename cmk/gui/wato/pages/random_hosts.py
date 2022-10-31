@@ -80,7 +80,7 @@ class ModeRandomHosts(WatoMode):
             while len(hosts_to_create) < count:
                 host_name = "random_%010d" % int(random.random() * 10000000000)
                 hosts_to_create.append((HostName(host_name), {"ipaddress": "127.0.0.1"}, None))
-            folder.create_hosts(hosts_to_create, bake=lambda *args: None)
+            folder.create_hosts(hosts_to_create)
             return count
 
         total_created = 0

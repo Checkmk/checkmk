@@ -397,7 +397,6 @@ def with_host(
     hostnames = ["heute", "example.com"]
     hosts_and_folders.CREFolder.root_folder().create_hosts(
         [(hostname, {}, None) for hostname in hostnames],
-        bake=lambda *args: None,
     )
     yield hostnames
     hosts_and_folders.CREFolder.root_folder().delete_hosts(

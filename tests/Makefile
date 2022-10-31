@@ -8,7 +8,6 @@ FIND_PYTHON_FILES := $(SCRIPTS)/find-python-files
 PIPENV := $(SCRIPTS)/run-pipenv
 PYTEST := $(PIPENV) run pytest $(PYTEST_ARGS)
 CYCLES := $(PIPENV) run py_import_cycles
-CYCLES_THRESHOLD := 0
 PYTEST_UNIT_TEST_OPTS = \
     -T unit \
     --doctest-modules \
@@ -356,9 +355,7 @@ test-cycles:
 		--packages cmk enterprise managed plus \
 		--project-path $$(realpath -L ..) \
 		--strategy dfs \
-		--verbose 2>&1 | tee .py-import-cycles.txt || true
-	(cat .py-import-cycles.txt && rm .py-import-cycles.txt) \
-	| perl -ne '/Found (\d+)/ && exit ($$1 > $(CYCLES_THRESHOLD))'
+		--verbose
 
 test-cycles-docker:
 	../scripts/run-in-docker.sh make --quiet test-cycles

@@ -555,28 +555,6 @@ class PodStatus(BaseModel):
     qos_class: QosClass | None
 
 
-class ControllerType(enum.Enum):
-    deployment = "deployment"
-    daemonset = "daemonset"
-    statefulset = "statefulset"
-    cronjob = "cronjob"
-    job = "job"
-
-    @staticmethod
-    def from_str(label):
-        if label == "deployment":
-            return ControllerType.deployment
-        if label == "daemonset":
-            return ControllerType.daemonset
-        if label == "statefulset":
-            return ControllerType.statefulset
-        if label == "cronjob":
-            return ControllerType.cronjob
-        if label == "job":
-            return ControllerType.job
-        raise ValueError(f"Unknown controller type {label} specified")
-
-
 class Controller(BaseModel):
     # Used to represent top level controllers of a pod
     # Derived from the OwnerReference information in the pod

@@ -9,6 +9,7 @@ from pydantic_factories import ModelFactory, Use
 
 from cmk.special_agents import agent_kube as agent
 from cmk.special_agents.utils_kubernetes import performance
+from cmk.special_agents.utils_kubernetes.api_server import APIData
 from cmk.special_agents.utils_kubernetes.schemata import api
 
 
@@ -215,7 +216,6 @@ def api_to_agent_node(node: api.Node, pods: Sequence[api.Pod] = ()) -> agent.Nod
         metadata=node.metadata,
         status=node.status,
         resources=node.resources,
-        roles=node.roles,
         kubelet_info=node.kubelet_info,
         pods=pods,
     )
@@ -224,25 +224,38 @@ def api_to_agent_node(node: api.Node, pods: Sequence[api.Pod] = ()) -> agent.Nod
 # Cluster related Factories
 
 
+class APIDataFactory(ModelFactory):
+    __model__ = APIData
+
+
 class ClusterDetailsFactory(ModelFactory):
     __model__ = api.ClusterDetails
 
 
-def api_to_agent_cluster(
-    excluded_node_roles: Sequence[str] = ("control_plane", "master"),
-    pods: Sequence[api.Pod] = (),
-    nodes: Sequence[api.Node] = (),
+def composed_entities_builder(
+    *,
+    cluster_details: api.ClusterDetails | None = None,
+    daemonsets: Sequence[api.DaemonSet] = (),
     statefulsets: Sequence[api.StatefulSet] = (),
     deployments: Sequence[api.Deployment] = (),
-    daemon_sets: Sequence[api.DaemonSet] = (),
-    cluster_details: api.ClusterDetails = ClusterDetailsFactory.build(),
-) -> agent.Cluster:
-    return agent.Cluster.from_api_resources(
-        excluded_node_roles=excluded_node_roles or [],
-        pods=pods,
-        nodes=nodes,
-        statefulsets=statefulsets,
-        deployments=deployments,
-        daemon_sets=daemon_sets,
-        cluster_details=cluster_details,
+    pods: Sequence[api.Pod] = (),
+    nodes: Sequence[api.Node] = (),
+) -> agent.ComposedEntities:
+    controllers: Iterator[api.DaemonSet | api.StatefulSet | api.Deployment] = itertools.chain(
+        daemonsets, statefulsets, deployments
+    )
+    if not pods:
+        pods = [
+            APIPodFactory.build(uid=uid) for controller in controllers for uid in controller.pods
+        ]
+    return agent.ComposedEntities.from_api_resources(
+        excluded_node_roles=(),
+        api_data=APIDataFactory.build(
+            cluster_details=cluster_details or ClusterDetailsFactory.build(),
+            nodes=nodes,
+            statefulsets=statefulsets,
+            deployments=deployments,
+            daemonsets=daemonsets,
+            pods=pods,
+        ),
     )

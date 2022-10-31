@@ -185,20 +185,25 @@ run_purely_synchronous_sections() {
 # *Rewrite cpu / ps check to be faster - takes >1s on my laptop
 # ioreg -l zeigt etliche interessante Inventurdaten
 
+_non_comment_lines() {
+    grep -Ev '^[[:space:]]*($|#)' "${1}"
+}
+
 run_mrpe_plugins() {
+    configfile="${1}"
+
     if [ -e "/etc/mrpe.cfg" ]; then
         echo '<<<mrpe>>>'
         # SC2162: read without -r will mangle backslashes.
         # The following suppression was added when we enabled the corresponding shellcheck.
         # It may well be that "read -r" would be more appropriate.
         # shellcheck disable=SC2162
-        grep -Ev '^[[:space:]]*($|#)' "/etc/mrpe.cfg" |
-            while read descr cmdline; do
-                PLUGIN=${cmdline%% *}
-                OUTPUT=$(eval "$cmdline")
-                echo "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
-                echo
-            done
+        _non_comment_lines "${configfile}" | while read descr cmdline; do
+            PLUGIN=${cmdline%% *}
+            OUTPUT=$(eval "$cmdline")
+            echo "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
+            echo
+        done
     fi
 }
 
@@ -206,7 +211,7 @@ main() {
 
     run_purely_synchronous_sections
 
-    run_mrpe_plugins
+    run_mrpe_plugins "/etc/mrpe.cfg"
 
     return 0
 }

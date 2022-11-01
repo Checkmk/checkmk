@@ -298,33 +298,37 @@ def uninstall(package: PackageInfo) -> None:
     _execute_post_package_change_actions(package)
 
 
-def store_package(file_content: bytes) -> PackageInfo:
+class PackageStore:
+    def __init__(self) -> None:
+        self.local_packages: Final = cmk.utils.paths.local_optional_packages_dir
+        self.shipped_packages: Final = cmk.utils.paths.optional_packages_dir
 
-    with tarfile.open(fileobj=BytesIO(file_content), mode="r:gz") as tar:
-        info_file = tar.extractfile("info")
-        if info_file is None:
-            raise PackageException("Failed to open package info file")
-        package = parse_package_info(info_file.read().decode())
+    def store(self, file_content: bytes) -> PackageInfo:
 
-    base_name = format_file_name(name=package["name"], version=package["version"])
-    local_package_path = cmk.utils.paths.local_optional_packages_dir / base_name
-    shipped_package_path = cmk.utils.paths.optional_packages_dir / base_name
+        with tarfile.open(fileobj=BytesIO(file_content), mode="r:gz") as tar:
+            info_file = tar.extractfile("info")
+            if info_file is None:
+                raise PackageException("Failed to open package info file")
+            package = parse_package_info(info_file.read().decode())
 
-    if local_package_path.exists() or shipped_package_path.exists():
-        raise PackageException("Package '%s' already exists on the site!" % base_name)
+        base_name = format_file_name(name=package["name"], version=package["version"])
+        local_package_path = self.local_packages / base_name
+        shipped_package_path = self.shipped_packages / base_name
 
-    local_package_path.parent.mkdir(parents=True, exist_ok=True)
-    store.save_bytes_to_file(str(local_package_path), file_content)
+        if local_package_path.exists() or shipped_package_path.exists():
+            raise PackageException("Package '%s' already exists on the site!" % base_name)
 
-    return package
+        local_package_path.parent.mkdir(parents=True, exist_ok=True)
+        store.save_bytes_to_file(str(local_package_path), file_content)
 
+        return package
 
-def remove_optional_package(package_name: str | Path) -> None:
-    """Remove a local optional package file
+    def remove(self, package_name: str | Path) -> None:
+        """Remove a local optional package file
 
-    If the input is a `Path` (or `str` representing a path) only the base name is considered.
-    """
-    (cmk.utils.paths.local_optional_packages_dir / Path(package_name).name).unlink()
+        If the input is a `Path` (or `str` representing a path) only the base name is considered.
+        """
+        (self.local_packages / Path(package_name).name).unlink()
 
 
 def read_package(package_file_base_name: str) -> bytes:

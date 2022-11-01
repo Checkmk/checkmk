@@ -301,7 +301,7 @@ def package_install(args: List[str]) -> None:
         raise PackageException("No such file %s." % path)
 
     with Path(path).open("rb") as fh:
-        package = packaging.store_package(fh.read())
+        package = packaging.PackageStore().store(fh.read())
 
     packaging.install_optional_package(
         packaging.format_file_name(name=package["name"], version=package["version"])

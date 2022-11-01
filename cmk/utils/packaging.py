@@ -330,6 +330,18 @@ class PackageStore:
         """
         (self.local_packages / Path(package_name).name).unlink()
 
+    def list_local_packages(self) -> list[Path]:
+        try:
+            return list(self.local_packages.iterdir())
+        except FileNotFoundError:
+            return []
+
+    def list_shipped_packages(self) -> list[Path]:
+        try:
+            return list(self.shipped_packages.iterdir())
+        except FileNotFoundError:
+            return []
+
 
 def read_package(package_file_base_name: str) -> bytes:
     package_path = _get_full_package_path(package_file_base_name)
@@ -408,7 +420,8 @@ def _create_enabled_mkp_from_installed_package(manifest: PackageInfo) -> None:
 
 
 def _get_full_package_path(package_file_name: str) -> Path:
-    for package in _get_optional_package_paths():
+    package_store = PackageStore()
+    for package in package_store.list_local_packages() + package_store.list_shipped_packages():
         if package_file_name == package.name:
             return package
     raise PackageException("Optional package %s does not exist" % package_file_name)
@@ -735,32 +748,19 @@ def get_installed_package_infos() -> dict[PackageName, PackageInfo | None]:
 
 
 def get_optional_package_infos() -> dict[str, PackageInfo]:
+    package_store = PackageStore()
+    local_packages = package_store.list_local_packages()
+    local_names = {p.name for p in local_packages}
     return _get_package_infos(
         [
-            (p, p.parent != cmk.utils.paths.optional_packages_dir)
-            for p in _get_optional_package_paths()
+            *((p, True) for p in local_packages),
+            *(
+                (p, False)
+                for p in package_store.list_shipped_packages()
+                if p.name not in local_names
+            ),
         ]
     )
-
-
-def _get_optional_package_paths() -> list[Path]:
-    try:
-        local = list(cmk.utils.paths.local_optional_packages_dir.iterdir())
-    except FileNotFoundError:
-        local = []
-
-    local_mkp_names = {p.name for p in local}
-
-    try:
-        shipped = [
-            p
-            for p in cmk.utils.paths.optional_packages_dir.iterdir()
-            if p.name not in local_mkp_names
-        ]
-    except FileNotFoundError:
-        shipped = []
-
-    return local + shipped
 
 
 def get_enabled_package_infos() -> dict[str, PackageInfo]:

@@ -772,7 +772,7 @@ def test_disable_two_factor_authentication(user_id: UserId) -> None:
     assert userdb.is_two_factor_login_enabled(user_id) is False
 
 
-def test_make_two_factor_backup_codes(user_id) -> None:
+def test_make_two_factor_backup_codes(user_id: UserId) -> None:
     display_codes, store_codes = userdb.make_two_factor_backup_codes()
     assert len(display_codes) == 10
     assert len(store_codes) == 10
@@ -784,8 +784,7 @@ def test_is_two_factor_backup_code_valid_no_codes(user_id) -> None:
     assert userdb.is_two_factor_backup_code_valid(user_id, "yxz") is False
 
 
-def test_is_two_factor_backup_code_valid_matches(monkeypatch: MonkeyPatch, user_id: UserId) -> None:
-    monkeypatch.setattr("cmk.utils.crypto.password_hashing.BCRYPT_ROUNDS", 4)
+def test_is_two_factor_backup_code_valid_matches(user_id: UserId) -> None:
     display_codes, store_codes = userdb.make_two_factor_backup_codes()
     credentials = userdb.load_two_factor_credentials(user_id)
     credentials["backup_codes"] = store_codes

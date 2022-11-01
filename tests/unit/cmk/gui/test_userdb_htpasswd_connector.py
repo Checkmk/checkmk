@@ -16,12 +16,6 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.userdb import htpasswd
 
 
-@pytest.fixture(autouse=True)
-def reduce_bcrypt_rounds(monkeypatch: MonkeyPatch) -> None:
-    """Reduce the number of rounds for bcrypt hashing"""
-    monkeypatch.setattr("cmk.utils.crypto.password_hashing.BCRYPT_ROUNDS", 4)
-
-
 @pytest.fixture(name="htpasswd_file")
 def htpasswd_file_fixture(tmp_path: Path) -> Path:
     htpasswd_file_path = tmp_path / "htpasswd"

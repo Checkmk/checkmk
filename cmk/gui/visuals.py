@@ -1159,7 +1159,7 @@ def _vs_general(
                         "Dashboards will be visible in the ‘Monitor’ main menu. "
                         "With this option, you can select in which section of the menu this "
                         "dashboard should be accessible. If you want to define a new "
-                        "topic name you can do this here <a href='%s'>here</a>."
+                        "topic name you can do this <a href='%s'>here</a>."
                     )
                     % "pagetype_topics.py",
                     choices=pagetypes.PagetypeTopics.choices(),
@@ -1482,6 +1482,7 @@ def page_edit_visual(  # type:ignore[no-untyped-def] # pylint: disable=too-many-
             visib[key] = visual[key]
     visual["visibility"] = visib
 
+    visual["topic"] = visual["topic"] or "other"  # default to "other" (in case of empty string)
     vs_general.render_input("general", visual)
 
     # TODO: Only views are using it. Looks like we can move it to the view custom field handler in a

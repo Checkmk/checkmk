@@ -526,10 +526,6 @@ msgid "%s instances"
 msgstr "Adaugă instanță NGINX"
 
 #, python-format
-msgid "%s into %s"
-msgstr ""
-
-#, python-format
 msgid "%s is not a valid UNIX timestamp"
 msgstr "%s nu este o ștampilă de timp UNIX validă"
 
@@ -8022,17 +8018,7 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Changed properties of rule \"%s\", moved from folder \"%s\" to top of folder "
-"\"%s\""
-msgstr ""
-
-#, python-format
-msgid ""
 "Changed properties of rule \"%s\", moved rule from folder \"%s\" to \"%s\""
-msgstr ""
-
-#, python-format
-msgid "Changed properties of rule #%d in ruleset \"%s\" in folder \"%s\""
 msgstr ""
 
 #, python-format
@@ -9147,10 +9133,6 @@ msgstr "Adaungă un nou element"
 msgid "Clone view"
 msgstr "Conexiune Noua"
 
-#, python-format
-msgid "Cloned rule from rule %s in ruleset \"%s\" in folder \"%s\""
-msgstr ""
-
 msgid "Close Timewarp"
 msgstr ""
 
@@ -9906,10 +9888,10 @@ msgid ""
 "incoming HTTP requests"
 msgstr ""
 
+#, python-format
 msgid ""
-"Configure the port to send the real-time data to. The Microcore needs to be "
-"<a href=\"wato.py?mode=edit_configvar&varname=cmc_real_time_checks"
-"\">configured to listen on this port</a>."
+"Configure the port to send the real-time data to. The Microcore of the "
+"monitoring site needs to be %sconfigured to listen on this port%s."
 msgstr ""
 
 msgid "Configure the target mode for the system."
@@ -10954,10 +10936,6 @@ msgstr ""
 msgid "Create new %s attribute %s"
 msgstr ""
 
-#, python-format
-msgid "Create new %s group %s"
-msgstr ""
-
 msgid "Create new auxiliary tag"
 msgstr ""
 
@@ -11000,7 +10978,8 @@ msgstr ""
 msgid "Create random secret"
 msgstr ""
 
-msgid "Create real-time data executing the following agent plugins"
+msgid ""
+"Create real-time data executing the following agent plugins (Linux only)"
 msgstr ""
 
 msgid "Create regular time-schedule for this report"
@@ -11097,14 +11076,6 @@ msgid "Created new extension package %s"
 msgstr ""
 
 #, python-format
-msgid "Created new folder %s"
-msgstr ""
-
-#, python-format
-msgid "Created new host %s."
-msgstr ""
-
-#, python-format
 msgid "Created new host tag group '%s'"
 msgstr ""
 
@@ -11133,10 +11104,6 @@ msgstr ""
 
 #, python-format
 msgid "Created new time period %s"
-msgstr ""
-
-#, python-format
-msgid "Created new users: %s"
 msgstr ""
 
 msgid ""
@@ -11341,6 +11308,9 @@ msgid "Critical when all licenses are used"
 msgstr ""
 
 msgid "Criticality of the service when sensors detect that power is off."
+msgstr ""
+
+msgid "CronJobs"
 msgstr ""
 
 msgid "Current"
@@ -13045,10 +13015,6 @@ msgid "Deleted %s %d"
 msgstr ""
 
 #, python-format
-msgid "Deleted %s group %s"
-msgstr ""
-
-#, python-format
 msgid "Deleted BI aggregation %s"
 msgstr ""
 
@@ -13080,23 +13046,11 @@ msgid "Deleted custom GUI logo"
 msgstr ""
 
 #, python-format
-msgid "Deleted folder %s"
-msgstr ""
-
-#, python-format
-msgid "Deleted host %s"
-msgstr ""
-
-#, python-format
 msgid "Deleted notification rule %d of user %s"
 msgstr ""
 
 #, python-format
 msgid "Deleted role '%s'"
-msgstr ""
-
-#, python-format
-msgid "Deleted rule #%d in ruleset \"%s\" in folder \"%s\""
 msgstr ""
 
 #, python-format
@@ -13114,10 +13068,6 @@ msgstr ""
 #, fuzzy, python-format
 msgid "Deleted time period %s"
 msgstr "Perioada de timp Noua"
-
-#, python-format
-msgid "Deleted user: %s"
-msgstr ""
 
 msgid "Deletes"
 msgstr ""
@@ -16036,10 +15986,6 @@ msgstr ""
 
 #, python-format
 msgid "Edited host tag group %s (%s)"
-msgstr ""
-
-#, python-format
-msgid "Edited properties of folder %s"
 msgstr ""
 
 #, python-format
@@ -29459,10 +29405,6 @@ msgid "Modified folders: %d, modified hosts: %d, modified rulesets: %d"
 msgstr ""
 
 #, python-format
-msgid "Modified host %s."
-msgstr ""
-
-#, python-format
 msgid "Modified rule pack %s"
 msgstr ""
 
@@ -29476,10 +29418,6 @@ msgstr ""
 
 #, python-format
 msgid "Modified user role '%s'"
-msgstr ""
-
-#, python-format
-msgid "Modified users: %s"
 msgstr ""
 
 msgid "Modify"
@@ -29954,11 +29892,6 @@ msgid "Moved %d hosts to %s"
 msgstr ""
 
 #, python-format
-msgid ""
-"Moved %sgroup %s to customer %s. Additional properties may have changed."
-msgstr ""
-
-#, python-format
 msgid "Moved BI aggregation with ID %s to BI pack %s"
 msgstr ""
 
@@ -29966,20 +29899,7 @@ msgstr ""
 msgid "Moved BI rule with ID %s to BI pack %s"
 msgstr ""
 
-#, python-format
-msgid "Moved folder %s to %s"
-msgstr ""
-
 msgid "Moved from"
-msgstr ""
-
-#, python-format
-msgid "Moved host from \"%s\" (ID: %s) to \"%s\" (ID: %s)"
-msgstr ""
-
-#, python-format
-msgid ""
-"Moved rule %s from position #%d to #%d in ruleset \"%s\" in folder \"%s\""
 msgstr ""
 
 #, python-format
@@ -33961,10 +33881,6 @@ msgstr ""
 msgid "Password"
 msgstr "Parola"
 
-#, python-format
-msgid "Password changed (sync failed: %s)"
-msgstr ""
-
 msgid "Password does not exist or using not permitted"
 msgstr ""
 
@@ -35760,10 +35676,6 @@ msgstr ""
 msgid "Profile"
 msgstr ""
 
-#, python-format
-msgid "Profile changed (sync failed: %s)"
-msgstr ""
-
 msgid "Profile requests"
 msgstr ""
 
@@ -37158,18 +37070,10 @@ msgid "Removed"
 msgstr ""
 
 #, python-format
-msgid "Removed %sgroup %s from customer %s"
-msgstr ""
-
-#, python-format
 msgid "Removed auxiliary tag %s (%s)"
 msgstr ""
 
 msgid "Removed entries"
-msgstr ""
-
-#, python-format
-msgid "Removed explicit attributes of host %s."
 msgstr ""
 
 #, python-format
@@ -37216,34 +37120,6 @@ msgstr ""
 
 #, python-format
 msgid "Renamed %d %s at the following places:<br><ul>%s</ul>"
-msgstr ""
-
-#, python-format
-msgid "Renamed cluster node from %s into %s."
-msgstr ""
-
-#, python-format
-msgid "Renamed host %s"
-msgstr ""
-
-#, python-format
-msgid "Renamed host from %s into %s."
-msgstr ""
-
-#, python-format
-msgid "Renamed host from %s to %s"
-msgstr ""
-
-#, python-format
-msgid "Renamed host in %d rulesets of folder %s"
-msgstr ""
-
-#, python-format
-msgid "Renamed parent from %s into %s."
-msgstr ""
-
-#, python-format
-msgid "Renamed parent from %s to %s in folder \"%s\""
 msgstr ""
 
 #, fuzzy
@@ -42441,10 +42317,6 @@ msgstr "Setari"
 #, fuzzy
 msgid "Starting VMs"
 msgstr "Setari"
-
-#, python-format
-msgid "Starting activation (Sites: %s)"
-msgstr ""
 
 msgid "Starting from period number"
 msgstr ""
@@ -52728,14 +52600,6 @@ msgid ""
 "Updated metrics are written to disk in the configured interval. The write "
 "operation is only performed for metrics that are being updated. Old metrics "
 "are not affected by this option."
-msgstr ""
-
-#, python-format
-msgid "Updated properties of %s group %s"
-msgstr ""
-
-#, python-format
-msgid "Updated properties of %sgroup %s"
 msgstr ""
 
 msgid "Updates"

@@ -536,10 +536,6 @@ msgid "%s instances"
 msgstr "%s instanties"
 
 #, python-format
-msgid "%s into %s"
-msgstr "%s in %s"
-
-#, python-format
 msgid "%s is not a valid UNIX timestamp"
 msgstr "%s is geen geldige UNIX timestamp"
 
@@ -8520,23 +8516,10 @@ msgstr "Gewijzigde eigenschappen van geïnstalleerd extensiepakket %s"
 
 #, python-format
 msgid ""
-"Changed properties of rule \"%s\", moved from folder \"%s\" to top of folder "
-"\"%s\""
-msgstr ""
-"Gewijzigde eigenschappen van regel \"%s\", verplaatst van map \"%s\" naar "
-"boven in map \"%s\""
-
-#, python-format
-msgid ""
 "Changed properties of rule \"%s\", moved rule from folder \"%s\" to \"%s\""
 msgstr ""
 "Eigenschappen van regel \"%s\" gewijzigd, regel verplaatst van map \"%s\" "
 "naar \"%s\""
-
-#, python-format
-msgid "Changed properties of rule #%d in ruleset \"%s\" in folder \"%s\""
-msgstr ""
-"Gewijzigde eigenschappen van regel #%d in regelset \"%s\" in map \"%s\""
 
 #, python-format
 msgid "Changed site specific configuration variable %s to %s."
@@ -9724,10 +9707,6 @@ msgstr "Kloon onderwerp"
 msgid "Clone view"
 msgstr "Kloon uitzicht"
 
-#, python-format
-msgid "Cloned rule from rule %s in ruleset \"%s\" in folder \"%s\""
-msgstr "Gekloonde regel van regel %s in regelset \"%s\" in map \"%s\""
-
 msgid "Close Timewarp"
 msgstr "Timewarp sluiten"
 
@@ -10547,10 +10526,10 @@ msgstr ""
 "Configureer de naam van de HTTP verzoek header variabele om te lezen van de "
 "inkomende HTTP verzoeken"
 
+#, fuzzy, python-format
 msgid ""
-"Configure the port to send the real-time data to. The Microcore needs to be "
-"<a href=\"wato.py?mode=edit_configvar&varname=cmc_real_time_checks"
-"\">configured to listen on this port</a>."
+"Configure the port to send the real-time data to. The Microcore of the "
+"monitoring site needs to be %sconfigured to listen on this port%s."
 msgstr ""
 "Configureer de poort om de realtime gegevens naar toe te sturen. De "
 "Microcore moet <a href=\"wato.py?"
@@ -11571,10 +11550,6 @@ msgstr "Maak nieuwe %s"
 msgid "Create new %s attribute %s"
 msgstr "Maak nieuw %s attribuut %s"
 
-#, python-format
-msgid "Create new %s group %s"
-msgstr "Creëer nieuwe %s groep %s"
-
 msgid "Create new auxiliary tag"
 msgstr "Maak een nieuwe hulp tag"
 
@@ -11614,7 +11589,9 @@ msgstr "Willekeurige controlegegevens creëren"
 msgid "Create random secret"
 msgstr "Creëer willekeurig geheim"
 
-msgid "Create real-time data executing the following agent plugins"
+#, fuzzy
+msgid ""
+"Create real-time data executing the following agent plugins (Linux only)"
 msgstr ""
 "Real-time gegevens creëren door de volgende agent plugins uit te voeren"
 
@@ -11704,14 +11681,6 @@ msgid "Created new extension package %s"
 msgstr "Nieuw uitbreidingspakket %s aangemaakt"
 
 #, python-format
-msgid "Created new folder %s"
-msgstr "Nieuwe map %s aangemaakt"
-
-#, python-format
-msgid "Created new host %s."
-msgstr "Nieuwe host %s aangemaakt."
-
-#, python-format
 msgid "Created new host tag group '%s'"
 msgstr "Nieuwe host tag groep '%s' aangemaakt"
 
@@ -11741,10 +11710,6 @@ msgstr "Nieuw regelpakket aangemaakt met id %s"
 #, python-format
 msgid "Created new time period %s"
 msgstr "Nieuwe tijdsperiode aangemaakt %s"
-
-#, python-format
-msgid "Created new users: %s"
-msgstr "Nieuwe gebruikers aangemaakt: %s"
 
 msgid ""
 "Creates a new service that displays information about disk I/O of database "
@@ -11947,6 +11912,10 @@ msgid "Criticality of the service when sensors detect that power is off."
 msgstr ""
 "Kritiek van de dienst wanneer sensoren detecteren dat de stroom is "
 "uitgeschakeld."
+
+#, fuzzy
+msgid "CronJobs"
+msgstr "Pods van CronJobs"
 
 msgid "Current"
 msgstr "Huidige"
@@ -13567,10 +13536,6 @@ msgid "Deleted %s %d"
 msgstr "%s %d verwijderd"
 
 #, python-format
-msgid "Deleted %s group %s"
-msgstr "Gewiste %s groep %s"
-
-#, python-format
 msgid "Deleted BI aggregation %s"
 msgstr "Gewiste BI-aggregatie %s"
 
@@ -13602,24 +13567,12 @@ msgid "Deleted custom GUI logo"
 msgstr "Verwijderde aangepaste GUI logo"
 
 #, python-format
-msgid "Deleted folder %s"
-msgstr "Verwijderde map %s"
-
-#, python-format
-msgid "Deleted host %s"
-msgstr "Verwijderde host %s"
-
-#, python-format
 msgid "Deleted notification rule %d of user %s"
 msgstr "Verwijderde notificatie regel %d van gebruiker %s"
 
 #, python-format
 msgid "Deleted role '%s'"
 msgstr "Verwijderde rol '%s'"
-
-#, python-format
-msgid "Deleted rule #%d in ruleset \"%s\" in folder \"%s\""
-msgstr "Regel #%d verwijderd in regelset \"%s\" in map \"%s\""
 
 #, python-format
 msgid "Deleted rule %s"
@@ -13636,10 +13589,6 @@ msgstr "Verwijderde site %s"
 #, fuzzy, python-format
 msgid "Deleted time period %s"
 msgstr "Gewiste periode %s"
-
-#, python-format
-msgid "Deleted user: %s"
-msgstr "Verwijderde gebruiker: %s"
 
 msgid "Deletes"
 msgstr "Verwijdert"
@@ -16528,10 +16477,6 @@ msgstr "Bewerkte %d hosts"
 #, python-format
 msgid "Edited host tag group %s (%s)"
 msgstr "Bewerkte host tag groep %s (%s)"
-
-#, python-format
-msgid "Edited properties of folder %s"
-msgstr "Bewerkte eigenschappen van map %s"
 
 #, python-format
 msgid "Edited rule in ruleset \"%s\" in folder \"%s\""
@@ -30653,10 +30598,6 @@ msgid "Modified folders: %d, modified hosts: %d, modified rulesets: %d"
 msgstr "Gewijzigde mappen: %d, gewijzigde hosts: %d, gewijzigde regelsets: %d"
 
 #, python-format
-msgid "Modified host %s."
-msgstr "Gewijzigde host %s."
-
-#, python-format
 msgid "Modified rule pack %s"
 msgstr "Gewijzigd regelpakket %s"
 
@@ -30671,10 +30612,6 @@ msgstr "Gewijzigde tijdsperiode %s"
 #, python-format
 msgid "Modified user role '%s'"
 msgstr "Gewijzigde gebruikersrol '%s'"
-
-#, python-format
-msgid "Modified users: %s"
-msgstr "Gewijzigde gebruikers: %s"
 
 msgid "Modify"
 msgstr "Wijzigen"
@@ -31124,13 +31061,6 @@ msgid "Moved %d hosts to %s"
 msgstr "Verplaatst %d hosts naar %s"
 
 #, python-format
-msgid ""
-"Moved %sgroup %s to customer %s. Additional properties may have changed."
-msgstr ""
-"Verplaatst %sgroep %s naar klant %s. Andere eigenschappen kunnen veranderd "
-"zijn."
-
-#, python-format
 msgid "Moved BI aggregation with ID %s to BI pack %s"
 msgstr "BI-aggregatie met ID %s verplaatst naar BI-pakket %s"
 
@@ -31138,22 +31068,8 @@ msgstr "BI-aggregatie met ID %s verplaatst naar BI-pakket %s"
 msgid "Moved BI rule with ID %s to BI pack %s"
 msgstr "BI regel met ID %s verplaatst naar BI pakket %s"
 
-#, python-format
-msgid "Moved folder %s to %s"
-msgstr "Verplaatst map %s naar %s"
-
 msgid "Moved from"
 msgstr "Verplaatst van"
-
-#, fuzzy, python-format
-msgid "Moved host from \"%s\" (ID: %s) to \"%s\" (ID: %s)"
-msgstr "Verplaatst host van \"%s\" naar \"%s\""
-
-#, python-format
-msgid ""
-"Moved rule %s from position #%d to #%d in ruleset \"%s\" in folder \"%s\""
-msgstr ""
-"Regel %s verplaatst van positie #%d naar #%d in regelset \"%s\" in map \"%s\""
 
 #, python-format
 msgid "Moved rule %s to pack %s"
@@ -35083,10 +34999,6 @@ msgstr "Passphrase"
 msgid "Password"
 msgstr "Wachtwoord"
 
-#, python-format
-msgid "Password changed (sync failed: %s)"
-msgstr "Wachtwoord gewijzigd (synchronisatie mislukt: %s)"
-
 msgid "Password does not exist or using not permitted"
 msgstr "Wachtwoord bestaat niet of gebruik niet toegestaan"
 
@@ -36957,10 +36869,6 @@ msgstr "Product"
 msgid "Profile"
 msgstr "Profiel"
 
-#, python-format
-msgid "Profile changed (sync failed: %s)"
-msgstr "Profiel gewijzigd (synchronisatie mislukt: %s)"
-
 msgid "Profile requests"
 msgstr "Profiel verzoeken"
 
@@ -38294,19 +38202,11 @@ msgid "Removed"
 msgstr "Verwijderd"
 
 #, python-format
-msgid "Removed %sgroup %s from customer %s"
-msgstr "%sgroep %s verwijderd van klant %s"
-
-#, python-format
 msgid "Removed auxiliary tag %s (%s)"
 msgstr "Hulp tag %s (%s) verwijderd"
 
 msgid "Removed entries"
 msgstr "Verwijderde items"
-
-#, python-format
-msgid "Removed explicit attributes of host %s."
-msgstr "Expliciete attributen van host %s verwijderd."
 
 #, python-format
 msgid "Removed extension package %s"
@@ -38352,34 +38252,6 @@ msgstr "Hernoem meerdere hosts"
 #, python-format
 msgid "Renamed %d %s at the following places:<br><ul>%s</ul>"
 msgstr "Hernoemd %d %s op de volgende plaatsen:<br><ul>%s</ul>"
-
-#, python-format
-msgid "Renamed cluster node from %s into %s."
-msgstr "Hernoemde clusterknooppunt van %s in %s."
-
-#, python-format
-msgid "Renamed host %s"
-msgstr "Hernoemde host %s"
-
-#, python-format
-msgid "Renamed host from %s into %s."
-msgstr "Hernoemde host van %s in %s."
-
-#, python-format
-msgid "Renamed host from %s to %s"
-msgstr "Hernoemde host van %s naar %s"
-
-#, python-format
-msgid "Renamed host in %d rulesets of folder %s"
-msgstr "Hernoemde host in %d regelsets van map %s"
-
-#, python-format
-msgid "Renamed parent from %s into %s."
-msgstr "Hernoemde ouder van %s in %s."
-
-#, python-format
-msgid "Renamed parent from %s to %s in folder \"%s\""
-msgstr "Hernoemde ouder van %s naar %s in map \"%s\""
 
 msgid "Renaming Operations"
 msgstr "Operaties hernoemen"
@@ -43730,10 +43602,6 @@ msgstr "Beginnen"
 
 msgid "Starting VMs"
 msgstr "VM's starten"
-
-#, python-format
-msgid "Starting activation (Sites: %s)"
-msgstr "Start activering (Sites: %s)"
 
 msgid "Starting from period number"
 msgstr "Uitgaande van periode nummer"
@@ -56277,14 +56145,6 @@ msgstr ""
 "interval. De schrijfoperatie wordt alleen uitgevoerd voor metrieken die "
 "worden bijgewerkt. Oude metrieken worden niet beïnvloed door deze optie."
 
-#, python-format
-msgid "Updated properties of %s group %s"
-msgstr "Bijgewerkte eigenschappen van %s groep %s"
-
-#, python-format
-msgid "Updated properties of %sgroup %s"
-msgstr "Bijgewerkte eigenschappen van %sgroep %s"
-
 msgid "Updates"
 msgstr "Updates"
 
@@ -64674,6 +64534,154 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. Alle rechten voorbehouden."
+
+#, python-format
+#~ msgid "%s into %s"
+#~ msgstr "%s in %s"
+
+#, python-format
+#~ msgid ""
+#~ "Changed properties of rule \"%s\", moved from folder \"%s\" to top of "
+#~ "folder \"%s\""
+#~ msgstr ""
+#~ "Gewijzigde eigenschappen van regel \"%s\", verplaatst van map \"%s\" naar "
+#~ "boven in map \"%s\""
+
+#, python-format
+#~ msgid "Changed properties of rule #%d in ruleset \"%s\" in folder \"%s\""
+#~ msgstr ""
+#~ "Gewijzigde eigenschappen van regel #%d in regelset \"%s\" in map \"%s\""
+
+#, python-format
+#~ msgid "Cloned rule from rule %s in ruleset \"%s\" in folder \"%s\""
+#~ msgstr "Gekloonde regel van regel %s in regelset \"%s\" in map \"%s\""
+
+#, python-format
+#~ msgid "Create new %s group %s"
+#~ msgstr "Creëer nieuwe %s groep %s"
+
+#, python-format
+#~ msgid "Created new folder %s"
+#~ msgstr "Nieuwe map %s aangemaakt"
+
+#, python-format
+#~ msgid "Created new host %s."
+#~ msgstr "Nieuwe host %s aangemaakt."
+
+#, python-format
+#~ msgid "Created new users: %s"
+#~ msgstr "Nieuwe gebruikers aangemaakt: %s"
+
+#, python-format
+#~ msgid "Deleted %s group %s"
+#~ msgstr "Gewiste %s groep %s"
+
+#, python-format
+#~ msgid "Deleted folder %s"
+#~ msgstr "Verwijderde map %s"
+
+#, python-format
+#~ msgid "Deleted host %s"
+#~ msgstr "Verwijderde host %s"
+
+#, python-format
+#~ msgid "Deleted rule #%d in ruleset \"%s\" in folder \"%s\""
+#~ msgstr "Regel #%d verwijderd in regelset \"%s\" in map \"%s\""
+
+#, python-format
+#~ msgid "Deleted user: %s"
+#~ msgstr "Verwijderde gebruiker: %s"
+
+#, python-format
+#~ msgid "Edited properties of folder %s"
+#~ msgstr "Bewerkte eigenschappen van map %s"
+
+#, python-format
+#~ msgid "Modified host %s."
+#~ msgstr "Gewijzigde host %s."
+
+#, python-format
+#~ msgid "Modified users: %s"
+#~ msgstr "Gewijzigde gebruikers: %s"
+
+#, python-format
+#~ msgid ""
+#~ "Moved %sgroup %s to customer %s. Additional properties may have changed."
+#~ msgstr ""
+#~ "Verplaatst %sgroep %s naar klant %s. Andere eigenschappen kunnen "
+#~ "veranderd zijn."
+
+#, python-format
+#~ msgid "Moved folder %s to %s"
+#~ msgstr "Verplaatst map %s naar %s"
+
+#, fuzzy, python-format
+#~| msgid "Moved host from \"%s\" to \"%s\""
+#~ msgid "Moved host from \"%s\" (ID: %s) to \"%s\" (ID: %s)"
+#~ msgstr "Verplaatst host van \"%s\" naar \"%s\""
+
+#, python-format
+#~ msgid ""
+#~ "Moved rule %s from position #%d to #%d in ruleset \"%s\" in folder \"%s\""
+#~ msgstr ""
+#~ "Regel %s verplaatst van positie #%d naar #%d in regelset \"%s\" in map "
+#~ "\"%s\""
+
+#, python-format
+#~ msgid "Password changed (sync failed: %s)"
+#~ msgstr "Wachtwoord gewijzigd (synchronisatie mislukt: %s)"
+
+#, python-format
+#~ msgid "Profile changed (sync failed: %s)"
+#~ msgstr "Profiel gewijzigd (synchronisatie mislukt: %s)"
+
+#, python-format
+#~ msgid "Removed %sgroup %s from customer %s"
+#~ msgstr "%sgroep %s verwijderd van klant %s"
+
+#, python-format
+#~ msgid "Removed explicit attributes of host %s."
+#~ msgstr "Expliciete attributen van host %s verwijderd."
+
+#, python-format
+#~ msgid "Renamed cluster node from %s into %s."
+#~ msgstr "Hernoemde clusterknooppunt van %s in %s."
+
+#, python-format
+#~ msgid "Renamed host %s"
+#~ msgstr "Hernoemde host %s"
+
+#, python-format
+#~ msgid "Renamed host from %s into %s."
+#~ msgstr "Hernoemde host van %s in %s."
+
+#, python-format
+#~ msgid "Renamed host from %s to %s"
+#~ msgstr "Hernoemde host van %s naar %s"
+
+#, python-format
+#~ msgid "Renamed host in %d rulesets of folder %s"
+#~ msgstr "Hernoemde host in %d regelsets van map %s"
+
+#, python-format
+#~ msgid "Renamed parent from %s into %s."
+#~ msgstr "Hernoemde ouder van %s in %s."
+
+#, python-format
+#~ msgid "Renamed parent from %s to %s in folder \"%s\""
+#~ msgstr "Hernoemde ouder van %s naar %s in map \"%s\""
+
+#, python-format
+#~ msgid "Starting activation (Sites: %s)"
+#~ msgstr "Start activering (Sites: %s)"
+
+#, python-format
+#~ msgid "Updated properties of %s group %s"
+#~ msgstr "Bijgewerkte eigenschappen van %s groep %s"
+
+#, python-format
+#~ msgid "Updated properties of %sgroup %s"
+#~ msgstr "Bijgewerkte eigenschappen van %sgroep %s"
 
 #~ msgid "Agent pairing"
 #~ msgstr "Agent koppeling"

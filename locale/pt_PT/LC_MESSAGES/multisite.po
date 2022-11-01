@@ -536,10 +536,6 @@ msgid "%s instances"
 msgstr "instâncias do BD"
 
 #, python-format
-msgid "%s into %s"
-msgstr "%s em %s"
-
-#, python-format
 msgid "%s is not a valid UNIX timestamp"
 msgstr "%s não é um UNIX timestamp válido"
 
@@ -8534,25 +8530,11 @@ msgstr "Alteração das propriedades do cliente"
 msgid "Changed properties of installed extension package %s"
 msgstr "Propriedades alteradas do pacote de extensão instalado %s"
 
-#, fuzzy, python-format
-msgid ""
-"Changed properties of rule \"%s\", moved from folder \"%s\" to top of folder "
-"\"%s\""
-msgstr ""
-"Mudou as propriedades da regra \"%s\", moveu a regra da pasta \"%s\" para "
-"\"%s\"."
-
 #, python-format
 msgid ""
 "Changed properties of rule \"%s\", moved rule from folder \"%s\" to \"%s\""
 msgstr ""
 "Mudou as propriedades da regra \"%s\", moveu a regra da pasta \"%s\" para "
-"\"%s\"."
-
-#, python-format
-msgid "Changed properties of rule #%d in ruleset \"%s\" in folder \"%s\""
-msgstr ""
-"Propriedades alteradas da regra #%d no conjunto de regras \"%s\" na pasta "
 "\"%s\"."
 
 #, python-format
@@ -9754,11 +9736,6 @@ msgstr "Clonar tópico"
 msgid "Clone view"
 msgstr "Vistas lentas"
 
-#, python-format
-msgid "Cloned rule from rule %s in ruleset \"%s\" in folder \"%s\""
-msgstr ""
-"Regra clonada da regra %s no conjunto de regras \"%s\" na pasta \"%s\"."
-
 msgid "Close Timewarp"
 msgstr "Fechar Timewarp"
 
@@ -10579,10 +10556,10 @@ msgstr ""
 "Configurar o nome da variável do cabeçalho da solicitação HTTP para ler a "
 "partir das solicitações HTTP de entrada"
 
+#, fuzzy, python-format
 msgid ""
-"Configure the port to send the real-time data to. The Microcore needs to be "
-"<a href=\"wato.py?mode=edit_configvar&varname=cmc_real_time_checks"
-"\">configured to listen on this port</a>."
+"Configure the port to send the real-time data to. The Microcore of the "
+"monitoring site needs to be %sconfigured to listen on this port%s."
 msgstr ""
 "Configure a porta para onde enviar os dados em tempo real. O Microcore "
 "precisa de ser <a href=\"wato.py?"
@@ -11606,10 +11583,6 @@ msgstr "Criar novas %s"
 msgid "Create new %s attribute %s"
 msgstr "Criar novo atributo %s %s"
 
-#, python-format
-msgid "Create new %s group %s"
-msgstr "Criar novas %s grupo %s"
-
 msgid "Create new auxiliary tag"
 msgstr "Criar nova etiqueta auxiliar"
 
@@ -11650,7 +11623,9 @@ msgstr "Criar dados de monitoramento aleatórios"
 msgid "Create random secret"
 msgstr "Criar segredo aleatório"
 
-msgid "Create real-time data executing the following agent plugins"
+#, fuzzy
+msgid ""
+"Create real-time data executing the following agent plugins (Linux only)"
 msgstr "Criar dados em tempo real executando os seguintes plugins de agente"
 
 msgid "Create regular time-schedule for this report"
@@ -11741,14 +11716,6 @@ msgid "Created new extension package %s"
 msgstr "Criado novo pacote de extensão %s"
 
 #, python-format
-msgid "Created new folder %s"
-msgstr "Criada nova pasta %s"
-
-#, python-format
-msgid "Created new host %s."
-msgstr "Criado novo anfitrião %s."
-
-#, python-format
 msgid "Created new host tag group '%s'"
 msgstr "Criado novo grupo de tags de anfitrião '%s'."
 
@@ -11778,10 +11745,6 @@ msgstr "Criado novo pacote de regras com id %s"
 #, python-format
 msgid "Created new time period %s"
 msgstr "Criado novo período de tempo %s"
-
-#, python-format
-msgid "Created new users: %s"
-msgstr "Novos usuários criados: %s"
 
 msgid ""
 "Creates a new service that displays information about disk I/O of database "
@@ -11987,6 +11950,10 @@ msgid "Criticality of the service when sensors detect that power is off."
 msgstr ""
 "Criticidade do serviço quando os sensores detectam que a energia está "
 "desligada."
+
+#, fuzzy
+msgid "CronJobs"
+msgstr "Empregos"
 
 msgid "Current"
 msgstr "Corrente"
@@ -13637,10 +13604,6 @@ msgid "Deleted %s %d"
 msgstr "Eliminado %s %d"
 
 #, python-format
-msgid "Deleted %s group %s"
-msgstr "Grupo %s eliminado %s"
-
-#, python-format
 msgid "Deleted BI aggregation %s"
 msgstr "%s de agregação do BI eliminado"
 
@@ -13672,24 +13635,12 @@ msgid "Deleted custom GUI logo"
 msgstr "Logotipo GUI personalizado eliminado"
 
 #, python-format
-msgid "Deleted folder %s"
-msgstr "Pasta eliminada %s"
-
-#, python-format
-msgid "Deleted host %s"
-msgstr "Eliminado %s do anfitrião"
-
-#, python-format
 msgid "Deleted notification rule %d of user %s"
 msgstr "Eliminada regra de notificação %d de usuário %s"
 
 #, python-format
 msgid "Deleted role '%s'"
 msgstr "Função eliminada '%s'."
-
-#, python-format
-msgid "Deleted rule #%d in ruleset \"%s\" in folder \"%s\""
-msgstr "Eliminada a regra #%d no conjunto de regras \"%s\" na pasta \"%s\"."
 
 #, python-format
 msgid "Deleted rule %s"
@@ -13706,10 +13657,6 @@ msgstr "Site eliminado %s"
 #, fuzzy, python-format
 msgid "Deleted time period %s"
 msgstr "Período de tempo eliminado %s"
-
-#, python-format
-msgid "Deleted user: %s"
-msgstr "Usuário excluído: %s"
 
 msgid "Deletes"
 msgstr "Elimina"
@@ -16633,10 +16580,6 @@ msgstr "Editado %d anfitriões"
 #, python-format
 msgid "Edited host tag group %s (%s)"
 msgstr "Edited host tag group %s (%s)"
-
-#, python-format
-msgid "Edited properties of folder %s"
-msgstr "Propriedades editadas da pasta %s"
 
 #, python-format
 msgid "Edited rule in ruleset \"%s\" in folder \"%s\""
@@ -30917,10 +30860,6 @@ msgstr ""
 "modificadas: %d"
 
 #, python-format
-msgid "Modified host %s."
-msgstr "Modificado %s do hospedeiro."
-
-#, python-format
 msgid "Modified rule pack %s"
 msgstr "Pacote de regras modificadas %s"
 
@@ -30935,10 +30874,6 @@ msgstr "Período de tempo modificado %s"
 #, python-format
 msgid "Modified user role '%s'"
 msgstr "Função do usuário modificada '%s'."
-
-#, python-format
-msgid "Modified users: %s"
-msgstr "Utilizadores modificados: %s"
 
 msgid "Modify"
 msgstr "Modificar"
@@ -31385,12 +31320,6 @@ msgid "Moved %d hosts to %s"
 msgstr "Movido %d hospedeiros para %s"
 
 #, python-format
-msgid ""
-"Moved %sgroup %s to customer %s. Additional properties may have changed."
-msgstr ""
-"Movido %s grupo %s para cliente %s. Propriedades adicionais podem ter mudado."
-
-#, python-format
 msgid "Moved BI aggregation with ID %s to BI pack %s"
 msgstr "Agregação de BI movida com ID %s para BI pack %s"
 
@@ -31398,23 +31327,8 @@ msgstr "Agregação de BI movida com ID %s para BI pack %s"
 msgid "Moved BI rule with ID %s to BI pack %s"
 msgstr "Movido regra BI com ID %s para BI pack %s"
 
-#, python-format
-msgid "Moved folder %s to %s"
-msgstr "Pasta movida %s para %s"
-
 msgid "Moved from"
 msgstr "Movido de"
-
-#, fuzzy, python-format
-msgid "Moved host from \"%s\" (ID: %s) to \"%s\" (ID: %s)"
-msgstr "Mudou o anfitrião de \"%s\" para \"%s"
-
-#, python-format
-msgid ""
-"Moved rule %s from position #%d to #%d in ruleset \"%s\" in folder \"%s\""
-msgstr ""
-"Regra movida %s da posição #%d para #%d no conjunto de regras \"%s\" na "
-"pasta \"%s\"."
 
 #, python-format
 msgid "Moved rule %s to pack %s"
@@ -35406,10 +35320,6 @@ msgstr "Frase de passagem"
 msgid "Password"
 msgstr "Senha"
 
-#, python-format
-msgid "Password changed (sync failed: %s)"
-msgstr "Senha alterada (sincronização falhada: %s)"
-
 msgid "Password does not exist or using not permitted"
 msgstr "A senha não existe ou o uso não é permitido"
 
@@ -37304,10 +37214,6 @@ msgstr "Produto"
 msgid "Profile"
 msgstr "Perfil"
 
-#, python-format
-msgid "Profile changed (sync failed: %s)"
-msgstr "Perfil alterado (sincronização falhou: %s)"
-
 msgid "Profile requests"
 msgstr "Pedidos de perfil"
 
@@ -38659,19 +38565,11 @@ msgid "Removed"
 msgstr "Removido"
 
 #, python-format
-msgid "Removed %sgroup %s from customer %s"
-msgstr "Removido %s do grupo %s do cliente %s"
-
-#, python-format
 msgid "Removed auxiliary tag %s (%s)"
 msgstr "Removido o tag auxiliar %s (%s)"
 
 msgid "Removed entries"
 msgstr "Entradas removidas"
-
-#, python-format
-msgid "Removed explicit attributes of host %s."
-msgstr "Removido atributos explícitos de %s anfitrião."
 
 #, python-format
 msgid "Removed extension package %s"
@@ -38717,34 +38615,6 @@ msgstr "Renomear múltiplos anfitriões"
 #, fuzzy, python-format
 msgid "Renamed %d %s at the following places:<br><ul>%s</ul>"
 msgstr "Renomeado %d hospeda nos seguintes lugares:<br>>ul>%s</ul>"
-
-#, python-format
-msgid "Renamed cluster node from %s into %s."
-msgstr "Renomeado nó de cluster de %s para %s."
-
-#, python-format
-msgid "Renamed host %s"
-msgstr "Renomeado %s anfitrião"
-
-#, python-format
-msgid "Renamed host from %s into %s."
-msgstr "Renomeado hospedeiro de %s para %s."
-
-#, python-format
-msgid "Renamed host from %s to %s"
-msgstr "Renomeado hospedeiro de %s para %s"
-
-#, python-format
-msgid "Renamed host in %d rulesets of folder %s"
-msgstr "Renomeado host em %d conjuntos de regras da pasta %s"
-
-#, python-format
-msgid "Renamed parent from %s into %s."
-msgstr "Renomeado pai de %s para %s."
-
-#, python-format
-msgid "Renamed parent from %s to %s in folder \"%s\""
-msgstr "Renomeado pai de %s para %s na pasta \"%s\"."
 
 msgid "Renaming Operations"
 msgstr "Operações de Renomeamento"
@@ -44146,10 +44016,6 @@ msgstr "A partir de"
 #, fuzzy
 msgid "Starting VMs"
 msgstr "A partir de"
-
-#, python-format
-msgid "Starting activation (Sites: %s)"
-msgstr "Ativação inicial (Sites: %s)"
 
 msgid "Starting from period number"
 msgstr "A partir do número do período"
@@ -56627,14 +56493,6 @@ msgstr ""
 "operação de gravação só é realizada para métricas que estão sendo "
 "atualizadas. As métricas antigas não são afetadas por esta opção."
 
-#, python-format
-msgid "Updated properties of %s group %s"
-msgstr "Propriedades actualizadas de %s grupo %s"
-
-#, python-format
-msgid "Updated properties of %sgroup %s"
-msgstr "Propriedades actualizadas do %s grupo %s"
-
 msgid "Updates"
 msgstr "Actualizações"
 
@@ -65007,6 +64865,159 @@ msgstr "z/OS"
 #, fuzzy, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
+
+#, python-format
+#~ msgid "%s into %s"
+#~ msgstr "%s em %s"
+
+#, fuzzy, python-format
+#~| msgid ""
+#~| "Changed properties of rule \"%s\", moved rule from folder \"%s\" to \"%s"
+#~| "\""
+#~ msgid ""
+#~ "Changed properties of rule \"%s\", moved from folder \"%s\" to top of "
+#~ "folder \"%s\""
+#~ msgstr ""
+#~ "Mudou as propriedades da regra \"%s\", moveu a regra da pasta \"%s\" para "
+#~ "\"%s\"."
+
+#, python-format
+#~ msgid "Changed properties of rule #%d in ruleset \"%s\" in folder \"%s\""
+#~ msgstr ""
+#~ "Propriedades alteradas da regra #%d no conjunto de regras \"%s\" na pasta "
+#~ "\"%s\"."
+
+#, python-format
+#~ msgid "Cloned rule from rule %s in ruleset \"%s\" in folder \"%s\""
+#~ msgstr ""
+#~ "Regra clonada da regra %s no conjunto de regras \"%s\" na pasta \"%s\"."
+
+#, python-format
+#~ msgid "Create new %s group %s"
+#~ msgstr "Criar novas %s grupo %s"
+
+#, python-format
+#~ msgid "Created new folder %s"
+#~ msgstr "Criada nova pasta %s"
+
+#, python-format
+#~ msgid "Created new host %s."
+#~ msgstr "Criado novo anfitrião %s."
+
+#, python-format
+#~ msgid "Created new users: %s"
+#~ msgstr "Novos usuários criados: %s"
+
+#, python-format
+#~ msgid "Deleted %s group %s"
+#~ msgstr "Grupo %s eliminado %s"
+
+#, python-format
+#~ msgid "Deleted folder %s"
+#~ msgstr "Pasta eliminada %s"
+
+#, python-format
+#~ msgid "Deleted host %s"
+#~ msgstr "Eliminado %s do anfitrião"
+
+#, python-format
+#~ msgid "Deleted rule #%d in ruleset \"%s\" in folder \"%s\""
+#~ msgstr "Eliminada a regra #%d no conjunto de regras \"%s\" na pasta \"%s\"."
+
+#, python-format
+#~ msgid "Deleted user: %s"
+#~ msgstr "Usuário excluído: %s"
+
+#, python-format
+#~ msgid "Edited properties of folder %s"
+#~ msgstr "Propriedades editadas da pasta %s"
+
+#, python-format
+#~ msgid "Modified host %s."
+#~ msgstr "Modificado %s do hospedeiro."
+
+#, python-format
+#~ msgid "Modified users: %s"
+#~ msgstr "Utilizadores modificados: %s"
+
+#, python-format
+#~ msgid ""
+#~ "Moved %sgroup %s to customer %s. Additional properties may have changed."
+#~ msgstr ""
+#~ "Movido %s grupo %s para cliente %s. Propriedades adicionais podem ter "
+#~ "mudado."
+
+#, python-format
+#~ msgid "Moved folder %s to %s"
+#~ msgstr "Pasta movida %s para %s"
+
+#, fuzzy, python-format
+#~| msgid "Moved host from \"%s\" to \"%s\""
+#~ msgid "Moved host from \"%s\" (ID: %s) to \"%s\" (ID: %s)"
+#~ msgstr "Mudou o anfitrião de \"%s\" para \"%s"
+
+#, python-format
+#~ msgid ""
+#~ "Moved rule %s from position #%d to #%d in ruleset \"%s\" in folder \"%s\""
+#~ msgstr ""
+#~ "Regra movida %s da posição #%d para #%d no conjunto de regras \"%s\" na "
+#~ "pasta \"%s\"."
+
+#, python-format
+#~ msgid "Password changed (sync failed: %s)"
+#~ msgstr "Senha alterada (sincronização falhada: %s)"
+
+#, python-format
+#~ msgid "Profile changed (sync failed: %s)"
+#~ msgstr "Perfil alterado (sincronização falhou: %s)"
+
+#, python-format
+#~ msgid "Removed %sgroup %s from customer %s"
+#~ msgstr "Removido %s do grupo %s do cliente %s"
+
+#, python-format
+#~ msgid "Removed explicit attributes of host %s."
+#~ msgstr "Removido atributos explícitos de %s anfitrião."
+
+#, python-format
+#~ msgid "Renamed cluster node from %s into %s."
+#~ msgstr "Renomeado nó de cluster de %s para %s."
+
+#, python-format
+#~ msgid "Renamed host %s"
+#~ msgstr "Renomeado %s anfitrião"
+
+#, python-format
+#~ msgid "Renamed host from %s into %s."
+#~ msgstr "Renomeado hospedeiro de %s para %s."
+
+#, python-format
+#~ msgid "Renamed host from %s to %s"
+#~ msgstr "Renomeado hospedeiro de %s para %s"
+
+#, python-format
+#~ msgid "Renamed host in %d rulesets of folder %s"
+#~ msgstr "Renomeado host em %d conjuntos de regras da pasta %s"
+
+#, python-format
+#~ msgid "Renamed parent from %s into %s."
+#~ msgstr "Renomeado pai de %s para %s."
+
+#, python-format
+#~ msgid "Renamed parent from %s to %s in folder \"%s\""
+#~ msgstr "Renomeado pai de %s para %s na pasta \"%s\"."
+
+#, python-format
+#~ msgid "Starting activation (Sites: %s)"
+#~ msgstr "Ativação inicial (Sites: %s)"
+
+#, python-format
+#~ msgid "Updated properties of %s group %s"
+#~ msgstr "Propriedades actualizadas de %s grupo %s"
+
+#, python-format
+#~ msgid "Updated properties of %sgroup %s"
+#~ msgstr "Propriedades actualizadas do %s grupo %s"
 
 #, fuzzy
 #~| msgid "Agent baking"

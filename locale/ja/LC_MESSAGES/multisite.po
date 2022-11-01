@@ -529,10 +529,6 @@ msgid "%s instances"
 msgstr "%s インスタンス"
 
 #, python-format
-msgid "%s into %s"
-msgstr "%sから%sへ"
-
-#, python-format
 msgid "%s is not a valid UNIX timestamp"
 msgstr "%sは有効なUNIXタイムスタンプではありません"
 
@@ -8136,24 +8132,10 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Changed properties of rule \"%s\", moved from folder \"%s\" to top of folder "
-"\"%s\""
-msgstr ""
-"ルール \"%s\"のプロパティを変更し、フォルダ \"%s\"からフォルダ最上部 \"%s\"に"
-"移動しました"
-
-#, python-format
-msgid ""
 "Changed properties of rule \"%s\", moved rule from folder \"%s\" to \"%s\""
 msgstr ""
 "ルール \"%s\"のプロパティを変更し、ルールをフォルダ \"%s\"から \"%s\"に移動し"
 "ました"
-
-#, python-format
-msgid "Changed properties of rule #%d in ruleset \"%s\" in folder \"%s\""
-msgstr ""
-"ルール #%d のプロパティは変更されました。ルールセットは \"%s\" フォルダは\"%s"
-"\""
 
 #, python-format
 msgid "Changed site specific configuration variable %s to %s."
@@ -9283,10 +9265,6 @@ msgstr "クローントピック"
 msgid "Clone view"
 msgstr "クローン ビュー"
 
-#, python-format
-msgid "Cloned rule from rule %s in ruleset \"%s\" in folder \"%s\""
-msgstr "複製されたルール %s ルールセット内 \"%s\" フォルダ内 \"%s\""
-
 msgid "Close Timewarp"
 msgstr "タイムワープを閉じる"
 
@@ -10056,10 +10034,10 @@ msgid ""
 msgstr ""
 "着信HTTPリクエストから読み取るHTTPリクエストヘッダー変数の名前を構成します"
 
+#, python-format
 msgid ""
-"Configure the port to send the real-time data to. The Microcore needs to be "
-"<a href=\"wato.py?mode=edit_configvar&varname=cmc_real_time_checks"
-"\">configured to listen on this port</a>."
+"Configure the port to send the real-time data to. The Microcore of the "
+"monitoring site needs to be %sconfigured to listen on this port%s."
 msgstr ""
 
 msgid "Configure the target mode for the system."
@@ -11035,10 +11013,6 @@ msgstr "新しい%sを作成する"
 msgid "Create new %s attribute %s"
 msgstr "新しく作成 %s 属性 %s"
 
-#, python-format
-msgid "Create new %s group %s"
-msgstr "新しい %s グループ %s を作成します"
-
 msgid "Create new auxiliary tag"
 msgstr "新しい補助タグを作成する"
 
@@ -11078,7 +11052,8 @@ msgstr "ランダムな監視データを作成する"
 msgid "Create random secret"
 msgstr "ランダムな秘密を作成する"
 
-msgid "Create real-time data executing the following agent plugins"
+msgid ""
+"Create real-time data executing the following agent plugins (Linux only)"
 msgstr ""
 
 msgid "Create regular time-schedule for this report"
@@ -11166,14 +11141,6 @@ msgid "Created new extension package %s"
 msgstr "新しい拡張パッケージ %s を作成しました"
 
 #, python-format
-msgid "Created new folder %s"
-msgstr "新しいフォルダ %s を作成しました"
-
-#, python-format
-msgid "Created new host %s."
-msgstr "新しいホスト %s を作成しました。"
-
-#, python-format
 msgid "Created new host tag group '%s'"
 msgstr "新しいホストタググループ '%s'を作成しました"
 
@@ -11203,10 +11170,6 @@ msgstr "ID %s で新しいルールパックを作成しました"
 #, python-format
 msgid "Created new time period %s"
 msgstr "新しい期 %sを作成しました"
-
-#, python-format
-msgid "Created new users: %s"
-msgstr "作成された新しいユーザー: %s"
 
 msgid ""
 "Creates a new service that displays information about disk I/O of database "
@@ -11403,6 +11366,10 @@ msgstr "すべてのライセンスが使用される場合に重要"
 
 msgid "Criticality of the service when sensors detect that power is off."
 msgstr ""
+
+#, fuzzy
+msgid "CronJobs"
+msgstr "CronJobsのPod"
 
 msgid "Current"
 msgstr "電流"
@@ -12993,10 +12960,6 @@ msgid "Deleted %s %d"
 msgstr "%s %d を削除しました"
 
 #, python-format
-msgid "Deleted %s group %s"
-msgstr "%sグループ%sを削除しました"
-
-#, python-format
 msgid "Deleted BI aggregation %s"
 msgstr "削除されたBI集計%s"
 
@@ -13028,24 +12991,12 @@ msgid "Deleted custom GUI logo"
 msgstr "カスタムGUIロゴを削除"
 
 #, python-format
-msgid "Deleted folder %s"
-msgstr "削除されたフォルダ %s"
-
-#, python-format
-msgid "Deleted host %s"
-msgstr "削除されたホスト %s"
-
-#, python-format
 msgid "Deleted notification rule %d of user %s"
 msgstr ""
 
 #, python-format
 msgid "Deleted role '%s'"
 msgstr "削除された役割 '%s'"
-
-#, python-format
-msgid "Deleted rule #%d in ruleset \"%s\" in folder \"%s\""
-msgstr ""
 
 #, python-format
 msgid "Deleted rule %s"
@@ -13062,10 +13013,6 @@ msgstr "削除されたサイト %s"
 #, fuzzy, python-format
 msgid "Deleted time period %s"
 msgstr "削除された期間 %s"
-
-#, python-format
-msgid "Deleted user: %s"
-msgstr "削除されたユーザー: %s"
 
 msgid "Deletes"
 msgstr "削除します"
@@ -15882,10 +15829,6 @@ msgstr "編集された %d ホスト"
 #, python-format
 msgid "Edited host tag group %s (%s)"
 msgstr "編集されたホストタググループ%s(%s)"
-
-#, python-format
-msgid "Edited properties of folder %s"
-msgstr "フォルダ%sの編集されたプロパティ"
 
 #, python-format
 msgid "Edited rule in ruleset \"%s\" in folder \"%s\""
@@ -29391,10 +29334,6 @@ msgstr ""
 "変更されたフォルダー:%d、変更されたホスト:%d、変更されたルールセット:%d"
 
 #, python-format
-msgid "Modified host %s."
-msgstr "変更されたホスト %s。"
-
-#, python-format
 msgid "Modified rule pack %s"
 msgstr "変更されたルールパック %s"
 
@@ -29409,10 +29348,6 @@ msgstr "変更された期間 %s"
 #, python-format
 msgid "Modified user role '%s'"
 msgstr "変更されたユーザーロール '%s'"
-
-#, python-format
-msgid "Modified users: %s"
-msgstr "変更されたユーザー: %s"
 
 msgid "Modify"
 msgstr "変更"
@@ -29849,13 +29784,6 @@ msgid "Moved %d hosts to %s"
 msgstr "%d ホストを %s に移動しました"
 
 #, python-format
-msgid ""
-"Moved %sgroup %s to customer %s. Additional properties may have changed."
-msgstr ""
-"%sgroup%sを顧客%sに移動しました。追加のプロパティが変更された可能性がありま"
-"す。"
-
-#, python-format
 msgid "Moved BI aggregation with ID %s to BI pack %s"
 msgstr "ID%sのBIアグリゲーションをBIパック%sに移動しました"
 
@@ -29863,23 +29791,8 @@ msgstr "ID%sのBIアグリゲーションをBIパック%sに移動しました"
 msgid "Moved BI rule with ID %s to BI pack %s"
 msgstr "ID%sのBIルールをBIパック%sに移動しました"
 
-#, python-format
-msgid "Moved folder %s to %s"
-msgstr "フォルダ %s を %s に移動しました"
-
 msgid "Moved from"
 msgstr "から移動しました"
-
-#, fuzzy, python-format
-msgid "Moved host from \"%s\" (ID: %s) to \"%s\" (ID: %s)"
-msgstr "ホストを \"%s\" から \"%s\"に移動しました"
-
-#, python-format
-msgid ""
-"Moved rule %s from position #%d to #%d in ruleset \"%s\" in folder \"%s\""
-msgstr ""
-"ルール %s を位置 #%dから #%d に移動します ルールセット \"%s\" フォルダは、%s"
-"です"
 
 #, python-format
 msgid "Moved rule %s to pack %s"
@@ -33702,10 +33615,6 @@ msgstr "パスフレーズ"
 msgid "Password"
 msgstr "パスワード"
 
-#, python-format
-msgid "Password changed (sync failed: %s)"
-msgstr "パスワードが変更されました(同期に失敗しました: %s)"
-
 msgid "Password does not exist or using not permitted"
 msgstr "パスワードが存在しないか、使用が許可されていません"
 
@@ -35491,10 +35400,6 @@ msgstr "製品"
 msgid "Profile"
 msgstr "プロフィール"
 
-#, python-format
-msgid "Profile changed (sync failed: %s)"
-msgstr "プロファイルが変更されました(同期に失敗しました %s)"
-
 msgid "Profile requests"
 msgstr "プロファイルリクエスト"
 
@@ -36806,19 +36711,11 @@ msgid "Removed"
 msgstr "削除されました"
 
 #, python-format
-msgid "Removed %sgroup %s from customer %s"
-msgstr "%sグループ %s を顧客 %s から削除しました"
-
-#, python-format
 msgid "Removed auxiliary tag %s (%s)"
 msgstr "補助タグ %s (%s)を削除しました"
 
 msgid "Removed entries"
 msgstr "削除されたエントリ"
-
-#, python-format
-msgid "Removed explicit attributes of host %s."
-msgstr "ホスト %s の明示的な属性を削除しました。"
 
 #, python-format
 msgid "Removed extension package %s"
@@ -36864,35 +36761,6 @@ msgstr "複数のホストの名前を変更する"
 #, python-format
 msgid "Renamed %d %s at the following places:<br><ul>%s</ul>"
 msgstr "次の場所で %d %sの名前が変更されました:<br><ul>%s</ul>"
-
-#, python-format
-msgid "Renamed cluster node from %s into %s."
-msgstr "クラスタノードの名前を %s から %sに変更しました。"
-
-#, python-format
-msgid "Renamed host %s"
-msgstr "ホスト%sの名前が変更されました"
-
-#, python-format
-msgid "Renamed host from %s into %s."
-msgstr "ホストの名前を%sから%sに変更しました。"
-
-#, python-format
-msgid "Renamed host from %s to %s"
-msgstr "ホストの名前を %s から %s に変更"
-
-#, python-format
-msgid "Renamed host in %d rulesets of folder %s"
-msgstr ""
-"%d ルールセット内のホストの名前(フォルダ %s にあります)が変更されました"
-
-#, python-format
-msgid "Renamed parent from %s into %s."
-msgstr "親の名前を%sから%sに変更しました。"
-
-#, python-format
-msgid "Renamed parent from %s to %s in folder \"%s\""
-msgstr "親の名前を %s から %sに変更 フォルダ内 \"%s\""
 
 msgid "Renaming Operations"
 msgstr "操作の名前変更"
@@ -42008,10 +41876,6 @@ msgstr "起動"
 
 msgid "Starting VMs"
 msgstr "VMs起動"
-
-#, python-format
-msgid "Starting activation (Sites: %s)"
-msgstr "アクティベーションを開始しています(サイト: %s)"
 
 msgid "Starting from period number"
 msgstr "期間番号から"
@@ -53486,14 +53350,6 @@ msgstr ""
 "作は、更新されているメトリックに対してのみ実行されます。古いメトリックはこの"
 "オプションの影響を受けません。"
 
-#, python-format
-msgid "Updated properties of %s group %s"
-msgstr "%sグループ%sのプロパティを更新しました"
-
-#, python-format
-msgid "Updated properties of %sgroup %s"
-msgstr "%sgroup %s のプロパティを更新しました"
-
 msgid "Updates"
 msgstr "更新"
 
@@ -61315,6 +61171,152 @@ msgstr "z/OS"
 #, python-format
 msgid "© %s tribe29 GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#, python-format
+#~ msgid "%s into %s"
+#~ msgstr "%sから%sへ"
+
+#, python-format
+#~ msgid ""
+#~ "Changed properties of rule \"%s\", moved from folder \"%s\" to top of "
+#~ "folder \"%s\""
+#~ msgstr ""
+#~ "ルール \"%s\"のプロパティを変更し、フォルダ \"%s\"からフォルダ最上部 \"%s"
+#~ "\"に移動しました"
+
+#, python-format
+#~ msgid "Changed properties of rule #%d in ruleset \"%s\" in folder \"%s\""
+#~ msgstr ""
+#~ "ルール #%d のプロパティは変更されました。ルールセットは \"%s\" フォルダは"
+#~ "\"%s\""
+
+#, python-format
+#~ msgid "Cloned rule from rule %s in ruleset \"%s\" in folder \"%s\""
+#~ msgstr "複製されたルール %s ルールセット内 \"%s\" フォルダ内 \"%s\""
+
+#, python-format
+#~ msgid "Create new %s group %s"
+#~ msgstr "新しい %s グループ %s を作成します"
+
+#, python-format
+#~ msgid "Created new folder %s"
+#~ msgstr "新しいフォルダ %s を作成しました"
+
+#, python-format
+#~ msgid "Created new host %s."
+#~ msgstr "新しいホスト %s を作成しました。"
+
+#, python-format
+#~ msgid "Created new users: %s"
+#~ msgstr "作成された新しいユーザー: %s"
+
+#, python-format
+#~ msgid "Deleted %s group %s"
+#~ msgstr "%sグループ%sを削除しました"
+
+#, python-format
+#~ msgid "Deleted folder %s"
+#~ msgstr "削除されたフォルダ %s"
+
+#, python-format
+#~ msgid "Deleted host %s"
+#~ msgstr "削除されたホスト %s"
+
+#, python-format
+#~ msgid "Deleted user: %s"
+#~ msgstr "削除されたユーザー: %s"
+
+#, python-format
+#~ msgid "Edited properties of folder %s"
+#~ msgstr "フォルダ%sの編集されたプロパティ"
+
+#, python-format
+#~ msgid "Modified host %s."
+#~ msgstr "変更されたホスト %s。"
+
+#, python-format
+#~ msgid "Modified users: %s"
+#~ msgstr "変更されたユーザー: %s"
+
+#, python-format
+#~ msgid ""
+#~ "Moved %sgroup %s to customer %s. Additional properties may have changed."
+#~ msgstr ""
+#~ "%sgroup%sを顧客%sに移動しました。追加のプロパティが変更された可能性があり"
+#~ "ます。"
+
+#, python-format
+#~ msgid "Moved folder %s to %s"
+#~ msgstr "フォルダ %s を %s に移動しました"
+
+#, fuzzy, python-format
+#~| msgid "Moved host from \"%s\" to \"%s\""
+#~ msgid "Moved host from \"%s\" (ID: %s) to \"%s\" (ID: %s)"
+#~ msgstr "ホストを \"%s\" から \"%s\"に移動しました"
+
+#, python-format
+#~ msgid ""
+#~ "Moved rule %s from position #%d to #%d in ruleset \"%s\" in folder \"%s\""
+#~ msgstr ""
+#~ "ルール %s を位置 #%dから #%d に移動します ルールセット \"%s\" フォルダ"
+#~ "は、%sです"
+
+#, python-format
+#~ msgid "Password changed (sync failed: %s)"
+#~ msgstr "パスワードが変更されました(同期に失敗しました: %s)"
+
+#, python-format
+#~ msgid "Profile changed (sync failed: %s)"
+#~ msgstr "プロファイルが変更されました(同期に失敗しました %s)"
+
+#, python-format
+#~ msgid "Removed %sgroup %s from customer %s"
+#~ msgstr "%sグループ %s を顧客 %s から削除しました"
+
+#, python-format
+#~ msgid "Removed explicit attributes of host %s."
+#~ msgstr "ホスト %s の明示的な属性を削除しました。"
+
+#, python-format
+#~ msgid "Renamed cluster node from %s into %s."
+#~ msgstr "クラスタノードの名前を %s から %sに変更しました。"
+
+#, python-format
+#~ msgid "Renamed host %s"
+#~ msgstr "ホスト%sの名前が変更されました"
+
+#, python-format
+#~ msgid "Renamed host from %s into %s."
+#~ msgstr "ホストの名前を%sから%sに変更しました。"
+
+#, python-format
+#~ msgid "Renamed host from %s to %s"
+#~ msgstr "ホストの名前を %s から %s に変更"
+
+#, python-format
+#~ msgid "Renamed host in %d rulesets of folder %s"
+#~ msgstr ""
+#~ "%d ルールセット内のホストの名前(フォルダ %s にあります)が変更されました"
+
+#, python-format
+#~ msgid "Renamed parent from %s into %s."
+#~ msgstr "親の名前を%sから%sに変更しました。"
+
+#, python-format
+#~ msgid "Renamed parent from %s to %s in folder \"%s\""
+#~ msgstr "親の名前を %s から %sに変更 フォルダ内 \"%s\""
+
+#, python-format
+#~ msgid "Starting activation (Sites: %s)"
+#~ msgstr "アクティベーションを開始しています(サイト: %s)"
+
+#, python-format
+#~ msgid "Updated properties of %s group %s"
+#~ msgstr "%sグループ%sのプロパティを更新しました"
+
+#, python-format
+#~ msgid "Updated properties of %sgroup %s"
+#~ msgstr "%sgroup %s のプロパティを更新しました"
 
 #~ msgid "Agent pairing"
 #~ msgstr "エージェントペアリング"

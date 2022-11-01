@@ -8,7 +8,7 @@ from __future__ import annotations
 import ast
 import pprint
 import tarfile
-from typing import BinaryIO
+from io import BytesIO
 
 from pydantic import BaseModel, Field
 
@@ -56,8 +56,8 @@ def package_info_template(pacname: str) -> PackageInfo:
     )
 
 
-def get_optional_package_info(file_object: BinaryIO) -> PackageInfo | None:
-    with tarfile.open(fileobj=file_object, mode="r:gz") as tar:
+def get_optional_package_info(file_content: bytes) -> PackageInfo | None:
+    with tarfile.open(fileobj=BytesIO(file_content), mode="r:gz") as tar:
         try:
             if (extracted_file := tar.extractfile("info")) is None:
                 return None

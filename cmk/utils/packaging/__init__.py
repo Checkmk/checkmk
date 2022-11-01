@@ -14,7 +14,7 @@ from collections.abc import Callable, Iterable, Mapping
 from contextlib import suppress
 from io import BytesIO
 from pathlib import Path
-from typing import Any, BinaryIO, cast, Final, NamedTuple, TypedDict
+from typing import Any, Final, NamedTuple, TypedDict
 
 import cmk.utils.debug
 import cmk.utils.misc
@@ -274,7 +274,7 @@ class PackageStore:
 
     def store(self, file_content: bytes) -> PackageInfo:
 
-        package = _get_package_info_from_package(BytesIO(file_content))
+        package = _get_package_info_from_package(file_content)
 
         base_name = format_file_name(name=package.name, version=package.version)
         local_package_path = self.local_packages / base_name
@@ -430,19 +430,18 @@ def install(
     post_package_change_actions: bool = True,
 ) -> PackageInfo:
     try:
-        with package_path.open("rb") as f:
-            return _install(
-                file_object=f,
-                allow_outdated=allow_outdated,
-                post_package_change_actions=post_package_change_actions,
-            )
+        return _install(
+            package_path.read_bytes(),
+            allow_outdated=allow_outdated,
+            post_package_change_actions=post_package_change_actions,
+        )
     finally:
         # it is enabled, even if installing failed
         mark_as_enabled(package_path)
 
 
 def _install(  # pylint: disable=too-many-branches
-    file_object: BinaryIO,
+    mkp: bytes,
     # I am not sure whether we should install outdated packages by default -- but
     #  a) this is the compatible way to go
     #  b) users cannot even modify packages without installing them
@@ -451,8 +450,7 @@ def _install(  # pylint: disable=too-many-branches
     allow_outdated: bool,
     post_package_change_actions: bool,
 ) -> PackageInfo:
-    package = _get_package_info_from_package(file_object)
-    file_object.seek(0)
+    package = _get_package_info_from_package(mkp)
 
     pacname = package.name
     old_package = read_package_info(pacname)
@@ -470,7 +468,7 @@ def _install(  # pylint: disable=too-many-branches
 
     _raise_for_installability(package, old_package, cmk_version.__version__, allow_outdated)
 
-    with tarfile.open(fileobj=file_object, mode="r:gz") as tar:
+    with tarfile.open(fileobj=BytesIO(mkp), mode="r:gz") as tar:
         # Now install files, but only unpack files explicitely listed
         for part in get_package_parts() + get_config_parts():
             if not (filenames := package.files.get(part.ident, [])):
@@ -620,8 +618,8 @@ def _remove_packaged_rule_packs(file_names: Iterable[str], delete_export: bool =
     ec.save_rule_packs(rule_packs)
 
 
-def _get_package_info_from_package(file_object: BinaryIO) -> PackageInfo:
-    if (package := get_optional_package_info(file_object)) is None:
+def _get_package_info_from_package(file_content: bytes) -> PackageInfo:
+    if (package := get_optional_package_info(file_content)) is None:
         raise PackageException("Failed to open package info file")
     return package
 
@@ -741,14 +739,13 @@ def get_enabled_package_infos() -> Mapping[str, PackageInfo]:
 def _get_package_infos(paths: Iterable[Path]) -> Mapping[str, PackageInfo]:
     optional = {}
     for pkg_path in paths:
-        with pkg_path.open("rb") as pkg:
-            try:
-                package_info = _get_package_info_from_package(cast(BinaryIO, pkg))
-            except Exception:
-                # Do not make broken files / packages fail the whole mechanism
-                logger.error("[%s]: Failed to read package info, skipping", pkg_path, exc_info=True)
-                continue
-            optional[pkg_path.name] = package_info
+        try:
+            package_info = _get_package_info_from_package(pkg_path.read_bytes())
+        except Exception:
+            # Do not make broken files / packages fail the whole mechanism
+            logger.error("[%s]: Failed to read package info, skipping", pkg_path, exc_info=True)
+            continue
+        optional[pkg_path.name] = package_info
 
     return optional
 
@@ -944,17 +941,16 @@ def _sort_enabled_packages_for_installation(
 ) -> Iterable[tuple[str, Iterable[tuple[str, Path]]]]:
     packages_by_name: dict[str, dict[str, Path]] = {}
     for pkg_path in _get_enabled_package_paths():
-        with pkg_path.open("rb") as pkg:
-            try:
-                package_info = _get_package_info_from_package(pkg)
-            except Exception:
-                # Do not make broken files / packages fail the whole mechanism
-                log.error(
-                    "[%s]: Skipping (failed to read package info)",
-                    pkg_path.name,
-                    exc_info=True,
-                )
-                continue
+        try:
+            package_info = _get_package_info_from_package(pkg_path.read_bytes())
+        except Exception:
+            # Do not make broken files / packages fail the whole mechanism
+            log.error(
+                "[%s]: Skipping (failed to read package info)",
+                pkg_path.name,
+                exc_info=True,
+            )
+            continue
 
         packages_by_name.setdefault(package_info.name, {})[package_info.version] = pkg_path
 

@@ -273,11 +273,7 @@ def test_edit_rename_conflict() -> None:
 
 
 def test_install(mkp_bytes: bytes, build_setup_search_index: Mock) -> None:
-    packaging._install(
-        BytesIO(mkp_bytes),
-        allow_outdated=False,
-        post_package_change_actions=True,
-    )
+    packaging._install(mkp_bytes, allow_outdated=False, post_package_change_actions=True)
     build_setup_search_index.assert_called_once()
 
     assert packaging._package_exists("aaa") is True

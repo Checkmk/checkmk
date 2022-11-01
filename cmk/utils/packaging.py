@@ -307,11 +307,7 @@ class PackageStore:
 
     def store(self, file_content: bytes) -> PackageInfo:
 
-        with tarfile.open(fileobj=BytesIO(file_content), mode="r:gz") as tar:
-            info_file = tar.extractfile("info")
-            if info_file is None:
-                raise PackageException("Failed to open package info file")
-            package = parse_package_info(info_file.read().decode())
+        package = _get_package_info_from_package(BytesIO(file_content))
 
         base_name = format_file_name(name=package["name"], version=package["version"])
         local_package_path = self.local_packages / base_name

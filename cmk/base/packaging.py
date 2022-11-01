@@ -8,7 +8,7 @@ import os
 import sys
 import tarfile
 from pathlib import Path
-from typing import AbstractSet, BinaryIO, cast, List
+from typing import AbstractSet, List
 
 import cmk.utils.debug
 import cmk.utils.packaging as packaging
@@ -275,8 +275,7 @@ def package_pack(args: List[str]) -> None:
     tarfilename = packaging.format_file_name(name=pacname, version=package["version"])
 
     logger.log(VERBOSE, "Packing %s into %s...", pacname, tarfilename)
-    with Path(tarfilename).open("wb") as f:
-        packaging.write_file(package, cast(BinaryIO, f))
+    Path(tarfilename).write_bytes(packaging.create_mkp_object(package))
     logger.log(VERBOSE, "Successfully created %s", tarfilename)
 
 

@@ -7,9 +7,11 @@ import ast
 import json
 import shutil
 import tarfile
+from collections.abc import Iterable
 from io import BytesIO
 from pathlib import Path
 from typing import Callable
+from unittest.mock import Mock
 
 import pytest
 from pytest_mock import MockerFixture
@@ -26,14 +28,14 @@ def _read_package_info(pacname: packaging.PackageName) -> packaging.PackageInfo:
 
 
 @pytest.fixture(autouse=True)
-def package_dir():
+def package_dir() -> Iterable[None]:
     packaging.package_dir().mkdir(parents=True, exist_ok=True)
     yield
     shutil.rmtree(str(packaging.package_dir()))
 
 
 @pytest.fixture(autouse=True)
-def clean_dirs():
+def clean_dirs() -> Iterable[None]:
     paths = [Path(p.path) for p in packaging.get_package_parts()] + [
         cmk.utils.paths.local_optional_packages_dir,
         cmk.utils.paths.local_enabled_packages_dir,
@@ -48,15 +50,13 @@ def clean_dirs():
 
 
 @pytest.fixture(name="mkp_bytes")
-def fixture_mkp_bytes(build_setup_search_index):
+def fixture_mkp_bytes(build_setup_search_index: Mock) -> bytes:
     # Create package information
     _create_simple_test_package("aaa")
     package_info = _read_package_info("aaa")
 
     # Build MKP in memory
-    mkp = BytesIO()
-    packaging.write_file(package_info, mkp)
-    mkp.seek(0)
+    mkp = packaging.create_mkp_object(package_info)
 
     # Remove files from local hierarchy
     packaging.uninstall(package_info)
@@ -68,16 +68,14 @@ def fixture_mkp_bytes(build_setup_search_index):
 
 
 @pytest.fixture(name="mkp_file")
-def fixture_mkp_file(tmp_path, mkp_bytes):
+def fixture_mkp_file(tmp_path: Path, mkp_bytes: bytes) -> Path:
     mkp_path = tmp_path.joinpath("aaa.mkp")
-    with mkp_path.open("wb") as mkp:
-        mkp.write(mkp_bytes.getvalue())
-
+    mkp_path.write_bytes(mkp_bytes)
     return mkp_path
 
 
 @pytest.fixture(name="build_setup_search_index")
-def fixture_build_setup_search_index_background(mocker: MockerFixture) -> Callable[[], None]:
+def fixture_build_setup_search_index_background(mocker: MockerFixture) -> Mock:
     return mocker.patch(
         "cmk.utils.packaging._build_setup_search_index_background",
         side_effect=lambda: None,
@@ -282,8 +280,8 @@ def test_edit_rename_conflict() -> None:
         packaging.edit("aaa", new_package_info)
 
 
-def test_install(mkp_bytes, build_setup_search_index) -> None:  # type:ignore[no-untyped-def]
-    packaging.install(mkp_bytes)
+def test_install(mkp_bytes: bytes, build_setup_search_index: Mock) -> None:
+    packaging.install(BytesIO(mkp_bytes))
     build_setup_search_index.assert_called_once()
 
     assert packaging._package_exists("aaa") is True
@@ -293,7 +291,7 @@ def test_install(mkp_bytes, build_setup_search_index) -> None:  # type:ignore[no
     assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
 
 
-def test_install_by_path(mkp_file, build_setup_search_index) -> None:  # type:ignore[no-untyped-def]
+def test_install_by_path(mkp_file: Path, build_setup_search_index: Mock) -> None:
     packaging._install_by_path(mkp_file)
     build_setup_search_index.assert_called_once()
 
@@ -323,11 +321,9 @@ def test_release() -> None:
 def test_write_file() -> None:
     package_info = _create_simple_test_package("aaa")
 
-    mkp = BytesIO()
-    packaging.write_file(package_info, mkp)
-    mkp.seek(0)
+    mkp = packaging.create_mkp_object(package_info)
 
-    with tarfile.open(fileobj=mkp, mode="r:gz") as tar:
+    with tarfile.open(fileobj=BytesIO(mkp), mode="r:gz") as tar:
         assert sorted(tar.getnames()) == sorted(["info", "info.json", "checks.tar"])
 
         info_file = tar.extractfile("info")
@@ -342,7 +338,7 @@ def test_write_file() -> None:
     assert info2["name"] == "aaa"
 
 
-def test_uninstall(build_setup_search_index) -> None:  # type:ignore[no-untyped-def]
+def test_uninstall(build_setup_search_index: Mock) -> None:
     package_info = _create_simple_test_package("aaa")
     packaging.uninstall(package_info)
     build_setup_search_index.assert_called_once()
@@ -409,7 +405,7 @@ def test_get_optional_package_infos_none() -> None:
     assert packaging.get_optional_package_infos() == {}
 
 
-def test_get_optional_package_infos(monkeypatch, tmp_path) -> None:  # type:ignore[no-untyped-def]
+def test_get_optional_package_infos(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     mkp_dir = tmp_path.joinpath("optional_packages")
     mkp_dir.mkdir(parents=True, exist_ok=True)
     monkeypatch.setattr(cmk.utils.paths, "optional_packages_dir", mkp_dir)

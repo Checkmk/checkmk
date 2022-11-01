@@ -225,15 +225,15 @@ def _create_tar_info(filename: str, size: int) -> tarfile.TarInfo:
     return info
 
 
-def write_file(
+def create_mkp_object(
     package: PackageInfo,
-    file_object: BinaryIO | None = None,
     package_parts: Callable = get_package_parts,
     config_parts: Callable = get_config_parts,
-) -> None:
+) -> bytes:
     package["version.packaged"] = cmk_version.__version__
 
-    with tarfile.open(fileobj=file_object, mode="w:gz") as tar:
+    buffer = BytesIO()
+    with tarfile.open(fileobj=buffer, mode="w:gz") as tar:
 
         def add_file(filename: str, data: bytes) -> None:
             info_file = BytesIO(data)
@@ -258,6 +258,8 @@ def write_file(
                     + filenames
                 )
                 add_file(part.ident + ".tar", subdata)
+
+    return buffer.getvalue()
 
 
 def get_initial_package_info(pacname: str) -> PackageInfo:
@@ -413,8 +415,8 @@ def _create_enabled_mkp_from_installed_package(manifest: PackageInfo) -> None:
 
     file_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with file_path.open("wb") as fh:
-        write_file(manifest, fh)
+    mkp = create_mkp_object(manifest)
+    file_path.write_bytes(mkp)
 
     mark_as_enabled(file_path)
 

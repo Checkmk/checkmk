@@ -12,7 +12,6 @@ from the enterprise builds.
 import json
 from pathlib import Path
 from subprocess import check_output
-from typing import BinaryIO, cast
 
 import cmk.utils.version as cmk_version
 from cmk.utils import packaging
@@ -43,10 +42,11 @@ NTOP_PACKAGE_INFO: packaging.PackageInfo = {
 
 TARFILENAME = packaging.format_file_name(name="ntop", version=NTOP_PACKAGE_INFO["version"])
 
-with Path(TARFILENAME).open("wb") as f:
-    packaging.write_file(
+
+Path(TARFILENAME).write_bytes(
+    packaging.create_mkp_object(
         NTOP_PACKAGE_INFO,
-        cast(BinaryIO, f),
         package_parts=packaging.get_repo_ntop_parts,
         config_parts=lambda: [],
     )
+)

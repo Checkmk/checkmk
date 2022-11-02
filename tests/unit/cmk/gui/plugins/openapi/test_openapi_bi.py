@@ -190,6 +190,68 @@ def test_openapi_bi_rule(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     )
 
 
+def test_openapi_bi_aggregation(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+    base = "/NO_SITE/check_mk/api/1.0"
+
+    aggregation = {
+        "aggregation_visualization": {
+            "ignore_rule_styles": False,
+            "layout_id": "builtin_default",
+            "line_style": "round",
+        },
+        "comment": "",
+        "computation_options": {
+            "disabled": True,
+            "escalate_downtimes_as_warn": False,
+            "use_hard_states": False,
+        },
+        "customer": None,
+        "groups": {"names": ["Hosts"], "paths": []},
+        "id": "some_aggregation",
+        "node": {
+            "action": {
+                "params": {"arguments": ["$HOSTNAME$"]},
+                "rule_id": "host",
+                "type": "call_a_rule",
+            },
+            "search": {
+                "conditions": {
+                    "host_choice": {"type": "all_hosts"},
+                    "host_folder": "",
+                    "host_labels": {},
+                    "host_tags": {"tcp": "tcp"},
+                },
+                "refer_to": "host",
+                "type": "host_search",
+            },
+        },
+        "pack_id": "default",
+    }
+
+    # create some aggregation
+    aut_user_auth_wsgi_app.post(
+        base + "/objects/bi_aggregation/some_aggregation",
+        content_type="application/json",
+        headers={"Accept": "application/json"},
+        params=json.dumps(aggregation),
+        status=200,
+    )
+
+    # delete an aggregation
+    aut_user_auth_wsgi_app.delete(
+        base + "/objects/bi_aggregation/some_aggregation",
+        headers={"Accept": "application/json"},
+        status=204,
+    )
+
+    # delete a non existing aggregation
+    aut_user_auth_wsgi_app.delete(
+        base + "/objects/bi_aggregation/some_aggregation",
+        headers={"Accept": "application/json"},
+        status=404,
+    )
+
+
 def test_openapi_modify_bi_aggregation(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 

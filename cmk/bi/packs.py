@@ -43,6 +43,10 @@ class RuleNotFoundException(MKGeneralException):
     pass
 
 
+class AggregationNotFoundException(MKGeneralException):
+    pass
+
+
 class RuleReferencesResult(NamedTuple):
     aggr_refs: int
     rule_refs: int
@@ -230,7 +234,7 @@ class BIAggregationPacks:
         bi_aggregation = self.get_aggregation(aggregation_id)
         if bi_aggregation:
             return bi_aggregation
-        raise MKGeneralException(_("The requested BI aggregation does not exist."))
+        raise AggregationNotFoundException(_("The requested BI aggregation does not exist."))
 
     def get_all_aggregations(self) -> list[BIAggregation]:
         aggregations: list[BIAggregation] = []

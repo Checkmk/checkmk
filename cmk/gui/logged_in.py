@@ -204,7 +204,7 @@ class LoggedInUser:
 
     @property
     def bi_expansion_level(self) -> int:
-        return self.load_file("bi_treestate", (None,))[0]
+        return self.load_file("bi_treestate", (0,))[0]
 
     @bi_expansion_level.setter
     def bi_expansion_level(self, value: int) -> None:

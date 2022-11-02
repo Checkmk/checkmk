@@ -38,6 +38,9 @@ def _parameter_valuespec_heartbeat_rscstatus():
                 ),
             ),
         ],
+        ignored_keys=[
+            "discovered_state",
+        ],
     )
 
 

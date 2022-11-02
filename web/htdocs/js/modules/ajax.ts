@@ -18,28 +18,6 @@ interface Args {
 }
 
 // NOTE: This function is deprecated; use call_ajax instead.
-export function get_url(
-    url: string,
-    handler?: (a?, b?) => void,
-    data: any = undefined,
-    errorHandler?: (a?, b?, c?) => void,
-    addAjaxId?: boolean
-) {
-    var args: Args = {
-        method: "GET",
-        response_handler: handler,
-    };
-
-    if (typeof data !== "undefined") args.handler_data = data;
-
-    if (typeof errorHandler !== "undefined") args.error_handler = errorHandler;
-
-    if (typeof addAjaxId !== "undefined") args.add_ajax_id = addAjaxId;
-
-    call_ajax(url, args);
-}
-
-// NOTE: This function is deprecated; use call_ajax instead.
 export function post_url(
     url: string,
     post_params: string,
@@ -63,7 +41,7 @@ export function post_url(
     call_ajax(url, args);
 }
 
-export function call_ajax(url, optional_args) {
+export function call_ajax(url, optional_args?) {
     var args = merge_args(
         {
             add_ajax_id: true,

@@ -45,7 +45,7 @@ function toggle_tree_state(tree, name, oContainer, fetch_url, save_state) {
 }
 
 export function persist_tree_state(tree, name, state) {
-    ajax.get_url(
+    ajax.call_ajax(
         "tree_openclose.py?tree=" +
             encodeURIComponent(tree) +
             "&name=" +

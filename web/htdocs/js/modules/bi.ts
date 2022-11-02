@@ -30,8 +30,12 @@ export function toggle_subtree(oImg, lazy) {
         do_open = false;
     }
 
-    if (lazy && do_open) ajax.get_url(url, bi_update_tree, oImg);
-    else ajax.get_url(url);
+    if (lazy && do_open)
+        ajax.call_ajax(url, {
+            response_handler: bi_update_tree,
+            handler_data: oImg,
+        });
+    else ajax.call_ajax(url);
 }
 
 function bi_update_tree(container) {
@@ -77,9 +81,13 @@ export function toggle_box(container, lazy) {
     }
 
     // TODO: Make asynchronous
-    if (lazy && do_open) ajax.get_url(url, bi_update_tree, container);
+    if (lazy && do_open)
+        ajax.call_ajax(url, {
+            response_handler: bi_update_tree,
+            handler_data: container,
+        });
     else {
-        ajax.get_url(url);
+        ajax.call_ajax(url);
         // find child nodes that belong to this node and
         // control visibility of those. Note: the BI child nodes
         // are *no* child nodes in HTML but siblings!
@@ -127,7 +135,7 @@ export function toggle_assumption(link, site, host, service) {
     }
     url += "&state=" + current;
     img.src = path_parts.join("/") + "/icon_assume_" + current + ".png";
-    ajax.get_url(url);
+    ajax.call_ajax(url);
 }
 
 export function update_argument_hints() {

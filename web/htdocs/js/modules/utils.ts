@@ -724,7 +724,7 @@ export function toggle_more(trigger, toggle_id, dom_levels_up) {
         state = "on";
     }
 
-    ajax.get_url(
+    ajax.call_ajax(
         "tree_openclose.py?tree=more_buttons" +
             "&name=" +
             encodeURIComponent(toggle_id) +

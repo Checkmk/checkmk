@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-import {get_url} from "ajax";
+import {call_ajax} from "ajax";
 
 var iCurrent: number | null = null;
 var oCurrent: HTMLAnchorElement | null = null;
@@ -209,9 +209,8 @@ function mkSearch(oField) {
     if (mkSearchResultShown() && val == oldValue) return; // nothing changed, no new search
     oldValue = val;
 
-    get_url(
-        "ajax_search.py?q=" + encodeURIComponent(val),
-        handle_search_response,
-        oField
-    );
+    call_ajax("ajax_search.py?q=" + encodeURIComponent(val), {
+        response_handler: handle_search_response,
+        handler_data: oField,
+    });
 }

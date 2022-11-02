@@ -58,7 +58,7 @@ function switch_help(how) {
         }
     }
 
-    ajax.get_url("ajax_switch_help.py?enabled=" + (how ? "yes" : ""));
+    ajax.call_ajax("ajax_switch_help.py?enabled=" + (how ? "yes" : ""));
 }
 
 function switch_help_text(title) {

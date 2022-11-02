@@ -392,7 +392,10 @@ export function execute_dashboard_scheduler(initial) {
                 if (url.indexOf("?") !== -1)
                     url += "&mtime=" + dashboard_properties.dashboard_mtime;
                 else url += "?mtime=" + dashboard_properties.dashboard_mtime;
-                ajax.get_url(url, dashboard_update_contents, "dashlet_inner_" + nr);
+                ajax.call_ajax(url, {
+                    response_handler: dashboard_update_contents,
+                    handler_data: "dashlet_inner_" + nr,
+                });
             } else {
                 url(); // Execute "on_refresh" javascript function
             }
@@ -929,7 +932,7 @@ function persist_dashlet_pos(nr) {
         return;
     }
 
-    ajax.get_url(
+    ajax.call_ajax(
         "ajax_dashlet_pos.py?name=" +
             dashboard_properties.dashboard_name +
             "&id=" +
@@ -942,11 +945,13 @@ function persist_dashlet_pos(nr) {
             dashboard_properties.dashlets[nr].w +
             "&h=" +
             dashboard_properties.dashlets[nr].h,
-        handle_dashlet_post_response,
-        null,
-        undefined,
-        false
-    ); // eslint-disable-line indent
+        {
+            response_handler: handle_dashlet_post_response,
+            handler_data: null,
+            error_handler: undefined,
+            add_ajax_id: false,
+        }
+    );
 }
 
 function handle_dashlet_post_response(_unused, response_text) {

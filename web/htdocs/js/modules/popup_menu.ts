@@ -171,15 +171,14 @@ export function toggle_popup(
         content.innerHTML =
             '<img src="themes/facelift/images/icon_reload.svg" class="icon reloading">';
         const url_vars = !method.url_vars ? "" : "?" + method.url_vars;
-        ajax.get_url(
-            "ajax_popup_" + method.endpoint + ".py" + url_vars,
-            handle_render_popup_contents,
-            {
+        ajax.call_ajax("ajax_popup_" + method.endpoint + ".py" + url_vars, {
+            response_handler: handle_render_popup_contents,
+            handler_data: {
                 ident: ident,
                 content: content,
                 event: event,
-            }
-        );
+            },
+        });
     }
 
     active_popup.register({

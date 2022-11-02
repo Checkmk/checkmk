@@ -183,7 +183,7 @@ function snapinDrop(event, targetpos) {
     let before = "";
     if (targetpos != null)
         before = "&before=" + targetpos.id.replace("snapin_container_", "");
-    ajax.get_url("sidebar_move_snapin.py?name=" + thisId + before);
+    ajax.call_ajax("sidebar_move_snapin.py?name=" + thisId + before);
 }
 
 function snapinTerminateDrag() {
@@ -533,18 +533,20 @@ export function toggle_sidebar_snapin(oH2, url) {
 
 // TODO move to managed/web/htdocs/js
 export function switch_customer(customer_id, switch_state) {
-    ajax.get_url(
+    ajax.call_ajax(
         "switch_customer.py?_customer_switch=" +
             customer_id +
             ":" +
             switch_state,
-        utils.reload_whole_page,
-        null
+        {response_handler: utils.reload_whole_page, handler_data: null}
     );
 }
 
 export function switch_site(url) {
-    ajax.get_url(url, utils.reload_whole_page, null);
+    ajax.call_ajax(url, {
+        response_handler: utils.reload_whole_page,
+        handler_data: null,
+    });
 }
 
 function bulk_update_contents(ids, codes) {
@@ -571,7 +573,10 @@ var g_sidebar_full_reload = false;
 export function refresh_single_snapin(name) {
     const url = "sidebar_snapin.py?names=" + name;
     const ids = ["snapin_" + name];
-    ajax.get_url(url, bulk_update_contents, ids);
+    ajax.call_ajax(url, {
+        response_handler: bulk_update_contents,
+        handler_data: ids,
+    });
 }
 
 export function reset_sidebar_scheduler() {
@@ -611,7 +616,10 @@ export function execute_sidebar_scheduler() {
             url = refresh_snapins[i][1];
 
             if (g_seconds_to_update && g_seconds_to_update <= 0) {
-                ajax.get_url(url, utils.update_contents, "snapin_" + name);
+                ajax.call_ajax(url, {
+                    response_handler: utils.update_contents,
+                    handler_data: "snapin_" + name,
+                });
             }
         } else {
             // Internal update handling, use bulk update
@@ -642,7 +650,10 @@ export function execute_sidebar_scheduler() {
             ids.push("snapin_" + to_be_updated[i]);
         }
 
-        ajax.get_url(url, bulk_update_contents, ids);
+        ajax.call_ajax(url, {
+            response_handler: bulk_update_contents,
+            handler_data: ids,
+        });
     }
 
     if (g_sidebar_notify_interval !== null) {
@@ -847,13 +858,15 @@ export function wato_tree_target_changed(target_field) {
 export function set_snapin_site(event, ident, select_field) {
     if (!event) event = window.event;
 
-    ajax.get_url(
+    ajax.call_ajax(
         "sidebar_ajax_set_snapin_site.py?ident=" +
             encodeURIComponent(ident) +
             "&site=" +
             encodeURIComponent(select_field.value),
-        function (handler_data, response_body) {
-            refresh_single_snapin(ident);
+        {
+            response_handler: function (handler_data, response_body) {
+                refresh_single_snapin(ident);
+            },
         }
     );
     return utils.prevent_default_events(event);
@@ -1135,7 +1148,7 @@ export function update_message_trigger(msg_text, msg_count) {
 }
 
 function mark_message_read(msg_id, msg_text, msg_count) {
-    ajax.get_url("sidebar_message_read.py?id=" + msg_id);
+    ajax.call_ajax("sidebar_message_read.py?id=" + msg_id);
 
     // Update the button state
     update_message_trigger(msg_text, msg_count);

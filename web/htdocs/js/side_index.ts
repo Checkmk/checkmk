@@ -14,7 +14,6 @@ import * as popup_menu from "popup_menu";
 import * as search from "search";
 
 export const cmk_export = {
-    get_url: ajax.get_url,
     post_url: ajax.post_url,
     call_ajax: ajax.call_ajax,
     cmk: {

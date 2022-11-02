@@ -21,7 +21,7 @@ import socket
 import subprocess
 import time
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Mapping, Optional, Tuple, Type
+from typing import Any, Dict, Iterator, List, Mapping, Optional, Sequence, Tuple, Type
 
 import cmk.utils.render as render
 import cmk.utils.store as store
@@ -185,34 +185,34 @@ class BackupEntity:
 
 
 class BackupEntityCollection:
-    def __init__(self, config_file_path, cls, config_attr) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, config_file_path: str, cls: Type, config_attr: str) -> None:
         self._config_path = config_file_path
         self._config = Config(config_file_path).load()
         self._cls = cls
         self._config_attr = config_attr
         self.objects = {
-            ident: cls(ident, config) for ident, config in self._config[config_attr].items()  #
+            ident: cls(ident, config) for ident, config in self._config[config_attr].items()
         }
 
-    def get(self, ident):
+    def get(self, ident: str) -> BackupEntity:
         return self.objects[ident]
 
-    def remove(self, obj):
+    def remove(self, obj: BackupEntity) -> None:
         try:
             del self.objects[obj.ident()]
         except KeyError:
             pass
 
-    def choices(self):
+    def choices(self) -> Sequence[tuple[str, str]]:
         return sorted(
             [(ident, obj.title()) for ident, obj in self.objects.items()],
             key=lambda x_y: x_y[1].title(),
         )
 
-    def add(self, obj):
+    def add(self, obj: BackupEntity) -> None:
         self.objects[obj.ident()] = obj
 
-    def save(self):
+    def save(self) -> None:
         self._config[self._config_attr] = {
             ident: obj.to_config() for ident, obj in self.objects.items()  #
         }
@@ -1104,6 +1104,11 @@ class ABCBackupTargetType(abc.ABC):
     def remove_backup(self, backup_ident: str) -> None:
         raise NotImplementedError()
 
+    @classmethod
+    @abc.abstractmethod
+    def validate(cls, value, varprefix):
+        raise NotImplementedError()
+
 
 class BackupTargetLocal(ABCBackupTargetType):
     ident = "local"
@@ -1127,7 +1132,7 @@ class BackupTargetLocal(ABCBackupTargetType):
                             "network share on your own."
                         ),
                         allow_empty=False,
-                        validate=cls.validate_local_directory,
+                        validate=cls.validate,
                         size=64,
                     ),
                 ),
@@ -1149,7 +1154,7 @@ class BackupTargetLocal(ABCBackupTargetType):
         )
 
     @classmethod
-    def validate_local_directory(cls, value, varprefix):
+    def validate(cls, value, varprefix):
         if not is_canonical(value):
             raise MKUserError(varprefix, _("You have to provide a canonical path."))
 
@@ -1410,8 +1415,10 @@ class Targets(BackupEntityCollection):
 
     def validate_target(self, value, varprefix):
         target = self.get(value)
+        if not isinstance(target, Target):
+            raise MKGeneralException("I cannot use a job here")
         path = target.type_params()["path"]
-        target.type().validate_local_directory(path, varprefix)
+        target.type().validate(path, varprefix)
 
 
 class PageBackupTargets:

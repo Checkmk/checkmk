@@ -1103,7 +1103,7 @@ class ModeBIEditRule(ABCBIMode):
         vs_rule = self.valuespec(rule_id=self._rule_id)
         vs_rule_config = vs_rule.from_html_vars("rule")
         vs_rule.validate_value(copy.deepcopy(vs_rule_config), "rule")
-        schema_validated_config = BIRuleSchema().load(vs_rule_config)
+        schema_validated_config = BIRuleSchema().dump(vs_rule_config)
         new_bi_rule = BIRule(schema_validated_config)
         self._action_modify_rule(new_bi_rule)
         return redirect(mode_url("bi_rules", pack=self.bi_pack.id))
@@ -1654,7 +1654,8 @@ class BIModeEditAggregation(ABCBIMode):
         vs_aggregation_config = vs_aggregation.from_html_vars("aggr")
         vs_aggregation.validate_value(vs_aggregation_config, "aggr")
 
-        new_bi_aggregation = BIAggregation(vs_aggregation_config)
+        schema_validated_config = BIAggregationSchema().dump(vs_aggregation_config)
+        new_bi_aggregation = BIAggregation(schema_validated_config)
 
         aggregation_ids = self._get_aggregations_by_id()
         if (

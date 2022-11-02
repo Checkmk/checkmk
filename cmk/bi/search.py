@@ -6,8 +6,8 @@
 from collections.abc import Mapping
 from typing import Any, Type
 
-from marshmallow import fields, validate
-from marshmallow_oneofschema import OneOfSchema
+from marshmallow import fields, post_dump, pre_load
+from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
 from cmk.utils.macros import MacroMapping
 from cmk.utils.type_defs import HostName
@@ -139,18 +139,19 @@ class BIHostSearch(ABCBISearch):
         new_conditions = replace_macros(self.conditions, macros)
         search_matches: list[BIHostSearchMatch] = bi_searcher.search_hosts(new_conditions)
 
-        if self.refer_to == "host":
+        if isinstance(self.refer_to, str):
+            # TODO: remove with version 2.3: unconverted legacy refer_to field
+            referred_type = self.refer_to
+        else:
+            referred_type = self.refer_to["type"]
+        if referred_type == "host":
             return self._refer_to_host_results(search_matches)
-        if self.refer_to == "child":
+        if referred_type == "child":
             return self._refer_to_children_results(search_matches, bi_searcher)
-        if self.refer_to == "parent":
+        if referred_type == "parent":
             return self._refer_to_parent_results(search_matches)
-        if isinstance(self.refer_to, tuple):
-            refer_type, refer_config = self.refer_to
-            if refer_type == "child_with":
-                return self._refer_to_children_with_results(
-                    search_matches, bi_searcher, refer_config
-                )
+        if referred_type == "child_with":
+            return self._refer_to_children_with_results(search_matches, bi_searcher, self.refer_to)
 
         raise NotImplementedError(f"Invalid refer to type {self.refer_to!r}")
 
@@ -204,15 +205,11 @@ class BIHostSearch(ABCBISearch):
         return search_results
 
     def _refer_to_children_with_results(
-        self,
-        search_matches: list[BIHostSearchMatch],
-        bi_searcher: ABCBISearcher,
-        refer_config: dict,
+        self, search_matches: list[BIHostSearchMatch], bi_searcher: ABCBISearcher, refer_to: dict
     ) -> list[dict]:
-        referred_tags, referred_host_choice = refer_config
         all_children: set[HostName] = set()
 
-        # Determine pool of childrens
+        # Determine pool of children
         for search_match in search_matches:
             all_children.update(search_match.host.children)
 
@@ -221,11 +218,13 @@ class BIHostSearch(ABCBISearch):
             bi_searcher.hosts[x] for x in all_children if x in bi_searcher.hosts
         ]
 
-        # Apply host choice and host tags search
-        matched_hosts, _matched_re_groups = bi_searcher.filter_host_choice(
-            children_host_data, referred_host_choice
+        conditions = refer_to["conditions"]
+        hosts, _matched_re_groups = bi_searcher.filter_host_choice(
+            children_host_data, conditions["host_choice"]
         )
-        matched_hosts = bi_searcher.filter_host_tags(matched_hosts, referred_tags)
+        matched_hosts = bi_searcher.filter_host_folder(hosts, conditions["host_folder"])
+        matched_hosts = bi_searcher.filter_host_tags(matched_hosts, conditions["host_tags"])
+        matched_hosts = bi_searcher.filter_host_labels(matched_hosts, conditions["host_labels"])
 
         search_results = []
         for host in matched_hosts:
@@ -234,14 +233,62 @@ class BIHostSearch(ABCBISearch):
             #       We can live with it. The option is not used sensibly anywhere anyway :)
             search_result = {"$1$": host.name, "$HOSTNAME$": host.name, "$HOSTALIAS$": host.alias}
             search_results.append(search_result)
-
         return search_results
+
+
+class HostSchema(Schema):
+    type = ReqConstant("host")
+
+
+class ParentSchema(Schema):
+    type = ReqConstant("parent")
+
+
+class ChildSchema(Schema):
+    type = ReqConstant("child")
+
+
+class ChildWithSchema(Schema):
+    conditions = ReqNested(HostConditionsSchema, dump_default=HostConditionsSchema().dump({}))
+    host_choice = ReqNested(
+        BIHostChoice, dump_default={"type": "all_hosts"}, example={"type": "all_hosts"}
+    )
+
+
+class ReferToSchema(OneOfSchema):
+    type_field = "type"
+    type_field_remove = False
+    type_schemas = {
+        "host": HostSchema,
+        "parent": ParentSchema,
+        "child": ChildSchema,
+        "child_with": ChildWithSchema,
+    }
+
+    def get_obj_type(self, obj: str | dict[str, Any]) -> str:
+        if isinstance(obj, str):
+            return obj
+        return obj["type"]
 
 
 class BIHostSearchSchema(Schema):
     type = ReqConstant(BIHostSearch.type())
     conditions = ReqNested(HostConditionsSchema, dump_default=HostConditionsSchema().dump({}))
-    refer_to = ReqString(validate=validate.OneOf(["host", "child", "parent"]), dump_default="host")
+    refer_to = ReqNested(ReferToSchema, dump_default={"type": "host"})
+
+    @pre_load
+    def pre_load(self, data: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
+        if isinstance(data["refer_to"], str):
+            # Fixes legacy schema config: {"refer_to": "host"}
+            data["refer_to"] = {"type": data["refer_to"]}
+        return data
+
+    @post_dump
+    def post_dump(self, data: str | dict[str, Any], **kwargs: Any) -> dict[str, Any]:
+        if isinstance(data, str):
+            # Fixes legacy schema config: {"refer_to": "host"}
+            return {"type": data}
+        return data
 
 
 #   .--Service-------------------------------------------------------------.

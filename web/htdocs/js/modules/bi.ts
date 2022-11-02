@@ -51,13 +51,12 @@ function bi_update_tree(container) {
     ) {
         bi_container = bi_container.parentNode;
     }
-
-    ajax.post_url(
-        "bi_render_tree.py",
-        bi_container.id,
-        bi_update_tree_response,
-        bi_container
-    );
+    ajax.call_ajax("bi_render_tree.py", {
+        method: "POST",
+        post_data: bi_container.id,
+        response_handler: bi_update_tree_response,
+        handler_data: bi_container,
+    });
 }
 
 function bi_update_tree_response(bi_container, code) {

@@ -230,17 +230,18 @@ function toggle_row(e, elem) {
 }
 
 function set_rowselection(action, rows) {
-    ajax.post_url(
-        "ajax_set_rowselection.py",
-        "id=" +
+    ajax.call_ajax("ajax_set_rowselection.py", {
+        method: "POST",
+        post_data:
+            "id=" +
             selection_properties.page_id +
             "&selection=" +
             selection_properties.selection_id +
             "&action=" +
             action +
             "&rows=" +
-            rows.join(",")
-    );
+            rows.join(","),
+    });
 }
 
 // Update the header information (how many rows selected)

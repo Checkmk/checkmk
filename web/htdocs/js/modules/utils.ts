@@ -407,7 +407,10 @@ export function reload_whole_page(url: string | null = null) {
 }
 
 export function delete_user_message(msg_id, btn) {
-    ajax.post_url("ajax_delete_user_message.py", "id=" + msg_id);
+    ajax.call_ajax("ajax_delete_user_message.py", {
+        method: "POST",
+        post_data: "id=" + msg_id,
+    });
     var row = btn.parentNode.parentNode;
     row.parentNode.removeChild(row);
 }

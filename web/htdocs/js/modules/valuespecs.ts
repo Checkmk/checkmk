@@ -1139,13 +1139,14 @@ export function fetch_ca_from_server(varprefix) {
         `input[name='${varprefix + "_port"}']`
     )!.value;
 
-    ajax.post_url(
-        "ajax_fetch_ca.py",
-        "address=" +
+    ajax.call_ajax("ajax_fetch_ca.py", {
+        method: "POST",
+        post_data:
+            "address=" +
             encodeURIComponent(address) +
             "&port=" +
             encodeURIComponent(port),
-        (_data, ajax_response) => {
+        response_handler: (_data, ajax_response) => {
             const response = JSON.parse(ajax_response);
 
             const status = document.getElementById(
@@ -1161,6 +1162,6 @@ export function fetch_ca_from_server(varprefix) {
                 status.innerHTML = response.result.summary;
                 content.value = response.result.cert_pem;
             }
-        }
-    );
+        },
+    });
 }

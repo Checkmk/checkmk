@@ -672,7 +672,7 @@ class PageBackup:
                 is_suggested=True,
             )
 
-    def _may_edit_config(self):
+    def _may_edit_config(self) -> bool:
         return True
 
     def action(self) -> ActionResult:
@@ -699,7 +699,7 @@ class PageBackup:
 
         return HTTPRedirect(makeuri_contextless(request, [("mode", "backup")]))
 
-    def _delete_job(self, job) -> None:  # type:ignore[no-untyped-def]
+    def _delete_job(self, job: Job) -> None:
         if job.is_running():
             raise MKUserError("_job", _("This job is currently running."))
 
@@ -709,11 +709,11 @@ class PageBackup:
         jobs.save()
         flash(_("The job has been deleted."))
 
-    def _start_job(self, job) -> None:  # type:ignore[no-untyped-def]
+    def _start_job(self, job: Job) -> None:
         job.start()
         flash(_("The backup has been started."))
 
-    def _stop_job(self, job) -> None:  # type:ignore[no-untyped-def]
+    def _stop_job(self, job: Job) -> None:
         job.stop()
         flash(_("The backup has been stopped."))
 

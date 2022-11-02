@@ -6,8 +6,8 @@
 // provides basic api to start and stop service
 
 #pragma once
-#ifndef df_h__
-#define df_h__
+#ifndef DF_H
+#define DF_H
 
 #include <string>
 
@@ -39,4 +39,4 @@ uint64_t CalcUsage(uint64_t avail, uint64_t total) noexcept;
 
 }  // namespace cma::provider
 
-#endif  // df_h__
+#endif  // DF_H

@@ -9,8 +9,8 @@
 //
 #pragma once
 
-#ifndef wtools_user_control_h__
-#define wtools_user_control_h__
+#ifndef WTOOLS_USER_CONTROL_H
+#define WTOOLS_USER_CONTROL_H
 
 #include <string>  // for wstring
 
@@ -65,4 +65,4 @@ private:
 
 }  // namespace wtools::uc
 
-#endif  // wtools_user_control_h__
+#endif  // WTOOLS_USER_CONTROL_H

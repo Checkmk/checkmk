@@ -11,10 +11,6 @@
 
 namespace wtools::uc {  // to become friendly for cma::cfg classes
 
-//
-//
-static const int counter = 0;
-
 // List of all domains!!!
 // This is #REFERENCE
 NTSTATUS PrintDomainName() {

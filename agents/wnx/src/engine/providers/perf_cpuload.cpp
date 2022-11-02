@@ -22,8 +22,7 @@
 
 namespace rs = std::ranges;
 
-constexpr std::wstring_view kProcessorQueueLength{
-    L"\\System\\Processor Queue Length"};
+
 uint64_t ReadSingleCounter(std::wstring_view path) {
     PDH_HQUERY query{nullptr};
     if (::PdhOpenQuery(NULL, 0, &query) != ERROR_SUCCESS) {
@@ -132,6 +131,8 @@ std::unordered_map<std::string, std::string> GetComputerSystemInfo(
 }
 
 std::string PerfCpuLoad::makeBody() {
+    constexpr std::wstring_view kProcessorQueueLength{
+        L"\\System\\Processor Queue Length"};
     static const std::vector<std::string> names{
         "Name", "NumberOfLogicalProcessors", "NumberOfProcessors"};
     auto sep = wtools::ConvertToUTF16(fmt::format("{}", separator()));

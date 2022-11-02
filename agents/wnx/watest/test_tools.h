@@ -3,8 +3,8 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#ifndef test_tools_h__
-#define test_tools_h__
+#ifndef TEST_TOOLS_H
+#define TEST_TOOLS_H
 //
 
 #include <chrono>
@@ -371,4 +371,4 @@ private:
 
 }  // namespace cma::evl
 
-#endif  // test_tools_h__
+#endif  // TEST_TOOLS_H

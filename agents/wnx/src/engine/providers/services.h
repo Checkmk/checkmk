@@ -4,8 +4,8 @@
 // source code package.
 
 #pragma once
-#ifndef services_h__
-#define services_h__
+#ifndef SERVICES_H
+#define SERVICES_H
 
 #include <string>
 
@@ -26,4 +26,4 @@ private:
 
 }  // namespace cma::provider
 
-#endif  // services_h__
+#endif  // SERVICES_H

@@ -6,8 +6,8 @@
 // provides basic api to start and stop service
 
 #pragma once
-#ifndef p_perf_counters_h__
-#define p_perf_counters_h__
+#ifndef P_PERF_COUNTERS_H
+#define P_PERF_COUNTERS_H
 
 #include <string>
 #include <string_view>
@@ -63,4 +63,4 @@ std::string BuildWinPerfSection(std::wstring_view prefix,
 
 }  // namespace cma::provider
 
-#endif  // p_perf_counters_h__
+#endif  // P_PERF_COUNTERS_H

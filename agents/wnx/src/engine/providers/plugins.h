@@ -4,8 +4,8 @@
 // source code package.
 
 #pragma once
-#ifndef plugins_h__
-#define plugins_h__
+#ifndef PLUGINS_H
+#define PLUGINS_H
 
 #include <string>
 #include <string_view>
@@ -80,4 +80,4 @@ int FindMaxTimeout(const PluginMap &pm, PluginMode type);
 
 }  // namespace cma::provider
 
-#endif  // plugins_h__
+#endif  // PLUGINS_H

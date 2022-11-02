@@ -4,8 +4,8 @@
 // source code package.
 
 #pragma once
-#ifndef ps_h__
-#define ps_h__
+#ifndef PS_H
+#define PS_H
 
 #include <ctime>
 #include <string>
@@ -42,4 +42,4 @@ std::string GetProcessOwner(uint64_t pid);
 
 }  // namespace cma::provider
 
-#endif  // ps_h__
+#endif  // PS_H

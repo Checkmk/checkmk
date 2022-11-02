@@ -6,8 +6,8 @@
 // provides basic api to start and stop service
 
 #pragma once
-#ifndef agent_plugins_h__
-#define agent_plugins_h__
+#ifndef AGENT_PLUGINS_H
+#define AGENT_PLUGINS_H
 
 #include <string>
 
@@ -30,4 +30,4 @@ private:
 
 }  // namespace cma::provider
 
-#endif  // agent_plugins_h__
+#endif  // AGENT_PLUGINS_H

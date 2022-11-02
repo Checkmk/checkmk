@@ -4,8 +4,8 @@
 // source code package.
 
 #pragma once
-#ifndef external_port_h__
-#define external_port_h__
+#ifndef EXTERNAL_PORT_H
+#define EXTERNAL_PORT_H
 
 #include <chrono>
 #include <cstdint>
@@ -299,4 +299,4 @@ bool SendDataToMailSlot(const std::string &mailslot_name,
 
 }  // namespace cma::world
 
-#endif  // external_port_h__
+#endif  // EXTERNAL_PORT_H

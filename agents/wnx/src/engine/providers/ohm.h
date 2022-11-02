@@ -4,8 +4,8 @@
 // source code package.
 
 #pragma once
-#ifndef ohm_h__
-#define ohm_h__
+#ifndef OHM_H
+#define OHM_H
 
 #include <filesystem>
 #include <string>
@@ -42,4 +42,4 @@ protected:
 
 }  // namespace cma::provider
 
-#endif  // ohm_h__
+#endif  // OHM_H

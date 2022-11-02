@@ -6,8 +6,8 @@
 // provides basic api to start and stop service
 
 #pragma once
-#ifndef answer_h__
-#define answer_h__
+#ifndef ANSWER_H
+#define ANSWER_H
 
 #include <chrono>
 #include <condition_variable>
@@ -138,4 +138,4 @@ private:
 };
 }  // namespace cma::srv
 
-#endif  // answer_h__
+#endif  // ANSWER_H

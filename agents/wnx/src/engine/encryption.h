@@ -3,8 +3,8 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#ifndef encryption_h__
-#define encryption_h__
+#ifndef ENCRYPTION_H
+#define ENCRYPTION_H
 
 #include <wincrypt.h>
 
@@ -98,4 +98,4 @@ std::unique_ptr<Commander> MakeCrypt();
 
 std::tuple<HCRYPTHASH, size_t> GetHash(HCRYPTPROV crypt_provider);
 }  // namespace cma::encrypt
-#endif  // encryption_h__
+#endif  // ENCRYPTION_H

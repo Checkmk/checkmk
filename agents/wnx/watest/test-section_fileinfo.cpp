@@ -2,7 +2,7 @@
 
 //
 #include "pch.h"
-#define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
+#define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING  // NOLINT
 #include <experimental/filesystem>
 #include <filesystem>
 #include <ranges>

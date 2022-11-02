@@ -3,8 +3,8 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#ifndef cvt_h__
-#define cvt_h__
+#ifndef CVT_H
+#define CVT_H
 
 #pragma once
 
@@ -42,4 +42,4 @@ private:
 };
 }  // namespace cma::cfg::cvt
 
-#endif  // cvt_h__
+#endif  // CVT_H

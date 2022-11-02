@@ -6,8 +6,8 @@
 // provides basic api to start and stop service
 
 #pragma once
-#ifndef windows_service_api_h__
-#define windows_service_api_h__
+#ifndef WINDOWS_SERVICE_API_H
+#define WINDOWS_SERVICE_API_H
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
@@ -105,4 +105,4 @@ void CancelAll(bool cancel) noexcept;
 
 }  // namespace cma::srv
 
-#endif  // windows_service_api_h__
+#endif  // WINDOWS_SERVICE_API_H

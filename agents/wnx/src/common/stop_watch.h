@@ -9,8 +9,8 @@
 //
 #pragma once
 
-#ifndef stop_watch_h__
-#define stop_watch_h__
+#ifndef STOP_WATCH_H
+#define STOP_WATCH_H
 #include <chrono>
 #include <cstdint>
 #include <mutex>
@@ -147,4 +147,4 @@ private:
 
 }  // namespace wtools
 
-#endif  // stop_watch_h__
+#endif  // STOP_WATCH_H

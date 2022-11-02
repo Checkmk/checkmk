@@ -6,8 +6,8 @@
 // Windows Agent Version Data
 
 #pragma once
-#if !defined(version_h__)
-#define version_h__
+#ifndef VERSION_H
+#define VERSION_H
 
 #include "wnx_version.h"
 #define CHECK_MK_VERSION CMK_WIN_AGENT_VERSION
@@ -40,4 +40,4 @@
 #define VER_FILEFLAGS VER_VER_DEBUG
 #define VER_FILETYPE VFT_APP
 
-#endif  // version_h__
+#endif  // VERSION_H

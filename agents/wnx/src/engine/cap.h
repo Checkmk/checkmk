@@ -5,8 +5,8 @@
 
 // engine to install/remove cap files
 
-#ifndef cap_h__
-#define cap_h__
+#ifndef CAP_H
+#define CAP_H
 
 #pragma once
 
@@ -100,4 +100,4 @@ PairOfPath GetExampleYmlNames();
 PairOfPath GetInstallPair(std::wstring_view name);
 }  // namespace cma::cfg::cap
 
-#endif  // cap_h__
+#endif  // CAP_H

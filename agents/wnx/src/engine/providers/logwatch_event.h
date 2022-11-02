@@ -6,8 +6,8 @@
 // provides basic api to start and stop service
 
 #pragma once
-#ifndef logwatch_event_h__
-#define logwatch_event_h__
+#ifndef LOGWATCH_EVENT_H
+#define LOGWATCH_EVENT_H
 
 #include <filesystem>
 #include <string>
@@ -196,4 +196,4 @@ struct RawLogWatchData {
 
 }  // namespace cma::provider
 
-#endif  // logwatch_event_h__
+#endif  // LOGWATCH_EVENT_H

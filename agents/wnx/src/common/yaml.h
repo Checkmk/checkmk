@@ -8,8 +8,8 @@
 // No C++ file
 #pragma once
 
-#ifndef yaml_h__
-#define yaml_h__
+#ifndef YAML_H
+#define YAML_H
 
 #include <yaml-cpp/yaml.h>
 

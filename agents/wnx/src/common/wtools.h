@@ -9,8 +9,8 @@
 //
 #pragma once
 
-#ifndef wtools_h__
-#define wtools_h__
+#ifndef WTOOLS_H
+#define WTOOLS_H
 #if defined(_WIN32)
 #include <AclAPI.h>
 #include <comdef.h>
@@ -18,7 +18,7 @@
 #include "Windows.h"
 #include "winperf.h"
 
-#define _WIN32_DCOM
+#define _WIN32_DCOM  // NOLINT
 
 #include <TlHelp32.h>
 #include <WbemIdl.h>
@@ -1117,4 +1117,4 @@ std::optional<uint32_t> GetConnectionPid(uint16_t port, uint16_t peer_port);
 uint32_t GetServiceStatus(const std::wstring &name) noexcept;
 }  // namespace wtools
 
-#endif  // wtools_h__
+#endif  // WTOOLS_H

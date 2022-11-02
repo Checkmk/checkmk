@@ -6,8 +6,8 @@
 // provides basic api to start and stop service
 
 #pragma once
-#ifndef fileinfo_details_h__
-#define fileinfo_details_h__
+#ifndef FILEINFO_DETAILS_H
+#define FILEINFO_DETAILS_H
 
 #include <filesystem>
 #include <string>
@@ -91,4 +91,4 @@ inline auto SplitFileInfoPathSmart(const std::filesystem::path &file_path) {
 
 }  // namespace cma::provider::details
 
-#endif  // fileinfo_details_h__
+#endif  // FILEINFO_DETAILS_H

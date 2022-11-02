@@ -6,8 +6,8 @@
 // provides basic api to start and stop service
 
 #pragma once
-#ifndef fileinfo_h__
-#define fileinfo_h__
+#ifndef FILEINFO_H
+#define FILEINFO_H
 
 #include <string>
 
@@ -44,4 +44,4 @@ protected:
 };
 }  // namespace cma::provider
 
-#endif  // fileinfo_h__
+#endif  // FILEINFO_H

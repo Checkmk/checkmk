@@ -4,8 +4,8 @@
 // source code package.
 
 #pragma once
-#ifndef spool_h__
-#define spool_h__
+#ifndef SPOOL_H
+#define SPOOL_H
 
 #include <filesystem>
 #include <string>
@@ -36,4 +36,4 @@ bool IsSpoolFileValid(const std::filesystem::path &path);
 bool IsDirectoryValid(const std::filesystem::path &dir);
 }  // namespace cma::provider
 
-#endif  // spool_h__
+#endif  // SPOOL_H

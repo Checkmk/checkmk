@@ -3,8 +3,8 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#ifndef upgrade_h__
-#define upgrade_h__
+#ifndef UPGRADE_H
+#define UPGRADE_H
 
 #pragma once
 
@@ -164,4 +164,4 @@ void Execute();
 
 }  // namespace cma::cfg::rm_lwa
 
-#endif  // upgrade_h__
+#endif  // UPGRADE_H

@@ -4,8 +4,8 @@
 // source code package.
 
 #pragma once
-#ifndef wmi_h__
-#define wmi_h__
+#ifndef WMI_H
+#define WMI_H
 
 #include <string>
 #include <string_view>
@@ -136,4 +136,4 @@ std::string WmiCachedDataHelper(std::string &cache_data,
                                 const std::string &wmi_data, char separator);
 }  // namespace cma::provider
 
-#endif  // wmi_h__
+#endif  // WMI_H

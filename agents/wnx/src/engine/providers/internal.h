@@ -6,8 +6,8 @@
 // provides basic api to start and stop service
 
 #pragma once
-#ifndef p_internal_h__
-#define p_internal_h__
+#ifndef P_INTERNAL_H
+#define P_INTERNAL_H
 
 #include <chrono>
 #include <condition_variable>
@@ -198,4 +198,4 @@ private:
 
 }  // namespace cma::provider
 
-#endif  // p_internal_h__
+#endif  // P_INTERNAL_H

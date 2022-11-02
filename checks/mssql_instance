@@ -29,6 +29,7 @@ def inventory_mssql_instance(parsed):
 def check_mssql_instance(item, params, parsed):
     instance = parsed.get(item)
     if not instance:
+        yield 2, "Database or necessary processes not running or login failed"
         return
 
     state = 2

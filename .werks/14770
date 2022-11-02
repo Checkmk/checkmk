@@ -1,0 +1,15 @@
+Title: mssql_instance: check shows UNKNOWN when the instance is not accessible
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1667375323
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p16
+
+The check "mssql_instance" reported an UNKNOWN state when a specific MSSQL
+instance had been discovered and added to the monitoring, but vanished later.
+The check now reports a CRIT state and is consistent with other DB instance
+services (e.g. Oracle).
+

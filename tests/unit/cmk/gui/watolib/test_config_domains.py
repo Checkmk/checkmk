@@ -111,7 +111,7 @@ class TestConfigDomainCACertificates:
         )
         mocker.patch.object(
             ca_config,
-            "_update_remote_sites_cas",
+            "update_remote_sites_cas",
             lambda _trusted_cas: None,
         )
         return ca_config

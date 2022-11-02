@@ -305,7 +305,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
         # errors - this must be enough for the moment.
         if not site_specific and custom_site_path is None:
             self._update_trusted_cas(current_config)
-            self._update_remote_sites_cas(current_config["trusted_cas"])
+            self.update_remote_sites_cas(current_config["trusted_cas"])
 
     def activate(self, settings: SerializedSettings | None = None) -> ConfigurationWarnings:
         try:
@@ -343,9 +343,11 @@ class ConfigDomainCACertificates(ABCConfigDomain):
         )
         return errors
 
-    def _update_remote_sites_cas(self, trusted_cas: list[str]) -> None:
+    # this is only a non-member classmethod, because it used in update config to 2.2
+    @classmethod
+    def update_remote_sites_cas(cls, trusted_cas: list[str]) -> None:
         remote_cas_store = RemoteSiteCertsStore(cmk.utils.paths.remote_sites_cas_dir)
-        for site, cert in self._remote_sites_cas(trusted_cas).items():
+        for site, cert in cls._remote_sites_cas(trusted_cas).items():
             remote_cas_store.save(site, cert)
 
     @staticmethod

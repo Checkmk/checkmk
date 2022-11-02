@@ -162,13 +162,13 @@ class Config:
 
 
 class BackupEntity:
-    def __init__(self, ident: str | None, config: ConfigData) -> None:
+    def __init__(self, ident: str, config: ConfigData) -> None:
         self._ident = ident
         self._config: dict = {}
 
         self.from_config(config)
 
-    def ident(self) -> str | None:
+    def ident(self) -> str:
         return self._ident
 
     def config(self) -> ConfigData:
@@ -369,8 +369,7 @@ class Job(MKBackupJob, BackupEntity):
         if site:
             parts.append(site)
 
-        # TODO
-        parts.append(self._ident)  # type: ignore[arg-type]
+        parts.append(self._ident)
 
         return "-".join([p.replace("-", "+") for p in parts])
 
@@ -383,7 +382,7 @@ class Job(MKBackupJob, BackupEntity):
         return path / ("%s.state" % self.ident())
 
     def _start_command(self) -> List[str]:
-        return [mkbackup_path(), "backup", "--background", self.ident()]  # type: ignore[list-item]
+        return [mkbackup_path(), "backup", "--background", self.ident()]
 
     def schedule(self) -> Optional[Dict[str, Any]]:
         return self._config["schedule"]
@@ -718,7 +717,7 @@ class PageEditBackupJob:
     def __init__(self, key_store: key_mgmt.KeypairStore) -> None:
         super().__init__()
         self.key_store = key_store
-        job_ident = request.var("job")
+        job_ident = request.get_str_input("job")
 
         if job_ident is not None:
             try:
@@ -915,6 +914,8 @@ class PageEditBackupJob:
         if "ident" in config:
             self._ident = config.pop("ident")
         self._job_cfg = config
+        if self._ident is None:
+            raise MKGeneralException("Cannot create or modify job without identifier")
 
         jobs = self.jobs()
         if self._new:
@@ -1590,6 +1591,9 @@ class PageEditBackupTarget:
         if "ident" in config:
             self._ident = config.pop("ident")
         self._target_cfg = config
+
+        if self._ident is None:
+            raise MKGeneralException("Cannot create or modify job without identifier")
 
         targets = self.targets()
         if self._new:

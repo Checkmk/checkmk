@@ -674,9 +674,9 @@ filter_registry.register(
     )
 )
 
+
 # TODO: I would be great to split this in two filters for host & service kind of problems
-@filter_registry.register_instance
-class FilterHostgroupProblems(CheckboxRowFilter):
+class _FilterHostgroupProblems(CheckboxRowFilter):
     def __init__(self) -> None:
         self.host_problems = query_filters.host_problems_options("hostgroups_having_hosts_")
         self.host_problems.append(("hostgroups_show_unhandled_host", _("Unhandled host problems")))
@@ -700,6 +700,9 @@ class FilterHostgroupProblems(CheckboxRowFilter):
 
         html.br()
         checkbox_row(self.host_problems, value, "Host states: ")
+
+
+filter_registry.register(_FilterHostgroupProblems())
 
 
 filter_registry.register(
@@ -1328,8 +1331,7 @@ filter_registry.register(
 
 
 # TODO: I would be great to split this in two filters for host & service states
-@filter_registry.register_instance
-class FilterLogState(CheckboxRowFilter):
+class _FilterLogState(CheckboxRowFilter):
     def __init__(self) -> None:
         self.host_states = [
             ("logst_h0", _("Up")),
@@ -1358,6 +1360,9 @@ class FilterLogState(CheckboxRowFilter):
         checkbox_row(self.host_states, value, "Hosts: ")
         html.br()
         checkbox_row(self.service_states, value, "Services: ")
+
+
+filter_registry.register(_FilterLogState())
 
 
 filter_registry.register(
@@ -1505,8 +1510,7 @@ filter_registry.register(
 )
 
 
-@filter_registry.register_instance
-class FilterHostAuxTags(Filter):
+class _FilterHostAuxTags(Filter):
     def __init__(self) -> None:
         self.query_filter = query_filters.AuxTagsQuery(object_type="host")
         super().__init__(
@@ -1536,6 +1540,9 @@ class FilterHostAuxTags(Filter):
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return self.query_filter.filter(value)
+
+
+filter_registry.register(_FilterHostAuxTags())
 
 
 class LabelFilter(Filter):
@@ -1858,8 +1865,7 @@ filter_registry.register(
 )
 
 
-@filter_registry.register_instance
-class FilterAggrGroup(Filter):
+class _FilterAggrGroup(Filter):
     def __init__(self) -> None:
         self.column = "aggr_group"
         super().__init__(
@@ -1893,8 +1899,10 @@ class FilterAggrGroup(Filter):
         return value.get(self.htmlvars[0])
 
 
-@filter_registry.register_instance
-class FilterAggrGroupTree(Filter):
+filter_registry.register(_FilterAggrGroup())
+
+
+class _FilterAggrGroupTree(Filter):
     def __init__(self) -> None:
         self.column = "aggr_group_tree"
         super().__init__(
@@ -1954,6 +1962,9 @@ class FilterAggrGroupTree(Filter):
         empty: Choices = [("", "")]
 
         return empty + selection
+
+
+filter_registry.register(_FilterAggrGroupTree())
 
 
 # how is either "regex" or "exact"
@@ -2037,8 +2048,7 @@ filter_registry.register(
 )
 
 
-@filter_registry.register_instance
-class FilterAggrHosts(Filter):
+class _FilterAggrHosts(Filter):
     def __init__(self) -> None:
         super().__init__(
             ident="aggr_hosts",
@@ -2075,8 +2085,10 @@ class FilterAggrHosts(Filter):
         return rows
 
 
-@filter_registry.register_instance
-class FilterAggrService(Filter):
+filter_registry.register(_FilterAggrHosts())
+
+
+class _FilterAggrService(Filter):
     """Not performing filter(), nor filter_table(). The filtering is done directly in BI by
     bi.table(), which calls service_spec()."""
 
@@ -2108,6 +2120,9 @@ class FilterAggrService(Filter):
             "host": row["host_name"],
             "service": row["service_description"],
         }
+
+
+filter_registry.register(_FilterAggrService())
 
 
 class BIStatusFilter(Filter):
@@ -2453,9 +2468,9 @@ filter_registry.register(
     )
 )
 
+
 # TODO: Cleanup as a dropdown visual Filter later on
-@filter_registry.register_instance
-class FilterOptEventEffectiveContactgroup(FilterGroupCombo):
+class _FilterOptEventEffectiveContactgroup(FilterGroupCombo):
     def __init__(self) -> None:
         super().__init__(
             title=_l("Contact group (effective)"),
@@ -2467,6 +2482,9 @@ class FilterOptEventEffectiveContactgroup(FilterGroupCombo):
 
     def request_vars_from_row(self, row: Row) -> Dict[str, str]:
         return {}
+
+
+filter_registry.register(_FilterOptEventEffectiveContactgroup())
 
 
 class FilterCMKSiteStatisticsByCorePIDs(Filter):

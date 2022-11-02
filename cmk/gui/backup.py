@@ -21,7 +21,7 @@ import socket
 import subprocess
 import time
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Mapping, Optional, Sequence, Tuple, Type
+from typing import Any, Dict, Iterator, List, Mapping, Optional, Sequence, Tuple, Type, TypedDict
 
 import cmk.utils.render as render
 import cmk.utils.store as store
@@ -234,10 +234,18 @@ class BackupEntityCollection:
 #   '----------------------------------------------------------------------'
 
 
+class StateConfig(TypedDict, total=False):
+    state: str | None
+    started: None
+    output: str
+    pid: int
+    success: bool
+
+
 # Abstract class for backup jobs (Job) and restore job (RestoreJob)
 class MKBackupJob:
     @classmethod
-    def state_name(cls, state):
+    def state_name(cls, state: str | None) -> str:
         return {
             "started": _("Started"),
             "running": _("Currently running"),
@@ -257,7 +265,7 @@ class MKBackupJob:
             else:
                 raise
 
-    def state(self):
+    def state(self) -> StateConfig:
         try:
             with self.state_file_path().open(encoding="utf-8") as f:
                 state = json.load(f)
@@ -299,7 +307,7 @@ class MKBackupJob:
             "/proc/%d" % state["pid"]
         )
 
-    def start(self, env=None):
+    def start(self, env: Mapping[str, str] | None = None) -> None:
         completed_process = subprocess.run(
             self._start_command(),
             close_fds=True,
@@ -313,10 +321,10 @@ class MKBackupJob:
         if completed_process.returncode != 0:
             raise MKGeneralException(_("Failed to start the job: %s") % completed_process.stdout)
 
-    def _start_command(self):
+    def _start_command(self) -> Sequence[str]:
         raise NotImplementedError()
 
-    def stop(self):
+    def stop(self) -> None:
         state = self.state()
         pgid = os.getpgid(state["pid"])
 
@@ -381,7 +389,7 @@ class Job(MKBackupJob, BackupEntity):
 
         return path / ("%s.state" % self.ident())
 
-    def _start_command(self) -> List[str]:
+    def _start_command(self) -> Sequence[str]:
         return [mkbackup_path(), "backup", "--background", self.ident()]
 
     def schedule(self) -> Optional[Dict[str, Any]]:

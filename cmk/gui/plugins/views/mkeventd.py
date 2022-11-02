@@ -1205,8 +1205,9 @@ class CommandECChangeState(ECCommand):
         self, cmdtag: str, spec: str, row: Row, row_index: int, action_rows: Rows
     ) -> CommandActionResult:
         if request.var("_mkeventd_changestate"):
+            events = ",".join([str(entry["event_id"]) for entry in action_rows])
             state = MonitoringState().from_html_vars("_mkeventd_state")
-            return "CHANGESTATE;%s;%s;%s" % (row["event_id"], user.id, state), _("change the state")
+            return "CHANGESTATE;%s;%s;%s" % (events, user.id, state), _("change the state")
         return None
 
 

@@ -935,13 +935,17 @@ def transform_stats_dashlet(dashlet_spec: DashletConfig) -> DashletConfig:
 
 
 def transform_timerange_dashlet(dashlet_spec: DashletConfig) -> DashletConfig:
-    dashlet_spec["timerange"] = {
+    old2new = {
         "0": "4h",
         "1": "25h",
         "2": "8d",
         "3": "35d",
         "4": "400d",
-    }.get(dashlet_spec["timerange"], dashlet_spec["timerange"])
+    }
+    # default to 25h
+    old_timerange = dashlet_spec.get("timerange", "1")
+    if old_timerange in old2new:
+        dashlet_spec["timerange"] = old2new[old_timerange]
     return dashlet_spec
 
 

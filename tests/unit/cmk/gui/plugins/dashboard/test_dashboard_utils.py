@@ -128,11 +128,18 @@ def test_transform_dashlet_status_display(entry, result):
             id="1.4.0->2.1.0i1 Timewindow from Timerange valuespec CMK-5864",
         ),
         pytest.param(
+            {},
             {
                 "timerange": "25h",
             },
+            id="timerange might not be set",
+        ),
+        pytest.param(
             {
-                "timerange": "25h",
+                "timerange": "4h",
+            },
+            {
+                "timerange": "4h",
             },
             id="2.1 Timewindow from Timerange valuespec CMK-5864",
         ),

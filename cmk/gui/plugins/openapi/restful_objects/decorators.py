@@ -87,7 +87,7 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     SchemaParameter,
     StatusCodeInt,
 )
-from cmk.gui.plugins.openapi.utils import problem
+from cmk.gui.plugins.openapi.utils import problem, ProblemException
 from cmk.gui.watolib.activate_changes import (
     update_config_generation as activate_changes_update_config_generation,
 )
@@ -795,6 +795,8 @@ class Endpoint:
                 response = self.func(_params)
             except ValidationError as exc:
                 response = _problem(exc, status_code=400)
+            except ProblemException as problem_exception:
+                response = problem_exception.to_problem()
 
             # We don't expect a permission to be triggered when an endpoint ran into an error.
             if response.status_code < 400:

@@ -1,0 +1,14 @@
+Title: nfsexports.solaris: no NFS exports listed under Solaris version >= 11
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1668411536
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p17
+
+The agent plugin nfsexports.solaris does not list any NFS exports under Solaris
+version >= 11. This has been fixed. The problem was that the agent plugin used
+the file "/etc/dfs/sharetab", which is still present but unused in this OS
+version. It now uses the "zfs" binary to determine NFS exports.

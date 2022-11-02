@@ -34,10 +34,18 @@ if [ -r "${clusterconfigdir}" ]; then
 else
     # is a standalone nfs server
     dfstabfile="/etc/dfs/dfstab"
-    if [ -r "${dfstabfile}" ]; then
-        EXPORTS="$(grep -v "^\#" "${dfstabfile}" | grep -v "^$")"
-    elif [ -x "/usr/sbin/zfs" ]; then
+    if [ -x "/usr/sbin/zfs" ]; then
+        # NFS under Solaris version >= 11
+        # Note that 'dfstabfile' is still present in this version, but does
+        # nothing. See SUP-10936.
+        # This order of operation is based on the assumption that the zfs
+        # binary is either absent for earlier Solaris versions or lists the NFS
+        # correctly. If it turns out that this is not the case, the approach needs to be
+        # changed.
         EXPORTS="$(zfs get sharenfs)"
+    elif [ -r "${dfstabfile}" ]; then
+        # NFS under Solaris version <= 10
+        EXPORTS="$(grep -v "^\#" "${dfstabfile}" | grep -v "^$")"
     fi
 
     if [ -n "${EXPORTS}" ]; then

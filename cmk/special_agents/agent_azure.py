@@ -32,14 +32,19 @@ from cmk.special_agents.utils import DataCache, get_seconds_since_midnight, vcrt
 Args = argparse.Namespace
 GroupLabels = Mapping[str, Mapping[str, str]]
 
-
 LOGGER = logging.getLogger()  # root logger for now
 
-METRICS_SELECTED = {
+AZURE_CACHE_FILE_PATH = Path(tmp_dir) / "agents" / "agent_azure"
+
+NOW = datetime.datetime.utcnow()
+
+ALL_METRICS: dict[str, list[tuple]] = {
     # to add a new metric, just add a made up name, run the
     # agent, and you'll get a error listing available metrics!
     # key: list of (name(s), interval, aggregation, filter)
     # NB: Azure API won't have requests with more than 20 metric names at once
+    # Also remember to add the service to the WATO rule:
+    # cmk/gui/plugins/wato/special_agents/azure.py
     "Microsoft.Network/virtualNetworkGateways": [
         ("AverageBandwidth,P2SBandwidth", "PT5M", "average", None),
         ("P2SConnectionCount", "PT1M", "maximum", None),
@@ -137,10 +142,6 @@ METRICS_SELECTED = {
     ],
 }
 
-AZURE_CACHE_FILE_PATH = Path(tmp_dir) / "agents" / "agent_azure"
-
-NOW = datetime.datetime.utcnow()
-
 
 def parse_arguments(argv):
     parser = argparse.ArgumentParser(description=__doc__)
@@ -213,9 +214,16 @@ def parse_arguments(argv):
         default=[],
         nargs="*",
         help="""list of arguments providing the configuration in <key>=<value> format.
-             If omitted, all groups and resources are fetched.
+             If omitted, all groups and all resources of the services specified in --services are 
+             fetched.
              If specified, every 'group=<name>' argument starts a new group configuration,
              and every 'resource=<name>' arguments specifies a resource.""",
+    )
+    parser.add_argument(
+        "--services",
+        default=[],
+        nargs="*",
+        help="List of services to monitor",
     )
     args = parser.parse_args(argv)
 
@@ -901,16 +909,19 @@ class UsageClient(DataCache):
             UsageSection(usage_resource, piggytargets, cacheinfo).write()
 
 
-def write_section_ad(graph_client):
-    section = AzureSection("ad")
-
+def write_section_ad(
+    graph_client: GraphApiClient, section: AzureSection, args: argparse.Namespace
+) -> None:
+    enabled_services = set(args.services)
     # users
-    users = graph_client.users()
-    section.add(["users_count", len(users)])
+    if "users_count" in enabled_services:
+        users = graph_client.users()
+        section.add(["users_count", len(users)])
 
     # organization
-    orgas = graph_client.organization()
-    section.add(["ad_connect", json.dumps(orgas)])
+    if "ad_connect" in enabled_services:
+        orgas = graph_client.organization()
+        section.add(["ad_connect", json.dumps(orgas)])
 
     section.write()
 
@@ -922,7 +933,7 @@ def gather_metrics(mgmt_client, resource, debug=False):
     Along the way collect ocurrring errors.
     """
     err = IssueCollecter()
-    metric_definitions = METRICS_SELECTED.get(resource.info["type"], [])
+    metric_definitions = ALL_METRICS.get(resource.info["type"], [])
     for metric_def in metric_definitions:
         cache = MetricCache(resource, metric_def, NOW, debug=debug)
         try:
@@ -955,8 +966,11 @@ def process_resource(
 ) -> Sequence[Section]:
     mgmt_client, resource, group_labels, args = function_args
     sections: list[Section] = []
-
+    enabled_services = set(args.services)
     resource_type = resource.info.get("type")
+    if resource_type not in enabled_services:
+        return sections
+
     if resource_type == "Microsoft.Compute/virtualMachines":
         process_vm(mgmt_client, resource, args)
 
@@ -1090,7 +1104,7 @@ def main_graph_client(args):
     graph_client = GraphApiClient()
     try:
         graph_client.login(args.tenant, args.client, args.secret)
-        write_section_ad(graph_client)
+        write_section_ad(graph_client, AzureSection("ad"), args)
     except ApiErrorAuthorizationRequestDenied as exc:
         # We are not raising the exception in debug mode.
         # Having no permissions for the graph API is a legit configuration
@@ -1099,6 +1113,14 @@ def main_graph_client(args):
         if args.debug:
             raise
         write_exception_to_agent_info_section(exc, "Graph client")
+
+
+def write_usage_section_if_enabled(
+    usage_client: UsageClient, monitored_groups: list[str], args: Args
+) -> None:
+    usage_details_enabled = "usage_details" in args.services
+    if usage_details_enabled:
+        usage_client.write_sections(monitored_groups)
 
 
 def main_subscription(args, selector, subscription):
@@ -1122,7 +1144,7 @@ def main_subscription(args, selector, subscription):
     write_group_info(monitored_groups, monitored_resources, group_labels)
 
     usage_client = UsageClient(mgmt_client, subscription, args.debug)
-    usage_client.write_sections(monitored_groups)
+    write_usage_section_if_enabled(usage_client, monitored_groups, args)
 
     func_args = ((mgmt_client, resource, group_labels, args) for resource in monitored_resources)
     mapper = get_mapper(args.debug, args.sequential, args.timeout)

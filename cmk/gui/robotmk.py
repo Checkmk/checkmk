@@ -12,7 +12,7 @@ from typing import Literal
 
 from livestatus import LivestatusRow, lqencode, MKLivestatusNotFoundError, SiteId
 
-from cmk.utils.type_defs import HostName, Tuple
+from cmk.utils.type_defs import HostName
 
 import cmk.gui.pages
 from cmk.gui.breadcrumb import Breadcrumb
@@ -231,7 +231,7 @@ def _pack_html_content(name: str, html_content: bytes) -> bytes:
     return buf.getvalue()
 
 
-def _get_mandatory_request_vars() -> Tuple[SiteId, HostName, str]:
+def _get_mandatory_request_vars() -> tuple[SiteId, HostName, str]:
     site_id: SiteId = SiteId(request.get_str_input_mandatory("site"))
     host_name: HostName = request.get_str_input_mandatory("host")
     service_description: str = request.get_str_input_mandatory("service")

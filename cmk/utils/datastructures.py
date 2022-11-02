@@ -5,7 +5,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Mapping, MutableMapping, overload, TypeVar
+from collections.abc import Mapping, MutableMapping
+from typing import Any, overload, TypeVar
 
 from typing_extensions import assert_never
 

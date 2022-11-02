@@ -12,7 +12,7 @@ import itertools
 import struct
 import sys
 import termios
-from typing import Dict, Iterable, List, Tuple
+from collections.abc import Iterable
 
 # TODO: Implementing the colors below as simple global variables is a bad idea,
 # because their actual values depend on sys.stdout at *import* time! sys.stdout
@@ -45,7 +45,7 @@ normal = ""
 ok = ""
 warn = ""
 error = ""
-states: Dict[int, str] = {}
+states: dict[int, str] = {}
 
 
 def reinit() -> None:
@@ -96,7 +96,7 @@ def reinit() -> None:
 
 reinit()
 
-TableRow = List[str]
+TableRow = list[str]
 TableColors = TableRow
 
 
@@ -112,7 +112,7 @@ def colorset(fg: int = -1, bg: int = -1, attr: int = -1) -> str:
     return normal
 
 
-def get_size() -> Tuple[int, int]:
+def get_size() -> tuple[int, int]:
     try:
         ws = struct.pack("HHHH", 0, 0, 0, 0)
         # TODO: Use the following instead?
@@ -123,7 +123,7 @@ def get_size() -> Tuple[int, int]:
             return lines, columns
     except io.UnsupportedOperation:
         pass  # When sys.stdout is StringIO() or similar, then .fileno() is not available
-    except IOError as e:
+    except OSError as e:
         if e.errno == errno.ENOTTY:
             # Inappropriate ioctl for device: Occurs when redirecting output
             pass
@@ -147,7 +147,7 @@ def print_table(
         sys.stdout.write(fmt % tuple(row[:num_columns]))
 
 
-def _column_lengths(headers: TableRow, rows: Iterable[TableRow], num_columns: int) -> List[int]:
+def _column_lengths(headers: TableRow, rows: Iterable[TableRow], num_columns: int) -> list[int]:
     lengths = [len(h) for h in headers]
     for row in rows:
         for index, column in enumerate(row[:num_columns]):
@@ -155,7 +155,7 @@ def _column_lengths(headers: TableRow, rows: Iterable[TableRow], num_columns: in
     return lengths
 
 
-def _row_template(lengths: List[int], colors: TableColors, indent: str) -> str:
+def _row_template(lengths: list[int], colors: TableColors, indent: str) -> str:
     fmt = indent
     sep = ""
     for l, c in zip(lengths, colors):

@@ -7,7 +7,8 @@
 from __future__ import annotations
 
 import re
-from typing import Dict, List, Mapping, NamedTuple, Optional, Sequence, Set, Tuple, Union
+from collections.abc import Mapping, Sequence
+from typing import NamedTuple
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
@@ -49,7 +50,7 @@ class AuxTag:
             topic=tag_info.get("topic"),
         )
 
-    def __init__(self, tag_id: TagID, title: str, topic: Optional[str]) -> None:
+    def __init__(self, tag_id: TagID, title: str, topic: str | None) -> None:
         self.id = tag_id
         self.title = title
         self.topic = topic
@@ -64,7 +65,7 @@ class AuxTag:
     @property
     def choice_title(self) -> str:
         if self.topic:
-            return "%s / %s" % (self.topic, self.title)
+            return f"{self.topic} / {self.title}"
         return self.title
 
     def validate(self) -> None:
@@ -78,7 +79,7 @@ class AuxTag:
 
 
 class AuxTagList:
-    def __init__(self, aux_tags: List[AuxTag]) -> None:
+    def __init__(self, aux_tags: list[AuxTag]) -> None:
         self._tags = aux_tags
 
     def __iadd__(self, other: AuxTagList) -> AuxTagList:
@@ -114,7 +115,7 @@ class AuxTagList:
                 return
 
     def validate(self) -> None:
-        seen: Set[str] = set()
+        seen: set[str] = set()
         for aux_tag in self._tags:
             aux_tag.validate()
 
@@ -142,16 +143,16 @@ class AuxTagList:
                 return aux_tag
         raise KeyError(_("Aux tag '%s' does not exist") % aux_tag_id)
 
-    def get_tag_ids(self) -> Set[TagID]:
+    def get_tag_ids(self) -> set[TagID]:
         return {tag.id for tag in self._tags}
 
-    def get_dict_format(self) -> List[AuxTagSpec]:
+    def get_dict_format(self) -> list[AuxTagSpec]:
         response = []
         for tag in self._tags:
             response.append(tag.get_dict_format())
         return response
 
-    def get_choices(self) -> Sequence[Tuple[str, str]]:
+    def get_choices(self) -> Sequence[tuple[str, str]]:
         return [(aux_tag.id, aux_tag.title) for aux_tag in self._tags]
 
 
@@ -166,7 +167,7 @@ class GroupedTag:
         )
 
     def __init__(
-        self, group: TagGroup, tag_id: Optional[TagID], title: str, aux_tag_ids: List[TagID]
+        self, group: TagGroup, tag_id: TagID | None, title: str, aux_tag_ids: list[TagID]
     ) -> None:
         self.id = tag_id
         self.title = title
@@ -199,9 +200,9 @@ class TagGroup:
         self,
         group_id: TaggroupID,
         title: str,
-        topic: Optional[str],
-        help: Optional[str],  # pylint: disable=redefined-builtin
-        tags: List[GroupedTag],
+        topic: str | None,
+        help: str | None,  # pylint: disable=redefined-builtin
+        tags: list[GroupedTag],
     ) -> None:
         self.id = group_id
         self.title = title
@@ -212,7 +213,7 @@ class TagGroup:
     @property
     def choice_title(self) -> str:
         if self.topic:
-            return "%s / %s" % (self.topic, self.title)
+            return f"{self.topic} / {self.title}"
         return self.title
 
     @property
@@ -220,16 +221,16 @@ class TagGroup:
         return len(self.tags) == 1
 
     @property
-    def default_value(self) -> Optional[TagID]:
+    def default_value(self) -> TagID | None:
         return self.tags[0].id
 
-    def get_tag(self, tag_id: TagID) -> Optional[GroupedTag]:
+    def get_tag(self, tag_id: TagID) -> GroupedTag | None:
         for tag in self.tags:
             if tag_id == tag.id:
                 return tag
         return None
 
-    def get_tag_ids(self) -> Set[Optional[TagID]]:
+    def get_tag_ids(self) -> set[TagID | None]:
         if self.is_checkbox_tag_group:
             return {None, self.tags[0].id}
         return {tag.id for tag in self.tags}
@@ -247,13 +248,13 @@ class TagGroup:
 
         return response
 
-    def get_tag_choices(self) -> Sequence[Tuple[Optional[TagID], str]]:
+    def get_tag_choices(self) -> Sequence[tuple[TagID | None, str]]:
         choices = []
         for tag in self.tags:
             choices.append((tag.id, tag.title))
         return choices
 
-    def get_tag_group_config(self, value: Optional[TagID]) -> TaggroupIDToTagID:
+    def get_tag_group_config(self, value: TagID | None) -> TaggroupIDToTagID:
         """Return the set of tag groups which should be set for a host based on the given value"""
         tag_groups = {}
 
@@ -282,7 +283,7 @@ class TagConfig:
         )
 
     def __init__(
-        self, tag_groups: Optional[List[TagGroup]] = None, aux_tags: Optional[AuxTagList] = None
+        self, tag_groups: list[TagGroup] | None = None, aux_tags: AuxTagList | None = None
     ) -> None:
         self.tag_groups = tag_groups or []
         self.aux_tag_list = aux_tags or AuxTagList([])
@@ -299,8 +300,8 @@ class TagConfig:
     def get_tag_groups(self) -> Sequence[TagGroup]:
         return self.tag_groups
 
-    def get_topic_choices(self) -> Sequence[Tuple[str, str]]:
-        names = set([])
+    def get_topic_choices(self) -> Sequence[tuple[str, str]]:
+        names = set()
         for tag_group in self.tag_groups:
             topic = tag_group.topic or _("Tags")
             if topic:
@@ -313,8 +314,8 @@ class TagConfig:
 
         return sorted(list(names), key=lambda x: x[1])
 
-    def get_tag_groups_by_topic(self) -> Sequence[Tuple[str, Sequence[TagGroup]]]:
-        by_topic: Dict[str, List[TagGroup]] = {}
+    def get_tag_groups_by_topic(self) -> Sequence[tuple[str, Sequence[TagGroup]]]:
+        by_topic: dict[str, list[TagGroup]] = {}
         for tag_group in self.tag_groups:
             topic = tag_group.topic or _("Tags")
             by_topic.setdefault(topic, []).append(tag_group)
@@ -323,7 +324,7 @@ class TagConfig:
     def tag_group_exists(self, tag_group_id: TaggroupID) -> bool:
         return self.get_tag_group(tag_group_id) is not None
 
-    def get_tag_group(self, tag_group_id: TaggroupID) -> Optional[TagGroup]:
+    def get_tag_group(self, tag_group_id: TaggroupID) -> TagGroup | None:
         for group in self.tag_groups:
             if group.id == tag_group_id:
                 return group
@@ -335,39 +336,39 @@ class TagConfig:
             return
         self.tag_groups.remove(group)
 
-    def get_tag_group_choices(self) -> Sequence[Tuple[TaggroupID, str]]:
+    def get_tag_group_choices(self) -> Sequence[tuple[TaggroupID, str]]:
         return [(tg.id, tg.choice_title) for tg in self.tag_groups]
 
     # TODO: Clean this up and make call sites directly call the wrapped function
     def get_aux_tags(self) -> Sequence[AuxTag]:
         return self.aux_tag_list.get_tags()
 
-    def get_aux_tags_by_tag(self) -> Mapping[Optional[TagID], Sequence[TagID]]:
+    def get_aux_tags_by_tag(self) -> Mapping[TagID | None, Sequence[TagID]]:
         aux_tag_map = {}
         for tag_group in self.tag_groups:
             for grouped_tag in tag_group.tags:
                 aux_tag_map[grouped_tag.id] = grouped_tag.aux_tag_ids
         return aux_tag_map
 
-    def get_aux_tags_by_topic(self) -> Sequence[Tuple[str, Sequence[AuxTag]]]:
-        by_topic: Dict[str, List[AuxTag]] = {}
+    def get_aux_tags_by_topic(self) -> Sequence[tuple[str, Sequence[AuxTag]]]:
+        by_topic: dict[str, list[AuxTag]] = {}
         for aux_tag in self.aux_tag_list.get_tags():
             topic = aux_tag.topic or _("Tags")
             by_topic.setdefault(topic, []).append(aux_tag)
         return sorted(by_topic.items(), key=lambda x: x[0])
 
-    def get_tag_ids(self) -> Set[Optional[TagID]]:
+    def get_tag_ids(self) -> set[TagID | None]:
         """Returns the raw ids of the grouped tags and the aux tags"""
-        response: Set[Optional[TagID]] = set()
+        response: set[TagID | None] = set()
         for tag_group in self.tag_groups:
             response.update(tag_group.get_tag_ids())
 
         response.update(self.aux_tag_list.get_tag_ids())
         return response
 
-    def get_tag_ids_by_group(self) -> Set[Tuple[TaggroupID, Optional[TagID]]]:
+    def get_tag_ids_by_group(self) -> set[tuple[TaggroupID, TagID | None]]:
         """Returns a set of (tag_group_id, tag_id) pairs"""
-        response: Set[Tuple[TaggroupID, Optional[TagID]]] = set()
+        response: set[tuple[TaggroupID, TagID | None]] = set()
         for tag_group in self.tag_groups:
             response.update([(tag_group.id, tag) for tag in tag_group.get_tag_ids()])
 
@@ -379,8 +380,8 @@ class TagConfig:
     def get_tag_or_aux_tag(
         self,
         taggroupd_id: TaggroupID,
-        tag_id: Optional[TagID],
-    ) -> Optional[Union[GroupedTag, AuxTag]]:
+        tag_id: TagID | None,
+    ) -> GroupedTag | AuxTag | None:
         for tag_group in (t_grp for t_grp in self.tag_groups if t_grp.id == taggroupd_id):
             for grouped_tag in tag_group.tags:
                 if grouped_tag.id == tag_id:
@@ -418,7 +419,7 @@ class TagConfig:
 
     def _validate_ids(self) -> None:
         """Make sure that no tag key is used twice as aux_tag ID or tag group id"""
-        seen_ids: Set[TaggroupID] = set()
+        seen_ids: set[TaggroupID] = set()
         for tag_group in self.tag_groups:
             if tag_group.id in seen_ids:
                 raise MKGeneralException(_('The tag group ID "%s" is used twice.') % tag_group.id)
@@ -511,7 +512,7 @@ class BuiltinTagConfig(TagConfig):
             ),
         )
 
-    def _builtin_tag_groups(self) -> List[TaggroupSpec]:
+    def _builtin_tag_groups(self) -> list[TaggroupSpec]:
         return [
             {
                 "id": "agent",
@@ -625,7 +626,7 @@ class BuiltinTagConfig(TagConfig):
             },
         ]
 
-    def _builtin_aux_tags(self) -> List[AuxTagSpec]:
+    def _builtin_aux_tags(self) -> list[AuxTagSpec]:
         return [
             {
                 "id": "ip-v4",

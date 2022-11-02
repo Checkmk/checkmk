@@ -21,7 +21,7 @@ class Registry(Mapping[str, _VT]):
     To create a registry inherit from ``Registry[A]`` where ``A`` is the class
     of the objects that are stored in the registry. Although it is not
     recommended classes can be stored inside registries as well. To create a
-    class registry you have to derive from ``Registry[Type[A]]``.
+    class registry you have to derive from ``Registry[type[A]]``.
 
     Objects can be added or removed with the register and unregister methods.
 

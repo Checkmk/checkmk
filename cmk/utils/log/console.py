@@ -7,8 +7,9 @@ from __future__ import annotations
 
 import logging
 import sys
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Generator, TextIO
+from typing import TextIO
 
 import cmk.utils.tty as tty
 
@@ -90,7 +91,7 @@ def _format_warning(text: str) -> str:
     # type (str) -> str
     stripped = text.lstrip()
     indent = text[: len(text) - len(stripped)]
-    return "%s%s%sWARNING:%s %s\n" % (indent, tty.bold, tty.yellow, tty.normal, stripped)
+    return f"{indent}{tty.bold}{tty.yellow}WARNING:{tty.normal} {stripped}\n"
 
 
 def error(text: str, *args: object) -> None:

@@ -11,7 +11,7 @@ import pprint
 import shutil
 from contextlib import nullcontext
 from pathlib import Path
-from typing import Any, Union
+from typing import Any
 
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout
@@ -39,13 +39,13 @@ logger = logging.getLogger("cmk.store")
 #   '----------------------------------------------------------------------'
 
 
-def mkdir(path: Union[Path, str], mode: int = 0o770) -> None:
+def mkdir(path: Path | str, mode: int = 0o770) -> None:
     if not isinstance(path, Path):
         path = Path(path)
     path.mkdir(mode=mode, exist_ok=True)
 
 
-def makedirs(path: Union[Path, str], mode: int = 0o770) -> None:
+def makedirs(path: Path | str, mode: int = 0o770) -> None:
     if not isinstance(path, Path):
         path = Path(path)
     path.mkdir(mode=mode, exist_ok=True, parents=True)
@@ -71,7 +71,7 @@ def makedirs(path: Union[Path, str], mode: int = 0o770) -> None:
 # This function generalizes reading from a .mk configuration file. It is basically meant to
 # generalize the exception handling for all file IO. This function handles all those files
 # that are read with exec().
-def load_mk_file(path: Union[Path, str], default: Any = None, lock: bool = False) -> Any:
+def load_mk_file(path: Path | str, default: Any = None, lock: bool = False) -> Any:
     if not isinstance(path, Path):
         path = Path(path)
 
@@ -101,11 +101,11 @@ def load_mk_file(path: Union[Path, str], default: Any = None, lock: bool = False
 
 
 # A simple wrapper for cases where you only have to read a single value from a .mk file.
-def load_from_mk_file(path: Union[Path, str], key: str, default: Any, lock: bool = False) -> Any:
+def load_from_mk_file(path: Path | str, key: str, default: Any, lock: bool = False) -> Any:
     return load_mk_file(path, {key: default}, lock=False)[key]
 
 
-def save_mk_file(path: Union[Path, str], mk_content: str, add_header: bool = True) -> None:
+def save_mk_file(path: Path | str, mk_content: str, add_header: bool = True) -> None:
     content = ""
 
     if add_header:
@@ -117,18 +117,16 @@ def save_mk_file(path: Union[Path, str], mk_content: str, add_header: bool = Tru
 
 
 # A simple wrapper for cases where you only have to write a single value to a .mk file.
-def save_to_mk_file(
-    path: Union[Path, str], key: str, value: Any, pprint_value: bool = False
-) -> None:
+def save_to_mk_file(path: Path | str, key: str, value: Any, pprint_value: bool = False) -> None:
     format_func = repr
     if pprint_value:
         format_func = pprint.pformat
 
     # mypy complains: "[mypy:] Cannot call function of unknown type"
     if isinstance(value, dict):
-        formated = "%s.update(%s)" % (key, format_func(value))
+        formated = f"{key}.update({format_func(value)})"
     else:
-        formated = "%s += %s" % (key, format_func(value))
+        formated = f"{key} += {format_func(value)}"
 
     save_mk_file(path, formated)
 
@@ -147,31 +145,29 @@ def save_to_mk_file(
 # Handle .mk files that are only holding a python data structure and often
 # directly read via file/open and then parsed using eval.
 # TODO: Consolidate with load_mk_file?
-def load_object_from_file(path: Union[Path, str], *, default: Any, lock: bool = False) -> Any:
+def load_object_from_file(path: Path | str, *, default: Any, lock: bool = False) -> Any:
     with _leave_locked_unless_exception(path) if lock else nullcontext():
         return ObjectStore(Path(path), serializer=DimSerializer()).read_obj(default=default)
 
 
-def load_object_from_pickle_file(
-    path: Union[Path, str], *, default: Any, lock: bool = False
-) -> Any:
+def load_object_from_pickle_file(path: Path | str, *, default: Any, lock: bool = False) -> Any:
     with _leave_locked_unless_exception(path) if lock else nullcontext():
         return ObjectStore(Path(path), serializer=PickleSerializer()).read_obj(default=default)
 
 
-def load_text_from_file(path: Union[Path, str], default: str = "", lock: bool = False) -> str:
+def load_text_from_file(path: Path | str, default: str = "", lock: bool = False) -> str:
     with _leave_locked_unless_exception(path) if lock else nullcontext():
         return ObjectStore(Path(path), serializer=TextSerializer()).read_obj(default=default)
 
 
-def load_bytes_from_file(path: Union[Path, str], default: bytes = b"", lock: bool = False) -> bytes:
+def load_bytes_from_file(path: Path | str, default: bytes = b"", lock: bool = False) -> bytes:
     with _leave_locked_unless_exception(path) if lock else nullcontext():
         return ObjectStore(Path(path), serializer=BytesSerializer()).read_obj(default=default)
 
 
 # A simple wrapper for cases where you want to store a python data
 # structure that is then read by load_data_from_file() again
-def save_object_to_file(path: Union[Path, str], data: Any, pretty: bool = False) -> None:
+def save_object_to_file(path: Path | str, data: Any, pretty: bool = False) -> None:
     serializer = DimSerializer(pretty=pretty)
     # Normally the file is already locked (when data has been loaded before with lock=True),
     # but lock it just to be sure we have the lock on the file.
@@ -184,7 +180,7 @@ def save_object_to_file(path: Union[Path, str], data: Any, pretty: bool = False)
         ObjectStore(Path(path), serializer=serializer).write_obj(data)
 
 
-def save_text_to_file(path: Union[Path, str], content: str) -> None:
+def save_text_to_file(path: Path | str, content: str) -> None:
     if not isinstance(content, str):
         raise TypeError("content argument must be Text, not bytes")
     # Normally the file is already locked (when data has been loaded before with lock=True),
@@ -198,7 +194,7 @@ def save_text_to_file(path: Union[Path, str], content: str) -> None:
         ObjectStore(Path(path), serializer=TextSerializer()).write_obj(content)
 
 
-def save_bytes_to_file(path: Union[Path, str], content: bytes) -> None:
+def save_bytes_to_file(path: Path | str, content: bytes) -> None:
     if not isinstance(content, bytes):
         raise TypeError("content argument must be bytes, not Text")
     # Normally the file is already locked (when data has been loaded before with lock=True),

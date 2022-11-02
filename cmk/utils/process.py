@@ -6,14 +6,14 @@
 import os
 import signal
 from pathlib import Path
-from typing import NewType, Optional
+from typing import NewType
 
 from cmk.utils.store import load_object_from_file
 
 ProcessId = NewType("ProcessId", int)
 
 
-def pid_from_file(pid_file: Path) -> Optional[ProcessId]:
+def pid_from_file(pid_file: Path) -> ProcessId | None:
     """Read a process id from a given pid file"""
     try:
         return ProcessId(int(load_object_from_file(pid_file, default=None)))

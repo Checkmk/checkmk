@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import abc
 import string
-from typing import Final, NamedTuple, Set
+from typing import Final, NamedTuple
 
 from ._misc import Item
 
@@ -33,7 +33,7 @@ class ABCName(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def _legacy_naming_exceptions(cls) -> Set[str]:
+    def _legacy_naming_exceptions(cls) -> set[str]:
         """we allow to maintain a list of exceptions"""
         raise NotImplementedError()
 
@@ -48,7 +48,7 @@ class ABCName(abc.ABC):
             raise ValueError(f"{cls.__name__} initializer must not be empty")
 
         if any(c not in cls.VALID_CHARACTERS for c in plugin_name):
-            invalid = "".join((c for c in plugin_name if c not in cls.VALID_CHARACTERS))
+            invalid = "".join(c for c in plugin_name if c not in cls.VALID_CHARACTERS)
             raise ValueError(
                 f"Invalid characters in {plugin_name!r} for {cls.__name__}: {invalid!r}"
             )
@@ -67,14 +67,14 @@ class ABCName(abc.ABC):
         self._hash: Final = hash(type(self).__name__ + self._value)
 
     def __repr__(self) -> str:
-        return "%s(%r)" % (self.__class__.__name__, self._value)
+        return f"{self.__class__.__name__}({self._value!r})"
 
     def __str__(self) -> str:
         return self._value
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, self.__class__):
-            raise TypeError("cannot compare %r and %r" % (self, other))
+            raise TypeError(f"cannot compare {self!r} and {other!r}")
         return self._value == other._value
 
     def __lt__(self, other: ABCName) -> bool:
@@ -97,19 +97,19 @@ class ABCName(abc.ABC):
 
 class ParsedSectionName(ABCName):
     @classmethod
-    def _legacy_naming_exceptions(cls) -> Set[str]:
+    def _legacy_naming_exceptions(cls) -> set[str]:
         return set()
 
 
 class SectionName(ABCName):
     @classmethod
-    def _legacy_naming_exceptions(cls) -> Set[str]:
+    def _legacy_naming_exceptions(cls) -> set[str]:
         return set()
 
 
 class RuleSetName(ABCName):
     @classmethod
-    def _legacy_naming_exceptions(cls) -> Set[str]:
+    def _legacy_naming_exceptions(cls) -> set[str]:
         """
         allow these names
 
@@ -135,18 +135,18 @@ class CheckPluginName(ABCName):
     MANAGEMENT_PREFIX = "mgmt_"
 
     @classmethod
-    def _legacy_naming_exceptions(cls) -> Set[str]:
+    def _legacy_naming_exceptions(cls) -> set[str]:
         return set()
 
     def is_management_name(self) -> bool:
         return self._value.startswith(self.MANAGEMENT_PREFIX)
 
-    def create_management_name(self) -> "CheckPluginName":
+    def create_management_name(self) -> CheckPluginName:
         if self.is_management_name():
             return self
-        return CheckPluginName("%s%s" % (self.MANAGEMENT_PREFIX, self._value))
+        return CheckPluginName(f"{self.MANAGEMENT_PREFIX}{self._value}")
 
-    def create_basic_name(self) -> "CheckPluginName":
+    def create_basic_name(self) -> CheckPluginName:
         if self.is_management_name():
             return CheckPluginName(self._value[len(self.MANAGEMENT_PREFIX) :])
         return self
@@ -154,7 +154,7 @@ class CheckPluginName(ABCName):
 
 class InventoryPluginName(ABCName):
     @classmethod
-    def _legacy_naming_exceptions(cls) -> Set[str]:
+    def _legacy_naming_exceptions(cls) -> set[str]:
         return set()
 
 

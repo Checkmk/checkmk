@@ -183,8 +183,7 @@ class RulesetMatcher:
 
         assert match_object.host_name is not None
         default: PreprocessedHostRuleset[T] = {}
-        for value in optimized_ruleset.get(match_object.host_name, default):
-            yield value
+        yield from optimized_ruleset.get(match_object.host_name, default)
 
     def is_matching_service_ruleset(
         self, match_object: RulesetMatchObject, ruleset: Ruleset[T]

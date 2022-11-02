@@ -13,22 +13,9 @@ import gzip
 import io
 import pprint
 from collections import Counter
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Any, Callable
-from typing import Counter as TCounter
-from typing import (
-    Dict,
-    Iterable,
-    List,
-    Literal,
-    Mapping,
-    NamedTuple,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
-    Union,
-)
+from typing import Any, Literal, NamedTuple
 
 from cmk.utils import store
 from cmk.utils.type_defs import HostName
@@ -43,33 +30,33 @@ from cmk.utils.type_defs import HostName
 
 SDRawPath = str
 # TODO improve this
-SDRawTree = Dict
+SDRawTree = dict
 
 SDNodeName = str
-SDPath = Tuple[SDNodeName, ...]
+SDPath = tuple[SDNodeName, ...]
 
 SDKey = str
-SDKeys = List[SDKey]
+SDKeys = list[SDKey]
 # TODO be more specific (None, str, float, int, DeltaValue:Tuple of previous)
 SDValue = Any  # needs only to support __eq__
 
-SDPairs = Dict[SDKey, SDValue]
+SDPairs = dict[SDKey, SDValue]
 # TODO merge with cmk.base.api.agent_based.inventory_classes.py::AttrDict
 SDPairsFromPlugins = Mapping[SDKey, SDValue]
-LegacyPairs = Dict[SDKey, SDValue]
+LegacyPairs = dict[SDKey, SDValue]
 
 # TODO SDRows and LegacyRows are the same for now, but SDRows will change in the future
 # adapt werk 12389 if inner table structure changes from List[SDRow] to Dict[SDRowIdent, SDRow]
-SDKeyColumns = List[SDKey]
-SDRowIdent = Tuple[SDValue, ...]
-SDRow = Dict[SDKey, SDValue]
-SDRows = Dict[SDRowIdent, SDRow]
-LegacyRows = List[SDRow]
+SDKeyColumns = list[SDKey]
+SDRowIdent = tuple[SDValue, ...]
+SDRow = dict[SDKey, SDValue]
+SDRows = dict[SDRowIdent, SDRow]
+LegacyRows = list[SDRow]
 
-SDNodes = Dict[SDNodeName, "StructuredDataNode"]
+SDNodes = dict[SDNodeName, "StructuredDataNode"]
 
 SDEncodeAs = Callable
-SDDeltaCounter = TCounter[Literal["new", "changed", "removed"]]
+SDDeltaCounter = Counter[Literal["new", "changed", "removed"]]
 
 # Used for de/serialization and retentions
 ATTRIBUTES_KEY = "Attributes"
@@ -112,8 +99,8 @@ class SDFilter(NamedTuple):
     filter_columns: SDFilterFunc
 
 
-RawIntervalsFromConfig = List[Dict]
-RawRetentionIntervals = Tuple[int, int, int]
+RawIntervalsFromConfig = list[dict]
+RawRetentionIntervals = tuple[int, int, int]
 
 
 class RetentionIntervals(NamedTuple):
@@ -137,8 +124,8 @@ class RetentionIntervals(NamedTuple):
         return cls(*raw_intervals)
 
 
-RawRetentionIntervalsByKeys = Dict[SDKey, RawRetentionIntervals]
-RetentionIntervalsByKeys = Dict[SDKey, RetentionIntervals]
+RawRetentionIntervalsByKeys = dict[SDKey, RawRetentionIntervals]
+RetentionIntervalsByKeys = dict[SDKey, RetentionIntervals]
 
 
 class UpdateResult(NamedTuple):
@@ -240,11 +227,11 @@ def _use_nothing(_key: str) -> Literal[False]:
     return False
 
 
-def _make_choices_filter(choices: Sequence[Union[str, int]]) -> SDFilterFunc:
+def _make_choices_filter(choices: Sequence[str | int]) -> SDFilterFunc:
     return lambda key: key in choices
 
 
-def make_filter(entry: Union[Tuple[SDPath, Optional[SDKeys]], Dict]) -> SDFilter:
+def make_filter(entry: tuple[SDPath, SDKeys | None] | dict) -> SDFilter:
     if isinstance(entry, tuple):
         path, keys = entry
         return (
@@ -271,7 +258,7 @@ def make_filter(entry: Union[Tuple[SDPath, Optional[SDKeys]], Dict]) -> SDFilter
     )
 
 
-def make_filter_from_choice(choice: Union[Tuple[str, List[str]], str, None]) -> SDFilterFunc:
+def make_filter_from_choice(choice: tuple[str, list[str]] | str | None) -> SDFilterFunc:
     # choice is of the form:
     #   - ('choices', ['some', 'keys'])
     #   - 'nothing'
@@ -301,7 +288,7 @@ def make_filter_from_choice(choice: Union[Tuple[str, List[str]], str, None]) -> 
 
 
 class StructuredDataNode:
-    def __init__(self, *, name: SDNodeName = "", path: Optional[SDPath] = None) -> None:
+    def __init__(self, *, name: SDNodeName = "", path: SDPath | None = None) -> None:
         # Only root node has no name or path
         self.name = name
 
@@ -336,7 +323,7 @@ class StructuredDataNode:
 
     def is_equal(self, other: object) -> bool:
         if not isinstance(other, StructuredDataNode):
-            raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
+            raise TypeError(f"Cannot compare {type(self)} with {type(other)}")
 
         if not (self.attributes.is_equal(other.attributes) and self.table.is_equal(other.table)):
             return False
@@ -361,7 +348,7 @@ class StructuredDataNode:
 
     def merge_with(self, other: object) -> StructuredDataNode:
         if not isinstance(other, StructuredDataNode):
-            raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
+            raise TypeError(f"Cannot compare {type(self)} with {type(other)}")
 
         node = StructuredDataNode(name=self.name, path=self.path)
 
@@ -427,18 +414,18 @@ class StructuredDataNode:
         for ident, row in table._rows.items():
             self.table.add_row(ident, row)
 
-    def get_node(self, path: SDPath) -> Optional[StructuredDataNode]:
+    def get_node(self, path: SDPath) -> StructuredDataNode | None:
         return self._get_node(path)
 
-    def get_table(self, path: SDPath) -> Optional[Table]:
+    def get_table(self, path: SDPath) -> Table | None:
         node = self._get_node(path)
         return None if node is None else node.table
 
-    def get_attributes(self, path: SDPath) -> Optional[Attributes]:
+    def get_attributes(self, path: SDPath) -> Attributes | None:
         node = self._get_node(path)
         return None if node is None else node.attributes
 
-    def _get_node(self, path: SDPath) -> Optional[StructuredDataNode]:
+    def _get_node(self, path: SDPath) -> StructuredDataNode | None:
         if not path:
             return self
         node = self._nodes.get(path[0])
@@ -447,9 +434,9 @@ class StructuredDataNode:
     #   ---representation-------------------------------------------------------
 
     def __repr__(self) -> str:
-        return "%s(%s)" % (self.__class__.__name__, pprint.pformat(self._format()))
+        return f"{self.__class__.__name__}({pprint.pformat(self._format())})"
 
-    def _format(self) -> Dict:
+    def _format(self) -> dict:
         # Only used for repr/debug purposes
         return {
             ATTRIBUTES_KEY: self.attributes._format(),
@@ -539,7 +526,7 @@ class StructuredDataNode:
         return node
 
     @staticmethod
-    def _is_table(entries: List) -> bool:
+    def _is_table(entries: list) -> bool:
         # Either we get:
         #   [
         #       {"column1": "value 11", "column2": "value 12",...},
@@ -557,7 +544,7 @@ class StructuredDataNode:
 
     def compare_with(self, other: object, keep_identical: bool = False) -> SDDeltaResult:
         if not isinstance(other, StructuredDataNode):
-            raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
+            raise TypeError(f"Cannot compare {type(self)} with {type(other)}")
 
         counter: SDDeltaCounter = Counter()
         delta_node = StructuredDataNode(name=self.name, path=self.path)
@@ -625,7 +612,7 @@ class StructuredDataNode:
 
     #   ---filtering------------------------------------------------------------
 
-    def get_filtered_node(self, filters: List[SDFilter]) -> StructuredDataNode:
+    def get_filtered_node(self, filters: list[SDFilter]) -> StructuredDataNode:
         filtered = StructuredDataNode(name=self.name, path=self.path)
 
         for f in filters:
@@ -661,16 +648,16 @@ class StructuredDataNode:
 
 # TODO Table: {IDENT: Attributes}?
 
-TableRetentions = Dict[SDRowIdent, RetentionIntervalsByKeys]
+TableRetentions = dict[SDRowIdent, RetentionIntervalsByKeys]
 
 
 class Table:
     def __init__(
         self,
         *,
-        path: Optional[SDPath] = None,
-        key_columns: Optional[SDKeyColumns] = None,
-        retentions: Optional[TableRetentions] = None,
+        path: SDPath | None = None,
+        key_columns: SDKeyColumns | None = None,
+        retentions: TableRetentions | None = None,
     ) -> None:
         if path:
             self.path = path
@@ -697,7 +684,7 @@ class Table:
             self.key_columns = key_columns
 
     @property
-    def rows(self) -> List[SDRow]:
+    def rows(self) -> list[SDRow]:
         return list(self._rows.values())
 
     #   ---common methods-------------------------------------------------------
@@ -707,7 +694,7 @@ class Table:
 
     def is_equal(self, other: object) -> bool:
         if not isinstance(other, Table):
-            raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
+            raise TypeError(f"Cannot compare {type(self)} with {type(other)}")
 
         compared_keys = _compare_dict_keys(old_dict=other._rows, new_dict=self._rows)
         if compared_keys.only_old or compared_keys.only_new:
@@ -723,7 +710,7 @@ class Table:
 
     def merge_with(self, other: object) -> Table:
         if not isinstance(other, Table):
-            raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
+            raise TypeError(f"Cannot compare {type(self)} with {type(other)}")
 
         if self.key_columns == other.key_columns:
             return self._merge_with(other)
@@ -778,7 +765,7 @@ class Table:
         return tuple(self._get_row_value(row[k]) for k in self.key_columns if k in row)
 
     @staticmethod
-    def _get_row_value(value: Union[SDValue, Tuple[SDValue, SDValue]]) -> SDValue:
+    def _get_row_value(value: SDValue | tuple[SDValue, SDValue]) -> SDValue:
         if isinstance(value, tuple):
             # Delta trees are also de/serialized: for these trees we have to
             # extract the value from (old, new) tuple, see als '_*_delta_tree_node'.
@@ -811,7 +798,7 @@ class Table:
         inv_intervals: RetentionIntervals,
     ) -> UpdateResult:
         if not isinstance(other, Table):
-            raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
+            raise TypeError(f"Cannot compare {type(self)} with {type(other)}")
 
         # TODO cleanup
 
@@ -839,7 +826,7 @@ class Table:
                 # Update row with ident-key-values.
                 old_row.update({k: other._rows[ident][k] for k in other.key_columns})
                 self.add_row(ident, old_row)
-                reasons.append("added row below %r" % (ident,))
+                reasons.append(f"added row below {ident!r}")
 
         for ident in compared_idents.both:
             compared_keys = _compare_dict_keys(
@@ -880,7 +867,7 @@ class Table:
                     }
                 )
                 self.add_row(ident, row)
-                reasons.append("added row below %r" % (ident,))
+                reasons.append(f"added row below {ident!r}")
 
         for ident in compared_idents.only_new:
             for key in self._rows[ident]:
@@ -899,7 +886,7 @@ class Table:
     def set_retentions(self, table_retentions: TableRetentions) -> None:
         self.retentions = table_retentions
 
-    def get_retention_intervals(self, key: SDKey, row: SDRow) -> Optional[RetentionIntervals]:
+    def get_retention_intervals(self, key: SDKey, row: SDRow) -> RetentionIntervals | None:
         return self.retentions.get(self._make_row_ident(row), {}).get(key)
 
     def remove_retentions(self) -> None:
@@ -908,9 +895,9 @@ class Table:
     #   ---representation-------------------------------------------------------
 
     def __repr__(self) -> str:
-        return "%s(%s)" % (self.__class__.__name__, pprint.pformat(self._format()))
+        return f"{self.__class__.__name__}({pprint.pformat(self._format())})"
 
-    def _format(self) -> Dict:
+    def _format(self) -> dict:
         # Only used for repr/debug purposes
         return {
             _KEY_COLUMNS_KEY: self.key_columns,
@@ -966,14 +953,14 @@ class Table:
         return table
 
     @staticmethod
-    def _get_default_key_columns(rows: List[SDRow]) -> SDKeyColumns:
-        return sorted(set(k for r in rows for k in r))
+    def _get_default_key_columns(rows: list[SDRow]) -> SDKeyColumns:
+        return sorted({k for r in rows for k in r})
 
     #   ---delta----------------------------------------------------------------
 
     def compare_with(self, other: object, keep_identical: bool = False) -> TDeltaResult:
         if not isinstance(other, Table):
-            raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
+            raise TypeError(f"Cannot compare {type(self)} with {type(other)}")
 
         counter: SDDeltaCounter = Counter()
         key_columns = sorted(set(self.key_columns).union(other.key_columns))
@@ -1031,8 +1018,8 @@ class Attributes:
     def __init__(
         self,
         *,
-        path: Optional[SDPath] = None,
-        retentions: Optional[RetentionIntervalsByKeys] = None,
+        path: SDPath | None = None,
+        retentions: RetentionIntervalsByKeys | None = None,
     ) -> None:
         if path:
             self.path = path
@@ -1056,7 +1043,7 @@ class Attributes:
 
     def is_equal(self, other: object) -> bool:
         if not isinstance(other, Attributes):
-            raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
+            raise TypeError(f"Cannot compare {type(self)} with {type(other)}")
 
         return self.pairs == other.pairs
 
@@ -1065,7 +1052,7 @@ class Attributes:
 
     def merge_with(self, other: object) -> Attributes:
         if not isinstance(other, Attributes):
-            raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
+            raise TypeError(f"Cannot compare {type(self)} with {type(other)}")
 
         attributes = Attributes(
             path=self.path,
@@ -1081,7 +1068,7 @@ class Attributes:
 
     #   ---attributes methods---------------------------------------------------
 
-    def add_pairs(self, pairs: Union[SDPairs, SDPairsFromPlugins]) -> None:
+    def add_pairs(self, pairs: SDPairs | SDPairsFromPlugins) -> None:
         self.pairs.update(pairs)
 
     #   ---retentions-----------------------------------------------------------
@@ -1094,7 +1081,7 @@ class Attributes:
         inv_intervals: RetentionIntervals,
     ) -> UpdateResult:
         if not isinstance(other, Attributes):
-            raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
+            raise TypeError(f"Cannot compare {type(self)} with {type(other)}")
 
         reasons = []
         retentions: RetentionIntervalsByKeys = {}
@@ -1130,7 +1117,7 @@ class Attributes:
     def set_retentions(self, intervals_by_keys: RetentionIntervalsByKeys) -> None:
         self.retentions = intervals_by_keys
 
-    def get_retention_intervals(self, key: SDKey) -> Optional[RetentionIntervals]:
+    def get_retention_intervals(self, key: SDKey) -> RetentionIntervals | None:
         return self.retentions.get(key)
 
     def remove_retentions(self) -> None:
@@ -1139,9 +1126,9 @@ class Attributes:
     #   ---representation-------------------------------------------------------
 
     def __repr__(self) -> str:
-        return "%s(%s)" % (self.__class__.__name__, pprint.pformat(self._format()))
+        return f"{self.__class__.__name__}({pprint.pformat(self._format())})"
 
-    def _format(self) -> Dict:
+    def _format(self) -> dict:
         # Only used for repr/debug purposes
         return {
             _PAIRS_KEY: self.pairs,
@@ -1178,7 +1165,7 @@ class Attributes:
 
     def compare_with(self, other: object, keep_identical: bool = False) -> ADeltaResult:
         if not isinstance(other, Attributes):
-            raise TypeError("Cannot compare %s with %s" % (type(self), type(other)))
+            raise TypeError(f"Cannot compare {type(self)} with {type(other)}")
 
         delta_dict_result = _compare_dicts(
             old_dict=other.pairs,
@@ -1218,7 +1205,7 @@ class Attributes:
 #   '----------------------------------------------------------------------'
 
 
-def _compare_dicts(*, old_dict: Dict, new_dict: Dict, keep_identical: bool) -> DDeltaResult:
+def _compare_dicts(*, old_dict: dict, new_dict: dict, keep_identical: bool) -> DDeltaResult:
     """
     Format of compared entries:
       new:          {k: (None, new_value), ...}
@@ -1228,8 +1215,8 @@ def _compare_dicts(*, old_dict: Dict, new_dict: Dict, keep_identical: bool) -> D
     """
     compared_keys = _compare_dict_keys(old_dict=old_dict, new_dict=new_dict)
 
-    identical: Dict = {}
-    changed: Dict = {}
+    identical: dict = {}
+    changed: dict = {}
     for k in compared_keys.both:
         new_value = new_dict[k]
         old_value = old_dict[k]
@@ -1241,7 +1228,7 @@ def _compare_dicts(*, old_dict: Dict, new_dict: Dict, keep_identical: bool) -> D
     new = {k: _new_delta_tree_node(new_dict[k]) for k in compared_keys.only_new}
     removed = {k: _removed_delta_tree_node(old_dict[k]) for k in compared_keys.only_old}
 
-    delta_dict: Dict = {}
+    delta_dict: dict = {}
     delta_dict.update(new)
     delta_dict.update(changed)
     delta_dict.update(removed)
@@ -1258,12 +1245,12 @@ def _compare_dicts(*, old_dict: Dict, new_dict: Dict, keep_identical: bool) -> D
 
 
 class ComparedDictKeys(NamedTuple):
-    only_old: Set
-    both: Set
-    only_new: Set
+    only_old: set
+    both: set
+    only_new: set
 
 
-def _compare_dict_keys(*, old_dict: Dict, new_dict: Dict) -> ComparedDictKeys:
+def _compare_dict_keys(*, old_dict: dict, new_dict: dict) -> ComparedDictKeys:
     """
     Returns the set relationships of the keys between two dictionaries:
     - relative complement of new_dict in old_dict
@@ -1278,23 +1265,23 @@ def _compare_dict_keys(*, old_dict: Dict, new_dict: Dict) -> ComparedDictKeys:
     )
 
 
-def _get_filtered_dict(dict_: Dict, filter_func: SDFilterFunc) -> Dict:
+def _get_filtered_dict(dict_: dict, filter_func: SDFilterFunc) -> dict:
     return {k: v for k, v in dict_.items() if filter_func(k)}
 
 
-def _new_delta_tree_node(value: SDValue) -> Tuple[None, SDValue]:
+def _new_delta_tree_node(value: SDValue) -> tuple[None, SDValue]:
     return (None, value)
 
 
-def _removed_delta_tree_node(value: SDValue) -> Tuple[SDValue, None]:
+def _removed_delta_tree_node(value: SDValue) -> tuple[SDValue, None]:
     return (value, None)
 
 
-def _changed_delta_tree_node(old_value: SDValue, new_value: SDValue) -> Tuple[SDValue, SDValue]:
+def _changed_delta_tree_node(old_value: SDValue, new_value: SDValue) -> tuple[SDValue, SDValue]:
     return (old_value, new_value)
 
 
-def _identical_delta_tree_node(value: SDValue) -> Tuple[SDValue, SDValue]:
+def _identical_delta_tree_node(value: SDValue) -> tuple[SDValue, SDValue]:
     return (value, value)
 
 
@@ -1309,7 +1296,7 @@ def _serialize_retentions(
 
 
 def _deserialize_retentions(
-    raw_intervals_by_keys: Optional[RawRetentionIntervalsByKeys],
+    raw_intervals_by_keys: RawRetentionIntervalsByKeys | None,
 ) -> RetentionIntervalsByKeys:
     if not raw_intervals_by_keys:
         return {}

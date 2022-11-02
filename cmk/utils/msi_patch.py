@@ -10,7 +10,7 @@ import uuid
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final, Literal, Tuple
+from typing import Final, Literal
 
 import yaml
 
@@ -63,7 +63,7 @@ def write_state_file(path_to_state: Path | None, pos: int, code: str) -> None:
         yaml.dump(state, f, encoding="utf-8", allow_unicode=True)
 
 
-def load_state_file(path_to_state: Path | None) -> Tuple[int, str]:
+def load_state_file(path_to_state: Path | None) -> tuple[int, str]:
     """returns offset and value if found, offset is -1 - not found"""
 
     if path_to_state is not None and path_to_state.exists():

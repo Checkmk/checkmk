@@ -59,20 +59,18 @@ from cmk.utils.exceptions import MKGeneralException
 PasswordLookupType = Literal["password", "store"]
 # We still need "Union" because of https://github.com/python/mypy/issues/11098
 PasswordId = Union[str, tuple[PasswordLookupType, str]]
-Password = TypedDict(
-    "Password",
-    {
-        "title": str,
-        "comment": str,
-        "docu_url": str,
-        "password": str,
-        # Only owners can edit the password
-        # None -> Administrators (having the permission "Write access to all passwords")
-        # str -> Name of the contact group owning the password
-        "owned_by": str | None,
-        "shared_with": list[str],
-    },
-)
+
+
+class Password(TypedDict):
+    title: str
+    comment: str
+    docu_url: str
+    password: str
+    # Only owners can edit the password
+    # None -> Administrators (having the permission "Write access to all passwords")
+    # str -> Name of the contact group owning the password
+    owned_by: str | None
+    shared_with: list[str]
 
 
 def password_store_path() -> Path:
@@ -133,7 +131,7 @@ def save(stored_passwords: Mapping[str, str], custom_path: Path | None = None) -
         # The GUI does this automatically by having only one line of input field,
         # but other sources (like the REST API) use this function as well.
         password_on_one_line = pw.replace("\n", "")
-        content += "%s:%s\n" % (ident, password_on_one_line)
+        content += f"{ident}:{password_on_one_line}\n"
 
     store.save_bytes_to_file(custom_path or password_store_path(), _obfuscate(content))
 
@@ -279,7 +277,7 @@ class PasswordStore:
 
     @staticmethod
     def decrypt(raw: bytes) -> str:
-        _version, rest = (
+        _version, rest = (  # noqa: F841
             raw[: PasswordStore.VERSION_BYTE_LENGTH],
             raw[PasswordStore.VERSION_BYTE_LENGTH :],
         )

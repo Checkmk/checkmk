@@ -4,12 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ipaddress
-from typing import Dict
 
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import ServiceName
 
-TranslationOptions = Dict  # TODO: Improve this type
+TranslationOptions = dict  # TODO: Improve this type
 
 
 def translate_hostname(translation: TranslationOptions, hostname: str) -> str:

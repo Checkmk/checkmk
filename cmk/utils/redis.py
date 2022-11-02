@@ -2,8 +2,9 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Callable
 from enum import Enum
-from typing import Any, Callable, Optional, TYPE_CHECKING, TypeVar
+from typing import Any, TYPE_CHECKING, TypeVar
 
 from redis import Redis
 from redis.client import Pipeline
@@ -44,7 +45,7 @@ def query_redis(
     integrity_callback: Callable[[], IntegrityCheckResponse],
     update_callback: Callable[[Pipeline], Any],
     query_callback: Callable[[], QueryData],
-    timeout: Optional[int] = None,
+    timeout: int | None = None,
     ttl_query_lock: int = 5,
     ttl_update_lock: int = 10,
 ) -> QueryData:

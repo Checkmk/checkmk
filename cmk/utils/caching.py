@@ -48,7 +48,7 @@ class CacheManager:
     def __contains__(self, name: str) -> bool:
         return name in self._caches
 
-    def get(self, name: str) -> "DictCache":
+    def get(self, name: str) -> DictCache:
         return self._caches[name]
 
     def clear(self) -> None:

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Optional, Pattern
+from re import Pattern
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -120,7 +120,7 @@ def hosttags_match_taglist(hosttags, required_tags):
     return True
 
 
-def convert_pattern_list(patterns: List[str]) -> Optional[Pattern[str]]:
+def convert_pattern_list(patterns: list[str]) -> Pattern[str] | None:
     """Compiles a list of service match patterns to a single regex
 
     Reducing the number of individual regex matches improves the performance dramatically.

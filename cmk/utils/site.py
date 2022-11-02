@@ -6,7 +6,6 @@
 import os
 from functools import lru_cache
 from pathlib import Path
-from typing import Dict, Optional
 
 from livestatus import SiteId
 
@@ -14,7 +13,7 @@ import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 
-OMDConfig = Dict[str, str]
+OMDConfig = dict[str, str]
 
 
 @lru_cache
@@ -31,7 +30,7 @@ def url_prefix() -> str:
     return "/%s/" % omd_site()
 
 
-def get_omd_config(omd_root: Optional[Path] = None) -> OMDConfig:
+def get_omd_config(omd_root: Path | None = None) -> OMDConfig:
     if omd_root is None:
         omd_root = cmk.utils.paths.omd_root
 
@@ -45,7 +44,7 @@ def get_omd_config(omd_root: Optional[Path] = None) -> OMDConfig:
     return omd_config
 
 
-def get_apache_port(omd_root: Optional[Path] = None) -> int:
+def get_apache_port(omd_root: Path | None = None) -> int:
     port = get_omd_config(omd_root).get("CONFIG_APACHE_TCP_PORT")
     if port is None:
         return 80

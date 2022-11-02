@@ -6,10 +6,11 @@
 import json
 import logging
 import time
+from collections.abc import Callable, Iterable, Iterator
 from contextlib import suppress
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, Iterator, List, Literal, NewType, Optional, Tuple
+from typing import Any, Literal, NewType
 
 import livestatus
 
@@ -21,29 +22,29 @@ from cmk.utils.type_defs import HostName, MetricName, Seconds, ServiceName, Time
 
 logger = logging.getLogger("cmk.prediction")
 
-TimeWindow = Tuple[Timestamp, Timestamp, Seconds]
+TimeWindow = tuple[Timestamp, Timestamp, Seconds]
 RRDColumnFunction = Callable[[Timestamp, Timestamp], "TimeSeries"]
-TimeSeriesValue = Optional[float]
-TimeSeriesValues = List[TimeSeriesValue]
+TimeSeriesValue = float | None
+TimeSeriesValues = list[TimeSeriesValue]
 ConsolidationFunctionName = str
 Timegroup = NewType("Timegroup", str)
-EstimatedLevel = Optional[float]
-EstimatedLevels = Tuple[EstimatedLevel, EstimatedLevel, EstimatedLevel, EstimatedLevel]
-PredictionParameters = Dict[str, Any]  # TODO: improve this type
+EstimatedLevel = float | None
+EstimatedLevels = tuple[EstimatedLevel, EstimatedLevel, EstimatedLevel, EstimatedLevel]
+PredictionParameters = dict[str, Any]  # TODO: improve this type
 
-_DataStatValue = Optional[float]
-_DataStat = List[_DataStatValue]
-DataStats = List[_DataStat]
+_DataStatValue = float | None
+_DataStat = list[_DataStatValue]
+DataStats = list[_DataStat]
 
 _LevelsType = Literal["absolute", "relative", "stdev"]
-_LevelsSpec = Tuple[_LevelsType, Tuple[float, float]]
+_LevelsSpec = tuple[_LevelsType, tuple[float, float]]
 
 
 @dataclass(frozen=True)
 class PredictionInfo:
     name: Timegroup
     time: int
-    range: Tuple[Timestamp, Timestamp]
+    range: tuple[Timestamp, Timestamp]
     cf: ConsolidationFunctionName
     dsname: MetricName
     slice: int
@@ -69,10 +70,10 @@ class PredictionInfo:
 
 @dataclass(frozen=True)
 class PredictionData:
-    columns: List[str]
+    columns: list[str]
     points: DataStats
     num_points: int
-    data_twindow: List[Timestamp]
+    data_twindow: list[Timestamp]
     step: Seconds
 
     @classmethod
@@ -100,7 +101,7 @@ def timezone_at(timestamp: float) -> int:
     return time.altzone if is_dst(timestamp) else time.timezone
 
 
-def rrd_timestamps(twindow: TimeWindow) -> List[Timestamp]:
+def rrd_timestamps(twindow: TimeWindow) -> list[Timestamp]:
     start, end, step = twindow
     if step == 0:
         return []
@@ -108,7 +109,7 @@ def rrd_timestamps(twindow: TimeWindow) -> List[Timestamp]:
 
 
 def aggregation_functions(
-    series: TimeSeriesValues, aggr: Optional[ConsolidationFunctionName]
+    series: TimeSeriesValues, aggr: ConsolidationFunctionName | None
 ) -> TimeSeriesValue:
     """Aggregate data in series list according to aggr
 
@@ -154,7 +155,7 @@ class TimeSeries:
     def __init__(
         self,
         data: TimeSeriesValues,
-        timewindow: Optional[tuple[Timestamp, Timestamp, Seconds]] = None,
+        timewindow: tuple[Timestamp, Timestamp, Seconds] | None = None,
         **metadata: str,
     ) -> None:
         if timewindow is None:
@@ -226,11 +227,11 @@ class TimeSeries:
             return dwsa
         return self.values
 
-    def time_data_pairs(self) -> List[Tuple[Timestamp, TimeSeriesValue]]:
+    def time_data_pairs(self) -> list[tuple[Timestamp, TimeSeriesValue]]:
         return list(zip(rrd_timestamps(self.twindow), self.values))
 
     def __repr__(self) -> str:
-        return "TimeSeries(%s, timewindow=%s)" % (self.values, self.twindow)
+        return f"TimeSeries({self.values}, timewindow={self.twindow})"
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, TimeSeries):
@@ -253,17 +254,17 @@ class TimeSeries:
         yield from self.values
 
 
-def lq_logic(filter_condition: str, values: List[str], join: str) -> str:
+def lq_logic(filter_condition: str, values: list[str], join: str) -> str:
     """JOIN with (Or, And) FILTER_CONDITION the VALUES for a livestatus query"""
-    conditions = "".join("%s %s\n" % (filter_condition, livestatus.lqencode(x)) for x in values)
+    conditions = "".join(f"{filter_condition} {livestatus.lqencode(x)}\n" for x in values)
     connective = "%s: %d\n" % (join, len(values)) if len(values) > 1 else ""
     return conditions + connective
 
 
 def livestatus_lql(
-    host_names: List[HostName],
-    columns: List[str],
-    service_description: Optional[ServiceName] = None,
+    host_names: list[HostName],
+    columns: list[str],
+    service_description: ServiceName | None = None,
 ) -> str:
     query_filter = "Columns: %s\n" % " ".join(columns)
     query_filter += lq_logic(
@@ -276,7 +277,7 @@ def livestatus_lql(
     else:
         what = "service"
         query_filter += lq_logic("Filter: service_description =", [service_description], "Or")
-    return "GET %ss\n%s" % (what, query_filter)
+    return f"GET {what}s\n{query_filter}"
 
 
 def get_rrd_data(
@@ -311,11 +312,11 @@ def get_rrd_data(
     """
 
     step = 1
-    rpn = "%s.%s" % (varname, cf.lower())  # "MAX" -> "max"
+    rpn = f"{varname}.{cf.lower()}"  # "MAX" -> "max"
     point_range = ":".join(
         livestatus.lqencode(str(x)) for x in (fromtime, untiltime, step, max_entries)
     )
-    column = "rrddata:m1:%s:%s" % (rpn, point_range)
+    column = f"rrddata:m1:{rpn}:{point_range}"
 
     lql = livestatus_lql([hostname], [column], service_description) + "OutputFormat: python\n"
 
@@ -398,19 +399,19 @@ class PredictionStore:
                     file_path.unlink()
                     logger.log(VERBOSE, "Removed obsolete prediction %s", file_path.name)
 
-    def get_info(self, timegroup: Timegroup) -> Optional[PredictionInfo]:
+    def get_info(self, timegroup: Timegroup) -> PredictionInfo | None:
         raw = self._read_file(self._info_file(timegroup))
         return None if raw is None else PredictionInfo.loads(raw, name=timegroup)
 
-    def get_data(self, timegroup: Timegroup) -> Optional[PredictionData]:
+    def get_data(self, timegroup: Timegroup) -> PredictionData | None:
         raw = self._read_file(self._data_file(timegroup))
         return None if raw is None else PredictionData.loads(raw)
 
-    def _read_file(self, file_path: Path) -> Optional[str]:
+    def _read_file(self, file_path: Path) -> str | None:
         try:
             with file_path.open() as fh:
                 return fh.read()
-        except IOError:
+        except OSError:
             logger.log(VERBOSE, "No previous prediction for group %s available.", file_path.stem)
         except ValueError:
             logger.log(VERBOSE, "Invalid prediction file %s, old format", file_path)
@@ -420,11 +421,11 @@ class PredictionStore:
 
 def estimate_levels(
     *,
-    reference_value: Optional[float],
-    stdev: Optional[float],
-    levels_lower: Optional[_LevelsSpec],
-    levels_upper: Optional[_LevelsSpec],
-    levels_upper_lower_bound: Optional[Tuple[float, float]],
+    reference_value: float | None,
+    stdev: float | None,
+    levels_lower: _LevelsSpec | None,
+    levels_upper: _LevelsSpec | None,
+    levels_upper_lower_bound: tuple[float, float] | None,
     levels_factor: float,
 ) -> EstimatedLevels:
     if not reference_value:  # No reference data available
@@ -474,9 +475,9 @@ def _get_levels_from_params(
     levels: _LevelsSpec,
     sig: Literal[1, -1],
     reference_value: float,
-    stdev: Optional[float],
+    stdev: float | None,
     levels_factor: float,
-) -> Tuple[float, float]:
+) -> tuple[float, float]:
 
     levels_type, (warn, crit) = levels
 
@@ -497,7 +498,7 @@ def _get_reference_deviation(
     *,
     levels_type: _LevelsType,
     reference_value: float,
-    stdev: Optional[float],
+    stdev: float | None,
     levels_factor: float,
 ) -> float:
     if levels_type == "absolute":

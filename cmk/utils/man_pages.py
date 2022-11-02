@@ -15,10 +15,11 @@ import re
 import subprocess
 import sys
 from collections import defaultdict
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from io import StringIO
 from pathlib import Path
-from typing import Final, Iterable, Mapping, Optional, Sequence, TextIO
+from typing import Final, TextIO
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -38,9 +39,9 @@ class ManPage:
     license: str
     distribution: str
     description: str
-    item: Optional[str]
-    discovery: Optional[str]
-    cluster: Optional[str]
+    item: str | None
+    discovery: str | None
+    cluster: str | None
 
     @classmethod
     def fallback(cls, path: Path, name: str, msg: str, content: str) -> "ManPage":
@@ -323,7 +324,7 @@ def _is_valid_basename(name: str) -> bool:
     return not name.startswith(".") and not name.endswith("~")
 
 
-def man_page_path(name: str, man_page_dirs: Optional[Iterable[Path]] = None) -> Optional[Path]:
+def man_page_path(name: str, man_page_dirs: Iterable[Path] | None = None) -> Path | None:
     if not _is_valid_basename(name):
         return None
 
@@ -338,7 +339,7 @@ def man_page_path(name: str, man_page_dirs: Optional[Iterable[Path]] = None) -> 
     return None
 
 
-def all_man_pages(man_page_dirs: Optional[Iterable[Path]] = None) -> Mapping[str, str]:
+def all_man_pages(man_page_dirs: Iterable[Path] | None = None) -> Mapping[str, str]:
     if man_page_dirs is None:
         man_page_dirs = _get_man_page_dirs()
 
@@ -359,7 +360,7 @@ def print_man_page_table() -> None:
         except MKGeneralException as e:
             sys.stderr.write(str("ERROR: %s" % e))
 
-    tty.print_table([str("Check type"), str("Title")], [tty.bold, tty.normal], table)
+    tty.print_table(["Check type", "Title"], [tty.bold, tty.normal], table)
 
 
 def get_title_from_man_page(path: Path) -> str:
@@ -392,7 +393,7 @@ def print_man_page_browser(cat: ManPageCatalogPath = ()) -> None:
 
     if entries and subtree_names:
         sys.stderr.write(
-            str("ERROR: Catalog path %s contains man pages and subfolders.\n") % ("/".join(cat))
+            "ERROR: Catalog path %s contains man pages and subfolders.\n" % ("/".join(cat))
         )
 
     if entries:
@@ -539,7 +540,7 @@ def _parse_man_page(name: str, path: Path) -> ManPage:
 
 
 # TODO: accepting the path here would make things a bit easier.
-def load_man_page(name: str, man_page_dirs: Optional[Iterable[Path]] = None) -> Optional[ManPage]:
+def load_man_page(name: str, man_page_dirs: Iterable[Path] | None = None) -> ManPage | None:
     path = man_page_path(name, man_page_dirs)
     if path is None:
         return None
@@ -582,7 +583,7 @@ class ManPageRenderer:
         try:
             self._paint_man_page()
         except Exception as e:
-            sys.stdout.write(str("ERROR: Invalid check manpage %s: %s\n") % (self.name, e))
+            sys.stdout.write(f"ERROR: Invalid check manpage {self.name}: {e}\n")
 
     def _paint_man_page(self) -> None:
         self._print_header()
@@ -630,7 +631,7 @@ class ManPageRenderer:
     def _print_subheader(self, line: str) -> None:
         raise NotImplementedError()
 
-    def _print_line(self, line: str, attr: Optional[str] = None, no_markup: bool = False) -> None:
+    def _print_line(self, line: str, attr: str | None = None, no_markup: bool = False) -> None:
         raise NotImplementedError()
 
     def _print_begin_splitlines(self) -> None:
@@ -700,7 +701,7 @@ class ConsoleManPageRenderer(ManPageRenderer):
             + "\n"
         )
 
-    def _print_line(self, line: str, attr: Optional[str] = None, no_markup: bool = False) -> None:
+    def _print_line(self, line: str, attr: str | None = None, no_markup: bool = False) -> None:
         if attr is None:
             attr = self._normal_color
 
@@ -801,7 +802,7 @@ class NowikiManPageRenderer(ManPageRenderer):
         pass
 
     def index_entry(self) -> str:
-        return '<tr><td class="tt">%s</td><td>[check_%s|%s]</td></tr>\n' % (
+        return '<tr><td class="tt">{}</td><td>[check_{}|{}]</td></tr>\n'.format(
             self.name,
             self.name,
             self._page.title,
@@ -811,7 +812,7 @@ class NowikiManPageRenderer(ManPageRenderer):
         self.paint()
         return self.__output.getvalue()
 
-    def _markup(self, line: str, ignored: Optional[str] = None) -> str:
+    def _markup(self, line: str, ignored: str | None = None) -> str:
         # preserve the inner { and } in double braces and then replace the braces left
         return (
             line.replace("{{", "{&#123;")
@@ -832,12 +833,12 @@ class NowikiManPageRenderer(ManPageRenderer):
         self.__output.write("<b>%s</b>\n" % title)
 
     def _print_info_line(self, left: str, right: str) -> None:
-        self.__output.write("<tr><td>%s</td><td>%s</td></tr>\n" % (left, right))
+        self.__output.write(f"<tr><td>{left}</td><td>{right}</td></tr>\n")
 
     def _print_subheader(self, line: str) -> None:
         self.__output.write("H2:%s\n" % line)
 
-    def _print_line(self, line: str, attr: Optional[str] = None, no_markup: bool = False) -> None:
+    def _print_line(self, line: str, attr: str | None = None, no_markup: bool = False) -> None:
         if no_markup:
             self.__output.write("%s\n" % line)
         else:
@@ -869,7 +870,7 @@ if __name__ == "__main__":
         help="use the given renderer (default: console)",
     )
     _args = _parser.parse_args()
-    cmk.utils.paths.local_check_manpages_dir = Path(__file__).parent.parent.parent / str("checkman")
+    cmk.utils.paths.local_check_manpages_dir = Path(__file__).parent.parent.parent / "checkman"
     for check in _args.checks:
         try:
             print("----------------------------------------", check)

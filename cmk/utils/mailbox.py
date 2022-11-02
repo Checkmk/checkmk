@@ -27,9 +27,10 @@ import socket
 import sys
 import time
 import warnings
+from collections.abc import Callable, Iterable, Sequence
 from contextlib import suppress
 from datetime import datetime
-from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Tuple, Union
+from typing import Any, Union
 
 import urllib3
 from exchangelib import (  # type: ignore[import]
@@ -47,13 +48,13 @@ import cmk.utils.password_store
 Args = argparse.Namespace
 Status = int
 PerfData = Any
-CheckResult = Tuple[Status, str, PerfData]
+CheckResult = tuple[Status, str, PerfData]
 
 MailIndex = int
 
 Message = Any
 
-MailMessages = Dict[MailIndex, Message]
+MailMessages = dict[MailIndex, Message]
 
 
 class EWS:
@@ -71,8 +72,8 @@ class EWS:
     def mail_ids_by_date(
         self,
         *,
-        before: Optional[float] = None,
-        after: Optional[float] = None,
+        before: float | None = None,
+        after: float | None = None,
     ) -> Iterable[float]:
         # exchangelib needs a timezone to be applied in order to select mails by
         # date. Providing none (and thus keep the default) results in errors
@@ -153,7 +154,7 @@ def _mutf_7_encode(string: str) -> bytes:
     b'Gr&APYA3w-e'
     """
     res = []
-    b64_buffer: List[str] = []
+    b64_buffer: list[str] = []
 
     def encode_b64_buffer() -> bytes:
         return (
@@ -193,9 +194,7 @@ def extract_folder_names(folder_list: Iterable[bytes]) -> Iterable[str]:
     ]
 
 
-def verified_result(
-    data: Union[Tuple[Union[bytes, str], List[Union[bytes, str]]], bytes]
-) -> List[Union[bytes, str]]:
+def verified_result(data: tuple[bytes | str, list[bytes | str]] | bytes) -> list[bytes | str]:
     """Return the payload part of the (badly typed) result of IMAP/POP functions or eventlually
     raise an exception if the result is not "OK"
     """
@@ -203,11 +202,11 @@ def verified_result(
         if isinstance(data[0], str):
             assert isinstance(data[1], list)
             if not data[0] in {"OK", "BYE"}:
-                raise RuntimeError("Server responded %r, %r" % (data[0], data[1]))
+                raise RuntimeError(f"Server responded {data[0]!r}, {data[1]!r}")
             return data[1]
         if isinstance(data[0], bytes):
             if not data[0].startswith(b"+OK"):
-                raise RuntimeError("Server responded %r, %r" % (data[0], data[1]))
+                raise RuntimeError(f"Server responded {data[0]!r}, {data[1]!r}")
             assert isinstance(data[1], list)
             return data[1]
         raise AssertionError()
@@ -378,13 +377,13 @@ class Mailbox:
             raise AssertionError("connection must be IMAP4[_SSL] or EWS")
 
         except Exception as exc:
-            raise FetchMailsError("Could not select folder %r: %s" % (folder_name, exc))
+            raise FetchMailsError(f"Could not select folder {folder_name!r}: {exc}")
 
     def mails_by_date(
         self,
         *,
-        before: Optional[float] = None,
-        after: Optional[float] = None,
+        before: float | None = None,
+        after: float | None = None,
     ) -> Iterable[float]:
         """Retrieve mail timestamps from currently selected mailbox folder
         before: if set, mails before that timestamp (rounded down to days)
@@ -461,7 +460,7 @@ class Mailbox:
         except Exception as exc:
             raise CleanupMailboxError("Failed to delete mail: %r" % exc) from exc
 
-    def copy_mails(self, mails: List[int], folder: str) -> None:
+    def copy_mails(self, mails: list[int], folder: str) -> None:
         assert self._connection and self.inbox_protocol() == "IMAP4"
         try:
             for mail_index in mails:
@@ -642,7 +641,9 @@ def _output_check_result(text: str, perfdata: PerfData) -> None:
     sys.stdout.write("%s" % text)
     if perfdata:
         sys.stdout.write(" | ")
-        sys.stdout.write(" ".join("%s=%s" % (p[0], ";".join(map(str, p[1:]))) for p in perfdata))
+        sys.stdout.write(
+            " ".join("{}={}".format(p[0], ";".join(map(str, p[1:]))) for p in perfdata)
+        )
     sys.stdout.write("\n")
 
 

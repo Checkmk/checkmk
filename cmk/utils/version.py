@@ -23,7 +23,7 @@ import time
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, Final, NamedTuple, Tuple, Union
+from typing import Any, Final, NamedTuple, Union
 
 from typing_extensions import assert_never
 
@@ -184,20 +184,9 @@ class _StableDailyVersion(_VersionDate, _VersionBase):
     pass
 
 
-_NoneDailyVersion = Union[
-    _StableVersion,
-    _BetaVersion,
-    _InnovationVersion,
-    _PatchVersion,
-]
-_DailyVersion = Union[
-    _MasterDailyVersion,
-    _StableDailyVersion,
-]
-_Version = Union[
-    _NoneDailyVersion,
-    _DailyVersion,
-]
+_NoneDailyVersion = _StableVersion | _BetaVersion | _InnovationVersion | _PatchVersion
+_DailyVersion = _MasterDailyVersion | _StableDailyVersion
+_Version = Union[_NoneDailyVersion | _DailyVersion]
 
 
 @functools.total_ordering
@@ -206,12 +195,12 @@ class Version:
     _pat_base: str = r"([1-9]?\d)\.([1-9]?\d)\.([1-9]?\d)"  # e.g. "2.1.0"
     _pat_date: str = r"([1-9]\d{3})\.([0-1]\d)\.([0-3]\d)"  # e.g. "2021.12.24"
     _pat_build: str = r"([bip])(\d+)"  # b=beta, i=innov, p=patch; e.g. "b4"
-    _pat_stable: str = r"%s(?:%s)?" % (_pat_base, _pat_build)  # e.g. "2.1.0p17"
+    _pat_stable: str = rf"{_pat_base}(?:{_pat_build})?"  # e.g. "2.1.0p17"
     # e.g. daily of version branch: "2.1.0-2021.12.24",
     # daily of master branch: "2021.12.24"
     # daily of master sandbox branch: "2022.06.02-sandbox-lm-2.2-thing"
     # daily of version sandbox branch: "2.1.0-2022.06.02-sandbox-lm-2.2-thing"
-    _pat_daily: str = "(?:%s-)?%s(?:-sandbox.+)?" % (_pat_base, _pat_date)
+    _pat_daily: str = f"(?:{_pat_base}-)?{_pat_date}(?:-sandbox.+)?"
 
     def __init__(self, vstring: str) -> None:
         try:
@@ -245,7 +234,7 @@ class Version:
             return _PatchVersion(int(major), int(minor), int(sub), int(patch))
 
         raise ValueError(
-            'Invalid version type "%s". Cannot parse version string "%s".' % (vtype, vstring)
+            f'Invalid version type "{vtype}". Cannot parse version string "{vstring}".'
         )
 
     @classmethod
@@ -265,7 +254,7 @@ class Version:
         )
 
     def __repr__(self) -> str:
-        return "%s('%s')" % (self.__class__.__name__, self)
+        return f"{self.__class__.__name__}('{self}')"
 
     def __str__(self) -> str:
         v = self.version
@@ -327,8 +316,8 @@ class Version:
         if isinstance(o_v, _MasterDailyVersion):
             raise ValueError('%s does not have a version base "<major>.<minor>.<sub>"' % o_v)
 
-        version_base: Tuple[int, int, int] = (v.major, v.minor, v.sub)
-        o_version_base: Tuple[int, int, int] = (o_v.major, o_v.minor, o_v.sub)
+        version_base: tuple[int, int, int] = (v.major, v.minor, v.sub)
+        o_version_base: tuple[int, int, int] = (o_v.major, o_v.minor, o_v.sub)
 
         return (version_base > o_version_base) - (version_base < o_version_base)
 
@@ -337,17 +326,17 @@ class Version:
 
         # Compare vtype and patch number with tuples holding numeric values for vtype and patch
         # ([0-3], [0-9]+)
-        numeric_build: Tuple[int, int] = self._get_numeric_build(v)
-        o_numeric_build: Tuple[int, int] = self._get_numeric_build(o_v)
+        numeric_build: tuple[int, int] = self._get_numeric_build(v)
+        o_numeric_build: tuple[int, int] = self._get_numeric_build(o_v)
 
         return (numeric_build > o_numeric_build) - (numeric_build < o_numeric_build)
 
     @staticmethod
-    def _get_numeric_build(v: _Version) -> Tuple[int, int]:
+    def _get_numeric_build(v: _Version) -> tuple[int, int]:
         if isinstance(v, (_MasterDailyVersion, _StableDailyVersion)):
             raise ValueError('%s does not have a version build "<vtype><patch>"' % v)
 
-        vtype_map: Dict[str, int] = {
+        vtype_map: dict[str, int] = {
             "i": 0,  # innovation
             "b": 1,  # beta
             "s": 2,  # stable
@@ -497,7 +486,7 @@ def parse_check_mk_version(v: str) -> int:
     return int("%02d%02d%02d%05d" % (int(major), int(minor), sub, val))
 
 
-def base_version_parts(version: str) -> Tuple[int, int, int]:
+def base_version_parts(version: str) -> tuple[int, int, int]:
     match = re.match(r"(\d+).(\d+).(\d+)", version)
     if not match or len(match.groups()) != 3:
         raise ValueError(_("Unable to parse version: %r") % version)
@@ -751,7 +740,7 @@ def _check_minimum_patch_release(
 # and diagnostics.
 
 
-def get_general_version_infos() -> Dict[str, Any]:
+def get_general_version_infos() -> dict[str, Any]:
     return {
         "time": time.time(),
         "os": _get_os_info(),

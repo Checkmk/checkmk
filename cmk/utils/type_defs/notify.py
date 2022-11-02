@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Literal, NewType, Optional, Tuple, TypedDict, Union
+from typing import Any, Literal, NewType, TypedDict
 
 from ._misc import TimeperiodName
 
@@ -12,10 +12,10 @@ ContactName = str
 HandlerName = str
 HandlerParameters = dict[str, Any]
 
-NotifyPluginParamsList = List[str]
-NotifyPluginParamsDict = Dict[str, Any]  # TODO: Improve this
-NotifyPluginParams = Union[NotifyPluginParamsList, NotifyPluginParamsDict]
-NotifyBulkParameters = Dict[str, Any]  # TODO: Improve this
+NotifyPluginParamsList = list[str]
+NotifyPluginParamsDict = dict[str, Any]  # TODO: Improve this
+NotifyPluginParams = NotifyPluginParamsList | NotifyPluginParamsDict
+NotifyBulkParameters = dict[str, Any]  # TODO: Improve this
 NotificationType = Literal[
     "ACKNOWLEDGEMENT",
     "DOWNTIMECANCELLED",
@@ -52,7 +52,7 @@ class EventRule(TypedDict, total=False):
     match_checktype: list[str]
     match_contactgroups: list[str]
     match_contacts: list[str]
-    match_ec: Union[Literal[False], dict[str, Any]]  # cmk/gui/wato/pages/notifications.py
+    match_ec: Literal[False] | dict[str, Any]  # cmk/gui/wato/pages/notifications.py
     match_escalation: tuple[int, int]
     match_escalation_throttle: tuple[int, int]
     match_exclude_hosts: list[str]
@@ -78,19 +78,19 @@ class EventRule(TypedDict, total=False):
     notify_method: NotifyPluginParams
     notify_plugin: tuple[str, NotifyPluginParams]
     # tuple is the "new" way but we still have compatable code
-    bulk: Union[tuple[Literal["always", "timeperiod"], NotifyBulkParameters], NotifyBulkParameters]
+    bulk: tuple[Literal["always", "timeperiod"], NotifyBulkParameters] | NotifyBulkParameters
 
 
-NotifyRuleInfo = Tuple[str, EventRule, str]
+NotifyRuleInfo = tuple[str, EventRule, str]
 NotifyPluginName = str
-NotifyPluginInfo = Tuple[
-    ContactName, NotifyPluginName, NotifyPluginParams, Optional[NotifyBulkParameters]
+NotifyPluginInfo = tuple[
+    ContactName, NotifyPluginName, NotifyPluginParams, NotifyBulkParameters | None
 ]
-NotifyAnalysisInfo = Tuple[List[NotifyRuleInfo], List[NotifyPluginInfo]]
+NotifyAnalysisInfo = tuple[list[NotifyRuleInfo], list[NotifyPluginInfo]]
 
-UUIDs = List[Tuple[float, str]]
-NotifyBulk = Tuple[str, float, Union[None, str, int], Union[None, str, int], int, UUIDs]
-NotifyBulks = List[NotifyBulk]
+UUIDs = list[tuple[float, str]]
+NotifyBulk = tuple[str, float, None | str | int, None | str | int, int, UUIDs]
+NotifyBulks = list[NotifyBulk]
 
 
 class DisabledNotificationsOptions(TypedDict, total=False):
@@ -100,13 +100,13 @@ class DisabledNotificationsOptions(TypedDict, total=False):
 
 class Contact(TypedDict, total=False):
     alias: str
-    contactgroups: Union[tuple[str, ...], list[str]]
+    contactgroups: tuple[str, ...] | list[str]
     disable_notifications: DisabledNotificationsOptions
     email: str
     name: str
     pager: str
     notification_rules: list[EventRule]
-    authorized_sites: Optional[list[str]]
+    authorized_sites: list[str] | None
     notifications_enabled: bool
     host_notification_options: str
     service_notification_options: str

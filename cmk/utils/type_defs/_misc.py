@@ -11,7 +11,7 @@ import re
 import sys
 from collections.abc import Container, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Generic, Literal, NamedTuple, NewType, Optional, TypeVar, Union
+from typing import Any, Generic, Literal, NamedTuple, NewType, TypeVar, Union
 
 if sys.version_info < (3, 11):
     # Generic typed dict
@@ -47,8 +47,8 @@ RuleValue = Any  # TODO: Improve this type
 class RuleConditionsSpec(TypedDict, total=False):
     host_tags: Any
     host_labels: Any
-    host_name: Optional[HostOrServiceConditions]
-    service_description: Optional[HostOrServiceConditions]
+    host_name: HostOrServiceConditions | None
+    service_description: HostOrServiceConditions | None
     service_labels: Any
     host_folder: Any
 
@@ -73,11 +73,11 @@ class RuleOptionsSpec(TypedDict, total=False):
 
 @dataclasses.dataclass()
 class RuleOptions:
-    disabled: Optional[bool]
+    disabled: bool | None
     description: str
     comment: str
     docu_url: str
-    predefined_condition_id: Optional[str] = None
+    predefined_condition_id: str | None = None
 
     @classmethod
     def from_config(
@@ -111,21 +111,20 @@ HostOrServiceConditionRegex = TypedDict(
     "HostOrServiceConditionRegex",
     {"$regex": str},
 )
-HostOrServiceConditionsSimple = list[Union[HostOrServiceConditionRegex, str]]
+HostOrServiceConditionsSimple = list[HostOrServiceConditionRegex | str]
 HostOrServiceConditionsNegated = TypedDict(
     "HostOrServiceConditionsNegated",
     {"$nor": HostOrServiceConditionsSimple},
 )
 
-HostOrServiceConditions = Union[
-    HostOrServiceConditionsSimple,
-    HostOrServiceConditionsNegated,
-]  # TODO: refine type
+HostOrServiceConditions = (
+    HostOrServiceConditionsSimple | HostOrServiceConditionsNegated
+)  # TODO: refine type
 
 Ruleset = list[RuleSpec[T]]
 CheckPluginNameStr = str
 ActiveCheckPluginName = str
-Item = Optional[str]
+Item = str | None
 Labels = Mapping[str, str]
 LabelSources = dict[str, str]
 
@@ -137,32 +136,32 @@ TagIDs = set[TagID]
 TagConditionNE = TypedDict(
     "TagConditionNE",
     {
-        "$ne": Optional[TagID],
+        "$ne": TagID | None,
     },
 )
 TagConditionOR = TypedDict(
     "TagConditionOR",
     {
-        "$or": Sequence[Optional[TagID]],
+        "$or": Sequence[TagID | None],
     },
 )
 TagConditionNOR = TypedDict(
     "TagConditionNOR",
     {
-        "$nor": Sequence[Optional[TagID]],
+        "$nor": Sequence[TagID | None],
     },
 )
-TagCondition = Union[Optional[TagID], TagConditionNE, TagConditionOR, TagConditionNOR]
+TagCondition = TagID | None | TagConditionNE | TagConditionOR | TagConditionNOR
 # Here, we have data structures such as
 # {'ip-v4': {'$ne': 'ip-v4'}, 'snmp_ds': {'$nor': ['no-snmp', 'snmp-v1']}, 'taggroup_02': None, 'aux_tag_01': 'aux_tag_01', 'address_family': 'ip-v4-only'}
 TaggroupIDToTagCondition = Mapping[TaggroupID, TagCondition]
 TagsOfHosts = dict[HostName, TaggroupIDToTagID]
 
-LabelConditions = dict[str, Union[str, TagConditionNE]]
+LabelConditions = dict[str, str | TagConditionNE]
 
 
 class GroupedTagSpec(TypedDict):
-    id: Optional[TagID]
+    id: TagID | None
     title: str
     aux_tags: list[TagID]
 
@@ -206,10 +205,10 @@ MetricName = str
 MetricTuple = tuple[
     MetricName,
     float,
-    Optional[float],
-    Optional[float],
-    Optional[float],
-    Optional[float],
+    float | None,
+    float | None,
+    float | None,
+    float | None,
 ]
 
 ClusterMode = Literal["native", "failover", "worst", "best"]
@@ -240,10 +239,10 @@ class DiscoveryResult:
     # None  -> No error occured
     # ""    -> Not monitored (disabled host)
     # "..." -> An error message about the failed discovery
-    error_text: Optional[str] = None
+    error_text: str | None = None
 
     # An optional text to describe the services changed by the operation
-    diff_text: Optional[str] = None
+    diff_text: str | None = None
 
 
 class UserId(str):
@@ -269,7 +268,7 @@ class UserId(str):
         if not cls.USER_ID_REGEX.match(text):
             raise ValueError(f"Invalid username: {text!r}")
 
-    def __new__(cls, text: str) -> "UserId":
+    def __new__(cls, text: str) -> UserId:
         cls.validate(text)
         return super().__new__(cls, text)
 
@@ -280,7 +279,7 @@ SNMPDetectBaseType = list[list[tuple[str, str, bool]]]
 
 # TODO: TimeperiodSpec should really be a class or at least a NamedTuple! We
 # can easily transform back and forth for serialization.
-TimeperiodSpec = dict[str, Union[str, list[str], list[tuple[str, str]]]]
+TimeperiodSpec = dict[str, str | list[str] | list[tuple[str, str]]]
 TimeperiodSpecs = dict[TimeperiodName, TimeperiodSpec]
 
 
@@ -302,7 +301,7 @@ def timeperiod_spec_alias(timeperiod_spec: TimeperiodSpec, default: str = "") ->
     alias = timeperiod_spec.get("alias", default)
     if isinstance(alias, str):
         return alias
-    raise Exception("invalid timeperiod alias %r" % (alias,))
+    raise Exception(f"invalid timeperiod alias {alias!r}")
 
 
 class EvalableFloat(float):
@@ -346,7 +345,7 @@ class ExitSpec(TypedDict, total=False):
 
 class HostLabelValueDict(TypedDict):
     value: str
-    plugin_name: Optional[str]
+    plugin_name: str | None
 
 
 DiscoveredHostLabelsDict = dict[str, HostLabelValueDict]

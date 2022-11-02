@@ -6,11 +6,12 @@ import pickle
 import pprint
 import tempfile
 from ast import literal_eval
+from collections.abc import Iterator
 from contextlib import contextmanager
 from os import getgid, getuid
 from pathlib import Path
 from stat import S_IMODE, S_IWOTH
-from typing import Any, Final, Generic, Iterator, Protocol, TypeVar
+from typing import Any, Final, Generic, Protocol, TypeVar
 
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout
@@ -64,7 +65,7 @@ class DimSerializer:
 
     def serialize(self, data: Any) -> bytes:
         data_str = pprint.pformat(data) if self.pretty else repr(data)
-        return f"{data_str}\n".encode("utf-8")
+        return f"{data_str}\n".encode()
 
     @staticmethod
     def deserialize(raw: bytes) -> Any:

@@ -6,7 +6,7 @@
 import abc
 import logging
 import sys
-from typing import Dict, Final, Optional
+from typing import Final
 
 import cmk.utils.misc
 import cmk.utils.render as render
@@ -29,13 +29,13 @@ class ABCResourceObserver(abc.ABC):
         self._num_check_cycles = 0
         self._hint = "<unknown>"
 
-    def _register_check(self, hint: Optional[str]) -> None:
+    def _register_check(self, hint: str | None) -> None:
         self._num_check_cycles += 1
         if hint is not None:
             self._hint = hint
 
     @abc.abstractmethod
-    def check_resources(self, hint: Optional[str]) -> None:
+    def check_resources(self, hint: str | None) -> None:
         """hint should provide reasonable additional information useful for analysis.
         Good examples are hostname, service name or raw command."""
         raise NotImplementedError()
@@ -117,7 +117,7 @@ class AbstractMemoryObserver(ABCResourceObserver):
         ]:
             self._dump("APPROXIMATE SIZES: %s" % title, module.dump_sizes(), None)
 
-    def _dump(self, header: str, sizes: Dict[str, int], limit: Optional[int]) -> None:
+    def _dump(self, header: str, sizes: dict[str, int], limit: int | None) -> None:
         self._warning("=== %s ====" % header)
         for varname, size_bytes in sorted(sizes.items(), key=lambda x: x[1], reverse=True)[:limit]:
             self._warning("%10s %s" % (render.fmt_bytes(size_bytes), varname))
@@ -132,7 +132,7 @@ class FetcherMemoryObserver(AbstractMemoryObserver):
     def _context(self) -> str:
         return f'[cycle {self._num_check_cycles}, command "{self._hint}"]'
 
-    def check_resources(self, hint: Optional[str]) -> None:
+    def check_resources(self, hint: str | None) -> None:
         self._register_check(hint)
 
         if not self._validate_size():

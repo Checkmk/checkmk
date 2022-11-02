@@ -7,11 +7,10 @@ to all components of Check_MK."""
 
 import os
 from pathlib import Path
-from typing import Union
 
 
 # One bright day, when every path is really a Path, this can die... :-)
-def _path(*args: Union[str, Path]) -> str:
+def _path(*args: str | Path) -> str:
     return str(Path(*args))
 
 
@@ -23,7 +22,7 @@ def _omd_path_str(path: str) -> str:
     return str(_omd_path(path))
 
 
-def _local_path(global_path: Union[str, Path]) -> Path:
+def _local_path(global_path: str | Path) -> Path:
     return Path(_path(omd_root, "local", Path(global_path).relative_to(omd_root)))
 
 

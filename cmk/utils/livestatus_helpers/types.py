@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import abc
-from typing import Any, Literal, Optional, Type
+from typing import Any, Literal
 
 from cmk.utils.livestatus_helpers.expressions import (
     BinaryExpression,
@@ -79,7 +79,7 @@ class Column:
         self,
         name: str,
         col_type: LivestatusType,
-        description: Optional[str] = None,
+        description: str | None = None,
     ):
         """A representation of a livestatus column.
 
@@ -112,10 +112,10 @@ class Column:
             object:
         """
         self.name = name
-        self.label_name: Optional[str] = None
+        self.label_name: str | None = None
         self.type: LivestatusType = col_type
         self.expr = ListExpression(name) if col_type == "list" else ScalarExpression(name)
-        self.table: Type[Table] = NoTable
+        self.table: type[Table] = NoTable
 
         self.__doc__ = description
 
@@ -160,7 +160,7 @@ class Column:
         copy.label_name = label_name
         return copy
 
-    def __get__(self, obj: object, obj_type: Type[Table]) -> Column:
+    def __get__(self, obj: object, obj_type: type[Table]) -> Column:
         # As we don't know on which Table this Column is located, we use
         # the descriptor protocol during attribute access to find out.
         if self.table is NoTable:
@@ -203,9 +203,9 @@ class Column:
 
 
 def expr_to_tree(
-    table: Type[Table],
+    table: type[Table],
     query_expr: QueryExpression,
-) -> Optional[ExpressionDict]:
+) -> ExpressionDict | None:
     """Transform the query-expression to a dict-tree.
 
     Examples:

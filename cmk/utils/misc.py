@@ -14,7 +14,7 @@ import time
 from collections.abc import Callable, Iterator, Mapping, MutableMapping, Sequence
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, ParamSpec, Type, TypeVar
+from typing import Any, ParamSpec, TypeVar
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import HostAddress
@@ -52,7 +52,7 @@ def key_config_paths(a: Path) -> tuple[tuple[str, ...], int, tuple[str, ...]]:
 
 
 def total_size(
-    o: Any, handlers: dict[Type[Any], Callable[[Any], Iterator[object]]] | None = None
+    o: Any, handlers: dict[type[Any], Callable[[Any], Iterator[object]]] | None = None
 ) -> int:
     """Returns the approximate memory footprint an object and all of its contents.
 
@@ -67,7 +67,7 @@ def total_size(
     if handlers is None:
         handlers = {}
 
-    all_handlers: dict[Type[Any], Callable[[Any], Iterator[object]]] = {
+    all_handlers: dict[type[Any], Callable[[Any], Iterator[object]]] = {
         tuple: iter,
         list: iter,
         dict: lambda d: itertools.chain.from_iterable(d.items()),

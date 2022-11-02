@@ -10,7 +10,7 @@ import time
 import uuid
 from logging import Logger
 from pathlib import Path
-from typing import Final, Literal, NewType, Optional, TypedDict, Union
+from typing import Final, Literal, NewType, TypedDict
 
 import livestatus
 
@@ -76,7 +76,7 @@ def notification_message(plugin: NotificationPluginName, context: NotificationCo
     service = context.get("SERVICEDESC")
     if service:
         what = "SERVICE NOTIFICATION"
-        spec = "%s;%s" % (hostname, service)
+        spec = f"{hostname};{service}"
         state = context["SERVICESTATE"]
         output = context["SERVICEOUTPUT"]
     else:
@@ -85,7 +85,7 @@ def notification_message(plugin: NotificationPluginName, context: NotificationCo
         state = context["HOSTSTATE"]
         output = context["HOSTOUTPUT"]
     # NOTE: There are actually 3 more additional fields, which we don't use: author, comment and long plugin output.
-    return "%s: %s;%s;%s;%s;%s" % (
+    return "{}: {};{};{};{};{}".format(
         what,
         contact,
         spec,
@@ -106,12 +106,12 @@ def notification_progress_message(
     service = context.get("SERVICEDESC")
     if service:
         what = "SERVICE NOTIFICATION PROGRESS"
-        spec = "%s;%s" % (hostname, service)
+        spec = f"{hostname};{service}"
     else:
         what = "HOST NOTIFICATION PROGRESS"
         spec = hostname
     state = _state_for(exit_code)
-    return "%s: %s;%s;%s;%s;%s" % (
+    return "{}: {};{};{};{};{}".format(
         what,
         contact,
         spec,
@@ -132,14 +132,14 @@ def notification_result_message(
     service = context.get("SERVICEDESC")
     if service:
         what = "SERVICE NOTIFICATION RESULT"
-        spec = "%s;%s" % (hostname, service)
+        spec = f"{hostname};{service}"
     else:
         what = "HOST NOTIFICATION RESULT"
         spec = hostname
     state = _state_for(exit_code)
     comment = " -- ".join(output)
     short_output = output[-1] if output else ""
-    return "%s: %s;%s;%s;%s;%s;%s" % (
+    return "{}: {};{};{};{};{};{}".format(
         what,
         contact,
         spec,
@@ -150,7 +150,7 @@ def notification_result_message(
     )
 
 
-def ensure_utf8(logger_: Optional[Logger] = None) -> None:
+def ensure_utf8(logger_: Logger | None = None) -> None:
     # Make sure that mail(x) is using UTF-8. Otherwise we cannot send notifications
     # with non-ASCII characters. Unfortunately we do not know whether C.UTF-8 is
     # available. If e.g. mail detects a non-Ascii character in the mail body and
@@ -173,8 +173,8 @@ def ensure_utf8(logger_: Optional[Logger] = None) -> None:
     )
     if exit_code != 0:
         if not logger_:
-            raise MKGeneralException("%s: %r. %s" % (error_msg, exit_code, not_found_msg))
-        logger_.info("%s: %r" % (error_msg, exit_code))
+            raise MKGeneralException(f"{error_msg}: {exit_code!r}. {not_found_msg}")
+        logger_.info(f"{error_msg}: {exit_code!r}")
         logger_.info(not_found_msg)
         return
 
@@ -198,9 +198,9 @@ def ensure_utf8(logger_: Optional[Logger] = None) -> None:
 def create_spoolfile(
     logger_: Logger,
     spool_dir: Path,
-    data: Union[
-        NotificationForward, NotificationResult, NotificationViaPlainMail, NotificationViaPlugin
-    ],
+    data: (
+        NotificationForward | NotificationResult | NotificationViaPlainMail | NotificationViaPlugin
+    ),
 ) -> None:
     spool_dir.mkdir(parents=True, exist_ok=True)
     file_path = spool_dir / str(uuid.uuid4())

@@ -93,7 +93,7 @@ class UnaryExpression(abc.ABC):
         return BinaryExpression(self, other_expr, operator)
 
     def __repr__(self) -> str:
-        return "<%s %s 0x%x>" % (self.__class__.__name__, self.value, id(self))
+        return f"<{self.__class__.__name__} {self.value} 0x{id(self):x}>"
 
     @abc.abstractmethod
     def __eq__(self, other: Primitives) -> BinaryExpression:  # type: ignore[override]
@@ -293,7 +293,7 @@ class BinaryExpression(QueryExpression):
         self._header = header
 
     def __repr__(self) -> str:
-        return "%s(%s %s %s)" % (
+        return "{}({} {} {})".format(
             self._header,
             self.left.value,
             self.operator,
@@ -301,7 +301,7 @@ class BinaryExpression(QueryExpression):
         )
 
     def __str__(self) -> str:
-        return "%s %s %s" % (self.left.value, self.operator, self.right.value)
+        return f"{self.left.value} {self.operator} {self.right.value}"
 
     def render(self) -> RenderIntermediary:
         return [(self._header, str(self))]

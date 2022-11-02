@@ -6,9 +6,10 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Final, Iterable, NamedTuple, Tuple, Union
+from typing import Final, NamedTuple
 
 from cryptography.hazmat.primitives.asymmetric.rsa import (
     generate_private_key,
@@ -66,11 +67,11 @@ class RootCA(NamedTuple):
     rsa: RSAPrivateKeyWithSerialization
 
     @classmethod
-    def load(cls, path: Path) -> "RootCA":
+    def load(cls, path: Path) -> RootCA:
         return cls(*load_cert_and_private_key(path))
 
     @classmethod
-    def load_or_create(cls, path: Path, name: str, days_valid: int = _DEFAULT_VALIDITY) -> "RootCA":
+    def load_or_create(cls, path: Path, name: str, days_valid: int = _DEFAULT_VALIDITY) -> RootCA:
         try:
             return cls.load(path)
         except FileNotFoundError:
@@ -90,7 +91,7 @@ class RootCA(NamedTuple):
         self,
         name: str,
         days_valid: int = _DEFAULT_VALIDITY,
-    ) -> Tuple[Certificate, RSAPrivateKeyWithSerialization]:
+    ) -> tuple[Certificate, RSAPrivateKeyWithSerialization]:
         private_key = _make_private_key()
         cert = _sign_csr(
             _make_csr(
@@ -118,7 +119,7 @@ def root_cert_path(ca_dir: Path) -> Path:
     return ca_dir / "ca.pem"
 
 
-def load_cert_and_private_key(path_pem: Path) -> Tuple[Certificate, RSAPrivateKeyWithSerialization]:
+def load_cert_and_private_key(path_pem: Path) -> tuple[Certificate, RSAPrivateKeyWithSerialization]:
     return (
         load_pem_x509_certificate(
             pem_bytes := path_pem.read_bytes(),
@@ -267,7 +268,7 @@ def _make_subject_name(cn: str) -> Name:
 
 
 def _rsa_public_key_from_cert_or_csr(
-    c: Union[Certificate, CertificateSigningRequest],
+    c: Certificate | CertificateSigningRequest,
     /,
 ) -> RSAPublicKey:
     assert isinstance(

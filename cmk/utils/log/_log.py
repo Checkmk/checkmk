@@ -8,7 +8,7 @@ import sys
 from logging.handlers import WatchedFileHandler
 from os import PathLike
 from pathlib import Path
-from typing import IO, Optional, Union
+from typing import IO
 
 from cmk.utils.paths import log_dir
 
@@ -63,7 +63,7 @@ def setup_console_logging() -> None:
     setup_logging_handler(sys.stdout, get_formatter("%(message)s"))
 
 
-def open_log(log_file_path: Union[str, Path]) -> IOLog:
+def open_log(log_file_path: str | Path) -> IOLog:
     """Open logfile and fall back to stderr if this is not successfull
     The opened file-like object is returned.
     """
@@ -95,7 +95,7 @@ def setup_watched_file_logging_handler(
     logger.addHandler(handler)
 
 
-def setup_logging_handler(stream: IOLog, formatter: Optional[logging.Formatter] = None) -> None:
+def setup_logging_handler(stream: IOLog, formatter: logging.Formatter | None = None) -> None:
     """This method enables all log messages to be written to the given
     stream file object. The messages are formatted in Check_MK standard
     logging format.
@@ -116,7 +116,7 @@ def get_default_formatter() -> logging.Formatter:
 
 def modify_logging_handler(
     handler: logging.Handler,
-    formatter: Optional[logging.Formatter],
+    formatter: logging.Formatter | None,
 ) -> None:
     """Changes logging behavior. Normally used by fetcher to prevent
     non-formatted output to stdout"""

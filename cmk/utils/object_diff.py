@@ -59,8 +59,8 @@ def pretty_print_diff(diff: DeepDiff) -> str:
     type_t1 = get_type(diff.t1).__name__
     type_t2 = get_type(diff.t2).__name__
 
-    val_t1 = '"{}"'.format(str(diff.t1)) if type_t1 == "str" else str(diff.t1)
-    val_t2 = '"{}"'.format(str(diff.t2)) if type_t2 == "str" else str(diff.t2)
+    val_t1 = f'"{str(diff.t1)}"' if type_t1 == "str" else str(diff.t1)
+    val_t2 = f'"{str(diff.t2)}"' if type_t2 == "str" else str(diff.t2)
 
     return PRETTY_FORM_TEXTS.get(diff.report_type, "").format(
         diff_path=diff_path(diff), type_t1=type_t1, type_t2=type_t2, val_t1=val_t1, val_t2=val_t2

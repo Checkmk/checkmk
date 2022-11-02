@@ -5,7 +5,7 @@
 
 from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Any, Type
+from typing import Any
 
 from livestatus import LivestatusResponse, MultiSiteConnection
 
@@ -92,7 +92,7 @@ class ResultRow(dict):
         raise AttributeError(f"{key}: Setting of attributes not allowed.")
 
 
-def _get_column(table_class: Type[Table], col: str) -> Column:
+def _get_column(table_class: type[Table], col: str) -> Column:
     """Strip prefixes from column names and return the correct column
 
     Examples:
@@ -222,7 +222,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
         if len(_tables) != 1:
             raise ValueError(f"Query doesn't specify a single table: {_tables!r}")
 
-        self.table: Type[Table] = _tables.pop()
+        self.table: type[Table] = _tables.pop()
 
     def filter(self, filter_expr: QueryExpression) -> "Query":
         """Apply additional filters to an existing query.
@@ -639,7 +639,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
 
                 table_name = parts[1]
                 try:
-                    table_class: Type[Table] = getattr(tables, table_name.title())
+                    table_class: type[Table] = getattr(tables, table_name.title())
                 except AttributeError:
                     raise ValueError(f"Table {table_name} was not defined in the tables module.")
                 break
@@ -690,7 +690,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
 
 
 def _parse_line(
-    table: Type[Table],
+    table: type[Table],
     filter_string: str,
 ) -> BinaryExpression:
     """Parse a single filter line into a BinaryExpression

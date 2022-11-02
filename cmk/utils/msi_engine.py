@@ -124,7 +124,7 @@ def _patch_msi_files(use_dir: Path, version_build: str) -> None:
                         new_size = file_stats.st_size
                         words[3] = str(new_size)
                     else:
-                        _verbose("'{}' doesn't exist".format(work_file))
+                        _verbose(f"'{work_file}' doesn't exist")
                     break  # one file per table
 
             # The version of this file is different from the msi installer version !
@@ -190,8 +190,8 @@ def _copy_file_safe(s: Path, *, d: Path) -> bool:
     try:
         shutil.copy(s, d)
         return True
-    except IOError as ex:
-        _verbose("exception in copy safe {}".format(ex))
+    except OSError as ex:
+        _verbose(f"exception in copy safe {ex}")
     return False
 
 
@@ -222,7 +222,7 @@ def _strip_ascii_suffix(version: str) -> str:
 def generate_product_version(version: str, *, revision_text: str) -> str:
     major, minor, build = "1", "0", "0"
     try:
-        major, minor, build = [x.lstrip("0") for x in version.split("-")[0].split(".")[:3]]
+        major, minor, build = (x.lstrip("0") for x in version.split("-")[0].split(".")[:3])
         minor = minor or "0"
         build = build or "0"
         if len(major) > 3:
@@ -238,7 +238,7 @@ def generate_product_version(version: str, *, revision_text: str) -> str:
 
 # tested
 def _export_msi_file_table(exe_dir: Path, *, name: str, msi_in: Path, out_dir: Path) -> None:
-    _verbose("Export table %s from file %s" % (name, msi_in))
+    _verbose(f"Export table {name} from file {msi_in}")
     exe = exe_dir / "msiinfo"
     if not exe.exists():
         bail_out(f"{exe} is absent")

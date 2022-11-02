@@ -141,7 +141,7 @@ class OK(Result[T_co, E_co]):
         self._ok: Final[T_co] = ok
 
     def __repr__(self) -> str:
-        return "%s(%r)" % (type(self).__name__, self.ok)
+        return f"{type(self).__name__}({self.ok!r})"
 
     def __hash__(self) -> int:
         return hash(self.ok)
@@ -226,7 +226,7 @@ class Error(Result[T_co, E_co]):
         self._error: Final[E_co] = error
 
     def __repr__(self) -> str:
-        return "%s(%r)" % (type(self).__name__, self.error)
+        return f"{type(self).__name__}({self.error!r})"
 
     def __hash__(self) -> int:
         return hash(self.error)

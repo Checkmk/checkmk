@@ -20,9 +20,9 @@ import re
 import socket
 import statistics
 import time
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from contextlib import contextmanager
-from typing import Any, Iterator, Literal
+from typing import Any, Literal
 from unittest import mock
 
 from livestatus import LivestatusTestingError, MultiSiteConnection, SiteConfigurations, SiteId

@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Mapping, Optional, Protocol, Tuple
+from collections.abc import Mapping
+from typing import Protocol
 
 
 class HTTPProxyConfig(Protocol):
-    def to_requests_proxies(self) -> Optional[Mapping[str, str]]:
+    def to_requests_proxies(self) -> Mapping[str, str] | None:
         ...
 
     def serialize(self) -> str:
@@ -65,7 +66,7 @@ class ExplicitProxyConfig:
         return isinstance(o, ExplicitProxyConfig) and self._url == o._url
 
 
-def deserialize_http_proxy_config(serialized_config: Optional[str]) -> HTTPProxyConfig:
+def deserialize_http_proxy_config(serialized_config: str | None) -> HTTPProxyConfig:
     """
     >>> deserialize_http_proxy_config("FROM_ENVIRONMENT") == EnvironmentProxyConfig()
     True
@@ -84,7 +85,7 @@ def deserialize_http_proxy_config(serialized_config: Optional[str]) -> HTTPProxy
 
 
 def http_proxy_config_from_user_setting(
-    rulespec_value: Tuple[str, Optional[str]],
+    rulespec_value: tuple[str, str | None],
     http_proxies_global_settings: Mapping[str, Mapping[str, str]],
 ) -> HTTPProxyConfig:
     """Returns a proxy config object to be used for HTTP requests

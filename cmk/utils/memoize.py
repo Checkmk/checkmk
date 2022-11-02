@@ -9,7 +9,7 @@ given function arguments."""
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any, Type
+from typing import Any
 
 # The functions that violate this checker are borrowed from official python
 # code and are done for performance reasons.
@@ -23,7 +23,7 @@ def _make_key(
     args: tuple,
     kwds: dict,
     kwd_mark: tuple = (object(),),
-    fasttypes: set[Type] = {int, str},
+    fasttypes: set[type] = {int, str},
     type: Callable = type,
     len: Callable = len,
 ) -> int | str | _HashedSeq:

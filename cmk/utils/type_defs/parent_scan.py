@@ -3,10 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Optional, Tuple
-
 from ._misc import HostAddress, HostName
 
-Gateways = List[
-    Tuple[Optional[Tuple[Optional[HostName], HostAddress, Optional[HostName]]], str, int, str]
-]
+Gateways = list[tuple[tuple[HostName | None, HostAddress, HostName | None] | None, str, int, str]]

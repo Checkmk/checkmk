@@ -10,8 +10,9 @@ are just for optical output purposes."""
 import abc
 import math
 import time
+from collections.abc import Sequence
 from datetime import timedelta
-from typing import final, Optional, Sequence, Type, Union
+from typing import final
 
 from cmk.utils.i18n import _
 from cmk.utils.type_defs import Seconds
@@ -70,20 +71,20 @@ class SecondsRenderer(Renderer):
 
 
 # NOTE: strftime's format *must* be of type str, both in Python 2 and 3.
-def date(timestamp: Optional[float]) -> str:
+def date(timestamp: float | None) -> str:
     return time.strftime(str(_("%Y-%m-%d")), time.localtime(timestamp))
 
 
-def date_and_time(timestamp: Optional[float]) -> str:
-    return "%s %s" % (date(timestamp), time_of_day(timestamp))
+def date_and_time(timestamp: float | None) -> str:
+    return f"{date(timestamp)} {time_of_day(timestamp)}"
 
 
 # NOTE: strftime's format *must* be of type str, both in Python 2 and 3.
-def time_of_day(timestamp: Optional[float]) -> str:
+def time_of_day(timestamp: float | None) -> str:
     return time.strftime(str(_("%H:%M:%S")), time.localtime(timestamp))
 
 
-def timespan(seconds: Union[float, int]) -> str:
+def timespan(seconds: float | int) -> str:
     return str(timedelta(seconds=int(seconds)))
 
 
@@ -94,7 +95,7 @@ def time_since(timestamp: int) -> str:
 class Age:
     """Format time difference seconds into approximated human readable text"""
 
-    def __init__(self, secs: float, precision: Optional[int] = None) -> None:
+    def __init__(self, secs: float, precision: int | None = None) -> None:
         super().__init__()
         self.__secs = secs
         self.__precision = precision
@@ -110,9 +111,9 @@ class Age:
         if 0 < secs < 1:  # ms
             return physical_precision(secs, 3, _("s"))
         if secs < 10:
-            return "%.2f %s" % (secs, _("s"))
+            return "{:.2f} {}".format(secs, _("s"))
         if secs < 60:
-            return "%.1f %s" % (secs, _("s"))
+            return "{:.1f} {}".format(secs, _("s"))
         if secs < 240:
             return "%d %s" % (secs, _("s"))
 
@@ -126,14 +127,14 @@ class Age:
 
         days = hours / 24.0
         if days < 6:
-            return "%s %s" % (drop_dotzero(days, 1), _("d"))
+            return "{} {}".format(drop_dotzero(days, 1), _("d"))
         if days < 999:
-            return "%.0f %s" % (days, _("d"))
+            return "{:.0f} {}".format(days, _("d"))
         years = days / 365.0
         if years < 10:
-            return "%.1f %s" % (years, _("y"))
+            return "{:.1f} {}".format(years, _("y"))
 
-        return "%.0f %s" % (years, _("y"))
+        return "{:.0f} {}".format(years, _("y"))
 
     def __float__(self) -> float:
         return float(self.__secs)
@@ -228,7 +229,7 @@ def fmt_number_with_precision(
     *,
     precision: int = 2,
     drop_zeroes: bool = False,
-    unit_prefix_type: Type[_ABCUnitPrefixes] = SIUnitPrefixes,
+    unit_prefix_type: type[_ABCUnitPrefixes] = SIUnitPrefixes,
     unit: str = "",
     zero_non_decimal: bool = False,
 ) -> str:
@@ -237,7 +238,7 @@ def fmt_number_with_precision(
     if zero_non_decimal and value == 0:
         return "0 %s" % prefix + unit
     number = drop_dotzero(value, precision) if drop_zeroes else "%.*f" % (precision, value)
-    return "%s %s" % (number, prefix + unit)
+    return f"{number} {prefix + unit}"
 
 
 # .
@@ -254,7 +255,7 @@ def fmt_number_with_precision(
 def fmt_bytes(
     b: int,
     *,
-    unit_prefix_type: Type[_ABCUnitPrefixes] = IECUnitPrefixes,
+    unit_prefix_type: type[_ABCUnitPrefixes] = IECUnitPrefixes,
     precision: int = 2,
     unit: str = "B",
 ) -> str:

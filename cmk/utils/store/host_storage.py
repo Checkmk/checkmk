@@ -221,7 +221,7 @@ class StandardHostsStorage(ABCHostsStorage[str]):
             if len(entries) > 0:
                 out.write("\n# Explicit settings for %s\n" % varname)
                 out.write("explicit_host_conf.setdefault(%r, {})\n" % varname)
-                out.write("explicit_host_conf['%s'].update(%r)\n" % (varname, entries))
+                out.write(f"explicit_host_conf['{varname}'].update({entries!r})\n")
 
         if folder_host_contactgroups := contact_groups["folder_hosts"]:
             out.write("\nhost_contactgroups.insert(0, \n%r)\n" % folder_host_contactgroups)

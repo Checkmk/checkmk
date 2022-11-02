@@ -5,7 +5,7 @@
 """Hacky module to avoid cyclic imports, using a naive observer pattern.
 This should die..."""
 
-from typing import Callable
+from collections.abc import Callable
 
 cleanup_functions = set()
 

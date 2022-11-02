@@ -6,7 +6,7 @@ import time
 from typing import Any, Callable, Literal, Optional, Sequence, Type
 
 import cmk.utils.tags
-from cmk.utils.type_defs import HostName, List, Union
+from cmk.utils.type_defs import HostName
 from cmk.utils.type_defs._misc import UserId
 
 import cmk.gui.hooks as hooks
@@ -401,7 +401,7 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
         ]
         return "", HTML(", ").join(parts)
 
-    def filter_matches(self, crit: List, value: List, hostname: HostName) -> bool:
+    def filter_matches(self, crit: list, value: list, hostname: HostName) -> bool:
         return any(item in value for item in crit)
 
 
@@ -638,7 +638,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
 
     def _vs_ip_range(self, with_regexp=False):
         # NOTE: The `ip_regex_list` choice is only used in the `exclude_ranges` key.
-        options: List[tuple[str, str, ValueSpec[Any]]] = [
+        options: list[tuple[str, str, ValueSpec[Any]]] = [
             (
                 "ip_range",
                 _("IP-Range"),
@@ -1080,8 +1080,8 @@ class HostAttributeLockedBy(ABCHostAttributeValueSpec):
             ),
         )
 
-    def filter_matches(  # type:ignore[no-untyped-def]
-        self, crit: list[str], value: Union[list[str], tuple[str, str, str]], hostname
+    def filter_matches(
+        self, crit: list[str], value: list[str] | tuple[str, str, str], hostname: HostName
     ) -> bool:
         return crit == list(value)
 

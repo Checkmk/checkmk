@@ -7,8 +7,6 @@ import pytest
 
 from livestatus import LivestatusResponse, LivestatusRow, SiteId
 
-from cmk.utils.type_defs import Dict, List, Tuple
-
 from cmk.gui.utils.labels import _LivestatusLabelResponse, _MergedLabels, LabelsCache
 
 DISTRIBUTED_ROWS = _LivestatusLabelResponse(
@@ -172,15 +170,15 @@ SINGLE_SETUP_ROWS = _LivestatusLabelResponse(
         ],
     ],
 )
-def test_collect_labels_from_livestatus_rows(  # type:ignore[no-untyped-def]
+def test_collect_labels_from_livestatus_rows(
     livestatus_label_response: _LivestatusLabelResponse, expected: _MergedLabels
-):
+) -> None:
     assert (
         LabelsCache()._collect_labels_from_livestatus_labels(livestatus_label_response) == expected
     )
 
 
-DISTRIBUTED_RESULT: List[Dict[str, str]] = [
+DISTRIBUTED_RESULT: list[dict[str, str]] = [
     {
         "cmk/os_family": "['linux']",
         "cmk/docker_object": "['node']",
@@ -222,8 +220,8 @@ DISTRIBUTED_RESULT: List[Dict[str, str]] = [
         ]
     ],
 )
-def test_get_deserialized_labels(  # type:ignore[no-untyped-def]
-    redis_result: List[Dict[str, str]],
-    expected: List[Tuple[str, str]],
-):
+def test_get_deserialized_labels(
+    redis_result: list[dict[str, str]],
+    expected: list[tuple[str, str]],
+) -> None:
     assert LabelsCache()._get_deserialized_labels(redis_result) == expected

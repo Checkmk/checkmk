@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+from collections.abc import Iterator
 from contextlib import suppress
-from typing import Any, Iterator, Protocol, Type, TypeVar
+from typing import Any, Protocol, TypeVar
 
 __all__ = ["Serializer", "Deserializer"]
 
@@ -71,7 +72,7 @@ class Deserializer(Protocol):
 
     @classmethod
     @abc.abstractmethod
-    def from_bytes(cls: Type[TDeserializer], data: bytes) -> TDeserializer:
+    def from_bytes(cls: type[TDeserializer], data: bytes) -> TDeserializer:
         raise NotImplementedError
 
     @abc.abstractmethod

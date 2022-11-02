@@ -401,6 +401,19 @@ class ABCBISearcher(metaclass=abc.ABCMeta):
     ) -> Iterable[BIHostData]:
         ...
 
+    @abc.abstractmethod
+    def filter_host_folder(
+        self,
+        hosts: Iterable[BIHostData],
+        folder_path: str,
+    ) -> Iterable[BIHostData]:
+        ...
+
+    @abc.abstractmethod
+    def filter_host_labels(self, hosts: Iterable[BIHostData],
+                           required_labels) -> Iterable[BIHostData]:
+        ...
+
 
 class ABCBIStatusFetcher(metaclass=abc.ABCMeta):
     def __init__(self, sites_callback: SitesCallback):

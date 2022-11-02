@@ -353,17 +353,17 @@ class MKBackupJob:
 
 
 class Job(MKBackupJob, BackupEntity):
-    def target_ident(self):
+    def target_ident(self) -> str:
         return self._config["target"]
 
-    def key_ident(self):
+    def key_ident(self) -> str:
         return self._config["encrypt"]
 
     def is_encrypted(self) -> bool:
         return self._config["encrypt"] is not None
 
     # TODO: Duplicated code with mkbackup (globalize_job_id())
-    def global_ident(self):
+    def global_ident(self) -> str:
         parts = []
         site = os.environ.get("OMD_SITE")
 
@@ -402,7 +402,7 @@ class Job(MKBackupJob, BackupEntity):
         cmdline = self._cron_cmdline()
         return ["%s %s%s" % (timespec, userspec, cmdline) for timespec in self._cron_timespecs()]
 
-    def _cron_timespecs(self):
+    def _cron_timespecs(self) -> Sequence[str]:
         period = self._config["schedule"]["period"]
         times = self._config["schedule"]["timeofday"]
 
@@ -427,15 +427,15 @@ class Job(MKBackupJob, BackupEntity):
 
         return timespecs
 
-    def _cron_userspec(self):
+    def _cron_userspec(self) -> str:
         if os.environ.get("OMD_SITE"):
             return ""
         return "root "
 
-    def _cron_cmdline(self):
+    def _cron_cmdline(self) -> str:
         return "mkbackup backup %s >/dev/null" % self.ident()
 
-    def from_config(self, config):
+    def from_config(self, config: ConfigData) -> None:
         # Previous versions could set timeofday entries to None (CMK-7241). Clean this up for
         # compatibility.
         schedule = config.get("schedule", {})

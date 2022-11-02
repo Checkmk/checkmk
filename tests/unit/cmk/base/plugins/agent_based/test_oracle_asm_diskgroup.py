@@ -310,7 +310,7 @@ def test_discovery(section, expected) -> None:  # type:ignore[no-untyped-def]
                     "fs_used",
                     316283.0,
                     levels=(2097152.0, 2359296.0),
-                    boundaries=(0.0, None),
+                    boundaries=(0.0, 2621440.0),
                 ),
                 Metric(
                     "fs_free",
@@ -348,7 +348,7 @@ def test_discovery(section, expected) -> None:  # type:ignore[no-untyped-def]
                     "fs_used",
                     125252.0,
                     levels=(491520.0, 552960.0),
-                    boundaries=(0.0, None),
+                    boundaries=(0.0, 614400.0),
                 ),
                 Metric(
                     "fs_free",
@@ -383,7 +383,7 @@ def test_discovery(section, expected) -> None:  # type:ignore[no-untyped-def]
                     "fs_used",
                     125252.0,
                     levels=(491520.0, 552960.0),
-                    boundaries=(0.0, None),
+                    boundaries=(0.0, 614400.0),
                 ),
                 Metric(
                     "fs_free",
@@ -421,7 +421,9 @@ def test_discovery(section, expected) -> None:  # type:ignore[no-untyped-def]
                 },  # Ignore Requirre mirror free space in DG
             },
             [
-                Metric("fs_used", 125252.0, levels=(491520.0, 552960.0), boundaries=(0.0, None)),
+                Metric(
+                    "fs_used", 125252.0, levels=(491520.0, 552960.0), boundaries=(0.0, 614400.0)
+                ),
                 Metric("fs_free", 489148.0, boundaries=(0.0, None)),
                 Metric(
                     "fs_used_percent",
@@ -459,7 +461,7 @@ def test_check(value_store_patch, section, params, expected) -> None:  # type:ig
                     "fs_used",
                     316283.0,
                     levels=(2097152.0, 2359296.0),
-                    boundaries=(0.0, None),
+                    boundaries=(0.0, 2621440.0),
                 ),
                 Metric(
                     "fs_free",

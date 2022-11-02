@@ -600,7 +600,9 @@ def test_check_grouped(section: nav.Section, monkeypatch: pytest.MonkeyPatch) ->
                 section,
             )
         ) == [
-            Metric("fs_used", 17738.44921875, levels=(174080.0, 195840.0), boundaries=(0.0, None)),
+            Metric(
+                "fs_used", 17738.44921875, levels=(174080.0, 195840.0), boundaries=(0.0, 217600.0)
+            ),
             Metric("fs_free", 199861.55078125, boundaries=(0.0, None)),
             Metric(
                 "fs_used_percent", 8.151860854204964, levels=(80.0, 90.0), boundaries=(0.0, 100.0)
@@ -667,7 +669,9 @@ def test_check_with_perf_data(section: nav.Section, monkeypatch: pytest.MonkeyPa
                 section,
             )
         ) == [
-            Metric("fs_used", 184455.7265625, levels=(153600.0, 184320.0), boundaries=(0.0, None)),
+            Metric(
+                "fs_used", 184455.7265625, levels=(153600.0, 184320.0), boundaries=(0.0, 307200.0)
+            ),
             Metric("fs_free", 122744.2734375, boundaries=(0.0, None)),
             Metric(
                 "fs_used_percent", 60.04418182373047, levels=(50.0, 60.0), boundaries=(0.0, 100.0)

@@ -150,7 +150,7 @@ def value_store_fixture(monkeypatch):
                     "fs_used",
                     84.703125,
                     levels=(256.0, 288.0),
-                    boundaries=(0.0, None),
+                    boundaries=(0.0, 320.0),
                 ),
                 Metric(
                     "fs_free",
@@ -189,7 +189,7 @@ def value_store_fixture(monkeypatch):
                     "fs_used",
                     84.703125,
                     levels=(32.0, 48.0),
-                    boundaries=(0.0, None),
+                    boundaries=(0.0, 320.0),
                 ),
                 Metric(
                     "fs_free",

@@ -88,7 +88,7 @@ def test_discover_threepar_capacity(
                     "fs_used",
                     40459264.0,
                     levels=(128896204.79999924, 145008230.39999962),
-                    boundaries=(0.0, None),
+                    boundaries=(0.0, 161120256.0),
                 ),
                 Metric("fs_free", 120660992.0, boundaries=(0.0, None)),
                 Metric(
@@ -112,7 +112,7 @@ def test_discover_threepar_capacity(
             "all",
             FILESYSTEM_DEFAULT_PARAMS,
             [
-                Metric("fs_used", 81.0, levels=(80.0, 90.0), boundaries=(0.0, None)),
+                Metric("fs_used", 81.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
                 Metric("fs_free", 19.0, boundaries=(0.0, None)),
                 Metric("fs_used_percent", 81.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
                 Result(
@@ -133,7 +133,7 @@ def test_discover_threepar_capacity(
             "all",
             FILESYSTEM_DEFAULT_PARAMS,
             [
-                Metric("fs_used", 91.0, levels=(80.0, 90.0), boundaries=(0.0, None)),
+                Metric("fs_used", 91.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
                 Metric("fs_free", 9.0, boundaries=(0.0, None)),
                 Metric("fs_used_percent", 91.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
                 Result(
@@ -154,7 +154,7 @@ def test_discover_threepar_capacity(
             "all",
             FILESYSTEM_DEFAULT_PARAMS | {"failed_capacity_levels": (2.0, 5.0)},
             [
-                Metric("fs_used", 20.0, levels=(80.0, 90.0), boundaries=(0.0, None)),
+                Metric("fs_used", 20.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
                 Metric("fs_free", 80.0, boundaries=(0.0, None)),
                 Metric("fs_used_percent", 20.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
                 Result(state=State.OK, summary="Used: 20.00% - 20.0 MiB of 100 MiB"),
@@ -173,7 +173,7 @@ def test_discover_threepar_capacity(
             "all",
             FILESYSTEM_DEFAULT_PARAMS | {"failed_capacity_levels": (2.0, 5.0)},
             [
-                Metric("fs_used", 20.0, levels=(80.0, 90.0), boundaries=(0.0, None)),
+                Metric("fs_used", 20.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
                 Metric("fs_free", 80.0, boundaries=(0.0, None)),
                 Metric("fs_used_percent", 20.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
                 Result(state=State.OK, summary="Used: 20.00% - 20.0 MiB of 100 MiB"),

@@ -71,7 +71,7 @@ def test_discover_3par_volumes(
             FILESYSTEM_DEFAULT_PARAMS,
             [
                 Result(state=State.OK, summary="Used: 0% - 0 B of 10.0 GiB"),
-                Metric("fs_used", 0.0, levels=(8192.0, 9216.0), boundaries=(0.0, None)),
+                Metric("fs_used", 0.0, levels=(8192.0, 9216.0), boundaries=(0.0, 10240.0)),
                 Metric("fs_free", 10240.0, boundaries=(0.0, None)),
                 Metric("fs_used_percent", 0.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
                 Metric("fs_size", 10240.0, boundaries=(0.0, None)),
@@ -95,7 +95,7 @@ def test_discover_3par_volumes(
                     state=State.WARN,
                     summary="Used: 80.47% - 8.05 GiB of 10.0 GiB (warn/crit at 80.00%/90.00% used)",
                 ),
-                Metric("fs_used", 8240.0, levels=(8192.0, 9216.0), boundaries=(0.0, None)),
+                Metric("fs_used", 8240.0, levels=(8192.0, 9216.0), boundaries=(0.0, 10240.0)),
                 Metric("fs_free", 2000.0, boundaries=(0.0, None)),
                 Metric("fs_used_percent", 80.46875, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
                 Metric("fs_size", 10240.0, boundaries=(0.0, None)),
@@ -119,7 +119,7 @@ def test_discover_3par_volumes(
                     state=State.CRIT,
                     summary="Used: 97.66% - 9.77 GiB of 10.0 GiB (warn/crit at 80.00%/90.00% used)",
                 ),
-                Metric("fs_used", 10000.0, levels=(8192.0, 9216.0), boundaries=(0.0, None)),
+                Metric("fs_used", 10000.0, levels=(8192.0, 9216.0), boundaries=(0.0, 10240.0)),
                 Metric("fs_free", 240.0, boundaries=(0.0, None)),
                 Metric("fs_used_percent", 97.65625, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
                 Metric("fs_size", 10240.0, boundaries=(0.0, None)),
@@ -140,7 +140,7 @@ def test_discover_3par_volumes(
             FILESYSTEM_DEFAULT_PARAMS,
             [
                 Result(state=State.OK, summary="Used: 0% - 0 B of 10.0 GiB"),
-                Metric("fs_used", 0.0, levels=(8192.0, 9216.0), boundaries=(0.0, None)),
+                Metric("fs_used", 0.0, levels=(8192.0, 9216.0), boundaries=(0.0, 10240.0)),
                 Metric("fs_free", 10240.0, boundaries=(0.0, None)),
                 Metric("fs_used_percent", 0.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
                 Metric("fs_size", 10240.0, boundaries=(0.0, None)),
@@ -163,7 +163,7 @@ def test_discover_3par_volumes(
             FILESYSTEM_DEFAULT_PARAMS,
             [
                 Result(state=State.OK, summary="Used: 0% - 0 B of 10.0 GiB"),
-                Metric("fs_used", 0.0, levels=(8192.0, 9216.0), boundaries=(0.0, None)),
+                Metric("fs_used", 0.0, levels=(8192.0, 9216.0), boundaries=(0.0, 10240.0)),
                 Metric("fs_free", 10240.0, boundaries=(0.0, None)),
                 Metric("fs_used_percent", 0.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
                 Metric("fs_size", 10240.0, boundaries=(0.0, None)),
@@ -186,7 +186,7 @@ def test_discover_3par_volumes(
             FILESYSTEM_DEFAULT_PARAMS,
             [
                 Result(state=State.OK, summary="Used: 0% - 0 B of 10.0 GiB"),
-                Metric("fs_used", 0.0, levels=(8192.0, 9216.0), boundaries=(0.0, None)),
+                Metric("fs_used", 0.0, levels=(8192.0, 9216.0), boundaries=(0.0, 10240.0)),
                 Metric("fs_free", 10240.0, boundaries=(0.0, None)),
                 Metric("fs_used_percent", 0.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
                 Metric("fs_size", 10240.0, boundaries=(0.0, None)),

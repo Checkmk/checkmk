@@ -94,7 +94,7 @@ def test_df_discovery(params, expected) -> None:  # type:ignore[no-untyped-def]
                     "fs_used",
                     43841.0,
                     levels=(82124.0, 92389.5),
-                    boundaries=(0.0, None),
+                    boundaries=(0.0, 102655.0),
                 ),
                 Metric("fs_free", 58814.0, boundaries=(0, None)),
                 Metric(
@@ -145,7 +145,7 @@ def test_df_discovery(params, expected) -> None:  # type:ignore[no-untyped-def]
                     "fs_used",
                     43841.0,
                     levels=(82124.0, 92389.5),
-                    boundaries=(0.0, None),
+                    boundaries=(0.0, 102655.0),
                 ),
                 Metric(
                     "fs_free",
@@ -210,7 +210,7 @@ def test_df_discovery(params, expected) -> None:  # type:ignore[no-untyped-def]
                     "fs_used",
                     43841.0,
                     levels=(82124.0, 92389.5),
-                    boundaries=(0.0, None),
+                    boundaries=(0.0, 102655.0),
                 ),
                 Metric(
                     "fs_free",

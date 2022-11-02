@@ -90,7 +90,7 @@ def test_check_1_capacity(monkeypatch: pytest.MonkeyPatch, section_1: Section) -
                 "fs_used",
                 21108135.3046875,
                 levels=(57947394.2670002, 65190818.550374985),
-                boundaries=(0.0, None),
+                boundaries=(0.0, 72434242.83375072),
             ),
             Metric("fs_free", 51326107.529063225, boundaries=(0, None)),
             Metric(
@@ -196,7 +196,7 @@ def test_check_2_capacity(monkeypatch: pytest.MonkeyPatch, section_2: Section) -
                 "fs_used",
                 51789957.953125,
                 levels=(57947394.2670002, 65190818.550374985),
-                boundaries=(0, None),
+                boundaries=(0.0, 72434242.83375072),
             ),
             Metric("fs_free", 20644284.880625725, boundaries=(0.0, None)),
             Metric(

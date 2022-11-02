@@ -38,7 +38,10 @@ def test_check(section: eiq.Section, monkeypatch: pytest.MonkeyPatch) -> None:
         eiq.check_emc_isilon_quota("/ifs/data/pacs", df.FILESYSTEM_DEFAULT_PARAMS, section)
     ) == [
         Metric(
-            "fs_used", 3666504.428902626, levels=(167772160.0, 188743680.0), boundaries=(0.0, None)
+            "fs_used",
+            3666504.428902626,
+            levels=(167772160.0, 188743680.0),
+            boundaries=(0.0, 209715200.0),
         ),
         Metric("fs_free", 206048695.57109737, boundaries=(0, None)),
         Metric("fs_used_percent", 1.7483255524171002, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),

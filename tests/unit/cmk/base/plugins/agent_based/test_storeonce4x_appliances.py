@@ -65,7 +65,7 @@ def test_check_storage(monkeypatch: pytest.MonkeyPatch, section: Section) -> Non
                 "fs_used",
                 96122807.59765625,
                 levels=(274296840.0, 308583945.0),
-                boundaries=(0, None),
+                boundaries=(0, 342871050.0),
             ),
             Metric("fs_free", 246748242.40234375, boundaries=(0, None)),
             Metric(

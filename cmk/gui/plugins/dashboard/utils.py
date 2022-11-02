@@ -935,13 +935,16 @@ def transform_stats_dashlet(dashlet_spec: DashletConfig) -> DashletConfig:
 
 
 def transform_timerange_dashlet(dashlet_spec: DashletConfig) -> DashletConfig:
-    dashlet_spec["timerange"] = {
-        "0": "4h",
-        "1": "25h",
-        "2": "8d",
-        "3": "35d",
-        "4": "400d",
-    }.get(dashlet_spec["timerange"], dashlet_spec["timerange"])
+    if "timerange" in dashlet_spec:
+        dashlet_spec["timerange"] = {
+            "0": "4h",
+            "1": "25h",
+            "2": "8d",
+            "3": "35d",
+            "4": "400d",
+        }.get(dashlet_spec["timerange"], dashlet_spec["timerange"])
+    else:
+        dashlet_spec["timerange"] = "4h"
     return dashlet_spec
 
 

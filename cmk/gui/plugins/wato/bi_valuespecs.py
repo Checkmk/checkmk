@@ -305,6 +305,24 @@ class BIConfigHostSearch(BIHostSearch, ABCBIConfigSearch):
         return (cls.type(), _("Create nodes based on a host search"), cls.valuespec())
 
     @classmethod
+    def _convert_child_with_to_vs(cls, value):
+        if isinstance(value, str):
+            # Old config with 'refer_to: "parent"' format
+            return value
+
+        if value["type"] == "child_with":
+            return "child_with", value["conditions"]
+
+        return value["type"]
+
+    @classmethod
+    def _convert_child_with_from_vs(cls, value):
+        if isinstance(value, str):
+            return {"type": value}
+
+        return {"type": "child_with", "conditions": value[1]}
+
+    @classmethod
     def valuespec(cls):
         return Dictionary(
             elements=[
@@ -316,37 +334,38 @@ class BIConfigHostSearch(BIHostSearch, ABCBIConfigSearch):
                 ),
                 (
                     "refer_to",
-                    CascadingDropdown(
-                        title=_("Refer to:"),
-                        choices=[
-                            ("host", _("The found hosts themselves")),
-                            ("child", _("The found hosts' childs")),
-                            (
-                                "child_with",
-                                _("The found hosts' childs (with child filtering)"),
-                                Tuple(
-                                    elements=[
-                                        DictHostTagCondition(
-                                            title=_("Child Host Tags:"), help_txt=""
-                                        ),
-                                        _bi_host_choice_vs(_("Child host name:")),
-                                    ]
+                    Transform(
+                        CascadingDropdown(
+                            title=_("Refer to:"),
+                            choices=[
+                                ("host", _("The found hosts themselves")),
+                                ("child", _("The found hosts' childs")),
+                                (
+                                    "child_with",
+                                    _("The found hosts' childs (with child filtering)"),
+                                    Dictionary(
+                                        title=_("Child Conditions"),
+                                        elements=cls.get_host_conditions(),
+                                        optional_keys=[],
+                                    ),
                                 ),
+                                ("parent", _("The found hosts' parents")),
+                            ],
+                            help=_(
+                                "When selecting <i>The found hosts' childs</i>, the conditions "
+                                "(tags and host name) are used to match a host, but you will get one "
+                                "node created for each child of the matched host. The "
+                                "place holder <tt>$HOSTNAME$</tt> contains the name of the found child "
+                                "and the place holder <tt>$HOSTALIAS$</tt> contains it's alias.<br><br>"
+                                "When selecting <i>The found hosts' parents</i>, the conditions "
+                                "(tags and host name) are used to match a host, but you will get one "
+                                "node created for each of the parent hosts of the matched host. "
+                                "The place holder <tt>$HOSTNAME$</tt> contains the name of the child "
+                                "host and <tt>$2$</tt> the name of the parent host."
                             ),
-                            ("parent", _("The found hosts' parents")),
-                        ],
-                        help=_(
-                            "When selecting <i>The found hosts' childs</i>, the conditions "
-                            "(tags and host name) are used to match a host, but you will get one "
-                            "node created for each child of the matched host. The "
-                            "place holder <tt>$HOSTNAME$</tt> contains the name of the found child "
-                            "and the place holder <tt>$HOSTALIAS$</tt> contains it's alias.<br><br>"
-                            "When selecting <i>The found hosts' parents</i>, the conditions "
-                            "(tags and host name) are used to match a host, but you will get one "
-                            "node created for each of the parent hosts of the matched host. "
-                            "The place holder <tt>$HOSTNAME$</tt> contains the name of the child "
-                            "host and <tt>$2$</tt> the name of the parent host."
                         ),
+                        forth=cls._convert_child_with_to_vs,
+                        back=cls._convert_child_with_from_vs,
                     ),
                 ),
             ],

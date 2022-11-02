@@ -1,0 +1,22 @@
+Title: BI: Fixed broken host_search/child-with filtering
+Class: fix
+Compatible: incomp
+Component: bi
+Date: 1667387806
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p16
+
+The host search option "The found hosts' (with child filtering)" was broken since the BI rework 2 years ago.
+Any attempt to save this setting lead to an exception.
+
+The fix for this problem required a small change in the API specification for the <tt>refer_to</tt> field
+<ul>
+<li>"refer_to": "host" -> "refer_to": {"type": "host"}</li>
+<li>"refer_to": "child" -> "refer_to": {"type": "child"}</li>
+<li>"refer_to": "parent" -> "refer_to": {"type": "parent"}</li>
+<li>"refer_to": {was broken} -> "refer_to": {"type": "child_with", "conditions": {..}}</li>
+</ul>
+

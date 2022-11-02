@@ -19,7 +19,7 @@ namespace wtools {
 class TestProcessor2 : public wtools::BaseServiceProcessor {
 public:
     TestProcessor2() { s_counter++; }
-    virtual ~TestProcessor2() { s_counter--; }
+    ~TestProcessor2() override { s_counter--; }
 
     // Standard Windows API to Service hit here
     void stopService(wtools::StopMode /*stop_mode*/) override {
@@ -63,7 +63,7 @@ TEST(ExternalPortTest, StartStop) {
     EXPECT_FALSE(test_port.startIo(reply, io_param));
 
     EXPECT_TRUE(tst::WaitForSuccessSilent(
-        1000ms, [&test_port]() { return test_port.isIoStarted(); }));
+        1000ms, [&test_port] { return test_port.isIoStarted(); }));
 
     cma::tools::sleep(50);
     test_port.shutdownIo();  // this is long operation
@@ -126,7 +126,7 @@ TEST_F(ExternalPortCheckProcessFixture, AnyProcessIntegration) {
     EXPECT_TRUE(test_port.startIo(reply, makeIoParam({})));
 
     EXPECT_EQ(writeToSocket(tst::TestPort()), 6U);
-    tst::WaitForSuccessSilent(100ms, [this]() { return !remote_ip.empty(); });
+    tst::WaitForSuccessSilent(100ms, [this] { return !remote_ip.empty(); });
     test_port.shutdownIo();  // this is long operation
     EXPECT_EQ(remote_ip, text);
 }
@@ -145,7 +145,7 @@ TEST_F(ExternalPortCheckProcessFixture, InvalidProcessDefaultIntegration) {
     EXPECT_TRUE(test_port.startIo(reply, makeIoParam(1)));
 
     EXPECT_EQ(writeToSocket(tst::TestPort()), 6U);
-    tst::WaitForSuccessSilent(100ms, [this]() { return !remote_ip.empty(); });
+    tst::WaitForSuccessSilent(100ms, [this] { return !remote_ip.empty(); });
     test_port.shutdownIo();  // this is long operation
     EXPECT_EQ(remote_ip, text);
 }
@@ -155,7 +155,7 @@ TEST_F(ExternalPortCheckProcessFixture, ValidProcessIntegration) {
     EXPECT_TRUE(test_port.startIo(reply, makeIoParam(::GetCurrentProcessId())));
 
     EXPECT_EQ(writeToSocket(tst::TestPort()), 6U);
-    tst::WaitForSuccessSilent(100ms, [this]() { return !remote_ip.empty(); });
+    tst::WaitForSuccessSilent(100ms, [this] { return !remote_ip.empty(); });
     test_port.shutdownIo();  // this is long operation
     EXPECT_EQ(remote_ip, text);
 }
@@ -202,7 +202,7 @@ public:
 
 TEST_F(ExternalPortTestFixture, ReadIntegration) {
     tst::FirewallOpener fwo;
-    ASSERT_TRUE(tst::WaitForSuccessSilent(1000ms, [this]() {
+    ASSERT_TRUE(tst::WaitForSuccessSilent(1000ms, [this] {
         std::error_code ec;
         this->sock_.connect(this->endpoint_, ec);
         return ec.value() == 0;
@@ -254,7 +254,7 @@ TEST_F(ExternalPortQueueFixture, FillAndConsumeAsioSessions) {
         [](const std::string & /*_*/) { return std::vector<uint8_t>{}; },
         10000);
     EXPECT_TRUE(tst::WaitForSuccessSilent(
-        1000ms, [this]() { return test_port_.entriesInQueue() == 0; }));
+        1000ms, [this] { return test_port_.entriesInQueue() == 0; }));
 }
 
 TEST_F(ExternalPortQueueFixture, FillAndConsumeMailSlotRequests) {
@@ -272,7 +272,7 @@ TEST_F(ExternalPortQueueFixture, FillAndConsumeMailSlotRequests) {
             .pid{::GetCurrentProcessId()},
         });
     EXPECT_TRUE(tst::WaitForSuccessSilent(
-        1000ms, [this]() { return test_port_.entriesInQueue() == 0; }));
+        1000ms, [this] { return test_port_.entriesInQueue() == 0; }));
     EXPECT_EQ(std::accumulate(result_.begin(), result_.end(), ""s),
               "0123456789101112131415"s);
 }

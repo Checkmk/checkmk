@@ -37,7 +37,7 @@ static void CheckString(std::string &x) {
     x.pop_back();
 }
 
-static void CheckTableMissing(std::vector<std::string> &table,
+static void CheckTableMissing(const std::vector<std::string> &table,
                               std::string_view name, FileInfo::Mode mode) {
     ASSERT_TRUE(table.size() >= 2);
     EXPECT_EQ(table[0], name.data());
@@ -48,7 +48,7 @@ static void CheckTableMissing(std::vector<std::string> &table,
     }
 }
 
-static void CheckTablePresent(std::vector<std::string> &table,
+static void CheckTablePresent(const std::vector<std::string> &table,
                               std::string_view name, FileInfo::Mode mode) {
     auto shift = mode == FileInfo::Mode::modern ? 1 : 0;
 
@@ -314,7 +314,7 @@ TEST(FileInfoTest, CheckOutput) {
         EXPECT_FALSE(fs::exists(values[0], ec));
         table.pop_back();
 
-        for (auto line : table) {
+        for (const auto &line : table) {
             auto values = tools::SplitString(line, "|");
             ASSERT_TRUE(values.size() == 3);
             EXPECT_TRUE(fs::exists(values[0], ec));
@@ -350,7 +350,7 @@ TEST(FileInfoTest, CheckOutput) {
         EXPECT_FALSE(fs::exists(values[0], ec));
         table.pop_back();
 
-        for (auto line : table) {
+        for (const auto &line : table) {
             auto values = tools::SplitString(line, "|");
             ASSERT_TRUE(values.size() == 4);
             EXPECT_TRUE(fs::exists(values[0], ec));

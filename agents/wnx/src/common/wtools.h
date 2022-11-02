@@ -425,7 +425,6 @@ private:
 };
 
 class ServiceController {
-private:
     static std::mutex s_lock_;
     static ServiceController *s_controller_;  // probably we need her shared
                                               // ptr, but this is clear overkill

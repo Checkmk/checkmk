@@ -85,7 +85,7 @@ int CopyAllFolders(const fs::path &legacy_root, const fs::path &program_data,
         return 0;
     }
 
-    static const std::wstring_view folders[] = {
+    static constexpr std::wstring_view folders[] = {
         L"config", L"plugins", L"local",
         L"spool",  // may contain important files
         L"mrpe",   L"state",   L"bin"};
@@ -204,7 +204,6 @@ int CopyFolderRecursive(
                 if (ec.value() != 0) {
                     XLOG::l("Failed create folder '{} error {}",
                             target_parent_path, ec.value());
-                    continue;
                 }
             } else {
                 if (IsFileNonCompatible(p)) {
@@ -1034,8 +1033,8 @@ bool UpgradeLegacy(Force force_upgrade) {
 
     fs::path user_dir = cfg::GetUserDir();
 
-    auto count = CopyAllFolders(path, user_dir, CopyFolderMode::keep_old);
-    count += CopyRootFolder(path, user_dir);
+    CopyAllFolders(path, user_dir, CopyFolderMode::keep_old);
+    CopyRootFolder(path, user_dir);
 
     XLOG::l.i("Converting ini file...");
     ConvertIniFiles(path, user_dir);
@@ -1479,7 +1478,7 @@ void Execute() {
     }
 
     // un-installation self
-    auto x = std::thread([]() {
+    auto x = std::thread([] {
         XLOG::l.i("Requested remove of Legacy Agent...");
         auto result = UninstallProduct(products::kLegacyAgent);
         if (result) {

@@ -451,7 +451,7 @@ namespace xlog {
         AdvancedLog() = default;
         LogParam log_param_;
         template <typename T, typename... Args>
-        inline void d(const T *format_string, Args &&...args) {
+        void d(const T *format_string, Args &&...args) {
 #if defined(XLOG_DEBUG)
             internal_dout(log_param_, format_string,
                           std::forward<Args>(args)...);
@@ -459,7 +459,7 @@ namespace xlog {
         }
 
         template <typename T, typename... Args>
-        inline void v(const T *format_string, Args &&...args) {
+        void v(const T *format_string, Args &&...args) {
 #if defined(XLOG_VERBOSE)
             internal_dout(log_param_, format_string,
                           std::forward<Args>(args)...);
@@ -467,7 +467,7 @@ namespace xlog {
         }
 
         template <typename T, typename... Args>
-        inline void l(const T *format_string, Args &&...args) {
+        void l(const T *format_string, Args &&...args) {
 #if !defined(NO_LOG)
             auto &log_param = log_param_;
             log_param.type_ = Type::kLogOut;
@@ -550,7 +550,7 @@ namespace xlog {
 #pragma warning(push)
 #pragma warning(disable : 26444)
     template <typename T, typename... Args>
-    [[maybe_unused]] inline TextInfo<T> internal_dout(
+    [[maybe_unused]] TextInfo<T> internal_dout(
         const LogParam &log_param, const T *format_string, Args &&...args) {
         T buf[kInternalMaxOut] = {0};
 
@@ -587,7 +587,7 @@ namespace xlog {
 
     // Common API
     template <typename T, typename... Args>
-    inline void d(const T *format_string, Args &&...args) {
+    void d(const T *format_string, Args &&...args) {
 #if defined(XLOG_DEBUG)
         LogParam log_param;
         auto _ = internal_dout(log_param, format_string,
@@ -596,7 +596,7 @@ namespace xlog {
     }
 
     template <typename T, typename... Args>
-    inline void d(bool enable, const T *format_string, Args &&...args) {
+    void d(bool enable, const T *format_string, Args &&...args) {
 
 #if defined(XLOG_DEBUG)
         if (enable) {
@@ -607,7 +607,7 @@ namespace xlog {
 #endif
     }
     template <typename T, typename... Args>
-    inline void v(const T *format_string, Args &&...args) {
+    void v(const T *format_string, Args &&...args) {
 #if defined(XLOG_VERBOSE)
         LogParam log_param;
         internal_dout(log_param, format_string, std::forward<Args>(args)...);
@@ -616,8 +616,7 @@ namespace xlog {
 #pragma warning(push)
 #pragma warning(disable : 26444)
     template <typename T, typename... Args>
-    [[maybe_unused]] inline TextInfo<T> l(const T *format_string,
-                                          Args &&...args) {
+    [[maybe_unused]] TextInfo<T> l(const T *format_string, Args &&...args) {
 #if defined(XLOG_NO_LOG)
         return TextInfo<T>((const T *)nullptr);
 #else
@@ -630,8 +629,8 @@ namespace xlog {
     }
 
     template <typename T, typename... Args>
-    [[maybe_unused]] inline TextInfo<T> l(bool enable, const T *format_string,
-                                          Args &&...args) {
+    [[maybe_unused]] TextInfo<T> l(bool enable, const T *format_string,
+                                   Args &&...args) {
         if (!enable) return TextInfo<T>((const T *)nullptr);
 
 #if defined(XLOG_NO_LOG)
@@ -648,7 +647,7 @@ namespace xlog {
 #pragma warning(pop)
 
     template <typename T>
-    struct Concatenator {
+    class Concatenator {
     public:
         explicit Concatenator(const T *value) : val_(value) {}
         const T *operator+(const T *y) {
@@ -669,7 +668,7 @@ namespace xlog {
     };
 
     template <typename T>
-    inline Concatenator<T> FunctionPrefix(const T *function_name) {
+    Concatenator<T> FunctionPrefix(const T *function_name) {
         return Concatenator<T>(function_name);
     }
 

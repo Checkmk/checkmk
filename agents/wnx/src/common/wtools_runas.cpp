@@ -81,7 +81,7 @@ void RevertFileRedirection() {
 }
 }  // namespace krnl
 
-struct AppSettings {
+class AppSettings {
 public:
     bool use_system_account{false};
     bool dont_load_profile{true};  //  we do not load it speed up process
@@ -221,7 +221,7 @@ bool EnablePrivilege(LPCWSTR privileges) {
     return EnablePrivilege(privileges, nullptr);
 }
 
-using WTSGetActiveConsoleSessionIdProc = DWORD(WINAPI *)(void);
+using WTSGetActiveConsoleSessionIdProc = DWORD(WINAPI *)();
 
 DWORD GetInteractiveSessionID() {
     // Get the active session ID.

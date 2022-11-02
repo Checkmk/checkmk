@@ -981,8 +981,8 @@ void PluginEntry::threadCore(const std::wstring &Id) {
     // pre entry
     // thread counters block
     XLOG::d.i("Async Thread for {} is to be started", wtools::ToUtf8(Id));
-    g_tread_count++;
-    ON_OUT_OF_SCOPE(g_tread_count--);
+    ++g_tread_count;
+    ON_OUT_OF_SCOPE(--g_tread_count);
     std::unique_lock lk(lock_);
     if (!thread_on_) {
         XLOG::l(XLOG::kBp)("Attempt to start without resource acquiring");
@@ -1343,8 +1343,6 @@ void RemoveDuplicatedPlugins(PluginMap &plugin_map, bool check_exists) {
 }
 
 namespace provider::config {
-const bool g_async_plugin_without_cache_age_run_async = true;
-const bool g_set_logwatch_pos_to_end = true;
 
 bool IsRunAsync(const PluginEntry &plugin) noexcept {
     const auto run_async = plugin.async();

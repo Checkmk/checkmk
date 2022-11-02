@@ -190,9 +190,8 @@ TEST_F(CarrierTestFixture, MailSlotIntegration) {
     sendSetOfCommands(summary_output);
     cc_.shutdownCommunication();
 
-    tst::WaitForSuccessSilent(10'000ms, [this]() {
-        return mailslot_storage.correct_commands_ == 3U;
-    });
+    tst::WaitForSuccessSilent(
+        10'000ms, [this] { return mailslot_storage.correct_commands_ == 3U; });
 
     ASSERT_TRUE(mailslot_storage.delivered_);
     EXPECT_EQ(mailslot_storage.answer_id_, 11);
@@ -253,7 +252,7 @@ TEST_F(CarrierTestInformFixture, InformByMailSlot) {
     for (const auto &cmd : {"xxx"s, "zzz"s}) {
         InformByMailSlot(mailbox_client.GetName(), cmd);
         EXPECT_TRUE(tst::WaitForSuccessSilent(
-            100ms, [cmd]() { return GetRunCommand() == cmd; }))
+            100ms, [cmd] { return GetRunCommand() == cmd; }))
             << "FAILED= " << cmd;
     }
 }

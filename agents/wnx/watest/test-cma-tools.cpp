@@ -23,7 +23,7 @@ TEST(CmaTools, CheckArgvForValue) {
 
     EXPECT_TRUE(CheckArgvForValue(2, t, 1, "b"));
     EXPECT_FALSE(CheckArgvForValue(2, t, 2, "c"));
-};
+}
 
 }  // namespace cma::tools
 

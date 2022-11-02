@@ -207,7 +207,7 @@ TEST(RealtimeTest, Base_Long) {
                         "");
 
         EXPECT_TRUE(ret);
-        WaitFor([]() { return TestTable.size() >= 6; }, 20s);
+        WaitFor([] { return TestTable.size() >= 6; }, 20s);
 
         EXPECT_TRUE(dev.started());
         dev.stop();
@@ -238,7 +238,7 @@ TEST(RealtimeTest, Base_Long) {
                         "encrypt");
 
         EXPECT_TRUE(ret);
-        WaitFor([]() { return TestTable.size() >= 6; }, 20s);
+        WaitFor([] { return TestTable.size() >= 6; }, 20s);
         EXPECT_TRUE(dev.started());
         dev.stop();
         EXPECT_FALSE(dev.started());

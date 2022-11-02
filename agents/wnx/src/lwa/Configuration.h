@@ -64,7 +64,8 @@ public:
     void outputConfigurables(std::ostream &out);
 
     void outputConfigurables(
-        std::function<void(std::string, std::string, std::string, std::string)>
+        std::function<void(const std::string &, const std::string &,
+                           const std::string &, const std::string &)>
             Sink);
 
     bool ReadSettings(const std::filesystem::path &settings_file,

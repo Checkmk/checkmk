@@ -664,8 +664,8 @@ constexpr std::chrono::seconds kRestartInterval{60};
 
 void RunDetachedPlugins(const PluginMap &plugins_map, int &start_count);
 namespace provider::config {
-extern const bool g_async_plugin_without_cache_age_run_async;
-extern const bool g_set_logwatch_pos_to_end;
+constexpr bool g_async_plugin_without_cache_age_run_async = true;
+constexpr bool g_set_logwatch_pos_to_end = true;
 
 bool IsRunAsync(const PluginEntry &plugin) noexcept;
 }  // namespace provider::config

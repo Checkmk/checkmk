@@ -133,7 +133,7 @@ static size_t WriteStringToSocket(asio::ip::tcp::socket &sock,
 
 // To send data
 void AsioSession::do_write(const void *data_block, std::size_t data_length,
-                           cma::encrypt::Commander *crypto_commander) {
+                           const encrypt::Commander *crypto_commander) {
     auto self(shared_from_this());
 
     const auto *data = static_cast<const char *>(data_block);
@@ -273,7 +273,7 @@ void ExternalPort::timedWaitForSession() {
     using namespace std::chrono;
     std::unique_lock lk(wake_lock_);
     wake_thread_.wait_until(lk, steady_clock::now() + wake_delay_,
-                            [this]() { return entriesInQueue() != 0; });
+                            [this] { return entriesInQueue() != 0; });
 }
 #define TEST_RESTART_OVERLOAD  // should be defined in production
 

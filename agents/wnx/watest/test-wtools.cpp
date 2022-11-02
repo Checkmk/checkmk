@@ -414,7 +414,7 @@ TEST(Wtools, Perf) {
         while (perf_data.data_ == nullptr ||
                !FindPerfObject(perf_data, index)) {
             // no data or data is not valid:
-            pos++;
+            ++pos;
             ASSERT_TRUE(pos != TsValues.cend());
             index = *pos;
             perf_data = ReadPerformanceDataFromRegistry(std::to_wstring(index));
@@ -429,7 +429,7 @@ TEST(Wtools, Perf) {
 
         // Check that object instance less
         auto instances = GenerateInstances(object);
-        EXPECT_TRUE(instances.size() == 0);
+        EXPECT_TRUE(instances.empty());
 
         //  Check that object is name less too
         auto names = GenerateInstanceNames(object);
@@ -448,7 +448,7 @@ TEST(Wtools, AppRunnerCtorDtor) {
     wtools::AppRunner app;
     EXPECT_EQ(app.exitCode(), STILL_ACTIVE);
     EXPECT_EQ(app.getCmdLine(), L"");
-    EXPECT_TRUE(app.getData().size() == 0);
+    EXPECT_TRUE(app.getData().empty());
     EXPECT_EQ(app.getStderrRead(), nullptr);
     EXPECT_EQ(app.getStdioRead(), nullptr);
     EXPECT_EQ(app.processId(), 0);
@@ -740,7 +740,7 @@ TEST(Wtools, ExecuteCommandsAsync) {
     EXPECT_EQ(table[0], ToUtf8(commands[0]));
     EXPECT_EQ(table[1], ToUtf8(commands[1]));
 
-    tst::WaitForSuccessSilent(5000ms, [output_file]() {
+    tst::WaitForSuccessSilent(5000ms, [output_file] {
         std::error_code ec;
         return fs::exists(output_file, ec) && fs::file_size(output_file) >= 1;
     });

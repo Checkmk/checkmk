@@ -129,7 +129,7 @@ template <>
 winperf_counter from_string<winperf_counter>(const std::string &value) {
     using namespace wtools;
 
-    size_t colonIdx = value.find_last_of(":");
+    size_t colonIdx = value.find_last_of(':');
     if (colonIdx == std::string::npos) {
         XLOG::l() << "Invalid counter '" << value
                   << "' in section [winperf]: need number(or "

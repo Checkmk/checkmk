@@ -203,7 +203,7 @@ static void CreateFileTest(const fs::path &path, const std::string &content) {
     ofs << content;
 }
 
-static auto CreateIniFile(std::filesystem::path lwa, const std::string &content,
+static auto CreateIniFile(const fs::path &lwa, const std::string &content,
                           const std::string &yaml_name) {
     auto ini_file = lwa / (yaml_name + ".ini");
     CreateFileTest(lwa / ini_file, content);
@@ -659,7 +659,7 @@ TEST(UpgradeTest, LoadIni) {
         auto table = tools::SplitString(a1, "\n");
         EXPECT_EQ(table.size(), 3);
         EXPECT_TRUE(table[0][0] == '#' && table[1][0] == '#');
-        EXPECT_TRUE(table[2].size() == 0);
+        EXPECT_TRUE(table[2].empty());
     }
     {
         auto a2 = MakeComments("[b]", false);
@@ -668,7 +668,7 @@ TEST(UpgradeTest, LoadIni) {
         auto table = tools::SplitString(a2, "\n");
         EXPECT_EQ(table.size(), 3);
         EXPECT_TRUE(table[0][0] == '#' && table[1][0] == '#');
-        EXPECT_TRUE(table[2].size() == 0);
+        EXPECT_TRUE(table[2].empty());
     }
 
     {

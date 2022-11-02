@@ -59,7 +59,7 @@ TEST(InstallAuto, FileControlIntegration) {
     tst::CreateTextFile(path, "-----\n");
     // Typical windows code below: wait for file, because on heavy load file may
     // not be created quick enough. WTF Microsoft?
-    tst::WaitForSuccessSilent(1000ms, [path]() {
+    tst::WaitForSuccessSilent(1000ms, [path] {
         std::error_code ec;
         return fs::exists(path, ec);
     });

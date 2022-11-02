@@ -60,7 +60,7 @@ const char *const kSectionFlush = "section_flush";                    // bool
 const char *const kGlobalEncrypt = "encrypted";                       // bool
 const char *const kGlobalPassword = "passphrase";                     // string
 const char *const kGlobalWmiTimeout = "wmi_timeout";                  // int
-const std::string_view kCpuLoadMethod{"cpuload_method"};              // string
+constexpr std::string_view kCpuLoadMethod{"cpuload_method"};          // string
 
 const char *const kGlobalRemoveLegacy = "remove_legacy";  // bool
 
@@ -224,8 +224,8 @@ constexpr const char *const kWaitNetwork = "wait_network";  // int, seconds
 namespace values {
 
 // global.cpuload_method
-const std::string_view kCpuLoadWmi{"use_wmi"};
-const std::string_view kCpuLoadPerf{"use_perf"};
+constexpr std::string_view kCpuLoadWmi{"use_wmi"};
+constexpr std::string_view kCpuLoadPerf{"use_perf"};
 
 // modules.table
 constexpr std::string_view kModulesNamePython = "python-3";  //

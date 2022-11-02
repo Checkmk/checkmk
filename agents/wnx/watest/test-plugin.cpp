@@ -99,12 +99,11 @@ void CreatePluginInTemp(const std::filesystem::path &path, int timeout,
 
 void RemoveFolder(const std::filesystem::path &path) {
     fs::path top = path;
-    fs::path dir_path;
 
     cma::PathVector directories;
     std::error_code ec;
     for (auto &p : fs::recursive_directory_iterator(top, ec)) {
-        dir_path = p.path();
+        auto dir_path = p.path();
         if (fs::is_directory(dir_path)) {
             directories.push_back(fs::canonical(dir_path));
         }
@@ -704,12 +703,12 @@ TEST(PluginTest, FilesAndFoldersIntegration) {
         // no local files
         PluginMap pm;
         UpdatePluginMap(pm, true, files, exe_units, true);
-        EXPECT_TRUE(pm.size() == 0);
+        EXPECT_TRUE(pm.empty());
     }
 
     {
         auto pv = GetFolderStructure();
-        ASSERT_TRUE(0 != pv.size());
+        ASSERT_TRUE(!pv.empty());
         RemoveFolderStructure(pv);
         MakeFolderStructure(pv);
         ON_OUT_OF_SCOPE(RemoveFolderStructure(pv));
@@ -1094,8 +1093,7 @@ TEST(PluginTest, ApplyEverything) {
             for (auto &entry : pm) {
                 auto expected_index = valid_entries[index++];
                 auto end_path = entry.second.path();
-                auto expected_path = typical_files[expected_index];
-                EXPECT_EQ(end_path, expected_path);
+                EXPECT_EQ(end_path, typical_files[expected_index]);
             }
         }
 
@@ -1109,8 +1107,7 @@ TEST(PluginTest, ApplyEverything) {
             for (auto &entry : pm) {
                 auto expected_index = valid_entries[index++];
                 auto end_path = entry.second.path();
-                auto expected_path = typical_files[expected_index];
-                EXPECT_EQ(end_path, expected_path);
+                EXPECT_EQ(end_path, typical_files[expected_index]);
                 EXPECT_EQ(entry.second.cacheAge(), 0);
                 EXPECT_EQ(entry.second.retry(), 5);
                 EXPECT_EQ(entry.second.async(), false);
@@ -1128,8 +1125,7 @@ TEST(PluginTest, ApplyEverything) {
             for (auto &[name, unit] : pm) {
                 auto expected_index = valid_entries[index++];
                 auto end_path = unit.path();
-                auto expected_path = typical_files[expected_index];
-                EXPECT_EQ(end_path, expected_path);
+                EXPECT_EQ(end_path, typical_files[expected_index]);
                 EXPECT_EQ(unit.cacheAge(), 0);   // default
                 EXPECT_EQ(unit.retry(), 0);      // default
                 EXPECT_EQ(unit.async(), false);  // default
@@ -1153,8 +1149,7 @@ TEST(PluginTest, ApplyEverything) {
                 for (auto &[name, unit] : pm) {
                     auto expected_index = valid_entries[index++];
                     auto end_path = unit.path();
-                    auto expected_path = many_files[expected_index];
-                    EXPECT_EQ(end_path, expected_path);
+                    EXPECT_EQ(end_path, many_files[expected_index]);
                     EXPECT_EQ(unit.cacheAge(), 0);
                     EXPECT_EQ(unit.retry(), 1);
                     EXPECT_EQ(unit.async(), false);
@@ -1188,7 +1183,7 @@ TEST(PluginTest, DuplicatedFileRemove) {
 
 TEST(PluginTest, DuplicatedUnitsRemove) {
     UnitMap um;
-    const char *const paths[] = {
+    constexpr const char *const paths[] = {
         "c:\\t\\1b\\abC", "c:\\t\\2b\\xxx", "c:\\t\\3b\\abc", "c:\\t\\4b\\XXX",
         "c:\\t\\5b\\abc", "c:\\t\\6b\\abc", "c:\\t\\7b\\ccc", "c:\\t\\8b\\abc"};
 
@@ -1263,7 +1258,7 @@ TEST(PluginTest, SyncStartSimulationFuture_Integration) {
     int delivered_count = 0;
     for (auto &r : results) {
         auto result = r.get();
-        if (result.size()) {
+        if (!result.empty()) {
             ++delivered_count;
             cma::tools::AddVector(out, result);
         }
@@ -1399,7 +1394,7 @@ PluginDescVector async0_files = {{2, "async2.cmd", "async0"}};
 TEST(PluginTest, RemoveDuplicatedPlugins) {
     PluginMap x;
     RemoveDuplicatedPlugins(x, false);
-    EXPECT_TRUE(x.size() == 0);
+    EXPECT_TRUE(x.empty());
 
     x.emplace(std::make_pair("c:\\123\\a.bb", "c:\\123\\a.bb"));
     EXPECT_TRUE(x.size() == 1);
@@ -1882,7 +1877,7 @@ TEST(PluginTest, AsyncDataPickup_Integration) {
     }
 }
 
-static const int LocalUnitCacheAge = cma::cfg::kMinimumCacheAge;
+constexpr int LocalUnitCacheAge = cma::cfg::kMinimumCacheAge;
 std::vector<cma::cfg::Plugins::ExeUnit> local_units_async = {
     //       Async  Timeout CacheAge              Retry  Run
     // clang-format off
@@ -2447,7 +2442,7 @@ TEST(CmaMain, MiniBoxStartModeDeep) {
         auto success = mb.waitForEnd(std::chrono::seconds(30));
         ASSERT_TRUE(success);
         // we have probably data, try to get and and store
-        mb.processResults([&](const std::wstring CmdLine, uint32_t Pid,
+        mb.processResults([&](const std::wstring &CmdLine, uint32_t Pid,
                               uint32_t Code, const std::vector<char> &Data) {
             auto data = wtools::ConditionallyConvertFromUTF16(Data);
 
@@ -2470,7 +2465,7 @@ TEST(CmaMain, MiniBoxStartModeDeep) {
         auto success = mb.waitForEnd(std::chrono::milliseconds(20));
         EXPECT_FALSE(success);
         // we have probably data, try to get and and store
-        mb.processResults([&](const std::wstring CmdLine, uint32_t Pid,
+        mb.processResults([&](const std::wstring &CmdLine, uint32_t Pid,
                               uint32_t Code, const std::vector<char> &Data) {
             auto data = wtools::ConditionallyConvertFromUTF16(Data);
 
@@ -2550,7 +2545,7 @@ TEST(PluginTest, Hacking) {
         EXPECT_EQ(section::kFooter4Right, ">>>>");
     }
 
-    const std::string_view name = "Name";
+    constexpr std::string_view name = "Name";
     const std::string cached_info = ":cached(12344545, 600)";
 
     const auto normal =

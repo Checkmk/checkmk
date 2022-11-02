@@ -137,7 +137,7 @@ TEST(CvtTest, CrLf) {
     EXPECT_TRUE(content.find("\r\n") != std::string::npos);
 }
 
-void AddKeyedPattern(YAML::Node Node, const std::string Key,
+void AddKeyedPattern(YAML::Node Node, const std::string &Key,
                      const std::string &Pattern, const std::string &Value);
 
 TEST(CvtTest, Keyed) {

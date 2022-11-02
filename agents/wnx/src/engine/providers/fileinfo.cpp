@@ -159,7 +159,6 @@ void GatherMatchingFilesAndDirs(
             if (fs::is_directory(status) &&
                 tools::GlobMatch(dir_pattern.wstring(), path.wstring())) {
                 dirs_found.push_back(path);
-                continue;
             }
         } catch (const std::exception &e) {
             XLOG::l("Exception GatherMatchingFilesAndDirs '{}'", e.what());

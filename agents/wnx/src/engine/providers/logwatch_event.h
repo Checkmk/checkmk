@@ -36,10 +36,7 @@ enum class LogWatchContext { with, hide };
 
 struct State {
     State(std::string name, uint64_t pos, bool new_found)
-        : name_(std::move(name))
-        , pos_(pos)
-        , presented_(new_found)
-        , in_config_(false) {
+        : name_(std::move(name)), pos_(pos), presented_(new_found) {
         setDefaults();
     }
     State() = default;
@@ -61,7 +58,7 @@ struct State {
 
 using StateVector = std::vector<State>;
 
-struct LogWatchEntry {
+class LogWatchEntry {
 public:
     bool loadFromMapNode(const YAML::Node &node);
     bool loadFrom(std::string_view line);

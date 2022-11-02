@@ -62,7 +62,7 @@ LocalResource<SERVICE_FAILURE_ACTIONS> WinService::GetServiceFailureActions() {
 
     // allocation
     const auto new_buf_size = bytes_needed;
-    const auto actions = reinterpret_cast<SERVICE_FAILURE_ACTIONS *>(
+    const auto actions = static_cast<SERVICE_FAILURE_ACTIONS *>(
         ::LocalAlloc(LMEM_FIXED, new_buf_size));
 
     if (::QueryServiceConfig2(handle_, SERVICE_CONFIG_FAILURE_ACTIONS,
@@ -139,7 +139,7 @@ static uint32_t CallChangeServiceConfig(SC_HANDLE handle, DWORD start_type,
     );
 
     return ret == TRUE ? 0 : ::GetLastError();
-};
+}
 
 /// \brief set service delayed flag if configured
 ///
@@ -151,7 +151,7 @@ static uint32_t CallChangeServiceDelay(SC_HANDLE handle, bool delayed) {
         handle, SERVICE_CONFIG_DELAYED_AUTO_START_INFO, &dasi);
 
     return ret == TRUE ? 0 : ::GetLastError();
-};
+}
 
 static uint32_t StartMode2WinApi(WinService::StartMode mode) {
     switch (mode) {

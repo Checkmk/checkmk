@@ -18,7 +18,8 @@ NTSTATUS PrintDomainName() {
 
     static LSA_OBJECT_ATTRIBUTES oa = {sizeof(oa)};
 
-    auto status = LsaOpenPolicy(0, &oa, POLICY_VIEW_LOCAL_INFORMATION, &policy);
+    auto status =
+        LsaOpenPolicy(nullptr, &oa, POLICY_VIEW_LOCAL_INFORMATION, &policy);
 
     if (!LSA_SUCCESS(status)) return status;
     ON_OUT_OF_SCOPE(LsaClose(policy));
@@ -119,9 +120,8 @@ TEST(WtoolsUserControl, AddDeleteCheckGroup) {
 TEST(WtoolsUserControl, AddDeleteCheckForbiddenGroupIntegration) {
     using namespace std::literals::string_literals;
     LdapControl lc;
-    if (wtools::SidToName(L"S-1-5-32-545", SidTypeGroup) != L"Users") {
+    if (SidToName(L"S-1-5-32-545", SidTypeGroup) != L"Users") {
         GTEST_SKIP() << "This test is only suitable for English Windows";
-        return;
     }
     static const std::wstring groups[] = {
         L"Access Control Assistance Operators"s,

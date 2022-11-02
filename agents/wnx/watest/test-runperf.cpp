@@ -71,6 +71,7 @@ bool MailboxCallbackPerfTest(const cma::mailslot::Slot *Slot, const void *Data,
             }
 
         case cma::carrier::DataType::kYaml:
+        case cma::carrier::DataType::kCommand:
             break;
     }
 
@@ -105,7 +106,7 @@ TEST(SectionPerf, Runner) {
     auto accu = AccumulateCounters(prefix, counters);
 
     {
-        ASSERT_TRUE(accu.size() > 0);
+        ASSERT_TRUE(!accu.empty());
 
         auto table = cma::tools::SplitString(accu, "\n");
 
@@ -122,13 +123,13 @@ TEST(SectionPerf, Runner) {
     auto ret = RunPerf(prefix, port_param, L"12345", 20, counters);
     ASSERT_EQ(ret, 0);
     ASSERT_TRUE(tst::WaitForSuccessIndicate(
-        4s, []() { return g_mailslot_storage.delivered_; }));
+        4s, [] { return g_mailslot_storage.delivered_; }));
 
     auto data = g_mailslot_storage.buffer_.data();
     auto data_end = data + g_mailslot_storage.buffer_.size();
     accu = std::string(data, data_end);
     {
-        ASSERT_TRUE(accu.size() > 0);
+        ASSERT_TRUE(!accu.empty());
 
         auto table = cma::tools::SplitString(accu, "\n");
 

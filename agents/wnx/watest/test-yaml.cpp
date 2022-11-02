@@ -37,7 +37,7 @@ fs::path CreateYamlnInTemp(const std::string &name, const std::string &text) {
     return path;
 }
 
-static fs::path CreateTestFile(const fs::path &name, const std::string &text) {
+fs::path CreateTestFile(const fs::path &name, const std::string &text) {
     auto path = name;
     std::ofstream ofs(wtools::ToStr(path), std::ios::binary);
     if (!ofs) {
@@ -541,7 +541,7 @@ namespace cma::cfg {  // to become friendly for cma::cfg classes
 
 TEST(AgentConfig, LogFile) {
     auto fname = GetCurrentLogFileName();
-    EXPECT_TRUE(fname.size() != 0);
+    EXPECT_TRUE(!fname.empty());
 }
 
 TEST(AgentConfig, YamlRead) {
@@ -669,7 +669,7 @@ TEST(AgentConfig, FactoryConfig) {
     EXPECT_TRUE(execute.size() > 3);
 
     auto only_from = GetInternalArray(groups::kGlobal, vars::kOnlyFrom);
-    EXPECT_TRUE(only_from.size() == 0);
+    EXPECT_TRUE(only_from.empty());
 
     {
         auto sections_enabled =
@@ -739,12 +739,9 @@ TEST(AgentConfig, FactoryConfig) {
         auto winperf_counters =
             GetPairArray(groups::kWinPerf, vars::kWinPerfCounters);
         EXPECT_EQ(winperf_counters.size(), 3);
-        for (const auto &counter : winperf_counters) {
-            auto id = counter.first;
-            EXPECT_TRUE(id != "");
-
-            auto name = counter.second;
-            EXPECT_TRUE(name != "");
+        for (const auto &[id, name] : winperf_counters) {
+            EXPECT_TRUE(!id.empty());
+            EXPECT_TRUE(!name.empty());
         }
     }
 
@@ -860,11 +857,11 @@ TEST(AgentConfig, UTF16LE) {
     // we will use possibility to test our conversion functions from wtools
     // #TODO make separate
     auto name_utf8 = GetVal(groups::kGlobal, vars::kName, std::string(""));
-    EXPECT_TRUE(name_utf8 != "");
+    EXPECT_TRUE(!name_utf8.empty());
     auto name_utf16 = wtools::ConvertToUTF16(name_utf8);
-    EXPECT_TRUE(name_utf16 != L"");
+    EXPECT_TRUE(!name_utf16.empty());
     auto utf8_from_utf16 = wtools::ToUtf8(name_utf16);
-    EXPECT_TRUE(utf8_from_utf16 != "");
+    EXPECT_TRUE(!utf8_from_utf16.empty());
 
     EXPECT_TRUE(utf8_from_utf16 == name_utf8);
 
@@ -963,8 +960,8 @@ TEST(AgentConfig, LoadingCheck) {
     EXPECT_TRUE(XLOG::l.isFileDbg());
     EXPECT_TRUE(XLOG::l.isWinDbg());
 
-    EXPECT_TRUE(groups::global.enabledSections().size() != 0);
-    EXPECT_TRUE(groups::global.disabledSections().size() == 0);
+    EXPECT_TRUE(!groups::global.enabledSections().empty());
+    EXPECT_TRUE(groups::global.disabledSections().empty());
 
     EXPECT_TRUE(groups::global.realtimePort() == cfg::kDefaultRealtimePort);
     EXPECT_TRUE(groups::global.realtimeTimeout() ==
@@ -1261,7 +1258,7 @@ TEST(AgentConfig, PluginsExecutionParams) {
     EXPECT_EQ(exe_units[0].pattern(), "a_1");
     EXPECT_EQ(exe_units[0].cacheAge(), kMinimumCacheAge);
     EXPECT_EQ(exe_units[0].async(), true);
-    for (auto e : exe_units) {
+    for (const auto &e : exe_units) {
         EXPECT_TRUE(e.source().IsMap());
         EXPECT_TRUE(e.sourceText().empty());
     }

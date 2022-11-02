@@ -22,7 +22,6 @@
 
 namespace rs = std::ranges;
 
-
 uint64_t ReadSingleCounter(std::wstring_view path) {
     PDH_HQUERY query{nullptr};
     if (::PdhOpenQuery(NULL, 0, &query) != ERROR_SUCCESS) {

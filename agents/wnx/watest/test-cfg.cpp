@@ -556,7 +556,7 @@ private:
     std::vector<std::string> runScript() const {
         auto [pid, job, process] =
             tools::RunStdCommandAsJob(cmd_file_.wstring());
-        tst::WaitForSuccessSilent(1000ms, [process]() {
+        tst::WaitForSuccessSilent(1000ms, [process] {
             DWORD code = 0;
             auto success = ::GetExitCodeProcess(process, &code);
             return success == TRUE && code != STILL_ACTIVE;

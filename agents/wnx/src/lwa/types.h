@@ -155,7 +155,7 @@ struct glob_token {
 // Pattern definition within the config file:
 //      C = *critpatternglobdescription*
 struct condition_pattern {
-    condition_pattern(const char state_, const std::string glob_pattern_)
+    condition_pattern(const char state_, const std::string &glob_pattern_)
         : state(state_), glob_pattern(glob_pattern_) {}
     char state;
     std::string glob_pattern;
@@ -233,7 +233,8 @@ inline script_async_execution from_string<script_async_execution>(
 
 // Command definitions for MRPE
 struct mrpe_entry {
-    mrpe_entry(const std::string run_as_user_, const std::string command_line_,
+    mrpe_entry(const std::string &run_as_user_,
+               const std::string &command_line_,
                const std::string &plugin_name_,
                const std::string &service_description_)
         : run_as_user(run_as_user_)

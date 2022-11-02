@@ -114,7 +114,7 @@ void stringToIPv6(const char *value, uint16_t *address) {
 
     while (pos != NULL) {
         char *endpos = NULL;
-        unsigned long segment = strtoul(pos, &endpos, 16);
+        const unsigned long segment = strtoul(pos, &endpos, 16);
 
         if (segment > 0xFFFFu) {
             std::cerr << "Invalid ipv6 address " << value << std::endl;
@@ -123,13 +123,12 @@ void stringToIPv6(const char *value, uint16_t *address) {
         if (endpos == pos) {
             skip_offset = static_cast<int>(segments.size());
         } else {
-            segments.push_back((unsigned short)segment);
+            segments.push_back(static_cast<unsigned short>(segment));
         }
         if (*endpos != ':') {
             break;
         }
         pos = endpos + 1;
-        ++segment;
     }
 
     int idx = 0;
@@ -173,9 +172,11 @@ void netmaskFromPrefixIPv6(int bits, uint16_t *netmask) {
 
 void netmaskFromPrefixIPv4(int bits, uint32_t &netmask) {
     uint32_t mask_swapped = 0;
-    for (int bit = 0; bit < bits; bit++) mask_swapped |= 0x80000000 >> bit;
-    unsigned char *s = (unsigned char *)&mask_swapped;
-    unsigned char *t = (unsigned char *)&netmask;
+    for (int bit = 0; bit < bits; bit++) {
+        mask_swapped |= 0x80000000 >> bit;
+    }
+    const auto *s = reinterpret_cast<unsigned char *>(&mask_swapped);
+    auto *t = reinterpret_cast<unsigned char *>(&netmask);
     t[3] = s[0];
     t[2] = s[1];
     t[1] = s[2];
@@ -203,7 +204,7 @@ std::string IPAddrToString(const sockaddr_storage &addr) {
         }
     }
 
-    DWORD size = static_cast<DWORD>(buffer.size());
+    auto size = static_cast<DWORD>(buffer.size());
     if (::WSAAddressToString(const_cast<sockaddr *>(inputAddr), length, nullptr,
                              (LPWSTR)buffer.data(), &size) == SOCKET_ERROR) {
         int errorId = ::WSAGetLastError();
@@ -250,7 +251,7 @@ OptionalString matchIPv6Mapped(const std::string &inputAddr) {
     if (std::regex_match(inputAddr, match, ipv6mapped) && match.size() >= 2) {
         for (const auto &m : match) {
             const auto subString{m.str()};
-            if (const auto subMatch = matchBase(subString, ipv4)) {
+            if (auto subMatch = matchBase(subString, ipv4)) {
                 return subMatch;
             }
         }

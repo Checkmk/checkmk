@@ -77,11 +77,11 @@ TEST(LogTest, RotationFileNameCreation) {
 }
 
 TEST(LogTest, RotationFileCfgParam) {
-    for (auto t : {XLOG::LogType::debug, XLOG::LogType::log,
-                   XLOG::LogType::stdio, XLOG::LogType::trace}) {
-        XLOG::Emitter e(t);
-        auto max_count = e.getBackupLogMaxCount();
-        auto max_size = e.getBackupLogMaxSize();
+    for (auto type : {XLOG::LogType::debug, XLOG::LogType::log,
+                      XLOG::LogType::stdio, XLOG::LogType::trace}) {
+        XLOG::Emitter e(type);
+        const auto max_count = e.getBackupLogMaxCount();
+        const auto max_size = e.getBackupLogMaxSize();
         EXPECT_TRUE(max_count < 32);
         EXPECT_TRUE(max_size > 100'000);
         EXPECT_TRUE(max_size < 1'000'000'000);
@@ -89,13 +89,13 @@ TEST(LogTest, RotationFileCfgParam) {
 }
 
 static bool FindString(const std::string &name, unsigned int index,
-                       const std::string &Text) {
+                       const std::string &text) {
     auto filename = details::MakeBackupLogName(name, index);
     auto data = tst::ReadFileAsTable(filename);
     if (data.size() != 1) return false;
     auto table = cma::tools::SplitString(data[0], " ");
     if (table.size() != 3) return false;
-    return table[2] == Text;
+    return table[2] == text;
 }
 
 TEST(LogTest, RotationFile) {
@@ -233,31 +233,31 @@ TEST(LogTest, All) {
 
     // Check API
     {
-        XLOG::Emitter l(XLOG::LogType::log);
-        const auto &lp = l.logParam();
+        Emitter logger(LogType::log);
+        const auto &lp = logger.logParam();
         EXPECT_TRUE(lp.directions_ & xlog::Directions::kFilePrint);
-        l.configFile(cma::cfg::GetCurrentLogFileName());
+        logger.configFile(cma::cfg::GetCurrentLogFileName());
         EXPECT_TRUE(cma::cfg::GetCurrentLogFileName() == lp.filename());
-        l.configPrefix(prefix);
+        logger.configPrefix(prefix);
         EXPECT_TRUE(prefix == lp.prefix());
         EXPECT_TRUE(prefix_ascii == lp.prefixAscii());
     }
 
     {
-        XLOG::Emitter d(XLOG::LogType::debug);
-        auto &lp = t.logParam();
+        Emitter logger(LogType::debug);
+        auto &lp = logger.logParam();
         EXPECT_FALSE(lp.directions_ & xlog::Directions::kFilePrint);
     }
 
     {
-        XLOG::Emitter t(XLOG::LogType::trace);
-        auto &lp = t.logParam();
+        Emitter logger(LogType::trace);
+        auto &lp = logger.logParam();
         EXPECT_FALSE(lp.directions_ & xlog::Directions::kFilePrint);
 
-        t.enableFileLog(true);
+        logger.enableFileLog(true);
         EXPECT_TRUE(lp.directions_ & xlog::Directions::kFilePrint);
 
-        t.enableFileLog(false);
+        logger.enableFileLog(false);
         EXPECT_FALSE(lp.directions_ & xlog::Directions::kFilePrint);
     }
 
@@ -265,16 +265,16 @@ TEST(LogTest, All) {
 
     // CLEAN FILE
     {
-        XLOG::Emitter l(XLOG::LogType::log);
-        auto &lp = l.logParam();
-        l.configFile("");
+        Emitter logger(LogType::log);
+        auto &lp = logger.logParam();
+        logger.configFile("");
         EXPECT_TRUE(lp.filename()[0] == 0) << "File not changed";
         EXPECT_TRUE(lp.directions_ & xlog::Directions::kFilePrint)
             << "Flag was changed";
         EXPECT_TRUE(lp.directions_ & xlog::Directions::kDebuggerPrint)
             << "Flag was changed";
 
-        l.configPrefix(L"ac");
+        logger.configPrefix(L"ac");
         std::string new_prefix = lp.prefixAscii();
         EXPECT_TRUE(new_prefix == "ac");
     }

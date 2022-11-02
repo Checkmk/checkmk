@@ -228,7 +228,7 @@ void Asynchronous::threadProc(
             }
             std::unique_lock l(lock_stopper_);
             const auto stop = stop_thread_.wait_until(
-                l, tm + period, [this]() { return stop_requested_; });
+                l, tm + period, [this] { return stop_requested_; });
             if (stop) {
                 break;
             }

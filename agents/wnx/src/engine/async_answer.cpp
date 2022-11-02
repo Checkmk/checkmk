@@ -79,15 +79,13 @@ bool AddVectorGracefully(std::vector<uint8_t> &out_data,
 }  // namespace
 
 AsyncAnswer::DataBlock AsyncAnswer::getDataAndClear() {
-    DataBlock v;
-
     std::lock_guard lk(lock_);
     if (order_ == Order::plugins_last) {
         AddVectorGracefully(data_, plugins_);
         AddVectorGracefully(data_, local_);
     }
 
-    v = std::move(data_);
+    auto v = std::move(data_);
     dropDataNoLock();
 
     return v;

@@ -205,9 +205,6 @@ std::wstring GenerateRandomFileName() noexcept;
 
 /// \brief RAII class to change folder structure in the config
 class TempCfgFs {
-private:
-    enum class Mode { standard, no_io };
-
 public:
     using ptr = std::unique_ptr<TempCfgFs>;
 
@@ -244,6 +241,7 @@ public:
     void allowUserAccess() const;
 
 private:
+    enum class Mode { standard, no_io };
     explicit TempCfgFs(Mode mode);
     [[nodiscard]] static bool createFile(
         const std::filesystem::path &filepath,

@@ -83,9 +83,8 @@ bool LdapControl::clearAsSpecialUser(std::wstring_view user_name) {
 }
 
 Status LdapControl::userDel(std::wstring_view user_name) noexcept {
-    auto err =
-        ::NetUserDel(primary_dc_name_,                          // PDC name
-                     const_cast<wchar_t *>(user_name.data()));  // user name
+    auto err = ::NetUserDel(primary_dc_name_,   // PDC name
+                            user_name.data());  // user name
 
     switch (err) {
         case 0:

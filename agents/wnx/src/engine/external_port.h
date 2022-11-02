@@ -92,7 +92,7 @@ private:
     }
     size_t allocCryptBuffer(const encrypt::Commander *commander);
     void do_write(const void *data_block, std::size_t data_length,
-                  encrypt::Commander *crypto_commander);
+                  const encrypt::Commander *crypto_commander);
 
     asio::ip::tcp::socket socket_;
 

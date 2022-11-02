@@ -17,7 +17,7 @@ namespace cma::evl {
 
 namespace win {
 // This safe wrapper for Vista API when Vista API is not accessible(XP/2003)
-struct EvtFunctionMap {
+class EvtFunctionMap {
 public:
     explicit EvtFunctionMap();
     ~EvtFunctionMap();
@@ -103,8 +103,8 @@ EvtFunctionMap g_evt;
     return nullptr;
 }
 
-[[nodiscard]] void RenderValues(EVT_HANDLE context, EVT_HANDLE fragment,
-                                std::vector<BYTE> &buffer) noexcept {
+void RenderValues(EVT_HANDLE context, EVT_HANDLE fragment,
+                  std::vector<BYTE> &buffer) noexcept {
     if (g_evt.render == nullptr) {
         return;
     }
@@ -288,7 +288,8 @@ public:
     };
 
     const EVT_VARIANT &getValByType(int index) const {
-        const auto *values = reinterpret_cast<const EVT_VARIANT *>(&buffer_[0]);
+        const auto *values =
+            reinterpret_cast<const EVT_VARIANT *>(buffer_.data());
 
         return values[index];
     }
@@ -349,9 +350,9 @@ public:
                 return Level::audit_success;
             case WinEventLevel::Verbose:
                 return Level::success;
-            default:
-                return Level::error;
         }
+        // unreachable
+        return Level::error;
     }
 
     [[nodiscard]] std::wstring makeMessage() const override {

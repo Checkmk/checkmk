@@ -773,7 +773,7 @@ TEST(LogWatchEventTest, TestMakeBody) {
     {
         auto st = states;
         auto logs_in = logs_in_registry;
-        logs_in.push_back("Zcx");
+        logs_in.emplace_back("Zcx");
         auto processed = UpdateEventLogStates(st, logs_in, SendMode::normal);
         EXPECT_TRUE(processed == logs_in.size());
         int count = 0;
@@ -796,7 +796,7 @@ TEST(LogWatchEventTest, TestMakeBody) {
     {
         auto st = states;
         std::vector<std::string> logs_in;
-        logs_in.push_back("Zcx");
+        logs_in.emplace_back("Zcx");
         auto processed = UpdateEventLogStates(st, logs_in, SendMode::all);
         EXPECT_EQ(processed, 1);
         int count = 0;

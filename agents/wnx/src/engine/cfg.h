@@ -386,7 +386,7 @@ std::vector<std::string> GetInternalArray(std::string_view section_name,
                                           std::string_view value_name);
 
 void PutInternalArray(YAML::Node yaml_node, std::string_view value_name,
-                      std::vector<std::string> &arr);
+                      const std::vector<std::string> &arr);
 
 void PutInternalArray(std::string_view section_name,
                       std::string_view value_name,
@@ -463,7 +463,7 @@ void KillDefaultConfig();
 void LoadGlobal();
 }  // namespace details
 
-struct Group {
+class Group {
 public:
     Group() noexcept : enabled_in_cfg_(false), exist_in_cfg_(false) {}
     bool existInConfig() const { return exist_in_cfg_; }
@@ -484,7 +484,7 @@ protected:
     std::string name_;
 };
 
-struct Global : public Group {
+class Global : public Group {
 public:
     Global() noexcept;
 
@@ -760,7 +760,7 @@ private:
     std::wstring logfile_as_wide_;
 };
 
-struct WinPerf : public Group {
+class WinPerf : public Group {
 public:
     struct Counter {
         Counter() = default;
@@ -902,7 +902,7 @@ void ApplyValueIfScalar(const YAML::Node &entry, T &var,
     }
 }
 
-struct Plugins : public Group {
+class Plugins : public Group {
 public:
     // describes how should certain modules executed
     struct ExeUnit : public PluginInfo {

@@ -23,10 +23,8 @@ extern std::vector<int> TsValues;
 
 namespace {
 bool ValidIndexOfTs(int index) {
-    for (auto a : wtools::TsValues)
-        if (a == index) return true;
-
-    return false;
+    return std::ranges::any_of(wtools::TsValues,
+                               [index](const auto &e) { return e == index; });
 }
 }  // namespace
 
@@ -141,7 +139,7 @@ TEST(WinPerf, MakeBodyForTSIntegration) {
 
     auto str = details::MakeWinPerfNakedList(object, key_index);
     auto table = cma::tools::SplitString(str, "\n");
-    ASSERT_TRUE(table.size() > 0);
+    ASSERT_TRUE(!table.empty());
     for (const auto &row : table) {
         auto words = cma::tools::SplitString(row, " ");
         EXPECT_EQ(words.size(), 3);

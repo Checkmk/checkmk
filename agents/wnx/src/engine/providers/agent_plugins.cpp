@@ -32,7 +32,7 @@ std::string ReadFileToString(const fs::path &file) {
     std::ifstream ifs(file, std::ifstream::in);
     if (ifs) {
         const auto length = GetLength(ifs);
-        ret.resize(static_cast<size_t>(length));
+        ret.resize(length);
         ifs.read(ret.data(), static_cast<std::streamsize>(length));
         if (ifs.good() || ifs.eof()) {
             return ret;

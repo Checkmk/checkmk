@@ -84,7 +84,7 @@ TEST(ServiceControllerTest, StartStop) {
     int counter = 0;
 
     wtools::ServiceController controller(
-        std::make_unique<cma::srv::ServiceProcessor>(100ms, [&counter]() {
+        std::make_unique<cma::srv::ServiceProcessor>(100ms, [&counter] {
             counter++;
             return true;
         }));
@@ -105,7 +105,7 @@ TEST(ServiceControllerTest, StartStop) {
                                        ));
     ON_OUT_OF_SCOPE(wtools::UninstallService(test_service_name));
     auto success = wtools::ServiceController::StopType::fail;
-    std::thread t([&]() {
+    std::thread t([&] {
         success =
             controller.registerAndRun(test_service_name, true, true, true);
     });

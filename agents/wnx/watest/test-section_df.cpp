@@ -49,7 +49,6 @@ TEST(DfTest, ProduceMountPointsOutput) {
     if (mp.empty()) {
         GTEST_SKIP()
             << "Mounting points absent: you have mount at least two different points\n";
-        return;
     }
 
     auto raws = tools::SplitString(mp, "\n");

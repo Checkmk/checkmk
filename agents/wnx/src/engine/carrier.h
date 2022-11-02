@@ -66,7 +66,7 @@ struct CarrierDataHeader {
         return static_cast<const char *>(static_cast<const void *>(this));
     }
 
-    static void destroy(CarrierDataHeader *cdh) noexcept {
+    static void destroy(const CarrierDataHeader *cdh) noexcept {
         if (cdh != nullptr) {
             delete[] cdh->asBuf();
         }

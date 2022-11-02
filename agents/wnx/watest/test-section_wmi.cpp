@@ -417,7 +417,7 @@ TEST(WmiProviderTest, SimulationIntegration) {
         EXPECT_EQ(msexch.columns().size(), 0);
 
         // sub section count
-        const int count = 7;
+        constexpr int count = 7;
         auto &subs = msexch.subObjects();
         EXPECT_EQ(subs.size(), count);
         for (int k = 0; k < count; ++k)

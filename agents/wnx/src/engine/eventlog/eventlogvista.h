@@ -28,11 +28,11 @@ bool IsEvtApiAvailable() noexcept;
 
 class EventLogVista : public EventLogBase {
 public:
-    EventLogVista(const std::wstring &path);
-    ~EventLogVista();
+    explicit EventLogVista(const std::wstring &path);
+    ~EventLogVista() override;
 
     [[nodiscard]] std::wstring getName() const override;
-    [[nodiscard]] void seek(uint64_t record_id) override;
+    void seek(uint64_t record_id) override;
     EventLogRecordBase *readRecord() override;
     uint64_t getLastRecordId() override;
     [[nodiscard]] bool isLogValid() const override;

@@ -27,7 +27,7 @@ int wmain(int argc, wchar_t **argv) {
         return 1;
     }
 
-    std::set_terminate([]() {
+    std::set_terminate([] {
         //
         XLOG::details::LogWindowsEventCritical(999, "Win Agent is Terminated.");
         XLOG::stdio.crit("Win Agent is Terminated.");

@@ -12,7 +12,7 @@
 namespace cma::evl {
 class MessageResolver {
 public:
-    MessageResolver(const std::wstring &log_name) : _name(log_name) {}
+    explicit MessageResolver(const std::wstring &log_name) : _name(log_name) {}
     MessageResolver(const MessageResolver &) = delete;
     MessageResolver &operator=(const MessageResolver &) = delete;
     ~MessageResolver() {
@@ -36,7 +36,7 @@ private:
 };
 
 class EventLog : public EventLogBase {
-    static const size_t INIT_BUFFER_SIZE = 64 * 1024;
+    static constexpr size_t INIT_BUFFER_SIZE = 64 * 1024;
 
 public:
     /**
@@ -47,7 +47,7 @@ public:
     EventLog operator=(const EventLog &) = delete;
     EventLog(EventLog &&) = delete;
     EventLog operator=(EventLog &&) = delete;
-    ~EventLog() {
+    ~EventLog() override {
         if (handle_ != nullptr) {
             ::CloseEventLog(handle_);
             handle_ = nullptr;

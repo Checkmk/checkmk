@@ -1062,7 +1062,7 @@ std::vector<std::string> GetInternalArray(std::string_view section_name,
 
 // opposite operation for the GetInternalArray
 void PutInternalArray(YAML::Node yaml_node, std::string_view value_name,
-                      std::vector<std::string> &arr) {
+                      const std::vector<std::string> &arr) {
     try {
         auto section = yaml_node[value_name];
         if (arr.empty()) {
@@ -1734,7 +1734,7 @@ void ConfigInfo::mergeYamlData(YAML::Node &config_node,
     user_yaml_path_ = user_data.path_;
 
     aggregated_ = true;
-    g_uniq_id++;
+    ++g_uniq_id;
     ok_ = true;
 }
 
@@ -1841,7 +1841,7 @@ bool ConfigInfo::loadDirect(const fs::path &file) {
     bakery_yaml_path_.clear();
     aggregated_ = false;
     ok_ = true;
-    g_uniq_id++;
+    ++g_uniq_id;
     return true;
 }
 
@@ -1854,7 +1854,7 @@ bool ConfigInfo::loadDirect(std::string_view text) {
     std::lock_guard lk(lock_);
     yaml_ = new_yaml;
 
-    g_uniq_id++;
+    ++g_uniq_id;
     return true;
 }
 

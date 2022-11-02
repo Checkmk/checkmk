@@ -58,7 +58,7 @@ bool ChangeAccessRights(
         XLOG::l("GetNamedSecurityInfo Error {}", result);
         return false;
     }
-    ON_OUT_OF_SCOPE(if (sd != nullptr)::LocalFree((HLOCAL)sd));
+    ON_OUT_OF_SCOPE(if (sd != nullptr)::LocalFree(sd));
 
     // Initialize an EXPLICIT_ACCESS structure for the new ACE.
     EXPLICIT_ACCESS ea;
@@ -78,7 +78,7 @@ bool ChangeAccessRights(
         return false;
     }
 
-    ON_OUT_OF_SCOPE(if (new_dacl != nullptr) LocalFree((HLOCAL)new_dacl));
+    ON_OUT_OF_SCOPE(if (new_dacl != nullptr) LocalFree(new_dacl));
 
     // Attach the new ACL as the object's DACL.
     result = ::SetNamedSecurityInfo(const_cast<wchar_t *>(object_name),
@@ -477,7 +477,6 @@ void LogLastError(std::string_view name) {
     }
 
     XLOG::l(XLOG::kStdio).crit("OpenService '{}' failed, [{}]", name, e);
-    return;
 }
 }  // namespace
 
@@ -1294,7 +1293,7 @@ void InitWindowsCom() {
 
     auto hres = ::CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 
-    const auto version_requested = MAKEWORD(2, 2);
+    constexpr auto version_requested = MAKEWORD(2, 2);
     WSADATA wsa_data{0};
     const int err = ::WSAStartup(version_requested, &wsa_data);
     if (err != 0) {
@@ -2457,7 +2456,7 @@ std::string MakeReadableString(bool allowed, std::string_view domain,
     return os;
 }
 
-SID *ExtractSid(ACLInfo::AceList *list) {
+SID *ExtractSid(const ACLInfo::AceList *list) {
     auto *ace = list->ace;
     auto *sid_start =
         list->allowed ? &reinterpret_cast<ACCESS_ALLOWED_ACE *>(ace)->SidStart
@@ -2524,7 +2523,7 @@ std::string ReadWholeFile(const fs::path &fname) noexcept {
         f.seekg(0, std::ios::beg);
         std::string v;
         v.resize(fsize);
-        f.read(reinterpret_cast<char *>(v.data()), fsize);
+        f.read(v.data(), fsize);
         return v;
     } catch (const std::exception &e) {
         // catching possible exceptions in the
@@ -2867,7 +2866,7 @@ private:
     size_t count_{0};
 };
 
-ACL *CombineSidsIntoACl(SidStore &first, SidStore &second) {
+ACL *CombineSidsIntoACl(const SidStore &first, const SidStore &second) {
     auto acl_size = sizeof(ACL) +
                     2 * (sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD)) +
                     GetSidLengthRequired(static_cast<UCHAR>(first.count())) +

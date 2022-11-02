@@ -29,7 +29,6 @@ void MemMove(void *dst, const void *src, size_t count);
 #include "stringutil.h"
 #include "types.h"
 
-#define __STDC_FORMAT_MACROS
 namespace fs = std::filesystem;
 
 namespace {
@@ -46,23 +45,6 @@ bool checkHostRestriction(const std::string &hostname,
 }
 
 enum class CheckResult { Nop, Continue, Return };
-
-inline CheckResult checkSpecialVariables(const std::string &variable,
-                                         const std::string &hostname,
-                                         const std::string &value) {
-    if (variable == "host") {
-        if (checkHostRestriction(hostname, value)) {
-            return CheckResult::Continue;
-        }
-        return CheckResult::Return;
-    }
-    if (variable == "print") {
-        std::cout << value << std::endl;
-        return CheckResult::Continue;
-    }
-
-    return CheckResult::Nop;
-}
 
 bool assignVariable(const std::string &variable, const std::string &value,
                     ConfigurableVector &configurables) {
@@ -123,7 +105,6 @@ bool feedSection(const std::string &hostname, ConfigurableMap &configurables,
         if (mapIt == configurables.end() ||
             !assignVariable(variable, value, mapIt->second)) {
             XLOG::l("Invalid entry (" + sectionName + ":" + variable + ")");
-            continue;
         }
     }
 
@@ -169,7 +150,7 @@ void Configuration::outputConfigurables(std::ostream &out) {
 
     for (const auto &kv : _configurables) {
         const auto &[section, key] = kv.first;
-        if (config_map.find(section) == config_map.end()) {
+        if (!config_map.contains(section)) {
             config_map[section] = {};
         }
         // this serializes only the first configurable registered under that
@@ -188,8 +169,8 @@ void Configuration::outputConfigurables(std::ostream &out) {
 }
 
 void Configuration::outputConfigurables(
-    std::function<void(const std::string, const std::string, const std::string,
-                       const std::string)>
+    std::function<void(const std::string &, const std::string &,
+                       const std::string &, const std::string &)>
         Sink) {
     using ConfigMap =
         std::map<std::string, std::reference_wrapper<ConfigurableBase>>;
@@ -197,7 +178,7 @@ void Configuration::outputConfigurables(
 
     for (const auto &kv : _configurables) {
         const auto &[section, key] = kv.first;
-        if (config_map.find(section) == config_map.end()) {
+        if (!config_map.contains(section)) {
             config_map[section] = {};
         }
         // this serializes only the first configurable registered under that
@@ -219,11 +200,12 @@ void Configuration::outputConfigurables(
                     auto arr = v.generateKeys();
                     for (auto &entry : arr) {
                         std::string out;
-                        if (entry.first.size())
+                        if (!entry.first.empty()) {
                             out += "- include " + entry.first + " = " +
                                    entry.second + "\n";
-                        else
+                        } else {
                             out += "- include = " + entry.second + "\n";
+                        }
                         cma::cfg::ReplaceInString(
                             out, wtools::ToUtf8(cma::cfg::GetUserDir()),
                             cma::cfg::vars::kProgramDataFolder);
@@ -334,8 +316,8 @@ std::ostream &operator<<(std::ostream &out, const config &val);
 // which record entry we have seen its messages so
 // far.
 struct state {
-    state(const std::string &name_, uint64_t record_no_ = 0,
-          bool newly_discovered_ = true)
+    explicit state(const std::string &name_, uint64_t record_no_ = 0,
+                   bool newly_discovered_ = true)
         : name(name_)
         , record_no(record_no_)
         , newly_discovered(newly_discovered_) {}
@@ -391,7 +373,7 @@ eventlog::config from_string<eventlog::config>(const std::string &value) {
         }
     }
 
-    return eventlog::config("", level, hide_context);
+    return {"", level, hide_context};
 }
 
 template <>
@@ -451,7 +433,9 @@ std::string ToYamlString(const globline_container &Entry, bool) {
         out += p.glob_pattern;
         out += "'";
     }
-    if (Entry.patterns.size() == 0) out += " ~";
+    if (Entry.patterns.empty()) {
+        out += " ~";
+    }
 
     return out;
 }
@@ -467,9 +451,9 @@ inline std::ostream &operator<<(std::ostream &os, const Level &l) {
             return os << "warn";
         case Level::Crit:
             return os << "crit";
-        default:
-            return os << "invalid";
     }
+    // unreachable
+    return os << "invalid";
 }
 
 std::ostream &operator<<(std::ostream &out, const config &val) {
@@ -859,7 +843,7 @@ bool CheckIniFile(const std::filesystem::path &Path) {
 Parser::~Parser() { delete pi_; }
 
 void Parser::prepare() {
-    if (pi_) delete pi_;
+    delete pi_;
     pi_ = new ParserImplementation;
 }
 
@@ -956,24 +940,24 @@ const std::unordered_map<std::string, Mapping> G_Mapper = {
 const Mapping G_MissingMapping{ "", "", MapMode::kMissing };
 // clang-format on
 
-std::string MakeMappingKey(std::string Section, std::string Key) {
-    auto s = Section + "." + Key;
-    std::transform(s.cbegin(), s.cend(), s.begin(), tolower);
+std::string MakeMappingKey(const std::string &section, std::string key) {
+    auto s = section + "." + key;
+    std::ranges::transform(s, s.begin(), tolower);
 
     return s;
 }
 
-const Mapping &FindMapping(const std::string Section, const std::string Key) {
-    auto kk = MakeMappingKey(Section, Key);
-    auto found = G_Mapper.find(kk);
+const Mapping &FindMapping(const std::string &section, const std::string &key) {
+    const auto kk = MakeMappingKey(section, key);
+    const auto found = G_Mapper.find(kk);
     if (found == G_Mapper.end()) {
-        XLOG::stdio("UNKNOWN KEY {}.{}", Section, Key);
+        XLOG::stdio("UNKNOWN KEY {}.{}", section, key);
         return G_MissingMapping;
     }
     return found->second;
 }
 
-void AddKeyedPattern(YAML::Node Node, const std::string Key,
+void AddKeyedPattern(YAML::Node Node, const std::string &Key,
                      const std::string &Pattern, const std::string &Value) {
     for (auto it = Node.begin(); it != Node.end(); ++it) {
         auto entry = *it;

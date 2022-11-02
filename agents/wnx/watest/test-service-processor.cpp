@@ -138,7 +138,7 @@ TEST(ServiceProcessorTest, StartStopExe) {
     auto temp_fs{tst::TempCfgFs::CreateNoIo()};
     ASSERT_TRUE(temp_fs->loadContent(tst::GetFabricYmlContent()));
 
-    auto processor = new ServiceProcessor(100ms, [&counter]() {
+    auto processor = new ServiceProcessor(100ms, [&counter] {
         xlog::l("pip").print();
         counter++;
         return true;
@@ -270,7 +270,7 @@ public:
                                 wtools::SecurityLevel::standard);
         sp.startService();
         ASSERT_TRUE(
-            tst::WaitForSuccessSilent(1000ms, [this]() { return ready; }));
+            tst::WaitForSuccessSilent(1000ms, [this] { return ready; }));
     }
     void TearDown() override {
         cc.shutdownCommunication();
@@ -286,7 +286,7 @@ public:
                     "  id: 0\n",
                     "local_test")};
     bool ready{false};
-    ServiceProcessor sp{100ms, [this]() {
+    ServiceProcessor sp{100ms, [this] {
                             ready = true;
                             return true;
                         }};
@@ -295,7 +295,7 @@ public:
 TEST_F(ServiceProcessorTestFixture, YamlOverMailSlot) {
     ASSERT_TRUE(cc.establishCommunication(sp.getInternalPort()));
     cc.sendYaml("TestSite", cmd);
-    tst::WaitForSuccessSilent(1000ms, [this]() { return !md.data.empty(); });
+    tst::WaitForSuccessSilent(1000ms, [this] { return !md.data.empty(); });
     EXPECT_GE(md.data.size(), 100U);
     std::string s{md.data.data(), md.data.size()};
     EXPECT_TRUE(s.starts_with("<<<check_mk>>>"));

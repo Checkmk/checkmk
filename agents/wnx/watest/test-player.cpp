@@ -22,18 +22,18 @@
 namespace cma::player {  // to become friendly for wtools classes
 TEST(PlayerTest, Pipe) {
     auto p = new wtools::SimplePipe();
-    EXPECT_TRUE(p->getRead() == 0);
-    EXPECT_TRUE(p->getWrite() == 0);
+    EXPECT_TRUE(p->getRead() == nullptr);
+    EXPECT_TRUE(p->getWrite() == nullptr);
     p->create();
-    EXPECT_TRUE(p->getRead() != 0);
-    EXPECT_TRUE(p->getWrite() != 0);
+    EXPECT_TRUE(p->getRead() != nullptr);
+    EXPECT_TRUE(p->getWrite() != nullptr);
 
     auto p2 = new wtools::SimplePipe();
-    EXPECT_TRUE(p2->getRead() == 0);
-    EXPECT_TRUE(p2->getWrite() == 0);
+    EXPECT_TRUE(p2->getRead() == nullptr);
+    EXPECT_TRUE(p2->getWrite() == nullptr);
     p2->create();
-    EXPECT_TRUE(p2->getRead() != 0);
-    EXPECT_TRUE(p2->getWrite() != 0);
+    EXPECT_TRUE(p2->getRead() != nullptr);
+    EXPECT_TRUE(p2->getWrite() != nullptr);
     delete p;
     delete p2;
 }
@@ -81,7 +81,7 @@ static void CreateFileInTemp(const std::filesystem::path &filename) {
 constexpr const char *SecondLine = "0, 1, 2, 3, 4, 5, 6, 7, 8";
 
 static void CreatePluginInTemp(const std::filesystem::path &filename,
-                               int timeout, std::string &plugin_name) {
+                               int timeout, const std::string &plugin_name) {
     std::ofstream ofs(wtools::ToStr(filename));
 
     if (!ofs) {
@@ -99,12 +99,11 @@ static void CreatePluginInTemp(const std::filesystem::path &filename,
 static void RemoveFolder(const std::filesystem::path &Path) {
     namespace fs = std::filesystem;
     fs::path top = Path;
-    fs::path dir_path;
 
     cma::PathVector directories;
     std::error_code ec;
     for (auto &p : fs::recursive_directory_iterator(top, ec)) {
-        dir_path = p.path();
+        auto dir_path = p.path();
         if (fs::is_directory(dir_path)) {
             directories.push_back(fs::canonical(dir_path));
         }

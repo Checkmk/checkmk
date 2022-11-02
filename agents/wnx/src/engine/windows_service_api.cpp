@@ -96,16 +96,16 @@ static bool execMsi() {
     si.cb = sizeof(si);
     ZeroMemory(&pi, sizeof(pi));
 
-    if (!CreateProcess(nullptr,                          // application name
-                       (LPWSTR)(exe + options).c_str(),  // Command line options
-                       NULL,   // Process handle not inheritable
-                       NULL,   // Thread handle not inheritable
-                       FALSE,  // Set handle inheritance to FALSE
-                       0,      // No creation flags
-                       NULL,   // Use parent's environment block
-                       NULL,   // Use parent's starting directory
-                       &si,    // Pointer to STARTUPINFO structure
-                       &pi))   // Pointer to PROCESS_INFORMATION structure
+    if (!CreateProcess(nullptr,                 // application name
+                       (exe + options).data(),  // Command line options
+                       nullptr,  // Process handle not inheritable
+                       nullptr,  // Thread handle not inheritable
+                       FALSE,    // Set handle inheritance to FALSE
+                       0,        // No creation flags
+                       nullptr,  // Use parent's environment block
+                       nullptr,  // Use parent's starting directory
+                       &si,      // Pointer to STARTUPINFO structure
+                       &pi))     // Pointer to PROCESS_INFORMATION structure
     {
         return false;
     }
@@ -172,7 +172,6 @@ static void CheckForCommand(std::string &Command) {
                 done_file_name.c_str(), GetLastError());
     } catch (...) {
     }
-    return;
 }
 
 // on -test self
@@ -185,7 +184,7 @@ int TestMainServiceSelf(int interval) {
         interval = 0;
     }
     // not a best method to call thread, but this is only for VISUAL testing
-    std::thread kick_and_print([&stop, interval]() {
+    std::thread kick_and_print([&stop, interval] {
         auto port = static_cast<uint16_t>(cfg::groups::global.port());
 
         using namespace asio;
@@ -307,7 +306,7 @@ int TestMt() {
     try {
         XLOG::setup::ColoredOutputOnStdio(true);
         std::string command;
-        ServiceProcessor sp(2000ms, [&command]() {
+        ServiceProcessor sp(2000ms, [&command] {
             CheckForCommand(command);
             if (command[0]) {
                 tools::RunDetachedCommand(command);
@@ -331,7 +330,7 @@ int TestLegacy() {
     try {
         // test for main thread. will be disabled in production
         // to find file, read and start update POC.
-        ServiceProcessor sp(2000ms, []() { return true; });
+        ServiceProcessor sp(2000ms, [] { return true; });
         sp.startServiceAsLegacyTest();
         sp.stopService(wtools::StopMode::cancel);
     } catch (const std::exception &e) {
@@ -529,7 +528,7 @@ int ExecMainService(StdioLog stdio_log) {
         "press any key to stop execution\n",
         XLOG::Colors::cyan);
     auto delay = 1000ms;
-    auto processor = std::make_unique<ServiceProcessor>(delay, []() {
+    auto processor = std::make_unique<ServiceProcessor>(delay, [] {
     // default embedded callback for exec
     // At the moment does nothing
     // optional commands should be placed here
@@ -1105,7 +1104,6 @@ void ProcessFirewallConfiguration(std::wstring_view app_name, int port,
             XLOG::d.i("Firewall rule '{}' is absent, nothing to remove",
                       wtools::ToUtf8(rule_name));
         }
-        return;
     }
 }
 
@@ -1305,7 +1303,7 @@ SERVICE_FAILURE_ACTIONS *GetServiceFailureActions(SC_HANDLE handle) {
 
         // allocation
         new_buf_size = bytes_needed;
-        actions = reinterpret_cast<SERVICE_FAILURE_ACTIONS *>(
+        actions = static_cast<SERVICE_FAILURE_ACTIONS *>(
             ::LocalAlloc(LMEM_FIXED, new_buf_size));
     }
 

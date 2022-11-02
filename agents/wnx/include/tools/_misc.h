@@ -243,8 +243,8 @@ uint64_t ConvertToUint64(const T &str, uint64_t dflt) noexcept {
 
 namespace win {
 template <typename T>
-inline bool SetEnv(const std::basic_string<T> &name,
-                   const std::basic_string<T> &value) noexcept {
+bool SetEnv(const std::basic_string<T> &name,
+            const std::basic_string<T> &value) noexcept {
     auto cmd = name;
     if constexpr (sizeof(T) == 1) {
         cmd += "=" + value;

@@ -16,8 +16,7 @@
 
 namespace cma::tools {
 
-namespace {
-void ClosePi(PROCESS_INFORMATION &pi) noexcept {
+inline void ClosePi(PROCESS_INFORMATION &pi) noexcept {
     if (pi.hProcess != nullptr) {
         ::CloseHandle(pi.hProcess);
         pi.hProcess = nullptr;
@@ -27,7 +26,6 @@ void ClosePi(PROCESS_INFORMATION &pi) noexcept {
         pi.hThread = nullptr;
     }
 }
-}  // namespace
 
 inline bool RunCommandAndWait(const std::wstring &command,
                               const std::wstring_view work_dir) {

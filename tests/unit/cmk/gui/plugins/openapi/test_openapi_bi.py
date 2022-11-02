@@ -354,7 +354,7 @@ def test_openapi_delete_pack(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
         "public": True,
     }
 
-    # Check invalid POST request on existing id
+    # Create new pack
     aut_user_auth_wsgi_app.post(
         base + "/objects/bi_pack/test_pack",
         content_type="application/json",
@@ -383,7 +383,6 @@ def test_openapi_delete_pack(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
 
 def test_openapi_delete_pack_forbidden(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
-    # Check invalid POST request on existing id
     aut_user_auth_wsgi_app.delete(
         base + "/objects/bi_pack/default",
         content_type="application/json",

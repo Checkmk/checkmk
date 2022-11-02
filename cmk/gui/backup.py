@@ -20,6 +20,7 @@ import signal
 import socket
 import subprocess
 import time
+from io import TextIOWrapper
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Mapping, Optional, Sequence, Tuple, Type, TypedDict
 
@@ -445,13 +446,13 @@ class Job(MKBackupJob, BackupEntity):
 
 
 class Jobs(BackupEntityCollection):
-    def __init__(self, config_file_path) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, config_file_path: str) -> None:
         super().__init__(config_file_path, cls=Job, config_attr="jobs")
 
         etc_path = os.path.dirname(os.path.dirname(config_file_path))
         self._cronjob_path = "%s/cron.d/mkbackup" % etc_path
 
-    def show_list(self, editable=True):  # pylint: disable=too-many-branches
+    def show_list(self, editable: bool = True) -> None:  # pylint: disable=too-many-branches
         html.h3(_("Jobs"))
         with table_element(sortable=False, searchable=False) as table:
 
@@ -567,18 +568,18 @@ class Jobs(BackupEntityCollection):
 
                     html.write_text(time.strftime("%Y-%m-%d %H:%M", time.localtime(min(times))))
 
-    def jobs_using_target(self, target):
+    def jobs_using_target(self, target: "Target") -> Sequence[Job]:
         jobs = []
         for job in self.objects.values():
             if job.target_ident() == target.ident():
                 jobs.append(job)
         return jobs
 
-    def save(self):
+    def save(self) -> None:
         super().save()
         self.save_cronjobs()
 
-    def save_cronjobs(self):
+    def save_cronjobs(self) -> None:
         with Path(self._cronjob_path).open("w", encoding="utf-8") as f:
             self._write_cronjob_header(f)
             for job in self.objects.values():
@@ -588,10 +589,10 @@ class Jobs(BackupEntityCollection):
 
         self._apply_cron_config()
 
-    def _write_cronjob_header(self, f):
+    def _write_cronjob_header(self, f: TextIOWrapper) -> None:
         f.write("# Written by mkbackup configuration\n")
 
-    def _apply_cron_config(self):
+    def _apply_cron_config(self) -> None:
         pass
 
 

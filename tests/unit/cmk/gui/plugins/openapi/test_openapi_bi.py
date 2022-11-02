@@ -101,6 +101,94 @@ def test_openapi_get_bi_rule(aut_user_auth_wsgi_app: WebTestAppForCMK):
     assert rule["id"] == rule_id
 
 
+def test_openapi_bi_rule(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+    base = "/NO_SITE/check_mk/api/1.0"
+    rule = {
+        "id": "some_rule",
+        "pack_id": "default",
+        "nodes": [
+            {
+                "search": {"type": "empty"},
+                "action": {
+                    "type": "state_of_service",
+                    "host_regex": "$HOSTNAME$",
+                    "service_regex": "ASM|ORACLE|proc",
+                },
+            }
+        ],
+        "params": {"arguments": ["HOSTNAME", "OTHERARGUMENT"]},
+        "node_visualization": {"type": "none", "style_config": {}},
+        "properties": {
+            "title": "Applications",
+            "comment": "",
+            "docu_url": "",
+            "icon": "",
+            "state_messages": {},
+        },
+        "aggregation_function": {"type": "worst", "count": 1, "restrict_state": 2},
+        "computation_options": {"disabled": False},
+    }
+
+    # create rule
+    aut_user_auth_wsgi_app.post(
+        base + "/objects/bi_rule/some_rule",
+        headers={"Accept": "application/json"},
+        status=200,
+        content_type="application/json",
+        params=json.dumps(rule),
+    )
+
+    # create dependent rule
+    rule_dependent = rule.copy()
+    rule_dependent["id"] = "dependent"
+    rule_dependent["nodes"] = [
+        {
+            "search": {"type": "empty"},
+            "action": {"type": "call_a_rule", "rule_id": "some_rule", "params": {"arguments": []}},
+        }
+    ]
+    aut_user_auth_wsgi_app.post(
+        base + "/objects/bi_rule/dependent",
+        headers={"Accept": "application/json"},
+        status=200,
+        content_type="application/json",
+        params=json.dumps(rule_dependent),
+    )
+
+    # try delete a rule, another rule is dependent on
+    response = aut_user_auth_wsgi_app.delete(
+        base + "/objects/bi_rule/some_rule",
+        headers={"Accept": "application/json"},
+        status=409,
+    )
+    assert json.loads(response.text) == {
+        "detail": "You cannot delete this rule: it is still used by other rules.",
+        "status": 409,
+        "title": "Conflict",
+    }
+
+    # delete dependent rule
+    aut_user_auth_wsgi_app.delete(
+        base + "/objects/bi_rule/dependent",
+        headers={"Accept": "application/json"},
+        status=204,
+    )
+
+    # delete rule
+    aut_user_auth_wsgi_app.delete(
+        base + "/objects/bi_rule/some_rule",
+        headers={"Accept": "application/json"},
+        status=204,
+    )
+
+    # delete non existing rule
+    aut_user_auth_wsgi_app.delete(
+        base + "/objects/bi_rule/some_rule",
+        headers={"Accept": "application/json"},
+        status=404,
+    )
+
+
 def test_openapi_modify_bi_aggregation(aut_user_auth_wsgi_app: WebTestAppForCMK):
     base = "/NO_SITE/check_mk/api/1.0"
 

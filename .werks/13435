@@ -1,0 +1,15 @@
+Title: Fix 500 errors on BI rule endpoints
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1667396850
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0p16
+
+Deleting a rule which is a dependency of another rule returned a 500 status code, now returns 409
+
+Deleting a rule returned a 500 status code "permission mismatch", now returns 204
+
+Deleting a non existing rule returned a 500 status code, now returns 404

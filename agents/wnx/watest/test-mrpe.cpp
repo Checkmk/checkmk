@@ -11,7 +11,8 @@
 #include "system_error"  // for error_code
 #include "test_tools.h"
 
-std::string_view a;
+namespace fs = std::filesystem;
+
 /*
 Typic output:
 
@@ -177,8 +178,7 @@ TEST(SectionProviderMrpe, YmlCheck) {
     EXPECT_EQ(paths.size(), 0) << "base YAML must have 0 mrpe entries";
 }
 
-static auto CreateMrpeFiles(std::filesystem::path cfg_dir,
-                            std::filesystem::path file_dir) {
+static auto CreateMrpeFiles(const fs::path &cfg_dir, const fs::path &file_dir) {
     auto mrpe_file_1 =
         tst::CreateWorkFile(file_dir / "mrpe1.bat", "@echo output_of_mrpe1");
 
@@ -297,8 +297,8 @@ TEST(SectionProviderMrpe, Run) {
     replaceYamlSeq(
         groups::kMrpe, vars::kMrpeConfig,
         {
-            "check = Codepage 'c:\\windows\\system32\\chcp.com'",
-            "check = Console 'c:\\windows\\system32\\mode.com' CON CP /STATUS",
+            R"(check = Codepage 'c:\windows\system32\chcp.com')",
+            R"(check = Console 'c:\windows\system32\mode.com' CON CP /STATUS)",
         });
 
     auto strings = GetArray<std::string>(groups::kMrpe, vars::kMrpeConfig);

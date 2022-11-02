@@ -12,8 +12,8 @@
 
 #pragma once
 
-#ifndef section_header_h__
-#define section_header_h__
+#ifndef SECTION_HEADER_H
+#define SECTION_HEADER_H
 
 #include <string>
 #include <string_view>
@@ -120,4 +120,4 @@ constexpr std::wstring_view kWmiPathOhm = L"Root\\OpenHardwareMonitor";
 constexpr std::wstring_view kWmiPathStd = L"Root\\Cimv2";
 
 }  // namespace cma::provider
-#endif  // section_header_h__
+#endif  // SECTION_HEADER_H

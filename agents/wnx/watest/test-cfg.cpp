@@ -292,10 +292,10 @@ TEST_F(CmaFixture, FindAlternateDirsExeEnvVar) {
 
 TEST(CmaCfg, ReloadCfg) {
     OnStartTest();
-    auto id = GetCfg().uniqId();
+    auto id = details::ConfigInfo::uniqId();
     EXPECT_TRUE(id > 0);
     LoadConfigFull({});
-    auto id2 = GetCfg().uniqId();
+    auto id2 = details::ConfigInfo::uniqId();
     EXPECT_TRUE(id2 > id);
 }
 
@@ -356,8 +356,8 @@ TEST(Cma, PushPop) {
 namespace cma::srv {
 TEST(CmaCfg, RestartBinaries) {
     srv::ServiceProcessor sp;
-    uint64_t id = cfg::GetCfg().uniqId();
-    auto old_id = id;
+    auto id = cfg::details::ConfigInfo::uniqId();
+    const auto old_id = id;
     EXPECT_FALSE(sp.restartBinariesIfCfgChanged(id));
     EXPECT_EQ(old_id, id);
     ReloadConfig();
@@ -396,7 +396,7 @@ protected:
     }
 
     fs::path capBase() const { return cap_base_; }
-    size_t userFoldersCount() const { return user_folders_count_; };
+    size_t userFoldersCount() const { return user_folders_count_; }
 
 private:
     std::wstring root_;
@@ -471,7 +471,7 @@ TEST_F(CmaCfg_F, CleanDataFolderSmart) {
 
     std::vector<std::wstring> files;
     cap::Process(wtools::ToUtf8(tgt.wstring()), cap::ProcMode::install, files);
-    ASSERT_TRUE(files.size() > 0);
+    ASSERT_FALSE(files.empty());
     for (const auto &f : files) {
         EXPECT_TRUE(fs::exists(f));
     }

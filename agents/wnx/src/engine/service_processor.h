@@ -6,8 +6,8 @@
 // provides basic api to start and stop service
 
 #pragma once
-#ifndef service_processor_h__
-#define service_processor_h__
+#ifndef SERVICE_PROCESSOR_H
+#define SERVICE_PROCESSOR_H
 
 #include <fmt/format.h>
 
@@ -699,4 +699,4 @@ void WaitForAsyncPluginThreads(std::chrono::duration<T, B> allowed_wait) {
 
 }  // namespace cma::srv
 
-#endif  // service_processor_h__
+#endif  // SERVICE_PROCESSOR_H

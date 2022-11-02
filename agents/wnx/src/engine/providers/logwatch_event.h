@@ -108,7 +108,7 @@ public:
         XLOG::l("This can't happen index is {} size is {} ", default_entry_,
                 entries().size());
         return nullptr;
-    };
+    }
     std::vector<std::filesystem::path> makeStateFilesTable() const;
 
     bool sendAll() const { return send_all_; }

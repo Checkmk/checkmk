@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <optional>
 #include <string>
 
 #include "cfg_details.h"
@@ -148,13 +149,10 @@ bool IsIgnoredFile(const fs::path &filename) {
 
 // copies all files from root, exception is ini and exe
 // returns count of files copied
-int CopyRootFolder(const fs::path &LegacyRoot, const fs::path &ProgramData) {
-    using namespace cma::tools;
-    using namespace cma::cfg;
-
+int CopyRootFolder(const fs::path &legacy_root, const fs::path &program_data) {
     auto count = 0;
     std::error_code ec;
-    for (const auto &dir_entry : fs::directory_iterator(LegacyRoot, ec)) {
+    for (const auto &dir_entry : fs::directory_iterator(legacy_root, ec)) {
         const auto &p = dir_entry.path();
         if (fs::is_directory(p, ec)) {
             continue;
@@ -162,12 +160,12 @@ int CopyRootFolder(const fs::path &LegacyRoot, const fs::path &ProgramData) {
 
         if (details::IsIgnoredFile(p)) {
             XLOG::l.i("File '{}' in root folder '{}' is ignored", p,
-                      LegacyRoot);
+                      legacy_root);
             continue;
         }
 
         // Copy to the targetParentPath which we just created.
-        fs::copy(p, ProgramData, fs::copy_options::skip_existing, ec);
+        fs::copy(p, program_data, fs::copy_options::skip_existing, ec);
 
         if (ec.value() == 0) {
             count++;
@@ -234,7 +232,7 @@ int CopyFolderRecursive(
     return count;
 }
 
-int GetServiceStatus(SC_HANDLE ServiceHandle) {
+std::optional<DWORD> GetServiceStatus(SC_HANDLE ServiceHandle) {
     DWORD bytes_needed = 0;
     SERVICE_STATUS_PROCESS ssp;
     auto buffer = reinterpret_cast<LPBYTE>(&ssp);
@@ -243,7 +241,7 @@ int GetServiceStatus(SC_HANDLE ServiceHandle) {
                              sizeof(SERVICE_STATUS_PROCESS),
                              &bytes_needed) == FALSE) {
         XLOG::l("QueryServiceStatusEx failed [{}]", GetLastError());
-        return -1;
+        return {};
     }
     return ssp.dwCurrentState;
 }
@@ -262,13 +260,13 @@ uint32_t GetServiceHint(SC_HANDLE ServiceHandle) {
     return ssp.dwWaitHint;
 }
 
-int SendServiceCommand(SC_HANDLE Handle, uint32_t Command) {
+std::optional<DWORD> SendServiceCommand(SC_HANDLE Handle, uint32_t Command) {
     SERVICE_STATUS_PROCESS ssp;
     if (::ControlService(Handle, Command,
                          reinterpret_cast<LPSERVICE_STATUS>(&ssp)) == FALSE) {
         XLOG::l("ControlService command [{}] failed [{}]", Command,
                 GetLastError());
-        return -1;
+        return {};
     }
     return ssp.dwCurrentState;
 }
@@ -304,14 +302,15 @@ std::tuple<SC_HANDLE, SC_HANDLE, DWORD> OpenServiceForControl(
     return {manager_handle, handle, 0};
 }
 
-int GetServiceStatusByName(const std::wstring &Name) {
-    auto [manager_handle, handle, err] = OpenServiceForControl(Name);
+std::optional<DWORD> GetServiceStatusByName(const std::wstring &name) {
+    auto [manager_handle, handle, err] = OpenServiceForControl(name);
 
     ON_OUT_OF_SCOPE(
         if (manager_handle) { CloseServiceHandle(manager_handle); });
     ON_OUT_OF_SCOPE(if (handle) { CloseServiceHandle(handle); });
 
     if (handle == nullptr) {
+        XLOG::l("OpenService failed [{}]", GetLastError());
         return err;
     }
 
@@ -336,7 +335,7 @@ static uint32_t CalcDelay(SC_HANDLE handle) noexcept {
 // so good as for 2019
 static bool TryStopService(SC_HANDLE handle, const std::string &name_to_log,
                            DWORD current_status) noexcept {
-    auto status = current_status;
+    std::optional<DWORD> status = current_status;
     const auto delay = CalcDelay(handle);
     constexpr uint64_t timeout = 30'000;  // 30-second time-out
     const auto start_time = GetTickCount64();
@@ -345,14 +344,11 @@ static bool TryStopService(SC_HANDLE handle, const std::string &name_to_log,
         XLOG::l.i("Service stop pending...");
 
         while (status == SERVICE_STOP_PENDING) {
-            cma::tools::sleep(delay);
-
+            tools::sleep(delay);
             status = GetServiceStatus(handle);
-
-            if (status == -1) {
+            if (!status) {
                 return false;
             }
-
             if (status == SERVICE_STOPPED) {
                 XLOG::l.i("Service '{}' stopped successfully.", name_to_log);
                 return true;
@@ -367,21 +363,18 @@ static bool TryStopService(SC_HANDLE handle, const std::string &name_to_log,
 
     // Send a stop code to the service.
     status = SendServiceCommand(handle, SERVICE_CONTROL_STOP);
-
-    if (status == -1) {
+    if (!status) {
         return false;
     }
 
     // Wait for the service to stop.
-
     while (status != SERVICE_STOPPED) {
-        cma::tools::sleep(delay);
+        tools::sleep(delay);
 
         status = GetServiceStatus(handle);
-        if (status == -1) {
+        if (!status) {
             return false;
         }
-
         if (GetTickCount64() - start_time > timeout) {
             XLOG::l("Wait timed out for '{}'", name_to_log);
             return false;
@@ -408,7 +401,7 @@ bool StopWindowsService(std::wstring_view service_name) {
 
     // Make sure the service is not already stopped.
     const auto status = GetServiceStatus(handle);
-    if (status == -1) {
+    if (!status) {
         return false;
     }
 
@@ -417,7 +410,7 @@ bool StopWindowsService(std::wstring_view service_name) {
         return true;
     }
 
-    return TryStopService(handle, name_to_log, status);
+    return TryStopService(handle, name_to_log, *status);
 }
 
 static void LogStartStatus(const std::wstring &service_name,
@@ -574,15 +567,18 @@ bool DeactivateLegacyAgent() {
                                      ServiceStartType::disable);
 }
 
-int WaitForStatus(
-    const std::function<int(const std::wstring &)> &status_checker,
+std::optional<DWORD> WaitForStatus(
+    const std::function<std::optional<DWORD>(const std::wstring &)>
+        &status_checker,
     std::wstring_view service_name, int expected_status, int millisecs) {
-    int status = -1;
+    const std::wstring name{service_name};
     while (true) {
-        status = status_checker(std::wstring(service_name));
-        if (status == expected_status) return status;
+        auto status = status_checker(name);
+        if (status == expected_status) {
+            return *status;
+        }
         if (millisecs >= 0) {
-            tools::sleep(1000);
+            tools::sleep(1000U);
             XLOG::l.i("1 second is over status is {}, t=required {}...", status,
                       expected_status);
         } else {
@@ -591,10 +587,10 @@ int WaitForStatus(
         millisecs -= 1000;
     }
 
-    return status;
+    return {};
 }
 
-static void LogAndDisplayErrorMessage(int status) {
+static void LogAndDisplayErrorMessage(DWORD status) {
     auto driver_body = cfg::details::FindServiceImagePath(L"winring0_1_2_0");
 
     using namespace xlog::internal;
@@ -666,12 +662,12 @@ bool FindStopDeactivateLegacyAgent() {
 
     if (status == SERVICE_STOPPED ||
         status == 1060 ||  // case when driver killed by OHM
-        status == -1) {    // variant when damned OHM kill and remove damned
+        !status) {         // variant when damned OHM kill and remove damned
                            // driver before we have a chance to check its stop
         return true;
     }
 
-    LogAndDisplayErrorMessage(status);
+    LogAndDisplayErrorMessage(*status);
 
     return false;
 }
@@ -1097,9 +1093,10 @@ bool ConvertLocalIniFile(const fs::path &legacy_root,
     return false;
 }
 
-bool ConvertUserIniFile(const fs::path &legacy_root,
-                        const fs::path &pdata,  // programdata/checkmk/agent
-                        bool local_ini_exists) {
+bool ConvertUserIniFile(
+    const fs::path &legacy_root,
+    const fs::path &program_data,  // programdata/checkmk/agent
+    bool local_ini_exists) {
     if (cma::cfg::DetermineInstallationType() == InstallationType::wato) {
         XLOG::l("Bad Call for Bad Installation");
         return false;
@@ -1119,7 +1116,7 @@ bool ConvertUserIniFile(const fs::path &legacy_root,
     const auto name = wtools::ToUtf8(files::kDefaultMainConfigName);
 
     // generate
-    auto out_folder = pdata;
+    auto out_folder = program_data;
 
     // if local.ini file exists, then second file must be a bakery file(pure
     // logic)

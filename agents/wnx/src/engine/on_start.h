@@ -44,10 +44,6 @@ bool ConfigLoaded();
 class UninstallAlert {
 public:
     UninstallAlert() = default;
-    UninstallAlert(const UninstallAlert &) = delete;
-    UninstallAlert(UninstallAlert &&) = delete;
-    UninstallAlert &operator=(const UninstallAlert &) = delete;
-    UninstallAlert &operator=(UninstallAlert &&) = delete;
     [[nodiscard]] bool isSet() const noexcept {
         return set_;
     }                       // check during exit from the service

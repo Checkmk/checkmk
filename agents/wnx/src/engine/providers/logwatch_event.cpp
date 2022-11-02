@@ -608,7 +608,9 @@ std::string GenerateOutputFromStates(EvlType type, StateVector &states,
                 // this is NOT log, just stupid entries in registry
                 continue;
 
-            default:
+            case cfg::EventLevels::kAll:
+            case cfg::EventLevels::kWarn:
+            case cfg::EventLevels::kCrit:
                 if (state.in_config_) {
                     auto log_data = ReadDataFromLog(type, state, lwl);
                     if (log_data.has_value()) {

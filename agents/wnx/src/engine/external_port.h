@@ -4,7 +4,7 @@
 // source code package.
 
 #pragma once
-#if !defined(external_port_h__)
+#ifndef external_port_h__
 #define external_port_h__
 
 #include <chrono>
@@ -268,7 +268,7 @@ protected:
 
     void ioThreadProc(const ReplyFunc &reply_func, uint16_t port,
                       LocalOnly local_only,
-                      std::optional<uint32_t> controllser_pid);
+                      std::optional<uint32_t> controller_pid);
 
     void mailslotThreadProc(const ReplyFunc &reply, uint32_t pid);
 

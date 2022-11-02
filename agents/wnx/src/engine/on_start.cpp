@@ -59,7 +59,9 @@ std::pair<fs::path, fs::path> FindAlternateDirs(AppType app_type) {
             }
             return FindTestDirs(dir);
         }
-        default:
+        case AppType::failed:
+        case AppType::srv:
+        case AppType::automatic:
             XLOG::l("Bad Mode [{}]", static_cast<int>(app_type));
             return {};
     }

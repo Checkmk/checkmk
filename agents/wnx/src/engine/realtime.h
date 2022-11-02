@@ -3,8 +3,8 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#ifndef realtime_h__
-#define realtime_h__
+#ifndef REALTIME_H
+#define REALTIME_H
 
 #include <condition_variable>
 #include <mutex>
@@ -95,4 +95,4 @@ private:
 };
 
 }  // namespace cma::rt
-#endif  // realtime_h__
+#endif  // REALTIME_H

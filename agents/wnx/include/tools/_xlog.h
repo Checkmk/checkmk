@@ -348,7 +348,9 @@ namespace xlog {
         // EXTENDED API
         [[maybe_unused]] const TextInfo &filelog(
             std::string_view filename) const {
-            if (filename.empty()) return *this;
+            if (filename.empty()) {
+                return *this;
+            }
             internal_PrintStringFile(filename,
                                      std::basic_string_view<T>{text_});
             return *this;

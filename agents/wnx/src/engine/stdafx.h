@@ -7,8 +7,8 @@
 // THIS is pre-compiled header for Engine Project
 //
 #pragma once
-#ifndef ENGINE_STDAFX_H__
-#define ENGINE_STDAFX_H__
+#ifndef ENGINE_STDAFX_H
+#define ENGINE_STDAFX_H
 
 #if defined(_MSC_VER)
 // more aggressive warning

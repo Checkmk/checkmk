@@ -464,7 +464,7 @@ void ServiceProcessor::sendDebugData() {
     auto block = getAnswer(started);
     block.emplace_back('\0');  // we need this for printf
     _setmode(_fileno(stdout), _O_BINARY);
-    auto count = printf("%s", block.data());
+    auto count = static_cast<size_t>(printf("%s", block.data()));
     if (count != block.size() - 1) {
         XLOG::l("Binary data at offset [{}]", count);
     }
@@ -648,9 +648,13 @@ std::wstring_view RuleName() {
     switch (GetModus()) {
         case Modus::service:
             return srv::kSrvFirewallRuleName;
-        default:
+        case Modus::app:
+        case Modus::test:
+        case Modus::integration:
             return srv::kAppFirewallRuleName;
     }
+    // unreachable
+    return srv::kAppFirewallRuleName;
 }
 
 void OpenFirewall(bool controller) {

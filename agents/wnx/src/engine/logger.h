@@ -182,9 +182,11 @@ constexpr uint16_t GetColorAttribute(Colors color) {
         case Colors::white:
             return FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE |
                    FOREGROUND_INTENSITY;
-        default:
+        case Colors::dflt:
             return 0;
     }
+    // unreachable
+    return 0;
 }
 
 constexpr int GetBitOffset(uint16_t color_mask) {
@@ -326,8 +328,7 @@ enum class LogType {
     log = 0,  // this is logger for user
     debug,    // this is logger for developer
     trace,    // this is TEMPORARY logger for developer
-    stdio,
-    last = stdio
+    stdio,    // must be last one
 };
 
 class Emitter {
@@ -362,8 +363,6 @@ public:
                 log_param_.setFileName({});
                 log_param_.initPrefix({});
                 break;
-            default:
-                log_param_.type_ = xlog::Type::kDebugOut;
         }
         if (breakpoint) {
             mods_ |= Mods::kBp;
@@ -431,14 +430,14 @@ public:
 
     template <typename... Args>
     [[maybe_unused]] auto operator()(const std::string &format,
-                                     Args &&...args) const noexcept {
+                                     Args &&...args) noexcept {
         const auto va = fmt::make_format_args(args...);
         return sendToLogModding({}, format, va);
     }
 
     template <typename... Args>
     [[maybe_unused]] auto operator()(int mods, const std::string &format,
-                                     Args &&...args) const noexcept {
+                                     Args &&...args) noexcept {
         auto va = fmt::make_format_args(args...);
         return sendToLogModding(
             ModData{.mods = mods, .type = ModData::ModType::assign}, format,

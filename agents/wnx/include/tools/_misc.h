@@ -6,8 +6,6 @@
 // Assorted routines
 #pragma once
 
-#include <fmt/format.h>
-
 #include <cctype>
 #include <chrono>
 #include <cwctype>
@@ -31,7 +29,7 @@ using ByteVector = std::vector<unsigned char>;
 
 namespace cma::tools {
 
-inline void sleep(int milliseconds) noexcept {
+inline void sleep(uint32_t milliseconds) noexcept {
     std::this_thread::sleep_until(std::chrono::steady_clock::now() +
                                   std::chrono::milliseconds(milliseconds));
 }

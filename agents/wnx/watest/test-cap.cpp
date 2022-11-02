@@ -558,7 +558,7 @@ TEST(CapTest, ReInstallRestoreIntegration) {
         }
 
         // now damage files
-        auto destroy_file = [](fs::path f) {
+        auto destroy_file = [](const fs::path &f) {
             std::ofstream ofs(f, std::ios::binary);
 
             if (ofs) {

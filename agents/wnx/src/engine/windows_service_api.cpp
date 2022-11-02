@@ -186,7 +186,7 @@ int TestMainServiceSelf(int interval) {
     }
     // not a best method to call thread, but this is only for VISUAL testing
     std::thread kick_and_print([&stop, interval]() {
-        auto port = cfg::groups::global.port();
+        auto port = static_cast<uint16_t>(cfg::groups::global.port());
 
         using namespace asio;
 

@@ -480,7 +480,7 @@ static void MakeFolderStructure(cma::PathVector Paths) {
     }
 }
 
-static void RemoveFolderStructure(cma::PathVector paths) {
+static void RemoveFolderStructure(const cma::PathVector &paths) {
     for (const auto &folder : paths) {
         RemoveFolder(folder);
     }
@@ -2389,11 +2389,11 @@ TEST(CmaMain, MiniBoxStartMode) {
         auto success = mb.waitForEnd(std::chrono::seconds(3));
         ASSERT_TRUE(success);
         // we have probably data, try to get and and store
-        mb.processResults([&](const std::wstring &cmd_line, uint32_t _pid,
+        mb.processResults([&](const std::wstring &_cmd_line, uint32_t _pid,
                               uint32_t _code, const std::vector<char> &data) {
             auto result = wtools::ConditionallyConvertFromUTF16(data);
 
-            cma::tools::AddVector(accu, result);
+            tools::AddVector(accu, result);
         });
 
         EXPECT_TRUE(accu.empty() ==
@@ -2421,11 +2421,11 @@ TEST(CmaMain, MiniBoxStartModeDeep) {
         auto success = mb.waitForEnd(std::chrono::seconds(3));
         ASSERT_TRUE(success);
         // we have probably data, try to get and and store
-        mb.processResults([&](const std::wstring CmdLine, uint32_t Pid,
-                              uint32_t Code, const std::vector<char> &Data) {
-            auto data = wtools::ConditionallyConvertFromUTF16(Data);
+        mb.processResults([&](const std::wstring &cmd_line, uint32_t pid,
+                              uint32_t code, const std::vector<char> &data) {
+            auto result = wtools::ConditionallyConvertFromUTF16(data);
 
-            cma::tools::AddVector(accu, data);
+            tools::AddVector(accu, result);
         });
 
         EXPECT_TRUE(!accu.empty());

@@ -38,7 +38,7 @@ class SubSection {
 public:
     enum class Type {
         sub,  // [name]
-        full  //<<<name>>>
+        full  // <<<name>>>
     };
 
     enum class Mode {
@@ -49,7 +49,6 @@ public:
         : uniq_name_(name), type_(type) {
         setupByName();
     }
-    virtual ~SubSection() = default;
 
     [[nodiscard]] std::string getUniqName() const noexcept {
         return uniq_name_;

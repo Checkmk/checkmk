@@ -258,7 +258,7 @@ TEST(PlayerTest, RealLifeInventory_Long) {
     vector<char> accu;
     int count = 0;
 
-    box.processResults([&](const std::wstring cmd_line, uint32_t pid,
+    box.processResults([&](const std::wstring &cmd_line, uint32_t pid,
                            uint32_t code, const std::vector<char> &result) {
         // we check for the UNICODE output(see msdn 0xFFFE, -xFEFF etc.)
         bool convert_required = result[0] == '\xFF' && result[1] == '\xFE';

@@ -60,7 +60,7 @@ unsigned short LoggerEventLevelToWindowsEventType(EventLevel level) noexcept {
 
 static std::atomic<bool> g_log_duplicated_on_stdio = false;
 static std::atomic<bool> g_log_colored_on_stdio = false;
-static DWORD g_log_old_mode = -1;
+static DWORD g_log_old_mode = static_cast<DWORD>(-1);
 
 bool IsDuplicatedOnStdio() noexcept {
     return details::g_log_duplicated_on_stdio;
@@ -110,7 +110,7 @@ public:
     GlobalLogSettings &operator=(const GlobalLogSettings &) = delete;
 
 private:
-    constexpr static auto last_ = static_cast<int>(LogType::last);
+    constexpr static auto last_ = static_cast<int>(LogType::stdio);
     mutable std::mutex lock_;
     Info arr_[last_];
 };
@@ -376,7 +376,7 @@ void ColoredOutputOnStdio(bool on) noexcept {
         constexpr DWORD old_mode =
             ENABLE_PROCESSED_OUTPUT | ENABLE_VIRTUAL_TERMINAL_PROCESSING;
         ::SetConsoleMode(std_input, old_mode);
-    } else if (details::g_log_old_mode != -1) {
+    } else if (details::g_log_old_mode != static_cast<DWORD>(-1)) {
         ::SetConsoleMode(std_input, details::g_log_old_mode);
     }
 }

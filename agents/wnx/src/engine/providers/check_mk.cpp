@@ -99,7 +99,6 @@ std::string MakeDirs() {
     return out;
 }
 
-std::string GetLegacyPullMode() { return ac::IsInLegacyMode() ? "yes" : "no"; }
 }  // namespace
 
 std::string CheckMk::makeBody() {

@@ -13,8 +13,8 @@
 // THANK YOU FOR UNDERSTANDING
 // ***************************************************
 
-#ifndef firewall_h__
-#define firewall_h__
+#ifndef FIREWALL_H
+#define FIREWALL_H
 
 #pragma once
 
@@ -70,4 +70,4 @@ private:
 
 }  // namespace cma::fw
 
-#endif  // firewall_h__
+#endif  // FIREWALL_H

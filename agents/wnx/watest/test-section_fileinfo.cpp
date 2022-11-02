@@ -247,8 +247,8 @@ TEST(FileInfoTest, CheckDriveLetter) {
     auto fileinfo_node = cfg[cfg::groups::kFileInfo];
     ASSERT_TRUE(fileinfo_node.IsDefined());
     ASSERT_TRUE(fileinfo_node.IsMap());
-    auto value = a.u8string();
-    value[0] = std::tolower(value[0]);
+    auto value = wtools::ToStr(a);
+    value[0] = static_cast<char>(std::tolower(value[0]));
     auto str = fmt::format("['{}\\*.txt', 'c:\\weirdfile' ]", value);
     fileinfo_node[cfg::vars::kFileInfoPath] = YAML::Load(str);
     ASSERT_TRUE(fileinfo_node[cfg::vars::kFileInfoPath].IsSequence());
@@ -261,7 +261,7 @@ TEST(FileInfoTest, CheckDriveLetter) {
         EXPECT_EQ(table[2][0], value[0]);
         EXPECT_EQ(table[3][0], value[0]);
     }
-    value[0] = std::toupper(value[0]);
+    value[0] = static_cast<char>(std::toupper(value[0]));
     str = fmt::format("['{}\\*.txt', 'C:\\weirdfile']", value);
     fileinfo_node[cfg::vars::kFileInfoPath] = YAML::Load(str);
     ASSERT_TRUE(fileinfo_node[cfg::vars::kFileInfoPath].IsSequence());
@@ -322,7 +322,7 @@ TEST(FileInfoTest, CheckOutput) {
             EXPECT_TRUE(std::atoll(values[2].c_str()) > 0LL);
             auto f = std::any_of(
                 std::begin(data), std::end(data),
-                [values](std::tuple<fs::path, std::string_view> entry) {
+                [values](std::tuple<fs::path, std::string_view> &entry) {
                     auto const &[path, _] = entry;
                     return tools::IsEqual(wtools::ToStr(path), values[0]);
                 });
@@ -359,7 +359,7 @@ TEST(FileInfoTest, CheckOutput) {
             EXPECT_TRUE(std::atoll(values[2].c_str()) > 0LL);
             auto f = std::any_of(
                 std::begin(data), std::end(data),
-                [values](std::tuple<fs::path, std::string_view> entry) {
+                [values](std::tuple<fs::path, std::string_view> &entry) {
                     auto const &[path, _] = entry;
                     return tools::IsEqual(wtools::ToStr(path), values[0]);
                 });

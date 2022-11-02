@@ -30,9 +30,9 @@ struct fmt::formatter<YAML::NodeType::value> {
                 return "Scalar";
             case YAML::NodeType::value::Sequence:
                 return "Sequence";
-            default:
-                return "Unknown";
         }
+        // unreachable
+        return "Unknown";
     }
 
     static constexpr auto parse(format_parse_context &ctx) {

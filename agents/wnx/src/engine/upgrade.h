@@ -78,8 +78,8 @@ bool StoreYaml(const std::filesystem::path &File, YAML::Node Yaml,
 // gtest [+]
 bool IsBakeryIni(const std::filesystem::path &Path) noexcept;
 // gtest [+]
-std::string MakeComments(const std::filesystem::path &SourceFilePath,
-                         bool Bakery) noexcept;
+std::string MakeComments(const std::filesystem::path &source_file_path,
+                         bool file_from_bakery) noexcept;
 
 [[nodiscard]] bool CreateFolderSmart(const std::filesystem::path &tgt) noexcept;
 bool IsPathProgramData(const std::filesystem::path &program_data);
@@ -98,8 +98,8 @@ bool FindActivateStartLegacyAgent(AddAction action = AddAction::nothing);
 
 // Low Level API
 std::wstring FindLegacyAgent();
-int GetServiceStatusByName(const std::wstring &Name);
-int GetServiceStatus(SC_HANDLE ServiceHandle);
+std::optional<DWORD> GetServiceStatusByName(const std::wstring &name);
+std::optional<DWORD> GetServiceStatus(SC_HANDLE service_handle);
 // this is full-featured function
 // may be used in production as part of top level API
 bool StopWindowsService(std::wstring_view service_name);
@@ -112,8 +112,9 @@ bool DeactivateLegacyAgent();
 bool StartWindowsService(const std::wstring &service_name);
 
 // used to wait for some long starting/stopping drivers
-int WaitForStatus(
-    const std::function<int(const std::wstring &)> &status_checker,
+std::optional<DWORD> WaitForStatus(
+    const std::function<std::optional<DWORD>(const std::wstring &)>
+        &status_checker,
     std::wstring_view service_name, int expected_status, int millisecs);
 
 // used to copy folders from legacy agent to programdata

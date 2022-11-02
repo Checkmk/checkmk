@@ -236,7 +236,7 @@ protected:
     }
 
     tst::TempCfgFs::ptr temp_fs;
-    std::filesystem::path temp_dir() const { return temp_fs->data(); };
+    std::filesystem::path temp_dir() const { return temp_fs->data(); }
 };
 
 TEST_F(WtoolsKillProcessTreeFixture, Integration) {

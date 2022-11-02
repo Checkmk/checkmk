@@ -197,16 +197,16 @@ std::string not_bakeryfile =
     "    counters = Terminal Services:ts_sessions\n"
     "\n";
 
-static void CreateFileTest(std::filesystem::path Path, std::string Content) {
-    std::ofstream ofs(Path);
+static void CreateFileTest(const fs::path &path, const std::string &content) {
+    std::ofstream ofs(path);
 
-    ofs << Content;
+    ofs << content;
 }
 
-static auto CreateIniFile(std::filesystem::path Lwa, const std::string Content,
-                          const std::string YamlName) {
-    auto ini_file = Lwa / (YamlName + ".ini");
-    CreateFileTest(Lwa / ini_file, Content);
+static auto CreateIniFile(std::filesystem::path lwa, const std::string &content,
+                          const std::string &yaml_name) {
+    auto ini_file = lwa / (yaml_name + ".ini");
+    CreateFileTest(lwa / ini_file, content);
     return ini_file;
 }
 
@@ -338,13 +338,13 @@ TEST(UpgradeTest, PatchRelativePath) {
     EXPECT_EQ(seq[3][vars::kPluginPattern].as<std::string>(), "/test3");
 }
 
-std::filesystem::path ConstructBakeryYmlPath(std::filesystem::path pd_dir) {
+fs::path ConstructBakeryYmlPath(const fs::path &pd_dir) {
     auto bakery_yaml = pd_dir / dirs::kBakery / files::kDefaultMainConfigName;
     bakery_yaml += files::kDefaultBakeryExt;
     return bakery_yaml;
 }
 
-std::filesystem::path ConstructUserYmlPath(std::filesystem::path pd_dir) {
+fs::path ConstructUserYmlPath(const fs::path &pd_dir) {
     auto user_yaml = pd_dir / files::kDefaultMainConfigName;
     user_yaml += files::kDefaultUserExt;
     return user_yaml;
@@ -849,8 +849,8 @@ TEST(UpgradeTest, CopyFiles) {
 
     auto count = CopyFolderRecursive(
         lwa_path, cfg::GetTempDir(), fs::copy_options::overwrite_existing,
-        [lwa_path](fs::path P) {
-            XLOG::l.i("Copy '{}' to '{}'", fs::relative(P, lwa_path),
+        [lwa_path](const fs::path &path) {
+            XLOG::l.i("Copy '{}' to '{}'", fs::relative(path, lwa_path),
                       wtools::ToUtf8(cfg::GetTempDir()));
             return true;
         });
@@ -858,7 +858,7 @@ TEST(UpgradeTest, CopyFiles) {
 
     count = CopyFolderRecursive(
         lwa_path, cfg::GetTempDir(), fs::copy_options::skip_existing,
-        [lwa_path](fs::path path) {
+        [lwa_path](const fs::path &path) {
             XLOG::l.i("Copy '{}' to '{}'", fs::relative(path, lwa_path),
                       wtools::ToUtf8(cfg::GetTempDir()));
             return true;

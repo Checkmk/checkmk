@@ -81,7 +81,7 @@ inline void CreateBinaryFile(const std::filesystem::path &path,
                              std::string_view data) {
     std::ofstream ofs(path, std::ios::binary);
 
-    ofs.write(data.data(), data.size());
+    ofs.write(data.data(), static_cast<std::streamsize>(data.size()));
 }
 
 inline std::filesystem::path CreateIniFile(
@@ -182,7 +182,7 @@ inline void CheckYaml(const YAML::Node &table, const CheckYamlVector &vec) {
 constexpr std::string_view install_cab_to_test = "install_test.cab";
 constexpr std::string_view cab_to_test = "uncab_test.cab";
 
-/// \b creates temporary folder in temp and delete it on desctruction
+/// \b creates temporary folder in temp and delete it on destruction
 class TempFolder {
 public:
     explicit TempFolder(std::string_view folder_name)
@@ -190,6 +190,8 @@ public:
     explicit TempFolder(std::wstring_view folder_name);
     TempFolder(const TempFolder &) = delete;
     TempFolder &operator=(const TempFolder &) = delete;
+    TempFolder(TempFolder &&) = delete;
+    TempFolder &operator=(TempFolder &&) = delete;
     ~TempFolder();
 
     [[nodiscard]] std::filesystem::path path() const { return folder_name_; }
@@ -349,7 +351,6 @@ class EventLogDebug : public EventLogBase {
 public:
     explicit EventLogDebug(const std::vector<tst::EventRecordData> &data)
         : data_(data) {}
-    ~EventLogDebug() override = default;
 
     [[nodiscard]] std::wstring getName() const override { return L"debug"; }
     void seek(uint64_t record_id) override { pos_ = record_id; }

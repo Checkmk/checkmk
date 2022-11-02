@@ -129,11 +129,11 @@ public:
     }
 
     [[nodiscard]] uint16_t eventId() const override {
-        return _record->EventID % 65536;
+        return static_cast<uint16_t>(_record->EventID % 65536);
     }
 
     [[nodiscard]] uint16_t eventQualifiers() const override {
-        return (uint16_t)(_record->EventID / 65536);
+        return static_cast<uint16_t>(_record->EventID / 65536);
     }
 
     [[nodiscard]] time_t timeGenerated() const override {

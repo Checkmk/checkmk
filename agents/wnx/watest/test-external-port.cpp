@@ -15,7 +15,7 @@ using namespace std::chrono_literals;
 using namespace std::string_literals;
 using asio::ip::tcp;
 
-namespace wtools {  // to become friendly for wtools classes
+namespace wtools {
 class TestProcessor2 : public wtools::BaseServiceProcessor {
 public:
     TestProcessor2() { s_counter++; }
@@ -45,7 +45,7 @@ public:
 int TestProcessor2::s_counter = 0;
 }  // namespace wtools
 
-namespace cma::world {  // to become friendly for wtools classes
+namespace cma::world {
 
 TEST(ExternalPortTest, StartStop) {
     world::ReplyFunc reply =
@@ -280,7 +280,7 @@ TEST_F(ExternalPortQueueFixture, FillAndConsumeMailSlotRequests) {
 namespace {
 size_t g_count{0};
 std::mutex g_lock;
-void runThread(int port) {
+void runThread(uint16_t port) {
     asio::io_context ios;
     tcp::endpoint endpoint(asio::ip::make_address("127.0.0.1"), port);
 

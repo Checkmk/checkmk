@@ -34,7 +34,12 @@ from cmk.gui.plugins.openapi.utils import ProblemException, serve_json
 from cmk import fields
 from cmk.bi.aggregation import BIAggregation, BIAggregationSchema
 from cmk.bi.lib import ReqBoolean, ReqList, ReqString
-from cmk.bi.packs import BIAggregationPack
+from cmk.bi.packs import (
+    BIAggregationPack,
+    DeleteErrorUsedByAggregation,
+    DeleteErrorUsedByRule,
+    RuleNotFoundException,
+)
 from cmk.bi.rule import BIRule, BIRuleSchema
 from cmk.bi.schema import Schema
 
@@ -126,7 +131,7 @@ def get_bi_rule(params: Mapping[str, Any]) -> Response:
     bi_packs.load_config()
     try:
         bi_rule = bi_packs.get_rule_mandatory(params["rule_id"])
-    except MKGeneralException:
+    except RuleNotFoundException:
         raise _make_error("Unknown bi_rule: %s" % params["rule_id"])
 
     data = {"pack_id": bi_rule.pack_id}
@@ -200,17 +205,23 @@ def _update_bi_rule(params, must_exist: bool):  # type:ignore[no-untyped-def]
     convert_response=False,
     output_empty=True,
     permissions_required=RW_BI_RULES_PERMISSION,
+    additional_status_codes=[409],
 )
 def delete_bi_rule(params: Mapping[str, Any]) -> Response:
     """Delete BI rule"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.bi_rules")
     bi_packs = get_cached_bi_packs()
     bi_packs.load_config()
     try:
         bi_rule = bi_packs.get_rule_mandatory(params["rule_id"])
-    except KeyError:
+    except RuleNotFoundException:
         raise _make_error("Unknown bi_rule: %s" % params["rule_id"])
 
-    bi_packs.delete_rule(bi_rule.id)
+    try:
+        bi_packs.delete_rule(bi_rule.id)
+    except (DeleteErrorUsedByRule, DeleteErrorUsedByAggregation) as e:
+        raise ProblemException(status=409, title=http.client.responses[409], detail=e.args[0])
     bi_packs.save_config()
     return Response(status=204)
 

@@ -1,0 +1,14 @@
+Title: Fix 500 errors on BI aggregation endpoints
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1667398005
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0p16
+
+Deleting a aggregation returned 500 status code "permission mismatch"
+
+Deleting a non existing aggregation returned 500 status code, now returns 404
+

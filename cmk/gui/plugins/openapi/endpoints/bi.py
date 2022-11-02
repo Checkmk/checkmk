@@ -20,6 +20,7 @@ import http.client
 from cmk.utils.bi.bi_aggregation import BIAggregation, BIAggregationSchema
 from cmk.utils.bi.bi_lib import ReqBoolean, ReqList, ReqString
 from cmk.utils.bi.bi_packs import (
+    AggregationNotFoundException,
     BIAggregationPack,
     DeleteErrorUsedByAggregation,
     DeleteErrorUsedByRule,
@@ -303,7 +304,7 @@ def get_bi_aggregation(params):
     bi_packs.load_config()
     try:
         bi_aggregation = bi_packs.get_aggregation_mandatory(params["aggregation_id"])
-    except MKGeneralException:
+    except AggregationNotFoundException:
         _bailout_with_message("Unknown bi_aggregation: %s" % params["aggregation_id"])
 
     data = {"pack_id": bi_aggregation.pack_id}
@@ -380,11 +381,13 @@ def _update_bi_aggregation(params, must_exist: bool):
 )
 def delete_bi_aggregation(params):
     """Delete a BI aggregation"""
+    user.need_permission("wato.edit")
+    user.need_permission("wato.bi_rules")
     bi_packs = get_cached_bi_packs()
     bi_packs.load_config()
     try:
         bi_aggregation = bi_packs.get_aggregation_mandatory(params["aggregation_id"])
-    except KeyError:
+    except AggregationNotFoundException:
         _bailout_with_message("Unknown bi_aggregation: %s" % params["aggregation_id"])
 
     bi_packs.delete_aggregation(bi_aggregation.id)

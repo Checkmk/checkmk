@@ -19,6 +19,7 @@ import requests.exceptions
 import tests.testlib as testlib
 from tests.testlib.utils import (
     cmk_path,
+    current_base_branch_name,
     get_cmk_download_credentials,
     get_cmk_download_credentials_file,
 )
@@ -27,7 +28,7 @@ import docker  # type: ignore[import]
 
 build_path = os.path.join(testlib.repo_path(), "docker")
 image_prefix = "docker-tests"
-branch_name = os.environ.get("BRANCH", "master")
+branch_name = os.environ.get("BRANCH", current_base_branch_name())
 
 logger = logging.getLogger()
 
@@ -51,7 +52,7 @@ def client():
 
 
 def _image_name(version):
-    return "docker-tests/check-mk-%s-%s-%s" % (version.edition(), branch_name, version.version)
+    return "docker-tests/check-mk-%s-%s" % (version.edition(), version.version)
 
 
 def _package_name(version: testlib.CMKVersion) -> str:

@@ -96,17 +96,17 @@ def is_site() -> bool:
     return "OMD_ROOT" in os.environ
 
 
-def mkbackup_path():
+def mkbackup_path() -> str:
     if not is_site():
         return "/usr/sbin/mkbackup"
     return "%s/bin/mkbackup" % os.environ["OMD_ROOT"]
 
 
-def system_config_path():
+def system_config_path() -> str:
     return "/etc/cma/backup.conf"
 
 
-def site_config_path(site_id=None):
+def site_config_path(site_id: str | None = None) -> str:
     if site_id is None:
         if not is_site():
             raise Exception(_("Not executed in OMD environment!"))
@@ -115,11 +115,11 @@ def site_config_path(site_id=None):
     return "/omd/sites/%s/etc/check_mk/backup.mk" % site_id
 
 
-def hostname():
+def hostname() -> str:
     return socket.gethostname()
 
 
-def is_canonical(directory) -> bool:  # type:ignore[no-untyped-def]
+def is_canonical(directory: str) -> bool:  # type:ignore[no-untyped-def]
     if not directory.endswith("/"):
         directory += "/"
     return (
@@ -128,12 +128,16 @@ def is_canonical(directory) -> bool:  # type:ignore[no-untyped-def]
     )
 
 
+# TODO narrow type!
+ConfigData = dict
+
+
 # TODO: Locking!
 class Config:
-    def __init__(self, file_path) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, file_path: str) -> None:
         self._file_path = file_path
 
-    def load(self):
+    def load(self) -> ConfigData:
         return store.load_object_from_file(
             self._file_path,
             default={
@@ -142,7 +146,7 @@ class Config:
             },
         )
 
-    def save(self, config):
+    def save(self, config: ConfigData) -> None:
         store.save_object_to_file(self._file_path, config)
 
 
@@ -158,25 +162,25 @@ class Config:
 
 
 class BackupEntity:
-    def __init__(self, ident, config) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, ident: str | None, config: ConfigData) -> None:
         self._ident = ident
         self._config: dict = {}
 
         self.from_config(config)
 
-    def ident(self) -> str:
+    def ident(self) -> str | None:
         return self._ident
 
-    def config(self):
+    def config(self) -> ConfigData:
         return self._config
 
     def title(self) -> str:
         return self._config["title"]
 
-    def to_config(self):
+    def to_config(self) -> ConfigData:
         return self._config
 
-    def from_config(self, config):
+    def from_config(self, config: ConfigData) -> None:
         self._config = config
 
 
@@ -365,7 +369,8 @@ class Job(MKBackupJob, BackupEntity):
         if site:
             parts.append(site)
 
-        parts.append(self._ident)
+        # TODO
+        parts.append(self._ident)  # type: ignore[arg-type]
 
         return "-".join([p.replace("-", "+") for p in parts])
 
@@ -378,7 +383,7 @@ class Job(MKBackupJob, BackupEntity):
         return path / ("%s.state" % self.ident())
 
     def _start_command(self) -> List[str]:
-        return [mkbackup_path(), "backup", "--background", self.ident()]
+        return [mkbackup_path(), "backup", "--background", self.ident()]  # type: ignore[list-item]
 
     def schedule(self) -> Optional[Dict[str, Any]]:
         return self._config["schedule"]

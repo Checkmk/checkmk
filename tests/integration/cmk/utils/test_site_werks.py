@@ -13,6 +13,30 @@ def test_load(site: Site) -> None:
     assert len(werks) > 1000
 
 
+def test_make_sure_werks_have_mandatory_fields(site: Site) -> None:
+    mandatory_werk_fields = set(
+        # ATTENTION! If you have to change this list, you have to talk
+        # to the website team first! They rely on those fields.
+        [
+            "class",
+            "compatible",
+            "component",
+            "date",
+            "description",
+            "edition",
+            "id",
+            "level",
+            "title",
+            "version",
+        ]
+    )
+    werks = cmk.utils.werks.load()
+    for werk in werks.values():
+        missing_fields = mandatory_werk_fields - set(werk.keys())
+        if missing_fields:
+            assert False, f"werk {werk} has missing fields: {missing_fields}"
+
+
 def test_regular_werks(site: Site) -> None:
     werks = cmk.utils.werks.load()
 

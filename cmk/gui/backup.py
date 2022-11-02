@@ -734,6 +734,9 @@ class PageEditBackupJob:
             except KeyError:
                 raise MKUserError("target", _("This backup job does not exist."))
 
+            if not isinstance(job, Job):
+                raise MKGeneralException("this is impossible. Why would this page have targets?")
+
             if job.is_running():
                 raise MKUserError("_job", _("This job is currently running."))
 
@@ -747,10 +750,10 @@ class PageEditBackupJob:
             self._job_cfg = {}
             self._title = _("New backup job")
 
-    def jobs(self):
+    def jobs(self) -> Jobs:
         raise NotImplementedError()
 
-    def targets(self):
+    def targets(self) -> "Targets":
         raise NotImplementedError()
 
     def title(self) -> str:
@@ -761,7 +764,7 @@ class PageEditBackupJob:
             _("Job"), breadcrumb, form_name="edit_job", button_name="_save"
         )
 
-    def vs_backup_schedule(self):
+    def vs_backup_schedule(self) -> Alternative:
         return Alternative(
             title=_("Schedule"),
             elements=[
@@ -802,7 +805,7 @@ class PageEditBackupJob:
             ],
         )
 
-    def vs_backup_job(self):
+    def vs_backup_job(self) -> Dictionary:
         if self._new:
             ident_attr = [
                 (
@@ -890,25 +893,25 @@ class PageEditBackupJob:
             render="form",
         )
 
-    def _validate_target(self, value, varprefix):
+    def _validate_target(self, value: Any, varprefix: str) -> None:
         self.targets().validate_target(value, varprefix)
 
     # Can be overridden by subclasses to add custom attributes to the
     # job configuration. e.g. system jobs can exclude sites optionally.
-    def custom_job_attributes(self):
+    def custom_job_attributes(self) -> list[tuple[str, ValueSpec]]:
         return []
 
-    def _validate_backup_job_ident(self, value, varprefix):
+    def _validate_backup_job_ident(self, value: str, varprefix: str) -> None:
         if value == "restore":
             raise MKUserError(varprefix, _("You need to choose another ID."))
 
         if value in self.jobs().objects:
             raise MKUserError(varprefix, _("This ID is already used by another backup job."))
 
-    def backup_key_choices(self):
+    def backup_key_choices(self) -> Sequence[tuple[str, str]]:
         return self.key_store.choices()
 
-    def backup_target_choices(self):
+    def backup_target_choices(self) -> Sequence[tuple[str, str]]:
         return sorted(self.targets().choices(), key=lambda x_y1: x_y1[1].title())
 
     def action(self) -> ActionResult:
@@ -931,7 +934,8 @@ class PageEditBackupJob:
             job = Job(self._ident, self._job_cfg)
             jobs.add(job)
         else:
-            job = jobs.get(self._ident)
+            # TODO type the containers more generically
+            job = jobs.get(self._ident)  # type: ignore[assignment]
             job.from_config(self._job_cfg)
 
         jobs.save()

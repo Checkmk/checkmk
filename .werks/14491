@@ -7,4 +7,4 @@ Version: 2.2.0i1
 Date: 1659946109
 Class: feature
 
-Kubernetes dashboard headers now hold the name of the currently displayed Cluster/Namespace/Daemonset/etc. So instead of the former general header "Kubernetes Cluster" the page title now says "Kubernetes Cluster <cluster_name>".
+Kubernetes dashboard headers now hold the name of the currently displayed Cluster/Namespace/Daemonset/etc. So instead of the former general header <i>Kubernetes Cluster</i> the page title now says <i>Kubernetes Cluster &lt;cluster_name&gt;</i>.

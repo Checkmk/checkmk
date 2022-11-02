@@ -52,8 +52,6 @@ from cmk.gui.watolib.utils import may_edit_ruleset
 if TYPE_CHECKING:
     from cmk.utils.redis import RedisDecoded
 
-_NAME_DEFAULT_LANGUAGE = "default"
-
 
 class IndexNotFoundException(MKGeneralException):
     """Raised when trying to load a non-existing search index file or when the current language is
@@ -110,11 +108,6 @@ class IndexBuilder:
 
     def __init__(self, registry: MatchItemGeneratorRegistry) -> None:
         self._registry = registry
-        self._all_languages = {
-            name: _NAME_DEFAULT_LANGUAGE if name == "en" else name
-            for language in get_languages()
-            for name in [language[0]]
-        }
         self._redis_client = get_redis_client()
 
     @staticmethod
@@ -186,8 +179,8 @@ class IndexBuilder:
         redis_pipeline: redis.client.Pipeline,
     ) -> None:
         key_categories_ld = self.key_categories(self.PREFIX_LOCALIZATION_DEPENDENT)
-        for language, language_name in self._all_languages.items():
-            localize(language)
+        for language_code, _language_name in get_languages():
+            localize(language_code)
             for match_item_generator in match_item_generators:
                 self._add_match_item_generator_to_redis(
                     match_item_generator,
@@ -195,7 +188,7 @@ class IndexBuilder:
                     key_categories_ld,
                     self.add_to_prefix(
                         self.PREFIX_LOCALIZATION_DEPENDENT,
-                        language_name,
+                        language_code,
                     ),
                 )
 
@@ -356,8 +349,6 @@ class IndexSearcher:
     def __init__(self, permissions_handler: PermissionsHandler) -> None:
         self._may_see_category = permissions_handler.may_see_category
         self._may_see_item_func = permissions_handler.permissions_for_items()
-        current_lang = get_current_language()
-        self._current_language = _NAME_DEFAULT_LANGUAGE if current_lang == "en" else current_lang
         self._user_id = user.ident
         self._redis_client = get_redis_client()
 
@@ -383,7 +374,7 @@ class IndexSearcher:
             IndexBuilder.key_categories(IndexBuilder.PREFIX_LOCALIZATION_DEPENDENT),
             IndexBuilder.add_to_prefix(
                 IndexBuilder.PREFIX_LOCALIZATION_DEPENDENT,
-                self._current_language,
+                get_current_language(),
             ),
             results,
         )

@@ -171,7 +171,10 @@ def fixture_get_languages(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(
         search,
         "get_languages",
-        lambda: [["en"], ["de"]],
+        lambda: [
+            ("en", "English"),
+            ("de", "German"),
+        ],
     )
 
 

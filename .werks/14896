@@ -1,0 +1,14 @@
+Title: Fix "Move to other folder" of hosts filtered by alias
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1667490528
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p16
+
+If you filtered for hosts on the "Setup" - "Hosts" page and used the alias as
+filter value, the option "Move to other folder" showed the error "Please select
+some hosts before doing bulk operations on hosts.", even if you selected the
+matched hosts.

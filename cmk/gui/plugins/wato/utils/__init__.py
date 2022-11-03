@@ -2747,6 +2747,7 @@ def _search_text_matches(
     for pattern in [
         host.name(),
         host.effective_attributes().get("ipaddress"),
+        host.effective_attributes().get("alias"),
         host.site_id(),
         get_site_config(host.site_id())["alias"],
         str(host.tag_groups()),

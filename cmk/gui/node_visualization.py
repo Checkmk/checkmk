@@ -44,7 +44,7 @@ from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.plugins.visuals.node_vis import FilterTopologyMaxNodes, FilterTopologyMeshDepth
 from cmk.gui.plugins.visuals.utils import Filter, get_livestatus_filter_headers
 from cmk.gui.plugins.wato import bi_valuespecs
-from cmk.gui.type_defs import VisualContext
+from cmk.gui.type_defs import Visual, VisualContext
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.theme import theme
 from cmk.gui.view import View
@@ -97,8 +97,12 @@ class TopologySettingsJSON(TopologySettings):
 @page_registry.register_page("parent_child_topology")
 class ParentChildTopologyPage(Page):
     @classmethod
-    def visual_spec(cls):
+    def visual_spec(cls) -> Visual:
         return {
+            "owner": "",
+            "description": "",
+            "hidebutton": False,
+            "public": True,
             "topic": "overview",
             "title": _("Network topology"),
             "name": "parent_child_topology",
@@ -197,10 +201,10 @@ class ParentChildTopologyPage(Page):
             mega_menu_registry.menu_monitoring(),
             PagetypeTopics.get_topic(visual_spec["topic"]).title(),
         )
-        breadcrumb.append(make_current_page_breadcrumb_item(visual_spec["title"]))
+        breadcrumb.append(make_current_page_breadcrumb_item(str(visual_spec["title"])))
         page_menu = PageMenu(breadcrumb=breadcrumb)
         self._extend_display_dropdown(page_menu, visual_spec["name"])
-        make_header(html, visual_spec["title"], breadcrumb, page_menu)
+        make_header(html, str(visual_spec["title"]), breadcrumb, page_menu)
         self.show_topology_content(topology_settings=topology_settings)
 
     def show_topology_content(self, topology_settings: TopologySettings) -> None:

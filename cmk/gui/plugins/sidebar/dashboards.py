@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List
-
 import cmk.gui.dashboard as dashboard
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
@@ -22,18 +20,18 @@ from cmk.gui.type_defs import TopicMenuTopic
 @snapin_registry.register
 class Dashboards(SidebarSnapin):
     @staticmethod
-    def type_name():
+    def type_name() -> str:
         return "dashboards"
 
     @classmethod
-    def title(cls):
+    def title(cls) -> str:
         return _("Dashboards")
 
     @classmethod
-    def description(cls):
+    def description(cls) -> str:
         return _("Links to all dashboards")
 
-    def show(self):
+    def show(self) -> None:
         show_topic_menu(treename="dashboards", menu=self._get_dashboard_menu_items())
 
         links = []
@@ -43,7 +41,7 @@ class Dashboards(SidebarSnapin):
             links.append((_("Edit"), "edit_dashboards.py"))
             footnotelinks(links)
 
-    def _get_dashboard_menu_items(self) -> List[TopicMenuTopic]:
+    def _get_dashboard_menu_items(self) -> list[TopicMenuTopic]:
         return make_topic_menu(
-            [("dashboards", (k, dict(v))) for k, v in dashboard.get_permitted_dashboards().items()]
+            [("dashboards", (k, v)) for k, v in dashboard.get_permitted_dashboards().items()]
         )

@@ -24,7 +24,15 @@ from cmk.gui.plugins.sidebar.utils import (
     snapin_registry,
 )
 from cmk.gui.plugins.wato.utils.main_menu import main_module_registry, MainModuleTopic
-from cmk.gui.type_defs import Choices, MegaMenu, RoleName, TopicMenuItem, TopicMenuTopic, ViewSpec
+from cmk.gui.type_defs import (
+    Choices,
+    MegaMenu,
+    RoleName,
+    TopicMenuItem,
+    TopicMenuTopic,
+    TypedVisual,
+    ViewSpec,
+)
 from cmk.gui.utils.html import HTML
 from cmk.gui.view_store import get_permitted_views
 from cmk.gui.watolib.activate_changes import ActivateChanges
@@ -344,9 +352,11 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
             "foldertree", (dflt_topic_name, dflt_target_name)
         )
 
-        visuals_to_show = [("views", (k, dict(v))) for k, v in views_to_show]
+        visuals_to_show: list[tuple[str, tuple[str, TypedVisual]]] = [
+            ("views", (k, v)) for k, v in views_to_show
+        ]
         visuals_to_show += [
-            ("dashboards", (k, dict(v))) for k, v in dashboard.get_permitted_dashboards().items()
+            ("dashboards", (k, v)) for k, v in dashboard.get_permitted_dashboards().items()
         ]
 
         topics = make_topic_menu(visuals_to_show)

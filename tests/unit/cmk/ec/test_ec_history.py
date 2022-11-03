@@ -12,17 +12,16 @@ from cmk.ec.history import convert_history_line, History, parse_history_file
 
 def test_convert_history_line(history: History) -> None:
     """History convert values."""
-    values = "1666942292.2998602	DELETE	cmkadmin		5	1	some text	1666942205.0	1666942205.0		0	heute		OMD	0	6	9	asdf	0	closed	cmkadmin					host	heute	0	".split(
+    values = "1	1666942292.2998602	DELETE	cmkadmin		5	1	some text	1666942205.0	1666942205.0		0	heute		OMD	0	6	9	asdf	0	closed	cmkadmin					host	heute	0	".split(
         "\t")
 
-    assert values[0] == "1666942292.2998602"
-    assert values[4] == "5"
-    assert len(values) == 29
+    assert len(values) == 30
 
     convert_history_line(history._history_columns, values)
 
-    assert values[0] == 1666942292.2998602  # type: ignore[comparison-overlap]
-    assert values[4] == 5  # type: ignore[comparison-overlap]
+    assert values[0] == 1  # type: ignore[comparison-overlap]
+    assert values[1] == 1666942292.2998602  # type: ignore[comparison-overlap]
+    assert values[5] == 5  # type: ignore[comparison-overlap]
 
 
 def test_history_parse(history: History, tmp_path: Path) -> None:

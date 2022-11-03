@@ -555,11 +555,10 @@ def parse_history_file(
     logger: Logger,
 ) -> List[Any]:
     entries: List[Any] = []
-    line_no = 0
     # If we have greptexts we pre-filter the file using the extremely
     # fast GNU Grep
     # Revert lines from the log file to have the newer lines processed first
-    cmd = 'tac %s' % quote_shell_string(str(path))
+    cmd = 'nl -b a %s | tac' % quote_shell_string(str(path))
     if greptexts:
         cmd += " | egrep -i -e %s" % quote_shell_string(".*".join(greptexts))
     grep = subprocess.Popen(cmd, shell=True, close_fds=True, stdout=subprocess.PIPE)  # nosec
@@ -567,7 +566,6 @@ def parse_history_file(
         raise Exception("Huh? stdout vanished...")
 
     for line in grep.stdout:
-        line_no += 1
         if limit is not None and len(entries) > limit:
             grep.kill()
             grep.wait()
@@ -576,9 +574,8 @@ def parse_history_file(
         try:
             parts: List[Any] = line.decode('utf-8').rstrip('\n').split('\t')
             convert_history_line(history_columns, parts)
-            values = [line_no] + parts
-            if filter_row(values):
-                entries.append(values)
+            if filter_row(parts):
+                entries.append(parts)
         except Exception as e:
             logger.exception("Invalid line '%r' in history file %s: %s" % (line, path, e))
 
@@ -588,41 +585,41 @@ def parse_history_file(
 def convert_history_line(history_columns: Sequence[Tuple[str, Any]], values: List[Any]) -> None:
     """
     Speed-critical function for converting string representation
-    of log line back to Python values
-    NOTE: history_line column is missing here, so indices are off by 1! :-P
+    of log line back to Python values.
     """
-    values[0] = float(values[0])  # history_time
-    values[4] = int(values[4])  # event_id
-    values[5] = int(values[5])  # event_count
-    values[7] = float(values[7])  # event_first
-    values[8] = float(values[8])  # event_last
-    values[10] = int(values[10])  # event_sl
-    values[14] = int(values[14])  # event_pid
-    values[15] = int(values[15])  # event_priority
-    values[16] = int(values[16])  # event_facility
-    values[18] = int(values[18])  # event_state
-    values[21] = _unsplit(values[21])  # event_match_groups
+    values[0] = int(values[0])  # history_line
+    values[1] = float(values[1])  # history_time
+    values[5] = int(values[5])  # event_id
+    values[6] = int(values[6])  # event_count
+    values[8] = float(values[8])  # event_first
+    values[9] = float(values[9])  # event_last
+    values[11] = int(values[11])  # event_sl
+    values[15] = int(values[15])  # event_pid
+    values[16] = int(values[16])  # event_priority
+    values[17] = int(values[17])  # event_facility
+    values[19] = int(values[19])  # event_state
+    values[22] = _unsplit(values[22])  # event_match_groups
     num_values = len(values)
-    if num_values <= 22:  # event_contact_groups
+    if num_values <= 23:  # event_contact_groups
         values.append(None)
     else:
-        values[22] = _unsplit(values[22])
-    if num_values <= 23:  # event_ipaddress
-        values.append(history_columns[24][1])
-    if num_values <= 24:  # event_orig_host
+        values[23] = _unsplit(values[23])
+    if num_values <= 24:  # event_ipaddress
         values.append(history_columns[25][1])
-    if num_values <= 25:  # event_contact_groups_precedence
+    if num_values <= 25:  # event_orig_host
         values.append(history_columns[26][1])
-    if num_values <= 26:  # event_core_host
+    if num_values <= 26:  # event_contact_groups_precedence
         values.append(history_columns[27][1])
-    if num_values <= 27:  # event_host_in_downtime
+    if num_values <= 27:  # event_core_host
         values.append(history_columns[28][1])
-    else:
-        values[27] = values[27] == "1"
-    if num_values <= 28:  # event_match_groups_syslog_application
+    if num_values <= 28:  # event_host_in_downtime
         values.append(history_columns[29][1])
     else:
-        values[28] = _unsplit(values[28])
+        values[28] = values[28] == "1"
+    if num_values <= 29:  # event_match_groups_syslog_application
+        values.append(history_columns[30][1])
+    else:
+        values[29] = _unsplit(values[29])
 
 
 def _unsplit(s: Any) -> Any:

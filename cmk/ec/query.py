@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from logging import Logger
-from typing import Any, Callable, List, Optional, Set, Tuple
+from typing import Any, Callable, List, Optional, Set, Tuple, Sequence
 
 from cmk.utils.exceptions import MKException
 import cmk.utils.regex
@@ -149,7 +149,7 @@ class QueryGET(Query):
             for column_name in self.requested_columns
         ]
 
-    def filter_row(self, row: List[Any]) -> bool:
+    def filter_row(self, row: Sequence[Any]) -> bool:
         return all(
             predicate(row[self.table.column_indices[column_name]])
             for column_name, _operator_name, predicate, _argument in self.filters)

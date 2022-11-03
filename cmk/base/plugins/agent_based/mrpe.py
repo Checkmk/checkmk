@@ -161,7 +161,11 @@ def check_mrpe(item: str, section: MRPESection) -> CheckResult:
     if dataset.cache_info is not None:
         yield Result(state=State.OK, summary=cache_helper.render_cache_info(dataset.cache_info))
 
-    yield Result(state=dataset.state, summary=output[0], details="\n".join(output))
+    yield Result(
+        state=dataset.state,
+        summary=output[0] if output[0] else "No further information available",
+        details="\n".join(output) if output[0] else None,
+    )
     yield from _output_metrics(perfdata)
 
     # name of check command needed for PNP to choose the correct template

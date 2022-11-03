@@ -1,0 +1,12 @@
+Title: Host diagnose: Internal error: dictionary changed size during iteration
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1667484326
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p16
+
+This fixes a regression introduced in Checkmk 2.1.0p15.
+If users try to change the host properties from the <i>"Test connection to <HOST>"</i> page, the above error was raised.

@@ -162,12 +162,10 @@ class ModeDiagHost(WatoMode):
 
             # Remove fields in this page that are not host attributes in order to avoid
             # data corruption.
-            new = new.copy()
-            for key in new:
-                if key not in host_attribute_registry:
-                    new.pop(key, None)
+            self._host.update_attributes(
+                {k: v for k, v in new.items() if k in host_attribute_registry}
+            )
 
-            self._host.update_attributes(new)
             flash(_("Updated attributes: ") + ", ".join(return_message))
             return redirect(
                 mode_url(

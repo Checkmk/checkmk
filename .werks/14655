@@ -1,0 +1,13 @@
+Title: Extension manager: disable upgraded packages
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1667510910
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p16
+
+When upgrading installed MKPs to a new version, the former version is disabled now.
+

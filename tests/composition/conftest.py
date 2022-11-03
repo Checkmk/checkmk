@@ -31,6 +31,8 @@ from tests.composition.constants import (  # pylint: disable=ungrouped-imports
 )
 from tests.composition.utils import get_package_type, wait_for_baking_job
 
+site_number = 0
+
 
 # Disable this. We have a site_factory instead.
 @pytest.fixture(scope="module")
@@ -42,12 +44,17 @@ def site(request):
 # may result in a test failing in another one
 @pytest.fixture(scope="module")
 def site_factory() -> Iterator[SiteFactory]:
+    # Using a different site for every module to avoid having issues when saving the results for the
+    # tests: if you call SiteFactory.save_results() twice with the same site_id, it will crash
+    # because the results are already there.
+    global site_number
     sf = SiteFactory(
         version=os.environ.get("VERSION", CMKVersion.DAILY),
         edition=os.environ.get("EDITION", CMKVersion.CEE),
         branch=os.environ.get("BRANCH") or current_branch_name(),
-        prefix="comp_",
+        prefix=f"comp_{site_number}_",
     )
+    site_number += 1
     try:
         yield sf
     finally:

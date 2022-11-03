@@ -49,14 +49,6 @@ def is_plus_repo() -> bool:
     return os.path.exists(cpe_path())
 
 
-def is_containerized() -> bool:
-    return (
-        os.path.exists("/.dockerenv")
-        or os.path.exists("/run/.containerenv")
-        or os.environ.get("CMK_CONTAINERIZED") == "TRUE"
-    )
-
-
 def virtualenv_path() -> Path:
     venv = subprocess.check_output(
         [str(repo_path() / "scripts/run-pipenv"), "--bare", "--venv"], encoding="utf-8"

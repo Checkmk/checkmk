@@ -27,7 +27,6 @@ from tests.testlib.utils import (
     cme_path,
     cmk_path,
     current_base_branch_name,
-    is_containerized,
     virtualenv_path,
 )
 from tests.testlib.version import CMKVersion
@@ -990,8 +989,8 @@ class Site:
         return port
 
     def save_results(self) -> None:
-        if not is_containerized():
-            logger.info("Not containerized: not copying results")
+        if not _is_dockerized():
+            logger.info("Not dockerized: not copying results")
             return
         logger.info("Saving to %s", self.result_dir())
 
@@ -1074,6 +1073,10 @@ class Site:
             site.wait_for_core_reloaded(old_t)
 
         self.ensure_running()
+
+
+def _is_dockerized() -> bool:
+    return Path("/.dockerenv").exists()
 
 
 class SiteFactory:

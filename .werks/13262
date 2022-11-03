@@ -1,0 +1,18 @@
+Title: Missing failure indicator in IPMI status messages
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1667483203
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p16
+
+The IPMI sensor check would result in an OK state when confronted with a status
+message like this:
+
+    "ok (Presence detected, Predictive failure, Power Supply AC lost)"
+
+This change adds more substrings indicating an error and renders a service with
+the above string CRIT.

@@ -250,10 +250,15 @@ def discover_ipmi(
 
 def ipmi_status_txt_mapping(status_txt: str) -> State:
     status_txt_lower = status_txt.lower()
-    if status_txt.startswith("ok") and not (
-        "failure detected" in status_txt_lower
-        or "in critical array" in status_txt_lower
-        or "drive fault" in status_txt_lower
+    if status_txt.startswith("ok") and not any(
+        p in status_txt_lower
+        for p in (
+            "failure detected",
+            "in critical array",
+            "drive fault",
+            "predictive failure",
+            "power supply ac lost",
+        )
     ):
         return State.OK
     if status_txt.startswith("nc"):

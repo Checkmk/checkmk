@@ -1,6 +1,7 @@
 [Unit]
 Description=Checkmk agent - Asynchronous background tasks
 After=network.target
+Documentation=https://docs.checkmk.com/latest/en/agent_linux.html
 
 [Service]
 ExecStart=/usr/bin/check_mk_agent

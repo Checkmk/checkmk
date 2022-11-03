@@ -1,5 +1,6 @@
 [Unit]
 Description=Checkmk agent
+Documentation=https://docs.checkmk.com/latest/en/agent_linux.html
 
 [Service]
 # "-" path prefix makes systemd record the exit code,

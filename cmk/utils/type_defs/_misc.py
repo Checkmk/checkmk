@@ -29,6 +29,7 @@ ServicegroupName = str
 ContactgroupName = str
 TimeperiodName = str
 
+# We still need "Union" because of https://github.com/python/mypy/issues/11098
 AgentTargetVersion = Union[None, str, tuple[str, str], tuple[str, dict[str, str]]]
 
 AgentRawData = NewType("AgentRawData", bytes)
@@ -213,7 +214,7 @@ MetricTuple = tuple[
 
 ClusterMode = Literal["native", "failover", "worst", "best"]
 
-LegacyCheckParameters = Union[None, Mapping[Any, Any], tuple[Any, ...], list[Any], str, int, bool]
+LegacyCheckParameters = None | Mapping[Any, Any] | tuple[Any, ...] | list[Any] | str | int | bool
 ParametersTypeAlias = Mapping[str, Any]  # Modification may result in an incompatible API change.
 
 SetAutochecksTable = dict[

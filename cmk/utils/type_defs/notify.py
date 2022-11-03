@@ -33,7 +33,7 @@ NotificationContext = NewType("NotificationContext", dict[str, str])
 class EventRule(TypedDict, total=False):
     """Event Rule
 
-    used to be Dict[str, Any], feel free to add stuff"""
+    used to be dict[str, Any], feel free to add stuff"""
 
     alert_handler: tuple[HandlerName, HandlerParameters]
     allow_disable: bool
@@ -113,7 +113,7 @@ class Contact(TypedDict, total=False):
 
 
 class EventContext(TypedDict, total=False):
-    """Used to be Dict[str, Any]"""
+    """Used to be dict[str, Any]"""
 
     CONTACTNAME: str
     CONTACTS: str

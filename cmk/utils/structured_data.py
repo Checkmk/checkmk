@@ -46,7 +46,7 @@ SDPairsFromPlugins = Mapping[SDKey, SDValue]
 LegacyPairs = dict[SDKey, SDValue]
 
 # TODO SDRows and LegacyRows are the same for now, but SDRows will change in the future
-# adapt werk 12389 if inner table structure changes from List[SDRow] to Dict[SDRowIdent, SDRow]
+# adapt werk 12389 if inner table structure changes from list[SDRow] to dict[SDRowIdent, SDRow]
 SDKeyColumns = list[SDKey]
 SDRowIdent = tuple[SDValue, ...]
 SDRow = dict[SDKey, SDValue]

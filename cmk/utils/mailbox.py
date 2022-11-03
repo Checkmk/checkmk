@@ -30,7 +30,7 @@ import warnings
 from collections.abc import Callable, Iterable, Sequence
 from contextlib import suppress
 from datetime import datetime
-from typing import Any, Union
+from typing import Any
 
 import urllib3
 from exchangelib import (  # type: ignore[import]
@@ -101,7 +101,7 @@ class EWS:
         self._account.protocol.close()
 
 
-MailBoxType = Union[poplib.POP3_SSL, poplib.POP3, imaplib.IMAP4_SSL, imaplib.IMAP4, EWS]
+MailBoxType = poplib.POP3_SSL | poplib.POP3 | imaplib.IMAP4_SSL | imaplib.IMAP4 | EWS
 
 
 class ConnectError(Exception):

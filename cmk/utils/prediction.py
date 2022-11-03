@@ -143,7 +143,7 @@ class TimeSeries:
     - Start has no associated value to it.
 
     args:
-        data : List
+        data : list
             Includes [start, end, step, *values]
         timewindow: tuple
             describes (start, end, step), in this case data has only values

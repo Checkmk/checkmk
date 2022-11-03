@@ -7,7 +7,7 @@
 Note:
     The conversions to sequence (`to_seq`) and list (`to_list`) are not necessary.
 
-    Use `list(Result[T, E]) -> List[T]` to convert to list and `for v in result: ...`
+    Use `list(Result[T, E]) -> list[T]` to convert to list and `for v in result: ...`
     for the sequence.
 
 See Also:

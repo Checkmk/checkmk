@@ -186,7 +186,8 @@ class _StableDailyVersion(_VersionDate, _VersionBase):
 
 _NoneDailyVersion = _StableVersion | _BetaVersion | _InnovationVersion | _PatchVersion
 _DailyVersion = _MasterDailyVersion | _StableDailyVersion
-_Version = Union[_NoneDailyVersion | _DailyVersion]
+# We still need "Union" because of https://github.com/python/mypy/issues/12005
+_Version = Union[_DailyVersion, _NoneDailyVersion]
 
 
 @functools.total_ordering

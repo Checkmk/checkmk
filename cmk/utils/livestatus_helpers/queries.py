@@ -34,8 +34,7 @@ class ResultRow(dict):
     Sadly the values can't really be checked by mypy, but this won't be possible with dict-lookups
     as well.
 
-    >>> from typing import Dict
-    >>> result: Dict[str, Any] = {'a': 'b', 'b': 5, 'c': [1, 2, 3]}
+    >>> result: dict[str, Any] = {'a': 'b', 'b': 5, 'c': [1, 2, 3]}
     >>> d = ResultRow(result)
     >>> str_value = d.a  # is of type Any
     >>> str_value
@@ -435,7 +434,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
             names = self.column_names
 
         for entry in self.fetch_values(sites):
-            # This is Dict[str, Any], just with Attribute based access. Can't do much about this.
+            # This is dict[str, Any], just with Attribute based access. Can't do much about this.
             yield ResultRow(list(zip(names, entry)))
 
     def to_dict(self, sites: MultiSiteConnection) -> dict[Any, Any]:

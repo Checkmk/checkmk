@@ -488,8 +488,10 @@ RenderingExpression = tuple[Any, ...]
 TranslatedMetrics = dict[str, TranslatedMetric]
 MetricExpression = str
 LineType = str  # TODO: Literal["line", "area", "stack", "-line", "-area", "-stack"]
-MetricDefinition = Union[  # https://github.com/python/mypy/issues/11098
-    tuple[MetricExpression, LineType], tuple[MetricExpression, LineType, str | LazyString]
+# We still need "Union" because of https://github.com/python/mypy/issues/11098
+MetricDefinition = Union[
+    tuple[MetricExpression, LineType],
+    tuple[MetricExpression, LineType, str | LazyString],
 ]
 PerfometerSpec = dict[str, Any]
 PerfdataTuple = tuple[str, float, str, float | None, float | None, float | None, float | None]
@@ -566,7 +568,8 @@ CustomGraphIdentifier = tuple[Literal["custom"], str]
 ExplicitGraphIdentifier = tuple[Literal["explicit"], ExplicitGraphSpec]
 SingleTimeseriesGraphIdentifier = tuple[Literal["single_timeseries"], SingleTimeseriesGraphSpec]
 
-GraphIdentifier = Union[  # https://github.com/python/mypy/issues/11098
+# We still need "Union" because of https://github.com/python/mypy/issues/11098
+GraphIdentifier = Union[
     CustomGraphIdentifier,
     tuple[Literal["forecast"], str],
     TemplateGraphIdentifier,

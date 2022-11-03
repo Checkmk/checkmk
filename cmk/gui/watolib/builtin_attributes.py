@@ -849,7 +849,7 @@ class HostAttributeManagementAddress(ABCHostAttributeValueSpec):
                 [
                     fields.ValidateIPv4(),
                     fields.ValidateIPv6(),
-                    fields.validate_hostname,
+                    fields.ValidateHostName(),
                 ]
             ),
         )

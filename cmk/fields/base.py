@@ -2,15 +2,15 @@
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import collections.abc
 import re
-from typing import Any, Optional, Protocol, Tuple
+from collections.abc import Mapping
+from typing import Any, Protocol
 
 from marshmallow import fields, ValidationError
 
 
 class OpenAPIAttributes:
-    def __init__(self, *args, **kwargs) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, *args, **kwargs) -> None:  # type: ignore[no-untyped-def]
         metadata = kwargs.setdefault("metadata", {})
         for key in [
             "description",
@@ -199,7 +199,7 @@ class Integer(OpenAPIAttributes, fields.Integer):
         return value
 
 
-def _freeze(obj: Any, partial: Optional[Tuple[str, ...]] = None):  # type:ignore[no-untyped-def]
+def _freeze(obj: Any, partial: tuple[str, ...] | None = None):  # type: ignore[no-untyped-def]
     """Freeze all the things, so we can put them in a set.
 
     Examples:
@@ -219,7 +219,7 @@ def _freeze(obj: Any, partial: Optional[Tuple[str, ...]] = None):  # type:ignore
     Returns:
 
     """
-    if isinstance(obj, collections.abc.Mapping):
+    if isinstance(obj, Mapping):
         return frozenset(
             (_freeze(key), _freeze(value))
             for key, value in obj.items()
@@ -253,7 +253,7 @@ class UniqueFields:
 
     def _verify_unique_schema_entries(  # type:ignore[no-untyped-def]
         self: HasMakeError, value, _fields
-    ):
+    ) -> None:
         required_fields = tuple(name for name, field in _fields.items() if field.required)
         seen = set()
         for idx, entry in enumerate(value, start=1):
@@ -281,7 +281,7 @@ class UniqueFields:
 
             seen.add(entry_hash)
 
-    def _verify_unique_scalar_entries(self: HasMakeError, value):  # type:ignore[no-untyped-def]
+    def _verify_unique_scalar_entries(self: HasMakeError, value) -> None:  # type: ignore[no-untyped-def]
         # FIXME: Pretty sure that List(List(List(...))) will break this.
         #        I have yet to see this use-case though.
         seen = set()

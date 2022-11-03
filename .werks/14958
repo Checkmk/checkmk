@@ -1,0 +1,23 @@
+Title: cmk-update-agent: Fix lockfile handling
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1667485672
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p16
+
+This Werk mainly fixes an inconvenience that occured when invoking multiple
+instances of the Agent Updater simultaneously.
+
+Since Werk #14732, it's possible for the Agent Updater to wait for running exclusively.
+However, before this Werk, a second instance failed to actually open and hold the
+respective lockfile (because the first instance deleted it). Hence, it also failed to
+delete it in the end.
+
+This resulted in an error message like <tt>No such file or directory:
+'/tmp/cmk-update-agent.pid'"</tt>. This didn't result in a crash, but the error was
+printed to the logfile and could lead to confusion.
+

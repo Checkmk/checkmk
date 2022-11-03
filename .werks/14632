@@ -1,0 +1,13 @@
+Title: mrpe: Check plugin no longer crashes when information is not available in the agent section
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1667466112
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+The check plugin used to crash if no further information about a service was not available.
+This has now been fixed, and if no further information is available, the check summary will be appropriate.
+

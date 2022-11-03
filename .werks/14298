@@ -12,6 +12,7 @@ Version: 2.2.0i1
 With Checkmk 2.1, announced by Werk #13640, the Web API was deprecated. This
 release now removes the Web API.
 
+The Endpoint will return a standard apache error message with status code 410.
+
 We recommend migrating all existing scripts that use the Web API to the REST
 API.
-

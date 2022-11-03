@@ -4,18 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Provide methods to get an snmp table with or without caching
 """
+from collections.abc import Callable, Iterable, Iterator, MutableMapping, Sequence
 from pathlib import Path
-from typing import (
-    Callable,
-    Iterable,
-    Iterator,
-    List,
-    MutableMapping,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
-)
 
 import cmk.utils.debug
 import cmk.utils.store as store
@@ -36,13 +26,13 @@ from .type_defs import (
     SpecialColumn,
 )
 
-ResultColumnsUnsanitized = List[Tuple[OID, SNMPRowInfo, SNMPValueEncoding]]
-ResultColumnsSanitized = List[Tuple[List[SNMPRawValue], SNMPValueEncoding]]
-ResultColumnsDecoded = List[List[SNMPDecodedValues]]
+ResultColumnsUnsanitized = list[tuple[OID, SNMPRowInfo, SNMPValueEncoding]]
+ResultColumnsSanitized = list[tuple[list[SNMPRawValue], SNMPValueEncoding]]
+ResultColumnsDecoded = list[list[SNMPDecodedValues]]
 
 
 class WalkCache(
-    MutableMapping[str, Tuple[bool, SNMPRowInfo]]
+    MutableMapping[str, tuple[bool, SNMPRowInfo]]
 ):  # pylint: disable=too-many-ancestors
     """A cache on a per-fetchoid basis
 
@@ -57,7 +47,7 @@ class WalkCache(
     __slots__ = ("_store", "_path")
 
     def __init__(self, host_name: HostName) -> None:
-        self._store: MutableMapping[str, Tuple[bool, SNMPRowInfo]] = {}
+        self._store: MutableMapping[str, tuple[bool, SNMPRowInfo]] = {}
         self._path = Path(cmk.utils.paths.var_dir, "snmp_cache", host_name)
 
     def _read_row(self, path: Path) -> SNMPRowInfo:
@@ -80,12 +70,12 @@ class WalkCache(
         return self._path.iterdir()
 
     def __repr__(self) -> str:
-        return "%s(%r)" % (type(self).__name__, self._store)
+        return f"{type(self).__name__}({self._store!r})"
 
-    def __getitem__(self, key: str) -> Tuple[bool, SNMPRowInfo]:
+    def __getitem__(self, key: str) -> tuple[bool, SNMPRowInfo]:
         return self._store.__getitem__(key)
 
-    def __setitem__(self, key: str, value: Tuple[bool, SNMPRowInfo]) -> None:
+    def __setitem__(self, key: str, value: tuple[bool, SNMPRowInfo]) -> None:
         return self._store.__setitem__(key, value)
 
     def __delitem__(self, key: str) -> None:
@@ -147,21 +137,21 @@ class WalkCache(
 
 def get_snmp_table(
     *,
-    section_name: Optional[SectionName],
+    section_name: SectionName | None,
     tree: BackendSNMPTree,
-    walk_cache: MutableMapping[str, Tuple[bool, SNMPRowInfo]],
+    walk_cache: MutableMapping[str, tuple[bool, SNMPRowInfo]],
     backend: SNMPBackend,
 ) -> Sequence[SNMPTable]:
 
     index_column = -1
-    index_format: Optional[SpecialColumn] = None
+    index_format: SpecialColumn | None = None
     columns: ResultColumnsUnsanitized = []
     # Detect missing (empty columns)
     max_len = 0
     max_len_col = -1
 
     for oid in tree.oids:
-        fetchoid: OID = "%s.%s" % (tree.base, oid.column)
+        fetchoid: OID = f"{tree.base}.{oid.column}"
         # column may be integer or string like "1.5.4.2.3"
         # if column is 0, we do not fetch any data from snmp, but use
         # a running counter as index. If the index column is the first one,
@@ -223,7 +213,7 @@ def _make_index_rows(
         elif index_format is SpecialColumn.END_OCTET_STRING:
             val = _oid_to_bin(_extract_end_oid(fetchoid, o))[1:]
         else:
-            raise MKGeneralException("Invalid index format %r" % (index_format,))
+            raise MKGeneralException(f"Invalid index format {index_format!r}")
         index_rows.append((o, val))
     return index_rows
 
@@ -254,7 +244,7 @@ def _extract_end_oid(prefix: OID, complete: OID) -> OID:
 
 
 # sort OID strings numerically
-def _oid_to_intlist(oid: OID) -> List[int]:
+def _oid_to_intlist(oid: OID) -> list[int]:
     if oid:
         return list(map(int, oid.split(".")))
     return []
@@ -264,20 +254,20 @@ def _cmp_oids(o1: OID, o2: OID) -> int:
     return (_oid_to_intlist(o1) > _oid_to_intlist(o2)) - (_oid_to_intlist(o1) < _oid_to_intlist(o2))
 
 
-def _key_oids(o1: OID) -> List[int]:
+def _key_oids(o1: OID) -> list[int]:
     return _oid_to_intlist(o1)
 
 
-def _key_oid_pairs(pair1: Tuple[OID, SNMPRawValue]) -> List[int]:
+def _key_oid_pairs(pair1: tuple[OID, SNMPRawValue]) -> list[int]:
     return _oid_to_intlist(pair1[0].lstrip("."))
 
 
 def _get_snmpwalk(
-    section_name: Optional[SectionName],
+    section_name: SectionName | None,
     base: str,
     fetchoid: OID,
     *,
-    walk_cache: MutableMapping[str, Tuple[bool, SNMPRowInfo]],
+    walk_cache: MutableMapping[str, tuple[bool, SNMPRowInfo]],
     save_walk_cache: bool,
     backend: SNMPBackend,
 ) -> SNMPRowInfo:
@@ -294,13 +284,13 @@ def _get_snmpwalk(
 
 
 def _perform_snmpwalk(
-    section_name: Optional[SectionName],
+    section_name: SectionName | None,
     base_oid: str,
     fetchoid: OID,
     *,
     backend: SNMPBackend,
 ) -> SNMPRowInfo:
-    added_oids: Set[OID] = set([])
+    added_oids: set[OID] = set()
     rowinfo: SNMPRowInfo = []
 
     for context_name in backend.config.snmpv3_contexts_of(section_name):
@@ -323,7 +313,7 @@ def _perform_snmpwalk(
 
         for row_oid, val in rows:
             if row_oid in added_oids:
-                console.vverbose("Duplicate OID found: %s (%r)\n" % (row_oid, val))
+                console.vverbose(f"Duplicate OID found: {row_oid} ({val!r})\n")
             else:
                 rowinfo.append((row_oid, val))
                 added_oids.add(row_oid)
@@ -340,8 +330,8 @@ def _sanitize_snmp_encoding(
 
 
 def _decode_column(
-    column: List[SNMPRawValue], value_encoding: SNMPValueEncoding, snmp_config: SNMPHostConfig
-) -> List[SNMPDecodedValues]:
+    column: list[SNMPRawValue], value_encoding: SNMPValueEncoding, snmp_config: SNMPHostConfig
+) -> list[SNMPDecodedValues]:
     if value_encoding == "string":
         # ? ensure_str is used with potentially different encodings
         decode: Callable[[bytes], SNMPDecodedValues] = snmp_config.ensure_str
@@ -356,7 +346,7 @@ def _decode_column(
 def _sanitize_snmp_table_columns(columns: ResultColumnsUnsanitized) -> ResultColumnsSanitized:
     # First compute the complete list of end-oids appearing in the output
     # by looping all results and putting the endoids to a flat list
-    endoids: List[OID] = []
+    endoids: list[OID] = []
     for fetchoid, row_info, value_encoding in columns:
         for o, value in row_info:
             endoid = _extract_end_oid(fetchoid, o)
@@ -403,7 +393,7 @@ def _sanitize_snmp_table_columns(columns: ResultColumnsUnsanitized) -> ResultCol
     return new_columns
 
 
-def _are_ascending_oids(oid_list: List[OID]) -> bool:
+def _are_ascending_oids(oid_list: list[OID]) -> bool:
     for a in range(len(oid_list) - 1):
         if _cmp_oids(oid_list[a], oid_list[a + 1]) > 0:  # == 0 should never happen
             return False

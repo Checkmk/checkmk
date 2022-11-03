@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import functools
-from typing import Collection, FrozenSet, Iterable, Set, Tuple
+from collections.abc import Collection, Iterable
 
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError, OnError
@@ -16,7 +16,7 @@ import cmk.snmplib.snmp_modes as snmp_modes
 from cmk.snmplib.type_defs import SNMPBackend
 from cmk.snmplib.utils import evaluate_snmp_detection
 
-SNMPScanSection = Tuple[SectionName, SNMPDetectBaseType]
+SNMPScanSection = tuple[SectionName, SNMPDetectBaseType]
 
 
 # gather auto_discovered check_plugin_names for this host
@@ -26,7 +26,7 @@ def gather_available_raw_section_names(
     on_error: OnError = OnError.RAISE,
     missing_sys_description: bool,
     backend: SNMPBackend,
-) -> FrozenSet[SectionName]:
+) -> frozenset[SectionName]:
     if not sections:
         return frozenset()
 
@@ -56,7 +56,7 @@ def _snmp_scan(
     on_error: OnError,
     missing_sys_description: bool,
     backend: SNMPBackend,
-) -> FrozenSet[SectionName]:
+) -> frozenset[SectionName]:
     snmp_cache.initialize_single_oid_cache(backend.config)
     console.vverbose("  SNMP scan:\n")
 
@@ -104,8 +104,8 @@ def _find_sections(
     *,
     on_error: OnError,
     backend: SNMPBackend,
-) -> FrozenSet[SectionName]:
-    found_sections: Set[SectionName] = set()
+) -> frozenset[SectionName]:
+    found_sections: set[SectionName] = set()
     for name, specs in sections:
         oid_value_getter = functools.partial(
             snmp_modes.get_single_oid,

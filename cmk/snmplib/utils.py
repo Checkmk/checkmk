@@ -4,20 +4,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from typing import Callable, List, Optional, Tuple
+from collections.abc import Callable
 
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import SNMPDetectBaseType
 
 from .type_defs import OID, SNMPDetectAtom
 
-SNMPRowInfoForStoredWalk = List[Tuple[OID, str]]
+SNMPRowInfoForStoredWalk = list[tuple[OID, str]]
 
 
 def evaluate_snmp_detection(
     *,
     detect_spec: SNMPDetectBaseType,
-    oid_value_getter: Callable[[str], Optional[str]],
+    oid_value_getter: Callable[[str], str | None],
 ) -> bool:
     """Evaluate a SNMP detection specification
 
@@ -31,7 +31,7 @@ def evaluate_snmp_detection(
 
 def _evaluate_snmp_detection_atom(
     atom: SNMPDetectAtom,
-    oid_value_getter: Callable[[str], Optional[str]],
+    oid_value_getter: Callable[[str], str | None],
 ) -> bool:
     oid, pattern, flag = atom
     value = oid_value_getter(oid)

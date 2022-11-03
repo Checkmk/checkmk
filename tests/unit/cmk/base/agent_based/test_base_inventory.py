@@ -18,6 +18,7 @@ from cmk.core_helpers.type_defs import NO_SELECTION
 import cmk.base.agent_based.inventory._inventory as _inventory
 import cmk.base.config as config
 from cmk.base.agent_based.data_provider import ParsedSectionsBroker
+from cmk.base.agent_based.inventory._inventory import _parse_inventory_plugin_item
 from cmk.base.agent_based.inventory._tree_aggregator import (
     AttributesUpdater,
     RealHostTreeAggregator,
@@ -28,25 +29,24 @@ from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 from cmk.base.config import HostConfig
 
 
-def test_aggregator_raises_collision() -> None:
-    inventory_items: list[Attributes | TableRow] = [
-        Attributes(path=["a", "b", "c"], status_attributes={"foo": "bar"}),
-        TableRow(path=["a", "b", "c"], key_columns={"foo": "bar"}),
-    ]
-
+@pytest.mark.parametrize(
+    "item, known_class_name",
+    [
+        (Attributes(path=["a", "b", "c"], status_attributes={"foo": "bar"}), "TableRow"),
+        (TableRow(path=["a", "b", "c"], key_columns={"foo": "bar"}), "Attributes"),
+    ],
+)
+def test_item_collisions(item: Attributes | TableRow, known_class_name: str) -> None:
     # For some reason, the callee raises instead of returning the exception if
     # it runs in debug mode.  So let us explicitly disable that here.
     cmk.utils.debug.disable()
 
-    result = RealHostTreeAggregator([]).aggregate_results(
-        inventory_generator=inventory_items,
-        raw_cache_info=None,
-    )
+    with pytest.raises(TypeError) as e:
+        _parse_inventory_plugin_item(item, known_class_name)
 
-    assert isinstance(result, TypeError)
-    assert str(result) == (
-        "Cannot create TableRow at path ['a', 'b', 'c']: this is a Attributes node."
-    )
+        assert str(e) == (
+            "Cannot create TableRow at path ['a', 'b', 'c']: this is a Attributes node."
+        )
 
 
 _TREE_WITH_OTHER = StructuredDataNode()
@@ -81,19 +81,17 @@ def test__tree_nodes_are_equal(old_tree: StructuredDataNode, inv_tree: Structure
 
 
 def test_integrate_attributes() -> None:
-    inventory_items: list[Attributes] = [
-        Attributes(
-            path=["a", "b", "c"],
-            inventory_attributes={
-                "foo0": "bar0",
-                "foo1": "bar1",
-            },
-        ),
-    ]
-
     tree_aggr = RealHostTreeAggregator([])
     tree_aggr.aggregate_results(
-        inventory_generator=inventory_items,
+        inventory_plugin_items=[
+            Attributes(
+                path=["a", "b", "c"],
+                inventory_attributes={
+                    "foo0": "bar0",
+                    "foo1": "bar1",
+                },
+            ),
+        ],
         raw_cache_info=None,
     )
 
@@ -125,37 +123,35 @@ def test_integrate_attributes() -> None:
 
 
 def test_integrate_table_row() -> None:
-    inventory_items: list[TableRow] = [
-        TableRow(
-            path=["a", "b", "c"],
-            key_columns={"foo": "baz"},
-            inventory_columns={
-                "col1": "baz val1",
-                "col2": "baz val2",
-                "col3": "baz val3",
-            },
-        ),
-        TableRow(
-            path=["a", "b", "c"],
-            key_columns={"foo": "bar"},
-            inventory_columns={
-                "col1": "bar val1",
-                "col2": "bar val2",
-            },
-        ),
-        TableRow(
-            path=["a", "b", "c"],
-            key_columns={"foo": "bar"},
-            inventory_columns={
-                "col1": "new bar val1",
-                "col3": "bar val3",
-            },
-        ),
-    ]
-
     tree_aggr = RealHostTreeAggregator([])
     tree_aggr.aggregate_results(
-        inventory_generator=inventory_items,
+        inventory_plugin_items=[
+            TableRow(
+                path=["a", "b", "c"],
+                key_columns={"foo": "baz"},
+                inventory_columns={
+                    "col1": "baz val1",
+                    "col2": "baz val2",
+                    "col3": "baz val3",
+                },
+            ),
+            TableRow(
+                path=["a", "b", "c"],
+                key_columns={"foo": "bar"},
+                inventory_columns={
+                    "col1": "bar val1",
+                    "col2": "bar val2",
+                },
+            ),
+            TableRow(
+                path=["a", "b", "c"],
+                key_columns={"foo": "bar"},
+                inventory_columns={
+                    "col1": "new bar val1",
+                    "col3": "bar val3",
+                },
+            ),
+        ],
         raw_cache_info=None,
     )
 

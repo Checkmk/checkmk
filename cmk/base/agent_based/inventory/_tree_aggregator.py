@@ -6,9 +6,8 @@
 from __future__ import annotations
 
 import time
-from typing import Iterable, NamedTuple, Sequence
+from typing import NamedTuple
 
-import cmk.utils.debug
 from cmk.utils.structured_data import (
     ATTRIBUTES_KEY,
     make_filter_from_choice,
@@ -23,7 +22,7 @@ from cmk.utils.structured_data import (
 )
 from cmk.utils.type_defs import HostName
 
-from cmk.base.api.agent_based.inventory_classes import Attributes, InventoryResult, TableRow
+from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 
 RawCacheInfo = tuple[int, int]
 
@@ -71,7 +70,6 @@ class RealHostTreeAggregator:
         self._inventory_tree = StructuredDataNode()
         self._status_data_tree = StructuredDataNode()
         self._update_result = UpdateResult(save_tree=False, reason="")
-        self._class_mutex: dict[tuple, str] = {}
 
     @property
     def inventory_tree(self) -> StructuredDataNode:
@@ -90,65 +88,28 @@ class RealHostTreeAggregator:
     def aggregate_results(
         self,
         *,
-        inventory_generator: InventoryResult,
+        inventory_plugin_items: list[Attributes | TableRow],
         raw_cache_info: RawCacheInfo | None,
-    ) -> Exception | None:
-
-        try:
-            table_rows, attributes = self._dispatch(inventory_generator)
-        except Exception as exc:
-            # TODO(ml): Returning the error is one possibly valid way to
-            #           handle it.  What is the `if cmk.utils.debug.enabled()`
-            #           actually good for?
-            if cmk.utils.debug.enabled():
-                raise
-            return exc
-
+    ) -> None:
         now = int(time.time())
-        for tabr in table_rows:
-            self._integrate_table_row(tabr)
-
-            self._may_add_cache_info(
-                now=now,
-                node_type=TABLE_KEY,
-                path=tuple(tabr.path),
-                raw_cache_info=raw_cache_info,
-            )
-
-        for attr in attributes:
-            self._integrate_attributes(attr)
-            self._may_add_cache_info(
-                now=now,
-                node_type=ATTRIBUTES_KEY,
-                path=tuple(attr.path),
-                raw_cache_info=raw_cache_info,
-            )
-
-        return None
-
-    def _dispatch(
-        self,
-        intentory_items: Iterable[TableRow | Attributes],
-    ) -> tuple[Sequence[TableRow], Sequence[Attributes]]:
-        attributes = []
-        table_rows = []
-        for item in intentory_items:
-            expected_class_name = self._class_mutex.setdefault(
-                tuple(item.path), item.__class__.__name__
-            )
-            if item.__class__.__name__ != expected_class_name:
-                raise TypeError(
-                    f"Cannot create {item.__class__.__name__} at path {item.path}:"
-                    f" this is a {expected_class_name} node."
-                )
+        for item in inventory_plugin_items:
             if isinstance(item, Attributes):
-                attributes.append(item)
-            elif isinstance(item, TableRow):
-                table_rows.append(item)
-            else:
-                raise NotImplementedError()  # can't happen, inventory results are filtered
+                self._integrate_attributes(item)
+                self._may_add_cache_info(
+                    now=now,
+                    node_type=ATTRIBUTES_KEY,
+                    path=tuple(item.path),
+                    raw_cache_info=raw_cache_info,
+                )
 
-        return table_rows, attributes
+            elif isinstance(item, TableRow):
+                self._integrate_table_row(item)
+                self._may_add_cache_info(
+                    now=now,
+                    node_type=TABLE_KEY,
+                    path=tuple(item.path),
+                    raw_cache_info=raw_cache_info,
+                )
 
     def _integrate_attributes(
         self,

@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Container, Iterable, Iterator, NamedTuple, Sequence, Tuple
 
+import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.check_utils import ActiveCheckResult
@@ -46,6 +47,7 @@ from cmk.base.agent_based.utils import (
     get_section_kwargs,
     summarize_host_sections,
 )
+from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 from cmk.base.config import HostConfig
 from cmk.base.sources import fetch_all, make_sources
 
@@ -253,6 +255,7 @@ def inventorize_real_host_via_plugins(
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[InventoryPluginName],
 ) -> RealHostTreeAggregator:
+    class_mutex: dict[tuple[str, ...], str] = {}
     tree_aggregator = RealHostTreeAggregator(host_config.inv_retention_intervals)
 
     section.section_step("Executing inventory plugins")
@@ -284,20 +287,47 @@ def inventorize_real_host_via_plugins(
                     ),
                 }
 
-            exception = tree_aggregator.aggregate_results(
-                inventory_generator=inventory_plugin.inventory_function(**kwargs),
-                raw_cache_info=parsed_sections_broker.get_cache_info(inventory_plugin.sections),
-            )
+            try:
+                inventory_plugin_items = [
+                    _parse_inventory_plugin_item(
+                        item,
+                        class_mutex.setdefault(tuple(item.path), item.__class__.__name__),
+                    )
+                    for item in inventory_plugin.inventory_function(**kwargs)
+                ]
+            except Exception as exception:
+                # TODO(ml): What is the `if cmk.utils.debug.enabled()` actually good for?
+                if cmk.utils.debug.enabled():
+                    raise
 
-            if exception:
                 console.warning(
                     f" {tty.red}{tty.bold}{inventory_plugin.name}{tty.normal}:"
                     f" failed: {exception}\n"
                 )
-            else:
-                console.verbose(f" {tty.green}{tty.bold}{inventory_plugin.name}{tty.normal}: ok\n")
+                continue
+
+            tree_aggregator.aggregate_results(
+                inventory_plugin_items=inventory_plugin_items,
+                raw_cache_info=parsed_sections_broker.get_cache_info(inventory_plugin.sections),
+            )
+
+            console.verbose(f" {tty.green}{tty.bold}{inventory_plugin.name}{tty.normal}: ok\n")
 
     return tree_aggregator
+
+
+def _parse_inventory_plugin_item(item: object, expected_class_name: str) -> Attributes | TableRow:
+    if not isinstance(item, (Attributes, TableRow)):
+        # can't happen, inventory results are filtered
+        raise NotImplementedError()
+
+    if item.__class__.__name__ != expected_class_name:
+        raise TypeError(
+            f"Cannot create {item.__class__.__name__} at path {item.path}:"
+            f" this is a {expected_class_name} node."
+        )
+
+    return item
 
 
 def _check_fetched_data_or_trees(

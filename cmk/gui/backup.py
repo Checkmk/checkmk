@@ -20,9 +20,10 @@ import signal
 import socket
 import subprocess
 import time
+from collections.abc import Iterator, Mapping, Sequence
 from io import TextIOWrapper
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Mapping, Optional, Sequence, Tuple, Type, TypedDict
+from typing import Any, TypedDict
 
 import cmk.utils.render as render
 import cmk.utils.store as store
@@ -186,7 +187,7 @@ class BackupEntity:
 
 
 class BackupEntityCollection:
-    def __init__(self, config_file_path: str, cls: Type, config_attr: str) -> None:
+    def __init__(self, config_file_path: str, cls: type, config_attr: str) -> None:
         self._config_path = config_file_path
         self._config = Config(config_file_path).load()
         self._cls = cls
@@ -270,7 +271,7 @@ class MKBackupJob:
         try:
             with self.state_file_path().open(encoding="utf-8") as f:
                 state = json.load(f)
-        except IOError as e:
+        except OSError as e:
             if e.errno == errno.ENOENT:  # not existant
                 state = {
                     "state": None,
@@ -393,15 +394,15 @@ class Job(MKBackupJob, BackupEntity):
     def _start_command(self) -> Sequence[str]:
         return [mkbackup_path(), "backup", "--background", self.ident()]
 
-    def schedule(self) -> Optional[Dict[str, Any]]:
+    def schedule(self) -> dict[str, Any] | None:
         return self._config["schedule"]
 
-    def cron_config(self) -> List[str]:
+    def cron_config(self) -> list[str]:
         if not self._config["schedule"] or self._config["schedule"]["disabled"]:
             return []
         userspec = self._cron_userspec()
         cmdline = self._cron_cmdline()
-        return ["%s %s%s" % (timespec, userspec, cmdline) for timespec in self._cron_timespecs()]
+        return [f"{timespec} {userspec}{cmdline}" for timespec in self._cron_timespecs()]
 
     def _cron_timespecs(self) -> Sequence[str]:
         period = self._config["schedule"]["period"]
@@ -741,7 +742,7 @@ class PageEditBackupJob:
                 raise MKUserError("_job", _("This job is currently running."))
 
             self._new = False
-            self._ident: Optional[str] = job_ident
+            self._ident: str | None = job_ident
             self._job_cfg = job.to_config()
             self._title = _("Edit backup job: %s") % job.title()
         else:
@@ -958,8 +959,8 @@ class PageEditBackupJob:
 class PageAbstractBackupJobState:
     def __init__(self) -> None:
         super().__init__()
-        self._job: Optional[MKBackupJob] = None
-        self._ident: Optional[str] = None
+        self._job: MKBackupJob | None = None
+        self._ident: str | None = None
 
     def jobs(self):
         raise NotImplementedError()
@@ -1076,7 +1077,7 @@ class ABCBackupTargetType(abc.ABC):
         raise NotImplementedError()
 
     @classmethod
-    def choices(cls: Any) -> List[Tuple[str, str, ValueSpec]]:
+    def choices(cls: Any) -> list[tuple[str, str, ValueSpec]]:
         choices = []
         # TODO: subclasses with the same name may be registered multiple times, due to execfile
         # TODO: DO NOT USE __subclasses__, EVER! (Unless you are writing a debugger etc.)
@@ -1085,7 +1086,7 @@ class ABCBackupTargetType(abc.ABC):
         return sorted(choices, key=lambda x: x[1])
 
     @classmethod
-    def get_type(cls, type_ident: str) -> Type["ABCBackupTargetType"] | None:
+    def get_type(cls, type_ident: str) -> type["ABCBackupTargetType"] | None:
         # TODO: subclasses with the same name may be registered multiple times, due to execfile
         for type_class in cls.__subclasses__():
             # indent is an attribute in the implementations
@@ -1195,7 +1196,7 @@ class BackupTargetLocal(ABCBackupTargetType):
             with open(test_file_path, "wb"):
                 pass
             os.unlink(test_file_path)
-        except IOError:
+        except OSError:
             if cmk_version.is_cma():
                 raise MKUserError(
                     varprefix,
@@ -1222,7 +1223,7 @@ class BackupTargetLocal(ABCBackupTargetType):
         for path in glob.glob("%s/*/mkbackup.info" % self._params["path"]):
             try:
                 info = self._load_backup_info(path)
-            except IOError as e:
+            except OSError as e:
                 if e.errno == errno.EACCES:
                     continue  # Silently skip not permitted files
                 raise
@@ -1259,7 +1260,7 @@ class BackupTargetLocal(ABCBackupTargetType):
 
     def remove_backup(self, backup_ident: str) -> None:
         self.verify_target_is_ready()
-        shutil.rmtree("%s/%s" % (self._params["path"], backup_ident))
+        shutil.rmtree("{}/{}".format(self._params["path"], backup_ident))
 
 
 # .
@@ -1281,7 +1282,7 @@ class Target(BackupEntity):
     def type_ident(self) -> str:
         return self._config["remote"][0]
 
-    def type_class(self) -> Type[ABCBackupTargetType]:
+    def type_class(self) -> type[ABCBackupTargetType]:
         tclass = ABCBackupTargetType.get_type(self.type_ident())
         if tclass is not None:
             return tclass
@@ -1332,7 +1333,7 @@ class Target(BackupEntity):
 
                 from_info = info["hostname"]
                 if "site_id" in info:
-                    from_info += " (Site: %s, Version: %s)" % (
+                    from_info += " (Site: {}, Version: {})".format(
                         info["site_id"],
                         info["site_version"],
                     )
@@ -1523,7 +1524,7 @@ class PageEditBackupTarget:
                 raise MKUserError("target", _("This backup target does not exist."))
 
             self._new = False
-            self._ident: Optional[str] = target_ident
+            self._ident: str | None = target_ident
             self._target_cfg = target.to_config()
             self._title = _("Edit backup target: %s") % target.title()
         else:

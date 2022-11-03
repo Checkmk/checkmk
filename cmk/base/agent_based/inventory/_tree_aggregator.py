@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import time
+from dataclasses import dataclass
 from typing import NamedTuple
 
 from cmk.utils.structured_data import (
@@ -62,6 +63,12 @@ def _add_cluster_property_to(*, inventory_tree: StructuredDataNode, is_cluster: 
     node.attributes.add_pairs({"is_cluster": is_cluster})
 
 
+@dataclass(frozen=True)
+class ItemsOfInventoryPlugin:
+    items: list[Attributes | TableRow]
+    raw_cache_info: tuple[int, int] | None
+
+
 class RealHostTreeAggregator:
     def __init__(self, raw_intervals_from_config: RawIntervalsFromConfig) -> None:
         super().__init__()
@@ -85,21 +92,16 @@ class RealHostTreeAggregator:
 
     # ---from inventory plugins---------------------------------------------
 
-    def aggregate_results(
-        self,
-        *,
-        inventory_plugin_items: list[Attributes | TableRow],
-        raw_cache_info: RawCacheInfo | None,
-    ) -> None:
+    def aggregate_results(self, items_of_inventory_plugin: ItemsOfInventoryPlugin) -> None:
         now = int(time.time())
-        for item in inventory_plugin_items:
+        for item in items_of_inventory_plugin.items:
             if isinstance(item, Attributes):
                 self._integrate_attributes(item)
                 self._may_add_cache_info(
                     now=now,
                     node_type=ATTRIBUTES_KEY,
                     path=tuple(item.path),
-                    raw_cache_info=raw_cache_info,
+                    raw_cache_info=items_of_inventory_plugin.raw_cache_info,
                 )
 
             elif isinstance(item, TableRow):
@@ -108,7 +110,7 @@ class RealHostTreeAggregator:
                     now=now,
                     node_type=TABLE_KEY,
                     path=tuple(item.path),
-                    raw_cache_info=raw_cache_info,
+                    raw_cache_info=items_of_inventory_plugin.raw_cache_info,
                 )
 
     def _integrate_attributes(

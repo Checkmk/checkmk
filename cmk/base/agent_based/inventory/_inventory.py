@@ -51,7 +51,7 @@ from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 from cmk.base.config import HostConfig
 from cmk.base.sources import fetch_all, make_sources
 
-from ._tree_aggregator import inventorize_cluster, RealHostTreeAggregator
+from ._tree_aggregator import inventorize_cluster, ItemsOfInventoryPlugin, RealHostTreeAggregator
 
 __all__ = [
     "inventorize_real_host_via_plugins",
@@ -255,10 +255,26 @@ def inventorize_real_host_via_plugins(
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[InventoryPluginName],
 ) -> RealHostTreeAggregator:
-    class_mutex: dict[tuple[str, ...], str] = {}
-    tree_aggregator = RealHostTreeAggregator(host_config.inv_retention_intervals)
-
     section.section_step("Executing inventory plugins")
+
+    tree_aggregator = RealHostTreeAggregator(host_config.inv_retention_intervals)
+    for items_of_inventory_plugin in _collect_inventory_plugin_items(
+        host_config=host_config,
+        parsed_sections_broker=parsed_sections_broker,
+        run_plugin_names=run_plugin_names,
+    ):
+        tree_aggregator.aggregate_results(items_of_inventory_plugin)
+
+    return tree_aggregator
+
+
+def _collect_inventory_plugin_items(
+    *,
+    host_config: HostConfig,
+    parsed_sections_broker: ParsedSectionsBroker,
+    run_plugin_names: Container[InventoryPluginName],
+) -> Iterator[ItemsOfInventoryPlugin]:
+    class_mutex: dict[tuple[str, ...], str] = {}
     for inventory_plugin in agent_based_register.iter_all_inventory_plugins():
         if inventory_plugin.name not in run_plugin_names:
             continue
@@ -306,14 +322,12 @@ def inventorize_real_host_via_plugins(
                 )
                 continue
 
-            tree_aggregator.aggregate_results(
-                inventory_plugin_items=inventory_plugin_items,
+            yield ItemsOfInventoryPlugin(
+                items=inventory_plugin_items,
                 raw_cache_info=parsed_sections_broker.get_cache_info(inventory_plugin.sections),
             )
 
             console.verbose(f" {tty.green}{tty.bold}{inventory_plugin.name}{tty.normal}: ok\n")
-
-    return tree_aggregator
 
 
 def _parse_inventory_plugin_item(item: object, expected_class_name: str) -> Attributes | TableRow:

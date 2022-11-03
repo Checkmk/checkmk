@@ -257,7 +257,6 @@ TEST(InstallAuto, FindAgentMsiSkippable) {
     auto agent_msi = FindProductMsi(install::kAgentProductName);
     if (!agent_msi) {
         GTEST_SKIP();
-        return;
     }
     ASSERT_TRUE(fs::exists(*agent_msi));
 }

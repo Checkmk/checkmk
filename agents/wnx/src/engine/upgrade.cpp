@@ -659,10 +659,11 @@ bool FindStopDeactivateLegacyAgent() {
     status = WaitForStatus(GetServiceStatusByName, L"WinRing0_1_2_0",
                            SERVICE_STOPPED, 5000);
 
-    if (status == SERVICE_STOPPED ||
-        status == 1060 ||  // case when driver killed by OHM
-        !status) {         // variant when damned OHM kill and remove damned
-                           // driver before we have a chance to check its stop
+    if (!status.has_value() ||  // driver before we have a chance to check its
+                                // stop
+        status == SERVICE_STOPPED ||  // case when driver killed by OHM
+        status == 1060  // variant when damned OHM kill and remove damned
+    ) {
         return true;
     }
 

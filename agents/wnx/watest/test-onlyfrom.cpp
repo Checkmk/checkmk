@@ -31,7 +31,6 @@ std::string address_out_list[] = {
     "192.168.2.13"};                            // addressipv4
 namespace cma::cfg {
 TEST(OnlyFromTest, Convert) {
-    std::error_code ec;
     using namespace asio;
     {
         auto n_v6 = of::MapToV6Address(network_list[0]);
@@ -82,7 +81,6 @@ TEST(OnlyFromTest, Convert) {
 }
 
 TEST(OnlyFromTest, Validness) {
-    std::error_code ec;
     using namespace asio;
 
     for (const auto &l : loopback_list) {
@@ -182,8 +180,6 @@ void WriteToSocket(const std::string &ip) {
 }
 
 auto RegisterIp(const std::string &ip) -> std::vector<uint8_t> {
-    std::error_code ec;
-
     if (groups::global.isIpAddressAllowed(ip)) {
         ip_received = ip;
     } else {
@@ -288,8 +284,6 @@ TEST(OnlyFromTest, Ipv6Integration) {
     bool address_ok = true;
     cma::world::ReplyFunc reply =
         [&address_ok](const std::string &Ip) -> std::vector<uint8_t> {
-        std::error_code ec;
-
         if (!groups::global.isIpAddressAllowed(Ip)) {
             XLOG::d("Invalid IP {}", Ip);
             return {};

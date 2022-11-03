@@ -1347,7 +1347,7 @@ namespace provider::config {
 bool IsRunAsync(const PluginEntry &plugin) noexcept {
     const auto run_async = plugin.async();
 
-    if (g_async_plugin_without_cache_age_run_async) {
+    if constexpr (g_async_plugin_without_cache_age_run_async) {
         return run_async;
     }
 

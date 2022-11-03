@@ -40,7 +40,7 @@
 #define NODEFERWINDOWPOS   // DeferWindowPos routines
 #define NOMCX              // Modem Configuration Extensions
 
-#define _WIN32_WINNT 0x0600  // required by some packets
+#define _WIN32_WINNT 0x0600  // NOLINT
 
 #define _CRT_SECURE_NO_WARNINGS ﻿1  // NOLINT
 

@@ -494,10 +494,11 @@ TEST(PluginTest, ExeUnitSyncCtor) {
     EXPECT_EQ(e.run(), true);
 }
 
+constexpr int unit_async_timeout = 120;
 TEST(PluginTest, ExeUnitAsyncCtor) {
-    cma::cfg::Plugins::ExeUnit e("Plugin", 1, 120, 2, true);
+    cma::cfg::Plugins::ExeUnit e("Plugin", 1, unit_async_timeout, 2, true);
     EXPECT_EQ(e.async(), true);
-    EXPECT_EQ(e.cacheAge(), 120);
+    EXPECT_EQ(e.cacheAge(), unit_async_timeout);
 }
 
 TEST(PluginTest, ExeUnitAsyncCtorNotSoValid) {
@@ -661,7 +662,6 @@ TEST(PluginTest, FilesAndFoldersIntegration) {
         auto files = cma::GatherAllFiles(pv);
         if (files.size() < 10) {
             GTEST_SKIP() << "TEST IS SKIPPED> YOU HAVE NO PLUGINS";
-            return;
         }
 
         EXPECT_EQ(groups::localGroup.foldersCount(), 1);
@@ -1819,9 +1819,8 @@ TEST(PluginTest, AsyncDataPickup_Integration) {
     UpdatePluginMap(pm, false, files, exe_units_async_0, false);
 
     // async part should provide nothing
-    for (auto &entry_pair : pm) {
-        auto &name = entry_pair.first;
-        auto &entry = entry_pair.second;
+    for (auto &[name, entry] : pm) {
+        EXPECT_TRUE(fs::exists(name));
         EXPECT_EQ(entry.failures(), 0);
         EXPECT_FALSE(entry.isTooManyRetries());
 
@@ -1939,9 +1938,8 @@ TEST(PluginTest, AsyncLocal_Integration) {
     UpdatePluginMap(pm, true, files, local_units_async, false);
 
     // async part should provide nothing
-    for (auto &entry_pair : pm) {
-        auto &name = entry_pair.first;
-        auto &entry = entry_pair.second;
+    for (auto &[name, entry] : pm) {
+        EXPECT_TRUE(fs::exists(name));
         EXPECT_EQ(entry.failures(), 0);
         EXPECT_FALSE(entry.isTooManyRetries());
 
@@ -2013,6 +2011,8 @@ TEST(PluginTest, AsyncLocal_Integration) {
 
             ASSERT_TRUE(table.size() == 2);
             auto [time, cache_age] = ParseCached(table[0]);
+            EXPECT_GE(time, 1'600'000'000ULL);
+            EXPECT_EQ(cache_age, unit_async_timeout);
 
             auto tdt_2 = StringToTime(table[1]);
             ASSERT_TRUE(!tdt_2.invalid());
@@ -2314,19 +2314,17 @@ TEST(PluginTest, SyncStartSimulation_Long) {
     }
 
     // sync part
-    for (auto &entry_pair : pm) {
-        auto &entry_name = entry_pair.first;
-        auto &entry = entry_pair.second;
+    for (auto &[name, entry] : pm) {
         EXPECT_EQ(entry.failures(), 0);
         EXPECT_FALSE(entry.isTooManyRetries());
 
-        if (entry_name == vp[0]) {
+        if (name == vp[0]) {
             auto accu = entry.getResultsSync(L"id", 0);
             EXPECT_TRUE(accu.empty());  // wait precise 0 sec, nothing
                                         // should be presented
         }
 
-        if (entry_name == vp[3]) {
+        if (name == vp[3]) {
             auto accu = entry.getResultsSync(L"id", 1);
             EXPECT_TRUE(accu.empty());  // wait precise 0 sec, nothing
                                         // should be presented
@@ -2334,7 +2332,7 @@ TEST(PluginTest, SyncStartSimulation_Long) {
 
         auto accu = entry.getResultsSync(L"id");
 
-        if (vp[3] == entry_name) {
+        if (vp[3] == name) {
             EXPECT_EQ(true, accu.empty());
             EXPECT_EQ(entry.failures(), 2);
             EXPECT_FALSE(entry.isTooManyRetries());
@@ -2379,7 +2377,6 @@ TEST(CmaMain, MiniBoxStartMode) {
         auto started = mb.startStd(L"x", path, start_mode);
         ASSERT_TRUE(started);
 
-        auto pid = mb.getProcessId();
         std::vector<char> accu;
         auto success = mb.waitForEnd(std::chrono::seconds(3));
         ASSERT_TRUE(success);
@@ -2411,7 +2408,6 @@ TEST(CmaMain, MiniBoxStartModeDeep) {
         auto started = mb.startStd(L"x", exec, TheMiniBox::StartMode::job);
         ASSERT_TRUE(started);
 
-        auto pid = mb.getProcessId();
         std::vector<char> accu;
         auto success = mb.waitForEnd(std::chrono::seconds(3));
         ASSERT_TRUE(success);
@@ -2437,7 +2433,6 @@ TEST(CmaMain, MiniBoxStartModeDeep) {
         auto started = mb.startStd(L"x", exec, TheMiniBox::StartMode::job);
         ASSERT_TRUE(started);
 
-        auto pid = mb.getProcessId();
         std::vector<char> accu;
         auto success = mb.waitForEnd(std::chrono::seconds(30));
         ASSERT_TRUE(success);
@@ -2460,7 +2455,6 @@ TEST(CmaMain, MiniBoxStartModeDeep) {
         auto started = mb.startStd(L"x", exec, TheMiniBox::StartMode::job);
         ASSERT_TRUE(started);
 
-        auto pid = mb.getProcessId();
         std::vector<char> accu;
         auto success = mb.waitForEnd(std::chrono::milliseconds(20));
         EXPECT_FALSE(success);

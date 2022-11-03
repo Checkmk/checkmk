@@ -340,7 +340,6 @@
     <ClCompile Include="test-object_repo.cpp" />
     <ClCompile Include="test-ohm.cpp" />
     <ClCompile Include="test-onlyfrom.cpp" />
-    <ClCompile Include="test-player-cmdline.cpp" />
     <ClCompile Include="test-player.cpp" />
     <ClCompile Include="test-plugin.cpp" />
     <ClCompile Include="test-realtime.cpp" />

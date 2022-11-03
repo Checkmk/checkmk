@@ -295,14 +295,14 @@ void SetCfgMode(YAML::Node &cfg, std::string_view mode, bool all_ports) {
 }
 
 std::wstring getPortValue(std::wstring_view name, std::wstring_view app_name) {
-    auto rule = cma::fw::FindRule(name, app_name);
+    const auto rule = cma::fw::FindRule(name, app_name);
     ON_OUT_OF_SCOPE(if (rule) { rule->Release(); });
     if (rule == nullptr) {
         return {};
     }
 
     BSTR bstr = nullptr;
-    auto x = rule->get_LocalPorts(&bstr);
+    auto _ = rule->get_LocalPorts(&bstr);
     std::wstring port(bstr);
     ::SysFreeString(bstr);
     return port;

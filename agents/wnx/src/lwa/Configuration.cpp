@@ -36,16 +36,6 @@ namespace {
 using Entry = CSimpleIniA::Entry;
 using EntryPair = std::pair<Entry, Entry>;
 
-bool checkHostRestriction(const std::string &hostname,
-                          const std::string &input) {
-    const auto patterns = tokenize(input, "\\s+");
-    return std::any_of(
-        patterns.cbegin(), patterns.cend(),
-        [&hostname](const auto &p) { return globmatch(p, hostname); });
-}
-
-enum class CheckResult { Nop, Continue, Return };
-
 bool assignVariable(const std::string &variable, const std::string &value,
                     ConfigurableVector &configurables) {
     bool found = false;

@@ -43,14 +43,14 @@ ipspec from_string<ipspec>(const std::string &value) {
     ipspec result;
 
     auto slash_pos = strchr(value.c_str(), '/');
-    if (slash_pos != NULL) {
+    if (slash_pos != nullptr) {
         // ipv4/ipv6 agnostic
-        result.bits = strtol(slash_pos + 1, NULL, 10);
+        result.bits = strtol(slash_pos + 1, nullptr, 10);
     } else {
         result.bits = 0;
     }
 
-    result.ipv6 = strchr(value.c_str(), ':') != NULL;
+    result.ipv6 = strchr(value.c_str(), ':') != nullptr;
 
     if (result.ipv6) {
         if (result.bits == 0) {

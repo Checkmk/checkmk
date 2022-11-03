@@ -97,19 +97,6 @@ static bool CheckTheParameters(std::filesystem::path file,
     return true;
 }
 
-static ReleasedResource<FolderItem> GetItem(FolderItems *fi, long i) {
-    VARIANT var_index;
-    VariantInit(&var_index);
-    var_index.lVal = i;
-    var_index.vt = VT_I4;
-
-    FolderItem *item = nullptr;
-    fi->Item(var_index, &item);
-    ::VariantClear(&var_index);
-
-    return ReleasedResource<FolderItem>{item};
-}
-
 static ReleasedResource<IShellDispatch> CreateShellDispatch() {
     IShellDispatch *dispatch = nullptr;
     auto hres = CoCreateInstance(CLSID_Shell, nullptr, CLSCTX_INPROC_SERVER,

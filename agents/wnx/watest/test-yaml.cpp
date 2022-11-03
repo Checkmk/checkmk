@@ -406,7 +406,6 @@ TEST(AgentConfig, Aggregate) {
     EXPECT_FALSE(GetCfg().isUserLoaded());
 
     ASSERT_EQ(yaml["bakery"]["status"].as<std::string>(), "loaded");
-    auto x = yaml["global"]["enabled"].as<bool>();
     ASSERT_EQ(yaml["global"]["enabled"].as<bool>(), false);
     ASSERT_EQ(yaml["global"]["async"].as<bool>(), true);
     EXPECT_EQ(yaml[groups::kWinPerf][vars::kWinPerfCounters].size(), 6);
@@ -637,7 +636,6 @@ TEST(AgentConfig, FactoryConfig) {
     const auto cfg = GetLoadedConfig();
     EXPECT_TRUE(cfg.size() >= 1);  // minimum has ONE section
 
-    auto sz = cfg.size();
     EXPECT_TRUE(cfg.IsMap());  // minimum has ONE section
     auto port = GetVal(groups::kGlobal, vars::kPort, -1);
     EXPECT_TRUE(port != -1);
@@ -841,7 +839,6 @@ TEST(AgentConfig, UTF16LE) {
             return false;
         }
         auto cfg = GetLoadedConfig();
-        auto sz = cfg.size();
         return cfg.IsMap();  // minimum has ONE section
     };
 

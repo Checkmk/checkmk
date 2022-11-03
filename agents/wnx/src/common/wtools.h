@@ -370,7 +370,7 @@ public:
                     process_handle_ = nullptr;
                 }
             } else {
-                if (kProcessTreeKillAllowed) {
+                if constexpr (kProcessTreeKillAllowed) {
                     KillProcessTree(proc_id);
                 }
             }

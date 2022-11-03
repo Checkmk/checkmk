@@ -46,7 +46,7 @@ size_t CalcCryptBufferSize(const encrypt::Commander *commander,
 }  // namespace
 
 void LogWhenDebugging(const ByteVector &send_back) noexcept {
-    if (!tgt::IsDebug()) {
+    if constexpr (!tgt::IsDebug()) {
         return;
     }
 

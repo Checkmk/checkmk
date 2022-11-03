@@ -69,6 +69,8 @@ struct WmiSource {
     std::vector<std::wstring> service_names;
 };
 
+#if 0
+/// reference
 const std::vector<std::wstring> msexch_service_all_names = {
     L"MSExchangeADTopology",
     L"MSExchangeAntispamUpdate",
@@ -100,7 +102,7 @@ const std::vector<std::wstring> msexch_service_all_names = {
     L"MSExchangeUM",
     L"MSExchangeUMCR",
 };
-
+#endif
 const std::vector<std::wstring> msexch_service_reasonable_names = {
     L"MSExchangeDiagnostics",
     L"MSExchangeHM",

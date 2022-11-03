@@ -76,7 +76,7 @@ int RemoveMainService() {
 // #POC: to be deleted
 static bool execMsi() {
     wchar_t *str = nullptr;
-    if (SHGetKnownFolderPath(FOLDERID_System, KF_FLAG_DEFAULT, NULL, &str) !=
+    if (SHGetKnownFolderPath(FOLDERID_System, KF_FLAG_DEFAULT, nullptr, &str) !=
         S_OK) {
         return false;
     }
@@ -584,10 +584,10 @@ constexpr bool g_duplicate_updater_output_on_stdio = false;
 // Unit(easy, but public)/Integration(difficult but private) Tests.
 //
 void ModifyStdio(bool yes) {
-    if (g_use_colored_output_for_agent_updater) {
+    if constexpr (g_use_colored_output_for_agent_updater) {
         XLOG::setup::ColoredOutputOnStdio(yes);
     }
-    if (g_duplicate_updater_output_on_stdio) {
+    if constexpr (g_duplicate_updater_output_on_stdio) {
         XLOG::setup::DuplicateOnStdio(yes);
     }
 }
@@ -728,27 +728,6 @@ int ExecUninstallAlert() {
     carrier::InformByMailSlot(mailbox_service.GetName(),
                               commander::kUninstallAlert);
     return 0;
-}
-
-// only as testing
-static bool CreateTheFile(const fs::path &dir, std::string_view content) {
-    try {
-        auto protocol_file = dir / "check_mk_agent.log.tmp";
-        std::ofstream ofs(protocol_file, std::ios::binary);
-
-        if (ofs) {
-            ofs << "Info Log from check mk agent:\n";
-            ofs << "  time: '" << cfg::ConstructTimeString() << "'\n";
-            if (!content.empty()) {
-                ofs << content;
-                ofs << "\n";
-            }
-        }
-    } catch (const std::exception &e) {
-        XLOG::l.crit("Exception during creatin protocol file {}", e.what());
-        return false;
-    }
-    return true;
 }
 
 // returns codes for main

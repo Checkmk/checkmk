@@ -56,7 +56,7 @@ void ServiceProcessor::startService() {
 
 void ServiceProcessor::startServiceAsLegacyTest() {
     if (thread_.joinable()) {
-        xlog::l("Attempt to start service twice, no way!").print();
+        XLOG::l("Attempt to start service twice, no way!");
         return;
     }
     thread_ = std::thread(&ServiceProcessor::mainThreadAsTest, this);
@@ -823,11 +823,11 @@ auto CalcTimePoint(const carrier::CarrierDataHeader *data_header) noexcept {
 
 void ServiceProcessor::processYamlInput(const std::string &yaml_text) noexcept {
     try {
-        auto y = YAML::Load(yaml_text);
-        auto mr = GetMonitoringRequest(y);
+        const auto y = YAML::Load(yaml_text);
+        const auto mr = GetMonitoringRequest(y);
         if (mr.has_value()) {
             external_port_.putOnQueue(mr->text);
-            XLOG::t.i("Request >{}<", yaml_text);
+            XLOG::t.i("Request >{}< {} {}", yaml_text, mr->text, mr->id);
         } else {
             XLOG::l("Not supported request '{}'", yaml_text);
         }

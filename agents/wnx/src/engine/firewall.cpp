@@ -42,7 +42,7 @@ INetFwRule *CreateRule() {  // Create a new Firewall Rule object.
 
 Policy::Policy() {
     auto hr =
-        CoCreateInstance(__uuidof(NetFwPolicy2), NULL, CLSCTX_INPROC_SERVER,
+        CoCreateInstance(__uuidof(NetFwPolicy2), nullptr, CLSCTX_INPROC_SERVER,
                          __uuidof(INetFwPolicy2), (void **)&policy_);
 
     if (FAILED(hr)) {

@@ -617,7 +617,6 @@ TEST_F(WmiProviderTestFixture, WmiMsExch) {
 TEST_F(WmiProviderTestFixture, WmiWebServicesAbsentIntegration) {
     if (wtools::GetServiceStatus(web_services_service) != 0) {
         GTEST_SKIP() << fmt::format(L"'{}' is presented", web_services_service);
-        return;
     }
 
     const auto table = execWmiProvider(
@@ -629,7 +628,6 @@ TEST_F(WmiProviderTestFixture, WmiWebServicesAbsentIntegration) {
 TEST_F(WmiProviderTestFixture, WmiWebServicesPresentedIntegration) {
     if (wtools::GetServiceStatus(web_services_service) == 0) {
         GTEST_SKIP() << fmt::format(L"'{}' is absent", web_services_service);
-        return;
     }
 
     const auto table = execWmiProvider(

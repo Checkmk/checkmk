@@ -112,8 +112,8 @@ void stringToIPv6(const char *value, uint16_t *address) {
     int skip_offset = -1;
     segments.reserve(8);
 
-    while (pos != NULL) {
-        char *endpos = NULL;
+    while (pos != nullptr) {
+        char *endpos = nullptr;
         const unsigned long segment = strtoul(pos, &endpos, 16);
 
         if (segment > 0xFFFFu) {
@@ -307,8 +307,8 @@ std::string ConvertToUTF8(const std::wstring &Src) noexcept {
     if (Src.empty()) return {};
     // Windows only
     auto in_len = static_cast<int>(Src.length());
-    auto out_len =
-        ::WideCharToMultiByte(CP_UTF8, 0, Src.c_str(), in_len, NULL, 0, 0, 0);
+    auto out_len = ::WideCharToMultiByte(CP_UTF8, 0, Src.c_str(), in_len,
+                                         nullptr, 0, nullptr, nullptr);
     if (out_len == 0) return {};
 
     std::string str;
@@ -319,7 +319,7 @@ std::string ConvertToUTF8(const std::wstring &Src) noexcept {
     }
 
     // convert
-    ::WideCharToMultiByte(CP_UTF8, 0, Src.c_str(), -1, str.data(), out_len, 0,
-                          0);
+    ::WideCharToMultiByte(CP_UTF8, 0, Src.c_str(), -1, str.data(), out_len,
+                          nullptr, nullptr);
     return str;
 }

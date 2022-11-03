@@ -26,19 +26,19 @@ using namespace std::string_literals;
 namespace cma::ac {
 
 namespace {
-const std::vector<Modus> start_controller_moduses{Modus::service,
-                                                  Modus::integration};
+const std::vector<Modus> g_start_controller_moduses{Modus::service,
+                                                    Modus::integration};
 
 bool AllowUseController(Modus modus) {
-    return rs::find(start_controller_moduses, modus) !=
-           start_controller_moduses.end();
+    return rs::find(g_start_controller_moduses, modus) !=
+           g_start_controller_moduses.end();
 }
-const std::vector<Modus> use_special_port_moduses{Modus::app,
-                                                  Modus::integration};
+const std::vector<Modus> g_use_special_port_moduses{Modus::app,
+                                                    Modus::integration};
 
 bool UseSpecialPort(Modus modus) {
-    return rs::find(use_special_port_moduses, modus) !=
-           use_special_port_moduses.end();
+    return rs::find(g_use_special_port_moduses, modus) !=
+           g_use_special_port_moduses.end();
 }
 }  // namespace
 
@@ -302,12 +302,12 @@ std::optional<uint32_t> StartAgentController() {
         return {};
     }
 
-    ac::CreateTomlConfig(ac::TomlConfigFile());
+    CreateTomlConfig(TomlConfigFile());
 
     wtools::AppRunner ar;
     if (GetModus() == Modus::integration) {
-        auto env_value = tools::win::GetEnv(L"DEBUG_HOME_DIR"s);
-        if (env_value.empty()) {
+        if (auto env_value = tools::win::GetEnv(L"DEBUG_HOME_DIR"s);
+            env_value.empty()) {
             XLOG::d.i("Set DEBUG_HOME_DIR to '{}'",
                       wtools::ToUtf8(cfg::GetUserDir()));
             tools::win::SetEnv(L"DEBUG_HOME_DIR"s, cfg::GetUserDir());
@@ -328,8 +328,7 @@ std::optional<uint32_t> StartAgentController() {
 
 // TODO(sk): make public API and replace all Trailing/trim with this one
 void TrimRight(std::string &s, std::string_view chars) {
-    const auto end = s.find_last_not_of(chars);
-    if (end != std::string::npos) {
+    if (const auto end = s.find_last_not_of(chars); end != std::string::npos) {
         s.erase(end + 1);
     }
 }
@@ -380,7 +379,7 @@ bool KillAgentController() {
         std::this_thread::sleep_for(200ms);
     }
     std::error_code ec;
-    fs::remove(ac::TomlConfigFile(), ec);
+    fs::remove(TomlConfigFile(), ec);
     return success;
 }
 
@@ -394,7 +393,7 @@ const std::string g_legacy_pull_text{"File '{}'  {}, legacy pull mode {}"};
 bool ConditionallyCreateLegacyFile(const fs::path &marker,
                                    std::string_view message) {
     bool created{false};
-    if (!ac::IsControllerFlagFileExists()) {
+    if (!IsControllerFlagFileExists()) {
         CreateLegacyFile();
         created = true;
     }
@@ -429,7 +428,7 @@ bool CreateLegacyModeFile(const fs::path &marker) {
             marker, "is too old, assuming fresh install");
     }
 
-    auto data = tools::ReadFileInString(marker.wstring());
+    const auto data = tools::ReadFileInString(marker.wstring());
     if (!data.has_value()) {
         return ConditionallyCreateLegacyFile(marker,
                                              "is bad, assuming fresh install");

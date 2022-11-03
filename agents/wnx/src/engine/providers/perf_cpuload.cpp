@@ -24,7 +24,7 @@ namespace rs = std::ranges;
 
 uint64_t ReadSingleCounter(std::wstring_view path) {
     PDH_HQUERY query{nullptr};
-    if (::PdhOpenQuery(NULL, 0, &query) != ERROR_SUCCESS) {
+    if (::PdhOpenQuery(nullptr, 0, &query) != ERROR_SUCCESS) {
         XLOG::l("Failed PdhOpenQuery [{}]", ::GetLastError());
         return 0u;
     }
@@ -58,7 +58,7 @@ uint64_t ReadSingleCounter(std::wstring_view path) {
 namespace cma::provider {
 bool CheckSingleCounter(std::wstring_view path) {
     PDH_HQUERY query{nullptr};
-    if (::PdhOpenQuery(NULL, 0, &query) != ERROR_SUCCESS) {
+    if (::PdhOpenQuery(nullptr, 0, &query) != ERROR_SUCCESS) {
         XLOG::l("Failed PdhOpenQuery [{}]", ::GetLastError());
         return false;
     }

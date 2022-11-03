@@ -58,8 +58,6 @@ bool MailboxCallbackPerfTest(const cma::mailslot::Slot *Slot, const void *Data,
             // IMPORTANT ENTRY POINT
             // Receive data for Section
             {
-                nanoseconds duration_since_epoch(dt->answerId());
-                time_point<steady_clock> tp(duration_since_epoch);
                 auto data_source = static_cast<const uint8_t *>(dt->data());
                 auto data_end = data_source + dt->length();
                 std::vector<uint8_t> vectorized_data(data_source, data_end);

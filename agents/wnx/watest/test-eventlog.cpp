@@ -67,50 +67,43 @@ TEST(EventLogTest, PrintEventLogSkip) {
 
 TEST(EventLogTest, PrintEventLogOneLine) {
     EventLogDebug evd(ApplicationLogData());
-    for (auto vista_mode : {false, true}) {
-        std::string str;
-        auto last = PrintEventLog(
-            evd, cfg::kFromBegin, cfg::EventLevels::kCrit, false,
-            SkipDuplicatedRecords::no, [&str](const std::string &in) -> bool {
-                str += in;
-                return in.find(
-                           wtools::ToUtf8(ApplicationLogData()[0].message)) !=
-                       std::string::npos;
-            });
-        EXPECT_EQ(last, 1);
-        EXPECT_NE(str.find(wtools::ToUtf8(ApplicationLogData()[0].message)),
-                  std::string::npos);
-    }
+    std::string str;
+    const auto last = PrintEventLog(
+        evd, cfg::kFromBegin, cfg::EventLevels::kCrit, false,
+        SkipDuplicatedRecords::no, [&str](const std::string &in) {
+            str += in;
+            return in.find(wtools::ToUtf8(ApplicationLogData()[0].message)) !=
+                   std::string::npos;
+        });
+    EXPECT_EQ(last, 1);
+    EXPECT_NE(str.find(wtools::ToUtf8(ApplicationLogData()[0].message)),
+              std::string::npos);
 }
 
 TEST(EventLogTest, PrintEventLogAll) {
     EventLogDebug evd(ApplicationLogData());
-    for (auto vista_mode : {false, true}) {
-        std::vector<std::string> table;
-        auto last = PrintEventLog(evd, cfg::kFromBegin, cfg::EventLevels::kCrit,
-                                  false, SkipDuplicatedRecords::no,
-                                  [&](const std::string &in) -> bool {
-                                      table.emplace_back(in);
-                                      return true;
-                                  });
-        EXPECT_EQ(last, ApplicationLogData().size() - 1);
-        EXPECT_EQ(table.size(), ApplicationLogData().size());
-    }
+    std::vector<std::string> table;
+    const auto last =
+        PrintEventLog(evd, cfg::kFromBegin, cfg::EventLevels::kCrit, false,
+                      SkipDuplicatedRecords::no, [&](const std::string &in) {
+                          table.emplace_back(in);
+                          return true;
+                      });
+    EXPECT_EQ(last, ApplicationLogData().size() - 1);
+    EXPECT_EQ(table.size(), ApplicationLogData().size());
 }
 
 TEST(EventLogTest, PrintEventLogOffset) {
     EventLogDebug evd(ApplicationLogData());
-    for (auto vista_mode : {false, true}) {
-        std::vector<std::string> table;
-        auto last = PrintEventLog(evd, 2, cfg::EventLevels::kCrit, false,
-                                  SkipDuplicatedRecords::no,
-                                  [&](const std::string &in) -> bool {
-                                      table.emplace_back(in);
-                                      return true;
-                                  });
-        EXPECT_EQ(last, ApplicationLogData().size() - 1);
-        EXPECT_EQ(table.size(), ApplicationLogData().size() - 3);
-    }
+    std::vector<std::string> table;
+    const auto last =
+        PrintEventLog(evd, 2, cfg::EventLevels::kCrit, false,
+                      SkipDuplicatedRecords::no, [&](const std::string &in) {
+                          table.emplace_back(in);
+                          return true;
+                      });
+    EXPECT_EQ(last, ApplicationLogData().size() - 1);
+    EXPECT_EQ(table.size(), ApplicationLogData().size() - 3);
 }
 
 TEST(EventLogTest, PrintEventLogIntegration) {
@@ -121,7 +114,7 @@ TEST(EventLogTest, PrintEventLogIntegration) {
         std::string str;
         auto last = PrintEventLog(
             *ptr, 0, cfg::EventLevels::kCrit, false, SkipDuplicatedRecords::no,
-            [&str](const std::string &in) -> bool {
+            [&str](const std::string &in) {
                 str += in;
                 return str.length() < (cfg::logwatch::kMaxSize / 10);
             });
@@ -131,7 +124,7 @@ TEST(EventLogTest, PrintEventLogIntegration) {
             std::string str;
             auto last = PrintEventLog(*ptr, 0, cfg::EventLevels::kCrit, false,
                                       SkipDuplicatedRecords::no,
-                                      [&str](const std::string &in) -> bool {
+                                      [&str](const std::string &in) {
                                           str += in;
                                           return str.length() < 10'000;
                                       });
@@ -144,12 +137,12 @@ TEST(EventLogTest, PrintEventLogIntegration) {
 TEST(EventLogTest, BeginningOfTheHardwareLogIntegration) {
     auto ptr = OpenEvl(L"HardwareEvents", false);
     std::string str;
-    auto last = PrintEventLog(*ptr, cfg::kFromBegin, cfg::EventLevels::kAll,
-                              false, SkipDuplicatedRecords::no,
-                              [&str](const std::string &in) -> bool {
-                                  str += in;
-                                  return true;
-                              });
+    const auto last =
+        PrintEventLog(*ptr, cfg::kFromBegin, cfg::EventLevels::kAll, false,
+                      SkipDuplicatedRecords::no, [&str](const std::string &in) {
+                          str += in;
+                          return true;
+                      });
     EXPECT_TRUE(last == cfg::kFromBegin);
     EXPECT_TRUE(str.empty());
 }
@@ -157,12 +150,12 @@ TEST(EventLogTest, BeginningOfTheHardwareLogIntegration) {
 TEST(EventLogTest, BeginningOfTheApplicationLogIntegration) {
     auto ptr = OpenEvl(L"Application", false);
     std::string str;
-    auto last = PrintEventLog(*ptr, cfg::kFromBegin, cfg::EventLevels::kAll,
-                              false, SkipDuplicatedRecords::no,
-                              [&str](const std::string &in) -> bool {
-                                  str += in;
-                                  return false;
-                              });
+    auto _ =
+        PrintEventLog(*ptr, cfg::kFromBegin, cfg::EventLevels::kAll, false,
+                      SkipDuplicatedRecords::no, [&str](const std::string &in) {
+                          str += in;
+                          return false;
+                      });
     EXPECT_FALSE(str.empty());
 }
 

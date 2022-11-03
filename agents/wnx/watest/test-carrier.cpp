@@ -78,7 +78,6 @@ protected:
                 break;
 
             case DataType::kSegment: {
-                nanoseconds duration_since_epoch(dt->answerId());
                 auto data_source = static_cast<const uint8_t *>(dt->data());
                 auto data_end = data_source + dt->length();
                 std::vector<uint8_t> vectorized_data(data_source, data_end);

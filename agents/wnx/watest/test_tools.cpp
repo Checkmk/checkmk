@@ -166,23 +166,6 @@ void SafeCleanTempDir() {
     fs::create_directory(temp_dir);
 }
 
-void SafeCleanTmpxDir() {
-    if (very_temp != "tmpx") {
-        XLOG::l.crit(
-            "Recursive folder remove is allowed only for very temporary folders");
-        std::terminate();
-        return;
-    }
-
-    // clean
-    std::error_code ec;
-    fs::remove_all(very_temp, ec);
-    if (ec) {
-        XLOG::l("error removing '{}' with {} ", wtools::ToUtf8(very_temp),
-                ec.message());
-    }
-}
-
 void SafeCleanTempDir(std::string_view sub_dir) {
     auto temp_dir = cma::cfg::GetTempDir();
     if (temp_dir.find(L"\\tmp", 0) == std::wstring::npos) {

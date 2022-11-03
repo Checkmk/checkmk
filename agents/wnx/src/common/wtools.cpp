@@ -2975,8 +2975,8 @@ std::wstring SidToName(std::wstring_view sid, const SID_NAME_USE &sid_type) {
     DWORD domain_size{buf_size};
     SID_NAME_USE try_sid_type{sid_type};
 
-    if (::LookupAccountSid(NULL, psid, name, &name_size, domain, &domain_size,
-                           &try_sid_type)) {
+    if (::LookupAccountSid(nullptr, psid, name, &name_size, domain,
+                           &domain_size, &try_sid_type)) {
         return name;
     }
     return {};

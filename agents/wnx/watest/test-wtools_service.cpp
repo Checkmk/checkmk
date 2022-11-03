@@ -107,7 +107,6 @@ public:
 TEST_F(WtoolsServiceFunc, ConfigServiceRestart) {
     if (!ws_.isOpened()) {
         GTEST_SKIP();
-        return;
     }
     ws_.configureRestart(true);
     std::pair<int, bool> checks[] = {{SC_ACTION_NONE, false},
@@ -123,7 +122,6 @@ TEST_F(WtoolsServiceFunc, ConfigServiceRestart) {
 TEST_F(WtoolsServiceFunc, ConfigServiceErrorControl) {
     if (!ws_.isOpened()) {
         GTEST_SKIP();
-        return;
     }
     //
     //
@@ -145,7 +143,6 @@ TEST_F(WtoolsServiceFunc, ConfigServiceErrorControl) {
 TEST_F(WtoolsServiceFunc, ConfigService) {
     if (!ws_.isOpened()) {
         GTEST_SKIP();
-        return;
     }
     //
 

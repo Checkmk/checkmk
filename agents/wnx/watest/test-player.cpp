@@ -67,77 +67,7 @@ TEST(PlayerTest, ConfigFolders) {
     }
 }
 
-static void CreateFileInTemp(const std::filesystem::path &filename) {
-    std::ofstream ofs(wtools::ToStr(filename));
-
-    if (!ofs) {
-        XLOG::l("Can't open file {} error {}", filename, GetLastError());
-        return;
-    }
-
-    ofs << wtools::ToStr(filename) << std::endl;
-}
-
 constexpr const char *SecondLine = "0, 1, 2, 3, 4, 5, 6, 7, 8";
-
-static void CreatePluginInTemp(const std::filesystem::path &filename,
-                               int timeout, const std::string &plugin_name) {
-    std::ofstream ofs(wtools::ToStr(filename));
-
-    if (!ofs) {
-        XLOG::l("Can't open file {} error {}", filename, GetLastError());
-        return;
-    }
-
-    ofs << "@echo off\n"
-        //<< "timeout /T " << timeout << " /NOBREAK > nul\n"
-        << "powershell Start-Sleep " << timeout << " \n"
-        << "@echo ^<^<^<" << plugin_name << "^>^>^>\n"
-        << "@echo " << SecondLine << "\n";
-}
-
-static void RemoveFolder(const std::filesystem::path &Path) {
-    namespace fs = std::filesystem;
-    fs::path top = Path;
-
-    cma::PathVector directories;
-    std::error_code ec;
-    for (auto &p : fs::recursive_directory_iterator(top, ec)) {
-        auto dir_path = p.path();
-        if (fs::is_directory(dir_path)) {
-            directories.push_back(fs::canonical(dir_path));
-        }
-    }
-
-    for (auto rit = directories.rbegin(); rit != directories.rend(); ++rit) {
-        if (fs::is_empty(*rit)) {
-            fs::remove(*rit);
-        }
-    }
-
-    fs::remove_all(Path);
-}
-
-// returns folder where
-static cma::PathVector GetFolderStructure() {
-    using namespace cma::cfg;
-    namespace fs = std::filesystem;
-    fs::path tmp = cma::cfg::GetTempDir();
-    if (!fs::exists(tmp) || !fs::is_directory(tmp) ||
-        wtools::ToStr(tmp).find("\\tmp") == 0 ||
-        wtools::ToStr(tmp).find("\\tmp") == std::string::npos) {
-        XLOG::l(XLOG::kStdio)("Cant create folder structure {} {} {}",
-                              fs::exists(tmp), fs::is_directory(tmp),
-                              wtools::ToStr(tmp).find("\\tmp"));
-        return {};
-    }
-    PathVector pv;
-    for (auto &folder : {"a", "b", "c"}) {
-        auto dir = tmp / folder;
-        pv.emplace_back(dir);
-    }
-    return pv;
-}
 
 TEST(PlayerTest, All) {
     using namespace std::chrono;
@@ -232,7 +162,7 @@ TEST(PlayerTest, RealLifeInventory_Long) {
 
     exe.push_back((plugin_path.lexically_normal() / plugin).wstring());
     {
-        cma::player::TheBox box;
+        TheBox box;
         EXPECT_TRUE(box.exec_array_.empty());
         box.tryAddToExecArray(exe[0]);
         EXPECT_TRUE(box.exec_array_.size() == 1);
@@ -248,10 +178,9 @@ TEST(PlayerTest, RealLifeInventory_Long) {
     std::filesystem::remove_all(state_path, ec);  // no exception here
     std::filesystem::create_directory(state_path, ec);
 
-    auto result =
-        tools::win::SetEnv(std::string{envs::kMkStateDirName}, state_path);
-    player::TheBox box;
-    auto x = box.start(L"id", exe);
+    auto _ = tools::win::SetEnv(std::string{envs::kMkStateDirName}, state_path);
+    TheBox box;
+    box.start(L"id", exe);
     box.waitForAllProcesses(20000ms, true);
 
     vector<char> accu;

@@ -224,7 +224,6 @@ TEST(CmaToolsDetails, ExtractPathFromServiceName) {
     auto x = ExtractPathFromServiceName(L"check_mk_agent");
     if (x.empty()) {
         GTEST_SKIP() << "Legacy agent not installed test is not possible";
-        return;
     }
     std::error_code ec;
     EXPECT_TRUE(fs::exists(x, ec));
@@ -237,7 +236,6 @@ TEST(CmaToolsDetails, FindRootByExePath) {
     std::error_code ec;
     if (!fs::exists(x, ec)) {
         GTEST_SKIP() << "The agent not installed test is not possible";
-        return;
     }
 
     auto x_no_ext = x / "check_mk_agent";

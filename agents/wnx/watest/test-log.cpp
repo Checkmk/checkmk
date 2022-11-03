@@ -355,7 +355,6 @@ TEST(LogTest, All) {
 
 TEST(LogTest, Simulation) {
     GTEST_SKIP() << "This test is not finished";
-    return;
     // Output to log
     XLOG::l() << L"This streamed Log Entry and"  // body
                                                  // .....
@@ -442,7 +441,7 @@ std::string return_current_time_and_date() {
 }
 
 TEST(LogTest, EventTest) {
-    if (false) {
+    if constexpr (false) {
         // #TODO place in docu
         // #REFERENCE how to use windows event log
         XLOG::details::LogWindowsEventCritical(1, "Test is on {}", "error!");
@@ -479,9 +478,9 @@ TEST(LogTest, Functional) {
         std::stringstream sstr;
         sstr << in.rdbuf();
         auto contents = sstr.str();
-        auto n = std::count(contents.begin(), contents.end(), '\n');
         auto result = cma::tools::SplitString(contents, "\n");
         ASSERT_EQ(result.size(), 9);
+        ASSERT_EQ(result.size(), std::ranges::count(contents, '\n'));
         EXPECT_NE(std::string::npos, result[0].find("simple test"));
         EXPECT_NE(std::string::npos, result[1].find("<GTEST> std test"));
         EXPECT_NE(std::string::npos, result[2].find("<GTEST> stream test"));

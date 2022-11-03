@@ -158,10 +158,6 @@ inline void SafeCleanBakeryDir() {
     }
 }
 
-const std::string_view very_temp = "tmpx";
-
-void SafeCleanTmpxDir();
-
 std::vector<std::string> ReadFileAsTable(const std::string &name);
 inline std::vector<std::string> ReadFileAsTable(
     const std::filesystem::path &name) {

@@ -190,7 +190,7 @@ TEST(LogWatchEventTest, DumpEventLog) {
                            .timeout = -1,
                            .skip = SkipDuplicatedRecords::no};
         auto start = steady_clock::now();
-        auto [pos, out] = DumpEventLog(*ptr, state, lwl);
+        auto [_, out] = DumpEventLog(*ptr, state, lwl);
         auto end = steady_clock::now();
         EXPECT_TRUE(
             std::chrono::duration_cast<std::chrono::seconds>(end - start)
@@ -328,8 +328,9 @@ TEST(LogWatchEventTest, CheckFabricConfig) {
 
     int pos = 0;
     for (const auto &sec : sections) {
-        auto type = sec.Type();
-        if (!sec.IsMap()) continue;
+        if (!sec.IsMap()) {
+            continue;
+        }
         YAML::Emitter emit;
         emit << sec;
         LogWatchEntry lwe;
@@ -374,8 +375,9 @@ TEST(LogWatchEventTest, CheckTestConfig) {
 
     int pos = 0;
     for (const auto &sec : sections) {
-        auto type = sec.Type();
-        if (!sec.IsMap()) continue;
+        if (!sec.IsMap()) {
+            continue;
+        }
         YAML::Emitter emit;
         emit << sec;
         LogWatchEntry lwe;
@@ -816,8 +818,7 @@ TEST(LogWatchEventTest, TestMakeBody) {
         EXPECT_EQ(count, logs_in.size());  // all must be inside
     }
 
-    auto processed =
-        UpdateEventLogStates(states, logs_in_registry, SendMode::normal);
+    auto _ = UpdateEventLogStates(states, logs_in_registry, SendMode::normal);
 
     int application_index = -1;
     int system_index = -1;

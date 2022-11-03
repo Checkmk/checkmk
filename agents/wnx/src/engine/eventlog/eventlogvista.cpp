@@ -94,7 +94,7 @@ EvtFunctionMap g_evt;
     if (g_evt.next == nullptr) {
         return nullptr;
     }
-    EVT_HANDLE h{0};
+    EVT_HANDLE h{nullptr};
     DWORD num_events{0};
     if (g_evt.next(subscription, 1, &h, INFINITE, 0, &num_events) == TRUE) {
         return EvtHandle{h};

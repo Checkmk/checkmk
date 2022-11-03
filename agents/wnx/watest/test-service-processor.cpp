@@ -139,7 +139,6 @@ TEST(ServiceProcessorTest, StartStopExe) {
     ASSERT_TRUE(temp_fs->loadContent(tst::GetFabricYmlContent()));
 
     auto processor = new ServiceProcessor(100ms, [&counter] {
-        xlog::l("pip").print();
         counter++;
         return true;
     });

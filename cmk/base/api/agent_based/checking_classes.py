@@ -5,7 +5,7 @@
 """Classes used by the API for check plugins
 """
 import enum
-from typing import Callable, Iterable, List, NamedTuple, Optional, overload, Tuple, Union
+from typing import Callable, Iterable, List, NamedTuple, Optional, overload, Sequence, Tuple, Union
 
 from cmk.utils import pnp_cleanup as quote_pnp_string
 from cmk.utils.type_defs import CheckPluginName, EvalableFloat, ParsedSectionName, RuleSetName
@@ -37,7 +37,7 @@ class Service(
         [
             ("item", Optional[str]),
             ("parameters", ParametersTypeAlias),
-            ("labels", List[ServiceLabel]),
+            ("labels", Sequence[ServiceLabel]),
         ],
     )
 ):

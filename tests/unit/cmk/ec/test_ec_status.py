@@ -6,7 +6,6 @@
 
 import ast
 import logging
-import pathlib  # pylint: disable=import-error
 import socket
 import threading
 import time
@@ -18,7 +17,6 @@ from tests.testlib import CMKEventConsole
 
 import cmk.utils.paths
 
-import cmk.ec.export as ec
 import cmk.ec.history
 import cmk.ec.main
 from cmk.ec.main import Event, EventStatus, StatusServer
@@ -50,16 +48,6 @@ class FakeStatusSocket(socket.socket):
         return response
 
 
-@pytest.fixture(name="settings", scope="function")
-def fixture_settings():
-    return ec.settings(
-        "1.2.3i45",
-        cmk.utils.paths.omd_root,
-        pathlib.Path(cmk.utils.paths.default_config_dir),
-        ["mkeventd"],
-    )
-
-
 @pytest.fixture(name="lock_configuration", scope="function")
 def fixture_lock_configuration():
     return cmk.ec.main.ECLock(logging.getLogger("cmk.mkeventd.configuration"))
@@ -68,22 +56,6 @@ def fixture_lock_configuration():
 @pytest.fixture(name="slave_status", scope="function")
 def fixture_slave_status():
     return cmk.ec.main.default_slave_status_master()
-
-
-@pytest.fixture(name="config", scope="function")
-def fixture_config():
-    return ec.default_config()
-
-
-@pytest.fixture(name="history", scope="function")
-def fixture_history(settings, config):
-    return cmk.ec.history.History(
-        settings,
-        config,
-        logging.getLogger("cmk.mkeventd"),
-        cmk.ec.main.StatusTableEvents.columns,
-        cmk.ec.main.StatusTableHistory.columns,
-    )
 
 
 @pytest.fixture(name="perfcounters", scope="function")

@@ -261,18 +261,16 @@ def inventorize_real_host_via_plugins(
             continue
 
         for source_type in (SourceType.HOST, SourceType.MANAGEMENT):
-            kwargs = get_section_kwargs(
-                parsed_sections_broker,
-                HostKey(host_config.hostname, source_type),
-                inventory_plugin.sections,
-            )
-            if not kwargs:
+            if not (
+                kwargs := get_section_kwargs(
+                    parsed_sections_broker,
+                    HostKey(host_config.hostname, source_type),
+                    inventory_plugin.sections,
+                )
+            ):
                 console.vverbose(
-                    " %s%s%s%s: skipped (no data)\n",
-                    tty.yellow,
-                    tty.bold,
-                    inventory_plugin.name,
-                    tty.normal,
+                    f" {tty.yellow}{tty.bold}{inventory_plugin.name}{tty.normal}:"
+                    f" skipped (no data)\n"
                 )
                 continue
 
@@ -293,18 +291,12 @@ def inventorize_real_host_via_plugins(
 
             if exception:
                 console.warning(
-                    " %s%s%s%s: failed: %s",
-                    tty.red,
-                    tty.bold,
-                    inventory_plugin.name,
-                    tty.normal,
-                    exception,
+                    f" {tty.red}{tty.bold}{inventory_plugin.name}{tty.normal}:"
+                    f" failed: {exception}\n"
                 )
             else:
-                console.verbose(" %s%s%s%s", tty.green, tty.bold, inventory_plugin.name, tty.normal)
-                console.vverbose(": ok\n")
+                console.verbose(f" {tty.green}{tty.bold}{inventory_plugin.name}{tty.normal}: ok\n")
 
-    console.verbose("\n")
     return tree_aggregator
 
 

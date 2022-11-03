@@ -13,5 +13,4 @@ from cmk.gui.view_store import get_all_views
 
 def page_edit_views() -> None:
     cols = [(_("Datasource"), lambda v: data_source_registry[v["datasource"]]().title)]
-    # Intermediate step. Will be cleaned up once all visuals are TypedDicts
-    visuals.page_list("views", _("Edit Views"), get_all_views(), cols)  # type: ignore[arg-type]
+    visuals.page_list("views", _("Edit Views"), get_all_views(), cols)

@@ -665,12 +665,12 @@ def get_permissioned_visual(
 def page_list(  # pylint: disable=too-many-branches
     what: VisualTypeName,
     title: str,
-    visuals: dict[Tuple[UserId, VisualName], Visual],
-    custom_columns: Iterable[tuple[HTMLContent, Callable[[Visual], HTMLContent]]] | None = None,
-    render_custom_buttons: Callable[[VisualName, Visual], None] | None = None,
-    render_custom_columns: Callable[[Table, VisualName, Visual], None] | None = None,
+    visuals: dict[Tuple[UserId, VisualName], T],
+    custom_columns: Iterable[tuple[HTMLContent, Callable[[T], HTMLContent]]] | None = None,
+    render_custom_buttons: Callable[[VisualName, T], None] | None = None,
+    render_custom_columns: Callable[[Table, VisualName, T], None] | None = None,
     custom_page_menu_entries: Callable[[], Iterable[PageMenuEntry]] | None = None,
-    check_deletable_handler: Callable[[dict[Tuple[UserId, VisualName], Visual], UserId, str], bool]
+    check_deletable_handler: Callable[[dict[Tuple[UserId, VisualName], T], UserId, str], bool]
     | None = None,
 ) -> None:
 
@@ -848,8 +848,8 @@ def _visual_can_be_linked(what, visual_name, user_visuals, visual, owner):
 
 
 def _partition_visuals(
-    visuals: Dict[Tuple[UserId, VisualName], Visual], what: str
-) -> List[Tuple[str, List[Tuple[UserId, VisualName, Visual]]]]:
+    visuals: Dict[Tuple[UserId, VisualName], T], what: str
+) -> List[Tuple[str, List[Tuple[UserId, VisualName, T]]]]:
     keys_sorted = sorted(visuals.keys(), key=lambda x: (x[1], x[0]))
 
     my_visuals, foreign_visuals, builtin_visuals = [], [], []

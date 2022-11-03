@@ -1544,9 +1544,8 @@ def page_edit_dashboards() -> None:
     visuals.page_list(
         what="dashboards",
         title=_("Edit dashboards"),
-        # Intermediate step. Will be cleaned up once all visuals are TypedDicts
-        visuals=get_all_dashboards(),  # type: ignore[arg-type]
-        render_custom_buttons=_render_dashboard_buttons,  # type: ignore[arg-type]
+        visuals=get_all_dashboards(),
+        render_custom_buttons=_render_dashboard_buttons,
     )
 
 
@@ -1609,8 +1608,7 @@ def page_create_dashboard() -> None:
 def page_edit_dashboard() -> None:
     visuals.page_edit_visual(
         "dashboards",
-        # Intermediate step. Will be cleaned up once all visuals are TypedDicts
-        get_all_dashboards(),  # type: ignore[arg-type]
+        get_all_dashboards(),
         create_handler=create_dashboard,
         custom_field_handler=dashboard_fields_handler,
         info_handler=_dashboard_info_handler,

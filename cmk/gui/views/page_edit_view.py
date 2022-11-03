@@ -59,8 +59,7 @@ def page_edit_view() -> None:
 
     visuals.page_edit_visual(
         "views",
-        # Intermediate step. Will be cleaned up once all visuals are TypedDicts
-        get_all_views(),  # type: ignore[arg-type]
+        get_all_views(),
         custom_field_handler=render_view_config,
         load_handler=transform_view_to_valuespec_value,
         create_handler=create_view_from_valuespec,

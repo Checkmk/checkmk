@@ -49,7 +49,7 @@ from cmk.base.agent_based.utils import (
 from cmk.base.config import HostConfig
 from cmk.base.sources import fetch_all, make_sources
 
-from ._tree_aggregator import ClusterTreeAggregator, RealHostTreeAggregator
+from ._tree_aggregator import inventorize_cluster, RealHostTreeAggregator
 
 __all__ = [
     "inventorize_real_host_via_plugins",
@@ -82,22 +82,20 @@ def check_inventory_tree(
     parameters: config.HWSWInventoryParameters,
     old_tree: StructuredDataNode,
 ) -> CheckInventoryTreeResult:
-    tree_aggregator: ClusterTreeAggregator | RealHostTreeAggregator
     if host_config.is_cluster:
-        tree_aggregator = ClusterTreeAggregator()
-        tree_aggregator.add_cluster_properties(nodes=host_config.nodes or [])
+        inventory_tree = inventorize_cluster(nodes=host_config.nodes or [])
         return CheckInventoryTreeResult(
             processing_failed=False,
             no_data_or_files=False,
             check_result=ActiveCheckResult.from_subresults(
                 *_check_trees(
                     parameters=parameters,
-                    inventory_tree=tree_aggregator.inventory_tree,
+                    inventory_tree=inventory_tree,
                     status_data_tree=StructuredDataNode(),
                     old_tree=old_tree,
                 ),
             ),
-            inventory_tree=tree_aggregator.inventory_tree,
+            inventory_tree=inventory_tree,
             update_result=UpdateResult(save_tree=False, reason=""),
         )
 

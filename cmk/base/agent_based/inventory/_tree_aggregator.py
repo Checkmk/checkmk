@@ -43,46 +43,39 @@ RetentionInfos = dict[RetentionKey, RetentionInfo]
 IntervalsFromConfig = dict[RetentionKey, IntervalFromConfig]
 
 
-class TreeAggregator:
-    def __init__(self) -> None:
-        self._inventory_tree = StructuredDataNode()
+def inventorize_cluster(*, nodes: list[HostName]) -> StructuredDataNode:
+    inventory_tree = StructuredDataNode()
 
-    @property
-    def inventory_tree(self) -> StructuredDataNode:
-        return self._inventory_tree
+    _add_cluster_property_to(inventory_tree=inventory_tree, is_cluster=True)
 
-    # ---static data from config--------------------------------------------
-
-    def _add_cluster_property(self, *, is_cluster: bool) -> None:
-        node = self._inventory_tree.setdefault_node(
-            ("software", "applications", "check_mk", "cluster")
+    if nodes:
+        node = inventory_tree.setdefault_node(
+            ("software", "applications", "check_mk", "cluster", "nodes")
         )
-        node.attributes.add_pairs({"is_cluster": is_cluster})
+        node.table.add_key_columns(["name"])
+        node.table.add_rows([{"name": node_name} for node_name in nodes])
+
+    return inventory_tree
 
 
-class ClusterTreeAggregator(TreeAggregator):
-
-    # ---static data from config--------------------------------------------
-
-    def add_cluster_properties(self, *, nodes: list[HostName]) -> None:
-        self._add_cluster_property(is_cluster=True)
-
-        if nodes:
-            node = self._inventory_tree.setdefault_node(
-                ("software", "applications", "check_mk", "cluster", "nodes")
-            )
-            node.table.add_key_columns(["name"])
-            node.table.add_rows([{"name": node_name} for node_name in nodes])
+def _add_cluster_property_to(*, inventory_tree: StructuredDataNode, is_cluster: bool) -> None:
+    node = inventory_tree.setdefault_node(("software", "applications", "check_mk", "cluster"))
+    node.attributes.add_pairs({"is_cluster": is_cluster})
 
 
-class RealHostTreeAggregator(TreeAggregator):
+class RealHostTreeAggregator:
     def __init__(self, raw_intervals_from_config: RawIntervalsFromConfig) -> None:
         super().__init__()
         self._from_config = _get_intervals_from_config(raw_intervals_from_config)
         self._retention_infos: RetentionInfos = {}
+        self._inventory_tree = StructuredDataNode()
         self._status_data_tree = StructuredDataNode()
         self._update_result = UpdateResult(save_tree=False, reason="")
         self._class_mutex: dict[tuple, str] = {}
+
+    @property
+    def inventory_tree(self) -> StructuredDataNode:
+        return self._inventory_tree
 
     @property
     def status_data_tree(self) -> StructuredDataNode:
@@ -299,7 +292,7 @@ class RealHostTreeAggregator(TreeAggregator):
     # ---static data from config--------------------------------------------
 
     def add_cluster_property(self) -> None:
-        self._add_cluster_property(is_cluster=False)
+        _add_cluster_property_to(inventory_tree=self._inventory_tree, is_cluster=False)
 
 
 #   .--config--------------------------------------------------------------.

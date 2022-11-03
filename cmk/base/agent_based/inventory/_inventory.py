@@ -58,7 +58,12 @@ from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 from cmk.base.config import HostConfig
 from cmk.base.sources import fetch_all, make_sources
 
-from ._tree_aggregator import inventorize_cluster, ItemsOfInventoryPlugin, RealHostTreeAggregator
+from ._tree_aggregator import (
+    inventorize_cluster,
+    ItemsOfInventoryPlugin,
+    RealHostTreeAggregator,
+    RealHostTreeUpdater,
+)
 
 __all__ = [
     "inventorize_real_host_via_plugins",
@@ -116,7 +121,7 @@ def check_inventory_tree(
         selected_sections=selected_sections,
     )
 
-    tree_aggregator = _inventorize_real_host(
+    trees, update_result = _inventorize_real_host(
         host_name,
         host_config=host_config,
         parsed_sections_broker=fetched_data_result.parsed_sections_broker,
@@ -131,8 +136,8 @@ def check_inventory_tree(
             *_check_fetched_data_or_trees(
                 parameters=parameters,
                 fetched_data_result=fetched_data_result,
-                inventory_tree=tree_aggregator.inventory_tree,
-                status_data_tree=tree_aggregator.status_data_tree,
+                inventory_tree=trees.inventory,
+                status_data_tree=trees.status_data,
                 old_tree=old_tree,
             ),
             *summarize_host_sections(
@@ -151,8 +156,8 @@ def check_inventory_tree(
                 error_state=parameters.fail_status,
             ),
         ),
-        inventory_tree=tree_aggregator.inventory_tree,
-        update_result=tree_aggregator.update_result,
+        inventory_tree=trees.inventory,
+        update_result=update_result,
     )
 
 
@@ -237,6 +242,15 @@ def _no_data_or_files(host_name: HostName, host_sections: Iterable[HostSections]
     return True
 
 
+#   ---inventorize real host------------------------------------------------
+
+
+@dataclass(frozen=True)
+class InventoryTrees:
+    inventory: StructuredDataNode
+    status_data: StructuredDataNode
+
+
 def _inventorize_real_host(
     host_name: HostName,
     *,
@@ -244,20 +258,48 @@ def _inventorize_real_host(
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[InventoryPluginName],
     old_tree: StructuredDataNode,
-) -> RealHostTreeAggregator:
-    tree_aggregator = inventorize_real_host_via_plugins(
-        host_name,
-        host_config=host_config,
-        parsed_sections_broker=parsed_sections_broker,
-        run_plugin_names=run_plugin_names,
+) -> tuple[InventoryTrees, UpdateResult]:
+    section.section_step("Executing inventory plugins")
+
+    items_of_inventory_plugins = list(
+        _collect_inventory_plugin_items(
+            host_name,
+            host_config=host_config,
+            parsed_sections_broker=parsed_sections_broker,
+            run_plugin_names=run_plugin_names,
+        )
     )
 
-    tree_aggregator.may_update(now=int(time.time()), previous_tree=old_tree)
+    section.section_step("Create inventory or status data tree")
+
+    tree_aggregator = RealHostTreeAggregator()
+    for items_of_inventory_plugin in items_of_inventory_plugins:
+        tree_aggregator.aggregate_results(items_of_inventory_plugin)
+
+    section.section_step("May update inventory tree")
+
+    tree_updater = RealHostTreeUpdater(
+        host_config.inv_retention_intervals,
+        tree_aggregator.inventory_tree,
+    )
+    for items_of_inventory_plugin in items_of_inventory_plugins:
+        tree_updater.may_add_cache_info(items_of_inventory_plugin)
+
+    tree_updater.may_update(now=int(time.time()), previous_tree=old_tree)
 
     if not tree_aggregator.inventory_tree.is_empty():
         tree_aggregator.add_cluster_property()
 
-    return tree_aggregator
+    return (
+        InventoryTrees(
+            inventory=tree_aggregator.inventory_tree,
+            status_data=tree_aggregator.status_data_tree,
+        ),
+        tree_updater.update_result,
+    )
+
+
+#   ---do status data inventory---------------------------------------------
 
 
 def inventorize_real_host_via_plugins(
@@ -266,10 +308,8 @@ def inventorize_real_host_via_plugins(
     host_config: HostConfig,
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[InventoryPluginName],
-) -> RealHostTreeAggregator:
-    section.section_step("Executing inventory plugins")
-
-    tree_aggregator = RealHostTreeAggregator(host_config.inv_retention_intervals)
+) -> StructuredDataNode:
+    tree_aggregator = RealHostTreeAggregator()
     for items_of_inventory_plugin in _collect_inventory_plugin_items(
         host_name,
         host_config=host_config,
@@ -277,8 +317,7 @@ def inventorize_real_host_via_plugins(
         run_plugin_names=run_plugin_names,
     ):
         tree_aggregator.aggregate_results(items_of_inventory_plugin)
-
-    return tree_aggregator
+    return tree_aggregator.status_data_tree
 
 
 def _collect_inventory_plugin_items(

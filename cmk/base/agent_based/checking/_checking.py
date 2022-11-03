@@ -175,7 +175,7 @@ def _do_inventory_actions_during_checking_for(
         host_config=host_config,
         parsed_sections_broker=parsed_sections_broker,
         run_plugin_names=EVERYTHING,
-    ).status_data_tree
+    )
 
     if status_data_tree and not status_data_tree.is_empty():
         tree_store.save(host_name=host_name, tree=status_data_tree)

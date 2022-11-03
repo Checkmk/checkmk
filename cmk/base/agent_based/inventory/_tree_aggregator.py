@@ -70,13 +70,10 @@ class ItemsOfInventoryPlugin:
 
 
 class RealHostTreeAggregator:
-    def __init__(self, raw_intervals_from_config: RawIntervalsFromConfig) -> None:
+    def __init__(self) -> None:
         super().__init__()
-        self._from_config = _get_intervals_from_config(raw_intervals_from_config)
-        self._retention_infos: RetentionInfos = {}
         self._inventory_tree = StructuredDataNode()
         self._status_data_tree = StructuredDataNode()
-        self._update_result = UpdateResult(save_tree=False, reason="")
 
     @property
     def inventory_tree(self) -> StructuredDataNode:
@@ -86,32 +83,14 @@ class RealHostTreeAggregator:
     def status_data_tree(self) -> StructuredDataNode:
         return self._status_data_tree
 
-    @property
-    def update_result(self) -> UpdateResult:
-        return self._update_result
-
     # ---from inventory plugins---------------------------------------------
 
     def aggregate_results(self, items_of_inventory_plugin: ItemsOfInventoryPlugin) -> None:
-        now = int(time.time())
         for item in items_of_inventory_plugin.items:
             if isinstance(item, Attributes):
                 self._integrate_attributes(item)
-                self._may_add_cache_info(
-                    now=now,
-                    node_type=ATTRIBUTES_KEY,
-                    path=tuple(item.path),
-                    raw_cache_info=items_of_inventory_plugin.raw_cache_info,
-                )
-
             elif isinstance(item, TableRow):
                 self._integrate_table_row(item)
-                self._may_add_cache_info(
-                    now=now,
-                    node_type=TABLE_KEY,
-                    path=tuple(item.path),
-                    raw_cache_info=items_of_inventory_plugin.raw_cache_info,
-                )
 
     def _integrate_attributes(
         self,
@@ -135,6 +114,27 @@ class RealHostTreeAggregator:
             node = self._status_data_tree.setdefault_node(tuple(table_row.path))
             node.table.add_key_columns(sorted(table_row.key_columns))
             node.table.add_rows([{**table_row.key_columns, **table_row.status_columns}])
+
+    # ---static data from config--------------------------------------------
+
+    def add_cluster_property(self) -> None:
+        _add_cluster_property_to(inventory_tree=self._inventory_tree, is_cluster=False)
+
+
+class RealHostTreeUpdater:
+    def __init__(
+        self,
+        raw_intervals_from_config: RawIntervalsFromConfig,
+        inventory_tree: StructuredDataNode,
+    ) -> None:
+        self._from_config = _get_intervals_from_config(raw_intervals_from_config)
+        self._inventory_tree = inventory_tree
+        self._retention_infos: RetentionInfos = {}
+        self._update_result = UpdateResult(save_tree=False, reason="")
+
+    @property
+    def update_result(self) -> UpdateResult:
+        return self._update_result
 
     # ---from retention intervals-------------------------------------------
 
@@ -163,6 +163,24 @@ class RealHostTreeAggregator:
     #       'Recent enough' means: now <= cache_at + cache_interval + retention_interval
     #       where cache_at, cache_interval: from agent data (or set to (now, 0) if not persisted),
     #             retention_interval: configured in the above ruleset
+
+    def may_add_cache_info(self, inventory_plugin_items: ItemsOfInventoryPlugin) -> None:
+        now = int(time.time())
+        for item in inventory_plugin_items.items:
+            if isinstance(item, Attributes):
+                self._may_add_cache_info(
+                    now=now,
+                    node_type=ATTRIBUTES_KEY,
+                    path=tuple(item.path),
+                    raw_cache_info=inventory_plugin_items.raw_cache_info,
+                )
+            elif isinstance(item, TableRow):
+                self._may_add_cache_info(
+                    now=now,
+                    node_type=TABLE_KEY,
+                    path=tuple(item.path),
+                    raw_cache_info=inventory_plugin_items.raw_cache_info,
+                )
 
     def _may_add_cache_info(
         self,
@@ -251,11 +269,6 @@ class RealHostTreeAggregator:
             )
 
         raise NotImplementedError()
-
-    # ---static data from config--------------------------------------------
-
-    def add_cluster_property(self) -> None:
-        _add_cluster_property_to(inventory_tree=self._inventory_tree, is_cluster=False)
 
 
 #   .--config--------------------------------------------------------------.

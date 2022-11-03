@@ -10,7 +10,13 @@ import pytest
 from tests.testlib.base import Scenario
 
 import cmk.utils.debug
-from cmk.utils.structured_data import RetentionIntervals, SDFilterFunc, SDPath, StructuredDataNode
+from cmk.utils.structured_data import (
+    RetentionIntervals,
+    SDFilterFunc,
+    SDPath,
+    StructuredDataNode,
+    UpdateResult,
+)
 from cmk.utils.type_defs import EVERYTHING
 
 from cmk.core_helpers.type_defs import NO_SELECTION
@@ -18,11 +24,12 @@ from cmk.core_helpers.type_defs import NO_SELECTION
 import cmk.base.agent_based.inventory._inventory as _inventory
 import cmk.base.config as config
 from cmk.base.agent_based.data_provider import ParsedSectionsBroker
-from cmk.base.agent_based.inventory._inventory import _parse_inventory_plugin_item
+from cmk.base.agent_based.inventory._inventory import _parse_inventory_plugin_item, InventoryTrees
 from cmk.base.agent_based.inventory._tree_aggregator import (
     AttributesUpdater,
     ItemsOfInventoryPlugin,
     RealHostTreeAggregator,
+    RealHostTreeUpdater,
     RetentionInfo,
     TableUpdater,
 )
@@ -82,7 +89,7 @@ def test__tree_nodes_are_equal(old_tree: StructuredDataNode, inv_tree: Structure
 
 
 def test_integrate_attributes() -> None:
-    tree_aggr = RealHostTreeAggregator([])
+    tree_aggr = RealHostTreeAggregator()
     tree_aggr.aggregate_results(
         ItemsOfInventoryPlugin(
             items=[
@@ -126,7 +133,7 @@ def test_integrate_attributes() -> None:
 
 
 def test_integrate_table_row() -> None:
-    tree_aggr = RealHostTreeAggregator([])
+    tree_aggr = RealHostTreeAggregator()
     tree_aggr.aggregate_results(
         ItemsOfInventoryPlugin(
             items=[
@@ -505,14 +512,14 @@ def test_retentions_add_cache_info_no_match(
     raw_cache_info: tuple[int, int] | None,
 ) -> None:
     now = 100
-    tree_aggregator = RealHostTreeAggregator(raw_intervals)
-    tree_aggregator._may_add_cache_info(
+    tree_updater = RealHostTreeUpdater(raw_intervals, StructuredDataNode())
+    tree_updater._may_add_cache_info(
         now=now,
         node_type=node_type,
         path=path,
         raw_cache_info=raw_cache_info,
     )
-    assert tree_aggregator._retention_infos == {}
+    assert tree_updater._retention_infos == {}
 
 
 @pytest.mark.parametrize(
@@ -679,15 +686,15 @@ def test_retentions_add_cache_info(
     match_other_keys: bool,
 ) -> None:
     now = 100
-    tree_aggregator = RealHostTreeAggregator(raw_intervals)
-    tree_aggregator._may_add_cache_info(
+    tree_updater = RealHostTreeUpdater(raw_intervals, StructuredDataNode())
+    tree_updater._may_add_cache_info(
         now=now,
         node_type=node_type,
         path=("path-to", "node"),
         raw_cache_info=raw_cache_info,
     )
 
-    retention_info = tree_aggregator._retention_infos.get((("path-to", "node"), node_type))
+    retention_info = tree_updater._retention_infos.get((("path-to", "node"), node_type))
     assert retention_info is not None
 
     assert retention_info.intervals == expected_intervals
@@ -1453,7 +1460,13 @@ def test_check_inventory_tree(
     monkeypatch.setattr(
         _inventory,
         "_inventorize_real_host",
-        lambda *args, **kw: RealHostTreeAggregator([]),
+        lambda *args, **kw: (
+            InventoryTrees(
+                inventory=StructuredDataNode(),
+                status_data=StructuredDataNode(),
+            ),
+            UpdateResult(save_tree=False, reason=""),
+        ),
     )
 
     check_result = _inventory.check_inventory_tree(
@@ -1496,7 +1509,13 @@ def test_check_inventory_tree_no_data_or_files(
     monkeypatch.setattr(
         _inventory,
         "_inventorize_real_host",
-        lambda *args, **kw: RealHostTreeAggregator([]),
+        lambda *args, **kw: (
+            InventoryTrees(
+                inventory=StructuredDataNode(),
+                status_data=StructuredDataNode(),
+            ),
+            UpdateResult(save_tree=False, reason=""),
+        ),
     )
 
     check_result = _inventory.check_inventory_tree(

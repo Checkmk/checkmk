@@ -168,7 +168,7 @@ fn write_legacy_registry(path: impl AsRef<Path>) {
 }
 
 #[test]
-#[cfg(unix)] // skipped in windows as a flacky
+#[cfg_attr(target_os = "windows", ignore)] // skipped in windows as a flaky
 fn test_migration_is_always_triggered() {
     let test_dir = common::setup_test_dir("cmk-agent-ctl_test_migration_is_always_triggered");
     let path_registry = test_dir.path().join("registered_connections.json");

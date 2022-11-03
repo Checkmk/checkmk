@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
-from typing import Optional, Sequence
+from collections.abc import Sequence
 
 import pytest
 
@@ -66,12 +66,12 @@ class TestDiscover(DiscoverTester):
             ServiceLabel("gcp/projectId", "backup-255820"),
         }
 
-    def discover(self, assets: Optional[gcp.AssetSection]) -> DiscoveryResult:
+    def discover(self, assets: gcp.AssetSection | None) -> DiscoveryResult:
         yield from discover(section_gcp_service_cloud_sql=None, section_gcp_assets=assets)
 
 
 class TestDiscoverReplication(TestDiscover):
-    def discover(self, assets: Optional[gcp.AssetSection]) -> DiscoveryResult:
+    def discover(self, assets: gcp.AssetSection | None) -> DiscoveryResult:
 
         cloud_sql_stringtable = generate_stringtable("checktest", 0.42, CLOUDSQL)
         cloud_sql_stringtable.extend(generate_stringtable("follower", 0.42, CLOUDSQL))
@@ -102,7 +102,7 @@ def cloud_sql_stringtable_without_lag() -> Section:
     ],
 )
 def test_discover_replication_lag_metric(
-    cloud_sql_section: Optional[Section], expected: Sequence[str]
+    cloud_sql_section: Section | None, expected: Sequence[str]
 ) -> None:
     assert expected == [
         el.item

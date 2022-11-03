@@ -10,7 +10,6 @@ from typing import Any
 from livestatus import LivestatusResponse, MultiSiteConnection
 
 from cmk.utils.livestatus_helpers import tables
-from cmk.utils.livestatus_helpers.base import BaseQuery
 from cmk.utils.livestatus_helpers.expressions import (
     And,
     BinaryExpression,
@@ -125,7 +124,7 @@ def _get_column(table_class: type[Table], col: str) -> Column:
     return getattr(table_class, col)
 
 
-class Query(BaseQuery):
+class Query:
     """A representation of a Livestatus query.
 
     This holds all necessary information to generate a valid livestatus query.

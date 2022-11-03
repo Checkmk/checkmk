@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Callable, Dict, Iterable, List, Optional, Tuple
+from typing import Callable, Dict, Iterable, Optional
 
 import cmk.gui.dashboard as dashboard
 import cmk.gui.site_config as site_config
@@ -30,8 +30,8 @@ from cmk.gui.type_defs import (
     RoleName,
     TopicMenuItem,
     TopicMenuTopic,
-    TypedVisual,
     ViewSpec,
+    Visual,
 )
 from cmk.gui.utils.html import HTML
 from cmk.gui.view_store import get_permitted_views
@@ -76,7 +76,7 @@ def render_wato(mini) -> None | bool:  # type:ignore[no-untyped-def]
     return None
 
 
-def get_wato_menu_items() -> List[TopicMenuTopic]:
+def get_wato_menu_items() -> list[TopicMenuTopic]:
     by_topic: Dict[MainModuleTopic, TopicMenuTopic] = {}
     for module_class in main_module_registry.values():
         module = module_class()
@@ -335,7 +335,7 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         # Render link target selection
         #
         # Apply some view specific filters
-        views_to_show: List[Tuple[str, ViewSpec]] = []
+        views_to_show: list[tuple[str, ViewSpec]] = []
         dflt_target_name: str = "allhosts"
         dflt_topic_name: str = ""
         for name, view in get_permitted_views().items():
@@ -352,7 +352,7 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
             "foldertree", (dflt_topic_name, dflt_target_name)
         )
 
-        visuals_to_show: list[tuple[str, tuple[str, TypedVisual]]] = [
+        visuals_to_show: list[tuple[str, tuple[str, Visual]]] = [
             ("views", (k, v)) for k, v in views_to_show
         ]
         visuals_to_show += [

@@ -94,7 +94,6 @@ from cmk.gui.type_defs import (
     InfoName,
     PermissionName,
     SingleInfos,
-    TypedVisual,
     ViewSpec,
     Visual,
     VisualContext,
@@ -140,8 +139,7 @@ from cmk.gui.valuespec import (
     ValueSpecValidateFunc,
 )
 
-# Remove Visual once all visual types have been moved over To TypedVisual
-T = TypeVar("T", bound=Visual | TypedVisual)
+T = TypeVar("T", bound=Visual)
 CustomUserVisuals = Dict[Tuple[UserId, VisualName], T]
 
 #   .--Plugins-------------------------------------------------------------.
@@ -803,7 +801,7 @@ def page_list(  # pylint: disable=too-many-branches
 
                 # Title
                 table.cell(_("Title"))
-                title2 = _u(visual["title"])
+                title2 = _u(str(visual["title"]))
                 if _visual_can_be_linked(what, visual_name, available_visuals, visual, owner):
                     show_url = makeuri_contextless(
                         request,
@@ -817,7 +815,7 @@ def page_list(  # pylint: disable=too-many-branches
                     )
                 else:
                     html.write_text(title2)
-                html.help(_u(visual["description"]))
+                html.help(_u(str(visual["description"])))
 
                 # Custom cols
                 for title3, renderer in custom_columns:
@@ -1581,7 +1579,7 @@ def get_link_filter_names(
 
 
 def filters_of_visual(
-    visual: Visual | TypedVisual,
+    visual: Visual,
     info_keys: SingleInfos,
     link_filters: Optional[Dict[FilterName, FilterName]] = None,
 ) -> List[Filter]:
@@ -1630,9 +1628,7 @@ def get_ubiquitary_filters() -> List[FilterName]:
 # which are really presented to the user later.
 # For the moment we only remove the single context filters which have a
 # hard coded default value which is treated as enforced value.
-def visible_filters_of_visual(
-    visual: Visual | TypedVisual, use_filters: List[Filter]
-) -> List[Filter]:
+def visible_filters_of_visual(visual: Visual, use_filters: List[Filter]) -> List[Filter]:
     show_filters = []
 
     single_keys = get_single_info_keys(visual["single_infos"])
@@ -2159,7 +2155,7 @@ def missing_context_filters(
 
 def visual_title(
     what: str,
-    visual: Visual | TypedVisual,
+    visual: Visual,
     context: VisualContext,
     skip_title_context: bool = False,
 ) -> str:

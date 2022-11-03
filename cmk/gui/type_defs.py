@@ -186,12 +186,8 @@ class LinkFromSpec(TypedDict, total=False):
     has_inventory_tree_history: Sequence[SDPath]
 
 
-class TypedVisual(_VisualMandatory):
+class Visual(_VisualMandatory):
     link_from: LinkFromSpec
-
-
-# TODO: Will be replaced by TypedVisual once all visual types have been moved over to TypedDict
-Visual = dict[str, Any]
 
 
 class VisualLinkSpec(NamedTuple):
@@ -305,7 +301,7 @@ class SorterSpec:
         return str(self.to_raw())
 
 
-class _ViewSpecMandatory(TypedVisual):
+class _ViewSpecMandatory(Visual):
     datasource: str
     layout: str  # TODO: Replace with literal? See layout_registry.get_choices()
     group_painters: Sequence[PainterSpec]

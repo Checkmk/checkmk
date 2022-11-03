@@ -25,7 +25,7 @@ from cmk.gui.plugins.sidebar.utils import (
     SidebarSnapin,
     snapin_registry,
 )
-from cmk.gui.type_defs import MegaMenu, TopicMenuTopic, TypedVisual, Visual
+from cmk.gui.type_defs import MegaMenu, TopicMenuTopic, Visual
 from cmk.gui.view_store import get_permitted_views
 
 if not cmk_version.is_raw_edition():
@@ -96,7 +96,7 @@ def get_view_menu_items(include_reports: bool) -> list[TopicMenuTopic]:
     network_topology_visual_spec = ParentChildTopologyPage.visual_spec()
     pages_to_show = [(network_topology_visual_spec["name"], network_topology_visual_spec)]
 
-    visuals_to_show: list[tuple[str, tuple[str, TypedVisual | Visual]]] = [
+    visuals_to_show: list[tuple[str, tuple[str, Visual]]] = [
         ("views", (k, v)) for k, v in views_to_show
     ]
     visuals_to_show += [

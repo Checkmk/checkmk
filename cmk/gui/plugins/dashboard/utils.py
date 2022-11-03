@@ -65,7 +65,7 @@ from cmk.gui.type_defs import (
     Row,
     SingleInfos,
     SorterSpec,
-    TypedVisual,
+    Visual,
     VisualContext,
 )
 from cmk.gui.utils.html import HTML
@@ -90,7 +90,7 @@ from cmk.gui.view_store import get_all_views, get_permitted_views, internal_view
 DashboardName = str
 
 
-class DashboardConfig(TypedVisual):
+class DashboardConfig(Visual):
     mtime: int
     dashlets: list[DashletConfig]
     show_title: bool

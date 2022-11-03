@@ -29,7 +29,6 @@ from cmk.gui.type_defs import (
     RoleName,
     TopicMenuItem,
     TopicMenuTopic,
-    TypedVisual,
     Visual,
 )
 from cmk.gui.utils.html import HTML
@@ -340,9 +339,7 @@ def snapin_site_choice(ident: str, choices: List[Tuple[SiteId, str]]) -> Optiona
     return only_sites
 
 
-def make_topic_menu(
-    visuals: Sequence[tuple[str, tuple[str, Visual | TypedVisual]]]
-) -> list[TopicMenuTopic]:
+def make_topic_menu(visuals: Sequence[Tuple[str, Tuple[str, Visual]]]) -> List[TopicMenuTopic]:
     topics = {p.name(): p for p in pagetypes.PagetypeTopics.load().permitted_instances_sorted()}
 
     by_topic: Dict[pagetypes.PagetypeTopics, TopicMenuTopic] = {}

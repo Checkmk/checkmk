@@ -359,7 +359,7 @@ def _make_page_menu_entry_for_visual(
     url: str = make_linked_visual_url(visual_type, visual, singlecontext_request_vars, mobile)
     link: PageMenuLink = make_external_link(url) if external_link else make_simple_link(url)
     return PageMenuEntry(
-        title=visual["title"],
+        title=str(visual["title"]),
         icon_name=visual.get("icon") or "trans",
         item=link,
         name="cb_" + visual["name"],

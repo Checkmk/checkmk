@@ -5,7 +5,7 @@
 
 
 from contextlib import suppress
-from typing import Dict, Optional
+from typing import cast, Dict, Optional
 
 import cmk.gui.visuals as visuals
 from cmk.gui.data_source import data_source_registry
@@ -13,7 +13,15 @@ from cmk.gui.display_options import display_options
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request, response
 from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry, VisualType
-from cmk.gui.type_defs import HTTPVariables, Row, SingleInfos, Visual, VisualLinkSpec, VisualName
+from cmk.gui.type_defs import (
+    HTTPVariables,
+    Row,
+    SingleInfos,
+    ViewSpec,
+    Visual,
+    VisualLinkSpec,
+    VisualName,
+)
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
@@ -40,6 +48,8 @@ def url_to_visual(row: Row, link_spec: VisualLinkSpec) -> Optional[str]:
     visual_type = visual_type_registry[link_spec.type_name]()
 
     if visual_type.ident == "views":
+        # TOOD: We need to change the logic to be able to type this correctly
+        visual = cast(ViewSpec, visual)
         datasource = data_source_registry[visual["datasource"]]()
         infos = datasource.infos
         link_filters = datasource.link_filters
@@ -136,9 +146,8 @@ def make_linked_visual_url(
 
     # Include visual default context. This comes from the hard_filters. Linked
     # view would have no _active flag. Thus prepend the default context
-    required_vars = [(visual_type.ident_attr, name)] + visuals.context_to_uri_vars(
-        visual.get("context", {})
-    )
+    required_vars: HTTPVariables = [(visual_type.ident_attr, name)]
+    required_vars += visuals.context_to_uri_vars(visual.get("context", {}))
 
     # add context link to this visual. For reports we put in
     # the *complete* context, even the non-single one.

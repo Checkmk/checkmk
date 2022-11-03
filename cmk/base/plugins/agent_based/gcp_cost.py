@@ -5,9 +5,10 @@
 # mypy: disallow_untyped_defs
 import datetime
 import json
+from collections.abc import Mapping
 from dataclasses import dataclass
 from itertools import groupby
-from typing import Any, Mapping, Optional, Union
+from typing import Any
 
 from .agent_based_api.v1 import register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -21,7 +22,7 @@ class Cost:
     currency: str
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Union[str, float]]) -> "Cost":
+    def from_dict(cls, data: Mapping[str, str | float]) -> "Cost":
         month = data["month"]
         amount = data["amount"]
         currency = data["currency"]
@@ -39,7 +40,7 @@ class Cost:
 @dataclass(frozen=True)
 class ProjectCost:
     current_month: Cost
-    previous_month: Optional[Cost]
+    previous_month: Cost | None
 
 
 Section = Mapping[gcp.Project, ProjectCost]

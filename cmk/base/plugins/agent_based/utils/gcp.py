@@ -4,9 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
 import json
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import IntEnum, unique
-from typing import Any, Callable, Mapping, NewType, Optional, Sequence, Union
+from typing import Any, NewType, Union
 
 from ..agent_based_api.v1 import check_levels, check_levels_predictive, Result, Service, State
 from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -113,8 +114,8 @@ class AssetSection:
         return self._assets.get(key, {})
 
     def get(
-        self, key: AssetType, default: Optional[AssetTypeSection] = None
-    ) -> Optional[AssetTypeSection]:
+        self, key: AssetType, default: AssetTypeSection | None = None
+    ) -> AssetTypeSection | None:
         return self._assets.get(key, default)
 
     def __contains__(self, key: AssetType) -> bool:
@@ -153,12 +154,10 @@ class MetricSpec:
     label: str
     render_func: Callable
     scale: float = 1.0
-    filter_by: Optional[Filter] = None
+    filter_by: Filter | None = None
 
 
-def validate_asset_section(
-    section_gcp_assets: Optional[AssetSection], service: str
-) -> AssetSection:
+def validate_asset_section(section_gcp_assets: AssetSection | None, service: str) -> AssetSection:
     if section_gcp_assets is None or not section_gcp_assets.config.is_enabled(service):
         return AssetSection(Project(""), Config(services=[]), _assets={})
     return section_gcp_assets
@@ -223,9 +222,9 @@ def check(
     spec: Mapping[str, MetricSpec],
     item: str,
     params: Mapping[str, Any],
-    section: Optional[Section],
+    section: Section | None,
     asset_type: AssetType,
-    all_assets: Optional[AssetSection],
+    all_assets: AssetSection | None,
 ) -> CheckResult:
     if section is None or not item_in_section(item, asset_type, all_assets):
         return
@@ -236,7 +235,7 @@ def check(
 def item_in_section(
     item: str,
     asset_type: AssetType,
-    all_assets: Optional[AssetSection],
+    all_assets: AssetSection | None,
 ) -> bool:
     """We have to check the assets for the item. In the normal section a missing item could also indicate no data.
     This happens for example with a function that is not called."""

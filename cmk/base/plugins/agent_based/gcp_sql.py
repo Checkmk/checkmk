@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
 from collections.abc import Mapping
-from typing import Any, Optional
+from typing import Any
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     register,
@@ -52,8 +52,8 @@ def _get_service_labels(
 
 
 def discover(
-    section_gcp_service_cloud_sql: Optional[gcp.Section],
-    section_gcp_assets: Optional[gcp.AssetSection],
+    section_gcp_service_cloud_sql: gcp.Section | None,
+    section_gcp_assets: gcp.AssetSection | None,
 ) -> DiscoveryResult:
     assets = gcp.validate_asset_section(section_gcp_assets, "cloud_sql")
     for item, service in assets[ASSET_TYPE].items():
@@ -70,8 +70,8 @@ def discover(
 def check_gcp_sql_status(
     item: str,
     params: Mapping[str, Any],
-    section_gcp_service_cloud_sql: Optional[gcp.Section],
-    section_gcp_assets: Optional[gcp.AssetSection],
+    section_gcp_service_cloud_sql: gcp.Section | None,
+    section_gcp_assets: gcp.AssetSection | None,
 ) -> CheckResult:
     if section_gcp_service_cloud_sql is None or not gcp.item_in_section(
         item, ASSET_TYPE, section_gcp_assets
@@ -119,8 +119,8 @@ register.check_plugin(
 def check_gcp_sql_memory(
     item: str,
     params: Mapping[str, Any],
-    section_gcp_service_cloud_sql: Optional[gcp.Section],
-    section_gcp_assets: Optional[gcp.AssetSection],
+    section_gcp_service_cloud_sql: gcp.Section | None,
+    section_gcp_assets: gcp.AssetSection | None,
 ) -> CheckResult:
     metrics = {
         # percent render expects numbers range 0 to 100 and not fractions.
@@ -150,8 +150,8 @@ register.check_plugin(
 def check_gcp_sql_cpu(
     item: str,
     params: Mapping[str, Any],
-    section_gcp_service_cloud_sql: Optional[gcp.Section],
-    section_gcp_assets: Optional[gcp.AssetSection],
+    section_gcp_service_cloud_sql: gcp.Section | None,
+    section_gcp_assets: gcp.AssetSection | None,
 ) -> CheckResult:
     metrics = {
         "util": gcp.MetricSpec(
@@ -177,8 +177,8 @@ register.check_plugin(
 def check_gcp_sql_network(
     item: str,
     params: Mapping[str, Any],
-    section_gcp_service_cloud_sql: Optional[gcp.Section],
-    section_gcp_assets: Optional[gcp.AssetSection],
+    section_gcp_service_cloud_sql: gcp.Section | None,
+    section_gcp_assets: gcp.AssetSection | None,
 ) -> CheckResult:
     metrics = {
         "net_data_recv": gcp.MetricSpec(
@@ -211,8 +211,8 @@ register.check_plugin(
 def check_gcp_sql_disk(
     item: str,
     params: Mapping[str, Any],
-    section_gcp_service_cloud_sql: Optional[gcp.Section],
-    section_gcp_assets: Optional[gcp.AssetSection],
+    section_gcp_service_cloud_sql: gcp.Section | None,
+    section_gcp_assets: gcp.AssetSection | None,
 ) -> CheckResult:
     metrics = {
         "fs_used_percent": gcp.MetricSpec(
@@ -266,7 +266,7 @@ register.check_plugin(
 
 
 def _has_metric(
-    section_gcp_service_cloud_sql: Optional[gcp.Section], item: str, metric_type: str
+    section_gcp_service_cloud_sql: gcp.Section | None, item: str, metric_type: str
 ) -> bool:
     if not section_gcp_service_cloud_sql:
         return False
@@ -279,8 +279,8 @@ def _has_metric(
 # metric. The standard discovery would create a service for the leader database
 # as well where the nonexistent lag would be shown with default value.
 def discover_gcp_sql_replication(
-    section_gcp_service_cloud_sql: Optional[gcp.Section],
-    section_gcp_assets: Optional[gcp.AssetSection],
+    section_gcp_service_cloud_sql: gcp.Section | None,
+    section_gcp_assets: gcp.AssetSection | None,
 ) -> DiscoveryResult:
     assets = gcp.validate_asset_section(section_gcp_assets, "cloud_sql")
 
@@ -299,8 +299,8 @@ def discover_gcp_sql_replication(
 def check_gcp_sql_replication(
     item: str,
     params: Mapping[str, Any],
-    section_gcp_service_cloud_sql: Optional[gcp.Section],
-    section_gcp_assets: Optional[gcp.AssetSection],
+    section_gcp_service_cloud_sql: gcp.Section | None,
+    section_gcp_assets: gcp.AssetSection | None,
 ) -> CheckResult:
     metrics = {
         "replication_lag": gcp.MetricSpec(

@@ -8,7 +8,7 @@ import shlex
 import subprocess
 import threading
 import time
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Sequence
 from logging import Logger
 from pathlib import Path
 from typing import Any
@@ -531,7 +531,9 @@ def _get_files(history: History, logger: Logger, query: QueryGET) -> Iterable[An
         tac = f"tac {shlex.quote(str(path))}"  # Process younger lines first
         cmd = " | ".join([tac] + grep_pipeline)
         logger.debug("preprocessing history file with command [%s]", cmd)
-        new_entries = _parse_history_file(history, path, query, cmd, limit, logger)
+        new_entries = parse_history_file(
+            history._history_columns, path, query.filter_row, cmd, limit, logger
+        )
         history_entries += new_entries
         if limit is not None:
             limit -= len(new_entries)
@@ -587,10 +589,10 @@ def _intersects(
     return (lo2 is None or hi1 is None or lo2 <= hi1) and (lo1 is None or hi2 is None or lo1 <= hi2)
 
 
-def _parse_history_file(
-    history: History,
+def parse_history_file(
+    history_columns: Sequence[tuple[str, Any]],
     path: Path,
-    query: QueryGET,
+    filter_row: Callable[[Sequence[Any]], bool],
     cmd: str,
     limit: int | None,
     logger: Logger,
@@ -609,14 +611,13 @@ def _parse_history_file(
         for line in grep.stdout:
             line_no += 1
             if limit is not None and len(entries) > limit:
-                grep.kill()
                 break
 
             try:
                 parts: list[Any] = line.decode("utf-8").rstrip("\n").split("\t")
-                _convert_history_line(history, parts)
+                convert_history_line(history_columns, parts)
                 values = [line_no] + parts
-                if query.filter_row(values):
+                if filter_row(values):
                     entries.append(values)
             except Exception as e:
                 logger.exception(f"Invalid line '{line!r}' in history file {path}: {e}")
@@ -624,10 +625,12 @@ def _parse_history_file(
     return entries
 
 
-# Speed-critical function for converting string representation
-# of log line back to Python values
-def _convert_history_line(history: History, values: list[Any]) -> None:
-    # NOTE: history_line column is missing here, so indices are off by 1! :-P
+def convert_history_line(history_columns: Sequence[tuple[str, Any]], values: list[Any]) -> None:
+    """
+    Speed-critical function for converting string representation
+    of log line back to Python values
+    NOTE: history_line column is missing here, so indices are off by 1! :-P
+    """
     values[0] = float(values[0])  # history_time
     values[4] = int(values[4])  # event_id
     values[5] = int(values[5])  # event_count
@@ -645,19 +648,19 @@ def _convert_history_line(history: History, values: list[Any]) -> None:
     else:
         values[22] = _unsplit(values[22])
     if num_values <= 23:  # event_ipaddress
-        values.append(history._history_columns[24][1])
+        values.append(history_columns[24][1])
     if num_values <= 24:  # event_orig_host
-        values.append(history._history_columns[25][1])
+        values.append(history_columns[25][1])
     if num_values <= 25:  # event_contact_groups_precedence
-        values.append(history._history_columns[26][1])
+        values.append(history_columns[26][1])
     if num_values <= 26:  # event_core_host
-        values.append(history._history_columns[27][1])
+        values.append(history_columns[27][1])
     if num_values <= 27:  # event_host_in_downtime
-        values.append(history._history_columns[28][1])
+        values.append(history_columns[28][1])
     else:
         values[27] = values[27] == "1"
     if num_values <= 28:  # event_match_groups_syslog_application
-        values.append(history._history_columns[29][1])
+        values.append(history_columns[29][1])
     else:
         values[28] = _unsplit(values[28])
 

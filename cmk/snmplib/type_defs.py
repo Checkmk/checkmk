@@ -8,9 +8,7 @@ import copy
 import enum
 import logging
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from typing import Any, AnyStr, cast, Literal, NamedTuple, TypeVar, Union
-
-from six import ensure_str
+from typing import Any, cast, Literal, NamedTuple, TypeVar, Union
 
 from cmk.utils.type_defs import AgentRawData as _AgentRawData
 from cmk.utils.type_defs import HostAddress as _HostAddress
@@ -148,15 +146,15 @@ class SNMPHostConfig(NamedTuple):
         cfg.update(**kwargs)
         return SNMPHostConfig(**cfg)
 
-    def ensure_str(self, value: AnyStr) -> str:
+    def ensure_str(self, value: str | bytes) -> str:
+        if isinstance(value, str):
+            return value
         if self.character_encoding:
-            return ensure_str(  # pylint: disable= six-ensure-str-bin-call
-                value, self.character_encoding
-            )
+            return value.decode(self.character_encoding)
         try:
-            return ensure_str(value, "utf-8")  # pylint: disable= six-ensure-str-bin-call
+            return value.decode()
         except UnicodeDecodeError:
-            return ensure_str(value, "latin1")  # pylint: disable= six-ensure-str-bin-call
+            return value.decode("latin1")
 
     def serialize(self):
         serialized = self._asdict()

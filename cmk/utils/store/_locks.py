@@ -184,7 +184,7 @@ def aquire_lock(path: Path | str, blocking: bool = True) -> None:
         os.close(fd)
         fd = fd_new
 
-    _set_lock(str(path), fd)  # pylint: disable=no-value-for-parameter
+    _set_lock(str(path), fd)
     logger.debug("Got lock on %s", path)
 
 

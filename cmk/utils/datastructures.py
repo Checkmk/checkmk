@@ -67,7 +67,7 @@ def denilled(obj: dict[str, T | None]) -> dict[str, T]:
     ...
 
 
-def denilled(  # pylint: disable=inconsistent-return-statements
+def denilled(
     obj: list[T | None] | dict[str, T | None],
 ) -> list[T] | dict[str, T]:
     """Remove all None values from a dict or list.
@@ -86,9 +86,8 @@ def denilled(  # pylint: disable=inconsistent-return-statements
     Returns:
         A dict or a list without values being None.
     """
-    if isinstance(obj, list):  # pylint: disable=no-else-return
+    if isinstance(obj, list):
         return [entry for entry in obj if entry is not None]
-    elif isinstance(obj, dict):
+    if isinstance(obj, dict):
         return {key: value for key, value in obj.items() if value is not None}
-    else:
-        assert_never(type(obj))
+    return assert_never(type(obj))

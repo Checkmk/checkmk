@@ -158,41 +158,38 @@ def ensure_utf8(logger_: Logger | None = None) -> None:
     # Our resultion in future: use /usr/sbin/sendmail directly.
     # Our resultion in the present: look with locale -a for an existing UTF encoding
     # and use that.
-    proc: subprocess.Popen = subprocess.Popen(  # pylint:disable=consider-using-with
+    with subprocess.Popen(
         ["locale", "-a"],
         close_fds=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.DEVNULL,
-    )
-    locales_list: list[str] = []
-    std_out: bytes = proc.communicate()[0]
-    exit_code: int = proc.returncode
-    error_msg: str = _("Command 'locale -a' could not be executed. Exit code of command was")
-    not_found_msg: str = _(
-        "No UTF-8 encoding found in your locale -a! Please install appropriate locales."
-    )
-    if exit_code != 0:
-        if not logger_:
-            raise MKGeneralException(f"{error_msg}: {exit_code!r}. {not_found_msg}")
-        logger_.info(f"{error_msg}: {exit_code!r}")
-        logger_.info(not_found_msg)
-        return
+    ) as proc:
+        std_out = proc.communicate()[0]
+        exit_code = proc.returncode
+        error_msg = _("Command 'locale -a' could not be executed. Exit code of command was")
+        not_found_msg = _(
+            "No UTF-8 encoding found in your locale -a! Please install appropriate locales."
+        )
+        if exit_code != 0:
+            if not logger_:
+                raise MKGeneralException(f"{error_msg}: {exit_code!r}. {not_found_msg}")
+            logger_.info(f"{error_msg}: {exit_code!r}")
+            logger_.info(not_found_msg)
+            return
 
-    locales_list = std_out.decode("utf-8", "ignore").split("\n")
-    for encoding in locales_list:
-        el: str = encoding.lower()
-        if "utf8" in el or "utf-8" in el or "utf.8" in el:
-            encoding = encoding.strip()
-            os.putenv("LANG", encoding)
-            if logger_:
-                logger_.debug("Setting locale for mail to %s.", encoding)
-            break
-    else:
-        if not logger_:
-            raise MKGeneralException(not_found_msg)
-        logger_.info(not_found_msg)
-
-    return
+        locales_list = std_out.decode("utf-8", "ignore").split("\n")
+        for encoding in locales_list:
+            el: str = encoding.lower()
+            if "utf8" in el or "utf-8" in el or "utf.8" in el:
+                encoding = encoding.strip()
+                os.putenv("LANG", encoding)
+                if logger_:
+                    logger_.debug("Setting locale for mail to %s.", encoding)
+                break
+        else:
+            if not logger_:
+                raise MKGeneralException(not_found_msg)
+            logger_.info(not_found_msg)
 
 
 def create_spoolfile(

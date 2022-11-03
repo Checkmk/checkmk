@@ -11,9 +11,10 @@ be called manually.
 
 import argparse
 import logging
+from collections.abc import Sequence
 from itertools import chain
 from pathlib import Path
-from typing import Final, Sequence
+from typing import Final
 
 from cmk.utils import debug, log, paths, tty
 from cmk.utils.log import VERBOSE

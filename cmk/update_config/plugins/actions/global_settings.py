@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
 from logging import Logger
-from typing import Mapping, Sequence
 
 from cmk.utils.log import VERBOSE
 
@@ -95,7 +95,7 @@ def _update_removed_global_config_vars(
     # Replace old settings with new ones
     for old_config_name, new_config_name, replacement in _REMOVED_GLOBALS:
         if old_config_name in global_config:
-            logger.log(VERBOSE, "Replacing %s with %s" % (old_config_name, new_config_name))
+            logger.log(VERBOSE, f"Replacing {old_config_name} with {new_config_name}")
             old_value = global_config[old_config_name]
             if replacement:
                 global_config.setdefault(new_config_name, replacement[old_value])

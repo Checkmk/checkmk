@@ -5,8 +5,9 @@
 from __future__ import annotations
 
 import json
+from collections.abc import MutableMapping
 from pathlib import Path
-from typing import Final, MutableMapping
+from typing import Final
 
 from cmk.utils.store import ObjectStore
 

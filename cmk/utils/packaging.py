@@ -440,6 +440,13 @@ def mark_as_enabled(package_path: Path) -> None:
         shutil.copy(str(package_path), str(destination))
 
 
+def remove_enabled_mark(package_info: PackageInfo) -> None:
+    base_name = format_file_name(name=package_info["name"], version=package_info["version"])
+    (cmk.utils.paths.local_enabled_packages_dir / base_name).unlink(
+        missing_ok=True
+    )  # should never be missing, but don't crash in messed up state
+
+
 def _install_by_path(package_path: Path, allow_outdated: bool = True) -> PackageInfo:
     with package_path.open("rb") as f:
         return install(file_object=cast(BinaryIO, f), allow_outdated=allow_outdated)
@@ -542,6 +549,8 @@ def install(  # pylint: disable=too-many-branches
 
             if part.ident == "ec_rule_packs":
                 _remove_packaged_rule_packs(list(remove_files), delete_export=False)
+
+        remove_enabled_mark(old_package)
 
     # Last but not least install package file
     write_package_info(package)

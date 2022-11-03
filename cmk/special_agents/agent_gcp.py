@@ -6,21 +6,10 @@
 import datetime
 import json
 import time
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import cache
-from typing import (
-    Any,
-    Callable,
-    Iterable,
-    Iterator,
-    List,
-    Mapping,
-    Optional,
-    Protocol,
-    Sequence,
-    Tuple,
-    Union,
-)
+from typing import Any, Protocol, Union
 
 import requests
 import typing_extensions
@@ -79,7 +68,7 @@ class ClientProtocol(Protocol):
     def list_assets(self, request: Any) -> Iterable[asset_v1.Asset]:
         ...
 
-    def list_costs(self, tableid: str) -> Tuple[Schema, Pages]:
+    def list_costs(self, tableid: str) -> tuple[Schema, Pages]:
         ...
 
     def health_info(self) -> Mapping[str, Any]:
@@ -114,7 +103,7 @@ class Client:
     def list_assets(self, request: Any) -> Iterable[asset_v1.Asset]:
         return self.asset().list_assets(request)
 
-    def list_costs(self, tableid: str) -> Tuple[Schema, Pages]:
+    def list_costs(self, tableid: str) -> tuple[Schema, Pages]:
         prev_month = self.date.replace(day=1) - datetime.timedelta(days=1)
         query = f'SELECT PROJECT.name, SUM(cost) AS cost, currency, invoice.month FROM `{tableid}` WHERE DATE(_PARTITIONTIME) >= "{prev_month.strftime("%Y-%m-01")}" GROUP BY PROJECT.name, currency, invoice.month'
         body = {"query": query, "useLegacySql": False}
@@ -122,7 +111,7 @@ class Client:
         response = request.execute()
         schema: Schema = response["schema"]["fields"]
 
-        pages: List[Page] = [response["rows"]]
+        pages: list[Page] = [response["rows"]]
         # collect all rows, even if we use pagination
         if "pageToken" in response:
             request = self.bigquery().getQueryResults(
@@ -378,7 +367,7 @@ class ResourceFilter:
 
 
 def time_series(
-    client: ClientProtocol, service: Service, filter_by: Optional[ResourceFilter]
+    client: ClientProtocol, service: Service, filter_by: ResourceFilter | None
 ) -> Iterator[Result]:
     now = time.time()
     seconds = int(now)
@@ -410,7 +399,7 @@ def time_series(
 
 
 def run_metrics(
-    client: ClientProtocol, services: Iterable[Service], filter_by: Optional[ResourceFilter] = None
+    client: ClientProtocol, services: Iterable[Service], filter_by: ResourceFilter | None = None
 ) -> Iterator[ResultSection]:
     for s in services:
         yield ResultSection(s.name, time_series(client, s, filter_by))
@@ -473,7 +462,7 @@ def gather_costs(client: ClientProtocol, cost: CostArgument) -> Sequence[CostRow
     schema, pages = client.list_costs(tableid=cost.tableid)
     columns = {el["name"]: i for i, el in enumerate(schema)}
     assert set(columns.keys()) == {"name", "cost", "currency", "month"}
-    cost_rows: List[CostRow] = []
+    cost_rows: list[CostRow] = []
     for page in pages:
         for row in page:
             data = row["f"]
@@ -488,7 +477,7 @@ def gather_costs(client: ClientProtocol, cost: CostArgument) -> Sequence[CostRow
     return cost_rows
 
 
-def run_cost(client: ClientProtocol, cost: Optional[CostArgument]) -> Iterable[CostSection]:
+def run_cost(client: ClientProtocol, cost: CostArgument | None) -> Iterable[CostSection]:
     if cost is None:
         return
     yield CostSection(rows=gather_costs(client, cost), query_date=client.date)
@@ -512,8 +501,8 @@ def run(
     client: ClientProtocol,
     services: Sequence[Service],
     piggy_back_services: Sequence[PiggyBackService],
-    serializer: Callable[[Union[Iterable[Section], Iterable[PiggyBackSection]]], None],
-    cost: Optional[CostArgument],
+    serializer: Callable[[Iterable[Section] | Iterable[PiggyBackSection]], None],
+    cost: CostArgument | None,
     monitor_health: bool,
 ) -> None:
     assets = run_assets(client, [s.name for s in services] + [s.name for s in piggy_back_services])
@@ -954,7 +943,7 @@ SERVICES = {
 PIGGY_BACK_SERVICES = {s.name: s for s in [GCE]}
 
 
-def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
+def parse_arguments(argv: Sequence[str] | None) -> Args:
     parser = create_default_argument_parser(description=__doc__)
     parser.add_argument("--project", type=str, help="Global ID of Project", required=True)
     parser.add_argument(

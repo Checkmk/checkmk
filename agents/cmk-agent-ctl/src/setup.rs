@@ -183,6 +183,10 @@ fn become_user(username: &str) -> AnyhowResult<unistd::User> {
         username
     ))?;
 
+    unistd::setgroups(&[user.gid]).context(format!(
+        "Failed to set supplementary group id {} corresponding to user {}",
+        user.gid, user.name,
+    ))?;
     unistd::setgid(user.gid).context(format!(
         "Failed to set group id {} corresponding to user {}",
         user.gid, user.name,
@@ -191,6 +195,7 @@ fn become_user(username: &str) -> AnyhowResult<unistd::User> {
         "Failed to set user id {} corresponding to user {}",
         user.uid, user.name,
     ))?;
+
     Ok(user)
 }
 

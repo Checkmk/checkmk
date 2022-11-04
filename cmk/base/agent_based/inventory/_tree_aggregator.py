@@ -42,11 +42,6 @@ RetentionInfos = dict[RetentionKey, RetentionInfo]
 IntervalsFromConfig = dict[RetentionKey, IntervalFromConfig]
 
 
-def add_cluster_property_to(*, inventory_tree: StructuredDataNode, is_cluster: bool) -> None:
-    node = inventory_tree.setdefault_node(("software", "applications", "check_mk", "cluster"))
-    node.attributes.add_pairs({"is_cluster": is_cluster})
-
-
 @dataclass(frozen=True)
 class ItemsOfInventoryPlugin:
     items: list[Attributes | TableRow]
@@ -98,11 +93,6 @@ class RealHostTreeAggregator:
             node = self._status_data_tree.setdefault_node(tuple(table_row.path))
             node.table.add_key_columns(sorted(table_row.key_columns))
             node.table.add_rows([{**table_row.key_columns, **table_row.status_columns}])
-
-    # ---static data from config--------------------------------------------
-
-    def add_cluster_property(self) -> None:
-        add_cluster_property_to(inventory_tree=self._inventory_tree, is_cluster=False)
 
 
 class RealHostTreeUpdater:

@@ -58,12 +58,7 @@ from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 from cmk.base.config import HostConfig
 from cmk.base.sources import fetch_all, make_sources
 
-from ._tree_aggregator import (
-    add_cluster_property_to,
-    ItemsOfInventoryPlugin,
-    RealHostTreeAggregator,
-    RealHostTreeUpdater,
-)
+from ._tree_aggregator import ItemsOfInventoryPlugin, RealHostTreeAggregator, RealHostTreeUpdater
 
 __all__ = [
     "inventorize_status_data_of_real_host",
@@ -180,7 +175,7 @@ def check_inventory_tree(
 def _inventorize_cluster(*, nodes: list[HostName]) -> StructuredDataNode:
     inventory_tree = StructuredDataNode()
 
-    add_cluster_property_to(inventory_tree=inventory_tree, is_cluster=True)
+    _add_cluster_property_to(inventory_tree=inventory_tree, is_cluster=True)
 
     if nodes:
         node = inventory_tree.setdefault_node(
@@ -347,7 +342,7 @@ def _inventorize_real_host(
     tree_updater.may_update(now=int(time.time()), previous_tree=old_tree)
 
     if not tree_aggregator.inventory_tree.is_empty():
-        tree_aggregator.add_cluster_property()
+        _add_cluster_property_to(inventory_tree=tree_aggregator.inventory_tree, is_cluster=False)
 
     return (
         InventoryTrees(
@@ -471,6 +466,28 @@ def _parse_inventory_plugin_item(item: object, expected_class_name: str) -> Attr
         )
 
     return item
+
+
+# .
+#   .--cluster properties--------------------------------------------------.
+#   |                         _           _                                |
+#   |                     ___| |_   _ ___| |_ ___ _ __                     |
+#   |                    / __| | | | / __| __/ _ \ '__|                    |
+#   |                   | (__| | |_| \__ \ ||  __/ |                       |
+#   |                    \___|_|\__,_|___/\__\___|_|                       |
+#   |                                                                      |
+#   |                                           _   _                      |
+#   |           _ __  _ __ ___  _ __   ___ _ __| |_(_) ___  ___            |
+#   |          | '_ \| '__/ _ \| '_ \ / _ \ '__| __| |/ _ \/ __|           |
+#   |          | |_) | | | (_) | |_) |  __/ |  | |_| |  __/\__ \           |
+#   |          | .__/|_|  \___/| .__/ \___|_|   \__|_|\___||___/           |
+#   |          |_|             |_|                                         |
+#   '----------------------------------------------------------------------'
+
+
+def _add_cluster_property_to(*, inventory_tree: StructuredDataNode, is_cluster: bool) -> None:
+    node = inventory_tree.setdefault_node(("software", "applications", "check_mk", "cluster"))
+    node.attributes.add_pairs({"is_cluster": is_cluster})
 
 
 # .

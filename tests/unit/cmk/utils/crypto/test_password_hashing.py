@@ -142,3 +142,19 @@ def test_verify_invalid_rounds(password: str, pw_hash: str) -> None:
 )
 def test_verify_and_update(expects_update: bool, pw_hash: str) -> None:
     assert expects_update == ph.needs_update(pw_hash)
+
+
+@pytest.mark.parametrize(
+    "is_insecure,pw_hash",
+    [
+        (True, "$1$49rn5.0y$XoUJMucpN.aQUEOquaj5C/"),
+        (True, "$apr1$EpPwa/X9$TB2UcQxmrSTJWQQcwHzJM/"),
+        (True, "WsbFVbJdvDcpY"),
+        (False, "foobar"),  # ignore unrecognized algorithms
+        (False, ""),
+        (False, "$5$rounds=1000$.J4mcfJGFGgWJA7R$bDhUCLMe2v1.L3oWclfsVYMyOhsS/6RmyzqFRyCgDi/"),
+        (False, "$2b$04$5LiM0CX3wUoO55cGCwrkDeZIU5zyBqPDZfV9zU4Q2WH/Lkkn2lypa"),
+    ],
+)
+def test_is_insecure_hash(is_insecure: bool, pw_hash: str) -> None:
+    assert ph.is_insecure_hash(pw_hash) == is_insecure

@@ -8,4 +8,4 @@ State: unknown
 Version: 1.6.0b4
 Date: 1563283599
 
-The systemd services summary check plugin obtains the functionality to assess static and activatingin a separate batch. Regarding the activating services, a new WATO rule has been implemented which allows to specify "lenient" time periods.
+The systemd services summary check plugin obtains the functionality to assess static and activating processes in a separate batch. Regarding the activating services, a new WATO rule has been implemented which allows to specify "lenient" time periods.

@@ -1,7 +1,7 @@
 Title: jira notification: Clearer assignment of tickets in distributed environments
 Level: 1
 Component: notifications
-Compatible: incompat
+Compatible: incomp
 Edition: cee
 Version: 1.6.0p18
 Date: 1598009116

@@ -1,4 +1,4 @@
-Title: Windows Agent supports log file paths which contain white spaces
+Title: Windows Agent is able to install plugins.cap with empty files
 Level: 1
 Component: checks
 Compatible: compat
@@ -7,9 +7,7 @@ Version: 1.6.0p14
 Date: 1594367901
 Class: fix
 
-Previously, such log file path, for example E:\Log Files\log_file,
-prevents automatic windows agent update.
+Previously the installation of the plugins.cap file with zero size files
+was not possible.
 
-With this release the problem have been solved.
-
-
+Now the problem has been fully solved. See the ticket CMK-4519.

@@ -10,5 +10,5 @@ Version: 1.6.0p14
 Date: 1592911643
 
 For the rulesets {{Execute MRPE checks}}, {{Plugins, local checks and MRPE for non-root users}},
-{{Installation paths for agent files (Linux, UNIX)}} and {{Allowed agent access via IP addres}}
+{{Installation paths for agent files (Linux, UNIX)}} and {{Allowed agent access via IP address}}
 you need the permission {{Can add or modiy executables}} in order to prevent code injection.

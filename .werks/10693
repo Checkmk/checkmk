@@ -1,10 +1,13 @@
-Title: Agent Updater supports Windows UTF-8 encoding
+Title: Windows Agent supports log file paths which contain white spaces
 Level: 1
-Component: wato
 Compatible: compat
-Edition: cee
 Version: 1.6.0p12
 Date: 1589201914
-Class: feature
+Class: fix
+Component: checks
+Edition: cre
 
-With this release Agent Updater supports UTF-8 Encoding in windows.
+Previously, such log file path, for example E:\Log Files\log_file,
+prevents automatic windows agent update.
+
+With this release the problem have been solved.

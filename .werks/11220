@@ -10,6 +10,6 @@ Version: 1.6.0p14
 Date: 1593440606
 
 This werk adds the option to specify a minimum age for processes monitored
-by the check <tt>ps<\tt>. This can be done either when configuring the default
-parameters for the discovered services of the <tt>ps<\tt>-check (rule "Process
+by the check <tt>ps</tt>. This can be done either when configuring the default
+parameters for the discovered services of the <tt>ps</tt>-check (rule "Process
 Discovery") or directly via the rule "State and count of processes".

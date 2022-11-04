@@ -245,7 +245,14 @@ class Discovery:
                 remove_disabled_rule,
             )
 
-            if entry.check_source in [DiscoveryState.MONITORED, DiscoveryState.IGNORED]:
+            # Vanished services have to be added here because of audit log entries.
+            # Otherwise, on each change all vanished services would lead to an
+            # "added" entry, also on remove of a vanished service
+            if entry.check_source in [
+                DiscoveryState.MONITORED,
+                DiscoveryState.IGNORED,
+                DiscoveryState.VANISHED,
+            ]:
                 old_autochecks[key] = value
 
         if apply_changes:

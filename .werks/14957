@@ -6,19 +6,14 @@ Date: 1667220707
 Edition: cre
 Knowledge: doc
 Level: 1
-State: unknown
-Version: 2.1.0p16
+Version: 2.2.0i1
 
-Services relating to size and age of files and filegroups
-(i.e., all services basing on the <i>fileinfo</i> agent section) may fail
-temporarily with a crash report containing the error "Cannot render negative
-timespan".
+When monitoring files/filegroups with service monitoring rules <i>Size and age of single files</i>
+or <i>Size, age and count of file groups</i> (i.e., all services basing on the <i>fileinfo</i>
+agent section, not on the mk_filestats agent plugin), the service evaluation could fail with a crash
+report containing the error "Cannot render negative timespan".
 
-There is a small chance that a monitored file is touched at the instant
-right after the agent started calculating the fileinfo section, and before the
-timestamp of the file is evaluated.
-If the UNIX timestamp additionally steps over a full second, this would lead
-to a negative age of the file, because the fileinfo plugin determines the
-file age relative to a reference timestamp that's taken on plugin start.
+This happened very rarely, and if it did, it was temorary (for one check period).
 
-This situation is now fixed by taking the reference timestamp as last step.
+Since the fix consists of a change in the agent section evaluation, you'll have to update agents
+to apply it on affected systems.

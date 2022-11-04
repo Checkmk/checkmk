@@ -1,4 +1,4 @@
-Title: Fix XSS
+Title: Fix several XSS issues
 Class: security
 Compatible: compat
 Component: multisite
@@ -8,8 +8,11 @@ Knowledge: doc
 Level: 1
 Version: 2.1.0b1
 
-JavaScript was executed in the tag overview and notification
-rules if sripts were entered in the the title, topic and
-help text of aux tags and tags.
+* JavaScript was executed in the rule overview if a script
+  was entered in the Text to match of EC rules.
+* JavaScript was executed if scripts were entered in the LDAP
+  server and failover server and "Save & Test" was clicked
+* JavaScript was executed in the notification rules if sripts
+  were entered in the the title and topic of aux tags and tags.
 
 FEED-6031

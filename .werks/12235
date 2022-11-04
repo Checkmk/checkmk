@@ -14,4 +14,6 @@ to call itself as a DB2 instance user, however, the directory where the plugin
 is located requires root permissions.
 
 For this fix to come into effect, users have to re-bake and update the Linux
-agent for all affected systems.
+agent for all affected systems. In order to achieve a proper re-baking, users
+should first deactivate the rule for deploying the agent plugin, then re-bake,
+then activate the rule again and re-bake again.

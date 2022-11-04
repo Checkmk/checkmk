@@ -1,4 +1,4 @@
-Title: Fix customgraphs in reports
+Title: Fix Exception reports when displaying a custom graph
 Class: fix
 Compatible: compat
 Component: reporting
@@ -8,4 +8,5 @@ Knowledge: doc
 Level: 1
 Version: 2.1.0b1
 
-Customgraph report elements cause an exception. This is now fixed
+The exception of missing the host and service context is now fixed. Custom
+graphs are explicitly defined and thus don't use any context.

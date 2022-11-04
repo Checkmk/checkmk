@@ -1,4 +1,4 @@
-Title: Check_MK Discovery: Revert werks 10534 and 11229
+Title: Check_MK Discovery: Revert werks 10534, 11229 and 11238
 Level: 1
 Component: checks
 Compatible: compat
@@ -7,8 +7,8 @@ Version: 2.0.0i1
 Date: 1597762711
 Class: fix
 
-The original werks 10534 (1.6.0p11) and 11229 (1.6.0p16) tried to fix the
-following situation:
+The original werks 10534 (1.6.0p11), 11229 (1.6.0p16) and 11238 (1.6.0p16)
+tried to fix the following situation:
 
 The "Check_MK discovery" check was unable to discover entirely new check_types.
 The discovery phase always relies on cached data, if available.  Since the SNMP

@@ -8,11 +8,13 @@ Knowledge: doc
 Level: 1
 Version: 2.2.0i1
 
-Previously, the parameter <tt>DNS Server</tt> of <tt>Check DNS service</tt> rule was optional.
-Moreover, the options <tt>this host</tt> and <tt>default DNS Server</tt> would both do the same:
-They would use the default DNS server(s) specified inside of /etc/resolve.conf.  With this werk, the
-option <tt>this host</tt> now (again) will use the address of the host on which the service is
-generated. Secondly, the rule has been reworked to be more concise.
+Previously, the parameter <tt>DNS Server</tt> of <tt>Check DNS
+service</tt> rule was broken.  The options <tt>this host</tt> and
+<tt>default DNS Server</tt> would both do the same: They would use the
+default DNS server(s) specified inside of /etc/resolve.conf.  With this
+werk, the option <tt>this host</tt> now (again) will use the address of
+the host on which the service is generated. Secondly, the rule has been
+reworked to be more concise.
 
 Intervention is necessary if
 

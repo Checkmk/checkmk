@@ -18,7 +18,7 @@ Here is how common tasks are done now:
 
 <b>Upload and install a package</b>:
 Previously, this was one step.
-It failed if packages were not suitable for the sites Checkmk version or if it collided with an already installed MKP.
+It failed if packages were not siutable for the sites Checkmk version or if it collided with an already installed MKP.
 Now can always upload the package.
 It is then shown in the list of <i>available</i> packages.
 From this list, you can choose to <i>enable</i>, <i>download</i> and <i>remove</i> it.
@@ -29,3 +29,4 @@ Users can edit active packages (during operation) or create new MKPs from unpack
 This is not changed.
 Previously the MKP was created "on demand" if the user clicked the <i>download</i> button.
 With this werk, the MKP is created immediately when the user hits "<i>Save</i>" in the package creation page.
+The <i>download</i> button can be found in the "<i>Available</i>" section.

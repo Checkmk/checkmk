@@ -23,6 +23,6 @@ therefore the creation and the setting of the rights on the <tt>mkbackup</tt> fo
 Therefore <tt>omd</tt> will now try to ensure that this folder exists
 and has the correct permissions.
 
-Furthermore, the backup directory has been moven to
+Furthermore, the backup directory has been moved to
 <tt>/run/lock/mkbackup</tt> as this is the standard path for locks
 according to FHS.

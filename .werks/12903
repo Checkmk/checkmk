@@ -10,9 +10,18 @@ Version: 2.1.0b1
 
 If the management board address of a host has been provided
 as a name (not an IP address) Checkmks DNS lookup cache has
-not been effective, leading to a lot of DNS lookups.
+not been effective.
 
-This is fixed now. In the rare case your management board
-has a dynamic IP address, you must configure the entire host
-to use dynamic lookup using the WATO rule
-"Hosts with dynamic DNS lookup".
+While this was consistent with the behaviour of the IP address
+configuration of the hosts (as documented here:
+https://docs.checkmk.com/latest/en/wato_hosts.html#dns), it
+lead to a lot of DNS lookups.
+
+The management board address is now treated analogous to the
+host name: If it is a name (not an IP address), it will be
+resolved during "activate changes", reducing the number of
+required DNS lookups.
+
+In the rare case your management board has a dynamic IP
+address, you must configure the entire host to use dynamic
+lookup using the WATO rule "Hosts with dynamic DNS lookup".

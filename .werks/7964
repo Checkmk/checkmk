@@ -11,7 +11,4 @@ The plugin mk_docker.py tries to execute the linux agent inside the container.
 If the contianer had no agent installed, plugin used to pipe the linux agent
 into the docker container. The latter is no longer done.
 
-The agent is still executed if users have installed in on the conatiner.
-
-The old behaviour is replaced by additional sections (refer to werk NN)
-
+The agent is still executed if users have installed in on the container.

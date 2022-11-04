@@ -10,7 +10,9 @@ State: unknown
 Version: 2.1.0b1
 
 In versions 1.6.0p12 to 1.6.0p19 the 'capacity' metric was not produced if the
-correspinding devices were on main power supply.
+correspinding devices were on main power supply. If it was produced, it was
+the canonical unit sections, which is desirable, but an incompatible change in
+Checkmk 1.6.
 
 Note that some devices report "0 minutes left" in case they are on mains.
 In this case no levels are applied, to avoid false positives.

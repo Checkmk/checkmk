@@ -10,6 +10,6 @@ State: unknown
 Version: 2.1.0b6
 
 By default "CRC errors rate" display format was set to one decimal.
-User could enter a procentage with a bigger precission, but it was
+User could enter a percentage with a bigger precision, but it was
 shown incorrectly.
 Now, two decimals are displayed for this parameter.

@@ -9,6 +9,6 @@ Level: 1
 State: unknown
 Version: 2.1.0p3
 
-When the veeam backup status agent plugin was run on a machine without veam installed we 
+When the veeam backup status agent plugin was run on a machine without veeam installed we
 printed a debug string into the section of the previous plugin. This has been fixed now.
 No user interaction required.

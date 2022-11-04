@@ -12,7 +12,7 @@ This change is only relevant in case you have custom GUI extensions that
 implement custom HTML pages.
 
 In case you do this, it is likely that you use the <tt>html.header</tt> or
-<tt>html.top_heading</tt> methods. Once upgrading to 1.7 you will have to
+<tt>html.top_heading</tt> methods. Once upgrading to 2.0 you will have to
 update your code to hand over a breadcrumb as second argument.
 
 This can be done like this:

@@ -1,7 +1,7 @@
 Title: Fix missing spaces on CSV and JSON export of views
 Level: 1
 Component: multisite
-Compatible: comp
+Compatible: compat
 Edition: cre
 Version: 1.6.0p26
 Date: 1629722192

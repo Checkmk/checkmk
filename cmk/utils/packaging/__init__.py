@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import ast
 import json
 import logging
 import os
-import pprint
 import shutil
 import subprocess
 import tarfile
@@ -32,6 +30,14 @@ from cmk.utils.version import parse_check_mk_version
 
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
+
+from ._package import (
+    get_initial_package_info,
+    get_optional_package_info,
+    PackageInfo,
+    parse_package_info,
+    serialize_package_info,
+)
 
 
 # TODO: Subclass MKGeneralException()?
@@ -91,26 +97,6 @@ class PackagePart(NamedTuple):
     ident: PartName
     title: str
     path: PartPath
-
-
-# Would like to use class declaration here, but that is not compatible with the dots in the keys
-# below.
-PackageInfo = TypedDict(
-    "PackageInfo",
-    {
-        "title": str,
-        "name": str,
-        "description": str,
-        "version": str,
-        "version.packaged": str,
-        "version.min_required": str,
-        "version.usable_until": str | None,
-        "author": str,
-        "download_url": str,
-        "files": PackageFiles,
-    },
-    total=False,
-)
 
 
 Packages = dict[PackageName, PackageInfo]
@@ -240,7 +226,7 @@ def create_mkp_object(
             tar.addfile(info, info_file)
 
         # add the regular info file (Python format)
-        add_file("info", _serialize_package_info(package).encode())
+        add_file("info", serialize_package_info(package).encode())
 
         # add the info file a second time (JSON format) for external tools
         add_file("info.json", json.dumps(package).encode())
@@ -259,21 +245,6 @@ def create_mkp_object(
                 add_file(part.ident + ".tar", subdata)
 
     return buffer.getvalue()
-
-
-def get_initial_package_info(pacname: str) -> PackageInfo:
-    return {
-        "title": "Title of %s" % pacname,
-        "name": pacname,
-        "description": "Please add a description here",
-        "version": "1.0",
-        "version.packaged": cmk_version.__version__,
-        "version.min_required": cmk_version.__version__,
-        "version.usable_until": None,
-        "author": "Add your name here",
-        "download_url": "http://example.com/%s/" % pacname,
-        "files": {},
-    }
 
 
 def uninstall(package: PackageInfo, post_package_change_actions: bool = True) -> None:
@@ -639,20 +610,9 @@ def _remove_packaged_rule_packs(file_names: Iterable[str], delete_export: bool =
 
 
 def _get_package_info_from_package(file_object: BinaryIO) -> PackageInfo:
-    if (package := _get_optional_package_info(file_object)) is None:
+    if (package := get_optional_package_info(file_object)) is None:
         raise PackageException("Failed to open package info file")
     return package
-
-
-def _get_optional_package_info(file_object: BinaryIO) -> PackageInfo | None:
-    with tarfile.open(fileobj=file_object, mode="r:gz") as tar:
-        try:
-            if (extracted_file := tar.extractfile("info")) is None:
-                return None
-            raw_info = extracted_file.read()
-        except KeyError:
-            return None
-    return parse_package_info(raw_info.decode())
 
 
 def _validate_package_files(pacname: PackageName, files: PackageFiles) -> None:
@@ -891,21 +851,11 @@ def _package_exists(pacname: PackageName) -> bool:
 
 def write_package_info(package: PackageInfo) -> None:
     pkg_info_path = package_dir() / package["name"]
-    pkg_info_path.write_text(_serialize_package_info(package))
-
-
-def _serialize_package_info(package_info: PackageInfo) -> str:
-    return pprint.pformat(package_info) + "\n"
+    pkg_info_path.write_text(serialize_package_info(package))
 
 
 def _remove_package_info(pacname: PackageName) -> None:
     (package_dir() / pacname).unlink()
-
-
-def parse_package_info(python_string: str) -> PackageInfo:
-    package_info = ast.literal_eval(python_string)
-    package_info.setdefault("version.usable_until", None)
-    return package_info
 
 
 def rule_pack_id_to_mkp() -> dict[str, Any]:

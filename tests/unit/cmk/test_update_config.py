@@ -22,10 +22,19 @@ from tests.unit.cmk.gui.conftest import load_plugins  # noqa: F401 # pylint: dis
 import cmk.utils.log
 import cmk.utils.paths
 from cmk.utils import password_store, store, version
-from cmk.utils.type_defs import CheckPluginName, ContactgroupName, RulesetName, RuleSpec, RuleValue
+from cmk.utils.type_defs import (
+    CheckPluginName,
+    ContactgroupName,
+    RulesetName,
+    RuleSpec,
+    RuleValue,
+    UserId,
+)
 from cmk.utils.version import is_raw_edition
 
 import cmk.gui.config
+from cmk.gui.type_defs import UserSpec
+from cmk.gui.userdb import load_users, save_users
 from cmk.gui.utils.script_helpers import application_and_request_context
 from cmk.gui.watolib.changes import AuditLogStore, ObjectRef, ObjectRefType
 from cmk.gui.watolib.hosts_and_folders import Folder
@@ -1094,3 +1103,36 @@ def _read_servicenow_config() -> list[dict[str, Any]]:
         key="notification_rules",
         default=[],
     )
+
+
+def _user_dict(hashes: list[tuple[str, str]]) -> dict[UserId, UserSpec]:
+    return {UserId(u[0]): {"connector": "htpasswd", "password": u[1]} for u in hashes}
+
+
+@pytest.mark.usefixtures("request_context")
+def test_check_password_hashes(uc: update_config.UpdateConfig) -> None:
+    do_update = _user_dict(
+        [
+            ("md5", "$apr1$EpPwa/X9$TB2UcQxmrSTJWQQcwHzJM/"),
+            ("crypt", "WsbFVbJdvDcpY"),
+        ]
+    )
+    dont_update = _user_dict(
+        [
+            (
+                "sha256crypt",
+                "$5$rounds=1000$.J4mcfJGFGgWJA7R$bDhUCLMe2v1.L3oWclfsVYMyOhsS/6RmyzqFRyCgDi/",
+            ),
+            ("bcrypt", "$2b$04$5LiM0CX3wUoO55cGCwrkDeZIU5zyBqPDZfV9zU4Q2WH/Lkkn2lypa"),
+            ("unrecognized", "foo"),
+        ]
+    )
+    all_users = do_update | dont_update
+    save_users(all_users)
+
+    uc._check_password_hashes()
+
+    loaded = load_users()
+    assert all(user in loaded for user in all_users)
+    assert all(loaded[user].get("enforce_pw_change") for user in do_update)
+    assert not any(loaded[user].get("enforce_pw_change") for user in dont_update)

@@ -54,6 +54,7 @@ import cmk.utils.tty as tty
 from cmk.utils import password_store, version
 from cmk.utils.bi.bi_legacy_config_converter import BILegacyPacksConverter
 from cmk.utils.check_utils import maincheckify
+from cmk.utils.crypto.password_hashing import is_insecure_hash
 from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import VERBOSE
@@ -333,6 +334,10 @@ class UpdateConfig:
             (self._migrate_ldap_connections, "Migrate LDAP connections"),
             (self._rewrite_bi_configuration, "Rewrite BI Configuration"),
             (self._adjust_user_attributes, "Set version specific user attributes"),
+            (
+                self._check_password_hashes,
+                "Check for insecure password hashes, enforce password reset",
+            ),
             (self._rewrite_py2_inventory_data, "Rewriting inventory data"),
             (self._migrate_pre_2_0_audit_log, "Migrate audit log"),
             (self._sanitize_audit_log, "Sanitize audit log (Werk #13330)"),
@@ -1355,6 +1360,33 @@ class UpdateConfig:
 
             _add_user_scheme_serial(users, user_id)
             _cleanup_ldap_connector(users, user_id, has_deprecated_ldap_connection)
+
+        save_users(users)
+
+    def _check_password_hashes(self) -> None:
+        """If a user's password hash is not considered secure anymore (see
+        password_hashing.is_insecure_hash) make that user set a new password in their next login.
+        In a future release we will not allow such password hashes anymore -- log a warning.
+        """
+        users: Users = load_users(lock=True)
+        insecure: list[UserId] = [
+            user_id
+            for user_id in users
+            if (
+                (users[user_id].get("connector") == "htpasswd")
+                and (pw := users[user_id].get("password"))
+                and is_insecure_hash(pw)
+            )
+        ]
+
+        for user_id in insecure:
+            users[user_id]["enforce_pw_change"] = True
+
+        if insecure:
+            explanation = """Users with insecure password hashes have been found in the htpasswd file. These users will be required to change their password on their next login.
+Please ensure that the affected users log in and change their password before updating to Checkmk version 2.2. Otherwise these users will not be able to log in anymore and their passwords will need to be reset manually by an administrator (either the user configuration or via the cmk-passwd command).
+The following users are affected:"""
+            self._logger.warning(_format_warning(explanation + "\n" + "\n".join(insecure)))
 
         save_users(users)
 

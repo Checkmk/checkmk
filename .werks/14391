@@ -1,0 +1,29 @@
+Title: Require password change for old password hashes
+Class: security
+Compatible: incomp
+Component: wato
+Date: 1667552003
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p16
+
+Local users whose passwords are hashed with insecure hash functions in the htpasswd file will be required to change their passwords on their next UI login.
+Users that authenticate via other mechanisms, such as LDAP, are not affected by this.
+
+Starting from version 2.2, Checkmk will no longer support validating password hashes of deprecated and insecure hash algorithms.
+In order to avoid situations where users are unable to log in (and require manually resetting their password by an administrator), users whose passwords are currently hashed with any of the affected hash algorithms will be required to set a new password.
+
+A warning message including all affected usernames will be displayed to the administrator running the `omd update` command.
+You can use this list to contact these users and selectively inform them that they will be required to change their password during their next UI login.
+In case they do not change their password before Checkmk is upgraded to version 2.2, these users will not be able to log in anymore after the upgrade and an administrator will have to reset the password.
+
+The following hash algorithms that are currently still supported are affected: des-crypt, MD5-crypt, Apr MD5-crypt.
+Passwords hashed with sha256-crypt will not require resetting the password but will be updated automatically on the user's next login (see Werk #14390).
+
+New passwords will be hashed with bcrypt.
+
+Should you wish to manually change a user's password via the CLI, please be aware of the newly introduced `cmk-passwd` utility (see Werk #14389).
+
+Even though this Werk is related to security, it does not fix any exploitable issue.
+Hence, we assign a CVSS score of 0 (None) (CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:N).

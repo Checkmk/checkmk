@@ -65,21 +65,18 @@ def hash_password(password: str, *, allow_truncation=False) -> str:
         raise PasswordTooLongError(e)
 
 
+# Created by Checkmk < 2.1:
+_deprecated_algos = ["sha256_crypt"]
+# Created by Checkmk < 1.6:
+_insecure_algos = ["md5_crypt", "apr_md5_crypt", "des_crypt"]
+
 _context = passlib.context.CryptContext(
     # All new hashes we create (using hash_password() will use bcrypt. However, we still have to
     # account for existing passwords created with now-deprecated schemes.
-    schemes=[
-        "bcrypt",
-        # Created by Checkmk < 2.1:
-        "sha256_crypt",
-        # Created by Checkmk < 1.6:
-        "md5_crypt",
-        "apr_md5_crypt",
-        "des_crypt",
-    ],
+    schemes=["bcrypt"] + _deprecated_algos + _insecure_algos,
     # Hashes marked "deprecated" will automatically be updated to bcrypt. We only update
     # sha256-crypt. Older hashes are not auto-updated -- users should make a new password.
-    deprecated=["sha256_crypt"],
+    deprecated=_deprecated_algos,
     bcrypt__ident=BCRYPT_IDENT,
 )
 
@@ -111,3 +108,8 @@ def needs_update(password_hash: str) -> bool:
     See _context for the list of deprecated algorithms.
     """
     return _context.needs_update(password_hash)
+
+
+def is_insecure_hash(password_hash: str) -> bool:
+    """Is the hash algorithm used for this hash considered insecure"""
+    return _context.identify(password_hash, required=False) in _insecure_algos

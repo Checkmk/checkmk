@@ -59,7 +59,7 @@ from cmk.base.config import HostConfig
 from cmk.base.sources import fetch_all, make_sources
 
 from ._tree_aggregator import (
-    inventorize_cluster,
+    add_cluster_property_to,
     ItemsOfInventoryPlugin,
     RealHostTreeAggregator,
     RealHostTreeUpdater,
@@ -99,7 +99,7 @@ def check_inventory_tree(
 ) -> CheckInventoryTreeResult:
     config_cache = config.get_config_cache()
     if config_cache.is_cluster(host_name):
-        inventory_tree = inventorize_cluster(nodes=config_cache.nodes_of(host_name) or [])
+        inventory_tree = _inventorize_cluster(nodes=config_cache.nodes_of(host_name) or [])
         return CheckInventoryTreeResult(
             processing_failed=False,
             no_data_or_files=False,
@@ -159,6 +159,48 @@ def check_inventory_tree(
         inventory_tree=trees.inventory,
         update_result=update_result,
     )
+
+
+#   .--cluster inventory---------------------------------------------------.
+#   |                         _           _                                |
+#   |                     ___| |_   _ ___| |_ ___ _ __                     |
+#   |                    / __| | | | / __| __/ _ \ '__|                    |
+#   |                   | (__| | |_| \__ \ ||  __/ |                       |
+#   |                    \___|_|\__,_|___/\__\___|_|                       |
+#   |                                                                      |
+#   |             _                      _                                 |
+#   |            (_)_ ____   _____ _ __ | |_ ___  _ __ _   _               |
+#   |            | | '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |              |
+#   |            | | | | \ V /  __/ | | | || (_) | |  | |_| |              |
+#   |            |_|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |              |
+#   |                                                  |___/               |
+#   '----------------------------------------------------------------------'
+
+
+def _inventorize_cluster(*, nodes: list[HostName]) -> StructuredDataNode:
+    inventory_tree = StructuredDataNode()
+
+    add_cluster_property_to(inventory_tree=inventory_tree, is_cluster=True)
+
+    if nodes:
+        node = inventory_tree.setdefault_node(
+            ("software", "applications", "check_mk", "cluster", "nodes")
+        )
+        node.table.add_key_columns(["name"])
+        node.table.add_rows([{"name": node_name} for node_name in nodes])
+
+    return inventory_tree
+
+
+# .
+#   .--real host data------------------------------------------------------.
+#   |                   _   _               _         _       _            |
+#   |    _ __ ___  __ _| | | |__   ___  ___| |_    __| | __ _| |_ __ _     |
+#   |   | '__/ _ \/ _` | | | '_ \ / _ \/ __| __|  / _` |/ _` | __/ _` |    |
+#   |   | | |  __/ (_| | | | | | | (_) \__ \ |_  | (_| | (_| | || (_| |    |
+#   |   |_|  \___|\__,_|_| |_| |_|\___/|___/\__|  \__,_|\__,_|\__\__,_|    |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
 
 def _fetch_real_host_data(
@@ -242,6 +284,23 @@ def _no_data_or_files(host_name: HostName, host_sections: Iterable[HostSections]
     return True
 
 
+# .
+#   .--real host inventory-------------------------------------------------.
+#   |                              _   _               _                   |
+#   |               _ __ ___  __ _| | | |__   ___  ___| |_                 |
+#   |              | '__/ _ \/ _` | | | '_ \ / _ \/ __| __|                |
+#   |              | | |  __/ (_| | | | | | | (_) \__ \ |_                 |
+#   |              |_|  \___|\__,_|_| |_| |_|\___/|___/\__|                |
+#   |                                                                      |
+#   |             _                      _                                 |
+#   |            (_)_ ____   _____ _ __ | |_ ___  _ __ _   _               |
+#   |            | | '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |              |
+#   |            | | | | \ V /  __/ | | | || (_) | |  | |_| |              |
+#   |            |_|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |              |
+#   |                                                  |___/               |
+#   '----------------------------------------------------------------------'
+
+
 #   ---inventorize real host------------------------------------------------
 
 
@@ -320,6 +379,23 @@ def inventorize_status_data_of_real_host(
     return tree_aggregator.status_data_tree
 
 
+# .
+#   .--inventory plugin items----------------------------------------------.
+#   |             _                      _                                 |
+#   |            (_)_ ____   _____ _ __ | |_ ___  _ __ _   _               |
+#   |            | | '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |              |
+#   |            | | | | \ V /  __/ | | | || (_) | |  | |_| |              |
+#   |            |_|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |              |
+#   |                                                  |___/               |
+#   |              _             _         _ _                             |
+#   |        _ __ | |_   _  __ _(_)_ __   (_) |_ ___ _ __ ___  ___         |
+#   |       | '_ \| | | | |/ _` | | '_ \  | | __/ _ \ '_ ` _ \/ __|        |
+#   |       | |_) | | |_| | (_| | | | | | | | ||  __/ | | | | \__ \        |
+#   |       | .__/|_|\__,_|\__, |_|_| |_| |_|\__\___|_| |_| |_|___/        |
+#   |       |_|            |___/                                           |
+#   '----------------------------------------------------------------------'
+
+
 def _collect_inventory_plugin_items(
     host_name: HostName,
     *,
@@ -395,6 +471,17 @@ def _parse_inventory_plugin_item(item: object, expected_class_name: str) -> Attr
         )
 
     return item
+
+
+# .
+#   .--checks--------------------------------------------------------------.
+#   |                         _               _                            |
+#   |                     ___| |__   ___  ___| | _____                     |
+#   |                    / __| '_ \ / _ \/ __| |/ / __|                    |
+#   |                   | (__| | | |  __/ (__|   <\__ \                    |
+#   |                    \___|_| |_|\___|\___|_|\_\___/                    |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
 
 def _check_fetched_data_or_trees(

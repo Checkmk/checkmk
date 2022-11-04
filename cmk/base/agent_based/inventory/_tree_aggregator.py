@@ -21,7 +21,6 @@ from cmk.utils.structured_data import (
     TABLE_KEY,
     UpdateResult,
 )
-from cmk.utils.type_defs import HostName
 
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 
@@ -43,22 +42,7 @@ RetentionInfos = dict[RetentionKey, RetentionInfo]
 IntervalsFromConfig = dict[RetentionKey, IntervalFromConfig]
 
 
-def inventorize_cluster(*, nodes: list[HostName]) -> StructuredDataNode:
-    inventory_tree = StructuredDataNode()
-
-    _add_cluster_property_to(inventory_tree=inventory_tree, is_cluster=True)
-
-    if nodes:
-        node = inventory_tree.setdefault_node(
-            ("software", "applications", "check_mk", "cluster", "nodes")
-        )
-        node.table.add_key_columns(["name"])
-        node.table.add_rows([{"name": node_name} for node_name in nodes])
-
-    return inventory_tree
-
-
-def _add_cluster_property_to(*, inventory_tree: StructuredDataNode, is_cluster: bool) -> None:
+def add_cluster_property_to(*, inventory_tree: StructuredDataNode, is_cluster: bool) -> None:
     node = inventory_tree.setdefault_node(("software", "applications", "check_mk", "cluster"))
     node.attributes.add_pairs({"is_cluster": is_cluster})
 
@@ -118,7 +102,7 @@ class RealHostTreeAggregator:
     # ---static data from config--------------------------------------------
 
     def add_cluster_property(self) -> None:
-        _add_cluster_property_to(inventory_tree=self._inventory_tree, is_cluster=False)
+        add_cluster_property_to(inventory_tree=self._inventory_tree, is_cluster=False)
 
 
 class RealHostTreeUpdater:

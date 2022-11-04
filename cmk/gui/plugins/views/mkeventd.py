@@ -766,7 +766,7 @@ def paint_event_icons(row, history=False):
     return "", ""
 
 
-def render_event_phase_icons(row) -> str | HTML:  # type:ignore[no-untyped-def]
+def render_event_phase_icons(row: Row) -> str | HTML:
     phase = row["event_phase"]
 
     if phase == "ack":
@@ -781,7 +781,7 @@ def render_event_phase_icons(row) -> str | HTML:  # type:ignore[no-untyped-def]
     return html.render_icon(phase, title=title)
 
 
-def render_delete_event_icons(row) -> str | HTML:  # type:ignore[no-untyped-def]
+def render_delete_event_icons(row: Row) -> str | HTML:
     if not user.may("mkeventd.delete"):
         return ""
     urlvars: HTTPVariables = []

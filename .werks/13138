@@ -8,7 +8,8 @@ Knowledge: doc
 Level: 1
 Version: 2.1.0b1
 
-The old check would crash when host time and server time
+The check would crash when host time and server time
 ran out of sync.
 
-To fix this issue the timesyncd Check was migrated to the new API.
+Negative timespans are now detected and result in a {CRIT}
+state and an informational message.

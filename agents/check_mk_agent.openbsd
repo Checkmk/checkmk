@@ -217,6 +217,11 @@ section_misc_sections() {
             # Speed
             SP=$(echo "$IO" | grep -E "media:.*base" | cut -d\( -f2 | cut -db -f1)
             if [ "$SP" ]; then
+                case "$SP" in
+                        # Detect 10Gbps interfaces
+                        *G*) SP=10000
+                        SP=10000
+                esac
                 printf "\tSpeed: %sMb/s\n" "${SP}"
             fi
             # Detect duplexity - in reality only available for physical devices but

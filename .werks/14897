@@ -1,0 +1,13 @@
+Title: Fix audit log entry for removed vanished services
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1667585564
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p17
+
+If a vanished service was removed on the service discovery page, the audit log
+showed an entry like "Item "Foo" added.".
+

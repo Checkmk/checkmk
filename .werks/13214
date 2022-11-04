@@ -10,4 +10,4 @@ Version: 2.1.0b1
 
 The previous approach of the RTC feature did not work with
 systemd. This werk changes the way real time data
-transmission is triggered, such that thay work with systemd.
+transmission is triggered, such that they work with systemd.

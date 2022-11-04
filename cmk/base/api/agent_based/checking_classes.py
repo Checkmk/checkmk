@@ -62,7 +62,7 @@ class Service(
         *,
         item: Optional[str] = None,
         parameters: Optional[ParametersTypeAlias] = None,
-        labels: Optional[List[ServiceLabel]] = None,
+        labels: Optional[Sequence[ServiceLabel]] = None,
     ) -> "Service":
         return super().__new__(
             cls,
@@ -88,7 +88,7 @@ class Service(
         raise TypeError("'parameters' must be dict or None, got %r" % (parameters,))
 
     @staticmethod
-    def _parse_labels(labels: Optional[List[ServiceLabel]]) -> List[ServiceLabel]:
+    def _parse_labels(labels: Optional[Sequence[ServiceLabel]]) -> Sequence[ServiceLabel]:
         if not labels:
             return []
         if isinstance(labels, list) and all(isinstance(l, ServiceLabel) for l in labels):

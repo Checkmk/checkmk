@@ -87,6 +87,12 @@ set_up_get_epoch() {
     fi
 }
 
+set_up_current_shell() {
+    # Note the current shell may not be the same as what is specified in the
+    # shebang, e.g. when reconfigured in the xinetd/systemd/whateverd config file
+    CURRENT_SHELL="$(ps -o cmd= -p $$ | cut -d' ' -f1)"
+}
+
 #
 # END COMMON AGENT CODE
 #
@@ -1537,10 +1543,6 @@ run_real_time_checks_for_remote() {
     done
 }
 
-_this_shell() {
-    ps -o args= -p $$ | sed -e 's/^-//' -e 's/^.*qemu-x86_64 //' -e 's/\ .*//'
-}
-
 #
 # BEGIN COMMON AGENT CODE
 #
@@ -1616,7 +1618,7 @@ run_cached() {
         # Time to refresh cache file and new job not yet running?
         if [ $((NOW - MTIME)) -gt "${REFRESH_INTERVAL}" ] && [ ! -e "$(_cfile_in_use)" ]; then
             # Start it. If the command fails the output is thrown away
-            cat <<HERE | nohup "$(_this_shell)" >/dev/null 2>&1 &
+            cat <<HERE | nohup "${CURRENT_SHELL}" >/dev/null 2>&1 &
 eval '${MK_DEFINE_LOG_SECTION_TIME}'
 exec > "${CACHEFILE}.new.\$\$" || exit 1
 $* && mv -f "${CACHEFILE}.new.\$\$" "${CACHEFILE}" || rm -f "${CACHEFILE}" "${CACHEFILE}.new.\$\$"
@@ -2000,6 +2002,8 @@ main_setup() {
     set_up_process_commandline_arguments "$@"
 
     set_up_get_epoch
+
+    set_up_current_shell
 
     set_variable_defaults
 

@@ -14,6 +14,7 @@ oneTimeSetUp() {
     export MK_LOGDIR="${SHUNIT_TMPDIR}"
 
     set_up_get_epoch
+    set_up_current_shell
 }
 
 profiling_dir() {

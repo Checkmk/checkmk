@@ -24,11 +24,14 @@ from cmk.core_helpers.type_defs import NO_SELECTION
 import cmk.base.agent_based.inventory._inventory as _inventory
 import cmk.base.config as config
 from cmk.base.agent_based.data_provider import ParsedSectionsBroker
-from cmk.base.agent_based.inventory._inventory import _parse_inventory_plugin_item, InventoryTrees
+from cmk.base.agent_based.inventory._inventory import (
+    _create_trees_from_inventory_plugin_items,
+    _parse_inventory_plugin_item,
+    InventoryTrees,
+)
 from cmk.base.agent_based.inventory._tree_aggregator import (
     AttributesUpdater,
     ItemsOfInventoryPlugin,
-    RealHostTreeAggregator,
     RealHostTreeUpdater,
     RetentionInfo,
     TableUpdater,
@@ -89,8 +92,7 @@ def test__tree_nodes_are_equal(old_tree: StructuredDataNode, inv_tree: Structure
 
 
 def test_integrate_attributes() -> None:
-    tree_aggr = RealHostTreeAggregator()
-    tree_aggr.aggregate_results(
+    trees = _create_trees_from_inventory_plugin_items(
         [
             ItemsOfInventoryPlugin(
                 items=[
@@ -107,7 +109,7 @@ def test_integrate_attributes() -> None:
         ]
     )
 
-    assert tree_aggr.inventory_tree.serialize() == {
+    assert trees.inventory.serialize() == {
         "Attributes": {},
         "Nodes": {
             "a": {
@@ -135,8 +137,7 @@ def test_integrate_attributes() -> None:
 
 
 def test_integrate_table_row() -> None:
-    tree_aggr = RealHostTreeAggregator()
-    tree_aggr.aggregate_results(
+    trees = _create_trees_from_inventory_plugin_items(
         [
             ItemsOfInventoryPlugin(
                 items=[
@@ -171,7 +172,7 @@ def test_integrate_table_row() -> None:
         ]
     )
 
-    assert tree_aggr.inventory_tree.serialize() == {
+    assert trees.inventory.serialize() == {
         "Attributes": {},
         "Nodes": {
             "a": {

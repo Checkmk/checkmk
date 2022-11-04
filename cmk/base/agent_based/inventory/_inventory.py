@@ -11,6 +11,8 @@ CL:
     if and only if there are NO errors while executing inventory plugins.
 """
 
+from __future__ import annotations
+
 import logging
 import time
 from dataclasses import dataclass
@@ -58,7 +60,7 @@ from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 from cmk.base.config import HostConfig
 from cmk.base.sources import fetch_all, make_sources
 
-from ._tree_aggregator import ItemsOfInventoryPlugin, RealHostTreeAggregator, RealHostTreeUpdater
+from ._tree_aggregator import ItemsOfInventoryPlugin, RealHostTreeUpdater
 
 __all__ = [
     "inventorize_status_data_of_real_host",
@@ -299,12 +301,6 @@ def _no_data_or_files(host_name: HostName, host_sections: Iterable[HostSections]
 #   ---inventorize real host------------------------------------------------
 
 
-@dataclass(frozen=True)
-class InventoryTrees:
-    inventory: StructuredDataNode
-    status_data: StructuredDataNode
-
-
 def _inventorize_real_host(
     host_name: HostName,
     *,
@@ -326,30 +322,23 @@ def _inventorize_real_host(
 
     section.section_step("Create inventory or status data tree")
 
-    tree_aggregator = RealHostTreeAggregator()
-    tree_aggregator.aggregate_results(items_of_inventory_plugins)
+    trees = _create_trees_from_inventory_plugin_items(items_of_inventory_plugins)
 
     section.section_step("May update inventory tree")
 
     tree_updater = RealHostTreeUpdater(
         host_config.inv_retention_intervals,
-        tree_aggregator.inventory_tree,
+        trees.inventory,
     )
     for items_of_inventory_plugin in items_of_inventory_plugins:
         tree_updater.may_add_cache_info(items_of_inventory_plugin)
 
     tree_updater.may_update(now=int(time.time()), previous_tree=old_tree)
 
-    if not tree_aggregator.inventory_tree.is_empty():
-        _add_cluster_property_to(inventory_tree=tree_aggregator.inventory_tree, is_cluster=False)
+    if not trees.inventory.is_empty():
+        _add_cluster_property_to(inventory_tree=trees.inventory, is_cluster=False)
 
-    return (
-        InventoryTrees(
-            inventory=tree_aggregator.inventory_tree,
-            status_data=tree_aggregator.status_data_tree,
-        ),
-        tree_updater.update_result,
-    )
+    return trees, tree_updater.update_result
 
 
 #   ---do status data inventory---------------------------------------------
@@ -362,16 +351,14 @@ def inventorize_status_data_of_real_host(
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[InventoryPluginName],
 ) -> StructuredDataNode:
-    tree_aggregator = RealHostTreeAggregator()
-    tree_aggregator.aggregate_results(
+    return _create_trees_from_inventory_plugin_items(
         _collect_inventory_plugin_items(
             host_name,
             host_config=host_config,
             parsed_sections_broker=parsed_sections_broker,
             run_plugin_names=run_plugin_names,
         )
-    )
-    return tree_aggregator.status_data_tree
+    ).status_data
 
 
 # .
@@ -466,6 +453,57 @@ def _parse_inventory_plugin_item(item: object, expected_class_name: str) -> Attr
         )
 
     return item
+
+
+# .
+#   .--creating trees------------------------------------------------------.
+#   |                       _   _               _                          |
+#   |    ___ _ __ ___  __ _| |_(_)_ __   __ _  | |_ _ __ ___  ___  ___     |
+#   |   / __| '__/ _ \/ _` | __| | '_ \ / _` | | __| '__/ _ \/ _ \/ __|    |
+#   |  | (__| | |  __/ (_| | |_| | | | | (_| | | |_| | |  __/  __/\__ \    |
+#   |   \___|_|  \___|\__,_|\__|_|_| |_|\__, |  \__|_|  \___|\___||___/    |
+#   |                                   |___/                              |
+#   '----------------------------------------------------------------------'
+
+
+@dataclass(frozen=True)
+class InventoryTrees:
+    inventory: StructuredDataNode
+    status_data: StructuredDataNode
+
+
+def _create_trees_from_inventory_plugin_items(
+    items_of_inventory_plugins: Iterable[ItemsOfInventoryPlugin],
+) -> InventoryTrees:
+    inventory_tree = StructuredDataNode()
+    status_data_tree = StructuredDataNode()
+
+    for items_of_inventory_plugin in items_of_inventory_plugins:
+        for item in items_of_inventory_plugin.items:
+            if isinstance(item, Attributes):
+                if item.inventory_attributes:
+                    node = inventory_tree.setdefault_node(tuple(item.path))
+                    node.attributes.add_pairs(item.inventory_attributes)
+
+                if item.status_attributes:
+                    node = status_data_tree.setdefault_node(tuple(item.path))
+                    node.attributes.add_pairs(item.status_attributes)
+
+            elif isinstance(item, TableRow):
+                # do this always, it sets key_columns!
+                node = inventory_tree.setdefault_node(tuple(item.path))
+                node.table.add_key_columns(sorted(item.key_columns))
+                node.table.add_rows([{**item.key_columns, **item.inventory_columns}])
+
+                if item.status_columns:
+                    node = status_data_tree.setdefault_node(tuple(item.path))
+                    node.table.add_key_columns(sorted(item.key_columns))
+                    node.table.add_rows([{**item.key_columns, **item.status_columns}])
+
+    return InventoryTrees(
+        inventory=inventory_tree,
+        status_data=status_data_tree,
+    )
 
 
 # .

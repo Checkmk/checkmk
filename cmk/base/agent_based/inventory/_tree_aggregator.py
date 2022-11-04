@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass
-from typing import Iterable, NamedTuple
+from typing import NamedTuple
 
 from cmk.utils.structured_data import (
     ATTRIBUTES_KEY,
@@ -46,56 +46,6 @@ IntervalsFromConfig = dict[RetentionKey, IntervalFromConfig]
 class ItemsOfInventoryPlugin:
     items: list[Attributes | TableRow]
     raw_cache_info: tuple[int, int] | None
-
-
-class RealHostTreeAggregator:
-    def __init__(self) -> None:
-        super().__init__()
-        self._inventory_tree = StructuredDataNode()
-        self._status_data_tree = StructuredDataNode()
-
-    @property
-    def inventory_tree(self) -> StructuredDataNode:
-        return self._inventory_tree
-
-    @property
-    def status_data_tree(self) -> StructuredDataNode:
-        return self._status_data_tree
-
-    # ---from inventory plugins---------------------------------------------
-
-    def aggregate_results(
-        self, items_of_inventory_plugins: Iterable[ItemsOfInventoryPlugin]
-    ) -> None:
-        for items_of_inventory_plugin in items_of_inventory_plugins:
-            for item in items_of_inventory_plugin.items:
-                if isinstance(item, Attributes):
-                    self._integrate_attributes(item)
-                elif isinstance(item, TableRow):
-                    self._integrate_table_row(item)
-
-    def _integrate_attributes(
-        self,
-        attributes: Attributes,
-    ) -> None:
-        if attributes.inventory_attributes:
-            node = self._inventory_tree.setdefault_node(tuple(attributes.path))
-            node.attributes.add_pairs(attributes.inventory_attributes)
-
-        if attributes.status_attributes:
-            node = self._status_data_tree.setdefault_node(tuple(attributes.path))
-            node.attributes.add_pairs(attributes.status_attributes)
-
-    def _integrate_table_row(self, table_row: TableRow) -> None:
-        # do this always, it sets key_columns!
-        node = self._inventory_tree.setdefault_node(tuple(table_row.path))
-        node.table.add_key_columns(sorted(table_row.key_columns))
-        node.table.add_rows([{**table_row.key_columns, **table_row.inventory_columns}])
-
-        if table_row.status_columns:
-            node = self._status_data_tree.setdefault_node(tuple(table_row.path))
-            node.table.add_key_columns(sorted(table_row.key_columns))
-            node.table.add_rows([{**table_row.key_columns, **table_row.status_columns}])
 
 
 class RealHostTreeUpdater:

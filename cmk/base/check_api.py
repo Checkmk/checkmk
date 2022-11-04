@@ -94,8 +94,9 @@ import re  # noqa: F401 # pylint: disable=unused-import
 import socket  # noqa: F401 # pylint: disable=unused-import
 import sys  # noqa: F401 # pylint: disable=unused-import
 import time
+from collections.abc import Callable, Iterable
 from contextlib import suppress
-from typing import Any, Callable, Dict, Iterable, List, Literal, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Literal, Mapping, Optional, Set, Tuple, Union
 
 import cmk.utils as _cmk_utils
 import cmk.utils.debug as _debug
@@ -717,7 +718,9 @@ def get_parsed_item_data(check_function: Callable) -> Callable:
     return wrapped_check_function
 
 
-def discover_single(info: Union[List, Dict]) -> Optional[List]:
+def discover_single(
+    info: list[object] | dict[object, object] | None
+) -> list[tuple[None, Mapping[object, object]]] | None:
     """Return a discovered item in case there is info text or parsed"""
     if info:
         return [(None, {})]

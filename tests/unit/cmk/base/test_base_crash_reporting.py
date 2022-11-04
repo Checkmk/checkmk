@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
+from pytest import MonkeyPatch
+
 from tests.testlib.base import Scenario
 
 import cmk.utils.crash_reporting
@@ -70,7 +73,7 @@ def test_base_crash_report_save() -> None:
     assert crash.crash_info["time"] == crash2.crash_info["time"]
 
 
-def test_check_crash_report_from_exception(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_check_crash_report_from_exception(monkeypatch: MonkeyPatch) -> None:
     hostname = HostName("testhost")
     Scenario().apply(monkeypatch)
     crash = None
@@ -96,7 +99,7 @@ def test_check_crash_report_from_exception(monkeypatch) -> None:  # type:ignore[
     assert crash.crash_info["exc_value"] == "DING"
 
 
-def test_check_crash_report_save(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_check_crash_report_save(monkeypatch: MonkeyPatch) -> None:
     hostname = HostName("testhost")
     Scenario().apply(monkeypatch)
     store = crash_reporting.CrashReportStore()

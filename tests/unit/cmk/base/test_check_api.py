@@ -5,6 +5,7 @@
 
 import ast
 import math
+from collections.abc import Mapping
 from typing import Any
 
 import pytest
@@ -19,7 +20,7 @@ from cmk.base import check_api
 
 
 @pytest.mark.parametrize("value_eight", ["8", 8])
-def test_oid_spec_binary(value_eight) -> None:  # type:ignore[no-untyped-def]
+def test_oid_spec_binary(value_eight: str | int) -> None:
     oid_bin = check_api.BINARY(value_eight)
     assert oid_bin.column == "8"
     assert oid_bin.encoding == "binary"
@@ -27,7 +28,7 @@ def test_oid_spec_binary(value_eight) -> None:  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.parametrize("value_eight", ["8", 8])
-def test_oid_spec_cached(value_eight) -> None:  # type:ignore[no-untyped-def]
+def test_oid_spec_cached(value_eight: str | int) -> None:
     oid_cached = check_api.CACHED_OID(value_eight)
     assert oid_cached.column == "8"
     assert oid_cached.encoding == "string"
@@ -72,7 +73,10 @@ def test_validate_filter() -> None:
         ({"first": "enabled"}, [(None, {})]),
     ],
 )
-def test_discover_single(parsed, result) -> None:  # type:ignore[no-untyped-def]
+def test_discover_single(
+    parsed: list[object] | dict[object, object] | None,
+    result: list[tuple[None, Mapping[object, object]]] | None,
+) -> None:
     assert check_api.discover_single(parsed) == result
 
 

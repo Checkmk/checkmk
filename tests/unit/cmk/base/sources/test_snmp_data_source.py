@@ -6,6 +6,7 @@
 # pylint: disable=protected-access
 
 import pytest
+from pytest import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
@@ -17,8 +18,8 @@ import cmk.base.ip_lookup as ip_lookup
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 
 
-def test_snmp_ipaddress_from_mgmt_board_unresolvable(  # type:ignore[no-untyped-def]
-    monkeypatch,
+def test_snmp_ipaddress_from_mgmt_board_unresolvable(
+    monkeypatch: MonkeyPatch,
 ) -> None:
     def fake_lookup_ip_address(*_a, **_kw):
         raise MKIPAddressLookupError("Failed to ...")

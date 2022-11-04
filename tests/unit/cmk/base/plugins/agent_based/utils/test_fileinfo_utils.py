@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
 from typing import Any
 
 import pytest
@@ -401,10 +402,15 @@ def test__filename_matches(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_fileinfo_groups_data(  # type:ignore[no-untyped-def]
-    item, params, parsed, expected_result
+def test_check_fileinfo_groups_data(
+    item: str,
+    params: Mapping[str, object],
+    parsed: Fileinfo,
+    expected_result: Sequence[Result | Metric],
 ) -> None:
-    result = list(check_fileinfo_groups_data(item, params, parsed, parsed.reftime))
+    reftime = parsed.reftime
+    assert isinstance(reftime, int)
+    result = list(check_fileinfo_groups_data(item, params, parsed, reftime))
     assert result == expected_result
 
 

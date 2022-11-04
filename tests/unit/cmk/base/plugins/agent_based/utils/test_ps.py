@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
+from collections.abc import Iterable, Mapping, Sequence
+
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import HostLabel, Result, State
@@ -112,8 +115,12 @@ def test_process_matches(  # type:ignore[no-untyped-def]
         (["test", "c:\\a\\b\\123_foo"], "~.*\\\\(.*)_foo", None, ["123"], True),
     ],
 )
-def test_process_matches_match_groups(  # type:ignore[no-untyped-def]
-    ps_line, ps_pattern, user_pattern, match_groups, result
+def test_process_matches_match_groups(
+    ps_line: Sequence[str],
+    ps_pattern: str,
+    user_pattern: None,
+    match_groups: None | Sequence[str],
+    result: bool,
 ) -> None:
     psi = ps.PsInfo(ps_line[0])
     matches_attr = ps.process_attributes_match(psi, user_pattern, (None, False))
@@ -135,7 +142,7 @@ def test_process_matches_match_groups(  # type:ignore[no-untyped-def]
         ("users", "user", False),
     ],
 )
-def test_ps_match_user(attribute, pattern, result) -> None:  # type:ignore[no-untyped-def]
+def test_ps_match_user(attribute: str, pattern: str, result: bool) -> None:
     assert ps.match_attribute(attribute, pattern) == result
 
 
@@ -156,8 +163,8 @@ def test_ps_match_user(attribute, pattern, result) -> None:  # type:ignore[no-un
         ("%s %2 %s %1", ("one", "two", "three", "four"), "three two four one"),
     ],
 )
-def test_replace_service_description(  # type:ignore[no-untyped-def]
-    service_description, matches, result
+def test_replace_service_description(
+    service_description: str, matches: Sequence[str], result: str
 ) -> None:
     assert ps.replace_service_description(service_description, matches, "") == result
 
@@ -199,8 +206,8 @@ PROCESSES = [
         ),
     ],
 )
-def test_format_process_list(  # type:ignore[no-untyped-def]
-    processes, formatted_list, html_flag
+def test_format_process_list(
+    processes: "ps.ProcessAggregator", formatted_list: str, html_flag: bool
 ) -> None:
     assert ps.format_process_list(processes, html_flag) == formatted_list
 
@@ -345,8 +352,10 @@ def test_memory_perc_check_cluster() -> None:
         )
     ],
 )
-def test_process_capture(  # type:ignore[no-untyped-def]
-    process_lines, params, expected_processes
+def test_process_capture(
+    process_lines: Iterable[tuple[str | None, ps.PsInfo, Sequence[str]]],
+    params: Mapping[str, int],
+    expected_processes: Sequence[ps._Process],
 ) -> None:
     process_aggregator = ps.process_capture(process_lines, params, 1, {})
     assert process_aggregator.processes == expected_processes

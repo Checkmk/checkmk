@@ -1,4 +1,4 @@
-Title: Raw edition: Fix "No historic metrics recorded..."
+Title: Fix "No historic metrics recorded..."
 Class: fix
 Compatible: compat
 Component: livestatus

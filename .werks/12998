@@ -10,3 +10,5 @@ Version: 2.0.0p16
 
 For readability purposes of long titles in graphs, the titles are now left
 aligned instead of being centered.
+
+Additionally for forecast graphs, the title is cropped after 64 characters.

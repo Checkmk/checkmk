@@ -10,6 +10,6 @@ State: unknown
 Version: 2.0.0p30
 
 The check used to crash if the status of a cluster was not available (i.e. empty string) or
-if the status was not known (wasn't either 'synchronized' or 'unsynchronized').
+if the status was not known (wasn't either 'synchronized' nor 'unsynchronized').
 Now, if any of the above cases occur, the check turns to an UNKNOWN state and provides the appropriate description.
 

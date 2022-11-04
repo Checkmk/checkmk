@@ -1,4 +1,4 @@
-Title: Fix TypeError on "Event history of host" view
+Title: Fix crash on "Event history of host" view
 Class: fix
 Compatible: compat
 Component: multisite
@@ -9,5 +9,5 @@ Level: 1
 State: unknown
 Version: 2.0.0p28
 
-The view created an error like "TypeError ('NoneType' object is not
-subscriptable)".
+The view created an error like "Exception: Painter 'history_what_explained'
+returned invalid result".

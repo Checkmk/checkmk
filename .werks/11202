@@ -1,6 +1,6 @@
 Title: jira notification: Clearer assignment of tickets in distributed environments
 Class: fix
-Compatible: incompat
+Compatible: incomp
 Component: notifications
 Date: 1598009116
 Edition: cee

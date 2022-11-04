@@ -23,8 +23,9 @@ inventory on kubernetes endpoint hosts:
 Go to "Setup" &rarr; "HW/SW inventory rules" &rarr; "Do hardware/software
 inventory" &rarr; "Create rule in folder":
 
-* "Status data inventory" &rarr; "Do status data inventory"
-* "Host labels" &rarr; "has" &rarr; "cmk/kubernetes:yes"
+<ul>
+<li>"Status data inventory" &rarr; "Do status data inventory"</li>
+<li>"Host labels" &rarr; "has" &rarr; "cmk/kubernetes:yes"</li>
 
 &rarr; Save
 

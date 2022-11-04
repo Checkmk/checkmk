@@ -1,6 +1,6 @@
 Title: API host_tag_group: change show all endpoint to include additional information
 Class: fix
-Compatible: incompat
+Compatible: incomp
 Component: core
 Date: 1634889214
 Edition: cre

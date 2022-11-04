@@ -1,6 +1,6 @@
 Title: mknotifyd: Fix missing environment variables
 Class: fix
-Compatible: incompat
+Compatible: incomp
 Component: notifications
 Date: 1616684074
 Edition: cee

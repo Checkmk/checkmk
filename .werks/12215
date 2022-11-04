@@ -1,6 +1,6 @@
 Title: db2_mem, mssql_blocked_sessions: Fix usage of new service description
 Class: fix
-Compatible: incompat
+Compatible: incomp
 Component: multisite
 Date: 1614173056
 Edition: cre

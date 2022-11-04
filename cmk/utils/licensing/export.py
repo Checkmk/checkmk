@@ -272,11 +272,13 @@ class SubscriptionDetails(NamedTuple):
 
 def validate_subscription_period(attrs: dict[str, object]) -> None:
     start = attrs["subscription_start"]
-    if not isinstance(start, float):
+    if not isinstance(start, (int, float)):
         raise TypeError()
+
     end = attrs["subscription_end"]
-    if not isinstance(end, float):
+    if not isinstance(end, (int, float)):
         raise TypeError()
+
     delta = date.fromtimestamp(end) - date.fromtimestamp(start)
     # full year is e.g. 01.01.1970-31.12.1970 (364 days)
     if delta.days < 364:

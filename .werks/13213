@@ -1,4 +1,4 @@
-Title: real-time-checks: fix decryption if agent encryption is anabled
+Title: real-time-checks: fix decryption if agent encryption is enabled
 Class: fix
 Compatible: compat
 Component: checks

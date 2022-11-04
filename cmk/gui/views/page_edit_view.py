@@ -16,6 +16,7 @@ from cmk.gui.exceptions import MKGeneralException, MKInternalError, MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
 from cmk.gui.pages import AjaxPage, PageResult
+from cmk.gui.plugins.dashboard.utils import ViewDashletConfig
 from cmk.gui.plugins.views.utils import (
     Cell,
     layout_registry,
@@ -61,7 +62,6 @@ def page_edit_view() -> None:
         "views",
         get_all_views(),
         custom_field_handler=render_view_config,
-        load_handler=transform_view_to_valuespec_value,
         create_handler=create_view_from_valuespec,
         info_handler=get_view_infos,
     )
@@ -436,9 +436,11 @@ class PageAjaxCascadingRenderPainterParameters(AjaxPage):
         raise MKGeneralException("Invaild choice")
 
 
-# Hint: view_spec is not the ViewSpec here. It's a dict in the visual editor format. We need a
-# separate type for that or rework the editor. Let's see once we come to the visual editor typing.
-def render_view_config(view_spec: dict[str, Any], general_properties: bool = True) -> None:
+def render_view_config(
+    view_spec: ViewDashletConfig | ViewSpec, general_properties: bool = True
+) -> None:
+    value = _transform_view_to_valuespec_value(view_spec)
+
     # TODO: This and the modification of the view_spec should not be here. Find a better place
     ds_name: str = view_spec.get("datasource", request.get_ascii_input_mandatory("datasource", ""))
     if not ds_name:
@@ -446,59 +448,63 @@ def render_view_config(view_spec: dict[str, Any], general_properties: bool = Tru
     if ds_name not in data_source_registry:
         raise MKInternalError(_("The given datasource is not supported."))
 
-    view_spec["datasource"] = ds_name
+    value["datasource"] = ds_name
 
     if general_properties:
-        view_editor_general_properties(ds_name).render_input("view", view_spec.get("view"))
+        view_editor_general_properties(ds_name).render_input("view", value.get("view"))
 
     vs_columns = view_editor_column_spec("columns", ds_name)
-    vs_columns.render_input("columns", view_spec["columns"])
+    vs_columns.render_input("columns", value["columns"])
 
     vs_sorting = view_editor_sorter_specs(
-        "sorting", ds_name, [PainterSpec.from_raw(v) for v in view_spec["columns"]]
+        "sorting", ds_name, [PainterSpec.from_raw(v) for v in value["columns"]]
     )
-    vs_sorting.render_input("sorting", view_spec["sorting"])
+    vs_sorting.render_input("sorting", value["sorting"])
 
     vs_grouping = view_editor_grouping_spec("grouping", ds_name)
-    vs_grouping.render_input("grouping", view_spec["grouping"])
+    vs_grouping.render_input("grouping", value["grouping"])
 
 
 # Is used to change the view structure to be compatible to
 # the valuespec This needs to perform the inverted steps of the
-# transform_valuespec_value_to_view() function. FIXME: One day we should
+# _transform_valuespec_value_to_view() function. FIXME: One day we should
 # rewrite this to make no transform needed anymore
-def transform_view_to_valuespec_value(view):
-    view["view"] = {}  # Several global variables are put into a sub-dict
+def _transform_view_to_valuespec_value(view: ViewDashletConfig | ViewSpec) -> dict[str, Any]:
+    value: dict[str, Any] = {**view}
+    value["view"] = {}  # Several global variables are put into a sub-dict
     # Only copy our known keys. Reporting element, etc. might have their own keys as well
     for key in ["datasource", "browser_reload", "layout", "num_columns", "column_headers"]:
-        if key in view:
-            view["view"][key] = view[key]
+        if key in value:
+            value["view"][key] = value[key]
 
-    if not view.get("topic"):
-        view["topic"] = "other"
+    if not value.get("topic"):
+        value["topic"] = "other"
 
-    view["view"]["options"] = []
+    value["view"]["options"] = []
     for key, _title in view_editor_options():
-        if view.get(key):
-            view["view"]["options"].append(key)
+        if value.get(key):
+            value["view"]["options"].append(key)
 
-    view["visibility"] = {}
+    value["visibility"] = {}
     for key in ["hidden", "hidebutton", "public"]:
-        if view.get(key):
-            view["visibility"][key] = view[key]
+        if value.get(key):
+            value["visibility"][key] = value[key]
 
-    view["grouping"] = {
-        "grouping": [painter_spec.to_raw() for painter_spec in view.get("group_painters", [])]
+    value["grouping"] = {
+        "grouping": [painter_spec.to_raw() for painter_spec in value.get("group_painters", [])]
     }
 
-    view["sorting"] = {"sorters": [sorter_spec.to_raw() for sorter_spec in view.get("sorters", {})]}
-
-    view["columns"] = {
-        "columns": [painter_spec.to_raw() for painter_spec in view.get("painters", [])]
+    value["sorting"] = {
+        "sorters": [sorter_spec.to_raw() for sorter_spec in value.get("sorters", {})]
     }
 
+    value["columns"] = {
+        "columns": [painter_spec.to_raw() for painter_spec in value.get("painters", [])]
+    }
+    return value
 
-def transform_valuespec_value_to_view(ident, attrs):
+
+def _transform_valuespec_value_to_view(ident, attrs):
     # Transform some valuespec specific options to legacy view format.
     # We do not want to change the view data structure at the moment.
 
@@ -534,7 +540,7 @@ def create_view_from_valuespec(old_view, view):
     def update_view(ident, vs):
         attrs = vs.from_html_vars(ident)
         vs.validate_value(attrs, ident)
-        view.update(transform_valuespec_value_to_view(ident, attrs))
+        view.update(_transform_valuespec_value_to_view(ident, attrs))
 
     update_view("view", view_editor_general_properties(ds_name))
     update_view("columns", view_editor_column_spec("columns", ds_name))

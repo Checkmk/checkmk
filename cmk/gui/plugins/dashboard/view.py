@@ -31,7 +31,6 @@ from cmk.gui.view_store import get_permitted_views
 from cmk.gui.views.page_edit_view import (
     create_view_from_valuespec,
     render_view_config,
-    transform_view_to_valuespec_value,
     view_choices,
 )
 from cmk.gui.views.page_show_view import get_limit, get_user_sorters, process_view
@@ -137,12 +136,7 @@ class ViewDashlet(ABCViewDashlet[ViewDashletConfig]):
         Callable[[DashletId, ViewDashletConfig, ViewDashletConfig], ViewDashletConfig],
     ]:
         def _render_input(dashlet: ViewDashletConfig) -> None:
-            # TODO: Don't modify the self._dashlet data structure here!
-            transform_view_to_valuespec_value(dashlet)
-            # We are only interested in the ViewSpec specific attributes here. Once we have the full
-            # picture (dashlets typed (already done) and reports typed), we can better decide how to do
-            # it
-            render_view_config(dashlet)  # type: ignore[arg-type]
+            render_view_config(dashlet)
 
         def _handle_input(
             ident: DashletId, old_dashlet: ViewDashletConfig, dashlet: ViewDashletConfig

@@ -1221,7 +1221,6 @@ def page_edit_visual(  # type:ignore[no-untyped-def] # pylint: disable=too-many-
     all_visuals: dict[tuple[UserId, VisualName], T],
     custom_field_handler=None,
     create_handler=None,
-    load_handler=None,
     info_handler=None,
     sub_pages: pagetypes.SubPagesSpec | None = None,
     help_text_context: str | HTML | None = None,
@@ -1487,11 +1486,6 @@ def page_edit_visual(  # type:ignore[no-untyped-def] # pylint: disable=too-many-
 
     visual["topic"] = visual["topic"] or "other"  # default to "other" (in case of empty string)
     vs_general.render_input("general", visual)
-
-    # TODO: Only views are using it. Looks like we can move it to the view custom field handler in a
-    # follow up clean up
-    if load_handler:
-        load_handler(visual)
 
     if custom_field_handler and custom_field_handler.__name__ != "dashboard_fields_handler":
         custom_field_handler(visual)

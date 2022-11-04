@@ -56,15 +56,11 @@ pub struct PathResolver {
 #[cfg(unix)]
 impl PathResolver {
     pub fn new(home_dir: &Path) -> PathResolver {
-        let etc_dir = PathBuf::from(constants::ETC_DIR);
         PathResolver {
             home_dir: PathBuf::from(home_dir),
-            config_path: home_dir
-                .join(constants::CONFIG_FILE)
-                .exists_or(etc_dir.join(constants::CONFIG_FILE)),
+            config_path: home_dir.join(constants::CONFIG_FILE),
             pre_configured_connections_path: home_dir
-                .join(constants::PRE_CONFIGURED_CONNECTIONS_FILE)
-                .exists_or(etc_dir.join(constants::PRE_CONFIGURED_CONNECTIONS_FILE)),
+                .join(constants::PRE_CONFIGURED_CONNECTIONS_FILE),
             registry_path: home_dir.join(Path::new(constants::REGISTRY_FILE)),
         }
     }

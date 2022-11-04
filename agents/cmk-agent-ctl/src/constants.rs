@@ -25,8 +25,6 @@ pub const ENV_AGENT_LOG_DIR: &str = "MK_LOGDIR";
 pub const ENV_LOG_TO_FILE: &str = "CMK_AGENT_CTL_LOG_TO_FILE";
 
 // DIRS
-#[cfg(unix)]
-pub const ETC_DIR: &str = "/etc/check_mk";
 #[cfg(windows)]
 pub const WIN_AGENT_HOME_DIR: &str = "\\checkmk\\agent";
 

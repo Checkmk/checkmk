@@ -15,14 +15,10 @@ from marshmallow import Schema as marshmallow_Schema
 from livestatus import LivestatusOutputFormat, LivestatusResponse, SiteId
 
 from cmk.bi.schema import Schema
-from cmk.fields import Boolean, Constant
-from cmk.fields import Dict as MDict
-from cmk.fields import Integer
-from cmk.fields import List as MList
-from cmk.fields import Nested, String
+from cmk.fields import Boolean, Constant, Dict, Integer, List, Nested, String
 
-ReqList = partial(MList, required=True)
-ReqDict = partial(MDict, required=True)
+ReqList = partial(List, required=True)
+ReqDict = partial(Dict, required=True)
 ReqConstant = partial(Constant, required=True)
 ReqInteger = partial(Integer, required=True)
 ReqString = partial(String, required=True)
@@ -164,13 +160,13 @@ class BIServiceSearchMatch(NamedTuple):
 class ABCWithSchema(ABC):
     @classmethod
     @abstractmethod
-    def schema(cls) -> Type[Schema]:
+    def schema(cls) -> type[Schema]:
         raise NotImplementedError()
 
 
 def create_nested_schema_for_class(
-    class_template: Type[ABCWithSchema],
-    default_schema: Type[Schema] | None = None,
+    class_template: type[ABCWithSchema],
+    default_schema: type[Schema] | None = None,
     example_config: list | dict[str, Any] | None = None,
 ) -> Nested:
     class_schema = class_template.schema()
@@ -178,8 +174,8 @@ def create_nested_schema_for_class(
 
 
 def create_nested_schema(
-    base_schema: Type[marshmallow_Schema],
-    default_schema: Type[marshmallow_Schema] | None = None,
+    base_schema: type[marshmallow_Schema],
+    default_schema: type[marshmallow_Schema] | None = None,
     example_config: list | dict[str, Any] | None = None,
 ) -> Nested:
     """
@@ -211,7 +207,7 @@ def create_nested_schema(
 
 
 def get_schema_default_config(
-    schema: Type[marshmallow_Schema], params: dict[object, object] | None = None
+    schema: type[marshmallow_Schema], params: dict[object, object] | None = None
 ) -> dict[str, Any]:
     """
 
@@ -249,7 +245,7 @@ class BIAggregationComputationOptions(ABCWithSchema):
         self.escalate_downtimes_as_warn = computation_config["escalate_downtimes_as_warn"]
 
     @classmethod
-    def schema(cls) -> Type[BIAggregationComputationOptionsSchema]:
+    def schema(cls) -> type[BIAggregationComputationOptionsSchema]:
         return BIAggregationComputationOptionsSchema
 
     def serialize(self):
@@ -279,7 +275,7 @@ class BIAggregationGroups(ABCWithSchema):
         return set(self.names + ["/".join(x) for x in self.paths])
 
     @classmethod
-    def schema(cls) -> Type[BIAggregationGroupsSchema]:
+    def schema(cls) -> type[BIAggregationGroupsSchema]:
         return BIAggregationGroupsSchema
 
     def serialize(self):
@@ -290,8 +286,8 @@ class BIAggregationGroups(ABCWithSchema):
 
 
 class BIAggregationGroupsSchema(Schema):
-    names = MList(ReqString(), dump_default=[], example=["group1", "group2"])
-    paths = MList(MList(ReqString()), dump_default=[], example=[["path", "of", "group1"]])
+    names = List(ReqString(), dump_default=[], example=["group1", "group2"])
+    paths = List(List(ReqString()), dump_default=[], example=[["path", "of", "group1"]])
 
 
 class BIParams(ABCWithSchema):
@@ -302,7 +298,7 @@ class BIParams(ABCWithSchema):
         # Like keywords which are passed down the tree, without being explicit set for a rule
 
     @classmethod
-    def schema(cls) -> Type[BIParamsSchema]:
+    def schema(cls) -> type[BIParamsSchema]:
         return BIParamsSchema
 
     def serialize(self):
@@ -504,8 +500,8 @@ class ABCBIAction(ABC):
         raise NotImplementedError()
 
 
-class BIActionRegistry(plugin_registry.Registry[Type[ABCBIAction]]):
-    def plugin_name(self, instance: Type[ABCBIAction]) -> str:
+class BIActionRegistry(plugin_registry.Registry[type[ABCBIAction]]):
+    def plugin_name(self, instance: type[ABCBIAction]) -> str:
         return instance.type()
 
     def instantiate(self, action_config: ActionConfig) -> ABCBIAction:
@@ -530,7 +526,7 @@ class ABCBISearch(ABC):
 
     @classmethod
     @abstractmethod
-    def type(cls) -> str:
+    def type(cls) -> str:  # TODO: Use a better name which doesn't clash with Python itself... :-/
         raise NotImplementedError()
 
     @classmethod
@@ -547,8 +543,8 @@ class ABCBISearch(ABC):
         raise NotImplementedError()
 
 
-class BISearchRegistry(plugin_registry.Registry[Type[ABCBISearch]]):
-    def plugin_name(self, instance: Type[ABCBISearch]) -> str:
+class BISearchRegistry(plugin_registry.Registry[type[ABCBISearch]]):
+    def plugin_name(self, instance: type[ABCBISearch]) -> str:
         return instance.type()
 
     def instantiate(self, search_config: SearchConfig) -> ABCBISearch:
@@ -590,8 +586,8 @@ class ABCBIAggregationFunction(ABC):
         raise NotImplementedError()
 
 
-class BIAggregationFunctionRegistry(plugin_registry.Registry[Type[ABCBIAggregationFunction]]):
-    def plugin_name(self, instance: Type[ABCBIAggregationFunction]) -> str:
+class BIAggregationFunctionRegistry(plugin_registry.Registry[type[ABCBIAggregationFunction]]):
+    def plugin_name(self, instance: type[ABCBIAggregationFunction]) -> str:
         return instance.type()
 
     def instantiate(self, aggr_func_config: dict[str, Any]) -> ABCBIAggregationFunction:

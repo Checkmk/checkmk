@@ -8,8 +8,9 @@ import logging
 import os
 import signal
 import subprocess
+from collections.abc import Mapping
 from contextlib import suppress
-from typing import Any, Final, Mapping, Optional, Union
+from typing import Any, Final
 
 from six import ensure_str
 
@@ -24,15 +25,15 @@ class ProgramFetcher(Fetcher[AgentRawData]):
     def __init__(
         self,
         *,
-        cmdline: Union[bytes, str],
-        stdin: Optional[str],
+        cmdline: bytes | str,
+        stdin: str | None,
         is_cmc: bool,
     ) -> None:
         super().__init__(logger=logging.getLogger("cmk.helper.program"))
         self.cmdline: Final = cmdline
         self.stdin: Final = stdin
         self.is_cmc: Final = is_cmc
-        self._process: Optional[subprocess.Popen] = None
+        self._process: subprocess.Popen | None = None
 
     def __repr__(self) -> str:
         return (

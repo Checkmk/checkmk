@@ -8,12 +8,10 @@ Send notification messages to Cisco Webex Teams
 
 Use a Cisco Webex Teams webhook to send notification messages
 """
-from typing import Dict
-
 import cmk.notification_plugins.utils as utils
 
 
-def cisco_webex_teams_msg(context: Dict) -> Dict:
+def cisco_webex_teams_msg(context: dict) -> dict:
     """Build the message for Cisco Webex Teams. We use the Markdown markup language, see
     https://developer.webex.com/docs/api/basics. For example, we need two spaces before a newline
     character."""
@@ -23,7 +21,7 @@ def cisco_webex_teams_msg(context: Dict) -> Dict:
     # notification about a service
     if context.get("WHAT", None) == "SERVICE":
         monitored_type = "Service"
-        host_service_info = "Host: %s (IP: %s)  \nService: %s" % (
+        host_service_info = "Host: {} (IP: {})  \nService: {}".format(
             utils.format_link("<%s|%s>", utils.host_url_from_context(context), context["HOSTNAME"]),
             context["HOSTADDRESS"],
             utils.format_link(
@@ -36,7 +34,7 @@ def cisco_webex_teams_msg(context: Dict) -> Dict:
     # notification about a host
     else:
         monitored_type = "Host"
-        host_service_info = "Host: %s (IP: %s)" % (
+        host_service_info = "Host: {} (IP: {})".format(
             utils.format_link("<%s|%s>", utils.host_url_from_context(context), context["HOSTNAME"]),
             context["HOSTADDRESS"],
         )

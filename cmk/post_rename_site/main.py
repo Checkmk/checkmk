@@ -6,7 +6,6 @@
 import argparse
 import logging
 from itertools import chain
-from typing import List
 
 from livestatus import SiteId
 
@@ -30,7 +29,7 @@ from .registry import rename_action_registry
 logger = logging.getLogger("cmk.post_rename_site")
 
 
-def main(args: List[str]) -> int:
+def main(args: list[str]) -> int:
     arguments = parse_arguments(args)
     setup_logging(arguments)
 
@@ -70,7 +69,7 @@ def load_plugins() -> None:
             raise exc
 
 
-def parse_arguments(args: List[str]) -> argparse.Namespace:
+def parse_arguments(args: list[str]) -> argparse.Namespace:
     def site_id(s: str) -> SiteId:
         if not s:
             raise ValueError("Must not be empty")

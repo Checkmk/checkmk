@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterator
 from typing import Any
 
 import pytest
@@ -45,12 +46,12 @@ DUMMY_SITES_CALLBACK = SitesCallback(lambda: [], mock_query_callback, lambda s: 
 
 
 @pytest.fixture(scope="function", name="bi_searcher")
-def _bi_searcher():
+def _bi_searcher() -> Iterator[BISearcher]:
     yield BISearcher()
 
 
 @pytest.fixture(scope="function")
-def bi_searcher_with_sample_config(bi_searcher):
+def bi_searcher_with_sample_config(bi_searcher: BISearcher) -> Iterator[BISearcher]:
     structure_fetcher = BIStructureFetcher(DUMMY_SITES_CALLBACK)
     structure_fetcher.add_site_data(SiteId("heute"), sample_config.bi_structure_states)
     bi_searcher.set_hosts(structure_fetcher.hosts)
@@ -58,19 +59,19 @@ def bi_searcher_with_sample_config(bi_searcher):
 
 
 @pytest.fixture(scope="function")
-def bi_status_fetcher():
+def bi_status_fetcher() -> Iterator[BIStatusFetcher]:
     status_fetcher = BIStatusFetcher(DUMMY_SITES_CALLBACK)
     yield status_fetcher
 
 
 @pytest.fixture(scope="function")
-def bi_structure_fetcher():
+def bi_structure_fetcher() -> Iterator[BIStructureFetcher]:
     structure_fetcher = BIStructureFetcher(DUMMY_SITES_CALLBACK)
     yield structure_fetcher
 
 
 @pytest.fixture(scope="function")
-def dummy_bi_rule():
+def dummy_bi_rule() -> Iterator[BIRule]:
     rule_id = "dummy_rule"
     try:
         node_schema = BINodeGenerator.schema()().dump({})
@@ -83,5 +84,5 @@ def dummy_bi_rule():
 
 
 @pytest.fixture(scope="function")
-def bi_packs_sample_config():
+def bi_packs_sample_config() -> Iterator[BIAggregationPacks]:
     yield MockBIAggregationPack(sample_config.bi_packs_config)

@@ -216,7 +216,7 @@ class BIAggregationFunctionCountOKSchema(Schema):
 class BIAggregationFunctionSchema(OneOfSchema):
     type_field = "type"
     type_field_remove = False
-    type_schemas = dict((k, v.schema()) for k, v in bi_aggregation_function_registry.items())
+    type_schemas = {k: v.schema() for k, v in bi_aggregation_function_registry.items()}
 
     # type_schemas ={
     #    "worst": BIAggregationFunctionWorstSchema,

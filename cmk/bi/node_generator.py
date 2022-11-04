@@ -12,8 +12,6 @@
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-from typing import List, Type
-
 from cmk.utils.macros import MacroMapping
 
 from cmk.bi.actions import BIActionSchema, BICallARuleAction, BIStateOfHostActionSchema
@@ -25,10 +23,10 @@ from cmk.bi.search import BIEmptySearchSchema, BISearchSchema
 
 class BINodeGenerator(ABCBINodeGenerator):
     @classmethod
-    def schema(cls) -> Type["BINodeGeneratorSchema"]:
+    def schema(cls) -> type["BINodeGeneratorSchema"]:
         return BINodeGeneratorSchema
 
-    def compile(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> List[ABCBICompiledNode]:
+    def compile(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> list[ABCBICompiledNode]:
         search_results = self.search.execute(macros, bi_searcher)
 
         # Note: This feature is currently unused

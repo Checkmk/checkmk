@@ -7,7 +7,8 @@ import copy
 import logging
 import socket
 import ssl
-from typing import Any, Final, List, Mapping, Optional, Tuple
+from collections.abc import Mapping
+from typing import Any, Final
 from uuid import UUID
 
 import cmk.utils.debug
@@ -27,7 +28,7 @@ class TCPFetcher(Fetcher[AgentRawData]):
         self,
         *,
         family: socket.AddressFamily,
-        address: Tuple[Optional[HostAddress], int],
+        address: tuple[HostAddress | None, int],
         timeout: float,
         host_name: HostName,
         encryption_settings: Mapping[str, str],
@@ -35,11 +36,11 @@ class TCPFetcher(Fetcher[AgentRawData]):
         super().__init__(logger=logging.getLogger("cmk.helper.tcp"))
         self.family: Final = socket.AddressFamily(family)
         # json has no builtin tuple, we have to convert
-        self.address: Final[Tuple[Optional[HostAddress], int]] = (address[0], address[1])
+        self.address: Final[tuple[HostAddress | None, int]] = (address[0], address[1])
         self.timeout: Final = timeout
         self.host_name: Final = host_name
         self.encryption_settings: Final = encryption_settings
-        self._opt_socket: Optional[socket.socket] = None
+        self._opt_socket: socket.socket | None = None
 
     @property
     def _socket(self) -> socket.socket:
@@ -64,7 +65,7 @@ class TCPFetcher(Fetcher[AgentRawData]):
     @classmethod
     def _from_json(cls, serialized: Mapping[str, Any]) -> "TCPFetcher":
         serialized_ = copy.deepcopy(dict(serialized))
-        address: Tuple[Optional[HostAddress], int] = serialized_.pop("address")
+        address: tuple[HostAddress | None, int] = serialized_.pop("address")
         host_name = HostName(serialized_.pop("host_name"))
         return cls(address=address, host_name=host_name, **serialized_)
 
@@ -90,7 +91,7 @@ class TCPFetcher(Fetcher[AgentRawData]):
             self._socket.settimeout(self.timeout)
             self._socket.connect(self.address)
             self._socket.settimeout(None)
-        except socket.error as e:
+        except OSError as e:
             self._close_socket()
 
             if cmk.utils.debug.enabled():
@@ -114,10 +115,10 @@ class TCPFetcher(Fetcher[AgentRawData]):
         agent_data, protocol = self._get_agent_data()
         return self._validate_decrypted_data(self._decrypt(protocol, agent_data))
 
-    def _get_agent_data(self) -> Tuple[AgentRawData, TransportProtocol]:
+    def _get_agent_data(self) -> tuple[AgentRawData, TransportProtocol]:
         try:
             raw_protocol = self._socket.recv(2, socket.MSG_WAITALL)
-        except socket.error as e:
+        except OSError as e:
             raise MKFetcherError(f"Communication failed: {e}") from e
 
         protocol = self._detect_transport_protocol(
@@ -176,7 +177,7 @@ class TCPFetcher(Fetcher[AgentRawData]):
                 "Agent output is encrypted but encryption is disabled by configuration"
             )
 
-    def _wrap_tls(self, controller_uuid: Optional[UUID]) -> ssl.SSLSocket:
+    def _wrap_tls(self, controller_uuid: UUID | None) -> ssl.SSLSocket:
 
         if controller_uuid is None:
             raise MKFetcherError("Agent controller not registered")
@@ -191,14 +192,14 @@ class TCPFetcher(Fetcher[AgentRawData]):
 
     def _recvall(self, sock: socket.socket, flags: int = 0) -> bytes:
         self._logger.debug("Reading data from agent")
-        buffer: List[bytes] = []
+        buffer: list[bytes] = []
         try:
             while True:
                 data = sock.recv(4096, flags)
                 if not data:
                     break
                 buffer.append(data)
-        except socket.error as e:
+        except OSError as e:
             if cmk.utils.debug.enabled():
                 raise
             raise MKFetcherError("Communication failed: %s" % e)

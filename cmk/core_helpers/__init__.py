@@ -35,13 +35,10 @@ Todo:
 
 """
 
-from typing import Any, Mapping, Type
+from collections.abc import Mapping
+from typing import Any
 
 from typing_extensions import assert_never
-
-from cmk.utils import version
-
-from cmk.core_helpers.summarize import summarize
 
 from . import cache
 from ._base import Fetcher, FileCache, get_raw_data, Parser, verify_ipaddress
@@ -50,6 +47,7 @@ from .ipmi import IPMIFetcher
 from .piggyback import PiggybackFetcher
 from .program import ProgramFetcher
 from .snmp import SNMPFetcher, SNMPFileCache
+from .summarize import summarize
 from .tcp import TCPFetcher
 from .type_defs import FetcherType
 
@@ -71,7 +69,7 @@ __all__ = [
 
 class FetcherFactory:
     @staticmethod
-    def make(fetcher_type: FetcherType) -> Type[Fetcher]:
+    def make(fetcher_type: FetcherType) -> type[Fetcher]:
         """The fetcher factory."""
         # The typing error comes from the use of `Fetcher[Any]`.
         # but we have tests to show that it still does what it

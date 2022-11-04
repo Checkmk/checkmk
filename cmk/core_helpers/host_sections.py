@@ -7,7 +7,8 @@ from __future__ import annotations
 
 import abc
 import copy
-from typing import Final, Generic, List, Mapping, MutableMapping, Optional, Sequence, Tuple
+from collections.abc import Mapping, MutableMapping, Sequence
+from typing import Final, Generic
 
 from cmk.utils.type_defs import HostName, SectionName
 
@@ -19,11 +20,11 @@ class HostSections(Generic[TRawDataSection], abc.ABC):
 
     def __init__(
         self,
-        sections: Optional[Mapping[SectionName, Sequence[TRawDataSection]]] = None,
+        sections: Mapping[SectionName, Sequence[TRawDataSection]] | None = None,
         *,
-        cache_info: Optional[Mapping[SectionName, Tuple[int, int]]] = None,
+        cache_info: Mapping[SectionName, tuple[int, int]] | None = None,
         # For `piggybacked_raw_data`, Sequence[bytes] is equivalent to AgentRawData.
-        piggybacked_raw_data: Optional[Mapping[HostName, Sequence[bytes]]] = None,
+        piggybacked_raw_data: Mapping[HostName, Sequence[bytes]] | None = None,
     ) -> None:
         super().__init__()
         self.sections: Final = sections if sections else {}
@@ -31,7 +32,7 @@ class HostSections(Generic[TRawDataSection], abc.ABC):
         self.piggybacked_raw_data: Final = piggybacked_raw_data if piggybacked_raw_data else {}
 
     def __repr__(self) -> str:
-        return "%s(sections=%r, cache_info=%r, piggybacked_raw_data=%r)" % (
+        return "{}(sections={!r}, cache_info={!r}, piggybacked_raw_data={!r})".format(
             type(self).__name__,
             self.sections,
             self.cache_info,
@@ -46,7 +47,7 @@ class HostSections(Generic[TRawDataSection], abc.ABC):
                 (list(s) + list(section_content)) if s else list(section_content)
             )
 
-        new_piggybacked_raw_data: MutableMapping[HostName, List[bytes]] = {
+        new_piggybacked_raw_data: MutableMapping[HostName, list[bytes]] = {
             k: list(v) for k, v in self.piggybacked_raw_data.items()
         }
         for hostname, raw_lines in other.piggybacked_raw_data.items():

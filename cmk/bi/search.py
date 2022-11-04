@@ -152,7 +152,7 @@ class BIHostSearch(ABCBISearch):
                     search_matches, bi_searcher, refer_config
                 )
 
-        raise NotImplementedError("Invalid refer to type %r" % (self.refer_to,))
+        raise NotImplementedError(f"Invalid refer to type {self.refer_to!r}")
 
     def _refer_to_host_results(self, search_matches: list[BIHostSearchMatch]) -> list[dict]:
         search_results = []
@@ -364,7 +364,7 @@ class BIFixedArgumentsSearchSchema(Schema):
 class BISearchSchema(OneOfSchema):
     type_field = "type"
     type_field_remove = False
-    type_schemas = dict((k, v.schema()) for k, v in bi_search_registry.items())
+    type_schemas = {k: v.schema() for k, v in bi_search_registry.items()}
 
     def get_obj_type(self, obj: ABCBISearch | dict) -> str:
         if isinstance(obj, dict):

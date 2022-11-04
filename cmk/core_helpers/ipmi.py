@@ -7,7 +7,8 @@ from __future__ import annotations
 
 import copy
 import logging
-from typing import Any, Final, List, Mapping, Optional, TYPE_CHECKING
+from collections.abc import Mapping
+from typing import Any, Final, TYPE_CHECKING
 
 import pyghmi.constants as ipmi_const  # type: ignore[import]
 from pyghmi.exceptions import IpmiException  # type: ignore[import]
@@ -42,14 +43,14 @@ class IPMIFetcher(Fetcher[AgentRawData]):
         self,
         *,
         address: HostAddress,  # Could actually be HostName as well.
-        username: Optional[str],
-        password: Optional[str],
+        username: str | None,
+        password: str | None,
     ) -> None:
         super().__init__(logger=logging.getLogger("cmk.helper.ipmi"))
         self.address: Final = address
         self.username: Final = username
         self.password: Final = password
-        self._command: Optional[ipmi_cmd.Command] = None
+        self._command: ipmi_cmd.Command | None = None
 
     def __repr__(self) -> str:
         return (
@@ -215,7 +216,7 @@ class IPMIFetcher(Fetcher[AgentRawData]):
 
     def _parse_sensor_reading(
         self, number: int, reading: ipmi_sdr.SensorReading
-    ) -> List[AgentRawData]:
+    ) -> list[AgentRawData]:
         # {'states': [], 'health': 0, 'name': 'CPU1 Temp', 'imprecision': 0.5,
         #  'units': '\xc2\xb0C', 'state_ids': [], 'type': 'Temperature',
         #  'value': 25.0, 'unavailable': 0}]]

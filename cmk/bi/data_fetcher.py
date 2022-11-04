@@ -245,7 +245,7 @@ class BIStructureFetcher:
                 # Delete obsolete data files older than 5 minutes
                 if time.time() - path_object.stat().st_mtime > 300:
                     path_object.unlink(missing_ok=True)
-            except (IndexError, IOError, ValueError):
+            except (IndexError, OSError, ValueError):
                 path_object.unlink(missing_ok=True)
 
     def _get_site_data_files(self) -> list[tuple[Path, SiteProgramStart]]:

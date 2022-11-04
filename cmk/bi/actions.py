@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Type, Union
+from typing import Any, Type
 
 from marshmallow_oneofschema import OneOfSchema
 
@@ -58,7 +58,7 @@ class BICallARuleAction(ABCBIAction, ABCWithSchema):
             "params": self.params.serialize(),
         }
 
-    def __init__(self, action_config: Dict[str, Any]) -> None:
+    def __init__(self, action_config: dict[str, Any]) -> None:
         super().__init__(action_config)
         self.rule_id = action_config["rule_id"]
         self.params = BIParams(action_config["params"])
@@ -72,7 +72,7 @@ class BICallARuleAction(ABCBIAction, ABCWithSchema):
 
     def execute(
         self, argument: ActionArgument, bi_searcher: ABCBISearcher
-    ) -> List[ABCBICompiledNode]:
+    ) -> list[ABCBICompiledNode]:
         return bi_rule_id_registry[self.rule_id].compile(argument, bi_searcher)
 
     def preview_rule_title(self, search_result: SearchResult) -> str:
@@ -118,7 +118,7 @@ class BIStateOfHostAction(ABCBIAction, ABCWithSchema):
             "host_regex": self.host_regex,
         }
 
-    def __init__(self, action_config: Dict[str, Any]) -> None:
+    def __init__(self, action_config: dict[str, Any]) -> None:
         super().__init__(action_config)
         self.host_regex = action_config["host_regex"]
 
@@ -129,7 +129,7 @@ class BIStateOfHostAction(ABCBIAction, ABCWithSchema):
 
     def execute(
         self, argument: ActionArgument, bi_searcher: ABCBISearcher
-    ) -> List[ABCBICompiledNode]:
+    ) -> list[ABCBICompiledNode]:
         host_matches, _match_groups = bi_searcher.get_host_name_matches(
             list(bi_searcher.hosts.values()), argument[0]
         )
@@ -168,7 +168,7 @@ class BIStateOfServiceAction(ABCBIAction, ABCWithSchema):
             "service_regex": self.service_regex,
         }
 
-    def __init__(self, action_config: Dict[str, Any]) -> None:
+    def __init__(self, action_config: dict[str, Any]) -> None:
         super().__init__(action_config)
         self.host_regex = action_config["host_regex"]
         self.service_regex = action_config["service_regex"]
@@ -186,7 +186,7 @@ class BIStateOfServiceAction(ABCBIAction, ABCWithSchema):
 
     def execute(
         self, argument: ActionArgument, bi_searcher: ABCBISearcher
-    ) -> List[ABCBICompiledNode]:
+    ) -> list[ABCBICompiledNode]:
         matched_hosts, match_groups = bi_searcher.get_host_name_matches(
             list(bi_searcher.hosts.values()), argument[0]
         )
@@ -237,7 +237,7 @@ class BIStateOfRemainingServicesAction(ABCBIAction, ABCWithSchema):
             "host_regex": self.host_regex,
         }
 
-    def __init__(self, action_config: Dict[str, Any]) -> None:
+    def __init__(self, action_config: dict[str, Any]) -> None:
         super().__init__(action_config)
         self.host_regex = action_config["host_regex"]
 
@@ -248,7 +248,7 @@ class BIStateOfRemainingServicesAction(ABCBIAction, ABCWithSchema):
 
     def execute(
         self, argument: ActionArgument, bi_searcher: ABCBISearcher
-    ) -> List[ABCBICompiledNode]:
+    ) -> list[ABCBICompiledNode]:
         host_matches, _match_groups = bi_searcher.get_host_name_matches(
             list(bi_searcher.hosts.values()), argument[0]
         )
@@ -273,7 +273,7 @@ class BIStateOfRemainingServicesActionSchema(Schema):
 class BIActionSchema(OneOfSchema):
     type_field = "type"
     type_field_remove = False
-    type_schemas = dict((k, v.schema()) for k, v in bi_action_registry.items())
+    type_schemas = {k: v.schema() for k, v in bi_action_registry.items()}
 
     # type_schemas = {
     #    "call_a_rule": BICallARuleActionSchema,
@@ -282,7 +282,7 @@ class BIActionSchema(OneOfSchema):
     #    "state_of_remaining_services": BIStateOfRemainingServicesActionSchema,
     # }
 
-    def get_obj_type(self, obj: Union[ABCBIAction, dict]) -> str:
+    def get_obj_type(self, obj: ABCBIAction | dict) -> str:
         if isinstance(obj, dict):
             return obj["type"]
         return obj.type()

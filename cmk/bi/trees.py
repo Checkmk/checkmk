@@ -97,7 +97,7 @@ class BICompiledLeaf(ABCBICompiledNode):
         return {RequiredBIElement(self.site_id, self.host_name, self.service_description)}
 
     def __str__(self) -> str:
-        return "BICompiledLeaf[Site %s, Host: %s, Service %s]" % (
+        return "BICompiledLeaf[Site {}, Host: {}, Service {}]".format(
             self.site_id,
             self.host_name,
             self.service_description,
@@ -577,7 +577,7 @@ class BICompiledAggregation:
             result["title"] = (
                 node.host_name
                 if node.service_description is None
-                else "%s - %s" % (node.host_name, node.service_description)
+                else f"{node.host_name} - {node.service_description}"
             )
             return result
 
@@ -596,7 +596,7 @@ class BICompiledAggregation:
         raise NotImplementedError("Unknown node type %r" % node)
 
     @classmethod
-    def schema(cls) -> Type["BICompiledAggregationSchema"]:
+    def schema(cls) -> type["BICompiledAggregationSchema"]:
         return BICompiledAggregationSchema
 
     def serialize(self):

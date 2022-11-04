@@ -9,7 +9,7 @@ Cache hierarchy
 .. uml::
 
     abstract FileCache<TRawData> {
-        + read(Mode) : Optional[TRawData]
+        + read(Mode) : TRawData | None
         + write(TRawData, Mode) : None
         - {abstract} _from_cache_file(bytes) : TRawData
         - {abstract} _to_cache_file(TRawData) : bytes
@@ -47,23 +47,9 @@ import abc
 import copy
 import enum
 import logging
+from collections.abc import Callable, Iterator, Mapping, MutableMapping, Sequence
 from pathlib import Path
-from typing import (
-    Any,
-    Callable,
-    Final,
-    Generic,
-    Iterator,
-    Mapping,
-    MutableMapping,
-    NamedTuple,
-    Optional,
-    Sequence,
-    Tuple,
-    Type,
-    TypeVar,
-    Union,
-)
+from typing import Any, Final, Generic, NamedTuple, TypeVar
 
 import cmk.utils
 import cmk.utils.store as _store
@@ -86,29 +72,29 @@ __all__ = [
 
 # ABCRawDataSection is wrong from a typing point of view.
 # AgentRawDataSection and SNMPRawDataSection are not correct either.
-ABCRawDataSection = Union[AgentRawDataSection, SNMPRawDataSection]
+ABCRawDataSection = AgentRawDataSection | SNMPRawDataSection
 TRawDataSection = TypeVar("TRawDataSection", bound=ABCRawDataSection)
 
 
 class PersistedSections(  # pylint: disable=too-many-ancestors
     Generic[TRawDataSection],
-    MutableMapping[SectionName, Tuple[int, int, Sequence[TRawDataSection]]],
+    MutableMapping[SectionName, tuple[int, int, Sequence[TRawDataSection]]],
 ):
     __slots__ = ("_store",)
 
     def __init__(
-        self, store: MutableMapping[SectionName, Tuple[int, int, Sequence[TRawDataSection]]]
+        self, store: MutableMapping[SectionName, tuple[int, int, Sequence[TRawDataSection]]]
     ):
         self._store = store
 
     def __repr__(self) -> str:
-        return "%s(%r)" % (type(self).__name__, self._store)
+        return f"{type(self).__name__}({self._store!r})"
 
-    def __getitem__(self, key: SectionName) -> Tuple[int, int, Sequence[TRawDataSection]]:
+    def __getitem__(self, key: SectionName) -> tuple[int, int, Sequence[TRawDataSection]]:
         return self._store.__getitem__(key)
 
     def __setitem__(
-        self, key: SectionName, value: Tuple[int, int, Sequence[TRawDataSection]]
+        self, key: SectionName, value: tuple[int, int, Sequence[TRawDataSection]]
     ) -> None:
         return self._store.__setitem__(key, value)
 
@@ -126,7 +112,7 @@ class PersistedSections(  # pylint: disable=too-many-ancestors
         cls,
         *,
         sections: Mapping[SectionName, Sequence[TRawDataSection]],
-        lookup_persist: Callable[[SectionName], Optional[Tuple[int, int]]],
+        lookup_persist: Callable[[SectionName], tuple[int, int] | None],
     ) -> "PersistedSections[TRawDataSection]":
         return cls(
             {
@@ -146,7 +132,7 @@ class PersistedSections(  # pylint: disable=too-many-ancestors
 class SectionStore(Generic[TRawDataSection]):
     def __init__(
         self,
-        path: Union[str, Path],
+        path: str | Path,
         *,
         logger: logging.Logger,
     ) -> None:
@@ -180,8 +166,8 @@ class SectionStore(Generic[TRawDataSection]):
     def update(
         self,
         sections: Mapping[SectionName, Sequence[TRawDataSection]],
-        cache_info: MutableMapping[SectionName, Tuple[int, int]],
-        lookup_persist: Callable[[SectionName], Optional[Tuple[int, int]]],
+        cache_info: MutableMapping[SectionName, tuple[int, int]],
+        lookup_persist: Callable[[SectionName], tuple[int, int] | None],
         now: int,
         keep_outdated: bool,
     ) -> Mapping[SectionName, Sequence[TRawDataSection]]:
@@ -200,7 +186,7 @@ class SectionStore(Generic[TRawDataSection]):
     def _update(
         self,
         sections: Mapping[SectionName, Sequence[TRawDataSection]],
-        lookup_persist: Callable[[SectionName], Optional[Tuple[int, int]]],
+        lookup_persist: Callable[[SectionName], tuple[int, int] | None],
         *,
         now: int,
         keep_outdated: bool,
@@ -227,7 +213,7 @@ class SectionStore(Generic[TRawDataSection]):
     def _add_persisted_sections(
         self,
         sections: Mapping[SectionName, Sequence[TRawDataSection]],
-        cache_info: MutableMapping[SectionName, Tuple[int, int]],
+        cache_info: MutableMapping[SectionName, tuple[int, int]],
         persisted_sections: PersistedSections[TRawDataSection],
     ) -> Mapping[SectionName, Sequence[TRawDataSection]]:
         cache_info.update(
@@ -296,7 +282,7 @@ class FileCache(Generic[TRawData], abc.ABC):
         use_outdated: bool,
         simulation: bool,
         use_only_cache: bool,
-        file_cache_mode: Union[FileCacheMode, int],
+        file_cache_mode: FileCacheMode | int,
     ) -> None:
         super().__init__()
         self.hostname: Final = hostname
@@ -355,7 +341,7 @@ class FileCache(Generic[TRawData], abc.ABC):
         }
 
     @classmethod
-    def from_json(cls: Type[TFileCache], serialized: Mapping[str, Any]) -> TFileCache:
+    def from_json(cls: type[TFileCache], serialized: Mapping[str, Any]) -> TFileCache:
         serialized_ = copy.deepcopy(dict(serialized))
         max_age = MaxAge(*serialized_.pop("max_age"))
         return cls(max_age=max_age, **serialized_)
@@ -385,7 +371,7 @@ class FileCache(Generic[TRawData], abc.ABC):
 
         return True
 
-    def read(self, mode: Mode) -> Optional[TRawData]:
+    def read(self, mode: Mode) -> TRawData | None:
         self._logger.debug("Read from cache: %r", self)
         raw_data = self._read(mode)
         if raw_data is not None:
@@ -408,7 +394,7 @@ class FileCache(Generic[TRawData], abc.ABC):
         # creation, that's fine with me.
         return Path(template.format(mode=mode.name.lower(), hostname=hostname))
 
-    def _read(self, mode: Mode) -> Optional[TRawData]:
+    def _read(self, mode: Mode) -> TRawData | None:
         if FileCacheMode.READ not in self.file_cache_mode or not self._do_cache(mode):
             return None
 
@@ -450,13 +436,13 @@ class FileCache(Generic[TRawData], abc.ABC):
         try:
             path.parent.mkdir(parents=True, exist_ok=True)
         except Exception as e:
-            raise MKGeneralException("Cannot create directory %r: %s" % (path.parent, e))
+            raise MKGeneralException(f"Cannot create directory {path.parent!r}: {e}")
 
         self._logger.debug("Write data to cache file %s", path)
         try:
             _store.save_bytes_to_file(path, self._to_cache_file(raw_data))
         except Exception as e:
-            raise MKGeneralException("Cannot write cache file %s: %s" % (path, e))
+            raise MKGeneralException(f"Cannot write cache file {path}: {e}")
 
 
 class FileCacheGlobals:

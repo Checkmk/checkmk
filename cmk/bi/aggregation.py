@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Type
+from typing import Any
 
 # TODO: fix duplicate type def. the original type def is in gui-managed (module layer violation)
 from cmk.utils.type_defs import HostName, ServiceName
@@ -57,7 +57,7 @@ class BIAggregation:
         self.aggregation_visualization = aggr_config["aggregation_visualization"]
 
     @classmethod
-    def schema(cls) -> Type[BIAggregationSchema]:
+    def schema(cls) -> type[BIAggregationSchema]:
         return BIAggregationSchema
 
     def serialize(self):
@@ -71,7 +71,7 @@ class BIAggregation:
             "computation_options": self.computation_options.serialize(),
         }
 
-    def clone(self) -> "BIAggregation":
+    def clone(self) -> BIAggregation:
         aggregation_config = self.schema()().dump(self)
         return BIAggregation(aggregation_config)
 

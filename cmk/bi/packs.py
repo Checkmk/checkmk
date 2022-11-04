@@ -6,7 +6,7 @@
 import os
 from collections.abc import Iterator
 from pathlib import Path
-from typing import Any, NamedTuple, Type
+from typing import Any, NamedTuple
 
 from marshmallow import fields, pre_dump
 
@@ -78,7 +78,7 @@ class BIAggregationPack:
         }
 
     @classmethod
-    def schema(cls) -> Type["BIAggregationPackSchema"]:
+    def schema(cls) -> type["BIAggregationPackSchema"]:
         return BIAggregationPackSchema
 
     def serialize(self):
@@ -137,7 +137,7 @@ class BIAggregationPacks:
         self._bi_configuration_file = bi_configuration_file
 
     @classmethod
-    def schema(cls) -> Type["BIAggregationPacksSchema"]:
+    def schema(cls) -> type["BIAggregationPacksSchema"]:
         return BIAggregationPacksSchema
 
     def cleanup(self) -> None:

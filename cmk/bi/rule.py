@@ -12,7 +12,8 @@
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-from typing import Any, Dict, List, Optional, Sequence, Type
+from collections.abc import Sequence
+from typing import Any
 
 from marshmallow import fields
 
@@ -46,7 +47,7 @@ from cmk.bi.trees import BICompiledLeaf, BICompiledRule
 
 
 class BIRule(ABCBIRule, ABCWithSchema):
-    def __init__(self, rule_config: Optional[Dict[str, Any]] = None, pack_id: str = "") -> None:
+    def __init__(self, rule_config: dict[str, Any] | None = None, pack_id: str = "") -> None:
         super().__init__()
         if rule_config is None:
             rule_config = get_schema_default_config(self.schema())
@@ -81,7 +82,7 @@ class BIRule(ABCBIRule, ABCWithSchema):
         return self.properties.title
 
     @classmethod
-    def schema(cls) -> Type["BIRuleSchema"]:
+    def schema(cls) -> type["BIRuleSchema"]:
         return BIRuleSchema
 
     def serialize(self):
@@ -107,7 +108,7 @@ class BIRule(ABCBIRule, ABCWithSchema):
 
     def compile(
         self, extern_arguments: ActionArgument, bi_searcher: ABCBISearcher
-    ) -> List[ABCBICompiledNode]:
+    ) -> list[ABCBICompiledNode]:
         if self.computation_options.disabled:
             return []
 
@@ -125,7 +126,7 @@ class BIRule(ABCBIRule, ABCWithSchema):
         return [self._generate_rule_branch(action_results, mapped_rule_arguments)]
 
     def _generate_rule_branch(
-        self, nodes: List[ABCBICompiledNode], macros: MacroMapping
+        self, nodes: list[ABCBICompiledNode], macros: MacroMapping
     ) -> ABCBICompiledNode:
         required_hosts = set()
         for node in nodes:
@@ -145,7 +146,7 @@ class BIRule(ABCBIRule, ABCWithSchema):
         return bi_rule_result
 
     @classmethod
-    def create_tree_from_schema(cls, schema_config: Dict[str, Any]) -> BICompiledRule:
+    def create_tree_from_schema(cls, schema_config: dict[str, Any]) -> BICompiledRule:
         rule_id = schema_config["id"]
         pack_id = schema_config["pack_id"]
         nodes = [cls._create_node(x) for x in schema_config["nodes"]]
@@ -167,7 +168,7 @@ class BIRule(ABCBIRule, ABCWithSchema):
         )
 
     @classmethod
-    def _create_node(cls, node_config: Dict[str, Any]) -> ABCBICompiledNode:
+    def _create_node(cls, node_config: dict[str, Any]) -> ABCBICompiledNode:
         if node_config["type"] == BICompiledRule.type():
             return cls.create_tree_from_schema(node_config)
         if node_config["type"] == BICompiledLeaf.type():

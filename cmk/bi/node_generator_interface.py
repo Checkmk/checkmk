@@ -13,7 +13,6 @@
 #   +----------------------------------------------------------------------+
 
 from abc import abstractmethod
-from typing import List, Optional
 
 from cmk.utils.macros import MacroMapping
 
@@ -37,8 +36,8 @@ class ABCBINodeGenerator(ABCWithSchema):
 
         # Enables the generator only to process rules with the given title
         # Can be used to limit the compilation to a specific branch, e.g. "Aggr HostA"
-        self.restrict_rule_title: Optional[str] = None
+        self.restrict_rule_title: str | None = None
 
     @abstractmethod
-    def compile(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> List[ABCBICompiledNode]:
+    def compile(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> list[ABCBICompiledNode]:
         raise NotImplementedError()

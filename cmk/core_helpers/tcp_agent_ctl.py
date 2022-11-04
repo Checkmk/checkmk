@@ -6,8 +6,9 @@
 from __future__ import annotations
 
 import zlib
+from collections.abc import Iterator
 from enum import Enum
-from typing import Final, Iterator
+from typing import Final
 
 from cmk.utils.type_defs.protocol import Deserializer, Serializer
 

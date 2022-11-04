@@ -15,12 +15,13 @@ import json
 import os
 import socket
 import sys
+from collections.abc import Callable
 from email.message import Message
 from email.mime.application import MIMEApplication
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from typing import Callable, List, Literal, NamedTuple, NoReturn, Optional, Union
+from typing import Literal, NamedTuple, NoReturn
 from urllib.parse import quote
 from urllib.request import urlopen
 
@@ -495,13 +496,13 @@ class GraphException(MKException):
 class AttachmentNamedTuple(NamedTuple):
     what: Literal["img"]
     name: str
-    contents: Union[bytes, str]
+    contents: bytes | str
     how: str
 
 
 # Keeping this for compatibility reasons
-AttachmentUnNamedTuple = tuple[str, str, Union[bytes, str], str]
-AttachmentTuple = Union[AttachmentNamedTuple, AttachmentUnNamedTuple]
+AttachmentUnNamedTuple = tuple[str, str, bytes | str, str]
+AttachmentTuple = AttachmentNamedTuple | AttachmentUnNamedTuple
 AttachmentList = list[AttachmentTuple]
 
 
@@ -513,7 +514,7 @@ def multipart_mail(
     reply_to: str,
     content_txt: str,
     content_html: str,
-    attach: Optional[AttachmentList] = None,
+    attach: AttachmentList | None = None,
 ) -> MIMEMultipart:
     if attach is None:
         attach = []
@@ -568,9 +569,9 @@ def send_mail_smtp(  # pylint: disable=too-many-branches
             send_mail_smtp_impl(message, target, smarthost, from_address, context)
             success = True
         except socket.timeout as e:
-            sys.stderr.write('timeout connecting to "%s": %s\n' % (smarthost, str(e)))
+            sys.stderr.write(f'timeout connecting to "{smarthost}": {str(e)}\n')
         except socket.gaierror as e:
-            sys.stderr.write('socket error connecting to "%s": %s\n' % (smarthost, str(e)))
+            sys.stderr.write(f'socket error connecting to "{smarthost}": {str(e)}\n')
         except smtplib.SMTPRecipientsRefused as e:
             # the exception contains a dict of failed recipients to the respective error. since we
             # only have one recipient there has to be exactly one element
@@ -608,7 +609,7 @@ def send_mail_smtp(  # pylint: disable=too-many-branches
             )
         except smtplib.SMTPException as e:
             retry_possible = True  # who knows what went wrong, a retry might just work
-            sys.stderr.write('undocumented error code from "%s": %s\n' % (smarthost, str(e)))
+            sys.stderr.write(f'undocumented error code from "{smarthost}": {str(e)}\n')
 
     if success:
         return 0
@@ -617,7 +618,7 @@ def send_mail_smtp(  # pylint: disable=too-many-branches
     return 2
 
 
-def _ensure_str_error_message(message: Union[bytes, str]) -> str:
+def _ensure_str_error_message(message: bytes | str) -> str:
     return message.decode("utf-8") if isinstance(message, bytes) else message
 
 
@@ -705,7 +706,7 @@ def render_cmk_graphs(context: dict[str, str], is_bulk: bool) -> list[bytes]:
     except Exception as e:
         if opt_debug:
             raise
-        sys.stderr.write("ERROR: Failed to fetch graphs: %s\nURL: %s\n" % (e, url))
+        sys.stderr.write(f"ERROR: Failed to fetch graphs: {e}\nURL: {url}\n")
         return []
 
     if not json_data:
@@ -716,9 +717,7 @@ def render_cmk_graphs(context: dict[str, str], is_bulk: bool) -> list[bytes]:
     except Exception as e:
         if opt_debug:
             raise
-        sys.stderr.write(
-            "ERROR: Failed to decode graphs: %s\nURL: %s\nData: %r\n" % (e, url, json_data)
-        )
+        sys.stderr.write(f"ERROR: Failed to decode graphs: {e}\nURL: {url}\nData: {json_data!r}\n")
         return []
 
     return [base64.b64decode(s) for s in base64_strings]
@@ -745,7 +744,7 @@ def render_performance_graphs(context: dict[str, str], is_bulk: bool) -> tuple[A
         cls = ""
         if context.get("PARAMETER_NO_FLOATING_GRAPHS"):
             cls = ' class="nofloat"'
-        graph_code += '<img src="cid:%s"%s />' % (filename, cls)
+        graph_code += f'<img src="cid:{filename}"{cls} />'
 
     if graph_code:
         graph_code = (
@@ -903,8 +902,8 @@ def body_templates(
     body_elements: list[tuple[str, str, bool, str, str, str, str]],
 ) -> tuple[str, str]:
     even = "even"
-    tmpl_txt: List[str] = []
-    tmpl_html: List[str] = []
+    tmpl_txt: list[str] = []
+    tmpl_html: list[str] = []
     for name, whence, forced, nottype, title, txt, html in body_elements:
         if nottype == "alerthandler" and not is_alert_handler:
             continue
@@ -914,7 +913,7 @@ def body_templates(
 
         if (whence in ("both", what)) and (forced or (name in elements)):
             tmpl_txt += "%-20s %s\n" % (title + ":", txt)
-            tmpl_html += '<tr class="%s0"><td class=left>%s</td><td>%s</td></tr>' % (
+            tmpl_html += '<tr class="{}0"><td class=left>{}</td><td>{}</td></tr>'.format(
                 even,
                 title,
                 html,
@@ -955,7 +954,7 @@ class BulkEmailContent(EmailContent):
         content_txt = ""
         content_html = ""
         parameters, contexts = context_function()
-        hosts = set([])
+        hosts = set()
 
         for i, c in enumerate(contexts, 1):
             c.update(parameters)

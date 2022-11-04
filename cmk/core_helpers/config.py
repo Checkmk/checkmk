@@ -5,7 +5,8 @@
 
 from __future__ import annotations
 
-from typing import Mapping, NamedTuple
+from collections.abc import Mapping
+from typing import NamedTuple
 
 from cmk.utils.translations import TranslationOptions
 from cmk.utils.type_defs import SectionName

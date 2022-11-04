@@ -8,12 +8,13 @@ import re
 import socket
 import subprocess
 import sys
+from collections.abc import Callable, Iterable
 from email.message import Message
 from email.utils import formataddr, formatdate, parseaddr
 from html import escape as html_escape
 from http.client import responses as http_responses
 from quopri import encodestring
-from typing import Any, Callable, Iterable, Literal, NamedTuple, NoReturn, Optional, Tuple, TypeVar
+from typing import Any, Literal, NamedTuple, NoReturn, TypeVar
 
 import requests
 
@@ -71,9 +72,9 @@ def _base_url(context: dict[str, str]) -> str:
     elif context.get("PARAMETER_URL_PREFIX_MANUAL"):
         url_prefix = context["PARAMETER_URL_PREFIX_MANUAL"]
     elif context.get("PARAMETER_URL_PREFIX_AUTOMATIC") == "http":
-        url_prefix = "http://%s/%s" % (context["MONITORING_HOST"], context["OMD_SITE"])
+        url_prefix = "http://{}/{}".format(context["MONITORING_HOST"], context["OMD_SITE"])
     elif context.get("PARAMETER_URL_PREFIX_AUTOMATIC") == "https":
-        url_prefix = "https://%s/%s" % (context["MONITORING_HOST"], context["OMD_SITE"])
+        url_prefix = "https://{}/{}".format(context["MONITORING_HOST"], context["OMD_SITE"])
     else:
         url_prefix = ""
 
@@ -141,8 +142,8 @@ def add_debug_output(template: str, context: dict[str, str]) -> str:
     html_output = "<table class=context>\n"
     elements = sorted(context.items())
     for varname, value in elements:
-        ascii_output += "%s=%s\n" % (varname, value)
-        html_output += "<tr><td class=varname>%s</td><td class=value>%s</td></tr>\n" % (
+        ascii_output += f"{varname}={value}\n"
+        html_output += "<tr><td class=varname>{}</td><td class=value>{}</td></tr>\n".format(
             varname,
             html_escape(value),
         )
@@ -194,7 +195,7 @@ def set_mail_headers(
     return mail
 
 
-def send_mail_sendmail(m: Message, target: str, from_address: Optional[str]) -> Literal[0]:
+def send_mail_sendmail(m: Message, target: str, from_address: str | None) -> Literal[0]:
     cmd = [_sendmail_path()]
     if from_address:
         # sendmail of the appliance can not handle "FULLNAME <my@mail.com>" format
@@ -317,8 +318,8 @@ def retrieve_from_passwordstore(parameter: str) -> str:
 
 def post_request(
     message_constructor: Callable[[dict[str, str]], dict[str, str]],
-    url: Optional[str] = None,
-    headers: Optional[dict[str, str]] = None,
+    url: str | None = None,
+    headers: dict[str, str] | None = None,
 ) -> requests.Response:
     context = collect_context()
 
@@ -372,7 +373,7 @@ class StateInfo(NamedTuple):
     title: str
 
 
-StatusCodeRange = Tuple[int, int]
+StatusCodeRange = tuple[int, int]
 
 
 def process_by_result_map(
@@ -447,7 +448,7 @@ def get_sms_message_from_context(raw_context: dict[str, str]) -> str:
     return message
 
 
-def quote_message(message: str, max_length: Optional[int] = None) -> str:
+def quote_message(message: str, max_length: int | None = None) -> str:
     if max_length:
         return "'" + message.replace("'", "'\"'\"'")[: max_length - 2] + "'"
     return "'" + message.replace("'", "'\"'\"'") + "'"

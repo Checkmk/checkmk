@@ -5,7 +5,8 @@
 """Package containing the fetchers to the data sources."""
 
 import enum
-from typing import Final, FrozenSet, NamedTuple, Optional, Sequence, Union
+from collections.abc import Sequence
+from typing import Final, NamedTuple
 
 from cmk.utils.type_defs import HostAddress, HostName, SectionName, SourceType
 
@@ -39,7 +40,7 @@ class FetcherType(enum.Enum):
 
 class SourceInfo(NamedTuple):
     hostname: HostName
-    ipaddress: Optional[HostAddress]
+    ipaddress: HostAddress | None
     ident: str
     fetcher_type: FetcherType
     source_type: SourceType
@@ -62,7 +63,7 @@ class SelectionType(enum.Enum):
     NONE = enum.auto()
 
 
-SectionNameCollection = Union[SelectionType, FrozenSet[SectionName]]
+SectionNameCollection = SelectionType | frozenset[SectionName]
 # If preselected sections are given, we assume that we are interested in these
 # and only these sections, so we may omit others and in the SNMP case
 # must try to fetch them (regardles of detection).

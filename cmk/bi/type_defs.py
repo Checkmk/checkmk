@@ -1,47 +1,35 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import TypedDict, List, Any, Dict
 
-SearchConfig = Dict[str, Any]
+from typing import Any, TypedDict
 
-ActionConfig = Dict[str, Any]
+SearchConfig = dict[str, Any]
 
-NodeDict = TypedDict(
-    "NodeDict",
-    {
-        "search": SearchConfig,
-        "action": ActionConfig,
-    },
-)
+ActionConfig = dict[str, Any]
 
-GroupConfigDict = TypedDict(
-    "GroupConfigDict",
-    {
-        "names": List[str],
-        "paths": List[List[str]],
-    },
-)
 
-ComputationConfigDict = TypedDict(
-    "ComputationConfigDict",
-    {
-        "disabled": bool,
-        "use_hard_states": bool,
-        "escalate_downtimes_as_warn": bool,
-    },
-)
+class NodeDict(TypedDict):
+    search: SearchConfig
+    action: ActionConfig
 
-AggrConfigDict = TypedDict(
-    "AggrConfigDict",
-    {
-        "id": Any,
-        "comment": str,
-        "customer": Any,
-        "groups": GroupConfigDict,
-        "node": NodeDict,
-        "computation_options": ComputationConfigDict,
-        "aggregation_visualization": Any,
-    },
-    total=True,
-)
+
+class GroupConfigDict(TypedDict):
+    names: list[str]
+    paths: list[list[str]]
+
+
+class ComputationConfigDict(TypedDict):
+    disabled: bool
+    use_hard_states: bool
+    escalate_downtimes_as_warn: bool
+
+
+class AggrConfigDict(TypedDict, total=True):
+    id: Any
+    comment: str
+    customer: Any
+    groups: GroupConfigDict
+    node: NodeDict
+    computation_options: ComputationConfigDict
+    aggregation_visualization: Any

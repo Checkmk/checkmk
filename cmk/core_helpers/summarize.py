@@ -6,7 +6,8 @@
 from __future__ import annotations
 
 import itertools
-from typing import Final, Sequence
+from collections.abc import Sequence
+from typing import Final
 
 from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import (

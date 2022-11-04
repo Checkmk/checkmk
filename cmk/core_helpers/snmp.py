@@ -8,22 +8,9 @@ import copy
 import dataclasses
 import logging
 import time
+from collections.abc import Collection, Iterable, Iterator, Mapping, MutableMapping, Sequence
 from pathlib import Path
-from typing import (
-    Any,
-    Collection,
-    Final,
-    FrozenSet,
-    Iterable,
-    Iterator,
-    Mapping,
-    MutableMapping,
-    NamedTuple,
-    Optional,
-    Sequence,
-    Tuple,
-    Union,
-)
+from typing import Any, Final, NamedTuple
 
 from cmk.utils.exceptions import OnError
 from cmk.utils.type_defs import HostName, SectionName
@@ -77,12 +64,12 @@ class SNMPPluginStoreItem(NamedTuple):
 class SNMPPluginStore(Mapping[SectionName, SNMPPluginStoreItem]):
     def __init__(
         self,
-        store: Optional[Mapping[SectionName, SNMPPluginStoreItem]] = None,
+        store: Mapping[SectionName, SNMPPluginStoreItem] | None = None,
     ) -> None:
         self._store: Final[Mapping[SectionName, SNMPPluginStoreItem]] = store if store else {}
 
     def __repr__(self) -> str:
-        return "%s(%r)" % (type(self).__name__, self._store)
+        return f"{type(self).__name__}({self._store!r})"
 
     def __getitem__(self, key: SectionName) -> SNMPPluginStoreItem:
         return self._store.__getitem__(key)
@@ -113,7 +100,7 @@ class SectionMeta:
     checking: bool
     disabled: bool
     redetect: bool
-    fetch_interval: Optional[int]
+    fetch_interval: int | None
 
     def __init__(
         self,
@@ -121,7 +108,7 @@ class SectionMeta:
         checking: bool,
         disabled: bool,
         redetect: bool,
-        fetch_interval: Optional[int],
+        fetch_interval: int | None,
     ) -> None:
         # There does not seem to be a way to have kwonly dataclasses.
         self.checking = checking
@@ -161,7 +148,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         on_error: OnError,
         missing_sys_description: bool,
         do_status_data_inventory: bool,
-        section_store_path: Union[Path, str],
+        section_store_path: Path | str,
         snmp_config: SNMPHostConfig,
     ) -> None:
         super().__init__(logger=logging.getLogger("cmk.helper.snmp"))
@@ -177,15 +164,15 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         self._backend = factory.backend(self.snmp_config, self._logger)
 
     @property
-    def disabled_sections(self) -> FrozenSet[SectionName]:
+    def disabled_sections(self) -> frozenset[SectionName]:
         return frozenset(name for name, meta in self.sections.items() if meta.disabled)
 
     @property
-    def checking_sections(self) -> FrozenSet[SectionName]:
+    def checking_sections(self) -> frozenset[SectionName]:
         return frozenset(name for name, meta in self.sections.items() if meta.checking)
 
     @property
-    def inventory_sections(self) -> FrozenSet[SectionName]:
+    def inventory_sections(self) -> frozenset[SectionName]:
         return frozenset(name for name, data in self.plugin_store.items() if data.inventory)
 
     @property
@@ -248,7 +235,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
     def close(self) -> None:
         pass
 
-    def _detect(self, *, select_from: Collection[SectionName]) -> FrozenSet[SectionName]:
+    def _detect(self, *, select_from: Collection[SectionName]) -> frozenset[SectionName]:
         """Detect the applicable sections for the device in question"""
         return gather_available_raw_section_names(
             sections=[(name, self.plugin_store[name].detect_spec) for name in select_from],
@@ -261,7 +248,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         """Decide whether to load data from the SNMP walk cache"""
         return mode is not Mode.CHECKING
 
-    def _get_selection(self, mode: Mode) -> FrozenSet[SectionName]:
+    def _get_selection(self, mode: Mode) -> frozenset[SectionName]:
         """Determine the sections fetched unconditionally (without detection)"""
         if mode is Mode.CHECKING:
             return frozenset(
@@ -274,7 +261,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
 
         return frozenset()
 
-    def _get_detected_sections(self, mode: Mode) -> FrozenSet[SectionName]:
+    def _get_detected_sections(self, mode: Mode) -> frozenset[SectionName]:
         """Determine the sections fetched after successful detection"""
         if mode is Mode.CHECKING:
             return frozenset(
@@ -391,7 +378,7 @@ class SNMPParser(Parser[SNMPRawData, SNMPRawDataSection]):
         hostname: HostName,
         section_store: SectionStore[SNMPRawDataSection],
         *,
-        check_intervals: Mapping[SectionName, Optional[int]],
+        check_intervals: Mapping[SectionName, int | None],
         keep_outdated: bool,
         logger: logging.Logger,
     ) -> None:
@@ -413,12 +400,12 @@ class SNMPParser(Parser[SNMPRawData, SNMPRawDataSection]):
         sections = dict(raw_data)
         now = int(time.time())
 
-        def lookup_persist(section_name: SectionName) -> Optional[Tuple[int, int]]:
+        def lookup_persist(section_name: SectionName) -> tuple[int, int] | None:
             if (interval := self.check_intervals.get(section_name)) is not None:
                 return now, now + interval
             return None
 
-        cache_info: MutableMapping[SectionName, Tuple[int, int]] = {}
+        cache_info: MutableMapping[SectionName, tuple[int, int]] = {}
         new_sections = self.section_store.update(
             sections,
             cache_info,

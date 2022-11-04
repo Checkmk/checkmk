@@ -30,7 +30,6 @@ def _valuespec_special_agents_gcp():
                     title=_("GCP services to monitor"),
                     choices=[
                         ("gcs", _("Google Cloud Storage (GCS)")),
-                        ("gce", _("Google Compute Engine (GCE)")),
                         ("cloud_run", _("Cloud Run")),
                         ("cloud_functions", _("Cloud Functions")),
                         ("cloud_sql", _("Cloud SQL")),
@@ -41,7 +40,6 @@ def _valuespec_special_agents_gcp():
                     ],
                     default_value=[
                         "gcs",
-                        "gce",
                         "cloud_run",
                         "cloud_functions",
                         "cloud_sql",
@@ -51,6 +49,33 @@ def _valuespec_special_agents_gcp():
                         "http_lb",
                     ],
                     allow_empty=True,
+                ),
+            ),
+            (
+                "piggyback",
+                Dictionary(
+                    title=_("GCP piggyback services"),
+                    elements=[
+                        (
+                            "prefix",
+                            TextInput(
+                                title=_("Custom host name prefix"),
+                                help=_(
+                                    "Prefix for GCE piggyback host names. Defaults to project ID"
+                                ),
+                            ),
+                        ),
+                        (
+                            "piggyback_services",
+                            ListChoice(
+                                title=_("Piggyback services to monitor"),
+                                choices=[("gce", _("Google Compute Engine (GCE)"))],
+                                default_value=["gce"],
+                                allow_empty=True,
+                            ),
+                        ),
+                    ],
+                    optional_keys=["prefix"],
                 ),
             ),
             (

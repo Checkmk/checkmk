@@ -428,11 +428,11 @@ def run_assets(client: ClientProtocol, config: Sequence[str]) -> AssetSection:
 
 
 def piggy_back(
-    client: ClientProtocol, service: PiggyBackService, assets: Sequence[Asset]
+    client: ClientProtocol, service: PiggyBackService, assets: Sequence[Asset], prefix: str
 ) -> Iterable[PiggyBackSection]:
     for host in [a for a in assets if a.asset.asset_type == service.asset_type]:
         label = host.asset.resource.data[service.asset_label]
-        name = host.asset.resource.data[service.name_label]
+        name = f"{prefix}_{host.asset.resource.data[service.name_label]}"
         filter_by = ResourceFilter(label=service.metric_label, value=label)
         sections = run_metrics(client, services=service.services, filter_by=filter_by)
         yield PiggyBackSection(
@@ -444,10 +444,13 @@ def piggy_back(
 
 
 def run_piggy_back(
-    client: ClientProtocol, services: Sequence[PiggyBackService], assets: Sequence[Asset]
+    client: ClientProtocol,
+    services: Sequence[PiggyBackService],
+    assets: Sequence[Asset],
+    prefix: str,
 ) -> Iterable[PiggyBackSection]:
     for s in services:
-        yield from piggy_back(client, s, assets)
+        yield from piggy_back(client, s, assets, prefix)
 
 
 ########
@@ -504,11 +507,12 @@ def run(
     serializer: Callable[[Iterable[Section] | Iterable[PiggyBackSection]], None],
     cost: CostArgument | None,
     monitor_health: bool,
+    piggy_back_prefix: str,
 ) -> None:
     assets = run_assets(client, [s.name for s in services] + [s.name for s in piggy_back_services])
     serializer([assets])
     serializer(run_metrics(client, services))
-    serializer(run_piggy_back(client, piggy_back_services, assets.assets))
+    serializer(run_piggy_back(client, piggy_back_services, assets.assets, piggy_back_prefix))
     serializer(run_cost(client, cost))
     if monitor_health:
         serializer(run_health(client))
@@ -988,6 +992,13 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
         action="store_true",
         help="Monitor GCP Health",
     )
+
+    parser.add_argument(
+        "--piggy-back-prefix",
+        type=str,
+        help="Prefix for piggyback hosts",
+        required=True,
+    )
     return parser.parse_args(argv)
 
 
@@ -997,6 +1008,7 @@ def agent_gcp_main(args: Args) -> None:
     piggies = [PIGGY_BACK_SERVICES[s] for s in args.services if s in PIGGY_BACK_SERVICES]
     cost = CostArgument(args.cost_table) if args.cost_table else None
     monitor_health = args.monitor_health
+    piggy_back_prefix = args.piggy_back_prefix
     run(
         client,
         services,
@@ -1004,6 +1016,7 @@ def agent_gcp_main(args: Args) -> None:
         serializer=gcp_serializer,
         cost=cost,
         monitor_health=monitor_health,
+        piggy_back_prefix=piggy_back_prefix,
     )
 
 

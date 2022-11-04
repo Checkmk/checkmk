@@ -179,6 +179,7 @@ def fixture_agent_output() -> Sequence[agent_gcp.Section]:
         cost=None,
         serializer=collector,
         monitor_health=True,
+        piggy_back_prefix="custom-prefix",
     )
     return list(sections)
 
@@ -221,7 +222,15 @@ def test_metric_retrieval() -> None:
     client = FakeClient("test", FakeMonitoringClient(timeseries), FakeAssetClient())
     sections: list[agent_gcp.Section] = []
     collector = collector_factory(sections)
-    agent_gcp.run(client, [agent_gcp.RUN], [], cost=None, serializer=collector, monitor_health=True)
+    agent_gcp.run(
+        client,
+        [agent_gcp.RUN],
+        [],
+        cost=None,
+        serializer=collector,
+        monitor_health=True,
+        piggy_back_prefix="custom-prefix",
+    )
     result_section = next(
         s for s in sections if isinstance(s, agent_gcp.ResultSection) and s.name == "cloud_run"
     )
@@ -289,7 +298,13 @@ def asset_and_piggy_back_sections_fixture() -> Sequence[
         ],
     )
     agent_gcp.run(
-        client, [], [piggy_back_section], cost=None, serializer=collector, monitor_health=True
+        client,
+        [],
+        [piggy_back_section],
+        cost=None,
+        serializer=collector,
+        monitor_health=True,
+        piggy_back_prefix="custom-prefix",
     )
     return list(
         s for s in sections if isinstance(s, (agent_gcp.PiggyBackSection, agent_gcp.AssetSection))
@@ -323,8 +338,8 @@ def test_can_hash_client() -> None:
 def test_piggyback_identify_hosts(
     piggy_back_sections: Sequence[agent_gcp.PiggyBackSection],
 ) -> None:
-    assert piggy_back_sections[0].name == "a"
-    assert piggy_back_sections[1].name == "b"
+    assert piggy_back_sections[0].name == "custom-prefix_a"
+    assert piggy_back_sections[1].name == "custom-prefix_b"
 
 
 def test_serialize_piggy_back_section(
@@ -384,7 +399,15 @@ def fixture_gce_sections() -> Sequence[agent_gcp.PiggyBackSection]:
     sections: list[agent_gcp.Section] = []
     collector = collector_factory(sections)
 
-    agent_gcp.run(client, [], [agent_gcp.GCE], cost=None, serializer=collector, monitor_health=True)
+    agent_gcp.run(
+        client,
+        [],
+        [agent_gcp.GCE],
+        cost=None,
+        serializer=collector,
+        monitor_health=True,
+        piggy_back_prefix="custom-prefix",
+    )
     return list(s for s in sections if isinstance(s, agent_gcp.PiggyBackSection))
 
 
@@ -393,7 +416,7 @@ def test_gce_host_labels(gce_sections: Sequence[agent_gcp.PiggyBackSection]) -> 
 
 
 def test_gce_host_name_mangling(gce_sections: Sequence[agent_gcp.PiggyBackSection]) -> None:
-    assert gce_sections[0].name == "instance-1"
+    assert gce_sections[0].name == "custom-prefix_instance-1"
 
 
 def test_gce_metric_filtering(gce_sections: Sequence[agent_gcp.PiggyBackSection]) -> None:
@@ -478,6 +501,7 @@ def fixture_cost_output() -> Sequence[agent_gcp.Section]:
         cost=cost,
         serializer=collector,
         monitor_health=True,
+        piggy_back_prefix="custom-prefix",
     )
     return list(sections)
 

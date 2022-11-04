@@ -21,26 +21,26 @@ GIT_HASH_SHORT = check_output(["git", "rev-parse", "--short", "HEAD"], encoding=
 ENTERPRISE_PREFIX = "enterprise/cmk/gui/cee/"
 with open(REPO_PATH / "buildscripts" / "scripts" / "lib" / "ntop_rules.json") as json_file:
     MKP_ABLE_NTOP_FILES = json.load(json_file)["mkp-able_ntop_files"]
-NTOP_PACKAGE_INFO: packaging.PackageInfo = {
-    "title": "Checkmk ntop integration",
-    "name": "ntop",
-    "description": (
+NTOP_PACKAGE_INFO = packaging.PackageInfo(
+    title="Checkmk ntop integration",
+    name="ntop",
+    description=(
         "This package ships extensions for the Checkmk user interface to make information from "
         "your ntop installations available in the Checkmk user interface. This includes ntop "
         "specific views and dashlets."
     ),
-    "version": "1.0",
-    "version.packaged": cmk_version.__version__,
-    "version.min_required": cmk_version.__version__,
-    "version.usable_until": None,
-    "author": "tribe29 GmbH",
-    "download_url": "https://checkmk.com/",
-    "files": {
-        "web": [ntop_file.replace(ENTERPRISE_PREFIX, "") for ntop_file in MKP_ABLE_NTOP_FILES]
-    },
-}
+    version="1.0",
+    version_packaged=cmk_version.__version__,
+    version_min_required=cmk_version.__version__,
+    version_usable_until=None,
+    author="tribe29 GmbH",
+    download_url="https://checkmk.com/",
+    files={"web": [ntop_file.replace(ENTERPRISE_PREFIX, "") for ntop_file in MKP_ABLE_NTOP_FILES]},
+)
 
-TARFILENAME = packaging.format_file_name(name="ntop", version=NTOP_PACKAGE_INFO["version"])
+TARFILENAME = packaging.format_file_name(
+    name=NTOP_PACKAGE_INFO.name, version=NTOP_PACKAGE_INFO.version
+)
 
 
 Path(TARFILENAME).write_bytes(

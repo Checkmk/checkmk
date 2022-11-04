@@ -242,8 +242,8 @@ def test_diagnostics_element_local_files_json_content(  # type:ignore[no-untyped
         with check_dir.joinpath(name).open("w", encoding="utf-8") as f:
             f.write("test-check\n")
 
-        package_info = packaging.get_initial_package_info(name)
-        package_info["files"] = {
+        package_info = packaging.package_info_template(name)
+        package_info.files = {
             "checks": [name],
         }
 
@@ -366,8 +366,8 @@ def test_diagnostics_element_local_files_csv_content(  # type:ignore[no-untyped-
         with check_dir.joinpath(name).open("w", encoding="utf-8") as f:
             f.write("test-check\n")
 
-        package_info = packaging.get_initial_package_info(name)
-        package_info["files"] = {
+        package_info = packaging.package_info_template(name)
+        package_info.files = {
             "checks": [name],
         }
 

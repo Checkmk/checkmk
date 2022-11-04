@@ -18,12 +18,12 @@ import cmk.utils.werks
 from cmk.utils.log import VERBOSE
 from cmk.utils.packaging import (
     get_config_parts,
-    get_initial_package_info,
     get_package_parts,
     package_dir,
     PACKAGE_EXTENSION,
+    package_info_template,
     PackageException,
-    parse_package_info,
+    PackageInfo,
     read_package_info,
     unpackaged_files,
     unpackaged_files_in_dir,
@@ -114,7 +114,7 @@ def package_list(args: List[str]) -> None:
                     table.append([pacname, "package info is missing or broken", "0"])
                 else:
                     table.append(
-                        [pacname, package["title"], str(packaging.package_num_files(package))]
+                        [pacname, package.title, str(packaging.package_num_files(package))]
                     )
             tty.print_table(["Name", "Title", "Files"], [tty.bold, "", ""], table)
         else:
@@ -146,7 +146,7 @@ def show_package(  # pylint: disable=too-many-branches
             with tarfile.open(name, "r:gz") as tar:
                 if (info := tar.extractfile("info")) is None:
                     raise PackageException('Failed to extract "info"')
-                package = parse_package_info(info.read().decode())
+                package = PackageInfo.parse_python_string(info.read().decode())
         else:
             this_package = read_package_info(name)
             if not this_package:
@@ -161,29 +161,29 @@ def show_package(  # pylint: disable=too-many-branches
         raise PackageException("Cannot open package %s: %s" % (name, e))
 
     if show_info:
-        sys.stdout.write("Name:                          %s\n" % package["name"])
-        sys.stdout.write("Version:                       %s\n" % package["version"])
-        sys.stdout.write("Packaged on Checkmk Version:   %s\n" % package["version.packaged"])
-        sys.stdout.write("Required Checkmk Version:      %s\n" % package["version.min_required"])
-        valid_until_text = package["version.usable_until"] or "No version limitation"
+        sys.stdout.write("Name:                          %s\n" % package.name)
+        sys.stdout.write("Version:                       %s\n" % package.version)
+        sys.stdout.write("Packaged on Checkmk Version:   %s\n" % package.version_packaged)
+        sys.stdout.write("Required Checkmk Version:      %s\n" % package.version_min_required)
+        valid_until_text = package.version_usable_until or "No version limitation"
         sys.stdout.write("Valid until Checkmk version:   %s\n" % valid_until_text)
-        sys.stdout.write("Title:                         %s\n" % package["title"])
-        sys.stdout.write("Author:                        %s\n" % package["author"])
-        sys.stdout.write("Download-URL:                  %s\n" % package["download_url"])
-        files = " ".join(["%s(%d)" % (part, len(fs)) for part, fs in package["files"].items()])
+        sys.stdout.write("Title:                         %s\n" % package.title)
+        sys.stdout.write("Author:                        %s\n" % package.author)
+        sys.stdout.write("Download-URL:                  %s\n" % package.download_url)
+        files = " ".join(["%s(%d)" % (part, len(fs)) for part, fs in package.files.items()])
         sys.stdout.write("Files:                         %s\n" % files)
-        sys.stdout.write("Description:\n  %s\n" % package["description"])
+        sys.stdout.write("Description:\n  %s\n" % package.description)
     else:
         if logger.isEnabledFor(VERBOSE):
             sys.stdout.write("Files in package %s:\n" % name)
             for part in get_package_parts():
-                if part_files := package["files"].get(part.ident, []):
+                if part_files := package.files.get(part.ident, []):
                     sys.stdout.write("  %s%s%s:\n" % (tty.bold, part.title, tty.normal))
                     for f in part_files:
                         sys.stdout.write("    %s\n" % f)
         else:
             for part in get_package_parts():
-                for fn in package["files"].get(part.ident, []):
+                for fn in package.files.get(part.ident, []):
                     sys.stdout.write(part.path + "/" + fn + "\n")
 
 
@@ -196,8 +196,8 @@ def package_create(args: List[str]) -> None:
         raise PackageException("Package %s already existing." % pacname)
 
     logger.log(VERBOSE, "Creating new package %s...", pacname)
-    package = get_initial_package_info(pacname)
-    filelists = package["files"]
+    package = package_info_template(pacname)
+    filelists = package.files
     for part in get_package_parts():
         files = unpackaged_files_in_dir(part.ident, part.path)
         filelists[part.ident] = files
@@ -272,7 +272,7 @@ def package_pack(args: List[str]) -> None:
     package = read_package_info(pacname)
     if not package:
         raise PackageException("Package %s not existing or corrupt." % pacname)
-    tarfilename = packaging.format_file_name(name=pacname, version=package["version"])
+    tarfilename = packaging.format_file_name(name=pacname, version=package.version)
 
     logger.log(VERBOSE, "Packing %s into %s...", pacname, tarfilename)
     Path(tarfilename).write_bytes(packaging.create_mkp_object(package))
@@ -303,7 +303,7 @@ def package_install(args: List[str]) -> None:
         package = packaging.PackageStore().store(fh.read())
 
     packaging.install_optional_package(
-        packaging.format_file_name(name=package["name"], version=package["version"])
+        packaging.format_file_name(name=package.name, version=package.version)
     )
 
 
@@ -321,7 +321,7 @@ def package_enable(args: List[str]) -> None:
     if not package:
         raise PackageException("No such package %s." % args[0])
     packaging.install_optional_package(
-        packaging.format_file_name(name=package["name"], version=package["version"])
+        packaging.format_file_name(name=package.name, version=package.version)
     )
 
 

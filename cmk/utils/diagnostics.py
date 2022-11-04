@@ -284,13 +284,18 @@ def _parse_mkp_file_parts(contents: Mapping[str, Any]) -> dict[str, dict[str, di
 
 
 def _parse_mkp_files(
-    items: list[str], module: str, contents: Mapping[str, Any], state: str, package: str
+    items: list[str], module: str, contents: packaging.PackageInfo | None, state: str, package: str
 ) -> dict[str, dict[str, dict]]:
     file_list: dict[str, dict[str, Any]] = {}
+    columns = (
+        {}
+        if contents is None
+        else {k: str(v) for k, v in contents.dict(by_alias=True).items() if k in _CSV_COLUMNS}
+    )
     for file in items:
         path = f"{cmk.utils.paths.omd_root}/local/{_MODULE_TO_PATH[module]}/{file}"
         file_list[path] = {
-            **{col: str(contents.get(col, "N/A")) for col in _CSV_COLUMNS},
+            **{col: columns.get(col, "N/A") for col in _CSV_COLUMNS},
             "package": package,
             state: "YES",
             "path": path,
@@ -332,9 +337,9 @@ def get_local_files_csv(infos: AllPackageInfos) -> DiagnosticsElementCSVResult:
 
     # Parse different secions of the packaging output
     for (module, items) in infos["unpackaged"].items():
-        files = _deep_update(files, _parse_mkp_files(items, module, {}, "unpackaged", "N/A"))
+        files = _deep_update(files, _parse_mkp_files(items, module, None, "unpackaged", "N/A"))
     for package, (contents, _is_local) in infos["optional_packages"].items():
-        for (module, items) in contents["files"].items():
+        for (module, items) in contents.files.items():
             files = _deep_update(
                 files, _parse_mkp_files(items, module, contents, "optional_packages", package)
             )
@@ -342,12 +347,12 @@ def get_local_files_csv(infos: AllPackageInfos) -> DiagnosticsElementCSVResult:
         if opt_contents is None:
             # skip corrupt packages. TODO: rather create dummy package info and report the issue!
             continue
-        for (module, items) in opt_contents["files"].items():
+        for (module, items) in opt_contents.files.items():
             files = _deep_update(
                 files, _parse_mkp_files(items, module, opt_contents, "installed", package)
             )
-    for (module, contents) in infos["parts"].items():
-        files = _deep_update(files, _parse_mkp_file_parts(contents))
+    for (module, data) in infos["parts"].items():
+        files = _deep_update(files, _parse_mkp_file_parts(data))
 
     # Check which files exist
     for path in files:

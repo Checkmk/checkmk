@@ -3,46 +3,57 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """When it grows up, this file wants to provide an abstraction of the internal MKP structure"""
+from __future__ import annotations
+
 import ast
 import pprint
 import tarfile
-from typing import BinaryIO, TypedDict
+from typing import BinaryIO
+
+from pydantic import BaseModel, Field
 
 from cmk.utils import version as cmk_version
 
-# Would like to use class declaration here, but that is not compatible with the dots in the keys
-# below.
-PackageInfo = TypedDict(
-    "PackageInfo",
-    {
-        "title": str,
-        "name": str,
-        "description": str,
-        "version": str,
-        "version.packaged": str,
-        "version.min_required": str,
-        "version.usable_until": str | None,
-        "author": str,
-        "download_url": str,
-        "files": dict[str, list[str]],
-    },
-    total=False,
-)
+
+class PackageInfo(BaseModel):
+    title: str
+    name: str
+    description: str
+    version: str
+    version_packaged: str = Field(alias="version.packaged")
+    version_min_required: str = Field(alias="version.min_required")
+    version_usable_until: str | None = Field(None, alias="version.usable_until")
+    author: str
+    download_url: str
+    files: dict[str, list[str]]
+
+    class Config:
+        allow_population_by_field_name = True
+
+    def file_content(self) -> str:
+        return f"{pprint.pformat(self.dict(by_alias=True))}\n"
+
+    def json_file_content(self) -> str:
+        return self.json(by_alias=True)
+
+    @classmethod
+    def parse_python_string(cls, raw: str) -> PackageInfo:
+        return cls.parse_obj(ast.literal_eval(raw))
 
 
-def get_initial_package_info(pacname: str) -> PackageInfo:
-    return {
-        "title": "Title of %s" % pacname,
-        "name": pacname,
-        "description": "Please add a description here",
-        "version": "1.0",
-        "version.packaged": cmk_version.__version__,
-        "version.min_required": cmk_version.__version__,
-        "version.usable_until": None,
-        "author": "Add your name here",
-        "download_url": "http://example.com/%s/" % pacname,
-        "files": {},
-    }
+def package_info_template(pacname: str) -> PackageInfo:
+    return PackageInfo(
+        title=f"Title of {pacname}",
+        name=pacname,
+        description="Please add a description here",
+        version="1.0",
+        version_packaged=cmk_version.__version__,
+        version_min_required=cmk_version.__version__,
+        version_usable_until=None,
+        author="Add your name here",
+        download_url=f"https://example.com/{pacname}/",
+        files={},
+    )
 
 
 def get_optional_package_info(file_object: BinaryIO) -> PackageInfo | None:
@@ -53,14 +64,4 @@ def get_optional_package_info(file_object: BinaryIO) -> PackageInfo | None:
             raw_info = extracted_file.read()
         except KeyError:
             return None
-    return parse_package_info(raw_info.decode())
-
-
-def serialize_package_info(package_info: PackageInfo) -> str:
-    return pprint.pformat(package_info) + "\n"
-
-
-def parse_package_info(python_string: str) -> PackageInfo:
-    package_info = ast.literal_eval(python_string)
-    package_info.setdefault("version.usable_until", None)
-    return package_info
+    return PackageInfo.parse_python_string(raw_info.decode())

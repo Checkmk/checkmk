@@ -7,7 +7,7 @@ import ast
 import json
 import shutil
 import tarfile
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from io import BytesIO
 from pathlib import Path
 from typing import Callable
@@ -193,9 +193,9 @@ def test_get_package_parts() -> None:
 
 def _create_simple_test_package(pacname):
     _create_test_file(pacname)
-    package_info = packaging.get_initial_package_info(pacname)
+    package_info = packaging.package_info_template(pacname)
 
-    package_info["files"] = {
+    package_info.files = {
         "checks": [pacname],
     }
 
@@ -225,7 +225,7 @@ def test_create_twice() -> None:
 def test_read_package_info() -> None:
     _create_simple_test_package("aaa")
     package_info = _read_package_info("aaa")
-    assert package_info["version"] == "1.0"
+    assert package_info.version == "1.0"
     assert packaging.package_num_files(package_info) == 1
 
 
@@ -234,38 +234,38 @@ def test_read_package_info_not_existing() -> None:
 
 
 def test_edit_not_existing() -> None:
-    new_package_info = packaging.get_initial_package_info("aaa")
-    new_package_info["version"] = "2.0"
+    new_package_info = packaging.package_info_template("aaa")
+    new_package_info.version = "2.0"
 
     with pytest.raises(packaging.PackageException):
         packaging.edit("aaa", new_package_info)
 
 
 def test_edit() -> None:
-    new_package_info = packaging.get_initial_package_info("aaa")
-    new_package_info["version"] = "2.0"
+    new_package_info = packaging.package_info_template("aaa")
+    new_package_info.version = "2.0"
 
     package_info = _create_simple_test_package("aaa")
-    assert package_info["version"] == "1.0"
+    assert package_info.version == "1.0"
 
     packaging.edit("aaa", new_package_info)
 
-    assert _read_package_info("aaa")["version"] == "2.0"
+    assert _read_package_info("aaa").version == "2.0"
 
 
 def test_edit_rename() -> None:
-    new_package_info = packaging.get_initial_package_info("bbb")
+    new_package_info = packaging.package_info_template("bbb")
 
     _create_simple_test_package("aaa")
 
     packaging.edit("aaa", new_package_info)
 
-    assert _read_package_info("bbb")["name"] == "bbb"
+    assert _read_package_info("bbb").name == "bbb"
     assert packaging.read_package_info("aaa") is None
 
 
 def test_edit_rename_conflict() -> None:
-    new_package_info = packaging.get_initial_package_info("bbb")
+    new_package_info = packaging.package_info_template("bbb")
     _create_simple_test_package("aaa")
     _create_simple_test_package("bbb")
 
@@ -283,8 +283,8 @@ def test_install(mkp_bytes: bytes, build_setup_search_index: Mock) -> None:
 
     assert packaging._package_exists("aaa") is True
     package_info = _read_package_info("aaa")
-    assert package_info["version"] == "1.0"
-    assert package_info["files"]["checks"] == ["aaa"]
+    assert package_info.version == "1.0"
+    assert package_info.files["checks"] == ["aaa"]
     assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
 
 
@@ -398,25 +398,32 @@ def test_get_optional_package_infos(monkeypatch: pytest.MonkeyPatch, tmp_path: P
 
     # Create package
     _create_simple_test_package("optional")
-    package_info = _read_package_info("optional")
+    expected_package_info = _read_package_info("optional")
 
-    expected: dict = {k: v for k, v in package_info.items() if k != "num_files"}
-    assert packaging.get_optional_package_infos() == {"optional-1.0.mkp": (expected, True)}
+    assert packaging.get_optional_package_infos() == {
+        "optional-1.0.mkp": (expected_package_info, True)
+    }
 
 
 def test_parse_package_info_pre_160() -> None:
-    assert packaging.parse_package_info(repr({"name": "aaa"}))["version.usable_until"] is None
+    # make sure we can read old packages without "usable until"
+    raw = {
+        k: v
+        for k, v in packaging.package_info_template("testpackage").dict(by_alias=True).items()
+        if k != "version.usable_until"
+    }
+    assert packaging.PackageInfo.parse_python_string(repr(raw)).version_usable_until is None
 
 
 def test_parse_package_info() -> None:
-    info_str = repr(packaging.get_initial_package_info("pkgname"))
-    assert packaging.parse_package_info(info_str)["name"] == "pkgname"
+    info_str = packaging.package_info_template("pkgname").file_content()
+    assert packaging.PackageInfo.parse_python_string(info_str).name == "pkgname"
 
 
 def test_reload_gui_without_gui_files(  # type:ignore[no-untyped-def]
     reload_apache, build_setup_search_index
 ) -> None:
-    package = packaging.get_initial_package_info("ding")
+    package = packaging.package_info_template("ding")
     packaging._execute_post_package_change_actions(package)
     build_setup_search_index.assert_called_once()
     reload_apache.assert_not_called()
@@ -425,8 +432,8 @@ def test_reload_gui_without_gui_files(  # type:ignore[no-untyped-def]
 def test_reload_gui_with_gui_part(  # type:ignore[no-untyped-def]
     reload_apache, build_setup_search_index
 ) -> None:
-    package = packaging.get_initial_package_info("ding")
-    package["files"] = {"gui": ["a"]}
+    package = packaging.package_info_template("ding")
+    package.files = {"gui": ["a"]}
 
     packaging._execute_post_package_change_actions(package)
     build_setup_search_index.assert_called_once()
@@ -436,48 +443,49 @@ def test_reload_gui_with_gui_part(  # type:ignore[no-untyped-def]
 def test_reload_gui_with_web_part(  # type:ignore[no-untyped-def]
     reload_apache, build_setup_search_index
 ) -> None:
-    package = packaging.get_initial_package_info("ding")
-    package["files"] = {"web": ["a"]}
+    package = packaging.package_info_template("ding")
+    package.files = {"web": ["a"]}
 
     packaging._execute_post_package_change_actions(package)
     build_setup_search_index.assert_called_once()
     reload_apache.assert_called_once()
 
 
-def _get_test_package_info(properties: packaging.PackageInfo) -> packaging.PackageInfo:
-    pi = packaging.get_initial_package_info("test-package")
-    pi.update(properties)
+def _get_test_package_info(properties: Mapping) -> packaging.PackageInfo:
+    pi = packaging.package_info_template("test-package")
+    for k, v in properties.items():
+        setattr(pi, k, v)
     return pi
 
 
 @pytest.mark.parametrize(
     "package_info, site_version",
     [
-        (_get_test_package_info({"version.usable_until": "1.6.0"}), "2.0.0i1"),
-        (_get_test_package_info({"version.usable_until": "2.0.0i1"}), "2.0.0i2"),
-        (_get_test_package_info({"version.usable_until": "2.0.0"}), "2.0.0"),
-        (_get_test_package_info({"version.usable_until": "1.6.0"}), "1.6.0-2010.02.01"),
-        (_get_test_package_info({"version.usable_until": "1.6.0-2010.02.01"}), "1.6.0"),
+        (_get_test_package_info({"version_usable_until": "1.6.0"}), "2.0.0i1"),
+        (_get_test_package_info({"version_usable_until": "2.0.0i1"}), "2.0.0i2"),
+        (_get_test_package_info({"version_usable_until": "2.0.0"}), "2.0.0"),
+        (_get_test_package_info({"version_usable_until": "1.6.0"}), "1.6.0-2010.02.01"),
+        (_get_test_package_info({"version_usable_until": "1.6.0-2010.02.01"}), "1.6.0"),
     ],
 )
 def test_raise_for_too_new_cmk_version_raises(
     package_info: packaging.PackageInfo, site_version: str
 ) -> None:
     with pytest.raises(packaging.PackageException):
-        packaging._raise_for_too_new_cmk_version(package_info["name"], package_info, site_version)
+        packaging._raise_for_too_new_cmk_version(package_info, site_version)
 
 
 @pytest.mark.parametrize(
     "package_info, site_version",
     [
-        (_get_test_package_info({"version.usable_until": None}), "2.0.0i1"),
-        (_get_test_package_info({"version.usable_until": "2.0.0"}), "2.0.0i1"),
-        (_get_test_package_info({"version.usable_until": "2.0.0"}), "2010.02.01"),
-        (_get_test_package_info({"version.usable_until": ""}), "1.6.0"),
-        (_get_test_package_info({"version.usable_until": "1.6.0"}), ""),
+        (_get_test_package_info({"version_usable_until": None}), "2.0.0i1"),
+        (_get_test_package_info({"version_usable_until": "2.0.0"}), "2.0.0i1"),
+        (_get_test_package_info({"version_usable_until": "2.0.0"}), "2010.02.01"),
+        (_get_test_package_info({"version_usable_until": ""}), "1.6.0"),
+        (_get_test_package_info({"version_usable_until": "1.6.0"}), ""),
     ],
 )
 def test_raise_for_too_new_cmk_version_ok(
     package_info: packaging.PackageInfo, site_version: str
 ) -> None:
-    packaging._raise_for_too_new_cmk_version(package_info["name"], package_info, site_version)
+    packaging._raise_for_too_new_cmk_version(package_info, site_version)

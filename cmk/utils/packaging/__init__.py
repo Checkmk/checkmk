@@ -31,13 +31,7 @@ from cmk.utils.version import parse_check_mk_version
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
-from ._package import (
-    get_initial_package_info,
-    get_optional_package_info,
-    PackageInfo,
-    parse_package_info,
-    serialize_package_info,
-)
+from ._package import get_optional_package_info, package_info_template, PackageInfo
 
 
 # TODO: Subclass MKGeneralException()?
@@ -188,7 +182,7 @@ def release(pacname: PackageName) -> None:
         raise PackageException("Package %s not installed or corrupt." % pacname)
     logger.log(VERBOSE, "Releasing files of package %s into freedom...", pacname)
     for part in get_package_parts() + get_config_parts():
-        filenames = package["files"].get(part.ident, [])
+        filenames = package.files.get(part.ident, [])
         if len(filenames) > 0:
             logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
             for f in filenames:
@@ -215,25 +209,24 @@ def create_mkp_object(
     package_parts: Callable = get_package_parts,
     config_parts: Callable = get_config_parts,
 ) -> bytes:
-    package["version.packaged"] = cmk_version.__version__
+    package.version_packaged = cmk_version.__version__
 
     buffer = BytesIO()
     with tarfile.open(fileobj=buffer, mode="w:gz") as tar:
 
         def add_file(filename: str, data: bytes) -> None:
-            info_file = BytesIO(data)
-            info = _create_tar_info(filename, len(info_file.getvalue()))
-            tar.addfile(info, info_file)
+            info = _create_tar_info(filename, len(data))
+            tar.addfile(info, BytesIO(data))
 
         # add the regular info file (Python format)
-        add_file("info", serialize_package_info(package).encode())
+        add_file("info", package.file_content().encode())
 
         # add the info file a second time (JSON format) for external tools
-        add_file("info.json", json.dumps(package).encode())
+        add_file("info.json", package.json_file_content().encode())
 
         # Now pack the actual files into sub tars
         for part in package_parts() + config_parts():
-            filenames = package["files"].get(part.ident, [])
+            filenames = package.files.get(part.ident, [])
             if len(filenames) > 0:
                 logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
                 for f in filenames:
@@ -249,7 +242,7 @@ def create_mkp_object(
 
 def uninstall(package: PackageInfo, post_package_change_actions: bool = True) -> None:
     for part in get_package_parts() + get_config_parts():
-        filenames = package["files"].get(part.ident, [])
+        filenames = package.files.get(part.ident, [])
         if len(filenames) > 0:
             logger.log(VERBOSE, "  %s%s%s", tty.bold, part.title, tty.normal)
             if part.ident == "ec_rule_packs":
@@ -265,7 +258,7 @@ def uninstall(package: PackageInfo, post_package_change_actions: bool = True) ->
                         raise
                     raise Exception(f"Cannot uninstall {file_path}: {e}\n")
 
-    (package_dir() / package["name"]).unlink()
+    (package_dir() / package.name).unlink()
 
     if post_package_change_actions:
         _execute_post_package_change_actions(package)
@@ -280,7 +273,7 @@ class PackageStore:
 
         package = _get_package_info_from_package(BytesIO(file_content))
 
-        base_name = format_file_name(name=package["name"], version=package["version"])
+        base_name = format_file_name(name=package.name, version=package.version)
         local_package_path = self.local_packages / base_name
         shipped_package_path = self.shipped_packages / base_name
 
@@ -333,8 +326,8 @@ def _find_path_and_package_info(package_name: PackageName) -> tuple[Path, Packag
         if (package := enabled_packages.get(package_path.name)) is None:
             continue
         if (
-            package["name"] == package_name
-            or format_file_name(name=package["name"], version=package["version"]) == package_name
+            package.name == package_name
+            or format_file_name(name=package.name, version=package.version) == package_name
         ):
             return package_path, package
 
@@ -342,11 +335,10 @@ def _find_path_and_package_info(package_name: PackageName) -> tuple[Path, Packag
 
 
 def create(pkg_info: PackageInfo) -> None:
-    pacname = pkg_info["name"]
-    if _package_exists(pacname):
+    if _package_exists(pkg_info.name):
         raise PackageException("Packet already exists.")
 
-    _validate_package_files(pacname, pkg_info["files"])
+    _validate_package_files(pkg_info.name, pkg_info.files)
     write_package_info(pkg_info)
     _create_enabled_mkp_from_installed_package(pkg_info)
 
@@ -356,13 +348,13 @@ def edit(pacname: PackageName, new_package_info: PackageInfo) -> None:
         raise PackageException("No such package")
 
     # Renaming: check for collision
-    if pacname != new_package_info["name"]:
-        if _package_exists(new_package_info["name"]):
+    if pacname != new_package_info.name:
+        if _package_exists(new_package_info.name):
             raise PackageException(
                 "Cannot rename package: a package with that name already exists."
             )
 
-    _validate_package_files(pacname, new_package_info["files"])
+    _validate_package_files(pacname, new_package_info.files)
 
     _create_enabled_mkp_from_installed_package(new_package_info)
     _remove_package_info(pacname)
@@ -375,7 +367,7 @@ def _create_enabled_mkp_from_installed_package(manifest: PackageInfo) -> None:
     After we changed and or created an MKP, we must make sure it is present on disk as
     an MKP, just like the uploaded ones.
     """
-    base_name = format_file_name(name=manifest["name"], version=manifest["version"])
+    base_name = format_file_name(name=manifest.name, version=manifest.version)
     file_path = cmk.utils.paths.local_optional_packages_dir / base_name
 
     file_path.parent.mkdir(parents=True, exist_ok=True)
@@ -423,7 +415,7 @@ def mark_as_enabled(package_path: Path) -> None:
 
 
 def remove_enabled_mark(package_info: PackageInfo) -> None:
-    base_name = format_file_name(name=package_info["name"], version=package_info["version"])
+    base_name = format_file_name(name=package_info.name, version=package_info.version)
     (cmk.utils.paths.local_enabled_packages_dir / base_name).unlink(
         missing_ok=True
     )  # should never be missing, but don't crash in messed up state
@@ -459,7 +451,7 @@ def _install(  # pylint: disable=too-many-branches
     package = _get_package_info_from_package(file_object)
     file_object.seek(0)
 
-    pacname = package["name"]
+    pacname = package.name
     old_package = read_package_info(pacname)
 
     if old_package:
@@ -467,18 +459,18 @@ def _install(  # pylint: disable=too-many-branches
             VERBOSE,
             "Updating %s from version %s to %s.",
             pacname,
-            old_package["version"],
-            package["version"],
+            old_package.version,
+            package.version,
         )
     else:
-        logger.log(VERBOSE, "Installing %s version %s.", pacname, package["version"])
+        logger.log(VERBOSE, "Installing %s version %s.", pacname, package.version)
 
     _raise_for_installability(package, old_package, cmk_version.__version__, allow_outdated)
 
     with tarfile.open(fileobj=file_object, mode="r:gz") as tar:
         # Now install files, but only unpack files explicitely listed
         for part in get_package_parts() + get_config_parts():
-            filenames = package["files"].get(part.ident, [])
+            filenames = package.files.get(part.ident, [])
             if len(filenames) > 0:
                 logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
                 for fn in filenames:
@@ -531,8 +523,8 @@ def _install(  # pylint: disable=too-many-branches
     # In case of an update remove files from old_package not present in new one
     if old_package is not None:
         for part in get_package_parts() + get_config_parts():
-            new_files = set(package["files"].get(part.ident, []))
-            old_files = set(old_package["files"].get(part.ident, []))
+            new_files = set(package.files.get(part.ident, []))
+            old_files = set(old_package.files.get(part.ident, []))
             remove_files = old_files - new_files
             for fn in remove_files:
                 path = os.path.join(part.path, fn)
@@ -569,7 +561,7 @@ def _raise_for_installability(
     """
     _raise_for_too_old_cmk_version(package, site_version)
     if not allow_outdated:
-        _raise_for_too_new_cmk_version(package["name"], package, cmk_version.__version__)
+        _raise_for_too_new_cmk_version(package, cmk_version.__version__)
     _raise_for_conflicts(package, old_package)
 
 
@@ -589,9 +581,9 @@ def _conflicting_files(
     for part in get_package_parts() + get_config_parts():
         packaged = _packaged_files_in_dir(part.ident)
 
-        old_files = set(old_package["files"].get(part.ident, [])) if old_package else set()
+        old_files = set(old_package.files.get(part.ident, [])) if old_package else set()
 
-        for fn in package["files"].get(part.ident, []):
+        for fn in package.files.get(part.ident, []):
             if fn in old_files:
                 continue
             path = os.path.join(part.path, fn)
@@ -657,7 +649,7 @@ def _validate_package_files_part(
             raise PackageException("File %s does not exist." % path)
 
         for other_pacname, other_package_info in packages.items():
-            for other_rel_path in other_package_info["files"].get(part, []):
+            for other_rel_path in other_package_info.files.get(part, []):
                 if other_rel_path == rel_path and other_pacname != pacname:
                     raise PackageException(
                         f"File {path} does already belong to package {other_pacname}"
@@ -669,7 +661,7 @@ def _raise_for_too_old_cmk_version(package: PackageInfo, site_version: str) -> N
     current Check_MK version. Raises an exception if not. When the Check_MK version
     can not be parsed or is a daily build, the check is simply passing without error."""
 
-    min_version = _normalize_daily_version(package["version.min_required"])
+    min_version = _normalize_daily_version(package.version_min_required)
     if min_version == "master":
         return  # can not check exact version
 
@@ -792,8 +784,8 @@ def package_part_info() -> PackagePartInfo:
 def read_package_info(pacname: PackageName) -> PackageInfo | None:
     pkg_info_path = package_dir() / pacname
     try:
-        package = parse_package_info(pkg_info_path.read_text())
-        package["name"] = pacname  # do not trust package content
+        package = PackageInfo.parse_python_string(pkg_info_path.read_text())
+        package.name = pacname  # do not trust package content
         return package
     except OSError:
         return None
@@ -809,7 +801,7 @@ def read_package_info(pacname: PackageName) -> PackageInfo | None:
 
 
 def package_num_files(package: PackageInfo) -> int:
-    return sum(len(fl) for fl in package["files"].values())
+    return sum(len(fl) for fl in package.files.values())
 
 
 def _files_in_dir(part: str, directory: str, prefix: str = "") -> list[str]:
@@ -852,7 +844,7 @@ def _packaged_files_in_dir(part: PartName) -> list[str]:
     for pacname in installed_names():
         package = read_package_info(pacname)
         if package:
-            result += package["files"].get(part, [])
+            result += package.files.get(part, [])
     return result
 
 
@@ -865,8 +857,8 @@ def _package_exists(pacname: PackageName) -> bool:
 
 
 def write_package_info(package: PackageInfo) -> None:
-    pkg_info_path = package_dir() / package["name"]
-    pkg_info_path.write_text(serialize_package_info(package))
+    pkg_info_path = package_dir() / package.name
+    pkg_info_path.write_text(package.file_content())
 
 
 def _remove_package_info(pacname: PackageName) -> None:
@@ -883,7 +875,7 @@ def rule_pack_id_to_mkp() -> dict[str, Any]:
     def mkp_of(rule_pack_file: str) -> Any:
         """Find the MKP for the given file"""
         for package_name, package in get_installed_package_infos().items():
-            if package and rule_pack_file in package.get("files", {}).get("ec_rule_packs", []):
+            if package and rule_pack_file in package.files.get("ec_rule_packs", []):
                 return package_name
         return None
 
@@ -960,7 +952,7 @@ def _sort_enabled_packages_for_installation(
                 )
                 continue
 
-        packages_by_name.setdefault(package_info["name"], {})[package_info["version"]] = pkg_path
+        packages_by_name.setdefault(package_info.name, {})[package_info.version] = pkg_path
 
     return _sort_by_name_then_newest_version(packages_by_name)
 
@@ -1039,7 +1031,7 @@ def disable_outdated() -> None:
             continue
 
         try:
-            _raise_for_too_new_cmk_version(package_name, package_info, cmk_version.__version__)
+            _raise_for_too_new_cmk_version(package_info, cmk_version.__version__)
         except PackageException as exc:
             logger.log(VERBOSE, "[%s]: Disable outdated package: %s", package_name, exc)
             disable(package_name)
@@ -1047,28 +1039,28 @@ def disable_outdated() -> None:
             logger.log(VERBOSE, "[%s]: Not disabling", package_name)
 
 
-def _raise_for_too_new_cmk_version(
-    package_name: PackageName, package_info: PackageInfo, version: str
-) -> None:
+def _raise_for_too_new_cmk_version(package_info: PackageInfo, version: str) -> None:
     """Raise an exception if a package is considered outated for the Checmk version"""
-    until_version = package_info["version.usable_until"]
+    until_version = package_info.version_usable_until
 
     if until_version is None:
-        logger.log(VERBOSE, '[%s]: "Until version" is not set', package_name)
+        logger.log(VERBOSE, '[%s]: "Until version" is not set', package_info.name)
         return
 
     # Normalize daily versions to branch version
     version = _normalize_daily_version(version)
     if version == "master":
         logger.log(
-            VERBOSE, "[%s]: This is a daily build of master branch, can not decide", package_name
+            VERBOSE,
+            "[%s]: This is a daily build of master branch, can not decide",
+            package_info.name,
         )
         return
 
     until_version = _normalize_daily_version(until_version)
     if until_version == "master":
         logger.log(
-            VERBOSE, "[%s]: Until daily build of master branch, can not decide", package_name
+            VERBOSE, "[%s]: Until daily build of master branch, can not decide", package_info.name
         )
         return
 
@@ -1078,7 +1070,7 @@ def _raise_for_too_new_cmk_version(
         logger.log(
             VERBOSE,
             "[%s]: Could not compare until version %r with current version %r",
-            package_name,
+            package_info.name,
             until_version,
             version,
             exc_info=True,
@@ -1090,7 +1082,7 @@ def _raise_for_too_new_cmk_version(
         version,
         until_version,
     )
-    logger.log(VERBOSE, "[%s]: %s", package_name, msg)
+    logger.log(VERBOSE, "[%s]: %s", package_info.name, msg)
     if is_outdated:
         raise PackageException(msg)
 
@@ -1110,7 +1102,7 @@ def _build_setup_search_index_background() -> None:
 
 
 def _package_contains_gui_files(package: PackageInfo) -> bool:
-    return "gui" in package["files"] or "web" in package["files"]
+    return "gui" in package.files or "web" in package.files
 
 
 def _reload_apache() -> None:

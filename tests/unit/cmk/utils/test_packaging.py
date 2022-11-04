@@ -414,11 +414,8 @@ def test_get_optional_package_infos(monkeypatch: pytest.MonkeyPatch, tmp_path: P
     _create_simple_test_package("optional")
     package_info = _read_package_info("optional")
 
-    expected: dict = {
-        **{k: v for k, v in package_info.items() if k != "num_files"},
-        "is_local": True,
-    }
-    assert packaging.get_optional_package_infos() == {"optional-1.0.mkp": expected}
+    expected: dict = {k: v for k, v in package_info.items() if k != "num_files"}
+    assert packaging.get_optional_package_infos() == {"optional-1.0.mkp": (expected, True)}
 
 
 def test_parse_package_info_pre_160() -> None:

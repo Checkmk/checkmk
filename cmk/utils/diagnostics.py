@@ -261,7 +261,7 @@ class AllPackageInfos(TypedDict):
     installed: Mapping[packaging.PackageName, packaging.PackageInfo | None]
     unpackaged: Mapping[str, list[str]]
     parts: packaging.PackagePartInfo
-    optional_packages: Mapping[str, packaging.PackageInfo]
+    optional_packages: Mapping[str, tuple[packaging.PackageInfo, bool]]
     enabled_packages: Mapping[str, packaging.PackageInfo]
 
 
@@ -333,7 +333,7 @@ def get_local_files_csv(infos: AllPackageInfos) -> DiagnosticsElementCSVResult:
     # Parse different secions of the packaging output
     for (module, items) in infos["unpackaged"].items():
         files = _deep_update(files, _parse_mkp_files(items, module, {}, "unpackaged", "N/A"))
-    for package, contents in infos["optional_packages"].items():
+    for package, (contents, _is_local) in infos["optional_packages"].items():
         for (module, items) in contents["files"].items():
             files = _deep_update(
                 files, _parse_mkp_files(items, module, contents, "optional_packages", package)

@@ -108,7 +108,6 @@ PackageInfo = TypedDict(
         "author": str,
         "download_url": str,
         "files": PackageFiles,
-        "is_local": bool,  # TODO: this is the one that is optional...
     },
     total=False,
 )
@@ -754,29 +753,26 @@ def get_installed_package_infos() -> dict[PackageName, PackageInfo | None]:
     return {name: read_package_info(name) for name in installed_names()}
 
 
-def get_optional_package_infos() -> dict[str, PackageInfo]:
+def get_optional_package_infos() -> Mapping[str, tuple[PackageInfo, bool]]:
     package_store = PackageStore()
     local_packages = package_store.list_local_packages()
     local_names = {p.name for p in local_packages}
-    return _get_package_infos(
-        [
-            *((p, True) for p in local_packages),
-            *(
-                (p, False)
-                for p in package_store.list_shipped_packages()
-                if p.name not in local_names
-            ),
-        ]
+    shipped_packages = (
+        p for p in package_store.list_shipped_packages() if p.name not in local_names
     )
+    return {
+        **{k: (v, True) for k, v in _get_package_infos(local_packages).items()},
+        **{k: (v, False) for k, v in _get_package_infos(shipped_packages).items()},
+    }
 
 
-def get_enabled_package_infos() -> dict[str, PackageInfo]:
-    return _get_package_infos([(p, True) for p in _get_enabled_package_paths()])
+def get_enabled_package_infos() -> Mapping[str, PackageInfo]:
+    return _get_package_infos(_get_enabled_package_paths())
 
 
-def _get_package_infos(paths: list[tuple[Path, bool]]) -> dict[str, PackageInfo]:
+def _get_package_infos(paths: Iterable[Path]) -> Mapping[str, PackageInfo]:
     optional = {}
-    for pkg_path, is_local in paths:
+    for pkg_path in paths:
         with pkg_path.open("rb") as pkg:
             try:
                 package_info = _get_package_info_from_package(cast(BinaryIO, pkg))
@@ -784,7 +780,6 @@ def _get_package_infos(paths: list[tuple[Path, bool]]) -> dict[str, PackageInfo]
                 # Do not make broken files / packages fail the whole mechanism
                 logger.error("[%s]: Failed to read package info, skipping", pkg_path, exc_info=True)
                 continue
-            package_info["is_local"] = is_local
             optional[pkg_path.name] = package_info
 
     return optional

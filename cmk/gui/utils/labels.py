@@ -3,10 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import json
 from ast import literal_eval
-from typing import Dict, Iterable, List, Mapping, NamedTuple, Set, Tuple, TYPE_CHECKING, Union
+from typing import Dict, Iterable, List, Mapping, NamedTuple, Set, Tuple, Union
 
+from redis import Redis
 from redis.client import Pipeline
 
 from livestatus import LivestatusResponse, lqencode, quote_dict, SiteId
@@ -19,9 +22,6 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-
-if TYPE_CHECKING:
-    from cmk.utils.redis import RedisDecoded
 
 
 class Label(NamedTuple):
@@ -126,7 +126,7 @@ class LabelsCache:
         self._hst_label: str = "host_labels"
         self._svc_label: str = "service_labels"
         self._program_starts: str = self._namespace + ":last_program_starts"
-        self._redis_client: "RedisDecoded" = get_redis_client()
+        self._redis_client: Redis[str] = get_redis_client()
         self._sites_to_update: Set[SiteId] = set()
 
     def _get_site_ids(self) -> List[SiteId]:

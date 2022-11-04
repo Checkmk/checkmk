@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from contextlib import suppress
 from dataclasses import dataclass
@@ -19,9 +21,7 @@ from typing import (
     Iterable,
     List,
     Mapping,
-    Optional,
     Type,
-    TYPE_CHECKING,
     TypeVar,
 )
 
@@ -48,9 +48,6 @@ from cmk.gui.type_defs import SearchQuery, SearchResult, SearchResultsByTopic
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import file_name_and_query_vars_from_url, QueryVars
 from cmk.gui.watolib.utils import may_edit_ruleset
-
-if TYPE_CHECKING:
-    from cmk.utils.redis import RedisDecoded
 
 
 class IndexNotFoundException(MKGeneralException):
@@ -253,7 +250,7 @@ class IndexBuilder:
         )
 
     @classmethod
-    def index_is_built(cls, client: Optional["RedisDecoded"] = None) -> bool:
+    def index_is_built(cls, client: redis.Redis[str] | None = None) -> bool:
         return (client or get_redis_client()).exists(cls._KEY_INDEX_BUILT) == 1
 
 

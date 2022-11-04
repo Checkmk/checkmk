@@ -8,7 +8,9 @@ from __future__ import annotations
 import pickle
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING, TypedDict
+from typing import TypedDict
+
+from redis import Redis
 
 from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
@@ -23,9 +25,6 @@ from cmk.bi.lib import SitesCallback
 from cmk.bi.packs import BIAggregationPacks
 from cmk.bi.searcher import BISearcher
 from cmk.bi.trees import BICompiledAggregation
-
-if TYPE_CHECKING:
-    from cmk.utils.redis import RedisDecoded
 
 
 class ConfigStatus(TypedDict):
@@ -46,7 +45,7 @@ class BICompiler:
         self._path_compiled_aggregations = Path(get_cache_dir(), "compiled_aggregations")
         self._path_compiled_aggregations.mkdir(parents=True, exist_ok=True)
 
-        self._redis_client: RedisDecoded | None = None
+        self._redis_client: Redis[str] | None = None
         self._setup()
 
     def _setup(self) -> None:
@@ -232,7 +231,7 @@ class BICompiler:
     def _load_data(self, filepath: Path) -> dict:
         return store.load_object_from_pickle_file(filepath, default={})
 
-    def _get_redis_client(self) -> RedisDecoded:
+    def _get_redis_client(self) -> Redis[str]:
         if self._redis_client is None:
             self._redis_client = get_redis_client()
         return self._redis_client

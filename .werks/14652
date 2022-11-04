@@ -12,7 +12,7 @@ This Werk is incompatible for users of the <i>real-time check (RTC)</i> feature.
 
 We incompatibly change the way the encryption for RTC is configured.
 Since we cannot guarantee a compatible migration in all cases, we play it safe:
-All rulesets of the rule <i>"Real-time checks"<i> are extended by a randomly generated secret, used for (and enabling) encryption.
+All rulesets of the rule <i>"Real-time checks"</i> are extended by a randomly generated secret, used for (and enabling) encryption.
 Users have to reconfigure the rules to get the old behavior (or deploy the agents to use the created password).
 
 <b>In detail:</b>

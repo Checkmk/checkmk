@@ -91,18 +91,20 @@ def test__tree_nodes_are_equal(old_tree: StructuredDataNode, inv_tree: Structure
 def test_integrate_attributes() -> None:
     tree_aggr = RealHostTreeAggregator()
     tree_aggr.aggregate_results(
-        ItemsOfInventoryPlugin(
-            items=[
-                Attributes(
-                    path=["a", "b", "c"],
-                    inventory_attributes={
-                        "foo0": "bar0",
-                        "foo1": "bar1",
-                    },
-                ),
-            ],
-            raw_cache_info=None,
-        )
+        [
+            ItemsOfInventoryPlugin(
+                items=[
+                    Attributes(
+                        path=["a", "b", "c"],
+                        inventory_attributes={
+                            "foo0": "bar0",
+                            "foo1": "bar1",
+                        },
+                    ),
+                ],
+                raw_cache_info=None,
+            )
+        ]
     )
 
     assert tree_aggr.inventory_tree.serialize() == {
@@ -135,36 +137,38 @@ def test_integrate_attributes() -> None:
 def test_integrate_table_row() -> None:
     tree_aggr = RealHostTreeAggregator()
     tree_aggr.aggregate_results(
-        ItemsOfInventoryPlugin(
-            items=[
-                TableRow(
-                    path=["a", "b", "c"],
-                    key_columns={"foo": "baz"},
-                    inventory_columns={
-                        "col1": "baz val1",
-                        "col2": "baz val2",
-                        "col3": "baz val3",
-                    },
-                ),
-                TableRow(
-                    path=["a", "b", "c"],
-                    key_columns={"foo": "bar"},
-                    inventory_columns={
-                        "col1": "bar val1",
-                        "col2": "bar val2",
-                    },
-                ),
-                TableRow(
-                    path=["a", "b", "c"],
-                    key_columns={"foo": "bar"},
-                    inventory_columns={
-                        "col1": "new bar val1",
-                        "col3": "bar val3",
-                    },
-                ),
-            ],
-            raw_cache_info=None,
-        ),
+        [
+            ItemsOfInventoryPlugin(
+                items=[
+                    TableRow(
+                        path=["a", "b", "c"],
+                        key_columns={"foo": "baz"},
+                        inventory_columns={
+                            "col1": "baz val1",
+                            "col2": "baz val2",
+                            "col3": "baz val3",
+                        },
+                    ),
+                    TableRow(
+                        path=["a", "b", "c"],
+                        key_columns={"foo": "bar"},
+                        inventory_columns={
+                            "col1": "bar val1",
+                            "col2": "bar val2",
+                        },
+                    ),
+                    TableRow(
+                        path=["a", "b", "c"],
+                        key_columns={"foo": "bar"},
+                        inventory_columns={
+                            "col1": "new bar val1",
+                            "col3": "bar val3",
+                        },
+                    ),
+                ],
+                raw_cache_info=None,
+            ),
+        ]
     )
 
     assert tree_aggr.inventory_tree.serialize() == {

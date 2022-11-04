@@ -327,8 +327,7 @@ def _inventorize_real_host(
     section.section_step("Create inventory or status data tree")
 
     tree_aggregator = RealHostTreeAggregator()
-    for items_of_inventory_plugin in items_of_inventory_plugins:
-        tree_aggregator.aggregate_results(items_of_inventory_plugin)
+    tree_aggregator.aggregate_results(items_of_inventory_plugins)
 
     section.section_step("May update inventory tree")
 
@@ -364,13 +363,14 @@ def inventorize_status_data_of_real_host(
     run_plugin_names: Container[InventoryPluginName],
 ) -> StructuredDataNode:
     tree_aggregator = RealHostTreeAggregator()
-    for items_of_inventory_plugin in _collect_inventory_plugin_items(
-        host_name,
-        host_config=host_config,
-        parsed_sections_broker=parsed_sections_broker,
-        run_plugin_names=run_plugin_names,
-    ):
-        tree_aggregator.aggregate_results(items_of_inventory_plugin)
+    tree_aggregator.aggregate_results(
+        _collect_inventory_plugin_items(
+            host_name,
+            host_config=host_config,
+            parsed_sections_broker=parsed_sections_broker,
+            run_plugin_names=run_plugin_names,
+        )
+    )
     return tree_aggregator.status_data_tree
 
 

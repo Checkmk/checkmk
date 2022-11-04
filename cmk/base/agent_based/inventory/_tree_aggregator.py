@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass
-from typing import NamedTuple
+from typing import Iterable, NamedTuple
 
 from cmk.utils.structured_data import (
     ATTRIBUTES_KEY,
@@ -64,12 +64,15 @@ class RealHostTreeAggregator:
 
     # ---from inventory plugins---------------------------------------------
 
-    def aggregate_results(self, items_of_inventory_plugin: ItemsOfInventoryPlugin) -> None:
-        for item in items_of_inventory_plugin.items:
-            if isinstance(item, Attributes):
-                self._integrate_attributes(item)
-            elif isinstance(item, TableRow):
-                self._integrate_table_row(item)
+    def aggregate_results(
+        self, items_of_inventory_plugins: Iterable[ItemsOfInventoryPlugin]
+    ) -> None:
+        for items_of_inventory_plugin in items_of_inventory_plugins:
+            for item in items_of_inventory_plugin.items:
+                if isinstance(item, Attributes):
+                    self._integrate_attributes(item)
+                elif isinstance(item, TableRow):
+                    self._integrate_table_row(item)
 
     def _integrate_attributes(
         self,

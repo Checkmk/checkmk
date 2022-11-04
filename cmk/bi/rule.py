@@ -169,9 +169,9 @@ class BIRule(ABCBIRule, ABCWithSchema):
 
     @classmethod
     def _create_node(cls, node_config: dict[str, Any]) -> ABCBICompiledNode:
-        if node_config["type"] == BICompiledRule.type():
+        if node_config["type"] == BICompiledRule.kind():
             return cls.create_tree_from_schema(node_config)
-        if node_config["type"] == BICompiledLeaf.type():
+        if node_config["type"] == BICompiledLeaf.kind():
             return BICompiledLeaf(**node_config)
         raise NotImplementedError("Unknown node type")
 

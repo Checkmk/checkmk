@@ -11,6 +11,7 @@ from marshmallow_oneofschema import OneOfSchema
 
 from cmk.bi.lib import (
     ABCBIAggregationFunction,
+    AggregationKind,
     bi_aggregation_function_registry,
     BIStates,
     ReqConstant,
@@ -53,7 +54,7 @@ def mapped_states(f: Callable[[Any, list[int]], int]) -> Callable[[Any, list[int
 @bi_aggregation_function_registry.register
 class BIAggregationFunctionBest(ABCBIAggregationFunction):
     @classmethod
-    def type(cls) -> str:
+    def kind(cls) -> AggregationKind:
         return "best"
 
     @classmethod
@@ -62,7 +63,7 @@ class BIAggregationFunctionBest(ABCBIAggregationFunction):
 
     def serialize(self):
         return {
-            "type": self.type(),
+            "type": self.kind(),
             "count": self.count,
             "restrict_state": self.restrict_state,
         }
@@ -79,7 +80,7 @@ class BIAggregationFunctionBest(ABCBIAggregationFunction):
 
 
 class BIAggregationFunctionBestSchema(Schema):
-    type = ReqConstant(BIAggregationFunctionBest.type())
+    type = ReqConstant(BIAggregationFunctionBest.kind())
     count = ReqInteger(dump_default=1)
     restrict_state = ReqInteger(
         dump_default=2,
@@ -106,7 +107,7 @@ class BIAggregationFunctionBestSchema(Schema):
 @bi_aggregation_function_registry.register
 class BIAggregationFunctionWorst(ABCBIAggregationFunction):
     @classmethod
-    def type(cls) -> str:
+    def kind(cls) -> AggregationKind:
         return "worst"
 
     @classmethod
@@ -115,7 +116,7 @@ class BIAggregationFunctionWorst(ABCBIAggregationFunction):
 
     def serialize(self):
         return {
-            "type": self.type(),
+            "type": self.kind(),
             "count": self.count,
             "restrict_state": self.restrict_state,
         }
@@ -132,7 +133,7 @@ class BIAggregationFunctionWorst(ABCBIAggregationFunction):
 
 
 class BIAggregationFunctionWorstSchema(Schema):
-    type = ReqConstant(BIAggregationFunctionWorst.type())
+    type = ReqConstant(BIAggregationFunctionWorst.kind())
     count = ReqInteger(dump_default=1, example=2)
     restrict_state = ReqInteger(
         dump_default=2,
@@ -159,7 +160,7 @@ class BIAggregationFunctionWorstSchema(Schema):
 @bi_aggregation_function_registry.register
 class BIAggregationFunctionCountOK(ABCBIAggregationFunction):
     @classmethod
-    def type(cls) -> str:
+    def kind(cls) -> AggregationKind:
         return "count_ok"
 
     @classmethod
@@ -168,7 +169,7 @@ class BIAggregationFunctionCountOK(ABCBIAggregationFunction):
 
     def serialize(self):
         return {
-            "type": self.type(),
+            "type": self.kind(),
             "levels_ok": self.levels_ok,
             "levels_warn": self.levels_warn,
         }
@@ -198,7 +199,7 @@ class BIAggregationFunctionCountSettings(Schema):
 
 
 class BIAggregationFunctionCountOKSchema(Schema):
-    type = ReqConstant(BIAggregationFunctionCountOK.type())
+    type = ReqConstant(BIAggregationFunctionCountOK.kind())
     levels_ok = ReqNested(BIAggregationFunctionCountSettings)
     levels_warn = ReqNested(BIAggregationFunctionCountSettings)
 
@@ -227,4 +228,4 @@ class BIAggregationFunctionSchema(OneOfSchema):
     def get_obj_type(self, obj: ABCBIAggregationFunction | dict) -> str:
         if isinstance(obj, dict):
             return obj["type"]
-        return obj.type()
+        return obj.kind()

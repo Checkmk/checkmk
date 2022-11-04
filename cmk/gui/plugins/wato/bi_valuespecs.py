@@ -19,6 +19,7 @@ from cmk.gui.plugins.wato.utils import DictHostTagCondition, LabelCondition
 from cmk.gui.valuespec import (
     Alternative,
     CascadingDropdown,
+    CascadingDropdownChoices,
     Dictionary,
     DropdownChoice,
     FixedValue,
@@ -30,6 +31,7 @@ from cmk.gui.valuespec import (
     TextInput,
     Transform,
     Tuple,
+    ValueSpec,
 )
 from cmk.gui.watolib.hosts_and_folders import Folder
 
@@ -39,7 +41,8 @@ from cmk.bi.aggregation_functions import (
     BIAggregationFunctionCountOK,
     BIAggregationFunctionWorst,
 )
-from cmk.bi.lib import ABCBIAction, ABCBIAggregationFunction, ABCBISearch
+from cmk.bi.lib import ABCBIAction, ABCBIAggregationFunction, ABCBISearch, ActionKind, SearchKind
+from cmk.bi.packs import BIAggregationPack
 from cmk.bi.search import BIEmptySearch, BIFixedArgumentsSearch, BIHostSearch, BIServiceSearch
 
 #   .--Generic converter---------------------------------------------------.
@@ -102,7 +105,7 @@ def _convert_bi_aggr_from_vs(value):
     }
 
 
-def get_bi_aggregation_node_choices():
+def get_bi_aggregation_node_choices() -> ValueSpec:
     return Transform(
         valuespec=CascadingDropdown(choices=_get_aggregation_choices()),
         to_valuespec=_convert_bi_aggr_to_vs,
@@ -110,10 +113,10 @@ def get_bi_aggregation_node_choices():
     )
 
 
-def _get_aggregation_choices():
+def _get_aggregation_choices() -> CascadingDropdownChoices:
     # These choices are currently hardcoded
     # A more dynamic approach will be introduced once the BI GUI gets an overhaul
-    elements = []
+    elements: list[tuple[str, str, ValueSpec]] = []
     call_a_rule = bi_config_action_registry["call_a_rule"]
     elements.append(call_a_rule.cascading_dropdown_choice_element())
     for search_plugin in ["host_search", "service_search"]:
@@ -180,7 +183,7 @@ def _convert_bi_rule_from_vs(value):
     return {"search": search, "action": action}
 
 
-def get_bi_rule_node_choices_vs():
+def get_bi_rule_node_choices_vs() -> ValueSpec:
     return Transform(
         valuespec=CascadingDropdown(choices=_get_rule_choices(), sorted=False),
         to_valuespec=_convert_bi_rule_to_vs,
@@ -188,9 +191,9 @@ def get_bi_rule_node_choices_vs():
     )
 
 
-def _get_rule_choices():
+def _get_rule_choices() -> CascadingDropdownChoices:
     action_choices = _get_action_cascading_dropdown_choices()
-    choices = list(action_choices)
+    choices: list[tuple[str, str, ValueSpec]] = list(action_choices)
     for search_plugin in ["host_search", "service_search"]:
         plugin = bi_config_search_registry[search_plugin]
         plugin_type, title, valuespec = plugin.cascading_dropdown_choice_element()
@@ -209,12 +212,8 @@ def _get_rule_choices():
     return choices
 
 
-def _get_action_cascading_dropdown_choices():
+def _get_action_cascading_dropdown_choices() -> list[tuple[ActionKind, str, ValueSpec]]:
     return [x.cascading_dropdown_choice_element() for x in bi_config_action_registry.values()]
-
-
-def _get_search_cascading_dropdown_choices():
-    return [x.cascading_dropdown_choice_element() for x in bi_config_search_registry.values()]
 
     # .--Search--------------------------------------------------------------.
     #   |                   ____                      _                        |
@@ -229,18 +228,18 @@ def _get_search_cascading_dropdown_choices():
 class ABCBIConfigSearch(ABCBISearch):
     @classmethod
     @abc.abstractmethod
-    def cascading_dropdown_choice_element(cls):
+    def cascading_dropdown_choice_element(cls) -> tuple[SearchKind, str, ValueSpec]:
         raise NotImplementedError()
 
     @classmethod
     @abc.abstractmethod
-    def valuespec(cls):
+    def valuespec(cls) -> ValueSpec:
         raise NotImplementedError()
 
 
-class BIConfigSearchRegistry(plugin_registry.Registry[Type[ABCBIConfigSearch]]):
-    def plugin_name(self, instance) -> str:  # type:ignore[no-untyped-def]
-        return instance.type()
+class BIConfigSearchRegistry(plugin_registry.Registry[type[ABCBIConfigSearch]]):
+    def plugin_name(self, instance: type[ABCBIConfigSearch]) -> str:
+        return instance.kind()
 
 
 bi_config_search_registry = BIConfigSearchRegistry()
@@ -289,27 +288,27 @@ def _bi_host_choice_vs(title):
 @bi_config_search_registry.register
 class BIConfigEmptySearch(BIEmptySearch, ABCBIConfigSearch):
     @classmethod
-    def cascading_dropdown_choice_element(cls):
+    def cascading_dropdown_choice_element(cls) -> tuple[SearchKind, str, ValueSpec]:
         return (
-            cls.type(),
+            cls.kind(),
             _("No search"),
             Transform(
-                valuespec=FixedValue(value=""),
+                valuespec=cls.valuespec(),
                 to_valuespec=lambda x: "",
-                from_valuespec=lambda x: {"type": cls.type()},
+                from_valuespec=lambda x: {"type": cls.kind()},
             ),
         )
 
     @classmethod
-    def valuespec(cls):
-        return None
+    def valuespec(cls) -> ValueSpec:
+        return FixedValue(value="")
 
 
 @bi_config_search_registry.register
 class BIConfigHostSearch(BIHostSearch, ABCBIConfigSearch):
     @classmethod
-    def cascading_dropdown_choice_element(cls):
-        return (cls.type(), _("Create nodes based on a host search"), cls.valuespec())
+    def cascading_dropdown_choice_element(cls) -> tuple[SearchKind, str, ValueSpec]:
+        return (cls.kind(), _("Create nodes based on a host search"), cls.valuespec())
 
     @classmethod
     def _convert_child_with_to_vs(cls, value):
@@ -330,7 +329,7 @@ class BIConfigHostSearch(BIHostSearch, ABCBIConfigSearch):
         return {"type": "child_with", "conditions": value[1]}
 
     @classmethod
-    def valuespec(cls):
+    def valuespec(cls) -> ValueSpec:
         return Dictionary(
             elements=[
                 (
@@ -400,11 +399,11 @@ class BIConfigHostSearch(BIHostSearch, ABCBIConfigSearch):
 @bi_config_search_registry.register
 class BIConfigServiceSearch(BIServiceSearch, ABCBIConfigSearch):
     @classmethod
-    def cascading_dropdown_choice_element(cls):
-        return (cls.type(), _("Create nodes based on a service search"), cls.valuespec())
+    def cascading_dropdown_choice_element(cls) -> tuple[SearchKind, str, ValueSpec]:
+        return (cls.kind(), _("Create nodes based on a service search"), cls.valuespec())
 
     @classmethod
-    def valuespec(cls):
+    def valuespec(cls) -> ValueSpec:
         return Dictionary(
             title=_("Conditions"),
             elements=[
@@ -441,11 +440,11 @@ class BIConfigServiceSearch(BIServiceSearch, ABCBIConfigSearch):
 @bi_config_search_registry.register
 class BIConfigFixedArgumentsSearch(BIFixedArgumentsSearch, ABCBIConfigSearch):
     @classmethod
-    def cascading_dropdown_choice_element(cls):
-        return (cls.type(), _("No search, specify list of arguments"), cls.valuespec())
+    def cascading_dropdown_choice_element(cls) -> tuple[SearchKind, str, ValueSpec]:
+        return (cls.kind(), _("No search, specify list of arguments"), cls.valuespec())
 
     @classmethod
-    def valuespec(cls):
+    def valuespec(cls) -> ValueSpec:
         return Dictionary(
             elements=[
                 (
@@ -493,18 +492,18 @@ class BIConfigFixedArgumentsSearch(BIFixedArgumentsSearch, ABCBIConfigSearch):
 class ABCBIConfigAction(ABCBIAction):
     @classmethod
     @abc.abstractmethod
-    def cascading_dropdown_choice_element(cls):
+    def cascading_dropdown_choice_element(cls) -> tuple[ActionKind, str, ValueSpec]:
         raise NotImplementedError()
 
     @classmethod
     @abc.abstractmethod
-    def valuespec(cls):
+    def valuespec(cls) -> ValueSpec:
         raise NotImplementedError()
 
 
 class BIConfigActionRegistry(plugin_registry.Registry[Type[ABCBIConfigAction]]):
-    def plugin_name(self, instance) -> str:  # type:ignore[no-untyped-def]
-        return instance.type()
+    def plugin_name(self, instance: Type[ABCBIConfigAction]) -> str:
+        return instance.kind()
 
 
 bi_config_action_registry = BIConfigActionRegistry()
@@ -513,11 +512,11 @@ bi_config_action_registry = BIConfigActionRegistry()
 @bi_config_action_registry.register
 class BIConfigCallARuleAction(actions.BICallARuleAction, ABCBIConfigAction):
     @classmethod
-    def cascading_dropdown_choice_element(cls):
-        return (cls.type(), _("Call a Rule"), cls.valuespec())
+    def cascading_dropdown_choice_element(cls) -> tuple[ActionKind, str, ValueSpec]:
+        return (cls.kind(), _("Call a Rule"), cls.valuespec())
 
     @classmethod
-    def valuespec(cls):
+    def valuespec(cls) -> ValueSpec:
         def convert_to_vs(value):
             if value.get("rule_id") is None:
                 return None
@@ -531,7 +530,7 @@ class BIConfigCallARuleAction(actions.BICallARuleAction, ABCBIConfigAction):
 
         def convert_from_vs(value):
             return {
-                "type": cls.type(),
+                "type": cls.kind(),
                 "params": {
                     "arguments": value[1],
                 },
@@ -604,11 +603,11 @@ class BIConfigCallARuleAction(actions.BICallARuleAction, ABCBIConfigAction):
         return choices
 
 
-def may_use_rules_in_pack(bi_pack):
+def may_use_rules_in_pack(bi_pack: BIAggregationPack) -> bool:
     return bi_pack.public or is_contact_for_pack(bi_pack)
 
 
-def is_contact_for_pack(bi_pack) -> bool:  # type:ignore[no-untyped-def]
+def is_contact_for_pack(bi_pack: BIAggregationPack) -> bool:
     if user.may("wato.bi_admin"):
         return True  # meaning I am admin
 
@@ -626,11 +625,11 @@ def is_contact_for_pack(bi_pack) -> bool:  # type:ignore[no-untyped-def]
 @bi_config_action_registry.register
 class BIConfigStateOfHostAction(actions.BIStateOfHostAction, ABCBIConfigAction):
     @classmethod
-    def cascading_dropdown_choice_element(cls):
-        return (cls.type(), _("State of a host"), cls.valuespec())
+    def cascading_dropdown_choice_element(cls) -> tuple[ActionKind, str, ValueSpec]:
+        return (cls.kind(), _("State of a host"), cls.valuespec())
 
     @classmethod
-    def valuespec(cls):
+    def valuespec(cls) -> ValueSpec:
         return Dictionary(
             help=_(
                 "Will create child nodes representing the state of hosts (usually the "
@@ -658,11 +657,11 @@ class BIConfigStateOfHostAction(actions.BIStateOfHostAction, ABCBIConfigAction):
 @bi_config_action_registry.register
 class BIConfigStateOfServiceAction(actions.BIStateOfServiceAction, ABCBIConfigAction):
     @classmethod
-    def cascading_dropdown_choice_element(cls):
-        return (cls.type(), _("State of a service"), cls.valuespec())
+    def cascading_dropdown_choice_element(cls) -> tuple[ActionKind, str, ValueSpec]:
+        return (cls.kind(), _("State of a service"), cls.valuespec())
 
     @classmethod
-    def valuespec(cls):
+    def valuespec(cls) -> ValueSpec:
         return Dictionary(
             help=_("Will create child nodes representing the state of services."),
             elements=[
@@ -694,11 +693,11 @@ class BIConfigStateOfRemainingServicesAction(
     actions.BIStateOfRemainingServicesAction, ABCBIConfigAction
 ):
     @classmethod
-    def cascading_dropdown_choice_element(cls):
-        return (cls.type(), _("State of remaining services"), cls.valuespec())
+    def cascading_dropdown_choice_element(cls) -> tuple[ActionKind, str, ValueSpec]:
+        return (cls.kind(), _("State of remaining services"), cls.valuespec())
 
     @classmethod
-    def valuespec(cls):
+    def valuespec(cls) -> ValueSpec:
         return Dictionary(
             help=_(
                 "Create a child node for each service on the specified hosts that is not "
@@ -745,15 +744,15 @@ class ABCBIConfigAggregationFunction(ABCBIAggregationFunction):
         raise NotImplementedError()
 
     @classmethod
-    def valuespec(cls):
+    def valuespec(cls) -> ValueSpec:
         raise NotImplementedError()
 
 
 class BIConfigAggregationFunctionRegistry(
     plugin_registry.Registry[Type[ABCBIConfigAggregationFunction]]
 ):
-    def plugin_name(self, instance) -> str:  # type:ignore[no-untyped-def]
-        return instance.type()
+    def plugin_name(self, instance: Type[ABCBIConfigAggregationFunction]) -> str:
+        return instance.kind()
 
 
 bi_config_aggregation_function_registry = BIConfigAggregationFunctionRegistry()
@@ -772,13 +771,13 @@ class BIConfigAggregationFunctionBest(BIAggregationFunctionBest, ABCBIConfigAggr
         return _("Best - take best of all node states")
 
     @classmethod
-    def valuespec(cls):
+    def valuespec(cls) -> ValueSpec:
         def convert_to_vs(value):
             return value["count"], value["restrict_state"]
 
         def convert_from_vs(value):
             return {
-                "type": cls.type(),
+                "type": cls.kind(),
                 "count": value[0],
                 "restrict_state": value[1],
             }
@@ -826,13 +825,13 @@ class BIConfigAggregationFunctionWorst(BIAggregationFunctionWorst, ABCBIConfigAg
         return _("Worst - take worst of all node states")
 
     @classmethod
-    def valuespec(cls):
+    def valuespec(cls) -> ValueSpec:
         def convert_to_vs(value):
             return value["count"], value["restrict_state"]
 
         def convert_from_vs(value):
             return {
-                "type": cls.type(),
+                "type": cls.kind(),
                 "count": value[0],
                 "restrict_state": value[1],
             }
@@ -892,7 +891,7 @@ class BIConfigAggregationFunctionCountOK(
         return _("Count the number of nodes in state OK")
 
     @classmethod
-    def valuespec(cls):
+    def valuespec(cls) -> ValueSpec:
         def convert_to_vs(value):
             result = []
             for what in ["levels_ok", "levels_warn"]:
@@ -905,7 +904,7 @@ class BIConfigAggregationFunctionCountOK(
             return tuple(result)
 
         def convert_from_vs(value):
-            result: Dict[str, Union[str, Dict[str, Union[int, str]]]] = {"type": cls.type()}
+            result: Dict[str, Union[str, Dict[str, Union[int, str]]]] = {"type": cls.kind()}
 
             for name, number in [("levels_ok", value[0]), ("levels_warn", value[1])]:
                 result[name] = {

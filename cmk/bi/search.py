@@ -25,6 +25,7 @@ from cmk.bi.lib import (
     ReqList,
     ReqNested,
     ReqString,
+    SearchKind,
 )
 from cmk.bi.schema import Schema
 
@@ -83,7 +84,7 @@ class ServiceConditionsSchema(HostConditionsSchema):
 @bi_search_registry.register
 class BIEmptySearch(ABCBISearch):
     @classmethod
-    def type(cls) -> str:
+    def kind(cls) -> SearchKind:
         return "empty"
 
     @classmethod
@@ -95,12 +96,12 @@ class BIEmptySearch(ABCBISearch):
 
     def serialize(self):
         return {
-            "type": self.type(),
+            "type": self.kind(),
         }
 
 
 class BIEmptySearchSchema(Schema):
-    type = ReqConstant(BIEmptySearch.type())
+    type = ReqConstant(BIEmptySearch.kind())
 
 
 #   .--Host----------------------------------------------------------------.
@@ -116,7 +117,7 @@ class BIEmptySearchSchema(Schema):
 @bi_search_registry.register
 class BIHostSearch(ABCBISearch):
     @classmethod
-    def type(cls) -> str:
+    def kind(cls) -> SearchKind:
         return "host_search"
 
     @classmethod
@@ -125,7 +126,7 @@ class BIHostSearch(ABCBISearch):
 
     def serialize(self):
         return {
-            "type": self.type(),
+            "type": self.kind(),
             "conditions": self.conditions,
             "refer_to": self.refer_to,
         }
@@ -272,7 +273,7 @@ class ReferToSchema(OneOfSchema):
 
 
 class BIHostSearchSchema(Schema):
-    type = ReqConstant(BIHostSearch.type())
+    type = ReqConstant(BIHostSearch.kind())
     conditions = ReqNested(HostConditionsSchema, dump_default=HostConditionsSchema().dump({}))
     refer_to = ReqNested(ReferToSchema, dump_default={"type": "host"})
 
@@ -304,7 +305,7 @@ class BIHostSearchSchema(Schema):
 @bi_search_registry.register
 class BIServiceSearch(ABCBISearch):
     @classmethod
-    def type(cls) -> str:
+    def kind(cls) -> SearchKind:
         return "service_search"
 
     @classmethod
@@ -313,7 +314,7 @@ class BIServiceSearch(ABCBISearch):
 
     def serialize(self):
         return {
-            "type": self.type(),
+            "type": self.kind(),
             "conditions": self.conditions,
         }
 
@@ -341,7 +342,7 @@ class BIServiceSearch(ABCBISearch):
 
 
 class BIServiceSearchSchema(Schema):
-    type = ReqConstant(BIServiceSearch.type())
+    type = ReqConstant(BIServiceSearch.kind())
     conditions = ReqNested(ServiceConditionsSchema, dump_default=ServiceConditionsSchema().dump({}))
 
 
@@ -358,12 +359,12 @@ class BIServiceSearchSchema(Schema):
 @bi_search_registry.register
 class BIFixedArgumentsSearch(ABCBISearch):
     @classmethod
-    def type(cls) -> str:
+    def kind(cls) -> SearchKind:
         return "fixed_arguments"
 
     def serialize(self):
         return {
-            "type": self.type(),
+            "type": self.kind(),
             "arguments": self.arguments,
         }
 
@@ -394,7 +395,7 @@ class BIFixedArgumentsSearchTokenSchema(Schema):
 
 
 class BIFixedArgumentsSearchSchema(Schema):
-    type = ReqConstant(BIFixedArgumentsSearch.type())
+    type = ReqConstant(BIFixedArgumentsSearch.kind())
     arguments = ReqList(fields.Nested(BIFixedArgumentsSearchTokenSchema))
 
 
@@ -416,4 +417,4 @@ class BISearchSchema(OneOfSchema):
     def get_obj_type(self, obj: ABCBISearch | dict) -> str:
         if isinstance(obj, dict):
             return obj["type"]
-        return obj.type()
+        return obj.kind()

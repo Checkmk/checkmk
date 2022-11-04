@@ -8,7 +8,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable
 from functools import partial
-from typing import Any, NamedTuple, Protocol, Type, TypeVar
+from typing import Any, Literal, NamedTuple, Protocol, Type, TypeVar
 
 from marshmallow import Schema as marshmallow_Schema
 
@@ -416,6 +416,13 @@ class ABCBIStatusFetcher(ABC):
         self.assumed_states: dict[RequiredBIElement, HostState | ServiceState] = {}
 
 
+CompiledNodeKind = Literal[
+    "leaf",
+    "remaining",
+    "rule",
+]
+
+
 class ABCBICompiledNode(ABC):
     def __init__(self) -> None:
         super().__init__()
@@ -423,7 +430,7 @@ class ABCBICompiledNode(ABC):
 
     @classmethod
     @abstractmethod
-    def type(cls) -> str:
+    def kind(cls) -> CompiledNodeKind:
         raise NotImplementedError()
 
     def __lt__(self, other: ABCBICompiledNode) -> bool:
@@ -473,6 +480,13 @@ class ABCBICompiledNode(ABC):
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
+ActionKind = Literal[
+    "call_a_rule",
+    "state_of_host",
+    "state_of_remaining_services",
+    "state_of_service",
+]
+
 
 class ABCBIAction(ABC):
     def __init__(self, action_config: dict[str, Any]) -> None:
@@ -480,7 +494,7 @@ class ABCBIAction(ABC):
 
     @classmethod
     @abstractmethod
-    def type(cls) -> str:
+    def kind(cls) -> ActionKind:
         raise NotImplementedError()
 
     @classmethod
@@ -516,7 +530,7 @@ class ABCBIAction(ABC):
 
 class BIActionRegistry(plugin_registry.Registry[type[ABCBIAction]]):
     def plugin_name(self, instance: type[ABCBIAction]) -> str:
-        return instance.type()
+        return instance.kind()
 
     def instantiate(self, action_config: ActionConfig) -> ABCBIAction:
         return self._entries[action_config["type"]](action_config)
@@ -533,6 +547,13 @@ bi_action_registry = BIActionRegistry()
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
+SearchKind = Literal[
+    "empty",
+    "fixed_arguments",
+    "host_search",
+    "service_search",
+]
+
 
 class ABCBISearch(ABC):
     def __init__(self, search_config: dict[str, Any]) -> None:
@@ -540,7 +561,7 @@ class ABCBISearch(ABC):
 
     @classmethod
     @abstractmethod
-    def type(cls) -> str:  # TODO: Use a better name which doesn't clash with Python itself... :-/
+    def kind(cls) -> SearchKind:
         raise NotImplementedError()
 
     @classmethod
@@ -559,7 +580,7 @@ class ABCBISearch(ABC):
 
 class BISearchRegistry(plugin_registry.Registry[type[ABCBISearch]]):
     def plugin_name(self, instance: type[ABCBISearch]) -> str:
-        return instance.type()
+        return instance.kind()
 
     def instantiate(self, search_config: SearchConfig) -> ABCBISearch:
         return self._entries[search_config["type"]](search_config)
@@ -576,6 +597,12 @@ bi_search_registry = BISearchRegistry()
 #   |          |___/ |___/                                                 |
 #   +----------------------------------------------------------------------+
 
+AggregationKind = Literal[
+    "best",
+    "count_ok",
+    "worst",
+]
+
 
 class ABCBIAggregationFunction(ABC):
     def __init__(self, aggr_function_config: dict[str, Any]) -> None:
@@ -583,7 +610,7 @@ class ABCBIAggregationFunction(ABC):
 
     @classmethod
     @abstractmethod
-    def type(cls) -> str:
+    def kind(cls) -> AggregationKind:
         raise NotImplementedError()
 
     @abstractmethod
@@ -602,7 +629,7 @@ class ABCBIAggregationFunction(ABC):
 
 class BIAggregationFunctionRegistry(plugin_registry.Registry[type[ABCBIAggregationFunction]]):
     def plugin_name(self, instance: type[ABCBIAggregationFunction]) -> str:
-        return instance.type()
+        return instance.kind()
 
     def instantiate(self, aggr_func_config: dict[str, Any]) -> ABCBIAggregationFunction:
         return self._entries[aggr_func_config["type"]](aggr_func_config)

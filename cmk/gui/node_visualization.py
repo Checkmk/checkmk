@@ -439,7 +439,7 @@ class NodeVisualizationBIDataMapper:
         aggregation_function = bi_compiled_rule.aggregation_function
         function_data = BIAggregationFunctionSchema().dump(aggregation_function)
         aggr_func_gui = bi_valuespecs.bi_config_aggregation_function_registry[
-            aggregation_function.type()
+            aggregation_function.kind()
         ]
 
         node_data["rule_id"] = {

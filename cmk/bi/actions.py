@@ -16,6 +16,7 @@ from cmk.bi.lib import (
     ABCWithSchema,
     ActionArgument,
     ActionArguments,
+    ActionKind,
     bi_action_registry,
     BIHostSearchMatch,
     BIParams,
@@ -44,7 +45,7 @@ from cmk.bi.trees import BICompiledLeaf, BIRemainingResult
 @bi_action_registry.register
 class BICallARuleAction(ABCBIAction, ABCWithSchema):
     @classmethod
-    def type(cls) -> str:
+    def kind(cls) -> ActionKind:
         return "call_a_rule"
 
     @classmethod
@@ -53,7 +54,7 @@ class BICallARuleAction(ABCBIAction, ABCWithSchema):
 
     def serialize(self):
         return {
-            "type": self.type(),
+            "type": self.kind(),
             "rule_id": self.rule_id,
             "params": self.params.serialize(),
         }
@@ -85,7 +86,7 @@ class BICallARuleAction(ABCBIAction, ABCWithSchema):
 
 
 class BICallARuleActionSchema(Schema):
-    type = ReqConstant(BICallARuleAction.type())
+    type = ReqConstant(BICallARuleAction.kind())
     rule_id = ReqString(dump_default="", example="test_rule_1")
     params = ReqNested(
         BIParamsSchema, dump_default=BIParamsSchema().dump({}), example=BIParamsSchema().dump({})
@@ -105,7 +106,7 @@ class BICallARuleActionSchema(Schema):
 @bi_action_registry.register
 class BIStateOfHostAction(ABCBIAction, ABCWithSchema):
     @classmethod
-    def type(cls) -> str:
+    def kind(cls) -> ActionKind:
         return "state_of_host"
 
     @classmethod
@@ -114,7 +115,7 @@ class BIStateOfHostAction(ABCBIAction, ABCWithSchema):
 
     def serialize(self):
         return {
-            "type": self.type(),
+            "type": self.kind(),
             "host_regex": self.host_regex,
         }
 
@@ -137,7 +138,7 @@ class BIStateOfHostAction(ABCBIAction, ABCWithSchema):
 
 
 class BIStateOfHostActionSchema(Schema):
-    type = ReqConstant(BIStateOfHostAction.type())
+    type = ReqConstant(BIStateOfHostAction.kind())
     host_regex = ReqString(dump_default="", example="testhost")
 
 
@@ -154,7 +155,7 @@ class BIStateOfHostActionSchema(Schema):
 @bi_action_registry.register
 class BIStateOfServiceAction(ABCBIAction, ABCWithSchema):
     @classmethod
-    def type(cls) -> str:
+    def kind(cls) -> ActionKind:
         return "state_of_service"
 
     @classmethod
@@ -163,7 +164,7 @@ class BIStateOfServiceAction(ABCBIAction, ABCWithSchema):
 
     def serialize(self):
         return {
-            "type": self.type(),
+            "type": self.kind(),
             "host_regex": self.host_regex,
             "service_regex": self.service_regex,
         }
@@ -206,7 +207,7 @@ class BIStateOfServiceAction(ABCBIAction, ABCWithSchema):
 
 
 class BIStateOfServiceActionSchema(Schema):
-    type = ReqConstant(BIStateOfServiceAction.type())
+    type = ReqConstant(BIStateOfServiceAction.kind())
     host_regex = ReqString(dump_default="", example="testhost")
     service_regex = ReqString(dump_default="", example="testservice")
 
@@ -224,7 +225,7 @@ class BIStateOfServiceActionSchema(Schema):
 @bi_action_registry.register
 class BIStateOfRemainingServicesAction(ABCBIAction, ABCWithSchema):
     @classmethod
-    def type(cls) -> str:
+    def kind(cls) -> ActionKind:
         return "state_of_remaining_services"
 
     @classmethod
@@ -233,7 +234,7 @@ class BIStateOfRemainingServicesAction(ABCBIAction, ABCWithSchema):
 
     def serialize(self):
         return {
-            "type": self.type(),
+            "type": self.kind(),
             "host_regex": self.host_regex,
         }
 
@@ -256,7 +257,7 @@ class BIStateOfRemainingServicesAction(ABCBIAction, ABCWithSchema):
 
 
 class BIStateOfRemainingServicesActionSchema(Schema):
-    type = ReqConstant(BIStateOfRemainingServicesAction.type())
+    type = ReqConstant(BIStateOfRemainingServicesAction.kind())
     host_regex = ReqString(dump_default="", example="testhost")
 
 
@@ -285,4 +286,4 @@ class BIActionSchema(OneOfSchema):
     def get_obj_type(self, obj: ABCBIAction | dict) -> str:
         if isinstance(obj, dict):
             return obj["type"]
-        return obj.type()
+        return obj.kind()

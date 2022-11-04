@@ -256,7 +256,7 @@ class ABCBIMode(WatoMode):
     def aggregation_sub_rule_ids(self, bi_rule):
         sub_rule_ids = []
         for bi_node in bi_rule.get_nodes():
-            if bi_node.action.type() == BICallARuleAction.type():
+            if bi_node.action.kind() == BICallARuleAction.kind():
                 sub_rule_ids.append(bi_node.action.rule_id)
         return sub_rule_ids
 
@@ -980,7 +980,7 @@ class ModeBIRules(ABCBIMode):
                         bi_rule.aggregation_function
                     )
                     aggr_func_gui = bi_valuespecs.bi_config_aggregation_function_registry[
-                        bi_rule.aggregation_function.type()
+                        bi_rule.aggregation_function.kind()
                     ]
 
                     table.cell(_("Aggregation Function"), str(aggr_func_gui(aggr_func_data)))

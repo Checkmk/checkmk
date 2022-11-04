@@ -13,9 +13,8 @@ In the event that the SAP Hana host is in a timezone other than UTC, the
 render negative timespan)". This has been fixed. If you require this fix,
 please deploy the agent plugin "mk_sap_hana" to the affected hosts.
 
-The problem was that the timestamp that the timestamps of the files were
-incorrectly converted from local time to UTC. In addition, the reference
-timestamp (current time) used to calculate file age was determined before the
-modified times of the SAP Hana files were collected. This could lead to a
-scenario in which the reference timestamp was older than the modified time of
-the files.
+The problem was that the modified timestamp of the files was incorrectly
+converted from local time to UTC. In addition, the reference timestamp (current
+time) used to calculate file age was determined before the modified timestamp
+of the SAP Hana files was collected. This could lead to a scenario in which the
+reference timestamp was older than the modified time of the files.

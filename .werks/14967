@@ -17,8 +17,8 @@ LI: Time since last NTPMessage: When the last message from the NTP server was re
 To have these metrics available, the Checkmk linux agent needs to be updated, otherwise only the time since last synchronisation based on <tt>/var/lib/systemd/timesync/clock</tt> will be shown.
 
 Since the modification time of <tt>/var/lib/systemd/timesync/clock</tt>  can at times be unsuitable to monitor when synchronization occurred (due to limited error handling in earlier systemd version), the default threshold for the allowed duration since last synchronisation has been removed.
-If you want to apply thresholds to the time since last synchronisation you now have to enable the rule manually.
-The default thresholds for the allowed duration since last NTPMessage have been set to 1h (WARN) and 2h (CRIT).
+If you want to apply thresholds to the time since last synchronisation you now have to enable them manually in the rule "Systemd Timesyncd time synchronisation".
+In the same rule, the default thresholds for the allowed duration since last NTPMessage have been set to 1h (WARN) and 2h (CRIT).
 
 Additionally, the behavior of the check was changed to go to CRIT when the NTP server could not be reached for synchronisation.
 

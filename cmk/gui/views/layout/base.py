@@ -4,12 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import time
 from collections.abc import Sequence
 
-from cmk.utils.plugin_registry import Registry
-
-from cmk.gui.http import response
 from cmk.gui.painters.v0.base import Cell
 from cmk.gui.type_defs import Rows, ViewSpec
 
@@ -60,27 +56,3 @@ class Layout(abc.ABC):
         self, rows: Rows, view: ViewSpec, group_cells: Sequence[Cell], cells: Sequence[Cell]
     ) -> None:
         """Render the given data using this layout for CSV"""
-
-
-class ViewLayoutRegistry(Registry[type[Layout]]):
-    def plugin_name(self, instance: type[Layout]) -> str:
-        return instance().ident
-
-    def get_choices(self) -> list[tuple[str, str]]:
-        choices = []
-        for plugin_class in self.values():
-            layout = plugin_class()
-            choices.append((layout.ident, layout.title))
-
-        return choices
-
-
-layout_registry = ViewLayoutRegistry()
-
-
-def output_csv_headers(view: ViewSpec) -> None:
-    filename = "%s-%s.csv" % (
-        view["name"],
-        time.strftime("%Y-%m-%d_%H-%M-%S", time.localtime(time.time())),
-    )
-    response.headers["Content-Disposition"] = 'Attachment; filename="%s"' % filename

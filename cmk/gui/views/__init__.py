@@ -121,7 +121,6 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
     import cmk.gui.view_store as view_store
     import cmk.gui.visual_link as visual_link
     from cmk.gui import display_options
-    from cmk.gui.plugins.views.layouts import group_value
     from cmk.gui.views import command, layout
 
     for name in (
@@ -191,6 +190,7 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "Layout",
         "layout_registry",
         "output_csv_headers",
+        "group_value",
     ):
         api_module.__dict__[name] = layout.__dict__[name]
 
@@ -251,7 +251,6 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
             "get_labels": get_labels,
             "render_labels": render_labels,
             "render_tag_groups": render_tag_groups,
-            "group_value": group_value,
         }
     )
 

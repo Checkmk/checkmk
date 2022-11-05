@@ -21,6 +21,7 @@ from cmk.gui.type_defs import CombinedGraphSpec, Row
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views import datasource_selection
 from cmk.gui.views.host_tag_plugins import register_tag_plugins
+from cmk.gui.views.layout import layout_registry, register_layouts
 from cmk.gui.views.page_ajax_filters import AjaxInitialViewFilters
 from cmk.gui.views.page_ajax_popup_action_menu import ajax_popup_action_menu
 from cmk.gui.views.page_ajax_reschedule import PageRescheduleCheck
@@ -93,3 +94,4 @@ register_pages()
 register_painters()
 register_post_config_load_hook(register_tag_plugins)
 visual_type_registry.register(VisualTypeViews)
+register_layouts(layout_registry)

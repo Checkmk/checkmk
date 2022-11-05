@@ -20,35 +20,20 @@ from cmk.gui.painters.v1.helpers import is_stale
 from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.type_defs import GroupSpec, Row, Rows, ViewSpec
 from cmk.gui.utils.theme import theme
-from cmk.gui.views.layout import Layout, layout_registry, output_csv_headers
 from cmk.gui.visual_link import render_link_to_view
 
-
-def group_value(row: Row, group_cells: Sequence[Cell]) -> Hashable:
-    """The Group-value of a row is used for deciding whether
-    two rows are in the same group or not"""
-    group = []
-    for cell in group_cells:
-        painter = cell.painter()
-
-        group_by_val = painter.group_by(row, cell)
-        if group_by_val is not None:
-            group.append(group_by_val)
-
-        else:
-            for c in painter.columns:
-                if c in row:
-                    group.append(row[c])
-
-    return _create_dict_key(group)
+from .base import Layout
+from .helpers import group_value, output_csv_headers
+from .registry import ViewLayoutRegistry
 
 
-def _create_dict_key(value: list | dict | Hashable) -> Hashable:
-    if isinstance(value, (list, tuple)):
-        return tuple(map(_create_dict_key, value))
-    if isinstance(value, dict):
-        return tuple((k, _create_dict_key(v)) for (k, v) in sorted(value.items()))
-    return value
+def register_layouts(registry: ViewLayoutRegistry) -> None:
+    registry.register(LayoutSingleDataset)
+    registry.register(LayoutBalancedBoxes)
+    registry.register(LayoutBalancedGraphBoxes)
+    registry.register(LayoutTiled)
+    registry.register(LayoutTable)
+    registry.register(LayoutMatrix)
 
 
 def render_checkbox(view: ViewSpec, row: Row, num_tds: int) -> None:
@@ -76,7 +61,6 @@ def render_group_checkbox_th() -> None:
     html.close_th()
 
 
-@layout_registry.register
 class LayoutSingleDataset(Layout):
     """Layout designed for showing one single dataset with the column
     headers left and the values on the right. It is able to handle
@@ -420,7 +404,6 @@ def try_to_match_group(row: Row) -> GroupSpec | None:
     return None
 
 
-@layout_registry.register
 class LayoutBalancedBoxes(GroupedBoxesLayout):
     """The boxed layout is useful in views with a width > 1, boxes are
     stacked in columns and can have different sizes."""
@@ -441,7 +424,6 @@ class LayoutBalancedBoxes(GroupedBoxesLayout):
         return None
 
 
-@layout_registry.register
 class LayoutBalancedGraphBoxes(GroupedBoxesLayout):
     """Same as balanced boxes layout but adds a CSS class graph to the box"""
 
@@ -461,7 +443,6 @@ class LayoutBalancedGraphBoxes(GroupedBoxesLayout):
         return "graph"
 
 
-@layout_registry.register
 class LayoutTiled(Layout):
     """The tiled layout puts each dataset into one box with a fixed size"""
 
@@ -601,7 +582,6 @@ class LayoutTiled(Layout):
         init_rowselect(_get_view_name(view))
 
 
-@layout_registry.register
 class LayoutTable(Layout):
     """Most common layout: render all datasets in one big table. Groups
     are shown in what seems to be separate tables but they share the
@@ -801,7 +781,6 @@ def _get_view_name(view: ViewSpec) -> str:
     return "view-%s" % view["name"]
 
 
-@layout_registry.register
 class LayoutMatrix(Layout):
     """The Matrix is similar to what is called "Mine Map" in other GUIs.
     It create a matrix whose columns are single datasets and whole rows

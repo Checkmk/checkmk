@@ -139,46 +139,32 @@ class RealHostTreeUpdater:
 
         results = []
         for retention_key, retention_info in self._retention_infos.items():
-            updater = self._make_updater(retention_key, retention_info, previous_tree)
+            node_path, node_type = retention_key
+
+            updater_cls: type[AttributesUpdater] | type[TableUpdater]
+            if node_type == ATTRIBUTES_KEY:
+                updater_cls = AttributesUpdater
+            elif node_type == TABLE_KEY:
+                updater_cls = TableUpdater
+            else:
+                raise NotImplementedError()
+
+            inv_node = self._inventory_tree.get_node(node_path)
+            previous_node = previous_tree.get_node(node_path)
+
+            if previous_node is None:
+                previous_node = StructuredDataNode()
+
+            if inv_node is None:
+                inv_node = self._inventory_tree.setdefault_node(node_path)
+
+            updater = updater_cls(retention_info, inv_node, previous_node)
             results.append(updater.filter_and_merge(now))
 
         self._update_result = UpdateResult(
             save_tree=any(result.save_tree for result in results),
             reason=", ".join(result.reason for result in results if result.reason),
         )
-
-    def _make_updater(
-        self,
-        retention_key: RetentionKey,
-        retention_info: RetentionInfo,
-        previous_tree: StructuredDataNode,
-    ) -> NodeUpdater:
-        node_path, node_type = retention_key
-
-        inv_node = self._inventory_tree.get_node(node_path)
-        previous_node = previous_tree.get_node(node_path)
-
-        if previous_node is None:
-            previous_node = StructuredDataNode()
-
-        if inv_node is None:
-            inv_node = self._inventory_tree.setdefault_node(node_path)
-
-        if node_type == ATTRIBUTES_KEY:
-            return AttributesUpdater(
-                retention_info,
-                inv_node,
-                previous_node,
-            )
-
-        if node_type == TABLE_KEY:
-            return TableUpdater(
-                retention_info,
-                inv_node,
-                previous_node,
-            )
-
-        raise NotImplementedError()
 
 
 #   .--config--------------------------------------------------------------.

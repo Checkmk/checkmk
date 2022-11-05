@@ -110,34 +110,23 @@ class RealHostTreeUpdater:
                 if (from_config := self._from_config.get(retention_key)) is None:
                     return
 
-                intervals = self._make_intervals(
-                    now,
-                    items_of_inventory_plugin.raw_cache_info,
-                    from_config.interval,
-                )
-                filter_func = make_filter_from_choice(from_config.choices)
-
                 self._retention_infos.setdefault(
-                    retention_key, RetentionInfo(filter_func, intervals)
+                    retention_key,
+                    RetentionInfo(
+                        make_filter_from_choice(from_config.choices),
+                        RetentionIntervals(
+                            cached_at=items_of_inventory_plugin.raw_cache_info[0],
+                            cache_interval=items_of_inventory_plugin.raw_cache_info[1],
+                            retention_interval=from_config.interval,
+                        )
+                        if items_of_inventory_plugin.raw_cache_info
+                        else RetentionIntervals(
+                            cached_at=now,
+                            cache_interval=0,
+                            retention_interval=from_config.interval,
+                        ),
+                    ),
                 )
-
-    @staticmethod
-    def _make_intervals(
-        now: int,
-        raw_cache_info: RawCacheInfo | None,
-        retention_interval: int,
-    ) -> RetentionIntervals:
-        if raw_cache_info:
-            return RetentionIntervals(
-                cached_at=raw_cache_info[0],
-                cache_interval=raw_cache_info[1],
-                retention_interval=retention_interval,
-            )
-        return RetentionIntervals(
-            cached_at=now,
-            cache_interval=0,
-            retention_interval=retention_interval,
-        )
 
     def may_update(self, now: int, previous_tree: StructuredDataNode) -> None:
         if not self._from_config:

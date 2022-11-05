@@ -426,7 +426,8 @@ def _get_full_package_path(package_file_name: str) -> Path:
 def install_optional_package(package_file_base_name: str) -> PackageInfo:
     package_path = _get_full_package_path(package_file_base_name)
     try:
-        return _install_by_path(package_path)
+        with package_path.open("rb") as f:
+            return install(file_object=f, allow_outdated=True)
     finally:
         # it is enabled, even if installing failed.
         mark_as_enabled(package_path)
@@ -458,17 +459,6 @@ def remove_enabled_mark(package_info: PackageInfo) -> None:
     (cmk.utils.paths.local_enabled_packages_dir / base_name).unlink(
         missing_ok=True
     )  # should never be missing, but don't crash in messed up state
-
-
-def _install_by_path(
-    package_path: Path, allow_outdated: bool = True, post_package_change_actions: bool = True
-) -> PackageInfo:
-    with package_path.open("rb") as f:
-        return install(
-            file_object=cast(BinaryIO, f),
-            allow_outdated=allow_outdated,
-            post_package_change_actions=post_package_change_actions,
-        )
 
 
 def install(  # pylint: disable=too-many-branches
@@ -964,11 +954,12 @@ def _install_applicable_inactive_packages(
     for package_path in _sort_enabled_packages_for_installation(log):
 
         try:
-            _install_by_path(
-                package_path,
-                allow_outdated=False,
-                post_package_change_actions=post_package_change_actions,
-            )
+            with package_path.open("rb") as f:
+                install(
+                    file_object=f,
+                    allow_outdated=False,
+                    post_package_change_actions=post_package_change_actions,
+                )
         except PackageException as exc:
             logger.log(VERBOSE, "[%s]: Not installed (%s)", package_path.name, exc)
         else:

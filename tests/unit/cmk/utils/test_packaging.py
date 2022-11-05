@@ -67,13 +67,6 @@ def fixture_mkp_bytes(build_setup_search_index: Mock) -> bytes:
     return mkp
 
 
-@pytest.fixture(name="mkp_file")
-def fixture_mkp_file(tmp_path: Path, mkp_bytes: bytes) -> Path:
-    mkp_path = tmp_path.joinpath("aaa.mkp")
-    mkp_path.write_bytes(mkp_bytes)
-    return mkp_path
-
-
 @pytest.fixture(name="build_setup_search_index")
 def fixture_build_setup_search_index_background(mocker: MockerFixture) -> Mock:
     return mocker.patch(
@@ -282,17 +275,6 @@ def test_edit_rename_conflict() -> None:
 
 def test_install(mkp_bytes: bytes, build_setup_search_index: Mock) -> None:
     packaging.install(BytesIO(mkp_bytes))
-    build_setup_search_index.assert_called_once()
-
-    assert packaging._package_exists("aaa") is True
-    package_info = _read_package_info("aaa")
-    assert package_info["version"] == "1.0"
-    assert package_info["files"]["checks"] == ["aaa"]
-    assert cmk.utils.paths.local_checks_dir.joinpath("aaa").exists()
-
-
-def test_install_by_path(mkp_file: Path, build_setup_search_index: Mock) -> None:
-    packaging._install_by_path(mkp_file)
     build_setup_search_index.assert_called_once()
 
     assert packaging._package_exists("aaa") is True

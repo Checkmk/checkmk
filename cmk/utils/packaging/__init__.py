@@ -240,7 +240,7 @@ def create_mkp_object(
             tar.addfile(info, info_file)
 
         # add the regular info file (Python format)
-        add_file("info", pprint.pformat(package).encode())
+        add_file("info", _serialize_package_info(package).encode())
 
         # add the info file a second time (JSON format) for external tools
         add_file("info.json", json.dumps(package).encode())
@@ -895,8 +895,11 @@ def _package_exists(pacname: PackageName) -> bool:
 
 def write_package_info(package: PackageInfo) -> None:
     pkg_info_path = package_dir() / package["name"]
-    with pkg_info_path.open("w", encoding="utf-8") as f:
-        f.write(pprint.pformat(package) + "\n")
+    pkg_info_path.write_text(_serialize_package_info(package))
+
+
+def _serialize_package_info(package_info: PackageInfo) -> str:
+    return pprint.pformat(package_info) + "\n"
 
 
 def _remove_package_info(pacname: PackageName) -> None:

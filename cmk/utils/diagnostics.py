@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from enum import Enum
 from pathlib import Path
 from typing import Any, Literal, NamedTuple, TypedDict
@@ -257,7 +257,15 @@ def get_checkmk_log_files_map() -> CheckmkFilesMap:
     return files_map
 
 
-def get_all_package_infos() -> dict[str, Any]:
+class AllPackageInfos(TypedDict):
+    installed: Mapping[packaging.PackageName, packaging.PackageInfo | None]
+    unpackaged: Mapping[str, list[str]]
+    parts: packaging.PackagePartInfo
+    optional_packages: Mapping[str, packaging.PackageInfo]
+    enabled_packages: Mapping[str, packaging.PackageInfo]
+
+
+def get_all_package_infos() -> AllPackageInfos:
     return {
         "installed": packaging.get_installed_package_infos(),
         "unpackaged": packaging.get_unpackaged_files(),
@@ -267,7 +275,7 @@ def get_all_package_infos() -> dict[str, Any]:
     }
 
 
-def _parse_mkp_file_parts(contents: dict[str, Any]) -> dict[str, dict[str, dict]]:
+def _parse_mkp_file_parts(contents: Mapping[str, Any]) -> dict[str, dict[str, dict]]:
     file_list: dict[str, Any] = {}
     for idx, file in enumerate(contents["files"]):
         path = "{}/{}".format(contents["path"], file)
@@ -276,7 +284,7 @@ def _parse_mkp_file_parts(contents: dict[str, Any]) -> dict[str, dict[str, dict]
 
 
 def _parse_mkp_files(
-    items: list[str], module: str, contents: dict[str, Any], state: str, package: str
+    items: list[str], module: str, contents: Mapping[str, Any], state: str, package: str
 ) -> dict[str, dict[str, dict]]:
     file_list: dict[str, dict[str, Any]] = {}
     for file in items:
@@ -294,7 +302,7 @@ def _parse_mkp_files(
 def _deep_update(
     d1: dict[str, dict[str, Any]], d2: dict[str, dict[str, Any]]
 ) -> dict[str, dict[str, Any]]:
-    for key in set(list(d1.keys()) + list(d2.keys())):
+    for key in set(d1) | set(d2):
         if key not in d1:
             d1[key] = d2[key]
         elif key in d2:
@@ -319,18 +327,25 @@ def _filelist_to_csv_lines(dictlist: dict[str, dict[str, Any]]) -> Sequence[str]
     return lines
 
 
-def get_local_files_csv(infos: DiagnosticsElementJSONResult) -> DiagnosticsElementCSVResult:
+def get_local_files_csv(infos: AllPackageInfos) -> DiagnosticsElementCSVResult:
     files: dict[str, dict[str, Any]] = {}
 
     # Parse different secions of the packaging output
     for (module, items) in infos["unpackaged"].items():
         files = _deep_update(files, _parse_mkp_files(items, module, {}, "unpackaged", "N/A"))
-    for state in ["optional_packages", "installed"]:
-        for (package, contents) in infos[state].items():
-            for (module, items) in contents["files"].items():
-                files = _deep_update(
-                    files, _parse_mkp_files(items, module, contents, state, package)
-                )
+    for package, contents in infos["optional_packages"].items():
+        for (module, items) in contents["files"].items():
+            files = _deep_update(
+                files, _parse_mkp_files(items, module, contents, "optional_packages", package)
+            )
+    for package, opt_contents in infos["installed"].items():
+        if opt_contents is None:
+            # skip corrupt packages. TODO: rather create dummy package info and report the issue!
+            continue
+        for (module, items) in opt_contents["files"].items():
+            files = _deep_update(
+                files, _parse_mkp_files(items, module, opt_contents, "installed", package)
+            )
     for (module, contents) in infos["parts"].items():
         files = _deep_update(files, _parse_mkp_file_parts(contents))
 

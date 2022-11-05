@@ -627,7 +627,7 @@ class LocalFilesJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         )
 
     def _collect_infos(self, collectors: Collectors) -> DiagnosticsElementJSONResult:
-        return get_all_package_infos()
+        return {**get_all_package_infos()}  # down cast :-(
 
 
 class OMDConfigDiagnosticsElement(ABCDiagnosticsElementJSONDump):

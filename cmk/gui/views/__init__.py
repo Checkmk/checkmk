@@ -5,17 +5,11 @@
 
 from typing import Any, Dict, List
 
-import cmk.utils.paths
-
-import cmk.gui.pages
 import cmk.gui.utils as utils
-import cmk.gui.view_utils
-import cmk.gui.views.datasource_selection as _datasource_selection
 import cmk.gui.visuals as visuals
-from cmk.gui.config import default_authorized_builtin_role_ids, register_post_config_load_hook
+from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.derived_columns_sorter import DerivedColumnsSorter
 from cmk.gui.i18n import _, _u
-from cmk.gui.pages import page_registry
 from cmk.gui.permissions import (
     declare_dynamic_permissions,
     declare_permission,
@@ -28,47 +22,19 @@ from cmk.gui.plugins.views.icons.utils import (
     multisite_icons_and_actions,
 )
 from cmk.gui.plugins.views.utils import register_legacy_command, register_painter
-from cmk.gui.plugins.visuals.utils import visual_type_registry
 from cmk.gui.sorter import register_sorter
 from cmk.gui.type_defs import Perfdata, PerfometerSpec, TranslatedMetrics
 from cmk.gui.view_store import multisite_builtin_views
 from cmk.gui.view_utils import get_labels, render_labels, render_tag_groups
 from cmk.gui.views.builtin_views import builtin_views
-from cmk.gui.views.host_tag_plugins import register_tag_plugins
 from cmk.gui.views.inventory import register_table_views_and_columns, update_paint_functions
-from cmk.gui.views.page_ajax_filters import AjaxInitialViewFilters
-from cmk.gui.views.page_ajax_popup_action_menu import ajax_popup_action_menu
-from cmk.gui.views.page_ajax_reschedule import PageRescheduleCheck
-from cmk.gui.views.page_create_view import page_create_view
-from cmk.gui.views.page_edit_view import (
-    format_view_title,
-    page_edit_view,
-    PageAjaxCascadingRenderPainterParameters,
-)
-from cmk.gui.views.page_edit_views import page_edit_views
-from cmk.gui.views.page_show_view import page_show_view
-from cmk.gui.views.visual_type import VisualTypeViews
+from cmk.gui.views.page_edit_view import format_view_title
 
 # TODO: Kept for compatibility with pre 1.6 plugins. Plugins will not be used anymore, but an error
 # will be displayed.
 multisite_commands: List[Dict[str, Any]] = []
 multisite_painters: Dict[str, Dict[str, Any]] = {}
 multisite_sorters: Dict[str, Any] = {}
-
-
-cmk.gui.pages.register("view")(page_show_view)
-cmk.gui.pages.register("create_view")(_datasource_selection.page_create_view)
-cmk.gui.pages.register("edit_view")(page_edit_view)
-cmk.gui.pages.register("edit_views")(page_edit_views)
-cmk.gui.pages.register("create_view_infos")(page_create_view)
-cmk.gui.pages.register("ajax_popup_action_menu")(ajax_popup_action_menu)
-page_registry.register_page("ajax_cascading_render_painer_parameters")(
-    PageAjaxCascadingRenderPainterParameters
-)
-page_registry.register_page("ajax_reschedule")(PageRescheduleCheck)
-page_registry.register_page("ajax_initial_view_filters")(AjaxInitialViewFilters)
-visual_type_registry.register(VisualTypeViews)
-register_post_config_load_hook(register_tag_plugins)
 
 
 @permission_section_registry.register

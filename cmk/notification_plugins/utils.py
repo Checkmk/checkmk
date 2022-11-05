@@ -186,6 +186,9 @@ def set_mail_headers(target, subject, from_address, reply_to, mail):
     elif len(target.split(",")) > 1:
         mail["Reply-To"] = target
 
+    mail["Auto-Submitted"] = "auto-generated"
+    mail["X-Auto-Response-Suppress"] = "DR,RN,NRN,OOF,AutoReply"
+
     return mail
 
 

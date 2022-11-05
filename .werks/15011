@@ -1,0 +1,16 @@
+Title: email notifications set auto submitted headers
+Class: feature
+Compatible: compat
+Component: notifications
+Date: 1668588697
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p17
+
+When we send a notification email to a recipient that set an "out of office" reply an automatic response would be
+created by the receiver. This is suppressed now. To achieve this notification emails now set the following headers.
+
+LI: Auto-Submitted, see RFC 3834
+LI: X-Auto-Response-Suppress, see MS Exchange documentation

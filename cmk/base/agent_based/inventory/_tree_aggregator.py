@@ -99,37 +99,27 @@ class RealHostTreeUpdater:
         for items_of_inventory_plugin in items_of_inventory_plugins:
             for item in items_of_inventory_plugin.items:
                 if isinstance(item, Attributes):
-                    self._may_add_cache_info(
-                        now=now,
-                        node_type=ATTRIBUTES_KEY,
-                        path=tuple(item.path),
-                        raw_cache_info=items_of_inventory_plugin.raw_cache_info,
-                    )
+                    node_type = ATTRIBUTES_KEY
                 elif isinstance(item, TableRow):
-                    self._may_add_cache_info(
-                        now=now,
-                        node_type=TABLE_KEY,
-                        path=tuple(item.path),
-                        raw_cache_info=items_of_inventory_plugin.raw_cache_info,
-                    )
+                    node_type = TABLE_KEY
+                else:
+                    continue
 
-    def _may_add_cache_info(
-        self,
-        *,
-        now: int,
-        node_type: str,
-        path: SDPath,
-        raw_cache_info: RawCacheInfo | None,
-    ) -> None:
-        retention_key = (tuple(path), node_type)
+                retention_key = (tuple(item.path), node_type)
 
-        if (from_config := self._from_config.get(retention_key)) is None:
-            return
+                if (from_config := self._from_config.get(retention_key)) is None:
+                    return
 
-        intervals = self._make_intervals(now, raw_cache_info, from_config.interval)
-        filter_func = make_filter_from_choice(from_config.choices)
+                intervals = self._make_intervals(
+                    now,
+                    items_of_inventory_plugin.raw_cache_info,
+                    from_config.interval,
+                )
+                filter_func = make_filter_from_choice(from_config.choices)
 
-        self._retention_infos.setdefault(retention_key, RetentionInfo(filter_func, intervals))
+                self._retention_infos.setdefault(
+                    retention_key, RetentionInfo(filter_func, intervals)
+                )
 
     @staticmethod
     def _make_intervals(

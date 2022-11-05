@@ -21,14 +21,14 @@ def parse_prism_alerts(string_table: StringTable) -> Section:
     data = ast.literal_eval(string_table[0][0])
 
     for entity in data.get("entities"):
-        full_context = dict(zip(entity["contextTypes"], entity["contextValues"]))
+        full_context = dict(zip(entity["context_types"], entity["context_values"]))
 
         try:
             message = entity["message"].format(**full_context)
         except KeyError:
             message = entity["message"]
 
-        full_context["timestamp"] = entity["createdTimeStampInUsecs"]
+        full_context["timestamp"] = entity["created_time_stamp_in_usecs"]
         full_context["severity"] = entity["severity"]
         full_context["message"] = message
 

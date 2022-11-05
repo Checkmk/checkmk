@@ -21,10 +21,11 @@ Section = Dict[str, Any]
 
 def discovery_prism_host_disks(section: Section) -> DiscoveryResult:
     data = section.get("disk_hardware_configs", {})
-    for item in data:
-        if data.get(item) is None:
-            continue
-        yield Service(item=item)
+    if data:
+        for item in data:
+            if data.get(item) is None:
+                continue
+            yield Service(item=item)
 
 
 def check_prism_host_disks(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:

@@ -42,8 +42,8 @@ def check_prism_container(item: str, params: Mapping[str, Any], section: Section
     capacity, freebytes = map(
         int,
         (
-            data["usage_stats"].get("storage.user_capacity_bytes", 0),
-            data["usage_stats"].get("storage.user_free_bytes", 0),
+            data["usageStats"].get("storage.user_capacity_bytes", 0),
+            data["usageStats"].get("storage.user_free_bytes", 0),
         ),
     )
 

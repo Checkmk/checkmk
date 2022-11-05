@@ -45,6 +45,10 @@ def check_prism_hosts(item: str, params: Mapping[str, Any], section: Section) ->
     if not data:
         return
     wanted_state = params.get("system_state", "NORMAL")
+    acropolis_state = data.get("acropolis_connection_state", "")
+    if acropolis_state == "kDisconnected":
+        yield Result(state=State.CRIT, summary=f"Acropolis state is {acropolis_state}")
+        return
     state = 0
     state_text = data["state"]
     num_vms = data["num_vms"]

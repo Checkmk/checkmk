@@ -192,6 +192,8 @@ def set_mail_headers(
     elif len(target.split(",")) > 1:
         mail["Reply-To"] = target
 
+    mail["Auto-Submitted"] = "auto-generated"
+
     return mail
 
 

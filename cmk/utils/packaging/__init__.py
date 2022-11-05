@@ -342,9 +342,7 @@ class PackageStore:
 
 
 def read_package(package_file_base_name: str) -> bytes:
-    package_path = _get_full_package_path(package_file_base_name)
-    with package_path.open("rb") as fh:
-        return fh.read()
+    return _get_full_package_path(package_file_base_name).read_bytes()
 
 
 def disable(package_name: PackageName) -> None:
@@ -820,8 +818,7 @@ def package_part_info() -> PackagePartInfo:
 def read_package_info(pacname: PackageName) -> PackageInfo | None:
     pkg_info_path = package_dir() / pacname
     try:
-        with pkg_info_path.open("r", encoding="utf-8") as f:
-            package = parse_package_info(f.read())
+        package = parse_package_info(pkg_info_path.read_text())
         package["name"] = pacname  # do not trust package content
         return package
     except OSError:

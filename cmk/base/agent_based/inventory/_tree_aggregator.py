@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import NamedTuple
+from typing import Collection, NamedTuple
 
 from cmk.utils.structured_data import (
     ATTRIBUTES_KEY,
@@ -94,23 +94,24 @@ class RealHostTreeUpdater:
         self,
         *,
         now: int,
-        items_of_inventory_plugin: ItemsOfInventoryPlugin,
+        items_of_inventory_plugins: Collection[ItemsOfInventoryPlugin],
     ) -> None:
-        for item in items_of_inventory_plugin.items:
-            if isinstance(item, Attributes):
-                self._may_add_cache_info(
-                    now=now,
-                    node_type=ATTRIBUTES_KEY,
-                    path=tuple(item.path),
-                    raw_cache_info=items_of_inventory_plugin.raw_cache_info,
-                )
-            elif isinstance(item, TableRow):
-                self._may_add_cache_info(
-                    now=now,
-                    node_type=TABLE_KEY,
-                    path=tuple(item.path),
-                    raw_cache_info=items_of_inventory_plugin.raw_cache_info,
-                )
+        for items_of_inventory_plugin in items_of_inventory_plugins:
+            for item in items_of_inventory_plugin.items:
+                if isinstance(item, Attributes):
+                    self._may_add_cache_info(
+                        now=now,
+                        node_type=ATTRIBUTES_KEY,
+                        path=tuple(item.path),
+                        raw_cache_info=items_of_inventory_plugin.raw_cache_info,
+                    )
+                elif isinstance(item, TableRow):
+                    self._may_add_cache_info(
+                        now=now,
+                        node_type=TABLE_KEY,
+                        path=tuple(item.path),
+                        raw_cache_info=items_of_inventory_plugin.raw_cache_info,
+                    )
 
     def _may_add_cache_info(
         self,

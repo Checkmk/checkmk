@@ -324,12 +324,7 @@ def _inventorize_real_host(
         raw_intervals_from_config,
         trees.inventory,
     )
-    for items_of_inventory_plugin in items_of_inventory_plugins:
-        tree_updater.may_add_cache_info(
-            now=now,
-            items_of_inventory_plugin=items_of_inventory_plugin,
-        )
-
+    tree_updater.may_add_cache_info(now=now, items_of_inventory_plugins=items_of_inventory_plugins)
     tree_updater.may_update(now=now, previous_tree=old_tree)
 
     if not trees.inventory.is_empty():

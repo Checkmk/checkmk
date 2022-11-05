@@ -11,10 +11,12 @@ from tests.testlib.base import Scenario
 
 import cmk.utils.debug
 from cmk.utils.structured_data import (
+    ATTRIBUTES_KEY,
     RetentionIntervals,
     SDFilterFunc,
     SDPath,
     StructuredDataNode,
+    TABLE_KEY,
     UpdateResult,
 )
 from cmk.utils.type_defs import EVERYTHING
@@ -568,13 +570,37 @@ def test_retentions_add_cache_info_no_match(
     path: SDPath,
     raw_cache_info: tuple[int, int] | None,
 ) -> None:
+    items: list[Attributes | TableRow]
+    if node_type == ATTRIBUTES_KEY:
+        items = [
+            Attributes(
+                path=["path-to", "node"] if path else ["unknown-to", "node"],
+                inventory_attributes={},
+                status_attributes={},
+            ),
+        ]
+    elif node_type == TABLE_KEY:
+        items = [
+            TableRow(
+                path=["path-to", "node"] if path else ["unknown-to", "node"],
+                key_columns={"foo": "Foo"},
+                inventory_columns={},
+                status_columns={},
+            ),
+        ]
+    else:
+        items = []
+
     now = 100
     tree_updater = RealHostTreeUpdater(raw_intervals, StructuredDataNode())
-    tree_updater._may_add_cache_info(
+    tree_updater.may_add_cache_info(
         now=now,
-        node_type=node_type,
-        path=path,
-        raw_cache_info=raw_cache_info,
+        items_of_inventory_plugins=[
+            ItemsOfInventoryPlugin(
+                items=items,
+                raw_cache_info=raw_cache_info,
+            ),
+        ],
     )
     assert tree_updater._retention_infos == {}
 
@@ -742,13 +768,37 @@ def test_retentions_add_cache_info(
     match_some_keys: bool,
     match_other_keys: bool,
 ) -> None:
+    items: list[Attributes | TableRow]
+    if node_type == ATTRIBUTES_KEY:
+        items = [
+            Attributes(
+                path=["path-to", "node"],
+                inventory_attributes={},
+                status_attributes={},
+            ),
+        ]
+    elif node_type == TABLE_KEY:
+        items = [
+            TableRow(
+                path=["path-to", "node"],
+                key_columns={"foo": "Foo"},
+                inventory_columns={},
+                status_columns={},
+            ),
+        ]
+    else:
+        items = []
+
     now = 100
     tree_updater = RealHostTreeUpdater(raw_intervals, StructuredDataNode())
-    tree_updater._may_add_cache_info(
+    tree_updater.may_add_cache_info(
         now=now,
-        node_type=node_type,
-        path=("path-to", "node"),
-        raw_cache_info=raw_cache_info,
+        items_of_inventory_plugins=[
+            ItemsOfInventoryPlugin(
+                items=items,
+                raw_cache_info=raw_cache_info,
+            ),
+        ],
     )
 
     retention_info = tree_updater._retention_infos.get((("path-to", "node"), node_type))

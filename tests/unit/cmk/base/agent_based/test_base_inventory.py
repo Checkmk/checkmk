@@ -25,7 +25,7 @@ import cmk.base.agent_based.inventory._inventory as _inventory
 import cmk.base.config as config
 from cmk.base.agent_based.data_provider import ParsedSectionsBroker
 from cmk.base.agent_based.inventory._inventory import (
-    _create_trees_from_inventory_plugin_items,
+    _inventorize_real_host,
     _parse_inventory_plugin_item,
     InventoryTrees,
 )
@@ -92,8 +92,9 @@ def test__tree_nodes_are_equal(old_tree: StructuredDataNode, inv_tree: Structure
 
 
 def test_integrate_attributes() -> None:
-    trees = _create_trees_from_inventory_plugin_items(
-        [
+    trees, _update_result = _inventorize_real_host(
+        now=1000,
+        items_of_inventory_plugins=[
             ItemsOfInventoryPlugin(
                 items=[
                     Attributes(
@@ -106,7 +107,9 @@ def test_integrate_attributes() -> None:
                 ],
                 raw_cache_info=None,
             )
-        ]
+        ],
+        raw_intervals_from_config=[],
+        old_tree=StructuredDataNode(),
     )
 
     assert trees.inventory.serialize() == {
@@ -130,15 +133,39 @@ def test_integrate_attributes() -> None:
                     }
                 },
                 "Table": {},
-            }
+            },
+            "software": {
+                "Attributes": {},
+                "Nodes": {
+                    "applications": {
+                        "Attributes": {},
+                        "Nodes": {
+                            "check_mk": {
+                                "Attributes": {},
+                                "Nodes": {
+                                    "cluster": {
+                                        "Attributes": {"Pairs": {"is_cluster": False}},
+                                        "Nodes": {},
+                                        "Table": {},
+                                    }
+                                },
+                                "Table": {},
+                            }
+                        },
+                        "Table": {},
+                    }
+                },
+                "Table": {},
+            },
         },
         "Table": {},
     }
 
 
 def test_integrate_table_row() -> None:
-    trees = _create_trees_from_inventory_plugin_items(
-        [
+    trees, _update_result = _inventorize_real_host(
+        now=1000,
+        items_of_inventory_plugins=[
             ItemsOfInventoryPlugin(
                 items=[
                     TableRow(
@@ -169,7 +196,9 @@ def test_integrate_table_row() -> None:
                 ],
                 raw_cache_info=None,
             ),
-        ]
+        ],
+        raw_intervals_from_config=[],
+        old_tree=StructuredDataNode(),
     )
 
     assert trees.inventory.serialize() == {
@@ -207,7 +236,30 @@ def test_integrate_table_row() -> None:
                     }
                 },
                 "Table": {},
-            }
+            },
+            "software": {
+                "Attributes": {},
+                "Nodes": {
+                    "applications": {
+                        "Attributes": {},
+                        "Nodes": {
+                            "check_mk": {
+                                "Attributes": {},
+                                "Nodes": {
+                                    "cluster": {
+                                        "Attributes": {"Pairs": {"is_cluster": False}},
+                                        "Nodes": {},
+                                        "Table": {},
+                                    }
+                                },
+                                "Table": {},
+                            }
+                        },
+                        "Table": {},
+                    }
+                },
+                "Table": {},
+            },
         },
         "Table": {},
     }

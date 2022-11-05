@@ -17,7 +17,7 @@ import logging
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Container, Iterable, Iterator, NamedTuple, Sequence, Tuple
+from typing import Collection, Container, Iterable, Iterator, NamedTuple, Sequence, Tuple
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -26,7 +26,7 @@ from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
-from cmk.utils.structured_data import StructuredDataNode, UpdateResult
+from cmk.utils.structured_data import RawIntervalsFromConfig, StructuredDataNode, UpdateResult
 from cmk.utils.type_defs import (
     AgentRawData,
     HostKey,
@@ -119,10 +119,16 @@ def check_inventory_tree(
     )
 
     trees, update_result = _inventorize_real_host(
-        host_name,
-        host_config=host_config,
-        parsed_sections_broker=fetched_data_result.parsed_sections_broker,
-        run_plugin_names=run_plugin_names,
+        now=int(time.time()),
+        items_of_inventory_plugins=list(
+            _collect_inventory_plugin_items(
+                host_name,
+                host_config=host_config,
+                parsed_sections_broker=fetched_data_result.parsed_sections_broker,
+                run_plugin_names=run_plugin_names,
+            )
+        ),
+        raw_intervals_from_config=host_config.inv_retention_intervals,
         old_tree=old_tree,
     )
 
@@ -302,24 +308,12 @@ def _no_data_or_files(host_name: HostName, host_sections: Iterable[HostSections]
 
 
 def _inventorize_real_host(
-    host_name: HostName,
     *,
-    host_config: HostConfig,
-    parsed_sections_broker: ParsedSectionsBroker,
-    run_plugin_names: Container[InventoryPluginName],
+    now: int,
+    items_of_inventory_plugins: Collection[ItemsOfInventoryPlugin],
+    raw_intervals_from_config: RawIntervalsFromConfig,
     old_tree: StructuredDataNode,
 ) -> tuple[InventoryTrees, UpdateResult]:
-    section.section_step("Executing inventory plugins")
-
-    items_of_inventory_plugins = list(
-        _collect_inventory_plugin_items(
-            host_name,
-            host_config=host_config,
-            parsed_sections_broker=parsed_sections_broker,
-            run_plugin_names=run_plugin_names,
-        )
-    )
-
     section.section_step("Create inventory or status data tree")
 
     trees = _create_trees_from_inventory_plugin_items(items_of_inventory_plugins)
@@ -327,13 +321,16 @@ def _inventorize_real_host(
     section.section_step("May update inventory tree")
 
     tree_updater = RealHostTreeUpdater(
-        host_config.inv_retention_intervals,
+        raw_intervals_from_config,
         trees.inventory,
     )
     for items_of_inventory_plugin in items_of_inventory_plugins:
-        tree_updater.may_add_cache_info(items_of_inventory_plugin)
+        tree_updater.may_add_cache_info(
+            now=now,
+            items_of_inventory_plugin=items_of_inventory_plugin,
+        )
 
-    tree_updater.may_update(now=int(time.time()), previous_tree=old_tree)
+    tree_updater.may_update(now=now, previous_tree=old_tree)
 
     if not trees.inventory.is_empty():
         _add_cluster_property_to(inventory_tree=trees.inventory, is_cluster=False)
@@ -385,6 +382,8 @@ def _collect_inventory_plugin_items(
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[InventoryPluginName],
 ) -> Iterator[ItemsOfInventoryPlugin]:
+    section.section_step("Executing inventory plugins")
+
     class_mutex: dict[tuple[str, ...], str] = {}
     for inventory_plugin in agent_based_register.iter_all_inventory_plugins():
         if inventory_plugin.name not in run_plugin_names:

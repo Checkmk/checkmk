@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-import time
 from dataclasses import dataclass
 from typing import NamedTuple
 
@@ -91,22 +90,26 @@ class RealHostTreeUpdater:
     #       where cache_at, cache_interval: from agent data (or set to (now, 0) if not persisted),
     #             retention_interval: configured in the above ruleset
 
-    def may_add_cache_info(self, inventory_plugin_items: ItemsOfInventoryPlugin) -> None:
-        now = int(time.time())
-        for item in inventory_plugin_items.items:
+    def may_add_cache_info(
+        self,
+        *,
+        now: int,
+        items_of_inventory_plugin: ItemsOfInventoryPlugin,
+    ) -> None:
+        for item in items_of_inventory_plugin.items:
             if isinstance(item, Attributes):
                 self._may_add_cache_info(
                     now=now,
                     node_type=ATTRIBUTES_KEY,
                     path=tuple(item.path),
-                    raw_cache_info=inventory_plugin_items.raw_cache_info,
+                    raw_cache_info=items_of_inventory_plugin.raw_cache_info,
                 )
             elif isinstance(item, TableRow):
                 self._may_add_cache_info(
                     now=now,
                     node_type=TABLE_KEY,
                     path=tuple(item.path),
-                    raw_cache_info=inventory_plugin_items.raw_cache_info,
+                    raw_cache_info=items_of_inventory_plugin.raw_cache_info,
                 )
 
     def _may_add_cache_info(

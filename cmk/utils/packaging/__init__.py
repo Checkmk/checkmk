@@ -639,11 +639,20 @@ def _remove_packaged_rule_packs(file_names: Iterable[str], delete_export: bool =
 
 
 def _get_package_info_from_package(file_object: BinaryIO) -> PackageInfo:
+    if (package := _get_optional_package_info(file_object)) is None:
+        raise PackageException("Failed to open package info file")
+    return package
+
+
+def _get_optional_package_info(file_object: BinaryIO) -> PackageInfo | None:
     with tarfile.open(fileobj=file_object, mode="r:gz") as tar:
-        package_info_file = tar.extractfile("info")
-        if package_info_file is None:
-            raise PackageException("Failed to open package info file")
-        return parse_package_info(package_info_file.read().decode())
+        try:
+            if (extracted_file := tar.extractfile("info")) is None:
+                return None
+            raw_info = extracted_file.read()
+        except KeyError:
+            return None
+    return parse_package_info(raw_info.decode())
 
 
 def _validate_package_files(pacname: PackageName, files: PackageFiles) -> None:

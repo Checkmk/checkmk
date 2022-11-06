@@ -393,7 +393,7 @@ public:
     auto &getData() noexcept { return data_; }
 
     bool trySetExitCode(uint32_t pid, uint32_t code) noexcept {
-        if ((pid != 0U) && pid == process_id_) {
+        if (pid != 0U && pid == process_id_) {
             exit_code_ = code;
             return true;
         }
@@ -536,9 +536,6 @@ private:
     std::unique_ptr<BaseServiceProcessor> processor_;
 
     std::unique_ptr<wchar_t[]> name_;
-    bool can_stop_{false};
-    bool can_shutdown_{false};
-    bool can_pause_continue_{false};
 
     SERVICE_STATUS status_{0};
     SERVICE_STATUS_HANDLE status_handle_{nullptr};
@@ -938,7 +935,7 @@ public:
     bool open() noexcept;
     bool connect(std::wstring_view name_space) noexcept;
     // This is OPTIONAL feature, LWA doesn't use it
-    bool impersonate() noexcept;
+    [[maybe_unused]] bool impersonate() const noexcept;  // NOLINT
     // on error returns empty string and timeout status
     static std::tuple<std::wstring, WmiStatus> produceTable(
         IEnumWbemClassObject *enumerator,
@@ -949,14 +946,14 @@ public:
     /// on error returns empty string and timeout status
     std::tuple<std::wstring, WmiStatus> queryTable(
         const std::vector<std::wstring> &names, const std::wstring &target,
-        std::wstring_view separator, uint32_t wmi_timeout) noexcept;
+        std::wstring_view separator, uint32_t wmi_timeout) const noexcept;
 
     /// special purposes: formatting for PS for example
     /// on error returns nullptr
     /// You have to call Release for returned object!!!
     IEnumWbemClassObject *queryEnumerator(
         const std::vector<std::wstring> &names,
-        const std::wstring &target) noexcept;
+        const std::wstring &target) const noexcept;
 
 private:
     void close() noexcept;
@@ -1017,7 +1014,7 @@ public:
     /// \b Queries NTFS for ACL Info of the file/directory
     HRESULT query() noexcept;
     /// \b Outputs ACL info in Human-readable format
-    std::string output();
+    [[nodiscard]] std::string output() const;
 
 private:
     void clearAceList() noexcept;

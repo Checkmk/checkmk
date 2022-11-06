@@ -80,7 +80,7 @@ protected:
             case DataType::kSegment: {
                 auto data_source = static_cast<const uint8_t *>(dt->data());
                 auto data_end = data_source + dt->length();
-                std::vector<uint8_t> vectorized_data(data_source, data_end);
+                std::vector vectorized_data(data_source, data_end);
                 storage->buffer_ = vectorized_data;
                 storage->answer_id_ = dt->answerId();
                 storage->peer_name_ = dt->providerId();
@@ -209,7 +209,7 @@ std::string GetRunCommand() {
     std::scoped_lock l(g_lock_command);
     return g_last_command;
 }
-bool TestRunCommand(std::string_view peer, std::string_view cmd) {
+bool TestRunCommand(std::string_view /*peer*/, std::string_view cmd) {
     std::scoped_lock l(g_lock_command);
     g_last_command = cmd;
     return true;
@@ -242,8 +242,8 @@ private:
     std::string internal_port{BuildPortName(
         kCarrierMailslotName, mailbox_server.GetName())};  // port here
     srv::ServiceProcessor processor;
-    carrier::CoreCarrier cc;
-    cma::commander::RunCommandProcessor save_rcp;
+    CoreCarrier cc;
+    commander::RunCommandProcessor save_rcp{nullptr};
 };
 
 TEST_F(CarrierTestInformFixture, InformByMailSlot) {

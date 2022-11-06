@@ -20,7 +20,7 @@ constexpr auto kDfSeparatorString = section::kTabSeparatorString;
 
 class Df : public Asynchronous {
 public:
-    Df() : Asynchronous(cma::section::kDfName, '\t') {}
+    Df() : Asynchronous(section::kDfName, '\t') {}
 
 private:
     std::string makeBody() override;

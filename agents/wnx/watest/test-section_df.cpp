@@ -3,9 +3,12 @@
 //
 #include "pch.h"
 
+#include <ranges>
+
 #include "cfg.h"
 #include "common/wtools.h"
 #include "providers/df.h"
+namespace rs = std::ranges;
 
 namespace cma::provider {
 
@@ -17,8 +20,8 @@ TEST(DfTest, GetDriveVector) {
     auto all_drives = df::GetDriveVector();
     ASSERT_TRUE(!all_drives.empty());
 
-    auto c_disk_found = std::any_of(
-        std::begin(all_drives), std::end(all_drives),
+    const auto c_disk_found = rs::any_of(
+        all_drives,
         [](std::string_view drive) { return tools::IsEqual(drive, "c:\\"); });
     ASSERT_TRUE(c_disk_found);
 }

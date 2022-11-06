@@ -37,13 +37,13 @@ auto GetIndexOfTS() {
 }
 
 TEST(WinPerf, ValidateFabricConfig) {
-    namespace groups = cma::cfg::groups;
-    namespace vars = cma::cfg::vars;
+    namespace groups = cfg::groups;
+    namespace vars = cfg::vars;
     auto temp_fs(tst::TempCfgFs::CreateNoIo());
     ASSERT_TRUE(temp_fs->loadContent(tst::GetFabricYmlContent()));
 
     auto cmd_line = cfg::groups::winperf.buildCmdLine();
-    auto cfg = cma::cfg::GetLoadedConfig();
+    auto cfg = cfg::GetLoadedConfig();
 
     auto winperf_node = cfg[groups::kWinPerf];
     ASSERT_TRUE(winperf_node.IsDefined());
@@ -65,12 +65,11 @@ TEST(WinPerf, ValidateFabricConfig) {
     ASSERT_EQ(cfg_prefix, vars::kWinPerfPrefixDefault);
     EXPECT_EQ(groups::winperf.prefix(), cfg_prefix);
 
-    auto enabled = cma::cfg::GetVal(groups::kWinPerf, vars::kEnabled, false);
+    auto enabled = cfg::GetVal(groups::kWinPerf, vars::kEnabled, false);
     EXPECT_TRUE(enabled);
-    auto counters =
-        cma::cfg::GetPairArray(groups::kWinPerf, vars::kWinPerfCounters);
+    auto counters = cfg::GetPairArray(groups::kWinPerf, vars::kWinPerfCounters);
     ASSERT_EQ(counters.size(), 3);
-    const cma::cfg::StringPairArray base_counters = {
+    const cfg::StringPairArray base_counters = {
         {"238", "processor"},
         {"234", "phydisk"},
         {"510", "if"},
@@ -107,11 +106,11 @@ TEST(WinPerf, MakeWinPerfStamp) {
     auto x = details::MakeWinPerfStamp(0);
     ASSERT_TRUE(!x.empty());
 
-    auto table = cma::tools::SplitString(x, " ");
+    auto table = tools::SplitString(x, " ");
     ASSERT_EQ(table.size(), 3);
     EXPECT_EQ(table[1], "0");
 
-    auto value = cma::tools::ConvertToUint64(table[2], 12345678);
+    auto value = tools::ConvertToUint64(table[2], 12345678);
     EXPECT_NE(value, 12345678);
     EXPECT_TRUE(value > 1000);
 }
@@ -122,15 +121,19 @@ TEST(WinPerf, MakeWinPerfHeader) {
     x = details::MakeWinPerfHeader(L"www", L"");
     EXPECT_EQ(x, "<<<www_>>>\n");
 }
-TEST(WinPerf, MakeBodyForTSIntegration) {
-    auto ts_index = GetIndexOfTS();
-    ASSERT_TRUE(ValidIndexOfTs(ts_index)) << "not supported index " << ts_index;
+
+std::pair<wtools::perf::DataSequence, uint32_t> GetKeyIndex() {
+    const auto ts_index = GetIndexOfTS();
+    EXPECT_TRUE(ValidIndexOfTs(ts_index)) << "not supported index " << ts_index;
 
     uint32_t key_index = 0;
     auto result =
         details::LoadWinPerfData(std::to_wstring(ts_index), key_index);
+    return {std::move(result), key_index};
+}
+TEST(WinPerf, MakeBodyForTSIntegration) {
+    auto [result, key_index] = GetKeyIndex();
 
-    ASSERT_TRUE(result.len_ > 0);
     auto object = wtools::perf::FindPerfObject(result, key_index);
 
     EXPECT_NO_THROW(details::MakeWinPerfNakedList(nullptr, key_index));
@@ -138,16 +141,16 @@ TEST(WinPerf, MakeBodyForTSIntegration) {
     EXPECT_NO_THROW(details::MakeWinPerfNakedList(object, 1));
 
     auto str = details::MakeWinPerfNakedList(object, key_index);
-    auto table = cma::tools::SplitString(str, "\n");
+    auto table = tools::SplitString(str, "\n");
     ASSERT_TRUE(!table.empty());
     for (const auto &row : table) {
-        auto words = cma::tools::SplitString(row, " ");
+        auto words = tools::SplitString(row, " ");
         EXPECT_EQ(words.size(), 3);
-        EXPECT_NE(cma::tools::ConvertToUint64(words[0], 12345), 12345)
+        EXPECT_NE(tools::ConvertToUint64(words[0], 12345), 12345)
             << "words[0] must be number";
-        EXPECT_NE(cma::tools::ConvertToUint64(words[1], 12345), 12345)
+        EXPECT_NE(tools::ConvertToUint64(words[1], 12345), 12345)
             << "words[1] must be number";
-        EXPECT_EQ(cma::tools::ConvertToUint64(words[2], 12345), 12345)
+        EXPECT_EQ(tools::ConvertToUint64(words[2], 12345), 12345)
             << "words[2] must be NOT number";
     }
 }
@@ -165,24 +168,24 @@ TEST(WinPerf, IfCounter) {
     ASSERT_TRUE(!x.empty());
 
     // check all
-    auto table = cma::tools::SplitString(x, "\n");
+    auto table = tools::SplitString(x, "\n");
     ASSERT_TRUE(table.size() > 3);
 
     // check header
     EXPECT_EQ(table[0], "<<<winp_if>>>"s);
-    auto stamp = cma::tools::SplitString(table[1], " ");
+    auto stamp = tools::SplitString(table[1], " ");
     ASSERT_EQ(stamp.size(), 3);
 
     // check stamp
-    auto stamp_time = cma::tools::ConvertToUint64(stamp[0], 12345678);
+    auto stamp_time = tools::ConvertToUint64(stamp[0], 12345678);
     EXPECT_NE(stamp_time, 12345678);
     EXPECT_TRUE(stamp_time > 100000);  // we are sure that time is going
 
-    auto stamp_index = cma::tools::ConvertToUint64(stamp[1], 12345678);
+    auto stamp_index = tools::ConvertToUint64(stamp[1], 12345678);
     EXPECT_EQ(std::to_string(stamp_index), "510");
 
-    auto stamp_counter = cma::tools::ConvertToUint64(stamp[2], 12345678);
-    EXPECT_EQ(stamp_counter, cma::cfg::GetPerformanceFrequency());
+    auto stamp_counter = tools::ConvertToUint64(stamp[2], 12345678);
+    EXPECT_EQ(stamp_counter, cfg::GetPerformanceFrequency());
 }
 
 TEST(WinPerf, TcpConnCounter) {
@@ -212,7 +215,7 @@ TEST(WinPerf, TsCounter) {
         ASSERT_TRUE(!x.empty());
 
         // check all
-        auto table = cma::tools::SplitString(x, "\n");
+        auto table = tools::SplitString(x, "\n");
         ASSERT_TRUE(table.size() > 3);
     }
 
@@ -233,9 +236,9 @@ TEST(WinPerf, TsCounter) {
         ASSERT_TRUE(!x.empty());
 
         // check all
-        auto table = cma::tools::SplitString(x, "\n");
+        auto table = tools::SplitString(x, "\n");
         ASSERT_TRUE(table.size() > 3);
-        auto words = cma::tools::SplitString(table[2], " ");
+        auto words = tools::SplitString(table[2], " ");
         EXPECT_EQ(words.size(), 3);
     }
 }

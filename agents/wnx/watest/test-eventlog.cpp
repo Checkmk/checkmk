@@ -116,7 +116,7 @@ TEST(EventLogTest, PrintEventLogIntegration) {
             *ptr, 0, cfg::EventLevels::kCrit, false, SkipDuplicatedRecords::no,
             [&str](const std::string &in) {
                 str += in;
-                return str.length() < (cfg::logwatch::kMaxSize / 10);
+                return str.length() < cfg::logwatch::kMaxSize / 10;
             });
         EXPECT_TRUE(last > 0);
         EXPECT_TRUE(!str.empty());

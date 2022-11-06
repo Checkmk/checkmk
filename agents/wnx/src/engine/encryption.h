@@ -16,7 +16,7 @@
 
 namespace cma::encrypt {
 // algorithm can't currently be changed
-enum Algorithm {
+enum class Algorithm {
     kDefault = CALG_AES_256,
     kHash = CALG_MD5
 

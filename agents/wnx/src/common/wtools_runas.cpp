@@ -125,7 +125,7 @@ std::wstring MakePath(const AppSettings &settings) {
 
 STARTUPINFO MakeStartupInfo(const AppSettings &settings) {
     STARTUPINFO si = {0};
-    si.cb = sizeof(si);
+    si.cb = sizeof si;
     si.dwFlags = STARTF_USESHOWWINDOW;
     si.wShowWindow = settings.show_window ? SW_SHOW : SW_HIDE;
 
@@ -183,14 +183,14 @@ std::optional<LUID> GetLookupPrivilegeValue(const wchar_t *privilegs) {
 
 bool SetLookupPrivilege(HANDLE token_handle, const LUID &luid) {
     TOKEN_PRIVILEGES tp;  // token privileges
-    ZeroMemory(&tp, sizeof(tp));
+    ZeroMemory(&tp, sizeof tp);
     tp.PrivilegeCount = 1;
     tp.Privileges[0].Luid = luid;
     tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
 
     // Adjust Token privileges
     if (::AdjustTokenPrivileges(token_handle, FALSE, &tp,
-                                sizeof(TOKEN_PRIVILEGES), nullptr,
+                                sizeof TOKEN_PRIVILEGES, nullptr,
                                 nullptr) == TRUE)
         return true;
 
@@ -288,13 +288,13 @@ BOOL PrepForInteractiveProcess(AppSettings &settings,
     DWORD len = 0;
     ::GetTokenInformation(settings.hUser, TokenSessionId,
                           &cleanup_interactive->origSessionID,
-                          sizeof(cleanup_interactive->origSessionID), &len);
+                          sizeof cleanup_interactive->origSessionID, &len);
 
     EnablePrivilege(SE_TCB_NAME, settings.hUser);
 
     if (::SetTokenInformation(settings.hUser, TokenSessionId,
                               &target_session_id,
-                              sizeof(target_session_id)) == FALSE)
+                              sizeof target_session_id) == FALSE)
         XLOG::l("Failed to set interactive token [{}]", ::GetLastError());
 
     return TRUE;
@@ -326,7 +326,7 @@ CleanupInteractive MakeCleanupInteractive(AppSettings &settings,
 
 PROFILEINFOW MakeProfile(std::wstring_view user_name) {
     PROFILEINFO profile = {0};
-    profile.dwSize = sizeof(profile);
+    profile.dwSize = sizeof profile;
     profile.lpUserName = const_cast<wchar_t *>(user_name.data());
     profile.dwFlags = PI_NOUI;
     return profile;
@@ -374,13 +374,13 @@ HANDLE GetLocalSystemProcessToken() {
     DWORD pids[1024 * 10] = {0};
     DWORD byte_count = 0;
 
-    if (::EnumProcesses(pids, sizeof(pids), &byte_count) == TRUE) {
+    if (::EnumProcesses(pids, sizeof pids, &byte_count) == TRUE) {
         XLOG::l("Can't enumProcesses - Failed to get token for Local System.");
         return nullptr;
     }
 
     // Calculate how many process identifiers were returned.
-    auto process_count = byte_count / sizeof(DWORD);
+    auto process_count = byte_count / sizeof DWORD;
     for (DWORD i = 0; i < process_count; ++i) {
         const DWORD pid = pids[i];
         const HANDLE proc_handle =
@@ -428,7 +428,7 @@ void CleanUpInteractiveProcess(
     CleanupInteractive *cleanup_interactive) noexcept {
     ::SetTokenInformation(cleanup_interactive->hUser, TokenSessionId,
                           &cleanup_interactive->origSessionID,
-                          sizeof(cleanup_interactive->origSessionID));
+                          sizeof cleanup_interactive->origSessionID);
 }
 
 // GTEST [-]
@@ -626,17 +626,16 @@ bool LimitRights(HANDLE &hUser) {
 
 bool ElevateUserToken(HANDLE &hEnvUser) {
     TOKEN_ELEVATION_TYPE tet;
-    if (DWORD needed = 0; ::GetTokenInformation(hEnvUser, TokenElevationType,
-                                                static_cast<void *>(&tet),
-                                                sizeof(tet), &needed) == TRUE) {
+    if (DWORD needed = 0;
+        ::GetTokenInformation(hEnvUser, TokenElevationType, &tet, sizeof tet,
+                              &needed) == TRUE) {
         if (tet != TokenElevationTypeLimited) {
             return true;
         }
 
         // get the associated token, which is the full-admin token
         if (TOKEN_LINKED_TOKEN tlt = {nullptr};
-            ::GetTokenInformation(hEnvUser, TokenLinkedToken,
-                                  static_cast<void *>(&tlt), sizeof(tlt),
+            ::GetTokenInformation(hEnvUser, TokenLinkedToken, &tlt, sizeof tlt,
                                   &needed) == TRUE) {
             if (!DupeHandle(tlt.LinkedToken)) {
                 LogDupeError(XLOG_FLINE + " !!!");
@@ -828,7 +827,7 @@ bool StartProcess(AppSettings &settings, HANDLE command_pipe) {
             // CreateProcessWithLogonW can't be called from LocalSystem on
             // Win2003 and earlier, so LogonUser/CreateProcessAsUser must be
             // used. Might as well try for everyone
-            if ((launched == FALSE) && !wtools::IsBadHandle(settings.hUser)) {
+            if (launched == FALSE && !wtools::IsBadHandle(settings.hUser)) {
                 XLOG::d(
                     "Failed CreateProcessWithLogonW - trying CreateProcessAsUser");
 

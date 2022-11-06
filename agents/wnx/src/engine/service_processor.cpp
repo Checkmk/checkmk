@@ -172,11 +172,9 @@ std::string FindWinPerfExe() {
     if (tools::IsEqual(exe_name, "agent")) {
         XLOG::t.i("Looking for default agent");
         const fs::path f{cfg::GetRootDir()};
-        std::vector<fs::path> names{
-            f / cfg::kDefaultAppFileName  // on install
-        };
+        std::vector names{f / cfg::kDefaultAppFileName};
 
-        if (tgt::Is64bit()) {
+        if constexpr (tgt::Is64bit()) {
             names.emplace_back(f / "check_mk_service64.exe");
         }
 
@@ -464,7 +462,7 @@ void ServiceProcessor::sendDebugData() {
     auto block = getAnswer(started);
     block.emplace_back('\0');  // we need this for printf
     _setmode(_fileno(stdout), _O_BINARY);
-    auto count = static_cast<size_t>(printf("%s", block.data()));
+    auto count = static_cast<size_t>(printf("%s", block.data()));  // NOLINT
     if (count != block.size() - 1) {
         XLOG::l("Binary data at offset [{}]", count);
     }
@@ -473,7 +471,7 @@ void ServiceProcessor::sendDebugData() {
 /// \brief called before every answer to execute routine tasks
 void ServiceProcessor::prepareAnswer(const std::string &ip_from,
                                      rt::Device &rt_device) {
-    auto value = tools::win::GetEnv(env::auto_reload);
+    const auto value = tools::win::GetEnv(env::auto_reload);
 
     if (cfg::ReloadConfigAutomatically() || tools::IsEqual(value, L"yes"))
         ReloadConfig();  // automatic config reload

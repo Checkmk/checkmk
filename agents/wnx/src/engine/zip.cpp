@@ -119,8 +119,8 @@ static ReleasedResource<FolderItems> GetFolderItems(Folder *folder) {
 namespace {
 
 zip::Type GetFileType(std::wstring_view name) noexcept {
-    constexpr std::array<char, 2> cab_header{'M', 'S'};
-    constexpr std::array<char, 2> zip_header{'P', 'K'};
+    constexpr std::array cab_header{'M', 'S'};
+    constexpr std::array zip_header{'P', 'K'};
     try {
         std::ifstream f(wtools::ToUtf8(name), std::ios::binary);
         if (!f.good()) {

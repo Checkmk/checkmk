@@ -614,12 +614,12 @@ auto ReadFileAsTable(const fs::path &name) {
     return tools::SplitString(sstr.str(), "\n");
 }
 
-/// reads the file which must be encoded as LE BOM<summary>
+/// reads the file which must be encoded as LE BOM
 std::wstring ReadLeBom(const fs::path &file) {
     constexpr size_t max_log_size{8192U * 1024};
     constexpr auto ff = static_cast<unsigned char>('\xFF');
     constexpr auto fe = static_cast<unsigned char>('\xFE');
-    constexpr std::array<unsigned char, 2> le_bom_marker{ff, fe};
+    constexpr std::array le_bom_marker{ff, fe};
     try {
         std::ifstream f1(file, std::ifstream::binary | std::ifstream::ate);
 

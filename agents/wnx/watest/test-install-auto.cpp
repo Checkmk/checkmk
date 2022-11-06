@@ -291,7 +291,7 @@ protected:
         return fs::exists(bak_file_, ec);
     }
 
-    void createLogFile(std::string_view text) {
+    void createLogFile(std::string_view text) const {
         tst::CreateTextFile(logFile(), text);
     }
 

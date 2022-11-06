@@ -51,7 +51,7 @@ TEST_F(ZipFixture, UnCabIntegration) {
     auto work_file = cab_file_;
 
     fs::copy_file(tst::GetUnitTestFilesRoot() / tst::cab_to_test, work_file);
-    ASSERT_FALSE(Extract((work_file / "1"), target_));
+    ASSERT_FALSE(Extract(work_file / "1", target_));
 
     ASSERT_FALSE(Extract(work_file, target));
     ASSERT_TRUE(fs::create_directories(target));

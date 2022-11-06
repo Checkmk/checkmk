@@ -43,7 +43,7 @@ static bool IsPluginRequiredType(const PluginEntry &plugin,
 }
 
 // returns 0 on lack plugin entries
-int FindMaxTimeout(const cma::PluginMap &pm, PluginMode need_type) {
+int FindMaxTimeout(const PluginMap &pm, PluginMode need_type) {
     int timeout = 0;
     for (const auto &[path, plugin] : pm) {
         if (IsPluginRequiredType(plugin, need_type)) {

@@ -1084,13 +1084,13 @@ void PutInternalArray(YAML::Node yaml_node, std::string_view value_name,
 // opposite operation for the GetInternalArray
 void PutInternalArray(std::string_view section_name,
                       std::string_view value_name,
-                      std::vector<std::string> &arr) {
+                      const std::vector<std::string> &arr) {
     auto yaml = GetLoadedConfig();
     if (yaml.size() == 0) {
         return;
     }
     try {
-        auto section = yaml[section_name];
+        const auto section = yaml[section_name];
         PutInternalArray(section, value_name, arr);
     } catch (const std::exception &e) {
         XLOG::l("Cannot read yml file '{}' with '{}.{} 'code:'{}'",
@@ -1451,11 +1451,9 @@ void CombineSequence(std::string_view name, YAML::Node target_value,
                     continue;
                 }
 
-                if (std::none_of(std::begin(target_value),
-                                 std::end(target_value),
-                                 [s_name](const YAML::Node &Node) {
-                                     return s_name == GetMapNodeName(Node);
-                                 })) {
+                if (rs::none_of(target_value, [s_name](const YAML::Node &node) {
+                        return s_name == GetMapNodeName(node);
+                    })) {
                     target_value.push_back(entry);
                 }
             }
@@ -1470,11 +1468,9 @@ void CombineSequence(std::string_view name, YAML::Node target_value,
                     continue;
                 }
 
-                if (std::none_of(std::begin(source_value),
-                                 std::end(source_value),
-                                 [s_name](const YAML::Node &node) {
-                                     return s_name == GetMapNodeName(node);
-                                 })) {
+                if (rs::none_of(source_value, [s_name](const YAML::Node &node) {
+                        return s_name == GetMapNodeName(node);
+                    })) {
                     new_seq.push_back(entry);
                 }
             }

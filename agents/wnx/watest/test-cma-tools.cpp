@@ -30,8 +30,8 @@ TEST(CmaTools, CheckArgvForValue) {
 namespace cma::tools {  // to become friendly for cma::cfg classes
 
 TEST(CmaTools, AddVectorsStrings) {
-    const std::vector<char> c = {'a', 'b', 'c'};
-    const std::vector<char> z = {'x', 'y', 'z'};
+    const std::vector c = {'a', 'b', 'c'};
+    const std::vector z = {'x', 'y', 'z'};
     const std::string s = "012";
 
     auto op = c;

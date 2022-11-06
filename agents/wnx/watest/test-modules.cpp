@@ -344,8 +344,8 @@ protected:
 
     tst::TempCfgFs::ptr temp_fs_;
 
-    std::pair<fs::path, fs::path> CreateModulesAndBackup() {
-        fs::path user = temp_fs_->data();
+    [[nodiscard]] std::pair<fs::path, fs::path> CreateModulesAndBackup() const {
+        const fs::path user = temp_fs_->data();
         auto modules_dir = user / dirs::kUserModules;
         auto backup_dir =
             user / dirs::kUserInstallDir / dirs::kInstalledModules;
@@ -354,8 +354,8 @@ protected:
         return {modules_dir, backup_dir};
     }
 
-    ::testing::AssertionResult IsPresented(const fs::path &file,
-                                           const fs::path &dir) {
+    [[nodiscard]] ::testing::AssertionResult IsPresented(
+        const fs::path &file, const fs::path &dir) const {
         if (!fs::exists(file)) {
             return ::testing::AssertionFailure()
                    << file.u8string() << " is absent";
@@ -379,8 +379,8 @@ protected:
         return ::testing::AssertionSuccess();
     }
 
-    ::testing::AssertionResult IsAbsent(const fs::path &file,
-                                        const fs::path &dir) {
+    [[nodiscard]] ::testing::AssertionResult IsAbsent(
+        const fs::path &file, const fs::path &dir) const {
         if (fs::exists(file)) {
             return ::testing::AssertionFailure()
                    << file.u8string() << " should be absent";
@@ -394,8 +394,9 @@ protected:
         return ::testing::AssertionSuccess();
     }
 
-    std::pair<fs::path, fs::path> makeExpectedPair(const fs::path &zip_file) {
-        auto name{zip_file.filename()};
+    [[nodiscard]] std::pair<fs::path, fs::path> makeExpectedPair(
+        const fs::path &zip_file) const {
+        const auto name{zip_file.filename()};
         auto target_folder = temp_fs_->data() / dirs::kUserModules / name;
         target_folder.replace_extension();
         auto backup_file = temp_fs_->data() / dirs::kUserInstallDir /
@@ -551,7 +552,7 @@ TEST_F(ModuleCommanderTest, FindModules) {
     ASSERT_EQ(mc.findModuleFiles(root), 0);
 
     EXPECT_EQ(mc.getExtensions(),
-              std::vector<std::string>({".test"s, ".test2"s, "test3.tt"s}));
+              std::vector({".test"s, ".test2"s, "test3.tt"s}));
 
     tst::CreateTextFile(install / ("real_module_module"s + kExtension.data()),
                         "zip");

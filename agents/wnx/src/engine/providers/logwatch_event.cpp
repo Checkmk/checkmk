@@ -37,9 +37,9 @@ cfg::EventLevels LabelToEventLevel(std::string_view required_level) {
     std::string val(required_level);
     tools::StringLower(val);
 
-    constexpr std::array<EventLevels, 5> levels = {
-        EventLevels::kIgnore, EventLevels::kOff, EventLevels::kAll,
-        EventLevels::kWarn, EventLevels::kCrit};
+    constexpr std::array levels = {EventLevels::kIgnore, EventLevels::kOff,
+                                   EventLevels::kAll, EventLevels::kWarn,
+                                   EventLevels::kCrit};
 
     for (auto level : levels) {
         if (val == ConvertLogWatchLevelToString(level)) {

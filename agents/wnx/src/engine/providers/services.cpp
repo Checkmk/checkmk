@@ -7,15 +7,18 @@
 
 #include "providers/services.h"
 
+#include <ranges>
 #include <string>
 #include <utility>
 
 #include "tools/_raii.h"
 
+namespace rs = std::ranges;
+
 namespace cma::provider {
 namespace {
 
-DWORD GetServiceStartDWORD(SC_HANDLE manager_handle,
+DWORD GetServiceStartDword(SC_HANDLE manager_handle,
                            const wchar_t *service_name) {
     // Query the start type of the service
     auto *handle =
@@ -49,7 +52,7 @@ DWORD GetServiceStartDWORD(SC_HANDLE manager_handle,
 
 std::string_view GetServiceStartType(SC_HANDLE manager_handle,
                                      const wchar_t *service_name) {
-    switch (GetServiceStartDWORD(manager_handle, service_name)) {
+    switch (GetServiceStartDword(manager_handle, service_name)) {
         case SERVICE_AUTO_START:
             return "auto";
         case SERVICE_BOOT_START:
@@ -134,13 +137,12 @@ std::string Services::makeBody() {
 
     std::string out;
     for (unsigned i = 0; i < num_services; i++) {
-        auto state = service->ServiceStatusProcess.dwCurrentState;
+        const auto state = service->ServiceStatusProcess.dwCurrentState;
 
         auto state_name = ConvertState2Name(state);
 
-        // replace in name ' ' with  '_'
         auto service_name = wtools::ToUtf8(service->lpServiceName);
-        std::replace(service_name.begin(), service_name.end(), ' ', '_');
+        rs::replace(service_name, ' ', '_');
 
         auto start_type = GetServiceStartType(handle, service->lpServiceName);
 

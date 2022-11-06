@@ -390,7 +390,7 @@ void PutInternalArray(YAML::Node yaml_node, std::string_view value_name,
 
 void PutInternalArray(std::string_view section_name,
                       std::string_view value_name,
-                      std::vector<std::string> &arr);
+                      const std::vector<std::string> &arr);
 
 // gets string from the yaml and split it in table using space as divider
 std::vector<std::string> GetInternalArray(const YAML::Node &yaml_node,
@@ -492,7 +492,7 @@ public:
 
     // #TODO move somewhere!
     // transfer global data into app environment
-    void setupLogEnvironment();
+    void setupLogEnvironment() const;
 
     // accessors
     bool ipv6() const {
@@ -719,14 +719,14 @@ private:
     }
 
     // root
-    int port_;
-    bool ipv6_;
-    bool async_;
-    bool flush_tcp_;
+    int port_{kMainPort};
+    bool ipv6_{false};
+    bool async_{true};
+    bool flush_tcp_{false};
     std::vector<std::string> execute_;
     std::vector<std::string> only_from_;
     std::string password_;
-    bool encrypt_;
+    bool encrypt_{false};
     std::string cpuload_method_;
 
     // sections
@@ -734,24 +734,23 @@ private:
     std::vector<std::string> disabled_sections_;
 
     // real time
-    bool realtime_enabled_;
-    bool realtime_encrypt_;
-    int realtime_timeout_;
-    int realtime_port_;
+    bool realtime_enabled_{true};
+    bool realtime_encrypt_{false};
+    int realtime_timeout_{kDefaultRealtimeTimeout};
+    int realtime_port_{kDefaultRealtimePort};
     std::vector<std::string> realtime_sections_;
 
     // wmi global
-    int wmi_timeout_;
+    int wmi_timeout_{kDefaultWmiTimeout};
 
     // log
     std::filesystem::path yaml_log_path_;
-    int debug_level_;  // 0, 1, 2
+    int debug_level_{static_cast<int>(
+        tgt::IsDebug() ? LogLevel::kLogDebug : LogLevel::kLogBase)};  // 0, 1, 2
 
-    bool windbg_;
-    bool event_log_;
+    bool windbg_{true};
+    bool event_log_{true};
     std::string log_file_name_;
-    uint32_t log_file_max_count_;
-    uint32_t log_file_max_size_;
 
     // derivative
     std::filesystem::path logfile_;
@@ -905,7 +904,8 @@ void ApplyValueIfScalar(const YAML::Node &entry, T &var,
 class Plugins : public Group {
 public:
     // describes how should certain modules executed
-    struct ExeUnit : public PluginInfo {
+    class ExeUnit : public PluginInfo {
+    public:
         ExeUnit() = default;
 
         ExeUnit(std::string_view pattern, int the_timeout,

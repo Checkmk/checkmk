@@ -303,8 +303,8 @@ bool IsIpAllowedAsException(const std::string &ip) noexcept {
 }
 
 namespace {
-std::vector<Modus> local_connection_moduses{Modus::service, Modus::test,
-                                            Modus::integration};
+std::vector local_connection_moduses{Modus::service, Modus::test,
+                                     Modus::integration};
 
 bool AllowLocalConnection() {
     return rs::find(local_connection_moduses, GetModus()) !=
@@ -379,7 +379,7 @@ bool SendDataToMailSlot(const std::string &mailslot_name,
 }
 
 void ExternalPort::processRequest(const ReplyFunc &reply,
-                                  const std::string &request) {
+                                  const std::string &request) const {
     XLOG::d.i("Request is '{}'", request);
     auto r = ParseRequest(request);
     if (r.ip.empty()) {

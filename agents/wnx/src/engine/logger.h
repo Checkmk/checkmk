@@ -212,11 +212,11 @@ constexpr uint16_t CalculateColor(Colors color, uint16_t old_color_attributes) {
 
     uint16_t new_color =
         GetColorAttribute(color) | existing_bg | FOREGROUND_INTENSITY;
-    constexpr const int bg_bit_offset = GetBitOffset(background_mask);
-    constexpr const int fg_bit_offset = GetBitOffset(foreground_mask);
+    constexpr int bg_bit_offset = GetBitOffset(background_mask);
+    constexpr int fg_bit_offset = GetBitOffset(foreground_mask);
 
-    if (((new_color & background_mask) >> bg_bit_offset) ==
-        ((new_color & foreground_mask) >> fg_bit_offset)) {
+    if ((new_color & background_mask) >> bg_bit_offset ==
+        (new_color & foreground_mask) >> fg_bit_offset) {
         new_color ^= FOREGROUND_INTENSITY;  // invert intensity
     }
     return new_color;
@@ -402,7 +402,7 @@ public:
         }
 
         std::lock_guard lk(lock_);
-        return (os_ << s);
+        return os_ << s;
     }
 
     std::ostream &operator<<(const wchar_t *value) {
@@ -411,7 +411,7 @@ public:
             return os_;
         }
         std::lock_guard lk(lock_);
-        return (os_ << s);
+        return os_ << s;
     }
     // **********************************
 
@@ -523,31 +523,31 @@ public:
         return e;
     }
 
-    [[maybe_unused]] Emitter t() noexcept {
+    [[maybe_unused]] Emitter t() const noexcept {
         auto e = *this;
         e.mods_ = XLOG::kTrace;
         return e;
     }
 
-    [[maybe_unused]] Emitter w() noexcept {
+    [[maybe_unused]] Emitter w() const noexcept {
         auto e = *this;
         e.mods_ = XLOG::kWarning;
         return e;
     }
 
-    [[maybe_unused]] Emitter i() noexcept {
+    [[maybe_unused]] Emitter i() const noexcept {
         auto e = *this;
         e.mods_ = XLOG::kInfo;
         return e;
     }
 
-    [[maybe_unused]] Emitter e() noexcept {
+    [[maybe_unused]] Emitter e() const noexcept {
         auto e = *this;
         e.mods_ = XLOG::kError;
         return e;
     }
 
-    [[maybe_unused]] Emitter crit() noexcept {
+    [[maybe_unused]] Emitter crit() const noexcept {
         auto e = *this;
         e.mods_ = XLOG::kCritError;
         return e;

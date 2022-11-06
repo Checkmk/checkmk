@@ -60,7 +60,7 @@ bool MailboxCallbackPerfTest(const cma::mailslot::Slot *Slot, const void *Data,
             {
                 auto data_source = static_cast<const uint8_t *>(dt->data());
                 auto data_end = data_source + dt->length();
-                std::vector<uint8_t> vectorized_data(data_source, data_end);
+                std::vector vectorized_data(data_source, data_end);
                 g_mailslot_storage.buffer_ = vectorized_data;
                 g_mailslot_storage.answer_id_ = dt->answerId();
                 g_mailslot_storage.peer_name_ = dt->providerId();

@@ -130,8 +130,6 @@ std::unordered_map<std::string, std::string> GetComputerSystemInfo(
 }
 
 std::string PerfCpuLoad::makeBody() {
-    constexpr std::wstring_view kProcessorQueueLength{
-        L"\\System\\Processor Queue Length"};
     static const std::vector<std::string> names{
         "Name", "NumberOfLogicalProcessors", "NumberOfProcessors"};
     auto sep = wtools::ConvertToUTF16(fmt::format("{}", separator()));

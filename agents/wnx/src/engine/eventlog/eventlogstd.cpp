@@ -167,7 +167,7 @@ public:
         // prepare array of zero terminated strings to be inserted
         // into message template.
         std::vector<LPCWSTR> strings;
-        LPCWSTR string = (WCHAR *)(((char *)_record) + _record->StringOffset);
+        LPCWSTR string = (WCHAR *)((char *)_record + _record->StringOffset);
         for (int i = 0; i < _record->NumStrings; ++i) {
             strings.push_back(string);
             string += wcslen(string) + 1;
@@ -207,11 +207,11 @@ void EventLog::seek(uint64_t record_number) {
     DWORD recordCount = 0;
 
     if (GetOldestEventLogRecord(handle_, &oldestRecord) &&
-        (record_number < oldestRecord)) {
+        record_number < oldestRecord) {
         // Beyond the oldest record:
         record_offset_ = oldestRecord;
     } else if (GetNumberOfEventLogRecords(handle_, &recordCount) &&
-               (record_number >= oldestRecord + recordCount)) {
+               record_number >= oldestRecord + recordCount) {
         // Beyond the newest record. Note: set offset intentionally to the next
         // record after the currently last one!
         record_offset_ = oldestRecord + recordCount;
@@ -227,7 +227,7 @@ EventLogRecordBase *EventLog::readRecord() {
     while (result == nullptr) {
         while (buffer_offset_ < buffer_used_) {
             auto temp =
-                reinterpret_cast<EVENTLOGRECORD *>(&(buffer_[buffer_offset_]));
+                reinterpret_cast<EVENTLOGRECORD *>(&buffer_[buffer_offset_]);
             buffer_offset_ += temp->Length;
             // as long as seeking on this event log is possible this will
             // always be true.
@@ -281,7 +281,7 @@ bool EventLog::fillBuffer() {
     }
 
     DWORD flags = EVENTLOG_FORWARDS_READ;
-    if ((record_offset_ != 0) && (seek_possible_)) {
+    if (record_offset_ != 0 && seek_possible_) {
         flags |= EVENTLOG_SEEK_READ;
     } else {
         flags |= EVENTLOG_SEQUENTIAL_READ;
@@ -308,8 +308,7 @@ bool EventLog::fillBuffer() {
         return fillBuffer();
     }
 
-    if ((error == ERROR_INVALID_PARAMETER) &&
-        0 != (flags & EVENTLOG_SEEK_READ)) {
+    if (error == ERROR_INVALID_PARAMETER && 0 != (flags & EVENTLOG_SEEK_READ)) {
         // if error during "seek_read" we should retry with
         // sequential read
         // the most likely cause for this error (since our

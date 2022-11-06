@@ -107,7 +107,7 @@ fs::path Module::findBin(const fs::path &modules_dir) const noexcept {
 }
 
 bool ModuleCommander::IsQuickReinstallAllowed() noexcept {
-    auto enabled_in_config =
+    const auto enabled_in_config =
         GetVal(groups::kModules, vars::kModulesQuickReinstall, true);
     return cfg::g_quick_module_reinstall_allowed && enabled_in_config;
 }

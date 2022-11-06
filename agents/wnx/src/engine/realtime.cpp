@@ -185,7 +185,7 @@ bool connectSocket(asio::io_context &io_context, asio::ip::udp::socket &socket,
 
 }  // namespace
 
-std::string Device::generateData() {
+std::string Device::generateData() const {
     std::string result;
 
     if (use_df_) {

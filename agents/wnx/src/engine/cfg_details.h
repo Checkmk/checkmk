@@ -4,9 +4,6 @@
 // source code package.
 
 #pragma once
-// registry access
-#define WIN32_LEAN_AND_MEAN
-#include "windows.h"
 
 // other files
 #include <filesystem>

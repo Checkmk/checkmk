@@ -50,7 +50,7 @@ public:
 
     void connectFrom(std::string_view address, int port,
                      const RtTable &sections, std::string_view passphrase,
-                     int Timeout);
+                     int timeout);
 
     void connectFrom(std::string_view address, int port,
                      const RtTable &sections, std::string_view passphrase) {
@@ -64,7 +64,7 @@ public:
 
 private:
     void mainThread() noexcept;
-    std::string generateData();
+    std::string generateData() const;
 
     void clear();
     void resetSections();

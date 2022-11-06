@@ -17,21 +17,21 @@ using namespace std::string_literals;
 
 namespace xlog {
 TEST(xlogTest, xlogLowLevel) {
-    EXPECT_TRUE(xlog::IsAddCrFlag(xlog::Flags::kAddCr));
-    EXPECT_FALSE(xlog::IsAddCrFlag(~xlog::Flags::kAddCr));
+    EXPECT_TRUE(IsAddCrFlag(Flags::kAddCr));
+    EXPECT_FALSE(IsAddCrFlag(~Flags::kAddCr));
 
-    EXPECT_TRUE(xlog::IsNoCrFlag(xlog::Flags::kNoCr));
-    EXPECT_FALSE(xlog::IsNoCrFlag(~xlog::Flags::kNoCr));
+    EXPECT_TRUE(IsNoCrFlag(Flags::kNoCr));
+    EXPECT_FALSE(IsNoCrFlag(~Flags::kNoCr));
 
     std::string s;
-    EXPECT_NO_THROW(xlog::RmCr(s));
-    xlog::AddCr(s);
+    EXPECT_NO_THROW(RmCr(s));
+    AddCr(s);
     EXPECT_EQ(s, "\n");
-    xlog::AddCr(s);
+    AddCr(s);
     EXPECT_EQ(s, "\n");
-    xlog::RmCr(s);
+    RmCr(s);
     EXPECT_EQ(s, "");
-    EXPECT_NO_THROW(xlog::RmCr(s));
+    EXPECT_NO_THROW(RmCr(s));
 }
 }  // namespace xlog
 
@@ -391,17 +391,17 @@ TEST(LogTest, Simulation) {
 }
 
 TEST(LogTest, EmitterLogRotation) {
-    XLOG::Emitter l(XLOG::LogType::log);
-    l.setLogRotation(3, 1024 * 1024);
-    EXPECT_EQ(l.getBackupLogMaxCount(), 3);
-    EXPECT_EQ(l.getBackupLogMaxSize(), 1024 * 1024);
-    l.setLogRotation(0, 0);
-    EXPECT_EQ(l.getBackupLogMaxCount(), 0);
-    EXPECT_EQ(l.getBackupLogMaxSize(), 256 * 1024);
+    XLOG::Emitter logger(XLOG::LogType::log);
+    logger.setLogRotation(3, 1024 * 1024);
+    EXPECT_EQ(logger.getBackupLogMaxCount(), 3);
+    EXPECT_EQ(logger.getBackupLogMaxSize(), 1024 * 1024);
+    logger.setLogRotation(0, 0);
+    EXPECT_EQ(logger.getBackupLogMaxCount(), 0);
+    EXPECT_EQ(logger.getBackupLogMaxSize(), 256 * 1024);
 
-    l.setLogRotation(1000, 1024 * 1024 * 1024);
-    EXPECT_EQ(l.getBackupLogMaxCount(), 64);
-    EXPECT_EQ(l.getBackupLogMaxSize(), 256 * 1024 * 1024);
+    logger.setLogRotation(1000, 1024 * 1024 * 1024);
+    EXPECT_EQ(logger.getBackupLogMaxCount(), 64);
+    EXPECT_EQ(logger.getBackupLogMaxSize(), 256 * 1024 * 1024);
 }
 
 TEST(LogTest, Setup) {

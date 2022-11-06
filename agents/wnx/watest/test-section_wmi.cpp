@@ -219,15 +219,14 @@ TEST(WmiProviderTest, WmiConfiguration) {
     }
 }
 
-constexpr size_t exch_count{7U};
-constexpr std::array<std::string_view, exch_count> exch_names = {
-    kMsExchActiveSync,     //
-    kMsExchAvailability,   //
-    kMsExchOwa,            //
-    kMsExchAutoDiscovery,  //
-    kMsExchIsClientType,   //
-    kMsExchIsStore,        //
-    kMsExchRpcClientAccess};
+constexpr std::array exch_names = {kMsExchActiveSync,     //
+                                   kMsExchAvailability,   //
+                                   kMsExchOwa,            //
+                                   kMsExchAutoDiscovery,  //
+                                   kMsExchIsClientType,   //
+                                   kMsExchIsStore,        //
+                                   kMsExchRpcClientAccess};
+constexpr size_t exch_count{exch_names.size()};
 
 TEST(WmiProviderTest, WmiSubSection_Integration) {
     for (auto n : exch_names) {
@@ -576,8 +575,8 @@ public:
     }
 
 protected:
-    std::vector<std::string> execWmiProvider(std::string_view wmi_name,
-                                             const std::string &test_name) {
+    [[nodiscard]] std::vector<std::string> execWmiProvider(
+        std::string_view wmi_name, const std::string &test_name) const {
         auto f = tst::GetTempDir() / test_name;
 
         cma::srv::SectionProvider<Wmi> wmi_provider(wmi_name, wmi::kSepChar);

@@ -46,8 +46,7 @@ public:
 
 TEST(SectionProviderMrpe, Construction) {
     YamlLoaderMrpe w;
-    using namespace cma::cfg;
-    EXPECT_TRUE(cma::cfg::groups::global.allowedSection(groups::kMrpe));
+    EXPECT_TRUE(cfg::groups::global.allowedSection(cfg::groups::kMrpe));
     MrpeProvider mrpe;
     EXPECT_EQ(mrpe.getUniqName(), cma::section::kMrpe);
     EXPECT_TRUE(mrpe.checks().empty());

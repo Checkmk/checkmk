@@ -3,6 +3,7 @@
 
 #include "wtools_user_control.h"
 
+#include <ranges>
 // WINDOWS STUFF
 #if defined(_WIN32)
 #include <minwindef.h>
@@ -17,12 +18,14 @@
 #include "logger.h"
 #include "winerror.h"  // for ERROR_NO_SUCH_ALIAS, ERROR_ALIAS_EXISTS, ERROR_MEMBER_IN_ALIAS
 
+namespace rs = std::ranges;
+
 namespace wtools {
 
 namespace uc {
 
 Status LdapControl::userAdd(std::wstring_view user_name,
-                            std::wstring_view pwd_string) noexcept {
+                            std::wstring_view pwd_string) const noexcept {
     USER_INFO_1 user_info;
     // Set up the USER_INFO_1 structure.
     user_info.usri1_name = const_cast<wchar_t *>(user_name.data());
@@ -39,11 +42,12 @@ Status LdapControl::userAdd(std::wstring_view user_name,
 
     wchar_t user_script_path[] = L"";
     user_info.usri1_script_path = user_script_path;
-    unsigned long parm_err = 0;
-    auto err = ::NetUserAdd(primary_dc_name_,             // PDC name
-                            1,                            // level
-                            (unsigned char *)&user_info,  // input buffer
-                            &parm_err);                   // parameter in error
+    unsigned long parameter_err = 0;
+    const auto err = ::NetUserAdd(
+        primary_dc_name_,                               // PDC name
+        1,                                              // level
+        reinterpret_cast<unsigned char *>(&user_info),  // input buffer
+        &parameter_err);                                // parameter in error
 
     switch (err) {
         case 0:
@@ -61,7 +65,7 @@ Status LdapControl::userAdd(std::wstring_view user_name,
 
 // this function tested indirectly in runas (difficult top test)
 Status LdapControl::changeUserPassword(std::wstring_view user_name,
-                                       std::wstring_view pwd_string) {
+                                       std::wstring_view pwd_string) const {
     USER_INFO_1003 pwd_data;
     pwd_data.usri1003_password = const_cast<wchar_t *>(pwd_string.data());
 
@@ -82,7 +86,7 @@ bool LdapControl::clearAsSpecialUser(std::wstring_view user_name) {
     return SetRegistryValue(getSpecialUserRegistryPath(), user_name, 1u);
 }
 
-Status LdapControl::userDel(std::wstring_view user_name) noexcept {
+Status LdapControl::userDel(std::wstring_view user_name) const noexcept {
     auto err = ::NetUserDel(primary_dc_name_,   // PDC name
                             user_name.data());  // user name
 
@@ -152,16 +156,14 @@ wtools::uc::ForbiddenGroups g_forbidden_groups;
 bool CheckGroupIsForbidden(std::wstring_view group_name) noexcept {
     auto groups_forbidden_to_delete = g_forbidden_groups.groups();
 
-    return std::any_of(
-        std::begin(groups_forbidden_to_delete),
-        std::end(groups_forbidden_to_delete),
-        // predicate:
+    return rs::any_of(
+        groups_forbidden_to_delete,
         [group_name](std::wstring_view name) { return group_name == name; });
 }
 }  // namespace
 
 Status LdapControl::localGroupAdd(std::wstring_view group_name,
-                                  std::wstring_view group_comment) {
+                                  std::wstring_view group_comment) const {
     auto forbidden = CheckGroupIsForbidden(group_name);
     if (forbidden) {
         XLOG::d("Groups is '{}' predefined group", ToUtf8(group_name));
@@ -192,7 +194,7 @@ Status LdapControl::localGroupAdd(std::wstring_view group_name,
     }
 }
 
-Status LdapControl::localGroupDel(std::wstring_view group_name) {
+Status LdapControl::localGroupDel(std::wstring_view group_name) const {
     auto forbidden = CheckGroupIsForbidden(group_name);
     if (forbidden) {
         XLOG::d("Groups is '{}' predefined group", ToUtf8(group_name));
@@ -218,13 +220,13 @@ Status LdapControl::localGroupDel(std::wstring_view group_name) {
 }
 
 Status LdapControl::localGroupAddMembers(std::wstring_view group_name,
-                                         std::wstring_view user_name) {
+                                         std::wstring_view user_name) const {
     LOCALGROUP_MEMBERS_INFO_3 lg_members;
     lg_members.lgrmi3_domainandname = const_cast<wchar_t *>(user_name.data());
 
     auto err = ::NetLocalGroupAddMembers(
         primary_dc_name_,                                // PDC name
-        const_cast<wchar_t *>(group_name.data()),        // group name
+        group_name.data(),                               // group name
         3,                                               // name
         reinterpret_cast<unsigned char *>(&lg_members),  // buffer
         1);                                              // count
@@ -245,13 +247,13 @@ Status LdapControl::localGroupAddMembers(std::wstring_view group_name,
 }
 
 Status LdapControl::localGroupDelMembers(std::wstring_view group_name,
-                                         std::wstring_view user_name) {
+                                         std::wstring_view user_name) const {
     LOCALGROUP_MEMBERS_INFO_3 lg_members;
     lg_members.lgrmi3_domainandname = const_cast<wchar_t *>(user_name.data());
 
     auto err = NetLocalGroupDelMembers(
         primary_dc_name_,                                // PDC name
-        const_cast<wchar_t *>(group_name.data()),        // group name
+        group_name.data(),                               // group name
         3,                                               // name
         reinterpret_cast<unsigned char *>(&lg_members),  // buffer
         1);                                              // count
@@ -293,8 +295,9 @@ Status LdapControl::chooseDomain(std::wstring_view server_name,
 }
 
 LdapControl::~LdapControl() {
-    if (primary_dc_name_)
-        ::NetApiBufferFree(static_cast<void *>(primary_dc_name_));
+    if (primary_dc_name_) {
+        ::NetApiBufferFree(primary_dc_name_);
+    }
 }
 
 }  // namespace uc

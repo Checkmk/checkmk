@@ -113,9 +113,8 @@ TEST(PlayerTest, All) {
     bool test_content_ok = false;
     bool test2_size_ok = false;
     bool test2_content_ok = false;
-    box.processResults([&](const std::wstring &CmdLine, uint32_t Pid,
-                           uint32_t Code, const std::vector<char> &Data) {
-        auto data = Data;
+    box.processResults([&](const std::wstring & /*cmd_line*/, uint32_t /*pid*/,
+                           uint32_t /*code*/, const std::vector<char> &data) {
         if (data.size() == test_plugin_output->size()) {
             test_size_ok = true;
             test_content_ok =
@@ -128,7 +127,7 @@ TEST(PlayerTest, All) {
                 memcmp(data.data(), test_plugin2_output->data(), data.size());
         }
 
-        cma::tools::AddVector(accu, data);
+        tools::AddVector(accu, data);
         count++;
     });
 

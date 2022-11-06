@@ -11,7 +11,7 @@
 // Setup
 #pragma once
 // Target determination
-#if DBG || defined(_DEBUG) || defined(DEBUG)
+#if defined(DBG) || defined(_DEBUG) || defined(DEBUG)
 #define KDBG_DEBUG
 #endif
 

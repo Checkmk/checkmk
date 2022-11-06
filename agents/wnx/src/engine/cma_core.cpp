@@ -101,9 +101,9 @@ bool AreFilesSame(const fs::path &tgt, const fs::path &src) {
         // seek back to beginning and use std::equal to compare contents
         f1.seekg(0, std::ifstream::beg);
         f2.seekg(0, std::ifstream::beg);
-        return std::equal(std::istreambuf_iterator<char>(f1.rdbuf()),
+        return std::equal(std::istreambuf_iterator(f1.rdbuf()),
                           std::istreambuf_iterator<char>(),
-                          std::istreambuf_iterator<char>(f2.rdbuf()));
+                          std::istreambuf_iterator(f2.rdbuf()));
     } catch (const std::exception &e) {
         XLOG::l(XLOG_FUNC + " exception '{}'", e.what());
         return false;
@@ -387,7 +387,7 @@ void ApplyEverythingLogResult(const std::string &format, std::string_view file,
 std::vector<fs::path> RemoveDuplicatedFilesByName(
     const std::vector<fs::path> &found_files, bool local) {
     tools::StringSet cache;
-    std::vector<fs::path> files{found_files};
+    std::vector files{found_files};
     std::erase_if(files, [&cache, local](const fs::path &candidate) {
         const auto fname = wtools::ToUtf8(candidate.filename().wstring());
         const auto new_file = tools::AddUniqStringToSetIgnoreCase(cache, fname);

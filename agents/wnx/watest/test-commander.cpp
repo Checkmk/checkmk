@@ -16,7 +16,7 @@ namespace cma::commander {
 static bool GetEnabledFlag(bool dflt) {
     auto yaml = cfg::GetLoadedConfig();
     auto yaml_global = yaml[cfg::groups::kGlobal];
-    return cfg::GetVal(yaml_global, cfg::vars::kEnabled, true);
+    return cfg::GetVal(yaml_global, cfg::vars::kEnabled, dflt);
 }
 
 static void SetEnabledFlag(bool flag) {

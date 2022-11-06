@@ -62,7 +62,7 @@ bool ChangeAccessRights(
 
     // Initialize an EXPLICIT_ACCESS structure for the new ACE.
     EXPLICIT_ACCESS ea;
-    ZeroMemory(&ea, sizeof(EXPLICIT_ACCESS));
+    ZeroMemory(&ea, sizeof EXPLICIT_ACCESS);
     ea.grfAccessPermissions = access_rights;
     ea.grfAccessMode = access_mode;
     ea.grfInheritance = inheritance;
@@ -1606,7 +1606,7 @@ bool WmiWrapper::connect(std::wstring_view name_space) noexcept {
 }
 
 // This is OPTIONAL feature, LWA doesn't use it
-bool WmiWrapper::impersonate() noexcept {
+bool WmiWrapper::impersonate() const noexcept {
     std::lock_guard lk(lock_);
     if (nullptr == services_) {
         XLOG::l.e(XLOG_FUNC + " not connected");
@@ -1626,7 +1626,9 @@ bool WmiWrapper::impersonate() noexcept {
         EOAC_NONE                     // proxy capabilities
     );
 
-    if (SUCCEEDED(hres)) return true;
+    if (SUCCEEDED(hres)) {
+        return true;
+    }
 
     XLOG::l.e("Failed blanker/impersonation locator wmI {:X}", hres);
     return false;  // Program has failed.
@@ -1733,7 +1735,7 @@ std::wstring WmiWrapper::makeQuery(const std::vector<std::wstring> &names,
 // returns "", Status
 std::tuple<std::wstring, WmiStatus> WmiWrapper::queryTable(
     const std::vector<std::wstring> &names, const std::wstring &target,
-    std::wstring_view separator, uint32_t wmi_timeout) noexcept {
+    std::wstring_view separator, uint32_t wmi_timeout) const noexcept {
     auto query_text = makeQuery(names, target);
 
     // Send a query to system
@@ -1754,7 +1756,7 @@ std::tuple<std::wstring, WmiStatus> WmiWrapper::queryTable(
 // on error returns nullptr
 IEnumWbemClassObject *WmiWrapper::queryEnumerator(
     const std::vector<std::wstring> &names,
-    const std::wstring &target) noexcept {
+    const std::wstring &target) const noexcept {
     auto query_text = makeQuery(names, target);
 
     // Send a query to system
@@ -2022,7 +2024,7 @@ bool KillProcess(std::wstring_view process_name, int exit_code) noexcept {
         return false;
     }
 
-    auto current_process_id = GetCurrentProcessId();
+    const auto current_process_id = GetCurrentProcessId();
 
     ON_OUT_OF_SCOPE(CloseHandle(snapshot));
 
@@ -2032,7 +2034,7 @@ bool KillProcess(std::wstring_view process_name, int exit_code) noexcept {
     while (result != 0) {
         if (cma::tools::IsEqual(std::wstring_view(entry32.szExeFile),
                                 process_name) &&
-            (entry32.th32ProcessID != current_process_id)) {
+            entry32.th32ProcessID != current_process_id) {
             auto *process =
                 ::OpenProcess(PROCESS_TERMINATE, 0, entry32.th32ProcessID);
             if (process != nullptr) {
@@ -2181,8 +2183,8 @@ void KillProcessTree(uint32_t ProcessId) {
     // scan and kill
     // error management is ignored while this is secondary method for now
     PROCESSENTRY32 process;
-    ZeroMemory(&process, sizeof(process));
-    process.dwSize = sizeof(process);
+    ZeroMemory(&process, sizeof process);
+    process.dwSize = sizeof process;
     Process32First(snapshot, &process);
     do {
         // process.th32ProcessId is the PID.
@@ -2222,7 +2224,7 @@ namespace {
 std::optional<PROCESS_MEMORY_COUNTERS_EX> GetProcessMemoryCounters(
     HANDLE process) {
     PROCESS_MEMORY_COUNTERS_EX counters = {0};
-    counters.cb = sizeof(counters);
+    counters.cb = sizeof counters;
     if (::GetProcessMemoryInfo(process,
                                static_cast<PROCESS_MEMORY_COUNTERS *>(
                                    static_cast<void *>(&counters)),
@@ -2289,8 +2291,8 @@ uint32_t GetParentPid(uint32_t pid)  // By Napalm @ NetCore2K
     }
     ON_OUT_OF_SCOPE(CloseHandle(h));
 
-    if (nt_query_information_process(h, 0, &pbi, sizeof(pbi), &size) >= 0 &&
-        size == sizeof(pbi))
+    if (nt_query_information_process(h, 0, &pbi, sizeof pbi, &size) >= 0 &&
+        size == sizeof pbi)
         return static_cast<uint32_t>(pbi[5]);
 
     return 0;
@@ -2397,7 +2399,7 @@ HRESULT ACLInfo::query() noexcept {
 }
 
 HRESULT ACLInfo::addAceToList(ACE_HEADER *ace) noexcept {
-    auto *new_ace = static_cast<AceList *>(malloc(sizeof(AceList)));
+    auto *new_ace = static_cast<AceList *>(malloc(sizeof AceList));
     if (new_ace == nullptr) {
         return S_FALSE;
     }
@@ -2423,9 +2425,9 @@ HRESULT ACLInfo::addAceToList(ACE_HEADER *ace) noexcept {
 
 namespace {
 std::string PrintPermissions(bool allowed, ACCESS_MASK permissions) {
-    constexpr std::array<std::pair<int, const char *>, 3> mapping = {
-        std::pair{READ_PERMISSIONS, "R"}, std::pair{WRITE_PERMISSIONS, "W"},
-        std::pair{EXECUTE_PERMISSIONS, "X"}};
+    constexpr std::array mapping = {std::pair{READ_PERMISSIONS, "R"},
+                                    std::pair{WRITE_PERMISSIONS, "W"},
+                                    std::pair{EXECUTE_PERMISSIONS, "X"}};
     std::string os;
     if (allowed) {
         for (const auto &[value, text] : mapping) {
@@ -2475,8 +2477,8 @@ std::pair<std::string, std::string> GetAccountName(SID *sid) {
     SID_NAME_USE sid_name_use{SidTypeUser};
     char name_buffer[MAX_PATH];
     char domain_buffer[MAX_PATH];
-    DWORD name_len = sizeof(name_buffer);
-    DWORD domain_name_len = sizeof(domain_buffer);
+    DWORD name_len = sizeof name_buffer;
+    DWORD domain_name_len = sizeof domain_buffer;
 
     // Get account name for SID
     if (::LookupAccountSidA(nullptr, sid, name_buffer, &name_len, domain_buffer,
@@ -2489,7 +2491,7 @@ std::pair<std::string, std::string> GetAccountName(SID *sid) {
 }
 }  // namespace
 
-std::string ACLInfo::output() {
+std::string ACLInfo::output() const {
     if (ace_list_ == nullptr) {
         return "No ACL Info\n";
     }
@@ -2867,8 +2869,8 @@ private:
 };
 
 ACL *CombineSidsIntoACl(const SidStore &first, const SidStore &second) {
-    auto acl_size = sizeof(ACL) +
-                    2 * (sizeof(ACCESS_ALLOWED_ACE) - sizeof(DWORD)) +
+    auto acl_size = sizeof ACL + 2 * (sizeof ACCESS_ALLOWED_ACE) -
+                    sizeof(DWORD) +
                     GetSidLengthRequired(static_cast<UCHAR>(first.count())) +
                     GetSidLengthRequired(static_cast<UCHAR>(second.count()));
 
@@ -2935,16 +2937,16 @@ bool SecurityAttributeKeeper::allocAll(SecurityLevel sl) {
     }
 
     sd_ = static_cast<SECURITY_DESCRIPTOR *>(
-        ProcessHeapAlloc(sizeof(SECURITY_DESCRIPTOR)));
+        ProcessHeapAlloc(sizeof SECURITY_DESCRIPTOR));
     sa_ = static_cast<SECURITY_ATTRIBUTES *>(
-        ProcessHeapAlloc(sizeof(SECURITY_ATTRIBUTES)));
+        ProcessHeapAlloc(sizeof SECURITY_ATTRIBUTES));
 
     if (acl_ != nullptr && sd_ != nullptr &&
         sa_ != nullptr &&  // <--- alloc check
         ::InitializeSecurityDescriptor(sd_, SECURITY_DESCRIPTOR_REVISION) ==
             TRUE &&
         ::SetSecurityDescriptorDacl(sd_, TRUE, acl_, FALSE) == TRUE) {
-        sa_->nLength = sizeof(SECURITY_ATTRIBUTES);
+        sa_->nLength = sizeof SECURITY_ATTRIBUTES;
         sa_->lpSecurityDescriptor = sd_;
         sa_->bInheritHandle = FALSE;
         return true;
@@ -3094,7 +3096,7 @@ namespace {
 class MibTcpTable2Wrapper {
 public:
     MibTcpTable2Wrapper() {
-        auto size = static_cast<DWORD>(sizeof(MIB_TCPTABLE2));
+        auto size = static_cast<DWORD>(sizeof MIB_TCPTABLE2);
         reallocateBuffer(size);
 
         while (true) {
@@ -3203,7 +3205,7 @@ ACL* BuildAdminSDAcls {
 
     // Initialize an EXPLICIT_ACCESS structure for an ACE.
     // The ACE will allow Everyone read access to the key.
-    ZeroMemory(&ea, 2 * sizeof(EXPLICIT_ACCESS));
+    ZeroMemory(&ea, 2 * sizeof EXPLICIT_ACCESS);
     ea[0].grfAccessPermissions = KEY_READ;
     ea[0].grfAccessMode = SET_ACCESS;
     ea[0].grfInheritance = NO_INHERITANCE;
@@ -3260,7 +3262,7 @@ ACL* BuildAdminSDAcls {
     }
 
     // Initialize a security attributes structure.
-    sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+    sa.nLength = sizeof SECURITY_ATTRIBUTES;
     sa.lpSecurityDescriptor = pSD;
     sa.bInheritHandle = FALSE;
 
@@ -3307,7 +3309,7 @@ public:
 
 protected:
     void openService(std::wstring_view service_name, Mode mode);
-    uint32_t flagsFromMode(Mode mode);
+    static uint32_t flagsFromMode(Mode mode);
 
 private:
     SC_HANDLE manager_{nullptr};
@@ -3354,7 +3356,7 @@ uint32_t ServiceControl::getStatus() const noexcept {
     const auto buffer = reinterpret_cast<BYTE *>(&ssp);
 
     if (::QueryServiceStatusEx(service_, SC_STATUS_PROCESS_INFO, buffer,
-                               sizeof(SERVICE_STATUS_PROCESS),
+                               sizeof SERVICE_STATUS_PROCESS,
                                &bytes_needed) == FALSE) {
         XLOG::l("QueryServiceStatusEx failed [{}]", ::GetLastError());
         return 0;

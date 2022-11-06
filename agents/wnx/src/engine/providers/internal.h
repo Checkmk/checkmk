@@ -36,8 +36,8 @@ inline std::string MakeStateFileName(std::string_view name,
     }
 
     std::string ip = ip_address.empty() ? "" : " " + std::string{ip_address};
-    std::transform(ip.cbegin(), ip.cend(), ip.begin(),
-                   [](char c) { return std::isalnum(c) != 0 ? c : L'_'; });
+    std::ranges::transform(
+        ip, ip.begin(), [](char c) { return std::isalnum(c) != 0 ? c : L'_'; });
 
     return std::string{name} + ip + std::string{extension};
 }

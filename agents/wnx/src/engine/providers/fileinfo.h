@@ -39,7 +39,7 @@ public:
 
 protected:
     std::string makeBody() override;
-    std::string generateFileList(const YAML::Node &path_array_val);
+    std::string generateFileList(const YAML::Node &path_array) const;
     Mode mode_{Mode::legacy};
 };
 }  // namespace cma::provider

@@ -27,24 +27,26 @@ public:
     ~LdapControl();
 
     // User
-    Status userAdd(std::wstring_view user_name,
-                   std::wstring_view pwd_string) noexcept;
-    Status userDel(std::wstring_view user_name) noexcept;
+    [[nodiscard]] Status userAdd(std::wstring_view user_name,
+                                 std::wstring_view pwd_string) const noexcept;
+    [[maybe_unused]] Status userDel(
+        std::wstring_view user_name) const noexcept;  // NOLINT
 
     // indirectly tested
-    Status changeUserPassword(std::wstring_view user_name,
-                              std::wstring_view pwd_string);
+    [[nodiscard]] Status changeUserPassword(std::wstring_view user_name,
+                                            std::wstring_view pwd_string) const;
 
     // Local Group
-    Status localGroupAdd(std::wstring_view group_name,
-                         std::wstring_view group_comment);
-    Status localGroupDel(std::wstring_view group_name);
+    [[nodiscard]] Status localGroupAdd(std::wstring_view group_name,
+                                       std::wstring_view group_comment) const;
+    [[maybe_unused]] Status localGroupDel(
+        std::wstring_view group_name) const;  // NOLINT
 
     // Group Member
-    Status localGroupAddMembers(std::wstring_view group_name,
-                                std::wstring_view user_name);
-    Status localGroupDelMembers(std::wstring_view group_name,
-                                std::wstring_view user_name);
+    [[nodiscard]] Status localGroupAddMembers(
+        std::wstring_view group_name, std::wstring_view user_name) const;
+    [[nodiscard]] Status localGroupDelMembers(
+        std::wstring_view group_name, std::wstring_view user_name) const;
 
     // this is trash to access old Windows API
     wchar_t *name() { return primary_dc_name_; }

@@ -17,10 +17,12 @@ namespace fs = std::filesystem;
 namespace cma {
 
 // internal global variables:
-static bool S_ConfigLoaded = false;
-static std::atomic<bool> S_OnStartCalled = false;
+namespace {
+bool g_config_loaded = false;
+std::atomic g_s_on_start_called = false;
+}  // namespace
 
-bool ConfigLoaded() { return S_ConfigLoaded; }
+bool ConfigLoaded() { return g_config_loaded; }
 
 std::pair<fs::path, fs::path> FindTestDirs(const fs::path &base) {
     auto root_dir = fs::path{base} / "test" / "root";
@@ -141,9 +143,9 @@ void UninstallAlert::set() noexcept {
 
 bool LoadConfigBase(const std::vector<std::wstring> &config_filenames,
                     YamlCacheOp cache_op) {
-    S_ConfigLoaded = cfg::InitializeMainConfig(config_filenames, cache_op);
+    g_config_loaded = cfg::InitializeMainConfig(config_filenames, cache_op);
 
-    if (S_ConfigLoaded) {
+    if (g_config_loaded) {
         cfg::ProcessKnownConfigGroups();
         cfg::SetupEnvironmentFromGroups();
     }
@@ -176,7 +178,7 @@ bool OnStartCore(AppType type, const std::wstring &config_file) {
 bool OnStart(AppType proposed_type, const std::wstring &config_file) {
     auto type = CalcAppType(proposed_type);
 
-    auto already_loaded = S_OnStartCalled.exchange(true);
+    auto already_loaded = g_s_on_start_called.exchange(true);
     if (type == AppType::srv) {
         XLOG::details::LogWindowsEventAlways(XLOG::EventLevel::information, 35,
                                              "check_mk_service is loading");

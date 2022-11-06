@@ -26,8 +26,8 @@ using namespace std::string_literals;
 namespace cma::ac {
 
 namespace {
-const std::vector<Modus> g_start_controller_moduses{Modus::service,
-                                                    Modus::integration};
+const std::vector g_start_controller_moduses{Modus::service,
+                                             Modus::integration};
 
 bool AllowUseController(Modus modus) {
     return rs::find(g_start_controller_moduses, modus) !=
@@ -250,19 +250,18 @@ bool CreateTomlConfig(const fs::path &toml_file) {
         allowed_ip += "]\n";
     }
     auto controller_config = GetControllerNode();
-    auto detect_proxy = fmt::format("{} = {}\n",
-                                    cfg::vars::kControllerDetectProxy,
-                                    cfg::GetVal(controller_config,
-                                                cfg::vars::kControllerDetectProxy,
-                                                false));
-    auto valid_api_cert = fmt::format("{} = {}\n",
-                                      cfg::vars::kControllerValidApiCert,
-                                      cfg::GetVal(controller_config,
-                                                  cfg::vars::kControllerValidApiCert,
-                                                  false));
+    auto detect_proxy =
+        fmt::format("{} = {}\n", cfg::vars::kControllerDetectProxy,
+                    cfg::GetVal(controller_config,
+                                cfg::vars::kControllerDetectProxy, false));
+    auto valid_api_cert =
+        fmt::format("{} = {}\n", cfg::vars::kControllerValidApiCert,
+                    cfg::GetVal(controller_config,
+                                cfg::vars::kControllerValidApiCert, false));
     try {
         std::ofstream ofs(toml_file);
-        ofs << text << pull_port << allowed_ip << detect_proxy << valid_api_cert;
+        ofs << text << pull_port << allowed_ip << detect_proxy
+            << valid_api_cert;
     } catch (const std::exception &e) {
         XLOG::l("Failed to create TOML config with exception {}", e.what());
         return false;

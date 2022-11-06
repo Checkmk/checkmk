@@ -96,8 +96,8 @@ inline void WideUpper(std::wstring &str) {
         CharUpperW(work_string);         // Microsoft specific, but safe
     } else {
         // for windows doesn't work, for Linux probably too
-        std::transform(str.begin(), str.end(), str.begin(),
-                       [](wchar_t ch) { return std::towupper(ch); });
+        std::ranges::transform(str, str.begin(),
+                               [](wchar_t ch) { return std::towupper(ch); });
     }
 }
 
@@ -107,8 +107,8 @@ inline void StringLower(std::string &str) {
         CharLowerA(work_string);         // Microsoft specific, but safe
     } else {
         // for windows doesn't work, for Linux probably too
-        std::transform(str.begin(), str.end(), str.begin(),
-                       [](char ch) { return std::tolower(ch); });
+        std::ranges::transform(str, str.begin(),
+                               [](char ch) { return std::tolower(ch); });
     }
 }
 
@@ -119,8 +119,8 @@ inline void StringUpper(std::string &str) {
 
     } else {
         // for windows doesn't work, for Linux probably too
-        std::transform(str.begin(), str.end(), str.begin(),
-                       [](char ch) { return std::toupper(ch); });
+        std::ranges::transform(str, str.begin(),
+                               [](char ch) { return std::toupper(ch); });
     }
 }
 
@@ -130,8 +130,9 @@ inline void WideLower(std::wstring &str) {
         CharLowerW(work_string);
     } else {
         // for windows doesn't work, for Linux probably too
-        std::transform(str.begin(), str.end(), str.begin(),
-                       [](const wchar_t ch) { return std::towlower(ch); });
+        std::ranges::transform(str, str.begin(), [](const wchar_t ch) {
+            return std::towlower(ch);
+        });
     }
 }
 
@@ -208,8 +209,7 @@ void *GetOffsetInBytes(T *object, size_t offset) {
 // returns const void*, never fails
 template <typename T>
 const void *GetOffsetInBytes(const T *object, size_t offset) {
-    return static_cast<const void *>(reinterpret_cast<const char *>(object) +
-                                     offset);
+    return reinterpret_cast<const char *>(object) + offset;
 }
 
 template <typename T>
@@ -292,6 +292,7 @@ public:
         }
         name_ = rhs.name_;
         rhs.name_.clear();
+        return *this;
     }
 
     auto name() noexcept { return name_; }
@@ -346,13 +347,7 @@ inline void AllTrim(std::string &str) {
 
 inline std::vector<std::string_view> ToView(
     const std::vector<std::string> &table) {
-    std::vector<std::string_view> s_view;
-
-    for (const auto &str : table) {
-        s_view.emplace_back(str);
-    }
-
-    return s_view;
+    return {table.begin(), table.end()};
 }
 
 /// max_count == 0 means inifinite parsing

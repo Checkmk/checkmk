@@ -714,7 +714,7 @@ public:
 };
 
 // Used in testing
-bool CheckIniFile(const std::filesystem::path &Path) {
+bool CheckIniFile(const std::filesystem::path &ini_file_path) {
     auto p = std::make_unique<Configuration>();
     Configuration &parser(*p);
     Configurable<int> port(parser, "global", "port", 6556);
@@ -825,7 +825,7 @@ bool CheckIniFile(const std::filesystem::path &Path) {
     if (parser.size() != 43) {
         XLOG::l("Failed to have required count of the config variables");
     } else {
-        return parser.ReadSettings(Path, false);
+        return parser.ReadSettings(ini_file_path, false);
     }
     return false;
 }

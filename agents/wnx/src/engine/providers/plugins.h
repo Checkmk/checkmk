@@ -76,7 +76,7 @@ public:
 };
 
 enum class PluginMode { all, sync, async };
-int FindMaxTimeout(const PluginMap &pm, PluginMode type);
+int FindMaxTimeout(const PluginMap &pm, PluginMode need_type);
 
 }  // namespace cma::provider
 

@@ -41,8 +41,7 @@ private:
     bool fillBuffer();
     bool processEvents();
     void resetData();
-    bool isNoMoreData() const noexcept;
-    std::wstring renderBookmark(EVT_HANDLE bookmark) const;
+    [[nodiscard]] bool isNoMoreData() const noexcept;
 
     std::wstring log_name_;
     EvtHandle subscription_handle_;

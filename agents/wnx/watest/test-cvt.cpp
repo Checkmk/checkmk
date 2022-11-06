@@ -102,7 +102,7 @@ std::string type_name() {
 // clang-format on
 
 template <typename T>
-void printType(T x) {
+void printType(T /*x*/) {
     std::cout << type_name<T>();
 }
 

@@ -7,12 +7,14 @@
 
 #include "providers/p_perf_counters.h"
 
-#include <iostream>
+#include <ranges>
 #include <string>
 
 #include "cfg.h"
 #include "common/wtools.h"
 #include "logger.h"
+
+namespace rs = std::ranges;
 
 namespace cma::provider {
 
@@ -59,9 +61,9 @@ const wchar_t *GetNextMultiSz(const std::vector<wchar_t> &data,
     const auto *str = &data[offset];
     auto len = wcslen(str);
 
-    if ((len == 0) ||  // end of data
-        (offset + (len * sizeof(wchar_t)) >
-         data.size())) {  // registry is corrupted
+    if (len == 0 ||  // end of data
+        offset + (len * sizeof(wchar_t)) >
+            data.size()) {  // registry is corrupted
         return nullptr;
     }
 
@@ -77,10 +79,10 @@ std::string MakeWinPerfInstancesLine(const PERF_OBJECT_TYPE *perf_object) {
     // this is as in 'LWA'
     // negative count is skipped
     std::string out = std::to_string(perf_object->NumInstances) + " instances:";
-    auto names = wtools::perf::GenerateInstanceNames(perf_object);
+    const auto names = wtools::perf::GenerateInstanceNames(perf_object);
     for (auto name : names) {
-        std::replace(name.begin(), name.end(), L' ', L'_');
-        auto name_of_instance = wtools::ToUtf8(name);
+        rs::replace(name, L' ', L'_');
+        const auto name_of_instance = wtools::ToUtf8(name);
         out += ' ';
         out += name_of_instance;
     }

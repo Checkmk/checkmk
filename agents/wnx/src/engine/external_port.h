@@ -239,7 +239,8 @@ protected:
     void wakeThread();
     void timedWaitForSession();
     void processSession(const ReplyFunc &reply, AsioSession::s_ptr session);
-    void processRequest(const ReplyFunc &reply, const std::string &request);
+    void processRequest(const ReplyFunc &reply,
+                        const std::string &request) const;
 
     bool isShutdown() const noexcept {
         std::lock_guard lk(io_thread_lock_);
@@ -248,7 +249,7 @@ protected:
 
     /// returns thread continue status
     bool registerAsioContext(asio::io_context *context) {
-        std::lock_guard<std::mutex> lk(io_thread_lock_);
+        std::lock_guard lk(io_thread_lock_);
         if (shutdown_thread_) {
             context_ = nullptr;
             return false;
@@ -258,7 +259,7 @@ protected:
     }
 
     void stopExecution() {
-        std::lock_guard<std::mutex> lk(io_thread_lock_);
+        std::lock_guard lk(io_thread_lock_);
         XLOG::l.t("Stopping execution");
         if (context_ != nullptr) {
             context_->stop();  // non blocking call to stop IO
@@ -270,7 +271,8 @@ protected:
                       LocalOnly local_only,
                       std::optional<uint32_t> controller_pid);
 
-    void mailslotThreadProc(const ReplyFunc &reply, uint32_t pid);
+    void mailslotThreadProc(const ReplyFunc &reply_func,
+                            uint32_t controller_pid);
 
     // probably overkill, but we want to restart and want to be sure that
     // everything is going smooth

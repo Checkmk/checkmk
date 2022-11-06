@@ -132,7 +132,7 @@ bool Slot::ExecPost(const void *data, uint64_t length) {
 }
 
 bool Slot::Create(wtools::SecurityLevel sl) {
-    std::lock_guard<std::mutex> lck(lock_);
+    std::lock_guard lck(lock_);
 
     if (handle_ != nullptr) {
         return true;  // bad(already exists) call
@@ -159,7 +159,7 @@ bool Slot::Create(wtools::SecurityLevel sl) {
 }
 
 bool Slot::Open() {
-    std::lock_guard<std::mutex> lck(lock_);
+    std::lock_guard lck(lock_);
 
     if (handle_ != nullptr) {
         return true;  // bad(already exists) call
@@ -178,7 +178,7 @@ bool Slot::Open() {
 }
 
 bool Slot::Close() {
-    std::lock_guard<std::mutex> lck(lock_);
+    std::lock_guard lck(lock_);
     if (handle_ == nullptr) {
         return true;
     }
@@ -195,8 +195,8 @@ bool Slot::Close() {
 }
 
 bool Slot::Post(const void *data, int len) {
-    std::lock_guard<std::mutex> lck(lock_);
-    if ((handle_ == nullptr) || IsOwner()) {
+    std::lock_guard lck(lock_);
+    if (handle_ == nullptr || IsOwner()) {
         ApiLog("Bad situation %p %d", handle_, static_cast<int>(IsOwner()));
         return false;
     }
@@ -211,8 +211,8 @@ bool Slot::Post(const void *data, int len) {
 }
 
 int Slot::Get(void *data, unsigned int max_len) {
-    std::lock_guard<std::mutex> lck(lock_);
-    if ((handle_ == nullptr) || IsClient()) {
+    std::lock_guard lck(lock_);
+    if (handle_ == nullptr || IsClient()) {
         return ErrCodes::FAILED_INIT;
     }
     const auto msg_size = CheckMessageSize();
@@ -247,7 +247,7 @@ int Slot::Get(void *data, unsigned int max_len) {
     return ErrCodes::FAILED_READ;
 }
 
-OVERLAPPED Slot::CreateOverlapped() const noexcept {
+OVERLAPPED Slot::CreateOverlapped() noexcept {
     OVERLAPPED ov = {0};
     ov.Offset = 0;
     ov.OffsetHigh = 0;
@@ -256,7 +256,7 @@ OVERLAPPED Slot::CreateOverlapped() const noexcept {
     return ov;
 }
 
-std::optional<DWORD> Slot::CheckMessageSize() {
+std::optional<DWORD> Slot::CheckMessageSize() const {
     DWORD message_size = 0;
     DWORD message_count = 0;
 

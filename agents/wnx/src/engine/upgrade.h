@@ -39,7 +39,7 @@ bool UpdateProtocolFile(std::wstring_view new_location,
 enum class CopyFolderMode { keep_old, remove_old };
 int CopyAllFolders(const std::filesystem::path &legacy_root,
                    const std::filesystem::path &program_data,
-                   CopyFolderMode mode);
+                   CopyFolderMode copy_mode);
 
 int CopyRootFolder(const std::filesystem::path &legacy_root,
                    const std::filesystem::path &program_data);
@@ -52,7 +52,7 @@ bool ConvertLocalIniFile(const std::filesystem::path &legacy_root,
                          const std::filesystem::path &program_data);
 bool ConvertUserIniFile(const std::filesystem::path &legacy_root,
                         const std::filesystem::path &program_data,
-                        bool LocalFileExists);
+                        bool local_ini_exists);
 
 std::filesystem::path CreateUserYamlFromIni(
     const std::filesystem::path &ini_file,      // ini file to use
@@ -73,8 +73,8 @@ bool CreateProtocolFile(const std::filesystem::path &dir,
 // gtest [+]
 std::optional<YAML::Node> LoadIni(std::filesystem::path File);
 // gtest [+]
-bool StoreYaml(const std::filesystem::path &File, YAML::Node Yaml,
-               const std::string &Comment) noexcept;
+bool StoreYaml(const std::filesystem::path &filename, YAML::Node yaml_node,
+               const std::string &comment) noexcept;
 // gtest [+]
 bool IsBakeryIni(const std::filesystem::path &Path) noexcept;
 // gtest [+]

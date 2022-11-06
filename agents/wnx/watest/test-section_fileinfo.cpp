@@ -139,16 +139,16 @@ TEST(FileInfoTest, ValidateConfig) {
 
 class FileInfoFixture : public ::testing::Test {
 public:
-    void loadFilesInConfig() {
+    void loadFilesInConfig() const {
         auto cfg = cfg::GetLoadedConfig();
 
         cfg[cfg::groups::kFileInfo][cfg::vars::kFileInfoPath] = YAML::Load(
             "['c:\\windows\\notepad.exe','c:\\windows\\explorer.exe']");
     }
 
-    std::vector<std::string> generate() {
+    [[nodiscard]] std::vector<std::string> generate() const {
         FileInfo fi;
-        auto result = fi.generateContent();
+        const auto result = fi.generateContent();
 
         EXPECT_EQ(result.back(), '\n');
         return tools::SplitString(result, "\n");
@@ -320,9 +320,8 @@ TEST(FileInfoTest, CheckOutput) {
             EXPECT_TRUE(fs::exists(values[0], ec));
             EXPECT_TRUE(std::atoll(values[1].c_str()) == 2);
             EXPECT_TRUE(std::atoll(values[2].c_str()) > 0LL);
-            auto f = std::any_of(
-                std::begin(data), std::end(data),
-                [values](std::tuple<fs::path, std::string_view> &entry) {
+            auto f = rs::any_of(
+                data, [values](std::tuple<fs::path, std::string_view> &entry) {
                     auto const &[path, _] = entry;
                     return tools::IsEqual(wtools::ToStr(path), values[0]);
                 });
@@ -357,9 +356,8 @@ TEST(FileInfoTest, CheckOutput) {
             EXPECT_EQ(values[1], FileInfo::kOk);
             EXPECT_TRUE(std::atoll(values[2].c_str()) == 2);
             EXPECT_TRUE(std::atoll(values[2].c_str()) > 0LL);
-            auto f = std::any_of(
-                std::begin(data), std::end(data),
-                [values](std::tuple<fs::path, std::string_view> &entry) {
+            auto f = rs::any_of(
+                data, [values](std::tuple<fs::path, std::string_view> &entry) {
                     auto const &[path, _] = entry;
                     return tools::IsEqual(wtools::ToStr(path), values[0]);
                 });
@@ -442,7 +440,7 @@ TEST_F(FileInfoTestFixture, Glob) {
 }
 
 TEST(FileInfoTest, WindowsResources) {
-    fs::path win_res_path = "c:\\windows\\Resources\\";
+    fs::path win_res_path = R"(c:\windows\Resources\)";
     auto files = details::FindFilesByMask(
         (win_res_path / "**" / "aero" / "aero*.*").wstring());
     EXPECT_TRUE(files.size() == 2)
@@ -457,14 +455,12 @@ TEST(FileInfoTest, Unicode) {
         try {
             auto files = details::FindFilesByMask(p.wstring() + L"\\*.*");
             EXPECT_TRUE(files.size() >= 2);  // syswow64 and system32
-            EXPECT_TRUE(std::find(files.begin(), files.end(), p / "test.txt") !=
-                        std::end(files));
+            EXPECT_TRUE(rs::find(files, p / "test.txt") != std::end(files));
             auto russian_file = p / test_russian_file;
             auto w_name = russian_file.wstring();
             auto ut8_name = russian_file.u8string();
             auto utf8_name_2 = wtools::ToUtf8(w_name);
-            EXPECT_TRUE(std::find(files.begin(), files.end(), w_name) !=
-                        std::end(files));
+            EXPECT_TRUE(rs::find(files, fs::path{w_name}) != std::end(files));
         } catch (const std::exception &e) {
             XLOG::l("Error {} ", e.what());
         }

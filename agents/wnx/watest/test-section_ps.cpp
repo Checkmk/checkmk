@@ -110,7 +110,7 @@ auto ToTm(const std::string &in) {
 bool IsAccountExist(const std::string &account) {
     SID_NAME_USE snu;
     SID sid{0};
-    auto sz = static_cast<DWORD>(sizeof(sid));
+    auto sz = static_cast<DWORD>(sizeof sid);
     DWORD rd_size{0};
     char *rd{nullptr};
     auto succ = ::LookupAccountNameA(nullptr, account.c_str(), &sid, &sz, rd,

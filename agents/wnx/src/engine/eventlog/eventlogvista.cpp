@@ -124,13 +124,13 @@ void RenderValues(EVT_HANDLE context, EVT_HANDLE fragment,
         return nullptr;
     }
 
-    std::vector<LPCWSTR> fields{L"/Event/System/Provider/@Name",
-                                L"/Event/System/EventID",
-                                L"/Event/System/EventID/@Qualifiers",
-                                L"/Event/System/EventRecordID",
-                                L"/Event/System/Level",
-                                L"/Event/System/TimeCreated/@SystemTime",
-                                L"/Event/EventData/Data"};
+    std::vector fields{L"/Event/System/Provider/@Name",
+                       L"/Event/System/EventID",
+                       L"/Event/System/EventID/@Qualifiers",
+                       L"/Event/System/EventRecordID",
+                       L"/Event/System/Level",
+                       L"/Event/System/TimeCreated/@SystemTime",
+                       L"/Event/EventData/Data"};
 
     return g_evt.createRenderContext(static_cast<DWORD>(fields.size()),
                                      fields.data(), EvtRenderContextValues);
@@ -287,7 +287,7 @@ public:
 
     };
 
-    const EVT_VARIANT &getValByType(int index) const {
+    [[nodiscard]] const EVT_VARIANT &getValByType(int index) const {
         const auto *values =
             reinterpret_cast<const EVT_VARIANT *>(buffer_.data());
 

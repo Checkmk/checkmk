@@ -30,7 +30,9 @@ public:
     void shutdownService(wtools::StopMode /*stop_mode*/) override {
         shutdowned_ = true;
     }
-    const wchar_t *getMainLogName() const override { return L"log.log"; }
+    [[nodiscard]] const wchar_t *getMainLogName() const override {
+        return L"log.log";
+    }
 
     bool stopped_ = false;
     bool started_ = false;
@@ -51,9 +53,6 @@ TEST(ServiceControllerTest, CreateDelete) {
                      p->shutdowned_ || p->stopped_);
         EXPECT_NE(controller.processor_, nullptr);
         EXPECT_EQ(controller.name_, nullptr);
-        EXPECT_EQ(controller.can_stop_, false);
-        EXPECT_EQ(controller.can_shutdown_, false);
-        EXPECT_EQ(controller.can_pause_continue_, false);
         EXPECT_NE(controller.processor_, nullptr);
     }
     EXPECT_EQ(TestProcessor::s_counter, 0);
@@ -90,9 +89,6 @@ TEST(ServiceControllerTest, StartStop) {
         }));
     EXPECT_NE(controller.processor_, nullptr);
     EXPECT_EQ(controller.name_, nullptr);
-    EXPECT_EQ(controller.can_stop_, false);
-    EXPECT_EQ(controller.can_shutdown_, false);
-    EXPECT_EQ(controller.can_pause_continue_, false);
     EXPECT_NE(controller.processor_, nullptr);
 
     wtools::UninstallService(test_service_name);

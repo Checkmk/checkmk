@@ -92,9 +92,9 @@ static bool execMsi() {
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
 
-    ZeroMemory(&si, sizeof(si));
-    si.cb = sizeof(si);
-    ZeroMemory(&pi, sizeof(pi));
+    ZeroMemory(&si, sizeof si);
+    si.cb = sizeof si;
+    ZeroMemory(&pi, sizeof pi);
 
     if (!CreateProcess(nullptr,                 // application name
                        (exe + options).data(),  // Command line options
@@ -1171,7 +1171,7 @@ bool IsServiceProcess() {
 // called by Windows Service Manager
 // exception free
 // returns -1 on failure
-int ServiceAsService(std::wstring_view app_name,
+int ServiceAsService(std::wstring_view /*app_name*/,
                      std::chrono::milliseconds delay,
                      const std::function<bool()> &internal_callback) {
     if (!IsServiceProcess()) {

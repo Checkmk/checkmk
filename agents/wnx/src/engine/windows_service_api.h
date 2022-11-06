@@ -26,7 +26,7 @@ int InstallMainService();               // on install
 int RemoveMainService();                // on remove
 int TestIo();                           // on check -io
 int TestMt();                           // on check -mt
-int TestMainServiceSelf(int Interval);  // on check self
+int TestMainServiceSelf(int interval);  // on check self
 int TestLegacy();                       // on test
 int RestoreWATOConfig();                // on restore
 int ExecFirewall(srv::FwMode fw_mode, std::wstring_view app_name,

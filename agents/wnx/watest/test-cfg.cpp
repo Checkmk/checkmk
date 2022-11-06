@@ -162,14 +162,14 @@ TEST(CmaCfg, Modules) {
     ASSERT_TRUE(envs::kMkModulesDirName == "MK_MODULESDIR");
     auto all_dir = details::AllDirTable();
 
-    ASSERT_TRUE(std::any_of(
-        std::begin(all_dir), std::end(all_dir),
-        [](std::wstring_view dir) { return dir == dirs::kUserModules; }));
+    ASSERT_TRUE(rs::any_of(all_dir, [](std::wstring_view dir) {
+        return dir == dirs::kUserModules;
+    }));
 
     auto removable_dir = details::AllDirTable();
-    ASSERT_TRUE(std::any_of(
-        std::begin(removable_dir), std::end(removable_dir),
-        [](std::wstring_view dir) { return dir == dirs::kUserModules; }));
+    ASSERT_TRUE(rs::any_of(removable_dir, [](std::wstring_view dir) {
+        return dir == dirs::kUserModules;
+    }));
 }
 
 TEST(CmaCfg, ProcessPluginEnvironment) {
@@ -393,8 +393,10 @@ protected:
         return std::make_tuple(pd, table, table_removed);
     }
 
-    fs::path capBase() const { return cap_base_; }
-    size_t userFoldersCount() const { return user_folders_count_; }
+    [[nodiscard]] fs::path capBase() const { return cap_base_; }
+    [[nodiscard]] size_t userFoldersCount() const {
+        return user_folders_count_;
+    }
 
 private:
     std::wstring root_;
@@ -551,7 +553,7 @@ private:
         ofs << bat_file;
     }
 
-    std::vector<std::string> runScript() const {
+    [[nodiscard]] std::vector<std::string> runScript() const {
         auto [pid, job, process] =
             tools::RunStdCommandAsJob(cmd_file_.wstring());
         tst::WaitForSuccessSilent(1000ms, [process] {

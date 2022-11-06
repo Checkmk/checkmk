@@ -22,11 +22,9 @@ public:
         ASSERT_TRUE(temp_fs_->loadFactoryConfig());
     }
 
-    std::vector<std::string> getRows() {
-        cma::provider::AgentPlugins ap{provider::kAgentPlugins,
-                                       provider::AgentPlugins::kSepChar};
-        auto result = ap.generateContent();
-        return tools::SplitString(result, "\n");
+    [[nodiscard]] std::vector<std::string> getRows() const {
+        AgentPlugins ap{kAgentPlugins, AgentPlugins::kSepChar};
+        return tools::SplitString(ap.generateContent(), "\n");
     }
 
     tst::TempCfgFs::ptr temp_fs_;
@@ -98,8 +96,7 @@ TEST_F(AgentPluginsTest, FileMix) {
 
     for (const auto &[p, s, ver] : to_create) {
         tst::CreateTextFile(
-            p,
-            ((ver == "unversioned") ? s : fmt::format(fmt::runtime(s), ver)));
+            p, ver == "unversioned" ? s : fmt::format(fmt::runtime(s), ver));
     }
     auto rows = getRows();
     EXPECT_EQ(rows.size(), to_create.size() + 3);

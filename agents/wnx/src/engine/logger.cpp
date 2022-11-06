@@ -9,14 +9,14 @@ namespace fs = std::filesystem;
 
 namespace XLOG {
 
-Emitter l(LogType::log);
-Emitter d(LogType::debug);
-Emitter t(LogType::trace);
-Emitter stdio(LogType::stdio);
-Emitter bp(LogType::log, true);
+Emitter l(LogType::log);         // NOLINT
+Emitter d(LogType::debug);       // NOLINT
+Emitter t(LogType::trace);       // NOLINT
+Emitter stdio(LogType::stdio);   // NOLINT
+Emitter bp(LogType::log, true);  // NOLINT
 
 namespace details {
-static bool EventLogEnabled = true;
+static bool g_event_log_enabled = true;
 
 std::string g_log_context;
 
@@ -58,8 +58,8 @@ unsigned short LoggerEventLevelToWindowsEventType(EventLevel level) noexcept {
     return EVENTLOG_ERROR_TYPE;
 }
 
-static std::atomic<bool> g_log_duplicated_on_stdio = false;
-static std::atomic<bool> g_log_colored_on_stdio = false;
+static std::atomic g_log_duplicated_on_stdio = false;
+static std::atomic g_log_colored_on_stdio = false;
 static DWORD g_log_old_mode = static_cast<DWORD>(-1);
 
 bool IsDuplicatedOnStdio() noexcept {
@@ -441,9 +441,11 @@ void EnableWinDbg(bool enable) noexcept {
     t.enableWinDbg(enable);
 }
 
-bool IsEventLogEnabled() noexcept { return details::EventLogEnabled; }
+bool IsEventLogEnabled() noexcept { return details::g_event_log_enabled; }
 
-void EnableEventLog(bool enable) noexcept { details::EventLogEnabled = enable; }
+void EnableEventLog(bool enable) noexcept {
+    details::g_event_log_enabled = enable;
+}
 
 // all parameters are set in config
 void Configure(const std::string &log_file_name, int debug_level, bool windbg,

@@ -64,15 +64,15 @@ public:
         std::lock_guard lk(lock_);
         return IsGoodHandle(handle_);
     }
-    LocalResource<SERVICE_FAILURE_ACTIONS> GetServiceFailureActions();
+    LocalResource<SERVICE_FAILURE_ACTIONS> GetServiceFailureActions() const;
 
     static std::string pathToRegistry(std::wstring_view service);
 
-    bool configureRestart(bool restart);
+    [[maybe_unused]] bool configureRestart(bool restart) const;  // NOLINT
 
-    bool configureStart(StartMode mode);
+    bool configureStart(StartMode mode) const;
 
-    bool configureError(ErrorMode log_mode);
+    [[maybe_unused]] bool configureError(ErrorMode log_mode) const;
 
 private:
     mutable std::mutex lock_;

@@ -13,7 +13,7 @@ namespace cma::provider {
 
 std::string Mem::makeBody() {
     MEMORYSTATUSEX stat;
-    stat.dwLength = sizeof(stat);
+    stat.dwLength = sizeof stat;
     ::GlobalMemoryStatusEx(&stat);
     constexpr uint32_t kilobyte = 1024;
 

@@ -13,8 +13,8 @@
 // installed we have to set native handle as NOT INHERITABLE immediately upon
 // creation
 
-#ifndef asio_h
-#define asio_h
+#ifndef ASIO_H
+#define ASIO_H
 
 #if defined(_WIN32)  // Windows MSDN 32/64 bits for ARM/x86
 #include <WinSock2.h>
@@ -33,4 +33,4 @@ SOCKET WSASocketW_Hook(int af, int type, int protocol,
     "Please, double check, that your handles are not kept by spawning processes"
 #include <asio.hpp>
 #endif
-#endif  // asio_h
+#endif  // ASIO_H

@@ -7,6 +7,7 @@
 #include <fmt/format.h>
 
 #include <filesystem>
+#include <ranges>
 #include <regex>
 #include <string>
 #include <tuple>
@@ -383,7 +384,7 @@ std::tuple<uint64_t, int64_t, bool> GetFileStats(const fs::path &file_path) {
 
     auto file_last_touch = GetFileTimeSinceEpoch(file_path);
     if (file_last_touch.has_value()) {
-        auto duration =
+        const auto duration =
             std::chrono::duration_cast<std::chrono::seconds>(*file_last_touch);
         seconds = duration.count();
         CorrectSeconds(seconds);
@@ -555,7 +556,7 @@ const std::string g_modern_sub_header{
     "[[[content]]]\n"};
 }  // namespace
 
-std::string FileInfo::generateFileList(const YAML::Node &path_array) {
+std::string FileInfo::generateFileList(const YAML::Node &path_array) const {
     int i_pos = 0;  // logging variable
     std::string out;
     for (const auto &p : path_array) {

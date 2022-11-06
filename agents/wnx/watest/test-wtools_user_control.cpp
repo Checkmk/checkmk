@@ -16,7 +16,7 @@ namespace wtools::uc {  // to become friendly for cma::cfg classes
 NTSTATUS PrintDomainName() {
     LSA_HANDLE policy;
 
-    static LSA_OBJECT_ATTRIBUTES oa = {sizeof(oa)};
+    static LSA_OBJECT_ATTRIBUTES oa = {sizeof oa};
 
     auto status =
         LsaOpenPolicy(nullptr, &oa, POLICY_VIEW_LOCAL_INFORMATION, &policy);
@@ -108,6 +108,7 @@ TEST(WtoolsUserControl, AddDeleteCheckGroup) {
     LdapControl lc;
     std::wstring_view g = L"x_test_group";
     std::wstring_view c = L"Check MK Testing Group";
+
     lc.localGroupDel(g);
     ON_OUT_OF_SCOPE(lc.localGroupDel(g));
     EXPECT_EQ(Status::absent, lc.localGroupDel(g));
@@ -155,7 +156,7 @@ TEST(WtoolsUserControl, AddDeleteMembers) {
     std::wstring_view g = L"x_test_group";
     std::wstring_view u = L"x_user_name";
     std::wstring_view c = L"Check MK Testing Group";
-    lc.localGroupDel(g);
+    EXPECT_NE(lc.localGroupDel(g), Status::error);
     ON_OUT_OF_SCOPE({
         lc.userDel(u);
         lc.localGroupDel(g);

@@ -234,7 +234,7 @@ public:
 
     std::string getInternalPort() const noexcept { return internal_port_; }
 
-    void processYamlInput(const std::string &yaml) noexcept;
+    void processYamlInput(const std::string &yaml_text) noexcept;
 
     // functions for testing/verifying
     void startTestingMainThread();
@@ -274,8 +274,8 @@ private:
 
     cma::cfg::modules::ModuleCommander mc_;
 
-    void informDevice(cma::rt::Device &Device,
-                      std::string_view Ip) const noexcept;
+    void informDevice(rt::Device &rt_device,
+                      std::string_view ip_addr) const noexcept;
 
     void mainThread(world::ExternalPort *ex_port, bool cap_installed) noexcept;
     void mainThreadAsTest() noexcept { mainThread(nullptr, false); }
@@ -567,14 +567,14 @@ private:
     // starting executable(any!) with valid command line
     // API to start exe
     std::future<bool> kickExe(
-        bool async_mode,                      // controlled from the config
-        const std::wstring &exe_name,         //
-        AnswerId answer_id,                   //
-        ServiceProcessor *service_processor,  // host
-        const std::wstring &segment_name,     // identifies exe
-        int timeout,                          // for exe
-        const std::wstring &command_line,     //
-        const std::wstring &log_file) {       // this is optional
+        bool async_mode,                       // controlled from the config
+        const std::wstring &exe_name,          //
+        AnswerId answer_id,                    //
+        ServiceProcessor *service_processor,   // host
+        const std::wstring &segment_name,      // identifies exe
+        int timeout,                           // for exe
+        const std::wstring &command_line,      //
+        const std::wstring &log_file) const {  // this is optional
         return std::async(
             async_mode ? std::launch::async : std::launch::deferred,
             [this, exe_name, log_file](AnswerId answer,

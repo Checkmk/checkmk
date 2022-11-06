@@ -231,13 +231,13 @@ int CopyFolderRecursive(
     return count;
 }
 
-std::optional<DWORD> GetServiceStatus(SC_HANDLE ServiceHandle) {
+std::optional<DWORD> GetServiceStatus(SC_HANDLE service_handle) {
     DWORD bytes_needed = 0;
     SERVICE_STATUS_PROCESS ssp;
     auto buffer = reinterpret_cast<LPBYTE>(&ssp);
 
-    if (QueryServiceStatusEx(ServiceHandle, SC_STATUS_PROCESS_INFO, buffer,
-                             sizeof(SERVICE_STATUS_PROCESS),
+    if (QueryServiceStatusEx(service_handle, SC_STATUS_PROCESS_INFO, buffer,
+                             sizeof SERVICE_STATUS_PROCESS,
                              &bytes_needed) == FALSE) {
         XLOG::l("QueryServiceStatusEx failed [{}]", GetLastError());
         return {};
@@ -251,7 +251,7 @@ uint32_t GetServiceHint(SC_HANDLE ServiceHandle) {
     auto buffer = reinterpret_cast<LPBYTE>(&ssp);
 
     if (::QueryServiceStatusEx(ServiceHandle, SC_STATUS_PROCESS_INFO, buffer,
-                               sizeof(SERVICE_STATUS_PROCESS),
+                               sizeof SERVICE_STATUS_PROCESS,
                                &bytes_needed) == FALSE) {
         XLOG::l("QueryServiceStatusEx failed [{}]", GetLastError());
         return 0;
@@ -334,7 +334,7 @@ static uint32_t CalcDelay(SC_HANDLE handle) noexcept {
 // so good as for 2019
 static bool TryStopService(SC_HANDLE handle, const std::string &name_to_log,
                            DWORD current_status) noexcept {
-    std::optional<DWORD> status = current_status;
+    std::optional status = current_status;
     const auto delay = CalcDelay(handle);
     constexpr uint64_t timeout = 30'000;  // 30-second time-out
     const auto start_time = GetTickCount64();
@@ -1189,11 +1189,11 @@ bool IsBakeryIni(const fs::path &Path) noexcept {
         }
 
         char buffer[kBakeryMarker.size()];
-        ifs.read(buffer, sizeof(buffer));
+        ifs.read(buffer, sizeof buffer);
         if (!ifs) {
             return false;
         }
-        return 0 == memcmp(buffer, kBakeryMarker.data(), sizeof(buffer));
+        return 0 == memcmp(buffer, kBakeryMarker.data(), sizeof buffer);
 
     } catch (const std::exception &e) {
         XLOG::l(XLOG_FLINE + " Exception {}", e.what());
@@ -1330,10 +1330,11 @@ std::string GetNewHash(const fs::path &dat) noexcept {
 
 std::string ReadHash(std::fstream &ifs) noexcept {
     try {
-        char old_hash[17];
-        ifs.read(old_hash, sizeof(old_hash) - 1);
-        old_hash[sizeof(old_hash) - 1] = 0;
-        if (strlen(old_hash) != 16) {
+        constexpr size_t len{16};
+        char old_hash[len + 1];
+        ifs.read(old_hash, len);
+        old_hash[len] = 0;
+        if (strlen(old_hash) != len) {
             XLOG::l("Bad hash in the ini");
             return {};
         }
@@ -1351,7 +1352,7 @@ std::string GetOldHashFromFile(const fs::path &ini,
         ifs.open(ini,
                  std::fstream::binary | std::fstream::in | std::fstream::out);
 
-        std::string str((std::istreambuf_iterator<char>(ifs)),
+        std::string str((std::istreambuf_iterator(ifs)),
                         std::istreambuf_iterator<char>());
 
         auto pos = str.find(marker);
@@ -1385,7 +1386,7 @@ bool PatchHashInFile(const fs::path &ini, const std::string &hash,
         ifs.open(ini,
                  std::fstream::binary | std::fstream::in | std::fstream::out);
 
-        std::string str((std::istreambuf_iterator<char>(ifs)),
+        std::string str((std::istreambuf_iterator(ifs)),
                         std::istreambuf_iterator<char>());
 
         auto pos = str.find(marker);

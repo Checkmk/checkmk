@@ -3,6 +3,8 @@
 //
 #include "pch.h"
 
+#include <ranges>
+
 #include "carrier.h"
 #include "cfg.h"
 #include "common/wtools.h"
@@ -11,6 +13,7 @@
 #include "tools/_misc.h"
 #include "tools/_raii.h"
 using namespace std::chrono_literals;
+namespace rs = std::ranges;
 
 namespace cma::provider {
 class Empty : public Synchronous {
@@ -158,8 +161,8 @@ TEST(ServiceProcessorTest, StartStopExe) {
     auto cmd_line = groups::winperf.buildCmdLine();
     ASSERT_TRUE(!cmd_line.empty());
     auto count = groups::winperf.countersCount();
-    auto count_of_colon = std::count(cmd_line.begin(), cmd_line.end(), L':');
-    auto count_of_spaces = std::count(cmd_line.begin(), cmd_line.end(), L' ');
+    auto count_of_colon = rs::count(cmd_line, L':');
+    auto count_of_spaces = rs::count(cmd_line, L' ');
     ASSERT_TRUE(count_of_colon == count);
     ASSERT_EQ(count_of_spaces, count - 1);
 
@@ -247,9 +250,9 @@ struct MailData {
 bool MailboxCallback(const cma::mailslot::Slot *slot, const void *data, int len,
                      void *context) {
     auto mail_data = static_cast<MailData *>(context);
-    mail_data->data = std::vector<char>(
-        static_cast<const char *>(data),
-        static_cast<const char *>(data) + static_cast<size_t>(len));
+    mail_data->data =
+        std::vector(static_cast<const char *>(data),
+                    static_cast<const char *>(data) + static_cast<size_t>(len));
     return true;
 }
 }  // namespace

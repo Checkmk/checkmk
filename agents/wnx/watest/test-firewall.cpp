@@ -35,7 +35,7 @@ class FirewallApiFixture : public ::testing::Test {
 
     void TearDown() override { reset(); }
 
-    void reset() {
+    void reset() const {
         RemoveRule(rule_name);  // to be sure that no rules are
         RemoveRule(rule_name);  // Windows can create many rules with same name
     }

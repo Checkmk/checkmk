@@ -4,6 +4,7 @@
 #include "pch.h"
 
 #include <filesystem>
+#include <ranges>
 
 #include "cfg.h"
 #include "cfg_details.h"
@@ -17,9 +18,10 @@
 #include "tools/_misc.h"
 #include "tools/_process.h"
 #include "tools/_raii.h"
-#include "tools/_tgt.h"
 
 namespace fs = std::filesystem;
+namespace rs = std::ranges;
+
 using namespace std::chrono_literals;
 using namespace std::string_literals;
 
@@ -1025,7 +1027,7 @@ TEST(AgentConfig, GlobalTest) {
             std::stringstream sstr;
             sstr << in.rdbuf();
             auto contents = sstr.str();
-            auto n = std::count(contents.begin(), contents.end(), '\n');
+            auto n = rs::count(contents, '\n');
             EXPECT_EQ(n, 2);
             EXPECT_NE(std::string::npos, contents.find("TEST WINDOWS LOG"));
             EXPECT_NE(std::string::npos, contents.find("CONTROL SHOT"));
@@ -1044,19 +1046,19 @@ TEST(AgentConfig, GlobalTest) {
     EXPECT_TRUE(
         tools::IsEqual(fname, wtools::ToStr(dir / cfg::kDefaultLogFileName)));
 
-    EXPECT_TRUE(cfg::groups::global.allowedSection("check_mk"));
-    EXPECT_TRUE(cfg::groups::global.allowedSection("winperf"));
-    EXPECT_TRUE(cfg::groups::global.allowedSection("uptime"));
-    EXPECT_TRUE(cfg::groups::global.allowedSection("systemtime"));
-    EXPECT_TRUE(cfg::groups::global.allowedSection("df"));
-    EXPECT_TRUE(cfg::groups::global.allowedSection("mem"));
-    EXPECT_TRUE(cfg::groups::global.allowedSection("services"));
+    EXPECT_TRUE(groups::global.allowedSection("check_mk"));
+    EXPECT_TRUE(groups::global.allowedSection("winperf"));
+    EXPECT_TRUE(groups::global.allowedSection("uptime"));
+    EXPECT_TRUE(groups::global.allowedSection("systemtime"));
+    EXPECT_TRUE(groups::global.allowedSection("df"));
+    EXPECT_TRUE(groups::global.allowedSection("mem"));
+    EXPECT_TRUE(groups::global.allowedSection("services"));
 
-    EXPECT_TRUE(!cfg::groups::global.isSectionDisabled("winperf_any"));
-    EXPECT_TRUE(!cfg::groups::global.allowedSection("_logfiles"));
+    EXPECT_TRUE(!groups::global.isSectionDisabled("winperf_any"));
+    EXPECT_TRUE(!groups::global.allowedSection("_logfiles"));
 
-    auto val = cfg::groups::global.getWmiTimeout();
-    EXPECT_TRUE((val >= 1) && (val < 100));
+    auto val = groups::global.getWmiTimeout();
+    EXPECT_TRUE(val >= 1 && val < 100);
 }
 
 #define LW_ROOT_APP "- application: warn context"

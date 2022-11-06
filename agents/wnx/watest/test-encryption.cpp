@@ -10,45 +10,29 @@
 
 namespace cma::encrypt {
 
+TEST(EncryptionTest, CommanderAvailable) {
+    Commander c;
+    EXPECT_TRUE(c.available());
+}
 TEST(EncryptionTest, Base) {
-    // stub
-    {
-        Commander c;
-        EXPECT_TRUE(c.available());
-    }
+    Commander enc("abc");
+    EXPECT_TRUE(enc.available());
+    char word[1024] = "0123456789ABCDE";
+    constexpr int len = 16;
+    auto [success_a, required_sz] = enc.encode(word, len, 0);
+    EXPECT_FALSE(success_a);
+    EXPECT_TRUE(required_sz > len);
+    auto [success_b, encrypted_sz] = enc.encode(word, 16, required_sz);
+    EXPECT_TRUE(success_b);
+    EXPECT_TRUE(encrypted_sz != 0);
 
-    {
-        Commander enc("abc");
-        EXPECT_TRUE(enc.available());
-        char word[1024] = "0123456789ABCDE";
-        constexpr int len = 16;
-        size_t required_sz = 0;
-        {
-            auto [success, sz] = enc.encode(word, len, len);
-            EXPECT_FALSE(success);
-            EXPECT_TRUE(sz > len);
-            required_sz = sz;
-        }
-        ASSERT_TRUE(required_sz != 0);
-        size_t encrypted_sz = 0;
-        {
-            auto [success, sz] = enc.encode(word, 16, required_sz);
-            EXPECT_TRUE(success);
-            EXPECT_TRUE(sz != 0);
-            encrypted_sz = sz;
-        }
-        ASSERT_TRUE(encrypted_sz != 0);
-
-        Commander dec("abc");
-        EXPECT_TRUE(dec.available());
-        {
-            auto [success, sz] = dec.decode(word, encrypted_sz);
-            EXPECT_TRUE(success);
-            EXPECT_TRUE(sz == len);
-            auto b_size = dec.blockSize();
-            EXPECT_TRUE(b_size.has_value() && *b_size > 100);
-        }
-    }
+    Commander dec("abc");
+    EXPECT_TRUE(dec.available());
+    auto [success_final, sz] = dec.decode(word, encrypted_sz);
+    EXPECT_TRUE(success_final);
+    EXPECT_TRUE(sz == len);
+    const auto b_size = dec.blockSize();
+    EXPECT_TRUE(*b_size > 100);
 }
 
 TEST(EncryptionTest, BigBlock) {

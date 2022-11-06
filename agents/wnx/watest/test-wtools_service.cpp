@@ -3,6 +3,8 @@
 
 #include "pch.h"
 
+#include <ranges>
+
 #include "cma_core.h"
 #include "common/wtools.h"
 #include "common/wtools_service.h"
@@ -10,6 +12,8 @@
 #include "windows_service_api.h"
 
 using namespace std::string_literals;
+
+namespace rs = std::ranges;
 
 namespace wtools {
 
@@ -45,9 +49,8 @@ void CheckThe(const SERVICE_FAILURE_ACTIONS *x,
     for (unsigned i = 0; i < x->cActions; ++i) {
         auto &a = x->lpsaActions[i];
         EXPECT_TRUE(a.Delay > 0);
-        EXPECT_TRUE(std::any_of(std::begin(values), std::end(values),
-                                // predicate:
-                                [a](int value) { return a.Type == value; }));
+        EXPECT_TRUE(
+            rs::any_of(values, [a](int value) { return a.Type == value; }));
     }
 }
 }  // namespace
@@ -55,9 +58,9 @@ void CheckThe(const SERVICE_FAILURE_ACTIONS *x,
 class WtoolsServiceFunc : public ::testing::Test {
 protected:
     // original values from the registry
-    uint32_t save_ec_;
-    uint32_t save_start_;
-    uint32_t save_delayed_;
+    uint32_t save_ec_{0};
+    uint32_t save_start_{0};
+    uint32_t save_delayed_{0};
 
 public:
     wtools::WinService ws_{cma::srv::kServiceName};
@@ -129,8 +132,8 @@ TEST_F(WtoolsServiceFunc, ConfigServiceErrorControl) {
     ASSERT_EQ(name_ec_, "ErrorControl");
     ASSERT_EQ(WinService::kRegStart, "Start");
 
-    if (!std::any_of(std::begin(checks_ec_), std::end(checks_ec_),
-                     [this](auto check) { return check.first == save_ec_; }))
+    if (!rs::any_of(checks_ec_,
+                    [this](auto check) { return check.first == save_ec_; }))
         GTEST_SKIP() << "bad value start " << save_ec_ << "in registry";
 
     for (auto c : checks_ec_) {
@@ -159,7 +162,7 @@ TEST_F(WtoolsServiceFunc, ConfigService) {
         //
     };
 
-    if (!std::any_of(std::begin(checks), std::end(checks), [this](auto check) {
+    if (!rs::any_of(checks, [this](auto check) {
             return check.reg_value_main == save_start_;
         }))
         GTEST_SKIP() << "bad value start " << save_start_ << "in registry";

@@ -15,7 +15,7 @@
 
 namespace cma::cfg::cvt {
 class ParserImplementation;
-bool CheckIniFile(const std::filesystem::path &Path);
+bool CheckIniFile(const std::filesystem::path &ini_file_path);
 
 // Engine to parse ini and generate YAML
 // implementation in the lwa folder

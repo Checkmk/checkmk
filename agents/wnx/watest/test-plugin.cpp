@@ -36,7 +36,7 @@ void CreatePluginInTemp(const fs::path &filename, int timeout,
     }
 
     ofs << "@echo off\n"
-        //<< "timeout /T " << Timeout << " /NOBREAK > nul\n"
+        //  << "timeout /T " << Timeout << " /NOBREAK > nul\n"
         << "powershell Start-Sleep " << timeout << " \n"
         << "@echo ^<^<^<" << plugin_name << "^>^>^>\n"
         << "@echo " << SecondLine << "\n";
@@ -103,7 +103,7 @@ void RemoveFolder(const std::filesystem::path &path) {
     cma::PathVector directories;
     std::error_code ec;
     for (auto &p : fs::recursive_directory_iterator(top, ec)) {
-        auto dir_path = p.path();
+        const auto &dir_path = p.path();
         if (fs::is_directory(dir_path)) {
             directories.push_back(fs::canonical(dir_path));
         }
@@ -770,7 +770,7 @@ static const std::vector<cma::cfg::Plugins::ExeUnit> x2_async_low_cache_age = {
 
 static const std::vector<cma::cfg::Plugins::ExeUnit> x3_cmd_with_group_user = {
     //
-    {"???-?.cmd",
+    {"???-?.cmd",  // NOLINT
      "async: yes\n"
      "timeout: 10\n"
      "cache_age: 0\n"
@@ -858,7 +858,7 @@ TEST(PluginTest, GeneratePluginEntry) {
         EXPECT_EQ(pm.size(), pv_main.size());
         ApplyEverythingToPluginMap(pm, exe_units_base, pv_main, true);
         {
-            std::array<int, 3> indexes{0, 3, 5};
+            const std::array indexes{0, 3, 5};
             for (auto i : indexes) {
                 auto e_5 = GetEntrySafe(pm, pv_main[i]);
                 ASSERT_NE(nullptr, e_5) << "bad at index " << i << "\n";
@@ -869,7 +869,7 @@ TEST(PluginTest, GeneratePluginEntry) {
         }
         {
             // bad files
-            std::array<int, 3> indexes{1, 2, 4};
+            const std::array indexes{1, 2, 4};
             for (auto i : indexes) {
                 auto e_5 = GetEntrySafe(pm, pv_main[i]);
                 ASSERT_NE(nullptr, e_5) << "bad at index " << i << "\n";
@@ -1200,7 +1200,7 @@ TEST(PluginTest, SyncStartSimulationFuture_Integration) {
     using namespace cma::cfg;
     using namespace wtools;
     cma::OnStart(cma::AppType::test);
-    std::vector<Plugins::ExeUnit> exe_units = {
+    std::vector<Plugins::ExeUnit> units = {
         {"*.cmd", 10, {}, 3, true},  //
         {"*", 10, 0, 3, false},      //
     };
@@ -1229,7 +1229,7 @@ TEST(PluginTest, SyncStartSimulationFuture_Integration) {
     ON_OUT_OF_SCOPE(for (auto &f : vp) fs::remove(f););
 
     PluginMap pm;  // load from the groups::plugin
-    UpdatePluginMap(pm, false, vp, exe_units, false);
+    UpdatePluginMap(pm, false, vp, units, false);
 
     using namespace std;
     using DataBlock = vector<char>;
@@ -1493,7 +1493,7 @@ public:
 
 private:
     [[nodiscard]] PathVector prepareFilesAndStructures(
-        const PluginDescVector &plugin_desc_arr, std::string_view code) {
+        const PluginDescVector &plugin_desc_arr, std::string_view code) const {
         fs::path temp_folder =
             tst::GetTempDir() /
             ::testing::UnitTest::GetInstance()->current_test_info()->name();
@@ -1738,7 +1738,7 @@ TEST(PluginTest, AsyncStartSimulation_Long) {
 }
 namespace {
 struct TestDateTime {
-    bool invalid() const { return hour == 99; }
+    [[nodiscard]] bool invalid() const { return hour == 99; }
     uint32_t hour = 99;
     uint32_t min = 0;
     uint32_t sec = 0;
@@ -1876,7 +1876,7 @@ TEST(PluginTest, AsyncDataPickup_Integration) {
     }
 }
 
-constexpr int LocalUnitCacheAge = cma::cfg::kMinimumCacheAge;
+constexpr int g_local_unit_cache_age = cma::cfg::kMinimumCacheAge;
 std::vector<cma::cfg::Plugins::ExeUnit> local_units_async = {
     //       Async  Timeout CacheAge              Retry  Run
     // clang-format off
@@ -1974,7 +1974,7 @@ TEST(PluginTest, AsyncLocal_Integration) {
             auto [time_now, cache_age] = ParseCached(table[0]);
 
             ASSERT_TRUE(time_now != 0);
-            EXPECT_EQ(cache_age, LocalUnitCacheAge);
+            EXPECT_EQ(cache_age, g_local_unit_cache_age);
 
             tdt[i] = StringToTime(table[1]);
             ASSERT_TRUE(!tdt[i].invalid());
@@ -2258,7 +2258,7 @@ TEST(PluginTest, SyncStartSimulation_Long) {
     using namespace cma::cfg;
     using namespace wtools;
     cma::OnStart(cma::AppType::test);
-    std::vector<Plugins::ExeUnit> exe_units = {
+    std::vector<Plugins::ExeUnit> units = {
         //
         {"*.cmd",
          "async: no\ntimeout: 10\ncache_age: 500\nretry_count: 3\nrun: yes\n"},  //
@@ -2279,7 +2279,7 @@ TEST(PluginTest, SyncStartSimulation_Long) {
     CreatePluginInTemp(vp[2], 3, "c");
     CreatePluginInTemp(vp[3], 120, "d");
 
-    std::vector<std::string> strings = {
+    std::vector<std::string> headers = {
         "<<<a>>>",  //
         "<<<b>>>",  //
         "<<<c>>>",  //
@@ -2289,14 +2289,14 @@ TEST(PluginTest, SyncStartSimulation_Long) {
     ON_OUT_OF_SCOPE(for (auto &f : vp) fs::remove(f););
 
     PluginMap pm;  // load from the groups::plugin
-    UpdatePluginMap(pm, false, vp, exe_units, false);
+    UpdatePluginMap(pm, false, vp, units, false);
 
     // retry count test
     {
         PluginMap pm_1;  // load from the groups::plugin
         PathVector vp_1 = {vp[3]};
 
-        UpdatePluginMap(pm_1, false, vp_1, exe_units, false);
+        UpdatePluginMap(pm_1, false, vp_1, units, false);
         auto f = pm_1.begin();
         auto &entry = f->second;
 
@@ -2342,9 +2342,9 @@ TEST(PluginTest, SyncStartSimulation_Long) {
             accu.clear();
             auto table = cma::tools::SplitString(result, "\r\n");
             ASSERT_EQ(table.size(), 2);
-            EXPECT_TRUE(table[0] == strings[0] ||  //
-                        table[0] == strings[1] ||  //
-                        table[0] == strings[2]);
+            EXPECT_TRUE(table[0] == headers[0] ||  //
+                        table[0] == headers[1] ||  //
+                        table[0] == headers[2]);
             EXPECT_EQ(table[1], SecondLine);
         }
     }
@@ -2381,9 +2381,10 @@ TEST(CmaMain, MiniBoxStartMode) {
         auto success = mb.waitForEnd(std::chrono::seconds(3));
         ASSERT_TRUE(success);
         // we have probably data, try to get and and store
-        mb.processResults([&](const std::wstring &_cmd_line, uint32_t _pid,
-                              uint32_t _code, const std::vector<char> &data) {
-            auto result = wtools::ConditionallyConvertFromUTF16(data);
+        mb.processResults([&](const std::wstring & /*cmd_line*/,
+                              uint32_t /*pid*/, uint32_t /*code*/,
+                              const std::vector<char> &data) {
+            const auto result = wtools::ConditionallyConvertFromUTF16(data);
 
             tools::AddVector(accu, result);
         });
@@ -2412,9 +2413,10 @@ TEST(CmaMain, MiniBoxStartModeDeep) {
         auto success = mb.waitForEnd(std::chrono::seconds(3));
         ASSERT_TRUE(success);
         // we have probably data, try to get and and store
-        mb.processResults([&](const std::wstring &cmd_line, uint32_t pid,
-                              uint32_t code, const std::vector<char> &data) {
-            auto result = wtools::ConditionallyConvertFromUTF16(data);
+        mb.processResults([&](const std::wstring & /*cmd_line*/,
+                              uint32_t /*pid*/, uint32_t /*code*/,
+                              const std::vector<char> &data) {
+            const auto result = wtools::ConditionallyConvertFromUTF16(data);
 
             tools::AddVector(accu, result);
         });
@@ -2437,11 +2439,12 @@ TEST(CmaMain, MiniBoxStartModeDeep) {
         auto success = mb.waitForEnd(std::chrono::seconds(30));
         ASSERT_TRUE(success);
         // we have probably data, try to get and and store
-        mb.processResults([&](const std::wstring &CmdLine, uint32_t Pid,
-                              uint32_t Code, const std::vector<char> &Data) {
-            auto data = wtools::ConditionallyConvertFromUTF16(Data);
+        mb.processResults([&](const std::wstring & /*cmd_line*/,
+                              uint32_t /*pid*/, uint32_t /*code*/,
+                              const std::vector<char> &data) {
+            const auto result = wtools::ConditionallyConvertFromUTF16(data);
 
-            cma::tools::AddVector(accu, data);
+            tools::AddVector(accu, result);
         });
 
         EXPECT_TRUE(!accu.empty());
@@ -2459,11 +2462,11 @@ TEST(CmaMain, MiniBoxStartModeDeep) {
         auto success = mb.waitForEnd(std::chrono::milliseconds(20));
         EXPECT_FALSE(success);
         // we have probably data, try to get and and store
-        mb.processResults([&](const std::wstring &CmdLine, uint32_t Pid,
-                              uint32_t Code, const std::vector<char> &Data) {
-            auto data = wtools::ConditionallyConvertFromUTF16(Data);
-
-            cma::tools::AddVector(accu, data);
+        mb.processResults([&](const std::wstring & /*cmd_line*/,
+                              uint32_t /*pid*/, uint32_t /*code*/,
+                              const std::vector<char> &data) {
+            const auto result = wtools::ConditionallyConvertFromUTF16(data);
+            tools::AddVector(accu, result);
         });
 
         EXPECT_TRUE(accu.size() < 200);  // 200 is from complicated plugin
@@ -2639,7 +2642,7 @@ public:
     void SetUp() override {}
     void TearDown() override {}
 
-    void loadContent(std::string_view content) {
+    void loadContent(std::string_view content) const {
         ASSERT_TRUE(temp_fs_->loadContent(content));
     }
 

@@ -106,7 +106,7 @@ void somefoo_about_video()
 #define XLOG_DEBUG_TARGET 0
 #define XLOG_RELEASE_TARGET 1
 
-#if DBG || defined(_DEBUG) || defined(DEBUG)
+#if defined(DBG) || defined(_DEBUG) || defined(DEBUG)
 #define XLOG_CUR_TARGET XLOG_DEBUG_TARGET
 #define XLOG_DEBUG
 #else
@@ -346,7 +346,7 @@ namespace xlog {
         ~TextInfo() = default;
 
         // EXTENDED API
-        [[maybe_unused]] const TextInfo &filelog(
+        [[maybe_unused]] const TextInfo &filelog(  // NOLINT
             std::string_view filename) const {
             if (filename.empty()) {
                 return *this;
@@ -357,7 +357,7 @@ namespace xlog {
         }
 
         // LogName is syslog source name.
-        [[maybe_unused]] const TextInfo &syslog(
+        [[maybe_unused]] const TextInfo &syslog(  // NOLINT
             std::basic_string_view<T> log_name, LogEvents log_event,
             int code) const {
             if constexpr (sizeof(T) == 2) {
@@ -373,12 +373,12 @@ namespace xlog {
         }
 
         // print on screen
-        [[maybe_unused]] const TextInfo &print() const noexcept {
+        [[maybe_unused]] const TextInfo &print() const noexcept {  // NOLINT
             return print(true);
-        }  // NOLINT
+        }
 
-        [[maybe_unused]] const TextInfo &print(
-            bool enable) const noexcept {  // NOLINT
+        [[maybe_unused]] const TextInfo &print(  // NOLINT
+            bool enable) const noexcept {
             if (enable) {
                 internal_PrintStringStdio(text());
             }

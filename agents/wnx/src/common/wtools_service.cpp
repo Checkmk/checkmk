@@ -40,7 +40,8 @@ WinService::WinService(std::wstring_view name) {
     }
 }
 
-LocalResource<SERVICE_FAILURE_ACTIONS> WinService::GetServiceFailureActions() {
+LocalResource<SERVICE_FAILURE_ACTIONS> WinService::GetServiceFailureActions()
+    const {
     std::lock_guard lk(lock_);
     if (!IsGoodHandle(handle_)) {
         return nullptr;
@@ -94,11 +95,10 @@ SERVICE_FAILURE_ACTIONS CreateServiceFailureAction(int delay) {
 }
 
 /// \brief wraps low level win32 API-calls to make service restartable or not
-bool WinService::configureRestart(bool restart) {
+bool WinService::configureRestart(bool restart) const {
     const auto action = restart ? SC_ACTION_RESTART : SC_ACTION_NONE;
     constexpr int count_of_actions = 3;  // in windows service
-    std::vector<SC_ACTION> fail_actions(count_of_actions,
-                                        SC_ACTION{action, 2000});
+    std::vector fail_actions(count_of_actions, SC_ACTION{action, 2000});
 
     auto service_fail_actions = CreateServiceFailureAction(3600);
     service_fail_actions.cActions = static_cast<int>(fail_actions.size());
@@ -179,7 +179,7 @@ static uint32_t LogMode2WinApi(WinService::ErrorMode mode) {
     return SERVICE_NO_CHANGE;
 }
 
-bool WinService::configureStart(StartMode mode) {
+bool WinService::configureStart(StartMode mode) const {
     auto start_mode = StartMode2WinApi(mode);
 
     auto error_code_1 =
@@ -195,11 +195,13 @@ bool WinService::configureStart(StartMode mode) {
     return false;
 }
 
-bool WinService::configureError(ErrorMode log_mode) {
+bool WinService::configureError(ErrorMode log_mode) const {
     auto error_control = LogMode2WinApi(log_mode);
     auto error_code =
         CallChangeServiceConfig(handle_, SERVICE_NO_CHANGE, error_control);
-    if (error_code == 0) return true;
+    if (error_code == 0) {
+        return true;
+    }
 
     XLOG::l("Failed to set service error control to [{}], error isn [{}]",
             error_control, error_code);

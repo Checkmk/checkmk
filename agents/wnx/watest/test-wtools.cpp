@@ -62,7 +62,7 @@ protected:
         });
     }
 
-    int RunProcesses(int requested) const {
+    [[nodiscard]] int RunProcesses(int requested) const {
         const auto cmd = fmt::format("{} -t 8.8.8.8", test_exe_);
 
         int count = 0;
@@ -97,7 +97,7 @@ protected:
         fs::create_directories(test_dir_);
         fs::path ping(R"(c:\windows\system32\ping.exe)");
         ASSERT_TRUE(fs::copy_file(ping, test_exe_));
-        RunProcesses(1);
+        EXPECT_EQ(RunProcesses(1), 1);
     }
 
     void TearDown() override {
@@ -179,10 +179,10 @@ protected:
                     names.end());
     }
 
-    uint32_t startProcessTree() {
-        auto exe_a = temp_dir() / "a.cmd";
-        auto exe_b = temp_dir() / "b.cmd";
-        auto exe_c = temp_dir() / "c.cmd";
+    [[nodiscard]] uint32_t startProcessTree() const {
+        const auto exe_a = temp_dir() / "a.cmd";
+        const auto exe_b = temp_dir() / "b.cmd";
+        const auto exe_c = temp_dir() / "c.cmd";
 
         tst::CreateTextFile(exe_a,
                             "@echo start\n@call " + wtools::ToStr(exe_b));
@@ -193,7 +193,7 @@ protected:
         return cma::tools::RunStdCommand(exe_a.wstring(), false);
     }
 
-    bool findProcessByPid(uint32_t pid) const {
+    [[nodiscard]] bool findProcessByPid(uint32_t pid) const {
         bool found = false;
         wtools::ScanProcessList(
             [&found, pid ](const PROCESSENTRY32 &entry) -> auto{
@@ -207,7 +207,7 @@ protected:
         return found;
     }
 
-    bool findProcessByParentPid(uint32_t pid) const {
+    [[nodiscard]] bool findProcessByParentPid(uint32_t pid) const {
         bool found = false;
         wtools::ScanProcessList(
             [&found, pid ](const PROCESSENTRY32 &entry) -> auto{
@@ -236,7 +236,9 @@ protected:
     }
 
     tst::TempCfgFs::ptr temp_fs;
-    std::filesystem::path temp_dir() const { return temp_fs->data(); }
+    [[nodiscard]] std::filesystem::path temp_dir() const {
+        return temp_fs->data();
+    }
 };
 
 TEST_F(WtoolsKillProcessTreeFixture, Integration) {
@@ -340,7 +342,7 @@ TEST(Wtools, Utf16Utf8) {
     EXPECT_EQ(x.size(), 10);
 }
 
-std::vector<int> TsValues = {
+std::vector TsValues = {
     8154,  // windows 10, dev machine
     2066,  // windows server, build machine
     5090,  // windows 10, dev machine, late build
@@ -348,101 +350,99 @@ std::vector<int> TsValues = {
     8868,  // windows server build machine
 };
 
-TEST(Wtools, Perf) {
-    int num_cpu = std::thread::hardware_concurrency();
+const int num_cpu = std::thread::hardware_concurrency();
+namespace perf {
 
-    using namespace wtools::perf;
-    {
-        auto cur_info = kCpuCounter;
-        auto perf_data = ReadPerformanceDataFromRegistry(cur_info.name_);
-        ASSERT_TRUE(perf_data.data_);
-        EXPECT_TRUE(perf_data.len_ > 1000);
-        // 2. Find required object
-        auto object = FindPerfObject(perf_data, cur_info.index_);
-        ASSERT_TRUE(object);
-        EXPECT_EQ(object->ObjectNameTitleIndex, cur_info.index_);
+TEST(Wtools, PerfCpuCounter) {
+    constexpr auto cur_info = kCpuCounter;
+    auto perf_data = ReadPerformanceDataFromRegistry(cur_info.name_);
+    ASSERT_TRUE(perf_data.data_);
+    EXPECT_TRUE(perf_data.len_ > 1000);
+    // 2. Find required object
+    auto object = FindPerfObject(perf_data, cur_info.index_);
+    ASSERT_TRUE(object);
+    EXPECT_EQ(object->ObjectNameTitleIndex, cur_info.index_);
 
-        auto instances = GenerateInstances(object);
-        EXPECT_TRUE(instances.size() >= cur_info.instances_min_);
-        EXPECT_TRUE(instances.size() <= cur_info.instances_max_);
+    auto instances = GenerateInstances(object);
+    EXPECT_TRUE(instances.size() >= cur_info.instances_min_);
+    EXPECT_TRUE(instances.size() <= cur_info.instances_max_);
 
-        EXPECT_EQ(instances.size(), num_cpu + 1);
-        EXPECT_EQ(instances.size(), object->NumInstances);
+    EXPECT_EQ(instances.size(), num_cpu + 1);
+    EXPECT_EQ(instances.size(), object->NumInstances);
 
-        auto names = GenerateInstanceNames(object);
-        EXPECT_TRUE(instances.size() == names.size());
+    auto names = GenerateInstanceNames(object);
+    EXPECT_TRUE(instances.size() == names.size());
 
-        auto counters = GenerateCounters(object);
-        EXPECT_EQ(counters.size(), cur_info.counters_count);
-        EXPECT_EQ(counters.size(), object->NumCounters);
-    }
-
-    {
-        auto cur_info = kDiskCounter;
-        auto perf_data = ReadPerformanceDataFromRegistry(cur_info.name_);
-        ASSERT_TRUE(perf_data.data_);
-        EXPECT_TRUE(perf_data.len_ > 1000);
-        // 2. Find required object
-        auto object = FindPerfObject(perf_data, cur_info.index_);
-        ASSERT_TRUE(object);
-        EXPECT_EQ(object->ObjectNameTitleIndex, cur_info.index_);
-
-        auto instances = GenerateInstances(object);
-        EXPECT_TRUE(instances.size() >= cur_info.instances_min_);
-        EXPECT_TRUE(instances.size() <= cur_info.instances_max_);
-
-        EXPECT_EQ(instances.size(), object->NumInstances);
-
-        auto names = GenerateInstanceNames(object);
-        EXPECT_TRUE(instances.size() == names.size());
-
-        const PERF_COUNTER_BLOCK *counterblock = nullptr;
-        auto counters = GenerateCounters(object, counterblock);
-        EXPECT_EQ(counterblock, nullptr);
-        EXPECT_EQ(counters.size(), cur_info.counters_count);
-        EXPECT_EQ(counters.size(), object->NumCounters);
-    }
-
-    {
-        // Instance less Check
-        // 8154 is "Terminal Services" perf counter without instances
-        // 2066 is "Terminal Services" perf counter without instances
-        auto pos = TsValues.cbegin();
-        auto index = *pos;
-        auto perf_data =
-            ReadPerformanceDataFromRegistry(std::to_wstring(index));
-        while (perf_data.data_ == nullptr ||
-               !FindPerfObject(perf_data, index)) {
-            // no data or data is not valid:
-            ++pos;
-            ASSERT_TRUE(pos != TsValues.cend());
-            index = *pos;
-            perf_data = ReadPerformanceDataFromRegistry(std::to_wstring(index));
-        }
-        ASSERT_TRUE(perf_data.data_);
-        EXPECT_TRUE(perf_data.len_ > 30) << "Data should be big enough";
-
-        // 2. Find required object
-        auto object = FindPerfObject(perf_data, index);
-        ASSERT_TRUE(object);
-        EXPECT_EQ(object->ObjectNameTitleIndex, index);
-
-        // Check that object instance less
-        auto instances = GenerateInstances(object);
-        EXPECT_TRUE(instances.empty());
-
-        //  Check that object is name less too
-        auto names = GenerateInstanceNames(object);
-        EXPECT_TRUE(instances.size() == names.size());
-
-        // low level;
-
-        const PERF_COUNTER_BLOCK *counterblock = nullptr;
-        auto counters = GenerateCounters(object, counterblock);
-        EXPECT_NE(counterblock, nullptr);
-        EXPECT_EQ(counters.size(), object->NumCounters);
-    }
+    auto counters = GenerateCounters(object);
+    EXPECT_EQ(counters.size(), cur_info.counters_count);
+    EXPECT_EQ(counters.size(), object->NumCounters);
 }
+
+TEST(Wtools, PerfDiskCounter) {
+    constexpr auto cur_info = kDiskCounter;
+    auto perf_data = ReadPerformanceDataFromRegistry(cur_info.name_);
+    ASSERT_TRUE(perf_data.data_);
+    EXPECT_TRUE(perf_data.len_ > 1000);
+    // 2. Find required object
+    auto object = FindPerfObject(perf_data, cur_info.index_);
+    ASSERT_TRUE(object);
+    EXPECT_EQ(object->ObjectNameTitleIndex, cur_info.index_);
+
+    auto instances = GenerateInstances(object);
+    EXPECT_TRUE(instances.size() >= cur_info.instances_min_);
+    EXPECT_TRUE(instances.size() <= cur_info.instances_max_);
+
+    EXPECT_EQ(instances.size(), object->NumInstances);
+
+    auto names = GenerateInstanceNames(object);
+    EXPECT_TRUE(instances.size() == names.size());
+
+    const PERF_COUNTER_BLOCK *counterblock = nullptr;
+    auto counters = GenerateCounters(object, counterblock);
+    EXPECT_EQ(counterblock, nullptr);
+    EXPECT_EQ(counters.size(), cur_info.counters_count);
+    EXPECT_EQ(counters.size(), object->NumCounters);
+}
+
+TEST(Wtools, PerfTs) {
+    // Instance less Check
+    // 8154 is "Terminal Services" perf counter without instances
+    // 2066 is "Terminal Services" perf counter without instances
+    auto pos = TsValues.cbegin();
+    auto index = *pos;
+    auto perf_data = ReadPerformanceDataFromRegistry(std::to_wstring(index));
+    while (perf_data.data_ == nullptr || !FindPerfObject(perf_data, index)) {
+        // no data or data is not valid:
+        ++pos;
+        ASSERT_TRUE(pos != TsValues.cend());
+        index = *pos;
+        perf_data = ReadPerformanceDataFromRegistry(std::to_wstring(index));
+    }
+    ASSERT_TRUE(perf_data.data_);
+    EXPECT_TRUE(perf_data.len_ > 30) << "Data should be big enough";
+
+    // 2. Find required object
+    auto object = FindPerfObject(perf_data, index);
+    ASSERT_TRUE(object);
+    EXPECT_EQ(object->ObjectNameTitleIndex, index);
+
+    // Check that object instance less
+    auto instances = GenerateInstances(object);
+    EXPECT_TRUE(instances.empty());
+
+    //  Check that object is name less too
+    auto names = GenerateInstanceNames(object);
+    EXPECT_TRUE(instances.size() == names.size());
+
+    // low level;
+
+    const PERF_COUNTER_BLOCK *counterblock = nullptr;
+    auto counters = GenerateCounters(object, counterblock);
+    EXPECT_NE(counterblock, nullptr);
+    EXPECT_EQ(counters.size(), object->NumCounters);
+}
+
+}  // namespace perf
 
 TEST(Wtools, AppRunnerCtorDtor) {
     wtools::AppRunner app;
@@ -532,7 +532,7 @@ TEST(Wtools, KillTree) {
 }
 
 TEST(Wtools, Acl) {
-    wtools::ACLInfo info("c:\\windows\\notepad.exe");
+    wtools::ACLInfo info(R"(c:\windows\notepad.exe)");
     auto ret = info.query();
     ASSERT_EQ(ret, 0) << "Bad return" << fmt::format("{:#X}", ret);
     auto stat = info.output();
@@ -540,7 +540,7 @@ TEST(Wtools, Acl) {
     EXPECT_TRUE(!stat.empty());
 
     {
-        wtools::ACLInfo info_temp("c:\\windows\\temp\\check_mk_agent.msi");
+        wtools::ACLInfo info_temp(R"(c:\windows\temp\check_mk_agent.msi)");
         auto ret = info_temp.query();
         if (ret == S_OK) XLOG::l("\n{}", info_temp.output());
     }
@@ -695,7 +695,7 @@ TEST(Wtools, HandleDeleter) {
 }
 
 TEST(Wtools, HandleDeleterInvalidAndNull) {
-    const std::array<HANDLE, 2> handles{wtools::InvalidHandle(), nullptr};
+    const std::array handles{wtools::InvalidHandle(), HANDLE{nullptr}};
     for (auto h : handles) {
         UniqueHandle unique_handle(h);
         ASSERT_EQ(unique_handle.get(), h);

@@ -44,7 +44,7 @@ public:
 
     void TearDown() override { killArtifacts(); }
 
-    std::vector<std::string> loadConfigAndGetResult(
+    [[nodiscard]] std::vector<std::string> loadConfigAndGetResult(
         const std::string &cfg) const {
         if (!temp_fs_->loadContent(cfg)) {
             return {};
@@ -57,7 +57,9 @@ public:
         std::error_code ec;
         fs::remove(tomlFile(), ec);
     }
-    fs::path tomlFile() const { return tst::GetTempDir() / "the_file.toml"; }
+    [[nodiscard]] fs::path tomlFile() const {
+        return tst::GetTempDir() / "the_file.toml";
+    }
 
     // "allowed_ip = [x,b,z]" -> ["x","b","z"]
     static std::vector<std::string> convertTomlToIps(
@@ -340,9 +342,9 @@ public:
 
     void TearDown() override { killArtifacts(); }
 
-    bool markerExists() const { return fs::exists(markerFile()); }
-    bool legacyExists() const { return fs::exists(legacyFile()); }
-    bool flagExists() const { return fs::exists(flagFile()); }
+    [[nodiscard]] bool markerExists() const { return fs::exists(markerFile()); }
+    [[nodiscard]] bool legacyExists() const { return fs::exists(legacyFile()); }
+    [[nodiscard]] bool flagExists() const { return fs::exists(flagFile()); }
 
     void killArtifacts() const {
         std::error_code ec;
@@ -351,16 +353,16 @@ public:
         fs::remove(flagFile(), ec);
     }
 
-    fs::path markerFile() const {
+    [[nodiscard]] fs::path markerFile() const {
         return temp_fs_->data() / ac::kCmkAgentUnistall;
     }
 
-    fs::path flagFile() const {
+    [[nodiscard]] fs::path flagFile() const {
         return temp_fs_->data() / ac::kControllerFlagFile;
     }
 
 private:
-    fs::path legacyFile() const {
+    [[nodiscard]] fs::path legacyFile() const {
         return temp_fs_->data() / ac::kLegacyPullFile;
     }
 

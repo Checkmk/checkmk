@@ -68,7 +68,7 @@ std::wstring ProcessPluginPath(const std::string &name) {
 // all other name should be read
 std::optional<uint32_t> ReadFileNameLength(std::ifstream &cap_file) {
     uint8_t length = 0;
-    cap_file.read(reinterpret_cast<char *>(&length), sizeof(length));
+    cap_file.read(reinterpret_cast<char *>(&length), sizeof length);
     if (cap_file.good()) {
         return length;
     }
@@ -106,7 +106,7 @@ std::string ReadFileName(std::ifstream &cap_file, uint32_t length) {
 // skips too big files or invalid data
 std::optional<std::vector<char>> ReadFileData(std::ifstream &cap_file) {
     uint32_t length = 0;
-    cap_file.read(reinterpret_cast<char *>(&length), sizeof(length));
+    cap_file.read(reinterpret_cast<char *>(&length), sizeof length);
     if (!cap_file.good()) {
         XLOG::l("Unexpected problems with CAP-file data header");
         return {};

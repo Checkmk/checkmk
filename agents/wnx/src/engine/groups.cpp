@@ -114,8 +114,6 @@ void Global::loadLogging() {
     windbg_ = GetLoggingVal(vars::kLogWinDbg, true);
     event_log_ = GetLoggingVal(vars::kLogEvent, true);
     log_file_name_ = GetLoggingVal(vars::kLogFile, ""s);
-    log_file_max_count_ = GetLoggingVal(vars::kLogFile, cfg::kLogFileMaxCount);
-    log_file_max_size_ = GetLoggingVal(vars::kLogFile, cfg::kLogFileMaxCount);
     updateLogNames();
 }
 
@@ -201,7 +199,7 @@ void Global::setLogFolder(const fs::path &forced_path) {
 }
 
 // transfer global data into app environment
-void Global::setupLogEnvironment() {
+void Global::setupLogEnvironment() const {
     XLOG::setup::Configure(logfile_as_string_, debug_level_, windbg_,
                            event_log_);
     GetCfg().setConfiguredLogFileDir(logfile_dir_.wstring());

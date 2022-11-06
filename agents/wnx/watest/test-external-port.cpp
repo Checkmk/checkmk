@@ -104,7 +104,7 @@ public:
         return count;
     }
     tst::TempCfgFs::ptr temp_fs;
-    void disableElevatedAllowed() {
+    void disableElevatedAllowed() const {
         auto cfg = cfg::GetLoadedConfig();
         cfg[cfg::groups::kSystem][cfg::vars::kController]
            [cfg::vars::kControllerAllowElevated] = YAML::Load("no");

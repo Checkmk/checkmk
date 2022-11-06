@@ -4,6 +4,7 @@
 #include "pch.h"
 
 #include <filesystem>
+#include <ranges>
 
 #include "cfg.h"
 #include "cfg_engine.h"
@@ -13,11 +14,11 @@
 #include "service_processor.h"
 #include "test_tools.h"
 #include "tools/_misc.h"
-#include "tools/_process.h"
 
 using cma::evl::SkipDuplicatedRecords;
 using std::chrono::steady_clock;
 namespace fs = std::filesystem;
+namespace rs = std::ranges;
 
 namespace cma::provider {
 
@@ -671,7 +672,6 @@ TEST(LogWatchEventTest, CheckMakeBodyIntegration) {
     LogWatchEvent lw;
     lw.loadConfig();
     auto ret = lw.makeBody();
-    ret = lw.makeBody();
     EXPECT_TRUE(ret.size() < 2000) << "should be almost empty";
     auto table = tools::SplitString(ret, "\n");
     auto old_size = table.size();
@@ -780,10 +780,9 @@ TEST(LogWatchEventTest, TestMakeBody) {
         EXPECT_TRUE(processed == logs_in.size());
         int count = 0;
         for (auto &s : st) {
-            auto found = std::find(logs_in.cbegin(), logs_in.cend(), s.name_);
+            auto found = rs::find(logs_in, s.name_);
             if (found == std::end(logs_in)) {
                 EXPECT_FALSE(s.presented_);
-
             } else {
                 count++;
                 EXPECT_TRUE(s.presented_);
@@ -803,7 +802,7 @@ TEST(LogWatchEventTest, TestMakeBody) {
         EXPECT_EQ(processed, 1);
         int count = 0;
         for (auto &s : st) {
-            auto found = std::find(logs_in.cbegin(), logs_in.cend(), s.name_);
+            auto found = rs::find(logs_in, s.name_);
             if (found == std::end(logs_in)) {
                 EXPECT_FALSE(s.presented_);
 

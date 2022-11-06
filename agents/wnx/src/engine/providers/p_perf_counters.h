@@ -18,7 +18,7 @@
 namespace cma::provider {
 class UptimeSync : public Synchronous {
 public:
-    UptimeSync() noexcept : Synchronous(cma::section::kUptimeName, 0) {}
+    UptimeSync() noexcept : Synchronous(section::kUptimeName, 0) {}
 
     UptimeSync(const std::string &name, char separator) noexcept
         : Synchronous(name, separator) {}
@@ -32,7 +32,7 @@ protected:
 
 class UptimeAsync : public Asynchronous {
 public:
-    UptimeAsync() noexcept : Asynchronous(cma::section::kUptimeName, 0) {}
+    UptimeAsync() noexcept : Asynchronous(section::kUptimeName, 0) {}
 
     UptimeAsync(const std::string &name, char separator) noexcept
         : Asynchronous(name, separator) {}

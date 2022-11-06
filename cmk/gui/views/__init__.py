@@ -115,7 +115,6 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
     import cmk.gui.painters.v0.helpers as painter_helpers
     import cmk.gui.painters.v1.helpers as painter_v1_helpers
     import cmk.gui.plugins.views as api_module
-    import cmk.gui.plugins.views.utils as plugin_utils
     import cmk.gui.views.sorter as sorter
     import cmk.gui.visual_link as visual_link
     from cmk.gui import display_options
@@ -173,9 +172,6 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "multisite_builtin_views",
     ):
         api_module.__dict__[name] = store.__dict__[name]
-
-    for name in ("view_is_enabled",):
-        api_module.__dict__[name] = plugin_utils.__dict__[name]
 
     for name in (
         "inventory_displayhints",

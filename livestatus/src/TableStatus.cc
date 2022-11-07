@@ -64,10 +64,20 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     // NOTE: The NEB queues accepted connections, so we never have overflows
     // here. Nevertheless, we provide these columns for consistency with CMC,
     // always returning zero.
+    addCounterColumns("carbon_overflows",
+                      "times a Carbon connection could not send the metrics",
+                      offsets, Counter::carbon_overflows);
+    addCounterColumns("influxdb_overflows",
+                      "times an InfluxDB connection could not send the metrics",
+                      offsets, Counter::influxdb_overflows);
     addCounterColumns(
         "livestatus_overflows",
         "times a Livestatus connection could not be immediately accepted because all threads where busy",
         offsets, Counter::livestatus_overflows);
+    addCounterColumns(
+        "rrdcached_overflows",
+        "times an RRDCacheD connection could not send the metrics", offsets,
+        Counter::rrdcached_overflows);
 
     addColumn(std::make_unique<IntColumn<TableStatus>>(
         "nagios_pid", "The process ID of the monitoring core", offsets,

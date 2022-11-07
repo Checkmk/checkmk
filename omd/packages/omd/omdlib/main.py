@@ -123,6 +123,7 @@ from omdlib.version_info import VersionInfo
 import cmk.utils.log
 import cmk.utils.tty as tty
 from cmk.utils.certs import cert_dir, root_cert_path, RootCA
+from cmk.utils.crypto import Password
 from cmk.utils.crypto.password_hashing import hash_password
 from cmk.utils.exceptions import MKTerminate
 from cmk.utils.log import VERBOSE
@@ -268,13 +269,13 @@ def create_version_symlink(site: SiteContext, version: str) -> None:
     os.symlink("../../versions/%s" % version, linkname)
 
 
-def calculate_admin_password(options: CommandOptions) -> str:
-    if options.get("admin-password"):
-        return cast(str, options["admin-password"])
-    return random_password()
+def calculate_admin_password(options: CommandOptions) -> Password[str]:
+    if pw := options.get("admin-password"):
+        return Password(pw)
+    return Password(random_password())
 
 
-def set_admin_password(site: SiteContext, pw: str) -> None:
+def set_admin_password(site: SiteContext, pw: Password[str]) -> None:
     with open("%s/etc/htpasswd" % site.dir, "w") as f:
         f.write("cmkadmin:%s\n" % hash_password(pw))
 
@@ -2073,7 +2074,7 @@ def main_create(
         sys.stdout.write("Afterwards you can initialize the site with 'omd init'.\n")
 
 
-def welcome_message(site: SiteContext, admin_password: str) -> None:
+def welcome_message(site: SiteContext, admin_password: Password[str]) -> None:
     sys.stdout.write("Created new site %s with version %s.\n\n" % (site.name, omdlib.__version__))
     sys.stdout.write(
         "  The site can be started with %somd start %s%s.\n" % (tty.bold, site.name, tty.normal)
@@ -2085,7 +2086,7 @@ def welcome_message(site: SiteContext, admin_password: str) -> None:
     sys.stdout.write("\n")
     sys.stdout.write(
         "  The admin user for the web applications is %scmkadmin%s with password: %s%s%s\n"
-        % (tty.bold, tty.normal, tty.bold, admin_password, tty.normal)
+        % (tty.bold, tty.normal, tty.bold, admin_password.raw, tty.normal)
     )
     sys.stdout.write(
         "  For command line administration of the site, log in with %s'omd su %s'%s.\n"
@@ -2148,7 +2149,7 @@ def init_site(
     global_opts: "GlobalOptions",
     config_settings: Config,
     options: CommandOptions,
-) -> str:
+) -> Password[str]:
     apache_reload = "apache-reload" in options
 
     # Create symbolic link to version

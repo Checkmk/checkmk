@@ -1,0 +1,97 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# License: GNU General Public License v2
+
+# Currently I do not have that mutch hardware of that kind,
+# but notify all other states which are not "Optimal" as Critical should be
+# a good idea most of the time.
+factory_settings["storcli_bbu_default_levels"] = {
+    "Optimal": 0,
+}
+
+
+def parse_storcli_bbu(info):
+
+    parsed = {}
+
+    controller_num = -1
+    bbu_type = ""
+    bbu_state = ""
+    bbu_temperature = -1
+    bbu_replacement = ""
+    bbu_capacitance = -1
+    for line in info:
+        if line[0].startswith("Controller"):
+            # Next Controller, reset Values
+            bbu_state = ""
+            bbu_temperature = -1
+
+            controller_num = line[2]
+        if line[0].startswith("Temperature"):
+            bbu_temperature = line[1]
+        if line[0].startswith("Replacement"):
+            bbu_replacement = line[2]
+        if line[0].startswith("Type"):
+            bbu_type = line[1]
+        if line[0].startswith("State"):
+            bbu_state = line[1]
+        if line[0].startswith("Battery") and bbu_type == "BBU" and line[1].startswith("State"):
+            bbu_state = line[2]
+        if line[0].startswith("Relative"):
+            bbu_capacitance = line[4]
+        if line[0].startswith("Capacitance"):
+            bbu_capacitance = line[1]
+        if line[0].startswith("Properties") or line[0].startswith("BBU_Properties"):
+            # not interested in properties...stop parsing this controller
+            parsed["Controller %s Type %s" % (controller_num, bbu_type)] = {
+                "type": bbu_type,
+                "state": bbu_state,
+                "temperature": bbu_temperature,
+                "replacement_required": bbu_replacement,
+                "capacitance": bbu_capacitance
+            }
+            bbu_state = ""
+            bbu_type = ""
+            bbu_temperature = -1
+            bbu_replacement = ""
+            bbu_capacitance = -1
+
+
+    return parsed
+
+
+def inventory_storcli_bbu(parsed):
+    for item in parsed:
+        yield (item, {})
+
+
+def check_storcli_bbu(item, params, parsed):
+    yield 0, "Type is %s" % parsed[item]["type"]
+    yield 0, "Capacitance is %s" % parsed[item]["capacitance"]
+    yield 0, "Temperature is %s C" % parsed[item]["temperature"]
+    yield 0, "Replacement Required is %s" % parsed[item]["replacement_required"]
+
+    device_state = parsed[item]["state"]
+    infotext = "State is %s" % device_state
+
+    if device_state in params:
+        status = params[device_state]
+    else:
+        status = 2
+        infotext += " (unknown[%s])" % device_state
+
+    if parsed[item]["replacement_required"] != "No":
+        status = 2
+        infotext += " (Replacement Required: %s)" % parsed[item]["replacement_required"]
+
+    yield status, infotext
+
+
+check_info["storcli_bbu"] = {
+    "default_levels_variable": "storcli_bbu_default_levels",
+    "parse_function": parse_storcli_bbu,
+    "inventory_function": inventory_storcli_bbu,
+    "check_function": check_storcli_bbu,
+    "service_description": "RAID BBU %s",
+    "group": "storcli_bbu",
+}

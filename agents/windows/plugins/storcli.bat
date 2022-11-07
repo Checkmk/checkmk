@@ -13,5 +13,7 @@ ECHO ^<^<^<storcli_pdisks^>^>^>
 "!StorCli!" /call/eall/sall show
 ECHO ^<^<^<storcli_vdrives^>^>^>
 "!StorCli!" /call/vall show
-
+ECHO ^<^<^<storcli_bbu^>^>^>
+"!StorCli!" /call/bbu show all
+"!StorCli!" /call/cv show all
 :END

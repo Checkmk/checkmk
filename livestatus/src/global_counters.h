@@ -20,7 +20,11 @@ enum class Counter {
     log_messages,
     commands,
     livechecks,
-    livestatus_overflows
+
+    carbon_overflows,
+    influxdb_overflows,
+    livestatus_overflows,
+    rrdcached_overflows
 };
 
 // TODO(sp): We really need an OO version of this. :-P

@@ -13,15 +13,12 @@ from typing import Callable
 
 import cmk.utils.crypto.password_hashing as password_hashing
 import cmk.utils.version as cmk_version
+from cmk.utils.crypto import Password
 from cmk.utils.paths import htpasswd_file
 from cmk.utils.store.htpasswd import Htpasswd
 from cmk.utils.type_defs import UserId
 
 HTPASSWD_FILE = Path(htpasswd_file)
-
-
-class VerificationError(ValueError):
-    """Indicates that the password re-typed for verification does not match"""
 
 
 class InvalidUsernameError(ValueError):
@@ -73,27 +70,29 @@ For other tasks, such as deleting or deactivating users, use the web interface.
     return parser.parse_args(args)
 
 
-def _ask_password() -> str:
+def _ask_password() -> Password[str]:
     """Prompt the user to enter the password and re-type it for verification"""
-    pw = getpass("New password: ")
-    if pw != getpass("Re-type new password: "):
-        raise VerificationError("Password verification error")
+    pw = Password(getpass("New password: "))
+    if pw.raw != getpass("Re-type new password: "):
+        raise ValueError("Password verification error")
     return pw
 
 
-def _read_password() -> str:
+def _read_password() -> Password[str]:
     """Read password from stdin without prompt and confirmation"""
-    return input()
+    return Password(input())
 
 
-def _run_cmkpasswd(username: str, get_password: Callable[[], str], dst_file: Path | None) -> None:
+def _run_cmkpasswd(
+    username: str, get_password: Callable[[], Password[str]], dst_file: Path | None
+) -> None:
     try:
         username = UserId(username)
     except ValueError as e:
         raise InvalidUsernameError(e)
 
-    password = get_password()
     try:
+        password = get_password()
         pw_hash = password_hashing.hash_password(password)
     except (password_hashing.PasswordTooLongError, ValueError) as e:
         raise InvalidPasswordError(e)
@@ -117,7 +116,6 @@ def main(args: Sequence[str]) -> int:
 
     except (
         OSError,
-        VerificationError,
         InvalidPasswordError,
         InvalidUsernameError,
     ) as e:

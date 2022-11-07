@@ -8,6 +8,7 @@ import time
 from datetime import datetime
 from typing import Generator, Optional
 
+from cmk.utils.crypto import Password
 from cmk.utils.type_defs import UserId
 
 from cmk.gui import userdb
@@ -18,14 +19,14 @@ from cmk.gui.type_defs import AuthType
 from cmk.gui.wsgi.type_defs import RFC7662
 
 
-def automation_auth(user_id: UserId, secret: str) -> Optional[RFC7662]:
-    if verify_automation_secret(user_id, secret):
+def automation_auth(user_id: UserId, secret: Password[str]) -> Optional[RFC7662]:
+    if verify_automation_secret(user_id, secret.raw):
         return rfc7662_subject(user_id, "bearer")
 
     return None
 
 
-def gui_user_auth(user_id: UserId, secret: str, now: datetime) -> Optional[RFC7662]:
+def gui_user_auth(user_id: UserId, secret: Password[str], now: datetime) -> Optional[RFC7662]:
     try:
         if userdb.check_credentials(user_id, secret, now):
             return rfc7662_subject(user_id, "bearer")

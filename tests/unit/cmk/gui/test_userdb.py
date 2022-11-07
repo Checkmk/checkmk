@@ -19,7 +19,7 @@ from tests.testlib import is_managed_repo
 
 import cmk.utils.paths
 import cmk.utils.version
-from cmk.utils.crypto import password_hashing
+from cmk.utils.crypto import Password, password_hashing
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.plugins.userdb.utils as utils
@@ -541,7 +541,7 @@ def test_user_attribute_sync_plugins(
 
 def test_check_credentials_local_user(with_user: tuple[UserId, str]) -> None:
     username, password = with_user
-    assert userdb.check_credentials(username, password, datetime.now()) == username
+    assert userdb.check_credentials(username, Password(password), datetime.now()) == username
 
 
 @pytest.mark.usefixtures("request_context")
@@ -552,7 +552,7 @@ def test_check_credentials_local_user_create_htpasswd_user_ad_hoc() -> None:
     assert user_id not in _load_users_uncached(lock=False)
 
     htpasswd.Htpasswd(Path(cmk.utils.paths.htpasswd_file)).save_all(
-        {user_id: htpasswd.hash_password("cmk")}
+        {user_id: htpasswd.hash_password(Password("cmk"))}
     )
     # Once a user exists in the htpasswd, the GUI treats the user as existing user and will
     # automatically initialize the missing data structures
@@ -560,7 +560,7 @@ def test_check_credentials_local_user_create_htpasswd_user_ad_hoc() -> None:
     assert not userdb._user_exists_according_to_profile(user_id)
     assert str(user_id) in _load_users_uncached(lock=False)
 
-    assert userdb.check_credentials(user_id, "cmk", datetime.now()) == user_id
+    assert userdb.check_credentials(user_id, Password("cmk"), datetime.now()) == user_id
 
     # Nothing changes during regular access
     assert userdb.user_exists(user_id)
@@ -571,14 +571,14 @@ def test_check_credentials_local_user_create_htpasswd_user_ad_hoc() -> None:
 def test_check_credentials_local_user_disallow_locked(with_user: tuple[UserId, str]) -> None:
     now = datetime.now()
     user_id, password = with_user
-    assert userdb.check_credentials(user_id, password, now) == user_id
+    assert userdb.check_credentials(user_id, Password(password), now) == user_id
 
     users = _load_users_uncached(lock=True)
 
     users[user_id]["locked"] = True
     userdb.save_users(users, now)
 
-    assert userdb.check_credentials(user_id, password, now) is False
+    assert userdb.check_credentials(user_id, Password(password), now) is False
 
 
 # user_id needs to be used here because it executes a reload of the config and the monkeypatch of
@@ -606,7 +606,7 @@ def test_check_credentials_managed_global_user_is_allowed(with_user: tuple[UserI
     users = _load_users_uncached(lock=True)
     users[user_id]["customer"] = managed.SCOPE_GLOBAL
     userdb.save_users(users, now)
-    assert userdb.check_credentials(user_id, password, now) == user_id
+    assert userdb.check_credentials(user_id, Password(password), now) == user_id
 
 
 @pytest.mark.skipif(not is_managed_repo(), reason="managed-edition-only test")
@@ -617,7 +617,7 @@ def test_check_credentials_managed_customer_user_is_allowed(with_user: tuple[Use
     users = _load_users_uncached(lock=True)
     users[user_id]["customer"] = "test-customer"
     userdb.save_users(users, now)
-    assert userdb.check_credentials(user_id, password, now) == user_id
+    assert userdb.check_credentials(user_id, Password(password), now) == user_id
 
 
 @pytest.mark.skipif(not is_managed_repo(), reason="managed-edition-only test")
@@ -630,7 +630,7 @@ def test_check_credentials_managed_wrong_customer_user_is_denied(
     users = _load_users_uncached(lock=True)
     users[user_id]["customer"] = "wrong-customer"
     userdb.save_users(users, now)
-    assert userdb.check_credentials(user_id, password, now) is False
+    assert userdb.check_credentials(user_id, Password(password), now) is False
 
 
 def test_load_custom_attr_not_existing(user_id: UserId) -> None:
@@ -769,7 +769,7 @@ def test_make_two_factor_backup_codes(user_id: UserId) -> None:
     codes = userdb.make_two_factor_backup_codes()
     assert len(codes) == 10
     for password, pwhashed in codes:
-        password_hashing.verify(password, pwhashed)
+        password_hashing.verify(Password(password), pwhashed)
 
 
 def test_is_two_factor_backup_code_valid_no_codes(user_id: UserId) -> None:

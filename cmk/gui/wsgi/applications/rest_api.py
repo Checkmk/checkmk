@@ -25,6 +25,7 @@ from werkzeug.routing import Map, Rule, Submount
 
 import cmk.utils.store
 from cmk.utils import crash_reporting, paths
+from cmk.utils.crypto import Password
 from cmk.utils.exceptions import MKException
 from cmk.utils.type_defs import UserId
 
@@ -175,12 +176,13 @@ def user_from_basic_header(auth_header: str) -> tuple[UserId, str]:
     return UserId(user_id), secret
 
 
-def user_from_bearer_header(auth_header: str) -> tuple[UserId, str]:
+def user_from_bearer_header(auth_header: str) -> tuple[UserId, Password[str]]:
     """
 
     Examples:
 
-        >>> user_from_bearer_header("Bearer username password")
+        >>> username, password = user_from_bearer_header("Bearer username password")
+        >>> (username, password.raw)
         ('username', 'password')
 
     Args:
@@ -204,7 +206,7 @@ def user_from_bearer_header(auth_header: str) -> tuple[UserId, str]:
     if "/" in user_id:
         raise MKAuthException("No slashes / allowed in username.")
 
-    return UserId(user_id), secret
+    return UserId(user_id), Password(secret)
 
 
 class EndpointAdapter:

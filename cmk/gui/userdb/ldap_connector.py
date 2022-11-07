@@ -52,6 +52,7 @@ import cmk.utils.password_store as password_store
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils.crypto import Password
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
@@ -1122,9 +1123,7 @@ class LDAPUserConnector(UserConnector):
     #
 
     # This function only validates credentials, no locked checking or similar
-    def check_credentials(  # type:ignore[no-untyped-def]
-        self, user_id, password: str
-    ) -> CheckCredentialsResult:
+    def check_credentials(self, user_id: UserId, password: Password[str]) -> CheckCredentialsResult:
         # Connect only to servers of connections, the user is configured for,
         # to avoid connection errors for unrelated servers
         user_connection_id = self._connection_id_of_user(user_id)
@@ -1169,7 +1168,7 @@ class LDAPUserConnector(UserConnector):
         # Try to bind with the user provided credentials. This unbinds the default
         # authentication which should be rebound again after trying this.
         try:
-            self._bind(user_dn, ("password", password))
+            self._bind(user_dn, ("password", password.raw))
             result = user_id if not self._has_suffix() else self._add_suffix(user_id)
         except (ldap.INVALID_CREDENTIALS, ldap.INAPPROPRIATE_AUTH) as e:
             self._logger.warning(

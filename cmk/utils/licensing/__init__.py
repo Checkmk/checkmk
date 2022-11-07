@@ -32,6 +32,20 @@ from cmk.utils.licensing.export import (
 )
 from cmk.utils.paths import license_usage_dir, log_dir
 
+
+def init_logging() -> logging.Logger:
+    formatter = logging.Formatter("%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s")
+
+    handler = logging.FileHandler(filename=Path(log_dir, "licensing.log"), encoding="utf-8")
+    handler.setFormatter(formatter)
+
+    logger = logging.getLogger()
+    del logger.handlers[:]  # Remove all previously existing handlers
+    logger.addHandler(handler)
+
+    return logger
+
+
 #   .--update--------------------------------------------------------------.
 #   |                                   _       _                          |
 #   |                   _   _ _ __   __| | __ _| |_ ___                    |
@@ -52,26 +66,13 @@ def update_license_usage() -> int:
     skipped. This is important for checking the mtime of the history file during activate changes.
 
     The history has a max. length of 400 (days)."""
-    logger = _init_logging()
+    logger = init_logging()
 
     try:
         return _try_update_license_usage(logger)
     except Exception as e:
         logger.error("Error during license usage history update: %s", e)
         return 1
-
-
-def _init_logging() -> logging.Logger:
-    formatter = logging.Formatter("%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s")
-
-    handler = logging.FileHandler(filename=f"{log_dir}/license-usage.log", encoding="utf-8")
-    handler.setFormatter(formatter)
-
-    logger = logging.getLogger()
-    del logger.handlers[:]  # Remove all previously existing handlers
-    logger.addHandler(handler)
-
-    return logger
 
 
 def _try_update_license_usage(logger: logging.Logger) -> int:

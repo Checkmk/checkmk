@@ -133,6 +133,7 @@ local_agent_based_plugins_dir = _local_path(agent_based_plugins_dir)
 local_gui_plugins_dir = _local_path(gui_plugins_dir)
 
 license_usage_dir = Path(var_dir, "license_usage")
+licensing_dir = Path(var_dir, "licensing")
 
 # Agent registration paths
 received_outputs_dir = Path(omd_root, "var/agent-receiver/received-outputs")

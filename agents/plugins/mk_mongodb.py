@@ -48,7 +48,9 @@ except ImportError:
 try:
     import pymongo
     import pymongo.errors
-    from bson.json_util import dumps
+    # Starting from pymongo v. 3.4 dumps change datetime to isoformat
+    # To have the "LEGACY OPSTIONS" it needs to import them and use it in "dumps" method
+    from bson.json_util import dumps, LEGACY_JSON_OPTIONS
 except ImportError:
     sys.stdout.write("<<<mongodb_instance:sep(9)>>>\n")
     sys.stdout.write(
@@ -185,7 +187,9 @@ def sections_replica_set(client):
     sys.stdout.write(
         "%s\n"
         % json.dumps(
-            json.loads(dumps(rep_set_status)),
+            # Starting from pymongo v. 3.4 dumps change datetime to isoformat
+            # To have the "LEGACY OPSTIONS" it needs to import them and use it in "dumps" method
+            json.loads(dumps(rep_set_status, json_options=LEGACY_JSON_OPTIONS)),
             separators=(",", ":"),
         ),
     )
@@ -232,11 +236,11 @@ def _get_replication_info(client, databases):
     # Returns a timestamp for the first and last (i.e. earliest/latest) operation in the oplog.
     # Compare this value to the last write operation issued against the server.
     # Timestamp is time in seconds since epoch UTC
-    firstc = client.local.oplog.rs.find().sort("{$natural: 1}").limit(1)
-    lastc = client.local.oplog.rs.find().sort("{$natural: -1}").limit(1)
+    firstc = client.local.oplog.rs.find_one(sort=[("$natural", 1)])
+    lastc = client.local.oplog.rs.find_one(sort=[("$natural", -1)])
     if firstc and lastc:
-        timestamp_first_operation = firstc.next().get("ts", None)
-        timestamp_last_operation = lastc.next().get("ts", None)
+        timestamp_first_operation = firstc.get("ts", None)
+        timestamp_last_operation = lastc.get("ts", None)
         if timestamp_first_operation and timestamp_last_operation:
             result["tFirst"] = timestamp_first_operation.time
             result["tLast"] = timestamp_last_operation.time

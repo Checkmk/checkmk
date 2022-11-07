@@ -147,7 +147,7 @@ def check_ceph_status_osds(_no_item, params, parsed):
             warn, crit = params[param_key]
             if value_perc >= crit:
                 state = 2
-            elif value_perc >= crit:
+            elif value_perc >= warn:
                 state = 1
             if state > 0:
                 infotext += " (warn/crit at %s/%s)" % (

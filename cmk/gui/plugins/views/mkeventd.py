@@ -23,27 +23,16 @@ from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.livestatus_data_source import RowTableLivestatus
 from cmk.gui.logged_in import user
 from cmk.gui.painter_options import paint_age
+from cmk.gui.painters.v0.base import Cell, declare_1to1_sorter, Painter, painter_registry
+from cmk.gui.painters.v0.helpers import paint_nagiosflag
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.dashboard.utils import (
     DashletConfig,
     LinkedViewDashletConfig,
     ViewDashletConfig,
 )
-from cmk.gui.plugins.views.utils import (
-    Cell,
-    cmp_num_split,
-    cmp_simple_number,
-    cmp_simple_string,
-    Command,
-    command_registry,
-    CommandActionResult,
-    CommandSpec,
-    declare_1to1_sorter,
-    paint_nagiosflag,
-    Painter,
-    painter_registry,
-)
 from cmk.gui.plugins.visuals.utils import Filter
+from cmk.gui.sorter import cmp_num_split, cmp_simple_number, cmp_simple_string
 from cmk.gui.type_defs import (
     ColumnName,
     HTTPVariables,
@@ -62,6 +51,7 @@ from cmk.gui.utils.urls import makeactionuri, makeuri_contextless, urlencode_var
 from cmk.gui.valuespec import MonitoringState
 from cmk.gui.view_store import get_permitted_views, multisite_builtin_views
 from cmk.gui.view_utils import CellSpec
+from cmk.gui.views.command import Command, command_registry, CommandActionResult, CommandSpec
 
 #   .--Datasources---------------------------------------------------------.
 #   |       ____        _                                                  |

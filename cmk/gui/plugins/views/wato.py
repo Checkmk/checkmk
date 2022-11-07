@@ -8,7 +8,7 @@ from typing import Dict, Sequence, Union
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.plugins.views.utils import Cell, Painter, painter_registry
+from cmk.gui.painters.v0.base import Cell, Painter, painter_registry
 from cmk.gui.sorter import Sorter, sorter_registry
 from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.utils.html import HTML

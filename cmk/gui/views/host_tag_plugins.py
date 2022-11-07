@@ -7,7 +7,8 @@
 
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
-from cmk.gui.plugins.views.utils import get_tag_groups, Painter, painter_registry
+from cmk.gui.painters.v0.base import Painter, painter_registry
+from cmk.gui.painters.v0.helpers import get_tag_groups
 from cmk.gui.sorter import register_sorter
 
 

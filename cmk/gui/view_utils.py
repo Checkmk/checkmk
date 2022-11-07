@@ -23,6 +23,15 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
+
+class CSVExportError(Exception):
+    pass
+
+
+class JSONExportError(Exception):
+    pass
+
+
 CSSClass = Optional[str]
 # Dict: The aggr_treestate painters are returning a dictionary data structure (see
 # paint_aggregated_tree_state()) in case the output_format is not HTML. Once we have

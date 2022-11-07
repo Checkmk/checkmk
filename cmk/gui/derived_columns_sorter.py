@@ -5,7 +5,7 @@
 import abc
 from collections.abc import Iterable
 
-from cmk.gui.plugins.views.utils import Cell
+from cmk.gui.painters.v0.base import Cell
 from cmk.gui.sorter import Sorter
 from cmk.gui.valuespec import ValueSpec
 

@@ -14,8 +14,8 @@ import cmk.gui.plugins.views.painters as painters
 from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.i18n import _
 from cmk.gui.metrics import page_graph_dashlet, page_host_service_graph_popup
+from cmk.gui.painters.v0.base import Cell, painter_registry
 from cmk.gui.plugins.metrics.utils import CombinedGraphMetricSpec
-from cmk.gui.plugins.views.utils import Cell, painter_registry
 from cmk.gui.plugins.visuals.utils import visual_type_registry
 from cmk.gui.type_defs import CombinedGraphSpec, Row
 from cmk.gui.view_utils import CellSpec

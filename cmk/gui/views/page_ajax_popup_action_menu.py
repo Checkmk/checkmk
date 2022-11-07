@@ -15,6 +15,7 @@ from cmk.gui.display_options import display_options
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.painters.v0.helpers import replace_action_url_macros, transform_action_url
 from cmk.gui.plugins.views.icons.utils import (
     get_icons,
     IconEntry,
@@ -22,7 +23,6 @@ from cmk.gui.plugins.views.icons.utils import (
     iconpainter_columns,
     LegacyIconEntry,
 )
-from cmk.gui.plugins.views.utils import replace_action_url_macros, transform_action_url
 from cmk.gui.type_defs import Row
 
 

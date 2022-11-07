@@ -21,7 +21,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.plugins.views.utils import Cell, JoinCell, Layout, layout_registry, painter_exists
+from cmk.gui.painters.v0.base import Cell, JoinCell, painter_exists
 from cmk.gui.sorter import sorter_registry, SorterEntry
 from cmk.gui.type_defs import (
     FilterName,
@@ -33,6 +33,7 @@ from cmk.gui.type_defs import (
 )
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.view_breadcrumbs import make_host_breadcrumb, make_service_breadcrumb
+from cmk.gui.views.layout import Layout, layout_registry
 from cmk.gui.visuals import view_title
 
 

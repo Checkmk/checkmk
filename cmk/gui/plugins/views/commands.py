@@ -28,7 +28,9 @@ from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
 )
-from cmk.gui.plugins.views.utils import (
+from cmk.gui.type_defs import Choices, Row, Rows
+from cmk.gui.valuespec import AbsoluteDate, Age, Seconds
+from cmk.gui.views.command import (
     Command,
     command_group_registry,
     command_registry,
@@ -36,8 +38,6 @@ from cmk.gui.plugins.views.utils import (
     CommandGroup,
     CommandSpec,
 )
-from cmk.gui.type_defs import Choices, Row, Rows
-from cmk.gui.valuespec import AbsoluteDate, Age, Seconds
 from cmk.gui.watolib.downtime import determine_downtime_mode, DowntimeSchedule
 
 

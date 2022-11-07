@@ -19,15 +19,8 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.painter_options import painter_option_registry, PainterOption, PainterOptions
-from cmk.gui.plugins.views.utils import (
-    Cell,
-    CellSpec,
-    CSVExportError,
-    Painter,
-    painter_registry,
-    Row,
-)
-from cmk.gui.type_defs import ColumnName, Rows, SingleInfos, VisualContext
+from cmk.gui.painters.v0.base import Cell, CellSpec, CSVExportError, Painter, painter_registry
+from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, VisualContext
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import makeuri, urlencode_vars

@@ -16,14 +16,8 @@ from cmk.gui.exceptions import MKGeneralException, MKInternalError, MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
 from cmk.gui.pages import AjaxPage, PageResult
+from cmk.gui.painters.v0.base import Cell, Painter, painter_registry, PainterRegistry
 from cmk.gui.plugins.dashboard.utils import ViewDashletConfig
-from cmk.gui.plugins.views.utils import (
-    Cell,
-    layout_registry,
-    Painter,
-    painter_registry,
-    PainterRegistry,
-)
 from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry
 from cmk.gui.sorter import Sorter, sorter_registry, SorterRegistry
 from cmk.gui.type_defs import ColumnName, PainterSpec, SingleInfos, SorterSpec, ViewSpec
@@ -46,6 +40,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.view_store import get_all_views, get_permitted_views
+from cmk.gui.views.layout import layout_registry
 
 
 def page_edit_view() -> None:

@@ -10,6 +10,7 @@ import cmk.gui.visuals as visuals
 from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.derived_columns_sorter import DerivedColumnsSorter
 from cmk.gui.i18n import _, _u
+from cmk.gui.painters.v0.base import register_painter
 from cmk.gui.permissions import (
     declare_dynamic_permissions,
     declare_permission,
@@ -21,12 +22,12 @@ from cmk.gui.plugins.views.icons.utils import (
     icon_and_action_registry,
     multisite_icons_and_actions,
 )
-from cmk.gui.plugins.views.utils import register_legacy_command, register_painter
 from cmk.gui.sorter import register_sorter
-from cmk.gui.type_defs import Perfdata, PerfometerSpec, TranslatedMetrics
+from cmk.gui.type_defs import Perfdata, PerfometerSpec, TranslatedMetrics, VisualLinkSpec
 from cmk.gui.view_store import multisite_builtin_views
 from cmk.gui.view_utils import get_labels, render_labels, render_tag_groups
 from cmk.gui.views.builtin_views import builtin_views
+from cmk.gui.views.command import register_legacy_command
 from cmk.gui.views.inventory import register_table_views_and_columns, update_paint_functions
 from cmk.gui.views.page_edit_view import format_view_title
 
@@ -95,7 +96,7 @@ def load_plugins() -> None:
     declare_dynamic_permissions(lambda: visuals.declare_custom_permissions("views"))
 
 
-def _register_pre_21_plugin_api() -> None:
+def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
     """Register pre 2.1 "plugin API"
 
     This was never an official API, but the names were used by builtin and also 3rd party plugins.
@@ -111,11 +112,17 @@ def _register_pre_21_plugin_api() -> None:
     import cmk.gui.exporter as exporter
     import cmk.gui.livestatus_data_source as livestatus_data_source
     import cmk.gui.painter_options as painter_options
+    import cmk.gui.painters.v0.base as painter_base
+    import cmk.gui.painters.v0.helpers as painter_helpers
+    import cmk.gui.painters.v1.helpers as painter_v1_helpers
     import cmk.gui.plugins.views as api_module
     import cmk.gui.plugins.views.utils as plugin_utils
     import cmk.gui.sorter as sorter
     import cmk.gui.view_store as view_store
     import cmk.gui.visual_link as visual_link
+    from cmk.gui import display_options
+    from cmk.gui.plugins.views.layouts import group_value
+    from cmk.gui.views import command, layout
 
     for name in (
         "ABCDataSource",
@@ -152,6 +159,14 @@ def _register_pre_21_plugin_api() -> None:
         "register_sorter",
         "Sorter",
         "sorter_registry",
+        "cmp_custom_variable",
+        "cmp_ip_address",
+        "cmp_num_split",
+        "cmp_service_name_equiv",
+        "cmp_simple_number",
+        "cmp_simple_string",
+        "cmp_string_list",
+        "compare_ips",
     ):
         api_module.__dict__[name] = sorter.__dict__[name]
     api_module.__dict__["DerivedColumnsSorter"] = DerivedColumnsSorter
@@ -163,53 +178,63 @@ def _register_pre_21_plugin_api() -> None:
         api_module.__dict__[name] = view_store.__dict__[name]
 
     for name in (
-        "Cell",
-        "CellSpec",
-        "cmp_custom_variable",
-        "cmp_ip_address",
-        "cmp_num_split",
-        "cmp_service_name_equiv",
-        "cmp_simple_number",
-        "cmp_simple_string",
-        "cmp_string_list",
+        "inventory_displayhints",
+        "InventoryHintSpec",
+        "view_is_enabled",
+    ):
+        api_module.__dict__[name] = plugin_utils.__dict__[name]
+
+    api_module.__dict__["display_options"] = display_options.display_options
+    api_module.__dict__["view_title"] = visuals.view_title
+
+    for name in (
+        "Layout",
+        "layout_registry",
+        "output_csv_headers",
+    ):
+        api_module.__dict__[name] = layout.__dict__[name]
+
+    for name in (
         "Command",
         "command_group_registry",
         "command_registry",
         "CommandActionResult",
         "CommandGroup",
         "CommandSpec",
-        "compare_ips",
-        "declare_1to1_sorter",
-        "display_options",
+    ):
+        api_module.__dict__[name] = command.__dict__[name]
+
+    for name in (
+        "Cell",
         "EmptyCell",
-        "ExportCellContent",
-        "format_plugin_output",
-        "get_label_sources",
-        "get_perfdata_nth_value",
-        "get_tag_groups",
-        "group_value",
-        "inventory_displayhints",
-        "InventoryHintSpec",
-        "is_stale",
-        "join_row",
-        "Layout",
-        "layout_registry",
-        "output_csv_headers",
-        "paint_host_list",
-        "paint_nagiosflag",
-        "paint_stalified",
+        "CellSpec",
         "Painter",
         "painter_registry",
         "register_painter",
+        "declare_1to1_sorter",
+        "ExportCellContent",
+        "join_row",
+    ):
+        api_module.__dict__[name] = painter_base.__dict__[name]
+
+    for name in (
+        "format_plugin_output",
+        "get_label_sources",
+        "get_tag_groups",
+        "paint_host_list",
+        "paint_nagiosflag",
+        "transform_action_url",
         "render_cache_info",
         "replace_action_url_macros",
-        "Row",
-        "transform_action_url",
-        "view_is_enabled",
-        "VisualLinkSpec",
     ):
-        api_module.__dict__[name] = plugin_utils.__dict__[name]
-    api_module.__dict__["view_title"] = visuals.view_title
+        api_module.__dict__[name] = painter_helpers.__dict__[name]
+
+    for name in (
+        "get_perfdata_nth_value",
+        "is_stale",
+        "paint_stalified",
+    ):
+        api_module.__dict__[name] = painter_v1_helpers.__dict__[name]
 
     for name in (
         "render_link_to_view",
@@ -221,10 +246,12 @@ def _register_pre_21_plugin_api() -> None:
         {
             "Perfdata": Perfdata,
             "PerfometerSpec": PerfometerSpec,
+            "VisualLinkSpec": VisualLinkSpec,
             "TranslatedMetrics": TranslatedMetrics,
             "get_labels": get_labels,
             "render_labels": render_labels,
             "render_tag_groups": render_tag_groups,
+            "group_value": group_value,
         }
     )
 

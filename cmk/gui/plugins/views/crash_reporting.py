@@ -18,22 +18,15 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.livestatus_data_source import DataSourceLivestatus
 from cmk.gui.painter_options import paint_age
+from cmk.gui.painters.v0.base import Cell, Painter, painter_registry
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.views.commands import PermissionSectionAction
-from cmk.gui.plugins.views.utils import (
-    Cell,
-    cmp_simple_number,
-    Command,
-    command_registry,
-    CommandActionResult,
-    Painter,
-    painter_registry,
-)
 from cmk.gui.plugins.visuals.utils import Filter
-from cmk.gui.sorter import Sorter, sorter_registry
+from cmk.gui.sorter import cmp_simple_number, Sorter, sorter_registry
 from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, VisualContext
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.view_utils import CellSpec
+from cmk.gui.views.command import Command, command_registry, CommandActionResult
 
 
 @data_source_registry.register

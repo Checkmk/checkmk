@@ -17,15 +17,15 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.views.utils import (
+from cmk.gui.type_defs import InfoName, Row, Rows, ViewSpec
+from cmk.gui.utils.confirm_with_preview import confirm_with_preview
+from cmk.gui.views.command import (
     Command,
     command_registry,
     CommandExecutor,
     CommandGroup,
     CommandSpec,
 )
-from cmk.gui.type_defs import InfoName, Row, Rows, ViewSpec
-from cmk.gui.utils.confirm_with_preview import confirm_with_preview
 
 # .
 #   .--Commands------------------------------------------------------------.

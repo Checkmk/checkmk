@@ -15,19 +15,40 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.painter_options import PainterOptions
+from cmk.gui.painters.v0.base import Cell, EmptyCell
 from cmk.gui.painters.v1.helpers import is_stale
-from cmk.gui.plugins.views.utils import (
-    Cell,
-    EmptyCell,
-    group_value,
-    Layout,
-    layout_registry,
-    output_csv_headers,
-)
 from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.type_defs import GroupSpec, Row, Rows, ViewSpec
 from cmk.gui.utils.theme import theme
+from cmk.gui.views.layout import Layout, layout_registry, output_csv_headers
 from cmk.gui.visual_link import render_link_to_view
+
+
+def group_value(row: Row, group_cells: Sequence[Cell]) -> Hashable:
+    """The Group-value of a row is used for deciding whether
+    two rows are in the same group or not"""
+    group = []
+    for cell in group_cells:
+        painter = cell.painter()
+
+        group_by_val = painter.group_by(row, cell)
+        if group_by_val is not None:
+            group.append(group_by_val)
+
+        else:
+            for c in painter.columns:
+                if c in row:
+                    group.append(row[c])
+
+    return _create_dict_key(group)
+
+
+def _create_dict_key(value: list | dict | Hashable) -> Hashable:
+    if isinstance(value, (list, tuple)):
+        return tuple(map(_create_dict_key, value))
+    if isinstance(value, dict):
+        return tuple((k, _create_dict_key(v)) for (k, v) in sorted(value.items()))
+    return value
 
 
 def render_checkbox(view: ViewSpec, row: Row, num_tds: int) -> None:

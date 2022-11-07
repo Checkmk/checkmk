@@ -47,6 +47,7 @@ import cmk.gui.pages
 import cmk.gui.sites as sites
 from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource, data_source_registry, RowTable
+from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.foldable_container import foldable_container
@@ -60,19 +61,14 @@ from cmk.gui.painter_options import (
     PainterOption,
     PainterOptions,
 )
-from cmk.gui.plugins.views.utils import (
+from cmk.gui.painters.v0.base import (
     Cell,
-    cmp_simple_number,
-    CSVExportError,
     declare_1to1_sorter,
-    display_options,
-    inventory_displayhints,
-    InventoryHintSpec,
     Painter,
     painter_registry,
     register_painter,
-    register_sorter,
 )
+from cmk.gui.plugins.views.utils import inventory_displayhints, InventoryHintSpec
 from cmk.gui.plugins.visuals.inventory import (
     FilterInvBool,
     FilterInvFloat,
@@ -92,6 +88,7 @@ from cmk.gui.plugins.visuals.utils import (
     visual_info_registry,
     VisualInfo,
 )
+from cmk.gui.sorter import cmp_simple_number, register_sorter
 from cmk.gui.type_defs import (
     ColumnName,
     FilterName,
@@ -111,7 +108,7 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import Checkbox, Dictionary, ValueSpec
 from cmk.gui.view_store import multisite_builtin_views
-from cmk.gui.view_utils import CellSpec, render_labels
+from cmk.gui.view_utils import CellSpec, CSVExportError, render_labels
 
 if TYPE_CHECKING:
     from cmk.gui.plugins.visuals.utils import Filter

@@ -16,10 +16,10 @@ from cmk.gui.painter_options import (
     PainterOption,
     PainterOptions,
 )
+from cmk.gui.painters.v0.base import Cell, Painter2
 from cmk.gui.plugins.metrics import html_render
 from cmk.gui.plugins.metrics.utils import CombinedGraphMetricSpec
 from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
-from cmk.gui.plugins.views.utils import Cell, CSVExportError, JSONExportError, Painter2
 from cmk.gui.type_defs import (
     ColumnName,
     CombinedGraphSpec,
@@ -33,7 +33,7 @@ from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import Dictionary, DropdownChoice, MigrateNotUpdated, ValueSpec
 from cmk.gui.view_store import multisite_builtin_views
-from cmk.gui.view_utils import CellSpec
+from cmk.gui.view_utils import CellSpec, CSVExportError, JSONExportError
 
 multisite_builtin_views.update(
     {

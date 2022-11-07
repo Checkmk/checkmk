@@ -11,10 +11,11 @@ from cmk.utils.plugin_registry import Registry
 
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.http import request, response
-from cmk.gui.plugins.views.utils import join_row, output_csv_headers
+from cmk.gui.painters.v0.base import join_row
 from cmk.gui.type_defs import Rows
 from cmk.gui.utils.html import HTML
 from cmk.gui.view import View
+from cmk.gui.views.layout import output_csv_headers
 
 
 class Exporter(NamedTuple):

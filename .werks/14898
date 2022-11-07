@@ -1,0 +1,15 @@
+Title: Fix Apache port configuration on "omd cp" command
+Class: fix
+Compatible: incompat
+Component: omd
+Date: 1667815693
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p17
+
+Since version 2.1.0p7 and werk #14281 the Apache port of the source site was
+used for the new site while using "omd cp" command.
+
+As a workaround you could execute 'omd update-apache-config [site]' to fix the
+issue after the 'omd cp' command.

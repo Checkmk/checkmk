@@ -2217,6 +2217,10 @@ def finalize_site(
         if status:
             bail_out("Error in non-priviledged sub-process.")
 
+    # The config changes above, made with the site user, have to be also available for
+    # the root user, so load the site config again. Otherwise e.g. changed
+    # APACHE_TCP_PORT would not be recognized
+    site.load_config()
     register_with_system_apache(version_info, site, apache_reload)
 
 

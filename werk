@@ -131,7 +131,7 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         "grep",
         help="show werks containing all of the given keywords",
     )
-    parser_grep.add_argument("-v", "--vebose", action="store_true")
+    parser_grep.add_argument("-v", "--verbose", action="store_true")
     parser_grep.add_argument(
         "keywords",
         nargs="+",

@@ -88,6 +88,10 @@ class Site:
         """This gives the address-port combination where the site-Apache process listens."""
         return f"{self.http_proto}://{self.http_address}:{self.apache_port}/{self.id}/check_mk/"
 
+    @property
+    def internal_url_mobile(self) -> str:
+        return self.internal_url + "mobile.py"
+
     # Previous versions of integration/composition tests needed this distinction. This is no
     # longer the case and can be safely removed once all tests switch to either one of url
     # or internal_url.

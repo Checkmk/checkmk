@@ -27,6 +27,7 @@ from playwright.sync_api import (
 
 logger = logging.getLogger(__name__)
 _browser_engines = ["chromium", "firefox"]  # to align with what playwright installs (see Makefile).
+_mobile_devices = ["iPhone 6", "Galaxy S8"]
 
 
 @pytest.fixture(scope="session", name="browser_type_launch_args")
@@ -77,6 +78,29 @@ def _context(
 ) -> t.Generator[BrowserContext, None, None]:
     pages: t.List[Page] = []
     context = browser.new_context(locale=pytestconfig.getoption("--locale"))
+    context.on("page", lambda page: pages.append(page))  # pylint: disable=unnecessary-lambda
+    yield context
+    try:
+        _may_create_screenshot(request, pytestconfig, pages)
+    finally:
+        context.close()
+
+
+@pytest.fixture(name="context_mobile", params=_mobile_devices)
+def _context_mobile(
+    playwright: Playwright,
+    browser: Browser,
+    pytestconfig: t.Any,
+    request: pytest.FixtureRequest,
+    is_chromium: bool,  # pylint: disable=redefined-outer-name
+) -> t.Generator[BrowserContext, None, None]:
+    if not is_chromium:
+        pytest.skip("Mobile emulation currently not supported on Firefox.")
+
+    devices = playwright.devices[str(request.param)]
+    pages: t.List[Page] = []
+
+    context = browser.new_context(locale=pytestconfig.getoption("--locale"), **devices)
     context.on("page", lambda page: pages.append(page))  # pylint: disable=unnecessary-lambda
     yield context
     try:

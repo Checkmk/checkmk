@@ -1,0 +1,17 @@
+#!/bin/bash
+storcli_bin=""
+if [ -e /opt/MegaRAID/storcli/storcli64 ] ; then
+    storcli_bin="/opt/MegaRAID/storcli/storcli64"
+elif [ -e /opt/MegaRAID/perccli/perccli64 ] ; then
+    storcli_bin="/opt/MegaRAID/perccli/perccli64"  # dell branded version of storcli
+fi
+
+if [ -n "${storcli_bin}" ] ; then
+    echo "<<<storcli_pdisks>>>"
+    ${storcli_bin} /call/eall/sall show nolog
+    echo "<<<storcli_vdrives>>>"
+    ${storcli_bin} /call/vall show nolog
+    echo "<<<storcli_bbu>>>"
+    ${storcli_bin} /call/bbu show all nolog
+    ${storcli_bin} /call/cv show all nolog
+fi

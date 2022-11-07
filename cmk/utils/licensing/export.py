@@ -11,7 +11,7 @@ from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from datetime import date, datetime
 from enum import auto, Enum
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, TypedDict
 
 from dateutil.relativedelta import relativedelta
 
@@ -499,6 +499,18 @@ class MonthlyServiceAverage:
         }
 
 
+class RawMonthlyServiceAggregation(TypedDict):
+    owner: str
+    daily_services: Sequence[Mapping[str, float]]
+    monthly_service_averages: Sequence[Mapping[str, float]]
+    last_service_report: Mapping[str, float] | None
+    highest_service_report: Mapping[str, float] | None
+    subscription_exceeded_first: Mapping[str, float] | None
+    subscription_start: float | int | None
+    subscription_end: float | int | None
+    subscription_limit: float | int | None
+
+
 class MonthlyServiceAverages:
     today = datetime.today()
 
@@ -542,8 +554,7 @@ class MonthlyServiceAverages:
             for sample_date, counter in sorted(daily_services.items())[-400:]
         ]
 
-    # FIXME: We need a real type for the return value.
-    def get_aggregation(self) -> dict[str, Any]:
+    def get_aggregation(self) -> RawMonthlyServiceAggregation:
         "This method prepares the following data for javascript rendering"
         self._calculate_averages()
         return {

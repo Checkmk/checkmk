@@ -345,10 +345,20 @@ class MKDockerClient(docker.DockerClient):
         if not container.status == "running":
             return self._container_stats.setdefault(container_key, None)
 
+        # We use the streaming mode here because it faciliates error handling. If a container is
+        # removed at exactly the same time when we query the stats, we get StopIteration in
+        # streaming mode. In non-streaming mode, the error type is version-dependent.
+        stats_generator = container.stats(stream=True, decode=True)
         try:
-            stats = container.stats(stream=False)
-        except docker.errors.NotFound:
+            next(stats_generator)  # we need to advance the generator by one to get useful data
+            stats = next(stats_generator)
+        except (
             # container was removed in between collecting containers and here
+            docker.errors.NotFound,
+            # container is removed just now; it could be that under very old docker versions (eg.
+            # 1.31), there are other scenarios causing this exception (SUP-10974)
+            StopIteration,
+        ):
             return self._container_stats.setdefault(container_key, None)
 
         return self._container_stats.setdefault(container_key, stats)
@@ -538,7 +548,14 @@ def section_container_network(client, container_id):
 
 
 def _is_not_running_exception(exception):
-    return exception.response.status_code == 409 and "is not running" in exception.explanation
+    return (
+        exception.response.status_code
+        in (
+            409,
+            500,  # Thrown by old docker versions: SUP-10974
+        )
+        and "is not running" in exception.explanation
+    )
 
 
 def section_container_agent(client, container_id):

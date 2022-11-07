@@ -79,22 +79,27 @@ call scripts\unpack_packs.cmd
 make install_extlibs
 
 powershell Write-Host "Looking for MSVC 2022..." -Foreground White
-set msbuild="C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\msbuild.exe"
-if not exist %msbuild% powershell Write-Host "Install Visual Studio 2022, please" -Foreground Red && exit /b 8
+set msbuild=C:\Program Files\Microsoft Visual Studio\2022\Professional\MSBuild\Current\Bin\msbuild.exe
+if not exist "%msbuild%" powershell Write-Host "Install Visual Studio 2022, please" -Foreground Red && exit /b 8
 
 powershell Write-Host "[+] Found MSVC 2022" -Foreground Green
 powershell Write-Host "Building MSI..." -Foreground White
 powershell -ExecutionPolicy ByPass -File msb.ps1
 if not %errorlevel% == 0 powershell Write-Host "Failed Build" -Foreground Red && exit /b 7
 
+call build_ohm.cmd
+if not %errorlevel% == 0 powershell Write-Host "Failed OHM Build" -Foreground Red && exit /b 71
+
 if not "%2" == "" (
 powershell Write-Host "Signing Executables" -Foreground White
 @call sign_windows_exe c:\common\store\%1 %2 %build_dir%\check_mk_service\x64\Release\check_mk_service64.exe
 @call sign_windows_exe c:\common\store\%1 %2 %build_dir%\check_mk_service\Win32\Release\check_mk_service32.exe
 @call sign_windows_exe c:\common\store\%1 %2 %arte%\cmk-agent-ctl.exe
+rem @call sign_windows_exe %build_dir%\ohm\OpenHardwareMonitorLib.dll
+rem @call sign_windows_exe %build_dir%\ohm\OpenHardwareMonitorLib.exe
 )
 
-ptime %msbuild% wamain.sln /t:install /p:Configuration=Release,Platform=x86
+ptime "%msbuild%" wamain.sln /t:install /p:Configuration=Release,Platform=x86
 if not %errorlevel% == 0 powershell Write-Host "Failed Install build" -Foreground Red && exit /b 8
 
 :: Patch Version Phase: Patch version value direct in the msi file
@@ -127,8 +132,10 @@ exit 100
 
 :: Deploy Phase: post processing/build special modules using make
 copy %build_dir%\install\Release\check_mk_service.msi %arte%\check_mk_agent.msi /y || powershell Write-Host "Failed to copy msi" -Foreground Red && exit /b 33
-copy %build_dir%\check_mk_service\x64\Release\check_mk_service64.exe %arte%\check_mk_agent-64.exe /Y || powershell Write-Host "Failed to create 64 bit agent" -Foreground Red && exit /b 35
-copy %build_dir%\check_mk_service\Win32\Release\check_mk_service32.exe %arte%\check_mk_agent.exe /Y || powershell Write-Host "Failed to create 32 bit agent" -Foreground Red && exit /b 34
+copy %build_dir%\check_mk_service\x64\Release\check_mk_service64.exe %arte%\check_mk_agent-64.exe /Y || powershell Write-Host "Failed to create 64 bit agent" -Foreground Red && exit /b 34
+copy %build_dir%\check_mk_service\Win32\Release\check_mk_service32.exe %arte%\check_mk_agent.exe /Y || powershell Write-Host "Failed to create 32 bit agent" -Foreground Red && exit /b 35
+copy %build_dir%\ohm\OpenHardwareMonitorCLI.exe %arte%\OpenHardwareMonitorCLI.exe /Y || powershell Write-Host "Failed to copy OHM exe" -Foreground Red && exit /b 36
+copy %build_dir%\ohm\OpenHardwareMonitorLib.dll %arte%\OpenHardwareMonitorLib.dll /Y || powershell Write-Host "Failed to copy OHM dll" -Foreground Red && exit /b 37
 copy install\resources\check_mk.user.yml %arte%
 copy install\resources\check_mk.yml %arte%
 powershell Write-Host "File Deployment succeeded" -Foreground Green

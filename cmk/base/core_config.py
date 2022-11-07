@@ -497,6 +497,7 @@ def iter_active_check_services(
     hostname: str,
     host_attrs: config.ObjectAttributes,
     params: Dict[Any, Any],
+    stored_passwords: Mapping[str, str],
 ) -> Iterator[Tuple[str, str]]:
     """Iterate active service descriptions and arguments
 
@@ -515,14 +516,20 @@ def iter_active_check_services(
         host_config.hostname, host_config.alias, check_name, params
     )
     arguments = commandline_arguments(
-        host_config.hostname, description, active_info["argument_function"](params)
+        host_config.hostname,
+        description,
+        active_info["argument_function"](params),
+        stored_passwords,
     )
 
     yield description, arguments
 
 
 def _prepare_check_command(
-    command_spec: CheckCommandArguments, hostname: HostName, description: Optional[ServiceName]
+    command_spec: CheckCommandArguments,
+    hostname: HostName,
+    description: Optional[ServiceName],
+    stored_passwords: Mapping[str, str],
 ) -> str:
     """Prepares a check command for execution by Checkmk
 
@@ -532,7 +539,6 @@ def _prepare_check_command(
     """
     passwords: List[Tuple[str, str, str]] = []
     formated: List[str] = []
-    stored_passwords = cmk.utils.password_store.load()
     for arg in command_spec:
         if isinstance(arg, (int, float)):
             formated.append("%s" % arg)
@@ -611,6 +617,7 @@ def commandline_arguments(
     hostname: HostName,
     description: Optional[ServiceName],
     commandline_args: config.SpecialAgentInfoFunctionResult,
+    stored_passwords: Mapping[str, str] | None = None,
 ) -> str:
     """Commandline arguments for special agents or active checks."""
     if isinstance(commandline_args, str):
@@ -626,7 +633,12 @@ def commandline_arguments(
             % (hostname, description)
         )
 
-    return _prepare_check_command(args, hostname, description)
+    return _prepare_check_command(
+        args,
+        hostname,
+        description,
+        cmk.utils.password_store.load() if stored_passwords is None else stored_passwords,
+    )
 
 
 def make_special_agent_cmdline(

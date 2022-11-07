@@ -24,6 +24,7 @@ from typing import Any, cast, Dict, List, Optional, Sequence, Tuple, Union
 import cmk.utils.debug
 import cmk.utils.log as log
 import cmk.utils.man_pages as man_pages
+import cmk.utils.password_store
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKSNMPError, OnError
@@ -1612,11 +1613,12 @@ class AutomationActiveCheck(Automation):
 
         # Set host name for host_name()-function (part of the Check API)
         # (used e.g. by check_http)
+        stored_passwords = cmk.utils.password_store.load()
         with plugin_contexts.current_host(hostname):
             for params in dict(host_config.active_checks).get(plugin, []):
 
                 for description, command_args in core_config.iter_active_check_services(
-                    plugin, act_info, hostname, host_attrs, params
+                    plugin, act_info, hostname, host_attrs, params, stored_passwords
                 ):
                     if description != item:
                         continue

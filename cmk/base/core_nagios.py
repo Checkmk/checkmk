@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any, cast, Dict, IO, List, Literal, Optional, Set, Tuple
 
 import cmk.utils.config_path
+import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.tty as tty
@@ -412,6 +413,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
 
     if actchecks:
         cfg.write("\n\n# Active checks\n")
+        stored_passwords = cmk.utils.password_store.load()
         for acttype, act_info, params in actchecks:
 
             has_perfdata = act_info.get("has_perfdata", False)
@@ -419,7 +421,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
             # Make hostname available as global variable in argument functions
             with plugin_contexts.current_host(hostname):
                 for description, args in core_config.iter_active_check_services(
-                    acttype, act_info, hostname, host_attrs, params
+                    acttype, act_info, hostname, host_attrs, params, stored_passwords
                 ):
 
                     if not description:

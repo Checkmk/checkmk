@@ -2,16 +2,21 @@
 # Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import Any
+
+import pytest
+
 from tests.unit.cmk.special_agents.agent_kube.factory import (
+    IdentifiableMetricFactory,
     PerformanceMetricFactory,
-    PerformancePodFactory,
 )
 
+from cmk.special_agents.utils_kubernetes.common import Piggyback, PodsToHost, SectionName
 from cmk.special_agents.utils_kubernetes.performance import (
     _determine_cpu_rate_metrics,
-    _kube_object_performance_sections,
+    create_sections,
+    Selector,
 )
-from cmk.special_agents.utils_kubernetes.schemata.section import PerformanceUsage
 
 
 def test_determine_cpu_rate_metrics() -> None:
@@ -33,16 +38,84 @@ def test_determine_cpu_rate_metrics_for_containers_with_same_timestamp() -> None
     assert len(containers_rate_metrics) == 0
 
 
-def test_kube_object_performance_sections() -> None:
-    performance_pods = [
-        PerformancePodFactory.build(),
-        PerformancePodFactory.build(),
+@pytest.mark.parametrize("size", [2, 4])
+def test_selector_one_metric_per_pod(size: int) -> None:
+    identies = IdentifiableMetricFactory.batch(size=size)
+    pod_names = [i.pod_lookup_from_metric() for i in identies]
+    selector: Selector[Any] = Selector(identies, len)  # type: ignore[arg-type]
+
+    sections = list(
+        selector.get_section(Piggyback(piggyback="p", pod_names=pod_names), SectionName("s"))
+    )
+
+    assert len(sections) == 1
+    assert sections[0].section == size
+
+
+def test_selector_no_metrics() -> None:
+    pod_names = [i.pod_lookup_from_metric() for i in IdentifiableMetricFactory.batch(size=5)]
+    selector: Selector[Any] = Selector([], len)  # type: ignore[arg-type]
+
+    sections = list(
+        selector.get_section(Piggyback(piggyback="p", pod_names=pod_names), SectionName("s"))
+    )
+
+    assert len(sections) == 0
+
+
+def test_kube_create_sections() -> None:
+    # Assemble
+    identities = IdentifiableMetricFactory.batch(size=2)
+    one_metric_per_pod_selector: Selector[Any] = Selector(identities, len)  # type: ignore[arg-type]
+    piggyback_name = "host_name"
+    piggyback_to_pod_names = [
+        Piggyback(piggyback_name, [i.pod_lookup_from_metric() for i in identities])
     ]
 
-    performance_sections = _kube_object_performance_sections(performance_pods)
+    # Act
+    sections = list(
+        create_sections(
+            one_metric_per_pod_selector,
+            one_metric_per_pod_selector,
+            PodsToHost(
+                piggybacks=piggyback_to_pod_names,
+                namespace_piggies=[],
+            ),
+        )
+    )
 
-    assert [section[0] for section in performance_sections] == [
-        "kube_performance_memory_v1",
-        "kube_performance_cpu_v1",
+    # Assert
+    assert {s.piggyback_name for s in sections} == {piggyback_name}
+    assert {s.section_name for s in sections} == {
+        SectionName("kube_performance_memory_v1"),
+        SectionName("kube_performance_cpu_v1"),
+    }
+
+
+def test_kube_create_resource_quota_sections() -> None:
+    # Assemble
+    identities = IdentifiableMetricFactory.batch(size=2)
+    one_metric_per_pod_selector: Selector[Any] = Selector(identities, len)  # type: ignore[arg-type]
+    piggyback_name = "host_name"
+    piggyback_to_pod_names = [
+        Piggyback(piggyback_name, [i.pod_lookup_from_metric() for i in identities])
     ]
-    assert [PerformanceUsage.parse_raw(section[1]) for section in performance_sections]
+
+    # Act
+    sections = list(
+        create_sections(
+            one_metric_per_pod_selector,
+            one_metric_per_pod_selector,
+            PodsToHost(
+                piggybacks=[],
+                namespace_piggies=piggyback_to_pod_names,
+            ),
+        )
+    )
+
+    # Assert
+    assert {s.piggyback_name for s in sections} == {piggyback_name}
+    assert {s.section_name for s in sections} == {
+        SectionName("kube_resource_quota_performance_memory_v1"),
+        SectionName("kube_resource_quota_performance_cpu_v1"),
+    }

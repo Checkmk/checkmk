@@ -151,16 +151,20 @@ class APIResourceQuotaFactory(ModelFactory):
 # Performance related Factories
 
 
-class PerformancePodFactory(ModelFactory):
-    __model__ = performance.PerformancePod
-
-
 class PerformanceMetricFactory(ModelFactory):
     __model__ = performance.PerformanceMetric
 
 
 class MemoryMetricFactory(ModelFactory):
     __model__ = performance.MemoryMetric
+
+
+class CPURateMetricFactory(ModelFactory):
+    __model__ = performance.CPURateMetric
+
+
+class IdentifiableMetricFactory(ModelFactory):
+    __model__ = performance.IdentifiableMetric
 
 
 # Node related Factories

@@ -416,7 +416,7 @@ def test_create_correct_number_pod_names_for_cluster_host(
     def _raise_error() -> NoReturn:
         raise ValueError()
 
-    cluster_pods = agent.determine_pods_to_host(
+    pods_to_host = agent.determine_pods_to_host(
         monitored_objects=[],
         monitored_pods=set(),
         composed_entities=composed_entities,
@@ -428,7 +428,8 @@ def test_create_correct_number_pod_names_for_cluster_host(
         # This test is not supposed to generate any PiggyBack host:
         piggyback_formatter=_raise_error,  # type: ignore[arg-type]
         piggyback_formatter_node=_raise_error,  # type: ignore[arg-type]
-    ).cluster_pods
+    )
+    cluster_piggy_back = [p for p in pods_to_host.piggybacks if p.piggyback == ""]
 
     total = (
         sum(count for _, count, roles in node_podcount_roles if excluded_node_role not in roles)
@@ -436,7 +437,8 @@ def test_create_correct_number_pod_names_for_cluster_host(
         else 0
     )
 
-    assert len(cluster_pods) == total
+    assert len(cluster_piggy_back) == 1
+    assert len(cluster_piggy_back[0].pod_names) == total
 
 
 @pytest.mark.parametrize(

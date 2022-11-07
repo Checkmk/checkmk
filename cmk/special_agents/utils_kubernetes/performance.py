@@ -9,13 +9,14 @@ Cluster Collector for the Kubernetes Monitoring solution
 from __future__ import annotations
 
 import enum
+import itertools
 import json
 import os
 import tempfile
-from collections.abc import Container, Mapping, Sequence
+from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal, NewType
+from typing import Callable, Generic, Literal, NewType, TypeVar
 
 from pydantic import BaseModel, Field, parse_raw_as, ValidationError
 
@@ -25,9 +26,9 @@ from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, S
 from cmk.special_agents.utils_kubernetes.common import (
     LOGGER,
     lookup_name,
+    Piggyback,
     PodLookupName,
     PodsToHost,
-    SectionJson,
     SectionName,
 )
 from cmk.special_agents.utils_kubernetes.schemata import section
@@ -84,84 +85,106 @@ class Metrics:
     memory: Sequence[MemoryMetric]
 
 
-@dataclass
-class PerformancePod:
-    # TODO: CMK-11547
-    cpu: float
-    memory: float
-
-
 _AllMetrics = MemoryMetric | CPUMetric | UnusedMetric
+
+
+@dataclass(frozen=True)
+class WriteableSection:
+    piggyback_name: str
+    section_name: SectionName
+    section: section.Section
 
 
 def parse_performance_metrics(cluster_collector_metrics: bytes) -> Sequence[_AllMetrics]:
     return parse_raw_as(list[_AllMetrics], cluster_collector_metrics)
 
 
-def group_containers_performance_metrics(
-    cluster_name: str,
-    container_metrics: Sequence[_AllMetrics],
-) -> Mapping[PodLookupName, PerformancePod]:
-    """Parse container performance metrics and group them by pod"""
+def create_selectors(
+    cluster_name: str, container_metrics: Sequence[_AllMetrics]
+) -> tuple[Selector[CPURateMetric], Selector[MemoryMetric]]:
+    """Converts parsed metrics into Selectors."""
 
     metrics = _group_metric_types(container_metrics)
-    # We only persist the relevant counter metrics (not all metrics)
-    current_cycle_store = ContainersStore(cpu=metrics.cpu)
-    store_file_name = f"{cluster_name}_containers_counters.json"
-    previous_cycle_store = _load_containers_store(
-        path=AGENT_TMP_PATH,
-        file_name=store_file_name,
-    )
-    cpu_rate_metrics = _determine_cpu_rate_metrics(
-        current_cycle_store.cpu, previous_cycle_store.cpu
+    cpu_rate_metrics = _create_cpu_rate_metrics(cluster_name, metrics.cpu)
+    return (
+        Selector(cpu_rate_metrics, aggregator=_aggregate_cpu_metrics),
+        Selector(metrics.memory, aggregator=_aggregate_memory_metrics),
     )
 
-    # The agent will store the latest counter values returned by the collector overwriting the
-    # previous ones. The collector will return the same metric values for a certain time interval
-    # while the values are not updated or outdated. This will result in no rate value if the agent
-    # is polled too frequently (no performance section for the checks). All cases where no
-    # performance section can be generated should be handled on the check side (reusing the same
-    # value, etc.)
-    _persist_containers_store(current_cycle_store, path=AGENT_TMP_PATH, file_name=store_file_name)
-    return _group_container_metrics_by_pods(cpu_rate_metrics, metrics.memory)
+
+def write_sections(items: Iterator[WriteableSection]) -> None:
+    def key_function(item: WriteableSection) -> str:
+        return item.piggyback_name
+
+    # Optimize for size of agent output
+    for key, group in itertools.groupby(sorted(items, key=key_function), key_function):
+        with ConditionalPiggybackSection(key):
+            for item in group:
+                with SectionWriter(item.section_name) as writer:
+                    writer.append(item.section.json())
 
 
-def write_sections_based_on_performance_pods(
-    performance_pods: Mapping[PodLookupName, PerformancePod],
+T = TypeVar("T", bound=IdentifiableMetric)
+
+
+class Selector(Generic[T]):
+    def __init__(self, metrics: Sequence[T], aggregator: Callable[[Sequence[T]], section.Section]):
+        self.aggregator = aggregator
+        self.metrics_map: dict[PodLookupName, list[T]] = {}
+        for m in metrics:
+            key = m.pod_lookup_from_metric()
+            self.metrics_map.setdefault(key, []).append(m)
+
+    def get_section(
+        self, piggyback: Piggyback, section_name: SectionName
+    ) -> Iterator[WriteableSection]:
+        metrics = [
+            m for pod_name in piggyback.pod_names for m in self.metrics_map.get(pod_name, [])
+        ]
+        if metrics:
+            yield WriteableSection(
+                piggyback_name=piggyback.piggyback,
+                section_name=section_name,
+                section=self.aggregator(metrics),
+            )
+
+
+def create_sections(
+    cpu_selector: Selector[CPURateMetric],
+    memory_selector: Selector[MemoryMetric],
     pods_to_host: PodsToHost,
-) -> None:
-    # TODO: The usage of filter_outdated_and_non_monitored_pods here is really
-    # inefficient. We can improve this, if we match the performance_pods to
-    # sets of pod_names in a single go.
-    LOGGER.info("Write piggyback sections based on performance data")
-    for piggy in pods_to_host.piggybacks:
-        pods = _select_pods_by_lookup_name(performance_pods, piggy.pod_names)
-        with ConditionalPiggybackSection(piggy.piggyback):
-            for section_name, section_json in _kube_object_performance_sections(pods):
-                with SectionWriter(section_name) as writer:
-                    writer.append(section_json)
-    LOGGER.info("Write Namespace piggyback sections based on performance data")
-    for piggy in pods_to_host.namespace_piggies:
-        pods = _select_pods_by_lookup_name(performance_pods, piggy.pod_names)
-        resource_quota_pods = _select_pods_by_lookup_name(
-            performance_pods, piggy.resource_quota_pod_names
+) -> Iterator[WriteableSection]:
+    for piggyback in pods_to_host.piggybacks:
+        yield from memory_selector.get_section(
+            piggyback,
+            SectionName("kube_performance_memory_v1"),
         )
-        sections = _kube_object_performance_sections(pods) + _resource_quota_performance_sections(
-            resource_quota_pods
+        yield from cpu_selector.get_section(
+            piggyback,
+            SectionName("kube_performance_cpu_v1"),
         )
-        with ConditionalPiggybackSection(piggy.piggyback):
-            for section_name, section_json in sections:
-                with SectionWriter(section_name) as writer:
-                    writer.append(section_json)
-    if cluster_performance_pods := _select_pods_by_lookup_name(
-        performance_pods, pods_to_host.cluster_pods
-    ):
-        LOGGER.info("Write cluster sections based on performance data")
-        for section_name, section_json in _kube_object_performance_sections(
-            cluster_performance_pods
-        ):
-            with SectionWriter(section_name) as writer:
-                writer.append(section_json)
+
+    for piggyback in pods_to_host.namespace_piggies:
+        yield from memory_selector.get_section(
+            piggyback,
+            SectionName("kube_resource_quota_performance_memory_v1"),
+        )
+        yield from cpu_selector.get_section(
+            piggyback,
+            SectionName("kube_resource_quota_performance_cpu_v1"),
+        )
+
+
+def _aggregate_memory_metrics(metrics: Iterable[MemoryMetric]) -> section.PerformanceUsage:
+    return section.PerformanceUsage(
+        resource=section.Memory(usage=sum((m.value for m in metrics), start=0.0))
+    )
+
+
+def _aggregate_cpu_metrics(metrics: Iterable[CPURateMetric]) -> section.PerformanceUsage:
+    return section.PerformanceUsage(
+        resource=section.Cpu(usage=sum((m.rate for m in metrics), start=0.0))
+    )
 
 
 def _group_metric_types(metrics: Sequence[_AllMetrics]) -> Metrics:
@@ -177,6 +200,27 @@ def _group_metric_types(metrics: Sequence[_AllMetrics]) -> Metrics:
         else:
             raise NotImplementedError()
     return Metrics(memory=memory_metrics, cpu=cpu_metrics)
+
+
+def _create_cpu_rate_metrics(
+    cluster_name: str, cpu_metrics: Sequence[CPUMetric]
+) -> Sequence[CPURateMetric]:
+    # We only persist the relevant counter metrics (not all metrics)
+    current_cycle_store = ContainersStore(cpu=cpu_metrics)
+    store_file_name = f"{cluster_name}_containers_counters.json"
+    previous_cycle_store = _load_containers_store(
+        path=AGENT_TMP_PATH,
+        file_name=store_file_name,
+    )
+
+    # The agent will store the latest counter values returned by the collector overwriting the
+    # previous ones. The collector will return the same metric values for a certain time interval
+    # while the values are not updated or outdated. This will result in no rate value if the agent
+    # is polled too frequently (no performance section for the checks). All cases where no
+    # performance section can be generated should be handled on the check side (reusing the same
+    # value, etc.)
+    _persist_containers_store(current_cycle_store, path=AGENT_TMP_PATH, file_name=store_file_name)
+    return _determine_cpu_rate_metrics(current_cycle_store.cpu, previous_cycle_store.cpu)
 
 
 def _load_containers_store(path: Path, file_name: str) -> ContainersStore:
@@ -236,105 +280,3 @@ def _calculate_rate(counter_metric: CPUMetric, old_counter_metric: CPUMetric) ->
     """
     time_delta = counter_metric.timestamp - old_counter_metric.timestamp
     return (counter_metric.value - old_counter_metric.value) / time_delta
-
-
-def _group_container_metrics_by_pods(
-    cpu_metrics: Sequence[CPURateMetric],
-    memory_metrics: Sequence[MemoryMetric],
-) -> Mapping[PodLookupName, PerformancePod]:
-    parsed_pods: dict[PodLookupName, PerformancePod] = {}
-    # TODO: CMK-11547
-    for cpu_metric in cpu_metrics:
-        parsed_pods.setdefault(
-            cpu_metric.pod_lookup_from_metric(), PerformancePod(cpu=0.0, memory=0.0)
-        ).cpu += cpu_metric.rate
-    for memory_metric in memory_metrics:
-        parsed_pods.setdefault(
-            memory_metric.pod_lookup_from_metric(), PerformancePod(cpu=0.0, memory=0.0)
-        ).memory += memory_metric.value
-    return parsed_pods
-
-
-# TODO: this function is called multiple times at the moment, ideally this should be called once
-# probably to do when merging the section write logic
-def _select_pods_by_lookup_name(
-    performance_pods: Mapping[PodLookupName, PerformancePod],
-    lookup_name_to_piggyback_mappings: Container[PodLookupName],
-) -> Sequence[PerformancePod]:
-    """Filter out all performance data based pods that are not in the API data based lookup table
-    Examples:
-        >>> from pydantic_factories import ModelFactory
-        >>> class PerformancePodFactory(ModelFactory):
-        ...    __model__ = PerformancePod
-        >>> len(_select_pods_by_lookup_name(
-        ... {PodLookupName("foo"): PerformancePodFactory.build()},
-        ... {PodLookupName("foo")}))
-        1
-        >>> _select_pods_by_lookup_name({"foo": PerformancePodFactory.build()}, set())
-        []
-    """
-    LOGGER.info("Filtering out outdated and non-monitored pods from performance data")
-    current_pods = []
-    outdated_and_non_monitored_pods = []
-    for lookup, performance_pod in performance_pods.items():
-        if lookup in lookup_name_to_piggyback_mappings:
-            current_pods.append(performance_pod)
-            continue
-        outdated_and_non_monitored_pods.append(lookup)
-    LOGGER.debug(
-        "Outdated or non-monitored performance pods: %s",
-        ", ".join(outdated_and_non_monitored_pods),
-    )
-    return current_pods
-
-
-def _kube_object_performance_sections(
-    performance_pods: Sequence[PerformancePod],
-) -> list[tuple[SectionName, SectionJson]]:
-    return [
-        (
-            SectionName("kube_performance_memory_v1"),
-            _section_memory(performance_pods),
-        ),
-        (
-            SectionName("kube_performance_cpu_v1"),
-            _section_cpu(performance_pods),
-        ),
-    ]
-
-
-def _resource_quota_performance_sections(
-    resource_quota_performance_pods: Sequence[PerformancePod],
-) -> list[tuple[SectionName, SectionJson]]:
-    if not resource_quota_performance_pods:
-        return []
-    return [
-        (
-            SectionName("kube_resource_quota_performance_memory_v1"),
-            _section_memory(resource_quota_performance_pods),
-        ),
-        (
-            SectionName("kube_resource_quota_performance_cpu_v1"),
-            _section_cpu(resource_quota_performance_pods),
-        ),
-    ]
-
-
-def _section_memory(
-    performance_pods: Sequence[PerformancePod],
-) -> SectionJson:
-    return SectionJson(
-        section.PerformanceUsage(
-            resource=section.Memory(usage=sum(pod.memory for pod in performance_pods)),
-        ).json()
-    )
-
-
-def _section_cpu(
-    performance_pods: Sequence[PerformancePod],
-) -> SectionJson:
-    return SectionJson(
-        section.PerformanceUsage(
-            resource=section.Cpu(usage=sum(pod.cpu for pod in performance_pods)),
-        ).json()
-    )

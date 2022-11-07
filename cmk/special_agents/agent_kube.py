@@ -50,21 +50,15 @@ from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 from cmk.special_agents.utils import vcrtrace
 from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, SectionWriter
 from cmk.special_agents.utils.request_helper import get_requests_ca
-from cmk.special_agents.utils_kubernetes import query
+from cmk.special_agents.utils_kubernetes import performance, query
 from cmk.special_agents.utils_kubernetes.api_server import APIData, from_kubernetes
 from cmk.special_agents.utils_kubernetes.common import (
     LOGGER,
     lookup_name,
-    NamespacePiggy,
     Piggyback,
     PodLookupName,
     PodsToHost,
     RawMetrics,
-)
-from cmk.special_agents.utils_kubernetes.performance import (
-    group_containers_performance_metrics,
-    parse_performance_metrics,
-    write_sections_based_on_performance_pods,
 )
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 
@@ -1579,6 +1573,7 @@ def determine_pods_to_host(
     piggyback_formatter: PBFormatter,
     piggyback_formatter_node: ObjectSpecificPBFormatter,
 ) -> PodsToHost:
+    piggybacks: list[Piggyback] = []
     namespace_piggies = []
     if MonitoredObject.namespaces in monitored_objects:
         for api_namespace in monitored_api_namespaces:
@@ -1599,21 +1594,26 @@ def determine_pods_to_host(
             else:
                 resource_quota_pod_names = []
 
-            namespace_piggies.append(
-                NamespacePiggy(
-                    piggyback=piggyback_formatter(
-                        object_type="namespace",
-                        namespaced_name=namespace_name(api_namespace),
-                    ),
+            piggyback_name = piggyback_formatter(
+                object_type="namespace",
+                namespaced_name=namespace_name(api_namespace),
+            )
+            piggybacks.append(
+                Piggyback(
+                    piggyback=piggyback_name,
                     pod_names=[pod_lookup_from_api_pod(pod) for pod in namespace_api_pods],
-                    resource_quota_pod_names=resource_quota_pod_names,
+                )
+            )
+            namespace_piggies.append(
+                Piggyback(
+                    piggyback=piggyback_name,
+                    pod_names=resource_quota_pod_names,
                 )
             )
     # TODO: write_object_sections_based_on_performance_pods is the equivalent
     # function based solely on api.Pod rather than class Pod. All objects relying
     # on write_sections_based_on_performance_pods should be refactored to use the
     # other function similar to namespaces
-    piggybacks: list[Piggyback] = []
     if MonitoredObject.pods in monitored_objects:
         running_pods = pods_from_namespaces(
             filter_pods_by_phase(api_pods, api.Phase.RUNNING), monitored_namespaces
@@ -1665,10 +1665,17 @@ def determine_pods_to_host(
                 for k in kube_objects_from_namespaces(objects, monitored_namespaces)
                 if (names := _names_of_running_pods(k))
             )
-    cluster_pods = list(
-        map(
-            pod_lookup_from_api_pod,
-            filter_pods_by_phase(composed_entities.cluster.aggregation_pods, api.Phase.RUNNING),
+    piggybacks.append(
+        Piggyback(
+            piggyback="",
+            pod_names=list(
+                map(
+                    pod_lookup_from_api_pod,
+                    filter_pods_by_phase(
+                        composed_entities.cluster.aggregation_pods, api.Phase.RUNNING
+                    ),
+                )
+            ),
         )
     )
     if MonitoredObject.cronjobs in monitored_objects:
@@ -1690,7 +1697,6 @@ def determine_pods_to_host(
         )
     return PodsToHost(
         piggybacks=piggybacks,
-        cluster_pods=cluster_pods,
         namespace_piggies=namespace_piggies,
     )
 
@@ -2159,7 +2165,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                 container_metrics = request_cluster_collector(
                     query.CollectorPath.container_metrics,
                     usage_config,
-                    parse_performance_metrics,
+                    performance.parse_performance_metrics,
                 )
 
                 if not container_metrics:
@@ -2168,8 +2174,20 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                         detail="No container metrics were collected from the cluster collector",
                     )
 
+                pods_to_host = determine_pods_to_host(
+                    composed_entities=composed_entities,
+                    monitored_pods=monitored_pods,
+                    monitored_objects=arguments.monitored_objects,
+                    monitored_namespaces=monitored_namespace_names,
+                    api_pods=api_data.pods,
+                    resource_quotas=resource_quotas,
+                    api_cron_jobs=api_data.cron_jobs,
+                    monitored_api_namespaces=monitored_api_namespaces,
+                    piggyback_formatter=piggyback_formatter,
+                    piggyback_formatter_node=piggyback_formatter_node,
+                )
                 try:
-                    performance_pods = group_containers_performance_metrics(
+                    selectors = performance.create_selectors(
                         cluster_name=arguments.cluster,
                         container_metrics=container_metrics,
                     )
@@ -2181,21 +2199,8 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                     ) from e
 
                 try:
-                    pods_to_host = determine_pods_to_host(
-                        composed_entities=composed_entities,
-                        monitored_pods=monitored_pods,
-                        monitored_objects=arguments.monitored_objects,
-                        monitored_namespaces=monitored_namespace_names,
-                        api_pods=api_data.pods,
-                        resource_quotas=resource_quotas,
-                        api_cron_jobs=api_data.cron_jobs,
-                        monitored_api_namespaces=monitored_api_namespaces,
-                        piggyback_formatter=piggyback_formatter,
-                        piggyback_formatter_node=piggyback_formatter_node,
-                    )
-                    write_sections_based_on_performance_pods(
-                        performance_pods=performance_pods,
-                        pods_to_host=pods_to_host,
+                    performance.write_sections(
+                        performance.create_sections(*selectors, pods_to_host=pods_to_host)
                     )
 
                 except Exception as e:

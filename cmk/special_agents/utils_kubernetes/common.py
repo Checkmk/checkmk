@@ -6,8 +6,6 @@
 Module for definitions and functions which are used by both the special_agent/agent_kube and
 the utils_kubernetes/performance
 """
-from __future__ import annotations
-
 import logging
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -18,7 +16,6 @@ RawMetrics = Mapping[str, str]
 PodLookupName = NewType("PodLookupName", str)
 
 SectionName = NewType("SectionName", str)
-SectionJson = NewType("SectionJson", str)
 
 
 @dataclass
@@ -28,15 +25,9 @@ class Piggyback:
 
 
 @dataclass
-class NamespacePiggy(Piggyback):
-    resource_quota_pod_names: Sequence[PodLookupName]
-
-
-@dataclass
 class PodsToHost:
     piggybacks: Sequence[Piggyback]
-    cluster_pods: Sequence[PodLookupName]
-    namespace_piggies: Sequence[NamespacePiggy]
+    namespace_piggies: Sequence[Piggyback]
 
 
 def lookup_name(namespace: str, name: str) -> PodLookupName:

@@ -11,7 +11,6 @@ from urllib.parse import urljoin, urlsplit
 
 from playwright.sync_api import expect, Locator, Page, Response
 
-from tests.testlib.playwright.e2e_typing import ActivationStates
 from tests.testlib.playwright.timeouts import TemporaryTimeout, TIMEOUT_ACTIVATE_CHANGES_MS
 
 
@@ -232,10 +231,17 @@ class PPage(LocatorHelper):
         with TemporaryTimeout(self.page, TIMEOUT_ACTIVATE_CHANGES_MS):
             return self.main_frame.locator("#menu_suggestion_activate_selected").click()
 
-    def expect_activation_state(self, activation_state: ActivationStates) -> None:
+    def expect_success_state(self) -> None:
+        self.main_frame.locator("#site_gui_e2e_central_status.msg.state_success").is_visible()
+
         self.main_frame.locator(
-            f"#site_{self.site_id}_status:has-text('{activation_state}')"
-        ).select_text()
+            "#site_gui_e2e_central_progress.progress.state_success"
+        ).is_visible()
+
+        # assert no further changes are pending
+        expect(self.main_frame.locator("div.page_state.no_changes")).to_be_visible(
+            timeout=TIMEOUT_ACTIVATE_CHANGES_MS
+        )
 
     @property
     def megamenu_setup(self) -> Locator:
@@ -256,8 +262,12 @@ class PPage(LocatorHelper):
 
     def goto_monitoring_all_hosts(self) -> None:
         """main menu -> monitoring -> All hosts"""
-        self.megamenu_monitoring.click()
-        self.main_menu.locator("#monitoring_topic_overview >> text=All hosts").click()
+        monitoring = self.megamenu_monitoring
+        monitoring.click()
+
+        all_hosts = self.megamenu_monitoring.locator("#monitoring_topic_overview >> text=All hosts")
+        all_hosts.wait_for()
+        all_hosts.click()
 
     def select_host(self, host_name: str) -> None:
         self.main_frame.locator(f"td:has-text('{host_name}')").click()

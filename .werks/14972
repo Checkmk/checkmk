@@ -1,0 +1,16 @@
+Title: mk_oracle.ps1: Oracle SID not correctly set as connection property "TNS alias"
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1667825287
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p17
+
+The agent plugin for Oracle on Windows, "mk_oracle.ps1", is able to connect to
+multiple Oracle instances. If the plugin was configured to connect to these
+instances with a specific user, the Oracle SID was not included in the settings
+for TNS alias, which meant the plugin could not connect to the relevant
+instances. This has been fixed.

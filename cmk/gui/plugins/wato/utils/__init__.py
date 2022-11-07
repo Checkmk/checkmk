@@ -345,12 +345,18 @@ def SNMPCredentials(  # pylint: disable=redefined-builtin
     else:
         title = title if title is not None else _("SNMP credentials")
 
+    def validate(value: Any, _prefix: str):
+        if isinstance(value, (str, tuple)):
+            return
+        raise MKUserError(None, "Invalid Format for SNMP credentials")
+
     return Alternative(
         title=title,
         help=help,
         default_value=default_value,
         match=match,
         elements=elements,
+        validate=validate,
     )
 
 

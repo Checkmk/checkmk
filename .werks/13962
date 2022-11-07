@@ -1,0 +1,13 @@
+Title: Require Python Format in WebApi SNMP Attributes
+Class: fix
+Compatible: incomp
+Component: wato
+Date: 1665659386
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p16
+
+When editing or creating a host, you are now required to post data in the Python format
+as some of the datastructure stored in hosts have no direct mapping to JSON.

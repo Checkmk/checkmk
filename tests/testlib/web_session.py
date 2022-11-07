@@ -261,13 +261,15 @@ class CMKWebSession:
         expect_error=False,
         verify_set_attributes=True,
     ):
+        from cmk.utils.python_printer import pformat  # pylint: disable=import-outside-toplevel
+
         if attributes is None:
             attributes = {}
 
         result = self._api_request(
-            "webapi.py?action=add_host",
+            "webapi.py?action=add_host&request_format=python",
             {
-                "request": json.dumps(
+                "request": pformat(
                     {
                         "hostname": hostname,
                         "folder": folder,
@@ -295,6 +297,8 @@ class CMKWebSession:
 
     # hosts: List of tuples of this structure: (hostname, folder_path, attributes)
     def add_hosts(self, create_hosts):
+        from cmk.utils.python_printer import pformat  # pylint: disable=import-outside-toplevel
+
         hosts = [
             {
                 "hostname": hostname,
@@ -306,9 +310,9 @@ class CMKWebSession:
         ]
 
         result = self._api_request(
-            "webapi.py?action=add_hosts",
+            "webapi.py?action=add_hosts&request_format=python",
             {
-                "request": json.dumps(
+                "request": pformat(
                     {
                         "hosts": hosts,
                     }
@@ -324,6 +328,8 @@ class CMKWebSession:
             assert hostname in hosts
 
     def edit_host(self, hostname, attributes=None, unset_attributes=None, cluster_nodes=None):
+        from cmk.utils.python_printer import pformat  # pylint: disable=import-outside-toplevel
+
         if attributes is None:
             attributes = {}
 
@@ -331,9 +337,9 @@ class CMKWebSession:
             unset_attributes = []
 
         result = self._api_request(
-            "webapi.py?action=edit_host",
+            "webapi.py?action=edit_host&request_format=python",
             {
-                "request": json.dumps(
+                "request": pformat(
                     {
                         "hostname": hostname,
                         "unset_attributes": unset_attributes,
@@ -356,6 +362,8 @@ class CMKWebSession:
         assert host["attributes"] == attributes
 
     def edit_hosts(self, edit_hosts):
+        from cmk.utils.python_printer import pformat  # pylint: disable=import-outside-toplevel
+
         hosts = [
             {
                 "hostname": hostname,
@@ -366,9 +374,9 @@ class CMKWebSession:
         ]
 
         result = self._api_request(
-            "webapi.py?action=edit_hosts",
+            "webapi.py?action=edit_hosts&request_format=python",
             {
-                "request": json.dumps(
+                "request": pformat(
                     {
                         "hosts": hosts,
                     }
@@ -391,8 +399,9 @@ class CMKWebSession:
                 assert unset not in host["attributes"]
 
     def get_host(self, hostname, effective_attributes=False):
+
         result = self._api_request(
-            "webapi.py?action=get_host",
+            "webapi.py?action=get_host&output_format=python",
             {
                 "request": json.dumps(
                     {
@@ -401,6 +410,7 @@ class CMKWebSession:
                     }
                 ),
             },
+            output_format="python",
         )
 
         assert isinstance(result, dict)
@@ -409,6 +419,109 @@ class CMKWebSession:
         assert "attributes" in result
 
         return result
+
+    def host_exists(self, hostname):
+        from cmk.utils.python_printer import pformat  # pylint: disable=import-outside-toplevel
+
+        try:
+            result = self._api_request(
+                "webapi.py?action=get_host&request_format=python",
+                {
+                    "request": pformat(
+                        {
+                            "hostname": hostname,
+                        }
+                    ),
+                },
+                output_format="python",
+            )
+        except AssertionError as e:
+            if "No such host" in "%s" % e:
+                return False
+            raise
+
+        assert isinstance(result, dict)
+        return "hostname" in result
+
+    def add_folder(self, folder_path, attributes=None, create_folders=True, expect_error=False):
+        if attributes is None:
+            attributes = {}
+
+        result = self._api_request(
+            "webapi.py?action=add_folder",
+            {
+                "request": json.dumps(
+                    {
+                        "folder": folder_path,
+                        "attributes": attributes or {},
+                        "create_parent_folders": create_folders,
+                    }
+                ),
+            },
+            expect_error=expect_error,
+        )
+
+        assert result is None
+
+        folder = self.get_folder(folder_path)
+
+        # Ignore the automatically generated meta_data attribute for the moment
+        del folder["attributes"]["meta_data"]
+
+        assert folder["attributes"] == attributes
+
+    def get_folder(self, folder_path, effective_attributes=False):
+        result = self._api_request(
+            "webapi.py?action=get_folder",
+            {
+                "request": json.dumps(
+                    {
+                        "folder": folder_path,
+                        "effective_attributes": effective_attributes,
+                    }
+                ),
+            },
+        )
+
+        assert isinstance(result, dict)
+        assert "attributes" in result
+
+        return result
+
+    def folder_exists(self, folder_path):
+        try:
+            result = self._api_request(
+                "webapi.py?action=get_folder",
+                {
+                    "request": json.dumps(
+                        {
+                            "folder": folder_path,
+                        }
+                    ),
+                },
+            )
+        except AssertionError as e:
+            if "does not exist" in "%s" % e:
+                return False
+            raise
+
+        assert isinstance(result, dict)
+        return "folder" in result
+
+    def delete_folder(self, folder_path):
+        result = self._api_request(
+            "webapi.py?action=delete_folder",
+            {
+                "request": json.dumps(
+                    {
+                        "folder": folder_path,
+                    }
+                ),
+            },
+        )
+
+        assert result is None
+        assert not self.folder_exists(folder_path)
 
     def get_ruleset(self, ruleset_name):
         result = self._api_request(
@@ -474,7 +587,7 @@ class CMKWebSession:
 
     def get_all_hosts(self, effective_attributes=False):
         result = self._api_request(
-            "webapi.py?action=get_all_hosts",
+            "webapi.py?action=get_all_hosts&output_format=python",
             {
                 "request": json.dumps(
                     {
@@ -482,6 +595,7 @@ class CMKWebSession:
                     }
                 ),
             },
+            output_format="python",
         )
 
         assert isinstance(result, dict)

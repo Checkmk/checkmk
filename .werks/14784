@@ -1,0 +1,14 @@
+Title: Add Support for Ubuntu 22.10 (Kinetic Kudu)
+Class: feature
+Compatible: compat
+Component: omd
+Date: 1667832386
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p17
+
+With this werk, Checkmk is build for Ubuntu 22.10.
+
+

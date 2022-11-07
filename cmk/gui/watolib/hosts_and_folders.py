@@ -641,6 +641,10 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             self._locked_hosts = False
             self._locked_subfolders = False
 
+        # Preliminary fix for certain functions to speedup processing
+        # Version 2.1+ uses an entirely different approach to determine folder paths
+        self.cached_folder_path = self.path()
+
     def __repr__(self):
         return "Folder(%r, %r)" % (self.path(), self._title)
 

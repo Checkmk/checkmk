@@ -1,0 +1,13 @@
+Title: Slightly improved speed for cmk-update-config
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1667808747
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p30
+
+The cmk-update-config program is used for transforming configurations between major versions.
+In distributed setups, if the remote site is newer than the central site, this script has to be called on every activate changes.
+This werk improves the transformation time of rulesets.

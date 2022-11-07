@@ -482,7 +482,7 @@ class Ruleset:
 
     def get_folder_rules(self, folder):
         try:
-            return self._rules[folder.path()]
+            return self._rules[folder.cached_folder_path]
         except KeyError:
             return []
 

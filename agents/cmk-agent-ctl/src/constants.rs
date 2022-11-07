@@ -22,8 +22,6 @@ pub const LEGACY_PULL_FILE: &str = "allow-legacy-pull";
 pub const CONFIG_FILE: &str = "cmk-agent-ctl.toml";
 
 // DIRS
-#[cfg(unix)]
-pub const ETC_DIR: &str = "/etc/check_mk";
 #[cfg(windows)]
 pub const WIN_AGENT_HOME_DIR: &str = "\\checkmk\\agent";
 

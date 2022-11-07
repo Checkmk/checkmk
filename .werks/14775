@@ -1,0 +1,17 @@
+Title: Add overflow counters to status table
+Class: feature
+Compatible: compat
+Component: livestatus
+Date: 1667888498
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p17
+
+This adds 6 columns to the status table in livestatus: carbon_overflows,
+carbon_overflows_rate, influxdb_overflows, influxdb_overflows_rate,
+rrdcached_overflows, and rrdcached_overflows_rate.  These columns
+display count of rate of data that could not be sent to their
+respective connections.
+

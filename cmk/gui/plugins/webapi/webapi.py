@@ -16,6 +16,7 @@ from six import ensure_str
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.utils.tags
 import cmk.utils.version as cmk_version
+from cmk.utils.crypto import Password
 from cmk.utils.exceptions import MKException, MKGeneralException
 from cmk.utils.type_defs import DiscoveryResult, TagConfigSpec, TagID
 
@@ -595,7 +596,12 @@ class APICallUsers(APICallCollection):
             # Note: Use the htpasswd wrapper for hash_password below, so we get MKUserError if
             #       anything goes wrong.
             if "password" in values:
-                values["password"] = htpasswd.hash_password(values["password"])
+                try:
+                    pw = Password(values["password"])
+                except ValueError as e:
+                    raise MKUserError("password", str(e))
+
+                values["password"] = htpasswd.hash_password(pw)
                 values["serial"] = 1
 
             user_template.update(values)
@@ -648,7 +654,11 @@ class APICallUsers(APICallCollection):
 
             new_password = set_attributes.get("password")
             if new_password:
-                user_attrs["password"] = htpasswd.hash_password(new_password)
+                try:
+                    pw = Password(new_password)
+                except ValueError as e:
+                    raise MKUserError("password", str(e))
+                user_attrs["password"] = htpasswd.hash_password(pw)
                 user_attrs["serial"] = user_attrs.get("serial", 0) + 1
 
             edit_user_objects[user_id] = {"attributes": user_attrs, "is_new_user": False}

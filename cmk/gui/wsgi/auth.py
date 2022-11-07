@@ -8,6 +8,7 @@ import contextlib
 import time
 from typing import Optional
 
+from cmk.utils.crypto import Password
 from cmk.utils.type_defs import UserId
 
 from cmk.gui import userdb
@@ -18,14 +19,14 @@ from cmk.gui.utils.logged_in import UserContext
 from cmk.gui.wsgi.type_defs import RFC7662
 
 
-def automation_auth(user_id: UserId, secret: str) -> Optional[RFC7662]:
-    if verify_automation_secret(user_id, secret):
+def automation_auth(user_id: UserId, secret: Password[str]) -> Optional[RFC7662]:
+    if verify_automation_secret(user_id, secret.raw):
         return rfc7662_subject(user_id, "bearer")
 
     return None
 
 
-def gui_user_auth(user_id: UserId, secret: str) -> Optional[RFC7662]:
+def gui_user_auth(user_id: UserId, secret: Password[str]) -> Optional[RFC7662]:
     try:
         if userdb.check_credentials(user_id, secret):
             return rfc7662_subject(user_id, "bearer")

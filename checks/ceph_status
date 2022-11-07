@@ -109,8 +109,8 @@ check_info["ceph_status"] = {
 # Suggested by customer: 50, 100 per 15 min
 factory_settings["ceph_osds_default_levels"] = {
     "epoch": (50, 100, 15),
-    "num_out_osds": (7.0, 5.0),
-    "num_down_osds": (7.0, 5.0),
+    "num_out_osds": (5.0, 7.0),
+    "num_down_osds": (5.0, 7.0),
 }
 
 
@@ -147,7 +147,7 @@ def check_ceph_status_osds(_no_item, params, parsed):
             warn, crit = params[param_key]
             if value_perc >= crit:
                 state = 2
-            elif value_perc >= crit:
+            elif value_perc >= warn:
                 state = 1
             if state > 0:
                 infotext += " (warn/crit at %s/%s)" % (

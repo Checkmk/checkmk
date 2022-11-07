@@ -183,25 +183,31 @@ fn init_logging(
 
 #[cfg(unix)]
 fn become_user(username: &str) -> AnyhowResult<unistd::User> {
-    let user = unistd::User::from_name(username)?.context(format!(
+    let target_user = unistd::User::from_name(username)?.context(format!(
         "Could not find dedicated Checkmk agent user {}",
         username
     ))?;
 
-    unistd::setgroups(&[user.gid]).context(format!(
+    // If we already are the right user, return early. Otherwise, eg. setting the supplementary
+    // group ids will fail due to insufficient permissions.
+    if target_user.uid == unistd::getuid() {
+        return Ok(target_user);
+    }
+
+    unistd::setgroups(&[target_user.gid]).context(format!(
         "Failed to set supplementary group id {} corresponding to user {}",
-        user.gid, user.name,
+        target_user.gid, target_user.name,
     ))?;
-    unistd::setgid(user.gid).context(format!(
+    unistd::setgid(target_user.gid).context(format!(
         "Failed to set group id {} corresponding to user {}",
-        user.gid, user.name,
+        target_user.gid, target_user.name,
     ))?;
-    unistd::setuid(user.uid).context(format!(
+    unistd::setuid(target_user.uid).context(format!(
         "Failed to set user id {} corresponding to user {}",
-        user.uid, user.name,
+        target_user.uid, target_user.name,
     ))?;
 
-    Ok(user)
+    Ok(target_user)
 }
 
 #[cfg(unix)]

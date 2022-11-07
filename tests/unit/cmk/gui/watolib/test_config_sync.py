@@ -386,8 +386,6 @@ def _get_expected_paths(
             "local/share/check_mk/web",
             "local/share/check_mk/web/htdocs",
             "local/share/check_mk/web/htdocs/themes",
-            "local/share/check_mk/web/htdocs/themes/classic",
-            "local/share/check_mk/web/htdocs/themes/classic/images",
             "local/share/check_mk/web/htdocs/themes/facelift",
             "local/share/check_mk/web/htdocs/themes/facelift/images",
             "local/share/check_mk/web/htdocs/themes/modern-dark",

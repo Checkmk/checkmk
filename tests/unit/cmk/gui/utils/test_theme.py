@@ -112,8 +112,10 @@ def test_has_custom_logo(
     )
     if with_logo:
         th.base_dir().joinpath("images").mkdir(parents=True, exist_ok=True)
-        th.base_dir().joinpath("images", "mk-logo.png").touch()
-    assert th.has_custom_logo() is (edition is cmk.utils.version.Edition.CME and with_logo)
+        th.base_dir().joinpath("images", "login_logo.png").touch()
+    assert th.has_custom_logo("login_logo") is (
+        edition is cmk.utils.version.Edition.CME and with_logo
+    )
 
 
 @pytest.mark.usefixtures("theme_dirs")

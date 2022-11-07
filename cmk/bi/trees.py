@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Type
+from __future__ import annotations
+
+from typing import Any
 
 from marshmallow import fields, pre_dump
 from marshmallow_oneofschema import OneOfSchema
@@ -189,7 +191,7 @@ class BICompiledLeaf(ABCBICompiledNode):
         return entity.services_with_fullstate.get(self.service_description)
 
     @classmethod
-    def schema(cls) -> Type["BICompiledLeafSchema"]:
+    def schema(cls) -> type[BICompiledLeafSchema]:
         return BICompiledLeafSchema
 
     def serialize(self):
@@ -367,7 +369,7 @@ class BICompiledRule(ABCBICompiledNode):
         )
 
     @classmethod
-    def schema(cls) -> Type["BICompiledRuleSchema"]:
+    def schema(cls) -> type[BICompiledRuleSchema]:
         return BICompiledRuleSchema
 
     def serialize(self):

@@ -8,7 +8,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable
 from functools import partial
-from typing import Any, Literal, NamedTuple, Protocol, Type, TypeVar
+from typing import Any, Literal, NamedTuple, Protocol, TypeVar
 
 from marshmallow import Schema as marshmallow_Schema
 
@@ -499,7 +499,7 @@ class ABCBIAction(ABC):
 
     @classmethod
     @abstractmethod
-    def schema(cls) -> Type[Schema]:
+    def schema(cls) -> type[Schema]:
         raise NotImplementedError()
 
     @abstractmethod
@@ -566,7 +566,7 @@ class ABCBISearch(ABC):
 
     @classmethod
     @abstractmethod
-    def schema(cls) -> Type[Schema]:
+    def schema(cls) -> type[Schema]:
         raise NotImplementedError()
 
     @abstractmethod
@@ -619,7 +619,7 @@ class ABCBIAggregationFunction(ABC):
 
     @classmethod
     @abstractmethod
-    def schema(cls) -> Type[Schema]:
+    def schema(cls) -> type[Schema]:
         raise NotImplementedError()
 
     @abstractmethod

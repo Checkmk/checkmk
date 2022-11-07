@@ -3,8 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 from collections.abc import Mapping
-from typing import Any, Type
+from typing import Any
 
 from marshmallow import fields, post_dump, pre_load
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
@@ -88,7 +90,7 @@ class BIEmptySearch(ABCBISearch):
         return "empty"
 
     @classmethod
-    def schema(cls) -> Type["BIEmptySearchSchema"]:
+    def schema(cls) -> type[BIEmptySearchSchema]:
         return BIEmptySearchSchema
 
     def execute(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> list[dict]:
@@ -121,7 +123,7 @@ class BIHostSearch(ABCBISearch):
         return "host_search"
 
     @classmethod
-    def schema(cls) -> Type["BIHostSearchSchema"]:
+    def schema(cls) -> type[BIHostSearchSchema]:
         return BIHostSearchSchema
 
     def serialize(self):
@@ -309,7 +311,7 @@ class BIServiceSearch(ABCBISearch):
         return "service_search"
 
     @classmethod
-    def schema(cls) -> Type["BIServiceSearchSchema"]:
+    def schema(cls) -> type[BIServiceSearchSchema]:
         return BIServiceSearchSchema
 
     def serialize(self):
@@ -369,7 +371,7 @@ class BIFixedArgumentsSearch(ABCBISearch):
         }
 
     @classmethod
-    def schema(cls) -> Type["BIFixedArgumentsSearchSchema"]:
+    def schema(cls) -> type[BIFixedArgumentsSearchSchema]:
         return BIFixedArgumentsSearchSchema
 
     def __init__(self, search_config: dict[str, Any]) -> None:

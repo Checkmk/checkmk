@@ -3,8 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 from collections.abc import Callable
-from typing import Any, Type
+from typing import Any
 
 from marshmallow import validate
 from marshmallow_oneofschema import OneOfSchema
@@ -58,7 +60,7 @@ class BIAggregationFunctionBest(ABCBIAggregationFunction):
         return "best"
 
     @classmethod
-    def schema(cls) -> Type["BIAggregationFunctionBestSchema"]:
+    def schema(cls) -> type[BIAggregationFunctionBestSchema]:
         return BIAggregationFunctionBestSchema
 
     def serialize(self):
@@ -111,7 +113,7 @@ class BIAggregationFunctionWorst(ABCBIAggregationFunction):
         return "worst"
 
     @classmethod
-    def schema(cls) -> Type["BIAggregationFunctionWorstSchema"]:
+    def schema(cls) -> type[BIAggregationFunctionWorstSchema]:
         return BIAggregationFunctionWorstSchema
 
     def serialize(self):
@@ -164,7 +166,7 @@ class BIAggregationFunctionCountOK(ABCBIAggregationFunction):
         return "count_ok"
 
     @classmethod
-    def schema(cls) -> Type["BIAggregationFunctionCountOKSchema"]:
+    def schema(cls) -> type[BIAggregationFunctionCountOKSchema]:
         return BIAggregationFunctionCountOKSchema
 
     def serialize(self):

@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Type
+from __future__ import annotations
+
+from typing import Any
 
 from marshmallow_oneofschema import OneOfSchema
 
@@ -49,7 +51,7 @@ class BICallARuleAction(ABCBIAction, ABCWithSchema):
         return "call_a_rule"
 
     @classmethod
-    def schema(cls) -> Type["BICallARuleActionSchema"]:
+    def schema(cls) -> type[BICallARuleActionSchema]:
         return BICallARuleActionSchema
 
     def serialize(self):
@@ -110,7 +112,7 @@ class BIStateOfHostAction(ABCBIAction, ABCWithSchema):
         return "state_of_host"
 
     @classmethod
-    def schema(cls) -> Type["BIStateOfHostActionSchema"]:
+    def schema(cls) -> type[BIStateOfHostActionSchema]:
         return BIStateOfHostActionSchema
 
     def serialize(self):
@@ -159,7 +161,7 @@ class BIStateOfServiceAction(ABCBIAction, ABCWithSchema):
         return "state_of_service"
 
     @classmethod
-    def schema(cls) -> Type["BIStateOfServiceActionSchema"]:
+    def schema(cls) -> type[BIStateOfServiceActionSchema]:
         return BIStateOfServiceActionSchema
 
     def serialize(self):
@@ -229,7 +231,7 @@ class BIStateOfRemainingServicesAction(ABCBIAction, ABCWithSchema):
         return "state_of_remaining_services"
 
     @classmethod
-    def schema(cls) -> Type["BIStateOfRemainingServicesActionSchema"]:
+    def schema(cls) -> type[BIStateOfRemainingServicesActionSchema]:
         return BIStateOfRemainingServicesActionSchema
 
     def serialize(self):

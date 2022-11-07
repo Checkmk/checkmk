@@ -1,0 +1,18 @@
+Title: Docker agent plugin: Handle race conditions caused by removed containers
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1668411194
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p17
+
+As of this werk, the docker agent plugin handles the following two race conditions:
+
+LI: Removal of a container exactly at the time when the agent plugin attempts to query container statistics (CPU usage etc.). Before this werk, depending on the docker version, the plugin crashed with either <tt>requests.exceptions.JSONDecodeError</tt> or <tt>json.decoder.JSONDecodeError</tt>.
+LI: For old docker versions only (eg. 1.31): Removal of a container in between querying the list of containers on the target system and subsequently querying the individual containers. For newer docker versions, the agent plugin already handled this race condition before this werk.
+
+Note that users have to update the agent plugin on affected systems in order to benefit from this
+werk.

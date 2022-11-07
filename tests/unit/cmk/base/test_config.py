@@ -24,6 +24,7 @@ from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSe
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 from cmk.utils.type_defs import CheckPluginName, HostName, RuleSetName, SectionName, ServiceID
 
+from cmk.core_helpers.tcp import EncryptionHandling
 from cmk.core_helpers.type_defs import Mode
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -668,12 +669,38 @@ def test_host_config_tcp_connect_timeout(
 @pytest.mark.parametrize(
     "hostname_str,result",
     [
-        ("testhost1", {"use_regular": "disable"}),
-        ("testhost2", {"use_regular": "enforce"}),
+        ("testhost1", EncryptionHandling.ANY_AND_PLAIN),
+        ("testhost2", EncryptionHandling.TLS_ENCRYPTED_ONLY),
     ],
 )
-def test_host_config_agent_encryption(
-    monkeypatch: MonkeyPatch, hostname_str: str, result: Dict[str, str]
+def test_host_config_encryption_handling(
+    monkeypatch: MonkeyPatch, hostname_str: str, result: EncryptionHandling
+) -> None:
+    hostname = HostName(hostname_str)
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.set_ruleset(
+        "encryption_handling",
+        [
+            {
+                "condition": {"host_name": ["testhost2"]},
+                "value": {"accept": "tls_encrypted_only"},
+            }
+        ],
+    )
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.get_host_config(hostname).encryption_handling is result
+
+
+@pytest.mark.parametrize(
+    "hostname_str,result",
+    [
+        ("testhost1", None),
+        ("testhost2", "my-super-secret-psk"),
+    ],
+)
+def test_host_config_symmetric_agent_encryption(
+    monkeypatch: MonkeyPatch, hostname_str: str, result: str | None
 ) -> None:
     hostname = HostName(hostname_str)
     ts = Scenario()
@@ -683,12 +710,12 @@ def test_host_config_agent_encryption(
         [
             {
                 "condition": {"host_name": ["testhost2"]},
-                "value": {"use_regular": "enforce"},
+                "value": "my-super-secret-psk",
             }
         ],
     )
     config_cache = ts.apply(monkeypatch)
-    assert config_cache.get_host_config(hostname).agent_encryption == result
+    assert config_cache.get_host_config(hostname).symmetric_agent_encryption is result
 
 
 @pytest.mark.parametrize(

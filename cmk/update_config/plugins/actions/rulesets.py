@@ -13,7 +13,7 @@ from cmk.utils.type_defs import CheckPluginName, RulesetName
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.watolib import timeperiods
-from cmk.gui.watolib.rulesets import AllRulesets, RulesetCollection
+from cmk.gui.watolib.rulesets import AllRulesets, Rule, RulesetCollection
 
 from cmk.update_config.plugins.actions.replaced_check_plugins import REPLACED_CHECK_PLUGINS
 from cmk.update_config.registry import update_action_registry, UpdateAction
@@ -29,6 +29,10 @@ REPLACED_RULESETS: Mapping[RulesetName, RulesetName] = {
 class UpdateRulesets(UpdateAction):
     def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
         all_rulesets = AllRulesets.load_all_rulesets()
+
+        # this *must* be done before the transorms, otherwise information is lost!
+        _extract_connection_encryption_handling_from_210_rules(logger, all_rulesets)
+
         _transform_fileinfo_timeofday_to_timeperiods(all_rulesets)
         _transform_replaced_wato_rulesets(
             logger,
@@ -54,6 +58,46 @@ update_action_registry.register(
         sort_index=30,
     )
 )
+
+
+def _extract_connection_encryption_handling_from_210_rules(
+    logger: Logger, all_rulesets: RulesetCollection
+) -> None:
+    """Exctract the new 2.2 'encryption_handling' rule from the old 2.1 'agent_encryption'
+
+    We must do this befor we transform the rules, as the used information is then removed by the migration.
+    This can be removed after 2.2 is forked away.
+    """
+    if not (encryption_handling := all_rulesets.get("encryption_handling")).is_empty():
+        logger.log(VERBOSE, "New rule 'encryption_handling' is already present")
+        return
+
+    if (encryption_ruleset := all_rulesets.get("agent_encryption")).is_empty():
+        logger.log(VERBOSE, "No 'agent_encryption' rules to transform")
+        return
+
+    logger.log(VERBOSE, "Create 'encryption_handling' rules from 'agent_encryption'")
+    for folder, _folder_index, rule in encryption_ruleset.get_rules():
+        if not rule.value or "use_regular" not in rule.value:
+            continue
+
+        new_rule = Rule.from_ruleset_defaults(folder, encryption_handling)
+        match rule.value["use_regular"]:
+            case "enforce":
+                new_rule.value["accept"] = "any_encrypted"
+            case "allow":
+                new_rule.value["accept"] = "any_and_plain"
+            case "disable":
+                continue
+            case unknown_setting:
+                raise ValueError(f"Unknown setting in {encryption_ruleset.name}: {unknown_setting}")
+
+        new_rule.rule_options.comment = (
+            "This rule has been created automatically during the upgrade to Checkmk version 2.2.\n"
+            f"Please refer to Werk #14982 for details.\n\n{new_rule.comment()}"
+        )
+        logger.log(VERBOSE, "Adding 'encryption_handling' rule: %s", new_rule.id)
+        encryption_handling.append_rule(folder, new_rule)
 
 
 def _transform_replaced_wato_rulesets(

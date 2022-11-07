@@ -1,0 +1,37 @@
+Title: Agent Encryption: Simplify configuration
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1667986974
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+This is the second of two Werks to simplify the configuration of the agent encryption.
+The former ruleset <i>"Encryption (Linux, Windows)"</i> is split up in three rulesets:
+
+<b>The pre-shared secret used for the OpenSSH based encryption is configured in the ruleset <i>"Symmetric encryption (Linux, Windows)"</i></b>.
+This is the only parameter that is configured here. If it is set, the agent shall send encrypted data using this secret.
+By default, no such encryption is applied.
+
+This is a boiled down version of the original ruleset.
+No user interaction is required when updating.
+
+<b>The real-time check related parameters are moved to the dedicated ruleset</b>.
+See <a href='https://checkmk.com/de/werk/14652'>Werk #14652</a> for details on how this is incompatible.
+
+<b>The server side handling of (un)encrypted data is configured in the new ruleset <i>Enforce agent data encryption</i></b>.
+Users can choose how to deal with unencrypted data: use it, or discard it.
+This configration option is extended, as we now differentiate between TLS encryption and the OpenSSH based symmetric encryption.
+TLS encrypted data is always considered to be ok, which leaves us with three options:
+
+LI: <i>"Accept TLS encrypted connections only"</i>: All other connections are cosed, and the <i>Check_MK</i> service goes to {CRIT}. Note that by the time we notice that the connection is unencrypted, the unencrypted data is already sent over the network.
+LI: <i>"Accept all types of encryption"</i>: TLS encrypted and symmetrically encrypted data is accepted. Unencrypted data is discarded, and the <i>Check_MK</i> service goes to {CRIT}.
+LI: <i>"Accept all incoming data, including unencrypted"</i>: This is (and has been) the default.
+
+During update, rules reflecting your current setup are created automatically, no user interaction is required.
+
+Note that for users of the agent controller, the configuration of the pre-shared secret is not only unneccessary, but also counter productive:
+It renders the compression implemented in the controller ineffective.
+

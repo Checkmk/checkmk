@@ -1418,7 +1418,8 @@ class AutomationDiagHost(Automation):
                     address=(fetcher.address[0], port),
                     timeout=timeout,
                     host_name=fetcher.host_name,
-                    encryption_settings=fetcher.encryption_settings,
+                    encryption_handling=fetcher.encryption_handling,
+                    pre_shared_secret=fetcher.pre_shared_secret,
                 )
 
             raw_data = get_raw_data(file_cache, fetcher, Mode.CHECKING)

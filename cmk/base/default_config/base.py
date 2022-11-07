@@ -45,7 +45,8 @@ pnp4nagios_enabled = True  # Set by OMD hook
 # TODO: Is this one deprecated for a long time?
 agent_port = 6556
 agent_ports: Ruleset[int] = []
-agent_encryption: Ruleset[object] = []
+agent_encryption: Ruleset[str | None] = []
+encryption_handling: Ruleset[object] = []
 agent_exclude_sections: Ruleset[object] = []
 # UDP ports used for SNMP
 snmp_ports: Ruleset[object] = []

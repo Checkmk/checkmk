@@ -114,6 +114,7 @@ from cmk.snmplib.type_defs import (  # these are required in the modules' namesp
 )
 
 import cmk.core_helpers.cache as cache_file
+from cmk.core_helpers.tcp import EncryptionHandling
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.autochecks as autochecks
@@ -2803,11 +2804,27 @@ class HostConfig:
         return timeouts[0]
 
     @property
-    def agent_encryption(self) -> Mapping[str, str]:
-        settings = self._config_cache.host_extra_conf(self.hostname, agent_encryption)
-        if not settings:
-            return {"use_regular": "disable"}
-        return settings[0]
+    def encryption_handling(
+        self,
+    ) -> EncryptionHandling:
+        if not (settings := self._config_cache.host_extra_conf(self.hostname, encryption_handling)):
+            return EncryptionHandling.ANY_AND_PLAIN
+        match settings[0]["accept"]:
+            case "tls_encrypted_only":
+                return EncryptionHandling.TLS_ENCRYPTED_ONLY
+            case "any_encrypted":
+                return EncryptionHandling.ANY_ENCRYPTED
+            case "any_and_plain":
+                return EncryptionHandling.ANY_AND_PLAIN
+        raise ValueError("Unknown setting: %r" % settings[0])
+
+    @property
+    def symmetric_agent_encryption(self) -> str | None:
+        return (
+            settings[0]
+            if (settings := self._config_cache.host_extra_conf(self.hostname, agent_encryption))
+            else None
+        )
 
     @property
     def agent_description(self) -> str:

@@ -4,12 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
+import enum
 import logging
 import socket
 import ssl
 from collections.abc import Mapping
 from typing import Any, Final
 from uuid import UUID
+
+from typing_extensions import assert_never
 
 import cmk.utils.debug
 from cmk.utils import paths
@@ -23,6 +26,12 @@ from .tcp_agent_ctl import AgentCtlMessage
 from .type_defs import Mode
 
 
+class EncryptionHandling(enum.Enum):
+    TLS_ENCRYPTED_ONLY = enum.auto()
+    ANY_ENCRYPTED = enum.auto()
+    ANY_AND_PLAIN = enum.auto()
+
+
 class TCPFetcher(Fetcher[AgentRawData]):
     def __init__(
         self,
@@ -31,7 +40,8 @@ class TCPFetcher(Fetcher[AgentRawData]):
         address: tuple[HostAddress | None, int],
         timeout: float,
         host_name: HostName,
-        encryption_settings: Mapping[str, str],
+        encryption_handling: EncryptionHandling,
+        pre_shared_secret: str | None,
     ) -> None:
         super().__init__(logger=logging.getLogger("cmk.helper.tcp"))
         self.family: Final = socket.AddressFamily(family)
@@ -39,7 +49,8 @@ class TCPFetcher(Fetcher[AgentRawData]):
         self.address: Final[tuple[HostAddress | None, int]] = (address[0], address[1])
         self.timeout: Final = timeout
         self.host_name: Final = host_name
-        self.encryption_settings: Final = encryption_settings
+        self.encryption_handling: Final = encryption_handling
+        self.pre_shared_secret: Final = pre_shared_secret
         self._opt_socket: socket.socket | None = None
 
     @property
@@ -56,7 +67,8 @@ class TCPFetcher(Fetcher[AgentRawData]):
                     f"family={self.family!r}",
                     f"timeout={self.timeout!r}",
                     f"host_name={self.host_name!r}",
-                    f"encryption_settings={self.encryption_settings!r}",
+                    f"encryption_handling={self.encryption_handling!r}",
+                    f"pre_shared_secret={self.pre_shared_secret!r}",
                 )
             )
             + ")"
@@ -67,7 +79,13 @@ class TCPFetcher(Fetcher[AgentRawData]):
         serialized_ = copy.deepcopy(dict(serialized))
         address: tuple[HostAddress | None, int] = serialized_.pop("address")
         host_name = HostName(serialized_.pop("host_name"))
-        return cls(address=address, host_name=host_name, **serialized_)
+        encryption_handling = EncryptionHandling(serialized_.pop("encryption_handling"))
+        return cls(
+            address=address,
+            host_name=host_name,
+            encryption_handling=encryption_handling,
+            **serialized_,
+        )
 
     def to_json(self) -> Mapping[str, Any]:
         return {
@@ -75,7 +93,8 @@ class TCPFetcher(Fetcher[AgentRawData]):
             "address": self.address,
             "timeout": self.timeout,
             "host_name": str(self.host_name),
-            "encryption_settings": self.encryption_settings,
+            "encryption_handling": self.encryption_handling.value,
+            "pre_shared_secret": self.pre_shared_secret,
         }
 
     def open(self) -> None:
@@ -156,26 +175,20 @@ class TCPFetcher(Fetcher[AgentRawData]):
             return
 
         if is_registered:
-            raise MKFetcherError("Host is registered for TLS but not using it")
+            raise MKFetcherError("Refused: Host is registered for TLS but not using it")
 
-        # Using 'get' here is a quick fix.
-        # The key is missing if a rule "Encryption" is set up without configuring anything.
-        # Fixing this is not worth it at the moment, the ruleset needs a makeover anyway.
-        enc_setting = self.encryption_settings.get("use_regular", "allow")
-        if enc_setting == "tls":
-            raise MKFetcherError("Refused: TLS not supported by agent")
-
-        if protocol is TransportProtocol.PLAIN:
-            if enc_setting in ("disable", "allow"):
-                return
-            raise MKFetcherError(
-                "Agent output is plaintext but encryption is enforced by configuration"
-            )
-
-        if enc_setting == "disable":
-            raise MKFetcherError(
-                "Agent output is encrypted but encryption is disabled by configuration"
-            )
+        match self.encryption_handling:
+            case EncryptionHandling.TLS_ENCRYPTED_ONLY:
+                raise MKFetcherError("Refused: TLS is enforced but host is not using it")
+            case EncryptionHandling.ANY_ENCRYPTED:
+                if protocol is TransportProtocol.PLAIN:
+                    raise MKFetcherError(
+                        "Refused: Encryption is enforced but agent output is plaintext"
+                    )
+            case EncryptionHandling.ANY_AND_PLAIN:
+                pass
+            case never:
+                assert_never(never)
 
     def _wrap_tls(self, controller_uuid: UUID | None) -> ssl.SSLSocket:
 
@@ -213,15 +226,12 @@ class TCPFetcher(Fetcher[AgentRawData]):
         if protocol is TransportProtocol.PLAIN:
             return protocol.value + output  # bring back stolen bytes
 
+        if (secret := self.pre_shared_secret) is None:
+            raise MKFetcherError("Data is encrypted but no secret is known")
+
         self._logger.debug("Try to decrypt output")
         try:
-            return AgentRawData(
-                decrypt_by_agent_protocol(
-                    self.encryption_settings["passphrase"],
-                    protocol,
-                    output,
-                )
-            )
+            return AgentRawData(decrypt_by_agent_protocol(secret, protocol, output))
         except Exception as e:
             raise MKFetcherError("Failed to decrypt agent output: %s" % e) from e
 

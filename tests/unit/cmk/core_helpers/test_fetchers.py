@@ -44,7 +44,7 @@ from cmk.core_helpers.snmp import (
     SNMPPluginStore,
     SNMPPluginStoreItem,
 )
-from cmk.core_helpers.tcp import TCPFetcher
+from cmk.core_helpers.tcp import EncryptionHandling, TCPFetcher
 from cmk.core_helpers.tcp_agent_ctl import CompressionType, HeaderV1, Version
 from cmk.core_helpers.type_defs import Mode
 
@@ -826,7 +826,8 @@ class TestTCPFetcher:
             address=("1.2.3.4", 6556),
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.1,
-            encryption_settings={"use_regular": "allow"},
+            encryption_handling=EncryptionHandling.ANY_AND_PLAIN,
+            pre_shared_secret=None,
         )
 
     def test_repr(self, fetcher: TCPFetcher) -> None:
@@ -838,7 +839,8 @@ class TestTCPFetcher:
         assert other.family == fetcher.family
         assert other.address == fetcher.address
         assert other.timeout == fetcher.timeout
-        assert other.encryption_settings == fetcher.encryption_settings
+        assert other.encryption_handling == fetcher.encryption_handling
+        assert other.pre_shared_secret == fetcher.pre_shared_secret
 
     def test_with_cached_does_not_open(self) -> None:
         file_cache = StubFileCache[AgentRawData](
@@ -856,7 +858,8 @@ class TestTCPFetcher:
             address=("This is not an IP address. Connecting would fail.", 6556),
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.1,
-            encryption_settings={"use_regular": "allow"},
+            encryption_handling=EncryptionHandling.ANY_AND_PLAIN,
+            pre_shared_secret=None,
         ) as fetcher:
             # TODO(ml): monkeypatch the fetcehr and check it was
             # not called to make this test explicit and do what
@@ -878,7 +881,8 @@ class TestTCPFetcher:
             address=("127.0.0.1", 6556),
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.1,
-            encryption_settings={"use_regular": "allow"},
+            encryption_handling=EncryptionHandling.ANY_AND_PLAIN,
+            pre_shared_secret=None,
         ) as fetcher:
             for mode in Mode:
                 if mode is Mode.CHECKING:
@@ -901,47 +905,37 @@ class TestTCPFetcher:
             address=("This is not an IP address. Connecting fails.", 6556),
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.1,
-            encryption_settings={"use_regular": "allow"},
+            encryption_handling=EncryptionHandling.ANY_AND_PLAIN,
+            pre_shared_secret=None,
         ) as fetcher:
             raw_data = get_raw_data(file_cache, fetcher, Mode.CHECKING)
 
         assert isinstance(raw_data.error, MKFetcherError)
 
     def test_decrypt_plaintext_is_noop(self) -> None:
-        settings = {"use_regular": "allow"}
         output = b"<<<section:sep(0)>>>\nbody\n"
         fetcher = TCPFetcher(
             family=socket.AF_INET,
             address=("1.2.3.4", 0),
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.0,
-            encryption_settings=settings,
+            encryption_handling=EncryptionHandling.ANY_AND_PLAIN,
+            pre_shared_secret=None,
         )
         assert fetcher._decrypt(TransportProtocol(output[:2]), AgentRawData(output[2:])) == output
 
     def test_validate_protocol_plaintext_with_enforce_raises(self) -> None:
-        settings = {"use_regular": "enforce"}
         fetcher = TCPFetcher(
             family=socket.AF_INET,
             address=("1.2.3.4", 0),
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.0,
-            encryption_settings=settings,
+            encryption_handling=EncryptionHandling.ANY_ENCRYPTED,
+            pre_shared_secret=None,
         )
 
         with pytest.raises(MKFetcherError):
             fetcher._validate_protocol(TransportProtocol.PLAIN, is_registered=False)
-
-    def test_validate_protocol_missing_use_regular_key_allows_plaintext(self) -> None:
-        # The key is missing if a rule "Encryption" is set up without configuring anything.
-        # Fixing this is not worth it at the moment, the ruleset needs a makeover anyway.
-        TCPFetcher(
-            family=socket.AF_INET,
-            address=("1.2.3.4", 0),
-            host_name=HostName("irrelevant_for_this_test"),
-            timeout=0.0,
-            encryption_settings={},  # key use_regular is missing here
-        )._validate_protocol(TransportProtocol.PLAIN, is_registered=False)
 
     def test_validate_protocol_no_tls_with_registered_host_raises(self) -> None:
         fetcher = TCPFetcher(
@@ -949,7 +943,8 @@ class TestTCPFetcher:
             address=("1.2.3.4", 0),
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.0,
-            encryption_settings={},
+            encryption_handling=EncryptionHandling.ANY_AND_PLAIN,  # not relevant for this test
+            pre_shared_secret=None,
         )
         for p in TransportProtocol:
             if p is TransportProtocol.TLS:
@@ -958,38 +953,26 @@ class TestTCPFetcher:
                 fetcher._validate_protocol(p, is_registered=True)
 
     def test_validate_protocol_tls_always_ok(self) -> None:
-        for setting, is_registered in cartesian_product(
-            ("tls", "enforce", "enable", "disable"),
-            (True, False),
+        for encryption_handling, is_registered in cartesian_product(
+            EncryptionHandling, (True, False)
         ):
             TCPFetcher(
                 family=socket.AF_INET,
                 address=("1.2.3.4", 0),
                 host_name=HostName("irrelevant_for_this_test"),
                 timeout=0.0,
-                encryption_settings={"use_regular": setting},
+                encryption_handling=encryption_handling,
+                pre_shared_secret=None,
             )._validate_protocol(TransportProtocol.TLS, is_registered=is_registered)
 
-    def test_validate_protocol_encryption_with_disabled_raises(self) -> None:
-        settings = {"use_regular": "disable"}
-        fetcher = TCPFetcher(
-            family=socket.AF_INET,
-            address=("1.2.3.4", 0),
-            host_name=HostName("irrelevant_for_this_test"),
-            timeout=0.0,
-            encryption_settings=settings,
-        )
-        with pytest.raises(MKFetcherError):
-            fetcher._validate_protocol(TransportProtocol.PBKDF2, is_registered=False)
-
     def test_validate_protocol_tls_required(self) -> None:
-        settings = {"use_regular": "tls"}
         fetcher = TCPFetcher(
             family=socket.AF_INET,
             address=("1.2.3.4", 0),
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.0,
-            encryption_settings=settings,
+            encryption_handling=EncryptionHandling.TLS_ENCRYPTED_ONLY,
+            pre_shared_secret=None,
         )
         for p in TransportProtocol:
             if p is TransportProtocol.TLS:
@@ -1045,7 +1028,8 @@ class TestFetcherCaching:
             address=("1.2.3.4", 0),
             timeout=0.0,
             host_name=HostName("irrelevant_for_this_test"),
-            encryption_settings={},
+            encryption_handling=EncryptionHandling.ANY_AND_PLAIN,
+            pre_shared_secret=None,
         )
         monkeypatch.setattr(fetcher, "_fetch_from_io", lambda mode: b"fetched_section")
         return fetcher

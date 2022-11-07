@@ -584,7 +584,8 @@ class _Builder:
                     address=(source.ipaddress, self.host_config.agent_port),
                     host_name=source.hostname,
                     timeout=self.host_config.tcp_connect_timeout,
-                    encryption_settings=self.host_config.agent_encryption,
+                    encryption_handling=self.host_config.encryption_handling,
+                    pre_shared_secret=self.host_config.symmetric_agent_encryption,
                 ),
                 AgentFileCache(
                     source.hostname,

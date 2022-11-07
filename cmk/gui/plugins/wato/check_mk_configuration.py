@@ -5231,94 +5231,84 @@ rulespec_registry.register(
 )
 
 
-def _encryption_secret(title) -> _Tuple[str, PasswordSpec]:  # type:ignore[no-untyped-def]
-    return ("passphrase", PasswordSpec(title=title, pwlen=16, allow_empty=False))
-
-
-def _valuespec_agent_encryption_no_tls() -> Dictionary:
+def _valuespec_encryption_handling() -> Dictionary:
     return Dictionary(
-        title=_("Allow non-TLS connections"),
+        title=_("Enforce agent data encryption"),
         elements=[
-            _encryption_secret(_("Encryption secret")),
             (
-                "use_regular",
+                "accept",
                 DropdownChoice(
-                    title=_("Use the following setting for non-TLS connections"),
+                    title=_("Server side handling of unencrypted data"),
                     help=_(
-                        "Choose if the agent sends encrypted packages. This controls whether "
-                        "baked agents encrypt their output and whether Checkmk expects "
-                        "encrypted output. "
-                        "Please note: If you opt to enforce encryption, "
-                        "agents that don't support encryption will not work any more. "
-                        "Further note: This only affects regular agents, not special agents "
-                        "aka datasource programs."
+                        "The agent can send data either using TLS encryption, a symmetric encryption, or unencrypted."
+                        " This rule determines how the monitoring site handles each type of data, in case it is sent by the agent."
+                        " Data encrypted using TLS is always accepted."
+                        " Note: This does not prevent the unencrypted data being sent over the network in all cases."
                     ),
-                    default_value="disable",
+                    default_value="any_and_plain",
                     choices=[
-                        ("enforce", _("Enforce (drop unencrypted data)")),
-                        ("allow", _("Enable (accept encrypted and unencrypted data)")),
-                        ("disable", _("Disable (drop encrypted data)")),
+                        ("tls_encrypted_only", _("Accept TLS encrypted connections only")),
+                        ("any_encrypted", _("Accept all types of encryption")),
+                        (
+                            "any_and_plain",
+                            _("Accept all incoming data, including unencrypted"),
+                        ),
                     ],
                 ),
             ),
         ],
         optional_keys=[],
-        help=_("Control encryption of data sent from agents to Checkmk.")
-        + "<br>"
-        + _(
-            "<b>Note</b>: On the agent side, this encryption is only supported by the Linux "
-            "agent and the Windows agent. However, when setting the Encryption settings to "
-            "<i>enforce</i>, Checkmk will expect encrypted data from all matching hosts. "
-            "Please keep this in mind when configuring this ruleset."
-        ),
     )
 
 
-def _migrate_encryption_settings(p: Mapping[str, Any]) -> Mapping[str, Any]:
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupHostsMonitoringRulesVarious,
+        name="encryption_handling",
+        valuespec=_valuespec_encryption_handling,
+    )
+)
+
+
+def _migrate_encryption_settings(p: Mapping[str, Any]) -> str | None:
     """
-    >>> _migrate_encryption_settings({})
-    {}
-    >>> _migrate_encryption_settings({'use_realtime': 'enforce'})
-    {}
-    >>> _migrate_encryption_settings({'passphrase': 'this-must-be-for-rtc-only'})
-    {}
+    >>> _migrate_encryption_settings({}) is None
+    True
+    >>> _migrate_encryption_settings({'use_realtime': 'enforce'}) is None
+    True
+    >>> _migrate_encryption_settings({'passphrase': 'this-must-be-for-rtc-only'}) is None
+    True
     >>> _migrate_encryption_settings({'passphrase': 'this-is-also-for-the-agent', 'use_regular': 'disable', 'use_realtime': 'enforce'})
-    {'passphrase': 'this-is-also-for-the-agent', 'use_regular': 'disable'}
+    'this-is-also-for-the-agent'
 
     """
-    if "use_regular" in p:
-        return {
-            "passphrase": p["passphrase"],
-            "use_regular": p["use_regular"],
-        }
-    return {}
+    if p is None or isinstance(p, str):
+        return p
+    return p["passphrase"] if "use_regular" in p else None
 
 
 def _valuespec_agent_encryption() -> Migrate:
-    tls_alt_name_title = _("Use TLS encryption (Linux)")
     return Migrate(
         migrate=_migrate_encryption_settings,
         valuespec=Alternative(
-            title=_("Encryption (Linux, Windows)"),
-            help=_("Control encryption of data sent from agents to Checkmk.")
-            + "<br>"
-            + _(
-                "<b>Note</b>: On the agent side, TLS is currently only supported on systemd based Linux machines. "
-                "However, when setting the Encryption settings to '%s', Checkmk will expect encrypted data from all matching hosts. "
-                "Please keep this in mind when configuring this ruleset."
-            )
-            % tls_alt_name_title,
+            title=_("Symmetric encryption (Linux, Windows)"),
+            help=_(
+                "If you cannot use the agent controllers encrypted TLS connections,"
+                " you can resort to the old OpenSSH based symmetric encryption (if your host system supports it)."
+                "Note that using this encryption in addition to the TLS encryption is not only useless,"
+                " but also prevents the controller from compressing the data for transport."
+            ),
             elements=[
                 FixedValue(
-                    title=tls_alt_name_title,
-                    value={},
+                    title="Do not apply symmetric encryption",
+                    value=None,
                     totext="",
-                    help=_(
-                        "Rely on the TLS encryption provided by the agent controller."
-                        " No additional encryption is appied."
-                    ),
                 ),
-                _valuespec_agent_encryption_no_tls(),
+                PasswordSpec(
+                    title="Configure shared secret and apply symmetric encryption",
+                    pwlen=16,
+                    allow_empty=False,
+                ),
             ],
         ),
     )

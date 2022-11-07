@@ -27,5 +27,6 @@ Testing uses next gen build plus exe either in C# or in managed C++
 # Update
 
 1. Replace(or add) openhardwaremomonitor's zip with new one
-2. Correctly set version OHM_VERSION in the wnx/Makefile
-3. Set in wnx/ohm/ohm.sln correct version too
+2. Correctly set version OHM_VERSION in the check_mk/agents/wnx/Makefile
+3. Set in check_mk/agents/wnx/ohm/ohm.sln correct version too
+4. Set in check_mk/agents/wnx/ohm/OpenHardwareMonitorCLI/OpenHardwareMonitorCLI.csproj correct version too

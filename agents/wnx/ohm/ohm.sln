@@ -8,7 +8,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ohm_host", "ohm_host\ohm_ho
 		{EF25E72C-B04E-47A4-8020-16865F1EEDC6} = {EF25E72C-B04E-47A4-8020-16865F1EEDC6}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenHardwareMonitorLib", "..\extlibs\openhardwaremonitor-0.8.0\OpenHardwareMonitorLib.csproj", "{B0397530-545A-471D-BB74-027AE456DF1A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenHardwareMonitorLib", "..\extlibs\openhardwaremonitor-0.9.6\OpenHardwareMonitorLib.csproj", "{B0397530-545A-471D-BB74-027AE456DF1A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ohm_bridge", "ohm_bridge\ohm_bridge.csproj", "{EF25E72C-B04E-47A4-8020-16865F1EEDC6}"
 EndProject

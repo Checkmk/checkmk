@@ -29,7 +29,7 @@ FMT_VERSION    := fmt-9.0.0
 
 PACKAGE_OHM     := $(TOP_SRC_DIR)\omd\packages\openhardwaremonitor
 # ATTENTION: this value is hardcoded in the vcxproj files - fix it, please, too
-OHM_VERSION    := openhardwaremonitor-0.8.0
+OHM_VERSION    := openhardwaremonitor-0.9.6
 
 
 

@@ -67,7 +67,7 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     addCounterColumns(
         "livestatus_overflows",
         "times a Livestatus connection could not be immediately accepted because all threads where busy",
-        offsets, Counter::overflows);
+        offsets, Counter::livestatus_overflows);
 
     addColumn(std::make_unique<IntColumn<TableStatus>>(
         "nagios_pid", "The process ID of the monitoring core", offsets,

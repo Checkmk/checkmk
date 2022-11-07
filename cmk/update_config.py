@@ -90,6 +90,7 @@ import cmk.gui.watolib.rulesets
 import cmk.gui.watolib.tags
 from cmk.gui import main_modules
 from cmk.gui.bi import BIManager  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.cme.managed import Customer, CustomerId, load_customers, save_customers
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.plugins.dashboard.utils import (
@@ -353,6 +354,7 @@ class UpdateConfig:
             (self._transform_influxdb_connnections, "Rewriting InfluxDB connections"),
             (self._check_ec_rules, "Disabling unsafe EC rules"),
             (self._update_bakery, "Update bakery links and settings"),
+            (self._remove_old_custom_logos, "Remove old custom logos (CME)"),
         ]
 
     def _initialize_base_environment(self) -> None:
@@ -1862,6 +1864,28 @@ The following users are affected:"""
         root_folder.save_hosts()
         state[state_key] = "True"
         update_state.save()
+
+    def _remove_old_custom_logos(self) -> None:
+        """Remove old custom logo occurences, i.e. local image files "mk-logo.png" and customer
+        config "globals" entries with key "logo"."""
+        if not version.is_managed_edition():
+            return
+
+        themes_path: Path = Path(cmk.utils.paths.local_web_dir, "htdocs/themes/")
+        for theme in ["facelift", "modern-dark"]:
+            logo_path: Path = themes_path / theme / "images/mk-logo.png"
+            if logo_path.is_file():
+                logo_path.unlink()
+
+        try:
+            customers: Dict[CustomerId, Customer] = load_customers()
+            for config in customers.values():
+                globals_config: Dict[str, Dict] = config.get("globals", {})
+                if "logo" in globals_config:
+                    del globals_config["logo"]
+            save_customers(customers)
+        except MKGeneralException:
+            pass
 
 
 class PasswordSanitizer:

@@ -26,7 +26,7 @@ def main() {
         "INTERNAL_DEPLOY_PORT",
         "NODE_NAME",
     ]);
-    
+
     shout("load libaries");
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
@@ -58,7 +58,7 @@ def main() {
 
 
     shout("build image");
-    
+
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
 
         docker_image_from_alias("IMAGE_TESTING").inside("${docker_args}") {
@@ -88,7 +88,7 @@ def main() {
                                 "${cmk_version}",
                                 "${package_dir}/${cmk_version}",
                                 "${EDITION}",
-                                "buster");
+                                "jammy");
                             artifacts_helper.download_source_tar(
                                 "${INTERNAL_DEPLOY_DEST}",
                                 "${INTERNAL_DEPLOY_PORT}",
@@ -96,7 +96,7 @@ def main() {
                                 "${package_dir}/${cmk_version}",
                                 "${EDITION}");
                         }
-                        
+
                         on_dry_run_omit(LONG_RUNNING, "Run build-cmk-container.sh") {
                             /// TODO: fix this:
                             /// build-cmk-container does not support the downloads dir
@@ -107,7 +107,7 @@ def main() {
                                 ${SET_LATEST_TAG} ${SET_BRANCH_LATEST_TAG} \
                                 build""");
                         }
-                        
+
                         def filename = versioning.get_docker_artifact_name(EDITION, cmk_version);
                         on_dry_run_omit(LONG_RUNNING, "Upload ${filename}") {
                             stage("Upload ${filename}") {
@@ -120,7 +120,7 @@ def main() {
                                 );
                             }
                         }
-                        
+
                         def image_archive_file = "check-mk-${EDITION}-docker-${cmk_version}.tar.gz";
                         if (branch_name.contains("sandbox") ) {
                             print("Skip uploading ${image_archive_file} due to sandbox branch");
@@ -152,4 +152,3 @@ def main() {
     }
 }
 return this;
-

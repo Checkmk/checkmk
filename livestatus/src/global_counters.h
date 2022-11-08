@@ -8,6 +8,8 @@
 
 #include "config.h"  // IWYU pragma: keep
 
+#include <cstdlib>
+
 // Remember to update num_counters when you change the enum below. C++ really
 // lacks a feature to iterate over enums easily...
 enum class Counter {
@@ -16,6 +18,8 @@ enum class Counter {
     connections,
     service_checks,
     host_checks,
+    metrics,
+    perf_data,
     forks,
     log_messages,
     commands,
@@ -30,6 +34,7 @@ enum class Counter {
 // TODO(sp): We really need an OO version of this. :-P
 void counterReset(Counter which);
 void counterIncrement(Counter which);
+void counterIncrementBy(Counter which, std::size_t value);
 double counterValue(Counter which);
 double counterRate(Counter which);
 void do_statistics();

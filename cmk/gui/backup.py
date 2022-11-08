@@ -967,7 +967,7 @@ class PageAbstractBackupJobState:
         self._job: MKBackupJob | None = None
         self._ident: str | None = None
 
-    def jobs(self):
+    def jobs(self) -> Jobs:
         raise NotImplementedError()
 
     def title(self) -> str:
@@ -988,10 +988,10 @@ class PageAbstractBackupJobState:
             % (self._update_url(), self._ident, "true" if is_site() else "false")
         )
 
-    def _update_url(self):
+    def _update_url(self) -> str:
         return "ajax_backup_job_state.py?job=%s" % self._ident
 
-    def show_job_details(self):
+    def show_job_details(self) -> None:
         if self._job is None:
             raise Exception("uninitialized PageAbstractBackupJobState")
         job = self._job
@@ -1048,11 +1048,14 @@ class PageBackupJobState(PageAbstractBackupJobState):
         super().__init__()
         self._from_vars()
 
-    def _from_vars(self):
+    def _from_vars(self) -> None:
         job_ident = request.var("job")
         if job_ident is not None:
             try:
-                self._job = self.jobs().get(job_ident)
+                tmp = self.jobs().get(job_ident)
+                if not isinstance(tmp, Job):
+                    raise MKGeneralException("Wow this should have been a job")
+                self._job = tmp
             except KeyError:
                 raise MKUserError("job", _("This backup job does not exist."))
 

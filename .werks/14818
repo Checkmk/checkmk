@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0p16
+Version: 2.1.0p17
 
 The Chep OSDs check plugin ignored the warning thresholds for OSDs out and OSDs down.
 This has beed fixed now.

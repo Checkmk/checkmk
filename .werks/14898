@@ -1,6 +1,6 @@
 Title: Fix Apache port configuration on "omd cp" command
 Class: fix
-Compatible: incompat
+Compatible: incomp
 Component: omd
 Date: 1667815693
 Edition: cre

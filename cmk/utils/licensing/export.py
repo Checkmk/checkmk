@@ -8,10 +8,10 @@ from __future__ import annotations
 
 from collections import Counter
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import date, datetime
 from enum import auto, Enum
-from typing import Any, NamedTuple, TypedDict
+from typing import NamedTuple, TypedDict
 
 from dateutil.relativedelta import relativedelta
 
@@ -193,13 +193,27 @@ class SubscriptionDetailsLimit(NamedTuple):
         )
 
 
+class RawSubscriptionDetails(TypedDict):
+    source: str
+    subscription_start: int
+    subscription_end: int
+    subscription_limit: tuple[str, float]
+
+
+class RawSubscriptionDetailsForConfig(TypedDict):
+    source: str
+    subscription_start: int
+    subscription_end: int
+    subscription_limit: str | tuple[str, float]
+
+
 class SubscriptionDetails(NamedTuple):
     source: SubscriptionDetailsSource
     start: int
     end: int
     limit: SubscriptionDetailsLimit
 
-    def for_report(self) -> Mapping[str, Any]:
+    def for_report(self) -> RawSubscriptionDetails:
         return {
             "source": self.source.name,
             "subscription_start": self.start,
@@ -207,7 +221,7 @@ class SubscriptionDetails(NamedTuple):
             "subscription_limit": self.limit.for_report(),
         }
 
-    def for_config(self) -> Mapping[str, Any]:
+    def for_config(self) -> RawSubscriptionDetailsForConfig:
         return {
             "source": self.source.name,
             "subscription_start": self.start,
@@ -300,8 +314,8 @@ def validate_subscription_period(attrs: dict[str, object]) -> None:
 class LicenseUsageExtensions:
     ntop: bool
 
-    def for_report(self) -> Mapping[str, Any]:
-        return asdict(self)
+    def for_report(self) -> Mapping[str, bool]:
+        return {"ntop": self.ntop}
 
     @classmethod
     def parse(cls, raw_sample: object) -> LicenseUsageExtensions:
@@ -321,6 +335,21 @@ class LicenseUsageExtensions:
         return cls(ntop=parsed_extensions["extension_ntop"])
 
 
+class RawLicenseUsageSample(TypedDict):
+    version: str
+    edition: str
+    platform: str
+    is_cma: bool
+    sample_time: int
+    timezone: str
+    num_hosts: int
+    num_hosts_excluded: int
+    num_shadow_hosts: int
+    num_services: int
+    num_services_excluded: int
+    extension_ntop: bool
+
+
 @dataclass
 class LicenseUsageSample:
     version: str
@@ -336,8 +365,21 @@ class LicenseUsageSample:
     num_services_excluded: int
     extension_ntop: bool
 
-    def for_report(self) -> Mapping[str, Any]:
-        return asdict(self)
+    def for_report(self) -> RawLicenseUsageSample:
+        return {
+            "version": self.version,
+            "edition": self.edition,
+            "platform": self.platform,
+            "is_cma": self.is_cma,
+            "sample_time": self.sample_time,
+            "timezone": self.timezone,
+            "num_hosts": self.num_hosts,
+            "num_hosts_excluded": self.num_hosts_excluded,
+            "num_shadow_hosts": self.num_shadow_hosts,
+            "num_services": self.num_services,
+            "num_services_excluded": self.num_services_excluded,
+            "extension_ntop": self.extension_ntop,
+        }
 
     @classmethod
     def get_parser(cls, report_version: str) -> Callable[[object], LicenseUsageSample]:
@@ -421,9 +463,42 @@ class LicenseUsageSample:
         return platform[:50]
 
 
+class RawLicenseUsageSampleWithSiteHash(TypedDict):
+    version: str
+    edition: str
+    platform: str
+    is_cma: bool
+    sample_time: int
+    timezone: str
+    num_hosts: int
+    num_hosts_excluded: int
+    num_shadow_hosts: int
+    num_services: int
+    num_services_excluded: int
+    extension_ntop: bool
+    site_hash: str
+
+
 @dataclass
 class LicenseUsageSampleWithSiteHash(LicenseUsageSample):
     site_hash: str
+
+    def for_report(self) -> RawLicenseUsageSampleWithSiteHash:
+        return {
+            "version": self.version,
+            "edition": self.edition,
+            "platform": self.platform,
+            "is_cma": self.is_cma,
+            "sample_time": self.sample_time,
+            "timezone": self.timezone,
+            "num_hosts": self.num_hosts,
+            "num_hosts_excluded": self.num_hosts_excluded,
+            "num_shadow_hosts": self.num_shadow_hosts,
+            "num_services": self.num_services,
+            "num_services_excluded": self.num_services_excluded,
+            "extension_ntop": self.extension_ntop,
+            "site_hash": self.site_hash,
+        }
 
     @classmethod
     def get_parser(cls, report_version: str) -> Callable[[object], LicenseUsageSampleWithSiteHash]:
@@ -477,7 +552,7 @@ class LicenseUsageHistoryWithSiteHash:
     def __iter__(self) -> Iterator[LicenseUsageSampleWithSiteHash]:
         return iter(self._samples)
 
-    def for_report(self) -> Sequence[Mapping[str, Any]]:
+    def for_report(self) -> Sequence[RawLicenseUsageSampleWithSiteHash]:
         return [sample.for_report() for sample in self._samples]
 
     @classmethod

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.1.0p16
+Version: 2.1.0p17
 
 The graph client API calls require some optional permissions so we are
 handling these permissions errors by notifying the user of the issue but

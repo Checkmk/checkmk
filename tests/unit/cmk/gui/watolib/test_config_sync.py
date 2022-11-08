@@ -15,6 +15,7 @@ from tests.testlib.utils import is_enterprise_repo, is_managed_repo
 
 from livestatus import SiteId
 
+import cmk.utils.packaging
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.type_defs import UserId
@@ -68,6 +69,12 @@ def fixture_disable_cmk_update_config(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         cmk.gui.watolib.activate_changes, "_execute_cmk_update_config", lambda: None
     )
+
+
+@pytest.fixture(autouse=True)
+def fixture_disable_build_setup_search_index_background(monkeypatch):
+    # init-redis is not availabe...
+    monkeypatch.setattr(cmk.utils.packaging, "_build_setup_search_index_background", lambda: None)
 
 
 def _create_sync_snapshot(

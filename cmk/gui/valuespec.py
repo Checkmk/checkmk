@@ -168,16 +168,32 @@ class Bounds(Generic[C]):
     def lower(self, default: C) -> C:
         return default if self.__lower is None else self.__lower
 
-    def validate_value(self, value: C, varprefix: str) -> None:
+    def validate_value(
+        self,
+        value: C,
+        varprefix: str,
+        *,
+        message_lower: str | None = None,
+        message_upper: str | None = None,
+        formatter: Callable[[C], ValueSpecText] = str,
+    ) -> None:
         if self.__lower is not None and value < self.__lower:
             raise MKUserError(
                 varprefix,
-                _("%s is too low. The minimum allowed value is %s.") % (value, self.__lower),
+                (
+                    _("{actual} is too low. The minimum allowed value is {bound}.")
+                    if message_lower is None
+                    else message_lower
+                ).format(actual=formatter(value), bound=formatter(self.__lower)),
             )
         if self.__upper is not None and self.__upper < value:
             raise MKUserError(
                 varprefix,
-                _("%s is too high. The maximum allowed value is %s.") % (value, self.__upper),
+                (
+                    _("{actual} is too high. The maximum allowed value is {bound}.")
+                    if message_upper is None
+                    else message_upper
+                ).format(actual=formatter(value), bound=formatter(self.__upper)),
             )
 
 

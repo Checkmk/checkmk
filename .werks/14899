@@ -1,0 +1,12 @@
+Title: Fix missing modifications while cloning roles
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1667896036
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p17
+
+If a modified role was cloned, the clone of this role did not include these
+modifications. The builtin permissions of the source rule were used instead.

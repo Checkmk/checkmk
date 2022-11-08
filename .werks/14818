@@ -1,0 +1,13 @@
+Title: Ceph OSDs checkplugin now uses the warning threshold
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1667896185
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p30
+
+The Chep OSDs check plugin ignored the warning thresholds for OSDs out and OSDs down.
+This has beed fixed now.

@@ -1,6 +1,6 @@
 Title: ServiceNow: Fix empty notification rule after update
 Class: fix
-Compatible: incompat
+Compatible: incomp
 Component: notifications
 Date: 1667202803
 Edition: cee

@@ -46,7 +46,7 @@ def main():
     version = CMKVersion(version_spec, edition, branch)
 
     if version.is_installed():
-        logger.info("Version %s is already installed. Terminating.", version_spec)
+        logger.info("Version %s is already installed. Terminating.")
         return 0
 
     manager = ABCPackageManager.factory()

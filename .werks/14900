@@ -1,0 +1,23 @@
+Title: Make "Customize views" options more understandable
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1667911477
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0p17
+
+This werk adjusts the menu entries in "Display" when viewing views.
+Until now it was not really visible to users if they edited views of other users
+(this needs the permission "Edit foreign views").
+
+The menu entries, shown if you visit a view, were adjusted as follows:
+
+* "Clone builtin view" for builtin views
+* "Edit my view" for customized views of the current user
+* "Clone view" for views of other users (without permission "Edit foreign views")
+* "Edit view of user X" and "Clone view" for views of other users (with permission)
+
+The last mentioned example should give users the option to optional make a copy
+of the current view instead of editing the view of another user.

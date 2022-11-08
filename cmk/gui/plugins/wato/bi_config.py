@@ -1192,10 +1192,10 @@ class ModeBIEditRule(ABCBIMode):
 
         self._add_rule_arguments_lookup()
 
-    def _may_use_rules_from_packs(self, bi_rule):
+    def _may_use_rules_from_packs(self, bi_rule: BIRule) -> None:
         rules_without_permissions: Dict[_Tuple[str, str], Any] = {}
         for bi_node in bi_rule.get_nodes():
-            if bi_node.action.type() != "call_a_rule":
+            if bi_node.action.kind() != "call_a_rule":
                 continue
 
             bi_pack = self._bi_packs.get_pack_of_rule(bi_rule.id)

@@ -831,7 +831,7 @@ def _page_menu_dashboards(name) -> Iterable[PageMenuTopic]:  # type:ignore[no-un
         title=_("Customize"),
         entries=[
             PageMenuEntry(
-                title=_("Customize dashboards"),
+                title=_("Edit dashboards"),
                 icon_name="dashboard",
                 item=make_simple_link("edit_dashboards.py"),
             )
@@ -896,7 +896,7 @@ def _dashboard_edit_entries(
         # edit mode using javascript, use the URL with edit=1. When this URL is opened,
         # the dashboard will be cloned for this user
         yield PageMenuEntry(
-            title=_("Customize builtin dashboard"),
+            title=_("Clone builtin dashboard"),
             icon_name="edit",
             item=make_simple_link(makeuri(request, [("edit", 1)])),
         )

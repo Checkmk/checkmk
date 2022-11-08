@@ -53,6 +53,12 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
                       Counter::service_checks);
     addCounterColumns("host_checks", "host checks", offsets,
                       Counter::host_checks);
+    addCounterColumns("perf_data_count",
+                      "number of performance data processed by the core",
+                      offsets, Counter::perf_data);
+    addCounterColumns("metrics_count",
+                      "number of metrics processed by the core", offsets,
+                      Counter::metrics);
     addCounterColumns("forks", "process creations", offsets, Counter::forks);
     addCounterColumns("log_messages", "new log messages", offsets,
                       Counter::log_messages);

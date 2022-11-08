@@ -1,0 +1,15 @@
+Title: Add perf_data_count and metrics_count columns to status table
+Class: feature
+Compatible: compat
+Component: livestatus
+Date: 1667891609
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p17
+
+This adds 4 columns to the status table: perf_data_count, perf_data_count_rate,
+metrics_count, and metrics_count_rate that represent the total number of performance
+data and metrics handled by the core.
+

@@ -9,7 +9,7 @@ Level: 1
 State: unknown
 Version: 2.1.0p16
 
-We now can detect the PID of a running postgres instance if it is not installed in `/var/spool/postfix`.
+We now can detect the PID of a running postfix instance if it is not installed in `/var/spool/postfix`.
 To do this we search for the pid file in the queue directory as reported by `postconf`.
 
 You can find the new instances after updating the check mk agent.

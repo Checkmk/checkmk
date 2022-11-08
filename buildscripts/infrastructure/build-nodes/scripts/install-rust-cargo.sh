@@ -14,8 +14,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 # shellcheck source=buildscripts/infrastructure/build-nodes/scripts/build_lib.sh
 . "${SCRIPT_DIR}/build_lib.sh"
 
-# keep in sync with agents/cmk-agent-ctl/rust-toolchain.toml
-DEFAULT_TOOLCHAIN="1.64.0-x86_64-unknown-linux-gnu"
+DEFAULT_TOOLCHAIN="stable-x86_64-unknown-linux-gnu"
 DIR_NAME="rust"
 TARGET_DIR=/opt
 
@@ -25,7 +24,7 @@ RUSTUP_HOME="$TARGET_DIR/$DIR_NAME/rustup"
 export RUSTUP_HOME
 
 # Increase this to enforce a recreation of the build cache
-BUILD_ID=7
+BUILD_ID=6
 
 build_package() {
     WORK_DIR=$(mktemp -d)

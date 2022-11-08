@@ -90,15 +90,6 @@ if not %errorlevel% == 0 powershell Write-Host "Failed Build" -Foreground Red &&
 call build_ohm.cmd
 if not %errorlevel% == 0 powershell Write-Host "Failed OHM Build" -Foreground Red && exit /b 71
 
-if not "%2" == "" (
-powershell Write-Host "Signing Executables" -Foreground White
-@call sign_windows_exe c:\common\store\%1 %2 %build_dir%\check_mk_service\x64\Release\check_mk_service64.exe
-@call sign_windows_exe c:\common\store\%1 %2 %build_dir%\check_mk_service\Win32\Release\check_mk_service32.exe
-@call sign_windows_exe c:\common\store\%1 %2 %arte%\cmk-agent-ctl.exe
-@call sign_windows_exe c:\common\store\%1 %2 %build_dir%\ohm\OpenHardwareMonitorLib.dll
-@call sign_windows_exe c:\common\store\%1 %2 %build_dir%\ohm\OpenHardwareMonitorLib.exe
-)
-
 ptime "%msbuild%" wamain.sln /t:install /p:Configuration=Release,Platform=x86
 if not %errorlevel% == 0 powershell Write-Host "Failed Install build" -Foreground Red && exit /b 8
 
@@ -129,6 +120,15 @@ powershell Write-Host "Killing msi in artefacts" -Foreground Red
 call %cur_dir%\scripts\clean_artifacts.cmd
 exit 100
 :end
+
+if not "%2" == "" (
+powershell Write-Host "Signing Executables" -Foreground White
+@call sign_windows_exe c:\common\store\%1 %2 %build_dir%\check_mk_service\x64\Release\check_mk_service64.exe
+@call sign_windows_exe c:\common\store\%1 %2 %build_dir%\check_mk_service\Win32\Release\check_mk_service32.exe
+@call sign_windows_exe c:\common\store\%1 %2 %arte%\cmk-agent-ctl.exe
+@call sign_windows_exe c:\common\store\%1 %2 %build_dir%\ohm\OpenHardwareMonitorLib.dll
+@call sign_windows_exe c:\common\store\%1 %2 %build_dir%\ohm\OpenHardwareMonitorCLI.exe
+)
 
 :: Deploy Phase: post processing/build special modules using make
 copy %build_dir%\install\Release\check_mk_service.msi %arte%\check_mk_agent.msi /y || powershell Write-Host "Failed to copy msi" -Foreground Red && exit /b 33

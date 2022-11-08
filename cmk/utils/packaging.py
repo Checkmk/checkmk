@@ -290,7 +290,7 @@ def get_initial_package_info(pacname: str) -> PackageInfo:
     }
 
 
-def uninstall(package: PackageInfo) -> None:
+def uninstall(package: PackageInfo, post_package_change_actions: bool = True) -> None:
     for part in get_package_parts() + get_config_parts():
         filenames = package["files"].get(part.ident, [])
         if len(filenames) > 0:
@@ -310,7 +310,8 @@ def uninstall(package: PackageInfo) -> None:
 
     (package_dir() / package["name"]).unlink()
 
-    _execute_post_package_change_actions(package)
+    if post_package_change_actions:
+        _execute_post_package_change_actions(package)
 
 
 def store_package(file_content: bytes) -> PackageInfo:
@@ -462,9 +463,15 @@ def remove_enabled_mark(package_info: PackageInfo) -> None:
     )  # should never be missing, but don't crash in messed up state
 
 
-def _install_by_path(package_path: Path, allow_outdated: bool = True) -> PackageInfo:
+def _install_by_path(
+    package_path: Path, allow_outdated: bool = True, post_package_change_actions: bool = True
+) -> PackageInfo:
     with package_path.open("rb") as f:
-        return install(file_object=cast(BinaryIO, f), allow_outdated=allow_outdated)
+        return install(
+            file_object=cast(BinaryIO, f),
+            allow_outdated=allow_outdated,
+            post_package_change_actions=post_package_change_actions,
+        )
 
 
 def install(
@@ -474,6 +481,7 @@ def install(
     #  b) users cannot even modify packages without installing them
     # Reconsider!
     allow_outdated: bool = True,
+    post_package_change_actions: bool = True,
 ) -> PackageInfo:
     package = _get_package_info_from_package(file_object)
     file_object.seek(0)
@@ -570,7 +578,8 @@ def install(
     # Last but not least install package file
     write_package_info(package)
 
-    _execute_post_package_change_actions(package)
+    if post_package_change_actions:
+        _execute_post_package_change_actions(package)
 
     return package
 
@@ -939,11 +948,14 @@ def rule_pack_id_to_mkp() -> Dict[str, Any]:
 
 def update_active_packages(log: logging.Logger) -> None:
     """Update which of the enabled packages are actually active (installed)"""
-    _deinstall_inapplicable_active_packages(log)
-    _install_applicable_inactive_packages(log)
+    _deinstall_inapplicable_active_packages(log, post_package_change_actions=False)
+    _install_applicable_inactive_packages(log, post_package_change_actions=False)
+    _execute_post_package_change_actions(None)
 
 
-def _deinstall_inapplicable_active_packages(log: logging.Logger) -> None:
+def _deinstall_inapplicable_active_packages(
+    log: logging.Logger, *, post_package_change_actions: bool
+) -> None:
     for package_name in sorted(installed_names()):
         package_info = read_package_info(package_name)
         if package_info is None:
@@ -959,16 +971,22 @@ def _deinstall_inapplicable_active_packages(log: logging.Logger) -> None:
             )
         except PackageException as exc:
             log.log(VERBOSE, "[%s]: Uninstalling (%s)", package_name, exc)
-            uninstall(package_info)
+            uninstall(package_info, post_package_change_actions=post_package_change_actions)
         else:
             log.log(VERBOSE, "[%s]: Kept", package_name)
 
 
-def _install_applicable_inactive_packages(log: logging.Logger) -> None:
+def _install_applicable_inactive_packages(
+    log: logging.Logger, *, post_package_change_actions: bool
+) -> None:
     for package_path in _sort_enabled_packages_for_installation(log):
 
         try:
-            _install_by_path(package_path, allow_outdated=False)
+            _install_by_path(
+                package_path,
+                allow_outdated=False,
+                post_package_change_actions=post_package_change_actions,
+            )
         except PackageException as exc:
             logger.log(VERBOSE, "[%s]: Not installed (%s)", package_path.name, exc)
         else:
@@ -1204,10 +1222,10 @@ def _is_16_feature_pack_package(package_name: PackageName, package_info: Package
     return package_info.get("version", "").startswith("1.")
 
 
-def _execute_post_package_change_actions(package: PackageInfo) -> None:
+def _execute_post_package_change_actions(package: Optional[PackageInfo]) -> None:
     _build_setup_search_index_background()
 
-    if _package_contains_gui_files(package):
+    if package is None or _package_contains_gui_files(package):
         _reload_apache()
 
 

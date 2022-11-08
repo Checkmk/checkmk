@@ -11,25 +11,27 @@ import pytest
 from tests.testlib.site import Site
 
 test_plugin_code = """
-from cmk.gui.plugins.bi.utils import (ABCBISearch, bi_search_registry)
+from cmk.bi.lib import ABCBISearch, ABCBISearcher, SearchKind, bi_search_registry
+from cmk.bi.schema import Schema
+from cmk.utils.macros import MacroMapping
 
 @bi_search_registry.register
 class TestBISearch(ABCBISearch):
     @classmethod
-    def type(cls) -> str:
+    def kind(cls) -> SearchKind:
         return "test"
 
     @classmethod
-    def schema(cls):
-        return None
+    def schema(cls) -> type[Schema]:
+        raise NotImplementedError()
 
     def serialize(self):
         return {
-            "type": self.type(),
+            "type": self.kind(),
             "conditions": {},
         }
 
-    def execute(self, macros, bi_searcher):
+    def execute(self, macros: MacroMapping, bi_searcher: ABCBISearcher) -> list[dict]:
         return []
 """
 

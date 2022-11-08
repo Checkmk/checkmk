@@ -4,15 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
-
 import os
-import tempfile
 import shutil
-
+import tempfile
 from pathlib import Path
-from typing import List
-from subprocess import (Popen, PIPE)
+from subprocess import PIPE, Popen
+from typing import List, Optional
+
+import pytest  # type: ignore[import]
 
 tested_pythons = ["python-3.4.zip", "python-3.8.zip"]
 # I know this is not a best method to reach artifacts, but in Windows not so many options.
@@ -26,18 +25,18 @@ artifact_location = Path("..\\..\\..\\..\\..\\artefacts")
 # Also this give possibility to test literally everything
 regression_data = {
     "python-3.8.zip": b"home = C:\\ProgramData\\checkmk\\agent\\modules\\python-3.8\r\n"
-                      b"version_info = 3.8.7\r\n"
+                      b"version_info = 3.8.15\r\n"
                       b"include-system-site-packages = false\r\n",
     "python-3.4.zip": b"home = C:\\ProgramData\\checkmk\\agent\\modules\\python-3.8\r\n"
                       b"version_info = 3.4.4\r\n"
-                      b"include-system-site-packages = false\r\n"
+                      b"include-system-site-packages = false\r\n",
 }
 
 client_module_root = b"C:\\ProgramData\\checkmk\\agent\\modules\\python-3.8"
 
 
-@pytest.fixture(scope="session", autouse=True)
-def python_subdir():
+@pytest.fixture(name="python_subdir", scope="session", autouse=True)
+def python_subdir_fixture():
     tmpdir = tempfile.mkdtemp()
     subdir = os.path.join(tmpdir, "modules")
     os.makedirs(subdir)
@@ -45,18 +44,17 @@ def python_subdir():
     shutil.rmtree(tmpdir)
 
 
-def run_proc(command: List[str], *, cwd: Path = None):
+def run_proc(command: List[str], *, cwd: Optional[Path] = None):
     process = Popen(command, stdout=PIPE, stderr=PIPE, cwd=cwd)
     pipe, err = process.communicate()
     ret = process.wait()
-    assert ret == 0, f"Code {ret}\n" + \
-        f"Pipe:\n{pipe.decode('utf-8') if pipe else ''}\n" + \
-        f"Err\n{err.decode('utf-8') if err else ''}"
+    assert ret == 0, (f"Code {ret}\n" + f"Pipe:\n{pipe.decode('utf-8') if pipe else ''}\n" +
+                      f"Err\n{err.decode('utf-8') if err else ''}")
 
 
 @pytest.fixture(scope="session", autouse=True)
 def python_to_test(python_subdir) -> Path:
-    """ This is quite complicated simulator to verify python module and prepare the module for
+    """This is quite complicated simulator to verify python module and prepare the module for
     testing. During deployment every step will be validated, not because it is required(this method
     also contradicts a bit to the TDD philosophy), but to prevent extremely strange errors during
     testing phase.

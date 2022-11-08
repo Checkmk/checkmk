@@ -1,0 +1,16 @@
+Title: Update Python from 3.8.7 to 3.8.15
+Class: security
+Compatible: compat
+Component: core
+Date: 1667902805
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p30
+
+Update Python from 3.8.7 to 3.8.15.
+There are several Security fixes included.
+
+To our knowledge none of the vulnerabilities were exploitable.
+We rate this with a CVSS of 0 (None) (CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:N).
+This CVSS is primarily meant to please automatic scanners.

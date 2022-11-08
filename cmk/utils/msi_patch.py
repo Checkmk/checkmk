@@ -116,7 +116,7 @@ def patch_windows_version(
 
     Conditions:
     The string _matrix with VersionNT 600 must be presented.
-    Must be called to set 602 if Python module 3.8.7 or newer is added to the MSI.
+    Must be called to set 602 if Python module 3.8.15 newer is added to the MSI.
     """
 
     if len(new_version) != 3:

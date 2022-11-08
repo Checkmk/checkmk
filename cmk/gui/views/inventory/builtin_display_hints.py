@@ -129,6 +129,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
                 "partition_name",
                 "expresscode",
                 "pki_appliance_version",
+                "description",
             ],
         },
         ".hardware.system.product": {"title": _l("Product"), "is_show_more": False},
@@ -139,6 +140,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".hardware.system.node_name": {"title": _l("Node Name")},
         ".hardware.system.partition_name": {"title": _l("Partition Name")},
         ".hardware.system.pki_appliance_version": {"title": _l("Version of PKI Appliance")},
+        ".hardware.system.description": {"title": _l("Description")},
         # Legacy ones. Kept to not break existing views - DON'T use these values for new plugins
         ".hardware.system.serial_number": {"title": _l("Serial Number - LEGACY, don't use")},
         ".hardware.system.model_name": {"title": _l("Model Name - LEGACY, don't use")},

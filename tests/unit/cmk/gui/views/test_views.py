@@ -2097,6 +2097,7 @@ def test_registered_display_hints() -> None:
         ".hardware.storage.disks:*.type",
         ".hardware.storage.disks:*.vendor",
         ".hardware.system.",
+        ".hardware.system.description",
         ".hardware.system.expresscode",
         ".hardware.system.manufacturer",
         ".hardware.system.model",

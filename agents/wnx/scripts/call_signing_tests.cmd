@@ -18,11 +18,12 @@ set l=%loc_2%
 exit /b 113
 )
 )
-%l% verify ../../artefacts/check_mk_agent.msi || echo "check_mk_agent.msi not signed" && exit /b 0
-%l% verify ../../artefacts/OpenHardwareMonitorCLI.exe || echo "OpenHardwareMonitorCLI.exe not signed" && exit /b 0
-%l% verify ../../artefacts/OpenHardwareMonitorLIB.dll || echo "OpenHardwareMonitorLib.dll not signed" && exit /b 0
-%l% verify ../../artefacts/check_mk_agent.exe || echo "check_mk_agent.exe not signed" && exit /b 0
-%l% verify ../../artefacts/check_mk_agent-64.exe || echo "check_mk_agent-64.exe not signed" && exit /b 0
-%l% verify ../../artefacts/cmk-agent-ctl.exe || echo "cmk-agent-ctl.msi not signed" && exit /b 0
+%l% verify /pa ../../artefacts/check_mk_agent.msi || echo "check_mk_agent.msi not signed" && exit /b 1
+%l% verify /pa ../../artefacts/OpenHardwareMonitorCLI.exe || echo "OpenHardwareMonitorCLI.exe not signed" && exit /b 1
+%l% verify /pa ../../artefacts/OpenHardwareMonitorLIB.dll || echo "OpenHardwareMonitorLib.dll not signed" && exit /b 1
+%l% verify /pa ../../artefacts/check_mk_agent.exe || echo "check_mk_agent.exe not signed" && exit /b 1
+%l% verify /pa ../../artefacts/check_mk_agent-64.exe || echo "check_mk_agent-64.exe not signed" && exit /b 1
+%l% verify /pa ../../artefacts/cmk-agent-ctl.exe || echo "cmk-agent-ctl.msi not signed" && exit /b 1
 
+powershell Write-Host "Windows agent Signing Tests succeeded" -Foreground Green
 exit /b 0

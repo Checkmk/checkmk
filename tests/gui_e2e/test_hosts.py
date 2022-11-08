@@ -2,12 +2,9 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import subprocess
-
 import pytest
 
 from tests.testlib.playwright.helpers import PPage
-from tests.testlib.site import Site
 
 
 class TestHost:
@@ -16,32 +13,27 @@ class TestHost:
 
 
 class TestHosts:
-    def test_create_and_delete_a_host(
-        self, logged_in_page: PPage, is_chromium: bool, test_site: Site
-    ) -> None:
-        """Creates a host and deletes it afterwards. If the host already exists, it is deleted,
-        created and re-deleted. This makes the test execution independent of the previous status.
+    def test_create_and_delete_a_host(self, logged_in_page: PPage, is_chromium: bool) -> None:
+        """Creates a host and deletes it afterwards. Calling order of static methods
+        is therefore essential!
         """
         if not is_chromium:
             pytest.skip("Test currently working with the chromium engine only.")
 
-        if self._host_in_conf(TestHost.name, test_site.id):
-            self._delete_host(logged_in_page, test_site.id)
-
-        self._create_host(logged_in_page, test_site.id)
+        self._create_host(logged_in_page)
 
         logged_in_page.goto_monitoring_all_hosts()
         logged_in_page.select_host(TestHost.name)
 
-        self._delete_host(logged_in_page, test_site.id)
+        self._delete_host(logged_in_page)
 
-    def test_reschedule(self, logged_in_page: PPage, is_chromium: bool, test_site: Site) -> None:
-        """Reschedules a check."""
+    def test_reschedule(self, logged_in_page: PPage, is_chromium: bool) -> None:
+        """reschedules a check"""
+
         if not is_chromium:
             pytest.skip("Test currently working with the chromium engine only.")
 
-        if not self._host_in_conf(TestHost.name, test_site.id):
-            self._create_host(logged_in_page, test_site.id)
+        self._create_host(logged_in_page)
 
         logged_in_page.goto_monitoring_all_hosts()
         logged_in_page.select_host(TestHost.name)
@@ -58,9 +50,10 @@ class TestHosts:
         # otherwise the div stays open...
         logged_in_page.main_frame.locator("div#popup_menu").wait_for(state="hidden")
 
-        self._delete_host(logged_in_page, test_site.id)
+        self._delete_host(logged_in_page)
 
-    def _create_host(self, logged_in_page: PPage, site_id: str) -> None:
+    @staticmethod
+    def _create_host(logged_in_page: PPage) -> None:
         """Creates a host by starting from a logged in page."""
         logged_in_page.goto_setup_hosts()
         logged_in_page.main_frame.get_suggestion("Add host").click()
@@ -78,9 +71,8 @@ class TestHosts:
 
         logged_in_page.expect_activation_state("Success")
 
-        assert self._host_in_conf(TestHost.name, site_id)
-
-    def _delete_host(self, logged_in_page: PPage, site_id: str) -> None:
+    @staticmethod
+    def _delete_host(logged_in_page: PPage) -> None:
         """Deletes the former created host by starting from a logged in page."""
         logged_in_page.goto_setup_hosts()
 
@@ -93,17 +85,3 @@ class TestHosts:
         logged_in_page.activate_selected()
 
         logged_in_page.expect_activation_state("Success")
-
-        assert not self._host_in_conf(TestHost.name, site_id)
-
-    @staticmethod
-    def _host_in_conf(hostname: str, site_id: str) -> bool:
-        """Check if the given hostname is contained in the hosts.mk file."""
-        proc = subprocess.run(
-            ["su", site_id],
-            text=True,
-            input="cat ~/etc/check_mk/conf.d/wato/hosts.mk\n",
-            stdout=subprocess.PIPE,
-        )
-
-        return hostname in proc.stdout

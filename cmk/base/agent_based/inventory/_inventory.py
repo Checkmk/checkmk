@@ -325,12 +325,12 @@ def _inventorize_real_host(
         trees.inventory,
     )
     tree_updater.may_add_cache_info(now=now, items_of_inventory_plugins=items_of_inventory_plugins)
-    tree_updater.may_update(now=now, previous_tree=old_tree)
+    update_result = tree_updater.may_update(now=now, previous_tree=old_tree)
 
     if not trees.inventory.is_empty():
         _add_cluster_property_to(inventory_tree=trees.inventory, is_cluster=False)
 
-    return trees, tree_updater.update_result
+    return trees, update_result
 
 
 #   ---do status data inventory---------------------------------------------

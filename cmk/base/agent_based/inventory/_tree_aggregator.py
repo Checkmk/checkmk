@@ -56,11 +56,6 @@ class RealHostTreeUpdater:
         self._from_config = _get_intervals_from_config(raw_intervals_from_config)
         self._inventory_tree = inventory_tree
         self._retention_infos: RetentionInfos = {}
-        self._update_result = UpdateResult(save_tree=False, reason="")
-
-    @property
-    def update_result(self) -> UpdateResult:
-        return self._update_result
 
     # ---from retention intervals-------------------------------------------
 
@@ -128,14 +123,13 @@ class RealHostTreeUpdater:
                     ),
                 )
 
-    def may_update(self, now: int, previous_tree: StructuredDataNode) -> None:
+    def may_update(self, now: int, previous_tree: StructuredDataNode) -> UpdateResult:
         if not self._from_config:
             self._inventory_tree.remove_retentions()
-            self._update_result = UpdateResult(
+            return UpdateResult(
                 save_tree=False,
                 reason="No retention intervals found.",
             )
-            return
 
         results = []
         for retention_key, retention_info in self._retention_infos.items():
@@ -161,7 +155,7 @@ class RealHostTreeUpdater:
             updater = updater_cls(retention_info, inv_node, previous_node)
             results.append(updater.filter_and_merge(now))
 
-        self._update_result = UpdateResult(
+        return UpdateResult(
             save_tree=any(result.save_tree for result in results),
             reason=", ".join(result.reason for result in results if result.reason),
         )

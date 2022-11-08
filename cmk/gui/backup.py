@@ -196,7 +196,9 @@ class BackupEntityCollection:
             ident: cls(ident, config) for ident, config in self._config[config_attr].items()
         }
 
-    def get(self, ident: str) -> BackupEntity:
+    def get(self, ident: str | None) -> BackupEntity:
+        if ident is None:
+            raise KeyError
         return self.objects[ident]
 
     def remove(self, obj: BackupEntity) -> None:
@@ -601,7 +603,7 @@ class PageBackup:
     def title(self) -> str:
         raise NotImplementedError()
 
-    def jobs(self):
+    def jobs(self) -> Jobs:
         raise NotImplementedError()
 
     def home_button(self) -> None:
@@ -683,6 +685,9 @@ class PageBackup:
             job = jobs.get(ident)
         except KeyError:
             raise MKUserError("_job", _("This backup job does not exist."))
+
+        if not isinstance(job, Job):
+            raise MKGeneralException("Wow this should have been a job object")
 
         action = request.var("_action")
 

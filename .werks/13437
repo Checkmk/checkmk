@@ -1,0 +1,15 @@
+Title: Business Intelligence: Do not lock on getting state of aggregations
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1667890125
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p17
+
+Before this change a call to this endpoint aquited the WATO lock which blocked
+other operations, although there is no need to, because this endpoint does not
+write WATO configuration.
+

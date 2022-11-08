@@ -276,6 +276,7 @@ class BIAggregationStateResponseSchema(Schema):
     response_schema=BIAggregationStateResponseSchema,
     permissions_required=RO_PERMISSIONS,
     tag_group="Monitoring",
+    skip_locking=True,
 )
 def get_bi_aggregation_state(params):
     """Get the state of BI aggregations"""

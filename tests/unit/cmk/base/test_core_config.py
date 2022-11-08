@@ -357,6 +357,8 @@ def test_iter_active_check_services(
 
     active_info = active_check_info[check_name]
     services = list(
-        core_config.iter_active_check_services(check_name, active_info, hostname, host_attrs, {})
+        core_config.iter_active_check_services(
+            check_name, active_info, hostname, host_attrs, {}, password_store.load()
+        )
     )
     assert services == expected_result

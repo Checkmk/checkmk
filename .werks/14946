@@ -1,0 +1,15 @@
+Title: avoid unnecessary use of the password storage
+Class: fix
+Compatible: compat
+Component: config
+Date: 1667903305
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p17
+
+In some cases this change may considerably increase 
+the speed of configuration generation.
+
+SUP-11910

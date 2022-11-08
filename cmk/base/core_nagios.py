@@ -12,9 +12,10 @@ import socket
 import sys
 from io import StringIO
 from pathlib import Path
-from typing import Any, cast, Dict, IO, Iterable, List, Optional, Set, Tuple, Union
+from typing import Any, cast, Dict, IO, Iterable, List, Mapping, Optional, Set, Tuple, Union
 
 import cmk.utils.config_path
+import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.tty as tty
@@ -155,8 +156,9 @@ def create_config(outfile: IO[str], hostnames: Optional[List[HostName]]) -> None
 
     _output_conf_header(cfg)
 
+    stored_passwords = cmk.utils.password_store.load()
     for hostname in sorted(hostnames):
-        _create_nagios_config_host(cfg, config_cache, hostname)
+        _create_nagios_config_host(cfg, config_cache, hostname, stored_passwords)
 
     _create_nagios_config_contacts(cfg, hostnames)
     _create_nagios_config_hostgroups(cfg)
@@ -181,7 +183,10 @@ def _output_conf_header(cfg: NagiosConfig) -> None:
 
 
 def _create_nagios_config_host(
-    cfg: NagiosConfig, config_cache: ConfigCache, hostname: HostName
+    cfg: NagiosConfig,
+    config_cache: ConfigCache,
+    hostname: HostName,
+    stored_passwords: Mapping[str, str],
 ) -> None:
     cfg.write("\n# ----------------------------------------------------\n")
     cfg.write("# %s\n" % hostname)
@@ -190,7 +195,7 @@ def _create_nagios_config_host(
     if config.generate_hostconf:
         host_spec = _create_nagios_host_spec(cfg, config_cache, hostname, host_attrs)
         cfg.write(_format_nagios_object("host", host_spec))
-    _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs)
+    _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs, stored_passwords)
 
 
 def _create_nagios_host_spec(
@@ -298,8 +303,12 @@ def _create_nagios_host_spec(
     return host_spec
 
 
-def _create_nagios_servicedefs(
-    cfg: NagiosConfig, config_cache: ConfigCache, hostname: HostName, host_attrs: ObjectAttributes
+def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
+    cfg: NagiosConfig,
+    config_cache: ConfigCache,
+    hostname: HostName,
+    host_attrs: ObjectAttributes,
+    stored_passwords: Mapping[str, str],
 ) -> None:
     from cmk.base.check_table import get_check_table  # pylint: disable=import-outside-toplevel
 
@@ -423,7 +432,7 @@ def _create_nagios_servicedefs(
             # Make hostname available as global variable in argument functions
             with plugin_contexts.current_host(hostname):
                 for description, args in core_config.iter_active_check_services(
-                    acttype, act_info, hostname, host_attrs, params
+                    acttype, act_info, hostname, host_attrs, params, stored_passwords
                 ):
 
                     if not description:

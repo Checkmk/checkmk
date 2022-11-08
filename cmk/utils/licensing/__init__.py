@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import auto, Enum
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import NamedTuple, TypedDict
 
 import livestatus
 
@@ -28,6 +28,7 @@ from cmk.utils.licensing.export import (
     LicenseUsageHistoryWithSiteHash,
     LicenseUsageSample,
     LicenseUsageSampleWithSiteHash,
+    RawLicenseUsageSample,
 )
 from cmk.utils.paths import license_usage_dir, log_dir
 
@@ -204,19 +205,27 @@ def _get_history_dump_filepath() -> Path:
     return license_usage_dir / "history.json"
 
 
+class RawLicenseUsageHistoryDump(TypedDict):
+    VERSION: str
+    history: Sequence[RawLicenseUsageSample]
+
+
 @dataclass
 class LicenseUsageHistoryDump:
     VERSION: str
     history: LicenseUsageHistory
 
-    def for_report(self) -> Mapping[str, Any]:
+    def for_report(self) -> RawLicenseUsageHistoryDump:
         return {
             "VERSION": self.VERSION,
             "history": self.history.for_report(),
         }
 
     @classmethod
-    def parse(cls, raw_dump: Mapping[str, Any]) -> LicenseUsageHistoryDump:
+    def parse(cls, raw_dump: object) -> LicenseUsageHistoryDump:
+        if not isinstance(raw_dump, dict):
+            raise TypeError()
+
         if "VERSION" in raw_dump and "history" in raw_dump:
             return cls(
                 VERSION=LicenseUsageHistoryDumpVersion,
@@ -269,7 +278,7 @@ class LicenseUsageHistory:
     def last(self) -> LicenseUsageSample | None:
         return self._samples[0] if self._samples else None
 
-    def for_report(self) -> Sequence[Mapping[str, Any]]:
+    def for_report(self) -> Sequence[RawLicenseUsageSample]:
         return [sample.for_report() for sample in self]
 
     @classmethod
@@ -350,12 +359,12 @@ def _load_extensions() -> LicenseUsageExtensions:
     return LicenseUsageExtensions.parse(raw_extensions)
 
 
-def _serialize_dump(dump: Mapping[str, Any]) -> bytes:
+def _serialize_dump(dump: RawLicenseUsageHistoryDump | Mapping[str, float]) -> bytes:
     dump_str = json.dumps(dump)
     return _rot47(dump_str).encode("utf-8")
 
 
-def deserialize_dump(raw_dump: bytes) -> Mapping[str, Any]:
+def deserialize_dump(raw_dump: bytes) -> object:
     dump_str = _rot47(raw_dump.decode("utf-8"))
 
     try:
@@ -363,7 +372,7 @@ def deserialize_dump(raw_dump: bytes) -> Mapping[str, Any]:
     except json.decoder.JSONDecodeError:
         return {}
 
-    if isinstance(dump, dict) and all(isinstance(k, str) for k in dump):
+    if isinstance(dump, dict):
         return dump
 
     return {}

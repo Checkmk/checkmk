@@ -9,9 +9,10 @@ from pathlib import Path
 
 import pytest
 
+from tests.testlib.site import Site
 from tests.testlib.utils import is_containerized
 
-from tests.composition.utils import execute, install_package
+from tests.composition.utils import bake_agent, execute, get_cre_agent_path, install_package
 
 # Skip all agent controller tests if we are not in a container to avoid messing up your machine
 pytestmark = pytest.mark.skipif(
@@ -24,9 +25,15 @@ pytestmark = pytest.mark.skipif(
 
 
 @pytest.fixture(scope="module")
-def agent_ctl(bake_test_agent: tuple[str, Path]) -> Path:
-    _agent_hash, agent_path = bake_test_agent
-    install_result = install_package(agent_path)
+def get_test_agent_path(central_site: Site) -> Path:
+    if central_site.version.is_raw_edition():
+        return get_cre_agent_path(central_site)
+    return bake_agent(central_site)[1]
+
+
+@pytest.fixture(scope="module")
+def agent_ctl(get_test_agent_path: Path) -> Path:
+    install_result = install_package(get_test_agent_path)
     if install_result.returncode != 0:
         raise ValueError(
             f"Error while installing cmk agent:\nstderr:\n{install_result.stderr}"

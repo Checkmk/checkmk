@@ -304,12 +304,15 @@ class LicenseUsageExtensions:
         return asdict(self)
 
     @classmethod
-    def parse(cls, raw_sample: Mapping[str, Any]) -> LicenseUsageExtensions:
+    def parse(cls, raw_sample: object) -> LicenseUsageExtensions:
         # Extensions are created after execute_activate_changes and may be missing when downloading
         # or submitting license usage reports. This means that the extensions are not really
         # dependent on the report version:
         # Old: {..., "extensions": {"ntop": True/False}, ...}
         # New: {..., "extension_ntop": True/False, ...}
+        if not isinstance(raw_sample, dict):
+            raise TypeError()
+
         parsed_extensions = {
             ext_key: raw_sample.get(ext_key, raw_sample.get("extensions", {}).get(key, False))
             for key in ["ntop"]
@@ -337,7 +340,7 @@ class LicenseUsageSample:
         return asdict(self)
 
     @classmethod
-    def get_parser(cls, report_version: str) -> Callable[[Mapping[str, Any]], LicenseUsageSample]:
+    def get_parser(cls, report_version: str) -> Callable[[object], LicenseUsageSample]:
         if report_version == "1.0":
             return cls._parse_sample_v1_0
 
@@ -350,7 +353,10 @@ class LicenseUsageSample:
         raise LicenseUsageReportVersionError(f"Unknown report version {report_version}")
 
     @classmethod
-    def _parse_sample_v1_0(cls, raw_sample: Mapping[str, Any]) -> LicenseUsageSample:
+    def _parse_sample_v1_0(cls, raw_sample: object) -> LicenseUsageSample:
+        if not isinstance(raw_sample, dict):
+            raise TypeError()
+
         extensions = LicenseUsageExtensions.parse(raw_sample)
         return cls(
             version=raw_sample["version"],
@@ -368,7 +374,10 @@ class LicenseUsageSample:
         )
 
     @classmethod
-    def _parse_sample_v1_1(cls, raw_sample: Mapping[str, Any]) -> LicenseUsageSample:
+    def _parse_sample_v1_1(cls, raw_sample: object) -> LicenseUsageSample:
+        if not isinstance(raw_sample, dict):
+            raise TypeError()
+
         extensions = LicenseUsageExtensions.parse(raw_sample)
         return cls(
             version=raw_sample["version"],
@@ -386,7 +395,10 @@ class LicenseUsageSample:
         )
 
     @classmethod
-    def _parse_sample_v1_4(cls, raw_sample: Mapping[str, Any]) -> LicenseUsageSample:
+    def _parse_sample_v1_4(cls, raw_sample: object) -> LicenseUsageSample:
+        if not isinstance(raw_sample, dict):
+            raise TypeError()
+
         extensions = LicenseUsageExtensions.parse(raw_sample)
         return cls(
             version=raw_sample["version"],
@@ -414,9 +426,7 @@ class LicenseUsageSampleWithSiteHash(LicenseUsageSample):
     site_hash: str
 
     @classmethod
-    def get_parser(
-        cls, report_version: str
-    ) -> Callable[[Mapping[str, Any]], LicenseUsageSampleWithSiteHash]:
+    def get_parser(cls, report_version: str) -> Callable[[object], LicenseUsageSampleWithSiteHash]:
         return lambda raw_sample: cls._parse(
             LicenseUsageSample.get_parser(report_version),
             raw_sample,
@@ -425,9 +435,12 @@ class LicenseUsageSampleWithSiteHash(LicenseUsageSample):
     @classmethod
     def _parse(
         cls,
-        parser: Callable[[Mapping[str, Any]], LicenseUsageSample],
-        raw_sample: Mapping[str, Any],
+        parser: Callable[[object], LicenseUsageSample],
+        raw_sample: object,
     ) -> LicenseUsageSampleWithSiteHash:
+        if not isinstance(raw_sample, dict):
+            raise TypeError()
+
         parsed_sample = parser({k: v for k, v in raw_sample.items() if k != "site_hash"})
         return cls(
             version=parsed_sample.version,
@@ -468,9 +481,10 @@ class LicenseUsageHistoryWithSiteHash:
         return [sample.for_report() for sample in self._samples]
 
     @classmethod
-    def parse(
-        cls, report_version: str, raw_history: Sequence[Mapping[str, Any]]
-    ) -> LicenseUsageHistoryWithSiteHash:
+    def parse(cls, report_version: str, raw_history: object) -> LicenseUsageHistoryWithSiteHash:
+        if not isinstance(raw_history, list):
+            raise TypeError()
+
         parser = LicenseUsageSampleWithSiteHash.get_parser(report_version)
         return cls(parser(raw_sample) for raw_sample in raw_history)
 

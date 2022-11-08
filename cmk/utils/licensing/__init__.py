@@ -273,9 +273,10 @@ class LicenseUsageHistory:
         return [sample.for_report() for sample in self]
 
     @classmethod
-    def parse(
-        cls, report_version: str, raw_history: Sequence[Mapping[str, Any]]
-    ) -> LicenseUsageHistory:
+    def parse(cls, report_version: str, raw_history: object) -> LicenseUsageHistory:
+        if not isinstance(raw_history, list):
+            raise TypeError()
+
         parser = LicenseUsageSample.get_parser(report_version)
         return cls(parser(raw_sample) for raw_sample in raw_history)
 

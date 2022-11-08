@@ -16,6 +16,7 @@ import pytest  # type: ignore[import]
 import responses  # type: ignore[import]
 
 import cmk.utils.paths
+import cmk.utils.packaging
 import cmk.utils.version as cmk_version
 
 import cmk.gui.config as config
@@ -65,6 +66,12 @@ def fixture_disable_cmk_update_config(monkeypatch):
     # and causes timeouts. Disable this for these tests.
     monkeypatch.setattr(cmk.gui.watolib.activate_changes, "_execute_cmk_update_config",
                         lambda: None)
+
+
+@pytest.fixture(autouse=True)
+def fixture_disable_build_setup_search_index_background(monkeypatch):
+    # init-redis is not availabe...
+    monkeypatch.setattr(cmk.utils.packaging, "_build_setup_search_index_background", lambda: None)
 
 
 def _create_sync_snapshot(activation_manager, snapshot_data_collector_class, monkeypatch, tmp_path,

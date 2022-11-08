@@ -138,8 +138,8 @@ copy %build_dir%\ohm\OpenHardwareMonitorCLI.exe %arte%\OpenHardwareMonitorCLI.ex
 copy %build_dir%\ohm\OpenHardwareMonitorLib.dll %arte%\OpenHardwareMonitorLib.dll /Y || powershell Write-Host "Failed to copy OHM dll" -Foreground Red && exit /b 37
 copy install\resources\check_mk.user.yml %arte%
 copy install\resources\check_mk.yml %arte%
+if not "%2" == "" call scripts\call_signing_tests.cmd || exit /b 41
 powershell Write-Host "File Deployment succeeded" -Foreground Green
-
 ::Get end time:
 for /F "tokens=1-4 delims=:.," %%a in ("%time%") do (
    set /A "end=(((%%a*60)+1%%b %% 100)*60+1%%c %% 100)*100+1%%d %% 100"

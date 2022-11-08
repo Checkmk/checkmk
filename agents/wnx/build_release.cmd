@@ -95,8 +95,8 @@ powershell Write-Host "Signing Executables" -Foreground White
 @call sign_windows_exe c:\common\store\%1 %2 %build_dir%\check_mk_service\x64\Release\check_mk_service64.exe
 @call sign_windows_exe c:\common\store\%1 %2 %build_dir%\check_mk_service\Win32\Release\check_mk_service32.exe
 @call sign_windows_exe c:\common\store\%1 %2 %arte%\cmk-agent-ctl.exe
-rem @call sign_windows_exe %build_dir%\ohm\OpenHardwareMonitorLib.dll
-rem @call sign_windows_exe %build_dir%\ohm\OpenHardwareMonitorLib.exe
+@call sign_windows_exe %build_dir%\ohm\OpenHardwareMonitorLib.dll
+@call sign_windows_exe %build_dir%\ohm\OpenHardwareMonitorLib.exe
 )
 
 ptime "%msbuild%" wamain.sln /t:install /p:Configuration=Release,Platform=x86

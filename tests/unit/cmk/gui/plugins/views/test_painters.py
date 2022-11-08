@@ -272,6 +272,7 @@ def test_registered_painters() -> None:
         "inv_hardware_storage_disks_size",
         "inv_hardware_system",
         "inv_hardware_system_device_number",
+        "inv_hardware_system_description",
         "inv_hardware_system_expresscode",
         "inv_hardware_system_manufacturer",
         "inv_hardware_system_model",

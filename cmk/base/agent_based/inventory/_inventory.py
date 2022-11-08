@@ -320,12 +320,13 @@ def _inventorize_real_host(
 
     section.section_step("May update inventory tree")
 
-    tree_updater = RealHostTreeUpdater(
-        raw_intervals_from_config,
-        trees.inventory,
-    )
+    tree_updater = RealHostTreeUpdater(raw_intervals_from_config)
     tree_updater.may_add_cache_info(now=now, items_of_inventory_plugins=items_of_inventory_plugins)
-    update_result = tree_updater.may_update(now=now, previous_tree=old_tree)
+    update_result = tree_updater.may_update(
+        now=now,
+        inventory_tree=trees.inventory,
+        previous_tree=old_tree,
+    )
 
     if not trees.inventory.is_empty():
         _add_cluster_property_to(inventory_tree=trees.inventory, is_cluster=False)

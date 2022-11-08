@@ -48,13 +48,8 @@ class ItemsOfInventoryPlugin:
 
 
 class RealHostTreeUpdater:
-    def __init__(
-        self,
-        raw_intervals_from_config: RawIntervalsFromConfig,
-        inventory_tree: StructuredDataNode,
-    ) -> None:
+    def __init__(self, raw_intervals_from_config: RawIntervalsFromConfig) -> None:
         self._from_config = _get_intervals_from_config(raw_intervals_from_config)
-        self._inventory_tree = inventory_tree
         self._retention_infos: RetentionInfos = {}
 
     # ---from retention intervals-------------------------------------------
@@ -123,9 +118,15 @@ class RealHostTreeUpdater:
                     ),
                 )
 
-    def may_update(self, now: int, previous_tree: StructuredDataNode) -> UpdateResult:
+    def may_update(
+        self,
+        *,
+        now: int,
+        inventory_tree: StructuredDataNode,
+        previous_tree: StructuredDataNode,
+    ) -> UpdateResult:
         if not self._from_config:
-            self._inventory_tree.remove_retentions()
+            inventory_tree.remove_retentions()
             return UpdateResult(
                 save_tree=False,
                 reason="No retention intervals found.",
@@ -138,8 +139,8 @@ class RealHostTreeUpdater:
             if (previous_node := previous_tree.get_node(node_path)) is None:
                 previous_node = StructuredDataNode()
 
-            if (inv_node := self._inventory_tree.get_node(node_path)) is None:
-                inv_node = self._inventory_tree.setdefault_node(node_path)
+            if (inv_node := inventory_tree.get_node(node_path)) is None:
+                inv_node = inventory_tree.setdefault_node(node_path)
 
             if node_type == ATTRIBUTES_KEY:
                 results.append(

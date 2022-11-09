@@ -622,12 +622,10 @@ class HTMLWriter:
     def render_fieldset(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
         return render_element("fieldset", content, **kwargs)
 
-    def open_optgroup(self, **kwargs):
-        # type: (**HTMLTagAttributeValue) -> None
+    def open_optgroup(self, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_start_tag("optgroup", close_tag=False, **kwargs))
 
-    def close_optgroup(self):
-        # type: () -> None
+    def close_optgroup(self) -> None:
         self.write_html(render_end_tag("optgroup"))
 
     def open_option(self, **kwargs: HTMLTagAttributeValue) -> None:

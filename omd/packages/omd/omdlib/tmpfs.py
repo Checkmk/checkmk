@@ -252,8 +252,7 @@ def remove_from_fstab(site: SiteContext) -> None:
     ok()
 
 
-def save_tmpfs_dump(site):
-    # type: (SiteContext) -> None
+def save_tmpfs_dump(site: SiteContext) -> None:
     """Dump tmpfs content for later restore after remount
 
     Creates a tar archive from the current tmpfs contents that is restored to the
@@ -275,8 +274,7 @@ def save_tmpfs_dump(site):
     assert dump_path.exists()
 
 
-def restore_tmpfs_dump(site):
-    # type: (SiteContext) -> None
+def restore_tmpfs_dump(site: SiteContext) -> None:
     """Populate the tmpfs from the previously created tmpfs dump
     Silently skipping over in case there is no dump available."""
     if not _tmpfs_dump_path(site).exists():
@@ -285,6 +283,5 @@ def restore_tmpfs_dump(site):
         tar.extractall(site.tmp_dir)
 
 
-def _tmpfs_dump_path(site):
-    # type: (SiteContext) -> Path
+def _tmpfs_dump_path(site: SiteContext) -> Path:
     return Path(site.dir, "var", "omd", "tmpfs-dump.tar")

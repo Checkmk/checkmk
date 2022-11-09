@@ -69,8 +69,7 @@ def serialize_group_list(
 
 
 def serialize_group(name: GroupName) -> Any:
-    def _serializer(group):
-        # type: (Dict[str, str]) -> Any
+    def _serializer(group: Dict[str, str]) -> Any:
         ident = group["id"]
         extensions = {}
         if "customer" in group:

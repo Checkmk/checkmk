@@ -1161,9 +1161,9 @@ class CommandScheduleDowntimes(Command):
             recurring_type = 0
         return recurring_type
 
-    def _flexible_option(self):
+    def _flexible_option(self) -> Seconds:
         if request.var("_down_flexible"):
-            delayed_duration = self._vs_duration().from_html_vars("_down_duration")  # type: Seconds
+            delayed_duration: Seconds = self._vs_duration().from_html_vars("_down_duration")
             self._vs_duration().validate_value(delayed_duration, "_down_duration")
         else:
             delayed_duration = 0

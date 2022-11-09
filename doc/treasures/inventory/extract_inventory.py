@@ -18,7 +18,7 @@ import sys
 import time
 from typing import Any, Dict
 
-relations = {
+relations: Dict[str, Dict[str, Any]] = {
     "devices": {
         "columns": (
             ("@hostname", "import_id"),  # special functions start with "@"
@@ -93,7 +93,7 @@ relations = {
         },
         "converter": {},
     },
-}  # type: Dict[str, Dict[str, Any]]
+}
 
 omd_root = os.environ["OMD_ROOT"]
 

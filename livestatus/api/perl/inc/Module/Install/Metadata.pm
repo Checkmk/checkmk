@@ -250,7 +250,7 @@ sub feature {
 
 	if ( @_ == 1 and ref( $_[0] ) ) {
 		# The user used ->feature like ->features by passing in the second
-		# argument as a reference.  Accomodate for that.
+		# argument as a reference.  Accommodate for that.
 		$mods = $_[0];
 	} else {
 		$mods = \@_;

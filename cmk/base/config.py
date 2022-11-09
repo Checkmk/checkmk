@@ -2217,7 +2217,7 @@ def _get_plugin_parameters(
     rules_getter_function: Callable[[RuleSetName], Ruleset],
 ) -> Union[None, Parameters, List[Parameters]]:
     if default_parameters is None:
-        # This means the function will not acctept any params.
+        # This means the function will not accept any params.
         return None
     if ruleset_name is None:
         # This means we have default params, but no rule set.

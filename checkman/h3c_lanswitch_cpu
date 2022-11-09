@@ -15,7 +15,7 @@ description:
  exceeds configurable levels.
 
  Note that some of these switches don't handle SNMP well and might generate
- up to 90% cpu load while queried.  To accomodate for this you should lower
+ up to 90% cpu load while queried.  To accommodate for this you should lower
  the frequency of SNMP based checks with them.
 
  Some devices have a high usage even in normal conditions (i.e. running full

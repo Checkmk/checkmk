@@ -1,0 +1,13 @@
+Title: SLA reporting: Fixed rounding error and exception on missing SLA
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1667990560
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p17
+
+The SLA painter had a rounding error in the summary line, hereby showing <tt>0.00% OP</tt> when at least one SLA period was broken.
+Furthermore, fixed an exception in the SLA painter when service in question had no SLA assigned.
+Both problems only showed up when exporting the SLA as PDF. 

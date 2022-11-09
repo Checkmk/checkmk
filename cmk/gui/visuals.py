@@ -1484,7 +1484,7 @@ def page_edit_visual(  # type:ignore[no-untyped-def] # pylint: disable=too-many-
             visib[key] = visual[key]
     visual["visibility"] = visib
 
-    visual["topic"] = visual["topic"] or "other"  # default to "other" (in case of empty string)
+    visual["topic"] = visual.get("topic") or "other"  # default to "other" (in case of empty string)
     vs_general.render_input("general", visual)
 
     if custom_field_handler and custom_field_handler.__name__ != "dashboard_fields_handler":

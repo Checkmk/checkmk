@@ -151,7 +151,7 @@ apispec-oneofschema = "==3.0.0"  # direct dependency
 typing_extensions = "==4.3.0"   # required by pydantic
 pydantic = "==1.9.1"
 paho-mqtt = "==1.6.1"  # needed for MQTT special agent
-python-active-directory = {ref = "v2.1.0", git = "https://github.com/tribe29/python-active-directory"}  # Forked in order to have relevant patch available
+python-active-directory = "==1.0.5"
 rrdtool = "==0.1.15"  # Actually we ship the binding which comes with rrdtool itself...
 docstring_parser = "==0.13"  # direct dependency
 pyprof2calltree = "==1.4.5"  # used for GUI/API profiling

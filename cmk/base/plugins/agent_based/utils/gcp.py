@@ -163,7 +163,7 @@ def validate_asset_section(section_gcp_assets: AssetSection | None, service: str
     return section_gcp_assets
 
 
-def get_value(results: Sequence[GCPResult], spec: MetricSpec) -> float:
+def get_value(timeseries: Sequence[GCPResult], spec: MetricSpec) -> float:
     # GCP does not always deliver all metrics. i.e. api/request_count only contains values if
     # api requests have occured. To ensure all metrics are displayed in check mk we default to
     # 0 in the absence of data.
@@ -179,7 +179,7 @@ def get_value(results: Sequence[GCPResult], spec: MetricSpec) -> float:
         def filter_func(r: GCPResult) -> bool:
             return r.metric_type == spec.metric_type
 
-    results = list(r for r in results if filter_func(r))
+    results = list(r for r in timeseries if filter_func(r))
     # normally, only one result should be retrieved. The aggregation over several results is
     # currently only needed for getting the total request count over the response classes for
     # Google Cloud Run applications

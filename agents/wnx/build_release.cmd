@@ -138,7 +138,6 @@ copy %build_dir%\ohm\OpenHardwareMonitorCLI.exe %arte%\OpenHardwareMonitorCLI.ex
 copy %build_dir%\ohm\OpenHardwareMonitorLib.dll %arte%\OpenHardwareMonitorLib.dll /Y || powershell Write-Host "Failed to copy OHM dll" -Foreground Red && exit /b 37
 copy install\resources\check_mk.user.yml %arte%
 copy install\resources\check_mk.yml %arte%
-if not "%2" == "" call scripts\call_signing_tests.cmd || exit /b 41
 powershell Write-Host "File Deployment succeeded" -Foreground Green
 ::Get end time:
 for /F "tokens=1-4 delims=:.," %%a in ("%time%") do (
@@ -163,6 +162,8 @@ powershell Write-Host "Signing MSI" -Foreground White
 copy /Y %arte%\check_mk_agent.msi %arte%\check_mk_agent_unsigned.msi
 @call sign_windows_exe c:\common\store\%1 %2 %arte%\check_mk_agent.msi
 )
+if not "%2" == "" call scripts\call_signing_tests.cmd || exit /b 41
+
 
 
 

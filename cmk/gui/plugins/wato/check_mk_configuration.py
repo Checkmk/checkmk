@@ -5275,8 +5275,18 @@ def _valuespec_agent_encryption_no_tls() -> Dictionary:
 
 
 def _migrate_encryption_settings(p: Mapping[str, Any]) -> Mapping[str, Any]:
-    if set(p) == {"passphrase", "use_regular", "use_realtime"}:
-        # "passphrase" refers to agent encryption, leave it in!
+    """
+    >>> _migrate_encryption_settings({})
+    {}
+    >>> _migrate_encryption_settings({'use_realtime': 'enforce'})
+    {}
+    >>> _migrate_encryption_settings({'passphrase': 'this-must-be-for-rtc-only'})
+    {}
+    >>> _migrate_encryption_settings({'passphrase': 'this-is-also-for-the-agent', 'use_regular': 'disable', 'use_realtime': 'enforce'})
+    {'passphrase': 'this-is-also-for-the-agent', 'use_regular': 'disable'}
+
+    """
+    if "use_regular" in p:
         return {
             "passphrase": p["passphrase"],
             "use_regular": p["use_regular"],

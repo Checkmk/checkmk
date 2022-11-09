@@ -540,7 +540,7 @@ def check_fileinfo_groups_data(
                 file_stat.size, files_matching["size_minmax"]
             )
 
-            age = reftime - file_stat.time
+            age = max(reftime - file_stat.time, 0)
             files_matching["age_minmax"] = _update_minmax(age, files_matching["age_minmax"])
 
             yield from _check_individual_files(

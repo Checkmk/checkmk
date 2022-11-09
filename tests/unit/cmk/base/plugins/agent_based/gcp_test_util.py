@@ -7,7 +7,7 @@ import datetime
 import json
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import pytest
 from google.cloud import monitoring_v3
@@ -100,17 +100,31 @@ def generate_labels(item: str, service_desc: agent_gcp.Service) -> tuple[Mapping
     return metric_labels, resource_labels
 
 
-def generate_stringtable(item: str, value: float, service_desc: agent_gcp.Service) -> StringTable:
+def generate_stringtable(
+    item: str,
+    value: float,
+    service_desc: agent_gcp.Service,
+    overriding_values: Mapping[str, float] | None = None,
+) -> StringTable:
+
+    if overriding_values is None:
+        overriding_values = {}
+
     start_time = datetime.datetime(2016, 4, 6, 22, 5, 0, 42)
     end_time = datetime.datetime(2016, 4, 6, 22, 5, 1, 42)
     interval = monitoring_v3.TimeInterval(end_time=end_time, start_time=start_time)
-    point = monitoring_v3.Point({"interval": interval, "value": {"double_value": value}})
 
     metric_labels, resource_labels = generate_labels(item, service_desc)
 
     time_series = []
     for metric in service_desc.metrics:
         metric_type = metric.name
+        point = monitoring_v3.Point(
+            {
+                "interval": interval,
+                "value": {"double_value": overriding_values.get(metric_type, value)},
+            }
+        )
         ts = monitoring_v3.TimeSeries(
             {
                 "metric": {"type": metric_type, "labels": metric_labels},
@@ -130,6 +144,8 @@ class Plugin:
     metrics: Sequence[str]
     results: Sequence[Result]
     function: Callable[..., CheckResult]
+    default_value: float = 42.0
+    override_values: Mapping[str, float] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         assert len(self.metrics) == len(

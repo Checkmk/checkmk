@@ -5,7 +5,7 @@
 
 # NOTE: DO NOT EDIT! Automatically generated from @@ORIG-FILE@@
 
-# type: ignore[var-annotated]
+# mypy: disable-error-code="arg-type,assignment,attr-defined,call-overload,comparison-overlap,dict-item,index,list-item,misc,name-defined,name-match,no-untyped-def,operator,str-format,type-var,union-attr,var-annotated"
 
 from cmk.base.check_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
 

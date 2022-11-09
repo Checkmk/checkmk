@@ -21,7 +21,7 @@ mock = "*"  # used in checktestlib in unit tests
 mocket = "*"    # used for mocking kubernetes python client
 pylint = "*"  # used by test/Makefile's test-pylint target
 hypothesis = "*"    # used by unit tests
-mypy = "*"  # used by test/static/Makefile's test-mypy target
+mypy = "==0.982"  # used by test/static/Makefile's test-mypy target # TODO: unpin after resolving mypy errors
 twine = "*" # used to upload packages to internal PyPi mirror
 types-six = "*"  # used for type checking
 types-requests = "*"  # used for type checking

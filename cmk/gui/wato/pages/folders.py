@@ -5,7 +5,6 @@
 """Modes for managing folders"""
 
 import abc
-import json
 import operator
 from typing import Any, Collection, Dict, Iterator, List, Optional, Tuple, Type
 
@@ -21,7 +20,7 @@ from cmk.gui.groups import load_contact_group_information
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import mandatory_parameter, request
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.num_split import key_num_split
 from cmk.gui.page_menu import (
@@ -48,7 +47,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.plugins.wato.utils.base_modes import mode_url, redirect, WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import make_folder_status_link
 from cmk.gui.plugins.wato.utils.main_menu import MainMenu, MenuItem
-from cmk.gui.table import init_rowselect, Table, table_element
+from cmk.gui.table import show_row_count, Table, table_element
 from cmk.gui.type_defs import ActionResult, Choices, PermissionName
 from cmk.gui.utils.agent_registration import remove_tls_registration_help
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -902,11 +901,11 @@ class ModeFolder(WatoMode):
         html.hidden_fields()
         html.end_form()
 
-        row_count = len(hostnames)
-        row_info = "%d %s" % (row_count, _("host") if row_count == 1 else _("hosts"))
-        html.javascript("cmk.utils.update_row_info(%s);" % json.dumps(row_info))
-
-        init_rowselect("wato-folder-/" + self._folder.path())
+        show_row_count(
+            row_count=(row_count := len(hostnames)),
+            row_info=ungettext("host", "hosts", row_count),
+            selection_id="wato-folder-/" + self._folder.path(),
+        )
 
     def _show_host_row(
         self,

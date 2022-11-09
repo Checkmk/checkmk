@@ -19,6 +19,7 @@ import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
+import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -50,7 +51,7 @@ from cmk.gui.plugins.wato.utils import (
     redirect,
     WatoMode,
 )
-from cmk.gui.table import table_element
+from cmk.gui.table import show_row_count, table_element
 from cmk.gui.type_defs import ActionResult, Choices, PermissionName, UserSpec
 from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.userdb.htpasswd import hash_password
@@ -334,6 +335,8 @@ class ModeUsers(WatoMode):
         timeperiods = watolib.timeperiods.load_timeperiods()
         contact_groups = load_contact_group_information()
 
+        html.div("", id_="row_info")
+
         with table_element("users", None, empty_text=_("No users are defined yet.")) as table:
             online_threshold = time.time() - active_config.user_online_maxage
             for uid, user_spec in sorted(entries, key=lambda x: x[1].get("alias", x[0]).lower()):
@@ -535,8 +538,15 @@ class ModeUsers(WatoMode):
                     table.cell(_u(vs_title) if isinstance(vs_title, str) else vs_title)
                     html.write_text(vs.value_to_html(user_spec.get(name, vs.default_value())))
 
+        html.hidden_field("selection_id", weblib.selection_id())
         html.hidden_fields()
         html.end_form()
+
+        show_row_count(
+            row_count=(row_count := len(users)),
+            row_info=_("user") if row_count == 1 else _("users"),
+            selection_id="users",
+        )
 
         if not load_contact_group_information():
             url = "wato.py?mode=contact_groups"

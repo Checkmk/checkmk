@@ -144,10 +144,10 @@ class SubscriptionDetailsLimit(NamedTuple):
     limit_type: SubscriptionDetailsLimitType
     limit_value: int
 
-    def for_report(self) -> tuple[str, float]:
+    def for_report(self) -> tuple[str, int]:
         return (self.limit_type.name, self.limit_value)
 
-    def for_config(self) -> str | tuple[str, float]:
+    def for_config(self) -> str | tuple[str, int]:
         if self.limit_type == SubscriptionDetailsLimitType.fixed:
             return str(self.limit_value)
 
@@ -197,14 +197,14 @@ class RawSubscriptionDetails(TypedDict):
     source: str
     subscription_start: int
     subscription_end: int
-    subscription_limit: tuple[str, float]
+    subscription_limit: tuple[str, int]
 
 
 class RawSubscriptionDetailsForConfig(TypedDict):
     source: str
     subscription_start: int
     subscription_end: int
-    subscription_limit: str | tuple[str, float]
+    subscription_limit: str | tuple[str, int]
 
 
 class SubscriptionDetails(NamedTuple):
@@ -597,7 +597,7 @@ class RawMonthlyServiceAggregation(TypedDict):
     subscription_exceeded_first: Mapping[str, float] | None
     subscription_start: float | int | None
     subscription_end: float | int | None
-    subscription_limit: float | int | None
+    subscription_limit: int | None
 
 
 class MonthlyServiceAverages:

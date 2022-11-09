@@ -38,21 +38,21 @@ jobs:
         echo "PIP_CACHE_DIR=$HOME/.cache/pip" >> $GITHUB_ENV
         echo "PIPENV_CACHE_DIR=$HOME/.cache/pipenv" >> $GITHUB_ENV
     - name: Checkout Repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Parse Python version from defines.make
       run: |
         echo "PYTHON_VERSION=$(make --no-print-directory --file=defines.make print-PYTHON_VERSION)" >> $GITHUB_ENV
     - name: Setup Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ env.PYTHON_VERSION }}
     - name: Cache pip
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         key: pip-${{ runner.os }}-${{ hashFiles('Pipfile.lock') }}
         path: ${{ env.PIP_CACHE_DIR  }}
     - name: Cache pipenv
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         key: pipenv-${{ runner.os }}-${{ hashFiles('Pipfile.lock') }}
         path: ${{ env.PIPENV_CACHE_DIR  }}

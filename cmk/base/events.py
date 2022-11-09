@@ -284,20 +284,24 @@ def complete_raw_context(  # pylint: disable=too-many-branches
 
     This ensures that all raw contexts processed in the notification code has specific variables
     set. Add a few further helper variables that are useful in notification and alert plugins.
-
-    Please not that this is not only executed on the source system. When notifications are
-    forwarded to another site and the analysis is executed on that site, this function will be
-    executed on the central site. So be sure not to overwrite site specific things.
     """
 
     raw_keys = list(raw_context)
 
+    # If a remote site has send the spool file to the central site and the user
+    # uses "Analyze ruleset", the key "OMD_SITE" is already present. So there is
+    # no need to enrich the raw_context again. This also avoids overwriting
+    # of sitespecific values.
+    if "OMD_SITE" in raw_context:
+        return
+
     try:
+        raw_context["OMD_SITE"] = omd_site()
+
         raw_context["WHAT"] = "SERVICE" if raw_context.get("SERVICEDESC") else "HOST"
 
         raw_context.setdefault("MONITORING_HOST", socket.gethostname())
         raw_context.setdefault("OMD_ROOT", str(cmk.utils.paths.omd_root))
-        raw_context.setdefault("OMD_SITE", omd_site())
 
         # The Checkmk Micro Core sends the MICROTIME and no other time stamps. We add
         # a few Nagios-like variants in order to be compatible

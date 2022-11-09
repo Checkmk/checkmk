@@ -21,7 +21,7 @@ class LocatorHelper(ABC):
         self.page = page
 
     @abstractmethod
-    def locator(self, selector: str) -> Locator:
+    def locator(self, selector: str = "xpath=.") -> Locator:
         """return locator for this subpart"""
 
     def check_success(self, message: str) -> None:
@@ -66,7 +66,7 @@ class Keys(Enum):
 class MainMenu(LocatorHelper):
     """functionality to find items from the main menu"""
 
-    def locator(self, selector: str) -> Locator:
+    def locator(self, selector: str = "xpath=.") -> Locator:
         return self.page.locator("#check_mk_navigation").locator(selector)
 
     @property
@@ -173,7 +173,7 @@ class MainMenu(LocatorHelper):
 class MainFrame(LocatorHelper):
     """functionality to find items from the main frame"""
 
-    def locator(self, selector: str) -> Locator:
+    def locator(self, selector: str = "xpath=.") -> Locator:
         return self.page.frame_locator("iframe[name='main']").locator(selector)
 
     def check_page_title(self, title: str) -> None:
@@ -184,7 +184,7 @@ class MainFrame(LocatorHelper):
 class Sidebar(LocatorHelper):
     """functionality to find items from the sidebar"""
 
-    def locator(self, selector: str) -> Locator:
+    def locator(self, selector: str = "xpath=.") -> Locator:
         return self.page.locator("#check_mk_sidebar").locator(selector)
 
 
@@ -209,7 +209,7 @@ class PPage(LocatorHelper):
         self.username = ""
         self.password = ""
 
-    def locator(self, selector: str) -> Locator:
+    def locator(self, selector: str = "xpath=.") -> Locator:
         return self.page.locator(selector)
 
     def login(self, username: str = "", password: str = "") -> None:

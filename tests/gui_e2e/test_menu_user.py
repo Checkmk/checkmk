@@ -38,11 +38,11 @@ def test_user_sidebar_position(logged_in_page: PPage) -> None:
     default_label = str(
         logged_in_page.main_menu.user_sidebar_position_button.get_attribute("value")
     )
-    default_value = str(logged_in_page.sidebar.locator("xpath=.").get_attribute("class"))
+    default_value = str(logged_in_page.sidebar.locator().get_attribute("class"))
     logged_in_page.main_menu.user_sidebar_position.click()
     expect(logged_in_page.main_menu.user_sidebar_position_button).not_to_have_value(default_label)
     changed_label = logged_in_page.main_menu.user_sidebar_position_button.get_attribute("value")
-    changed_value = logged_in_page.sidebar.locator("xpath=.").get_attribute("class")
+    changed_value = logged_in_page.sidebar.locator().get_attribute("class")
     assert default_label != changed_label, "Changed sidebar position is not properly displayed!"
     assert default_value != changed_value, "Changed sidebar position is not properly reflected!"
 
@@ -50,7 +50,7 @@ def test_user_sidebar_position(logged_in_page: PPage) -> None:
     logged_in_page.logout()
     logged_in_page.login()
     saved_label = str(logged_in_page.main_menu.user_sidebar_position_button.get_attribute("value"))
-    saved_value = str(logged_in_page.sidebar.locator("xpath=.").get_attribute("class"))
+    saved_value = str(logged_in_page.sidebar.locator().get_attribute("class"))
     assert saved_label == changed_label, "Saved sidebar position is not properly displayed!"
     assert saved_value == changed_value, "Saved sidebar position is not properly reflected!"
 
@@ -59,7 +59,7 @@ def test_user_sidebar_position(logged_in_page: PPage) -> None:
     reverted_label = str(
         logged_in_page.main_menu.user_sidebar_position_button.get_attribute("value")
     )
-    reverted_value = str(logged_in_page.sidebar.locator("xpath=.").get_attribute("class"))
+    reverted_value = str(logged_in_page.sidebar.locator().get_attribute("class"))
     assert reverted_label == default_label, "Reverted sidebar position is not properly displayed!"
     assert reverted_value == default_value, "Reverted sidebar position is not properly reflected!"
 

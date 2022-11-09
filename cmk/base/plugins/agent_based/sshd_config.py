@@ -3,9 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Iterator, Mapping
+from collections.abc import Callable, Mapping
 
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1 import register, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
 
 _Section = Mapping[str, object]
 
@@ -50,8 +55,14 @@ def parse_sshd_config(string_table: StringTable) -> _Section:
     }
 
 
-def inventory_sshd_config(section: _Section) -> Iterator:
-    yield (None, {})
+register.agent_section(
+    name="sshd_config",
+    parse_function=parse_sshd_config,
+)
+
+
+def discover_sshd_config(section: _Section) -> DiscoveryResult:
+    yield Service()
 
 
 _OPTIONS_TO_HUMAN_READABLE = {
@@ -71,7 +82,7 @@ def _value_to_human_readable(v: object) -> str:
     return ", ".join(map(str, v)) if isinstance(v, list) else str(v)
 
 
-def check_sshd_config(_no_item: None, params: Mapping[str, object], section: _Section) -> Iterator:
+def check_sshd_config(params: Mapping[str, object], section: _Section) -> CheckResult:
     if params.get("permitrootlogin") == "without-password":
         params = {
             **params,
@@ -79,23 +90,27 @@ def check_sshd_config(_no_item: None, params: Mapping[str, object], section: _Se
         }
 
     for option, val in section.items():
-        state = 0
-        infotext = "%s: %s" % (_OPTIONS_TO_HUMAN_READABLE[option], _value_to_human_readable(val))
+        state = State.OK
+        summary = f"{_OPTIONS_TO_HUMAN_READABLE[option]}: {_value_to_human_readable(val)}"
 
         if (expected := params.get(option)) and expected != val:
-            state = 2
-            infotext += " (expected %s)" % _value_to_human_readable(expected)
+            state = State.CRIT
+            summary += f" (expected {_value_to_human_readable(expected)})"
 
-        yield state, infotext
+        yield Result(state=state, summary=summary)
 
     for option in sorted(set(params) - set(section)):
-        yield 2, "%s: not present in SSH daemon configuration" % _OPTIONS_TO_HUMAN_READABLE[option]
+        yield Result(
+            state=State.CRIT,
+            summary=f"{_OPTIONS_TO_HUMAN_READABLE[option]}: not present in SSH daemon configuration",
+        )
 
 
-check_info["sshd_config"] = {
-    "parse_function": parse_sshd_config,
-    "inventory_function": inventory_sshd_config,
-    "check_function": check_sshd_config,
-    "service_description": "SSH daemon configuration",
-    "group": "sshd_config",
-}
+register.check_plugin(
+    name="sshd_config",
+    service_name="SSH daemon configuration",
+    discovery_function=discover_sshd_config,
+    check_function=check_sshd_config,
+    check_ruleset_name="sshd_config",
+    check_default_parameters={},
+)

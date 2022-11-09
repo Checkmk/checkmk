@@ -2108,7 +2108,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "splunk_jobs",
         "splunk_license_state",
         "splunk_license_usage",
-        "sshd_config",
         "statgrab_cpu",
         "steelhead_connections",
         "steelhead_peers",

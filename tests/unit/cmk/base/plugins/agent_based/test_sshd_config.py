@@ -7,14 +7,13 @@ from collections.abc import Mapping
 
 import pytest
 
-from tests.unit.conftest import FixRegister
-
-from cmk.utils.type_defs import CheckPluginName, SectionName
-
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
-from cmk.base.api.agent_based.type_defs import AgentSectionPlugin
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
+from cmk.base.plugins.agent_based.sshd_config import (
+    check_sshd_config,
+    discover_sshd_config,
+    parse_sshd_config,
+)
 
 _STRING_TABLE_UP_TO_DATE = [
     ["port", "22"],
@@ -193,16 +192,6 @@ _STRING_TABLE_DEPRECATED = [
 ]
 
 
-@pytest.fixture(name="section_plugin")
-def _fixture_section_plugin(fix_register: FixRegister) -> AgentSectionPlugin:
-    return fix_register.agent_sections[SectionName("sshd_config")]
-
-
-@pytest.fixture(name="check_plugin")
-def _fixture_check_plugin(fix_register: FixRegister) -> CheckPlugin:
-    return fix_register.check_plugins[CheckPluginName("sshd_config")]
-
-
 @pytest.mark.parametrize(
     ["string_table"],
     [
@@ -210,14 +199,8 @@ def _fixture_check_plugin(fix_register: FixRegister) -> CheckPlugin:
         pytest.param(_STRING_TABLE_DEPRECATED),
     ],
 )
-def test_discovery(
-    section_plugin: AgentSectionPlugin,
-    check_plugin: CheckPlugin,
-    string_table: StringTable,
-) -> None:
-    assert list(check_plugin.discovery_function(section_plugin.parse_function(string_table))) == [
-        Service()
-    ]
+def test_discovery(string_table: StringTable) -> None:
+    assert list(discover_sshd_config(parse_sshd_config(string_table))) == [Service()]
 
 
 @pytest.mark.parametrize(
@@ -281,17 +264,15 @@ def test_discovery(
     ],
 )
 def test_check(
-    section_plugin: AgentSectionPlugin,
-    check_plugin: CheckPlugin,
     string_table: StringTable,
     params: Mapping[str, object],
     expected_result: CheckResult,
 ) -> None:
     assert (
         list(
-            check_plugin.check_function(
+            check_sshd_config(
                 params=params,
-                section=section_plugin.parse_function(string_table),
+                section=parse_sshd_config(string_table),
             )
         )
         == expected_result

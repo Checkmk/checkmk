@@ -16,7 +16,7 @@
 using namespace std::chrono_literals;
 
 namespace {
-constexpr int num_counters = 15;
+constexpr int num_counters = 18;
 
 struct CounterInfo {
     std::mutex mutex;
@@ -46,6 +46,12 @@ void counterReset(Counter which) {
     c.value = 0.0;
     c.last_value = 0.0;
     c.rate = 0.0;
+}
+
+void counterSet(Counter which, double value) {
+    auto &c = counter(which);
+    std::lock_guard<std::mutex> lg(c.mutex);
+    c.value = value;
 }
 
 void counterIncrement(Counter which) {

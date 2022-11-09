@@ -25,6 +25,10 @@ enum class Counter {
     commands,
     livechecks,
 
+    carbon_queue_usage,
+    influxdb_queue_usage,
+    rrdcached_queue_usage,
+
     carbon_overflows,
     influxdb_overflows,
     livestatus_overflows,
@@ -33,6 +37,7 @@ enum class Counter {
 
 // TODO(sp): We really need an OO version of this. :-P
 void counterReset(Counter which);
+void counterSet(Counter which, double value);
 void counterIncrement(Counter which);
 void counterIncrementBy(Counter which, std::size_t value);
 double counterValue(Counter which);

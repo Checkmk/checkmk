@@ -274,13 +274,7 @@ class PainterSpec:
 
 @dataclass(frozen=True)
 class SorterSpec:
-    # some Sorter need an additional parameter e.g. svc_metrics_hist, svc_metrics_forecast
-    # The parameter is then encoded in the sorter name. "[sorter]:[param]"
-    # other Sorter (custom host metric) do the same when the information is
-    # coming from the url, but use a CascadingDropdown to let the user
-    # input the information. This results in a Tuple as a result variable.
-    # TODO: perhaps it could be possible to use the ValueSpec to
-    #       transparently transform the tuple into a single string?!
+    # The sorter parameters should be moved to a separate attribute instead
     sorter: SorterName | tuple[SorterName, Mapping[str, str]]
     negate: bool
     join_key: str | None = None

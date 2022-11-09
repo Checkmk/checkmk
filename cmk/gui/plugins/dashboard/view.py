@@ -101,7 +101,7 @@ class ABCViewDashlet(IFrameDashlet[VT]):
         view = View(self._dashlet_spec["name"], view_spec, context)  # type: ignore[arg-type]
         view.row_limit = get_limit()
         view.only_sites = visuals.get_only_sites_from_context(context)
-        view.user_sorters = get_user_sorters()
+        view.user_sorters = get_user_sorters(view.spec["sorters"], view.row_cells)
 
         process_view(GUIViewRenderer(view, show_buttons=False))
 

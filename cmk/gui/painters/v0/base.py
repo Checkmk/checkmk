@@ -692,13 +692,12 @@ def _encode_sorter_url(sorters: Iterable[SorterSpec]) -> str:
     p: list[str] = []
     for s in sorters:
         sorter_name = s.sorter
-        if not isinstance(sorter_name, str):
-            # sorter_name is a tuple
-            if sorter_name[0] in {"host_custom_variable"}:
-                sorter_name, params = sorter_name
-                sorter_name = "{}:{}".format(sorter_name, params["ident"])
-            else:
-                raise MKGeneralException(f"Can not handle sorter {sorter_name}")
+        if isinstance(sorter_name, tuple):
+            sorter_name, params = sorter_name
+            ident = params.get("ident", params.get("uuid", ""))
+            if not ident:
+                raise ValueError(f"Parameterized sorter without ident: {s!r}")
+            sorter_name = f"{sorter_name}:{ident}"
         url = ("-" if s.negate else "") + sorter_name
         if s.join_key:
             url += "~" + s.join_key

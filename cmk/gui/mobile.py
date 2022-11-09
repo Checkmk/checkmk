@@ -234,7 +234,7 @@ def page_index() -> None:
             view = View(view_name, view_spec, context)
             view.row_limit = get_limit()
             view.only_sites = visuals.get_only_sites_from_context(context)
-            view.user_sorters = get_user_sorters()
+            view.user_sorters = get_user_sorters(view.spec["sorters"], view.row_cells)
             view.want_checkboxes = get_want_checkboxes()
 
             url = "mobile_view.py?view_name=%s" % view_name
@@ -285,7 +285,7 @@ def page_view() -> None:
     view = View(view_name, view_spec, context)
     view.row_limit = get_limit()
     view.only_sites = visuals.get_only_sites_from_context(context)
-    view.user_sorters = get_user_sorters()
+    view.user_sorters = get_user_sorters(view.spec["sorters"], view.row_cells)
     view.want_checkboxes = get_want_checkboxes()
 
     title = view_title(view.spec, view.context)

@@ -7,7 +7,7 @@
 
 import functools
 from itertools import chain
-from typing import Callable, Dict, Iterable, List, Optional, Sequence, Set
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Sequence, Set
 from typing import Tuple as _Tuple
 from typing import Union
 
@@ -42,7 +42,7 @@ from cmk.gui.painter_options import PainterOptions
 from cmk.gui.painters.v0.base import Cell, JoinCell
 from cmk.gui.plugins.visuals.utils import Filter, get_livestatus_filter_headers
 from cmk.gui.sorter import SorterEntry
-from cmk.gui.type_defs import ColumnName, Row, Rows, SorterSpec, ViewSpec
+from cmk.gui.type_defs import ColumnName, Row, Rows, SorterName, SorterSpec, ViewSpec
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.view import View
@@ -73,7 +73,7 @@ def page_show_view() -> None:
 
         view.only_sites = visuals.get_only_sites_from_context(context)
 
-        view.user_sorters = get_user_sorters()
+        view.user_sorters = get_user_sorters(view.spec["sorters"], view.row_cells)
         view.want_checkboxes = get_want_checkboxes()
 
         # Gather the page context which is needed for the "add to visual" popup menu
@@ -655,8 +655,11 @@ def save_state_for_playing_alarm_sounds(row: "Row") -> None:
         g.setdefault("alarm_sound_states", set()).add(state_name)
 
 
-def _parse_url_sorters(sort: Optional[str]) -> list[SorterSpec]:
+def _parse_url_sorters(
+    config_sorters: Sequence[SorterSpec], cells: Sequence[Cell], sort: Optional[str]
+) -> list[SorterSpec]:
     sorters: list[SorterSpec] = []
+    sorter: SorterName | tuple[SorterName, Mapping[str, Any]]
     if not sort:
         return sorters
     for s in sort.split(","):
@@ -670,13 +673,47 @@ def _parse_url_sorters(sort: Optional[str]) -> list[SorterSpec]:
             negate = True
             sorter = sorter[1:]
 
+        if ":" in sorter:
+            sorter, ident = sorter.split(":", 1)
+            parameters = _sorter_parameters_by_ident(config_sorters, cells, sorter, ident)
+            if parameters is None:
+                continue  # Skip sorters with unresolvable parameters
+            sorter = (sorter, parameters)
+
         sorters.append(SorterSpec(sorter, negate, join_index))
     return sorters
 
 
-def get_user_sorters() -> List[SorterSpec]:
+def _sorter_parameters_by_ident(
+    sorters: Sequence[SorterSpec], cells: Sequence[Cell], sorter_name: str, ident: str
+) -> Mapping[str, Any] | None:
+    """Resolve sorter reference to configured parameters
+
+    We can not transport the sorter parameters through the URL of a view. So only a reference in the
+    form "name:ident" is used. We now need to be resolv this reference by looking up the reference
+    either in the sorters or the configured painters.
+    """
+    for sorter_spec in sorters:
+        sorter = sorter_spec.sorter
+        if (
+            isinstance(sorter, tuple)
+            and sorter[0] == sorter_name
+            # Consolidate "uuid" to "ident" for a cleaner handling here
+            and sorter[1].get("ident", sorter[1].get("uuid")) == ident
+        ):
+            return sorter[1]
+
+    for cell in cells:
+        parameters = cell.painter_parameters()
+        if cell.painter_name() == sorter_name and parameters.get("ident", parameters.get("uuid")):
+            return parameters
+
+    return None
+
+
+def get_user_sorters(sorters: Sequence[SorterSpec], cells: Sequence[Cell]) -> List[SorterSpec]:
     """Returns a list of optionally set sort parameters from HTTP request"""
-    return _parse_url_sorters(request.var("sort"))
+    return _parse_url_sorters(sorters, cells, request.var("sort"))
 
 
 def get_want_checkboxes() -> bool:

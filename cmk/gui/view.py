@@ -15,7 +15,7 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.derived_columns_sorter import DerivedColumnsSorter
 from cmk.gui.display_options import display_options
-from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -114,16 +114,10 @@ class View:
         sorters: list[SorterEntry] = []
         for entry in sorter_list:
             sorter_name = entry.sorter
-            uuid = None
+            ident = None
             if isinstance(sorter_name, tuple):
                 sorter_name, parameters = sorter_name
-                if sorter_name not in {"host_custom_variable"}:
-                    raise MKGeneralException(
-                        f"Don't know how to proceed with sorter {sorter_name} parameters {parameters}"
-                    )
-                uuid = parameters["ident"]
-            elif ":" in sorter_name:
-                sorter_name, uuid = sorter_name.split(":", 1)
+                ident = parameters.get("ident", parameters.get("uuid"))
 
             sorter = sorter_registry.get(sorter_name, None)
 
@@ -132,7 +126,7 @@ class View:
 
             sorter_instance = sorter()
             if isinstance(sorter_instance, DerivedColumnsSorter):
-                sorter_instance.derived_columns(self.row_cells, uuid)
+                sorter_instance.derived_columns(self.row_cells, ident)
 
             sorters.append(
                 SorterEntry(

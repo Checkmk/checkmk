@@ -16,7 +16,7 @@ Important: 1) If MongoDB runs as single instance the agent data is assigned
               hostname according to your needs.
 """
 
-__version__ = "2.0.0p30"
+__version__ = "2.0.0p31"
 
 import inspect
 import json

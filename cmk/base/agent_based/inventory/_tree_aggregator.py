@@ -135,25 +135,31 @@ class RealHostTreeUpdater:
         for retention_key, retention_info in self._retention_infos.items():
             node_path, node_type = retention_key
 
-            updater_cls: type[AttributesUpdater] | type[TableUpdater]
-            if node_type == ATTRIBUTES_KEY:
-                updater_cls = AttributesUpdater
-            elif node_type == TABLE_KEY:
-                updater_cls = TableUpdater
-            else:
-                raise NotImplementedError()
-
-            inv_node = self._inventory_tree.get_node(node_path)
-            previous_node = previous_tree.get_node(node_path)
-
-            if previous_node is None:
+            if (previous_node := previous_tree.get_node(node_path)) is None:
                 previous_node = StructuredDataNode()
 
-            if inv_node is None:
+            if (inv_node := self._inventory_tree.get_node(node_path)) is None:
                 inv_node = self._inventory_tree.setdefault_node(node_path)
 
-            updater = updater_cls(retention_info, inv_node, previous_node)
-            results.append(updater.filter_and_merge(now))
+            if node_type == ATTRIBUTES_KEY:
+                results.append(
+                    inv_node.attributes.update_from_previous(
+                        now,
+                        previous_node.attributes,
+                        retention_info.filter_func,
+                        retention_info.intervals,
+                    )
+                )
+
+            elif node_type == TABLE_KEY:
+                results.append(
+                    inv_node.table.update_from_previous(
+                        now,
+                        previous_node.table,
+                        retention_info.filter_func,
+                        retention_info.intervals,
+                    )
+                )
 
         return UpdateResult(
             save_tree=any(result.save_tree for result in results),
@@ -192,47 +198,3 @@ def _get_intervals_from_config(
 
 
 # .
-#   .--updater-------------------------------------------------------------.
-#   |                                _       _                             |
-#   |                _   _ _ __   __| | __ _| |_ ___ _ __                  |
-#   |               | | | | '_ \ / _` |/ _` | __/ _ \ '__|                 |
-#   |               | |_| | |_) | (_| | (_| | ||  __/ |                    |
-#   |                \__,_| .__/ \__,_|\__,_|\__\___|_|                    |
-#   |                     |_|                                              |
-#   '----------------------------------------------------------------------'
-
-
-class NodeUpdater:
-    def __init__(
-        self,
-        retention_info: RetentionInfo,
-        inv_node: StructuredDataNode,
-        previous_node: StructuredDataNode,
-    ) -> None:
-        self._filter_func = retention_info.filter_func
-        self._inv_intervals = retention_info.intervals
-        self._inv_node = inv_node
-        self._previous_node = previous_node
-
-    def filter_and_merge(self, now: int) -> UpdateResult:
-        raise NotImplementedError()
-
-
-class AttributesUpdater(NodeUpdater):
-    def filter_and_merge(self, now: int) -> UpdateResult:
-        return self._inv_node.attributes.update_from_previous(
-            now,
-            self._previous_node.attributes,
-            self._filter_func,
-            self._inv_intervals,
-        )
-
-
-class TableUpdater(NodeUpdater):
-    def filter_and_merge(self, now: int) -> UpdateResult:
-        return self._inv_node.table.update_from_previous(
-            now,
-            self._previous_node.table,
-            self._filter_func,
-            self._inv_intervals,
-        )

@@ -3941,7 +3941,7 @@ def _valuespec_periodic_discovery():
             FixedValue(
                 value=None,
                 title=_("Do not perform periodic service discovery check"),
-                totext=_("no discovery check"),
+                totext="",
             ),
             _vs_periodic_discovery(),
         ],

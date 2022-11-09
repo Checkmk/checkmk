@@ -5390,8 +5390,8 @@ class StatusEnum(str, Enum):
 
 
 class Tag(BaseModel):
-    Key: str = Field(None, alias="key")
-    Value: str = Field(None, alias="value")
+    Key: str = Field(..., alias="key")
+    Value: str = Field(..., alias="value")
 
     class Config:
         allow_population_by_field_name = True

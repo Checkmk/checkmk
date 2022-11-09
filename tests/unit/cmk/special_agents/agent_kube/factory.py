@@ -190,7 +190,8 @@ NPD_NODE_CONDITION_TYPES = [
 class NodeConditionFactory(ModelFactory):
     __model__ = api.NodeCondition
 
-    type_ = Use(next, itertools.cycle(agent.NATIVE_NODE_CONDITION_TYPES + NPD_NODE_CONDITION_TYPES))
+    # TODO: the ignore should be removed when mypy is unpinned
+    type_ = Use(next, itertools.cycle(agent.NATIVE_NODE_CONDITION_TYPES + NPD_NODE_CONDITION_TYPES))  # type: ignore
 
 
 class NodeStatusFactory(ModelFactory):

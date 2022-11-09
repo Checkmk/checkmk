@@ -448,20 +448,21 @@ def create_source_package(workspace, source_dir, cmk_version) {
         def scripts_dir = "${checkout_dir}/buildscripts/scripts";
         def patch_script = "create_unsign_msi_patch.sh"
         def patch_file = "unsign-msi.patch"
+        def artifacts = "check_mk_agent-64.exe,check_mk_agent.exe,${signed_msi},${unsigned_msi},check_mk.user.yml,python-3.cab,python-3.4.cab"
         if (params.FAKE_WINDOWS_ARTIFACTS) {
             sh "mkdir -p ${agents_dir}"
             if(EDITION != 'raw') {
                 sh "touch ${agents_dir}/cmk-update-agent"
                 sh "touch ${agents_dir}/cmk-update-agent-32"
             }
-            sh "touch ${agents_dir}/{check_mk_agent-64.exe,check_mk_agent.exe,${signed_msi},${unsigned_msi},check_mk.user.yml,python-3.cab,python-3.4.cab}"
+            sh "touch ${agents_dir}/{${artifacts}}"
         }
         dir("${checkout_dir}") {
             if(EDITION != 'raw') {
                 sh "cp ${agents_dir}/cmk-update-agent enterprise/agents/plugins/"
                 sh "cp ${agents_dir}/cmk-update-agent-32 enterprise/agents/plugins/"
             }
-            sh "cp ${agents_dir}/{check_mk_agent-64.exe,check_mk_agent.exe,${signed_msi},${unsigned_msi},check_mk.user.yml,python-3.cab,python-3.4.cab} ${target_dir}"
+            sh "cp ${agents_dir}/{${artifacts}} ${target_dir}"
             sh "${scripts_dir}/${patch_script} ${target_dir}/${signed_msi} ${target_dir}/${unsigned_msi} ${target_dir}/${patch_file}"
             sh 'make dist || cat /root/.npm/_logs/*-debug.log'
         }

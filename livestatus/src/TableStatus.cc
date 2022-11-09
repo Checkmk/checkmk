@@ -72,9 +72,15 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     addCounterColumns("carbon_overflows",
                       "times a Carbon connection could not send the metrics",
                       offsets, Counter::carbon_overflows);
+    addCounterColumns("carbon_queue_usage",
+                      "number of elements in the queue / size of the queue",
+                      offsets, Counter::carbon_queue_usage);
     addCounterColumns("influxdb_overflows",
                       "times an InfluxDB connection could not send the metrics",
                       offsets, Counter::influxdb_overflows);
+    addCounterColumns("influxdb_queue_usage",
+                      "number of elements in the queue / size of the queue",
+                      offsets, Counter::influxdb_queue_usage);
     addCounterColumns(
         "livestatus_overflows",
         "times a Livestatus connection could not be immediately accepted because all threads where busy",
@@ -83,6 +89,9 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         "rrdcached_overflows",
         "times an RRDCacheD connection could not send the metrics", offsets,
         Counter::rrdcached_overflows);
+    addCounterColumns("rrdcached_queue_usage",
+                      "number of elements in the queue / size of the queue",
+                      offsets, Counter::rrdcached_queue_usage);
 
     addColumn(std::make_unique<IntColumn<TableStatus>>(
         "nagios_pid", "The process ID of the monitoring core", offsets,

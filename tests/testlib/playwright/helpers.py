@@ -240,11 +240,13 @@ class PPage(LocatorHelper):
             return self.main_frame.locator("#menu_suggestion_activate_selected").click()
 
     def expect_success_state(self) -> None:
-        self.main_frame.locator("#site_gui_e2e_central_status.msg.state_success").is_visible()
+        expect(
+            self.main_frame.locator("#site_gui_e2e_central_status.msg.state_success")
+        ).to_be_visible()
 
-        self.main_frame.locator(
-            "#site_gui_e2e_central_progress.progress.state_success"
-        ).is_visible()
+        expect(
+            self.main_frame.locator("#site_gui_e2e_central_progress.progress.state_success")
+        ).to_be_visible()
 
         # assert no further changes are pending
         expect(self.main_frame.locator("div.page_state.no_changes")).to_be_visible(

@@ -1,0 +1,18 @@
+Title: <tt>inv_if</tt>: Fix crash on innovaphone IP811
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1668065522
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p17
+
+Previously, the inventory plugin <tt>inv_if</tt> would crash while inventorizing interfaces on a
+innovaphone IP811 with the message
+C+:
+Parsing of section inv_if failed
+C-:
+This could potentially happen on other devices, if they report 'NULL' to indicate missing values.
+With this werk, interfaces with this kind of missing information are omitted.

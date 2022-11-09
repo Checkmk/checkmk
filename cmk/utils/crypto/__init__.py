@@ -9,7 +9,10 @@ our crypto dependencies and python's built-in crypto utilities (like hashlib).
 """
 
 
+from __future__ import annotations
+
 import secrets
+import string
 from typing import AnyStr, Final, Generic
 
 from typing_extensions import assert_never
@@ -21,6 +24,21 @@ class Password(Generic[AnyStr]):
     The plaintext password can be accessed via `.raw`. Note that raw passwords should never be
     logged without masking.
     """
+
+    @classmethod
+    def random(cls, length: int) -> Password[str]:
+        """Generate a random password
+
+        Important: do not use this to generate cryptographic secrets. This function is intended
+        to generate default that can be entered (and hopefully changed) by users. In order to
+        obtain cryptographic key material, a key derivation function is necessary.
+
+        The generated password may contain digits and upper- and lowercase ascii letters.
+        """
+        if length < 0:
+            raise ValueError("Password length must not be negative")
+        alphabet = string.ascii_letters + string.digits
+        return Password("".join(secrets.choice(alphabet) for _ in range(length)))
 
     def __init__(self, password: AnyStr) -> None:
         if isinstance(password, bytes):

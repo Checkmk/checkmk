@@ -80,7 +80,7 @@ class WebAuthnCredential(TypedDict):
 
 class TwoFactorCredentials(TypedDict):
     webauthn_credentials: dict[str, WebAuthnCredential]
-    backup_codes: list[str]
+    backup_codes: list[str]  # Password Hashes
 
 
 SessionId = str

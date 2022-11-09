@@ -804,11 +804,11 @@ def test_make_two_factor_backup_codes(user_id: UserId) -> None:
     codes = make_two_factor_backup_codes()
     assert len(codes) == 10
     for password, pwhashed in codes:
-        password_hashing.verify(Password(password), pwhashed)
+        password_hashing.verify(password, pwhashed)
 
 
 def test_is_two_factor_backup_code_valid_no_codes(user_id: UserId) -> None:
-    assert not is_two_factor_backup_code_valid(user_id, "yxz")
+    assert not is_two_factor_backup_code_valid(user_id, Password("yxz"))
 
 
 def test_is_two_factor_backup_code_valid_matches(user_id: UserId) -> None:

@@ -5,6 +5,7 @@
 """These functions implement a web service with that a master can call
 automation functions on slaves,"""
 
+import secrets
 import traceback
 from collections.abc import Iterable
 from contextlib import nullcontext
@@ -307,6 +308,8 @@ def _get_login_secret(create_on_demand=False):
     if not create_on_demand:
         return None
 
-    secret = cmk.gui.utils.get_random_string(32)
+    # Note: This will make a secret and base64 encode it, so we'll end up with 43 chars for our
+    #       32 bytes. It would be better to store the raw secret bytes and encode when needed.
+    secret = secrets.token_urlsafe(32)
     store.save_object_to_file(path, secret)
     return secret

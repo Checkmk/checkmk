@@ -18,14 +18,14 @@ session is invalidated. The user can then login again from the same client or an
 
 import ast
 import hmac
+import secrets
 from contextlib import suppress
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from hashlib import sha256
-from pathlib import Path
 from typing import Mapping
 
-from cmk.utils.paths import htpasswd_file
+import cmk.utils.paths
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
 
@@ -86,13 +86,8 @@ def _load_secret() -> bytes:
     Creates the files if it does not exist. Having access to the secret means that one can issue
     valid cookies for the cookie auth.
     """
-    htpasswd_path = Path(htpasswd_file)
-    secret_path = htpasswd_path.parent.joinpath("auth.secret")
-
-    secret = ""
-    if secret_path.exists():
-        with secret_path.open(encoding="utf-8") as f:
-            secret = f.read().strip()
+    secret_path = cmk.utils.paths.omd_root / "etc" / "auth.secret"
+    secret = secret_path.read_bytes() if secret_path.exists() else None
 
     # Create new secret when this installation has no secret
     #
@@ -100,16 +95,10 @@ def _load_secret() -> bytes:
     # checks for such secrets and creates a new one. This will invalidate all
     # current auth cookies which means that all logged in users will need to
     # renew their login after update.
-    if secret == "" or len(secret) == 32:
-        secret = _generate_secret()
-        with secret_path.open("w", encoding="utf-8") as f:
-            f.write(secret)
-
-    return secret.encode("utf-8")
-
-
-def _generate_secret() -> str:
-    return utils.get_random_string(256)
+    if secret is None or len(secret) == 32:
+        secret = secrets.token_bytes(256)
+        secret_path.write_bytes(secret)
+    return secret
 
 
 def _load_serial(username: UserId) -> int:

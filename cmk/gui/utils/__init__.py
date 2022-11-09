@@ -85,18 +85,6 @@ def saveint(x: Any) -> int:
         return 0
 
 
-# We filter out non-printable characters. The byte 0x00 for example does not
-# make it through HTTP and the URL.
-def get_random_string(size: int, from_ascii: int = 48, to_ascii: int = 90) -> str:
-    """Generate a random string (no cryptographic safety)"""
-    secret = ""
-    while len(secret) < size:
-        c = os.urandom(1)
-        if ord(c) >= from_ascii and ord(c) <= to_ascii:
-            secret += c.decode()
-    return secret
-
-
 def gen_id() -> str:
     """Generates a unique id"""
     return str(uuid.uuid4())

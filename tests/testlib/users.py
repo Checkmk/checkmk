@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import contextlib
+import random
 import shutil
+import string
 from collections.abc import Iterator
 
 import cmk.utils.paths
@@ -13,7 +15,6 @@ from cmk.utils.type_defs import UserId
 import cmk.gui.config as config
 from cmk.gui.logged_in import SuperUserContext
 from cmk.gui.type_defs import UserObject, UserSpec
-from cmk.gui.utils import get_random_string
 from cmk.gui.watolib.users import delete_users, edit_users
 
 
@@ -64,7 +65,7 @@ def create_and_destroy_user(
     custom_attrs: UserSpec | None = None,
 ) -> Iterator[tuple[UserId, str]]:
     if username is None:
-        username = "test123-" + get_random_string(size=5, from_ascii=ord("a"), to_ascii=ord("z"))
+        username = "test123-" + "".join(random.choices(string.ascii_lowercase, k=5))
     password = "Ischbinwischtisch"
     user_id = UserId(username)
     del username

@@ -20,6 +20,8 @@ from fido2.ctap2 import (  # type: ignore[import]
 from fido2.server import Fido2Server  # type: ignore[import]
 from fido2.webauthn import PublicKeyCredentialRpEntity  # type: ignore[import]
 
+from cmk.utils.crypto import Password
+
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_simple_page_breadcrumb
 from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
@@ -103,7 +105,7 @@ class UserTwoFactorOverview(ABCUserProfilePage):
                     "The following backup codes have been generated: <ul>%s</ul> These codes are "
                     "displayed only now. Save them securely."
                 )
-                % "".join(f"<li><tt>{password}</tt></li>" for password, _pwhashed in codes)
+                % "".join(f"<li><tt>{password.raw}</tt></li>" for password, _pwhashed in codes)
             )
 
     def _page_menu(self, breadcrumb) -> PageMenu:  # type:ignore[no-untyped-def]
@@ -476,7 +478,7 @@ class UserLoginTwoFactor(Page):
             "_origtarget", origtarget := request.get_url_input("_origtarget", "index.py")
         )
 
-        if backup_code := request.get_ascii_input("_backup_code"):
+        if backup_code := request.get_validated_type_input(Password, "_backup_code"):
             if is_two_factor_backup_code_valid(user.id, backup_code):
                 set_two_factor_completed()
                 raise HTTPRedirect(origtarget)

@@ -270,25 +270,25 @@ def save_two_factor_credentials(user_id: UserId, credentials: TwoFactorCredentia
     save_custom_attr(user_id, "two_factor_credentials", repr(credentials))
 
 
-def make_two_factor_backup_codes() -> list[tuple[str, str]]:
+def make_two_factor_backup_codes() -> list[tuple[Password, str]]:
     """Creates a set of new two factor backup codes
 
     The codes are returned in plain form for displaying and in hashed+salted form for storage
     """
     return [
-        (password, password_hashing.hash_password(Password(password)))
-        for password in (utils.get_random_string(10) for i in range(10))
+        (password, password_hashing.hash_password(password))
+        for password in (Password.random(10) for _ in range(10))
     ]
 
 
-def is_two_factor_backup_code_valid(user_id: UserId, code: str) -> bool:
+def is_two_factor_backup_code_valid(user_id: UserId, code: Password) -> bool:
     """Verifies whether or not the given backup code is valid and invalidates the code"""
     credentials = load_two_factor_credentials(user_id)
     matched_code = ""
 
     for stored_code in credentials["backup_codes"]:
         try:
-            password_hashing.verify(Password(code), stored_code)
+            password_hashing.verify(code, stored_code)
             matched_code = stored_code
             break
         except (password_hashing.PasswordInvalidError, ValueError):

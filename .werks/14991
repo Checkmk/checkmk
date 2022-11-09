@@ -1,0 +1,12 @@
+Title: Add missing user count to "Users" page
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1667980277
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p17
+
+The count of users was not showing on the "Setup" - "Users" page. This number
+is now displayed in the same way as for hosts on the "Setup" - "Hosts" page.

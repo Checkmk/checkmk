@@ -1,0 +1,14 @@
+Title: oracle tablespaces: Add option to monitor undo tablespace
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1667987689
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0p17
+
+By default limits on undo tablespaces are not checked. It's now possible to
+monitor undo tablespaces by enabling the option "Monitor undo Tablespace" in
+rule "Oracle Tablespaces"

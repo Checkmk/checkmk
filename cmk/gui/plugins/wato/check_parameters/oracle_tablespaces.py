@@ -92,6 +92,16 @@ def _parameter_valuespec_oracle_tablespaces():
                     ],
                 ),
             ),
+            (
+                "monitor_undo_tablespace",
+                DropdownChoice(
+                    title=_("Monitor undo Tablespace"),
+                    choices=[
+                        (False, _("Ignore undo Tablespaces (Default)")),
+                        (True, _("Apply rule to undo Tablespaces")),
+                    ],
+                ),
+            ),
         ],
     )
 

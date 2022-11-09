@@ -693,3 +693,62 @@ def test_table_spaces__sup_10648() -> None:
             details="OFFLINE datafiles for sid:\n/some/path/to/a/file.dbf.c1",
         ),
     ]
+
+
+def test_undo_table_spaces__sup_11158() -> None:
+    data = (
+        "GGGGGGGG-PPPPPPPP|+DATA_A_A_AAA/CCCCCCCC_DDDDDDDDDDD/22222222222222222222222222222222/DATAFILE/"
+        "undo_2.222.1111111111|UNDO_2|AVAILABLE|YES|39322|1310720|39192|131072|ONLINE|8192|ONLINE|37176|"
+        "UNDO|19.0.0.0.0"
+    )
+    string_table = [data.split("|")]
+    parsed = oracle_tablespaces.parse_oracle_tablespaces(string_table)
+    discovery_result = list(oracle_tablespaces.discovery_oracle_tablespaces(parsed))
+    assert discovery_result == [
+        Service(item="GGGGGGGG-PPPPPPPP.UNDO_2", parameters={"autoextend": True})
+    ]
+
+    check_result = list(
+        oracle_tablespaces.check_oracle_tablespaces(
+            "GGGGGGGG-PPPPPPPP.UNDO_2",
+            # FYI: levels change meaning by datatype: float is percent, int is mb free space
+            # we just want to see some warning, so we want to see 99.9999% free tablespace
+            # this of course does not make sense in a real world scenario
+            {
+                "levels": (99.9999, 10.0),
+            },
+            parsed,
+        )
+    )
+    assert [
+        result for result in check_result if isinstance(result, Result) and result.state != state.OK
+    ] == [], "should not have a warning element, because this feature is turned off by default"
+
+    check_result = list(
+        oracle_tablespaces.check_oracle_tablespaces(
+            "GGGGGGGG-PPPPPPPP.UNDO_2",
+            {
+                "levels": (99.9999, 10.0),
+                "monitor_undo_tablespace": True,
+            },
+            parsed,
+        )
+    )
+    assert check_result == [
+        Result(
+            state=state.OK,
+            summary="ONLINE (UNDO), Size: 307 MiB, 0.16% used (16.8 MiB of max. 10.0 GiB), Free: 9.98 GiB",
+        ),
+        Metric(
+            "size",
+            322125824.0,
+            levels=(10737.418239593506, 9663676416.0),
+            boundaries=(0.0, 10737418240.0),
+        ),
+        Metric("used", 17580032.0),
+        Metric("max_size", 10737418240.0),
+        Result(state=state.OK, summary="autoextend"),
+        Result(
+            state=state.WARN, summary="Space left: 9.98 GiB (warn/crit below 10.00 GiB/1.00 GiB)"
+        ),
+    ]

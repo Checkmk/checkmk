@@ -1383,7 +1383,7 @@ class Targets(BackupEntityCollection):
     def __init__(self, config_file_path) -> None:  # type:ignore[no-untyped-def]
         super().__init__(config_file_path, cls=Target, config_attr="targets")
 
-    def show_list(self, title=None, editable=True):
+    def show_list(self, title: str | None = None, editable: bool = True) -> None:
         title = title if title else _("Targets")
         html.h2(title)
         if not editable and is_site():
@@ -1435,7 +1435,7 @@ class Targets(BackupEntityCollection):
                 vs_target = target_class(target.type_params()).valuespec()
                 table.cell(_("Destination"), vs_target.value_to_html(target.type_params()))
 
-    def validate_target(self, value, varprefix):
+    def validate_target(self, value: str, varprefix: str) -> None:
         target = self.get(value)
         if not isinstance(target, Target):
             raise MKGeneralException("I cannot use a job here")
@@ -1447,10 +1447,10 @@ class PageBackupTargets:
     def title(self) -> str:
         raise NotImplementedError()
 
-    def targets(self):
+    def targets(self) -> Targets:
         raise NotImplementedError()
 
-    def jobs(self):
+    def jobs(self) -> Jobs:
         raise NotImplementedError()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:

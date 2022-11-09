@@ -333,12 +333,11 @@ def JsonCachedData(
         cache = {}
 
     dirty = False
-    if cutoff_condition:
-        # note: this must not be a generator - otherwise we modify a dict while iterating it
-        for key in [k for k, data in cache.items() if cutoff_condition(k, data)]:
-            dirty = True
-            LOG.debug("Cache: erase log cache for %r", key)
-            del cache[key]
+    # note: this must not be a generator - otherwise we modify a dict while iterating it
+    for key in [k for k, data in cache.items() if cutoff_condition(k, data)]:
+        dirty = True
+        LOG.debug("Cache: erase log cache for %r", key)
+        del cache[key]
 
     def setdefault(key: str, value_fn: Callable[[], Any]) -> Any:
         nonlocal dirty

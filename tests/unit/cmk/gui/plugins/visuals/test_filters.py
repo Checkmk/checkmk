@@ -1211,7 +1211,7 @@ def test_filters_filter_table(  # type:ignore[no-untyped-def]
         context: VisualContext = {test.ident: dict(test.request_vars)}
 
         # TODO: Fix this for real...
-        if not cmk_version.is_raw_edition or test.ident != "deployment_has_agent":
+        if not cmk_version.is_raw_edition() or test.ident != "deployment_has_agent":
             filt = cmk.gui.plugins.visuals.utils.filter_registry[test.ident]
             assert filt.filter_table(context, test.rows) == test.expected_rows
 

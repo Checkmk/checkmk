@@ -225,5 +225,5 @@ def test_title_help_text_for_macros(  # type:ignore[no-untyped-def]
         "get_additional_title_macros",
         lambda: additional_macros,
     )
-    # mypy: Only concrete class can be given where "Type[Dashlet]" is expected [misc]
-    assert utils._title_help_text_for_macros(utils.ABCFigureDashlet) == result  # type: ignore[misc]
+    # TODO: Fix this! mypy is correct...
+    assert utils._title_help_text_for_macros(utils.ABCFigureDashlet) == result  # type: ignore[misc,type-abstract]

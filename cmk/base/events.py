@@ -118,7 +118,7 @@ def event_keepalive(  # pylint: disable=too-many-branches
 
         # Fix vor Python 2.4:
         except SystemExit as e:
-            sys.exit(e)
+            sys.exit(e.code)
         except Exception:
             if cmk.utils.debug.enabled():
                 raise

@@ -658,7 +658,7 @@ class ModeEditUser(WatoMode):
         return menu
 
     def _page_menu_entries_this_user(self) -> Iterator[PageMenuEntry]:
-        if self._rbn_enabled and not self._is_new_user:
+        if self._rbn_enabled() and not self._is_new_user:
             yield PageMenuEntry(
                 title=_("Notification rules"),
                 icon_name="topic_events",

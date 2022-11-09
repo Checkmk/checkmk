@@ -8,7 +8,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable
 from functools import partial
-from typing import Any, Literal, NamedTuple, Protocol, TypeVar
+from typing import Any, Literal, NamedTuple, NoReturn, overload, Protocol, TypeVar
 
 from marshmallow import Schema as marshmallow_Schema
 
@@ -314,14 +314,31 @@ class BIParamsSchema(Schema):
 T = TypeVar("T", str, dict, list)
 
 
-def replace_macros(pattern: T, macros: MacroMapping) -> T:
+@overload
+def replace_macros(pattern: str, macros: MacroMapping) -> str:
+    ...
+
+
+@overload
+def replace_macros(pattern: list[str], macros: MacroMapping) -> list[str]:
+    ...
+
+
+@overload
+def replace_macros(pattern: dict[str, str], macros: MacroMapping) -> dict[str, str]:
+    ...
+
+
+def replace_macros(
+    pattern: str | list[str] | dict[str, str], macros: MacroMapping
+) -> str | list[str] | dict[str, str]:
     if isinstance(pattern, str):
         return replace_macros_in_str(pattern, macros)
     if isinstance(pattern, list):
         return replace_macros_in_list(pattern, macros)
     if isinstance(pattern, dict):
         return replace_macros_in_dict(pattern, macros)
-    return None
+    return NoReturn
 
 
 def replace_macros_in_list(elements: list[str], macros: MacroMapping) -> list[str]:

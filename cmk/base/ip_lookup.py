@@ -27,12 +27,29 @@ class _HostConfigLike(Protocol):
     """This is what we expect from a HostConfig in *this* module"""
 
     # Importing of the HostConfig class repeatedly lead to import cycles at various places.
-    hostname: HostName
-    is_ipv4_host: bool
-    is_ipv6_host: bool
-    is_no_ip_host: bool
-    is_snmp_host: bool
-    is_usewalk_host: bool
+    @property
+    def hostname(self) -> HostName:
+        ...
+
+    @property
+    def is_ipv4_host(self) -> bool:
+        ...
+
+    @property
+    def is_ipv6_host(self) -> bool:
+        ...
+
+    @property
+    def is_no_ip_host(self) -> bool:
+        ...
+
+    @property
+    def is_snmp_host(self) -> bool:
+        ...
+
+    @property
+    def is_usewalk_host(self) -> bool:
+        ...
 
     @property
     def default_address_family(self) -> socket.AddressFamily:

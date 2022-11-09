@@ -46,14 +46,14 @@ def test_factory_snmp_backend_classic(snmp_config: SNMPHostConfig) -> None:
 
 def test_factory_snmp_backend_inline(snmp_config: SNMPHostConfig) -> None:
     snmp_config = snmp_config._replace(snmp_backend=SNMPBackendEnum.INLINE)
-    if InlineSNMPBackend:
+    if InlineSNMPBackend is not None:
         assert isinstance(factory.backend(snmp_config, logging.getLogger()), InlineSNMPBackend)
 
 
 def test_factory_snmp_backend_unknown_backend(snmp_config: SNMPHostConfig) -> None:
     with pytest.raises(NotImplementedError, match="Unknown SNMP backend"):
         snmp_config = snmp_config._replace(snmp_backend="bla")  # type: ignore[arg-type]
-        if InlineSNMPBackend:
+        if InlineSNMPBackend is not None:
             assert isinstance(factory.backend(snmp_config, logging.getLogger()), InlineSNMPBackend)
         else:
             assert isinstance(

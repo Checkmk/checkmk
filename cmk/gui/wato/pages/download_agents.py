@@ -120,7 +120,6 @@ class ABCModeDownloadAgents(WatoMode):
             "/windows/plugins": _("Plugins"),
             "/windows/mrpe": _("Scripts to integrate Nagios plugis"),
             "/windows/cfg_examples": _("Example Configurations"),
-            "/windows/ohm": _("OpenHardwareMonitor (headless)"),
             "/z_os": _("z/OS"),
             "/sap": _("SAP R/3"),
         }

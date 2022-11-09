@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "b9aa3a81ada0bd23d069d75f160dd45049ec84cdda0fb26501ad1efeaea985c3"
+            "sha256": "cdac814db455bf4e37e795fc7b9396cacf7edd5fad274e81844da5de9545e6f6"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -1218,8 +1218,25 @@
             "version": "==4.4.12"
         },
         "python-active-directory": {
-            "git": "https://github.com/tribe29/python-active-directory",
-            "ref": "f9961e2604c2916e2255756c0052f1b1ac1fb15d"
+            "hashes": [
+                "sha256:023be7ebc93e09a3dd2401a91ab1707b92220c7d91933a61dfbe58a0b74a894a",
+                "sha256:0ff783baf725a7678aac0867a1afa8d56d34289a6dfee916a2d52d5d0f8080b8",
+                "sha256:45679822d45d7d06871cf3486ea328376db6eb97598e32ecaf6190303c569835",
+                "sha256:5f37973201780dfba683f2cf53db144b245aee5781321abe3614770eff11652e",
+                "sha256:7f7f27de528c5b176b01b00827202ce94a0f8950a1d70db8c9ba4d83199bd4fc",
+                "sha256:8dba39cb2aedfe83d8fc8d031a20594c8c3a1746158a1977be3f9467da098e98",
+                "sha256:9ccee3bf3fbe657d8a1b3ee194b2ec9142beb2a05af8d44206e7f6e91cf95f38",
+                "sha256:9d92ee8396ec5f522e8974ed6c522b292fac33ae74af5322e849d3bb20086d58",
+                "sha256:a66e3b1b22b5ab23b74801c7cde506b6c8fb61fd9eab99378d440fe4d755ce01",
+                "sha256:a9ad4b021f5e4722c98538ab6c04ceb323c0048d37f17d596827d04e670582d0",
+                "sha256:b2a606d91e1a49296e42113fab879c3970db34ec2ca16588cde8cb6fa9e34bce",
+                "sha256:b83f6a5a1e511a7d70ffc6c7c5499e955e8c8a237472195bce8143324175b8ef",
+                "sha256:c8b751aea450f6730d432b0cccd36a4f569d6b8ec124434579ef27dafc1cc5be",
+                "sha256:da25c9cc51f02586a90848b27847d74f691af506fca77d62e90f8b6b5b25240e",
+                "sha256:dbc1256ceb90dbb04f1339d3783d1b9c9b5ac6c975764e8e88cb9885f14a9129"
+            ],
+            "index": "pypi",
+            "version": "==1.0.5"
         },
         "python-dateutil": {
             "hashes": [
@@ -2019,7 +2036,7 @@
                 "sha256:637996211036b6385ef91435e4fae22989472f9d571faba8927ba8253acbc330",
                 "sha256:b8c3f85900b9dc423225913c5aace94729fe1fa9763b38939a95226f02d37186"
             ],
-            "markers": "python_version >= '3.5'",
+            "markers": "python_full_version >= '3.5.0'",
             "version": "==5.1.1"
         },
         "distlib": {
@@ -2748,7 +2765,7 @@
                 "sha256:5facc821ece957208a81423af7d6ec7810dad29697cb0d77aae81e4e11c8e5a6",
                 "sha256:6153f521852e23a5add923dbacfbf4bebbb8d70c4e4bad609a8e0f9faeb915d1"
             ],
-            "markers": "python_version >= '3.5'",
+            "markers": "python_full_version >= '3.5.0'",
             "version": "==3.2.2"
         },
         "pyflakes": {
@@ -3175,7 +3192,7 @@
                 "sha256:806111e5e962be97c29ec4c1e7fe277bfd19e9652fb1a4392105b43e01af885a",
                 "sha256:a072735ec80e7675e3f432fcae8610ecf509c5f1869d17e2eecff44389cdbc58"
             ],
-            "markers": "python_version >= '3.5'",
+            "markers": "python_full_version >= '3.5.0'",
             "version": "==1.0.2"
         },
         "sphinxcontrib-devhelp": {
@@ -3183,7 +3200,7 @@
                 "sha256:8165223f9a335cc1af7ffe1ed31d2871f325254c0423bc0c4c7cd1c1e4734a2e",
                 "sha256:ff7f1afa7b9642e7060379360a67e9c41e8f3121f2ce9164266f61b9f4b338e4"
             ],
-            "markers": "python_version >= '3.5'",
+            "markers": "python_full_version >= '3.5.0'",
             "version": "==1.0.2"
         },
         "sphinxcontrib-htmlhelp": {
@@ -3199,7 +3216,7 @@
                 "sha256:2ec2eaebfb78f3f2078e73666b1415417a116cc848b72e5172e596c871103178",
                 "sha256:a9925e4a4587247ed2191a22df5f6970656cb8ca2bd6284309578f2153e0c4b8"
             ],
-            "markers": "python_version >= '3.5'",
+            "markers": "python_full_version >= '3.5.0'",
             "version": "==1.0.1"
         },
         "sphinxcontrib-plantuml": {
@@ -3214,7 +3231,7 @@
                 "sha256:4c33767ee058b70dba89a6fc5c1892c0d57a54be67ddd3e7875a18d14cba5a72",
                 "sha256:bd9fc24bcb748a8d51fd4ecaade681350aa63009a347a8c14e637895444dfab6"
             ],
-            "markers": "python_version >= '3.5'",
+            "markers": "python_full_version >= '3.5.0'",
             "version": "==1.0.3"
         },
         "sphinxcontrib-serializinghtml": {
@@ -3222,7 +3239,7 @@
                 "sha256:352a9a00ae864471d3a7ead8d7d79f5fc0b57e8b3f95e9867eb9eb28999b92fd",
                 "sha256:aa5f6de5dfdf809ef505c4895e51ef5c9eac17d0f287933eb49ec495280b6952"
             ],
-            "markers": "python_version >= '3.5'",
+            "markers": "python_full_version >= '3.5.0'",
             "version": "==1.1.5"
         },
         "sphinxcontrib-spelling": {

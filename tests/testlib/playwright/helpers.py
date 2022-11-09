@@ -169,6 +169,14 @@ class MainMenu(LocatorHelper):
     def help_rest_api_gui(self) -> Locator:
         return self.help_menu.get_by_text("REST API interactive GUI")
 
+    @property
+    def help_info(self) -> Locator:
+        return self.help_menu.get_by_text("Info")
+
+    @property
+    def help_werks(self) -> Locator:
+        return self.help_menu.get_by_text("Change log (Werks)")
+
 
 class MainFrame(LocatorHelper):
     """functionality to find items from the main frame"""

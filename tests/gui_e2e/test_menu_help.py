@@ -59,3 +59,13 @@ def test_help_rest_api_docs(logged_in_page: PPage) -> None:
 def test_help_rest_api_gui(logged_in_page: PPage) -> None:
     response = logged_in_page.go(logged_in_page.main_menu.help_rest_api_gui.get_attribute("href"))
     assert response and response.ok
+
+
+def test_help_info(logged_in_page: PPage) -> None:
+    response = logged_in_page.go(logged_in_page.main_menu.help_info.get_attribute("href"))
+    assert response and response.ok
+
+
+def test_help_werks(logged_in_page: PPage) -> None:
+    response = logged_in_page.go(logged_in_page.main_menu.help_werks.get_attribute("href"))
+    assert response and response.ok

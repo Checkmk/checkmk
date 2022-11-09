@@ -16,7 +16,7 @@
 using namespace std::chrono_literals;
 
 namespace {
-constexpr int num_counters = 18;
+constexpr int num_counters = 21;
 
 struct CounterInfo {
     std::mutex mutex;

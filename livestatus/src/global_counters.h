@@ -29,6 +29,10 @@ enum class Counter {
     influxdb_queue_usage,
     rrdcached_queue_usage,
 
+    carbon_bytes_sent,
+    influxdb_bytes_sent,
+    rrdcached_bytes_sent,
+
     carbon_overflows,
     influxdb_overflows,
     livestatus_overflows,

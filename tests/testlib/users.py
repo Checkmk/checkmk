@@ -5,7 +5,7 @@
 
 import contextlib
 import shutil
-from typing import Iterator, Optional
+from typing import Any, Iterator, Optional
 
 import cmk.utils.paths
 from cmk.utils.type_defs import UserId
@@ -27,7 +27,7 @@ def _mk_user_obj(  # type:ignore[no-untyped-def]
     if password not in precomputed_hashes:
         raise ValueError("Add your hash to precomputed_hashes")
 
-    user = {
+    user: dict[str, Any] = {
         username: {
             "attributes": {
                 "alias": "Test user",
@@ -39,7 +39,7 @@ def _mk_user_obj(  # type:ignore[no-untyped-def]
             },
             "is_new_user": True,
         }
-    }  # type: dict
+    }
     if automation:
         user[username]["attributes"].update(
             automation_secret=password,

@@ -69,14 +69,12 @@ class AbstractSiteContext(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def real_dir(self):
-        # type: () -> str
+    def real_dir(self) -> str:
         raise NotImplementedError()
 
     @property
     @abc.abstractmethod
-    def real_tmp_dir(self):
-        # type: () -> str
+    def real_tmp_dir(self) -> str:
         raise NotImplementedError()
 
     @property

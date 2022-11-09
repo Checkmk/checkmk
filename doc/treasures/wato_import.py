@@ -25,7 +25,7 @@ except Exception:
     wato_foldername;hostname|tag1 tag2;host_alias;ipaddress|None""")
     sys.exit()
 
-folders = {}  # type: Dict[str, List[Tuple[str, str, Union[str, bool]]]]
+folders: Dict[str, List[Tuple[str, str, Union[str, bool]]]] = {}
 for line in csv_file:
     if line.startswith('#'):
         continue
@@ -36,13 +36,13 @@ for line in csv_file:
         except os.error:
             pass
         folders.setdefault(target_folder, [])
-        ipaddress = ipaddress_.strip()  # type: Union[str, bool]
+        ipaddress: Union[str, bool] = ipaddress_.strip()
         if ipaddress == "None":
             ipaddress = False
         folders[target_folder].append((name, alias, ipaddress))
 csv_file.close()
 
-host_tags_info = {"wato_aux_tags": [], "wato_host_tags": []}  # type: Dict[str, Any]
+host_tags_info: Dict[str, Any] = {"wato_aux_tags": [], "wato_host_tags": []}
 exec(open("%s/../../multisite.d/wato/hosttags.mk" % pathlokal).read(), globals(), host_tags_info)
 
 host_tag_mapping = {}

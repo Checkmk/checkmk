@@ -94,8 +94,7 @@ CLUSTER empty
 
 
 @pytest.fixture(name="parsed_config", scope="module")
-def _get_parsed_config():
-    # type: () -> tuple[lw.GlobalOptions, Sequence[lw.PatternConfigBlock], Sequence[lw.ClusterConfigBlock]]
+def _get_parsed_config() -> tuple[lw.GlobalOptions, Sequence[lw.PatternConfigBlock], Sequence[lw.ClusterConfigBlock]]:
     return lw.read_config(_TEST_CONFIG.split("\n"), files=[], debug=False)
 
 
@@ -189,8 +188,7 @@ def test_get_config_files(tmpdir) -> None:  # type:ignore[no-untyped-def]
     assert lw.get_config_files(str(fake_config_dir)) == expected
 
 
-def test_raise_no_config_lines():
-    # type: () -> None
+def test_raise_no_config_lines() -> None:
 
     # No config file at all available, raise in debug mode!
     with pytest.raises(IOError):
@@ -200,16 +198,14 @@ def test_raise_no_config_lines():
     lw.read_config([], files=[], debug=False)
 
 
-def test_read_global_options(parsed_config):
-    # type: (tuple[lw.GlobalOptions, Sequence[lw.PatternConfigBlock], Sequence[lw.ClusterConfigBlock]]) -> None
+def test_read_global_options(parsed_config: tuple[lw.GlobalOptions, Sequence[lw.PatternConfigBlock], Sequence[lw.ClusterConfigBlock]]) -> None:
     global_options, _logfile_config, _cluster_config = parsed_config
 
     assert isinstance(global_options, lw.GlobalOptions)
     assert global_options.retention_period == 42
 
 
-def test_read_config_cluster(parsed_config):
-    # type: (tuple[lw.GlobalOptions, Sequence[lw.PatternConfigBlock], Sequence[lw.ClusterConfigBlock]]) -> None
+def test_read_config_cluster(parsed_config: tuple[lw.GlobalOptions, Sequence[lw.PatternConfigBlock], Sequence[lw.ClusterConfigBlock]]) -> None:
     """checks if the agent plugin parses the configuration appropriately."""
     _global_options, _logfile_config, c_config = parsed_config
 
@@ -223,8 +219,7 @@ def test_read_config_cluster(parsed_config):
     assert not c_config[1].ips_or_subnets
 
 
-def test_read_config_logfiles(parsed_config):
-    # type: (tuple[lw.GlobalOptions, Sequence[lw.PatternConfigBlock], Sequence[lw.ClusterConfigBlock]]) -> None
+def test_read_config_logfiles(parsed_config: tuple[lw.GlobalOptions, Sequence[lw.PatternConfigBlock], Sequence[lw.ClusterConfigBlock]]) -> None:
     """checks if the agent plugin parses the configuration appropriately."""
 
     _global_options, l_config, _cluster_config = parsed_config
@@ -420,8 +415,7 @@ STAR_FILES = [
 ]
 
 
-def _fix_for_os(pairs):
-    # type: (Sequence[tuple[bytes, str]])  -> list[tuple[bytes, str]]
+def _fix_for_os(pairs: Sequence[tuple[bytes, str]]) -> list[tuple[bytes, str]]:
     def symlink_in_windows(s: str) -> bool:
         return os.name == "nt" and s.find("symlink") != -1
 

@@ -1233,6 +1233,7 @@ def page_edit_visual(  # type:ignore[no-untyped-def] # pylint: disable=too-many-
         raise MKAuthException(_("You are not allowed to edit %s.") % visual_type.plural_title)
     visual: Dict[str, Any] = {
         "link_from": {},
+        "context": {},
     }
 
     mode = request.get_str_input_mandatory("mode", "edit")

@@ -30,7 +30,8 @@ def check_wlc_clients(
     if item == "Summary":
         total_number_of_clients = section.total_clients
     else:
-        clients_ssid = section.clients_per_ssid[item]
+        if (clients_ssid := section.clients_per_ssid.get(item)) is None:
+            return
         if isinstance(clients_ssid, ClientsTotal):
             total_number_of_clients = clients_ssid.total
         else:

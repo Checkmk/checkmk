@@ -300,7 +300,9 @@ def check_oracle_tablespaces(  # pylint: disable=too-many-branches
         # old plugins without v$tempseg_usage info send TEMP as type.
         # => Impossible to monitor old plugin with TEMP instead TEMPORARY
         if ts_status != "READONLY" and (
-            ts_type == "PERMANENT" or (ts_type == "TEMPORARY" and params.get("temptablespace"))
+            ts_type == "PERMANENT"
+            or (ts_type == "TEMPORARY" and params.get("temptablespace"))
+            or (ts_type == "UNDO" and params.get("monitor_undo_tablespace"))
         ):
 
             yield from check_levels(

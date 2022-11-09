@@ -69,12 +69,19 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     // NOTE: The NEB queues accepted connections, so we never have overflows
     // here. Nevertheless, we provide these columns for consistency with CMC,
     // always returning zero.
+    addCounterColumns("carbon_bytes_sent",
+                      "number of bytes sent over the carbon connections",
+                      offsets, Counter::carbon_bytes_sent);
     addCounterColumns("carbon_overflows",
                       "times a Carbon connection could not send the metrics",
                       offsets, Counter::carbon_overflows);
     addCounterColumns("carbon_queue_usage",
                       "number of elements in the queue / size of the queue",
                       offsets, Counter::carbon_queue_usage);
+    addCounterColumns(
+        "influxdb_bytes_sent",
+        "number of bytes sent over the InfluxDB connections (payload only)",
+        offsets, Counter::influxdb_bytes_sent);
     addCounterColumns("influxdb_overflows",
                       "times an InfluxDB connection could not send the metrics",
                       offsets, Counter::influxdb_overflows);
@@ -85,6 +92,9 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         "livestatus_overflows",
         "times a Livestatus connection could not be immediately accepted because all threads where busy",
         offsets, Counter::livestatus_overflows);
+    addCounterColumns("rrdcached_bytes_sent",
+                      "number of bytes sent over to the RRDs", offsets,
+                      Counter::rrdcached_bytes_sent);
     addCounterColumns(
         "rrdcached_overflows",
         "times an RRDCacheD connection could not send the metrics", offsets,

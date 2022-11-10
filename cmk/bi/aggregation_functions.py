@@ -191,8 +191,8 @@ class BIAggregationFunctionCountOK(ABCBIAggregationFunction):
 
     def _check_levels(self, ok_nodes: int, total_nodes: int, levels: dict) -> bool:
         if levels["type"] == "count":
-            return ok_nodes >= levels["value"]
-        return (ok_nodes / total_nodes) * 100 >= levels["value"]
+            return ok_nodes == levels["value"]
+        return (ok_nodes / total_nodes) * 100 == levels["value"]
 
 
 class BIAggregationFunctionCountSettings(Schema):
@@ -202,6 +202,48 @@ class BIAggregationFunctionCountSettings(Schema):
 
 class BIAggregationFunctionCountOKSchema(Schema):
     type = ReqConstant(BIAggregationFunctionCountOK.kind())
+    levels_ok = ReqNested(BIAggregationFunctionCountSettings)
+    levels_warn = ReqNested(BIAggregationFunctionCountSettings)
+
+
+@bi_aggregation_function_registry.register
+class BIAggregationFunctionCountMinOK(ABCBIAggregationFunction):
+    @classmethod
+    def kind(cls) -> AggregationKind:
+        return "count_ok"
+
+    @classmethod
+    def schema(cls) -> type[BIAggregationFunctionCountMinOKSchema]:
+        return BIAggregationFunctionCountMinOKSchema
+
+    def serialize(self):
+        return {
+            "type": self.kind(),
+            "levels_ok": self.levels_ok,
+            "levels_warn": self.levels_warn,
+        }
+
+    def __init__(self, aggr_function_config: dict[str, Any]) -> None:
+        super().__init__(aggr_function_config)
+        self.levels_ok = aggr_function_config["levels_ok"]
+        self.levels_warn = aggr_function_config["levels_warn"]
+
+    def aggregate(self, states: list[int]) -> int:
+        ok_nodes = states.count(0)
+        if self._check_levels(ok_nodes, len(states), self.levels_ok):
+            return BIStates.OK
+        if self._check_levels(ok_nodes, len(states), self.levels_warn):
+            return BIStates.WARN
+        return BIStates.CRIT
+
+    def _check_levels(self, ok_nodes: int, total_nodes: int, levels: dict) -> bool:
+        if levels["type"] == "count":
+            return ok_nodes >= levels["value"]
+        return (ok_nodes / total_nodes) * 100 >= levels["value"]
+
+
+class BIAggregationFunctionCountMinOKSchema(Schema):
+    type = ReqConstant(BIAggregationFunctionCountMinOK.kind())
     levels_ok = ReqNested(BIAggregationFunctionCountSettings)
     levels_warn = ReqNested(BIAggregationFunctionCountSettings)
 

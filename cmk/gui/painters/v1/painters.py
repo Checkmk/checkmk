@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -23,11 +24,13 @@ from cmk.gui.view_utils import CellSpec
 
 experimental_painter_registry.register(
     Painter[str](
-        "alias",
-        get_single_str_column,
-        Formatters[str](html=lambda painter_data, painter_configuration: ("", painter_data)),
-        _l("Host alias"),
-        _l("Alias"),
+        ident="alias",
+        computer=get_single_str_column,
+        formatters=Formatters[str](
+            html=lambda painter_data, painter_configuration: ("", painter_data)
+        ),
+        title=_l("Host alias"),
+        short_title=_l("Alias"),
         columns=["host_alias"],
     )
 )
@@ -53,11 +56,11 @@ for state, state_type, short_title, title in [
 ]:
     experimental_painter_registry.register(
         Painter[int](
-            f"num_services_{state_type}",
-            get_single_int_column,
-            Formatters[int](html=_get_number_of_services_formatter(state)),
-            title,
-            short_title,
+            ident=f"num_services_{state_type}",
+            computer=get_single_int_column,
+            formatters=Formatters[int](html=_get_number_of_services_formatter(state)),
+            title=title,
+            short_title=short_title,
             title_classes=["right"],
             columns=[f"host_num_services_{state_type}"],
         )
@@ -82,11 +85,11 @@ def _get_perfdata_with_staleness_callable(
 for i in range(1, 11):
     experimental_painter_registry.register(
         Painter[StrWithStaleness](
-            f"svc_perf_val{i:02}",
-            _get_perfdata_with_staleness_callable(i - 1),
-            Formatters[StrWithStaleness](html=render_str_with_staleness),
-            _l("Service performance data - value number %2d") % i,
-            _l("Val. %d") % i,
+            ident=f"svc_perf_val{i:02}",
+            computer=_get_perfdata_with_staleness_callable(i - 1),
+            formatters=Formatters[StrWithStaleness](html=render_str_with_staleness),
+            title=_l("Service performance data - value number %2d") % i,
+            short_title=_l("Val. %d") % i,
             columns=["service_perf_data", "service_staleness", "host_staleness"],
         )
     )

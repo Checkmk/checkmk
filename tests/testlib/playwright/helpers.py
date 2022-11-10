@@ -300,3 +300,11 @@ class PPage(LocatorHelper):
         return self.page.goto(
             urljoin(self.site_url, url), timeout=timeout, wait_until=wait_until, referer=referer
         )
+
+    def click_and_wait(self, locator: Locator, navigate: bool = False) -> None:
+        """clicks the located element and wait until the current url has changed and is loaded"""
+        url = self.page.url
+        locator.click()
+        if navigate:
+            expect(self.page).not_to_have_url(url)
+        self.page.wait_for_load_state("networkidle")

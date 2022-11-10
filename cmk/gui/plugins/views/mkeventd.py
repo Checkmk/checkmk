@@ -10,7 +10,7 @@ from typing import Literal, TypeGuard, TypeVar
 from livestatus import OnlySites, SiteId
 
 from cmk.utils.defines import short_service_state_name
-from cmk.utils.type_defs import HostName
+from cmk.utils.type_defs import HostName, UserId
 
 import cmk.gui.mkeventd as mkeventd
 import cmk.gui.utils.escaping as escaping
@@ -1511,7 +1511,7 @@ multisite_builtin_views["ec_events"] = mkeventd_view(
             PainterSpec(name="event_count"),
         ],
         "is_show_more": True,
-        "owner": "",
+        "owner": UserId.builtin(),
         "name": "ec_events",
         "single_infos": [],
         "context": {
@@ -1568,7 +1568,7 @@ multisite_builtin_views["ec_events_of_monhost"] = mkeventd_view(
             PainterSpec(name="event_last"),
             PainterSpec(name="event_count"),
         ],
-        "owner": "",
+        "owner": UserId.builtin(),
         "name": "ec_events_of_monhost",
         "single_infos": ["host"],
         "context": {
@@ -1618,7 +1618,7 @@ multisite_builtin_views["ec_events_of_host"] = mkeventd_view(
             PainterSpec(name="event_last"),
             PainterSpec(name="event_count"),
         ],
-        "owner": "",
+        "owner": UserId.builtin(),
         "name": "ec_events_of_host",
         "single_infos": ["host"],
         "context": {
@@ -1687,7 +1687,7 @@ multisite_builtin_views["ec_event"] = mkeventd_view(
             PainterSpec(name="event_phase"),
             PainterSpec(name="host_services"),
         ],
-        "owner": "",
+        "owner": UserId.builtin(),
         "name": "ec_event",
         "single_infos": ["event"],
         "context": {},
@@ -1734,7 +1734,7 @@ multisite_builtin_views["ec_history_recent"] = mkeventd_view(
             PainterSpec(name="event_count"),
         ],
         "is_show_more": True,
-        "owner": "",
+        "owner": UserId.builtin(),
         "name": "ec_history_recent",
         "single_infos": [],
         "context": {
@@ -1811,7 +1811,7 @@ multisite_builtin_views["ec_historyentry"] = mkeventd_view(
             PainterSpec(name="event_rule_id"),
             PainterSpec(name="event_phase"),
         ],
-        "owner": "",
+        "owner": UserId.builtin(),
         "name": "ec_historyentry",
         "single_infos": ["history"],
         "context": {},
@@ -1853,7 +1853,7 @@ multisite_builtin_views["ec_history_of_event"] = mkeventd_view(
             PainterSpec(name="event_phase"),
             PainterSpec(name="event_count"),
         ],
-        "owner": "",
+        "owner": UserId.builtin(),
         "name": "ec_history_of_event",
         "single_infos": ["event"],
         "context": {},
@@ -1900,7 +1900,7 @@ multisite_builtin_views["ec_history_of_host"] = mkeventd_view(
             PainterSpec(name="event_phase"),
             PainterSpec(name="event_count"),
         ],
-        "owner": "",
+        "owner": UserId.builtin(),
         "name": "ec_history_of_host",
         "single_infos": ["host"],
         "context": {
@@ -1981,7 +1981,7 @@ multisite_builtin_views["ec_event_mobile"] = {
     "title": _l("Event details"),
     "topic": "events",
     "user_sortable": True,
-    "owner": "",
+    "owner": UserId.builtin(),
     "link_from": {},
     "add_context_to_title": True,
     "sort_index": 99,
@@ -2050,7 +2050,7 @@ multisite_builtin_views["ec_events_mobile"] = {
     "mobile": True,
     "name": "ec_events_mobile",
     "num_columns": 1,
-    "owner": "",
+    "owner": UserId.builtin(),
     "painters": [
         PainterSpec(
             name="event_id",

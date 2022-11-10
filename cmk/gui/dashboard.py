@@ -395,7 +395,7 @@ def _load_dashboard_with_cloning(
         permitted_dashboards,
         all_dashboards,
     )
-    if edit and board["owner"] == "":
+    if edit and board["owner"] == UserId.builtin():
         # Trying to edit a builtin dashboard results in doing a copy
         active_user = user.id
         assert active_user is not None
@@ -897,7 +897,7 @@ def _dashboard_edit_entries(
     if not user.may("general.edit_dashboards"):
         return
 
-    if board["owner"] == "":
+    if board["owner"] == UserId.builtin():
         # Not owned dashboards must be cloned before being able to edit. Do not switch to
         # edit mode using javascript, use the URL with edit=1. When this URL is opened,
         # the dashboard will be cloned for this user
@@ -1760,7 +1760,7 @@ def _create_cloned_view_dashlet_spec(dashlet_id: int, view_name: str) -> ViewDas
             "num_columns": 1,
             "column_headers": "pergroup",
             "name": "",
-            "owner": "",
+            "owner": UserId.builtin(),
             "hidebutton": False,
             "group_painters": [],
             "painters": [],

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.utils.version as cmk_version
+from cmk.utils.type_defs import UserId
 
 from cmk.gui.i18n import _, _l
 from cmk.gui.plugins.dashboard.stats import StatsDashletConfig
@@ -91,7 +92,7 @@ builtin_dashboards["problems"] = DashboardConfig(
                     "mustsearch": False,
                     "name": "dashlet_2",
                     "num_columns": 1,
-                    "owner": "",
+                    "owner": UserId.builtin(),
                     "painters": [
                         PainterSpec(name="host_state"),
                         PainterSpec(
@@ -144,7 +145,7 @@ builtin_dashboards["problems"] = DashboardConfig(
                     "mustsearch": False,
                     "name": "dashlet_3",
                     "num_columns": 1,
-                    "owner": "",
+                    "owner": UserId.builtin(),
                     "painters": [
                         PainterSpec(name="service_state"),
                         PainterSpec(
@@ -201,7 +202,7 @@ builtin_dashboards["problems"] = DashboardConfig(
                     "mustsearch": False,
                     "name": "dashlet_4",
                     "num_columns": 1,
-                    "owner": "admin",
+                    "owner": UserId("admin"),
                     "painters": [
                         PainterSpec(name="log_icon"),
                         PainterSpec(name="log_time"),
@@ -227,7 +228,7 @@ builtin_dashboards["problems"] = DashboardConfig(
                 }
             ),
         ],
-        "owner": "",
+        "owner": UserId.builtin(),
         "public": True,
         "name": "problems",
         "hidden": False,
@@ -288,7 +289,7 @@ builtin_dashboards["simple_problems"] = DashboardConfig(
                     "mustsearch": False,
                     "name": "dashlet_0",
                     "num_columns": 1,
-                    "owner": "",
+                    "owner": UserId.builtin(),
                     "painters": [
                         PainterSpec(name="host_state"),
                         PainterSpec(
@@ -341,7 +342,7 @@ builtin_dashboards["simple_problems"] = DashboardConfig(
                     "mustsearch": False,
                     "name": "dashlet_1",
                     "num_columns": 1,
-                    "owner": "",
+                    "owner": UserId.builtin(),
                     "painters": [
                         PainterSpec(name="service_state"),
                         PainterSpec(
@@ -373,7 +374,7 @@ builtin_dashboards["simple_problems"] = DashboardConfig(
                 }
             ),
         ],
-        "owner": "",
+        "owner": UserId.builtin(),
         "public": True,
         "name": "simple_problems",
         "hidden": False,
@@ -426,7 +427,7 @@ builtin_dashboards["checkmk"] = DashboardConfig(
         ],
         "single_infos": [],
         "icon": "dashboard_system",
-        "owner": "",
+        "owner": UserId.builtin(),
         "public": True,
         "name": "checkmk",
         "is_show_more": False,

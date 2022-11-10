@@ -14,6 +14,7 @@ from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
 from cmk.utils.livestatus_helpers.tables.downtimes import Downtimes
 from cmk.utils.livestatus_helpers.tables.hosts import Hosts
 from cmk.utils.livestatus_helpers.tables.services import Services
+from cmk.utils.type_defs import UserId
 
 from cmk.gui.livestatus_utils.commands.lowlevel import send_command
 from cmk.gui.livestatus_utils.commands.type_defs import LivestatusCommand
@@ -143,7 +144,7 @@ def schedule_services_downtimes_with_query(  # type:ignore[no-untyped-def]
     end_time: dt.datetime,
     recur: RecurMode = "fixed",
     duration: int = 0,
-    user_id: str = "",
+    user_id: UserId = UserId.builtin(),
     comment: str = "",
 ):
     """Schedule downtimes for services based upon a query"""
@@ -188,7 +189,7 @@ def schedule_service_downtime(  # type:ignore[no-untyped-def]
     recur: RecurMode = "fixed",
     trigger_id: int = 0,
     duration: int = 0,
-    user_id: str = "",
+    user_id: UserId = UserId.builtin(),
     comment: str = "",
 ):
     """Schedule the downtime of a host.
@@ -299,7 +300,7 @@ def schedule_servicegroup_service_downtime(  # type:ignore[no-untyped-def]
     recur: RecurMode = "fixed",
     trigger_id: int = 0,
     duration: int = 0,
-    user_id: str = "",
+    user_id: UserId = UserId.builtin(),
     comment: str = "",
 ):
     """Schedules downtime for all hosts, which have services in a given service group.
@@ -401,7 +402,7 @@ def schedule_hostgroup_host_downtime(  # type:ignore[no-untyped-def]
     recur: RecurMode = "fixed",
     trigger_id: int = 0,
     duration: int = 0,
-    user_id: str = "",
+    user_id: UserId = UserId.builtin(),
     comment: str = "",
 ):
     """Schedules downtime for all hosts in a given host group.
@@ -484,7 +485,7 @@ def schedule_hosts_downtimes_with_query(  # type:ignore[no-untyped-def]
     include_all_services=False,
     recur: RecurMode = "fixed",
     duration: int = 0,
-    user_id: str = "",
+    user_id: UserId = UserId.builtin(),
     comment: str = "",
 ):
     """Schedule a downtimes for hosts based upon a query"""
@@ -521,7 +522,7 @@ def schedule_host_downtime(  # type:ignore[no-untyped-def]
     recur: RecurMode = "fixed",
     trigger_id: int = 0,
     duration: int = 0,
-    user_id: str = "",
+    user_id: UserId = UserId.builtin(),
     comment: str = "",
 ):
     """Schedule the downtime of a host.
@@ -673,7 +674,7 @@ def _schedule_downtime(  # type:ignore[no-untyped-def]
     recur: RecurMode = "fixed",
     trigger_id: int = 0,
     duration: int = 0,
-    user_id: str = "",
+    user_id: UserId = UserId.builtin(),
     comment: str = "",
 ):
     """Unified low level function

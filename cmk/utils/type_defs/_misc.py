@@ -269,6 +269,20 @@ class UserId(str):
         if not cls.USER_ID_REGEX.match(text):
             raise ValueError(f"Invalid username: {text!r}")
 
+    @classmethod
+    def builtin(cls) -> UserId:
+        """A special UserId signifying something is owned or created not by a real user but shipped
+        as a built in functionality.
+
+        This is mostly used in cmk.gui.visuals.
+
+        Note that, unfortunately, the UserId "" will sometimes also be constructed via regular
+        initialization, so this method is not the only source for them.
+        Moreover, be aware that it is very possible that some parts of the code use the UserId ""
+        with a different meaning.
+        """
+        return UserId("")
+
     def __new__(cls, text: str) -> UserId:
         cls.validate(text)
         return super().__new__(cls, text)

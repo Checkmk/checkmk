@@ -209,8 +209,8 @@ class ModeUsers(WatoMode):
         if not transactions.check_transaction():
             return redirect(self.mode_url())
 
-        if request.var("_delete"):
-            delete_users([request.get_str_input("_delete")])
+        if delete_user := request.get_validated_type_input(UserId, "_delete"):
+            delete_users([delete_user])
             return redirect(self.mode_url())
 
         if request.var("_sync"):
@@ -261,7 +261,7 @@ class ModeUsers(WatoMode):
                     "utf-8"
                 )
                 if user_id in users:
-                    selected_users.append(user_id)
+                    selected_users.append(UserId(user_id))
 
         if selected_users:
             delete_users(selected_users)
@@ -620,9 +620,7 @@ class ModeEditUser(WatoMode):
     def _from_vars(self):
         # TODO: Should we turn the both fields below into Optional[UserId]?
         try:
-            self._user_id = (
-                UserId(_uid) if (_uid := request.get_str_input("edit")) is not None else None
-            )
+            self._user_id = request.get_validated_type_input(UserId, "edit", empty_is_none=True)
         except ValueError as e:
             raise MKUserError("edit", str(e)) from e
         # This is needed for the breadcrumb computation:
@@ -631,29 +629,25 @@ class ModeEditUser(WatoMode):
         # then we can simply use self._user_id.
         if not self._user_id and request.has_var("user"):
             try:
-                self._user_id = UserId(request.get_str_input_mandatory("user"))
+                self._user_id = request.get_validated_type_input_mandatory(UserId, "user")
             except ValueError as e:
                 raise MKUserError("user", str(e)) from e
 
-        self._cloneid = request.get_str_input("clone")  # Only needed in 'new' mode
+        self._cloneid = request.get_validated_type_input_mandatory(
+            UserId, "clone"
+        )  # Only needed in 'new' mode
         # TODO: Nuke the field below? It effectively hides facts about _user_id for mypy.
         self._is_new_user: bool = self._user_id is None
         self._users = userdb.load_users(lock=transactions.is_transaction())
         new_user = userdb.new_user_template("htpasswd")
+
         if self._user_id is not None:
-            try:
-                user_id = UserId(self._user_id)
-            except ValueError as e:
-                raise MKUserError("edit", str(e)) from e
-            self._user = self._users.get(user_id, new_user)
+            self._user = self._users.get(self._user_id, new_user)
         elif self._cloneid:
-            try:
-                user_id = UserId(self._cloneid)
-            except ValueError as e:
-                raise MKUserError("clone", str(e)) from e
-            self._user = self._users.get(user_id, new_user)
+            self._user = self._users.get(self._cloneid, new_user)
         else:
             self._user = new_user
+
         self._locked_attributes = userdb.locked_attributes(self._user.get("connector"))
 
     def title(self) -> str:
@@ -694,7 +688,7 @@ class ModeEditUser(WatoMode):
                 title=_("Audit log"),
                 icon_name="auditlog",
                 item=make_simple_link(
-                    make_object_audit_log_url(make_user_object_ref(UserId(self._user_id)))
+                    make_object_audit_log_url(make_user_object_ref(self._user_id))
                 ),
             )
 
@@ -725,7 +719,7 @@ class ModeEditUser(WatoMode):
             return redirect(mode_url("users"))
 
         if self._user_id is not None and request.has_var("_disable_two_factor"):
-            userdb.disable_two_factor_authentication(UserId(self._user_id))
+            userdb.disable_two_factor_authentication(self._user_id)
             return redirect(mode_url("users"))
 
         if self._user_id is None:  # same as self._is_new_user
@@ -746,9 +740,9 @@ class ModeEditUser(WatoMode):
         increase_serial = False
 
         if (
-            UserId(self._user_id) in self._users
+            self._user_id in self._users
             and user_attrs["locked"]
-            and self._users[UserId(self._user_id)]["locked"] != user_attrs["locked"]
+            and self._users[self._user_id]["locked"] != user_attrs["locked"]
         ):
             increase_serial = True  # when user is being locked now, increase the auth serial
 
@@ -1018,9 +1012,9 @@ class ModeEditUser(WatoMode):
             html.td("%s:" % _("Enforce change"))
             html.open_td()
             # Only make password enforcement selection possible when user is allowed to change the PW
-            uid = None if self._user_id is None else UserId(self._user_id)
             if self._is_new_user or (
-                user_may(uid, "general.edit_profile") and user_may(uid, "general.change_password")
+                user_may(self._user_id, "general.edit_profile")
+                and user_may(self._user_id, "general.change_password")
             ):
                 html.checkbox(
                     "enforce_pw_change",

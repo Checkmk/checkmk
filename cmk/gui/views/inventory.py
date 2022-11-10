@@ -28,7 +28,7 @@ from cmk.utils.structured_data import (
     StructuredDataNode,
     Table,
 )
-from cmk.utils.type_defs import HostName
+from cmk.utils.type_defs import HostName, UserId
 
 import cmk.gui.inventory as inventory
 import cmk.gui.pages
@@ -1751,7 +1751,7 @@ def _register_views(
         "group_painters": [],
         "sorters": [],
         "is_show_more": is_show_more,
-        "owner": "",
+        "owner": UserId.builtin(),
         "add_context_to_title": True,
     }
 
@@ -1790,7 +1790,7 @@ def _register_views(
         "group_painters": [],
         "sorters": [],
         "is_show_more": is_show_more,
-        "owner": "",
+        "owner": UserId.builtin(),
         "add_context_to_title": True,
     }
 
@@ -1840,7 +1840,7 @@ multisite_builtin_views["inv_host"] = {
         PainterSpec(name="inventory_tree"),
     ],
     "sorters": [],
-    "owner": "",
+    "owner": UserId.builtin(),
     "name": "inv_host",
     "single_infos": ["host"],
     "context": {},
@@ -1892,7 +1892,7 @@ multisite_builtin_views["inv_hosts_cpu"] = {
         ),
     ],
     "sorters": [],
-    "owner": "",
+    "owner": UserId.builtin(),
     "name": "inv_hosts_cpu",
     "single_infos": [],
     "context": {
@@ -1946,7 +1946,7 @@ multisite_builtin_views["inv_hosts_ports"] = {
         PainterSpec(name="inv_networking_available_ethernet_ports"),
     ],
     "sorters": [SorterSpec(sorter="inv_networking_available_ethernet_ports", negate=True)],
-    "owner": "",
+    "owner": UserId.builtin(),
     "name": "inv_hosts_ports",
     "single_infos": [],
     "context": {
@@ -2214,7 +2214,7 @@ multisite_builtin_views["inv_host_history"] = {
         PainterSpec(name="invhist_delta"),
     ],
     "sorters": [SorterSpec(sorter="invhist_time", negate=False)],
-    "owner": "",
+    "owner": UserId.builtin(),
     "name": "inv_host_history",
     "single_infos": ["host"],
     "context": {},

@@ -320,7 +320,7 @@ class WebTestAppForCMK(webtest.TestApp):
             resp = self.call_method(link["method"], link["href"], **params)
         return resp
 
-    def login(self, username: str, password: str) -> WebTestAppForCMK:
+    def login(self, username: UserId, password: str) -> WebTestAppForCMK:
         self.username = username
         login = self.get("/NO_SITE/check_mk/login.py")
         login.form["_username"] = username

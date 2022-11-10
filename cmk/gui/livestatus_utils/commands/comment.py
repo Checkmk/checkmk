@@ -16,6 +16,7 @@ from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
 from cmk.utils.livestatus_helpers.tables.comments import Comments
 from cmk.utils.livestatus_helpers.tables.hosts import Hosts
 from cmk.utils.livestatus_helpers.tables.services import Services
+from cmk.utils.type_defs import UserId
 
 from cmk.gui.livestatus_utils.commands.lowlevel import send_command
 
@@ -109,7 +110,7 @@ def add_host_comment_by_query(
     connection: MultiSiteConnection,
     query: QueryExpression,
     comment_txt: str,
-    user: str = "",
+    user: UserId = UserId.builtin(),
     persistent: bool = False,
 ) -> None:
 
@@ -131,7 +132,7 @@ def add_host_comment(
     comment_txt: str,
     site_id: SiteId,
     persistent: bool = False,
-    user: str = "",
+    user: UserId = UserId.builtin(),
 ) -> None:
     """Add a comment for a particular host.
 
@@ -177,7 +178,7 @@ def add_service_comment_by_query(
     query: QueryExpression,
     comment_txt: str,
     persistent: bool = False,
-    user: str = "",
+    user: UserId = UserId.builtin(),
 ) -> None:
 
     q = Query([Services.description, Services.host_name], query)
@@ -199,7 +200,7 @@ def add_service_comment(
     comment_txt: str,
     site_id: SiteId,
     persistent: bool = False,
-    user: str = "",
+    user: UserId = UserId.builtin(),
 ) -> None:
 
     """Add service comment

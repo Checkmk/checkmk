@@ -9,6 +9,8 @@ import ast
 from collections.abc import Iterator, Mapping, Sequence
 from typing import Any, overload
 
+from cmk.utils.type_defs import UserId
+
 from cmk.gui import visuals
 from cmk.gui.exceptions import MKGeneralException, MKInternalError, MKUserError
 from cmk.gui.http import request
@@ -575,7 +577,7 @@ def _dummy_view_spec() -> ViewSpec:
             "mustsearch": False,
             "name": "allhosts",
             "num_columns": 3,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [],
             "play_sounds": False,
             "public": True,

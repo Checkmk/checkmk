@@ -9,6 +9,7 @@ import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
 import cmk.utils.version as cmk_version
+from cmk.utils.type_defs import UserId
 
 import cmk.gui.dashboard as dashboard  # pylint: disable=reimported
 from cmk.gui.config import default_authorized_builtin_role_ids
@@ -135,7 +136,7 @@ TEST_DASHBOARD = DashboardConfig(
         "icon": "dashboard_problems",
         "description": "",
         "dashlets": [],
-        "owner": "",
+        "owner": UserId.builtin(),
         "public": True,
         "name": "problems",
         "hidden": False,

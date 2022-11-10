@@ -8,6 +8,8 @@ import time
 from collections.abc import Callable, Sequence
 from typing import Literal
 
+from cmk.utils.type_defs import UserId
+
 from cmk.gui.config import active_config
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l
@@ -73,7 +75,7 @@ multisite_builtin_views.update(
             "mustsearch": False,
             "name": "service_graphs",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="service_graphs"),
             ],
@@ -113,7 +115,7 @@ multisite_builtin_views.update(
             "mustsearch": False,
             "name": "host_graphs",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [PainterSpec(name="host_graphs")],
             "public": True,
             "sorters": [],

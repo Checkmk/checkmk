@@ -6,6 +6,7 @@
 import pprint
 
 import cmk.utils.version as cmk_version
+from cmk.utils.type_defs import UserId
 
 import cmk.gui.dashboard as dashboard
 import cmk.gui.pages
@@ -62,7 +63,7 @@ class Views(SidebarSnapin):
 @cmk.gui.pages.register("export_views")
 def ajax_export_views() -> None:
     for view in get_permitted_views().values():
-        view["owner"] = ""
+        view["owner"] = UserId.builtin()
         view["public"] = True
     response.set_data(pprint.pformat(get_permitted_views()))
 

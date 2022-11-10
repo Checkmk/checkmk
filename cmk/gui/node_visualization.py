@@ -13,7 +13,7 @@ import livestatus
 from livestatus import SiteId
 
 from cmk.utils.site import omd_site
-from cmk.utils.type_defs import HostName
+from cmk.utils.type_defs import HostName, UserId
 
 import cmk.gui.bi as bi
 import cmk.gui.visuals
@@ -99,7 +99,7 @@ class ParentChildTopologyPage(Page):
     @classmethod
     def visual_spec(cls) -> Visual:
         return {
-            "owner": "",
+            "owner": UserId.builtin(),
             "description": "",
             "hidebutton": False,
             "public": True,
@@ -1006,7 +1006,7 @@ multisite_builtin_views.update(
             "mustsearch": False,
             "name": "topology_filters",
             "num_columns": 3,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [PainterSpec(name="host_state")],
             "play_sounds": False,
             "public": True,
@@ -1047,7 +1047,7 @@ multisite_builtin_views.update(
             "mustsearch": False,
             "name": "bi_map_hover_host",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(
                     name="host",
@@ -1104,7 +1104,7 @@ multisite_builtin_views.update(
             "single_infos": ["service", "host"],
             "sorters": [],
             "title": _l("BI service details"),
-            "owner": "",
+            "owner": UserId.builtin(),
             "user_sortable": True,
             "context": {},
             "link_from": {},
@@ -1127,7 +1127,7 @@ multisite_builtin_views.update(
             "mustsearch": False,
             "name": "topology_hover_host",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(
                     name="host",

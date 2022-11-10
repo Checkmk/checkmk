@@ -5,6 +5,8 @@
 
 from collections.abc import Sequence
 
+from cmk.utils.type_defs import UserId
+
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l
@@ -59,7 +61,7 @@ multisite_builtin_views.update(
             "layout": "mobilelist",
             "name": "mobile_searchsvc",
             "num_columns": 2,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="service_state"),
                 PainterSpec(
@@ -138,7 +140,7 @@ multisite_builtin_views.update(
                 SorterSpec(sorter="svcdescr", negate=False),
             ],
             "title": _l("Service problems (all)"),
-            "owner": "",
+            "owner": UserId.builtin(),
             "single_infos": [],
             "context": {
                 "in_downtime": {"is_in_downtime": "0"},
@@ -191,7 +193,7 @@ multisite_builtin_views.update(
                 SorterSpec(sorter="svcdescr", negate=False),
             ],
             "title": _l("Service problems (unhandled)"),
-            "owner": "",
+            "owner": UserId.builtin(),
             "single_infos": [],
             "context": {
                 "in_downtime": {"is_in_downtime": "0"},
@@ -246,7 +248,7 @@ multisite_builtin_views.update(
                 SorterSpec(sorter="svcdescr", negate=False),
             ],
             "title": _l("Services of host"),
-            "owner": "",
+            "owner": UserId.builtin(),
             "single_infos": ["host"],
             "context": {
                 "site": {},
@@ -291,7 +293,7 @@ multisite_builtin_views.update(
                 SorterSpec(sorter="svcdescr", negate=False),
             ],
             "title": _l("Services of host"),
-            "owner": "",
+            "owner": UserId.builtin(),
             "single_infos": ["host"],
             "context": {
                 "site": {},
@@ -356,7 +358,7 @@ multisite_builtin_views.update(
             ],
             "sorters": [],
             "title": _l("Host status"),
-            "owner": "",
+            "owner": UserId.builtin(),
             "name": "mobile_hoststatus",
             "single_infos": ["host"],
             "context": {"site": {}},
@@ -393,7 +395,7 @@ multisite_builtin_views.update(
             ],
             "sorters": [],
             "title": _l("Host search"),
-            "owner": "",
+            "owner": UserId.builtin(),
             "name": "mobile_searchhost",
             "single_infos": [],
             "context": {
@@ -435,7 +437,7 @@ multisite_builtin_views.update(
             ],
             "sorters": [],
             "title": _l("Host problems (all)"),
-            "owner": "",
+            "owner": UserId.builtin(),
             "single_infos": [],
             "context": {
                 "host_scheduled_downtime_depth": {"is_host_scheduled_downtime_depth": "0"},
@@ -479,7 +481,7 @@ multisite_builtin_views.update(
             ],
             "sorters": [],
             "title": _l("Host problems (unhandled)"),
-            "owner": "",
+            "owner": UserId.builtin(),
             "single_infos": [],
             "context": {
                 "host_scheduled_downtime_depth": {"is_host_scheduled_downtime_depth": "0"},
@@ -531,7 +533,7 @@ multisite_builtin_views.update(
                 SorterSpec(sorter="log_lineno", negate=False),
             ],
             "title": _l("Events"),
-            "owner": "",
+            "owner": UserId.builtin(),
             "single_infos": [],
             "context": {"logtime": {"logtime_from": "4", "logtime_from_range": "3600"}},
             "link_from": {},
@@ -578,7 +580,7 @@ multisite_builtin_views.update(
                 SorterSpec(sorter="log_lineno", negate=True),
             ],
             "title": _l("History"),
-            "owner": "",
+            "owner": UserId.builtin(),
             "single_infos": [],
             "context": {
                 "log_class": {
@@ -636,7 +638,7 @@ multisite_builtin_views.update(
                 SorterSpec(sorter="log_lineno", negate=False),
             ],
             "title": _l("Events of host & services"),
-            "owner": "",
+            "owner": UserId.builtin(),
             "single_infos": ["host"],
             "context": {
                 "site": {},
@@ -679,7 +681,7 @@ multisite_builtin_views.update(
                 SorterSpec(sorter="log_lineno", negate=False),
             ],
             "title": _l("Events of service"),
-            "owner": "",
+            "owner": UserId.builtin(),
             "single_infos": ["service", "host"],
             "context": {
                 "site": {},
@@ -728,7 +730,7 @@ multisite_builtin_views.update(
                 SorterSpec(sorter="log_lineno", negate=False),
             ],
             "title": _l("Notifications of contact"),
-            "owner": "",
+            "owner": UserId.builtin(),
             "single_infos": ["contact"],
             "context": {
                 "log_class": {
@@ -789,7 +791,7 @@ multisite_builtin_views.update(
                 SorterSpec(sorter="log_lineno", negate=False),
             ],
             "title": _l("Notifications of host & services"),
-            "owner": "",
+            "owner": UserId.builtin(),
             "single_infos": ["host"],
             "context": {
                 "site": {},
@@ -842,7 +844,7 @@ multisite_builtin_views.update(
                 SorterSpec(sorter="log_lineno", negate=False),
             ],
             "title": _l("Service Notifications"),
-            "owner": "",
+            "owner": UserId.builtin(),
             "single_infos": ["service", "host"],
             "context": {
                 "site": {},

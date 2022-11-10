@@ -334,9 +334,8 @@ def verify_automation_secret(user_id: UserId, secret: str) -> bool:
 
 def _check_auth_automation() -> UserId:
     secret = request.get_str_input_mandatory("_secret", "").strip()
-    user_id = request.get_str_input_mandatory("_username", "")
+    user_id = request.get_validated_type_input_mandatory(UserId, "_username", UserId.builtin())
 
-    user_id = UserId(user_id.strip())
     request.del_var_from_env("_username")
     request.del_var_from_env("_secret")
 

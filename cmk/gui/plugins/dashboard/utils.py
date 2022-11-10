@@ -109,7 +109,7 @@ class LinkedViewDashletConfig(ABCViewDashletConfig):
 class _ViewDashletConfigMandatory(ABCViewDashletConfig):
     # TODO: Find a way to clean up the rendundancies with ViewSpec and Visual
     # From: Visual
-    owner: str
+    owner: UserId
     # These fields are redundant between DashletConfig and Visual
     # name: str
     # context: VisualContext

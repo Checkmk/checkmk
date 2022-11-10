@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from datetime import datetime
 
 from cmk.utils.object_diff import make_diff_text
@@ -45,7 +46,7 @@ from cmk.gui.watolib.user_scripts import (
 )
 
 
-def delete_users(users_to_delete):
+def delete_users(users_to_delete: Sequence[UserId]) -> None:
     user.need_permission("wato.users")
     user.need_permission("wato.edit")
     if user.id in users_to_delete:
@@ -83,6 +84,7 @@ def edit_users(changed_users: UserObject) -> None:
         user_attrs = settings.get("attributes", {})
         is_new_user = settings.get("is_new_user", True)
         _validate_user_attributes(all_users, user_id, user_attrs, is_new_user=is_new_user)
+
         if is_new_user:
             new_users_info.append(user_id)
         else:

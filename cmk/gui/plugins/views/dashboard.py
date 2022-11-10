@@ -6,6 +6,8 @@
 # FIXME: Can be removed once all dashboards have been converted
 # to have the view definitions right inside the dashboards
 
+from cmk.utils.type_defs import UserId
+
 from cmk.gui.i18n import _l
 from cmk.gui.type_defs import PainterSpec, SorterSpec, VisualLinkSpec
 from cmk.gui.views.store import multisite_builtin_views
@@ -27,7 +29,7 @@ multisite_builtin_views.update(
             "mustsearch": False,
             "name": "hostproblems_dash",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="host_state"),
                 PainterSpec(
@@ -70,7 +72,7 @@ multisite_builtin_views.update(
             "mustsearch": False,
             "name": "svcproblems_dash",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="service_state"),
                 PainterSpec(
@@ -122,7 +124,7 @@ multisite_builtin_views.update(
             "mustsearch": False,
             "name": "events_dash",
             "num_columns": 1,
-            "owner": "",
+            "owner": UserId.builtin(),
             "painters": [
                 PainterSpec(name="log_icon"),
                 PainterSpec(name="log_time"),

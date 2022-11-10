@@ -1972,7 +1972,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec, "PagetypeTopics"]):
                 "description": "",
                 "public": True,
                 "sort_index": 20,
-                "owner": "",
+                "owner": UserId.builtin(),
             },
             "monitoring": {
                 "name": "monitoring",
@@ -1981,7 +1981,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec, "PagetypeTopics"]):
                 "description": "",
                 "public": True,
                 "sort_index": 30,
-                "owner": "",
+                "owner": UserId.builtin(),
             },
             "problems": {
                 "name": "problems",
@@ -1990,7 +1990,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec, "PagetypeTopics"]):
                 "description": "",
                 "public": True,
                 "sort_index": 40,
-                "owner": "",
+                "owner": UserId.builtin(),
             },
             "history": {
                 "name": "history",
@@ -1999,7 +1999,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec, "PagetypeTopics"]):
                 "description": "",
                 "public": True,
                 "sort_index": 50,
-                "owner": "",
+                "owner": UserId.builtin(),
             },
             "analyze": {
                 "name": "analyze",
@@ -2008,7 +2008,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec, "PagetypeTopics"]):
                 "description": "",
                 "public": True,
                 "sort_index": 60,
-                "owner": "",
+                "owner": UserId.builtin(),
             },
             "events": {
                 "name": "events",
@@ -2017,7 +2017,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec, "PagetypeTopics"]):
                 "description": "",
                 "public": True,
                 "sort_index": 70,
-                "owner": "",
+                "owner": UserId.builtin(),
             },
             "bi": {
                 "name": "bi",
@@ -2027,7 +2027,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec, "PagetypeTopics"]):
                 "sort_index": 80,
                 "public": True,
                 "hide": _no_bi_aggregate_active(),
-                "owner": "",
+                "owner": UserId.builtin(),
             },
             "applications": {
                 "name": "applications",
@@ -2036,7 +2036,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec, "PagetypeTopics"]):
                 "description": "",
                 "public": True,
                 "sort_index": 85,
-                "owner": "",
+                "owner": UserId.builtin(),
             },
             "inventory": {
                 "name": "inventory",
@@ -2045,7 +2045,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec, "PagetypeTopics"]):
                 "description": "",
                 "public": True,
                 "sort_index": 90,
-                "owner": "",
+                "owner": UserId.builtin(),
             },
             "network_statistics": {
                 "name": "network_statistics",
@@ -2055,7 +2055,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec, "PagetypeTopics"]):
                 "sort_index": 95,
                 "public": True,
                 "hide": not is_ntop_configured(),
-                "owner": "",
+                "owner": UserId.builtin(),
             },
             "my_workplace": {
                 "name": "my_workplace",
@@ -2064,7 +2064,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec, "PagetypeTopics"]):
                 "description": "",
                 "public": True,
                 "sort_index": 100,
-                "owner": "",
+                "owner": UserId.builtin(),
             },
             # Only fallback for items without topic
             "other": {
@@ -2074,7 +2074,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec, "PagetypeTopics"]):
                 "description": "",
                 "public": True,
                 "sort_index": 105,
-                "owner": "",
+                "owner": UserId.builtin(),
             },
         }
 

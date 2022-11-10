@@ -172,7 +172,7 @@ SingleInfos = Sequence[InfoName]
 
 
 class _VisualMandatory(TypedDict):
-    owner: str
+    owner: UserId
     name: str
     context: VisualContext
     single_infos: SingleInfos

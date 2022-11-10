@@ -119,22 +119,6 @@ def handle_nodes(response):
 
 
 def handle_stats(response):
-    shards = response.get("_shards")
-    if shards is not None:
-        sys.stdout.write("<<<elasticsearch_shards>>>\n")
-
-        sys.stdout.write(
-            "{} {} {}\n".format(shards.get("total"), shards.get("successful"), shards.get("failed"))
-        )
-
-    docs = response.get("_all", {}).get("total")
-    if docs is not None:
-        sys.stdout.write("<<<elasticsearch_cluster>>>\n")
-        count = docs.get("docs", {}).get("count")
-        size = docs.get("store", {}).get("size_in_bytes")
-
-        sys.stdout.write(f"{count} {size}\n")
-
     indices_data = response.get("indices")
     if indices_data is not None:
         indices = set()

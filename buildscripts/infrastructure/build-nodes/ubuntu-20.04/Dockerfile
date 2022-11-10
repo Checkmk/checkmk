@@ -122,6 +122,9 @@ RUN /opt/install-rust-cargo.sh
 # in the next step
 RUN /opt/strip_binaries /opt
 
+# Run this AFTER strip_binaries!!
+RUN /opt/install-bazel.sh
+
 ### Actual Image ###
 FROM base
 
@@ -138,6 +141,7 @@ RUN /opt/install-cmake.sh link-only
 RUN /opt/install-protobuf-cpp.sh --link-only
 RUN /opt/install-python.sh link-only
 RUN /opt/install-freetds.sh link-only
+RUN /opt/install-bazel.sh link-only
 
 # Exclusively for this distro at the moment, because it is used by several CI
 # jobs for special tasks (checking out git, "make dist", orchestrating other

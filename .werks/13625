@@ -1,0 +1,15 @@
+Title: Aligned reschedule text of passive services with Check_MK service
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1668071151
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p17
+
+The reschedule button of passive services refers to the
+Check_MK service as this service fetches the data. During
+the alignement of the product name this referrer has been
+changed, too. 
+With this fix, the service is called correct again.

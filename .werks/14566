@@ -1,0 +1,14 @@
+Title: <tt>datadog_monitors</tt>: Allow empty custom messages
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1668074231
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p17
+
+Previously, the check <tt>datadog_monitors</tt> would crash with a <tt>ValueError</tt> if there were
+any Datadog monitors with an empty message. With this werk, <tt>No message</tt> is shown if the
+message is empty.

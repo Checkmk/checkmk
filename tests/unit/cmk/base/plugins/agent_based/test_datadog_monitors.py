@@ -205,5 +205,14 @@ def test_check_datadog_monitors(item, params, expected_result):
     )
 
 
-def test_default_datadog_and_checkmk_states():
+def test_check_datadog_monitors_does_not_crash_on_empty_message() -> None:
+    """Handle custom messages.
+
+    Datadog monitors allows to specify custom messages. These messages can be empty, see SUP-12228.
+    """
+    section = {"item": Monitor(state="OK", message="", thresholds={}, tags=[])}
+    list(check_datadog_monitors("item", {"state_mapping": {}, "tags_to_show": []}, section))
+
+
+def test_default_datadog_and_checkmk_states() -> None:
     assert _DEFAULT_DATADOG_AND_CHECKMK_STATES == WATO_DEFAULTS

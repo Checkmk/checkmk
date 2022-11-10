@@ -259,7 +259,7 @@ class _Builder:
 
     def __init__(
         self,
-        host_config: HostConfig,
+        host_name: HostName,
         ipaddress: Optional[HostAddress],
         *,
         selected_sections: SectionNameCollection,
@@ -270,9 +270,9 @@ class _Builder:
         file_cache_max_age: MaxAge,
     ) -> None:
         super().__init__()
-        self.host_config: Final = host_config
-        self.host_name: Final = self.host_config.hostname
+        self.host_name: Final = host_name
         self.config_cache: Final = config.get_config_cache()
+        self.host_config: Final = self.config_cache.get_host_config(self.host_name)
         self.ipaddress: Final = ipaddress
         self.selected_sections: Final = selected_sections
         self.on_scan_error: Final = on_scan_error
@@ -644,7 +644,7 @@ class _Builder:
 
 
 def make_non_cluster_sources(
-    host_config: HostConfig,
+    host_name: HostName,
     ipaddress: Optional[HostAddress],
     *,
     force_snmp_cache_refresh: bool = False,
@@ -656,7 +656,7 @@ def make_non_cluster_sources(
 ) -> Sequence[Tuple[SourceInfo, FileCache, Fetcher]]:
     """Sequence of sources available for `host_config`."""
     return _Builder(
-        host_config,
+        host_name,
         ipaddress,
         selected_sections=selected_sections,
         on_scan_error=on_scan_error,
@@ -686,7 +686,7 @@ def fetch_all(
 
 
 def make_sources(
-    host_config: HostConfig,
+    host_name: HostName,
     ip_address: Optional[HostAddress],
     *,
     ip_lookup: Callable[[HostName], Optional[HostAddress]],
@@ -697,24 +697,19 @@ def make_sources(
     missing_sys_description: bool,
     file_cache_max_age: MaxAge,
 ) -> Sequence[Tuple[SourceInfo, FileCache, Fetcher]]:
-    host_name = host_config.hostname
     config_cache = config.get_config_cache()
     nodes = config_cache.nodes_of(host_name)
     if nodes is None:
         # Not a cluster
-        host_configs = [host_config]
+        host_names = [host_name]
     else:
-        host_configs = [HostConfig.make_host_config(host_name) for host_name in nodes]
+        host_names = nodes
     return [
         source
-        for host_config_ in host_configs
+        for host_name_ in host_names
         for source in make_non_cluster_sources(
-            host_config_,
-            (
-                ip_address
-                if config_cache.nodes_of(host_name) is None
-                else ip_lookup(host_config_.hostname)
-            ),
+            host_name_,
+            (ip_address if config_cache.nodes_of(host_name) is None else ip_lookup(host_name_)),
             force_snmp_cache_refresh=(
                 force_snmp_cache_refresh if config_cache.nodes_of(host_name) is None else False
             ),

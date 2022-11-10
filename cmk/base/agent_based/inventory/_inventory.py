@@ -160,7 +160,7 @@ def _fetch_real_host_data(
         Tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
     ] = fetch_all(
         make_sources(
-            host_config,
+            host_name,
             ipaddress,
             ip_lookup=lambda host_name: config.lookup_ip_address(
                 config_cache.get_host_config(host_name)

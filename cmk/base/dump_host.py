@@ -173,7 +173,7 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
     agenttypes = [
         dump_source(source, fetcher)
         for source, _file_cache, fetcher in sources.make_non_cluster_sources(
-            host_config,
+            hostname,
             ipaddress,
             simulation_mode=config.simulation_mode,
             missing_sys_description=config.get_config_cache().in_binary_hostlist(

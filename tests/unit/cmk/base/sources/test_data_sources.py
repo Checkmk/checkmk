@@ -10,7 +10,6 @@ from tests.testlib.base import Scenario
 import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers import PiggybackFetcher, ProgramFetcher, SNMPFetcher, TCPFetcher
 
-from cmk.base.config import HostConfig
 from cmk.base.sources import make_non_cluster_sources
 
 
@@ -94,14 +93,11 @@ def test_host_config_creates_passing_source_sources(
     ts = make_scenario(hostname, tags)
     ts.apply(monkeypatch)
 
-    host_config = HostConfig.make_host_config(hostname)
-    ipaddress = "127.0.0.1"
-
     assert [
         type(fetcher)
         for _meta, _file_cache, fetcher in make_non_cluster_sources(
-            host_config,
-            ipaddress,
+            hostname,
+            "127.0.0.1",
             simulation_mode=True,
             missing_sys_description=False,
             file_cache_max_age=file_cache.MaxAge.none(),

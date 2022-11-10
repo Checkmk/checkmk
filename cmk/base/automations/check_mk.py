@@ -1387,7 +1387,7 @@ class AutomationDiagHost(Automation):
         state, output = 0, ""
         host_name = host_config.hostname
         for source, file_cache, fetcher in sources.make_non_cluster_sources(
-            host_config,
+            host_name,
             ipaddress,
             simulation_mode=config.simulation_mode,
             missing_sys_description=config.get_config_cache().in_binary_hostlist(
@@ -1725,7 +1725,7 @@ class AutomationGetAgentOutput(Automation):
             if ty == "agent":
                 FileCacheGlobals.maybe = not FileCacheGlobals.disabled
                 for source, file_cache, fetcher in sources.make_non_cluster_sources(
-                    host_config,
+                    hostname,
                     ipaddress,
                     simulation_mode=config.simulation_mode,
                     missing_sys_description=config.get_config_cache().in_binary_hostlist(

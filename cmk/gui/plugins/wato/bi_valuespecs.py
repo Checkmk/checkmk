@@ -39,6 +39,7 @@ from cmk.bi import actions
 from cmk.bi.aggregation_functions import (
     BIAggregationFunctionBest,
     BIAggregationFunctionCountOK,
+    BIAggregationFunctionCountMinOK,
     BIAggregationFunctionWorst,
 )
 from cmk.bi.lib import ABCBIAction, ABCBIAggregationFunction, ABCBISearch, ActionKind, SearchKind
@@ -888,7 +889,93 @@ class BIConfigAggregationFunctionCountOK(
 
     @classmethod
     def title(cls):
-        return _("Count the number of nodes in state OK")
+        return _("Count the exact number of nodes in state OK")
+
+    @classmethod
+    def valuespec(cls) -> ValueSpec:
+        def convert_to_vs(value):
+            result = []
+            for what in ["levels_ok", "levels_warn"]:
+                field = value[what]
+                if field["type"] == "count":
+                    result.append(field["value"])
+                else:
+                    result.append("%s%%" % field["value"])
+
+            return tuple(result)
+
+        def convert_from_vs(value):
+            result: Dict[str, Union[str, Dict[str, Union[int, str]]]] = {"type": cls.kind()}
+
+            for name, number in [("levels_ok", value[0]), ("levels_warn", value[1])]:
+                result[name] = {
+                    "type": "count" if isinstance(number, int) else "percentage",
+                    "value": number if isinstance(number, int) else int(number.rstrip("%")),
+                }
+            return result
+
+        return Transform(
+            valuespec=Tuple(
+                elements=[
+                    cls._vs_count_ok_count(
+                        _("Required number of OK-nodes for a total state of OK:"), 2, 50
+                    ),
+                    cls._vs_count_ok_count(
+                        _("Required number of OK-nodes for a total state of WARN:"), 1, 25
+                    ),
+                ]
+            ),
+            to_valuespec=convert_to_vs,
+            from_valuespec=convert_from_vs,
+        )
+
+    @classmethod
+    def _vs_count_ok_count(cls, title: str, defval: int, defvalperc: int) -> Alternative:
+        return Alternative(
+            title=title,
+            match=lambda x: str(x).endswith("%") and 1 or 0,
+            elements=[
+                Integer(
+                    title=_("Explicit number"),
+                    label=_("Number of OK-nodes"),
+                    minvalue=0,
+                    default_value=defval,
+                ),
+                Transform(
+                    valuespec=Percentage(
+                        label=_("Percent of OK-nodes"),
+                        display_format="%.0f",
+                        default_value=defvalperc,
+                    ),
+                    title=_("Percentage"),
+                    to_valuespec=lambda x: float(x[:-1]),
+                    from_valuespec=lambda x: "%d%%" % x,
+                ),
+            ],
+        )
+
+@bi_config_aggregation_function_registry.register
+class BIConfigAggregationFunctionCountMinOK(
+    BIAggregationFunctionCountMinOK, ABCBIConfigAggregationFunction
+):
+    def __str__(self) -> str:
+        info = []
+        for state, settings in [(_("OK"), self.levels_ok), (_("WARN"), self.levels_warn)]:
+            if settings["type"] == "count":
+                info.append(
+                    "%(state)s (%(value)s OK nodes)" % {"state": state, "value": settings["value"]}
+                )
+            else:
+                info.append(
+                    "%(state)s (%(value)s%% OK nodes)"
+                    % {"state": state, "value": settings["value"]}
+                )
+
+        return ",".join(info)
+
+    @classmethod
+    def title(cls):
+        return _("Count the minimum number of nodes in state OK")
 
     @classmethod
     def valuespec(cls) -> ValueSpec:

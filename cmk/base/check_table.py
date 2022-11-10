@@ -52,8 +52,8 @@ def _aggregate_check_table_services(
 ) -> Iterable[ConfiguredService]:
 
     sfilter = _ServiceFilter(
+        host_config.hostname,
         config_cache=config_cache,
-        host_config=host_config,
         mode=filter_mode,
         skip_ignored=skip_ignored,
     )
@@ -68,7 +68,7 @@ def _aggregate_check_table_services(
     yield from (s for s in _get_enforced_services(host_config) if sfilter.keep(s))
 
     # Now add checks a cluster might receive from its nodes
-    if host_config.is_cluster:
+    if config_cache.is_cluster(host_config.hostname):
         yield from (
             s
             for s in _get_clustered_services(config_cache, host_config, skip_autochecks)
@@ -90,9 +90,9 @@ def _aggregate_check_table_services(
 class _ServiceFilter:
     def __init__(
         self,
+        host_name: HostName,
         *,
         config_cache: ConfigCache,
-        host_config: HostConfig,
         mode: FilterMode,
         skip_ignored: bool,
     ) -> None:
@@ -102,9 +102,8 @@ class _ServiceFilter:
         FilterMode.ONLY_CLUSTERED    -> returns only checks belonging to clusters
         FilterMode.INCLUDE_CLUSTERED -> returns checks of own host, including clustered checks
         """
+        self._host_name = host_name
         self._config_cache = config_cache
-        self._host_name = host_config.hostname
-        self._host_part_of_clusters = host_config.part_of_clusters
         self._mode = mode
         self._skip_ignored = skip_ignored
 
@@ -120,13 +119,13 @@ class _ServiceFilter:
         if self._mode is FilterMode.INCLUDE_CLUSTERED:
             return True
 
-        if not self._host_part_of_clusters:
+        if not self._config_cache.clusters_of(self._host_name):
             return self._mode is not FilterMode.ONLY_CLUSTERED
 
         host_of_service = self._config_cache.host_of_clustered_service(
             self._host_name,
             service.description,
-            part_of_clusters=self._host_part_of_clusters,
+            part_of_clusters=self._config_cache.clusters_of(self._host_name),
         )
         svc_is_mine = self._host_name == host_of_service
 
@@ -155,7 +154,7 @@ def _get_clustered_services(
     host_config: HostConfig,
     skip_autochecks: bool,
 ) -> Iterable[ConfiguredService]:
-    for node in host_config.nodes or []:
+    for node in config_cache.nodes_of(host_config.hostname) or []:
         # TODO: Cleanup this to work exactly like the logic above (for a single host)
         # (mo): in particular: this means that autochecks will win over static checks.
         #       for a single host the static ones win.

@@ -370,7 +370,7 @@ def get_aggregated_result(
             service_id=service.id(),
             value_store_manager=value_store_manager,
         )
-        if host_config.is_cluster
+        if config_cache.is_cluster(host_config.hostname)
         else plugin.check_function
     )
 
@@ -431,7 +431,7 @@ def get_aggregated_result(
                 service.description,
                 plugin_name=service.check_plugin_name,
                 plugin_kwargs={**item_kw, **params_kw, **section_kws},
-                is_cluster=host_config.is_cluster,
+                is_cluster=config_cache.is_cluster(host_config.hostname),
                 is_enforced=service.id() in table,
                 is_inline_snmp=(
                     host_config.snmp_config(host_config.hostname).snmp_backend
@@ -457,13 +457,14 @@ def _get_clustered_service_node_keys(
     service_descr: ServiceName,
 ) -> Sequence[HostKey]:
     """Returns the node keys if a service is clustered, otherwise an empty sequence"""
+    nodes = config_cache.nodes_of(host_config.hostname)
     used_nodes = (
         [
             nn
-            for nn in (host_config.nodes or ())
+            for nn in (nodes or ())
             if host_config.hostname == config_cache.host_of_clustered_service(nn, service_descr)
         ]
-        or host_config.nodes
+        or nodes
         or ()
     )
 
@@ -492,7 +493,7 @@ def _get_monitoring_data_kwargs(
             else SourceType.HOST
         )
 
-    if host_config.is_cluster:
+    if config_cache.is_cluster(host_config.hostname):
         nodes = _get_clustered_service_node_keys(
             config_cache,
             host_config,

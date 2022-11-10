@@ -918,12 +918,13 @@ def get_cluster_nodes_for_config(
     host_config: HostConfig,
 ) -> List[HostName]:
 
-    if host_config.nodes is None:
+    nodes = config_cache.nodes_of(host_config.hostname)
+    if nodes is None:
         return []
 
-    nodes = host_config.nodes[:]
     _verify_cluster_address_family(nodes, config_cache, host_config)
     _verify_cluster_datasource(nodes, config_cache, host_config)
+    nodes = nodes[:]
     for node in nodes:
         if node not in config_cache.all_active_realhosts():
             warning(
@@ -935,7 +936,7 @@ def get_cluster_nodes_for_config(
 
 
 def _verify_cluster_address_family(
-    nodes: List[HostName],
+    nodes: Iterable[HostName],
     config_cache: ConfigCache,
     host_config: HostConfig,
 ) -> None:
@@ -964,7 +965,7 @@ def _verify_cluster_address_family(
 
 
 def _verify_cluster_datasource(
-    nodes: List[HostName],
+    nodes: Iterable[HostName],
     config_cache: ConfigCache,
     host_config: HostConfig,
 ) -> None:
@@ -987,7 +988,8 @@ def ip_address_of(host_config: HostConfig, family: socket.AddressFamily) -> Opti
     try:
         return config.lookup_ip_address(host_config, family=family)
     except Exception as e:
-        if host_config.is_cluster:
+        config_cache = config.get_config_cache()
+        if config_cache.is_cluster(host_config.hostname):
             return ""
 
         _failed_ip_lookups.append(host_config.hostname)
@@ -1062,7 +1064,7 @@ def translate_ds_program_source_cmdline(
     def _translate_host_macros(cmd: str, host_config: HostConfig) -> str:
         config_cache = config.get_config_cache()
         attrs = get_host_attributes(host_config.hostname, config_cache)
-        if host_config.is_cluster:
+        if config_cache.is_cluster(host_config.hostname):
             parents_list = get_cluster_nodes_for_config(
                 config_cache,
                 host_config,

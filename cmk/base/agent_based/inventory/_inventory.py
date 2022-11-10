@@ -84,8 +84,11 @@ def check_inventory_tree(
     parameters: config.HWSWInventoryParameters,
     old_tree: StructuredDataNode,
 ) -> CheckInventoryTreeResult:
-    if host_config.is_cluster:
-        inventory_tree = inventorize_cluster(nodes=host_config.nodes or [])
+    config_cache = config.get_config_cache()
+    if config_cache.is_cluster(host_config.hostname):
+        inventory_tree = inventorize_cluster(
+            nodes=config_cache.nodes_of(host_config.hostname) or []
+        )
         return CheckInventoryTreeResult(
             processing_failed=False,
             no_data_or_files=False,

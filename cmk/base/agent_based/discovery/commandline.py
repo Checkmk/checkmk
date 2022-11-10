@@ -143,14 +143,15 @@ def _preprocess_hostnames(
     # For clusters add their nodes to the list. Clusters itself
     # cannot be discovered but the user is allowed to specify
     # them and we do discovery on the nodes instead.
-    for host_name, host_config in [(hn, config_cache.get_host_config(hn)) for hn in arg_host_names]:
-        if not host_config.is_cluster:
+    for host_name in arg_host_names:
+        if not config_cache.is_cluster(host_name):
             host_names.add(host_name)
             continue
 
-        if host_config.nodes is None:
+        nodes = config_cache.nodes_of(host_name)
+        if nodes is None:
             raise MKGeneralException("Invalid cluster configuration")
-        host_names.update(host_config.nodes)
+        host_names.update(nodes)
 
     return host_names
 
@@ -216,6 +217,7 @@ def commandline_check_discovery(
     active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,
 ) -> ServiceState:
+    config_cache = config.get_config_cache()
     host_config = HostConfig.make_host_config(host_name)
     return error_handling.check_result(
         partial(_commandline_check_discovery, host_name, ipaddress),
@@ -223,7 +225,7 @@ def commandline_check_discovery(
         host_name=host_config.hostname,
         service_name="Check_MK Discovery",
         plugin_name="discover",
-        is_cluster=host_config.is_cluster,
+        is_cluster=config_cache.is_cluster(host_name),
         is_inline_snmp=(
             host_config.snmp_config(host_config.hostname).snmp_backend is SNMPBackendEnum.INLINE
         ),
@@ -241,7 +243,7 @@ def _commandline_check_discovery(
 
     # In case of keepalive discovery we always have an ipaddress. When called as non keepalive
     # ipaddress is always None
-    if ipaddress is None and not host_config.is_cluster:
+    if ipaddress is None and not config_cache.is_cluster(host_name):
         ipaddress = config.lookup_ip_address(host_config)
 
     fetched = fetch_all(

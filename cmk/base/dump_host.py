@@ -98,8 +98,8 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
     host_config = config_cache.get_host_config(hostname)
 
     out.output("\n")
-    if host_config.is_cluster:
-        nodes = host_config.nodes
+    if config_cache.is_cluster(hostname):
+        nodes = config_cache.nodes_of(hostname)
         if nodes is None:
             raise RuntimeError()
         color = tty.bgmagenta
@@ -145,8 +145,8 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
     out.output(tty.yellow + "Labels:                 " + tty.normal + ", ".join(labels) + "\n")
 
     # TODO: Clean this up once cluster parent handling has been moved to HostConfig
-    if host_config.is_cluster:
-        parents_list = host_config.nodes
+    if config_cache.is_cluster(hostname):
+        parents_list = config_cache.nodes_of(hostname)
         if parents_list is None:
             raise RuntimeError()
     else:
@@ -236,7 +236,12 @@ def _ip_address_for_dump_host(
     *,
     family: socket.AddressFamily,
 ) -> Optional[str]:
+    config_cache = config.get_config_cache()
     try:
         return config.lookup_ip_address(host_config, family=family)
     except Exception:
-        return "" if host_config.is_cluster else ip_lookup.fallback_ip_for(family)
+        return (
+            ""
+            if config_cache.is_cluster(host_config.hostname)
+            else ip_lookup.fallback_ip_for(family)
+        )

@@ -111,7 +111,7 @@ class DiscoveryAutomation(Automation):
         if host_config.discovery_check_parameters().commandline_only:
             return
 
-        if host_config.is_cluster:
+        if config_cache.is_cluster(host_config.hostname):
             return
 
         discovery.schedule_discovery_check(host_config.hostname)
@@ -276,7 +276,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
         # checks for host_config.set_autochecks, because it needs to calculate the
         # service_descriptions of existing services to decided whether or not they are clustered
         # (See autochecks.set_autochecks_of_cluster())
-        if host_config.is_cluster:
+        if config_cache.is_cluster(hostname):
             config.load_all_agent_based_plugins(
                 check_api.get_check_api_context,
             )
@@ -822,12 +822,12 @@ class AutomationAnalyseServices(Automation):
         services = (
             [
                 service
-                for node in host_config.nodes or []
+                for node in config_cache.nodes_of(host_config.hostname) or []
                 for service in config_cache.get_autochecks_of(node)
                 if host_config.hostname
                 == config_cache.host_of_clustered_service(node, service.description)
             ]
-            if host_config.is_cluster
+            if config_cache.is_cluster(host_config.hostname)
             else config_cache.get_autochecks_of(host_config.hostname)
         )
 

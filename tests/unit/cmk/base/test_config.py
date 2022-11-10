@@ -1647,22 +1647,22 @@ def cluster_config_fixture(monkeypatch: MonkeyPatch) -> ConfigCache:
     return ts.apply(monkeypatch)
 
 
-def test_host_config_is_cluster(cluster_config: ConfigCache) -> None:
-    assert cluster_config.get_host_config(HostName("node1")).is_cluster is False
-    assert cluster_config.get_host_config(HostName("host1")).is_cluster is False
-    assert cluster_config.get_host_config(HostName("cluster1")).is_cluster is True
+def test_config_cache_is_cluster(cluster_config: ConfigCache) -> None:
+    assert cluster_config.is_cluster(HostName("node1")) is False
+    assert cluster_config.is_cluster(HostName("host1")) is False
+    assert cluster_config.is_cluster(HostName("cluster1")) is True
 
 
-def test_host_config_part_of_clusters(cluster_config: ConfigCache) -> None:
-    assert cluster_config.get_host_config(HostName("node1")).part_of_clusters == ["cluster1"]
-    assert cluster_config.get_host_config(HostName("host1")).part_of_clusters == []
-    assert cluster_config.get_host_config(HostName("cluster1")).part_of_clusters == []
+def test_config_cache_clusters_of(cluster_config: ConfigCache) -> None:
+    assert cluster_config.clusters_of(HostName("node1")) == ["cluster1"]
+    assert cluster_config.clusters_of(HostName("host1")) == []
+    assert cluster_config.clusters_of(HostName("cluster1")) == []
 
 
-def test_host_config_nodes(cluster_config: ConfigCache) -> None:
-    assert cluster_config.get_host_config(HostName("node1")).nodes is None
-    assert cluster_config.get_host_config(HostName("host1")).nodes is None
-    assert cluster_config.get_host_config(HostName("cluster1")).nodes == ["node1"]
+def test_config_cache_nodes_of(cluster_config: ConfigCache) -> None:
+    assert cluster_config.nodes_of(HostName("node1")) is None
+    assert cluster_config.nodes_of(HostName("host1")) is None
+    assert cluster_config.nodes_of(HostName("cluster1")) == ["node1"]
 
 
 def test_host_config_parents(cluster_config: ConfigCache) -> None:
@@ -2283,8 +2283,9 @@ def test_host_config_max_cachefile_age_no_cluster(monkeypatch: MonkeyPatch) -> N
     ts.add_host(xyz_host)
     ts.apply(monkeypatch)
 
-    host_config = HostConfig.make_host_config(xyz_host)
-    assert not host_config.is_cluster
+    config_cache = config.get_config_cache()
+    host_config = config_cache.get_host_config(xyz_host)
+    assert not config_cache.is_cluster(xyz_host)
     assert host_config.max_cachefile_age.get(Mode.CHECKING) == config.check_max_cachefile_age
     assert host_config.max_cachefile_age.get(Mode.CHECKING) != config.cluster_max_cachefile_age
 
@@ -2295,8 +2296,9 @@ def test_host_config_max_cachefile_age_cluster(monkeypatch: MonkeyPatch) -> None
     ts.add_cluster(clu)
     ts.apply(monkeypatch)
 
-    host_config = HostConfig.make_host_config(clu)
-    assert host_config.is_cluster
+    config_cache = config.get_config_cache()
+    host_config = config_cache.get_host_config(clu)
+    assert config_cache.is_cluster(clu)
     assert host_config.max_cachefile_age.get(Mode.CHECKING) != config.check_max_cachefile_age
     assert host_config.max_cachefile_age.get(Mode.CHECKING) == config.cluster_max_cachefile_age
 

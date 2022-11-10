@@ -421,11 +421,10 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
     _handle_fetcher_options(options)
     try:
         config_cache = config.get_config_cache()
-        host_config = config_cache.get_host_config(hostname)
-
-        if host_config.is_cluster:
+        if config_cache.is_cluster(hostname):
             raise MKBailOut("Can not be used with cluster hosts")
 
+        host_config = config_cache.get_host_config(hostname)
         ipaddress = config.lookup_ip_address(host_config)
 
         output = []

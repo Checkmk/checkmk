@@ -18,7 +18,6 @@ from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
 
 import cmk.base.agent_based.error_handling as error_handling
 import cmk.base.config as config
-from cmk.base.config import HostConfig
 from cmk.base.sources import fetch_all, make_sources
 from cmk.base.submitters import Submitter
 
@@ -36,7 +35,8 @@ def commandline_checking(
     keepalive: bool,
 ) -> ServiceState:
     # The error handling is required for the Nagios core.
-    host_config = HostConfig.make_host_config(host_name)
+    config_cache = config.get_config_cache()
+    host_config = config_cache.get_host_config(host_name)
     return error_handling.check_result(
         partial(
             _commandline_checking,
@@ -50,7 +50,7 @@ def commandline_checking(
         host_name=host_config.hostname,
         service_name="Check_MK",
         plugin_name="mk",
-        is_cluster=host_config.is_cluster,
+        is_cluster=config_cache.is_cluster(host_name),
         is_inline_snmp=(
             host_config.snmp_config(host_config.hostname).snmp_backend is SNMPBackendEnum.INLINE
         ),
@@ -73,7 +73,7 @@ def _commandline_checking(
     # In case of keepalive we always have an ipaddress (can be 0.0.0.0 or :: when
     # address is unknown). When called as non keepalive ipaddress may be None or
     # is already an address (2nd argument)
-    if ipaddress is None and not host_config.is_cluster:
+    if ipaddress is None and not config_cache.is_cluster(host_name):
         ipaddress = config.lookup_ip_address(host_config)
 
     fetched = fetch_all(

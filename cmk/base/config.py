@@ -2423,10 +2423,6 @@ class HostConfig:
         self._config_cache: Final = config_cache
 
         self._explicit_attributes_lookup = None
-        self.is_cluster: Final = self._is_cluster()
-        # TODO: Rename this to self.clusters?
-        self.part_of_clusters: Final = self._config_cache.clusters_of(hostname)
-        self.nodes: Final = self._config_cache.nodes_of(hostname)
 
         # TODO: Rename self.tags to self.tag_list and self.tag_groups to self.tags
         self.tags: Final = self._config_cache.tag_list_of_host(hostname)
@@ -2751,13 +2747,6 @@ class HostConfig:
             return SNMPBackendEnum.INLINE
 
         return SNMPBackendEnum.CLASSIC
-
-    def _is_cluster(self) -> bool:
-        """Checks whether or not the given host is a cluster host
-        all_configured_clusters() needs to be used, because this function affects
-        the agent bakery, which needs all configured hosts instead of just the hosts
-        of this site"""
-        return self.hostname in self._config_cache.all_configured_clusters()
 
     def snmp_fetch_interval(self, section_name: SectionName) -> Optional[int]:
         """Return the fetch interval of SNMP sections in seconds
@@ -3259,7 +3248,7 @@ class HostConfig:
 
     @property
     def hwsw_inventory_parameters(self) -> HWSWInventoryParameters:
-        if self.is_cluster:
+        if self._config_cache.is_cluster(self.hostname):
             return HWSWInventoryParameters.from_raw({})
 
         # TODO: Use dict(self.active_checks).get("cmk_inv", [])?
@@ -3298,10 +3287,11 @@ class HostConfig:
         new_services: Sequence[AutocheckServiceWithNodes],
     ) -> None:
         """Merge existing autochecks with the given autochecks for a host and save it"""
-        if self.is_cluster:
-            if self.nodes:
+        nodes = self._config_cache.nodes_of(self.hostname)
+        if self._config_cache.is_cluster(self.hostname):
+            if nodes:
                 autochecks.set_autochecks_of_cluster(
-                    self.nodes,
+                    nodes,
                     self.hostname,
                     new_services,
                     self._config_cache.host_of_clustered_service,
@@ -3319,7 +3309,7 @@ class HostConfig:
         Cluster aware means that the autocheck files of the nodes are handled. Instead
         of removing the whole file the file is loaded and only the services associated
         with the given cluster are removed."""
-        hostnames = self.nodes if self.nodes else [self.hostname]
+        nodes = self._config_cache.nodes_of(self.hostname) or [self.hostname]
         return sum(
             autochecks.remove_autochecks_of_host(
                 hostname,
@@ -3327,13 +3317,15 @@ class HostConfig:
                 self._config_cache.host_of_clustered_service,
                 service_description,
             )
-            for hostname in hostnames
+            for hostname in nodes
         )
 
     @property
     def max_cachefile_age(self) -> cache_file.MaxAge:
         return max_cachefile_age(
-            checking=None if self.nodes is None else cluster_max_cachefile_age,
+            checking=None
+            if self._config_cache.nodes_of(self.hostname) is None
+            else cluster_max_cachefile_age,
         )
 
     @property
@@ -3411,6 +3403,9 @@ class ConfigCache:
     def __init__(self) -> None:
         super().__init__()
         self._initialize_caches()
+
+    def is_cluster(self, host_name: HostName) -> bool:
+        return host_name in self.all_configured_clusters()
 
     def initialize(self) -> None:
         self._initialize_caches()
@@ -3949,9 +3944,7 @@ class ConfigCache:
 
     # TODO: cleanup None case
     def nodes_of(self, hostname: HostName) -> Optional[List[HostName]]:
-        """Returns the nodes of a cluster. Returns None if no match.
-
-        Use host_config.nodes instead of this method to get the node list"""
+        """Returns the nodes of a cluster. Returns None if no match."""
         return self._nodes_of_cache.get(hostname)
 
     def all_active_clusters(self) -> Set[HostName]:

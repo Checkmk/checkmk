@@ -33,7 +33,8 @@ def active_check_inventory(
     active_check_handler: Callable[[HostName, str], object],
     keepalive: bool,
 ) -> ServiceState:
-    host_config = HostConfig.make_host_config(hostname)
+    config_cache = config.get_config_cache()
+    host_config = config_cache.get_host_config(hostname)
     return error_handling.check_result(
         partial(
             execute_active_check_inventory,
@@ -44,7 +45,7 @@ def active_check_inventory(
         host_name=host_config.hostname,
         service_name="Check_MK HW/SW Inventory",
         plugin_name="check_mk_active-cmk_inv",
-        is_cluster=host_config.is_cluster,
+        is_cluster=config_cache.is_cluster(hostname),
         is_inline_snmp=(
             host_config.snmp_config(host_config.hostname).snmp_backend is SNMPBackendEnum.INLINE
         ),

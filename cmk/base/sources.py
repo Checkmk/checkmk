@@ -271,6 +271,8 @@ class _Builder:
     ) -> None:
         super().__init__()
         self.host_config: Final = host_config
+        self.host_name: Final = self.host_config.hostname
+        self.config_cache: Final = config.get_config_cache()
         self.ipaddress: Final = ipaddress
         self.selected_sections: Final = selected_sections
         self.on_scan_error: Final = on_scan_error
@@ -294,7 +296,7 @@ class _Builder:
         )
 
     def _initialize(self) -> None:
-        if self.host_config.is_cluster:
+        if self.config_cache.is_cluster(self.host_name):
             # Cluster hosts do not have any actual data sources
             # Instead all data is provided by the nodes
             return
@@ -695,22 +697,38 @@ def make_sources(
     missing_sys_description: bool,
     file_cache_max_age: MaxAge,
 ) -> Sequence[Tuple[SourceInfo, FileCache, Fetcher]]:
-    if host_config.nodes is None:
+    config_cache = config.get_config_cache()
+    nodes = config_cache.nodes_of(host_config.hostname)
+    if nodes is None:
         # Not a cluster
         host_configs = [host_config]
     else:
-        host_configs = [HostConfig.make_host_config(host_name) for host_name in host_config.nodes]
+        host_configs = [HostConfig.make_host_config(host_name) for host_name in nodes]
     return [
         source
         for host_config_ in host_configs
         for source in make_non_cluster_sources(
             host_config_,
-            ip_address if host_config.nodes is None else ip_lookup(host_config_.hostname),
-            force_snmp_cache_refresh=force_snmp_cache_refresh
-            if host_config.nodes is None
-            else False,
-            selected_sections=selected_sections if host_config.nodes is None else NO_SELECTION,
-            on_scan_error=on_scan_error if host_config.nodes is None else OnError.RAISE,
+            (
+                ip_address
+                if config_cache.nodes_of(host_config.hostname) is None
+                else ip_lookup(host_config_.hostname)
+            ),
+            force_snmp_cache_refresh=(
+                force_snmp_cache_refresh
+                if config_cache.nodes_of(host_config.hostname) is None
+                else False
+            ),
+            selected_sections=(
+                selected_sections
+                if config_cache.nodes_of(host_config.hostname) is None
+                else NO_SELECTION
+            ),
+            on_scan_error=(
+                on_scan_error
+                if config_cache.nodes_of(host_config.hostname) is None
+                else OnError.RAISE
+            ),
             simulation_mode=simulation_mode,
             missing_sys_description=missing_sys_description,
             file_cache_max_age=file_cache_max_age,

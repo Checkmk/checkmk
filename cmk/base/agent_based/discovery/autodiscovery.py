@@ -142,7 +142,9 @@ def automation_discovery(
         if mode is DiscoveryMode.REFRESH:
             result.self_removed += host_config.remove_autochecks()  # this is cluster-aware!
 
-        ipaddress = None if host_config.is_cluster else config.lookup_ip_address(host_config)
+        ipaddress = (
+            None if config_cache.is_cluster(host_name) else config.lookup_ip_address(host_config)
+        )
 
         fetched: Sequence[
             Tuple[SourceInfo, Result[AgentRawData | SNMPRawData, Exception], Snapshot]
@@ -229,9 +231,10 @@ def _get_host_services(
     parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
 ) -> ServicesByTransition:
+    config_cache = config.get_config_cache()
 
     services: ServicesTable[_Transition]
-    if host_config.is_cluster:
+    if config_cache.is_cluster(host_config.hostname):
         services = {
             **_get_cluster_services(
                 host_config,
@@ -581,9 +584,10 @@ def get_host_services(
     parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
 ) -> ServicesByTransition:
+    config_cache = config.get_config_cache()
 
     services: ServicesTable[_Transition]
-    if host_config.is_cluster:
+    if config_cache.is_cluster(host_config.hostname):
         services = {
             **_get_cluster_services(
                 host_config,
@@ -597,7 +601,7 @@ def get_host_services(
                 host_name=host_config.hostname,
                 parsed_sections_broker=parsed_sections_broker,
                 on_error=on_error,
-                host_of_clustered_service=config.get_config_cache().host_of_clustered_service,
+                host_of_clustered_service=config_cache.host_of_clustered_service,
             )
         }
 
@@ -696,8 +700,9 @@ def _get_cluster_services(
     parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
 ) -> ServicesTable[_Transition]:
-
-    if not host_config.nodes:
+    config_cache = config.get_config_cache()
+    nodes = config_cache.nodes_of(host_config.hostname)
+    if not nodes:
         return {}
 
     cluster_items: ServicesTable[_BasicTransition] = {}
@@ -705,7 +710,7 @@ def _get_cluster_services(
 
     # Get services of the nodes. We are only interested in "old", "new" and "vanished"
     # From the states and parameters of these we construct the final state per service.
-    for node in host_config.nodes:
+    for node in nodes:
         entries = analyse_discovered_services(
             host_name=node,
             parsed_sections_broker=parsed_sections_broker,

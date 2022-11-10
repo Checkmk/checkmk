@@ -67,7 +67,9 @@ def get_check_preview(
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(host_name)
 
-    ip_address = None if host_config.is_cluster else config.lookup_ip_address(host_config)
+    ip_address = (
+        None if config_cache.is_cluster(host_name) else config.lookup_ip_address(host_config)
+    )
     host_attrs = get_host_attributes(host_name, config_cache)
 
     cmk.core_helpers.cache.FileCacheGlobals.use_outdated = True

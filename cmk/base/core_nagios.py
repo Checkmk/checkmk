@@ -197,7 +197,7 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
 
     ip = attrs["address"]
 
-    if host_config.is_cluster:
+    if config_cache.is_cluster(hostname):
         nodes = core_config.get_cluster_nodes_for_config(config_cache, host_config)
         attrs.update(core_config.get_cluster_attributes(config_cache, host_config, nodes))
 
@@ -209,7 +209,9 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
 
     host_spec = {
         "host_name": hostname,
-        "use": config.cluster_template if host_config.is_cluster else config.host_template,
+        "use": (
+            config.cluster_template if config_cache.is_cluster(hostname) else config.host_template
+        ),
         "address": ip if ip else ip_lookup.fallback_ip_for(host_config.default_address_family),
         "alias": attrs["alias"],
     }
@@ -223,7 +225,7 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
         command = "check-mk-host-custom-%d" % (len(cfg.hostcheck_commands_to_define) + 1)
         service_with_hostname = replace_macros_in_str(
             service,
-            {"$HOSTNAME$": host_config.hostname},
+            {"$HOSTNAME$": hostname},
         )
         cfg.hostcheck_commands_to_define.append(
             (
@@ -250,7 +252,7 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
         config_cache,  #
         host_config,
         ip,
-        host_config.is_cluster,
+        config_cache.is_cluster(hostname),
         "ping",
         host_check_via_service_status,
         host_check_via_custom_check,
@@ -269,7 +271,7 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
         host_spec["contact_groups"] = ",".join(contactgroups)
         cfg.contactgroups_to_define.update(contactgroups)
 
-    if not host_config.is_cluster:
+    if not config_cache.is_cluster(hostname):
         # Parents for non-clusters
 
         # Get parents explicitly defined for host/folder via extra_host_conf["parents"]. Only honor
@@ -279,7 +281,7 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
             if parents_list:
                 host_spec["parents"] = ",".join(parents_list)
 
-    elif host_config.is_cluster:
+    elif config_cache.is_cluster(hostname):
         # Special handling of clusters
         host_spec["parents"] = ",".join(nodes)
 
@@ -288,7 +290,7 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
     for key, value in host_config.extra_host_attributes.items():
         if key == "cmk_agent_connection":
             continue
-        if host_config.is_cluster and key == "parents":
+        if config_cache.is_cluster(hostname) and key == "parents":
             continue
         host_spec[key] = value
 
@@ -659,7 +661,7 @@ def _add_ping_service(
     arguments = core_config.check_icmp_arguments_of(config_cache, hostname, family=family)
 
     ping_command = "check-mk-ping"
-    if host_config.is_cluster:
+    if config_cache.is_cluster(host_config.hostname):
         assert node_ips is not None
         arguments += " -m 1 " + node_ips
     else:
@@ -1105,11 +1107,12 @@ def _dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
         needed_agent_based_inventory_plugin_names,
     ) = _get_needed_plugin_names(host_config)
 
-    if host_config.is_cluster:
-        if host_config.nodes is None:
+    if config_cache.is_cluster(hostname):
+        nodes = config_cache.nodes_of(hostname)
+        if nodes is None:
             raise TypeError()
 
-        for node_config in (config_cache.get_host_config(node) for node in host_config.nodes):
+        for node_config in (config_cache.get_host_config(node) for node in nodes):
             (
                 node_needed_legacy_check_plugin_names,
                 node_needed_agent_based_check_plugin_names,
@@ -1233,11 +1236,12 @@ if '-d' in sys.argv:
         {},
         {},
     )
-    if host_config.is_cluster:
-        if host_config.nodes is None:
+    if config_cache.is_cluster(hostname):
+        nodes = config_cache.nodes_of(hostname)
+        if nodes is None:
             raise TypeError()
 
-        for node in host_config.nodes:
+        for node in nodes:
             node_config = config_cache.get_host_config(node)
             if node_config.is_ipv4_host:
                 needed_ipaddresses[node] = config.lookup_ip_address(

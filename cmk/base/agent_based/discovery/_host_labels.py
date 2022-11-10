@@ -33,6 +33,7 @@ def analyse_host_labels(
     parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
 ) -> QualifiedDiscovery[HostLabel]:
+    config_cache = config.get_config_cache()
     return (
         analyse_cluster_labels(
             host_config=host_config,
@@ -41,7 +42,7 @@ def analyse_host_labels(
             save_labels=save_labels,
             on_error=on_error,
         )
-        if host_config.is_cluster
+        if config_cache.is_cluster(host_config.hostname)
         else analyse_node_labels(
             host_name=host_config.hostname,
             parsed_sections_broker=parsed_sections_broker,
@@ -104,11 +105,13 @@ def analyse_cluster_labels(
     Some plugins discover services based on host labels, so the ruleset
     optimizer caches have to be cleared if new host labels are found.
     """
-    if not host_config.nodes:
+    config_cache = config.get_config_cache()
+    nodes = config_cache.nodes_of(host_config.hostname)
+    if not nodes:
         return QualifiedDiscovery.empty()
 
     nodes_host_labels: Dict[str, HostLabel] = {}
-    for node in host_config.nodes:
+    for node in nodes:
         node_result = analyse_node_labels(
             host_name=node,
             parsed_sections_broker=parsed_sections_broker,

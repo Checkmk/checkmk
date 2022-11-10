@@ -23,7 +23,7 @@ from cmk.snmplib.type_defs import SNMPBackendEnum, SNMPRawData
 from cmk.core_helpers.type_defs import NO_SELECTION, SectionNameCollection, SourceInfo
 
 import cmk.base.agent_based.error_handling as error_handling
-from cmk.base.config import HostConfig
+import cmk.base.config as config
 from cmk.base.submitters import Submitter
 
 from ._checking import execute_checkmk_checks
@@ -47,7 +47,8 @@ def active_check_checking(
         - `cmk.base.discovery.active_check_discovery()` for the discovery.
 
     """
-    host_config = HostConfig.make_host_config(hostname)
+    config_cache = config.get_config_cache()
+    host_config = config_cache.get_host_config(hostname)
     return error_handling.check_result(
         partial(
             execute_checkmk_checks,
@@ -61,7 +62,7 @@ def active_check_checking(
         host_name=host_config.hostname,
         service_name="Check_MK",
         plugin_name="mk",
-        is_cluster=host_config.is_cluster,
+        is_cluster=config_cache.is_cluster(hostname),
         is_inline_snmp=(
             host_config.snmp_config(host_config.hostname).snmp_backend is SNMPBackendEnum.INLINE
         ),

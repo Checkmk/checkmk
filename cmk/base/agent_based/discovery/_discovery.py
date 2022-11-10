@@ -236,8 +236,10 @@ def _schedule_rediscovery(
         return ActiveCheckResult()
 
     autodiscovery_queue = AutoQueue(cmk.utils.paths.autodiscovery_dir)
-    if host_config.is_cluster and host_config.nodes:
-        for nodename in host_config.nodes:
+    config_cache = config.get_config_cache()
+    nodes = config_cache.nodes_of(host_config.hostname)
+    if config_cache.is_cluster(host_config.hostname) and nodes:
+        for nodename in nodes:
             autodiscovery_queue.add(nodename)
     else:
         autodiscovery_queue.add(host_config.hostname)

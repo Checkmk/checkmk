@@ -654,8 +654,8 @@ def _agent_cache_file_age(
     hostname: HostName,
     check_plugin_name: str,
 ) -> Optional[float]:
-    host_config = _config.get_config_cache().get_host_config(hostname)
-    if host_config.is_cluster:
+    config_cache = _config.get_config_cache()
+    if config_cache.is_cluster(hostname):
         raise MKGeneralException("get_agent_data_time() not valid for cluster")
 
     # NOTE: This is a workaround for the 'old' API and will not be correct

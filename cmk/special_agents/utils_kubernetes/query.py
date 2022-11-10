@@ -14,7 +14,7 @@ import argparse
 import enum
 import logging
 from collections.abc import Mapping
-from typing import NewType
+from typing import final, NewType
 
 import requests
 import urllib3
@@ -31,18 +31,20 @@ class CollectorPath(str, enum.Enum):
     machine_sections = "/machine_sections"
 
 
+@final
 class NoUsageConfig(BaseModel):
+    pass
+
+
+class SessionConfig(BaseModel):
     token: str
-
-    class Config:
-        allow_mutable = False
-
-
-class SessionConfig(NoUsageConfig):
     cluster_collector_proxy: str
     cluster_collector_read_timeout: int
     cluster_collector_connect_timeout: int
     verify_cert_collector: bool
+
+    class Config:
+        allow_mutable = False
 
     def requests_timeout(self) -> TCPTimeout:
         return TCPTimeout(

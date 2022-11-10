@@ -1370,12 +1370,12 @@ def write_statefulsets_api_sections(
 
 
 def write_machine_sections(
-    cluster: Cluster,
+    composed_entities: ComposedEntities,
     machine_sections: Mapping[str, str],
     piggyback_formatter_node: ObjectSpecificPBFormatter,
 ) -> None:
     # make sure we only print sections for nodes currently visible via Kubernetes api:
-    for node in cluster.nodes:
+    for node in composed_entities.nodes:
         if sections := machine_sections.get(str(node.metadata.name)):
             with ConditionalPiggybackSection(piggyback_formatter_node(node.metadata.name)):
                 sys.stdout.write(sections)

@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
+import pydantic
 import requests
 
-from cmk.special_agents.utils.agent_common import special_agent_main
+from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_main
 from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
 
 
@@ -39,11 +40,8 @@ def agent_elasticsearch_main(args: Args) -> None:
                     sys.stderr.write("Error: %s\n" % e)
                     if args.debug:
                         raise
-                else:
-                    sys.stdout.write("<<<elasticsearch_%s>>>\n" % section)
 
-                json_response = response.json()
-                handler(json_response)
+                handler(response.json())
 
             return
         except Exception:
@@ -87,66 +85,109 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
     return parser.parse_args(argv)
 
 
-def handle_cluster_health(response):
-    for item, value in response.items():
-        sys.stdout.write(f"{item} {value}\n")
+def handle_cluster_health(response: Mapping[str, object]) -> None:
+    with SectionWriter("elasticsearch_cluster_health", separator=" ") as writer:
+        for item, value in response.items():
+            writer.append(f"{item} {value}")
 
 
-def handle_nodes(response):
-    nodes_data = response.get("nodes")
-    if nodes_data is not None:
-        for node in nodes_data:
-            node = nodes_data[node]
-            proc = node["process"]
-            cpu = proc["cpu"]
-            mem = proc["mem"]
+class _CPUResponse(pydantic.BaseModel, frozen=True):
+    percent: int
+    total_in_millis: int
 
-            sys.stdout.write(
-                "{} open_file_descriptors {}\n".format(node["name"], proc["open_file_descriptors"])
+
+class _MemResponse(pydantic.BaseModel, frozen=True):
+    total_virtual_in_bytes: int
+
+
+class _ProcessResponse(pydantic.BaseModel, frozen=True):
+    open_file_descriptors: int
+    max_file_descriptors: int
+    cpu: _CPUResponse
+    mem: _MemResponse
+
+
+class _NodeReponse(pydantic.BaseModel, frozen=True):
+    name: str
+    process: _ProcessResponse
+
+
+class _NodesReponse(pydantic.BaseModel, frozen=True):
+    nodes: Mapping[str, _NodeReponse]
+
+
+def handle_nodes(response: Mapping[str, object]) -> None:
+    with SectionWriter("elasticsearch_nodes", separator=" ") as writer:
+        for node_response in _NodesReponse.parse_obj(response).nodes.values():
+            writer.append(
+                "{} open_file_descriptors {}".format(
+                    node_response.name, node_response.process.open_file_descriptors
+                )
             )
-            sys.stdout.write(
-                "{} max_file_descriptors {}\n".format(node["name"], proc["max_file_descriptors"])
+            writer.append(
+                "{} max_file_descriptors {}".format(
+                    node_response.name, node_response.process.max_file_descriptors
+                )
             )
-            sys.stdout.write("{} cpu_percent {}\n".format(node["name"], cpu["percent"]))
-            sys.stdout.write(
-                "{} cpu_total_in_millis {}\n".format(node["name"], cpu["total_in_millis"])
+            writer.append(
+                "{} cpu_percent {}".format(node_response.name, node_response.process.cpu.percent)
             )
-            sys.stdout.write(
-                "{} mem_total_virtual_in_bytes {}\n".format(
-                    node["name"], mem["total_virtual_in_bytes"]
+            writer.append(
+                "{} cpu_total_in_millis {}".format(
+                    node_response.name, node_response.process.cpu.total_in_millis
+                )
+            )
+            writer.append(
+                "{} mem_total_virtual_in_bytes {}".format(
+                    node_response.name, node_response.process.mem.total_virtual_in_bytes
                 )
             )
 
 
-def handle_stats(response):
-    indices_data = response.get("indices")
-    if indices_data is not None:
-        indices = set()
+class _DocsResponse(pydantic.BaseModel, frozen=True):
+    count: int
 
-        sys.stdout.write("<<<elasticsearch_indices>>>\n")
-        for index in indices_data:
-            indices.add(index.split("-")[0])
+
+class _PrimariesResponse(pydantic.BaseModel, frozen=True):
+    docs: _DocsResponse
+
+
+class _StoreReponse(pydantic.BaseModel, frozen=True):
+    size_in_bytes: int
+
+
+class _TotalResponse(pydantic.BaseModel, frozen=True):
+    store: _StoreReponse
+
+
+class _IndexResponse(pydantic.BaseModel, frozen=True):
+    primaries: _PrimariesResponse
+    total: _TotalResponse
+
+
+class _StatsResponse(pydantic.BaseModel, frozen=True):
+    indices: Mapping[str, _IndexResponse]
+
+
+def handle_stats(response: Mapping[str, object]) -> None:
+    stats_response = _StatsResponse.parse_obj(response)
+
+    indices = set()
+    for index in stats_response.indices:
+        indices.add(index.split("-")[0])
+
+    with SectionWriter("elasticsearch_indices", separator=" ") as writer:
         for indice in list(indices):
             all_counts = []
             all_sizes = []
-            for index in indices_data:
+            for index, index_response in stats_response.indices.items():
                 if index.split("-")[0] == indice:
-                    all_counts.append(
-                        indices_data.get(index, {})
-                        .get("primaries", {})
-                        .get("docs", {})
-                        .get("count")
-                    )
-                    all_sizes.append(
-                        indices_data.get(index, {})
-                        .get("total", {})
-                        .get("store", {})
-                        .get("size_in_bytes")
-                    )
-            sys.stdout.write(
-                "%s %s %s\n"
+                    all_counts.append(index_response.primaries.docs.count)
+                    all_sizes.append(index_response.total.store.size_in_bytes)
+            writer.append(
+                "%s %s %s"
                 % (indice, sum(all_counts) / len(all_counts), sum(all_sizes) / len(all_sizes))
-            )  # fixed: true-division
+            )
 
 
 def main():

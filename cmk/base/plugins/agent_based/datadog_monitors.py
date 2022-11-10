@@ -85,6 +85,7 @@ def check_datadog_monitors(
 ) -> CheckResult:
     if not (monitor := section.get(item)):
         return
+    monitor_message = monitor.message if monitor.message else "No message"
     yield Result(
         state=State(
             params["state_mapping"].get(
@@ -93,7 +94,7 @@ def check_datadog_monitors(
             )
         ),
         summary=f"Overall state: {monitor.state}",
-        details=monitor.message,
+        details=monitor_message,
     )
     if datadog_thresholds := ", ".join(f"{k}: {v}" for k, v in sorted(monitor.thresholds.items())):
         yield Result(

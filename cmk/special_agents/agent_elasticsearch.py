@@ -20,15 +20,16 @@ def agent_elasticsearch_main(args: Args) -> None:
         # Cluster health: https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-health.html
         # Node stats: https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-nodes-stats.html
         # Indices Stats: https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-stats.html
-        sections = {
-            "cluster_health": "/_cluster/health",
-            "nodes": "/_nodes/_all/stats",
-            "stats": "/*-*/_stats/store,docs",
+        section_urls_and_handlers = {
+            "cluster_health": ("/_cluster/health", handle_cluster_health),
+            "nodes": ("/_nodes/_all/stats", handle_nodes),
+            "stats": ("/*-*/_stats/store,docs", handle_stats),
         }
 
         try:
             for section in args.modules:
-                url = url_base + sections[section]
+                section_url, handler = section_urls_and_handlers[section]
+                url = url_base + section_url
 
                 auth = (args.user, args.password) if args.user and args.password else None
                 certcheck = not args.no_cert_check
@@ -42,13 +43,9 @@ def agent_elasticsearch_main(args: Args) -> None:
                     sys.stdout.write("<<<elasticsearch_%s>>>\n" % section)
 
                 json_response = response.json()
-                if section == "cluster_health":
-                    handle_cluster_health(json_response)
-                elif section == "nodes":
-                    handle_nodes(json_response)
-                elif section == "stats":
-                    handle_stats(json_response)
-            sys.exit(0)
+                handler(json_response)
+
+            return
         except Exception:
             if args.debug:
                 raise

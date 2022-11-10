@@ -30,7 +30,6 @@ RUN zypper ref -s \
     && zypper -n in -y --force-resolution \
     apache2-devel \
     bind-utils \
-    bison \
     curl \
     flex \
     freeradius-client-devel \

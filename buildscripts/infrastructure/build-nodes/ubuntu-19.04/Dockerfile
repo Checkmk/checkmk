@@ -34,7 +34,6 @@ RUN sed -i -re 's/([a-z]{2}\.)?archive.ubuntu.com|security.ubuntu.com/old-releas
     apache2-dev \
     autoconf \
     build-essential \
-    bison \
     curl \
     devscripts \
     dnsutils \

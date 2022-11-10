@@ -32,7 +32,6 @@ RUN apt-get update \
     apache2 \
     apache2-dev \
     autoconf \
-    bison \
     build-essential \
     curl \
     devscripts \

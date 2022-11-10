@@ -35,7 +35,6 @@ RUN apt-get update \
     apache2-dev \
     autoconf \
     build-essential \
-    bison \
     curl \
     devscripts \
     dnsutils \

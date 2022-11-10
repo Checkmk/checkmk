@@ -32,7 +32,7 @@ PREFIX=${TARGET_DIR}/${DIR_NAME}
 BUILD_DIR=/opt/src
 
 # Increase this to enforce a recreation of the build cache
-BUILD_ID=1
+BUILD_ID=2
 
 download_sources() {
     # Get the sources from nexus or upstream

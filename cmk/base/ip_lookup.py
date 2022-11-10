@@ -369,8 +369,7 @@ def update_dns_cache(
         ip_lookup_cache.clear()
 
         console.verbose("Updating DNS cache...\n")
-        for host_config, family in _annotate_family(host_configs):
-            host_name = host_config.hostname
+        for host_name, host_config, family in _annotate_family(host_configs):
             console.verbose(f"{host_name} ({family})...")
             try:
                 ip = lookup_ip_address(
@@ -412,11 +411,11 @@ def update_dns_cache(
 
 def _annotate_family(
     host_configs: Iterable[_HostConfigLike],
-) -> Iterable[Tuple[_HostConfigLike, socket.AddressFamily]]:
+) -> Iterable[Tuple[HostName, _HostConfigLike, socket.AddressFamily]]:
     for host_config in host_configs:
 
         if host_config.is_ipv4_host:
-            yield host_config, socket.AF_INET
+            yield host_config.hostname, host_config, socket.AF_INET
 
         if host_config.is_ipv6_host:
-            yield host_config, socket.AF_INET6
+            yield host_config.hostname, host_config, socket.AF_INET6

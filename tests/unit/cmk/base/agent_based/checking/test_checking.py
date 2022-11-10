@@ -237,10 +237,7 @@ def test_config_cache_get_clustered_service_node_keys_no_cluster(monkeypatch: Mo
     )
     # empty, we have no cluster:
     assert [] == checking._get_clustered_service_node_keys(
-        config_cache,
-        config_cache.get_host_config(HostName("cluster.test")),
-        SourceType.HOST,
-        "Test Service",
+        config_cache, HostName("cluster.test"), SourceType.HOST, "Test Service"
     )
 
 
@@ -259,10 +256,7 @@ def test_config_cache_get_clustered_service_node_keys_cluster_no_service(
     )
     # empty for a node:
     assert [] == checking._get_clustered_service_node_keys(
-        config_cache,
-        config_cache.get_host_config(HostName("node1.test")),
-        SourceType.HOST,
-        "Test Service",
+        config_cache, HostName("node1.test"), SourceType.HOST, "Test Service"
     )
 
     # empty for cluster (we have not clustered the service)
@@ -270,10 +264,7 @@ def test_config_cache_get_clustered_service_node_keys_cluster_no_service(
         HostKey(hostname="node1.test", source_type=SourceType.HOST),
         HostKey(hostname="node2.test", source_type=SourceType.HOST),
     ] == checking._get_clustered_service_node_keys(
-        config_cache,
-        config_cache.get_host_config(cluster_test),
-        SourceType.HOST,
-        "Test Service",
+        config_cache, cluster_test, SourceType.HOST, "Test Service"
     )
 
 
@@ -304,10 +295,7 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
         lambda host_config, *, family=None: "dummy.test.ip.%s" % host_config.hostname[4],
     )
     assert checking._get_clustered_service_node_keys(
-        config_cache,
-        config_cache.get_host_config(cluster),
-        SourceType.HOST,
-        "Test Service",
+        config_cache, cluster, SourceType.HOST, "Test Service"
     ) == [
         HostKey(node1, SourceType.HOST),
         HostKey(node2, SourceType.HOST),
@@ -321,8 +309,5 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
         HostKey(hostname="node1.test", source_type=SourceType.HOST),
         HostKey(hostname="node2.test", source_type=SourceType.HOST),
     ] == checking._get_clustered_service_node_keys(
-        config_cache,
-        config_cache.get_host_config(cluster),
-        SourceType.HOST,
-        "Test Unclustered",
+        config_cache, cluster, SourceType.HOST, "Test Unclustered"
     )

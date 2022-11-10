@@ -103,10 +103,10 @@ HistoryFilePair = Tuple[HistoryFile, HistoryFile]
 
 
 class DiscoveryAutomation(Automation):
-    def _trigger_discovery_check(self, config_cache: ConfigCache, host_config: HostConfig) -> None:
+    def _trigger_discovery_check(
+        self, config_cache: ConfigCache, host_name: HostName, host_config: HostConfig
+    ) -> None:
         """if required, schedule the "Check_MK Discovery" check"""
-        host_name = host_config.hostname
-
         if not config.inventory_check_autotrigger:
             return
 
@@ -162,6 +162,7 @@ class AutomationDiscovery(DiscoveryAutomation):
         for hostname in hostnames:
             host_config = config_cache.get_host_config(hostname)
             results[hostname] = discovery.automation_discovery(
+                hostname,
                 config_cache=config_cache,
                 host_config=host_config,
                 mode=mode,
@@ -174,7 +175,7 @@ class AutomationDiscovery(DiscoveryAutomation):
             if results[hostname].error_text is None:
                 # Trigger the discovery service right after performing the discovery to
                 # make the service reflect the new state as soon as possible.
-                self._trigger_discovery_check(config_cache, host_config)
+                self._trigger_discovery_check(config_cache, hostname, host_config)
 
         return automation_results.DiscoveryResult(results)
 
@@ -301,7 +302,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
             )
 
         host_config.set_autochecks(new_services)
-        self._trigger_discovery_check(config_cache, host_config)
+        self._trigger_discovery_check(config_cache, hostname, host_config)
         return automation_results.SetAutochecksResult()
 
 
@@ -352,7 +353,7 @@ class AutomationUpdateHostLabels(DiscoveryAutomation):
 
         config_cache = config.get_config_cache()
         host_config = config_cache.get_host_config(hostname)
-        self._trigger_discovery_check(config_cache, host_config)
+        self._trigger_discovery_check(config_cache, hostname, host_config)
         return automation_results.UpdateHostLabelsResult()
 
 
@@ -730,6 +731,7 @@ class AutomationAnalyseServices(Automation):
             if (
                 service_info := self._get_service_info(
                     config_cache=config_cache,
+                    host_name=hostname,
                     host_config=config_cache.get_host_config(hostname),
                     host_attrs=core_config.get_host_attributes(hostname, config_cache),
                     servicedesc=servicedesc,
@@ -748,12 +750,11 @@ class AutomationAnalyseServices(Automation):
     def _get_service_info(
         self,
         config_cache: ConfigCache,
+        host_name: HostName,
         host_config: HostConfig,
         host_attrs: core_config.ObjectAttributes,
         servicedesc: str,
     ) -> automation_results.ServiceInfo:
-        host_name = host_config.hostname
-
         # We just consider types of checks that are managed via WATO.
         # We have the following possible types of services:
         # 1. enforced services (currently overriding discovered services)
@@ -1313,6 +1314,7 @@ class AutomationDiagHost(Automation):
             if test == "agent":
                 return automation_results.DiagHostResult(
                     *self._execute_agent(
+                        hostname,
                         host_config,
                         ipaddress,
                         agent_port=agent_port,
@@ -1378,6 +1380,7 @@ class AutomationDiagHost(Automation):
 
     def _execute_agent(
         self,
+        host_name: HostName,
         host_config: HostConfig,
         ipaddress: HostAddress,
         agent_port: int,
@@ -1385,7 +1388,6 @@ class AutomationDiagHost(Automation):
         tcp_connect_timeout: Optional[float],
     ) -> Tuple[int, str]:
         state, output = 0, ""
-        host_name = host_config.hostname
         for source, file_cache, fetcher in sources.make_non_cluster_sources(
             host_name,
             ipaddress,
@@ -1402,7 +1404,7 @@ class AutomationDiagHost(Automation):
                 assert isinstance(fetcher, ProgramFetcher)
                 fetcher = ProgramFetcher(
                     cmdline=core_config.translate_ds_program_source_cmdline(
-                        cmd, host_config, ipaddress
+                        cmd, host_name, host_config, ipaddress
                     ),
                     stdin=fetcher.stdin,
                     is_cmc=fetcher.is_cmc,

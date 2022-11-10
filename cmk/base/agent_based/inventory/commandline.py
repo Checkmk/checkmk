@@ -37,6 +37,7 @@ def commandline_inventory(
         host_config = HostConfig.make_host_config(hostname)
         try:
             _commandline_inventory_on_host(
+                hostname,
                 host_config=host_config,
                 selected_sections=selected_sections,
                 run_plugin_names=run_plugin_names,
@@ -51,6 +52,7 @@ def commandline_inventory(
 
 
 def _commandline_inventory_on_host(
+    host_name: HostName,
     *,
     host_config: HostConfig,
     selected_sections: SectionNameCollection,
@@ -58,9 +60,10 @@ def _commandline_inventory_on_host(
 ) -> None:
     section.section_step("Inventorizing")
 
-    old_tree = load_tree(Path(cmk.utils.paths.inventory_output_dir, host_config.hostname))
+    old_tree = load_tree(Path(cmk.utils.paths.inventory_output_dir, host_name))
 
     check_result = check_inventory_tree(
+        host_name,
         host_config=host_config,
         selected_sections=selected_sections,
         run_plugin_names=run_plugin_names,

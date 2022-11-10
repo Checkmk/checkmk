@@ -198,7 +198,7 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
     ip = attrs["address"]
 
     if config_cache.is_cluster(hostname):
-        nodes = core_config.get_cluster_nodes_for_config(config_cache, host_config)
+        nodes = core_config.get_cluster_nodes_for_config(config_cache, hostname, host_config)
         attrs.update(core_config.get_cluster_attributes(config_cache, host_config, nodes))
 
     #   _
@@ -249,8 +249,9 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
 
     # Host check command might differ from default
     command = core_config.host_check_command(
-        config_cache,  #
+        config_cache,
         host_config,
+        hostname,
         ip,
         config_cache.is_cluster(hostname),
         "ping",
@@ -618,7 +619,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
         _add_ping_service(
             cfg,
             config_cache,
-            host_config,
+            hostname,
             host_attrs["address"],
             host_config.is_ipv6_primary and 6 or 4,
             "PING",
@@ -630,7 +631,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
             _add_ping_service(
                 cfg,
                 config_cache,
-                host_config,
+                hostname,
                 host_attrs["_ADDRESS_4"],
                 4,
                 "PING IPv4",
@@ -640,7 +641,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
             _add_ping_service(
                 cfg,
                 config_cache,
-                host_config,
+                hostname,
                 host_attrs["_ADDRESS_6"],
                 6,
                 "PING IPv6",
@@ -651,17 +652,16 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
 def _add_ping_service(
     cfg: NagiosConfig,
     config_cache: ConfigCache,
-    host_config: HostConfig,
+    host_name: HostName,
     ipaddress: HostAddress,
     family: int,
     descr: ServiceName,
     node_ips: Optional[str],
 ) -> None:
-    hostname = host_config.hostname
-    arguments = core_config.check_icmp_arguments_of(config_cache, hostname, family=family)
+    arguments = core_config.check_icmp_arguments_of(config_cache, host_name, family=family)
 
     ping_command = "check-mk-ping"
-    if config_cache.is_cluster(hostname):
+    if config_cache.is_cluster(host_name):
         assert node_ips is not None
         arguments += " -m 1 " + node_ips
     else:
@@ -669,12 +669,12 @@ def _add_ping_service(
 
     service_spec = {
         "use": config.pingonly_template,
-        "host_name": hostname,
+        "host_name": host_name,
         "service_description": descr,
         "check_command": "%s!%s" % (ping_command, arguments),
     }
-    service_spec.update(core_config.get_service_attributes(hostname, descr, config_cache))
-    service_spec.update(_extra_service_conf_of(cfg, config_cache, hostname, descr))
+    service_spec.update(core_config.get_service_attributes(host_name, descr, config_cache))
+    service_spec.update(_extra_service_conf_of(cfg, config_cache, host_name, descr))
     cfg.write(_format_nagios_object("service", service_spec))
 
 
@@ -1105,19 +1105,20 @@ def _dump_precompiled_hostcheck(  # pylint: disable=too-many-branches
         needed_legacy_check_plugin_names,
         needed_agent_based_check_plugin_names,
         needed_agent_based_inventory_plugin_names,
-    ) = _get_needed_plugin_names(host_config)
+    ) = _get_needed_plugin_names(hostname, host_config)
 
     if config_cache.is_cluster(hostname):
         nodes = config_cache.nodes_of(hostname)
         if nodes is None:
             raise TypeError()
 
-        for node_config in (config_cache.get_host_config(node) for node in nodes):
+        for node in nodes:
+            node_config = config_cache.get_host_config(node)
             (
                 node_needed_legacy_check_plugin_names,
                 node_needed_agent_based_check_plugin_names,
                 node_needed_agent_based_inventory_plugin_names,
-            ) = _get_needed_plugin_names(node_config)
+            ) = _get_needed_plugin_names(node, node_config)
             needed_legacy_check_plugin_names.update(node_needed_legacy_check_plugin_names)
             needed_agent_based_check_plugin_names.update(node_needed_agent_based_check_plugin_names)
             needed_agent_based_inventory_plugin_names.update(
@@ -1325,6 +1326,7 @@ if '-d' in sys.argv:
 
 
 def _get_needed_plugin_names(
+    host_name: HostName,
     host_config: HostConfig,
 ) -> Tuple[Set[CheckPluginNameStr], Set[CheckPluginName], Set[InventoryPluginName]]:
     from cmk.base import check_table  # pylint: disable=import-outside-toplevel
@@ -1339,7 +1341,7 @@ def _get_needed_plugin_names(
     # This matters in cases where the section is migrated, but the check
     # plugins are not.
     needed_agent_based_check_plugin_names = check_table.get_check_table(
-        host_config.hostname,
+        host_name,
         filter_mode=check_table.FilterMode.INCLUDE_CLUSTERED,
         skip_ignored=False,
     ).needed_check_names()

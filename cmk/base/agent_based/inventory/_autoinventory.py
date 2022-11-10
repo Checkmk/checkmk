@@ -37,6 +37,7 @@ def inventorize_marked_hosts(
             if host_name in process_hosts:
                 host_config = config_cache.get_host_config(host_name)
                 execute_active_check_inventory(
+                    host_name,
                     host_config,
                     host_config.hwsw_inventory_parameters,
                 )

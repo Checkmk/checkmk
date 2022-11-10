@@ -43,6 +43,7 @@ class HostCheckTable(Mapping[ServiceID, ConfiguredService]):
 
 
 def _aggregate_check_table_services(
+    host_name: HostName,
     *,
     config_cache: ConfigCache,
     host_config: HostConfig,
@@ -50,8 +51,6 @@ def _aggregate_check_table_services(
     skip_ignored: bool,
     filter_mode: FilterMode,
 ) -> Iterable[ConfiguredService]:
-
-    host_name = host_config.hostname
     sfilter = _ServiceFilter(
         host_name,
         config_cache=config_cache,
@@ -70,7 +69,7 @@ def _aggregate_check_table_services(
     if config_cache.is_cluster(host_name):
         yield from (
             s
-            for s in _get_clustered_services(config_cache, host_config, skip_autochecks)
+            for s in _get_clustered_services(config_cache, host_name, host_config, skip_autochecks)
             if sfilter.keep(s)
         )
         return
@@ -142,16 +141,16 @@ def _get_services_from_cluster_nodes(
 ) -> Iterable[ConfiguredService]:
     for cluster in config_cache.clusters_of(hostname):
         cluster_config = config_cache.get_host_config(cluster)
-        for service in _get_clustered_services(config_cache, cluster_config, False):
+        for service in _get_clustered_services(config_cache, cluster, cluster_config, False):
             yield service
 
 
 def _get_clustered_services(
     config_cache: ConfigCache,
+    host_name: HostName,
     host_config: HostConfig,
     skip_autochecks: bool,
 ) -> Iterable[ConfiguredService]:
-    host_name = host_config.hostname
     for node in config_cache.nodes_of(host_name) or []:
         # TODO: Cleanup this to work exactly like the logic above (for a single host)
         # (mo): in particular: this means that autochecks will win over static checks.
@@ -179,9 +178,7 @@ def get_check_table(
     config_cache = config.get_config_cache()
     host_config = config_cache.get_host_config(hostname)
 
-    cache_key = (
-        (host_config.hostname, filter_mode, skip_autochecks, skip_ignored) if use_cache else None
-    )
+    cache_key = (hostname, filter_mode, skip_autochecks, skip_ignored) if use_cache else None
 
     if cache_key:
         with suppress(KeyError):
@@ -189,6 +186,7 @@ def get_check_table(
 
     host_check_table = HostCheckTable(
         services=_aggregate_check_table_services(
+            hostname,
             config_cache=config_cache,
             host_config=host_config,
             skip_autochecks=skip_autochecks,

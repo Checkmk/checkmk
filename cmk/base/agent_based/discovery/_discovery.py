@@ -70,6 +70,7 @@ def execute_check_discovery(
         on_error=OnError.RAISE,
     )
     services = get_host_services(
+        host_name,
         host_config,
         parsed_sections_broker,
         on_error=OnError.RAISE,

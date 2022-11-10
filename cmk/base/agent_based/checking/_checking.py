@@ -118,6 +118,7 @@ def execute_checkmk_checks(
     broker = make_broker(host_sections)
     with CPUTracker() as tracker:
         service_results = check_host_services(
+            hostname,
             config_cache=config_cache,
             host_config=host_config,
             parsed_sections_broker=broker,
@@ -128,6 +129,7 @@ def execute_checkmk_checks(
         )
         if run_plugin_names is EVERYTHING:
             _do_inventory_actions_during_checking_for(
+                hostname,
                 host_config,
                 parsed_sections_broker=broker,
             )
@@ -156,12 +158,12 @@ def execute_checkmk_checks(
 
 
 def _do_inventory_actions_during_checking_for(
+    host_name: HostName,
     host_config: HostConfig,
     *,
     parsed_sections_broker: ParsedSectionsBroker,
 ) -> None:
     tree_store = TreeStore(cmk.utils.paths.status_data_dir)
-    host_name = host_config.hostname
 
     if not host_config.do_status_data_inventory:
         # includes cluster case
@@ -169,6 +171,7 @@ def _do_inventory_actions_during_checking_for(
         return  # nothing to do here
 
     status_data_tree = inventorize_real_host_via_plugins(
+        host_name,
         host_config=host_config,
         parsed_sections_broker=parsed_sections_broker,
         run_plugin_names=EVERYTHING,
@@ -257,6 +260,7 @@ def _check_plugins_missing_data(
 
 
 def check_host_services(
+    host_name: HostName,
     *,
     config_cache: ConfigCache,
     host_config: HostConfig,
@@ -272,13 +276,13 @@ def check_host_services(
     * calls the check
     * examines the result and sends it to the core (unless `dry_run` is True).
     """
-    host_name = host_config.hostname
     with plugin_contexts.current_host(host_name):
         with value_store.load_host_value_store(
             host_name, store_changes=not submitter.dry_run
         ) as value_store_manager:
             submittables = [
                 get_aggregated_result(
+                    host_name,
                     parsed_sections_broker,
                     host_config,
                     service,
@@ -340,6 +344,7 @@ def service_outside_check_period(
 
 
 def get_aggregated_result(
+    host_name: HostName,
     parsed_sections_broker: ParsedSectionsBroker,
     host_config: HostConfig,
     service: ConfiguredService,
@@ -361,7 +366,6 @@ def get_aggregated_result(
             cache_info=None,
         )
 
-    host_name = host_config.hostname
     config_cache = config.get_config_cache()
     check_function = (
         _cluster_modes.get_cluster_check_function(
@@ -375,11 +379,7 @@ def get_aggregated_result(
     )
 
     section_kws, error_result = _get_monitoring_data_kwargs(
-        parsed_sections_broker,
-        host_config,
-        config_cache,
-        service,
-        plugin.sections,
+        host_name, parsed_sections_broker, config_cache, service, plugin.sections
     )
     if not section_kws:  # no data found
         return _AggregatedResult(
@@ -451,12 +451,11 @@ def get_aggregated_result(
 
 def _get_clustered_service_node_keys(
     config_cache: ConfigCache,
-    host_config: HostConfig,
+    host_name: HostName,
     source_type: SourceType,
     service_descr: ServiceName,
 ) -> Sequence[HostKey]:
     """Returns the node keys if a service is clustered, otherwise an empty sequence"""
-    host_name = host_config.hostname
     nodes = config_cache.nodes_of(host_name)
     used_nodes = (
         [
@@ -479,8 +478,8 @@ def _get_clustered_service_node_keys(
 
 
 def _get_monitoring_data_kwargs(
+    host_name: HostName,
     parsed_sections_broker: ParsedSectionsBroker,
-    host_config: HostConfig,
     config_cache: ConfigCache,
     service: ConfiguredService,
     sections: Sequence[ParsedSectionName],
@@ -493,11 +492,10 @@ def _get_monitoring_data_kwargs(
             else SourceType.HOST
         )
 
-    host_name = host_config.hostname
     if config_cache.is_cluster(host_name):
         nodes = _get_clustered_service_node_keys(
             config_cache,
-            host_config,
+            host_name,
             source_type,
             service.description,
         )

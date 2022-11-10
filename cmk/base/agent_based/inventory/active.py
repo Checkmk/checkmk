@@ -38,6 +38,7 @@ def active_check_inventory(
     return error_handling.check_result(
         partial(
             execute_active_check_inventory,
+            hostname,
             host_config,
             config.HWSWInventoryParameters.from_raw(options),
         ),
@@ -53,10 +54,10 @@ def active_check_inventory(
 
 
 def execute_active_check_inventory(
+    host_name: HostName,
     host_config: HostConfig,
     parameters: config.HWSWInventoryParameters,
 ) -> ActiveCheckResult:
-    host_name = host_config.hostname
     tree_or_archive_store = TreeOrArchiveStore(
         cmk.utils.paths.inventory_output_dir,
         cmk.utils.paths.inventory_archive_dir,
@@ -64,6 +65,7 @@ def execute_active_check_inventory(
     old_tree = tree_or_archive_store.load(host_name=host_name)
 
     result = check_inventory_tree(
+        host_name,
         host_config=host_config,
         selected_sections=NO_SELECTION,
         run_plugin_names=EVERYTHING,

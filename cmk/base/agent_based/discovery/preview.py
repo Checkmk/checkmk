@@ -116,6 +116,7 @@ def get_check_preview(
             console.warning(line)
 
     grouped_services = get_host_services(
+        host_name,
         host_config,
         parsed_sections_broker,
         on_error,
@@ -124,6 +125,7 @@ def get_check_preview(
     with load_host_value_store(host_name, store_changes=False) as value_store_manager:
         passive_rows = [
             _check_preview_table_row(
+                host_name,
                 host_config=host_config,
                 service=ConfiguredService(
                     check_plugin_name=entry.check_plugin_name,
@@ -147,6 +149,7 @@ def get_check_preview(
             for entry, found_on_nodes in services_with_nodes
         ] + [
             _check_preview_table_row(
+                host_name,
                 host_config=host_config,
                 service=service,
                 check_source="manual",  # "enforced" would be nicer
@@ -159,12 +162,13 @@ def get_check_preview(
 
     return [
         *passive_rows,
-        *_active_check_preview_rows(host_config, host_attrs),
-        *_custom_check_preview_rows(host_config),
+        *_active_check_preview_rows(host_name, host_config, host_attrs),
+        *_custom_check_preview_rows(host_name, host_config),
     ], host_labels
 
 
 def _check_preview_table_row(
+    host_name: HostName,
     *,
     host_config: HostConfig,
     service: ConfiguredService,
@@ -177,6 +181,7 @@ def _check_preview_table_row(
     ruleset_name = str(plugin.check_ruleset_name) if plugin and plugin.check_ruleset_name else None
 
     result = checking.get_aggregated_result(
+        host_name,
         parsed_sections_broker,
         host_config,
         service,
@@ -185,7 +190,6 @@ def _check_preview_table_row(
         rtc_package=None,
     ).result
 
-    host_name = host_config.hostname
     return _make_check_preview_entry(
         host_name=host_name,
         check_plugin_name=str(service.check_plugin_name),
@@ -203,9 +207,8 @@ def _check_preview_table_row(
 
 
 def _custom_check_preview_rows(
-    host_config: HostConfig,
+    host_name: HostName, host_config: HostConfig
 ) -> Sequence[CheckPreviewEntry]:
-    host_name = host_config.hostname
     return list(
         {
             entry["service_description"]: _make_check_preview_entry(
@@ -223,10 +226,10 @@ def _custom_check_preview_rows(
 
 
 def _active_check_preview_rows(
+    host_name: HostName,
     host_config: HostConfig,
     host_attrs: ObjectAttributes,
 ) -> Sequence[CheckPreviewEntry]:
-    host_name = host_config.hostname
     return list(
         {
             descr: _make_check_preview_entry(

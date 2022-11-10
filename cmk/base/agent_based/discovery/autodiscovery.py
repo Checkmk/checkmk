@@ -113,6 +113,7 @@ def schedule_discovery_check(host_name: HostName) -> None:
 #                       if it returns False for a new item it will not be added, if it returns
 #                       False for a vanished item, that item is kept
 def automation_discovery(
+    host_name: HostName,
     *,
     config_cache: ConfigCache,
     host_config: HostConfig,
@@ -122,12 +123,8 @@ def automation_discovery(
     use_cached_snmp_data: bool,
     max_cachefile_age: cmk.core_helpers.cache.MaxAge,
 ) -> DiscoveryResult:
-
     console.verbose("  Doing discovery with mode '%s'...\n" % mode)
-
-    host_name = host_config.hostname
     result = DiscoveryResult()
-
     if host_name not in config_cache.all_active_hosts():
         result.error_text = ""
         return result
@@ -193,6 +190,7 @@ def automation_discovery(
 
         # Compute current state of new and existing checks
         services = _get_host_services(
+            host_name,
             host_config,
             parsed_sections_broker,
             on_error=on_error,
@@ -226,22 +224,15 @@ def automation_discovery(
 
 
 def _get_host_services(
+    host_name: HostName,
     host_config: HostConfig,
     parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
 ) -> ServicesByTransition:
     config_cache = config.get_config_cache()
-
-    host_name = host_config.hostname
     services: ServicesTable[_Transition]
     if config_cache.is_cluster(host_name):
-        services = {
-            **_get_cluster_services(
-                host_config,
-                parsed_sections_broker,
-                on_error,
-            )
-        }
+        services = {**_get_cluster_services(host_name, parsed_sections_broker, on_error)}
     else:
         services = {
             **_get_node_services(
@@ -400,6 +391,7 @@ def discover_marked_hosts(
                 continue
 
             activation_required |= _discover_marked_host(
+                host_name,
                 config_cache=config_cache,
                 host_config=config_cache.get_host_config(host_name),
                 autodiscovery_queue=autodiscovery_queue,
@@ -440,6 +432,7 @@ def discover_marked_hosts(
 
 
 def _discover_marked_host(
+    host_name: HostName,
     *,
     config_cache: ConfigCache,
     host_config: HostConfig,
@@ -447,7 +440,6 @@ def _discover_marked_host(
     reference_time: float,
     oldest_queued: float,
 ) -> bool:
-    host_name = host_config.hostname
     console.verbose(f"{tty.bold}{host_name}{tty.normal}:\n")
 
     if (params := host_config.discovery_check_parameters()).commandline_only:
@@ -464,6 +456,7 @@ def _discover_marked_host(
         return False
 
     result = automation_discovery(
+        host_name,
         config_cache=config_cache,
         host_config=host_config,
         mode=DiscoveryMode(params.rediscovery.get("mode")),
@@ -580,22 +573,15 @@ def _may_rediscover(
 #    "clustered_old" : Old service found on a node that belongs to a cluster
 # This function is cluster-aware
 def get_host_services(
+    host_name: HostName,
     host_config: HostConfig,
     parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
 ) -> ServicesByTransition:
     config_cache = config.get_config_cache()
-
-    host_name = host_config.hostname
     services: ServicesTable[_Transition]
     if config_cache.is_cluster(host_name):
-        services = {
-            **_get_cluster_services(
-                host_config,
-                parsed_sections_broker,
-                on_error,
-            )
-        }
+        services = {**_get_cluster_services(host_name, parsed_sections_broker, on_error)}
     else:
         services = {
             **_get_node_services(
@@ -697,12 +683,11 @@ def _group_by_transition(
 
 
 def _get_cluster_services(
-    host_config: HostConfig,
+    host_name: HostName,
     parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
 ) -> ServicesTable[_Transition]:
     config_cache = config.get_config_cache()
-    host_name = host_config.hostname
     nodes = config_cache.nodes_of(host_name)
     if not nodes:
         return {}

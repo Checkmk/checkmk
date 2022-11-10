@@ -768,7 +768,7 @@ def test_updater_null_obj_attributes() -> None:
     inv_tree = StructuredDataNode()
     updater = AttributesUpdater(
         RetentionInfo(
-            lambda key: True,
+            lambda *args, **kw: True,
             RetentionIntervals(1, 2, 3),
         ),
         inv_tree,
@@ -785,7 +785,7 @@ def test_updater_null_obj_attributes_outdated() -> None:
     inv_tree = StructuredDataNode()
     updater = AttributesUpdater(
         RetentionInfo(
-            lambda key: True,
+            lambda *args, **kw: True,
             RetentionIntervals(1, 2, 3),
         ),
         inv_tree,
@@ -802,7 +802,7 @@ def test_updater_null_obj_tables() -> None:
     inv_tree = StructuredDataNode()
     updater = TableUpdater(
         RetentionInfo(
-            lambda key: True,
+            lambda *args, **kw: True,
             RetentionIntervals(1, 2, 3),
         ),
         inv_tree,
@@ -819,7 +819,7 @@ def test_updater_null_obj_tables_outdated() -> None:
     inv_tree = StructuredDataNode()
     updater = TableUpdater(
         RetentionInfo(
-            lambda key: True,
+            lambda *args, **kw: True,
             RetentionIntervals(1, 2, 3),
         ),
         inv_tree,
@@ -1187,13 +1187,7 @@ def test_updater_merge_previous_tables_outdated(filter_func: SDFilterFunc) -> No
     [
         (lambda key: key in ["unknown", "keyz"], {}),
         (
-            lambda key: key
-            in [
-                "old",
-                "and",
-                "new",
-                "keys",
-            ],
+            lambda key: key in ["old", "and", "new", "keys"],
             {
                 "old": RetentionIntervals(1, 2, 3),
                 "new": RetentionIntervals(4, 5, 6),
@@ -1248,13 +1242,7 @@ def test_updater_merge_attributes(
     [
         (lambda key: key in ["unknown", "keyz"], {}),
         (
-            lambda key: key
-            in [
-                "old",
-                "and",
-                "new",
-                "keys",
-            ],
+            lambda key: key in ["old", "and", "new", "keys"],
             {
                 "new": RetentionIntervals(4, 5, 6),
                 "keys": RetentionIntervals(4, 5, 6),
@@ -1307,13 +1295,7 @@ def test_updater_merge_attributes_outdated(
             {},
         ),
         (
-            lambda key: key
-            in [
-                "old",
-                "and",
-                "new",
-                "keys",
-            ],
+            lambda key: key in ["old", "and", "new", "keys"],
             {
                 ("Ident 1",): {
                     "old": RetentionIntervals(1, 2, 3),
@@ -1385,13 +1367,7 @@ def test_updater_merge_tables(
             {},
         ),
         (
-            lambda key: key
-            in [
-                "old",
-                "and",
-                "new",
-                "keys",
-            ],
+            lambda key: key in ["old", "and", "new", "keys"],
             {
                 ("Ident 1",): {
                     "new": RetentionIntervals(4, 5, 6),
@@ -1465,7 +1441,7 @@ def test_check_inventory_tree(
     monkeypatch.setattr(
         _inventory,
         "_fetch_real_host_data",
-        lambda host_config, selected_sections: _inventory.FetchedDataResult(
+        lambda *args, **kw: _inventory.FetchedDataResult(
             parsed_sections_broker=ParsedSectionsBroker({}),
             source_results=[],
             parsing_errors=[],
@@ -1477,12 +1453,11 @@ def test_check_inventory_tree(
     monkeypatch.setattr(
         _inventory,
         "_inventorize_real_host",
-        lambda host_config, parsed_sections_broker, run_plugin_names, old_tree: (
-            RealHostTreeAggregator([])
-        ),
+        lambda *args, **kw: RealHostTreeAggregator([]),
     )
 
     check_result = _inventory.check_inventory_tree(
+        hostname,
         host_config=HostConfig.make_host_config(hostname),
         selected_sections=NO_SELECTION,
         run_plugin_names=EVERYTHING,
@@ -1509,7 +1484,7 @@ def test_check_inventory_tree_no_data_or_files(
     monkeypatch.setattr(
         _inventory,
         "_fetch_real_host_data",
-        lambda host_config, selected_sections: _inventory.FetchedDataResult(
+        lambda *args, **kw: _inventory.FetchedDataResult(
             parsed_sections_broker=ParsedSectionsBroker({}),
             source_results=[],
             parsing_errors=[],
@@ -1521,12 +1496,11 @@ def test_check_inventory_tree_no_data_or_files(
     monkeypatch.setattr(
         _inventory,
         "_inventorize_real_host",
-        lambda host_config, parsed_sections_broker, run_plugin_names, old_tree: (
-            RealHostTreeAggregator([])
-        ),
+        lambda *args, **kw: RealHostTreeAggregator([]),
     )
 
     check_result = _inventory.check_inventory_tree(
+        hostname,
         host_config=HostConfig.make_host_config(hostname),
         selected_sections=NO_SELECTION,
         run_plugin_names=EVERYTHING,

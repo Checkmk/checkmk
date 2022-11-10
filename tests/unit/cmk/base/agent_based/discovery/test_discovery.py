@@ -1555,7 +1555,7 @@ def test__discover_services_on_cluster(
     )
 
     discovered_services = _get_cluster_services(
-        scenario.host_config,
+        scenario.host_config.hostname,
         scenario.parsed_sections_broker,
         OnError.RAISE,
     )

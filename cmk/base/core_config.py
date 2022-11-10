@@ -189,6 +189,7 @@ def _cluster_ping_command(
 def host_check_command(
     config_cache: ConfigCache,
     host_config: HostConfig,
+    host_name: HostName,
     ip: HostAddress,
     is_clust: bool,
     default_host_check_command: str,
@@ -196,7 +197,6 @@ def host_check_command(
     host_check_via_custom_check: Callable,
 ) -> Optional[CoreCommand]:
     value = _get_host_check_command(host_config, default_host_check_command)
-    host_name = host_config.hostname
 
     if value == "smart":
         if is_clust:
@@ -826,7 +826,7 @@ def get_host_attributes(hostname: HostName, config_cache: ConfigCache) -> Object
     # Now lookup configured IP addresses
     v4address: Optional[str] = None
     if host_config.is_ipv4_host:
-        v4address = ip_address_of(host_config, socket.AF_INET)
+        v4address = ip_address_of(hostname, host_config, socket.AF_INET)
 
     if v4address is None:
         v4address = ""
@@ -834,7 +834,7 @@ def get_host_attributes(hostname: HostName, config_cache: ConfigCache) -> Object
 
     v6address: Optional[str] = None
     if host_config.is_ipv6_host:
-        v6address = ip_address_of(host_config, socket.AF_INET6)
+        v6address = ip_address_of(hostname, host_config, socket.AF_INET6)
     if v6address is None:
         v6address = ""
     attrs["_ADDRESS_6"] = v6address
@@ -889,7 +889,7 @@ def get_cluster_attributes(
         family = socket.AF_INET
         for h in sorted_nodes:
             node_config = config_cache.get_host_config(h)
-            addr = ip_address_of(node_config, family)
+            addr = ip_address_of(h, node_config, family)
             if addr is not None:
                 node_ips_4.append(addr)
             else:
@@ -900,7 +900,7 @@ def get_cluster_attributes(
         family = socket.AF_INET6
         for h in sorted_nodes:
             node_config = config_cache.get_host_config(h)
-            addr = ip_address_of(node_config, family)
+            addr = ip_address_of(h, node_config, family)
             if addr is not None:
                 node_ips_6.append(addr)
             else:
@@ -916,15 +916,15 @@ def get_cluster_attributes(
 
 def get_cluster_nodes_for_config(
     config_cache: ConfigCache,
+    host_name: HostName,
     host_config: HostConfig,
 ) -> List[HostName]:
-    host_name = host_config.hostname
     nodes = config_cache.nodes_of(host_name)
     if nodes is None:
         return []
 
-    _verify_cluster_address_family(nodes, config_cache, host_config)
-    _verify_cluster_datasource(nodes, config_cache, host_config)
+    _verify_cluster_address_family(host_name, nodes, config_cache, host_config)
+    _verify_cluster_datasource(host_name, nodes, config_cache, host_config)
     nodes = nodes[:]
     for node in nodes:
         if node not in config_cache.all_active_realhosts():
@@ -937,11 +937,11 @@ def get_cluster_nodes_for_config(
 
 
 def _verify_cluster_address_family(
+    host_name: HostName,
     nodes: Iterable[HostName],
     config_cache: ConfigCache,
     host_config: HostConfig,
 ) -> None:
-    host_name = host_config.hostname
     cluster_host_family = "IPv6" if host_config.is_ipv6_primary else "IPv4"
     address_families = [
         "%s: %s" % (host_name, cluster_host_family),
@@ -966,6 +966,7 @@ def _verify_cluster_address_family(
 
 
 def _verify_cluster_datasource(
+    host_name: HostName,
     nodes: Iterable[HostName],
     config_cache: ConfigCache,
     host_config: HostConfig,
@@ -973,8 +974,6 @@ def _verify_cluster_datasource(
     cluster_tg = host_config.tag_groups
     cluster_agent_ds = cluster_tg.get("agent")
     cluster_snmp_ds = cluster_tg.get("snmp_ds")
-    host_name = host_config.hostname
-
     for nodename in nodes:
         node_tg = config_cache.get_host_config(nodename).tag_groups
         node_agent_ds = node_tg.get("agent")
@@ -986,8 +985,9 @@ def _verify_cluster_datasource(
             warning("%s '%s': %s vs. %s" % (warn_text, nodename, cluster_snmp_ds, node_snmp_ds))
 
 
-def ip_address_of(host_config: HostConfig, family: socket.AddressFamily) -> Optional[str]:
-    host_name = host_config.hostname
+def ip_address_of(
+    host_name: HostName, host_config: HostConfig, family: socket.AddressFamily
+) -> Optional[str]:
     try:
         return config.lookup_ip_address(host_config, family=family)
     except Exception as e:
@@ -1061,18 +1061,15 @@ def replace_macros(s: str, macros: ObjectMacros) -> str:
 
 def translate_ds_program_source_cmdline(
     template: str,
+    host_name: HostName,
     host_config: HostConfig,
     ipaddress: Optional[HostAddress],
 ) -> str:
     def _translate_host_macros(cmd: str, host_config: HostConfig) -> str:
-        host_name = host_config.hostname
         config_cache = config.get_config_cache()
         attrs = get_host_attributes(host_name, config_cache)
         if config_cache.is_cluster(host_name):
-            parents_list = get_cluster_nodes_for_config(
-                config_cache,
-                host_config,
-            )
+            parents_list = get_cluster_nodes_for_config(config_cache, host_name, host_config)
             attrs.setdefault("alias", "cluster of %s" % ", ".join(parents_list))
             attrs.update(
                 get_cluster_attributes(
@@ -1087,7 +1084,7 @@ def translate_ds_program_source_cmdline(
 
     def _translate_legacy_macros(
         cmd: str,
-        hostname: HostName,
+        host_name: HostName,
         ipaddress: Optional[HostAddress],
     ) -> str:
         # Make "legacy" translation. The users should use the $...$ macros in future
@@ -1095,11 +1092,11 @@ def translate_ds_program_source_cmdline(
             cmd,
             {
                 "<IP>": ipaddress or "",
-                "<HOST>": hostname,
+                "<HOST>": host_name,
             },
         )
 
     return _translate_host_macros(
-        _translate_legacy_macros(template, host_config.hostname, ipaddress),
+        _translate_legacy_macros(template, host_name, ipaddress),
         host_config,
     )

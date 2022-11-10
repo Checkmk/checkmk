@@ -395,6 +395,7 @@ def test_template_translation(ipaddress: str | None, monkeypatch: pytest.MonkeyP
 
     assert core_config.translate_ds_program_source_cmdline(
         template,
+        hostname,
         config.HostConfig.make_host_config(hostname),
         ipaddress,
     ) == "<NOTHING>x%sx%sx<host>x<ip>x" % (ipaddress if ipaddress is not None else "", hostname)

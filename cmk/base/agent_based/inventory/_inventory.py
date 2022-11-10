@@ -25,7 +25,14 @@ from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import OnError
 from cmk.utils.log import console
 from cmk.utils.structured_data import StructuredDataNode, UpdateResult
-from cmk.utils.type_defs import AgentRawData, HostKey, InventoryPluginName, result, SourceType
+from cmk.utils.type_defs import (
+    AgentRawData,
+    HostKey,
+    HostName,
+    InventoryPluginName,
+    result,
+    SourceType,
+)
 
 from cmk.snmplib.type_defs import SNMPRawData
 
@@ -77,6 +84,7 @@ class CheckInventoryTreeResult:
 
 
 def check_inventory_tree(
+    host_name: HostName,
     *,
     host_config: HostConfig,
     selected_sections: SectionNameCollection,
@@ -85,7 +93,6 @@ def check_inventory_tree(
     old_tree: StructuredDataNode,
 ) -> CheckInventoryTreeResult:
     config_cache = config.get_config_cache()
-    host_name = host_config.hostname
     if config_cache.is_cluster(host_name):
         inventory_tree = inventorize_cluster(nodes=config_cache.nodes_of(host_name) or [])
         return CheckInventoryTreeResult(
@@ -104,11 +111,13 @@ def check_inventory_tree(
         )
 
     fetched_data_result = _fetch_real_host_data(
+        host_name,
         host_config=host_config,
         selected_sections=selected_sections,
     )
 
     tree_aggregator = _inventorize_real_host(
+        host_name,
         host_config=host_config,
         parsed_sections_broker=fetched_data_result.parsed_sections_broker,
         run_plugin_names=run_plugin_names,
@@ -148,11 +157,11 @@ def check_inventory_tree(
 
 
 def _fetch_real_host_data(
+    host_name: HostName,
     *,
     host_config: HostConfig,
     selected_sections: SectionNameCollection,
 ) -> FetchedDataResult:
-    host_name = host_config.hostname
     ipaddress = config.lookup_ip_address(host_config)
     config_cache = config.get_config_cache()
 
@@ -193,7 +202,7 @@ def _fetch_real_host_data(
             _sources_failed(host_section for _source, host_section in results)
             or bool(parsing_errors)
         ),
-        no_data_or_files=_no_data_or_files(host_config, host_sections.values()),
+        no_data_or_files=_no_data_or_files(host_name, host_sections.values()),
     )
 
 
@@ -210,9 +219,7 @@ def _sources_failed(
     return any(not host_section.is_ok() for host_section in host_sections)
 
 
-def _no_data_or_files(host_config: HostConfig, host_sections: Iterable[HostSections]) -> bool:
-    host_name = host_config.hostname
-
+def _no_data_or_files(host_name: HostName, host_sections: Iterable[HostSections]) -> bool:
     if any(host_sections):
         return False
 
@@ -231,6 +238,7 @@ def _no_data_or_files(host_config: HostConfig, host_sections: Iterable[HostSecti
 
 
 def _inventorize_real_host(
+    host_name: HostName,
     *,
     host_config: HostConfig,
     parsed_sections_broker: ParsedSectionsBroker,
@@ -238,6 +246,7 @@ def _inventorize_real_host(
     old_tree: StructuredDataNode,
 ) -> RealHostTreeAggregator:
     tree_aggregator = inventorize_real_host_via_plugins(
+        host_name,
         host_config=host_config,
         parsed_sections_broker=parsed_sections_broker,
         run_plugin_names=run_plugin_names,
@@ -252,6 +261,7 @@ def _inventorize_real_host(
 
 
 def inventorize_real_host_via_plugins(
+    host_name: HostName,
     *,
     host_config: HostConfig,
     parsed_sections_broker: ParsedSectionsBroker,
@@ -261,6 +271,7 @@ def inventorize_real_host_via_plugins(
 
     tree_aggregator = RealHostTreeAggregator(host_config.inv_retention_intervals)
     for items_of_inventory_plugin in _collect_inventory_plugin_items(
+        host_name,
         host_config=host_config,
         parsed_sections_broker=parsed_sections_broker,
         run_plugin_names=run_plugin_names,
@@ -271,12 +282,12 @@ def inventorize_real_host_via_plugins(
 
 
 def _collect_inventory_plugin_items(
+    host_name: HostName,
     *,
     host_config: HostConfig,
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[InventoryPluginName],
 ) -> Iterator[ItemsOfInventoryPlugin]:
-    host_name = host_config.hostname
     class_mutex: dict[tuple[str, ...], str] = {}
     for inventory_plugin in agent_based_register.iter_all_inventory_plugins():
         if inventory_plugin.name not in run_plugin_names:

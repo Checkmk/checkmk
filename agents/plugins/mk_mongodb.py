@@ -819,6 +819,7 @@ class Config:
         self.tls_enable = config.get_mongodb_bool("tls_enable")
         self.tls_verify = config.get_mongodb_bool("tls_verify")
         self.tls_ca_file = config.get_mongodb_str("tls_ca_file")
+        self.tls_cert_file = config.get_mongodb_str("tls_cert_file")
 
         self.auth_mechanism = config.get_mongodb_str("auth_mechanism")
         self.auth_source = config.get_mongodb_str("auth_source")
@@ -834,7 +835,7 @@ class Config:
         return config for latest pymongo (3.12.X)
         """
         pymongo_config = {}
-        if self.username:
+	if self.username and self.auth_mechanism != 'MONGODB-X509':
             pymongo_config["username"] = self.username
             if self.password:
                 pymongo_config["password"] = self.password
@@ -846,10 +847,12 @@ class Config:
                     pymongo_config["tlsInsecure"] = not self.tls_verify
                 if self.tls_ca_file is not None:
                     pymongo_config["tlsCAFile"] = self.tls_ca_file
+                if self.tls_cert_file is not None:
+                    pymongo_config["tlsCertificateKeyFile"] = self.tls_cert_file
 
         if self.auth_mechanism is not None:
             pymongo_config["authMechanism"] = self.auth_mechanism
-        if self.auth_source is not None:
+        if self.auth_source is not None and self.auth_mechanism != 'MONGODB-X509':
             pymongo_config["authSource"] = self.auth_source
         if self.host is not None:
             pymongo_config["host"] = self.host

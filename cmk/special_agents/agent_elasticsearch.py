@@ -72,9 +72,10 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
     parser.add_argument(
         "-m",
         "--modules",
-        type=lambda x: x.split(" "),
-        default="cluster_health nodes stats",
-        help="Space-separated list of modules to query. Possible values: cluster_health, nodes, stats (default: all)",
+        nargs="*",
+        default=["cluster_health", "nodes", "stats"],
+        choices=["cluster_health", "nodes", "stats"],
+        help="List of modules to query.",
     )
     parser.add_argument(
         "--no-cert-check", action="store_true", help="Disable certificate verification"

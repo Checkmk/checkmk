@@ -3365,11 +3365,12 @@ def lookup_ip_address(
 ) -> Optional[HostAddress]:
     if family is None:
         family = host_config.default_address_family
+    host_name = host_config.hostname
     return ip_lookup.lookup_ip_address(
-        host_name=host_config.hostname,
+        host_name=host_name,
         family=family,
         configured_ip_address=(ipaddresses if family is socket.AF_INET else ipv6addresses).get(
-            host_config.hostname
+            host_name
         ),
         simulation_mode=simulation_mode,
         is_snmp_usewalk_host=host_config.is_usewalk_host and host_config.is_snmp_host,

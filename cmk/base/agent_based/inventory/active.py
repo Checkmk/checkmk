@@ -42,13 +42,11 @@ def active_check_inventory(
             config.HWSWInventoryParameters.from_raw(options),
         ),
         exit_spec=host_config.exit_code_spec(),
-        host_name=host_config.hostname,
+        host_name=hostname,
         service_name="Check_MK HW/SW Inventory",
         plugin_name="check_mk_active-cmk_inv",
         is_cluster=config_cache.is_cluster(hostname),
-        is_inline_snmp=(
-            host_config.snmp_config(host_config.hostname).snmp_backend is SNMPBackendEnum.INLINE
-        ),
+        is_inline_snmp=(host_config.snmp_config(hostname).snmp_backend is SNMPBackendEnum.INLINE),
         active_check_handler=active_check_handler,
         keepalive=keepalive,
     )
@@ -58,11 +56,12 @@ def execute_active_check_inventory(
     host_config: HostConfig,
     parameters: config.HWSWInventoryParameters,
 ) -> ActiveCheckResult:
+    host_name = host_config.hostname
     tree_or_archive_store = TreeOrArchiveStore(
         cmk.utils.paths.inventory_output_dir,
         cmk.utils.paths.inventory_archive_dir,
     )
-    old_tree = tree_or_archive_store.load(host_name=host_config.hostname)
+    old_tree = tree_or_archive_store.load(host_name=host_name)
 
     result = check_inventory_tree(
         host_config=host_config,
@@ -73,11 +72,11 @@ def execute_active_check_inventory(
     )
 
     if result.no_data_or_files:
-        AutoQueue(cmk.utils.paths.autoinventory_dir).add(host_config.hostname)
+        AutoQueue(cmk.utils.paths.autoinventory_dir).add(host_name)
 
     if not (result.processing_failed or result.no_data_or_files):
         _save_inventory_tree(
-            hostname=host_config.hostname,
+            hostname=host_name,
             tree_or_archive_store=tree_or_archive_store,
             old_tree=old_tree,
             inventory_tree=result.inventory_tree,

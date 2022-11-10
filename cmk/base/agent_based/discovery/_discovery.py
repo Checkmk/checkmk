@@ -24,7 +24,7 @@ from cmk.base.agent_based.data_provider import (
 )
 from cmk.base.agent_based.utils import check_parsing_errors, summarize_host_sections
 from cmk.base.auto_queue import AutoQueue
-from cmk.base.config import DiscoveryCheckParameters, HostConfig
+from cmk.base.config import DiscoveryCheckParameters
 from cmk.base.discovered_labels import HostLabel
 
 from ._filters import ServiceFilters as _ServiceFilters
@@ -63,7 +63,7 @@ def execute_check_discovery(
     parsed_sections_broker = make_broker(host_sections)
 
     host_labels = analyse_host_labels(
-        host_config=host_config,
+        host_name=host_name,
         parsed_sections_broker=parsed_sections_broker,
         load_labels=True,
         save_labels=False,
@@ -104,7 +104,7 @@ def execute_check_discovery(
         ),
         *parsing_errors_results,
         _schedule_rediscovery(
-            host_config=host_config,
+            host_name,
             need_rediscovery=(services_need_rediscovery or host_labels_need_rediscovery)
             and all(r.state == 0 for r in parsing_errors_results),
         ),
@@ -228,8 +228,8 @@ def _check_host_labels(
 
 
 def _schedule_rediscovery(
+    host_name: HostName,
     *,
-    host_config: HostConfig,
     need_rediscovery: bool,
 ) -> ActiveCheckResult:
     if not need_rediscovery:
@@ -237,11 +237,11 @@ def _schedule_rediscovery(
 
     autodiscovery_queue = AutoQueue(cmk.utils.paths.autodiscovery_dir)
     config_cache = config.get_config_cache()
-    nodes = config_cache.nodes_of(host_config.hostname)
-    if config_cache.is_cluster(host_config.hostname) and nodes:
+    nodes = config_cache.nodes_of(host_name)
+    if config_cache.is_cluster(host_name) and nodes:
         for nodename in nodes:
             autodiscovery_queue.add(nodename)
     else:
-        autodiscovery_queue.add(host_config.hostname)
+        autodiscovery_queue.add(host_name)
 
     return ActiveCheckResult(0, "rediscovery scheduled")

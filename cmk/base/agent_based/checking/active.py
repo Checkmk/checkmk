@@ -59,13 +59,11 @@ def active_check_checking(
             submitter=submitter,
         ),
         exit_spec=host_config.exit_code_spec(),
-        host_name=host_config.hostname,
+        host_name=hostname,
         service_name="Check_MK",
         plugin_name="mk",
         is_cluster=config_cache.is_cluster(hostname),
-        is_inline_snmp=(
-            host_config.snmp_config(host_config.hostname).snmp_backend is SNMPBackendEnum.INLINE
-        ),
+        is_inline_snmp=(host_config.snmp_config(hostname).snmp_backend is SNMPBackendEnum.INLINE),
         active_check_handler=active_check_handler,
         keepalive=keepalive,
     )

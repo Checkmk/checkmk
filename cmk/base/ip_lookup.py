@@ -370,16 +370,17 @@ def update_dns_cache(
 
         console.verbose("Updating DNS cache...\n")
         for host_config, family in _annotate_family(host_configs):
-            console.verbose(f"{host_config.hostname} ({family})...")
+            host_name = host_config.hostname
+            console.verbose(f"{host_name} ({family})...")
             try:
                 ip = lookup_ip_address(
-                    host_name=host_config.hostname,
+                    host_name=host_name,
                     family=family,
                     configured_ip_address=(
                         configured_ipv4_addresses
                         if family is socket.AF_INET
                         else configured_ipv4_addresses
-                    ).get(host_config.hostname),
+                    ).get(host_name),
                     simulation_mode=simulation_mode,
                     is_snmp_usewalk_host=host_config.is_usewalk_host and host_config.is_snmp_host,
                     override_dns=override_dns,
@@ -394,11 +395,11 @@ def update_dns_cache(
                 # could drop this special handling here
                 raise
             except MKIPAddressLookupError as e:
-                failed.append(host_config.hostname)
+                failed.append(host_name)
                 console.verbose("lookup failed: %s\n" % e)
                 continue
             except Exception as e:
-                failed.append(host_config.hostname)
+                failed.append(host_name)
                 console.verbose("lookup failed: %s\n" % e)
                 if cmk.utils.debug.enabled():
                     raise

@@ -89,8 +89,7 @@ def get_check_preview(
             on_scan_error=on_error,
             simulation_mode=config.simulation_mode,
             missing_sys_description=config.get_config_cache().in_binary_hostlist(
-                host_config.hostname,
-                config.snmp_without_sys_descr,
+                host_name, config.snmp_without_sys_descr
             ),
             file_cache_max_age=max_cachefile_age,
         ),
@@ -105,7 +104,7 @@ def get_check_preview(
     parsed_sections_broker = make_broker(host_sections)
 
     host_labels = analyse_host_labels(
-        host_config=host_config,
+        host_name=host_name,
         parsed_sections_broker=parsed_sections_broker,
         load_labels=True,
         save_labels=False,
@@ -131,7 +130,7 @@ def get_check_preview(
                     item=entry.item,
                     description=config.service_description(host_name, *entry.id()),
                     parameters=config.compute_check_parameters(
-                        host_config.hostname,
+                        host_name,
                         entry.check_plugin_name,
                         entry.item,
                         entry.parameters,
@@ -152,7 +151,7 @@ def get_check_preview(
                 service=service,
                 check_source="manual",  # "enforced" would be nicer
                 parsed_sections_broker=parsed_sections_broker,
-                found_on_nodes=[host_config.hostname],
+                found_on_nodes=[host_name],
                 value_store_manager=value_store_manager,
             )
             for _ruleset_name, service in host_config.enforced_services_table().values()
@@ -186,8 +185,9 @@ def _check_preview_table_row(
         rtc_package=None,
     ).result
 
+    host_name = host_config.hostname
     return _make_check_preview_entry(
-        host_name=host_config.hostname,
+        host_name=host_name,
         check_plugin_name=str(service.check_plugin_name),
         item=service.item,
         description=service.description,
@@ -205,17 +205,16 @@ def _check_preview_table_row(
 def _custom_check_preview_rows(
     host_config: HostConfig,
 ) -> Sequence[CheckPreviewEntry]:
+    host_name = host_config.hostname
     return list(
         {
             entry["service_description"]: _make_check_preview_entry(
-                host_name=host_config.hostname,
+                host_name=host_name,
                 check_plugin_name="custom",
                 item=entry["service_description"],
                 description=entry["service_description"],
                 check_source="ignored_custom"
-                if config.service_ignored(
-                    host_config.hostname, None, description=entry["service_description"]
-                )
+                if config.service_ignored(host_name, None, description=entry["service_description"])
                 else "custom",
             )
             for entry in host_config.custom_checks
@@ -227,22 +226,23 @@ def _active_check_preview_rows(
     host_config: HostConfig,
     host_attrs: ObjectAttributes,
 ) -> Sequence[CheckPreviewEntry]:
+    host_name = host_config.hostname
     return list(
         {
             descr: _make_check_preview_entry(
-                host_name=host_config.hostname,
+                host_name=host_name,
                 check_plugin_name=plugin_name,
                 item=descr,
                 description=descr,
                 check_source="ignored_active"
-                if config.service_ignored(host_config.hostname, None, descr)
+                if config.service_ignored(host_name, None, descr)
                 else "active",
                 effective_parameters=params,
             )
             for plugin_name, entries in host_config.active_checks
             for params in entries
             for descr in get_active_check_descriptions(
-                host_config.hostname, host_config.alias, host_attrs, plugin_name, params
+                host_name, host_config.alias, host_attrs, plugin_name, params
             )
         }.values()
     )

@@ -177,8 +177,7 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
             ipaddress,
             simulation_mode=config.simulation_mode,
             missing_sys_description=config.get_config_cache().in_binary_hostlist(
-                host_config.hostname,
-                config.snmp_without_sys_descr,
+                hostname, config.snmp_without_sys_descr
             ),
             file_cache_max_age=file_cache.MaxAge.none(),
         )
@@ -236,12 +235,9 @@ def _ip_address_for_dump_host(
     *,
     family: socket.AddressFamily,
 ) -> Optional[str]:
+    host_name = host_config.hostname
     config_cache = config.get_config_cache()
     try:
         return config.lookup_ip_address(host_config, family=family)
     except Exception:
-        return (
-            ""
-            if config_cache.is_cluster(host_config.hostname)
-            else ip_lookup.fallback_ip_for(family)
-        )
+        return "" if config_cache.is_cluster(host_name) else ip_lookup.fallback_ip_for(family)

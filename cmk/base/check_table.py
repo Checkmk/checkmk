@@ -51,8 +51,9 @@ def _aggregate_check_table_services(
     filter_mode: FilterMode,
 ) -> Iterable[ConfiguredService]:
 
+    host_name = host_config.hostname
     sfilter = _ServiceFilter(
-        host_config.hostname,
+        host_name,
         config_cache=config_cache,
         mode=filter_mode,
         skip_ignored=skip_ignored,
@@ -61,14 +62,12 @@ def _aggregate_check_table_services(
     # process all entries that are specific to the host
     # in search (single host) or that might match the host.
     if not (skip_autochecks or host_config.is_ping_host):
-        yield from (
-            s for s in config_cache.get_autochecks_of(host_config.hostname) if sfilter.keep(s)
-        )
+        yield from (s for s in config_cache.get_autochecks_of(host_name) if sfilter.keep(s))
 
     yield from (s for s in _get_enforced_services(host_config) if sfilter.keep(s))
 
     # Now add checks a cluster might receive from its nodes
-    if config_cache.is_cluster(host_config.hostname):
+    if config_cache.is_cluster(host_name):
         yield from (
             s
             for s in _get_clustered_services(config_cache, host_config, skip_autochecks)
@@ -81,9 +80,7 @@ def _aggregate_check_table_services(
     # in case of failover, it has to provide the service data to the cluster
     # even when the service was never discovered on it
     yield from (
-        s
-        for s in _get_services_from_cluster_nodes(config_cache, host_config.hostname)
-        if sfilter.keep(s)
+        s for s in _get_services_from_cluster_nodes(config_cache, host_name) if sfilter.keep(s)
     )
 
 
@@ -154,7 +151,8 @@ def _get_clustered_services(
     host_config: HostConfig,
     skip_autochecks: bool,
 ) -> Iterable[ConfiguredService]:
-    for node in config_cache.nodes_of(host_config.hostname) or []:
+    host_name = host_config.hostname
+    for node in config_cache.nodes_of(host_name) or []:
         # TODO: Cleanup this to work exactly like the logic above (for a single host)
         # (mo): in particular: this means that autochecks will win over static checks.
         #       for a single host the static ones win.
@@ -166,8 +164,7 @@ def _get_clustered_services(
         yield from (
             service
             for service in node_checks
-            if config_cache.host_of_clustered_service(node, service.description)
-            == host_config.hostname
+            if config_cache.host_of_clustered_service(node, service.description) == host_name
         )
 
 

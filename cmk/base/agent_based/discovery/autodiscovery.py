@@ -160,8 +160,7 @@ def automation_discovery(
                 on_scan_error=on_error,
                 simulation_mode=config.simulation_mode,
                 missing_sys_description=config.get_config_cache().in_binary_hostlist(
-                    host_config.hostname,
-                    config.snmp_without_sys_descr,
+                    host_name, config.snmp_without_sys_descr
                 ),
                 file_cache_max_age=max_cachefile_age,
             ),
@@ -177,7 +176,7 @@ def automation_discovery(
 
         if mode is not DiscoveryMode.REMOVE:
             host_labels = analyse_host_labels(
-                host_config=host_config,
+                host_name=host_name,
                 parsed_sections_broker=parsed_sections_broker,
                 load_labels=True,
                 save_labels=True,
@@ -233,8 +232,9 @@ def _get_host_services(
 ) -> ServicesByTransition:
     config_cache = config.get_config_cache()
 
+    host_name = host_config.hostname
     services: ServicesTable[_Transition]
-    if config_cache.is_cluster(host_config.hostname):
+    if config_cache.is_cluster(host_name):
         services = {
             **_get_cluster_services(
                 host_config,
@@ -245,14 +245,14 @@ def _get_host_services(
     else:
         services = {
             **_get_node_services(
-                host_name=host_config.hostname,
+                host_name=host_name,
                 parsed_sections_broker=parsed_sections_broker,
                 on_error=on_error,
                 host_of_clustered_service=config.get_config_cache().host_of_clustered_service,
             )
         }
 
-    services.update(_reclassify_disabled_items(host_config.hostname, services))
+    services.update(_reclassify_disabled_items(host_name, services))
 
     # remove the ones shadowed by enforced services
     enforced_services = host_config.enforced_services_table()
@@ -586,8 +586,9 @@ def get_host_services(
 ) -> ServicesByTransition:
     config_cache = config.get_config_cache()
 
+    host_name = host_config.hostname
     services: ServicesTable[_Transition]
-    if config_cache.is_cluster(host_config.hostname):
+    if config_cache.is_cluster(host_name):
         services = {
             **_get_cluster_services(
                 host_config,
@@ -598,14 +599,14 @@ def get_host_services(
     else:
         services = {
             **_get_node_services(
-                host_name=host_config.hostname,
+                host_name=host_name,
                 parsed_sections_broker=parsed_sections_broker,
                 on_error=on_error,
                 host_of_clustered_service=config_cache.host_of_clustered_service,
             )
         }
 
-    services.update(_reclassify_disabled_items(host_config.hostname, services))
+    services.update(_reclassify_disabled_items(host_name, services))
 
     # remove the ones shadowed by enforced services
     enforced_services = host_config.enforced_services_table()
@@ -701,7 +702,8 @@ def _get_cluster_services(
     on_error: OnError,
 ) -> ServicesTable[_Transition]:
     config_cache = config.get_config_cache()
-    nodes = config_cache.nodes_of(host_config.hostname)
+    host_name = host_config.hostname
+    nodes = config_cache.nodes_of(host_name)
     if not nodes:
         return {}
 
@@ -724,7 +726,7 @@ def _get_cluster_services(
             cluster_items.update(
                 _cluster_service_entry(
                     check_source=check_source,
-                    host_name=host_config.hostname,
+                    host_name=host_name,
                     node_name=node,
                     services_cluster=config_cache.host_of_clustered_service(
                         node, config.service_description(node, *entry.id())

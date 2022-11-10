@@ -232,9 +232,9 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
                 command,
                 'echo "$SERVICEOUTPUT:%s:%s$" && exit $SERVICESTATEID:%s:%s$'
                 % (
-                    host_config.hostname,
+                    hostname,
                     service_with_hostname,
-                    host_config.hostname,
+                    hostname,
                     service_with_hostname,
                 ),
             ),
@@ -382,7 +382,7 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
 
         service_spec.update(
             core_config.get_cmk_passive_service_attributes(
-                config_cache, host_config, service, check_mk_attrs
+                config_cache, hostname, service, check_mk_attrs
             )
         )
         service_spec.update(
@@ -661,7 +661,7 @@ def _add_ping_service(
     arguments = core_config.check_icmp_arguments_of(config_cache, hostname, family=family)
 
     ping_command = "check-mk-ping"
-    if config_cache.is_cluster(host_config.hostname):
+    if config_cache.is_cluster(hostname):
         assert node_ips is not None
         arguments += " -m 1 " + node_ips
     else:

@@ -85,10 +85,9 @@ def check_inventory_tree(
     old_tree: StructuredDataNode,
 ) -> CheckInventoryTreeResult:
     config_cache = config.get_config_cache()
-    if config_cache.is_cluster(host_config.hostname):
-        inventory_tree = inventorize_cluster(
-            nodes=config_cache.nodes_of(host_config.hostname) or []
-        )
+    host_name = host_config.hostname
+    if config_cache.is_cluster(host_name):
+        inventory_tree = inventorize_cluster(nodes=config_cache.nodes_of(host_name) or [])
         return CheckInventoryTreeResult(
             processing_failed=False,
             no_data_or_files=False,
@@ -153,6 +152,7 @@ def _fetch_real_host_data(
     host_config: HostConfig,
     selected_sections: SectionNameCollection,
 ) -> FetchedDataResult:
+    host_name = host_config.hostname
     ipaddress = config.lookup_ip_address(host_config)
     config_cache = config.get_config_cache()
 
@@ -170,8 +170,7 @@ def _fetch_real_host_data(
             on_scan_error=OnError.RAISE,
             simulation_mode=config.simulation_mode,
             missing_sys_description=config.get_config_cache().in_binary_hostlist(
-                host_config.hostname,
-                config.snmp_without_sys_descr,
+                host_name, config.snmp_without_sys_descr
             ),
             file_cache_max_age=host_config.max_cachefile_age,
         ),
@@ -277,6 +276,7 @@ def _collect_inventory_plugin_items(
     parsed_sections_broker: ParsedSectionsBroker,
     run_plugin_names: Container[InventoryPluginName],
 ) -> Iterator[ItemsOfInventoryPlugin]:
+    host_name = host_config.hostname
     class_mutex: dict[tuple[str, ...], str] = {}
     for inventory_plugin in agent_based_register.iter_all_inventory_plugins():
         if inventory_plugin.name not in run_plugin_names:
@@ -286,7 +286,7 @@ def _collect_inventory_plugin_items(
             if not (
                 kwargs := get_section_kwargs(
                     parsed_sections_broker,
-                    HostKey(host_config.hostname, source_type),
+                    HostKey(host_name, source_type),
                     inventory_plugin.sections,
                 )
             ):

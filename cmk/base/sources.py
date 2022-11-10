@@ -331,7 +331,7 @@ class _Builder:
 
         if "no-piggyback" not in self.host_config.tags:
             source = SourceInfo(
-                self.host_config.hostname,
+                self.host_name,
                 self.ipaddress,
                 "piggyback",
                 FetcherType.PIGGYBACK,
@@ -343,7 +343,7 @@ class _Builder:
                     hostname=source.hostname,
                     address=source.ipaddress,
                     time_settings=config.get_config_cache().get_piggybacked_hosts_time_settings(
-                        piggybacked_hostname=self.host_config.hostname
+                        piggybacked_hostname=self.host_name
                     ),
                 ),
                 AgentFileCache(
@@ -380,7 +380,7 @@ class _Builder:
             return
         self._initialize_snmp_plugin_store()
         source = SourceInfo(
-            self.host_config.hostname,
+            self.host_name,
             self.ipaddress,
             "snmp",
             FetcherType.SNMP,
@@ -431,7 +431,7 @@ class _Builder:
             return
         if protocol == "snmp":
             source = SourceInfo(
-                self.host_config.hostname,
+                self.host_name,
                 self.ipaddress,
                 "mgmt_snmp",
                 FetcherType.SNMP,
@@ -472,7 +472,7 @@ class _Builder:
             )
         elif protocol == "ipmi":
             source = SourceInfo(
-                self.host_config.hostname,
+                self.host_name,
                 ip_address,
                 "mgmt_ipmi",
                 FetcherType.IPMI,
@@ -512,7 +512,7 @@ class _Builder:
         datasource_program = self.host_config.datasource_program
         if datasource_program is not None:
             source = SourceInfo(
-                self.host_config.hostname,
+                self.host_name,
                 self.ipaddress,
                 "agent",
                 FetcherType.PROGRAM,
@@ -543,7 +543,7 @@ class _Builder:
         connection_mode = self.host_config.agent_connection_mode()
         if connection_mode == "push-agent":
             source = SourceInfo(
-                self.host_config.hostname,
+                self.host_name,
                 self.ipaddress,
                 "push-agent",
                 FetcherType.PUSH_AGENT,
@@ -573,7 +573,7 @@ class _Builder:
             )
         if connection_mode == "pull-agent":
             source = SourceInfo(
-                self.host_config.hostname,
+                self.host_name,
                 self.ipaddress,
                 "agent",
                 FetcherType.TCP,
@@ -608,7 +608,7 @@ class _Builder:
 
         for agentname, params in self.host_config.special_agents:
             source = SourceInfo(
-                self.host_config.hostname,
+                self.host_name,
                 self.ipaddress,
                 make_id(agentname),
                 FetcherType.SPECIAL_AGENT,
@@ -616,13 +616,13 @@ class _Builder:
             )
             fetcher = ProgramFetcher(
                 cmdline=core_config.make_special_agent_cmdline(
-                    self.host_config.hostname,
+                    self.host_name,
                     self.ipaddress,
                     agentname,
                     params,
                 ),
                 stdin=core_config.make_special_agent_stdin(
-                    self.host_config.hostname,
+                    self.host_name,
                     self.ipaddress,
                     agentname,
                     params,
@@ -697,8 +697,9 @@ def make_sources(
     missing_sys_description: bool,
     file_cache_max_age: MaxAge,
 ) -> Sequence[Tuple[SourceInfo, FileCache, Fetcher]]:
+    host_name = host_config.hostname
     config_cache = config.get_config_cache()
-    nodes = config_cache.nodes_of(host_config.hostname)
+    nodes = config_cache.nodes_of(host_name)
     if nodes is None:
         # Not a cluster
         host_configs = [host_config]
@@ -711,23 +712,17 @@ def make_sources(
             host_config_,
             (
                 ip_address
-                if config_cache.nodes_of(host_config.hostname) is None
+                if config_cache.nodes_of(host_name) is None
                 else ip_lookup(host_config_.hostname)
             ),
             force_snmp_cache_refresh=(
-                force_snmp_cache_refresh
-                if config_cache.nodes_of(host_config.hostname) is None
-                else False
+                force_snmp_cache_refresh if config_cache.nodes_of(host_name) is None else False
             ),
             selected_sections=(
-                selected_sections
-                if config_cache.nodes_of(host_config.hostname) is None
-                else NO_SELECTION
+                selected_sections if config_cache.nodes_of(host_name) is None else NO_SELECTION
             ),
             on_scan_error=(
-                on_scan_error
-                if config_cache.nodes_of(host_config.hostname) is None
-                else OnError.RAISE
+                on_scan_error if config_cache.nodes_of(host_name) is None else OnError.RAISE
             ),
             simulation_mode=simulation_mode,
             missing_sys_description=missing_sys_description,

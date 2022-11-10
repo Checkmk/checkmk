@@ -47,13 +47,11 @@ def commandline_checking(
             submitter=submitter,
         ),
         exit_spec=host_config.exit_code_spec(),
-        host_name=host_config.hostname,
+        host_name=host_name,
         service_name="Check_MK",
         plugin_name="mk",
         is_cluster=config_cache.is_cluster(host_name),
-        is_inline_snmp=(
-            host_config.snmp_config(host_config.hostname).snmp_backend is SNMPBackendEnum.INLINE
-        ),
+        is_inline_snmp=(host_config.snmp_config(host_name).snmp_backend is SNMPBackendEnum.INLINE),
         active_check_handler=active_check_handler,
         keepalive=keepalive,
     )
@@ -88,8 +86,7 @@ def _commandline_checking(
             on_scan_error=OnError.RAISE,
             simulation_mode=config.simulation_mode,
             missing_sys_description=config.get_config_cache().in_binary_hostlist(
-                host_config.hostname,
-                config.snmp_without_sys_descr,
+                host_name, config.snmp_without_sys_descr
             ),
             file_cache_max_age=host_config.max_cachefile_age,
         ),

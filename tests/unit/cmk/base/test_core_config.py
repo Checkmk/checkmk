@@ -225,7 +225,6 @@ def test_get_cmk_passive_service_attributes(  # type:ignore[no-untyped-def]
         },
     )
     config_cache = ts.apply(monkeypatch)
-    host_config = config_cache.get_host_config(hostname)
     check_mk_attrs = core_config.get_service_attributes(hostname, "Check_MK", config_cache)
 
     service = ConfiguredService(
@@ -237,7 +236,7 @@ def test_get_cmk_passive_service_attributes(  # type:ignore[no-untyped-def]
         service_labels={},
     )
     service_spec = core_config.get_cmk_passive_service_attributes(
-        config_cache, host_config, service, check_mk_attrs
+        config_cache, hostname, service, check_mk_attrs
     )
     assert service_spec == result
 

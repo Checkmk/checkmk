@@ -1547,7 +1547,7 @@ def test__discover_services_on_cluster(
 
     # we need the sideeffects of this call. TODO: guess what.
     _ = discovery._host_labels.analyse_cluster_labels(
-        host_config=scenario.host_config,
+        scenario.host_config.hostname,
         parsed_sections_broker=scenario.parsed_sections_broker,
         load_labels=discovery_test_case.load_labels,
         save_labels=discovery_test_case.save_labels,
@@ -1573,7 +1573,7 @@ def test__perform_host_label_discovery_on_cluster(
     scenario = cluster_scenario
 
     host_label_result = discovery._host_labels.analyse_cluster_labels(
-        host_config=scenario.host_config,
+        scenario.host_config.hostname,
         parsed_sections_broker=scenario.parsed_sections_broker,
         load_labels=discovery_test_case.load_labels,
         save_labels=discovery_test_case.save_labels,

@@ -435,8 +435,7 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
             ipaddress,
             simulation_mode=config.simulation_mode,
             missing_sys_description=config.get_config_cache().in_binary_hostlist(
-                host_config.hostname,
-                config.snmp_without_sys_descr,
+                hostname, config.snmp_without_sys_descr
             ),
             file_cache_max_age=config.max_cachefile_age(),
         ):

@@ -35,13 +35,11 @@ def active_check_discovery(
     return error_handling.check_result(
         partial(execute_check_discovery, host_name, fetched=fetched),
         exit_spec=host_config.exit_code_spec(),
-        host_name=host_config.hostname,
+        host_name=host_name,
         service_name="Check_MK Discovery",
         plugin_name="discover",
         is_cluster=config_cache.is_cluster(host_name),
-        is_inline_snmp=(
-            host_config.snmp_config(host_config.hostname).snmp_backend is SNMPBackendEnum.INLINE
-        ),
+        is_inline_snmp=(host_config.snmp_config(host_name).snmp_backend is SNMPBackendEnum.INLINE),
         active_check_handler=active_check_handler,
         keepalive=keepalive,
     )

@@ -19,7 +19,6 @@ from cmk.utils.type_defs import HostKey, HostName, SourceType
 
 import cmk.base.config as config
 from cmk.base.agent_based.data_provider import ParsedSectionsBroker
-from cmk.base.config import HostConfig
 from cmk.base.discovered_labels import HostLabel
 
 from .utils import QualifiedDiscovery
@@ -27,7 +26,7 @@ from .utils import QualifiedDiscovery
 
 def analyse_host_labels(
     *,
-    host_config: HostConfig,
+    host_name: HostName,
     load_labels: bool,
     save_labels: bool,
     parsed_sections_broker: ParsedSectionsBroker,
@@ -36,15 +35,15 @@ def analyse_host_labels(
     config_cache = config.get_config_cache()
     return (
         analyse_cluster_labels(
-            host_config=host_config,
+            host_name,
             parsed_sections_broker=parsed_sections_broker,
             load_labels=load_labels,
             save_labels=save_labels,
             on_error=on_error,
         )
-        if config_cache.is_cluster(host_config.hostname)
+        if config_cache.is_cluster(host_name)
         else analyse_node_labels(
-            host_name=host_config.hostname,
+            host_name=host_name,
             parsed_sections_broker=parsed_sections_broker,
             load_labels=load_labels,
             save_labels=save_labels,
@@ -86,8 +85,8 @@ def analyse_node_labels(
 
 
 def analyse_cluster_labels(
+    host_name: HostName,
     *,
-    host_config: HostConfig,
     parsed_sections_broker: ParsedSectionsBroker,
     load_labels: bool,
     save_labels: bool,
@@ -106,7 +105,7 @@ def analyse_cluster_labels(
     optimizer caches have to be cleared if new host labels are found.
     """
     config_cache = config.get_config_cache()
-    nodes = config_cache.nodes_of(host_config.hostname)
+    nodes = config_cache.nodes_of(host_name)
     if not nodes:
         return QualifiedDiscovery.empty()
 
@@ -132,11 +131,9 @@ def analyse_cluster_labels(
         )
 
     return _analyse_host_labels(
-        host_name=host_config.hostname,
+        host_name=host_name,
         discovered_host_labels=list(nodes_host_labels.values()),
-        existing_host_labels=_load_existing_host_labels(host_config.hostname)
-        if load_labels
-        else (),
+        existing_host_labels=_load_existing_host_labels(host_name) if load_labels else (),
         save_labels=save_labels,
     )
 

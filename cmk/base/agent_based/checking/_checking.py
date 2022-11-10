@@ -161,10 +161,11 @@ def _do_inventory_actions_during_checking_for(
     parsed_sections_broker: ParsedSectionsBroker,
 ) -> None:
     tree_store = TreeStore(cmk.utils.paths.status_data_dir)
+    host_name = host_config.hostname
 
     if not host_config.do_status_data_inventory:
         # includes cluster case
-        tree_store.remove(host_name=host_config.hostname)
+        tree_store.remove(host_name=host_name)
         return  # nothing to do here
 
     status_data_tree = inventorize_real_host_via_plugins(
@@ -174,7 +175,7 @@ def _do_inventory_actions_during_checking_for(
     ).status_data_tree
 
     if status_data_tree and not status_data_tree.is_empty():
-        tree_store.save(host_name=host_config.hostname, tree=status_data_tree)
+        tree_store.save(host_name=host_name, tree=status_data_tree)
 
 
 def _timing_results(
@@ -271,9 +272,10 @@ def check_host_services(
     * calls the check
     * examines the result and sends it to the core (unless `dry_run` is True).
     """
-    with plugin_contexts.current_host(host_config.hostname):
+    host_name = host_config.hostname
+    with plugin_contexts.current_host(host_name):
         with value_store.load_host_value_store(
-            host_config.hostname, store_changes=not submitter.dry_run
+            host_name, store_changes=not submitter.dry_run
         ) as value_store_manager:
             submittables = [
                 get_aggregated_result(
@@ -288,7 +290,7 @@ def check_host_services(
                     services=services,
                     run_plugin_names=run_plugin_names,
                     config_cache=config_cache,
-                    host_name=host_config.hostname,
+                    host_name=host_name,
                 )
             ]
 
@@ -359,18 +361,16 @@ def get_aggregated_result(
             cache_info=None,
         )
 
+    host_name = host_config.hostname
     config_cache = config.get_config_cache()
     check_function = (
         _cluster_modes.get_cluster_check_function(
-            *config_cache.get_clustered_service_configuration(
-                host_config.hostname,
-                service.description,
-            ),
+            *config_cache.get_clustered_service_configuration(host_name, service.description),
             plugin=plugin,
             service_id=service.id(),
             value_store_manager=value_store_manager,
         )
-        if config_cache.is_cluster(host_config.hostname)
+        if config_cache.is_cluster(host_name)
         else plugin.check_function
     )
 
@@ -398,7 +398,7 @@ def get_aggregated_result(
     )
 
     try:
-        with plugin_contexts.current_host(host_config.hostname), plugin_contexts.current_service(
+        with plugin_contexts.current_host(host_name), plugin_contexts.current_service(
             service.check_plugin_name, service.description
         ), value_store_manager.namespace(service.id()):
             result = _aggregate_results(
@@ -423,19 +423,18 @@ def get_aggregated_result(
     except Exception:
         if cmk.utils.debug.enabled():
             raise
-        table = check_table.get_check_table(host_config.hostname, skip_autochecks=True)
+        table = check_table.get_check_table(host_name, skip_autochecks=True)
         result = ServiceCheckResult(
             3,
             cmk.base.crash_reporting.create_check_crash_dump(
-                host_config.hostname,
+                host_name,
                 service.description,
                 plugin_name=service.check_plugin_name,
                 plugin_kwargs={**item_kw, **params_kw, **section_kws},
-                is_cluster=config_cache.is_cluster(host_config.hostname),
+                is_cluster=config_cache.is_cluster(host_name),
                 is_enforced=service.id() in table,
                 is_inline_snmp=(
-                    host_config.snmp_config(host_config.hostname).snmp_backend
-                    is SNMPBackendEnum.INLINE
+                    host_config.snmp_config(host_name).snmp_backend is SNMPBackendEnum.INLINE
                 ),
                 rtc_package=rtc_package,
             ),
@@ -457,12 +456,13 @@ def _get_clustered_service_node_keys(
     service_descr: ServiceName,
 ) -> Sequence[HostKey]:
     """Returns the node keys if a service is clustered, otherwise an empty sequence"""
-    nodes = config_cache.nodes_of(host_config.hostname)
+    host_name = host_config.hostname
+    nodes = config_cache.nodes_of(host_name)
     used_nodes = (
         [
             nn
             for nn in (nodes or ())
-            if host_config.hostname == config_cache.host_of_clustered_service(nn, service_descr)
+            if host_name == config_cache.host_of_clustered_service(nn, service_descr)
         ]
         or nodes
         or ()
@@ -493,7 +493,8 @@ def _get_monitoring_data_kwargs(
             else SourceType.HOST
         )
 
-    if config_cache.is_cluster(host_config.hostname):
+    host_name = host_config.hostname
+    if config_cache.is_cluster(host_name):
         nodes = _get_clustered_service_node_keys(
             config_cache,
             host_config,
@@ -512,7 +513,7 @@ def _get_monitoring_data_kwargs(
     return (
         get_section_kwargs(
             parsed_sections_broker,
-            HostKey(host_config.hostname, source_type),
+            HostKey(host_name, source_type),
             sections,
         ),
         ServiceCheckResult.received_no_data(),

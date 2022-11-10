@@ -105,16 +105,18 @@ HistoryFilePair = Tuple[HistoryFile, HistoryFile]
 class DiscoveryAutomation(Automation):
     def _trigger_discovery_check(self, config_cache: ConfigCache, host_config: HostConfig) -> None:
         """if required, schedule the "Check_MK Discovery" check"""
+        host_name = host_config.hostname
+
         if not config.inventory_check_autotrigger:
             return
 
         if host_config.discovery_check_parameters().commandline_only:
             return
 
-        if config_cache.is_cluster(host_config.hostname):
+        if config_cache.is_cluster(host_name):
             return
 
-        discovery.schedule_discovery_check(host_config.hostname)
+        discovery.schedule_discovery_check(host_name)
 
 
 class AutomationDiscovery(DiscoveryAutomation):
@@ -750,7 +752,7 @@ class AutomationAnalyseServices(Automation):
         host_attrs: core_config.ObjectAttributes,
         servicedesc: str,
     ) -> automation_results.ServiceInfo:
-        hostname = host_config.hostname
+        host_name = host_config.hostname
 
         # We just consider types of checks that are managed via WATO.
         # We have the following possible types of services:
@@ -774,7 +776,7 @@ class AutomationAnalyseServices(Automation):
         # our service there
         if (
             autocheck_service := self._get_service_info_from_autochecks(
-                config_cache, host_config, servicedesc
+                config_cache, host_name, servicedesc
             )
         ) is not None:
             return autocheck_service
@@ -791,11 +793,11 @@ class AutomationAnalyseServices(Automation):
                 return result
 
         # 4. Active checks
-        with plugin_contexts.current_host(hostname):
+        with plugin_contexts.current_host(host_name):
             for plugin_name, entries in host_config.active_checks:
                 for active_check_params in entries:
                     for description in core_config.get_active_check_descriptions(
-                        hostname,
+                        host_name,
                         host_config.alias,
                         host_attrs,
                         plugin_name,
@@ -812,23 +814,22 @@ class AutomationAnalyseServices(Automation):
 
     @staticmethod
     def _get_service_info_from_autochecks(
-        config_cache: ConfigCache, host_config: HostConfig, servicedesc: str
+        config_cache: ConfigCache, host_name: HostName, servicedesc: str
     ) -> Optional[automation_results.ServiceInfo]:
         # TODO: There is a lot of duplicated logic with discovery.py/check_table.py. Clean this
         # whole function up.
         # NOTE: Iterating over the check table would make things easier. But we might end up with
         # differen information. Also: check table forgets wether it's an *auto*check.
-        table = check_table.get_check_table(host_config.hostname)
+        table = check_table.get_check_table(host_name)
         services = (
             [
                 service
-                for node in config_cache.nodes_of(host_config.hostname) or []
+                for node in config_cache.nodes_of(host_name) or []
                 for service in config_cache.get_autochecks_of(node)
-                if host_config.hostname
-                == config_cache.host_of_clustered_service(node, service.description)
+                if host_name == config_cache.host_of_clustered_service(node, service.description)
             ]
-            if config_cache.is_cluster(host_config.hostname)
-            else config_cache.get_autochecks_of(host_config.hostname)
+            if config_cache.is_cluster(host_name)
+            else config_cache.get_autochecks_of(host_name)
         )
 
         for service in services:
@@ -1384,13 +1385,13 @@ class AutomationDiagHost(Automation):
         tcp_connect_timeout: Optional[float],
     ) -> Tuple[int, str]:
         state, output = 0, ""
+        host_name = host_config.hostname
         for source, file_cache, fetcher in sources.make_non_cluster_sources(
             host_config,
             ipaddress,
             simulation_mode=config.simulation_mode,
             missing_sys_description=config.get_config_cache().in_binary_hostlist(
-                host_config.hostname,
-                config.snmp_without_sys_descr,
+                host_name, config.snmp_without_sys_descr
             ),
             file_cache_max_age=config.max_cachefile_age(),
         ):
@@ -1728,8 +1729,7 @@ class AutomationGetAgentOutput(Automation):
                     ipaddress,
                     simulation_mode=config.simulation_mode,
                     missing_sys_description=config.get_config_cache().in_binary_hostlist(
-                        host_config.hostname,
-                        config.snmp_without_sys_descr,
+                        hostname, config.snmp_without_sys_descr
                     ),
                     file_cache_max_age=config.max_cachefile_age(),
                 ):

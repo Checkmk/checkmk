@@ -89,7 +89,7 @@ def commandline_discovery(
                     on_scan_error=on_error,
                     simulation_mode=config.simulation_mode,
                     missing_sys_description=config.get_config_cache().in_binary_hostlist(
-                        host_config.hostname,
+                        host_name,
                         config.snmp_without_sys_descr,
                     ),
                     file_cache_max_age=config.max_cachefile_age(),
@@ -104,7 +104,7 @@ def commandline_discovery(
             store_piggybacked_sections(host_sections)
             parsed_sections_broker = make_broker(host_sections)
             _commandline_discovery_on_host(
-                host_name=host_config.hostname,
+                host_name=host_name,
                 parsed_sections_broker=parsed_sections_broker,
                 run_plugin_names=run_plugin_names,
                 only_new=arg_only_new,
@@ -222,13 +222,11 @@ def commandline_check_discovery(
     return error_handling.check_result(
         partial(_commandline_check_discovery, host_name, ipaddress),
         exit_spec=host_config.exit_code_spec(),
-        host_name=host_config.hostname,
+        host_name=host_name,
         service_name="Check_MK Discovery",
         plugin_name="discover",
         is_cluster=config_cache.is_cluster(host_name),
-        is_inline_snmp=(
-            host_config.snmp_config(host_config.hostname).snmp_backend is SNMPBackendEnum.INLINE
-        ),
+        is_inline_snmp=(host_config.snmp_config(host_name).snmp_backend is SNMPBackendEnum.INLINE),
         active_check_handler=active_check_handler,
         keepalive=keepalive,
     )
@@ -258,7 +256,7 @@ def _commandline_check_discovery(
             on_scan_error=OnError.RAISE,
             simulation_mode=config.simulation_mode,
             missing_sys_description=config.get_config_cache().in_binary_hostlist(
-                host_config.hostname,
+                host_name,
                 config.snmp_without_sys_descr,
             ),
             file_cache_max_age=config.max_cachefile_age(

@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, NewType
 
-from pydantic import BaseModel, parse_raw_as, ValidationError
+from pydantic import BaseModel, Field, parse_raw_as, ValidationError
 
 import cmk.utils
 
@@ -53,17 +53,17 @@ class IdentifiableMetric(BaseModel):
 
 class PerformanceMetric(IdentifiableMetric):
     container_name: ContainerName
-    name: UsedMetrics
-    value: float
+    metric_name: UsedMetrics
+    value: float = Field(..., alias="metric_value_string")
     timestamp: float
 
 
 class MemoryMetric(PerformanceMetric):
-    name: Literal[UsedMetrics.container_memory_working_set_bytes]
+    metric_name: Literal[UsedMetrics.container_memory_working_set_bytes]
 
 
 class CPUMetric(PerformanceMetric):
-    name: Literal[UsedMetrics.container_cpu_usage_seconds_total]
+    metric_name: Literal[UsedMetrics.container_cpu_usage_seconds_total]
 
 
 class UnusedMetric(BaseModel):
@@ -230,8 +230,8 @@ def _calculate_rate(counter_metric: CPUMetric, old_counter_metric: CPUMetric) ->
         >>> from pydantic_factories import ModelFactory
         >>> class MetricFactory(ModelFactory):
         ...    __model__ = CPUMetric
-        >>> _calculate_rate(MetricFactory.build(value=40, timestamp=60),
-        ... MetricFactory.build(value=10, timestamp=30))
+        >>> _calculate_rate(MetricFactory.build(metric_value_string="40", timestamp=60),
+        ... MetricFactory.build(metric_value_string="10", timestamp=30))
         1.0
     """
     time_delta = counter_metric.timestamp - old_counter_metric.timestamp

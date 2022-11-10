@@ -1996,24 +1996,24 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                 )
 
             resource_quotas = api_data.resource_quotas
+            # Namespaces are handled differently to other objects. Namespace piggyback hosts
+            # should only be created if at least one running or pending pod is found in the
+            # namespace.
+            running_pending_pods = [
+                pod
+                for pod in api_data.pods
+                if pod.status.phase in [api.Phase.RUNNING, api.Phase.PENDING]
+            ]
+            namespacenames_running_pending_pods = {
+                pod_namespace(pod) for pod in running_pending_pods
+            }
+            monitored_api_namespaces = namespaces_from_namespacenames(
+                api_data.namespaces,
+                monitored_namespace_names.intersection(namespacenames_running_pending_pods),
+            )
             if MonitoredObject.namespaces in arguments.monitored_objects:
                 LOGGER.info("Write namespaces sections based on API data")
 
-                # Namespaces are handled differently to other objects. Namespace piggyback hosts
-                # should only be created if at least one running or pending pod is found in the
-                # namespace.
-                running_pending_pods = [
-                    pod
-                    for pod in api_data.pods
-                    if pod.status.phase in [api.Phase.RUNNING, api.Phase.PENDING]
-                ]
-                namespacenames_running_pending_pods = {
-                    pod_namespace(pod) for pod in running_pending_pods
-                }
-                monitored_api_namespaces = namespaces_from_namespacenames(
-                    api_data.namespaces,
-                    monitored_namespace_names.intersection(namespacenames_running_pending_pods),
-                )
                 write_namespaces_api_sections(
                     arguments.cluster,
                     arguments.annotation_key_pattern,

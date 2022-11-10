@@ -566,11 +566,13 @@ def _get_title_macros_from_single_infos(single_infos: SingleInfos) -> Iterable[s
         yield from single_info_to_macros.get(single_info, [])
 
 
-def _title_help_text_for_macros(dashlet_type: Type[Dashlet]) -> str:
+def _title_help_text_for_macros(
+    single_infos: SingleInfos, additional_title_macros: Iterable[str]
+) -> str:
     available_macros = chain(
         ["$DEFAULT_TITLE$ " + _u("(default title of the element)")],
-        _get_title_macros_from_single_infos(dashlet_type.single_infos()),
-        dashlet_type.get_additional_title_macros(),
+        _get_title_macros_from_single_infos(single_infos),
+        additional_title_macros,
     )
     macros_as_list = (
         f"<ul>{''.join(f'<li><tt>{macro}</tt></li>' for macro in available_macros)}</ul>"
@@ -639,7 +641,10 @@ def dashlet_vs_general_settings(
                                 "displays the title of the view. If you like to use any other title, set it "
                                 "here."
                             ),
-                            _title_help_text_for_macros(dashlet_type),
+                            _title_help_text_for_macros(
+                                dashlet_type.single_infos(),
+                                dashlet_type.get_additional_title_macros(),
+                            ),
                         )
                     ),
                     size=75,

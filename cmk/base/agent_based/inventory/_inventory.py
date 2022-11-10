@@ -66,7 +66,7 @@ from ._tree_aggregator import (
 )
 
 __all__ = [
-    "inventorize_real_host_via_plugins",
+    "inventorize_status_data_of_real_host",
     "check_inventory_tree",
 ]
 
@@ -302,7 +302,7 @@ def _inventorize_real_host(
 #   ---do status data inventory---------------------------------------------
 
 
-def inventorize_real_host_via_plugins(
+def inventorize_status_data_of_real_host(
     host_name: HostName,
     *,
     host_config: HostConfig,

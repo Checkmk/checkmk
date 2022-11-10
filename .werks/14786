@@ -1,0 +1,12 @@
+Title: Add support for Cisco C9800-CL WLC
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1668519925
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0i1
+
+
+

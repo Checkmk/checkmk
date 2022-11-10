@@ -63,6 +63,7 @@ register.snmp_section(
     name="cisco_wlc_9800_clients",
     parsed_section_name="wlc_clients",
     detect=any_of(
+        equals(OID_sysObjectID, ".1.3.6.1.4.1.9.1.2391"),
         equals(OID_sysObjectID, ".1.3.6.1.4.1.9.1.2530"),
         equals(OID_sysObjectID, ".1.3.6.1.4.1.9.1.2861"),
     ),

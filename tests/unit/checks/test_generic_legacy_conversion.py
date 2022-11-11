@@ -1291,7 +1291,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy: FixPluginLegacy) ->
         "elasticsearch_cluster_health",
         "elasticsearch_cluster_health.shards",
         "elasticsearch_cluster_health.tasks",
-        "elasticsearch_indices",
         "elasticsearch_nodes",
         "eltek_battery",
         "eltek_battery.temp",

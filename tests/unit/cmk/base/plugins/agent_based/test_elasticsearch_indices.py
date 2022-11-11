@@ -3,31 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
-
 import pytest
 
-from tests.testlib import on_time
-
-from tests.unit.conftest import FixRegister
-
-from cmk.utils.type_defs import CheckPluginName
-
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    GetRateError,
-    Metric,
-    Result,
-    Service,
-    State,
-)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
-from cmk.base.plugins.agent_based.elasticsearch_indices import _Section, parse_elasticsearch_indices
-
-
-@pytest.fixture(name="check_plugin", scope="module")
-def _check_plugin(fix_register: FixRegister) -> CheckPlugin:
-    return fix_register.check_plugins[CheckPluginName("elasticsearch_indices")]
+from cmk.base.plugins.agent_based.elasticsearch_indices import (
+    _check_elasticsearch_indices,
+    _CheckParams,
+    _Section,
+    discover_elasticsearch_indices,
+    parse_elasticsearch_indices,
+)
 
 
 @pytest.fixture(name="section", scope="module")
@@ -41,11 +27,8 @@ def _section() -> _Section:
     )
 
 
-def test_discover(
-    check_plugin: CheckPlugin,
-    section: _Section,
-) -> None:
-    assert list(check_plugin.discovery_function(section)) == [
+def test_discover(section: _Section) -> None:
+    assert list(discover_elasticsearch_indices(section)) == [
         Service(item=".monitoring-kibana-6"),
         Service(item="filebeat"),
         Service(item=".monitoring-es-6"),
@@ -59,13 +42,13 @@ def test_discover(
             "filebeat",
             {},
             [
-                Result(state=State.OK, summary="Total count: 28398 docs"),
+                Result(state=State.OK, summary="Document count: 28398"),
                 Metric("elasticsearch_count", 28398.0),
-                Result(state=State.OK, summary="Average count: 30 docs per Minute"),
+                Result(state=State.OK, summary="Document count rate: 30/minute"),
                 Metric("elasticsearch_count_rate", 30.0),
-                Result(state=State.OK, summary="Total size: 21.5 MiB"),
+                Result(state=State.OK, summary="Size: 21.5 MiB"),
                 Metric("elasticsearch_size", 22524354.0),
-                Result(state=State.OK, summary="Average size: 293 KiB  per Minute"),
+                Result(state=State.OK, summary="Size rate: 293 KiB/minute"),
                 Metric("elasticsearch_size_rate", 300000.0),
             ],
             id="without params",
@@ -77,25 +60,27 @@ def test_discover(
                 "elasticsearch_size_rate": (5, 15, 2),
             },
             [
-                Result(state=State.OK, summary="Total count: 28398 docs"),
+                Result(state=State.OK, summary="Document count: 28398"),
                 Metric("elasticsearch_count", 28398.0),
                 Result(
                     state=State.CRIT,
-                    summary="Average count: 30 docs per Minute (warn/crit at 22 docs per Minute/24 docs per Minute)",
+                    summary="Document count rate: 30/minute (warn/crit at 25/minute/27/minute)",
                 ),
                 Metric(
-                    "elasticsearch_count_rate", 30.0, levels=(22.605651338367295, 24.66071055094614)
+                    "elasticsearch_count_rate",
+                    30.0,
+                    levels=(24.639341968612495, 26.879282147577268),
                 ),
-                Result(state=State.OK, summary="Total size: 21.5 MiB"),
+                Result(state=State.OK, summary="Size: 21.5 MiB"),
                 Metric("elasticsearch_size", 22524354.0),
                 Result(
                     state=State.CRIT,
-                    summary="Average size: 293 KiB  per Minute (warn/crit at 211 KiB  per Minute/231 KiB  per Minute)",
+                    summary="Size rate: 293 KiB/minute (warn/crit at 230 KiB/minute/252 KiB/minute)",
                 ),
                 Metric(
                     "elasticsearch_size_rate",
                     300000.0,
-                    levels=(215781.21732077873, 236331.80944656717),
+                    levels=(235193.71879130113, 257593.12058094883),
                 ),
             ],
             id="with params",
@@ -109,34 +94,25 @@ def test_discover(
     ],
 )
 def test_check(
-    check_plugin: CheckPlugin,
     section: _Section,
     item: str,
-    params: Mapping[str, object],
+    params: _CheckParams,
     expected_result: CheckResult,
 ) -> None:
-    # temporary workaround to initialize value store
-    with on_time(100, "UTC"):
-        with pytest.raises(GetRateError):
-            list(
-                check_plugin.check_function(
-                    item="filebeat",
-                    params=params,
-                    section=parse_elasticsearch_indices(
-                        [
-                            ["filebeat", "28298.0", "21524354.0"],
-                        ]
-                    ),
-                )
+    assert (
+        list(
+            _check_elasticsearch_indices(
+                item=item,
+                params=params,
+                section=section,
+                value_store={
+                    "elasticsearch_count": (100.0, 28298.0),
+                    "elasticsearch_count.average": (100.0, 100.0, 0.0),
+                    "elasticsearch_size": (100.0, 21524354.0),
+                    "elasticsearch_size.average": (100.0, 100.0, 0.0),
+                },
+                now=300,
             )
-    with on_time(300, "UTC"):
-        assert (
-            list(
-                check_plugin.check_function(
-                    item=item,
-                    params=params,
-                    section=section,
-                )
-            )
-            == expected_result
         )
+        == expected_result
+    )

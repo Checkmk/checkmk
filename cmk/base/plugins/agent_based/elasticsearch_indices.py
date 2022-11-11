@@ -4,10 +4,25 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import dataclasses
-from collections.abc import Mapping
+import time
+from collections.abc import Callable, Mapping, MutableMapping
+from typing import Any, TypedDict
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import register
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    check_levels,
+    get_average,
+    get_rate,
+    get_value_store,
+    GetRateError,
+    register,
+    render,
+    Service,
+)
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -29,4 +44,146 @@ def parse_elasticsearch_indices(string_table: StringTable) -> _Section:
 register.agent_section(
     name="elasticsearch_indices",
     parse_function=parse_elasticsearch_indices,
+)
+
+
+def discover_elasticsearch_indices(section: _Section) -> DiscoveryResult:
+    yield from (Service(item=index_name) for index_name in section)
+
+
+class _CheckParams(TypedDict, total=False):
+    elasticsearch_count_rate: tuple[float, float, int]
+    elasticsearch_size_rate: tuple[float, float, int]
+
+
+def check_elasticsearch_indices(
+    item: str,
+    params: _CheckParams,
+    section: _Section,
+) -> CheckResult:
+    yield from _check_elasticsearch_indices(
+        item=item,
+        params=params,
+        section=section,
+        value_store=get_value_store(),
+        now=time.time(),
+    )
+
+
+def _check_elasticsearch_indices(
+    *,
+    item: str,
+    params: _CheckParams,
+    section: _Section,
+    value_store: MutableMapping[str, Any],
+    now: float,
+) -> CheckResult:
+    if not (index := section.get(item)):
+        return
+    yield from _check_index(
+        index=index,
+        params=params,
+        value_store=value_store,
+        now=now,
+    )
+
+
+def _check_index(
+    *,
+    index: _ElasticIndex,
+    params: _CheckParams,
+    value_store: MutableMapping[str, Any],
+    now: float,
+) -> CheckResult:
+    for metric_value, metric_name, metric_params, label, render_func in [
+        (
+            index.count,
+            "elasticsearch_count",
+            params.get("elasticsearch_count_rate", (None, None, 30)),
+            "Document count",
+            lambda v: str(round(v)),
+        ),
+        (
+            index.size,
+            "elasticsearch_size",
+            params.get("elasticsearch_size_rate", (None, None, 30)),
+            "Size",
+            render.bytes,
+        ),
+    ]:
+        yield from _check_metric(
+            metric_value=metric_value,
+            metric_name=metric_name,
+            metric_params=metric_params,
+            label=label,
+            render_func=render_func,
+            value_store=value_store,
+            now=now,
+        )
+
+
+def _check_metric(
+    *,
+    metric_value: float,
+    metric_name: str,
+    metric_params: tuple[float, float, int] | tuple[None, None, int],
+    label: str,
+    render_func: Callable[[float], str],
+    value_store: MutableMapping[str, Any],
+    now: float,
+) -> CheckResult:
+    yield from check_levels(
+        metric_value,
+        metric_name=metric_name,
+        render_func=render_func,
+        label=label,
+    )
+
+    try:
+        rate = (
+            get_rate(
+                value_store=value_store,
+                key=metric_name,
+                time=now,
+                value=metric_value,
+            )
+            * 60
+        )
+    except GetRateError:
+        return
+
+    # always compute the average st. we have a backlog available in case we need it
+    rate_warn, rate_crit, avg_horizon = metric_params
+    avg_rate = get_average(
+        value_store=value_store,
+        key=f"{metric_name}.average",
+        time=now,
+        value=rate,
+        backlog_minutes=avg_horizon,
+    )
+
+    levels_rate = None
+    if rate_warn is not None and rate_crit is not None:
+        levels_rate = (
+            avg_rate * (rate_warn / 100.0 + 1),
+            avg_rate * (rate_crit / 100.0 + 1),
+        )
+
+    yield from check_levels(
+        rate,
+        levels_upper=levels_rate,
+        metric_name=f"{metric_name}_rate",
+        # pylint: disable=cell-var-from-loop
+        render_func=lambda v: f"{render_func(v)}/minute",
+        label=f"{label} rate",
+    )
+
+
+register.check_plugin(
+    name="elasticsearch_indices",
+    service_name="Elasticsearch Indice %s",
+    discovery_function=discover_elasticsearch_indices,
+    check_function=check_elasticsearch_indices,
+    check_ruleset_name="elasticsearch_indices",
+    check_default_parameters={},
 )

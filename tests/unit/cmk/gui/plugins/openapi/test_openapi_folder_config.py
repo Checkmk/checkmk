@@ -785,3 +785,38 @@ def test_openapi_folder_config_collections_recursive_list(  # type:ignore[no-unt
 
     for folder in response.json["value"]:
         assert "batman" not in folder["id"]
+
+
+def test_bake_agent_package_attribute_regression(
+    base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
+) -> None:
+    folder_name = "blablabla"
+
+    aut_user_auth_wsgi_app.post(
+        url=base + "/domain-types/folder_config/collections/all",
+        params=json.dumps(
+            {
+                "name": folder_name,
+                "title": folder_name,
+                "parent": "~",
+                "attributes": {"bake_agent_package": True},
+            }
+        ),
+        headers={"Accept": "application/json"},
+        content_type="application/json",
+        status=200,
+    )
+
+    # see if we get an outbound validation error on a single folder
+    aut_user_auth_wsgi_app.get(
+        url=base + "/objects/folder_config/~" + folder_name,
+        headers={"Accept": "application/json"},
+        status=200,
+    )
+
+    # see if we get an outbound validation error on all folders
+    aut_user_auth_wsgi_app.get(
+        url=base + "/domain-types/folder_config/collections/all",
+        headers={"Accept": "application/json"},
+        status=200,
+    )

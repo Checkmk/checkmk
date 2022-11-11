@@ -1,0 +1,12 @@
+Title: REST API will no longer fail handling folders with the "bake agent package" attribute
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1668417521
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.2.0i1
+
+The endpoints regarding folders would fail with a 500 status code if a folder had the "bake agent package" attribute set.
+This is no longer the case.

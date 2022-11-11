@@ -7,6 +7,7 @@
 Tests for legacy tuple rulesets.
 """
 
+
 # pylint: disable=redefined-outer-name
 
 import pytest
@@ -17,6 +18,7 @@ import cmk.utils.rulesets.tuple_rulesets as tuple_rulesets
 import cmk.utils.version as cmk_version
 
 import cmk.base.config as config
+from cmk.base.config import Ruleset
 
 
 @pytest.fixture(autouse=True)
@@ -34,8 +36,8 @@ def ts(monkeypatch):
     return ts
 
 
-def test_service_extra_conf(ts) -> None:  # type:ignore[no-untyped-def]
-    ruleset = [
+def test_service_extra_conf(ts: Scenario) -> None:
+    ruleset: Ruleset[str] = [
         {"condition": {}, "options": {}, "value": "1"},
         {"condition": {}, "options": {}, "value": "2"},
         {"condition": {"host_tags": {"agent": "no-agent"}}, "options": {}, "value": "3"},
@@ -114,7 +116,7 @@ def host_ruleset():
     ]
 
 
-def test_host_extra_conf(ts, host_ruleset) -> None:  # type:ignore[no-untyped-def]
+def test_host_extra_conf(ts: Scenario, host_ruleset: Ruleset[object]) -> None:
     assert ts.config_cache.host_extra_conf("host1", host_ruleset) == [
         {"1": True},
         {"2": True},
@@ -132,7 +134,7 @@ def test_host_extra_conf(ts, host_ruleset) -> None:  # type:ignore[no-untyped-de
     ]
 
 
-def test_host_extra_conf_merged(ts, host_ruleset) -> None:  # type:ignore[no-untyped-def]
+def test_host_extra_conf_merged(ts: Scenario, host_ruleset: Ruleset[object]) -> None:
     assert ts.config_cache.host_extra_conf_merged("host1", host_ruleset) == {
         "1": True,
         "2": True,
@@ -154,19 +156,19 @@ def test_host_extra_conf_merged(ts, host_ruleset) -> None:  # type:ignore[no-unt
     "parameters",
     [
         # ruleset, outcome host1, outcome host2
-        [[], False, False],
-        [
+        ([], False, False),
+        (
             [{"condition": {}, "options": {}, "value": False}],
             False,
             False,
-        ],
-        [[{"condition": {}, "options": {}, "value": True}], True, True],
-        [
+        ),
+        ([{"condition": {}, "options": {}, "value": True}], True, True),
+        (
             [{"condition": {"host_name": {"$nor": ["host1"]}}, "options": {}, "value": True}],
             False,
             True,
-        ],
-        [
+        ),
+        (
             [
                 {
                     "condition": {"host_name": {"$nor": ["host1", "host2"]}},
@@ -176,13 +178,13 @@ def test_host_extra_conf_merged(ts, host_ruleset) -> None:  # type:ignore[no-unt
             ],
             False,
             False,
-        ],
-        [
+        ),
+        (
             [{"condition": {"host_tags": {"criticality": "test"}}, "options": {}, "value": True}],
             True,
             False,
-        ],
-        [
+        ),
+        (
             [
                 {
                     "condition": {
@@ -195,18 +197,18 @@ def test_host_extra_conf_merged(ts, host_ruleset) -> None:  # type:ignore[no-unt
             ],
             False,
             False,
-        ],
-        [
+        ),
+        (
             [{"condition": {"host_name": {"$nor": ["host1"]}}, "options": {}, "value": True}],
             False,
             True,
-        ],
-        [
+        ),
+        (
             [{"condition": {"host_name": {"$nor": ["host1"]}}, "options": {}, "value": False}],
             False,
             False,
-        ],
-        [
+        ),
+        (
             [
                 {
                     "condition": {
@@ -219,8 +221,8 @@ def test_host_extra_conf_merged(ts, host_ruleset) -> None:  # type:ignore[no-unt
             ],
             False,
             False,
-        ],
-        [
+        ),
+        (
             [
                 {
                     "condition": {"service_description": [{"$regex": "serv"}]},
@@ -230,8 +232,8 @@ def test_host_extra_conf_merged(ts, host_ruleset) -> None:  # type:ignore[no-unt
             ],
             True,
             True,
-        ],
-        [
+        ),
+        (
             [
                 {
                     "condition": {"service_description": [{"$regex": "serv"}]},
@@ -241,8 +243,8 @@ def test_host_extra_conf_merged(ts, host_ruleset) -> None:  # type:ignore[no-unt
             ],
             False,
             False,
-        ],
-        [
+        ),
+        (
             [
                 {
                     "condition": {"service_description": [{"$regex": "service1"}]},
@@ -252,10 +254,10 @@ def test_host_extra_conf_merged(ts, host_ruleset) -> None:  # type:ignore[no-unt
             ],
             False,
             False,
-        ],
+        ),
         # Dual rule test, first rule matches host1 - negates -> False
         #                 second rule matches host2 -> True
-        [
+        (
             [
                 {
                     "condition": {"service_description": [{"$regex": "service1"}]},
@@ -266,10 +268,10 @@ def test_host_extra_conf_merged(ts, host_ruleset) -> None:  # type:ignore[no-unt
             ],
             False,
             True,
-        ],
+        ),
     ],
 )
-def test_in_boolean_serviceconf_list(ts, parameters) -> None:  # type:ignore[no-untyped-def]
+def test_in_boolean_serviceconf_list(ts: Scenario, parameters: tuple[Ruleset, bool, bool]) -> None:
     ruleset, outcome_host1, outcome_host2 = parameters
 
     assert (
@@ -280,7 +282,7 @@ def test_in_boolean_serviceconf_list(ts, parameters) -> None:  # type:ignore[no-
     )
 
 
-def test_all_matching_hosts(ts) -> None:  # type:ignore[no-untyped-def]
+def test_all_matching_hosts(ts: Scenario) -> None:
     config_cache = ts.config_cache
     assert config_cache.ruleset_matcher.ruleset_optimizer._all_matching_hosts(
         {"host_tags": {"agent": "no-agent"}}, with_foreign_hosts=False
@@ -438,7 +440,7 @@ def test_hosttags_match_taglist_negate() -> None:
         ([r"OMD ([a-z]+) \1"], "OMD stable stable", True),
     ],
 )
-def test_in_extraconf_servicelist(  # type:ignore[no-untyped-def]
-    service_patterns, service, expected
+def test_in_extraconf_servicelist(
+    service_patterns: list[str], service: str, expected: bool
 ) -> None:
     assert config.in_extraconf_servicelist(service_patterns, service) == expected

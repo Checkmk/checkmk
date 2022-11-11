@@ -8,11 +8,14 @@ import os
 import queue
 import stat
 import threading
-from collections.abc import Iterator
+import types
+from collections.abc import Callable, Iterator, Sequence
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
+from typing import Type
 
 import pytest
+from pytest import MonkeyPatch
 
 from tests.testlib import import_module_hack, wait_until
 
@@ -63,8 +66,8 @@ def test_makedirs_mode(tmp_path: Path, path_type: type[str] | type[Path]) -> Non
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
-def test_load_data_from_file_not_existing(  # type:ignore[no-untyped-def]
-    tmp_path, path_type
+def test_load_data_from_file_not_existing(
+    tmp_path: Path, path_type: Type[str] | Type[Path]
 ) -> None:
     data = store.load_object_from_file(path_type(tmp_path / "x"), default=None)
     assert data is None
@@ -101,8 +104,8 @@ def test_load_data_from_file_locking(tmp_path: Path, path_type: type[str] | type
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
-def test_load_data_from_not_permitted_file(  # type:ignore[no-untyped-def]
-    tmp_path, path_type
+def test_load_data_from_not_permitted_file(
+    tmp_path: Path, path_type: Type[str] | Type[Path]
 ) -> None:
     # Note: The code is actually a lot more expressive in debug mode.
     cmk.utils.debug.disable()
@@ -185,7 +188,11 @@ def test_save_data_to_file_not_pretty(tmp_path: Path, path_type: type[str] | typ
         [b"foob\xc3\xa4r"],
     ],
 )
-def test_save_data_to_file(tmp_path: Path, path_type, data) -> None:  # type:ignore[no-untyped-def]
+def test_save_data_to_file(
+    tmp_path: Path,
+    path_type: Type[str] | Type[Path],
+    data: None | Sequence[str | int],
+) -> None:
     path = path_type(tmp_path / "lala")
     store.save_object_to_file(path, data)
     assert store.load_object_from_file(path, default=None) == data
@@ -198,7 +205,7 @@ def test_save_data_to_file(tmp_path: Path, path_type, data) -> None:  # type:ign
         "föö",
     ],
 )
-def test_save_text_to_file(tmp_path: Path, path_type, data) -> None:  # type:ignore[no-untyped-def]
+def test_save_text_to_file(tmp_path: Path, path_type: Type[str] | Type[Path], data: str) -> None:
     path = path_type(tmp_path / "lala")
     store.save_text_to_file(path, data)
     assert store.load_text_from_file(path) == data
@@ -208,9 +215,7 @@ def test_save_text_to_file(tmp_path: Path, path_type, data) -> None:  # type:ign
     "load_fun", [store.load_bytes_from_file, store.load_object_from_file, store.load_text_from_file]
 )
 @pytest.mark.parametrize("permissions", [0o002, 0o666, 0o777])
-def test_load_world_writable_file(  # type:ignore[no-untyped-def]
-    tmp_path: Path, load_fun, permissions
-) -> None:
+def test_load_world_writable_file(tmp_path: Path, load_fun: Callable, permissions: int) -> None:
     path = str(tmp_path / "writeme.txt")
     store.save_text_to_file(path, "")
     os.chmod(path, permissions)
@@ -226,12 +231,12 @@ def test_load_world_writable_file(  # type:ignore[no-untyped-def]
         b"foob\xc3\xa4r",
     ],
 )
-def test_save_text_to_file_bytes(  # type:ignore[no-untyped-def]
-    tmp_path: Path, path_type, data
+def test_save_text_to_file_bytes(
+    tmp_path: Path, path_type: Type[str] | Type[Path], data: object
 ) -> None:
     path = path_type(tmp_path / "lala")
     with pytest.raises(TypeError) as e:
-        store.save_text_to_file(path, data)
+        store.save_text_to_file(path, data)  # type: ignore[arg-type]
     assert "content argument must be Text, not bytes" in "%s" % e
 
 
@@ -242,7 +247,7 @@ def test_save_text_to_file_bytes(  # type:ignore[no-untyped-def]
         b"foob\xc3\xa4r",
     ],
 )
-def test_save_bytes_to_file(tmp_path: Path, path_type, data) -> None:  # type:ignore[no-untyped-def]
+def test_save_bytes_to_file(tmp_path: Path, path_type: Type[str] | Type[Path], data: bytes) -> None:
     path = path_type(tmp_path / "lala")
     store.save_bytes_to_file(path, data)
     assert store.load_bytes_from_file(path) == data
@@ -256,12 +261,12 @@ def test_save_bytes_to_file(tmp_path: Path, path_type, data) -> None:  # type:ig
         "föö",
     ],
 )
-def test_save_bytes_to_file_unicode(  # type:ignore[no-untyped-def]
-    tmp_path, path_type, data
+def test_save_bytes_to_file_unicode(
+    tmp_path: Path, path_type: Type[str] | Type[Path], data: object
 ) -> None:
     path = path_type(tmp_path / "lala")
     with pytest.raises(TypeError) as e:
-        store.save_bytes_to_file(path, data)
+        store.save_bytes_to_file(path, data)  # type: ignore[arg-type]
     assert "content argument must be bytes, not Text" in "%s" % e
 
 
@@ -317,13 +322,13 @@ def test_try_locked(locked_file: Path, path_type: type[str] | type[Path]) -> Non
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
-def test_try_locked_fails(  # type:ignore[no-untyped-def]
-    locked_file, path_type, monkeypatch
+def test_try_locked_fails(
+    locked_file: Path, path_type: Type[str] | Type[Path], monkeypatch: MonkeyPatch
 ) -> None:
     path = path_type(locked_file)
 
-    def _is_already_locked(path, blocking) -> bool:  # type:ignore[no-untyped-def]
-        raise OSError(errno.EAGAIN, "%s is already locked" % path)
+    def _is_already_locked(path: Path, blocking: object) -> bool:
+        raise IOError(errno.EAGAIN, "%s is already locked" % path)
 
     monkeypatch.setattr(store._locks, "aquire_lock", _is_already_locked)
 
@@ -357,7 +362,7 @@ def test_aquire_lock_twice(locked_file: Path, path_type: type[str] | type[Path])
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
-def test_release_lock_not_locked(path_type) -> None:  # type:ignore[no-untyped-def]
+def test_release_lock_not_locked(path_type: Type[str] | Type[Path]) -> None:
     store.release_lock(path_type("/asdasd/aasdasd"))
 
 
@@ -412,8 +417,8 @@ def test_release_all_locks(tmp_path: Path, path_type: type[str] | type[Path]) ->
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
-def test_release_all_locks_already_closed(  # type:ignore[no-untyped-def]
-    locked_file, path_type
+def test_release_all_locks_already_closed(
+    locked_file: Path, path_type: Type[str] | Type[Path]
 ) -> None:
     path = path_type(locked_file)
 
@@ -436,7 +441,7 @@ class LockTestJob(enum.Enum):
 
 
 class LockTestThread(threading.Thread):
-    def __init__(self, store_mod, path) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, store_mod: types.ModuleType, path: Path) -> None:
         super().__init__()
         self.daemon = True
 
@@ -540,8 +545,8 @@ def _wait_for_waiting_lock():
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
-def test_blocking_context_manager_from_multiple_threads(  # type:ignore[no-untyped-def]
-    locked_file, path_type
+def test_blocking_context_manager_from_multiple_threads(
+    locked_file: Path, path_type: Type[str] | Type[Path]
 ) -> None:
     path = path_type(locked_file)
 
@@ -560,8 +565,8 @@ def test_blocking_context_manager_from_multiple_threads(  # type:ignore[no-untyp
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
-def test_blocking_lock_from_multiple_threads(  # type:ignore[no-untyped-def]
-    locked_file, path_type
+def test_blocking_lock_from_multiple_threads(
+    locked_file: Path, path_type: Type[str] | Type[Path]
 ) -> None:
     path = path_type(locked_file)
 
@@ -607,8 +612,8 @@ def test_blocking_lock_from_multiple_threads(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
-def test_non_blocking_lock_from_multiple_threads(  # type:ignore[no-untyped-def]
-    locked_file, path_type
+def test_non_blocking_lock_from_multiple_threads(
+    locked_file: Path, path_type: Type[str] | Type[Path]
 ) -> None:
     path = path_type(locked_file)
 
@@ -634,8 +639,8 @@ def test_non_blocking_lock_from_multiple_threads(  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
-def test_blocking_lock_while_other_holds_the_lock(  # type:ignore[no-untyped-def]
-    locked_file, path_type, t1, t2, monkeypatch
+def test_blocking_lock_while_other_holds_the_lock(
+    locked_file: Path, path_type: Type[str] | Type[Path], t1: LockTestThread, t2: LockTestThread
 ) -> None:
     assert t1.store != t2.store
 
@@ -659,8 +664,8 @@ def test_blocking_lock_while_other_holds_the_lock(  # type:ignore[no-untyped-def
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
-def test_non_blocking_locking_without_previous_lock(  # type:ignore[no-untyped-def]
-    locked_file, path_type, t1
+def test_non_blocking_locking_without_previous_lock(
+    locked_file: Path, path_type: Type[str] | Type[Path], t1: LockTestThread
 ) -> None:
     assert t1.store != store
     path = path_type(locked_file)
@@ -673,8 +678,8 @@ def test_non_blocking_locking_without_previous_lock(  # type:ignore[no-untyped-d
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
-def test_non_blocking_locking_while_already_locked(  # type:ignore[no-untyped-def]
-    locked_file, path_type, t1
+def test_non_blocking_locking_while_already_locked(
+    locked_file: Path, path_type: Type[str] | Type[Path], t1: LockTestThread
 ) -> None:
     assert t1.store != store
     path = path_type(locked_file)
@@ -688,8 +693,8 @@ def test_non_blocking_locking_while_already_locked(  # type:ignore[no-untyped-de
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
-def test_non_blocking_decorated_locking_without_previous_lock(  # type:ignore[no-untyped-def]
-    locked_file, path_type, t1
+def test_non_blocking_decorated_locking_without_previous_lock(
+    locked_file: Path, path_type: Type[str] | Type[Path], t1: LockTestThread
 ) -> None:
     assert t1.store != store
     path = path_type(locked_file)
@@ -701,8 +706,8 @@ def test_non_blocking_decorated_locking_without_previous_lock(  # type:ignore[no
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
-def test_non_blocking_decorated_locking_while_already_locked(  # type:ignore[no-untyped-def]
-    locked_file, path_type, t1
+def test_non_blocking_decorated_locking_while_already_locked(
+    locked_file: Path, path_type: Type[str] | Type[Path], t1: LockTestThread
 ) -> None:
     assert t1.store != store
     path = path_type(locked_file)
@@ -725,7 +730,7 @@ def test_non_blocking_decorated_locking_while_already_locked(  # type:ignore[no-
         ("pickle", StorageFormat.PICKLE),
     ],
 )
-def test_storage_format(text, storage_format) -> None:  # type:ignore[no-untyped-def]
+def test_storage_format(text: str, storage_format: StorageFormat) -> None:
     assert StorageFormat(text) == storage_format
     assert str(storage_format) == text
     assert StorageFormat.from_str(text) == storage_format
@@ -739,9 +744,7 @@ def test_storage_format(text, storage_format) -> None:  # type:ignore[no-untyped
         (StorageFormat.PICKLE, ".pkl"),
     ],
 )
-def test_storage_format_extension(  # type:ignore[no-untyped-def]
-    storage_format, expected_extension
-) -> None:
+def test_storage_format_extension(storage_format: StorageFormat, expected_extension: str) -> None:
     assert storage_format.extension() == expected_extension
 
 

@@ -5,8 +5,9 @@
 
 import gzip
 import shutil
+from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import NamedTuple
+from typing import NamedTuple, Union
 
 import pytest
 
@@ -17,6 +18,7 @@ from cmk.utils.structured_data import (
     make_filter,
     parse_visible_raw_path,
     RetentionIntervals,
+    SDNodeName,
     StructuredDataNode,
     Table,
     TableRetentions,
@@ -335,8 +337,10 @@ def test_compare_with() -> None:
         ),
     ],
 )
-def test_attributes_compare_with(  # type:ignore[no-untyped-def]
-    old_attributes_data, new_attributes_data, result
+def test_attributes_compare_with(
+    old_attributes_data: Mapping[str, str],
+    new_attributes_data: Mapping[str, str],
+    result: tuple[int, int, int],
 ) -> None:
     old_attributes = Attributes()
     old_attributes.add_pairs(old_attributes_data)
@@ -401,8 +405,10 @@ def test_attributes_compare_with(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_table_compare_with(  # type:ignore[no-untyped-def]
-    old_table_data, new_table_data, result
+def test_table_compare_with(
+    old_table_data: Iterable[dict[str, str | int]],
+    new_table_data: Iterable[dict[str, str | int]],
+    result: tuple[int, int, int],
 ) -> None:
     old_table = Table(key_columns=["id"])
     old_table.add_rows(old_table_data)
@@ -628,13 +634,13 @@ def test_real_is_empty() -> None:
 
 
 @pytest.mark.parametrize("tree", trees)
-def test_real_is_empty_trees(tree) -> None:  # type:ignore[no-untyped-def]
+def test_real_is_empty_trees(tree: StructuredDataNode) -> None:
     assert not tree.is_empty()
 
 
 @pytest.mark.parametrize("tree_x", trees)
 @pytest.mark.parametrize("tree_y", trees)
-def test_real_is_equal(tree_x, tree_y) -> None:  # type:ignore[no-untyped-def]
+def test_real_is_equal(tree_x: StructuredDataNode, tree_y: StructuredDataNode) -> None:
     if id(tree_x) == id(tree_y):
         assert tree_x.is_equal(tree_y)
     else:
@@ -650,7 +656,7 @@ def test_real_equal_tables() -> None:
 
 
 @pytest.mark.parametrize("tree", trees)
-def test_real_is_equal_save_and_load(tree, tmp_path) -> None:  # type:ignore[no-untyped-def]
+def test_real_is_equal_save_and_load(tree: StructuredDataNode, tmp_path: Path) -> None:
     tree_store = TreeStore(tmp_path / "inventory")
     try:
         tree_store.save(host_name=HostName("foo"), tree=tree)
@@ -682,12 +688,12 @@ def test_real_is_equal_save_and_load(tree, tmp_path) -> None:  # type:ignore[no-
         )
     ),
 )
-def test_real_count_entries(tree, result) -> None:  # type:ignore[no-untyped-def]
+def test_real_count_entries(tree: StructuredDataNode, result: int) -> None:
     assert tree.count_entries() == result
 
 
 @pytest.mark.parametrize("tree", trees)
-def test_real_compare_with_self(tree) -> None:  # type:ignore[no-untyped-def]
+def test_real_compare_with_self(tree: StructuredDataNode) -> None:
     delta_result = tree.compare_with(tree)
     assert (
         delta_result.counter["new"],
@@ -713,7 +719,9 @@ def test_real_compare_with_self(tree) -> None:  # type:ignore[no-untyped-def]
         )
     ),
 )
-def test_real_compare_with(tree_old, tree_new, result) -> None:  # type:ignore[no-untyped-def]
+def test_real_compare_with(
+    tree_old: StructuredDataNode, tree_new: StructuredDataNode, result: tuple[int, int, int]
+) -> None:
     delta_result = tree_new.compare_with(tree_old)
     assert (
         delta_result.counter["new"],
@@ -752,11 +760,13 @@ def test_real_compare_with(tree_old, tree_new, result) -> None:  # type:ignore[n
         )
     ),
 )
-def test_real_get_node(tree, edges_t, edges_f) -> None:  # type:ignore[no-untyped-def]
+def test_real_get_node(
+    tree: StructuredDataNode, edges_t: Iterable[SDNodeName], edges_f: Iterable[SDNodeName]
+) -> None:
     for edge_t in edges_t:
-        assert tree.get_node([edge_t]) is not None
+        assert tree.get_node((edge_t,)) is not None
     for edge_f in edges_f:
-        assert tree.get_node([edge_f]) is None
+        assert tree.get_node((edge_f,)) is None
 
 
 @pytest.mark.parametrize(
@@ -768,7 +778,7 @@ def test_real_get_node(tree, edges_t, edges_f) -> None:  # type:ignore[no-untype
         )
     ),
 )
-def test_real_get_children(tree, len_children) -> None:  # type:ignore[no-untyped-def]
+def test_real_get_children(tree: StructuredDataNode, len_children: int) -> None:
     tree_children = tree._nodes
     assert len(tree_children) == len_children
 
@@ -816,15 +826,18 @@ def test_real_get_children(tree, len_children) -> None:  # type:ignore[no-untype
         ),
     ],
 )
-def test_real_merge_with_get_children(  # type:ignore[no-untyped-def]
-    tree_start, tree_edges
+def test_real_merge_with_get_children(
+    tree_start: StructuredDataNode,
+    tree_edges: Iterable[
+        tuple[StructuredDataNode, Sequence[str], Sequence[tuple[str, Sequence[str]]]]
+    ],
 ) -> None:
     for tree, edges, sub_children in tree_edges:
         the_tree = tree_start.merge_with(tree)
         assert id(tree) == id(tree)
         assert tree.is_equal(tree)
         for edge in edges:
-            assert the_tree.get_node([edge]) is not None
+            assert the_tree.get_node((edge,)) is not None
         for m_name, path in sub_children:
             m = getattr(the_tree, m_name)
             assert m is not None
@@ -841,10 +854,14 @@ TREE_STATUS = TEST_DATA_STORE.load(host_name=HostName("tree_status"))
         (TREE_INV, TREE_STATUS),
     ],
 )
-def test_real_merge_with_table(tree_inv, tree_status) -> None:  # type:ignore[no-untyped-def]
+def test_real_merge_with_table(
+    tree_inv: StructuredDataNode, tree_status: StructuredDataNode
+) -> None:
     tree = tree_inv.merge_with(tree_status)
     assert "foobar" in tree.serialize()["Nodes"]
-    assert len(tree.get_table(["foobar"]).rows) == 5
+    table = tree.get_table(("foobar",))
+    assert table is not None
+    assert len(table.rows) == 5
 
 
 @pytest.mark.parametrize(
@@ -858,11 +875,15 @@ def test_real_merge_with_table(tree_inv, tree_status) -> None:  # type:ignore[no
                 (["networking", "interfaces"], None),
                 (["software", "os"], None),
             ],
-            [["hardware", "system"], ["software", "applications"]],
+            [("hardware", "system"), ("software", "applications")],
         ),
     ],
 )
-def test_real_filtered_tree(tree, paths, unavail) -> None:  # type:ignore[no-untyped-def]
+def test_real_filtered_tree(
+    tree: StructuredDataNode,
+    paths: Sequence[tuple[Sequence[str], None]],
+    unavail: Sequence[tuple[str, str]],
+) -> None:
     filtered = tree.get_filtered_node(_make_filters(paths))
     assert id(tree) != id(filtered)
     assert not tree.is_equal(filtered)
@@ -941,24 +962,32 @@ def test_real_filtered_tree(tree, paths, unavail) -> None:  # type:ignore[no-unt
         ),
     ],
 )
-def test_real_filtered_tree_networking(  # type:ignore[no-untyped-def]
-    tree, paths, amount_if_entries
+def test_real_filtered_tree_networking(
+    tree: StructuredDataNode,
+    paths: Sequence[tuple[Sequence[str], Sequence[str]]],
+    amount_if_entries: int,
 ) -> None:
     the_paths = list(paths)
     filtered = tree.get_filtered_node(_make_filters(paths))
     assert the_paths == paths
-    assert filtered.get_node(["networking"]) is not None
-    assert filtered.get_node(["hardware"]) is None
-    assert filtered.get_node(["software"]) is None
+    assert filtered.get_node(("networking",)) is not None
+    assert filtered.get_node(("hardware",)) is None
+    assert filtered.get_node(("software",)) is None
 
     if amount_if_entries is not None:
-        interfaces = filtered.get_table(["networking", "interfaces"])
+        interfaces = filtered.get_table(
+            (
+                "networking",
+                "interfaces",
+            )
+        )
+        assert interfaces is not None
         assert interfaces.count_entries() == amount_if_entries
 
 
 @pytest.mark.parametrize("zipped_trees", list(zip(old_trees, new_trees)))
-def test_delta_structured_data_tree_serialization(  # type:ignore[no-untyped-def]
-    zipped_trees,
+def test_delta_structured_data_tree_serialization(
+    zipped_trees: tuple[HostName, HostName],
 ) -> None:
     old_filename, new_filename = zipped_trees
 

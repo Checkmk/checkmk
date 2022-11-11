@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+from pathlib import Path
+
+from pytest import CaptureFixture
 
 from tests.testlib import on_time
 
@@ -15,7 +18,7 @@ def test_get_logger() -> None:
     assert l.parent == log.logger
 
 
-def test_setup_console_logging(capsys) -> None:  # type:ignore[no-untyped-def]
+def test_setup_console_logging(capsys: CaptureFixture[str]) -> None:
     out, err = capsys.readouterr()
     log.clear_console_logging()
 
@@ -40,7 +43,7 @@ def test_setup_console_logging(capsys) -> None:  # type:ignore[no-untyped-def]
     assert err == ""
 
 
-def test_open_log(tmp_path) -> None:  # type:ignore[no-untyped-def]
+def test_open_log(tmp_path: Path) -> None:
     log_file = tmp_path / "test.log"
     log.open_log(log_file)
 

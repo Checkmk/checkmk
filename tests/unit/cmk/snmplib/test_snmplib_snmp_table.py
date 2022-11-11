@@ -3,7 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 import pytest
+from pytest import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
@@ -17,6 +20,7 @@ from cmk.snmplib.type_defs import (
     SNMPBackend,
     SNMPBackendEnum,
     SNMPHostConfig,
+    SNMPTable,
     SpecialColumn,
 )
 
@@ -66,8 +70,8 @@ class SNMPTestBackend(SNMPBackend):
         ),
     ],
 )
-def test_get_snmp_table(  # type:ignore[no-untyped-def]
-    monkeypatch, snmp_info, expected_values
+def test_get_snmp_table(
+    snmp_info: BackendSNMPTree, expected_values: list[Sequence[SNMPTable]]
 ) -> None:
     def get_all_snmp_tables(info):
         backend = SNMPTestBackend(SNMPConfig, logger)
@@ -103,8 +107,11 @@ def test_get_snmp_table(  # type:ignore[no-untyped-def]
         ("cp437", [([b"\x81"], "string")], [["ü"]]),
     ],
 )
-def test_sanitize_snmp_encoding(  # type:ignore[no-untyped-def]
-    monkeypatch, encoding, columns, expected
+def test_sanitize_snmp_encoding(
+    monkeypatch: MonkeyPatch,
+    encoding: str | None,
+    columns: snmp_table.ResultColumnsSanitized,
+    expected: snmp_table.ResultColumnsDecoded,
 ) -> None:
     ts = Scenario()
     ts.add_host("localhost")
@@ -123,7 +130,7 @@ def test_sanitize_snmp_encoding(  # type:ignore[no-untyped-def]
     assert snmp_table._sanitize_snmp_encoding(columns, snmp_config.ensure_str) == expected
 
 
-def test_is_bulkwalk_host(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_is_bulkwalk_host(monkeypatch: MonkeyPatch) -> None:
     ts = Scenario()
     ts.set_ruleset(
         "bulkwalk_hosts",
@@ -136,7 +143,7 @@ def test_is_bulkwalk_host(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     assert config_cache.get_host_config("localhost").snmp_config("").is_bulkwalk_host is True
 
 
-def test_is_classic_at_snmp_v1_host(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_is_classic_at_snmp_v1_host(monkeypatch: MonkeyPatch) -> None:
     ts = Scenario()
     ts.set_ruleset(
         "bulkwalk_hosts",

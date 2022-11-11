@@ -22,7 +22,7 @@ from six import ensure_str
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
-from cmk.utils.crypto import Password, password_hashing
+from cmk.utils.crypto import password_hashing
 from cmk.utils.type_defs import ContactgroupName, UserId
 
 import cmk.gui.background_job as background_job
@@ -284,7 +284,7 @@ def make_two_factor_backup_codes() -> Tuple[List[str], List[str]]:
     for _index in range(10):
         code = utils.get_random_string(10)
         display_codes.append(code)
-        store_codes.append(password_hashing.hash_password(Password(code)))
+        store_codes.append(password_hashing.hash_password(code))
     return display_codes, store_codes
 
 
@@ -295,7 +295,7 @@ def is_two_factor_backup_code_valid(user_id: UserId, code: str) -> bool:
 
     for stored_code in credentials["backup_codes"]:
         try:
-            password_hashing.verify(Password(code), stored_code)
+            password_hashing.verify(code, stored_code)
             matched_code = stored_code
             break
         except (password_hashing.PasswordInvalidError, ValueError):
@@ -1204,7 +1204,7 @@ def create_cmk_automation_user() -> None:
         "alias": "Check_MK Automation - used for calling web services",
         "contactgroups": [],
         "automation_secret": secret,
-        "password": password_hashing.hash_password(Password(secret)),
+        "password": password_hashing.hash_password(secret),
         "roles": ["admin"],
         "locked": False,
         "serial": 0,
@@ -1343,7 +1343,7 @@ register_post_config_load_hook(update_config_based_user_attributes)
 #   +----------------------------------------------------------------------+
 
 
-def check_credentials(username: UserId, password: Password[str]) -> Union[UserId, Literal[False]]:
+def check_credentials(username: UserId, password: str) -> Union[UserId, Literal[False]]:
     """Verify the credentials given by a user using all auth connections"""
     for connection_id, connection in active_connections():
         # None        -> User unknown, means continue with other connectors

@@ -11,13 +11,11 @@ from unittest.mock import patch
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
-from cmk.utils.crypto import Password
-
-from cmk.cmkpasswd import _run_cmkpasswd, InvalidPasswordError, main
+from cmk.cmkpasswd import _run_cmkpasswd, InvalidPasswordError, main, VerificationError
 
 
-def _get_pw(pw: str = "hunter2") -> Callable[[], Password[str]]:
-    return lambda: Password(pw)
+def _get_pw(pw: str = "hunter2") -> Callable[[], str]:
+    return lambda: pw
 
 
 @pytest.mark.parametrize(
@@ -56,11 +54,11 @@ def test_filenotfound(tmp_path: Path) -> None:
 
 
 def test_verification_error() -> None:
-    def raise_err() -> Password[str]:
-        raise ValueError("test error")
+    def raise_err() -> str:
+        raise VerificationError("test error")
 
     # This basically only tests that the error is propagated from the get_password function
-    with pytest.raises(ValueError, match="test error"):
+    with pytest.raises(VerificationError, match="test error"):
         _run_cmkpasswd("testuser", raise_err, None)
 
 
@@ -69,7 +67,7 @@ def test_invalid_password() -> None:
         # This test will break if we switch from bcrypt.
         _run_cmkpasswd("testuser", _get_pw(73 * "a"), None)
 
-    with pytest.raises(InvalidPasswordError):
+    with pytest.raises(InvalidPasswordError, match="NULL byte"):
         # This test might break if we switch from bcrypt and start allowing
         # null bytes in passwords. More likely we'll continue to forbid these though.
         _run_cmkpasswd("testuser", _get_pw("null\0byte"), None)

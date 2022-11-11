@@ -8,7 +8,6 @@ import datetime as dt
 import time
 from typing import Any, Dict, Literal, Optional, Tuple, TypedDict, Union
 
-from cmk.utils.crypto import Password
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.plugins.userdb.htpasswd as htpasswd
@@ -460,12 +459,10 @@ def _auth_options_to_internal_format(
     if auth_details["auth_type"] == "automation":
         secret = auth_details["secret"]
         internal_options["automation_secret"] = secret
-        internal_options["password"] = htpasswd.hash_password(Password(secret))
+        internal_options["password"] = htpasswd.hash_password(secret)
     else:  # password
         if new_user or "password" in auth_details:
-            internal_options["password"] = htpasswd.hash_password(
-                Password(auth_details["password"])
-            )
+            internal_options["password"] = htpasswd.hash_password(auth_details["password"])
             internal_options["last_pw_change"] = int(time.time())
 
         if "enforce_password_change" in auth_details:

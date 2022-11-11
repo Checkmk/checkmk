@@ -12,7 +12,6 @@ from typing import Iterator, List, Optional, overload, Tuple, Type, Union
 
 import cmk.utils.render as render
 import cmk.utils.version as cmk_version
-from cmk.utils.crypto import Password
 from cmk.utils.type_defs import timeperiod_spec_alias, UserId
 
 import cmk.gui.background_job as background_job
@@ -734,7 +733,7 @@ class ModeEditUser(WatoMode):
             secret = request.get_str_input_mandatory("_auth_secret", "").strip()
             if secret:
                 user_attrs["automation_secret"] = secret
-                user_attrs["password"] = hash_password(Password(secret))
+                user_attrs["password"] = hash_password(secret)
                 increase_serial = True  # password changed, reflect in auth serial
             elif "automation_secret" not in user_attrs and "password" in user_attrs:
                 del user_attrs["password"]
@@ -759,7 +758,7 @@ class ModeEditUser(WatoMode):
                     del user_attrs["password"]  # which was the encrypted automation password!
 
             if password:
-                user_attrs["password"] = hash_password(Password(password))
+                user_attrs["password"] = hash_password(password)
                 user_attrs["last_pw_change"] = int(time.time())
                 increase_serial = True  # password changed, reflect in auth serial
 

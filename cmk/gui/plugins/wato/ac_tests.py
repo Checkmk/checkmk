@@ -16,7 +16,6 @@ import urllib3  # type: ignore[import]
 
 from livestatus import LocalConnection
 
-from cmk.utils.crypto import Password
 from cmk.utils.paths import local_inventory_dir
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
@@ -417,7 +416,7 @@ class ACTestOldDefaultCredentials(ACTest):
     def execute(self) -> Iterator[ACResult]:
         if (
             cmk.gui.plugins.userdb.htpasswd.HtpasswdUserConnector({}).check_credentials(
-                UserId("omdadmin"), Password("omd")
+                UserId("omdadmin"), "omd"
             )
             == "omdadmin"
         ):

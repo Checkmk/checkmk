@@ -7,7 +7,7 @@
 from pathlib import Path
 
 import cmk.utils.paths
-from cmk.utils.crypto import Password, password_hashing
+from cmk.utils.crypto import password_hashing
 from cmk.utils.store.htpasswd import Htpasswd
 from cmk.utils.type_defs import UserId
 
@@ -36,7 +36,7 @@ from cmk.gui.type_defs import UserSpec
 # - https://httpd.apache.org/docs/2.4/misc/password_encryptions.html
 # - https://passlib.readthedocs.io/en/stable/lib/passlib.apache.html
 #
-def hash_password(password: Password[str]) -> str:
+def hash_password(password: str) -> str:
     """Hash a password
 
     Invalid inputs raise MKUserError.
@@ -77,7 +77,7 @@ class HtpasswdUserConnector(UserConnector):
     def is_enabled(self) -> bool:
         return True
 
-    def check_credentials(self, user_id: UserId, password: Password[str]) -> CheckCredentialsResult:
+    def check_credentials(self, user_id: UserId, password: str) -> CheckCredentialsResult:
         if not (pw_hash := self._htpasswd.get_hash(user_id)):
             return None  # not user in htpasswd, skip so other connectors can try
 

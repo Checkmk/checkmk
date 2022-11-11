@@ -18,7 +18,7 @@ from tests.testlib import is_managed_repo, on_time
 
 import cmk.utils.paths
 import cmk.utils.version
-from cmk.utils.crypto import Password, password_hashing
+from cmk.utils.crypto import password_hashing
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.plugins.userdb.htpasswd as htpasswd
@@ -540,7 +540,7 @@ def test_user_attribute_sync_plugins(request_context: None, monkeypatch: MonkeyP
 
 def test_check_credentials_local_user(with_user: tuple[UserId, str]) -> None:
     username, password = with_user
-    assert userdb.check_credentials(username, Password(password)) == username
+    assert userdb.check_credentials(username, password) == username
 
 
 @pytest.mark.usefixtures("request_context")
@@ -551,7 +551,7 @@ def test_check_credentials_local_user_create_htpasswd_user_ad_hoc() -> None:
     assert user_id not in _load_users_uncached(lock=False)
 
     htpasswd.Htpasswd(Path(cmk.utils.paths.htpasswd_file)).save_all(
-        {user_id: htpasswd.hash_password(Password("cmk"))}
+        {user_id: htpasswd.hash_password("cmk")}
     )
     # Once a user exists in the htpasswd, the GUI treats the user as existing user and will
     # automatically initialize the missing data structures
@@ -559,7 +559,7 @@ def test_check_credentials_local_user_create_htpasswd_user_ad_hoc() -> None:
     assert userdb._user_exists_according_to_profile(user_id) is False
     assert str(user_id) in _load_users_uncached(lock=False)
 
-    assert userdb.check_credentials(user_id, Password("cmk")) == user_id
+    assert userdb.check_credentials(user_id, "cmk") == user_id
 
     # Nothing changes during regular access
     assert userdb.user_exists(user_id) is True
@@ -569,14 +569,14 @@ def test_check_credentials_local_user_create_htpasswd_user_ad_hoc() -> None:
 
 def test_check_credentials_local_user_disallow_locked(with_user: tuple[UserId, str]) -> None:
     user_id, password = with_user
-    assert userdb.check_credentials(user_id, Password(password)) == user_id
+    assert userdb.check_credentials(user_id, password) == user_id
 
     users = _load_users_uncached(lock=True)
 
     users[user_id]["locked"] = True
     userdb.save_users(users)
 
-    assert userdb.check_credentials(user_id, Password(password)) is False
+    assert userdb.check_credentials(user_id, password) is False
 
 
 # user_id needs to be used here because it executes a reload of the config and the monkeypatch of
@@ -635,7 +635,7 @@ def test_check_credentials_managed_global_user_is_allowed(with_user: tuple[UserI
         pytest.skip("not relevant")
 
     user_id, password = with_user
-    assert userdb.check_credentials(user_id, Password(password)) == user_id
+    assert userdb.check_credentials(user_id, password) == user_id
 
 
 @pytest.mark.usefixtures("make_cme", "make_cme_customer_user")
@@ -644,7 +644,7 @@ def test_check_credentials_managed_customer_user_is_allowed(with_user: tuple[Use
         pytest.skip("not relevant")
 
     user_id, password = with_user
-    assert userdb.check_credentials(user_id, Password(password)) == user_id
+    assert userdb.check_credentials(user_id, password) == user_id
 
 
 @pytest.mark.usefixtures("make_cme", "make_cme_wrong_customer_user")
@@ -655,7 +655,7 @@ def test_check_credentials_managed_wrong_customer_user_is_denied(
         pytest.skip("not relevant")
 
     user_id, password = with_user
-    assert userdb.check_credentials(user_id, Password(password)) is False
+    assert userdb.check_credentials(user_id, password) is False
 
 
 def test_load_custom_attr_not_existing(user_id: UserId) -> None:
@@ -777,7 +777,7 @@ def test_make_two_factor_backup_codes(user_id: UserId) -> None:
     assert len(display_codes) == 10
     assert len(store_codes) == 10
     for index in range(10):
-        password_hashing.verify(Password(display_codes[index]), store_codes[index])
+        password_hashing.verify(display_codes[index], store_codes[index])
 
 
 def test_is_two_factor_backup_code_valid_no_codes(user_id) -> None:

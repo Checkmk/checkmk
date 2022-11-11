@@ -12,6 +12,7 @@ RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles15sp4 sles15sp4 \
     && zypper -n --no-gpg-checks in --replacefiles \
     gawk \
     && zypper -n --no-gpg-checks in --replacefiles \
+    bison \
     curl \
     cyrus-sasl-devel \
     enchant-devel \

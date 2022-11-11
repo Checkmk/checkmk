@@ -10,6 +10,7 @@ RUN yum -y --enablerepo=extras install \
     && yum -y install \
     centos-release-scl-rh \
     && yum -y install \
+    bison \
     curl \
     dpkg \
     enchant \

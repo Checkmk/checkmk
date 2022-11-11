@@ -31,6 +31,7 @@ RUN apt-get update \
     apache2 \
     apache2-dev \
     build-essential \
+    bison \
     curl \
     default-libmysqlclient-dev \
     dietlibc-dev \

@@ -39,7 +39,10 @@ def get_validated_plugin_module_name() -> str:
     calling_from = sys._getframe(2).f_code.co_filename
 
     path = pathlib.Path(calling_from)
-    if not path.parent.parts[-3:] == agent_based_plugins_dir.parts[-3:]:
+    if path.parent.parts[-3:] not in (
+        ("cpe", "plugins", "agent_based"),
+        agent_based_plugins_dir.parts[-3:],
+    ):
         raise ImportError("do not register from %r" % path)
 
     return path.stem

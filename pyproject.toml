@@ -6,6 +6,7 @@ known_omd = "omdlib"
 known_cmk_utils = "cmk.utils"
 known_cmk_automations = "cmk.automations"
 known_cmk_base = "cmk.base"
+known_cmc_proto = "cmc_proto"
 known_cmk_ec = "cmk.ec"
 known_cmk_gui = "cmk.gui"
 known_cmk_cee = "cmk.cee.dcd,cmk.cee.liveproxy,cmk.cee.mknotifyd"
@@ -15,7 +16,7 @@ known_cmk_core_helpers = "cmk.core_helpers"
 known_first_party = "cmk"
 
 # Order sections according to our layering.
-sections = """FUTURE,STDLIB,THIRDPARTY,TESTLIB,UNITTESTS,LIVESTATUS,OMD,CMK_UTILS,CMK_AUTOMATIONS,
+sections = """FUTURE,STDLIB,THIRDPARTY,TESTLIB,UNITTESTS,LIVESTATUS,OMD,CMC_PROTO,CMK_UTILS,CMK_AUTOMATIONS,
 CMK_SNMPLIB,CMK_CORE_HELPERS,CMK_BASE,CMK_EC,CMK_GUI,CMK_CEE,CMK_NOTIFICATION_PLUGINS,FIRSTPARTY,
 LOCALFOLDER"""
 

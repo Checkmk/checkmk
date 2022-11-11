@@ -20,15 +20,3 @@ sudo rsync -rlpgoD --delete-after ../../checks/ "$ROOT/share/check_mk/checks/"
     cd ..
     bash .f12
 )
-
-# Also deploy all other directories of same type
-if [ "${ALL_EDITIONS:-1}" != 0 ]; then
-    for WHAT in enterprise managed plus; do
-        if [ -e "../../$WHAT/cmk/base/.f12" ]; then
-            (
-                cd "../../$WHAT/cmk/base"
-                ONLY_COPY=1 ALL_EDITIONS=0 bash .f12
-            )
-        fi
-    done
-fi

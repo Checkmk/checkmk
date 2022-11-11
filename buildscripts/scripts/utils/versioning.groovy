@@ -10,36 +10,54 @@ import groovy.transform.Field
 @Field
 def REPO_PATCH_RULES = [\
 "raw": [\
-    "folders_to_be_removed": [\
+    "paths_to_be_removed": [\
         "enterprise", \
+        "cee", \
+        "cee.py", \
         "managed", \
+        "cme", \
+        "cme.py", \
         "plus", \
+        "cpe", \
+        "cpe.py", \
         "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cee,cpe}"],\
     "folders_to_be_created": [\
         "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cee,cpe}"]], \
 "enterprise": [\
-    "folders_to_be_removed": [\
+    "paths_to_be_removed": [\
         "managed", \
+        "cme", \
+        "cme.py", \
         "plus", \
+        "cpe", \
+        "cpe.py", \
         "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cpe}"], \
     "folders_to_be_created": [\
         "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cpe}"]], \
 "free": [\
-    "folders_to_be_removed": [\
+    "paths_to_be_removed": [\
         "managed", \
+        "cme", \
+        "cme.py", \
         "plus", \
+        "cpe", \
+        "cpe.py", \
         "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cpe}"], \
     "folders_to_be_created": [\
         "web/htdocs/themes/{facelift,modern-dark}/scss/{cme,cpe}"]], \
 "managed": [\
-    "folders_to_be_removed": [\
+    "paths_to_be_removed": [\
         "plus", \
+        "cpe", \
+        "cpe.py", \
         "web/htdocs/themes/{facelift,modern-dark}/scss/cpe"], \
     "folders_to_be_created": [\
         "web/htdocs/themes/{facelift,modern-dark}/scss/cpe"]], \
 "plus": [\
-    "folders_to_be_removed": [\
+    "paths_to_be_removed": [\
         "managed", \
+        "cme", \
+        "cme.py", \
         "web/htdocs/themes/{facelift,modern-dark}/scss/cme"], \
     "folders_to_be_created": [\
         "web/htdocs/themes/{facelift,modern-dark}/scss/cme"]], \
@@ -115,8 +133,8 @@ def print_image_tag() {
 }
 
 def patch_folders(edition) {
-    REPO_PATCH_RULES[edition]["folders_to_be_removed"].each{FOLDER ->
-        sh("rm -rf ${FOLDER}");
+    REPO_PATCH_RULES[edition]["paths_to_be_removed"].each{FOLDER ->
+        sh("find -name ${FOLDER} -exec rm -rf {} \;");
     }
 
     REPO_PATCH_RULES[edition]["folders_to_be_created"].each{FOLDER ->

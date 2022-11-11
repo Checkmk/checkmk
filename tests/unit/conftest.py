@@ -30,7 +30,6 @@ from cmk.utils.livestatus_helpers.testing import (
     mock_livestatus_communication,
     MockLiveStatusConnection,
 )
-from cmk.utils.plugin_loader import load_plugins_with_exceptions
 from cmk.utils.site import omd_site
 
 logger = logging.getLogger(__name__)
@@ -249,15 +248,6 @@ class FixRegister:
         config.load_all_agent_based_plugins(
             check_api.get_check_api_context,
         )
-
-        # our test environment does not deal with namespace packages properly. load plus plugins:
-        try:
-            load_plugins = list(load_plugins_with_exceptions("plus.cmk.base.plugins.agent_based"))
-        except ModuleNotFoundError:
-            pass
-        else:
-            for _plugin, exception in load_plugins:
-                raise exception
 
         self._snmp_sections = copy.deepcopy(register._config.registered_snmp_sections)
         self._agent_sections = copy.deepcopy(register._config.registered_agent_sections)

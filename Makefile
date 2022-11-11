@@ -171,14 +171,6 @@ $(DISTNAME).tar.gz: omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz .
 	$(MAKE) -C doc/plugin-api html
 	tar cf $(DISTNAME)/bin.tar $(TAROPTS) -C bin $$(cd bin ; ls)
 	gzip $(DISTNAME)/bin.tar
-	tar czf $(DISTNAME)/lib.tar.gz $(TAROPTS) \
-	    --exclude "cee" \
-	    --exclude "cee.py*" \
-	    --exclude "cme" \
-	    --exclude "cme.py*" \
-	    --exclude "cpe" \
-	    --exclude "cpe.py*" \
-	    cmk/*
 	tar czf $(DISTNAME)/werks.tar.gz $(TAROPTS) -C .werks werks
 	tar czf $(DISTNAME)/checks.tar.gz $(TAROPTS) -C checks $$(cd checks ; ls)
 	tar czf $(DISTNAME)/active_checks.tar.gz $(TAROPTS) -C active_checks $$(cd active_checks ; ls)

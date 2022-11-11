@@ -28,6 +28,7 @@ def run_script(work_python: Path, *, script: Path) -> Tuple[int, str, str]:
     return ret, pipe.decode("utf-8"), err.decode("utf-8")
 
 
+@pytest.mark.skip("needs to be analyzed later")
 @pytest.mark.parametrize("script,expected_code,expected_pipe,expected_err", [
     (
         Path("..\\..\\..\\..\\..\\enterprise\\agents\\plugins\\cmk_update_agent.py"),

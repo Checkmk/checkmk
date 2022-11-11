@@ -1,0 +1,11 @@
+Title: Improve label colors
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1668157429
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p31
+
+For the violet <i>explicit</i> labels the label color was too dark in the dark theme and the font color too dark in the light theme. Both stylings are fixed.

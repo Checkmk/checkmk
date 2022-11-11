@@ -1539,10 +1539,8 @@ table.data.job_table td {
     content: none;
   }
 
-  &[readonly] {
-    tag > div {
-      padding: $tag-padding;
-    }
+  &[readonly] tag > div {
+    padding: $tag-padding;
   }
 
   a {
@@ -1587,10 +1585,7 @@ table.data.job_table td {
     &:hover > div {
       background: $tag-input-bg-color;
       opacity: 1;
-    }
-
-    > div {
-      color: rgb(0, 0, 0);
+      color: $black;
     }
   }
 
@@ -1601,7 +1596,7 @@ table.data.job_table td {
   tag,
   &[readonly] tag {
     > div {
-      background: rgba(0, 168, 181, $tag-opacity);
+      background: rgba($tag-color, $tag-opacity);
       border-radius: $theme-border-radius;
       box-shadow: none;
       animation: none;
@@ -1612,17 +1607,20 @@ table.data.job_table td {
     }
 
     &.explicit > div {
-      background: rgba(119, 72, 152, $tag-opacity);
+      background: $tag-explicit-color;
     }
 
     &.discovered > div {
-      background: rgba(243, 174, 75, $tag-discovered-opacity);
+      background: rgba($tag-discovered-color, $tag-discovered-opacity);
     }
 
     &.ruleset > div {
-      background: rgba(222, 67, 131, $tag-opacity);
+      background: rgba($tag-ruleset-color, $tag-opacity);
+    }
 
-      span.tagify__tag-text {
+    &.explicit,
+    &.ruleset {
+      > div span.tagify__tag-text {
         color: $white;
       }
     }

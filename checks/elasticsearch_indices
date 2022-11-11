@@ -3,41 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# <<<elasticsearch_indices>>>
-# filebeat-6.5.4 11492614 801366929
-
-ElasticIndex = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
-    "ElasticIndex",
-    [
-        "count",
-        "size",
-    ],
-)
-
-
-def parse_elasticsearch_indices(info):
-    parsed = {}
-
-    for line in info:
-        try:
-            index, count, size = line
-            if parsed.get(index):
-                # sum up count/size for index names which already appeared
-                parsed[index] = parsed[index]._replace(count=parsed[index].count + float(count))
-                parsed[index] = parsed[index]._replace(size=parsed[index].size + float(size))
-            else:
-                parsed.setdefault(
-                    index,
-                    ElasticIndex(
-                        float(count),
-                        float(size),
-                    ),
-                )
-        except (IndexError, ValueError):
-            pass
-
-    return parsed
-
 
 @get_parsed_item_data
 def check_elasticsearch_indices(item, params, item_data):
@@ -87,7 +52,6 @@ def check_elasticsearch_indices(item, params, item_data):
 
 check_info["elasticsearch_indices"] = {
     "check_function": check_elasticsearch_indices,
-    "parse_function": parse_elasticsearch_indices,
     "inventory_function": discover(),
     "service_description": "Elasticsearch Indice %s",
     "has_perfdata": True,

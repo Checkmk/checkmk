@@ -11,10 +11,9 @@ from tests.testlib import on_time
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.type_defs import CheckPluginName, SectionName
+from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
-from cmk.base.api.agent_based.type_defs import AgentSectionPlugin
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     GetRateError,
     Metric,
@@ -23,11 +22,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
-
-
-@pytest.fixture(name="section_plugin", scope="module")
-def _section_plugin(fix_register: FixRegister) -> AgentSectionPlugin:
-    return fix_register.agent_sections[SectionName("elasticsearch_indices")]
+from cmk.base.plugins.agent_based.elasticsearch_indices import _Section, parse_elasticsearch_indices
 
 
 @pytest.fixture(name="check_plugin", scope="module")
@@ -36,8 +31,8 @@ def _check_plugin(fix_register: FixRegister) -> CheckPlugin:
 
 
 @pytest.fixture(name="section", scope="module")
-def _section(section_plugin: AgentSectionPlugin) -> object:
-    return section_plugin.parse_function(
+def _section() -> _Section:
+    return parse_elasticsearch_indices(
         [
             [".monitoring-kibana-6", "971.0", "765236.0"],
             ["filebeat", "28398.0", "22524354.0"],
@@ -48,7 +43,7 @@ def _section(section_plugin: AgentSectionPlugin) -> object:
 
 def test_discover(
     check_plugin: CheckPlugin,
-    section: object,
+    section: _Section,
 ) -> None:
     assert list(check_plugin.discovery_function(section)) == [
         Service(item=".monitoring-kibana-6"),
@@ -114,9 +109,8 @@ def test_discover(
     ],
 )
 def test_check(
-    section_plugin: AgentSectionPlugin,
     check_plugin: CheckPlugin,
-    section: object,
+    section: _Section,
     item: str,
     params: Mapping[str, object],
     expected_result: CheckResult,
@@ -128,7 +122,7 @@ def test_check(
                 check_plugin.check_function(
                     item="filebeat",
                     params=params,
-                    section=section_plugin.parse_function(
+                    section=parse_elasticsearch_indices(
                         [
                             ["filebeat", "28298.0", "21524354.0"],
                         ]

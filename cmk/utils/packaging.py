@@ -978,21 +978,27 @@ def _deinstall_inapplicable_active_packages(
 def _install_applicable_inactive_packages(
     log: logging.Logger, *, post_package_change_actions: bool
 ) -> None:
-    for package_path in _sort_enabled_packages_for_installation(log):
+    for name, package_paths in _sort_enabled_packages_for_installation(log):
+        for version, path in package_paths:
+            try:
+                _install_by_path(
+                    path,
+                    allow_outdated=False,
+                    post_package_change_actions=post_package_change_actions,
+                )
+            except PackageException as exc:
+                logger.log(VERBOSE, "[%s]: Verison %s not installed (%s)", name, version, exc)
+            else:
+                logger.log(VERBOSE, "[%s]: Version %s installed", name, version)
+                # We're done with this package.
+                # Do not try to install older versions, or the installation function will
+                # silently downgrade the package.
+                break
 
-        try:
-            _install_by_path(
-                package_path,
-                allow_outdated=False,
-                post_package_change_actions=post_package_change_actions,
-            )
-        except PackageException as exc:
-            logger.log(VERBOSE, "[%s]: Not installed (%s)", package_path.name, exc)
-        else:
-            logger.log(VERBOSE, "[%s]: Installed", package_path.name)
 
-
-def _sort_enabled_packages_for_installation(log: logging.Logger) -> Iterable[Path]:
+def _sort_enabled_packages_for_installation(
+    log: logging.Logger,
+) -> Iterable[Tuple[str, Iterable[Tuple[str, Path]]]]:
     packages_by_name: Dict[str, Dict[str, Path]] = {}
     for pkg_path in _get_enabled_package_paths():
         with pkg_path.open("rb") as pkg:
@@ -1014,18 +1020,27 @@ def _sort_enabled_packages_for_installation(log: logging.Logger) -> Iterable[Pat
 
 def _sort_by_name_then_newest_version(
     packages_by_name: Mapping[str, Mapping[str, Path]]
-) -> Iterable[Path]:
+) -> Iterable[tuple[str, Iterable[tuple[str, Path]]]]:
     """
-    >>> _sort_by_name_then_newest_version({
+    >>> from pprint import pprint
+    >>> pprint(_sort_by_name_then_newest_version({
     ...    "boo_package": {"1.2": "old_boo", "1.3": "new_boo"},
     ...    "argl_extension": {"canoo": "lexically_first", "dling": "lexically_later"},
-    ... })
-    ['lexically_later', 'lexically_first', 'new_boo', 'old_boo']
+    ... }))
+    [('argl_extension',
+      [('dling', 'lexically_later'), ('canoo', 'lexically_first')]),
+     ('boo_package', [('1.3', 'new_boo'), ('1.2', 'old_boo')])]
     """
+
+    def sortkey(item: tuple[str, Path]) -> tuple[tuple[float, str], ...]:
+        return _version_sort_key(item[0])
+
     return [
-        paths_by_version[version]
+        (
+            name,
+            sorted(paths_by_version.items(), key=sortkey, reverse=True),
+        )
         for name, paths_by_version in sorted(packages_by_name.items())
-        for version in sorted(paths_by_version, key=_version_sort_key, reverse=True)
     ]
 
 

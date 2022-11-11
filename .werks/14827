@@ -1,0 +1,29 @@
+Title: Re-work agent plugin for monitoring SSH daemon configuration
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1667986568
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p31
+
+The agent plugin for monitoring the SSH daemon configuration (<tt>mk_sshd_config</tt>) has been
+re-worked. The previous version of the plugin used the contents of <tt>/etc/ssh/sshd_config</tt> to
+monitor the daemon configuration. This is problematic in multiple ways:
+
+LI: Include directives, such as <tt>Include /etc/ssh/sshd_config.d/*.conf</tt>, are not taken into account, resulting in potentially wrong monitoring results.
+LI: Match directives are evaluated incorrectly, leading to monitoring results such as "PasswordAuthentication: noyes".
+LI: Defaults are not taken into account properly. For example, under Ubuntu, the default is that password authentication is enabled if not explictly configured differently.
+
+The re-worked version of the agent plugin reports the effective daemon configuration queried via
+<tt>sshd -T</tt>. This evaluates include directives and takes into daemon defaults, but does
+explicitly not evaluate Match directives. Hence, as an example, even if Checkmk reports that
+password authentication is off, this does not garantuee that no user can ssh into the system using a
+password.
+
+This werk is marked as incompatible for two reasons:
+
+LI: The behavioural changes listed above.
+LI: <tt>sshd -T</tt> will likely require root permissions to execute successfully. Hence, the new version of the plugin will likely not work on systems where the agent is executed as non-root.

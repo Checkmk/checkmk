@@ -279,11 +279,15 @@ def test_not_rc_tag(package_path: str, cmk_version: str) -> None:
             f"The file {msi_file_path} was most likely faked by fake-windows-artifacts, "
             f"so there is no reason to check it with msiinfo"
         )
+    properties = {
+        name: value
+        for line in subprocess.check_output(
+            ["msiinfo", "export", msi_file_path, "Property"], text=True
+        ).splitlines()
+        if "\t" in line
+        for name, value in (line.split("\t", 1),)
+    }
 
-    output = subprocess.check_output(["msiinfo", "export", msi_file_path, "Property"], text=True)
-    assert "ProductVersion" in output
-
-    for line in output.splitlines():
-        if "ProductVersion" in line:
-            assert cmk_version in line
-            assert "-rc" not in line
+    assert "ProductVersion" in properties
+    assert properties["ProductVersion"] == cmk_version
+    assert not re.match(r".*-rc\d+$", properties["ProductVersion"])

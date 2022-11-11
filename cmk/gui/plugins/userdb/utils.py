@@ -12,7 +12,6 @@ from livestatus import SiteId
 
 import cmk.utils.plugin_registry
 import cmk.utils.store as store
-from cmk.utils.crypto import Password
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
 
@@ -356,7 +355,9 @@ class UserConnector(abc.ABC):
     #     False       -> Login failed
     #     None        -> Unknown user
     @abc.abstractmethod
-    def check_credentials(self, user_id: UserId, password: Password[str]) -> CheckCredentialsResult:
+    def check_credentials(  # type:ignore[no-untyped-def]
+        self, user_id, password
+    ) -> CheckCredentialsResult:
         return None
 
     # Optional: Hook function can be registered here to be executed

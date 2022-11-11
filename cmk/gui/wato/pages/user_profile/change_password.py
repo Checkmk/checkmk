@@ -6,8 +6,6 @@
 import time
 from datetime import datetime
 
-from cmk.utils.crypto import Password
-
 from cmk.gui import forms, login, userdb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
@@ -53,14 +51,14 @@ class UserChangePasswordPage(ABCUserProfilePage):
             raise MKUserError("password", _("The new password must differ from your current one."))
 
         now = datetime.now()
-        if userdb.check_credentials(user.id, Password(cur_password), now) is False:
+        if userdb.check_credentials(user.id, cur_password, now) is False:
             raise MKUserError("cur_password", _("Your old password is wrong."))
 
         if password2 and password != password2:
             raise MKUserError("password2", _("The both new passwords do not match."))
 
         verify_password_policy(password)
-        user_spec["password"] = hash_password(Password(password))
+        user_spec["password"] = hash_password(password)
         user_spec["last_pw_change"] = int(time.time())
 
         # In case the user was enforced to change it's password, remove the flag

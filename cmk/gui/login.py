@@ -17,7 +17,6 @@ from werkzeug.local import LocalProxy
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
-from cmk.utils.crypto import Password
 from cmk.utils.site import omd_site, url_prefix
 from cmk.utils.type_defs import UserId
 
@@ -468,7 +467,9 @@ class LoginPage(Page):
             if not username:
                 raise MKUserError("_username", _("Missing username"))
 
-            password = request.get_validated_type_input_mandatory(Password, "_password")
+            password = request.var("_password", "")
+            if not password:
+                raise MKUserError("_password", _("Missing password"))
 
             default_origtarget = url_prefix() + "check_mk/"
             origtarget = request.get_url_input("_origtarget", default_origtarget)

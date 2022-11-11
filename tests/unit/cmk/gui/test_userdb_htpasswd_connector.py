@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
-from cmk.utils.crypto import Password, password_hashing
+from cmk.utils.crypto import password_hashing
 from cmk.utils.type_defs import UserId
 
 from cmk.gui.exceptions import MKUserError
@@ -58,19 +58,19 @@ def test_hash_password(password: str) -> None:
     # if not result:
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=DeprecationWarning)
-        hashed_pw = htpasswd.hash_password(Password(password))
-    password_hashing.verify(Password(password), hashed_pw)
+        hashed_pw = htpasswd.hash_password(password)
+    password_hashing.verify(password, hashed_pw)
 
 
 def test_truncation_error() -> None:
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=DeprecationWarning)
         with pytest.raises(MKUserError):
-            htpasswd.hash_password(Password("A" * 72 + "foo"))
+            htpasswd.hash_password("A" * 72 + "foo")
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=DeprecationWarning)
         with pytest.raises(MKUserError):
-            htpasswd.hash_password(Password("😀" * 19))
+            htpasswd.hash_password("😀" * 19)
 
 
 @pytest.mark.parametrize(
@@ -86,7 +86,7 @@ def test_truncation_error() -> None:
     ],
 )
 def test_update_hashes(htpasswd_file: Path, user: UserId, expect_update: bool) -> None:
-    password = Password("cmk")
+    password = "cmk"
     htpasswd_connector = htpasswd.HtpasswdUserConnector({})
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -113,24 +113,21 @@ def test_update_long_password(htpasswd_file: Path) -> None:
     pw_hash = "$5$rounds=1000$FwEKt/q2WUEYYjOm$EhgODZbqGIl8LcdDtGYYjfFLECubBN.xNSavUiP5.UB"
     htpasswd_file.write_text(f"{usr}:{pw_hash}\n")
 
+    assert htpasswd_connector.check_credentials(usr, pw) == usr, "Long passwords still work"
     assert (
-        htpasswd_connector.check_credentials(usr, Password(pw)) == usr
-    ), "Long passwords still work"
-    assert (
-        htpasswd_connector.check_credentials(usr, Password(pw[:72])) == usr
+        htpasswd_connector.check_credentials(usr, pw[:72]) == usr
     ), "The password is now truncated"
 
 
 def test_user_connector_verify_password() -> None:
     htpasswd_connector = htpasswd.HtpasswdUserConnector({})
-    pw = Password("cmk")
-    assert htpasswd_connector.check_credentials(UserId("cmkadmin"), pw) == "cmkadmin"
-    assert htpasswd_connector.check_credentials(UserId("bärnd"), pw) == "bärnd"
-    assert htpasswd_connector.check_credentials(UserId("sha256user"), pw) == "sha256user"
-    assert htpasswd_connector.check_credentials(UserId("harry"), pw) == "harry"
-    assert htpasswd_connector.check_credentials(UserId("bcrypt_user"), pw) == "bcrypt_user"
-    assert htpasswd_connector.check_credentials(UserId("dingeling"), Password("aaa")) is None
-    assert htpasswd_connector.check_credentials(UserId("locked"), Password("locked")) is False
+    assert htpasswd_connector.check_credentials(UserId("cmkadmin"), "cmk") == "cmkadmin"
+    assert htpasswd_connector.check_credentials(UserId("bärnd"), "cmk") == "bärnd"
+    assert htpasswd_connector.check_credentials(UserId("sha256user"), "cmk") == "sha256user"
+    assert htpasswd_connector.check_credentials(UserId("harry"), "cmk") == "harry"
+    assert htpasswd_connector.check_credentials(UserId("bcrypt_user"), "cmk") == "bcrypt_user"
+    assert htpasswd_connector.check_credentials(UserId("dingeling"), "aaa") is None
+    assert htpasswd_connector.check_credentials(UserId("locked"), "locked") is False
 
     # Check no exception is raised, when setting a password > 72 chars a exception is raised...
-    assert htpasswd_connector.check_credentials(UserId("bcrypt_user"), Password("A" * 100)) is False
+    assert htpasswd_connector.check_credentials(UserId("bcrypt_user"), "A" * 100) is False

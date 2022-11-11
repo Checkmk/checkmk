@@ -24,7 +24,7 @@ from six import ensure_str
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
-from cmk.utils.crypto import Password, password_hashing
+from cmk.utils.crypto import password_hashing
 from cmk.utils.type_defs import ContactgroupName, UserId
 
 import cmk.gui.hooks as hooks
@@ -275,7 +275,7 @@ def make_two_factor_backup_codes() -> list[tuple[str, str]]:
     The codes are returned in plain form for displaying and in hashed+salted form for storage
     """
     return [
-        (password, password_hashing.hash_password(Password(password)))
+        (password, password_hashing.hash_password(password))
         for password in (utils.get_random_string(10) for i in range(10))
     ]
 
@@ -287,7 +287,7 @@ def is_two_factor_backup_code_valid(user_id: UserId, code: str) -> bool:
 
     for stored_code in credentials["backup_codes"]:
         try:
-            password_hashing.verify(Password(code), stored_code)
+            password_hashing.verify(code, stored_code)
             matched_code = stored_code
             break
         except (password_hashing.PasswordInvalidError, ValueError):
@@ -1125,7 +1125,7 @@ def create_cmk_automation_user(now: datetime) -> None:
         "alias": "Check_MK Automation - used for calling web services",
         "contactgroups": [],
         "automation_secret": secret,
-        "password": password_hashing.hash_password(Password(secret)),
+        "password": password_hashing.hash_password(secret),
         "roles": ["admin"],
         "locked": False,
         "serial": 0,
@@ -1239,9 +1239,7 @@ def _clear_config_based_user_attributes() -> None:
 #   +----------------------------------------------------------------------+
 
 
-def check_credentials(
-    username: UserId, password: Password[str], now: datetime
-) -> UserId | Literal[False]:
+def check_credentials(username: UserId, password: str, now: datetime) -> UserId | Literal[False]:
     """Verify the credentials given by a user using all auth connections"""
     for connection_id, connection in active_connections():
         # None        -> User unknown, means continue with other connectors

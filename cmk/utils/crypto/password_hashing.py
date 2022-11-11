@@ -14,15 +14,12 @@ a salt, and the actual checksum -- which is all the information needed to verify
 given password (see `verify`).
 """
 
-from typing import AnyStr
-
 # Import errors from passlib are suppressed since stub files for mypy are not available.
 # pylint errors are suppressed since this is the only module that should import passlib.
 import passlib.context  # type: ignore[import]  # pylint: disable=passlib-module-import
 import passlib.exc  # type: ignore[import]  # pylint: disable=passlib-module-import
 from passlib import hash as passlib_hash  # pylint: disable=passlib-module-import
 
-from cmk.utils.crypto import Password
 from cmk.utils.exceptions import MKException
 
 # Using code should not be able to change the number of rounds (to unsafe values), but test code
@@ -44,7 +41,7 @@ class PasswordInvalidError(MKException):
     """Indicates that the provided password could not be verified"""
 
 
-def hash_password(password: Password[AnyStr], *, allow_truncation: bool = False) -> str:
+def hash_password(password: str, *, allow_truncation: bool = False) -> str:
     """Hash a password using the preferred algorithm
 
     Uses bcrypt with 12 rounds to hash a password.
@@ -63,7 +60,7 @@ def hash_password(password: Password[AnyStr], *, allow_truncation: bool = False)
     try:
         return passlib_hash.bcrypt.using(
             rounds=BCRYPT_ROUNDS, truncate_error=not allow_truncation, ident=BCRYPT_IDENT
-        ).hash(password.raw)
+        ).hash(password)
     except passlib.exc.PasswordTruncateError as e:
         raise PasswordTooLongError(e)
 
@@ -84,7 +81,7 @@ _context = passlib.context.CryptContext(
 )
 
 
-def verify(password: Password[AnyStr], password_hash: str) -> None:
+def verify(password: str, password_hash: str) -> None:
     """Verify if a password matches a password hash.
 
     :param password: The password to check.
@@ -98,7 +95,7 @@ def verify(password: Password[AnyStr], password_hash: str) -> None:
                        - if `password` or `password_hash` contain invalid characters (e.g. NUL).
     """
     try:
-        valid = _context.verify(password.raw, password_hash)
+        valid = _context.verify(password, password_hash)
     except passlib.exc.UnknownHashError:
         raise ValueError("Invalid hash")
     if not valid:

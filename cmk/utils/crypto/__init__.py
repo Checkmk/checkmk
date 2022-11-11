@@ -6,29 +6,11 @@
 
 It aims to provide a coherent, hard-to-misuse API. It should also serve as a facade to both
 our crypto dependencies and python's built-in crypto utilities (like hashlib).
+
+Find enclosed:
+    cmk.utils.crypto.password_hashing: for creating and validating password hashes
+
+TODO:
+    More functionality, hashing, like symmetric and asymmetric cryptography, key derivation,
+    randomly generating passwords/UIDs/etc. will be added in the future.
 """
-
-
-from typing import AnyStr, Final, Generic
-
-from typing_extensions import assert_never
-
-
-class Password(Generic[AnyStr]):
-    """A human-readable password
-
-    The plaintext password can be accessed via `.raw`. Note that raw passwords should never be
-    logged without masking.
-    """
-
-    def __init__(self, password: AnyStr) -> None:
-        if isinstance(password, bytes):
-            nul = b"\0"
-        elif isinstance(password, str):
-            nul = "\0"
-        else:
-            assert_never(password)
-
-        if nul in password:
-            raise ValueError(f"Invalid password: {password!r}")
-        self.raw: Final[AnyStr] = password

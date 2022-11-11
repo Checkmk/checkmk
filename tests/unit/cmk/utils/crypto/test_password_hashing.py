@@ -3,35 +3,33 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import AnyStr
-
 import pytest
 
-from cmk.utils.crypto import Password
 from cmk.utils.crypto import password_hashing as ph
 
 
-@pytest.mark.parametrize("password", ["", "blä", "😀", "😀" * 18, "a" * 72, b"bytes"])
-def test_hash_verify_roundtrip(password: AnyStr) -> None:
-    pw_hash = ph.hash_password(Password(password))
+@pytest.mark.parametrize("password", ["", "blä", "😀", "😀" * 18, "a" * 72])
+def test_hash_verify_roundtrip(password: str) -> None:
+    pw_hash = ph.hash_password(password)
     assert pw_hash.startswith("$2y$04$")  # bcrypt 4 rounds
-    ph.verify(Password(password), pw_hash)
+    ph.verify(password, pw_hash)
 
 
 def test_hash_no_white_space_trimming() -> None:
     with pytest.raises(ph.PasswordInvalidError):
-        ph.verify(Password(" "), ph.hash_password(Password("    ")))
+        ph.verify(" ", ph.hash_password("    "))
 
 
 def test_bcrypt_null_bytes() -> None:
-    with pytest.raises(ValueError):
-        ph.hash_password(Password("foo\0bar"))
+    # Note: pyca/bcrypt 4.0 removes this limitation, so this test is bound to fail.
+    with pytest.raises(ValueError, match="NULL byte"):
+        ph.hash_password("foo\0bar")
 
 
 @pytest.mark.parametrize("password", [" " * 73, "🙀" * 19])
 def test_bcrypt_too_long(password: str) -> None:
     with pytest.raises(ph.PasswordTooLongError):
-        ph.hash_password(Password(password))
+        ph.hash_password(password)
 
 
 @pytest.mark.parametrize(
@@ -49,7 +47,7 @@ def test_bcrypt_too_long(password: str) -> None:
     ],
 )
 def test_verify(valid_hash: str) -> None:
-    ph.verify(Password("foobar"), valid_hash)
+    ph.verify("foobar", valid_hash)
 
 
 @pytest.mark.parametrize(
@@ -63,7 +61,7 @@ def test_verify(valid_hash: str) -> None:
 )
 def test_verify_invalid_password_failure(password: str, password_hash: str) -> None:
     with pytest.raises(ph.PasswordInvalidError):
-        ph.verify(Password(password), password_hash)
+        ph.verify(password, password_hash)
 
 
 @pytest.mark.parametrize(
@@ -76,7 +74,7 @@ def test_verify_invalid_password_failure(password: str, password_hash: str) -> N
 )
 def test_verify_invalid_hash_failure(password: str, password_hash: str) -> None:
     with pytest.raises(ValueError, match="Invalid hash"):
-        ph.verify(Password(password), password_hash)
+        ph.verify(password, password_hash)
 
 
 @pytest.mark.parametrize(
@@ -93,7 +91,7 @@ def test_verify_invalid_hash_failure(password: str, password_hash: str) -> None:
 )
 def test_verify_null_bytes(password: str, password_hash: str) -> None:
     with pytest.raises(ValueError):
-        ph.verify(Password(password), password_hash)
+        ph.verify(password, password_hash)
 
 
 @pytest.mark.parametrize(
@@ -109,7 +107,7 @@ def test_verify_sha256_omit_rounds(pw_hash: str) -> None:
     indicate 5000 rounds.
     https://passlib.readthedocs.io/en/stable/lib/passlib.hash.sha256_crypt.html#passlib.hash.sha256_crypt
     """
-    ph.verify(Password("foobar"), pw_hash)
+    ph.verify("foobar", pw_hash)
 
 
 @pytest.mark.parametrize(
@@ -127,7 +125,7 @@ def test_verify_sha256_omit_rounds(pw_hash: str) -> None:
 )
 def test_verify_invalid_rounds(password: str, pw_hash: str) -> None:
     with pytest.raises(ValueError, match="rounds"):
-        ph.verify(Password(password), pw_hash)
+        ph.verify(password, pw_hash)
 
 
 @pytest.mark.parametrize(

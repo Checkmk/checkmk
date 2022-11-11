@@ -56,7 +56,7 @@ from cmk.gui.view_utils import CellSpec, CSVExportError, JSONExportError
 
 ExportCellContent = str | dict[str, Any]
 PDFCellContent = Union[str | tuple[Literal["icon"], str]]
-PDFCellSpec = tuple[str, PDFCellContent]
+PDFCellSpec = tuple[Sequence[str], PDFCellContent]
 
 
 # TODO: Return value of render() could be cleaned up e.g. to a named tuple with an
@@ -520,7 +520,7 @@ class Cell:
             if css_classes is None:
                 css_classes = ""
             if rendered_txt is None:
-                return css_classes, ""
+                return css_classes.split(), ""
             assert isinstance(rendered_txt, (str, HTML))
 
             txt = rendered_txt.strip()
@@ -546,7 +546,7 @@ class Cell:
             elif not isinstance(txt, tuple):
                 content = escaping.strip_tags(unescape(txt))
 
-            return css_classes, content
+            return css_classes.split(), content
         except Exception:
             raise MKGeneralException(
                 f'Failed to paint "{self.painter_name()}": {traceback.format_exc()}'

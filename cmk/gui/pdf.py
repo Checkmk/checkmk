@@ -42,7 +42,7 @@ from cmk.gui.type_defs import RGBColor, RowShading, SizeMM, SizePT
 
 RawIconColumn = tuple[Literal["icon"], str]
 RawRendererColumn = tuple[Literal["object"], "CellRenderer"]
-RawTableColumn = tuple[str, str | RawIconColumn | RawRendererColumn]
+RawTableColumn = tuple[Sequence[str], str | RawIconColumn | RawRendererColumn]
 RawTableRow = list[RawTableColumn]
 RawTableRows = list[RawTableRow]
 SizeInternal = float
@@ -1088,7 +1088,6 @@ class TableRenderer:
             row: list[CellRenderer] = []
             rows.append(row)
             for css, entry in raw_row:
-                css_list: list[str] = [] if css is None else css.split()
                 if isinstance(entry, tuple):
                     if entry[0] == "icon":
                         row.append(IconCell(entry[1]))
@@ -1096,10 +1095,10 @@ class TableRenderer:
                         row.append(entry[1])
                     else:
                         raise Exception(f"Invalid table entry {entry!r} in add_table()")
-                elif css == "leftheading":
-                    row.append(TitleCell(css_list, entry))
+                elif css == ["leftheading"]:
+                    row.append(TitleCell(css, entry))
                 else:
-                    row.append(TextCell(css_list, entry))
+                    row.append(TextCell(css, entry))
 
         # Now we balance the widths of the columns. Each render object has an
         # absolute minimum width (e.g. the width of the longest word) and
@@ -1413,7 +1412,7 @@ class TableRenderer:
 
         for index, step in enumerate(column.get_render_steps(self.pdf, headers, y_padding)):
             if is_single_dataset:
-                step_row = [row[0] if index == 0 else TitleCell(["lefheading"], ""), step]
+                step_row = [row[0] if index == 0 else TitleCell(["leftheading"], ""), step]
             else:
                 step_row = [step]
 
@@ -1439,16 +1438,13 @@ class TableRenderer:
 # Note: all dimensions this objects handles with are in mm! This is due
 # to the fact that this API is also available externally
 class TextCell(CellRenderer):
-    def __init__(self, csses: list[str] | None, text: str) -> None:
+    def __init__(self, csses: Sequence[str], text: str) -> None:
         self.supports_stepwise_rendering = False
         self._text = text
         self._bold = False
         self._color = black
         self._bg_color = white
         self._alignment: Align = "left"
-
-        if csses is None:
-            csses = []
 
         state_in_css: bool = any(
             css.startswith("hstate")

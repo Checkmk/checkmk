@@ -239,7 +239,7 @@ def test_edit_rename_conflict():
 
 
 def test_install(mkp_bytes):
-    packaging.install(mkp_bytes)
+    packaging._install(mkp_bytes)
 
     assert packaging._package_exists("aaa") is True
     package_info = _read_package_info("aaa")

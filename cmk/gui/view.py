@@ -24,6 +24,7 @@ from cmk.gui.sorter import sorter_registry, SorterEntry
 from cmk.gui.type_defs import (
     FilterName,
     HTTPVariables,
+    PainterSpec,
     SorterSpec,
     ViewProcessTracking,
     ViewSpec,
@@ -32,6 +33,7 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.view_breadcrumbs import make_host_breadcrumb, make_service_breadcrumb
 from cmk.gui.views.layout import Layout, layout_registry
+from cmk.gui.views.sort_url import compute_sort_url_parameter
 from cmk.gui.visuals import view_title
 
 
@@ -82,9 +84,9 @@ class View:
                 continue
 
             if e.join_index is not None:
-                cells.append(JoinCell(self.spec, self._user_sorters, e))
+                cells.append(JoinCell(e, self._compute_sort_url_parameter(e)))
             else:
-                cells.append(Cell(self.spec, self._user_sorters, e))
+                cells.append(Cell(e, self._compute_sort_url_parameter(e)))
 
         return cells
 
@@ -92,7 +94,7 @@ class View:
     def group_cells(self) -> list[Cell]:
         """Group cells are displayed as titles of grouped rows"""
         return [
-            Cell(self.spec, self._user_sorters, e)
+            Cell(e, self._compute_sort_url_parameter(e))
             for e in self.spec["group_painters"]
             if painter_exists(e)
         ]
@@ -107,6 +109,19 @@ class View:
         """Returns the list of effective sorters to be used to sort the rows of this view"""
         return self._get_sorter_entries(
             self.user_sorters if self.user_sorters else self.spec["sorters"]
+        )
+
+    def _compute_sort_url_parameter(self, painter: PainterSpec) -> str | None:
+        if not self.spec.get("user_sortable", False):
+            return None
+
+        return compute_sort_url_parameter(
+            painter.name,
+            painter.parameters,
+            painter.join_index,
+            self.spec["group_painters"],
+            self.spec["sorters"],
+            self._user_sorters or [],
         )
 
     def _get_sorter_entries(self, sorter_list: Iterable[SorterSpec]) -> list[SorterEntry]:

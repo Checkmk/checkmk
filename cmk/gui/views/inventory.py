@@ -61,13 +61,7 @@ from cmk.gui.painter_options import (
     PainterOption,
     PainterOptions,
 )
-from cmk.gui.painters.v0.base import (
-    Cell,
-    declare_1to1_sorter,
-    Painter,
-    painter_registry,
-    register_painter,
-)
+from cmk.gui.painters.v0.base import Cell, Painter, painter_registry, register_painter
 from cmk.gui.plugins.views.utils import inventory_displayhints, InventoryHintSpec
 from cmk.gui.plugins.visuals.inventory import (
     FilterInvBool,
@@ -88,7 +82,7 @@ from cmk.gui.plugins.visuals.utils import (
     visual_info_registry,
     VisualInfo,
 )
-from cmk.gui.sorter import cmp_simple_number, register_sorter
+from cmk.gui.sorter import cmp_simple_number, declare_1to1_sorter, register_sorter
 from cmk.gui.type_defs import (
     ColumnName,
     FilterName,

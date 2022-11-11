@@ -10,7 +10,6 @@ from typing import Any, List, Mapping, Sequence, Tuple
 import cmk.gui.utils as utils
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
-from cmk.gui.painters.v0.base import declare_1to1_sorter
 from cmk.gui.painters.v0.helpers import get_tag_groups
 from cmk.gui.painters.v1.helpers import get_perfdata_nth_value
 from cmk.gui.site_config import get_site_config
@@ -24,6 +23,7 @@ from cmk.gui.sorter import (
     cmp_simple_string,
     cmp_string_list,
     compare_ips,
+    declare_1to1_sorter,
     declare_simple_sorter,
     ParameterizedSorter,
     Sorter,

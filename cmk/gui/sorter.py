@@ -12,7 +12,8 @@ from typing import Any, NamedTuple
 from cmk.utils.plugin_registry import Registry
 
 from cmk.gui.num_split import cmp_num_split as _cmp_num_split
-from cmk.gui.type_defs import ColumnName, PainterSpec, Row, SorterFunction
+from cmk.gui.painters.v0.base import painter_registry
+from cmk.gui.type_defs import ColumnName, PainterName, PainterSpec, Row, SorterFunction
 from cmk.gui.valuespec import Dictionary
 
 
@@ -113,6 +114,24 @@ def declare_simple_sorter(name: str, title: str, column: ColumnName, func: Sorte
         name,
         {"title": title, "columns": [column], "cmp": lambda r1, r2: func(column, r1, r2)},
     )
+
+
+def declare_1to1_sorter(
+    painter_name: PainterName, func: SorterFunction, col_num: int = 0, reverse: bool = False
+) -> PainterName:
+    painter = painter_registry[painter_name]()
+
+    register_sorter(
+        painter_name,
+        {
+            "title": painter.title,
+            "columns": painter.columns,
+            "cmp": (lambda r1, r2: func(painter.columns[col_num], r2, r1))
+            if reverse
+            else lambda r1, r2: func(painter.columns[col_num], r1, r2),
+        },
+    )
+    return painter_name
 
 
 def cmp_simple_number(column: ColumnName, r1: Row, r2: Row) -> int:

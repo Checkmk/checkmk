@@ -9,12 +9,13 @@ import pytest
 
 from cmk.gui.logged_in import user
 from cmk.gui.painters.v0 import base as painter_base
-from cmk.gui.painters.v0.base import _encode_sorter_url, Cell, Painter, PainterRegistry
+from cmk.gui.painters.v0.base import Cell, Painter, PainterRegistry
 from cmk.gui.painters.v0.helpers import replace_action_url_macros
 from cmk.gui.type_defs import PainterSpec, Row, SorterSpec, ViewSpec
 from cmk.gui.view_store import multisite_builtin_views
 from cmk.gui.views.layout import group_value
 from cmk.gui.views.page_show_view import _parse_url_sorters
+from cmk.gui.views.sort_url import _encode_sorter_url
 
 
 @pytest.fixture(name="view_spec")
@@ -109,6 +110,6 @@ def test_group_value(monkeypatch: pytest.MonkeyPatch, view_spec: ViewSpec) -> No
     )
 
     painter: Painter = painter_base.painter_registry["tag_painter"]()
-    dummy_cell: Cell = Cell(view_spec, None, PainterSpec(name=painter.ident))
+    dummy_cell: Cell = Cell(PainterSpec(name=painter.ident), None)
 
     assert group_value({"host_tags": {"networking": "dmz"}}, [dummy_cell]) == ("dmz",)

@@ -660,7 +660,7 @@ def test_registered_datasources() -> None:
 def test_painter_export_title(monkeypatch: pytest.MonkeyPatch, view: View) -> None:
     painters: list[Painter] = [painter_class() for painter_class in painter_registry.values()]
     painters_and_cells: list[Tuple[Painter, Cell]] = [
-        (painter, Cell(view.spec, None, PainterSpec(name=painter.ident))) for painter in painters
+        (painter, Cell(PainterSpec(name=painter.ident), None)) for painter in painters
     ]
 
     dummy_ident: str = "einszwo"
@@ -697,7 +697,7 @@ def test_legacy_register_painter(monkeypatch: pytest.MonkeyPatch, view: View) ->
     )
 
     painter = painter_base.painter_registry["abc"]()
-    dummy_cell = Cell(view.spec, None, PainterSpec(name=painter.ident))
+    dummy_cell = Cell(PainterSpec(name=painter.ident), None)
     assert isinstance(painter, Painter)
     assert painter.ident == "abc"
     assert painter.title(dummy_cell) == "A B C"

@@ -154,6 +154,7 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
 
     for name in (
         "declare_simple_sorter",
+        "declare_1to1_sorter",
         "register_sorter",
         "Sorter",
         "sorter_registry",
@@ -209,7 +210,6 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "Painter",
         "painter_registry",
         "register_painter",
-        "declare_1to1_sorter",
         "ExportCellContent",
         "join_row",
     ):

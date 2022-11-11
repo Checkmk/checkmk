@@ -17,6 +17,8 @@ export MAILRC="$OMD_ROOT/etc/mail.rc"
 
 # Make the python requests module trust the CAs configured in Check_MK
 export REQUESTS_CA_BUNDLE=$OMD_ROOT/var/ssl/ca-certificates.crt
+# Make the openssl trust the CAs configured in Check_MK
+export SSL_CERT_FILE=$OMD_ROOT/var/ssl/ca-certificates.crt
 
 # Enforce a non localized environment. The reason for this configuration is
 # that the parameters and outputs of the monitoring plug-ins are localized. If

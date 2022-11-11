@@ -104,7 +104,7 @@ $(PYTHON3_INTERMEDIATE_INSTALL): $(PYTHON3_BUILD)
 # NOTE: -j1 seems to be necessary when --enable-optimizations is used
 	$(MAKE) -j1 -C $(PYTHON3_BUILD_DIR) DESTDIR=$(PYTHON3_INSTALL_DIR) install
 # Fix python interpreter
-	$(SED) -i '1s|^#!.*/python3\.8$$|#!/usr/bin/env python3|' $(addprefix $(PYTHON3_INSTALL_DIR)/bin/,2to3-3.8 easy_install-3.8 idle3.8 pip3 pip3.8 pydoc3.8)
+	$(SED) -i '1s|^#!.*/python3\.8$$|#!/usr/bin/env python3|' $(addprefix $(PYTHON3_INSTALL_DIR)/bin/,2to3-3.8 idle3.8 pip3 pip3.8 pydoc3.8)
 # Fix pip3 configuration
 	$(SED) -i '/^import re$$/i import os\nos.environ["PIP_DISABLE_PIP_VERSION_CHECK"] = "True"\nos.environ["PIP_TARGET"] = os.path.join(os.environ["OMD_ROOT"], "local/lib/python3")' $(addprefix $(PYTHON3_INSTALL_DIR)/bin/,pip3 pip3.8)
 	install -m 644 $(PYTHON3_SITECUSTOMIZE_SOURCE) $(PYTHON3_INSTALL_DIR)/lib/python3.8/

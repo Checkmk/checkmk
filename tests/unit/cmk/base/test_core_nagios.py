@@ -640,7 +640,7 @@ def test_create_nagios_servicedefs_active_check(
     hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
-    core_nagios._create_nagios_servicedefs(cfg, cache, "my_host", host_attrs)
+    core_nagios._create_nagios_servicedefs(cfg, cache, "my_host", host_attrs, {})
 
     assert outfile.getvalue() == expected_result
 
@@ -735,7 +735,7 @@ def test_create_nagios_servicedefs_with_warnings(  # type:ignore[no-untyped-def]
     hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
-    core_nagios._create_nagios_servicedefs(cfg, cache, "my_host", host_attrs)
+    core_nagios._create_nagios_servicedefs(cfg, cache, "my_host", host_attrs, {})
 
     assert outfile.getvalue() == expected_result
 
@@ -786,7 +786,7 @@ def test_create_nagios_servicedefs_omit_service(
     hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
-    core_nagios._create_nagios_servicedefs(cfg, cache, "my_host", host_attrs)
+    core_nagios._create_nagios_servicedefs(cfg, cache, "my_host", host_attrs, {})
 
     assert outfile.getvalue() == expected_result
 
@@ -835,7 +835,7 @@ def test_create_nagios_servicedefs_invalid_args(
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
 
     with pytest.raises(exceptions.MKGeneralException, match=error_message):
-        core_nagios._create_nagios_servicedefs(cfg, cache, "my_host", host_attrs)
+        core_nagios._create_nagios_servicedefs(cfg, cache, "my_host", host_attrs, {})
 
 
 @pytest.mark.parametrize(
@@ -902,7 +902,7 @@ def test_create_nagios_config_commands(
     hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
-    core_nagios._create_nagios_servicedefs(cfg, cache, "my_host", host_attrs)
+    core_nagios._create_nagios_servicedefs(cfg, cache, "my_host", host_attrs, {})
     core_nagios._create_nagios_config_commands(cfg)
 
     assert outfile.getvalue() == expected_result

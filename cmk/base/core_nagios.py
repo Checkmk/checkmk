@@ -11,7 +11,7 @@ import socket
 import sys
 from io import StringIO
 from pathlib import Path
-from typing import Any, cast, Dict, IO, List, Literal, Optional, Set, Tuple
+from typing import Any, cast, Dict, IO, List, Literal, Mapping, Optional, Set, Tuple
 
 import cmk.utils.config_path
 import cmk.utils.password_store
@@ -152,8 +152,9 @@ def create_config(outfile: IO[str], hostnames: Optional[List[HostName]]) -> None
 
     _output_conf_header(cfg)
 
+    stored_passwords = cmk.utils.password_store.load()
     for hostname in sorted(hostnames):
-        _create_nagios_config_host(cfg, config_cache, hostname)
+        _create_nagios_config_host(cfg, config_cache, hostname, stored_passwords)
 
     _create_nagios_config_contacts(cfg, hostnames)
     _create_nagios_config_hostgroups(cfg)
@@ -178,7 +179,10 @@ def _output_conf_header(cfg: NagiosConfig) -> None:
 
 
 def _create_nagios_config_host(
-    cfg: NagiosConfig, config_cache: ConfigCache, hostname: HostName
+    cfg: NagiosConfig,
+    config_cache: ConfigCache,
+    hostname: HostName,
+    stored_passwords: Mapping[str, str],
 ) -> None:
     cfg.write("\n# ----------------------------------------------------\n")
     cfg.write("# %s\n" % hostname)
@@ -187,7 +191,7 @@ def _create_nagios_config_host(
     if config.generate_hostconf:
         host_spec = _create_nagios_host_spec(cfg, config_cache, hostname, host_attrs)
         cfg.write(_format_nagios_object("host", host_spec))
-    _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs)
+    _create_nagios_servicedefs(cfg, config_cache, hostname, host_attrs, stored_passwords)
 
 
 def _create_nagios_host_spec(  # pylint: disable=too-many-branches
@@ -299,7 +303,11 @@ def _create_nagios_host_spec(  # pylint: disable=too-many-branches
 
 
 def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
-    cfg: NagiosConfig, config_cache: ConfigCache, hostname: HostName, host_attrs: ObjectAttributes
+    cfg: NagiosConfig,
+    config_cache: ConfigCache,
+    hostname: HostName,
+    host_attrs: ObjectAttributes,
+    stored_passwords: Mapping[str, str],
 ) -> None:
     from cmk.base.check_table import get_check_table  # pylint: disable=import-outside-toplevel
 
@@ -416,7 +424,6 @@ def _create_nagios_servicedefs(  # pylint: disable=too-many-branches
 
     if actchecks:
         cfg.write("\n\n# Active checks\n")
-        stored_passwords = cmk.utils.password_store.load()
         for acttype, act_info, params in actchecks:
 
             has_perfdata = act_info.get("has_perfdata", False)

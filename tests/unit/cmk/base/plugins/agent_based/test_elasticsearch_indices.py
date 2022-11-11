@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
+
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
@@ -20,18 +22,128 @@ from cmk.base.plugins.agent_based.elasticsearch_indices import (
 def _section() -> _Section:
     return parse_elasticsearch_indices(
         [
-            [".monitoring-kibana-6", "971.0", "765236.0"],
-            ["filebeat", "28398.0", "22524354.0"],
-            [".monitoring-es-6", "11986.0", "15581765.0"],
+            [
+                json.dumps(
+                    {
+                        "my-index-10.2022": {
+                            "uuid": "eZx4bV5_Qta1ErK6wftxHw",
+                            "health": "yellow",
+                            "status": "open",
+                            "primaries": {
+                                "docs": {"count": 28398, "deleted": 0},
+                                "store": {
+                                    "size_in_bytes": 22524354,
+                                    "total_data_set_size_in_bytes": 22524354,
+                                    "reserved_in_bytes": 0,
+                                },
+                            },
+                            "total": {
+                                "docs": {"count": 28398, "deleted": 0},
+                                "store": {
+                                    "size_in_bytes": 22524354,
+                                    "total_data_set_size_in_bytes": 22524354,
+                                    "reserved_in_bytes": 0,
+                                },
+                            },
+                        },
+                        "my-index-11.2022": {
+                            "uuid": "gP4TQ0PcSS6p3E0ULgqH5g",
+                            "health": "yellow",
+                            "status": "open",
+                            "primaries": {
+                                "docs": {"count": 2, "deleted": 4},
+                                "store": {
+                                    "size_in_bytes": 35800,
+                                    "total_data_set_size_in_bytes": 35800,
+                                    "reserved_in_bytes": 0,
+                                },
+                            },
+                            "total": {
+                                "docs": {"count": 2, "deleted": 4},
+                                "store": {
+                                    "size_in_bytes": 35800,
+                                    "total_data_set_size_in_bytes": 35800,
+                                    "reserved_in_bytes": 0,
+                                },
+                            },
+                        },
+                        "my-other-index-2016-04-12": {
+                            "uuid": "MOEas2q8QyWHKsNFh3_7NA",
+                            "health": "yellow",
+                            "status": "open",
+                            "primaries": {
+                                "docs": {"count": 1, "deleted": 0},
+                                "store": {
+                                    "size_in_bytes": 3580,
+                                    "total_data_set_size_in_bytes": 3580,
+                                    "reserved_in_bytes": 0,
+                                },
+                            },
+                            "total": {
+                                "docs": {"count": 1, "deleted": 0},
+                                "store": {
+                                    "size_in_bytes": 3580,
+                                    "total_data_set_size_in_bytes": 3580,
+                                    "reserved_in_bytes": 0,
+                                },
+                            },
+                        },
+                        "my-other-index-2016-04-22": {
+                            "uuid": "VsVq79a4T423GoBwS7hFFw",
+                            "health": "yellow",
+                            "status": "open",
+                            "primaries": {
+                                "docs": {"count": 2, "deleted": 0},
+                                "store": {
+                                    "size_in_bytes": 6917,
+                                    "total_data_set_size_in_bytes": 6917,
+                                    "reserved_in_bytes": 0,
+                                },
+                            },
+                            "total": {
+                                "docs": {"count": 2, "deleted": 0},
+                                "store": {
+                                    "size_in_bytes": 6917,
+                                    "total_data_set_size_in_bytes": 6917,
+                                    "reserved_in_bytes": 0,
+                                },
+                            },
+                        },
+                        "yet_another_index": {
+                            "uuid": "cft6yprDQaW9P5ILuFQ0ow",
+                            "health": "yellow",
+                            "status": "open",
+                            "primaries": {
+                                "docs": {"count": 22, "deleted": 0},
+                                "store": {
+                                    "size_in_bytes": 21680,
+                                    "total_data_set_size_in_bytes": 21680,
+                                    "reserved_in_bytes": 0,
+                                },
+                            },
+                            "total": {
+                                "docs": {"count": 22, "deleted": 0},
+                                "store": {
+                                    "size_in_bytes": 21680,
+                                    "total_data_set_size_in_bytes": 21680,
+                                    "reserved_in_bytes": 0,
+                                },
+                            },
+                        },
+                    }
+                )
+            ]
         ]
     )
 
 
 def test_discover(section: _Section) -> None:
-    assert list(discover_elasticsearch_indices(section)) == [
-        Service(item=".monitoring-kibana-6"),
-        Service(item="filebeat"),
-        Service(item=".monitoring-es-6"),
+    assert sorted(discover_elasticsearch_indices(section)) == [
+        Service(item="my-index-10.2022"),
+        Service(item="my-index-11.2022"),
+        Service(item="my-other-index-2016-04-12"),
+        Service(item="my-other-index-2016-04-22"),
+        Service(item="yet_another_index"),
     ]
 
 
@@ -39,7 +151,7 @@ def test_discover(section: _Section) -> None:
     ["item", "params", "expected_result"],
     [
         pytest.param(
-            "filebeat",
+            "my-index-10.2022",
             {},
             [
                 Result(state=State.OK, summary="Document count: 28398"),
@@ -54,7 +166,7 @@ def test_discover(section: _Section) -> None:
             id="without params",
         ),
         pytest.param(
-            "filebeat",
+            "my-index-10.2022",
             {
                 "elasticsearch_count_rate": (10, 20, 2),
                 "elasticsearch_size_rate": (5, 15, 2),

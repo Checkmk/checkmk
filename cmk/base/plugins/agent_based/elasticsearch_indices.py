@@ -4,9 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import dataclasses
+import json
 import time
 from collections.abc import Callable, Mapping, MutableMapping
 from typing import Any, TypedDict
+
+import pydantic
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,
@@ -25,6 +28,27 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 )
 
 
+class _DocsResponse(pydantic.BaseModel, frozen=True):
+    count: int
+
+
+class _PrimariesResponse(pydantic.BaseModel, frozen=True):
+    docs: _DocsResponse
+
+
+class _StoreReponse(pydantic.BaseModel, frozen=True):
+    size_in_bytes: int
+
+
+class _TotalResponse(pydantic.BaseModel, frozen=True):
+    store: _StoreReponse
+
+
+class _IndexResponse(pydantic.BaseModel, frozen=True):
+    primaries: _PrimariesResponse
+    total: _TotalResponse
+
+
 @dataclasses.dataclass(frozen=True)
 class _ElasticIndex:
     count: float
@@ -36,8 +60,14 @@ _Section = Mapping[str, _ElasticIndex]
 
 def parse_elasticsearch_indices(string_table: StringTable) -> _Section:
     return {
-        index_name: _ElasticIndex(float(count_str), float(count_size))
-        for (index_name, count_str, count_size) in string_table
+        index_name: _ElasticIndex(
+            count=index_response.primaries.docs.count,
+            size=index_response.total.store.size_in_bytes,
+        )
+        for index_name, index_response in (
+            (index_name, _IndexResponse.parse_obj(raw_dict))
+            for index_name, raw_dict in json.loads(string_table[0][0]).items()
+        )
     }
 
 

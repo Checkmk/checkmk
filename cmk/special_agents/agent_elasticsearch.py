@@ -144,50 +144,9 @@ def handle_nodes(response: Mapping[str, object]) -> None:
             )
 
 
-class _DocsResponse(pydantic.BaseModel, frozen=True):
-    count: int
-
-
-class _PrimariesResponse(pydantic.BaseModel, frozen=True):
-    docs: _DocsResponse
-
-
-class _StoreReponse(pydantic.BaseModel, frozen=True):
-    size_in_bytes: int
-
-
-class _TotalResponse(pydantic.BaseModel, frozen=True):
-    store: _StoreReponse
-
-
-class _IndexResponse(pydantic.BaseModel, frozen=True):
-    primaries: _PrimariesResponse
-    total: _TotalResponse
-
-
-class _StatsResponse(pydantic.BaseModel, frozen=True):
-    indices: Mapping[str, _IndexResponse]
-
-
 def handle_stats(response: Mapping[str, object]) -> None:
-    stats_response = _StatsResponse.parse_obj(response)
-
-    indices = set()
-    for index in stats_response.indices:
-        indices.add(index.split("-")[0])
-
-    with SectionWriter("elasticsearch_indices", separator=" ") as writer:
-        for indice in list(indices):
-            all_counts = []
-            all_sizes = []
-            for index, index_response in stats_response.indices.items():
-                if index.split("-")[0] == indice:
-                    all_counts.append(index_response.primaries.docs.count)
-                    all_sizes.append(index_response.total.store.size_in_bytes)
-            writer.append(
-                "%s %s %s"
-                % (indice, sum(all_counts) / len(all_counts), sum(all_sizes) / len(all_sizes))
-            )
+    with SectionWriter("elasticsearch_indices") as writer:
+        writer.append_json(response["indices"])
 
 
 def main():

@@ -12,9 +12,10 @@ import enum
 import json
 import os
 import tempfile
+from collections.abc import Container, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Container, List, Literal, Mapping, NewType, Sequence, Tuple
+from typing import Literal, NewType
 
 from pydantic import BaseModel, parse_raw_as, ValidationError
 
@@ -289,7 +290,7 @@ def _select_pods_by_lookup_name(
 
 def _kube_object_performance_sections(
     performance_pods: Sequence[PerformancePod],
-) -> List[Tuple[SectionName, SectionJson]]:
+) -> list[tuple[SectionName, SectionJson]]:
     return [
         (
             SectionName("kube_performance_memory_v1"),
@@ -304,7 +305,7 @@ def _kube_object_performance_sections(
 
 def _resource_quota_performance_sections(
     resource_quota_performance_pods: Sequence[PerformancePod],
-) -> List[Tuple[SectionName, SectionJson]]:
+) -> list[tuple[SectionName, SectionJson]]:
     if not resource_quota_performance_pods:
         return []
     return [

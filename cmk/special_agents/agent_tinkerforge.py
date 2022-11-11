@@ -37,12 +37,10 @@
 #  implemented
 
 import os
-import socket
 import sys
 import time
 from optparse import OptionParser  # pylint: disable=deprecated-module
 from pathlib import Path
-from typing import List
 
 DEFAULT_SETTINGS = {
     "host": "localhost",
@@ -58,7 +56,7 @@ segment_display = None
 
 
 def id_to_string(identifier):
-    return "%s.%s.%s" % (identifier.connected_uid, identifier.position, identifier.uid)
+    return f"{identifier.connected_uid}.{identifier.position}.{identifier.uid}"
 
 
 def print_generic(settings, sensor_type, ident, factor, unit, *values):
@@ -66,7 +64,9 @@ def print_generic(settings, sensor_type, ident, factor, unit, *values):
         global segment_display_value, segment_display_unit
         segment_display_value = int(values[0] * factor)
         segment_display_unit = unit
-    print("%s,%s,%s" % (sensor_type, id_to_string(ident), ",".join([str(val) for val in values])))
+    print(
+        "{},{},{}".format(sensor_type, id_to_string(ident), ",".join([str(val) for val in values]))
+    )
 
 
 def print_ambient_light(conn, settings, uid):
@@ -184,7 +184,7 @@ def display_on_segment(conn, settings, text):
     )
 
     br = BrickletSegmentDisplay4x7(segment_display, conn)
-    segments: List[int] = []
+    segments: list[int] = []
     for letter in text:
         if len(segments) >= 4:
             break
@@ -308,7 +308,7 @@ def main():
     conn = IPConnection()
     try:
         conn.connect(settings["host"], settings["port"])
-    except socket.error as e:
+    except OSError as e:
         sys.stderr.write("%s\n" % e)
         return 1
 

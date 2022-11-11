@@ -15,12 +15,12 @@ import json
 import logging
 import sys
 from collections import Counter, defaultdict
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
 from time import sleep
-from typing import Any, Callable, Literal, NamedTuple, Type, TypedDict, TypeVar
+from typing import Any, Literal, NamedTuple, TypedDict, TypeVar
 
 import boto3  # type: ignore[import]
 import botocore  # type: ignore[import]
@@ -5134,7 +5134,7 @@ class LambdaCloudwatchInsights(AWSSection):
 
 class HealthCheckConfig(TypedDict, total=False):
     Port: int
-    Type: str
+    type: str
     FullyQualifiedDomainName: str
     RequestInterval: int
     FailureThreshold: int
@@ -5688,7 +5688,7 @@ class ParameterGroup(BaseModel):
 
 
 def get_paginated_resources(
-    client: BaseClient, paginator_name: str, resource_name: str, resource_type: Type[BaseModel]
+    client: BaseClient, paginator_name: str, resource_name: str, resource_type: type[BaseModel]
 ) -> Iterable[BaseModel]:
     for page in client.get_paginator(paginator_name).paginate():
         for resource_dict in page[resource_name]:

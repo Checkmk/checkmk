@@ -25,20 +25,8 @@ import re
 import sys
 import time
 from collections import defaultdict, OrderedDict
-from collections.abc import MutableSequence
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Generic,
-    Iterator,
-    List,
-    Mapping,
-    Optional,
-    Sequence,
-    TypeVar,
-    Union,
-)
+from collections.abc import Callable, Iterator, Mapping, MutableSequence, Sequence
+from typing import Any, Generic, TypeVar
 
 import dateutil.parser
 import urllib3
@@ -71,7 +59,7 @@ class PathPrefixAction(argparse.Action):
         return None
 
 
-def parse_arguments(args: List[str]) -> argparse.Namespace:
+def parse_arguments(args: list[str]) -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--debug", action="store_true", help="Debug mode: raise Python exceptions")
     p.add_argument(
@@ -188,7 +176,7 @@ def left_join_dicts(initial, new, operation):
 
 class Metadata:
     def __init__(
-        self, metadata: Optional[client.V1ObjectMeta], prefix: str = "", use_namespace: bool = False
+        self, metadata: client.V1ObjectMeta | None, prefix: str = "", use_namespace: bool = False
     ) -> None:
         if metadata:
             self._name = metadata.name
@@ -258,7 +246,7 @@ class Node(Metadata):
         self.labels["cmk/kubernetes"] = "yes"
 
     @property
-    def conditions(self) -> Optional[Dict[str, str]]:
+    def conditions(self) -> dict[str, str] | None:
         if not self._status:
             return None
         conditions = self._status.conditions
@@ -282,7 +270,7 @@ class Node(Metadata):
         }
 
     @property
-    def resources(self) -> Dict[str, Dict[str, float]]:
+    def resources(self) -> dict[str, dict[str, float]]:
         view = self.zero_resources()
         if not self._status:
             return view
@@ -304,7 +292,7 @@ class ComponentStatus(Metadata):
         self._conditions = status.conditions
 
     @property
-    def conditions(self) -> List[Dict[str, str]]:
+    def conditions(self) -> list[dict[str, str]]:
         if not self._conditions:
             return []
         return [{"type": c.type, "status": c.status} for c in self._conditions]
@@ -823,7 +811,7 @@ class Namespace(Metadata):
         self._status = namespace.status
 
     @property
-    def phase(self) -> Optional[str]:
+    def phase(self) -> str | None:
         if self._status:
             return self._status.phase
         return None
@@ -836,13 +824,13 @@ class PersistentVolume(Metadata):
         self._spec = pv.spec
 
     @property
-    def access_modes(self) -> Optional[List[str]]:
+    def access_modes(self) -> list[str] | None:
         if self._spec:
             return self._spec.access_modes
         return None
 
     @property
-    def capacity(self) -> Optional[float]:
+    def capacity(self) -> float | None:
         if not self._spec or not self._spec.capacity:
             return None
         storage = self._spec.capacity.get("storage")
@@ -851,7 +839,7 @@ class PersistentVolume(Metadata):
         return None
 
     @property
-    def phase(self) -> Optional[str]:
+    def phase(self) -> str | None:
         if self._status:
             return self._status.phase
         return None
@@ -864,13 +852,13 @@ class PersistentVolumeClaim(Metadata):
         self._spec = pvc.spec
 
     @property
-    def phase(self) -> Optional[str]:
+    def phase(self) -> str | None:
         if self._status:
             return self._status.phase
         return None
 
     @property
-    def volume_name(self) -> Optional[str]:
+    def volume_name(self) -> str | None:
         if self._spec:
             return self._spec.volume_name
         return None
@@ -884,7 +872,7 @@ class StorageClass(Metadata):
 
 
 class Role(Metadata):
-    def __init__(self, role: Union[client.V1Role, client.V1ClusterRole]) -> None:
+    def __init__(self, role: client.V1Role | client.V1ClusterRole) -> None:
         super().__init__(role.metadata)
 
 
@@ -892,7 +880,7 @@ ListElem = TypeVar("ListElem", bound=Metadata)
 
 
 class K8sList(Generic[ListElem], MutableSequence):  # pylint: disable=too-many-ancestors
-    def __init__(self, elements: List[ListElem]) -> None:
+    def __init__(self, elements: list[ListElem]) -> None:
         super().__init__()
         self._elements = elements
 
@@ -915,7 +903,7 @@ class K8sList(Generic[ListElem], MutableSequence):  # pylint: disable=too-many-a
         return {item.name: item.labels for item in self}
 
     def group_by(self, selectors):
-        grouped: Dict[str, K8sList[ListElem]] = {}
+        grouped: dict[str, K8sList[ListElem]] = {}
         for element in self:
             for name, selector in selectors.items():
                 if element.matches(selector):
@@ -924,13 +912,13 @@ class K8sList(Generic[ListElem], MutableSequence):  # pylint: disable=too-many-a
 
 
 class NodeList(K8sList[Node]):  # pylint: disable=too-many-ancestors
-    def list_nodes(self) -> Dict[str, List[str]]:
+    def list_nodes(self) -> dict[str, list[str]]:
         return {"nodes": [node.name for node in self if node.name]}
 
-    def conditions(self) -> Dict[str, Dict[str, str]]:
+    def conditions(self) -> dict[str, dict[str, str]]:
         return {node.name: node.conditions for node in self if node.name and node.conditions}
 
-    def resources(self) -> Dict[str, Dict[str, Dict[str, Optional[float]]]]:
+    def resources(self) -> dict[str, dict[str, dict[str, float | None]]]:
         return {node.name: node.resources for node in self if node.name}
 
     def stats(self):
@@ -952,7 +940,7 @@ class NodeList(K8sList[Node]):  # pylint: disable=too-many-ancestors
 
 
 class ComponentStatusList(K8sList[ComponentStatus]):  # pylint: disable=too-many-ancestors
-    def list_statuses(self) -> Dict[str, List[Dict[str, str]]]:
+    def list_statuses(self) -> dict[str, list[dict[str, str]]]:
         return {status.name: status.conditions for status in self if status.name}
 
 
@@ -991,7 +979,7 @@ class StatefulSetList(K8sList[StatefulSet]):  # pylint: disable=too-many-ancesto
 
 
 class PodList(K8sList[Pod]):  # pylint: disable=too-many-ancestors
-    def pods_per_node(self) -> Dict[str, Dict[str, Dict[str, int]]]:
+    def pods_per_node(self) -> dict[str, dict[str, dict[str, int]]]:
         pods_sorted = sorted(self, key=lambda pod: pod.node or "")
         by_node = itertools.groupby(pods_sorted, lambda pod: pod.node)
         return {
@@ -1023,7 +1011,7 @@ class PodList(K8sList[Pod]):  # pylint: disable=too-many-ancestors
     def conditions(self):
         return {pod.name: pod.conditions for pod in self}
 
-    def resources_per_node(self) -> Dict[str, Dict[str, Dict[str, float]]]:
+    def resources_per_node(self) -> dict[str, dict[str, dict[str, float]]]:
         """
         Returns the limits and requests of all containers grouped by node. If at least
         one container does not specify a limit, infinity is returned as the container
@@ -1061,7 +1049,7 @@ class JobList(K8sList[Job]):  # pylint: disable=too-many-ancestors
 
 
 class NamespaceList(K8sList[Namespace]):  # pylint: disable=too-many-ancestors
-    def list_namespaces(self) -> Dict[str, Dict[str, Dict[str, Optional[str]]]]:
+    def list_namespaces(self) -> dict[str, dict[str, dict[str, str | None]]]:
         return {
             namespace.name: {
                 "status": {
@@ -1076,7 +1064,7 @@ class NamespaceList(K8sList[Namespace]):  # pylint: disable=too-many-ancestors
 class PersistentVolumeList(K8sList[PersistentVolume]):  # pylint: disable=too-many-ancestors
     def list_volumes(
         self,
-    ) -> Dict[str, Dict[str, Union[None, List[str], float, Dict[str, Optional[str]]]]]:
+    ) -> dict[str, dict[str, None | list[str] | float | dict[str, str | None]]]:
         # TODO: Output details of the different types of volumes
         return {
             pv.name: {
@@ -1094,7 +1082,7 @@ class PersistentVolumeList(K8sList[PersistentVolume]):  # pylint: disable=too-ma
 class PersistentVolumeClaimList(
     K8sList[PersistentVolumeClaim]
 ):  # pylint: disable=too-many-ancestors
-    def list_volume_claims(self) -> Dict[str, Dict[str, Any]]:
+    def list_volume_claims(self) -> dict[str, dict[str, Any]]:
         # TODO: Fix "Any"
         return {
             pvc.name: {
@@ -1108,8 +1096,8 @@ class PersistentVolumeClaimList(
 
 
 class StorageClassList(K8sList[StorageClass]):  # pylint: disable=too-many-ancestors
-    def list_storage_classes(self) -> Dict[Any, Dict[str, Any]]:
-        # TODO: should be Dict[str, Dict[str, Optional[str]]]
+    def list_storage_classes(self) -> dict[Any, dict[str, Any]]:
+        # TODO: should be dict[str, dict[str, str | None]]
         return {
             storage_class.name: {
                 "provisioner": storage_class.provisioner,
@@ -1142,18 +1130,18 @@ class PiggybackGroup:
         super().__init__()
         self._elements: OrderedDict[str, PiggybackHost] = OrderedDict()
 
-    def get(self, element_name: str) -> "PiggybackHost":
+    def get(self, element_name: str) -> PiggybackHost:
         if element_name not in self._elements:
             self._elements[element_name] = PiggybackHost()
         return self._elements[element_name]
 
-    def join(self, section_name: str, pairs: Mapping[str, Dict[str, Any]]) -> "PiggybackGroup":
+    def join(self, section_name: str, pairs: Mapping[str, dict[str, Any]]) -> PiggybackGroup:
         for element_name, data in pairs.items():
             section = self.get(element_name).get(section_name)
             section.insert(data)
         return self
 
-    def output(self) -> List[str]:
+    def output(self) -> list[str]:
         data = []
         for name, element in self._elements.items():
             data.append("<<<<%s>>>>" % (name))
@@ -1171,12 +1159,12 @@ class PiggybackHost:
         super().__init__()
         self._sections: OrderedDict[str, Section] = OrderedDict()
 
-    def get(self, section_name: str) -> "Section":
+    def get(self, section_name: str) -> Section:
         if section_name not in self._sections:
             self._sections[section_name] = Section()
         return self._sections[section_name]
 
-    def output(self) -> List[str]:
+    def output(self) -> list[str]:
         data = []
         for name, section in self._sections.items():
             data.append("<<<%s:sep(0)>>>" % name)
@@ -1191,9 +1179,9 @@ class Section:
 
     def __init__(self) -> None:
         super().__init__()
-        self._content: OrderedDict[str, Dict[str, Any]] = OrderedDict()
+        self._content: OrderedDict[str, dict[str, Any]] = OrderedDict()
 
-    def insert(self, data: Dict[str, Any]) -> None:
+    def insert(self, data: dict[str, Any]) -> None:
         for key, value in data.items():
             if key not in self._content:
                 self._content[key] = value
@@ -1216,7 +1204,7 @@ class ApiData:
         self,
         api_client: client.ApiClient,
         prefix_namespace: bool,
-        namespace_include_patterns: List[str],
+        namespace_include_patterns: list[str],
     ) -> None:
         super().__init__()
         self.namespace_include_patterns = namespace_include_patterns
@@ -1327,7 +1315,7 @@ class ApiData:
         self,
         items: Iterator,
         *,
-        namespace_reader: Optional[Callable[[Metadata], str]] = None,
+        namespace_reader: Callable[[Metadata], str] | None = None,
     ) -> Iterator:
 
         if namespace_reader is None:
@@ -1452,9 +1440,9 @@ def get_api_client(arguments: argparse.Namespace) -> client.ApiClient:
 
     host = arguments.api_server_endpoint
     if arguments.port is not None:
-        host = "%s:%s" % (host, arguments.port)
+        host = f"{host}:{arguments.port}"
     if arguments.path_prefix:
-        host = "%s%s" % (host, arguments.path_prefix)
+        host = f"{host}{arguments.path_prefix}"
     config.host = host
     config.api_key_prefix["authorization"] = "Bearer"
     config.api_key["authorization"] = arguments.token
@@ -1469,7 +1457,7 @@ def get_api_client(arguments: argparse.Namespace) -> client.ApiClient:
     return client.ApiClient(config)
 
 
-def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-branches
+def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-branches
     if args is None:
         cmk.utils.password_store.replace_passwords()
         args = sys.argv[1:]

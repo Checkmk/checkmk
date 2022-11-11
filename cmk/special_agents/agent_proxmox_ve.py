@@ -24,10 +24,11 @@ information about VMs and nodes:
 
 import logging
 import re
+from collections.abc import Iterable, Mapping, MutableMapping, Sequence
 from datetime import datetime, timedelta
 from json import JSONDecodeError
 from pathlib import Path
-from typing import Any, Dict, Iterable, Mapping, MutableMapping, Optional, Sequence, Tuple, Union
+from typing import Any
 
 import pytz
 import requests
@@ -44,7 +45,7 @@ from cmk.special_agents.utils.misc import JsonCachedData, to_bytes
 
 LOGGER = logging.getLogger("agent_proxmox_ve")
 
-RequestStructure = Union[Sequence[Mapping[str, Any]], Mapping[str, Any]]
+RequestStructure = Sequence[Mapping[str, Any]] | Mapping[str, Any]
 TaskInfo = Mapping[str, Any]
 BackupInfo = MutableMapping[str, Any]
 LogData = Iterable[Mapping[str, Any]]  # [{"d": int, "t": str}, {}, ..]
@@ -52,7 +53,7 @@ LogData = Iterable[Mapping[str, Any]]  # [{"d": int, "t": str}, {}, ..]
 LogCacheFilePath = Path(tmp_dir) / "special_agents" / "agent_proxmox_ve"
 
 
-def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
+def parse_arguments(argv: Sequence[str] | None) -> Args:
     """parse command line arguments and return argument object"""
     parser = create_default_argument_parser(description=__doc__)
     parser.add_argument("--timeout", "-t", type=int, default=50, help="API call timeout")
@@ -147,7 +148,7 @@ class BackupTask:
         )
 
     def __str__(self) -> str:
-        return "BackupTask(%r, t=%r, vms=%r)" % (
+        return "BackupTask({!r}, t={!r}, vms={!r})".format(
             self.type,
             datetime.fromtimestamp(self.starttime).strftime("%Y.%m.%d-%H:%M:%S"),
             tuple(self.backup_data.keys()),
@@ -157,7 +158,7 @@ class BackupTask:
     def _extract_logs(  # pylint: disable=too-many-branches
         logs: Iterable[str],
         strict: bool,
-    ) -> Tuple[Mapping[str, BackupInfo], Iterable[Tuple[int, str]]]:
+    ) -> tuple[Mapping[str, BackupInfo], Iterable[tuple[int, str]]]:
         log_line_pattern = {
             key: re.compile(pat, flags=re.IGNORECASE)
             for key, pat in (
@@ -220,17 +221,17 @@ class BackupTask:
             {"started_time", "total_duration", "backup_amount", "backup_time", "backup_total"},
         )
 
-        result: Dict[str, Dict[str, Any]] = {}  # mutable Mapping[str, Mapping[str, Any]]
+        result: dict[str, dict[str, Any]] = {}  # mutable Mapping[str, Mapping[str, Any]]
         current_vmid = ""
-        current_dataset: Dict[str, Any] = {}  # mutable Mapping[str, Any]
+        current_dataset: dict[str, Any] = {}  # mutable Mapping[str, Any]
         errors = []
 
-        def extract_tuple(line: str, pattern_name: str, count: int = 1) -> Optional[Sequence[str]]:
+        def extract_tuple(line: str, pattern_name: str, count: int = 1) -> Sequence[str] | None:
             if match := log_line_pattern[pattern_name].match(line):
                 return match.groups()[:count]
             return None
 
-        def extract_single_value(line: str, pattern_name: str) -> Optional[str]:
+        def extract_single_value(line: str, pattern_name: str) -> str | None:
             if match := extract_tuple(line, pattern_name, 1):
                 return match[0]
             return None
@@ -395,7 +396,7 @@ class BackupTask:
 
 
 def collect_vm_backup_info(backup_tasks: Iterable[BackupTask]) -> Mapping[str, BackupInfo]:
-    backup_data: Dict[str, BackupInfo] = {}
+    backup_data: dict[str, BackupInfo] = {}
     for task in backup_tasks:
         LOGGER.info("%s", task)
         LOGGER.debug("%r", task.backup_data)
@@ -423,7 +424,7 @@ def fetch_backup_data(
         cutoff_condition=lambda k, v: bool(v[0] < cutoff_date),
     ) as cached:
 
-        def fetch_backup_log(task: TaskInfo, node: str) -> Tuple[str, LogData]:
+        def fetch_backup_log(task: TaskInfo, node: str) -> tuple[str, LogData]:
             """Make a call to session.get_tree() to get a log only if it's not cached
             Note: this is just a closure to make the call below less complicated - it could
             also be part of the generator"""
@@ -510,12 +511,12 @@ def agent_proxmox_ve_main(args: Args) -> None:
         # look up scheduled backups and extract assigned VMIDs
         "scheduled_vmids": sorted(
             list(
-                set(
+                {
                     vmid  #
                     for backup in data["cluster"]["backup"]
                     if "vmid" in backup and backup["enabled"] == "1"
                     for vmid in backup["vmid"].split(",")
-                )
+                }
             )
         ),
         # add data of actually logged VMs
@@ -674,7 +675,7 @@ class ProxmoxVeSession:
 
     def __init__(
         self,
-        endpoint: Tuple[str, int],
+        endpoint: tuple[str, int],
         credentials: Mapping[str, str],
         timeout: int,
         verify_ssl: bool,
@@ -735,7 +736,7 @@ class ProxmoxVeSession:
         except JSONDecodeError as e:
             raise RuntimeError("Couldn't parse API element %r" % path) from e
         if "errors" in response_json:
-            raise RuntimeError("Could not fetch %r (%r)" % (path, response_json["errors"]))
+            raise RuntimeError("Could not fetch {!r} ({!r})".format(path, response_json["errors"]))
         return response_json.get("data")
 
 
@@ -766,7 +767,7 @@ class ProxmoxVeAPI:
         self._session.__exit__(*exc_info)
         self._session.close()
 
-    def get(self, path: Union[str, Iterable[str]]) -> Any:
+    def get(self, path: str | Iterable[str]) -> Any:
         """Handle request items in form of 'path/to/item' or ['path', 'to', 'item']"""
         return self._session.get_api_element(
             path if isinstance(path, str) else "/".join(map(str, path))
@@ -774,7 +775,7 @@ class ProxmoxVeAPI:
 
     def get_tree(self, requested_structure: RequestStructure) -> Any:
         def rec_get_tree(
-            element_name: Optional[str],
+            element_name: str | None,
             requested_structure: RequestStructure,
             path: Iterable[str],
         ) -> Any:
@@ -798,7 +799,7 @@ class ProxmoxVeAPI:
                     else {}  #
                 )
 
-            def extract_variable(st: RequestStructure) -> Optional[Mapping[str, Any]]:
+            def extract_variable(st: RequestStructure) -> Mapping[str, Any] | None:
                 """Check if there is exactly one root element with a variable name,
                 e.g. '{node}' and return its stripped name"""
                 if not isinstance(st, Mapping):

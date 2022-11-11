@@ -10,7 +10,7 @@ import sys
 from base64 import b64encode
 from http.client import HTTPConnection
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 from cmk.utils.password_store import replace_passwords
 
@@ -109,7 +109,7 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
         try:
             data = json.loads(Path(opt_filename).read_text())
         except Exception as e:
-            sys.stderr.write("Cannot read JSON data from file %s: %s\n" % (opt_filename, e))
+            sys.stderr.write(f"Cannot read JSON data from file {opt_filename}: {e}\n")
             if opt_debug:
                 raise
             return 1
@@ -130,10 +130,10 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
             connection = HTTPConnection(arg_host, opt_port)
 
             if opt_verbose:
-                sys.stdout.write("Connecting to %s:%s...\n" % (arg_host, opt_port))
+                sys.stdout.write(f"Connecting to {arg_host}:{opt_port}...\n")
             connection.connect()
 
-            auth = b64encode(("%s:%s" % (opt_username, opt_password)).encode())
+            auth = b64encode((f"{opt_username}:{opt_password}").encode())
             headers = {"Authorization": "Basic " + auth.decode()}
             for obj in ["Agent", "*|*"]:
                 connection.request(
@@ -156,7 +156,7 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
                 raise
             return 1
 
-    grouped_data: Dict[str, Dict[str, Dict[str, Any]]] = {}
+    grouped_data: dict[str, dict[str, dict[str, Any]]] = {}
     for metric in data:
         path_parts = metric["metricPath"].split("|")
         if len(path_parts) == 7:  # Unit missing
@@ -192,7 +192,7 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
                                 if not name:
                                     output_items.append("%s" % value)
                                 else:
-                                    output_items.append("%s:%s" % (name, value))
+                                    output_items.append(f"{name}:{value}")
                             sys.stdout.write("|".join(output_items) + "\n")
     sys.stdout.write("<<<<>>>>\n")
     return None

@@ -9,7 +9,6 @@ import logging
 import sys
 import xml.etree.ElementTree as ET
 from html.parser import HTMLParser
-from typing import Dict
 from urllib.parse import urljoin
 
 import requests
@@ -51,7 +50,7 @@ def parse_arguments(argv):
 
 
 # The dict key is the section, the values the list of lines
-sections: Dict = {}
+sections: dict = {}
 
 # Which objects to get
 api_get_objects = [
@@ -154,7 +153,7 @@ class HPMSAConnection:
 
     def _get_session_key(self, hash_class, username, password):
         login_hash = hash_class()
-        login_hash.update(f"{username}_{password}".encode("utf-8"))
+        login_hash.update(f"{username}_{password}".encode())
         login_url = "login/%s" % login_hash.hexdigest()
         response = self.get(login_url)
         xml_tree = ET.fromstring(response.text)

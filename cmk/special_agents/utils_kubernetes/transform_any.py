@@ -11,13 +11,14 @@ function is required to handle data from the client or from JSON.
 
 import datetime
 import re
-from typing import Mapping, TypeGuard, Union
+from collections.abc import Mapping
+from typing import TypeGuard
 
 from .schemata import api
 from .schemata.api import Label, LabelName, LabelValue
 
 
-def convert_to_timestamp(kube_date_time: Union[str, datetime.datetime]) -> api.Timestamp:
+def convert_to_timestamp(kube_date_time: str | datetime.datetime) -> api.Timestamp:
     if isinstance(kube_date_time, str):
         date_time = datetime.datetime.strptime(kube_date_time, "%Y-%m-%dT%H:%M:%SZ").replace(
             tzinfo=datetime.timezone.utc

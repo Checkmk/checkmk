@@ -12,7 +12,8 @@ client could no longer be upgraded, because v1.23.3 would reject valid
 API data, see CMK-10826.
 """
 
-from typing import cast, Iterable, Literal, Mapping, Sequence, TypedDict, Union
+from collections.abc import Iterable, Mapping, Sequence
+from typing import cast, Literal, TypedDict
 
 from typing_extensions import NotRequired
 
@@ -120,7 +121,7 @@ def _selector_from_json(selector: JSONSelector) -> api.Selector:
 
 def _statefulset_update_strategy_from_json(
     statefulset_update_strategy: JSONStatefulSetUpdateStrategy,
-) -> Union[api.OnDelete, api.StatefulSetRollingUpdate]:
+) -> api.OnDelete | api.StatefulSetRollingUpdate:
     if statefulset_update_strategy["type"] == "OnDelete":
         return api.OnDelete()
     if statefulset_update_strategy["type"] == "RollingUpdate":

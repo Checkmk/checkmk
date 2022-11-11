@@ -5,7 +5,8 @@
 
 import argparse
 import sys
-from typing import Any, Callable, NamedTuple
+from collections.abc import Callable
+from typing import Any, NamedTuple
 
 import requests
 import urllib3
@@ -205,8 +206,8 @@ def handle_health(value):
     sys.stdout.write("Overall_state %s\n" % value[0].get("content", {}).get("health"))
 
     for func, state in value[0]["content"]["features"].items():
-        func_name = "%s%s" % (func[0].upper(), func[1:].lower())
-        sys.stdout.write("%s %s\n" % (func_name.replace(" ", "_"), state.get("health", {})))
+        func_name = f"{func[0].upper()}{func[1:].lower()}"
+        sys.stdout.write("{} {}\n".format(func_name.replace(" ", "_"), state.get("health", {})))
 
         if state.get("disabled", False):
             # Some functions may have set '"disabled": True' and it seems
@@ -214,7 +215,7 @@ def handle_health(value):
             continue
 
         for feature, status in state["features"].items():
-            feature_name = "%s%s" % (feature[0].upper(), feature[1:].lower())
+            feature_name = f"{feature[0].upper()}{feature[1:].lower()}"
             sys.stdout.write(
                 "%s %s %s\n"
                 % (func_name.replace(" ", "_"), feature_name.replace(" ", "_"), status["health"])

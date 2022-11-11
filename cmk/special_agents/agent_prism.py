@@ -6,13 +6,14 @@
 import csv
 import logging
 import sys
-from typing import Any, Generator, Optional, Sequence, Tuple
+from collections.abc import Generator, Sequence
+from typing import Any
 
 from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_main
 from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
 from cmk.special_agents.utils.request_helper import HTTPSAuthRequester, Requester
 
-SectionLine = Tuple[Any, ...]
+SectionLine = tuple[Any, ...]
 
 LOGGING = logging.getLogger("agent_prism")
 
@@ -32,7 +33,7 @@ def write_title(section: str) -> None:
 # <<<<
 
 
-def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
+def parse_arguments(argv: Sequence[str] | None) -> Args:
     parser = create_default_argument_parser(description=__doc__)
     parser.add_argument(
         "--timeout",

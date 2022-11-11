@@ -16,10 +16,11 @@ import logging
 import string
 import sys
 import time
+from collections.abc import Mapping, Sequence
 from multiprocessing import Lock, Process, Queue
 from pathlib import Path
 from queue import Empty as QueueEmpty
-from typing import Any, List, Mapping, Sequence, Tuple, Type
+from typing import Any
 
 import adal  # type: ignore[import] # pylint: disable=import-error
 import requests
@@ -214,7 +215,7 @@ def parse_arguments(argv):
         default=[],
         nargs="*",
         help="""list of arguments providing the configuration in <key>=<value> format.
-             If omitted, all groups and all resources of the services specified in --services are 
+             If omitted, all groups and all resources of the services specified in --services are
              fetched.
              If specified, every 'group=<name>' argument starts a new group configuration,
              and every 'resource=<name>' arguments specifies a resource.""",
@@ -272,7 +273,7 @@ class ApiErrorAuthorizationRequestDenied(ApiError):
 
 
 class ApiErrorFactory:
-    _ERROR_CLASS_BY_CODE: dict[str, Type[ApiError]] = {
+    _ERROR_CLASS_BY_CODE: dict[str, type[ApiError]] = {
         "Authorization_RequestDenied": ApiErrorAuthorizationRequestDenied
     }
 
@@ -302,7 +303,7 @@ class BaseApiClient(abc.ABC):
         pass
 
     def login(self, tenant, client, secret):
-        context = adal.AuthenticationContext("%s/%s" % (self.AUTHORITY, tenant))
+        context = adal.AuthenticationContext(f"{self.AUTHORITY}/{tenant}")
         token = context.acquire_token_with_client_credentials(self.resource, client, secret)
         self._headers.update(
             {
@@ -432,7 +433,7 @@ class GraphApiClient(BaseApiClient):
 
 class MgmtApiClient(BaseApiClient):
     def __init__(self, subscription) -> None:  # type:ignore[no-untyped-def]
-        base_url = "%s/subscriptions/%s/" % (self.resource, subscription)
+        base_url = f"{self.resource}/subscriptions/{subscription}/"
         super().__init__(base_url)
 
     @staticmethod
@@ -589,7 +590,7 @@ class TagBasedConfig:
         if self._required:
             lines.append("required tags: %s" % ", ".join(self._required))
         for key, val in self._values:
-            lines.append("required value for %r: %r" % (key, val))
+            lines.append(f"required value for {key!r}: {val!r}")
         return "\n".join(lines)
 
 
@@ -758,7 +759,7 @@ class AzureResource:
 
     def dumpinfo(self):
         # TODO: Hmmm, should the variable-length tuples actually be lists?
-        lines: List[Tuple] = [("Resource",), (json.dumps(self.info),)]
+        lines: list[tuple] = [("Resource",), (json.dumps(self.info),)]
         if self.metrics:
             lines += [("metrics following", len(self.metrics))]
             lines += [(json.dumps(m),) for m in self.metrics]
@@ -797,14 +798,14 @@ class MetricCache(DataCache):
         # More info on Azure Monitor Ingestion time:
         # https://docs.microsoft.com/en-us/azure/azure-monitor/logs/data-ingestion-time
         start = ref_time - 5 * self.timedelta
-        self._timespan = "%s/%s" % (
+        self._timespan = "{}/{}".format(
             start.strftime("%Y-%m-%dT%H:%M:%SZ"),
             ref_time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         )
 
     @staticmethod
     def get_cache_path(resource):
-        valid_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
+        valid_chars = f"-_.() {string.ascii_letters}{string.digits}"
         subdir = "".join(c if c in valid_chars else "_" for c in resource.info["id"])
         return AZURE_CACHE_FILE_PATH / subdir
 
@@ -834,7 +835,7 @@ class MetricCache(DataCache):
             if parsed_metric is not None:
                 metrics.append(parsed_metric)
             else:
-                msg = "metric not found: %s (%s)" % (raw_metric["name"]["value"], aggregation)
+                msg = "metric not found: {} ({})".format(raw_metric["name"]["value"], aggregation)
                 err.add("info", resource_id, msg)
                 LOGGER.info(msg)
 
@@ -957,12 +958,12 @@ def get_vm_labels_section(vm: AzureResource, group_labels: GroupLabels) -> Label
             vm_labels[tag_name] = tag_value
 
     labels_section = LabelsSection(vm.info["name"])
-    labels_section.add(((json.dumps(vm_labels),)))
+    labels_section.add((json.dumps(vm_labels),))
     return labels_section
 
 
 def process_resource(
-    function_args: Tuple[MgmtApiClient, AzureResource, GroupLabels, Args]
+    function_args: tuple[MgmtApiClient, AzureResource, GroupLabels, Args]
 ) -> Sequence[Section]:
     mgmt_client, resource, group_labels, args = function_args
     sections: list[Section] = []
@@ -1010,7 +1011,7 @@ def write_group_info(
 ) -> None:
     for group_name, tags in group_labels.items():
         labels_section = LabelsSection(group_name)
-        labels_section.add(((json.dumps(tags),)))
+        labels_section.add((json.dumps(tags),))
         labels_section.write()
 
     section = AzureSection("agent_info")
@@ -1030,7 +1031,7 @@ def write_exception_to_agent_info_section(exception, component):
     if "does not have authorization to perform action" in msg:
         msg += "HINT: Make sure you have a proper role asigned to your client!"
 
-    value = json.dumps((2, "%s: %s" % (component, msg)))
+    value = json.dumps((2, f"{component}: {msg}"))
     section = AzureSection("agent_info")
     section.add(("agent-bailout", value))
     section.write()
@@ -1068,7 +1069,7 @@ def get_mapper(debug, sequential, timeout):
         Note that the order of the results does not correspond
         to that of the arguments.
         """
-        queue: Queue[Tuple[Any, bool, Any]] = Queue()
+        queue: Queue[tuple[Any, bool, Any]] = Queue()
         jobs = {}
 
         def produce(id_, args):
@@ -1133,7 +1134,7 @@ def main_subscription(args, selector, subscription):
 
         monitored_resources = [r for r in all_resources if selector.do_monitor(r)]
 
-        monitored_groups = sorted(set(r.info["group"] for r in monitored_resources))
+        monitored_groups = sorted({r.info["group"] for r in monitored_resources})
     except Exception as exc:
         if args.debug:
             raise

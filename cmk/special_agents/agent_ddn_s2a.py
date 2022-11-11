@@ -14,7 +14,7 @@ from cmk.utils.password_store import replace_passwords
 
 
 def commandstring(command_txt, username_txt, password_txt):
-    return "%s@%s@%s@0@0@$" % (command_txt, username_txt, password_txt)
+    return f"{command_txt}@{username_txt}@{password_txt}@0@0@$"
 
 
 def query(s, command_txt):

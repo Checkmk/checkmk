@@ -12,8 +12,10 @@ import re
 import socket
 import sys
 import time
+from collections import Counter
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Counter, Dict, List, Sequence
+from typing import Any
 from xml.dom import minidom
 
 import dateutil.parser
@@ -1146,7 +1148,7 @@ class ESXConnection:
 
         response = self._session.postsoap(SoapTemplates.SYSTEMINFO)
         for entry in systemfields:
-            element = get_pattern("<%(entry)s.*>(.*)</%(entry)s>" % {"entry": entry}, response.text)
+            element = get_pattern("<{entry}.*>(.*)</{entry}>".format(entry=entry), response.text)
             if element:
                 system_info[entry] = element[0]
 
@@ -1245,8 +1247,8 @@ class ESXConnection:
 
 def fetch_available_counters(  # type:ignore[no-untyped-def]
     connection, hostsystems
-) -> Dict[str, Dict[str, List[str]]]:
-    counters_available_by_host: Dict[str, Dict[str, List[str]]] = {}
+) -> dict[str, dict[str, list[str]]]:
+    counters_available_by_host: dict[str, dict[str, list[str]]] = {}
     for host in hostsystems:
         counter_avail_response = connection.query_server("perfcounteravail", esxhost=host)
         elements = get_pattern(
@@ -1292,12 +1294,10 @@ def fetch_extra_interface_counters(connection, opt):
         if not nic_if:
             continue
         _unused, device, bandwidth_block, mac = nic_if[0]
-        net_extra_info.append("net.macaddress|%s|%s|mac" % (device, mac))
+        net_extra_info.append(f"net.macaddress|{device}|{mac}|mac")
         bandwidth = get_pattern("</driver><linkSpeed><speedMb>(.*?)</speedMb>", bandwidth_block)
         try:
-            net_extra_info.append(
-                "net.bandwidth|%s|%s|bytes" % (device, int(bandwidth[0]) * 1000000)
-            )
+            net_extra_info.append(f"net.bandwidth|{device}|{int(bandwidth[0]) * 1000000}|bytes")
         except (ValueError, IndexError):
             net_extra_info.append("net.state|%s|2|state" % device)
         else:
@@ -1307,7 +1307,7 @@ def fetch_extra_interface_counters(connection, opt):
 
 
 def fetch_counters(connection, host, counters_selected):
-    counter_data: List[str] = []
+    counter_data: list[str] = []
     for entry, instances in counters_selected:
         counter_data.extend(
             "<ns1:metricId><ns1:counterId>%s</ns1:counterId><ns1:instance>%s</ns1:instance>"
@@ -1405,7 +1405,7 @@ def get_section_counters(connection, hostsystems, datastores, opt):
 
 
 def _iter_dicts(keys, data):
-    pattern = ".*?".join("<%s>(.*?)</%s>" % (key, key) for key in keys)
+    pattern = ".*?".join(f"<{key}>(.*?)</{key}>" for key in keys)
     matches = re.finditer(pattern, data, re.DOTALL)
     for match in matches:
         yield dict(zip(keys, match.groups()))
@@ -1432,8 +1432,8 @@ def eval_hardwarestatus_info(_hostname, _current_propname, propset):
 
 def eval_multipath_info(_hostname, current_propname, multipath_propset):
     multipath_infos = get_pattern("<id>(.*?)</id>.*?((?:<path>.*?</path>)+)", multipath_propset)
-    properties: Dict[str, List[str]] = {}
-    sensors: Dict = {}
+    properties: dict[str, list[str]] = {}
+    sensors: dict = {}
     for vml_id, xml_paths in multipath_infos:
         # The Lun ID is part of the VML ID: https://kb.vmware.com/s/article/2078730
         lun_id = vml_id[10:-12]
@@ -1446,19 +1446,15 @@ def eval_multipath_info(_hostname, current_propname, multipath_propset):
         for path_name, path_state in get_pattern(
             "<name>(.*?)</name>.*?<state>(.*?)</state>", xml_paths
         ):
-            properties.setdefault(current_propname, []).append(
-                "%s %s %s" % (lun_id, path_name, path_state)
-            )
+            properties.setdefault(current_propname, []).append(f"{lun_id} {path_name} {path_state}")
     return properties, sensors
 
 
 def eval_propset_block(_hostname, current_propname, elements, id_key, propset):
-    properties: Dict[str, List[str]] = {}
+    properties: dict[str, list[str]] = {}
     for entries in _iter_dicts(elements, propset):
         for key, value in entries.items():
-            properties.setdefault("%s.%s.%s" % (current_propname, key, entries[id_key]), []).append(
-                value
-            )
+            properties.setdefault(f"{current_propname}.{key}.{entries[id_key]}", []).append(value)
     return properties, {}
 
 
@@ -1506,8 +1502,8 @@ def fetch_hostsystem_data(connection):
     esxhostdetails_response = connection.query_server("esxhostdetails")
     hostsystems_objects = get_pattern("<objects>(.*?)</objects>", esxhostdetails_response)
 
-    hostsystems_properties: Dict[str, Dict[Any, Any]] = {}
-    hostsystems_sensors: Dict[str, Dict[Any, Any]] = {}
+    hostsystems_properties: dict[str, dict[Any, Any]] = {}
+    hostsystems_sensors: dict[str, dict[Any, Any]] = {}
     for entry in hostsystems_objects:
         hostname = get_pattern('<obj type="HostSystem">(.*)</obj>', entry[:512])[0]
         hostsystems_properties[hostname] = {}
@@ -1535,7 +1531,7 @@ def get_sections_hostsystem_sensors(hostsystems_properties, hostsystems_sensors,
 
         section_lines.append("<<<esx_vsphere_hostsystem>>>")
         for key, data in sorted(properties.items()):
-            section_lines.append("%s %s" % (key, " ".join(data)))
+            section_lines.append("{} {}".format(key, " ".join(data)))
 
         section_lines.append("<<<esx_vsphere_sensors:sep(59)>>>")
         for key, data in sorted(hostsystems_sensors[hostname].items()):
@@ -1574,12 +1570,12 @@ def get_sections_hostsystem_sensors(hostsystems_properties, hostsystems_sensors,
 
 
 def get_vm_power_states(vms, hostsystems, opt):
-    piggy_data: Dict[str, List[Any]] = {}
+    piggy_data: dict[str, list[Any]] = {}
     for used_hostname, vm_data in vms.items():
         runtime_host = vm_data.get("runtime.host")
         running_on = hostsystems.get(runtime_host, runtime_host)
         power_state = vm_data.get("runtime.powerState")
-        vm_info = "virtualmachine\t%s\t%s\t%s" % (used_hostname, running_on, power_state)
+        vm_info = f"virtualmachine\t{used_hostname}\t{running_on}\t{power_state}"
 
         if opt.vm_pwr_display == "vm":
             piggy_data.setdefault(used_hostname, []).append(vm_info)
@@ -1591,7 +1587,7 @@ def get_vm_power_states(vms, hostsystems, opt):
 
 
 def _get_vms_by_hostsystem(vms, hostsystems):
-    vms_by_hostsys: Dict[str, List[Any]] = {}
+    vms_by_hostsys: dict[str, list[Any]] = {}
     for vm_name, vm_data in vms.items():
         runtime_host = vm_data.get("runtime.host")
         running_on = hostsystems.get(runtime_host, runtime_host)
@@ -1606,12 +1602,12 @@ def get_hostsystem_power_states(vms, hostsystems, hostsystems_properties, opt):
     if opt.hostname and opt.direct and opt.host_pwr_display != "vm":
         override_hostname = opt.hostname
 
-    piggy_data: Dict[str, List[str]] = {}
+    piggy_data: dict[str, list[str]] = {}
     for data in hostsystems_properties.values():
         orig_hostname = data["name"][0]
         used_hostname = override_hostname or convert_hostname(orig_hostname, opt)
         power_state = data["runtime.powerState"][0]
-        host_info = "hostsystem\t%s\t\t%s" % (used_hostname, power_state)
+        host_info = f"hostsystem\t{used_hostname}\t\t{power_state}"
         if opt.host_pwr_display == "vm":
             for vm_name in vms_by_hostsys.get(orig_hostname, []):
                 piggy_data.setdefault(vm_name, []).append(host_info)
@@ -1708,7 +1704,7 @@ def eval_virtual_device(info, _datastores):
         except IndexError:
             continue
         device_txt = "|".join("%s %s" % p for p in zip(device_info[0::2], device_info[1::2]))  #
-        response.append("virtualDeviceType %s|%s" % (type_info, device_txt))
+        response.append(f"virtualDeviceType {type_info}|{device_txt}")
 
     return "@@".join(response)
 
@@ -1726,7 +1722,7 @@ def eval_snapshot_list(info, _datastores):
         except ValueError:
             creation_time = 0
         response.append(
-            "%s %s %s %s" % (entry[1], creation_time, entry[3], entry[0].replace("|", " "))
+            "{} {} {} {}".format(entry[1], creation_time, entry[3], entry[0].replace("|", " "))
         )
     return "|".join(response)
 
@@ -1741,7 +1737,7 @@ def eval_datastores(info, datastores):
                 for key, value in datastore.items():
                     if key != "name":
                         key = key.split(".")[1]
-                    vm_datastore.append("%s %s" % (key, value))
+                    vm_datastore.append(f"{key} {value}")
                 response.append("|".join(vm_datastore))
                 break
         else:
@@ -1773,7 +1769,7 @@ def fetch_datastores(connection):
     elements = get_pattern(
         '<objects><obj type="Datastore">(.*?)</obj>(.*?)</objects>', datastores_response
     )
-    datastores: Dict[str, Dict[str, Any]] = {}
+    datastores: dict[str, dict[str, Any]] = {}
     for datastore, content in elements:
         entries = get_pattern("<name>(.*?)</name><val xsi:type.*?>(.*?)</val>", content)
         datastores[datastore] = {}
@@ -1789,7 +1785,7 @@ def get_section_datastores(datastores):
         for ds_key in sorted(data.keys()):
             if ds_key == "name":
                 continue
-            section_lines.append("%s\t%s" % (ds_key.split(".")[1], data[ds_key]))
+            section_lines.append("{}\t{}".format(ds_key.split(".")[1], data[ds_key]))
     return section_lines
 
 
@@ -1804,13 +1800,13 @@ def get_section_licenses(connection):
             continue
         name = license_node.getElementsByTagName("name")[0].firstChild.data
         used = license_node.getElementsByTagName("used")[0].firstChild.data
-        section_lines.append("%s\t%s %s" % (name, used, total))
+        section_lines.append(f"{name}\t{used} {total}")
     return section_lines
 
 
 def fetch_virtual_machines(connection, hostsystems, datastores, opt):
     vms = {}
-    vm_esx_host: Dict[str, List[Any]] = {}
+    vm_esx_host: dict[str, list[Any]] = {}
 
     # <objects><propSet><name>...</name><val ..>...</val></propSet></objects>
     vmdetails_response = connection.query_server("vmdetails")
@@ -1908,7 +1904,7 @@ def get_sections_clusters(connection, vm_esx_host, opt):
             for host in hosts:
                 cluster_vms.extend(vm_esx_host.get(host, []))
             section_lines += [
-                "%s\thostsystems\t%s\t%s" % (datacenter, cluster[1], "\t".join(hosts)),
+                "{}\thostsystems\t{}\t{}".format(datacenter, cluster[1], "\t".join(hosts)),
                 "%s\tvms\t%s\t%s"
                 % (
                     datacenter,

@@ -55,7 +55,7 @@ def main(argv=None):
         argv = sys.argv[1:]
     args = parse_arguments(argv)
 
-    url = "https://%s:%s/api/v1" % (args.host, args.port)
+    url = f"https://{args.host}:{args.port}/api/v1"
     headers = {
         "Content-Type": "application/json",
         "Accept": "application/json",
@@ -83,7 +83,7 @@ def main(argv=None):
     # Status code should be 201.
     if not req.status_code == requests.codes.CREATED:
         sys.stderr.write(
-            "Wrong status code: %s. Expected: %s \n" % (req.status_code, requests.codes.CREATED)
+            f"Wrong status code: {req.status_code}. Expected: {requests.codes.CREATED} \n"
         )
         return 1
     try:
@@ -100,7 +100,7 @@ def main(argv=None):
     for value in args.values:
         print("<<<3par_%s:sep(0)>>>" % value)
         req = requests.get(
-            "%s/%s" % (url, value), headers=headers, timeout=10, verify=not args.no_cert_check
+            f"{url}/{value}", headers=headers, timeout=10, verify=not args.no_cert_check
         )
         value_data = req.text.replace("\r\n", "").replace("\n", "").replace(" ", "")
         print(value_data)
@@ -108,15 +108,13 @@ def main(argv=None):
     # Perform a proper disconnect. The Connection is closed if the session key
     # is deleted. The standard timeout for a session would be 15 minutes.
     req = requests.delete(
-        "%s/credentials/%s" % (url, headers["X-HP3PAR-WSAPI-SessionKey"]),
+        "{}/credentials/{}".format(url, headers["X-HP3PAR-WSAPI-SessionKey"]),
         headers=headers,
         timeout=10,
         verify=not args.no_cert_check,
     )
 
     if not req.status_code == requests.codes.OK:
-        sys.stderr.write(
-            "Wrong status code: %s. Expected: %s \n" % (req.status_code, requests.codes.OK)
-        )
+        sys.stderr.write(f"Wrong status code: {req.status_code}. Expected: {requests.codes.OK} \n")
         return 1
     return None

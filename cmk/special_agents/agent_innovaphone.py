@@ -5,7 +5,7 @@
 
 import sys
 import urllib.parse
-from typing import Iterable, Optional, Sequence, Tuple
+from collections.abc import Iterable, Sequence
 from xml.etree import ElementTree as etree
 
 import requests
@@ -81,7 +81,7 @@ def pri_channels_section(
 def _pri_channels_fetch_data(
     connection: InnovaphoneConnection,
     channels: Sequence[str],
-) -> Iterable[Tuple[str, etree.Element]]:
+) -> Iterable[tuple[str, etree.Element]]:
     for channel_name in channels:
         url = "%s/mod_cmd.xml" % channel_name
         response = connection.get(url)
@@ -101,7 +101,7 @@ def _pri_channel_format_line(channel_name: str, data: etree.Element) -> str:
     link = data.get("link")
     physical = data.get("physical")
     if link != "Up" or physical != "Up":
-        return "%s %s %s 0 0" % (channel_name, link, physical)
+        return f"{channel_name} {link} {physical} 0 0"
     idle = 0
     total = 0
     for channel in data.findall("ch"):
@@ -109,7 +109,7 @@ def _pri_channel_format_line(channel_name: str, data: etree.Element) -> str:
             idle += 1
         total += 1
     total -= 1
-    return "%s %s %s %s %s" % (channel_name, link, physical, idle, total)
+    return f"{channel_name} {link} {physical} {idle} {total}"
 
 
 def licenses_section(connection: InnovaphoneConnection) -> Iterable[str]:
@@ -131,7 +131,7 @@ def licenses_section(connection: InnovaphoneConnection) -> Iterable[str]:
             return
 
 
-def _get_element(text: str) -> Optional[etree.Element]:
+def _get_element(text: str) -> etree.Element | None:
     try:
         return etree.fromstring(text)
     except etree.ParseError as e:
@@ -140,7 +140,7 @@ def _get_element(text: str) -> Optional[etree.Element]:
     return None
 
 
-def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
+def parse_arguments(argv: Sequence[str] | None) -> Args:
     parser = create_default_argument_parser(description=__doc__)
     parser.add_argument("host", metavar="HOST")
     parser.add_argument("user", metavar="USER")

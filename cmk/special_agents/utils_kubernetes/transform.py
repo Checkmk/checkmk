@@ -9,7 +9,8 @@ data structures to version independent data structured defined in schemata.api
 
 from __future__ import annotations
 
-from typing import cast, Dict, Iterable, List, Literal, Mapping, Optional, Sequence, TypeVar, Union
+from collections.abc import Iterable, Mapping, Sequence
+from typing import cast, Literal, TypeAlias, TypeVar
 
 from kubernetes import client  # type: ignore[import]
 
@@ -155,7 +156,7 @@ def pod_spec(pod: client.V1Pod) -> api.PodSpec:
 
 
 def pod_status(pod: client.V1Pod) -> api.PodStatus:
-    start_time: Optional[float]
+    start_time: float | None
     if pod.status.start_time is not None:
         start_time = convert_to_timestamp(pod.status.start_time)
     else:
@@ -172,15 +173,15 @@ def pod_status(pod: client.V1Pod) -> api.PodStatus:
 
 
 def pod_containers(
-    container_statuses: Optional[Sequence[client.V1ContainerStatus]],
-) -> Dict[str, api.ContainerStatus]:
-    result: Dict[str, api.ContainerStatus] = {}
+    container_statuses: Sequence[client.V1ContainerStatus] | None,
+) -> dict[str, api.ContainerStatus]:
+    result: dict[str, api.ContainerStatus] = {}
     if container_statuses is None:
         return {}
     for status in container_statuses:
-        state: Union[
-            api.ContainerTerminatedState, api.ContainerRunningState, api.ContainerWaitingState
-        ]
+        state: (
+            api.ContainerTerminatedState | api.ContainerRunningState | api.ContainerWaitingState
+        )
         if (details := status.state.terminated) is not None:
             state = api.ContainerTerminatedState(
                 exit_code=details.exit_code,
@@ -219,7 +220,7 @@ def pod_containers(
 
 def pod_conditions(
     conditions: Sequence[client.V1PodCondition],
-) -> List[api.PodCondition]:
+) -> list[api.PodCondition]:
     condition_types = {
         "PodScheduled": api.ConditionType.PODSCHEDULED,
         "Initialized": api.ConditionType.INITIALIZED,
@@ -243,7 +244,7 @@ def pod_conditions(
     return result
 
 
-def _give_root_if_prefix_present(label: LabelName, prefix: str) -> Optional[str]:
+def _give_root_if_prefix_present(label: LabelName, prefix: str) -> str | None:
     """
     >>> _give_root_if_prefix_present("123asd", "123")
     'asd'
@@ -257,7 +258,7 @@ def _give_root_if_prefix_present(label: LabelName, prefix: str) -> Optional[str]
     return None
 
 
-def parse_node_roles(labels: Optional[Mapping[LabelName, Label]]) -> Sequence[str]:
+def parse_node_roles(labels: Mapping[LabelName, Label] | None) -> Sequence[str]:
     if labels is None:
         return []
     return [
@@ -267,7 +268,7 @@ def parse_node_roles(labels: Optional[Mapping[LabelName, Label]]) -> Sequence[st
     ]
 
 
-def node_conditions(status: client.V1NodeStatus) -> Optional[Sequence[api.NodeCondition]]:
+def node_conditions(status: client.V1NodeStatus) -> Sequence[api.NodeCondition] | None:
     conditions = status.conditions
     if not conditions:
         return None
@@ -293,7 +294,7 @@ def node_info(node: client.V1Node) -> api.NodeInfo:
     )
 
 
-def parse_node_resources(node: client.V1Node) -> Dict[str, api.NodeResources]:
+def parse_node_resources(node: client.V1Node) -> dict[str, api.NodeResources]:
     if node.status:
         capacity = node.status.capacity
         allocatable = node.status.allocatable
@@ -305,7 +306,7 @@ def parse_node_resources(node: client.V1Node) -> Dict[str, api.NodeResources]:
 
 def node_resources(  # type:ignore[no-untyped-def]
     capacity, allocatable
-) -> Dict[str, api.NodeResources]:
+) -> dict[str, api.NodeResources]:
     resources = {
         "capacity": api.NodeResources(),
         "allocatable": api.NodeResources(),
@@ -375,7 +376,7 @@ def pod_from_client(pod: client.V1Pod, controllers: Sequence[api.Controller]) ->
 
 
 def node_addresses_from_client(
-    node_addresses: Optional[Sequence[client.V1NodeAdresses]],
+    node_addresses: Sequence[client.V1NodeAdresses] | None,
 ) -> api.NodeAddresses:
     if not node_addresses:
         return []
@@ -655,8 +656,8 @@ def parse_resource_requirement(
 
 
 def parse_scope_selector(
-    scope_selector: Optional[client.V1ScopeSelector],
-) -> Optional[api.ScopeSelector]:
+    scope_selector: client.V1ScopeSelector | None,
+) -> api.ScopeSelector | None:
     if scope_selector is None:
         return None
     return api.ScopeSelector(
@@ -673,7 +674,7 @@ def parse_scope_selector(
 
 def resource_quota_from_client(
     resource_quota: client.V1ResourceQuota,
-) -> Optional[api.ResourceQuota]:
+) -> api.ResourceQuota | None:
     """Parse Kubernetes resource quota client object
 
     * Resource quotas which include the CrossNamespacePodAffinity scope
@@ -690,16 +691,16 @@ def resource_quota_from_client(
     )
 
 
-WorkloadResource = Union[
-    client.V1Pod,
-    client.V1Deployment,
-    client.V1ReplicaSet,
-    client.V1DaemonSet,
-    client.V1Job,
-    client.V1CronJob,
-    client.V1ReplicationController,
-    client.V1StatefulSet,
-]
+WorkloadResource: TypeAlias = (
+    client.V1Pod
+    | client.V1Deployment
+    | client.V1ReplicaSet
+    | client.V1DaemonSet
+    | client.V1Job
+    | client.V1CronJob
+    | client.V1ReplicationController
+    | client.V1StatefulSet
+)
 
 
 def dependent_object_owner_refererences_from_client(

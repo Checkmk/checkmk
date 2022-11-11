@@ -9,8 +9,9 @@ the utils_kubernetes/performance
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Mapping, NewType, Sequence
+from typing import NewType
 
 LOGGER = logging.getLogger()
 RawMetrics = Mapping[str, str]

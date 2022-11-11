@@ -32,7 +32,8 @@ import logging
 import pprint
 import re
 import sys
-from typing import Final, Iterator, Mapping, Tuple
+from collections.abc import Iterator, Mapping
+from typing import Final
 
 import requests
 
@@ -40,7 +41,7 @@ from cmk.utils.misc import typeshed_issue_7724
 
 from cmk.special_agents.utils import vcrtrace
 
-UPNPInfo = Tuple[Mapping[str, str], str, str]
+UPNPInfo = tuple[Mapping[str, str], str, str]
 
 _QUERIES: Final = (
     ("WANIPConn1", "urn:schemas-upnp-org:service:WANIPConnection:1", "GetStatusInfo"),
@@ -171,7 +172,7 @@ def get_upnp_info(
     # parse the response body
     if (
         match := re.search(
-            "<u:%sResponse[^>]+>(.*)</u:%sResponse>" % (action, action), response.text, re.M | re.S
+            f"<u:{action}Response[^>]+>(.*)</u:{action}Response>", response.text, re.M | re.S
         )
     ) is None:
         raise ValueError("Response not parsable")

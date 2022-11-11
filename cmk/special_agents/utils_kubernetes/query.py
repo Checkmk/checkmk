@@ -13,7 +13,8 @@
 import argparse
 import enum
 import logging
-from typing import Mapping, NewType
+from collections.abc import Mapping
+from typing import NewType
 
 import requests
 import urllib3

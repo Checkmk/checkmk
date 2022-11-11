@@ -9,7 +9,7 @@ import time
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import cache
-from typing import Any, Protocol, Union
+from typing import Any, Protocol
 
 import requests
 import typing_extensions
@@ -297,7 +297,7 @@ class HealthSection:
         return json.dumps(self.health_info)
 
 
-Section = Union[AssetSection, ResultSection, PiggyBackSection, CostSection, HealthSection]
+Section = AssetSection | ResultSection | PiggyBackSection | CostSection | HealthSection
 
 #################
 # Serialization #

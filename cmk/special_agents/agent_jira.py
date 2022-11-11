@@ -7,7 +7,7 @@ import argparse
 import json
 import logging
 import sys
-from typing import Any, Dict, Union
+from typing import Any
 
 import urllib3
 from jira import JIRA  # type: ignore[import]
@@ -53,7 +53,7 @@ def main(argv=None):
 
 
 def _handle_jira_connection(args):
-    jira_url = "%s://%s/" % (args.proto, args.hostname)
+    jira_url = f"{args.proto}://{args.hostname}/"
 
     jira = JIRA(
         server=jira_url,
@@ -92,7 +92,7 @@ def _handle_project(jira, args):
 
     # get open issues for each project and workflow
     sys.stdout.write("<<<jira_workflow>>>\n")
-    issues_dict: Dict[str, Dict[str, int]] = {}
+    issues_dict: dict[str, dict[str, int]] = {}
     for project in projects:
         project_name = project["Name"][0]
         for workflow in project.get("Workflow", []):
@@ -100,7 +100,7 @@ def _handle_project(jira, args):
             max_results = 0
             field = None
             svc_desc = None
-            jql = "project = '%s' AND status = '%s'" % (project_name, workflow)
+            jql = f"project = '{project_name}' AND status = '{workflow}'"
             issues = _handle_search_issues(
                 jira,
                 jql,
@@ -139,7 +139,7 @@ def _handle_custom_query(jira, args):
     ]
 
     sys.stdout.write("<<<jira_custom_svc>>>\n")
-    result_dict: Dict[str, Dict[str, Any]] = {}
+    result_dict: dict[str, dict[str, Any]] = {}
     for query in projects:
 
         jql = query["Query"][0]
@@ -185,7 +185,7 @@ def _handle_custom_query(jira, args):
         if query["Result"][0] == "sum":
             key = "sum"
             # TODO: Why do we use a float below, but a str in the else part?
-            value: Union[float, str] = total
+            value: float | str = total
         else:
             # average
             key = "avg"
@@ -211,7 +211,7 @@ def _handle_search_issues(jira, jql, field, max_results, args, project, svc_desc
         )
     except JIRAError as jira_error:
         # errors of sections are handled and shown by/in the related checks
-        msg = "Jira error %s: %s" % (jira_error.status_code, jira_error.text)
+        msg = f"Jira error {jira_error.status_code}: {jira_error.text}"
         if project:
             key = project
         else:

@@ -5,7 +5,7 @@
 
 import argparse
 import sys
-from typing import Any, Dict
+from typing import Any
 
 import cmk.utils.password_store
 
@@ -67,7 +67,7 @@ def main(args=None):
     if opt_debug:
         sys.stderr.write("%s\n" % repr(stderr))
 
-    results: Dict[str, Dict[str, Any]] = {}
+    results: dict[str, dict[str, Any]] = {}
     for query_type, query in queries.items():
         stdin, stdout, stderr = client.exec_command(query)
         results.setdefault(

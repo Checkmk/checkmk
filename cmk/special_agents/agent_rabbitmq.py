@@ -128,7 +128,7 @@ def main(argv=None):
 
 
 def _handle_rabbitmq_connection(args, sections):
-    url_base = "%s://%s:%s/api" % (
+    url_base = "{}://{}:{}/api".format(
         args.proto,
         args.hostname,
         args.port,
@@ -139,7 +139,7 @@ def _handle_rabbitmq_connection(args, sections):
             logging.warning('Ignoring unknown section "%s"', section.name)
             continue
 
-        section_data = _handle_request("%s/%s" % (url_base, section.uri), args)
+        section_data = _handle_request(f"{url_base}/{section.uri}", args)
         _handle_output(section.name, section_data)
 
 

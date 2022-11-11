@@ -16,7 +16,6 @@ endpoints monitored by Checkmk must be provided.
 from __future__ import annotations
 
 import argparse
-import collections
 import contextlib
 import enum
 import functools
@@ -24,25 +23,18 @@ import json
 import logging
 import re
 import sys
-from dataclasses import dataclass
-from typing import (
+from collections import Counter, defaultdict
+from collections.abc import (
     Callable,
     Collection,
-    DefaultDict,
-    Dict,
     Iterable,
     Iterator,
-    List,
-    Literal,
     Mapping,
     MutableMapping,
-    Optional,
-    Protocol,
     Sequence,
-    Set,
-    TypeVar,
-    Union,
 )
+from dataclasses import dataclass
+from typing import Literal, Protocol, TypeVar
 from urllib.parse import urlparse
 
 import requests
@@ -100,10 +92,9 @@ class AnnotationNonPatternOption(enum.Enum):
     import_all = "import_all"
 
 
-AnnotationOption = Union[
-    Literal[AnnotationNonPatternOption.ignore_all, AnnotationNonPatternOption.import_all],
-    str,
-]
+AnnotationOption = (
+    str | Literal[AnnotationNonPatternOption.ignore_all, AnnotationNonPatternOption.import_all]
+)
 
 
 class MonitoredObject(enum.Enum):
@@ -117,7 +108,7 @@ class MonitoredObject(enum.Enum):
     cronjobs_pods = "cronjobs_pods"
 
 
-def parse_arguments(args: List[str]) -> argparse.Namespace:
+def parse_arguments(args: list[str]) -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--debug", action="store_true", help="Debug mode: raise Python exceptions")
     p.add_argument(
@@ -370,7 +361,7 @@ def deployment_info(
 
 def deployment_conditions(
     deployment_status: api.DeploymentStatus,
-) -> Optional[section.DeploymentConditions]:
+) -> section.DeploymentConditions | None:
     if not deployment_status.conditions:
         return None
     return section.DeploymentConditions(**deployment_status.conditions)
@@ -480,7 +471,7 @@ def statefulset_info(
 class Node(PodOwner):
     metadata: api.MetaDataNoNamespace[api.NodeName]
     status: api.NodeStatus
-    resources: Dict[str, api.NodeResources]
+    resources: dict[str, api.NodeResources]
     kubelet_info: api.KubeletInfo
 
     def allocatable_pods(self) -> section.AllocatablePods:
@@ -516,7 +507,7 @@ class Node(PodOwner):
         )
 
     def container_count(self) -> section.ContainerCount:
-        type_count = collections.Counter(
+        type_count = Counter(
             container.state.type.name for pod in self.pods for container in pod.containers.values()
         )
         return section.ContainerCount(**type_count)
@@ -533,7 +524,7 @@ class Node(PodOwner):
             value=self.resources["allocatable"].cpu,
         )
 
-    def conditions(self) -> Optional[section.NodeConditions]:
+    def conditions(self) -> section.NodeConditions | None:
         if not self.status.conditions:
             return None
 
@@ -545,7 +536,7 @@ class Node(PodOwner):
             }
         )
 
-    def custom_conditions(self) -> Optional[section.NodeCustomConditions]:
+    def custom_conditions(self) -> section.NodeCustomConditions | None:
         if not self.status.conditions:
             return None
 
@@ -682,7 +673,7 @@ class Cluster:
 
 def _node_collector_daemons(daemonsets: Iterable[api.DaemonSet]) -> section.CollectorDaemons:
     # Extract DaemonSets with label key `node-collector`
-    collector_daemons = collections.defaultdict(list)
+    collector_daemons = defaultdict(list)
     for daemonset in daemonsets:
         if (label := daemonset.metadata.labels.get(api.LabelName("node-collector"))) is not None:
             collector_type = label.value
@@ -768,7 +759,7 @@ class ComposedEntities:
             for api_statefulset in api_data.statefulsets
         ]
 
-        node_to_api_pod = collections.defaultdict(list)
+        node_to_api_pod = defaultdict(list)
         for api_pod in api_data.pods:
             if (node_name := api_pod.spec.node) is not None:
                 node_to_api_pod[node_name].append(api_pod)
@@ -899,7 +890,7 @@ def cron_job_latest_job(
 
 def filter_matching_namespace_resource_quota(
     namespace: api.NamespaceName, resource_quotas: Sequence[api.ResourceQuota]
-) -> Optional[api.ResourceQuota]:
+) -> api.ResourceQuota | None:
     for resource_quota in resource_quotas:
         if resource_quota.metadata.namespace == namespace:
             return resource_quota
@@ -918,7 +909,7 @@ def filter_pods_by_resource_quota_criteria(
 
 
 def filter_pods_by_resource_quota_scope_selector(
-    pods: Sequence[api.Pod], scope_selector: Optional[api.ScopeSelector]
+    pods: Sequence[api.Pod], scope_selector: api.ScopeSelector | None
 ) -> Sequence[api.Pod]:
     if scope_selector is None:
         return pods
@@ -1033,7 +1024,7 @@ def _collect_cpu_resources_from_api_pods(pods: Sequence[api.Pod]) -> section.Res
 
 
 def _pod_resources_from_api_pods(pods: Sequence[api.Pod]) -> section.PodResources:
-    resources: DefaultDict[str, List[str]] = collections.defaultdict(list)
+    resources: defaultdict[str, list[str]] = defaultdict(list)
     for pod in pods:
         resources[pod.status.phase].append(pod_name(pod))
     return section.PodResources(**resources)
@@ -1485,18 +1476,18 @@ def pod_lookup_from_api_pod(api_pod: api.Pod) -> PodLookupName:
 
 
 KubeNamespacedObj = TypeVar(
-    "KubeNamespacedObj", bound=Union[DaemonSet, Deployment, StatefulSet, api.CronJob]
+    "KubeNamespacedObj", bound=DaemonSet | Deployment | StatefulSet | api.CronJob
 )
 
 
 def kube_objects_from_namespaces(
-    kube_objects: Sequence[KubeNamespacedObj], namespaces: Set[api.NamespaceName]
+    kube_objects: Sequence[KubeNamespacedObj], namespaces: set[api.NamespaceName]
 ) -> Sequence[KubeNamespacedObj]:
     return [kube_obj for kube_obj in kube_objects if kube_obj.metadata.namespace in namespaces]
 
 
 def namespaces_from_namespacenames(
-    api_namespaces: Sequence[api.Namespace], namespace_names: Set[api.NamespaceName]
+    api_namespaces: Sequence[api.Namespace], namespace_names: set[api.NamespaceName]
 ) -> Sequence[api.Namespace]:
     return [
         api_namespace
@@ -1506,10 +1497,10 @@ def namespaces_from_namespacenames(
 
 
 def filter_monitored_namespaces(
-    cluster_namespaces: Set[api.NamespaceName],
+    cluster_namespaces: set[api.NamespaceName],
     namespace_include_patterns: Sequence[str],
     namespace_exclude_patterns: Sequence[str],
-) -> Set[api.NamespaceName]:
+) -> set[api.NamespaceName]:
     """Filter Kubernetes namespaces based on the provided patterns
 
     Examples:
@@ -1538,8 +1529,8 @@ def filter_monitored_namespaces(
 
 
 def _filter_namespaces(
-    kubernetes_namespaces: Set[api.NamespaceName], re_patterns: Sequence[str]
-) -> Set[api.NamespaceName]:
+    kubernetes_namespaces: set[api.NamespaceName], re_patterns: Sequence[str]
+) -> set[api.NamespaceName]:
     """Filter namespaces based on the provided regular expression patterns
 
     Examples:
@@ -1559,7 +1550,7 @@ def cluster_piggyback_formatter(cluster_name: str, object_type: str, namespaced_
 
 
 def _names_of_running_pods(
-    kube_object: Union[Node, Deployment, DaemonSet, StatefulSet]
+    kube_object: Node | Deployment | DaemonSet | StatefulSet,
 ) -> Sequence[PodLookupName]:
     # TODO: This function should really be simple enough to allow a doctest.
     # However, due to the way kube_object classes are constructed (e.g., see
@@ -1571,16 +1562,16 @@ def _names_of_running_pods(
 
 
 def pods_from_namespaces(
-    pods: Iterable[api.Pod], namespaces: Set[api.NamespaceName]
+    pods: Iterable[api.Pod], namespaces: set[api.NamespaceName]
 ) -> Sequence[api.Pod]:
     return [pod for pod in pods if pod.metadata.namespace in namespaces]
 
 
 def determine_pods_to_host(
     monitored_objects: Sequence[MonitoredObject],
-    monitored_pods: Set[PodLookupName],
+    monitored_pods: set[PodLookupName],
     composed_entities: ComposedEntities,
-    monitored_namespaces: Set[api.NamespaceName],
+    monitored_namespaces: set[api.NamespaceName],
     api_pods: Sequence[api.Pod],
     resource_quotas: Sequence[api.ResourceQuota],
     monitored_api_namespaces: Sequence[api.Namespace],
@@ -1725,7 +1716,7 @@ def _identify_unsupported_node_collector_components(
 def _group_metadata_by_node(
     node_collectors_metadata: Sequence[section.NodeCollectorMetadata],
 ) -> Sequence[section.NodeMetadata]:
-    nodes_components: Dict[section.NodeName, Dict[str, section.NodeComponent]] = {}
+    nodes_components: dict[section.NodeName, dict[str, section.NodeComponent]] = {}
     for node_collector in node_collectors_metadata:
         components = nodes_components.setdefault(node_collector.node, {})
 
@@ -1746,8 +1737,8 @@ def _group_metadata_by_node(
 
 def write_cluster_collector_info_section(
     processing_log: section.CollectorHandlerLog,
-    cluster_collector: Optional[section.ClusterCollectorMetadata] = None,
-    node_collectors_metadata: Optional[Sequence[section.NodeMetadata]] = None,
+    cluster_collector: section.ClusterCollectorMetadata | None = None,
+    node_collectors_metadata: Sequence[section.NodeMetadata] | None = None,
 ) -> None:
     with SectionWriter("kube_collector_metadata_v1") as writer:
         writer.append(
@@ -1772,7 +1763,7 @@ class CollectorHandlingException(Exception):
 
 @contextlib.contextmanager
 def collector_exception_handler(
-    logs: List[section.CollectorHandlerLog], debug: bool = False
+    logs: list[section.CollectorHandlerLog], debug: bool = False
 ) -> Iterator:
     try:
         yield
@@ -1812,7 +1803,7 @@ class CustomKubernetesApiException(Exception):
         return error_message_visible_in_check_mk_service_summary
 
 
-def pod_conditions(pod_status: api.PodStatus) -> Optional[section.PodConditions]:
+def pod_conditions(pod_status: api.PodStatus) -> section.PodConditions | None:
     if pod_status.conditions is None:
         return None
 
@@ -1847,7 +1838,7 @@ def _pod_container_specs(container_specs: Sequence[api.ContainerSpec]) -> sectio
     )
 
 
-def pod_start_time(pod_status: api.PodStatus) -> Optional[section.StartTime]:
+def pod_start_time(pod_status: api.PodStatus) -> section.StartTime | None:
     if pod_status.start_time is None:
         return None
 
@@ -1933,7 +1924,7 @@ def write_api_pods_sections(
             output_pod_sections(pod, cluster_name, annotation_key_pattern)
 
 
-def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-branches
+def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-branches
     if args is None:
         cmk.utils.password_store.replace_passwords()
         args = sys.argv[1:]
@@ -2057,7 +2048,7 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
                     piggyback_formatter=functools.partial(piggyback_formatter, "statefulset"),
                 )
 
-            monitored_pods: Set[PodLookupName] = {
+            monitored_pods: set[PodLookupName] = {
                 pod_lookup_from_api_pod(pod)
                 for pod in pods_from_namespaces(api_data.pods, monitored_namespace_names)
             }
@@ -2115,7 +2106,7 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
             # components will not be highlighted in the usual Checkmk service but in a separate
             # service
 
-            collector_metadata_logs: List[section.CollectorHandlerLog] = []
+            collector_metadata_logs: list[section.CollectorHandlerLog] = []
             with collector_exception_handler(logs=collector_metadata_logs, debug=arguments.debug):
                 metadata = request_cluster_collector(
                     query.CollectorPath.metadata,
@@ -2162,7 +2153,7 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
                 write_cluster_collector_info_section(processing_log=collector_metadata_logs[-1])
                 return 0
 
-            collector_container_logs: List[section.CollectorHandlerLog] = []
+            collector_container_logs: list[section.CollectorHandlerLog] = []
             with collector_exception_handler(logs=collector_container_logs, debug=arguments.debug):
                 LOGGER.info("Collecting container metrics from cluster collector")
                 container_metrics = request_cluster_collector(
@@ -2224,7 +2215,7 @@ def main(args: Optional[List[str]] = None) -> int:  # pylint: disable=too-many-b
                 )
 
             # Sections based on cluster collector machine sections
-            collector_machine_logs: List[section.CollectorHandlerLog] = []
+            collector_machine_logs: list[section.CollectorHandlerLog] = []
             with collector_exception_handler(logs=collector_machine_logs, debug=arguments.debug):
                 LOGGER.info("Collecting machine sections from cluster collector")
                 machine_sections = request_cluster_collector(

@@ -89,7 +89,7 @@ def get_allnet_ip_sensoric_info(host_address, opt_debug):
 
         match = re.search(r"<(\w+)>(.+)</\w+>", line)
         if match and context:
-            attrs["%s.%s" % (context, match.group(1))] = match.group(2)
+            attrs[f"{context}.{match.group(1)}"] = match.group(2)
 
     if opt_debug:
         sys.stdout.write("Parsed: %s\n" % pprint.pformat(attrs))
@@ -144,7 +144,7 @@ def main(sys_argv=None):  # pylint: disable=too-many-branches
 
         sys.stdout.write("<<<allnet_ip_sensoric:sep(59)>>>\n")
         for key, value in sorted(status.items()):
-            sys.stdout.write("%s;%s\n" % (key, value))
+            sys.stdout.write(f"{key};{value}\n")
 
     except Exception:
         if opt_debug:

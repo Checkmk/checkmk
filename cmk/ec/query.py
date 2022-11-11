@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from logging import Logger
-from typing import Any, Literal, Sequence
+from typing import Any, Literal
 
 import cmk.utils.regex
 from cmk.utils.exceptions import MKException

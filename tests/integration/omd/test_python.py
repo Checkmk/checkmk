@@ -86,7 +86,7 @@ def test_02_pip_path(site):
 def test_03_pip_interpreter_version(site):
     p = site.execute(["pip3", "-V"], stdout=subprocess.PIPE)
     version = p.stdout.read()
-    assert version.startswith("pip 20.2.3")
+    assert version.startswith("pip 22.0.4")
 
 
 @pytest.mark.parametrize("module_name", _get_import_names_from_pipfile())

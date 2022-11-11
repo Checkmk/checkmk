@@ -632,7 +632,7 @@ class Filesize(Integer):
 
     def value_to_html(self, value: int) -> ValueSpecText:
         exp, count = self.get_exponent(value)
-        return "%s %s" % (count, self._names[exp])
+        return f"{count} {self._names[exp]}"
 
     def value_to_json(self, value: int) -> JSONValue:
         return value
@@ -1343,12 +1343,12 @@ class HostAddress(TextInput):
         except AttributeError:  # no inet_pton here, sorry
             try:
                 socket.inet_aton(address)
-            except socket.error:
+            except OSError:
                 return False
 
             return address.count(".") == 3
 
-        except socket.error:  # not a valid address
+        except OSError:  # not a valid address
             return False
 
         return True
@@ -2095,7 +2095,7 @@ class ListOf(ValueSpec[ListOfModel[T]]):
             raise NotImplementedError()
 
     def _show_entry(self, varprefix: str, index: str, value: T) -> None:
-        entry_id = "%s_entry_%s" % (varprefix, index)
+        entry_id = f"{varprefix}_entry_{index}"
 
         if self._style == ListOf.Style.REGULAR:
             html.open_tr(id_=entry_id)
@@ -2136,7 +2136,7 @@ class ListOf(ValueSpec[ListOfModel[T]]):
         html.close_td()
 
     def _del_button(self, vp: str, nr: str) -> None:
-        js = "cmk.valuespecs.listof_delete(%s, %s)" % (json.dumps(vp), json.dumps(nr))
+        js = f"cmk.valuespecs.listof_delete({json.dumps(vp)}, {json.dumps(nr)})"
         html.icon_button("#", self._del_label, "close", onclick=js, class_=["delete_button"])
 
     def canonical_value(self) -> ListOfModel[T]:
@@ -2262,7 +2262,7 @@ class ListOfMultiple(ValueSpec[ListOfMultipleModel]):
         return self._allow_empty
 
     def del_button(self, varprefix: str, ident: str) -> None:
-        js = "cmk.valuespecs.listofmultiple_del(%s, %s)" % (
+        js = "cmk.valuespecs.listofmultiple_del({}, {})".format(
             json.dumps(varprefix),
             json.dumps(ident),
         )
@@ -3224,7 +3224,7 @@ def _sub_valuespec(choice: CascadingDropdownChoice) -> ValueSpec | None:
         vs = choice[2 + 0]
         if vs is None or isinstance(vs, ValueSpec):
             return vs
-    raise Exception("invalid CascadingDropdownChoice %r" % (choice,))
+    raise Exception(f"invalid CascadingDropdownChoice {choice!r}")
 
 
 class CascadingDropdown(ValueSpec[CascadingDropdownChoiceValue]):
@@ -3875,14 +3875,14 @@ class DualListChoice(ListChoice):
 
             onchange_func = select_func if self._instant_add else ""
             if self._enlarge_active:
-                onchange_func = "cmk.valuespecs.duallist_enlarge(%s, %s);" % (
+                onchange_func = "cmk.valuespecs.duallist_enlarge({}, {});".format(
                     json.dumps(suffix),
                     json.dumps(varprefix),
                 )
 
             html.open_td()
             html.dropdown(
-                "%s_%s" % (varprefix, suffix),
+                f"{varprefix}_{suffix}",
                 [(str(k), v) for k, v in choices],
                 deflt="",
                 ordered=self._custom_order,
@@ -5294,7 +5294,7 @@ class Alternative(ValueSpec[AlternativeModel]):
             if self._orientation == "horizontal":
                 html.close_td()
                 html.open_td()
-            html.open_span(id_="%s_%s_sub" % (varprefix, nr), style="display:%s" % disp)
+            html.open_span(id_=f"{varprefix}_{nr}_sub", style="display:%s" % disp)
             html.help(vs.help())
             vs.render_input(varprefix + "_%d" % nr, cur_val)
             html.close_span()
@@ -5523,7 +5523,7 @@ class Tuple(ValueSpec[TT]):
             el.validate_datatype(val, f"{varprefix}_{idx}")
 
     def transform_value(self, value: TT) -> TT:
-        assert isinstance(value, tuple), "Tuple.transform_value() got a non-tuple: %r" % (value,)
+        assert isinstance(value, tuple), f"Tuple.transform_value() got a non-tuple: {value!r}"
         return tuple(
             vs.transform_value(value[index]) for index, vs in enumerate(self._elements)
         )  # type:ignore[return-value]
@@ -5581,7 +5581,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
 
         if isinstance(optional_keys, bool):
             self._optional_keys = optional_keys
-        elif opt_keys := set(k for k in optional_keys):
+        elif opt_keys := set(optional_keys):
             self._optional_keys = True
             if self._required_keys:
                 raise TypeError("optional_keys and required_keys can not be set at the same time.")
@@ -5889,7 +5889,7 @@ class Dictionary(ValueSpec[DictionaryModel]):
                 raise MKUserError(varprefix, _("The entry %s is missing") % vs.title())
 
     def transform_value(self, value: DictionaryModel) -> DictionaryModel:
-        assert isinstance(value, dict), "Dictionary.transform_value() got a non-dict: %r" % (value,)
+        assert isinstance(value, dict), f"Dictionary.transform_value() got a non-dict: {value!r}"
         return {
             **{
                 param: vs.transform_value(value[param])  #
@@ -6665,7 +6665,7 @@ class ImageUpload(FileUpload):
 
         try:
             im = Image.open(io.BytesIO(content))
-        except IOError:
+        except OSError:
             raise MKUserError(varprefix, _("Please choose a valid PNG image."))
 
         if self._max_size:
@@ -7020,7 +7020,7 @@ class IconSelector(ValueSpec[IconSelectorModel]):
                 if file_.suffix == ".png":
                     try:
                         category = self._extract_category_from_png(file_, default_category)
-                    except IOError as e:
+                    except OSError as e:
                         if "%s" % e == "cannot identify image file":
                             continue  # silently skip invalid files
                         raise
@@ -7143,7 +7143,7 @@ class IconSelector(ValueSpec[IconSelectorModel]):
                 category_alias,
                 href="javascript:cmk.valuespecs.iconselector_toggle(%s, %s)"
                 % (json.dumps(varprefix), json.dumps(category_name)),
-                id_="%s_%s_nav" % (varprefix, category_name),
+                id_=f"{varprefix}_{category_name}_nav",
                 class_="%s_nav" % varprefix,
             )
             html.close_li()
@@ -7153,7 +7153,7 @@ class IconSelector(ValueSpec[IconSelectorModel]):
         empty = ["empty"] if self._allow_empty or is_emblem else []
         for category_name, category_alias, icons in available_icons:
             html.open_div(
-                id_="%s_%s_container" % (varprefix, category_name),
+                id_=f"{varprefix}_{category_name}_container",
                 class_=["icon_container", "%s_container" % varprefix],
                 style="display:none;" if active_category != category_name else None,
             )
@@ -7755,8 +7755,7 @@ class CAorCAChain(UploadOrPasteTextFile):
                     HTMLWriter.render_td("%s:" % title)
                     + HTMLWriter.render_td(
                         HTML().join(
-                            "%s: %s" % (title1, val)
-                            for title1, val in sorted(cert_info[what].items())
+                            f"{title1}: {val}" for title1, val in sorted(cert_info[what].items())
                         )
                     )
                 )
@@ -7982,7 +7981,7 @@ class RuleComment(TextAreaUnicode):
 
         super().render_input(varprefix, value)
 
-        date_and_user = "%s %s: " % (time.strftime("%F", time.localtime()), user.id)
+        date_and_user = "{} {}: ".format(time.strftime("%F", time.localtime()), user.id)
 
         html.nbsp()
         html.icon_button(

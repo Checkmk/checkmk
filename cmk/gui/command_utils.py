@@ -159,7 +159,7 @@ def do_actions(  # pylint: disable=too-many-branches
 
     if not action_rows:
         message_no_rows = _("No rows selected to perform actions for.")
-        message_no_rows += '<br><a href="%s">%s</a>' % (backurl, _("Back to view"))
+        message_no_rows += '<br><a href="{}">{}</a>'.format(backurl, _("Back to view"))
         html.show_error(message_no_rows)
         return False  # no actions done
 
@@ -209,12 +209,12 @@ def do_actions(  # pylint: disable=too-many-branches
 
     if message:
         backurl += "&filled_in=filter&_show_filter_form=0"
-        message += '<br><a href="%s">%s</a>' % (backurl, _("Back to view"))
+        message += '<br><a href="{}">{}</a>'.format(backurl, _("Back to view"))
         if request.var("show_checkboxes") == "1":
             request.del_var("selection")
             weblib.selection_id()
             backurl += "&selection=" + request.get_str_input_mandatory("selection")
-            message += '<br><a href="%s">%s</a>' % (
+            message += '<br><a href="{}">{}</a>'.format(
                 backurl,
                 _("Back to view with checkboxes reset"),
             )

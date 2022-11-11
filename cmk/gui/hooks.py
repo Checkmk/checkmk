@@ -7,7 +7,7 @@ import sys
 import traceback
 import typing
 from collections.abc import Callable
-from typing import Any, Dict, List, Literal, NamedTuple, Optional, Union
+from typing import Any, Literal, NamedTuple
 
 from cmk.utils.exceptions import MKGeneralException
 
@@ -17,7 +17,7 @@ class Hook(NamedTuple):
     is_builtin: bool
 
 
-hooks: Dict[str, List[Hook]] = {}
+hooks: dict[str, list[Hook]] = {}
 
 
 def load_plugins() -> None:
@@ -57,7 +57,7 @@ def unregister(name: str, func: Callable) -> None:
             registered_hooks.remove(hook)
 
 
-def get(name: str) -> List[Hook]:
+def get(name: str) -> list[Hook]:
     return hooks.get(name, [])
 
 
@@ -93,7 +93,7 @@ ClearEvent = Literal[
     "users-saved",
 ]
 
-ClearEvents = Union[List[ClearEvent], ClearEvent]
+ClearEvents = list[ClearEvent] | ClearEvent
 
 R = typing.TypeVar("R")
 P = typing.ParamSpec("P")
@@ -108,7 +108,7 @@ P = typing.ParamSpec("P")
 
 def _scoped_memoize(
     clear_events: ClearEvents,
-    maxsize: Optional[int] = 128,
+    maxsize: int | None = 128,
     typed: bool = False,
 ) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """A scoped memoization decorator.
@@ -150,7 +150,7 @@ def _scoped_memoize(
 
 
 def request_memoize(
-    maxsize: Optional[int] = 128, typed: bool = False
+    maxsize: int | None = 128, typed: bool = False
 ) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """A cache decorator which only has a scope for one request.
 

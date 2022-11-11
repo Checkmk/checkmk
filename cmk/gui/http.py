@@ -7,20 +7,9 @@
 import ast
 import json
 import urllib.parse
+from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
-from typing import (
-    Any,
-    Dict,
-    Iterator,
-    List,
-    Mapping,
-    Optional,
-    overload,
-    Protocol,
-    Tuple,
-    TypeVar,
-    Union,
-)
+from typing import Any, overload, Protocol, TypeVar
 
 import werkzeug
 from six import ensure_str
@@ -33,7 +22,7 @@ from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.i18n import _
 
-UploadedFile = Tuple[str, str, bytes]
+UploadedFile = tuple[str, str, bytes]
 T = TypeVar("T")
 Value = TypeVar("Value")
 
@@ -62,7 +51,8 @@ class LegacyVarsMixin:
 
     def __init__(self, *args: Any, **kw: Any) -> None:
         super().__init__(*args, **kw)
-        self.legacy_vars = self._vars = {}  # type: Dict[str, Union[str, object]]
+        self._vars: dict[str, str | object] = {}
+        self.legacy_vars = self._vars
 
     def set_var(self, varname: str, value: str) -> None:
         if not isinstance(value, str):
@@ -78,7 +68,7 @@ class LegacyVarsMixin:
             if varname.startswith(prefix):
                 self.del_var(varname)
 
-    def itervars(self, prefix: str = "") -> Iterator[Tuple[str, str]]:
+    def itervars(self, prefix: str = "") -> Iterator[tuple[str, str]]:
         skip = []
         for name, value in self.legacy_vars.items():
             if name.startswith(prefix):
@@ -106,7 +96,7 @@ class LegacyVarsMixin:
         return super().has_var(varname)  # type: ignore[misc]
 
     @overload
-    def var(self, name: str) -> Optional[str]:
+    def var(self, name: str) -> str | None:
         ...
 
     @overload
@@ -114,10 +104,10 @@ class LegacyVarsMixin:
         ...
 
     @overload
-    def var(self, name: str, default: Optional[str]) -> Optional[str]:
+    def var(self, name: str, default: str | None) -> str | None:
         ...
 
-    def var(self, name: str, default: Optional[str] = None) -> Optional[str]:
+    def var(self, name: str, default: str | None = None) -> str | None:
         legacy_var = self.legacy_vars.get(name, None)
         if legacy_var is not None:
             if legacy_var is not self.DELETED:
@@ -133,7 +123,7 @@ class LegacyVarsMixin:
 class LegacyUploadMixin:
     def __init__(self, *args: Any, **kw: Any) -> None:
         super().__init__(*args, **kw)
-        self.upload_cache: Dict[str, UploadedFile] = {}
+        self.upload_cache: dict[str, UploadedFile] = {}
 
     def uploaded_file(self, name: str) -> UploadedFile:
         # NOTE: There could be multiple entries with the same key, we ignore that for now...
@@ -159,7 +149,7 @@ class LegacyDeprecatedMixin:
     methods and properties in Request itself.
     """
 
-    def itervars(self, prefix: str = "") -> Iterator[Tuple[str, Optional[str]]]:
+    def itervars(self, prefix: str = "") -> Iterator[tuple[str, str | None]]:
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
         # up with 1.7, once we have moved to python 3.
         # TODO: Deprecated
@@ -172,7 +162,7 @@ class LegacyDeprecatedMixin:
                 ) if values else None
 
     @overload
-    def var(self, name: str) -> Optional[str]:
+    def var(self, name: str) -> str | None:
         ...
 
     @overload
@@ -180,10 +170,10 @@ class LegacyDeprecatedMixin:
         ...
 
     @overload
-    def var(self, name: str, default: Optional[str]) -> Optional[str]:
+    def var(self, name: str, default: str | None) -> str | None:
         ...
 
-    def var(self, name: str, default: Optional[str] = None) -> Optional[str]:
+    def var(self, name: str, default: str | None = None) -> str | None:
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
         # up with 1.7, once we have moved to python 3.
         # TODO: Deprecated
@@ -207,7 +197,7 @@ class LegacyDeprecatedMixin:
         # TODO: Deprecated
         return varname in self.cookies  # type: ignore[attr-defined]
 
-    def cookie(self, varname: str, default: Optional[str] = None) -> Optional[str]:
+    def cookie(self, varname: str, default: str | None = None) -> str | None:
         """Return the value of the cookie provided by the client.
 
         If the cookie has not been set, None will be returned as a default.
@@ -222,14 +212,14 @@ class LegacyDeprecatedMixin:
             return ensure_str(value)  # pylint: disable= six-ensure-str-bin-call
         return None
 
-    def get_request_header(self, key: str, default: Optional[str] = None) -> Optional[str]:
+    def get_request_header(self, key: str, default: str | None = None) -> str | None:
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
         # up with 1.7, once we have moved to python 3.
         # TODO: Deprecated
         return self.headers.get(key, default)  # type: ignore[attr-defined]
 
     @property
-    def referer(self) -> Optional[str]:
+    def referer(self) -> str | None:
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
         # up with 1.7, once we have moved to python 3.
         # TODO: Deprecated
@@ -264,7 +254,7 @@ class LegacyDeprecatedMixin:
         return self.is_secure  # type: ignore[attr-defined]
 
 
-def mandatory_parameter(varname: str, value: Optional[T]) -> T:
+def mandatory_parameter(varname: str, value: T | None) -> T:
     if value is None:
         raise MKUserError(varname, _('The parameter "%s" is missing.') % varname)
     return value
@@ -311,12 +301,12 @@ class Request(
         return 110
 
     @property
-    def remote_ip(self) -> Optional[str]:
+    def remote_ip(self) -> str | None:
         """Selects remote addr from the given list of ips in
         X-Forwarded-For. Picks first non-trusted ip address.
         """
-        trusted_proxies: List[str] = ["127.0.0.1", "::1"]
-        remote_addr: Optional[str] = self.remote_addr
+        trusted_proxies: list[str] = ["127.0.0.1", "::1"]
+        remote_addr: str | None = self.remote_addr
         forwarded_for = self.environ.get("HTTP_X_FORWARDED_FOR", "").split(",")
         if remote_addr in trusted_proxies:
             return next(
@@ -329,10 +319,10 @@ class Request(
             )
         return self.remote_addr
 
-    def get_str_input(self, varname: str, deflt: Optional[str] = None) -> Optional[str]:
+    def get_str_input(self, varname: str, deflt: str | None = None) -> str | None:
         return self.var(varname, deflt)
 
-    def get_str_input_mandatory(self, varname: str, deflt: Optional[str] = None) -> str:
+    def get_str_input_mandatory(self, varname: str, deflt: str | None = None) -> str:
         return mandatory_parameter(varname, self.get_str_input(varname, deflt))
 
     @overload
@@ -340,7 +330,7 @@ class Request(
         self,
         type_: type[Validation_T],
         varname: str,
-    ) -> Optional[Validation_T]:
+    ) -> Validation_T | None:
         ...
 
     @overload
@@ -349,7 +339,7 @@ class Request(
         type_: type[Validation_T],
         varname: str,
         deflt: None,
-    ) -> Optional[Validation_T]:
+    ) -> Validation_T | None:
         ...
 
     @overload
@@ -365,8 +355,8 @@ class Request(
         self,
         type_: type[Validation_T],
         varname: str,
-        deflt: Optional[Validation_T] = None,
-    ) -> Optional[Validation_T]:
+        deflt: Validation_T | None = None,
+    ) -> Validation_T | None:
         """Try to convert the value of an HTTP request variable to a given type
 
         The Checkmk UI excepts `MKUserError` *exceptions* to be raised by
@@ -387,11 +377,11 @@ class Request(
         self,
         type_: type[Validation_T],
         varname: str,
-        deflt: Optional[Validation_T] = None,
+        deflt: Validation_T | None = None,
     ) -> Validation_T:
         return mandatory_parameter(varname, self.get_validated_type_input(type_, varname, deflt))
 
-    def get_ascii_input(self, varname: str, deflt: Optional[str] = None) -> Optional[str]:
+    def get_ascii_input(self, varname: str, deflt: str | None = None) -> str | None:
         """Helper to retrieve a byte string and ensure it only contains ASCII characters
         In case a non-ASCII character is found an MKUserError() is raised."""
         value = self.get_str_input(varname, deflt)
@@ -401,19 +391,19 @@ class Request(
             raise MKUserError(varname, _("The given text must only contain ASCII characters."))
         return value
 
-    def get_ascii_input_mandatory(self, varname: str, deflt: Optional[str] = None) -> str:
+    def get_ascii_input_mandatory(self, varname: str, deflt: str | None = None) -> str:
         return mandatory_parameter(varname, self.get_ascii_input(varname, deflt))
 
-    def get_binary_input(self, varname: str, deflt: Optional[bytes] = None) -> Optional[bytes]:
+    def get_binary_input(self, varname: str, deflt: bytes | None = None) -> bytes | None:
         val = self.var(varname, deflt.decode() if deflt is not None else None)
         if val is None:
             return None
         return val.encode()
 
-    def get_binary_input_mandatory(self, varname: str, deflt: Optional[bytes] = None) -> bytes:
+    def get_binary_input_mandatory(self, varname: str, deflt: bytes | None = None) -> bytes:
         return mandatory_parameter(varname, self.get_binary_input(varname, deflt))
 
-    def get_integer_input(self, varname: str, deflt: Optional[int] = None) -> Optional[int]:
+    def get_integer_input(self, varname: str, deflt: int | None = None) -> int | None:
 
         value = self.var(varname, "%d" % deflt if deflt is not None else None)
         if value is None:
@@ -424,10 +414,10 @@ class Request(
         except ValueError:
             raise MKUserError(varname, _('The parameter "%s" is not an integer.') % varname)
 
-    def get_integer_input_mandatory(self, varname: str, deflt: Optional[int] = None) -> int:
+    def get_integer_input_mandatory(self, varname: str, deflt: int | None = None) -> int:
         return mandatory_parameter(varname, self.get_integer_input(varname, deflt))
 
-    def get_float_input(self, varname: str, deflt: Optional[float] = None) -> Optional[float]:
+    def get_float_input(self, varname: str, deflt: float | None = None) -> float | None:
 
         value = self.var(varname, "%s" % deflt if deflt is not None else None)
         if value is None:
@@ -438,10 +428,10 @@ class Request(
         except ValueError:
             raise MKUserError(varname, _('The parameter "%s" is not a float.') % varname)
 
-    def get_float_input_mandatory(self, varname: str, deflt: Optional[float] = None) -> float:
+    def get_float_input_mandatory(self, varname: str, deflt: float | None = None) -> float:
         return mandatory_parameter(varname, self.get_float_input(varname, deflt))
 
-    def get_item_input(self, varname: str, collection: Mapping[str, Value]) -> Tuple[Value, str]:
+    def get_item_input(self, varname: str, collection: Mapping[str, Value]) -> tuple[Value, str]:
         """Helper to get an item from the given collection
         Raises a MKUserError() in case the requested item is not available."""
         item = self.get_ascii_input(varname)
@@ -453,7 +443,7 @@ class Request(
     # TODO: Invalid default URL is not validated. Should we do it?
     # TODO: This is only protecting against some not allowed URLs but does not
     #       really verify that this is some kind of URL.
-    def get_url_input(self, varname: str, deflt: Optional[str] = None) -> str:
+    def get_url_input(self, varname: str, deflt: str | None = None) -> str:
         """Helper function to retrieve a URL from HTTP parameters
 
         This is mostly used to the "back url" which can then be used to create
@@ -517,7 +507,7 @@ class Request(
     # TODO: The mixture of request variables and json request argument is a nasty hack. Split this
     # up into explicit methods that either use the one or the other method, remove the call sites to
     # this method and then this method.
-    def get_request(self, exclude_vars: Optional[List[str]] = None) -> Dict[str, Any]:
+    def get_request(self, exclude_vars: list[str] | None = None) -> dict[str, Any]:
         """Returns a dictionary containing all parameters the user handed over to this request.
 
         The concept is that the user can either provide the data in a single "request" variable,

@@ -15,10 +15,11 @@ import signal
 import sys
 import time
 import traceback
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from types import FrameType
-from typing import Any, Callable, List, NoReturn, Optional, Sequence, Type, TypedDict
+from typing import Any, NoReturn, TypedDict
 
 import psutil  # type: ignore[import]
 from pydantic import BaseModel
@@ -172,7 +173,7 @@ class BackgroundProcessInterface:
         """The progress update is written to stdout and will be catched by the threads counterpart"""
         message = info
         if with_timestamp:
-            message = "%s %s" % (render.time_of_day(time.time()), message)
+            message = f"{render.time_of_day(time.time())} {message}"
         sys.stdout.write(message + "\n")
 
     def send_result_message(self, info: str) -> None:
@@ -234,7 +235,7 @@ class BackgroundProcess(multiprocessing.Process):
         self._logger.debug("Register signal handler %d", os.getpid())
         signal.signal(signal.SIGTERM, self._handle_sigterm)
 
-    def _handle_sigterm(self, signum: int, frame: Optional[FrameType]) -> None:
+    def _handle_sigterm(self, signum: int, frame: FrameType | None) -> None:
         self._logger.debug("Received SIGTERM")
         status = self._jobstatus_store.read()
         if not status.stoppable:
@@ -777,8 +778,8 @@ class BackgroundJob:
         return None
 
 
-class BackgroundJobRegistry(cmk.utils.plugin_registry.Registry[Type[BackgroundJob]]):
-    def plugin_name(self, instance: Type[BackgroundJob]) -> str:
+class BackgroundJobRegistry(cmk.utils.plugin_registry.Registry[type[BackgroundJob]]):
+    def plugin_name(self, instance: type[BackgroundJob]) -> str:
         return instance.__name__
 
 
@@ -857,16 +858,16 @@ class BackgroundJobManager:
         self._logger = logger.getChild("job_manager")
         super().__init__()
 
-    def get_running_job_ids(self, job_class: Type[BackgroundJob]) -> List[JobId]:
+    def get_running_job_ids(self, job_class: type[BackgroundJob]) -> list[JobId]:
         """Checks for running jobs in the jobs default basedir"""
         all_jobs = self.get_all_job_ids(job_class)
         return [
             job_id for job_id in all_jobs if BackgroundJob(job_id, logger=self._logger).is_active()
         ]
 
-    def get_all_job_ids(self, job_class: Type[BackgroundJob]) -> List[JobId]:
+    def get_all_job_ids(self, job_class: type[BackgroundJob]) -> list[JobId]:
         """Checks for running jobs in the jobs default basedir"""
-        job_ids: List[JobId] = []
+        job_ids: list[JobId] = []
         if not os.path.exists(BackgroundJobDefines.base_dir):
             return job_ids
 
@@ -877,7 +878,7 @@ class BackgroundJobManager:
 
         return job_ids
 
-    def do_housekeeping(self, job_classes: Sequence[Type[BackgroundJob]]) -> None:
+    def do_housekeeping(self, job_classes: Sequence[type[BackgroundJob]]) -> None:
         try:
             for job_class in job_classes:
                 job_ids = self.get_all_job_ids(job_class)

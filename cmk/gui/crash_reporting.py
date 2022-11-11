@@ -11,7 +11,8 @@ import pprint
 import tarfile
 import time
 import traceback
-from typing import Dict, Iterator, Mapping, Optional, Type, TypedDict
+from collections.abc import Iterator, Mapping
+from typing import TypedDict
 
 import livestatus
 from livestatus import SiteId
@@ -85,7 +86,7 @@ class ABCCrashReportPage(cmk.gui.pages.Page, abc.ABC):
             )
         return row
 
-    def _get_crash_report_row(self, crash_id: str, site_id: str) -> Optional[Dict[str, str]]:
+    def _get_crash_report_row(self, crash_id: str, site_id: str) -> dict[str, str] | None:
         rows = CrashReportsRowTable().get_crash_report_rows(
             only_sites=[SiteId(site_id)],
             filter_headers="Filter: id = %s" % livestatus.lqencode(crash_id),
@@ -115,7 +116,7 @@ class PageCrash(ABCCrashReportPage):
         # Do not reveal crash context information to unauthenticated users or not permitted
         # users to prevent disclosure of internal information
         if not user.may("general.see_crash_reports"):
-            html.show_error("<b>%s:</b> %s" % (_("Internal error"), crash_info["exc_value"]))
+            html.show_error("<b>{}:</b> {}".format(_("Internal error"), crash_info["exc_value"]))
             html.p(
                 _(
                     "An internal error occurred while processing your request. "
@@ -133,7 +134,7 @@ class PageCrash(ABCCrashReportPage):
             details = ReportSubmitDetails(name="", mail="")
 
         if crash_info["crash_type"] == "gui":
-            html.show_error("<b>%s:</b> %s" % (_("Internal error"), crash_info["exc_value"]))
+            html.show_error("<b>{}:</b> {}".format(_("Internal error"), crash_info["exc_value"]))
             html.p(
                 _(
                     "An internal error occured while processing your request. "
@@ -364,7 +365,10 @@ class PageCrash(ABCCrashReportPage):
         html.open_table(class_=["data", "crash_report"])
 
         _crash_row(
-            _("Exception"), "%s (%s)" % (info["exc_type"], info["exc_value"]), odd=True, pre=True
+            _("Exception"),
+            "{} ({})".format(info["exc_type"], info["exc_value"]),
+            odd=True,
+            pre=True,
         )
         _crash_row(
             _("Traceback"), self._format_traceback(info["exc_traceback"]), odd=False, pre=True
@@ -420,7 +424,7 @@ class ABCReportRenderer(abc.ABC):
         raise NotImplementedError()
 
 
-class ReportRendererRegistry(cmk.utils.plugin_registry.Registry[Type[ABCReportRenderer]]):
+class ReportRendererRegistry(cmk.utils.plugin_registry.Registry[type[ABCReportRenderer]]):
     def plugin_name(self, instance):
         return instance.type()
 
@@ -654,7 +658,7 @@ class PageDownloadCrashReport(ABCCrashReportPage):
     def page(self) -> None:
         user.need_permission("general.see_crash_reports")
 
-        filename = "Checkmk_Crash_%s_%s_%s.tar.gz" % (
+        filename = "Checkmk_Crash_{}_{}_{}.tar.gz".format(
             urlencode(self._site_id),
             urlencode(self._crash_id),
             time.strftime("%Y-%m-%d_%H-%M-%S"),
@@ -665,7 +669,7 @@ class PageDownloadCrashReport(ABCCrashReportPage):
         response.set_data(_pack_crash_report(self._get_serialized_crash_report()))
 
 
-def _pack_crash_report(serialized_crash_report: Mapping[str, Optional[bytes]]) -> bytes:
+def _pack_crash_report(serialized_crash_report: Mapping[str, bytes | None]) -> bytes:
     """Returns a byte string representing the current crash report in tar archive format"""
     buf = io.BytesIO()
     with tarfile.open(mode="w:gz", fileobj=buf) as tar:

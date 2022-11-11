@@ -5,8 +5,9 @@
 
 import json
 import re
+from collections.abc import Mapping
 from html import unescape
-from typing import Any, List, Mapping, Optional, Tuple, TYPE_CHECKING, Union
+from typing import Any
 
 from livestatus import SiteId
 
@@ -18,7 +19,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.type_defs import HTTPVariables
+from cmk.gui.type_defs import HTTPVariables, Row
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
@@ -32,15 +33,12 @@ class JSONExportError(Exception):
     pass
 
 
-CSSClass = Optional[str]
+CSSClass = str | None
 # Dict: The aggr_treestate painters are returning a dictionary data structure (see
 # paint_aggregated_tree_state()) in case the output_format is not HTML. Once we have
 # separated the data from rendering of the data, we can hopefully clean this up
-CellContent = Union[str, HTML, Mapping[str, Any]]
-CellSpec = Tuple[CSSClass, CellContent]
-
-if TYPE_CHECKING:
-    from cmk.gui.type_defs import Row
+CellContent = str | HTML | Mapping[str, Any]
+CellSpec = tuple[CSSClass, CellContent]
 
 
 def _prepare_button_url(p: re.Match) -> str:
@@ -58,9 +56,7 @@ def _prepare_button_url(p: re.Match) -> str:
 # There is common code with cmk/notification_plugins/utils.py:format_plugin_output(). Please check
 # whether or not that function needs to be changed too
 # TODO(lm): Find a common place to unify this functionality.
-def format_plugin_output(
-    output: str, row: "Optional[Row]" = None, shall_escape: bool = True
-) -> HTML:
+def format_plugin_output(output: str, row: Row | None = None, shall_escape: bool = True) -> HTML:
     assert not isinstance(output, dict)
     ok_marker = '<b class="stmark state0">OK</b>'
     warn_marker = '<b class="stmark state1">WARN</b>'
@@ -121,7 +117,7 @@ def format_plugin_output(
     return HTML(output)
 
 
-def get_host_list_links(site: SiteId, hosts: List[Union[str]]) -> List[str]:
+def get_host_list_links(site: SiteId, hosts: list[str]) -> list[str]:
     entries = []
     for host in hosts:
         args: HTTPVariables = [
@@ -139,11 +135,11 @@ def get_host_list_links(site: SiteId, hosts: List[Union[str]]) -> List[str]:
     return entries
 
 
-def row_limit_exceeded(row_count: int, limit: Optional[int]) -> bool:
+def row_limit_exceeded(row_count: int, limit: int | None) -> bool:
     return limit is not None and row_count >= limit + 1
 
 
-def query_limit_exceeded_warn(limit: Optional[int], user_config: LoggedInUser) -> None:
+def query_limit_exceeded_warn(limit: int | None, user_config: LoggedInUser) -> None:
     """Compare query reply against limits, warn in the GUI about incompleteness"""
     text = HTML(_("Your query produced more than %d results. ") % limit)
 
@@ -193,7 +189,7 @@ def render_tag_groups(tag_groups: TaggroupIDToTagID, object_type: str, with_link
 
 
 def _render_tag_groups_or_labels(
-    entries: Union[TaggroupIDToTagID, Labels],
+    entries: TaggroupIDToTagID | Labels,
     object_type: str,
     with_links: bool,
     label_type: str,
@@ -216,8 +212,8 @@ def _render_tag_groups_or_labels(
 
 
 def _render_tag_group(
-    tag_group_id_or_label_key: Union[TaggroupID, str],
-    tag_id_or_label_value: Union[TagID, str],
+    tag_group_id_or_label_key: TaggroupID | str,
+    tag_id_or_label_value: TagID | str,
     object_type: str,
     with_link: bool,
     label_type: str,
@@ -249,9 +245,7 @@ def _render_tag_group(
         type_filter_vars = [
             (
                 "%s_label" % object_type,
-                json.dumps(
-                    [{"value": "%s:%s" % (tag_group_id_or_label_key, tag_id_or_label_value)}]
-                ),
+                json.dumps([{"value": f"{tag_group_id_or_label_key}:{tag_id_or_label_value}"}]),
             ),
         ]
 

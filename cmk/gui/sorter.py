@@ -6,7 +6,8 @@
 from __future__ import annotations
 
 import abc
-from typing import Any, Dict, List, NamedTuple, Optional, Sequence, Type
+from collections.abc import Sequence
+from typing import Any, NamedTuple
 
 from cmk.utils.plugin_registry import Registry
 
@@ -17,7 +18,7 @@ from cmk.gui.type_defs import ColumnName, Row, SorterFunction
 class SorterEntry(NamedTuple):
     sorter: Sorter
     negate: bool
-    join_key: Optional[str]
+    join_key: str | None
 
 
 # Is used to add default arguments to the named tuple. Would be nice to have a cleaner solution
@@ -47,7 +48,7 @@ class Sorter(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def cmp(self, r1: Dict, r2: Dict) -> int:
+    def cmp(self, r1: dict, r2: dict) -> int:
         """The function cmp does the actual sorting. During sorting it
         will be called with two data rows as arguments and must
         return -1, 0 or 1:
@@ -62,7 +63,7 @@ class Sorter(abc.ABC):
         raise NotImplementedError()
 
     @property
-    def _args(self) -> Optional[List]:
+    def _args(self) -> list | None:
         """Optional list of arguments for the cmp function"""
         return None
 
@@ -73,8 +74,8 @@ class Sorter(abc.ABC):
         return False
 
 
-class SorterRegistry(Registry[Type[Sorter]]):
-    def plugin_name(self, instance: Type[Sorter]) -> str:
+class SorterRegistry(Registry[type[Sorter]]):
+    def plugin_name(self, instance: type[Sorter]) -> str:
         return instance().ident
 
 
@@ -83,7 +84,7 @@ sorter_registry = SorterRegistry()
 
 # Kept for pre 1.6 compatibility. But also the inventory.py uses this to
 # register some painters dynamically
-def register_sorter(ident: str, spec: Dict[str, Any]) -> None:
+def register_sorter(ident: str, spec: dict[str, Any]) -> None:
     cls = type(
         "LegacySorter%s" % str(ident).title(),
         (Sorter,),

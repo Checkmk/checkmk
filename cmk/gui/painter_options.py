@@ -8,7 +8,7 @@ from __future__ import annotations
 import abc
 import time
 from collections.abc import Sequence
-from typing import Any, Dict, Optional, Type
+from typing import Any
 
 import cmk.utils.render
 from cmk.utils.plugin_registry import Registry
@@ -63,12 +63,12 @@ class PainterOptions:
         # The names of the painter options used by the current view
         self._used_option_names: Sequence[str] = []
         # The effective options for this view
-        self._options: Dict[str, Any] = {}
+        self._options: dict[str, Any] = {}
 
-    def load(self, view_name: Optional[str] = None) -> None:
+    def load(self, view_name: str | None = None) -> None:
         self._load_from_config(view_name)
 
-    def _load_from_config(self, view_name: Optional[str]) -> None:
+    def _load_from_config(self, view_name: str | None) -> None:
         if self._is_anonymous_view(view_name):
             return  # never has options
 
@@ -79,7 +79,7 @@ class PainterOptions:
         vo = user.load_file("viewoptions", {})
         self._options = vo.get(view_name, {})
 
-    def _is_anonymous_view(self, view_name: Optional[str]) -> bool:
+    def _is_anonymous_view(self, view_name: str | None) -> bool:
         return view_name is None
 
     def save_to_config(self, view_name: str) -> None:
@@ -167,7 +167,7 @@ class PainterOptions:
     def get_without_default(self, name: str) -> Any:
         return self._options.get(name)
 
-    def get_all(self) -> Dict[str, Any]:
+    def get_all(self) -> dict[str, Any]:
         return self._options
 
     def painter_options_permitted(self) -> bool:
@@ -200,8 +200,8 @@ class PainterOptions:
         html.end_form()
 
 
-class ViewPainterOptionRegistry(Registry[Type[PainterOption]]):
-    def plugin_name(self, instance: Type[PainterOption]) -> str:
+class ViewPainterOptionRegistry(Registry[type[PainterOption]]):
+    def plugin_name(self, instance: type[PainterOption]) -> str:
         return instance().ident
 
 
@@ -253,7 +253,7 @@ def paint_age(
     timestamp: Timestamp,
     has_been_checked: bool,
     bold_if_younger_than: int,
-    mode: Optional[str] = None,
+    mode: str | None = None,
     what: str = "past",
 ) -> CellSpec:
     if not has_been_checked:
@@ -269,7 +269,7 @@ def paint_age(
     if mode == "both":
         css, h1 = paint_age(timestamp, has_been_checked, bold_if_younger_than, "abs", what=what)
         css, h2 = paint_age(timestamp, has_been_checked, bold_if_younger_than, "rel", what=what)
-        return css, "%s - %s" % (h1, h2)
+        return css, f"{h1} - {h2}"
 
     age = time.time() - timestamp
     if mode == "abs" or (mode == "mixed" and abs(age) >= 48 * 3600):

@@ -7,11 +7,12 @@ import copy
 import errno
 import os
 import sys
+from collections.abc import Callable
 from dataclasses import asdict, dataclass, field, fields, make_dataclass
 from functools import partial
 from pathlib import Path
 from types import ModuleType
-from typing import Any, Callable, Dict, Final, List
+from typing import Any, Final
 
 from livestatus import SiteConfiguration, SiteConfigurations
 
@@ -104,12 +105,12 @@ def initialize() -> None:
     cmk.gui.i18n.set_user_localizations(active_config.user_localizations)
 
 
-def _load_config_file_to(path: str, raw_config: Dict[str, Any]) -> None:
+def _load_config_file_to(path: str, raw_config: dict[str, Any]) -> None:
     """Load the given GUI configuration file"""
     try:
         with Path(path).open("rb") as f:
             exec(f.read(), {}, raw_config)
-    except IOError as e:
+    except OSError as e:
         if e.errno != errno.ENOENT:  # No such file or directory
             raise
     except Exception as e:
@@ -171,7 +172,7 @@ def load_config() -> None:
     execute_post_config_load_hooks()
 
 
-def make_config_object(raw_config: Dict[str, Any]) -> Config:
+def make_config_object(raw_config: dict[str, Any]) -> Config:
     """Create the runtime config object
 
     In case there are some custom extensions installed which introduce new config variables, we make
@@ -179,7 +180,7 @@ def make_config_object(raw_config: Dict[str, Any]) -> Config:
     values. Since it is dynamic, pylint / mypy will complain about call sites accessing these config
     variables.
     """
-    default_keys = set(f.name for f in fields(Config()))
+    default_keys = {f.name for f in fields(Config())}
     configured_keys = set(raw_config.keys())
     custom_keys = configured_keys - default_keys
     if not custom_keys:
@@ -202,38 +203,38 @@ def execute_post_config_load_hooks() -> None:
         func()
 
 
-_post_config_load_hooks: List[Callable[[], None]] = []
+_post_config_load_hooks: list[Callable[[], None]] = []
 
 
 def register_post_config_load_hook(func: Callable[[], None]) -> None:
     _post_config_load_hooks.append(func)
 
 
-def get_default_config() -> Dict[str, Any]:
+def get_default_config() -> dict[str, Any]:
     default_config = asdict(Config())  # First apply the builtin config
     default_config.update(_get_default_config_from_legacy_plugins())
     default_config.update(_get_default_config_from_module_plugins())
     return default_config
 
 
-def _get_default_config_from_legacy_plugins() -> Dict[str, Any]:
+def _get_default_config_from_legacy_plugins() -> dict[str, Any]:
     """Plugins from local/share/check_mk/web/plugins/config are loaded here"""
-    default_config: Dict[str, Any] = {}
+    default_config: dict[str, Any] = {}
     utils.load_web_plugins("config", default_config)
     return default_config
 
 
-def _get_default_config_from_module_plugins() -> Dict[str, Any]:
+def _get_default_config_from_module_plugins() -> dict[str, Any]:
     """Plugins from the config plugin package are loaded here
 
     These are `cmk.gui.plugins.config`, `cmk.gui.cee.plugins.config` and
     `cmk.gui.cme.plugins.config`.
     """
-    config_plugin_vars: Dict = {}
+    config_plugin_vars: dict = {}
     for module in _config_plugin_modules():
         config_plugin_vars.update(module.__dict__)
 
-    default_config: Dict[str, Any] = {}
+    default_config: dict[str, Any] = {}
     for k, v in config_plugin_vars.items():
         if k[0] == "_" or k in ("CREConfig", "CEEConfig", "CMEConfig"):
             continue
@@ -245,7 +246,7 @@ def _get_default_config_from_module_plugins() -> Dict[str, Any]:
     return default_config
 
 
-def _config_plugin_modules() -> List[ModuleType]:
+def _config_plugin_modules() -> list[ModuleType]:
     return [
         module
         for name, module in sys.modules.items()

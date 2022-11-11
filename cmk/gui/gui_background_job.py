@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from typing import Iterable, Literal, Sequence, Type
+from typing import Literal
 
 import cmk.utils.plugin_registry
 import cmk.utils.render
@@ -123,13 +124,13 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
         super().__init__(logger=log.logger.getChild("background-job.manager"))
 
     def get_running_job_ids(
-        self, job_class: Type[background_job.BackgroundJob]
+        self, job_class: type[background_job.BackgroundJob]
     ) -> list[background_job.JobId]:
         job_ids = super().get_running_job_ids(job_class)
         return self._filter_available_jobs(job_ids)
 
     def get_all_job_ids(
-        self, job_class: Type[background_job.BackgroundJob]
+        self, job_class: type[background_job.BackgroundJob]
     ) -> list[background_job.JobId]:
         job_ids = super().get_all_job_ids(job_class)
         return self._filter_available_jobs(job_ids)
@@ -144,15 +145,15 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
                 if job.is_available():
                     visible_jobs.append(job_id)
             except Exception as e:
-                self._logger.error("Exception parsing background job %s: %s" % (job_id, e))
+                self._logger.error(f"Exception parsing background job {job_id}: {e}")
                 continue
         return visible_jobs
 
     def show_status_of_job_classes(
-        self, job_classes: Iterable[Type[BackgroundJob]], job_details_back_url: str
+        self, job_classes: Iterable[type[BackgroundJob]], job_details_back_url: str
     ) -> None:
         job_class_infos: dict[
-            Type[BackgroundJob],
+            type[BackgroundJob],
             dict[background_job.JobId, JobInfo],
         ] = {}
         for job_class in job_classes:
@@ -182,7 +183,7 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
                 job_status = job.get_status()
                 is_active = job.is_active()
             except Exception as e:
-                self._logger.error("Exception parsing background job %s: %s" % (job_id, str(e)))
+                self._logger.error(f"Exception parsing background job {job_id}: {str(e)}")
                 continue
 
             all_jobs[job_id] = JobInfo(
@@ -276,7 +277,7 @@ class JobRenderer:
             job_status.state == background_job.JobStatusStates.RUNNING
             and (estimated_duration := job_status.estimated_duration) is not None
         ):
-            runtime_info += " (%s: %s)" % (
+            runtime_info += " ({}: {})".format(
                 _("estimated duration"),
                 cmk.utils.render.timespan(estimated_duration),
             )
@@ -329,7 +330,7 @@ class JobRenderer:
     def show_job_class_infos(
         cls,
         job_class_infos: dict[
-            Type[BackgroundJob],
+            type[BackgroundJob],
             dict[background_job.JobId, JobInfo],
         ],
         job_details_back_url: str,

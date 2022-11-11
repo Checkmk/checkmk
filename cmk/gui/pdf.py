@@ -20,9 +20,10 @@ import io
 import os
 import subprocess
 import tempfile
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from textwrap import wrap
-from typing import Callable, Literal, Optional, overload, Protocol, Sequence, TypedDict, Union
+from typing import Literal, overload, Protocol, TypedDict, Union
 
 from PIL import Image, PngImagePlugin  # type: ignore[import]
 from reportlab.lib.units import mm  # type: ignore[import]
@@ -41,7 +42,7 @@ from cmk.gui.type_defs import RGBColor, RowShading, SizeMM, SizePT
 
 RawIconColumn = tuple[Literal["icon"], str]
 RawRendererColumn = tuple[Literal["object"], "CellRenderer"]
-RawTableColumn = tuple[str, Union[str, RawIconColumn, RawRendererColumn]]
+RawTableColumn = tuple[str, str | RawIconColumn | RawRendererColumn]
 RawTableRow = list[RawTableColumn]
 RawTableRows = list[RawTableRow]
 SizeInternal = float
@@ -66,7 +67,7 @@ def from_mm(dim: Sequence[float]) -> Sequence[float]:
     ...
 
 
-def from_mm(dim: Union[float, Sequence[float]]) -> Union[float, Sequence[float]]:
+def from_mm(dim: float | Sequence[float]) -> float | Sequence[float]:
     if isinstance(dim, (int, float)):
         return dim * mm
     return [x * mm for x in dim]
@@ -151,8 +152,8 @@ class Document:
         pagesize: tuple[SizeMM, SizeMM],
         margins: tuple[SizeMM, SizeMM, SizeMM, SizeMM],
         mirror_margins: bool = False,
-        pagebreak_function: Optional[Callable] = None,
-        pagebreak_arguments: Optional[tuple] = None,
+        pagebreak_function: Callable | None = None,
+        pagebreak_arguments: tuple | None = None,
     ) -> None:
         # Static paper settings for this document
         self._pagesize = from_mm(pagesize)
@@ -208,7 +209,7 @@ class Document:
         self._gfx_state_stack: list[GFXState] = []
         self.set_gfx_state()
 
-    def end(self, sendas: Optional[str] = None, do_send: bool = True) -> Optional[bytes]:
+    def end(self, sendas: str | None = None, do_send: bool = True) -> bytes | None:
         self._canvas.showPage()
         self._canvas.save()
         pdf_source = self._output_buffer.getvalue()
@@ -404,7 +405,7 @@ class Document:
         raise ValueError(f"Invalid position: {position}")
 
     def place_hrule(
-        self, position: Position, width: SizeMM = 0.05, color: Optional[RGBColor] = None
+        self, position: Position, width: SizeMM = 0.05, color: RGBColor | None = None
     ) -> None:
         el_width = self._right - self._left
         el_height = width * mm
@@ -510,7 +511,7 @@ class Document:
 
     # Add vertical white space, skip. If that does not fit onto the current
     # page, then make a page break and *do not* skip!
-    def add_margin(self, height: Optional[SizeMM] = None, force: bool = False) -> None:
+    def add_margin(self, height: SizeMM | None = None, force: bool = False) -> None:
         if height is not None:
             marg = height * mm
         else:
@@ -522,7 +523,7 @@ class Document:
             self.margin(marg, force)
 
     def add_hrule(
-        self, margin: SizeMM = 0.1, width: SizeMM = 0.05, color: Optional[RGBColor] = None
+        self, margin: SizeMM = 0.1, width: SizeMM = 0.05, color: RGBColor | None = None
     ) -> None:
         self._linepos -= margin * mm
         self.save_state()
@@ -563,7 +564,7 @@ class Document:
         width_mm: SizeMM,
         height_mm: SizeMM,
         border_width: SizeMM = 0,
-        left_mm: Optional[SizeMM] = None,
+        left_mm: SizeMM | None = None,
     ) -> tuple[SizeMM, SizeMM, SizeMM, SizeMM]:
         self.advance(height_mm * mm)
 
@@ -634,14 +635,14 @@ class Document:
             aligned_string(abs_x, abs_y, part, alignment)
             self.restore_state()
 
-    def set_tabstops(self, tabstops: list[Union[SizeMM, float, str]]) -> None:
+    def set_tabstops(self, tabstops: list[SizeMM | float | str]) -> None:
         # t is a list of tab stops. Each entry is either an int
         # or float -> tabstop in mm. Or it is a string that has
         # prefix of characters followed by a number (mm). The
         # characters specify alignment and font style. We convert
         # all this here to a pair ( "bc", 17.2 ) of the alignment
         # characters and the tabstop in *internal* dimensions.
-        def convert_tabstop(t: Union[SizeMM, str]) -> tuple[str, SizeInternal]:
+        def convert_tabstop(t: SizeMM | str) -> tuple[str, SizeInternal]:
             if isinstance(t, (int, float)):
                 return "", float(t) * mm
             if isinstance(t, str):
@@ -728,7 +729,7 @@ class Document:
                 ir, left_mm * mm, top_mm * mm, width_mm * mm, height_mm * mm, mask="auto"
             )
         except Exception as e:
-            raise Exception("Cannot render image %s: %s" % (path, e))
+            raise Exception(f"Cannot render image {path}: {e}")
 
     def get_line_skip(self) -> SizeMM:
         return self.lineskip() / mm  # fixed: true-division
@@ -747,7 +748,7 @@ class Document:
         align: Align = "center",
         valign: VerticalAlign = "bottom",
         bold: bool = False,
-        color: Optional[RGBColor] = None,
+        color: RGBColor | None = None,
     ) -> None:
         if color or bold:
             self.save_state()
@@ -778,9 +779,9 @@ class Document:
         top_mm: SizeMM,
         width_mm: SizeMM,
         height_mm: SizeMM,
-        line_width: Optional[SizeInternal] = None,
-        line_color: Optional[RGBColor] = None,
-        fill_color: Optional[RGBColor] = None,
+        line_width: SizeInternal | None = None,
+        line_color: RGBColor | None = None,
+        fill_color: RGBColor | None = None,
     ) -> None:
         self.save_state()
 
@@ -817,7 +818,7 @@ class Document:
         top2_mm: SizeMM,
         width: SizeInternal = 0.05,
         color: RGBColor = black,
-        dashes: Optional[Sequence[SizeMM]] = None,
+        dashes: Sequence[SizeMM] | None = None,
     ) -> None:
         self.save_state()
         self.set_line_width(width)
@@ -990,7 +991,7 @@ class CellRenderer(Protocol):
         height: SizeMM,
         x_padding: SizeMM,
         y_padding: SizeMM,
-        row_oddeven: Optional[OddEven],
+        row_oddeven: OddEven | None,
     ) -> None:
         ...
 
@@ -1094,7 +1095,7 @@ class TableRenderer:
                     elif entry[0] == "object":
                         row.append(entry[1])
                     else:
-                        raise Exception("Invalid table entry %r in add_table()" % (entry,))
+                        raise Exception(f"Invalid table entry {entry!r} in add_table()")
                 elif css == "leftheading":
                     row.append(TitleCell(css_list, entry))
                 else:
@@ -1438,7 +1439,7 @@ class TableRenderer:
 # Note: all dimensions this objects handles with are in mm! This is due
 # to the fact that this API is also available externally
 class TextCell(CellRenderer):
-    def __init__(self, csses: Optional[list[str]], text: str) -> None:
+    def __init__(self, csses: list[str] | None, text: str) -> None:
         self.supports_stepwise_rendering = False
         self._text = text
         self._bold = False
@@ -1518,7 +1519,7 @@ class TextCell(CellRenderer):
         height: SizeMM,
         x_padding: SizeMM,
         y_padding: SizeMM,
-        row_oddeven: Optional[OddEven],
+        row_oddeven: OddEven | None,
     ) -> None:
         if self._bg_color != white:
             color = self._bg_color
@@ -1585,7 +1586,7 @@ class IconCell(CellRenderer):
         height: SizeMM,
         x_padding: SizeMM,
         y_padding: SizeMM,
-        row_oddeven: Optional[OddEven],
+        row_oddeven: OddEven | None,
     ) -> None:
         w = self.width(pdfdoc)
         pdfdoc.render_image(left + x_padding, top - w - y_padding, w, w, self._image_path)
@@ -1623,8 +1624,7 @@ def pdf2png(pdf_source: bytes) -> bytes:
     completed_process = subprocess.run(
         ["pdftoppm", "-png", "-f", "1", "-l", "1", "-scale-to", "1000", temp_file.name],
         close_fds=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         check=False,
     )
 

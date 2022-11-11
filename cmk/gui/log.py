@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from typing import Dict
 
 import cmk.utils.log
 import cmk.utils.paths
@@ -20,13 +19,13 @@ def init_logging() -> None:
     root.addHandler(handler)
 
 
-def set_log_levels(log_levels: Dict[str, int]) -> None:
+def set_log_levels(log_levels: dict[str, int]) -> None:
     for name, level in _augmented_log_levels(log_levels).items():
         logging.getLogger(name).setLevel(level)
 
 
 # To see log entries from libraries and non-GUI code, reuse cmk.web's level.
-def _augmented_log_levels(log_levels: Dict[str, int]) -> Dict[str, int]:
+def _augmented_log_levels(log_levels: dict[str, int]) -> dict[str, int]:
     root_level = log_levels.get("cmk.web")
     all_levels = {} if root_level is None else {"": root_level, "cmk": root_level}
     all_levels.update(log_levels)

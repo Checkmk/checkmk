@@ -1,5 +1,3 @@
-from typing import Dict, Optional
-
 import cmk.utils.crash_reporting
 from cmk.utils.site import omd_site
 
@@ -44,10 +42,10 @@ class GUICrashReport(cmk.utils.crash_reporting.ABCCrashReport):
 
 
 def handle_exception_as_gui_crash_report(
-    details: Optional[Dict] = None,
+    details: dict | None = None,
     plain_error: bool = False,
     fail_silently: bool = False,
-    show_crash_link: Optional[bool] = None,
+    show_crash_link: bool | None = None,
 ) -> None:
     crash = GUICrashReport.from_exception(details=details)
     CrashReportStore().save(crash)
@@ -57,7 +55,7 @@ def handle_exception_as_gui_crash_report(
 
 
 def _show_crash_dump_message(
-    crash: "GUICrashReport", plain_text: bool, fail_silently: bool, show_crash_link: Optional[bool]
+    crash: "GUICrashReport", plain_text: bool, fail_silently: bool, show_crash_link: bool | None
 ) -> None:
     """Create a crash dump from a GUI exception and display a message to the user"""
 
@@ -65,7 +63,7 @@ def _show_crash_dump_message(
         show_crash_link = user.may("general.see_crash_reports")
 
     title = _("Internal error")
-    message = "%s: %s<br>\n<br>\n" % (title, crash.crash_info["exc_value"])
+    message = "{}: {}<br>\n<br>\n".format(title, crash.crash_info["exc_value"])
     # Do not reveal crash context information to unauthenticated users or not permitted
     # users to prevent disclosure of internal information
     if not show_crash_link:

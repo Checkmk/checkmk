@@ -5,7 +5,8 @@
 
 import datetime
 import time
-from typing import Any, Dict, Iterator, List, Optional
+from collections.abc import Iterator
+from typing import Any
 
 import livestatus
 from livestatus import SiteId
@@ -477,9 +478,9 @@ def _extend_display_dropdown(menu: PageMenu) -> None:
 
 
 def _page_menu_entry_acknowledge(
-    site: Optional[SiteId] = None,
-    host_name: Optional[HostName] = None,
-    int_filename: Optional[str] = None,
+    site: SiteId | None = None,
+    host_name: HostName | None = None,
+    int_filename: str | None = None,
 ) -> Iterator[PageMenuEntry]:
     if not user.may("general.act") or (host_name and not may_see(site, host_name)):
         return
@@ -586,7 +587,7 @@ def acknowledge_logfile(site, host_name, int_filename, display_name):
     if not may_see(site, host_name):
         raise MKAuthException(_("Permission denied."))
 
-    command = "MK_LOGWATCH_ACKNOWLEDGE;%s;%s" % (host_name, int_filename)
+    command = f"MK_LOGWATCH_ACKNOWLEDGE;{host_name};{int_filename}"
     sites.live().command("[%d] %s" % (int(time.time()), command), site)
 
 
@@ -604,9 +605,9 @@ def acknowledge_logfile(site, host_name, int_filename, display_name):
 
 
 def parse_file(site, host_name, file_name, hidecontext=False):  # pylint: disable=too-many-branches
-    log_chunks: List[Dict[str, Any]] = []
+    log_chunks: list[dict[str, Any]] = []
     try:
-        chunk: Optional[Dict[str, Any]] = None
+        chunk: dict[str, Any] | None = None
         lines = get_logfile_lines(site, host_name, file_name)
         if lines is None:
             return None
@@ -620,7 +621,7 @@ def parse_file(site, host_name, file_name, hidecontext=False):  # pylint: disabl
                 continue
 
             if line[:3] == "<<<":  # new chunk begins
-                log_lines: List[Dict[str, Any]] = []
+                log_lines: list[dict[str, Any]] = []
                 chunk = {"lines": log_lines}
                 log_chunks.append(chunk)
 

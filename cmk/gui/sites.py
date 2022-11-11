@@ -5,8 +5,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import cast, Iterator, Literal, NamedTuple, NewType, Optional, TypedDict, Union
+from typing import cast, Literal, NamedTuple, NewType, TypedDict
 
 from livestatus import (
     LivestatusOutputFormat,
@@ -46,7 +47,7 @@ from cmk.gui.logged_in import user as global_user
 
 
 def live(
-    user: Optional[LoggedInUser] = None, force_authuser: Optional[UserId] = None
+    user: LoggedInUser | None = None, force_authuser: UserId | None = None
 ) -> MultiSiteConnection:
     """Get Livestatus connection object matching the current site configuration
     and user settings. On the first call the actual connection is being made."""
@@ -71,9 +72,7 @@ class SiteStatus(TypedDict, total=False):
 SiteStates = NewType("SiteStates", dict[SiteId, SiteStatus])
 
 
-def states(
-    user: Optional[LoggedInUser] = None, force_authuser: Optional[UserId] = None
-) -> SiteStates:
+def states(user: LoggedInUser | None = None, force_authuser: UserId | None = None) -> SiteStates:
     """Returns dictionary of all known site states."""
     _ensure_connected(user, force_authuser)
     return g.site_status
@@ -120,7 +119,7 @@ def all_groups(what: str) -> list[tuple[str, str]]:
 
 
 # TODO: this too does not really belong here...
-def get_alias_of_host(site_id: Optional[SiteId], host_name: str) -> SiteId:
+def get_alias_of_host(site_id: SiteId | None, host_name: str) -> SiteId:
     query = (
         "GET hosts\n" "Cache: reload\n" "Columns: alias\n" "Filter: name = %s" % lqencode(host_name)
     )
@@ -163,7 +162,7 @@ def get_alias_of_host(site_id: Optional[SiteId], host_name: str) -> SiteId:
 # "program_version"    --> Version of Nagios if "online"
 
 
-def _ensure_connected(user: Optional[LoggedInUser], force_authuser: Optional[UserId]) -> None:
+def _ensure_connected(user: LoggedInUser | None, force_authuser: UserId | None) -> None:
     """Build up a connection to livestatus to either a single site or multiple sites."""
     if "live" in g:
         return
@@ -291,14 +290,14 @@ def encode_socket_for_livestatus(site_id: SiteId, site_spec: SiteConfiguration) 
     socket_spec = site_spec["socket"]
 
     if site_spec.get("proxy") is not None:
-        return "unix:%sproxy/%s" % (livestatus_unix_socket, site_id)
+        return f"unix:{livestatus_unix_socket}proxy/{site_id}"
 
     if socket_spec[0] == "local":
         return "unix:%s" % livestatus_unix_socket
 
     if socket_spec[0] == "unix":
         unix_family_spec, unix_address_spec = cast(UnixSocketInfo, socket_spec)
-        return "%s:%s" % (unix_family_spec, unix_address_spec["path"])
+        return "{}:{}".format(unix_family_spec, unix_address_spec["path"])
 
     if socket_spec[0] in ("tcp", "tcp6"):
         tcp_family_spec, tcp_address_spec = cast(NetworkSocketInfo, socket_spec)
@@ -314,7 +313,7 @@ def encode_socket_for_livestatus(site_id: SiteId, site_spec: SiteConfiguration) 
 def update_site_states_from_dead_sites() -> None:
     # Get exceptions in case of dead sites
     for site_id, deadinfo in live().dead_sites().items():
-        status_host_state = cast(Optional[int], deadinfo.get("status_host_state"))
+        status_host_state = cast(int | None, deadinfo.get("status_host_state"))
         g.site_status[site_id].update(
             {
                 "exception": deadinfo["exception"],
@@ -324,7 +323,7 @@ def update_site_states_from_dead_sites() -> None:
         )
 
 
-def _status_host_state_name(shs: Optional[int]) -> str:
+def _status_host_state_name(shs: int | None) -> str:
     return _STATUS_NAMES.get(shs, "unknown")
 
 
@@ -360,7 +359,7 @@ def _set_initial_site_states(
 
 # If Multisite is retricted to data the user is a contact for, we need to set an
 # AuthUser: header for livestatus.
-def _set_livestatus_auth(user: LoggedInUser, force_authuser: Optional[UserId]) -> None:
+def _set_livestatus_auth(user: LoggedInUser, force_authuser: UserId | None) -> None:
     user_id = _livestatus_auth_user(user, force_authuser)
     if user_id is not None:
         g.live.set_auth_user("read", user_id)
@@ -380,7 +379,7 @@ def _set_livestatus_auth(user: LoggedInUser, force_authuser: Optional[UserId]) -
 
 # Returns either None when no auth user shal be set or the name of the user
 # to be used as livestatus auth user
-def _livestatus_auth_user(user: LoggedInUser, force_authuser: Optional[UserId]) -> Optional[UserId]:
+def _livestatus_auth_user(user: LoggedInUser, force_authuser: UserId | None) -> UserId | None:
     if not user.may("general.see_all"):
         return user.id
     if force_authuser == UserId("1"):
@@ -395,7 +394,7 @@ def _livestatus_auth_user(user: LoggedInUser, force_authuser: Optional[UserId]) 
 
 
 @contextmanager
-def only_sites(sites: Union[None, list[SiteId], SiteId]) -> Iterator[None]:
+def only_sites(sites: None | list[SiteId] | SiteId) -> Iterator[None]:
     """Livestatus query over sites"""
     if not sites:
         sites = None
@@ -430,7 +429,7 @@ def prepend_site() -> Iterator[None]:
 
 
 @contextmanager
-def set_limit(limit: Optional[int]) -> Iterator[None]:
+def set_limit(limit: int | None) -> Iterator[None]:
     if limit is not None:
         live().set_limit(limit + 1)  # + 1: We need to know, if limit is exceeded
     else:

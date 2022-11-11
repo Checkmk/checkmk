@@ -11,8 +11,8 @@ import errno
 import logging
 import os
 import time
-from collections.abc import Container
-from typing import Any, ContextManager, Final, Iterator
+from collections.abc import Container, Iterator
+from typing import Any, ContextManager, Final
 
 from livestatus import SiteConfigurations, SiteId
 

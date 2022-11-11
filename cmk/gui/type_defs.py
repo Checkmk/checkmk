@@ -9,7 +9,7 @@ import uuid
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass, field
-from typing import Any, Literal, NamedTuple, Text, TypedDict, Union
+from typing import Any, Literal, NamedTuple, TypedDict, Union
 
 from pydantic import BaseModel
 
@@ -64,7 +64,7 @@ class UserRole:
 
 
 class ChoiceGroup(NamedTuple):
-    title: Text
+    title: str
     choices: Choices
 
 
@@ -355,7 +355,7 @@ class SetOnceDict(dict):
 
     def __setitem__(self, key, value):
         if key in self:
-            raise ValueError("key %r already set" % (key,))
+            raise ValueError(f"key {key!r} already set")
         dict.__setitem__(self, key, value)
 
     def __delitem__(self, key):
@@ -401,8 +401,8 @@ class TopicMenuItem(NamedTuple):
 
 
 class TopicMenuTopic(NamedTuple):
-    name: "str"
-    title: "str"
+    name: str
+    title: str
     items: list[TopicMenuItem]
     max_entries: int = 10
     icon: Icon | None = None
@@ -596,19 +596,14 @@ class ViewProcessTracking:
     duration_view_render: Snapshot = Snapshot.null()
 
 
-CustomAttr = TypedDict(
-    "CustomAttr",
-    {
-        "title": str,
-        "help": str,
-        "name": str,
-        "topic": str,
-        "type": str,
-        "add_custom_macro": bool,
-        "show_in_table": bool,
-    },
-    total=True,
-)
+class CustomAttr(TypedDict, total=True):
+    title: str
+    help: str
+    name: str
+    topic: str
+    type: str
+    add_custom_macro: bool
+    show_in_table: bool
 
 
 class Key(BaseModel):

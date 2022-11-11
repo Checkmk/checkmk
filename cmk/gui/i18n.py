@@ -107,7 +107,7 @@ def get_language_alias(lang: str) -> str:
         try:
             with (lang_dir / lang / "alias").open(encoding="utf-8") as f:
                 alias = f.read().strip()
-        except (OSError, IOError):
+        except OSError:
             pass
     return alias
 
@@ -165,7 +165,7 @@ def _init_language(lang: str) -> gettext_module.NullTranslations | None:
                 "multisite", str(locale_base_dir), languages=[lang]
             )
 
-        except IOError:
+        except OSError:
             continue
 
         # Create a chain of fallback translations

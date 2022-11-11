@@ -5,8 +5,8 @@
 
 import importlib
 import sys
+from collections.abc import Iterator
 from types import ModuleType
-from typing import Iterator, List
 
 import cmk.utils.version as cmk_version
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
@@ -47,7 +47,7 @@ def load_plugins() -> None:
     _call_load_plugins_hooks(main_modules)
 
 
-def _import_local_main_modules() -> List[ModuleType]:
+def _import_local_main_modules() -> list[ModuleType]:
     """Imports all site local main modules
 
     We essentially load the site local pages plugins (`local/share/check_mk/web/plugins/pages`)
@@ -67,7 +67,7 @@ def _import_local_main_modules() -> List[ModuleType]:
     return [sys.modules[m] for m in set(_imports()).difference(module_names_prev)]
 
 
-def _import_main_module_plugins(main_modules: List[ModuleType]) -> None:
+def _import_main_module_plugins(main_modules: list[ModuleType]) -> None:
     logger.debug("Importing main module plugins")
 
     for module in main_modules:
@@ -112,7 +112,7 @@ def _is_plugin_namespace(plugin_package_name: str) -> bool:
         return False
 
 
-def _call_load_plugins_hooks(main_modules: List[ModuleType]) -> None:
+def _call_load_plugins_hooks(main_modules: list[ModuleType]) -> None:
     """Call the load_plugins() function in all main modules
 
     Have a look at our Wiki: /books/concepts/page/how-cmkgui-is-organised
@@ -146,7 +146,7 @@ def _call_load_plugins_hooks(main_modules: List[ModuleType]) -> None:
     logger.debug("Finished executing load_plugin hooks")
 
 
-def _cmk_gui_top_level_modules() -> List[ModuleType]:
+def _cmk_gui_top_level_modules() -> list[ModuleType]:
     return [
         module  #
         for name, module in sys.modules.items()

@@ -6,7 +6,8 @@
 from __future__ import annotations
 
 import functools
-from typing import Callable, cast, Dict, List, Optional, Sequence, Tuple, Union
+from collections.abc import Callable, Sequence
+from typing import cast
 
 from livestatus import LivestatusColumn, LivestatusRow, OnlySites, Query, QuerySpecification
 
@@ -44,8 +45,8 @@ class RowTableLivestatus(RowTable):
     def _prepare_columns(
         datasource: ABCDataSource,
         cells: Sequence[Cell],
-        columns: List[ColumnName],
-    ) -> Tuple[List[ColumnName], Dict[int, List[ColumnName]]]:
+        columns: list[ColumnName],
+    ) -> tuple[list[ColumnName], dict[int, list[ColumnName]]]:
         dynamic_columns = {}
         for index, cell in enumerate(cells):
             dyn_col = cell.painter().dynamic_columns(cell)
@@ -61,7 +62,7 @@ class RowTableLivestatus(RowTable):
         # must not be done for the table 'log' as it cannot correctly
         # distinguish between service_state and host_state
         if "log" not in datasource.infos:
-            state_columns: List[ColumnName] = []
+            state_columns: list[ColumnName] = []
             if "service" in datasource.infos:
                 state_columns += ["service_has_been_checked", "service_state"]
             if "host" in datasource.infos:
@@ -83,13 +84,13 @@ class RowTableLivestatus(RowTable):
         self,
         datasource: ABCDataSource,
         cells: Sequence[Cell],
-        columns: List[ColumnName],
+        columns: list[ColumnName],
         context: VisualContext,
         headers: str,
         only_sites: OnlySites,
-        limit: Optional[int],
-        all_active_filters: List[Filter],
-    ) -> Union[Rows, Tuple[Rows, int]]:
+        limit: int | None,
+        all_active_filters: list[Filter],
+    ) -> Rows | tuple[Rows, int]:
         """Retrieve data via livestatus, convert into list of dicts,
 
         datasource: The data source to query
@@ -123,8 +124,8 @@ class RowTableLivestatus(RowTable):
 
 
 def query_livestatus(
-    query: Query, only_sites: OnlySites, limit: Optional[int], auth_domain: str
-) -> List[LivestatusRow]:
+    query: Query, only_sites: OnlySites, limit: int | None, auth_domain: str
+) -> list[LivestatusRow]:
 
     if all(
         (
@@ -147,17 +148,17 @@ def query_livestatus(
 
 
 def _merge_data(
-    data: List[LivestatusRow],
-    columns: List[ColumnName],
+    data: list[LivestatusRow],
+    columns: list[ColumnName],
     merge_column: ColumnName,
-) -> List[LivestatusRow]:
+) -> list[LivestatusRow]:
     """Merge all data rows with different sites but the same value in merge_column
 
     We require that all column names are prefixed with the tablename. The column with the merge key
     is required to be the *second* column (right after the site column)"""
-    merged: Dict[ColumnName, LivestatusRow] = {}
+    merged: dict[ColumnName, LivestatusRow] = {}
 
-    mergefuncs: List[Callable[[LivestatusColumn, LivestatusColumn], LivestatusColumn]] = [
+    mergefuncs: list[Callable[[LivestatusColumn, LivestatusColumn], LivestatusColumn]] = [
         # site column is not merged
         lambda a, b: ""
     ]

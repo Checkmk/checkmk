@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import http.client
-from typing import Optional
 
 from werkzeug.http import HTTP_STATUS_CODES
 
@@ -53,11 +52,11 @@ class MKConfigError(MKHTTPException):
 class MKUserError(MKHTTPException):
     def __init__(
         self,
-        varname: Optional[str],
+        varname: str | None,
         message: str,
         status: int = http.HTTPStatus.BAD_REQUEST,
     ) -> None:
-        self.varname: Optional[str] = varname
+        self.varname: str | None = varname
         self.message: str = message
         self.status: int = status
         super().__init__(varname, message)

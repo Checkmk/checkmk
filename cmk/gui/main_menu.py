@@ -10,7 +10,6 @@ in this module as small as possible.
 
 import time
 from datetime import timedelta
-from typing import List
 
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.version import __version__, edition, get_age_trial, is_expired_trial, is_free_edition
@@ -20,7 +19,7 @@ from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic
 from cmk.gui.utils.urls import doc_reference_url, DocReference
 
 
-def any_show_more_items(topics: List[TopicMenuTopic]) -> bool:
+def any_show_more_items(topics: list[TopicMenuTopic]) -> bool:
     return any(item.is_show_more for topic in topics for item in topic.items)
 
 
@@ -71,7 +70,7 @@ class MegaMenuRegistry(Registry[MegaMenu]):
 mega_menu_registry = MegaMenuRegistry()
 
 
-def _help_menu_topics() -> List[TopicMenuTopic]:
+def _help_menu_topics() -> list[TopicMenuTopic]:
     return [
         TopicMenuTopic(
             name="learning_checkmk",

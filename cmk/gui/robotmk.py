@@ -204,7 +204,7 @@ def robotmk_download_page() -> None:
     site_id, host_name, service_description = _get_mandatory_request_vars()
     report_type: str = request.get_str_input_mandatory("report_type")
 
-    filename = "Robot_Framework_log_%s_%s_%s_%s.tar.gz" % (
+    filename = "Robot_Framework_log_{}_{}_{}_{}.tar.gz".format(
         urlencode(site_id),
         urlencode(host_name),
         urlencode(service_description),

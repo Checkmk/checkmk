@@ -26,10 +26,9 @@ import abc
 import copy
 import json
 import os
+from collections.abc import Iterator, Mapping, Sequence
 from contextlib import suppress
-from typing import cast, Dict, Generic, Iterator, List, Literal, Mapping
-from typing import Optional as _Optional
-from typing import Sequence, Tuple, Type, TypedDict, TypeVar
+from typing import cast, Generic, Literal, TypedDict, TypeVar
 
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
@@ -113,7 +112,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 
-SubPagesSpec = List[Tuple[str, str, str]]
+SubPagesSpec = list[tuple[str, str, str]]
 PagetypePhrase = Literal["title", "title_plural", "add_to", "clone", "create", "edit", "new"]
 # Three possible modes:
 # "create" -> create completely new page
@@ -432,7 +431,7 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
     # Default values for the creation dialog can be overridden by the
     # sub class.
     @classmethod
-    def default_name(cls: Type[_Self], instances: OverridableInstances[_Self]) -> str:
+    def default_name(cls: type[_Self], instances: OverridableInstances[_Self]) -> str:
         return unique_default_name_suggestion(
             cls.type_name(),
             (instance.name() for instance in instances.instances()),
@@ -476,7 +475,7 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
         ]
 
     @classmethod
-    def page_handlers(cls: Type[_Self]) -> dict[str, cmk.gui.pages.PageHandlerFunc]:
+    def page_handlers(cls: type[_Self]) -> dict[str, cmk.gui.pages.PageHandlerFunc]:
         handlers = super().page_handlers()
         handlers.update(
             {
@@ -566,7 +565,7 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
     # Checks if the current user is allowed to see a certain page
     # TODO: Wie is die Semantik hier genau? Umsetzung vervollständigen!
     def may_see(self) -> bool:
-        perm_name = "%s.%s" % (self.type_name(), self.name())
+        perm_name = f"{self.type_name()}.{self.name()}"
         if perm_name in permission_registry and not user.may(perm_name):
             return False
 
@@ -770,7 +769,7 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
 
     @classmethod
     def has_overriding_permission(cls, how: str) -> bool:
-        return user.may("general.%s_%s" % (how, cls.type_name()))
+        return user.may(f"general.{how}_{cls.type_name()}")
 
     @classmethod
     def need_overriding_permission(cls) -> None:
@@ -785,7 +784,7 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
         return {}
 
     @classmethod
-    def load(cls: Type[_Self]) -> OverridableInstances[_Self]:
+    def load(cls: type[_Self]) -> OverridableInstances[_Self]:
         instances = OverridableInstances[_Self]()
 
         # First load builtin pages. Set username to ''
@@ -830,7 +829,7 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
         after performing the loading of the regular files."""
 
     @classmethod
-    def _transform_old_spec(cls, spec: Dict) -> Dict:
+    def _transform_old_spec(cls, spec: dict) -> dict:
         """May be used to transform old persisted data structures"""
         return spec
 
@@ -842,7 +841,7 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
 
     @classmethod
     def save_user_instances(
-        cls, instances: OverridableInstances[_Self], owner: _Optional[UserId] = None
+        cls, instances: OverridableInstances[_Self], owner: UserId | None = None
     ) -> None:
         if not owner:
             owner = user.id
@@ -863,7 +862,7 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
 
     @classmethod
     def declare_permission(cls, page: _Self) -> None:
-        permname = "%s.%s" % (cls.type_name(), page.name())
+        permname = f"{cls.type_name()}.{page.name()}"
         if page.is_public() and permname not in permission_registry:
             permission_registry.register(
                 Permission(
@@ -892,7 +891,7 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
 
 
 class ListPage(Page, Generic[_Self]):
-    def __init__(self, pagetype: Type[_Self]) -> None:
+    def __init__(self, pagetype: type[_Self]) -> None:
         self._type = pagetype
 
     def page(self) -> None:
@@ -1049,7 +1048,7 @@ class ListPage(Page, Generic[_Self]):
                         sortable=False,
                         css=["checkbox"],
                     )
-                    html.checkbox("_c_%s+%s" % (instance.owner(), instance.name()))
+                    html.checkbox(f"_c_{instance.owner()}+{instance.name()}")
 
                 # Actions
                 table.cell(_("Actions"), css=["buttons visuals"])
@@ -1102,7 +1101,7 @@ class ListPage(Page, Generic[_Self]):
 
 
 class EditPage(Page, Generic[_T_OverridableSpec, _Self]):
-    def __init__(self, pagetype: Type[_Self]) -> None:
+    def __init__(self, pagetype: type[_Self]) -> None:
         self._type = pagetype
 
     def page(self) -> None:  # pylint: disable=too-many-branches
@@ -1351,14 +1350,14 @@ def vs_no_permission_to_publish(type_title: str, title: str) -> FixedValue:
 def PublishTo(
     publish_all: bool,
     publish_groups: bool,
-    title: _Optional[str] = None,
-    type_title: _Optional[str] = None,
+    title: str | None = None,
+    type_title: str | None = None,
     with_foreign_groups: bool = True,
 ) -> CascadingDropdown:
     if title is None:
         title = _("Make this %s available for other users") % type_title
 
-    choices: List[CascadingDropdownChoice] = []
+    choices: list[CascadingDropdownChoice] = []
     if publish_all:
         choices.append((True, _("Publish to all users")))
 
@@ -1419,7 +1418,7 @@ def make_edit_form_page_menu(
     )
 
 
-_save_pagetype_icons: Dict[str, Icon] = {
+_save_pagetype_icons: dict[str, Icon] = {
     "custom_graph": {
         "icon": "save_graph",
         "emblem": "add",
@@ -1551,7 +1550,7 @@ class OverridableContainer(Overridable[_T_OverridableContainerSpec, _Self]):
         ...
 
     @classmethod
-    def page_menu_add_to_topics(cls, added_type: str) -> List[PageMenuTopic]:
+    def page_menu_add_to_topics(cls, added_type: str) -> list[PageMenuTopic]:
         if not cls.may_contain(added_type):
             return []
 
@@ -1616,7 +1615,7 @@ class OverridableContainer(Overridable[_T_OverridableContainerSpec, _Self]):
     # Default implementation for generic containers - used e.g. by GraphCollection
     @classmethod
     def add_element_via_popup(
-        cls: Type[_Self], page_name: str, element_type: str, create_info: ElementSpec
+        cls: type[_Self], page_name: str, element_type: str, create_info: ElementSpec
     ) -> tuple[str | None, bool]:
         cls.need_overriding_permission()
 
@@ -1756,7 +1755,7 @@ class PageRenderer(OverridableContainer[_T_PageRendererSpec, _SelfPageRenderer])
         return parameters
 
     @classmethod
-    def _transform_old_spec(cls, spec: Dict) -> Dict:
+    def _transform_old_spec(cls, spec: dict) -> dict:
         spec.setdefault("sort_index", 99)
         spec.setdefault("is_show_more", False)
 
@@ -1840,10 +1839,10 @@ class PageRenderer(OverridableContainer[_T_PageRendererSpec, _SelfPageRenderer])
 #   '----------------------------------------------------------------------'
 
 # Global dict of all page types
-page_types: dict[str, Type[Overridable]] = {}
+page_types: dict[str, type[Overridable]] = {}
 
 
-def declare(page_ty: Type[Overridable]) -> None:
+def declare(page_ty: type[Overridable]) -> None:
     page_ty.declare_overriding_permissions()
     page_types[page_ty.type_name()] = page_ty
 
@@ -1851,7 +1850,7 @@ def declare(page_ty: Type[Overridable]) -> None:
         cmk.gui.pages.register_page_handler(path, page_func)
 
 
-def page_type(page_type_name: str) -> Type[Overridable]:
+def page_type(page_type_name: str) -> type[Overridable]:
     return page_types[page_type_name]
 
 
@@ -1859,14 +1858,14 @@ def has_page_type(page_type_name: str) -> bool:
     return page_type_name in page_types
 
 
-def all_page_types() -> Mapping[str, Type[Overridable]]:
+def all_page_types() -> Mapping[str, type[Overridable]]:
     return page_types
 
 
 # Global module functions for the integration into the rest of the code
 
 
-def page_menu_add_to_topics(added_type: str) -> List[PageMenuTopic]:
+def page_menu_add_to_topics(added_type: str) -> list[PageMenuTopic]:
     topics = []
     for page_ty in page_types.values():
         if issubclass(page_ty, OverridableContainer):
@@ -2131,7 +2130,7 @@ def _no_bi_aggregate_active() -> bool:
 # .
 
 
-def _customize_menu_topics() -> List[TopicMenuTopic]:
+def _customize_menu_topics() -> list[TopicMenuTopic]:
     general_items = []
     monitoring_items = [
         TopicMenuItem(

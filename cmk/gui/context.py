@@ -9,7 +9,6 @@
 from __future__ import annotations
 
 import logging
-from typing import List, Optional
 
 from werkzeug.local import LocalStack
 
@@ -109,23 +108,23 @@ class RequestContext:
         funnel: OutputFunnel,
         config_obj: Config,
         user: LoggedInUser,  # pylint: disable=redefined-outer-name
-        html_obj: Optional[HTMLGenerator] = None,
-        timeout_manager: Optional[TimeoutManager] = None,  # pylint: disable=redefined-outer-name
+        html_obj: HTMLGenerator | None = None,
+        timeout_manager: TimeoutManager | None = None,  # pylint: disable=redefined-outer-name
         theme: Theme = Theme(),  # pylint: disable=redefined-outer-name
-        display_options: Optional[DisplayOptions] = None,  # pylint: disable=redefined-outer-name
+        display_options: DisplayOptions | None = None,  # pylint: disable=redefined-outer-name
         prefix_logs_with_url: bool = True,
         *,
         stack: LocalStack,
         url_filter: logging.Filter,
     ):
         self.html = html_obj
-        self.auth_type: Optional[str] = None
+        self.auth_type: str | None = None
         self.timeout_manager = timeout_manager
         self.theme = theme
         self.display_options = display_options
-        self.session: Optional[userdb.Session] = None
-        self.flashes: Optional[List[str]] = None
-        self.translation: Optional[Translation] = None
+        self.session: userdb.Session | None = None
+        self.flashes: list[str] | None = None
+        self.translation: Translation | None = None
         self._prefix_logs_with_url = prefix_logs_with_url
 
         self.request = req
@@ -136,7 +135,7 @@ class RequestContext:
         self.user_errors = UserErrors()
 
         self._prepend_url_filter = url_filter
-        self._web_log_handler: Optional[logging.Handler] = None
+        self._web_log_handler: logging.Handler | None = None
 
         self._stack = stack
 

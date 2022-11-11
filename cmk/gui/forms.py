@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import base64
-from typing import Callable, Optional, Tuple, Union
+from collections.abc import Callable
 
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.htmllib.foldable_container import (
@@ -31,11 +31,11 @@ def header(
     isopen: bool = True,
     table_id: str = "",
     narrow: bool = False,
-    css: Optional[str] = None,
+    css: str | None = None,
     show_table_head: bool = True,
     show_more_toggle: bool = False,
     show_more_mode: bool = False,
-    help_text: Union[str, HTML, None] = None,
+    help_text: str | HTML | None = None,
 ) -> None:
     global g_header_open, g_section_open
     if g_header_open:
@@ -82,14 +82,14 @@ def _table_head(
     isopen: bool,
     title: str,
     show_more_toggle: bool,
-    help_text: Union[str, HTML, None] = None,
+    help_text: str | HTML | None = None,
 ) -> None:
     onclick = foldable_container_onclick(treename, id_, fetch_url=None)
     img_id = foldable_container_img_id(treename, id_)
 
     html.open_thead()
     html.open_tr(class_="heading")
-    html.open_td(id_="nform.%s.%s" % (treename, id_), onclick=onclick, colspan=2)
+    html.open_td(id_=f"nform.{treename}.{id_}", onclick=onclick, colspan=2)
     html.img(
         id_=img_id,
         class_=["treeangle", "nform", "open" if isopen else "closed"],
@@ -119,13 +119,13 @@ def space() -> None:
 
 
 def section(
-    title: Union[None, HTML, str] = None,
-    checkbox: Union[None, HTML, str, Tuple[str, bool, str]] = None,
-    section_id: Optional[str] = None,
+    title: None | HTML | str = None,
+    checkbox: None | HTML | str | tuple[str, bool, str] = None,
+    section_id: str | None = None,
     simple: bool = False,
     hide: bool = False,
     legend: bool = True,
-    css: Optional[str] = None,
+    css: str | None = None,
     is_show_more: bool = False,
     is_changed: bool = False,
     is_required: bool = False,

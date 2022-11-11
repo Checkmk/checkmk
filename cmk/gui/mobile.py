@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Optional, Set, Tuple, Union
+from typing import Union
 
 import cmk.gui.pages
 import cmk.gui.utils
@@ -42,9 +42,9 @@ from cmk.gui.views.page_show_view import (
 )
 from cmk.gui.visuals import view_title
 
-HeaderButton = Union[Tuple[str, str, str], Tuple[str, str, str, str]]
-Items = List[Tuple[str, str, str]]
-NavigationBar = List[Tuple[str, str, str, str]]
+HeaderButton = Union[tuple[str, str, str], tuple[str, str, str, str]]
+Items = list[tuple[str, str, str]]
+NavigationBar = list[tuple[str, str, str, str]]
 
 
 def mobile_html_head(title: str) -> None:
@@ -89,9 +89,9 @@ def jqm_header_button(pos: str, url: str, title: str, icon: str = "") -> None:
 
 def jqm_page_header(
     title: str,
-    id_: Optional[str] = None,
-    left_button: Optional[HeaderButton] = None,
-    right_button: Optional[HeaderButton] = None,
+    id_: str | None = None,
+    left_button: HeaderButton | None = None,
+    right_button: HeaderButton | None = None,
 ) -> None:
     html.open_div(id_=id_ if id_ else None, **{"data-role": "page"})
     html.open_div(
@@ -245,7 +245,7 @@ def page_index() -> None:
                 count = '<span class="ui-li-count">%d</span>' % get_row_count(view)
 
             topic = PagetypeTopics.get_topic(view_spec.get("topic", ""))
-            items.append((topic.title(), url, "%s %s" % (view_spec["title"], count)))
+            items.append((topic.title(), url, "{} {}".format(view_spec["title"], count)))
 
     jqm_page_index(_("Checkmk Mobile"), items)
     # Link to non-mobile GUI
@@ -316,7 +316,7 @@ class MobileViewRenderer(ABCViewRenderer):
         rows: Rows,
         show_checkboxes: bool,
         num_columns: int,
-        show_filters: List[Filter],
+        show_filters: list[Filter],
         unfiltered_amount_of_rows: int,
     ) -> None:
         view_spec = self.view.spec
@@ -405,7 +405,7 @@ class MobileViewRenderer(ABCViewRenderer):
             jqm_page_navfooter(navbar, "context", page_id)
 
 
-def _show_filter_form(show_filters: List[Filter], context: VisualContext) -> None:
+def _show_filter_form(show_filters: list[Filter], context: VisualContext) -> None:
     # Sort filters
     s = sorted([(f.sort_index, f.title, f) for f in show_filters if f.available()])
 
@@ -483,7 +483,7 @@ def do_commands(what: str, rows: Rows) -> bool:
         return r is None  # Show commands on negative answer
 
     count = 0
-    already_executed: Set[CommandSpec] = set()
+    already_executed: set[CommandSpec] = set()
     for nr, row in enumerate(rows):
         nagios_commands, _confirm_options, title, executor = core_command(
             what,
@@ -502,7 +502,7 @@ def do_commands(what: str, rows: Rows) -> bool:
     return True  # Show commands again
 
 
-def _show_context_links(context_links: List[PageMenuEntry]) -> None:
+def _show_context_links(context_links: list[PageMenuEntry]) -> None:
     items = []
     for entry in context_links:
         if not isinstance(entry.item, PageMenuLink):

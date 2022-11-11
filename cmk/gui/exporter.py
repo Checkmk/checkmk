@@ -5,7 +5,8 @@
 
 import json
 import time
-from typing import Callable, NamedTuple
+from collections.abc import Callable
+from typing import NamedTuple
 
 from cmk.utils.plugin_registry import Registry
 
@@ -111,7 +112,7 @@ exporter_registry.register(
 
 
 def _export_json_export(view: "View", rows: Rows) -> None:
-    filename = "%s-%s.json" % (
+    filename = "{}-{}.json".format(
         view.name,
         time.strftime("%Y-%m-%d_%H-%M-%S", time.localtime(time.time())),
     )
@@ -130,7 +131,7 @@ exporter_registry.register(
 
 def _export_jsonp(view: "View", rows: Rows) -> None:
     response.set_data(
-        "%s(\n%s);\n" % (request.var("jsonp", "myfunction"), _get_json_body(view, rows))
+        "{}(\n{});\n".format(request.var("jsonp", "myfunction"), _get_json_body(view, rows))
     )
 
 

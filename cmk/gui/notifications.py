@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import List, NamedTuple, Optional
+from typing import NamedTuple
 
 from livestatus import LivestatusResponse, MKLivestatusNotFoundError
 
@@ -48,7 +48,7 @@ class FailedNotificationTimes(NamedTuple):
     modified: float
 
 
-g_columns: List[str] = [
+g_columns: list[str] = [
     "time",
     "contact_name",
     "type",
@@ -86,7 +86,7 @@ def _acknowledge_failed_notifications(timestamp: float, now: float) -> None:
 
 def acknowledged_time() -> float:
     """Returns the timestamp to start looking for failed notifications for the current user"""
-    times: Optional[FailedNotificationTimes] = g.get("failed_notification_times")
+    times: FailedNotificationTimes | None = g.get("failed_notification_times")
 
     # Initialize the request cache "g.failed_notification_times" from the user profile in case it is
     # needed. Either on first call to this function or when the file on disk was modified.
@@ -107,7 +107,7 @@ def acknowledged_time() -> float:
     return g.failed_notification_times.acknowledged_unitl
 
 
-def number_of_failed_notifications(after: Optional[float]) -> int:
+def number_of_failed_notifications(after: float | None) -> int:
     if not _may_see_failed_notifications():
         return 0
 
@@ -130,9 +130,9 @@ def number_of_failed_notifications(after: Optional[float]) -> int:
 
 
 def load_failed_notifications(
-    before: Optional[float] = None,
-    after: Optional[float] = None,
-    extra_headers: Optional[str] = None,
+    before: float | None = None,
+    after: float | None = None,
+    extra_headers: str | None = None,
 ) -> LivestatusResponse:
     may_see_notifications = _may_see_failed_notifications()
     if not may_see_notifications:
@@ -144,9 +144,9 @@ def load_failed_notifications(
 
 
 def _failed_notification_query(
-    before: Optional[float],
-    after: Optional[float],
-    extra_headers: Optional[str] = None,
+    before: float | None,
+    after: float | None,
+    extra_headers: str | None = None,
     *,
     stat_only: bool,
 ) -> str:

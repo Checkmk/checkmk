@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Basic functions for cmk_figures"""
 
-from typing import Any, Dict
+from typing import Any
 
-FigureResponse = Dict[str, Any]
+FigureResponse = dict[str, Any]
 
-FigureResponseData = Dict[str, Any]
+FigureResponseData = dict[str, Any]
 
 
 def create_figures_response(data, context=None) -> FigureResponse:  # type:ignore[no-untyped-def]

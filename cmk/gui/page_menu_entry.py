@@ -17,9 +17,7 @@ def disable_page_menu_entry(writer: HTMLWriter, name: str) -> None:
 
 
 def _toggle_page_menu_entry(writer: HTMLWriter, name: str, state: bool) -> None:
-    writer.javascript(
-        "cmk.page_menu.enable_menu_entry(%s, %s)" % (json.dumps(name), json.dumps(state))
-    )
+    writer.javascript(f"cmk.page_menu.enable_menu_entry({json.dumps(name)}, {json.dumps(state)})")
 
 
 def enable_page_menu_entries(writer: HTMLWriter, css_class: str) -> None:
@@ -32,5 +30,5 @@ def disable_page_menu_entries(writer: HTMLWriter, css_class: str) -> None:
 
 def toggle_page_menu_entries(writer: HTMLWriter, css_class: str, state: bool) -> None:
     writer.javascript(
-        "cmk.page_menu.enable_menu_entries(%s, %s)" % (json.dumps(css_class), json.dumps(state))
+        f"cmk.page_menu.enable_menu_entries({json.dumps(css_class)}, {json.dumps(state)})"
     )

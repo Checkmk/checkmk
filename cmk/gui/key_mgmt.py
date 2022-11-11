@@ -5,8 +5,9 @@
 
 import pprint
 import time
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Literal, Mapping, Optional, Union
+from typing import Any, Literal
 
 from OpenSSL import crypto
 
@@ -63,7 +64,7 @@ class KeypairStore:
     def save(self, keys: Mapping[int, Key]) -> None:
         store.makedirs(self._path.parent)
         store.save_mk_file(
-            self._path, "%s.update(%s)" % (self._attr, pprint.pformat(self._unparse(keys)))
+            self._path, f"{self._attr}.update({pprint.pformat(self._unparse(keys))})"
         )
 
     def _parse(self, raw_keys: Mapping[int, dict[str, Any]]) -> dict[int, Key]:
@@ -212,7 +213,7 @@ class PageKeyManagement:
 class PageEditKey:
     back_mode: str
 
-    def __init__(self, key_store: KeypairStore, passphrase_min_len: Optional[int] = None) -> None:
+    def __init__(self, key_store: KeypairStore, passphrase_min_len: int | None = None) -> None:
         self._minlen = passphrase_min_len
         self.key_store = key_store
 
@@ -337,9 +338,7 @@ class PageUploadKey:
 
     def _get_uploaded(
         self,
-        cert_spec: Union[
-            tuple[Literal["upload"], tuple[str, str, bytes]], tuple[Literal["text"], str]
-        ],
+        cert_spec: (tuple[Literal["upload"], tuple[str, str, bytes]] | tuple[Literal["text"], str]),
     ) -> str:
         if cert_spec[0] == "upload":
             return cert_spec[1][2].decode("ascii")

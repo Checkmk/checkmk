@@ -14,8 +14,8 @@ The hierarchy here is:
 
 import abc
 import json
+from collections.abc import Iterator
 from dataclasses import dataclass, field
-from typing import Dict, Iterator, List, Optional, Tuple, Union
 
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.breadcrumb import Breadcrumb
@@ -41,9 +41,9 @@ from cmk.gui.utils.urls import (
 class Link:
     """Group of attributes used for linking"""
 
-    url: Optional[str] = None
-    target: Optional[str] = None
-    onclick: Optional[str] = None
+    url: str | None = None
+    target: str | None = None
+    onclick: str | None = None
 
 
 class ABCPageMenuItem(abc.ABC):
@@ -79,7 +79,7 @@ def make_javascript_action(javascript: str) -> str:
 
 def make_form_submit_link(form_name: str, button_name: str) -> PageMenuLink:
     return make_javascript_link(
-        "cmk.page_menu.form_submit(%s, %s)" % (json.dumps(form_name), json.dumps(button_name))
+        f"cmk.page_menu.form_submit({json.dumps(form_name)}, {json.dumps(button_name)})"
     )
 
 
@@ -101,7 +101,7 @@ class PageMenuPopup(ABCPageMenuItem):
     """A link opening a pre-rendered hidden area (not necessarily a popup window)"""
 
     content: HTML
-    css_classes: List[Optional[str]] = field(default_factory=list)
+    css_classes: list[str | None] = field(default_factory=list)
 
 
 @dataclass
@@ -109,14 +109,14 @@ class PageMenuSidePopup(PageMenuPopup):
     """A link opening a pre-rendered popup on the right of the page"""
 
     content: HTML
-    css_classes: List[Optional[str]] = field(default_factory=list)
+    css_classes: list[str | None] = field(default_factory=list)
 
 
 @dataclass
 class PageMenuSearch(ABCPageMenuItem):
     """A text input box right in the menu, primarily for in page quick search"""
 
-    target_mode: Optional[str] = None
+    target_mode: str | None = None
     default_value: str = ""
 
 
@@ -127,16 +127,16 @@ class PageMenuEntry:
     title: str
     icon_name: Icon
     item: ABCPageMenuItem
-    name: Optional[str] = None
-    description: Optional[str] = None
+    name: str | None = None
+    description: str | None = None
     is_enabled: bool = True
     is_show_more: bool = False
     is_list_entry: bool = True
     is_shortcut: bool = False
     is_suggested: bool = True
-    shortcut_title: Optional[str] = None
-    css_classes: List[Optional[str]] = field(default_factory=list)
-    disabled_tooltip: Optional[str] = None
+    shortcut_title: str | None = None
+    css_classes: list[str | None] = field(default_factory=list)
+    disabled_tooltip: str | None = None
     sort_index: int = 1
 
 
@@ -145,9 +145,9 @@ class PageMenuTopic:
     """A dropdown is populated with multiple topics which hold the actual entries"""
 
     title: str
-    entries: List[PageMenuEntry] = field(default_factory=list)
+    entries: list[PageMenuEntry] = field(default_factory=list)
     # Added to skip topics from update on service discovery page
-    id_: Optional[str] = None
+    id_: str | None = None
 
 
 @dataclass
@@ -156,11 +156,11 @@ class PageMenuDropdown:
 
     name: str
     title: str
-    topics: List[PageMenuTopic] = field(default_factory=list)
+    topics: list[PageMenuTopic] = field(default_factory=list)
     is_enabled: bool = True
     # Optional data for the popup. To be used by popup_trigger().
     # It has been added for the "add view to dashboard/report" dropdown.
-    popup_data: Optional[List[Union[str, Dict]]] = None
+    popup_data: list[str | dict] | None = None
 
     @property
     def any_show_more_entries(self) -> bool:
@@ -175,11 +175,11 @@ class PageMenuDropdown:
 class PageMenu:
     """Representing the whole menu of the page"""
 
-    dropdowns: List[PageMenuDropdown] = field(default_factory=list)
-    breadcrumb: Optional[Breadcrumb] = None
-    inpage_search: Optional[PageMenuSearch] = None
+    dropdowns: list[PageMenuDropdown] = field(default_factory=list)
+    breadcrumb: Breadcrumb | None = None
+    inpage_search: PageMenuSearch | None = None
     has_pending_changes: bool = False
-    pending_changes_tooltip: Optional[str] = None
+    pending_changes_tooltip: str | None = None
     enable_suggestions: bool = True
 
     def __post_init__(self) -> None:
@@ -209,8 +209,7 @@ class PageMenu:
     def _entries(self) -> Iterator[PageMenuEntry]:
         for dropdown in self.dropdowns:
             for topic in dropdown.topics:
-                for entry in topic.entries:
-                    yield entry
+                yield from topic.entries
 
     @property
     def popups(self) -> Iterator[PageMenuEntry]:
@@ -330,7 +329,7 @@ def make_help_dropdown() -> PageMenuDropdown:
                         title=title_hide_help if user.show_help else title_show_help,
                         icon_name="help",
                         item=make_javascript_link(
-                            'cmk.help.toggle("%s", "%s")' % (title_show_help, title_hide_help)
+                            f'cmk.help.toggle("{title_show_help}", "{title_hide_help}")'
                         ),
                         name="inline_help",
                         is_enabled=False,
@@ -379,7 +378,7 @@ def make_up_link(breadcrumb: Breadcrumb) -> PageMenuDropdown:
     )
 
 
-def make_checkbox_selection_json_text() -> Tuple[str, str]:
+def make_checkbox_selection_json_text() -> tuple[str, str]:
     return json.dumps(_("Select all checkboxes")), json.dumps(_("Deselect all checkboxes"))
 
 
@@ -406,14 +405,14 @@ def make_checkbox_selection_topic(selection_key: str, is_enabled: bool = True) -
 def make_simple_form_page_menu(
     title: str,
     breadcrumb: Breadcrumb,
-    form_name: Optional[str] = None,
-    button_name: Optional[str] = None,
-    save_title: Optional[str] = None,
+    form_name: str | None = None,
+    button_name: str | None = None,
+    save_title: str | None = None,
     save_icon: str = "save",
     save_is_enabled: bool = True,
     add_abort_link: bool = False,
-    abort_url: Optional[str] = None,
-    inpage_search: Optional[PageMenuSearch] = None,
+    abort_url: str | None = None,
+    inpage_search: PageMenuSearch | None = None,
 ) -> PageMenu:
     """Factory for creating a simple menu for object edit dialogs that just link back"""
     entries = []
@@ -447,7 +446,7 @@ def make_simple_form_page_menu(
 def _make_form_save_link(
     form_name: str,
     button_name: str,
-    save_title: Optional[str] = None,
+    save_title: str | None = None,
     save_icon: str = "save",
     save_is_enabled: bool = True,
 ) -> PageMenuEntry:
@@ -462,7 +461,7 @@ def _make_form_save_link(
     )
 
 
-def _make_form_abort_link(breadcrumb: Breadcrumb, abort_url: Optional[str]) -> PageMenuEntry:
+def _make_form_abort_link(breadcrumb: Breadcrumb, abort_url: str | None) -> PageMenuEntry:
     if not abort_url:
         if not breadcrumb or len(breadcrumb) < 2 or not breadcrumb[-2].url:
             raise ValueError("Can not create back link for this page")
@@ -615,7 +614,7 @@ class PageMenuRenderer:
         inpage_search_form(mode=item.target_mode, default_value=item.default_value)
         html.close_td()
 
-    def _show_pending_changes_icon(self, tooltip: Optional[str]) -> None:
+    def _show_pending_changes_icon(self, tooltip: str | None) -> None:
         html.open_td(class_="icon_container")
         html.icon_button("wato.py?mode=changelog", tooltip if tooltip else "", "pending_changes")
         html.close_td()
@@ -648,9 +647,9 @@ class SuggestedEntryRenderer:
     def _show_link(
         self,
         entry: PageMenuEntry,
-        url: Optional[str],
-        onclick: Optional[str],
-        target: Optional[str],
+        url: str | None,
+        onclick: str | None,
+        target: str | None,
     ) -> None:
         html.open_a(
             href=url,
@@ -690,9 +689,9 @@ class ShortcutRenderer:
     def _show_link(
         self,
         entry: PageMenuEntry,
-        url: Optional[str],
-        onclick: Optional[str],
-        target: Optional[str],
+        url: str | None,
+        onclick: str | None,
+        target: str | None,
     ) -> None:
         classes = ["link", "enabled" if entry.is_enabled else "disabled"]
         if entry.is_suggested:
@@ -740,7 +739,7 @@ class DropdownEntryRenderer:
         )
 
     def _show_link(
-        self, url: str, onclick: Optional[str], target: Optional[str], icon: Icon, title: str
+        self, url: str, onclick: str | None, target: str | None, icon: Icon, title: str
     ) -> None:
         html.open_a(href=url, onclick=onclick, target=target)
         html.icon(icon or "trans")
@@ -749,9 +748,7 @@ class DropdownEntryRenderer:
 
 
 # TODO: Cleanup all calls using title and remove the argument
-def search_form(
-    title: Optional[str] = None, mode: Optional[str] = None, default_value: str = ""
-) -> None:
+def search_form(title: str | None = None, mode: str | None = None, default_value: str = "") -> None:
     html.begin_form("search", add_transid=False)
     if title:
         html.write_text(title + " ")
@@ -766,7 +763,7 @@ def search_form(
 
 
 # TODO: Mesh this function into one with the above search_form()
-def inpage_search_form(mode: Optional[str] = None, default_value: str = "") -> None:
+def inpage_search_form(mode: str | None = None, default_value: str = "") -> None:
     form_name = "inpage_search_form"
     reset_button_id = "%s_reset" % form_name
     was_submitted = request.get_ascii_input("filled_in") == form_name

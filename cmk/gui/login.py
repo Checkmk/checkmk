@@ -7,11 +7,11 @@ import contextlib
 import hmac
 import http.client
 import traceback
+from collections.abc import Iterator
 from contextlib import suppress
 from datetime import datetime
 from hashlib import sha256
 from pathlib import Path
-from typing import Iterator, List, Optional, Tuple, Union
 
 from werkzeug.local import LocalProxy
 
@@ -184,7 +184,7 @@ def _set_auth_cookie(username: UserId, session_id: str) -> None:
     )
 
 
-def user_from_cookie(raw_cookie: str) -> Tuple[UserId, str, str]:
+def user_from_cookie(raw_cookie: str) -> tuple[UserId, str, str]:
     try:
         username, session_id, cookie_hash = raw_cookie.split(":", 2)
     except ValueError:
@@ -212,7 +212,7 @@ def _get_session_id_from_cookie(username: UserId, revalidate_cookie: bool) -> st
     return session_id
 
 
-def _check_auth_cookie(cookie_name: str) -> Optional[UserId]:
+def _check_auth_cookie(cookie_name: str) -> UserId | None:
     username, session_id, cookie_hash = user_from_cookie(_fetch_cookie(cookie_name))
     check_parsed_auth_cookie(username, session_id, cookie_hash)
 
@@ -285,7 +285,7 @@ def auth_cookie_is_valid(cookie_text: str) -> bool:
 # - It also calls userdb.is_customer_user_allowed_to_login()
 # - It calls userdb.create_non_existing_user() but we don't
 # - It calls connection.is_locked() but we don't
-def _check_auth(req: Request) -> Optional[UserId]:
+def _check_auth(req: Request) -> UserId | None:
     user_id = _check_auth_web_server(req)
 
     if req.var("_secret"):
@@ -344,7 +344,7 @@ def _check_auth_automation() -> UserId:
     raise MKAuthException(_("Invalid automation secret for user %s") % user_id)
 
 
-def _check_auth_http_header(auth_by_http_header: str) -> Optional[UserId]:
+def _check_auth_http_header(auth_by_http_header: str) -> UserId | None:
     """When http header auth is enabled, try to read the user_id from the var"""
     user_id = request.get_request_header(auth_by_http_header)
     if not user_id:
@@ -356,7 +356,7 @@ def _check_auth_http_header(auth_by_http_header: str) -> Optional[UserId]:
     return user_id
 
 
-def _check_auth_web_server(req: Request) -> Optional[UserId]:
+def _check_auth_web_server(req: Request) -> UserId | None:
     """Try to get the authenticated user from the HTTP request
 
     The user may have configured (basic) authentication by the web server. In
@@ -370,7 +370,7 @@ def _check_auth_web_server(req: Request) -> Optional[UserId]:
     return None
 
 
-def check_auth_by_cookie() -> Optional[UserId]:
+def check_auth_by_cookie() -> UserId | None:
     """check if session cookie exists and if it is valid
 
     Returns None if not authenticated. If a user was successful authenticated the UserId is returned"""
@@ -385,7 +385,7 @@ def check_auth_by_cookie() -> Optional[UserId]:
     except Exception:
         # Suppress cookie validation errors from other sites cookies
         auth_logger.debug(
-            "Exception while checking cookie %s: %s" % (cookie_name, traceback.format_exc())
+            f"Exception while checking cookie {cookie_name}: {traceback.format_exc()}"
         )
     return None
 
@@ -410,7 +410,7 @@ def _check_auth_cookie_for_web_server_auth(user_id: UserId) -> None:
     except Exception:
         # Suppress cookie validation errors from other sites cookies
         auth_logger.debug(
-            "Exception while checking cookie %s: %s" % (cookie_name, traceback.format_exc())
+            f"Exception while checking cookie {cookie_name}: {traceback.format_exc()}"
         )
 
 
@@ -418,7 +418,7 @@ def set_auth_type(_auth_type: AuthType) -> None:
     request_local_attr().auth_type = _auth_type
 
 
-auth_type: Union[AuthType, LocalProxy] = LocalProxy(lambda: request_local_attr().auth_type)
+auth_type: AuthType | LocalProxy = LocalProxy(lambda: request_local_attr().auth_type)
 
 
 @page_registry.register_page("login")
@@ -580,7 +580,7 @@ class LoginPage(Page):
             html.show_message(active_config.login_screen["login_message"])
             html.close_div()
 
-        footer: List[HTML] = []
+        footer: list[HTML] = []
         for title, url, target in active_config.login_screen.get("footer_links", []):
             footer.append(HTMLWriter.render_a(title, href=url, target=target))
 

@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from cmk.gui.ctx_stack import request_local_attr
 
@@ -65,7 +65,7 @@ class DisplayOptions:
 
     def __init__(self) -> None:
         self.options: str = self.all_off()
-        self.title_options: Optional[str] = None
+        self.title_options: str | None = None
 
     def load_from_html(self, request: Request, html: HTMLGenerator) -> None:
         # Parse display options and

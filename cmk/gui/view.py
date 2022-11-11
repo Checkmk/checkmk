@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable, Sequence
-from typing import List, Optional, Set
 
 from livestatus import SiteId
 
@@ -45,9 +44,9 @@ class View:
         self.name = view_name
         self.spec = view_spec
         self.context: VisualContext = context
-        self._row_limit: Optional[int] = None
-        self._only_sites: Optional[List[SiteId]] = None
-        self._user_sorters: Optional[List[SorterSpec]] = None
+        self._row_limit: int | None = None
+        self._only_sites: list[SiteId] | None = None
+        self._user_sorters: list[SorterSpec] | None = None
         self._want_checkboxes: bool = False
         self._warning_messages: list[str] = []
         self.process_tracking = ViewProcessTracking()
@@ -76,9 +75,9 @@ class View:
             )
 
     @property
-    def row_cells(self) -> List[Cell]:
+    def row_cells(self) -> list[Cell]:
         """Regular cells are displaying information about the rows of the type the view is about"""
-        cells: List[Cell] = []
+        cells: list[Cell] = []
         for e in self.spec["painters"]:
             if not painter_exists(e):
                 continue
@@ -91,7 +90,7 @@ class View:
         return cells
 
     @property
-    def group_cells(self) -> List[Cell]:
+    def group_cells(self) -> list[Cell]:
         """Group cells are displayed as titles of grouped rows"""
         return [
             Cell(self.spec, self._user_sorters, e)
@@ -100,19 +99,19 @@ class View:
         ]
 
     @property
-    def join_cells(self) -> List[JoinCell]:
+    def join_cells(self) -> list[JoinCell]:
         """Join cells are displaying information of a joined source (e.g.service data on host views)"""
         return [x for x in self.row_cells if isinstance(x, JoinCell)]
 
     @property
-    def sorters(self) -> List[SorterEntry]:
+    def sorters(self) -> list[SorterEntry]:
         """Returns the list of effective sorters to be used to sort the rows of this view"""
         return self._get_sorter_entries(
             self.user_sorters if self.user_sorters else self.spec["sorters"]
         )
 
-    def _get_sorter_entries(self, sorter_list: Iterable[SorterSpec]) -> List[SorterEntry]:
-        sorters: List[SorterEntry] = []
+    def _get_sorter_entries(self, sorter_list: Iterable[SorterSpec]) -> list[SorterEntry]:
+        sorters: list[SorterEntry] = []
         for entry in sorter_list:
             sorter_name = entry.sorter
             uuid = None
@@ -149,11 +148,11 @@ class View:
         return self._row_limit
 
     @row_limit.setter
-    def row_limit(self, row_limit: Optional[int]) -> None:
+    def row_limit(self, row_limit: int | None) -> None:
         self._row_limit = row_limit
 
     @property
-    def only_sites(self) -> Optional[List[SiteId]]:
+    def only_sites(self) -> list[SiteId] | None:
         """Optional list of sites to query instead of all sites
 
         This is a performance feature. It is highly recommended to set the only_sites attribute
@@ -162,7 +161,7 @@ class View:
         return self._only_sites
 
     @only_sites.setter
-    def only_sites(self, only_sites: Optional[List[SiteId]]) -> None:
+    def only_sites(self, only_sites: list[SiteId] | None) -> None:
         self._only_sites = only_sites
 
     # FIXME: The layout should get the view as a parameter by default.
@@ -182,7 +181,7 @@ class View:
         )
 
     @property
-    def user_sorters(self) -> Optional[List[SorterSpec]]:
+    def user_sorters(self) -> list[SorterSpec] | None:
         """Optional list of sorters to use for rendering the view
 
         The user may click on the headers of tables to change the default view sorting. In the
@@ -191,7 +190,7 @@ class View:
         return self._user_sorters
 
     @user_sorters.setter
-    def user_sorters(self, user_sorters: Optional[List[SorterSpec]]) -> None:
+    def user_sorters(self, user_sorters: list[SorterSpec] | None) -> None:
         self._user_sorters = user_sorters
 
     @property
@@ -332,7 +331,7 @@ class View:
         return breadcrumb
 
     @property
-    def missing_single_infos(self) -> Set[FilterName]:
+    def missing_single_infos(self) -> set[FilterName]:
         """Return the missing single infos a view requires"""
         missing_single_infos = visuals.get_missing_single_infos(
             self.spec["single_infos"], self.context

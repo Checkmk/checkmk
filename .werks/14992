@@ -1,0 +1,15 @@
+Title: Fix error on export of availabilty views
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1668159066
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p17
+
+Werk #14888 should have fixed the wrong color of down hosts in exported reports
+but broke the export of availability views.
+
+An error like "AttributeError: 'list' object has no attribute 'split" was shown
+instead.

@@ -362,7 +362,7 @@ def update_dns_cache(
                     configured_ip_address=(
                         configured_ipv4_addresses
                         if family is socket.AF_INET
-                        else configured_ipv4_addresses
+                        else configured_ipv6_addresses
                     ).get(host_config.hostname),
                     simulation_mode=simulation_mode,
                     is_snmp_usewalk_host=host_config.is_usewalk_host and host_config.is_snmp_host,

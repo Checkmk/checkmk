@@ -226,15 +226,24 @@ class PiggyBackService:
 @dataclass(frozen=True)
 class Result:
     ts: TimeSeries
+    aggregation: gAggregation
 
     @staticmethod
     def serialize(obj: "Result") -> str:
-        return json.dumps(TimeSeries.to_dict(obj.ts))
+        aggregation = {
+            "alignment_period": {"seconds": int(obj.aggregation.alignment_period.total_seconds())},
+            "group_by_fields": list(obj.aggregation.group_by_fields),
+            "per_series_aligner": obj.aggregation.per_series_aligner.value,
+            "cross_series_reducer": obj.aggregation.cross_series_reducer.value,
+        }
+        return json.dumps({"ts": TimeSeries.to_dict(obj.ts), "aggregation": aggregation})
 
     @classmethod
     def deserialize(cls, data: str) -> "Result":
-        ts = TimeSeries.from_json(data)
-        return cls(ts=ts)
+        deserialized = json.loads(data)
+        ts = TimeSeries.from_json(json.dumps(deserialized["ts"]))
+        aggregation = monitoring_v3.Aggregation(deserialized["aggregation"])
+        return cls(ts=ts, aggregation=aggregation)
 
 
 @dataclass(frozen=True)
@@ -391,7 +400,10 @@ def time_series(
         except Exception as e:
             raise RuntimeError(metric.name) from e
         for ts in results:
-            result = Result(ts=ts)
+            result = Result(
+                ts=ts,
+                aggregation=metric.aggregation.to_obj(service.default_groupby),
+            )
             if filter_by is None:
                 yield result
             elif ts.resource.labels[filter_by.label] == filter_by.value:

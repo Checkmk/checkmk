@@ -4,14 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
 import datetime
-import json
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 
 import pytest
 from google.cloud import monitoring_v3
-from google.cloud.monitoring_v3.types import TimeSeries
 
 from cmk.base.api.agent_based.checking_classes import Result, Service, ServiceLabel
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
@@ -116,7 +114,7 @@ def generate_stringtable(
 
     metric_labels, resource_labels = generate_labels(item, service_desc)
 
-    time_series = []
+    results = []
     for metric in service_desc.metrics:
         metric_type = metric.name
         point = monitoring_v3.Point(
@@ -134,9 +132,9 @@ def generate_stringtable(
                 "points": [point],
             }
         )
-        time_series.append(ts)
+        results.append(agent_gcp.Result(ts=ts, aggregation=metric.aggregation.to_obj("test")))
 
-    return [[json.dumps(TimeSeries.to_dict(ts))] for ts in time_series]
+    return [[agent_gcp.Result.serialize(r)] for r in results]
 
 
 @dataclass(frozen=True)

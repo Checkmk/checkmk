@@ -27,6 +27,11 @@ class MetricKey:
     prefix: str = "metric"
 
 
+@dataclass(frozen=True)
+class AggregationKey:
+    key: str
+
+
 Key = Union[ResourceKey, MetricKey]
 
 
@@ -39,14 +44,27 @@ class GCPLabels:
 
 
 @dataclass(frozen=True)
+class GCPAggregation:
+    _data: Mapping[str, Any]
+
+    def __getitem__(self, key: AggregationKey) -> str:
+        return self._data[key.key]
+
+
+@dataclass(frozen=True)
 class GCPResult:
     _ts: Mapping[str, Any]
     labels: GCPLabels
+    aggregation: GCPAggregation
 
     @classmethod
     def deserialize(cls, data: str) -> "GCPResult":
         parsed = json.loads(data)
-        return cls(_ts=parsed, labels=GCPLabels(parsed))
+        return cls(
+            _ts=parsed["ts"],
+            labels=GCPLabels(parsed["ts"]),
+            aggregation=GCPAggregation(parsed["aggregation"]),
+        )
 
     @property
     def metric_type(self) -> str:

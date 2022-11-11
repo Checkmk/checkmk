@@ -2,7 +2,7 @@
 :: File to Build MSI usingMS BUild system
 :: Problem based on the fact that we have one x86 Playfrom for MSI
 :: but two, x86 and x64, for exe and MSI must have both targets
-:: build before owm build start. 
+:: build before owm build start.
 :: this is for command line only
 :: In GUI we should do Batch Rebuild of everything
 :: variables to set OPTOIONALLY, when you are using the same git checkout multiple times
@@ -10,7 +10,7 @@
 :: WNX_BUILD - in the future this is name of subfloder to build out
 :: creates # artefacts in the output folder
 
-:: 
+::
 :: Sign mode:
 :: build_release file password
 :: file is always in c:\common\store should be well protected from access
@@ -40,17 +40,17 @@ powershell Write-Host "[+] choco" -Foreground Green
 powershell Write-Host "Looking for make..." -Foreground White
 for /f %%i in ('where make') do set make_exe=%%i
 if "!make_exe!" == "" (
-powershell Write-Host "make not found, try to install" -Foreground Yellow 
+powershell Write-Host "make not found, try to install" -Foreground Yellow
 choco install make -y
 for /f %%i in ('where make') do set make_exe=%%i
 if "!make_exe!" == "" powershell Write-Host "make not found, something is really bad" -Foreground Red && exit /b 57
 )
 powershell Write-Host "[+] make" -Foreground Green
- 
+
 :: read version from the C++ agent
 set /p wnx_version_raw=<src\common\wnx_version.h
 :: parse version
-set wnx_version=%wnx_version_raw:~30,40%
+set wnx_version=%wnx_version_raw:~30,60%
 
 :: check that version is minimally ok
 set wnx_version_mark=%wnx_version_raw:~0,29%
@@ -64,16 +64,16 @@ set arte=%cur_dir%\..\..\artefacts
 set build_dir=.\build
 set SKIP_MINOR_BINARIES=YES
 
-set ExternalCompilerOptions=/DDECREASE_COMPILE_TIME 
+set ExternalCompilerOptions=/DDECREASE_COMPILE_TIME
 
 if "%1" == "SIMULATE_OK" powershell Write-Host "Successful Build" -Foreground Green && echo aaa > %arte%\check_mk_service.msi  && exit /b 0
 if "%1" == "SIMULATE_FAIL" powershell Write-Host "Failed Install build" -Foreground Red && del %arte%\check_mk_service.msi  && exit /b 8
 
 :: CHECK for line ending
-@py -3 scripts\check_crlf.py 
+@py -3 scripts\check_crlf.py
 @if errorlevel 1 powershell Write-Host "Line Encoding Error`r`n`tPlease check how good repo was checked out" -Foreground Red && exit /b 113
 
-call %cur_dir%\scripts\clean_artifacts.cmd 
+call %cur_dir%\scripts\clean_artifacts.cmd
 
 call scripts\unpack_packs.cmd
 make install_extlibs
@@ -109,7 +109,7 @@ if not %errorlevel% == 0 powershell Write-Host "Failed version set" -Foreground 
 net stop WinRing0_1_2_0
 copy %build_dir%\watest\Win32\Release\watest32.exe %arte% /y	
 copy %build_dir%\watest\x64\Release\watest64.exe %arte% /Y	
-powershell Write-Host "starting unit tests" -Foreground Cyan 
+powershell Write-Host "starting unit tests" -Foreground Cyan
 call call_unit_tests.cmd -*_Long:*Integration:*IntegrationExt
 if not %errorlevel% == 0 goto error
 powershell Write-Host "Unit test SUCCESS" -Foreground Green

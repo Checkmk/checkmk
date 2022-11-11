@@ -480,10 +480,20 @@ class Site:
 
     def create(self) -> None:
         if not self.version.is_installed():
-            raise Exception(
-                "Version %s not installed. "
-                'Use "tests/scripts/install-cmk.py" or install it manually.' % self.version.version
+            logger.info("Install Checkmk version %s", self.version.version)
+            completed_process = subprocess.run(
+                [
+                    f"{cmk_path()}/scripts/run-pipenv",
+                    "run",
+                    f"{cmk_path()}/tests/scripts/install-cmk.py",
+                ],
+                check=False,
             )
+            if completed_process.returncode != 0:
+                raise Exception(
+                    f"Version {self.version.version} could not be installed! "
+                    'Use "tests/scripts/install-cmk.py" or install it manually.'
+                )
 
         if not self.reuse and self.exists():
             raise Exception("The site %s already exists." % self.id)

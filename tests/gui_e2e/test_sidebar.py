@@ -14,8 +14,8 @@ def test_add_remove_snapin(logged_in_page: PPage, snapin_id: str) -> None:
     """add and remove a snapin (aka a sidebar element)"""
 
     logged_in_page.goto_add_sidebar_element()
-    logged_in_page.main_frame.locator(f"div.snapinadder:has(div#{snapin_id})").click()
-    logged_in_page.main_frame.locator(f"div#{snapin_id}").wait_for(state="detached")
+    logged_in_page.main_area.locator(f"div.snapinadder:has(div#{snapin_id})").click()
+    logged_in_page.main_area.locator(f"div#{snapin_id}").wait_for(state="detached")
 
     logged_in_page.locator(f"div#check_mk_sidebar >> div#{snapin_id}").wait_for(state="attached")
     logged_in_page.locator(
@@ -23,7 +23,7 @@ def test_add_remove_snapin(logged_in_page: PPage, snapin_id: str) -> None:
     ).click()
     logged_in_page.locator(f"div#check_mk_sidebar >> div#{snapin_id}").wait_for(state="detached")
 
-    logged_in_page.main_frame.locator(f"div#{snapin_id}").wait_for(state="attached")
+    logged_in_page.main_area.locator(f"div#{snapin_id}").wait_for(state="attached")
 
 
 def test_monitor_searchbar(logged_in_page: PPage, context: BrowserContext) -> None:
@@ -41,4 +41,4 @@ def test_monitor_searchbar(logged_in_page: PPage, context: BrowserContext) -> No
     logged_in_page.press_keyboard(Keys.ArrowDown)
     logged_in_page.press_keyboard(Keys.Enter)
 
-    logged_in_page.main_frame.check_page_title("CPU inventory of all hosts")
+    logged_in_page.main_area.check_page_title("CPU inventory of all hosts")

@@ -22,10 +22,10 @@ def _change_password(page: PPage, old_password: str, new_password: str) -> None:
     page.main_menu.user.click()
     page.main_menu.locator("text=Change password").click()
 
-    page.main_frame.locator("input[name='cur_password']").fill(old_password)
-    page.main_frame.locator("input[name='password']").fill(new_password)
-    page.main_frame.locator("#suggestions >> text=Save").click()
-    page.main_frame.check_success("Successfully changed password.")
+    page.main_area.locator("input[name='cur_password']").fill(old_password)
+    page.main_area.locator("input[name='password']").fill(new_password)
+    page.main_area.locator("#suggestions >> text=Save").click()
+    page.main_area.check_success("Successfully changed password.")
 
 
 def test_v2_1_5(logged_in_page: PPage) -> None:
@@ -41,12 +41,12 @@ def test_v2_1_5(logged_in_page: PPage) -> None:
 
     # changing it back for other tests
     page.login("cmkadmin", "not-cmk")
-    page.main_frame.check_page_title("Main dashboard")
+    page.main_area.check_page_title("Main dashboard")
     _change_password(page, "not-cmk", "cmk")
     page.logout()
 
     page.login("cmkadmin", "cmk")
-    page.main_frame.check_page_title("Main dashboard")
+    page.main_area.check_page_title("Main dashboard")
 
 
 def test_password_truncation_error(logged_in_page: PPage) -> None:
@@ -56,10 +56,10 @@ def test_password_truncation_error(logged_in_page: PPage) -> None:
     page.main_menu.user.click()
     page.main_menu.locator("text=Change password").click()
 
-    page.main_frame.locator("input[name='cur_password']").fill("cmk")
-    page.main_frame.locator("input[name='password']").fill("A" * 80)
-    page.main_frame.locator("#suggestions >> text=Save").click()
-    page.main_frame.check_error(
+    page.main_area.locator("input[name='cur_password']").fill("cmk")
+    page.main_area.locator("input[name='password']").fill("A" * 80)
+    page.main_area.locator("#suggestions >> text=Save").click()
+    page.main_area.check_error(
         "Passwords over 72 bytes would be truncated and are therefore not allowed!"
     )
 

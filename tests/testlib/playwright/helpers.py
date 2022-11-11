@@ -178,8 +178,8 @@ class MainMenu(LocatorHelper):
         return self.help_menu.get_by_text("Change log (Werks)")
 
 
-class MainFrame(LocatorHelper):
-    """functionality to find items from the main frame"""
+class MainArea(LocatorHelper):
+    """functionality to find items from the main area"""
 
     def locator(self, selector: str = "xpath=.") -> Locator:
         return self.page.frame_locator("iframe[name='main']").locator(selector)
@@ -207,7 +207,7 @@ class PPage(LocatorHelper):
     ) -> None:
         super().__init__(page)
         self.main_menu = MainMenu(self.page)
-        self.main_frame = MainFrame(self.page)
+        self.main_area = MainArea(self.page)
         self.sidebar = Sidebar(self.page)
         self.site_id = site_id
         if site_url:
@@ -237,19 +237,19 @@ class PPage(LocatorHelper):
 
     def activate_selected(self) -> None:
         with TemporaryTimeout(self.page, TIMEOUT_ACTIVATE_CHANGES_MS):
-            return self.main_frame.locator("#menu_suggestion_activate_selected").click()
+            return self.main_area.locator("#menu_suggestion_activate_selected").click()
 
     def expect_success_state(self) -> None:
         expect(
-            self.main_frame.locator("#site_gui_e2e_central_status.msg.state_success")
+            self.main_area.locator("#site_gui_e2e_central_status.msg.state_success")
         ).to_be_visible()
 
         expect(
-            self.main_frame.locator("#site_gui_e2e_central_progress.progress.state_success")
+            self.main_area.locator("#site_gui_e2e_central_progress.progress.state_success")
         ).to_be_visible()
 
         # assert no further changes are pending
-        expect(self.main_frame.locator("div.page_state.no_changes")).to_be_visible(
+        expect(self.main_area.locator("div.page_state.no_changes")).to_be_visible(
             timeout=TIMEOUT_ACTIVATE_CHANGES_MS
         )
 
@@ -280,11 +280,11 @@ class PPage(LocatorHelper):
         all_hosts.click()
 
     def select_host(self, host_name: str) -> None:
-        self.main_frame.locator(f"td:has-text('{host_name}')").click()
+        self.main_area.locator(f"td:has-text('{host_name}')").click()
 
     def goto_add_sidebar_element(self) -> None:
         self.locator("div#check_mk_sidebar >> div#add_snapin > a").click()
-        self.main_frame.check_page_title("Add sidebar element")
+        self.main_area.check_page_title("Add sidebar element")
 
     def press_keyboard(self, key: Keys) -> None:
         self.page.keyboard.press(str(key.value))

@@ -31,15 +31,13 @@ class TestHosts:
 
         # Use the Check_MK Service. It is always there and the first.
         # There are two Services containing "Check_MK", using the first
-        logged_in_page.main_frame.locator(
+        logged_in_page.main_area.locator(
             "tr.data:has-text('Check_MK') >> nth=0 >> img[title='Open the action menu']"
         ).click()
-        logged_in_page.main_frame.locator(
-            "div#popup_menu >> a:has-text('Reschedule check')"
-        ).click()
+        logged_in_page.main_area.locator("div#popup_menu >> a:has-text('Reschedule check')").click()
         # In case of a success the page is reloaded, therefore the div is hidden,
         # otherwise the div stays open...
-        logged_in_page.main_frame.locator("div#popup_menu").wait_for(state="hidden")
+        logged_in_page.main_area.locator("div#popup_menu").wait_for(state="hidden")
 
         self._delete_host(logged_in_page)
 
@@ -47,14 +45,14 @@ class TestHosts:
     def _create_host(logged_in_page: PPage) -> None:
         """Creates a host by starting from a logged in page."""
         logged_in_page.goto_setup_hosts()
-        logged_in_page.main_frame.get_suggestion("Add host").click()
+        logged_in_page.main_area.get_suggestion("Add host").click()
 
-        logged_in_page.main_frame.get_input("host").fill(TestHost.name)
-        logged_in_page.main_frame.get_attribute_label("ipaddress").click()
-        logged_in_page.main_frame.get_input("ipaddress").fill(TestHost.ip)
+        logged_in_page.main_area.get_input("host").fill(TestHost.name)
+        logged_in_page.main_area.get_attribute_label("ipaddress").click()
+        logged_in_page.main_area.get_input("ipaddress").fill(TestHost.ip)
 
-        logged_in_page.main_frame.get_suggestion("Save & go to service configuration").click()
-        logged_in_page.main_frame.get_element_including_texts(
+        logged_in_page.main_area.get_suggestion("Save & go to service configuration").click()
+        logged_in_page.main_area.get_element_including_texts(
             element_id="changes_info", texts=["1", "change"]
         ).click()
 
@@ -66,10 +64,10 @@ class TestHosts:
         """Deletes the former created host by starting from a logged in page."""
         logged_in_page.goto_setup_hosts()
 
-        logged_in_page.main_frame.get_link_from_title("Delete this host").click()
+        logged_in_page.main_area.get_link_from_title("Delete this host").click()
 
-        logged_in_page.main_frame.get_text("Yes").click()
-        logged_in_page.main_frame.get_element_including_texts(
+        logged_in_page.main_area.get_text("Yes").click()
+        logged_in_page.main_area.get_element_including_texts(
             element_id="changes_info", texts=["1", "change"]
         ).click()
 

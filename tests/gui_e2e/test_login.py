@@ -8,4 +8,4 @@ from tests.testlib.playwright.helpers import PPage
 
 
 def test_login_works(logged_in_page: PPage) -> None:
-    logged_in_page.main_frame.check_page_title("Main dashboard")
+    logged_in_page.main_area.check_page_title("Main dashboard")

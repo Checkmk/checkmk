@@ -427,12 +427,7 @@ def _get_full_package_path(package_file_name: str) -> Path:
 
 
 def install_optional_package(package_file_base_name: str) -> PackageInfo:
-    package_path = _get_full_package_path(package_file_base_name)
-    try:
-        return _install_by_path(package_path)
-    finally:
-        # it is enabled, even if installing failed.
-        mark_as_enabled(package_path)
+    return _install_by_path(_get_full_package_path(package_file_base_name))
 
 
 def mark_as_enabled(package_path: Path) -> None:
@@ -467,14 +462,18 @@ def _install_by_path(
     package_path: Path, allow_outdated: bool = True, post_package_change_actions: bool = True
 ) -> PackageInfo:
     with package_path.open("rb") as f:
-        return install(
-            file_object=cast(BinaryIO, f),
-            allow_outdated=allow_outdated,
-            post_package_change_actions=post_package_change_actions,
-        )
+        try:
+            return _install(
+                file_object=cast(BinaryIO, f),
+                allow_outdated=allow_outdated,
+                post_package_change_actions=post_package_change_actions,
+            )
+        finally:
+            # it is enabled, even if installing failed
+            mark_as_enabled(package_path)
 
 
-def install(
+def _install(
     file_object: BinaryIO,
     # I am not sure whether we should install outdated packages by default -- but
     #  a) this is the compatible way to go

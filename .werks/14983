@@ -1,0 +1,12 @@
+Title: Extension packages: "Internal error: Package is not enabled"
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1668168341
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p17
+
+This fixes a regression in Checkmk versions 2.0.0p29 and Checkmk version 2.1.0p16, where after an upgrade packages could not be disabled.

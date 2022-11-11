@@ -284,7 +284,7 @@ def test_edit_rename_conflict():
 
 
 def test_install(mkp_bytes, build_setup_search_index):
-    packaging.install(mkp_bytes)
+    packaging._install(mkp_bytes)
     build_setup_search_index.assert_called_once()
 
     assert packaging._package_exists("aaa") is True

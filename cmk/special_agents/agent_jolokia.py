@@ -7,7 +7,6 @@
 import argparse
 import os
 import sys
-from typing import List
 
 # TODO: is there a better way to do this?
 import cmk.utils.paths

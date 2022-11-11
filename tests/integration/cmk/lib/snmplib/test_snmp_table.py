@@ -79,13 +79,13 @@ def test_get_data_types(
 
 
 def test_get_simple_snmp_table_not_resolvable(backend: SNMPBackend) -> None:
-    if backend.config.is_usewalk_host:
+    if backend.config.snmp_backend is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
 
     backend.config = backend.config._replace(ipaddress="bla.local")
 
     # TODO: Unify different error messages
-    if backend.config.snmp_backend == SNMPBackendEnum.INLINE:
+    if backend.config.snmp_backend is SNMPBackendEnum.INLINE:
         exc_match = "Failed to initiate SNMP"
     else:
         exc_match = "Unknown host"
@@ -100,7 +100,7 @@ def test_get_simple_snmp_table_not_resolvable(backend: SNMPBackend) -> None:
 
 
 def test_get_simple_snmp_table_wrong_credentials(backend: SNMPBackend) -> None:
-    if backend.config.is_usewalk_host:
+    if backend.config.snmp_backend is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
 
     backend.config = backend.config._replace(credentials="dingdong")

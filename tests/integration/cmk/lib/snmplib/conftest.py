@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import logging
 import os
 import subprocess
@@ -10,6 +12,7 @@ from pathlib import Path
 from typing import NamedTuple
 
 import pytest
+from typing_extensions import assert_never
 
 from tests.testlib import wait_until
 from tests.testlib.site import Site
@@ -19,7 +22,7 @@ import cmk.utils.log as log
 import cmk.utils.paths
 
 import cmk.snmplib.snmp_cache as snmp_cache
-from cmk.snmplib.type_defs import SNMPBackendEnum, SNMPHostConfig
+from cmk.snmplib.type_defs import SNMPBackend, SNMPBackendEnum, SNMPHostConfig
 
 from cmk.core_helpers.snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
 
@@ -178,11 +181,20 @@ def _is_listening(process_def) -> bool:  # type:ignore[no-untyped-def]
     return True
 
 
-@pytest.fixture(
-    name="backend", params=[ClassicSNMPBackend, StoredWalkSNMPBackend, InlineSNMPBackend]
-)
+@pytest.fixture(name="backend", params=SNMPBackendEnum)
 def backend_fixture(request, snmp_data_dir):
-    backend = request.param
+    backend_type: SNMPBackendEnum = request.param
+    backend: type[SNMPBackend] | None
+    match backend_type:
+        case SNMPBackendEnum.INLINE:
+            backend = InlineSNMPBackend
+        case SNMPBackendEnum.CLASSIC:
+            backend = ClassicSNMPBackend
+        case SNMPBackendEnum.STORED_WALK:
+            backend = StoredWalkSNMPBackend
+        case _:
+            assert_never(backend_type)
+
     if backend is None:
         return pytest.skip("CEE feature only")
 
@@ -200,10 +212,7 @@ def backend_fixture(request, snmp_data_dir):
         oid_range_limits={},
         snmpv3_contexts=[],
         character_encoding=None,
-        is_usewalk_host=backend is StoredWalkSNMPBackend,
-        snmp_backend=SNMPBackendEnum.INLINE
-        if backend is InlineSNMPBackend
-        else SNMPBackendEnum.CLASSIC,
+        snmp_backend=backend_type,
     )
 
     snmpwalks_dir = cmk.utils.paths.snmpwalks_dir

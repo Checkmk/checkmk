@@ -9,7 +9,7 @@ from cmk.utils.exceptions import MKGeneralException
 
 import cmk.snmplib.snmp_cache as snmp_cache
 import cmk.snmplib.snmp_modes as snmp_modes
-from cmk.snmplib.type_defs import SNMPBackend
+from cmk.snmplib.type_defs import SNMPBackend, SNMPBackendEnum
 
 # "netsnmp" python module (used for inline SNMP) and snmp commands (used for
 # classic SNMP) are not available in the git environment. For the moment it
@@ -32,7 +32,7 @@ def monkeymodule(request):
 
 
 def test_get_single_oid_ipv6(backend: SNMPBackend) -> None:
-    if backend.config.is_usewalk_host:
+    if backend.config.snmp_backend is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
 
     backend.config = backend.config._replace(
@@ -45,7 +45,7 @@ def test_get_single_oid_ipv6(backend: SNMPBackend) -> None:
 
 
 def test_get_single_oid_snmpv3(backend: SNMPBackend) -> None:
-    if backend.config.is_usewalk_host:
+    if backend.config.snmp_backend is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
 
     backend.config = backend.config._replace(
@@ -62,7 +62,7 @@ def test_get_single_oid_snmpv3(backend: SNMPBackend) -> None:
 
 
 def test_get_single_oid_snmpv3_higher_encryption(backend: SNMPBackend) -> None:
-    if backend.config.is_usewalk_host:
+    if backend.config.snmp_backend is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
 
     backend.config = backend.config._replace(
@@ -86,7 +86,7 @@ def test_get_single_oid_snmpv3_higher_encryption(backend: SNMPBackend) -> None:
 
 
 def test_get_single_oid_wrong_credentials(backend: SNMPBackend) -> None:
-    if backend.config.is_usewalk_host:
+    if backend.config.snmp_backend is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
 
     backend.config = backend.config._replace(credentials="dingdong")
@@ -141,7 +141,7 @@ def test_get_single_oid_not_existing(backend: SNMPBackend) -> None:
 
 
 def test_get_single_oid_not_resolvable(backend: SNMPBackend) -> None:
-    if backend.config.is_usewalk_host:
+    if backend.config.snmp_backend is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
 
     backend.config = backend.config._replace(ipaddress="bla.local")
@@ -208,7 +208,7 @@ def test_get_single_oid_not_resolvable(backend: SNMPBackend) -> None:
 def test_walk_for_export(  # type:ignore[no-untyped-def]
     backend: SNMPBackend, oid, expected_table
 ) -> None:
-    if backend.config.is_usewalk_host:
+    if backend.config.snmp_backend is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
 
     table = snmp_modes.walk_for_export(oid, backend=backend)

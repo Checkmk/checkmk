@@ -14,6 +14,8 @@ from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.paths import tmp_dir
 from cmk.utils.type_defs import HostName, SourceType
 
+from cmk.snmplib.type_defs import SNMPBackendEnum
+
 import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers import (
     Fetcher,
@@ -65,7 +67,7 @@ def dump_source(source: SourceInfo, fetcher: Fetcher) -> str:
 
     if isinstance(fetcher, SNMPFetcher):
         snmp_config = fetcher.snmp_config
-        if snmp_config.is_usewalk_host:
+        if snmp_config.snmp_backend is SNMPBackendEnum.STORED_WALK:
             return "SNMP (use stored walk)"
 
         if snmp_config.is_snmpv3_host:

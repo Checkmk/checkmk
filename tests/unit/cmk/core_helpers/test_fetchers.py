@@ -393,7 +393,6 @@ class TestSNMPFetcherDeserialization:
                 oid_range_limits={},
                 snmpv3_contexts=[],
                 character_encoding=None,
-                is_usewalk_host=False,
                 snmp_backend=SNMPBackendEnum.CLASSIC,
             ),
         )
@@ -419,10 +418,11 @@ class TestSNMPFetcherDeserialization:
                 oid_range_limits={},
                 snmpv3_contexts=[],
                 character_encoding=None,
-                is_usewalk_host=False,
-                snmp_backend=SNMPBackendEnum.INLINE
-                if not cmk_version.is_raw_edition()
-                else SNMPBackendEnum.CLASSIC,
+                snmp_backend=(
+                    SNMPBackendEnum.INLINE
+                    if not cmk_version.is_raw_edition()
+                    else SNMPBackendEnum.CLASSIC
+                ),
             ),
         )
 
@@ -523,7 +523,6 @@ class TestSNMPFetcherFetch:
                 oid_range_limits={},
                 snmpv3_contexts=[],
                 character_encoding=None,
-                is_usewalk_host=False,
                 snmp_backend=SNMPBackendEnum.CLASSIC,
             ),
         )
@@ -761,7 +760,6 @@ class TestSNMPFetcherFetchCache:
                 oid_range_limits={},
                 snmpv3_contexts=[],
                 character_encoding=None,
-                is_usewalk_host=False,
                 snmp_backend=SNMPBackendEnum.CLASSIC,
             ),
         )

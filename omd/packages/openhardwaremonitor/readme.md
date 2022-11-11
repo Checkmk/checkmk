@@ -4,7 +4,7 @@ OpenHardwareMonitor USAGE
 # Build
 
 1. cd agents/wnx
-2. build_ohm.cmd
+2. build_ohm.cmd or build_release.cmd
 3. check artefacts folder
 
 Resulting build consists form 4 files

@@ -46,7 +46,6 @@ PACKAGES := \
     nagvis \
     nrpe \
     omd \
-    openhardwaremonitor \
     navicli \
     pnp4nagios \
     maintenance \

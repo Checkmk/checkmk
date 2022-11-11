@@ -23,6 +23,6 @@ touch agents/windows/check_mk.user.yml
 touch agents/windows/python-3.cab
 touch agents/windows/python-3.4.cab
 
-touch omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe
-chmod +x omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe
-touch omd/packages/openhardwaremonitor/OpenHardwareMonitorLib.dll
+touch agents/windows/OpenHardwareMonitorCLI.exe
+chmod +x agents/windows/OpenHardwareMonitorCLI.exe
+touch agents/windows/OpenHardwareMonitorLib.dll

@@ -5,7 +5,7 @@
 
 import json
 from collections.abc import Sequence
-from typing import Literal
+from typing import Any, Literal, Mapping
 
 import livestatus
 from livestatus import OnlySites, SiteId
@@ -280,7 +280,7 @@ class SorterCrashTime(Sorter):
     def columns(self) -> Sequence[ColumnName]:
         return ["crash_time"]
 
-    def cmp(self, r1, r2):
+    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
         return cmp_simple_number("crash_time", r1, r2)
 
 

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, Sequence, Tuple
+from typing import Any, Mapping, Optional, Sequence, Tuple
 
 import cmk.gui.metrics as metrics
 import cmk.gui.utils.escaping as escaping
@@ -281,7 +281,7 @@ class SorterPerfometer(Sorter):
             "service_plugin_output",
         ]
 
-    def cmp(self, r1, r2):
+    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
         try:
             v1 = tuple(-float("inf") if s is None else s for s in Perfometer(r1).sort_value())
             v2 = tuple(-float("inf") if s is None else s for s in Perfometer(r2).sort_value())

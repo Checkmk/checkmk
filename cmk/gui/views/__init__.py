@@ -8,7 +8,6 @@ from typing import Any, Dict, List
 import cmk.gui.utils as utils
 import cmk.gui.visuals as visuals
 from cmk.gui.config import default_authorized_builtin_role_ids
-from cmk.gui.derived_columns_sorter import DerivedColumnsSorter
 from cmk.gui.i18n import _, _u
 from cmk.gui.painters.v0.base import register_painter
 from cmk.gui.permissions import (
@@ -168,7 +167,6 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "compare_ips",
     ):
         api_module.__dict__[name] = sorter.__dict__[name]
-    api_module.__dict__["DerivedColumnsSorter"] = DerivedColumnsSorter
 
     for name in (
         "get_permitted_views",

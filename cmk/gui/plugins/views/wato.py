@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Sequence, Union
+from typing import Any, Dict, Mapping, Sequence, Union
 
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.http import request
@@ -177,7 +177,7 @@ class SorterWatoFolderAbs(Sorter):
     def columns(self) -> Sequence[ColumnName]:
         return ["host_filename"]
 
-    def cmp(self, r1, r2):
+    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
         return cmp_wato_folder(r1, r2, "abs")
 
 
@@ -195,7 +195,7 @@ class SorterWatoFolderRel(Sorter):
     def columns(self) -> Sequence[ColumnName]:
         return ["host_filename"]
 
-    def cmp(self, r1, r2):
+    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
         return cmp_wato_folder(r1, r2, "rel")
 
 
@@ -213,5 +213,5 @@ class SorterWatoFolderPlain(Sorter):
     def columns(self) -> Sequence[ColumnName]:
         return ["host_filename"]
 
-    def cmp(self, r1, r2):
+    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
         return cmp_wato_folder(r1, r2, "plain")

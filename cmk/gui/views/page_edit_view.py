@@ -11,7 +11,6 @@ from typing import Any, overload
 
 from cmk.gui import visuals
 from cmk.gui.data_source import ABCDataSource, data_source_registry
-from cmk.gui.derived_columns_sorter import DerivedColumnsSorter
 from cmk.gui.exceptions import MKGeneralException, MKInternalError, MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
@@ -19,7 +18,7 @@ from cmk.gui.pages import AjaxPage, PageResult
 from cmk.gui.painters.v0.base import Cell, Painter, painter_registry, PainterRegistry
 from cmk.gui.plugins.dashboard.utils import ViewDashletConfig
 from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry
-from cmk.gui.sorter import Sorter, sorter_registry, SorterRegistry
+from cmk.gui.sorter import ParameterizedSorter, Sorter, sorter_registry, SorterRegistry
 from cmk.gui.type_defs import ColumnName, PainterSpec, SingleInfos, SorterSpec, ViewSpec
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.valuespec import (
@@ -348,29 +347,12 @@ def view_editor_sorter_specs(
         for name, p in sorters_of_datasource(ds_name).items():
             if any(column in p.columns for column in unsupported_columns):
                 continue
-            # add all regular sortes. they may provide a third element: this
-            # ValueSpec will be displayed after the sorter was choosen in the
-            # CascadingDropdown.
-            if isinstance(p, DerivedColumnsSorter) and (parameters := p.get_parameters()):
+            # Sorters may provide a third element: That Dictionary will be displayed after the
+            # sorter was choosen in the CascadingDropdown.
+            if isinstance(p, ParameterizedSorter) and (parameters := p.vs_parameters(painters)):
                 yield name, get_sorter_plugin_title_for_choices(p), parameters
             else:
                 yield name, get_sorter_plugin_title_for_choices(p)
-
-        for painter_spec in painters:
-            # look through all defined columns and add sorters for
-            # svc_metrics_hist and svc_metrics_forecast columns.
-            if (
-                painter_spec.name in ("svc_metrics_hist", "svc_metrics_forecast")
-                and sorters_of_datasource(ds_name).get(painter_spec.name)
-                and painter_spec.parameters is not None
-                and (uuid := painter_spec.parameters.get("uuid", ""))
-            ):
-                title = "History" if "hist" in painter_spec.name else "Forecast"
-                yield (
-                    "%s:%s" % (painter_spec.name, uuid),
-                    "Services: Metric %s - Column: %s"
-                    % (title, painter_spec.parameters["column_title"]),
-                )
 
     return Dictionary(
         title=_("Sorting"),
@@ -452,7 +434,7 @@ def render_view_config(
     vs_columns.render_input("columns", value["columns"])
 
     vs_sorting = view_editor_sorter_specs(
-        "sorting", ds_name, [PainterSpec.from_raw(v) for v in value["columns"]]
+        "sorting", ds_name, [PainterSpec.from_raw(v) for v in value["columns"]["columns"]]
     )
     vs_sorting.render_input("sorting", value["sorting"])
 

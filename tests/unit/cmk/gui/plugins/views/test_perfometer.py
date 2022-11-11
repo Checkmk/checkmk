@@ -8,6 +8,7 @@ import functools
 import pytest
 
 from cmk.gui.plugins.views.perfometer import Perfometer, SorterPerfometer
+from cmk.gui.type_defs import Row
 
 
 @pytest.mark.parametrize(
@@ -32,5 +33,9 @@ def test_cmp_of_missing_values(sort_values) -> None:  # type:ignore[no-untyped-d
         for v in sort_values
     ]
     sorter = SorterPerfometer()
-    data.sort(key=functools.cmp_to_key(sorter.cmp))
+
+    def wrapped(r1: Row, r2: Row) -> int:
+        return sorter.cmp(r1, r2, None)
+
+    data.sort(key=functools.cmp_to_key(wrapped))
     assert [Perfometer(r).sort_value()[1] for r in data] == [None, -1.0, 0.0, 1.0]

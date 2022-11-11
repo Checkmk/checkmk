@@ -6,8 +6,9 @@
 """Display a table view"""
 
 import functools
+from collections.abc import Iterable, Mapping, Sequence
 from itertools import chain
-from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Sequence, Set
+from typing import Any, Callable, Dict, List, Optional, Set
 from typing import Tuple as _Tuple
 from typing import Union
 
@@ -274,7 +275,7 @@ def _get_view_rows(
         rows, unfiltered_amount_of_rows = _fetch_view_rows(view, all_active_filters, only_count)
 
     # Sorting - use view sorters and URL supplied sorters
-    _sort_data(view, rows, view.sorters)
+    _sort_data(rows, view.sorters)
 
     with CPUTracker() as filter_rows_tracker:
         # Apply non-Livestatus filters
@@ -740,20 +741,29 @@ def _link_to_folder_by_path(path: str) -> str:
     )
 
 
-def _sort_data(view: View, data: "Rows", sorters: List[SorterEntry]) -> None:
+def _sort_data(data: "Rows", sorters: List[SorterEntry]) -> None:
     """Sort data according to list of sorters."""
     if not sorters:
         return
 
     # Handle case where join columns are not present for all rows
-    def safe_compare(compfunc: Callable[[Row, Row], int], row1: Row, row2: Row) -> int:
+    def safe_compare(
+        compfunc: Callable[[Row, Row, Mapping[str, Any] | None], int],
+        row1: Row,
+        row2: Row,
+        parameters: Mapping[str, Any] | None,
+    ) -> int:
         if row1 is None and row2 is None:
             return 0
         if row1 is None:
             return -1
         if row2 is None:
             return 1
-        return compfunc(row1, row2)
+        return compfunc(
+            row1,
+            row2,
+            parameters,
+        )
 
     def multisort(e1: Row, e2: Row) -> int:
         for entry in sorters:
@@ -761,10 +771,13 @@ def _sort_data(view: View, data: "Rows", sorters: List[SorterEntry]) -> None:
 
             if entry.join_key:  # Sorter for join column, use JOIN info
                 c = neg * safe_compare(
-                    entry.sorter.cmp, e1["JOIN"].get(entry.join_key), e2["JOIN"].get(entry.join_key)
+                    entry.sorter.cmp,
+                    e1["JOIN"].get(entry.join_key),
+                    e2["JOIN"].get(entry.join_key),
+                    entry.parameters,
                 )
             else:
-                c = neg * entry.sorter.cmp(e1, e2)
+                c = neg * entry.sorter.cmp(e1, e2, entry.parameters)
 
             if c != 0:
                 return c

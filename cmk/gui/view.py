@@ -13,7 +13,6 @@ import cmk.gui.pagetypes as pagetypes
 import cmk.gui.visuals as visuals
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.data_source import ABCDataSource, data_source_registry
-from cmk.gui.derived_columns_sorter import DerivedColumnsSorter
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
@@ -113,26 +112,19 @@ class View:
     def _get_sorter_entries(self, sorter_list: Iterable[SorterSpec]) -> list[SorterEntry]:
         sorters: list[SorterEntry] = []
         for entry in sorter_list:
-            sorter_name = entry.sorter
-            ident = None
-            if isinstance(sorter_name, tuple):
-                sorter_name, parameters = sorter_name
-                ident = parameters.get("ident", parameters.get("uuid"))
-
-            sorter = sorter_registry.get(sorter_name, None)
-
-            if sorter is None:
+            sorter = entry.sorter
+            sorter_cls = sorter_registry.get(
+                sorter[0] if isinstance(sorter, tuple) else sorter, None
+            )
+            if sorter_cls is None:
                 continue  # Skip removed sorters
-
-            sorter_instance = sorter()
-            if isinstance(sorter_instance, DerivedColumnsSorter):
-                sorter_instance.derived_columns(self.row_cells, ident)
 
             sorters.append(
                 SorterEntry(
-                    sorter=sorter_instance,
+                    sorter=sorter_cls(),
                     negate=entry.negate,
                     join_key=entry.join_key,
+                    parameters=sorter[1] if isinstance(sorter, tuple) else None,
                 )
             )
         return sorters

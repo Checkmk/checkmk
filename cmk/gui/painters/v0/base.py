@@ -32,7 +32,7 @@ from cmk.gui.painters.v1.painter_lib import experimental_painter_registry
 from cmk.gui.painters.v1.painter_lib import Painter as V1Painter
 from cmk.gui.painters.v1.painter_lib import PainterConfiguration
 from cmk.gui.plugins.metrics.utils import CombinedGraphMetricSpec
-from cmk.gui.sorter import register_sorter, sorter_registry
+from cmk.gui.sorter import ParameterizedSorter, register_sorter, sorter_registry
 from cmk.gui.type_defs import (
     ColumnName,
     CombinedGraphSpec,
@@ -477,13 +477,13 @@ class Cell:
         2. user defined sorters (url sorter)
         3. configured view sorters
         """
-        sorter = []
+        sorters = []
 
         group_sort, user_sort, view_sort = _get_separated_sorters(
             self._view_spec, self._view_user_sorters
         )
 
-        sorter = group_sort + user_sort + view_sort
+        sorters = group_sort + user_sort + view_sort
 
         # Now apply the sorter of the current column:
         # - Negate/Disable when at first position
@@ -493,25 +493,27 @@ class Cell:
         sorter_name = _get_sorter_name_of_painter(painter_name)
         if sorter_name is None:
             # Do not change anything in case there is no sorter for the current column
-            return _encode_sorter_url(sorter)
+            return _encode_sorter_url(sorters)
 
-        if painter_name in ["svc_metrics_hist", "svc_metrics_forecast"]:
-            uuid = ":%s" % self.painter_parameters()["uuid"]
-            assert sorter_name is not None
-            sorter_name += uuid
-        elif painter_name in {"host_custom_variable"}:
-            sorter_name = f'{sorter_name}:{self.painter_parameters()["ident"]}'
+        if sorter_name not in sorter_registry:
+            return _encode_sorter_url(sorters)
 
-        this_asc_sorter = SorterSpec(sorter=sorter_name, negate=False, join_key=self.join_service())
-        this_desc_sorter = SorterSpec(sorter=sorter_name, negate=True, join_key=self.join_service())
+        sorter: SorterName | tuple[SorterName, Mapping[str, str]]
+        if issubclass(sorter_registry[sorter_name], ParameterizedSorter):
+            sorter = (painter_name, self.painter_parameters())
+        else:
+            sorter = sorter_name
+
+        this_asc_sorter = SorterSpec(sorter=sorter, negate=False, join_key=self.join_service())
+        this_desc_sorter = SorterSpec(sorter=sorter, negate=True, join_key=self.join_service())
 
         if user_sort and this_asc_sorter == user_sort[0]:
             # Second click: Change from asc to desc order
-            sorter[sorter.index(this_asc_sorter)] = this_desc_sorter
+            sorters[sorters.index(this_asc_sorter)] = this_desc_sorter
 
         elif user_sort and this_desc_sorter == user_sort[0]:
             # Third click: Remove this sorter
-            sorter.remove(this_desc_sorter)
+            sorters.remove(this_desc_sorter)
 
         else:
             # First click: add this sorter as primary user sorter
@@ -522,9 +524,9 @@ class Cell:
                 if this_desc_sorter in s:
                     s.remove(this_desc_sorter)
             # Now add the sorter as primary user sorter
-            sorter = group_sort + [this_asc_sorter] + user_sort + view_sort
+            sorters = group_sort + [this_asc_sorter] + user_sort + view_sort
 
-        return _encode_sorter_url(sorter)
+        return _encode_sorter_url(sorters)
 
     def render(
         self,
@@ -832,9 +834,9 @@ def declare_1to1_sorter(
         {
             "title": painter.title,
             "columns": painter.columns,
-            "cmp": (lambda self, r1, r2: func(painter.columns[col_num], r2, r1))
+            "cmp": (lambda r1, r2: func(painter.columns[col_num], r2, r1))
             if reverse
-            else lambda self, r1, r2: func(painter.columns[col_num], r1, r2),
+            else lambda r1, r2: func(painter.columns[col_num], r1, r2),
         },
     )
     return painter_name

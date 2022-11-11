@@ -6,23 +6,21 @@
 from __future__ import annotations
 
 import abc
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any, NamedTuple
 
 from cmk.utils.plugin_registry import Registry
 
 from cmk.gui.num_split import cmp_num_split as _cmp_num_split
-from cmk.gui.type_defs import ColumnName, Row, SorterFunction
+from cmk.gui.type_defs import ColumnName, PainterSpec, Row, SorterFunction
+from cmk.gui.valuespec import Dictionary
 
 
 class SorterEntry(NamedTuple):
     sorter: Sorter
     negate: bool
     join_key: str | None
-
-
-# Is used to add default arguments to the named tuple. Would be nice to have a cleaner solution
-SorterEntry.__new__.__defaults__ = (None,) * len(SorterEntry._fields)
+    parameters: Mapping[str, Any] | None
 
 
 class Sorter(abc.ABC):
@@ -48,7 +46,7 @@ class Sorter(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def cmp(self, r1: dict, r2: dict) -> int:
+    def cmp(self, r1: Row, r2: Row, parameters: Mapping[str, Any] | None) -> int:
         """The function cmp does the actual sorting. During sorting it
         will be called with two data rows as arguments and must
         return -1, 0 or 1:
@@ -59,19 +57,28 @@ class Sorter(abc.ABC):
 
         The rows are dictionaries from column names to values. Each row
         represents one item in the Livestatus table, for example one host,
-        one service, etc."""
-        raise NotImplementedError()
+        one service, etc.
 
-    @property
-    def _args(self) -> list | None:
-        """Optional list of arguments for the cmp function"""
-        return None
+        Only ParameterizedPainters get a Mapping as parameters (A dict produced with the
+        Dictionary valuespec returned by `vs_parameters`).
+        """
+        raise NotImplementedError()
 
     # TODO: Cleanup this hack
     @property
     def load_inv(self) -> bool:
         """Whether or not to load the HW/SW inventory for this column"""
         return False
+
+
+class ParameterizedSorter(Sorter):
+    @abc.abstractmethod
+    def vs_parameters(self, painters: Sequence[PainterSpec]) -> Dictionary:
+        """Valuespec to configure optional sorter parameters
+
+        This Dictionary will be visible as sorter specific parameters after selecting this sorter in
+        the section "Sorting" in the "Edit View" form.
+        """
 
 
 class SorterRegistry(Registry[type[Sorter]]):
@@ -95,7 +102,7 @@ def register_sorter(ident: str, spec: dict[str, Any]) -> None:
             "title": property(lambda s: s._spec["title"]),
             "columns": property(lambda s: s._spec["columns"]),
             "load_inv": property(lambda s: s._spec.get("load_inv", False)),
-            "cmp": spec["cmp"],
+            "cmp": lambda self, r1, r2, p: spec["cmp"](r1, r2),
         },
     )
     sorter_registry.register(cls)
@@ -104,7 +111,7 @@ def register_sorter(ident: str, spec: dict[str, Any]) -> None:
 def declare_simple_sorter(name: str, title: str, column: ColumnName, func: SorterFunction) -> None:
     register_sorter(
         name,
-        {"title": title, "columns": [column], "cmp": lambda self, r1, r2: func(column, r1, r2)},
+        {"title": title, "columns": [column], "cmp": lambda r1, r2: func(column, r1, r2)},
     )
 
 

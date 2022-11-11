@@ -395,13 +395,10 @@ def _get_full_package_path(package_file_name: str) -> Path:
 
 
 def install_optional_package(package_file_base_name: str) -> PackageInfo:
-    package_path = _get_full_package_path(package_file_base_name)
-    try:
-        with package_path.open("rb") as f:
-            return install(file_object=f, allow_outdated=True)
-    finally:
-        # it is enabled, even if installing failed.
-        mark_as_enabled(package_path)
+    return install(
+        _get_full_package_path(package_file_base_name),
+        allow_outdated=True,
+    )
 
 
 def mark_as_enabled(package_path: Path) -> None:
@@ -432,14 +429,32 @@ def remove_enabled_mark(package_info: PackageInfo) -> None:
     )  # should never be missing, but don't crash in messed up state
 
 
-def install(  # pylint: disable=too-many-branches
+def install(
+    package_path: Path,
+    allow_outdated: bool = True,
+    post_package_change_actions: bool = True,
+) -> PackageInfo:
+    try:
+        with package_path.open("rb") as f:
+            return _install(
+                file_object=f,
+                allow_outdated=allow_outdated,
+                post_package_change_actions=post_package_change_actions,
+            )
+    finally:
+        # it is enabled, even if installing failed
+        mark_as_enabled(package_path)
+
+
+def _install(  # pylint: disable=too-many-branches
     file_object: BinaryIO,
     # I am not sure whether we should install outdated packages by default -- but
     #  a) this is the compatible way to go
     #  b) users cannot even modify packages without installing them
     # Reconsider!
-    allow_outdated: bool = True,
-    post_package_change_actions: bool = True,
+    *,
+    allow_outdated: bool,
+    post_package_change_actions: bool,
 ) -> PackageInfo:
     package = _get_package_info_from_package(file_object)
     file_object.seek(0)
@@ -913,12 +928,11 @@ def _install_applicable_inactive_packages(
     for package_path in _sort_enabled_packages_for_installation(log):
 
         try:
-            with package_path.open("rb") as f:
-                install(
-                    file_object=f,
-                    allow_outdated=False,
-                    post_package_change_actions=post_package_change_actions,
-                )
+            install(
+                package_path,
+                allow_outdated=False,
+                post_package_change_actions=post_package_change_actions,
+            )
         except PackageException as exc:
             logger.log(VERBOSE, "[%s]: Not installed (%s)", package_path.name, exc)
         else:

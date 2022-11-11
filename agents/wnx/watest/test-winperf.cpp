@@ -77,8 +77,7 @@ TEST(WinPerf, ValidateFabricConfig) {
 
     int found_count = 0;
     for (const auto &counter : counters) {
-        std::pair<std::string, std::string> counter_low(counter.first,
-                                                        counter.second);
+        std::pair counter_low(counter.first, counter.second);
         tools::StringLower(counter_low.first);
         tools::StringLower(counter_low.second);
         if (std::ranges::find(base_counters, counter_low) !=

@@ -391,7 +391,7 @@ public:
         }
 
         std::lock_guard lk(lock_);
-        return (os_ << value);
+        return os_ << value;
     }
 
     template <>

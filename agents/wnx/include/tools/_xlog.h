@@ -678,7 +678,7 @@ namespace xlog {
         char buf[32];
         ConvertInt2Char(buf, 30, line);
         file_line += buf;
-        return Concatenator<char>{file_line.c_str()};
+        return Concatenator{file_line.c_str()};
     }
 } // namespace xlog
 

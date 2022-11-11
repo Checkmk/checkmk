@@ -20,6 +20,10 @@ namespace win {
 class EvtFunctionMap {
 public:
     explicit EvtFunctionMap();
+    EvtFunctionMap(const EvtFunctionMap &) = delete;
+    EvtFunctionMap &operator=(const EvtFunctionMap &) = delete;
+    EvtFunctionMap(EvtFunctionMap &&) = delete;
+    EvtFunctionMap &operator=(EvtFunctionMap &&) = delete;
     ~EvtFunctionMap();
 
     decltype(&EvtOpenLog) openLog;
@@ -460,9 +464,9 @@ std::optional<int64_t> SeekPos(EVT_HANDLE render_context,
         return {};
     }
 
-    EventLogRecordVista record(event.get(), render_context);
-    if ((record_id < record.recordId()) ||
-        (record_id == std::numeric_limits<uint64_t>::max())) {
+    const EventLogRecordVista record(event.get(), render_context);
+    if (record_id < record.recordId() ||
+        record_id == std::numeric_limits<uint64_t>::max()) {
         record_id = record.recordId();
     } else {
         --record_id;
@@ -514,8 +518,8 @@ void EventLogVista::seek(uint64_t record_id) {
 }
 
 bool EventLogVista::isNoMoreData() const noexcept {
-    return (index_in_table_ == event_table_.size()) ||
-           (event_table_[index_in_table_] == nullptr);
+    return index_in_table_ == event_table_.size() ||
+           event_table_[index_in_table_] == nullptr;
 }
 
 EventLogRecordBase *EventLogVista::readRecord() {

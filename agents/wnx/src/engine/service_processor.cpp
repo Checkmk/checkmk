@@ -561,7 +561,7 @@ ServiceProcessor::Signal ServiceProcessor::mainWaitLoop(
         }
 
         if (controller_param.has_value() &&
-            (std::chrono::steady_clock::now() - last_check) > 30s) {
+            std::chrono::steady_clock::now() - last_check > 30s) {
             if (!FindProcessByPid(controller_param->pid)) {
                 XLOG::d("Process of the controller is dead [{}]",
                         controller_param->pid);
@@ -580,7 +580,7 @@ ServiceProcessor::Signal ServiceProcessor::mainWaitLoop(
         }
 
         if (SERVICE_DISABLED ==
-            wtools::WinService::ReadUint32(srv::kServiceName,
+            wtools::WinService::readUint32(srv::kServiceName,
                                            wtools::WinService::kRegStart)) {
             XLOG::l("Service is disabled in config, leaving...");
 

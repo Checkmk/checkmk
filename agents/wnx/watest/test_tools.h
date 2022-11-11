@@ -280,7 +280,7 @@ private:
 
 inline uint16_t TestPort() noexcept {
     static uint32_t r =
-        (static_cast<uint32_t>(::GetCurrentProcessId()) / 4U % 0xFFU) + 22000;
+        static_cast<uint32_t>(::GetCurrentProcessId()) / 4U % 0xFFU + 22000;
     return static_cast<uint16_t>(r);
 }
 

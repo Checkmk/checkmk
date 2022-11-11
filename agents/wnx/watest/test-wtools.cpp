@@ -336,9 +336,8 @@ TEST(Wtools, PerformanceFrequency) {
 }
 
 TEST(Wtools, Utf16Utf8) {
-    using namespace std;
     unsigned short utf16string[] = {0x41, 0x0448, 0x65e5, 0xd834, 0xdd1e, 0};
-    auto x = ToUtf8((wchar_t *)utf16string);
+    auto x = ToUtf8(reinterpret_cast<wchar_t *>(utf16string));
     EXPECT_EQ(x.size(), 10);
 }
 

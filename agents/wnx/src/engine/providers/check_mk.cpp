@@ -40,9 +40,9 @@ std::string AddressToCheckMkString(std::string_view entry) {
 }
 
 std::string CheckMk::makeOnlyFrom() {
-    auto only_from =
+    const auto only_from =
         cfg::GetInternalArray(cfg::groups::kGlobal, cfg::vars::kOnlyFrom);
-    if (only_from.empty() || (only_from.size() == 1 && only_from[0] == "~")) {
+    if (only_from.empty() || only_from.size() == 1 && only_from[0] == "~") {
         return {};
     }
 

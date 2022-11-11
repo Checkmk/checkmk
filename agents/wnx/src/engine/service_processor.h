@@ -94,7 +94,7 @@ concept ProviderLike = std::is_base_of_v<cma::provider::Basic, T>;
 // wrapper to use section engine ASYNCHRONOUS by default
 //
 template <typename T>
-requires ProviderLike<T>
+    requires ProviderLike<T>
 class SectionProvider {
 public:
     // engine is default constructed
@@ -354,7 +354,7 @@ private:
     int max_wait_time_{0};  // this is waiting time for all section to run
 
     template <typename T>
-    bool isAllowed(const T &engine) {
+    static bool isAllowed(const T &engine) {
         if (!engine.isAllowedByTime()) {
             XLOG::d.t("Skipping '{}' by time", engine.getUniqName());
             return false;
@@ -400,8 +400,8 @@ private:
     void kickWinPerf(AnswerId answer_id, const std::string &ip_addr);
 
     template <typename T>
-    requires std::derived_from<T, provider::Synchronous> std::string generate()
-    const {
+        requires std::derived_from<T, provider::Synchronous>
+    std::string generate() const {
         T section;
         section.updateSectionStatus();
         return section.generateContent();

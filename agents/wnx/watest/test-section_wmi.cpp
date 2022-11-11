@@ -351,7 +351,7 @@ TEST(WmiProviderTest, SimulationIntegration) {
             << body << "\n";  // more than 1 line should be present;
         auto table = cma::tools::SplitString(body, "\n");
         table.erase(table.begin());
-        ASSERT_GT(table.size(), (size_t)(1))
+        ASSERT_GT(table.size(), 1U)
             << "2 bad output from wmi:\n"
             << body << "\n";  // more than 1 line should be present
 

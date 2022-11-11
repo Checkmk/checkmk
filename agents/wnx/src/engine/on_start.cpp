@@ -27,9 +27,9 @@ bool ConfigLoaded() { return g_config_loaded; }
 std::pair<fs::path, fs::path> FindTestDirs(const fs::path &base) {
     auto root_dir = fs::path{base} / "test" / "root";
     auto data_dir = fs::path{base} / "test" / "data";
-    std::error_code ec;
 
-    if (fs::exists(root_dir, ec) && fs::exists(data_dir, ec)) {
+    if (std::error_code ec;
+        fs::exists(root_dir, ec) && fs::exists(data_dir, ec)) {
         return {root_dir, data_dir};
     }
 
@@ -41,8 +41,7 @@ std::pair<fs::path, fs::path> FindAlternateDirs(AppType app_type) {
         case AppType::exe:
             for (const auto &env_var :
                  {env::regression_base_dir, env::integration_base_dir}) {
-                auto dir = tools::win::GetEnv(env_var);
-                if (!dir.empty()) {
+                if (auto dir = tools::win::GetEnv(env_var); !dir.empty()) {
                     XLOG::l.i(
                         "YOU ARE USING '{}' set by environment variable '{}'",
                         wtools::ToUtf8(dir), wtools::ToUtf8(env_var));

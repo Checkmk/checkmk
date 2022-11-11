@@ -22,6 +22,11 @@ enum class FindMode { local, automatic };
 class LdapControl {
 public:
     LdapControl() = default;
+    LdapControl(const LdapControl &) = delete;
+    LdapControl &operator=(const LdapControl &) = delete;
+    LdapControl(LdapControl &&) = delete;
+    LdapControl &operator=(LdapControl &&) = delete;
+
     Status chooseDomain(std::wstring_view server_name,
                         std::wstring_view domain_name);
     ~LdapControl();

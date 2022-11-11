@@ -12,7 +12,7 @@
 
 namespace wtools {
 
-uint32_t WinService::ReadUint32(std::wstring_view service_name,
+uint32_t WinService::readUint32(std::wstring_view service_name,
                                 std::string_view value_name) {
     return LocalReadUint32(pathToRegistry(service_name).c_str(),
                            value_name.data(), -1);

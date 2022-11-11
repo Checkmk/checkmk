@@ -29,9 +29,9 @@ constexpr std::wstring_view NET_FW_RULE_DISABLE_IN_NAME = L"FALSE";
 
 INetFwRule *CreateRule() {  // Create a new Firewall Rule object.
     INetFwRule *rule = nullptr;
-    auto hr =
-        CoCreateInstance(__uuidof(NetFwRule), nullptr, CLSCTX_INPROC_SERVER,
-                         __uuidof(INetFwRule), (void **)&rule);
+    auto hr = CoCreateInstance(__uuidof(NetFwRule), nullptr,
+                               CLSCTX_INPROC_SERVER, __uuidof(INetFwRule),
+                               reinterpret_cast<void **>(&rule));
     if (FAILED(hr)) {
         XLOG::l("CoCreateInstance for Firewall Rule failed: [{:#X}]", hr);
         return nullptr;
@@ -41,9 +41,9 @@ INetFwRule *CreateRule() {  // Create a new Firewall Rule object.
 }
 
 Policy::Policy() {
-    auto hr =
-        CoCreateInstance(__uuidof(NetFwPolicy2), nullptr, CLSCTX_INPROC_SERVER,
-                         __uuidof(INetFwPolicy2), (void **)&policy_);
+    auto hr = CoCreateInstance(__uuidof(NetFwPolicy2), nullptr,
+                               CLSCTX_INPROC_SERVER, __uuidof(INetFwPolicy2),
+                               reinterpret_cast<void **>(&policy_));
 
     if (FAILED(hr)) {
         XLOG::l("CoCreateInstance for INetFwPolicy2 failed: [{:#X}]", hr);
@@ -182,7 +182,7 @@ INetFwRule *ScanAllRules(
 namespace {
 std::string ToUtf8(const BSTR &bstr) {
     if (bstr == nullptr) {
-        return std::string("nullptr");
+        return {"nullptr"};
     }
     return wtools::ToUtf8(bstr);
 };

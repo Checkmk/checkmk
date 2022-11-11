@@ -286,7 +286,7 @@ std::wstring GenerateRandomFileName() noexcept {
     std::random_device rd;
     std::mt19937 generator(rd());
 
-    std::uniform_int_distribution<> dist(
+    std::uniform_int_distribution dist(
         0, static_cast<int>(possible_characters.size()) - 1);
     std::wstring ret;
     constexpr size_t kMaxLen{12};
@@ -440,7 +440,7 @@ bool WaitForSuccess(std::chrono::milliseconds ms, WaitForSuccessMode mode,
     auto success = false;
 
     for (int i = 0; i < count; i++) {
-        if ((mode == WaitForSuccessMode::indicate) && (i % 10 == 9)) {
+        if (mode == WaitForSuccessMode::indicate && i % 10 == 9) {
             xlog::sendStringToStdio(".", xlog::internal::Colors::yellow);
         }
         if (predicat()) {

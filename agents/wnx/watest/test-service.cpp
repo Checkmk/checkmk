@@ -255,25 +255,25 @@ TEST(CmaSrv, ServiceChange) {
     });
 
     auto err_control =
-        WinService::ReadUint32(kServiceName, WinService::kRegErrorControl);
+        WinService::readUint32(kServiceName, WinService::kRegErrorControl);
     // setting opposite value
     SetErrorMode(err_control == 0 ? values::kErrorModeLog
                                   : values::kErrorModeIgnore);
     ProcessServiceConfiguration(cma::srv::kServiceName);
     auto new_err_control =
-        WinService::ReadUint32(kServiceName, WinService::kRegErrorControl);
+        WinService::readUint32(kServiceName, WinService::kRegErrorControl);
     EXPECT_EQ(new_err_control, err_control == SERVICE_ERROR_IGNORE
                                    ? SERVICE_ERROR_NORMAL
                                    : SERVICE_ERROR_IGNORE);
 
-    auto start = WinService::ReadUint32(kServiceName, WinService::kRegStart);
+    auto start = WinService::readUint32(kServiceName, WinService::kRegStart);
     if (start <= SERVICE_AUTO_START)
         SetStartMode(values::kStartModeDemand);
     else
         SetStartMode(values::kStartModeAuto);
     ProcessServiceConfiguration(cma::srv::kServiceName);
     auto new_start =
-        WinService::ReadUint32(kServiceName, WinService::kRegStart);
+        WinService::readUint32(kServiceName, WinService::kRegStart);
     EXPECT_EQ(new_start, start < SERVICE_AUTO_START ? SERVICE_AUTO_START
                                                     : SERVICE_DEMAND_START);
 }

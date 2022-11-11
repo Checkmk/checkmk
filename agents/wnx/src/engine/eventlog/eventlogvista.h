@@ -29,6 +29,10 @@ bool IsEvtApiAvailable() noexcept;
 class EventLogVista : public EventLogBase {
 public:
     explicit EventLogVista(const std::wstring &path);
+    EventLogVista(const EventLogVista &) = delete;
+    EventLogVista operator=(const EventLogVista &) = delete;
+    EventLogVista(EventLogVista &&) = delete;
+    EventLogVista operator=(EventLogVista &&) = delete;
     ~EventLogVista() override;
 
     [[nodiscard]] std::wstring getName() const override;

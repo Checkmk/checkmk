@@ -23,44 +23,46 @@
 constexpr const wchar_t *kUniqueTestId = L"0345246";
 struct TestStorage {
     std::vector<uint8_t> buffer_;
-    bool delivered_;
-    uint64_t answer_id_;
+    bool delivered_{false};
+    uint64_t answer_id_{0};
     std::string peer_name_;
 };
 
 static TestStorage g_mailslot_storage;
 
 // testing callback
-bool MailboxCallbackPerfTest(const cma::mailslot::Slot *Slot, const void *Data,
-                             int Len, void *Context) {
+bool MailboxCallbackPerfTest(const cma::mailslot::Slot *mail_slot,
+                             const void *data, int length, void *context) {
     using namespace std::chrono;
-    auto storage = (TestStorage *)Context;
+    const auto storage = static_cast<TestStorage *>(context);
     if (!storage) {
         XLOG::l.bp("error in param");
         return false;
     }
 
     // your code is here
-    XLOG::l.i("Received [{}] bytes", Len);
+    XLOG::l.i("Received [{}] bytes", length);
 
-    auto fname = cma::cfg::GetCurrentLogFileName();
+    const auto fname = cma::cfg::GetCurrentLogFileName();
 
-    auto dt = static_cast<const cma::carrier::CarrierDataHeader *>(Data);
+    const auto dt = static_cast<const cma::carrier::CarrierDataHeader *>(data);
     switch (dt->type()) {
         case cma::carrier::DataType::kLog:
             // IMPORTANT ENTRY POINT
             // Receive data for Logging to file
             XLOG::l(XLOG::kNoPrefix)(  // command to out to file
-                "{} : {}", dt->providerId(), (const char *)dt->data());
+                "{} : {}", dt->providerId(),
+                static_cast<const char *>(dt->data()));
             break;
 
         case cma::carrier::DataType::kSegment:
             // IMPORTANT ENTRY POINT
             // Receive data for Section
             {
-                auto data_source = static_cast<const uint8_t *>(dt->data());
-                auto data_end = data_source + dt->length();
-                std::vector vectorized_data(data_source, data_end);
+                const auto data_source =
+                    static_cast<const uint8_t *>(dt->data());
+                const auto data_end = data_source + dt->length();
+                const std::vector vectorized_data(data_source, data_end);
                 g_mailslot_storage.buffer_ = vectorized_data;
                 g_mailslot_storage.answer_id_ = dt->answerId();
                 g_mailslot_storage.peer_name_ = dt->providerId();

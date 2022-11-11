@@ -55,7 +55,9 @@ inline YAML::Node GetNode(const YAML::Node &yaml, const std::string &section,
                           const std::string &name) noexcept {
     auto ret = GetVal<YAML::Node>(yaml, section, name);
 
-    if (ret) return *ret;
+    if (ret) {
+        return *ret;
+    }
 
     return {};
 }

@@ -77,7 +77,7 @@ TEST(PlayerTest, All) {
     exe.push_back(unit_test_path / L"a.exe");
     exe.push_back(unit_test_path / L"b.cmd");
     exe.push_back(unit_test_path / L"B.cmd");
-    int expected = 0;
+    auto expected = 0U;
     exe.push_back(unit_test_path / L"test_plugin.cmd");
     expected++;
     exe.push_back(unit_test_path / L"tESt_plugin.cmd");

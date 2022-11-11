@@ -33,8 +33,7 @@ bool AllowUseController(Modus modus) {
     return rs::find(g_start_controller_moduses, modus) !=
            g_start_controller_moduses.end();
 }
-const std::vector<Modus> g_use_special_port_moduses{Modus::app,
-                                                    Modus::integration};
+const std::vector g_use_special_port_moduses{Modus::app, Modus::integration};
 
 bool UseSpecialPort(Modus modus) {
     return rs::find(g_use_special_port_moduses, modus) !=

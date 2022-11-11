@@ -329,14 +329,14 @@ HCRYPTKEY Commander::deriveOpenSSLKey(const std::string &password,
     size_t key_offset = 0;
     size_t iv_offset = 0;
 
-    const auto key_size = (key_length == Length::kDefault)
+    const auto key_size = key_length == Length::kDefault
                               ? keySize(ToDword(algorithm_)) / kBlockALign
                               : static_cast<size_t>(key_length);
 
     std::vector<BYTE> key(key_size);
     std::vector<BYTE> iv;
 
-    while ((key_offset < key.size()) || (iv_offset < iv.size())) {
+    while (key_offset < key.size() || iv_offset < iv.size()) {
         HCRYPTHASH hash = DuplicateHash(base_hash);
         if (hash == 0) {
             return 0;
@@ -474,7 +474,7 @@ std::optional<size_t> Commander::CalcBufferOverhead(size_t data_size) const {
 
     const auto block_size = blockSize().value();
 
-    return block_size - (data_size % block_size);
+    return block_size - data_size % block_size;
 }
 
 }  // namespace cma::encrypt

@@ -30,10 +30,12 @@ NTSTATUS PrintDomainName() {
         PPOLICY_ACCOUNT_DOMAIN_INFO ppadi;
     };
 
-    status = LsaQueryInformationPolicy(policy, PolicyDnsDomainInformation,
-                                       (void **)&ppddi);
+    status = ::LsaQueryInformationPolicy(policy, PolicyDnsDomainInformation,
+                                         reinterpret_cast<void **>(&ppddi));
 
-    if (!LSA_SUCCESS(status)) return status;
+    if (!LSA_SUCCESS(status)) {
+        return status;
+    }
 
     if (ppddi->Sid) {
         XLOG::l("DnsDomainName: '{}'",
@@ -45,11 +47,13 @@ NTSTATUS PrintDomainName() {
     }
 
     LsaFreeMemory(ppddi);
-    if (0 <= status) return status;
+    if (0 <= status) {
+        return status;
+    }
 
-    if (LSA_SUCCESS(
-            status = LsaQueryInformationPolicy(
-                policy, PolicyAccountDomainInformation, (void **)&ppadi))) {
+    if (LSA_SUCCESS(status = ::LsaQueryInformationPolicy(
+                        policy, PolicyAccountDomainInformation,
+                        reinterpret_cast<void **>(&ppadi)))) {
         XLOG::l("DomainName: '{}'", wtools::ToUtf8(ppadi->DomainName.Buffer));
         LsaFreeMemory(ppadi);
     }

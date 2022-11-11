@@ -539,7 +539,7 @@ bool TryToHackStringWithCachedInfo(std::string &in_string,
     if (pos_start == 0 &&                // starting from <<<
         pos_end != std::string::npos &&  // >>> presented too
         pos_end > pos_start &&           //
-        (pos_end - pos_start) < 100) {   // not very far away
+        pos_end - pos_start < 100) {     // not very far away
         in_string.insert(pos_end, value_to_insert);
         return true;
     }
@@ -1328,7 +1328,7 @@ void RemoveDuplicatedPlugins(PluginMap &plugin_map, bool check_exists) {
     for (auto it = plugin_map.begin(); it != plugin_map.end();) {
         fs::path p = it->first;
 
-        if (it->second.path().empty() || (check_exists && !fs::exists(p, ec))) {
+        if (it->second.path().empty() || check_exists && !fs::exists(p, ec)) {
             it = plugin_map.erase(it);
             continue;
         }

@@ -2558,12 +2558,13 @@ std::wstring GenerateRandomString(size_t max_length) noexcept {
     std::random_device rd;
     std::mt19937 generator(rd());
 
-    std::uniform_int_distribution<> dist(
+    std::uniform_int_distribution dist(
         0, static_cast<int>(possible_characters.size()) - 1);
     std::wstring ret;
     for (size_t i = 0; i < max_length; i++) {
-        int random_index = dist(generator);  // get index between 0 and
-                                             // possible_characters.size()-1
+        const int random_index =
+            dist(generator);  // get index between 0 and
+                              // possible_characters.size()-1
         ret += possible_characters[random_index];
     }
 
@@ -2869,8 +2870,7 @@ private:
 };
 
 ACL *CombineSidsIntoACl(const SidStore &first, const SidStore &second) {
-    auto acl_size = sizeof ACL + 2 * (sizeof ACCESS_ALLOWED_ACE) -
-                    sizeof(DWORD) +
+    auto acl_size = sizeof ACL + 2 * sizeof ACCESS_ALLOWED_ACE - sizeof DWORD +
                     GetSidLengthRequired(static_cast<UCHAR>(first.count())) +
                     GetSidLengthRequired(static_cast<UCHAR>(second.count()));
 

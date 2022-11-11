@@ -323,7 +323,7 @@ void Emitter::postProcessAndPrint(const std::string &text) const {
 
     // EVENT
     if (setup::IsEventLogEnabled() &&
-        ((dirs & xlog::Directions::kEventPrint) != 0)) {
+        (dirs & xlog::Directions::kEventPrint) != 0) {
         // we do not need to format string for the event
         const auto windows_event_log_id = cma::GetModus() == cma::Modus::service
                                               ? EventClass::kSrvDefault
@@ -341,8 +341,8 @@ void Emitter::postProcessAndPrint(const std::string &text) const {
     const auto file_print = (dirs & xlog::Directions::kFilePrint) != 0;
     const auto stdio_print = (dirs & xlog::Directions::kStdioPrint) != 0;
 
-    if (stdio_print || (file_print && details::IsDuplicatedOnStdio())) {
-        auto normal = xlog::formatString(flags, "", text);
+    if (stdio_print || file_print && details::IsDuplicatedOnStdio()) {
+        const auto normal = xlog::formatString(flags, "", text);
         xlog::sendStringToStdio(normal.c_str(), c);
     }
 

@@ -61,9 +61,8 @@ const wchar_t *GetNextMultiSz(const std::vector<wchar_t> &data,
     const auto *str = &data[offset];
     auto len = wcslen(str);
 
-    if (len == 0 ||  // end of data
-        offset + (len * sizeof(wchar_t)) >
-            data.size()) {  // registry is corrupted
+    if (len == 0 ||                                      // end of data
+        offset + len * sizeof(wchar_t) > data.size()) {  // corrupted
         return nullptr;
     }
 

@@ -41,7 +41,7 @@ cfg::EventLevels LabelToEventLevel(std::string_view required_level) {
                                    EventLevels::kAll, EventLevels::kWarn,
                                    EventLevels::kCrit};
 
-    for (auto level : levels) {
+    for (const auto level : levels) {
         if (val == ConvertLogWatchLevelToString(level)) {
             return level;
         }

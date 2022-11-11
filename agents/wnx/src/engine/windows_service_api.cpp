@@ -1162,7 +1162,7 @@ bool IsServiceProcess() {
     auto success = ::GetUserObjectInformation(win_station, UOI_FLAGS, &uof,
                                               sizeof(USEROBJECTFLAGS), nullptr);
     // service should be NON-VISIBLE
-    return success && ((uof.dwFlags & WSF_VISIBLE) == 0);
+    return success && (uof.dwFlags & WSF_VISIBLE) == 0;
 }
 }  // namespace
 

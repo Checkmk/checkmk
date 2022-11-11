@@ -19,7 +19,7 @@ namespace cma::provider {
 namespace {
 long long convert(const std::string &value) {
     try {
-        return std::stoull(value);
+        return std::stoll(value);
     } catch (const std::invalid_argument &) {
         return -1;
     }

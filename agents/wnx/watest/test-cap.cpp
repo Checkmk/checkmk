@@ -469,10 +469,10 @@ fs::path CreateInvalidCap() {
     uint8_t name_len = 12;
     constexpr char name[] = "123456789012";
     file.open(file_name, std::ios::trunc | std::ios::binary | std::ios::out);
-    file.write(reinterpret_cast<const char *>(&name_len), sizeof(name_len));
+    file.write(reinterpret_cast<const char *>(&name_len), sizeof name_len);
     file.write(name, name_len);
     uint32_t len = 123000;
-    file.write(reinterpret_cast<const char *>(&len), sizeof(len));
+    file.write(reinterpret_cast<const char *>(&len), sizeof len);
     file.write(name, name_len);
     return file_name;
 }

@@ -439,7 +439,7 @@ public:
 
     virtual ~ServiceController() {
         std::lock_guard lk(s_lock_);
-        if ((s_controller_ != nullptr) && s_controller_ == this) {
+        if (s_controller_ != nullptr && s_controller_ == this) {
             s_controller_ = nullptr;
         }
     }
@@ -473,10 +473,10 @@ protected:
         status_.dwWin32ExitCode = win32_exit_code;
         status_.dwWaitHint = wait_hint;
 
-        status_.dwCheckPoint = ((current_state == SERVICE_RUNNING) ||
-                                (current_state == SERVICE_STOPPED))
-                                   ? 0
-                                   : check_point++;
+        status_.dwCheckPoint =
+            current_state == SERVICE_RUNNING || current_state == SERVICE_STOPPED
+                ? 0
+                : check_point++;
 
         // Report the status of the service to the SCM.
         const auto ret = ::SetServiceStatus(status_handle_, &status_);

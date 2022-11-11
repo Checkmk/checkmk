@@ -26,8 +26,7 @@ std::string ErrorCodeToMessage(std::error_code ec) {
 }
 
 void CopyFileWithLog(const fs::path &target, const fs::path &source) {
-    std::error_code ec;
-    if (fs::copy_file(source, target, ec)) {
+    if (std::error_code ec; fs::copy_file(source, target, ec)) {
         XLOG::l.i("Copy file '{}' to '{}' [OK]", source, target);
     } else {
         XLOG::l("Copy file '{}' to '{}' failed {}", source, target,

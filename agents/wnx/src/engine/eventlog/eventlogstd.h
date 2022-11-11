@@ -3,8 +3,8 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#ifndef EventLog_h
-#define EventLog_h
+#ifndef EVENT_LOG_H
+#define EVENT_LOG_H
 
 #include <map>
 
@@ -36,7 +36,7 @@ private:
 };
 
 class EventLog : public EventLogBase {
-    static constexpr size_t INIT_BUFFER_SIZE = 64 * 1024;
+    static constexpr size_t INIT_BUFFER_SIZE = 64U * 1024U;
 
 public:
     /**
@@ -95,4 +95,4 @@ private:
     MessageResolver message_resolver_;
 };
 }  // namespace cma::evl
-#endif  // EventLog_h
+#endif  // EVENT_LOG_H

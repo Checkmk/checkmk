@@ -149,7 +149,7 @@
       <AdditionalIncludeDirectories>.;$(ProjectDir)/../extlibs/googletest/googletest;$(ProjectDir)/../extlibs/googletest/googletest/include;$(ProjectDir)/../src/engine;$(ProjectDir)/../include;$(ProjectDir)/../src;$(ProjectDir)/../extlibs/$(AsioVersion)/include;$(ProjectDir)/../src/player;$(ProjectDir)/../extlibs/yaml-cpp/include;$(ProjectDir)/../extlibs/fmt/include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <DisableSpecificWarnings>%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <SupportJustMyCode>false</SupportJustMyCode>
@@ -189,7 +189,7 @@
       <AdditionalIncludeDirectories>.;$(ProjectDir)/../extlibs/googletest/googletest;$(ProjectDir)/../extlibs/googletest/googletest/include;$(ProjectDir)/../src/engine;$(ProjectDir)/../include;$(ProjectDir)/../src;$(ProjectDir)/../extlibs/$(AsioVersion)/include;$(ProjectDir)/../src/player;$(ProjectDir)/../extlibs/yaml-cpp/include;$(ProjectDir)/../extlibs/$(FmtVersion)/include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <DisableSpecificWarnings>%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <SupportJustMyCode>false</SupportJustMyCode>
@@ -231,7 +231,7 @@
       <AdditionalIncludeDirectories>.;$(ProjectDir)/../extlibs/googletest/googletest;$(ProjectDir)/../extlibs/googletest/googletest/include;$(ProjectDir)/../src/engine;$(ProjectDir)/../include;$(ProjectDir)/../src;$(ProjectDir)/../extlibs/$(AsioVersion)/include;$(ProjectDir)/../src/player;$(ProjectDir)/../extlibs/yaml-cpp/include;$(ProjectDir)/../extlibs/$(FmtVersion)/include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <DisableSpecificWarnings>%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <AdditionalOptions>/Zc:char8_t- $(ExternalCompilerOptions) /Zi %(AdditionalOptions)</AdditionalOptions>
@@ -273,7 +273,7 @@
       <AdditionalIncludeDirectories>.;$(ProjectDir)/../extlibs/googletest/googletest;$(ProjectDir)/../extlibs/googletest/googletest/include;$(ProjectDir)/../src/engine;$(ProjectDir)/../include;$(ProjectDir)/../src;$(ProjectDir)/../extlibs/$(AsioVersion)/include;$(ProjectDir)/../src/player;$(ProjectDir)/../extlibs/yaml-cpp/include;$(ProjectDir)/../extlibs/$(FmtVersion)/include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <TreatWarningAsError>true</TreatWarningAsError>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <MultiProcessorCompilation>false</MultiProcessorCompilation>
       <DisableSpecificWarnings>%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <AdditionalOptions>/Zc:char8_t- $(ExternalCompilerOptions) %(AdditionalOptions)</AdditionalOptions>

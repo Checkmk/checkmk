@@ -71,10 +71,10 @@ static ReleasedResource<Folder> CreateFolder(IShellDispatch *dispatch,
     VARIANT variantDir{0};
     InitVariant(variantDir, bstr.bstr());
     Folder *folder = nullptr;
-    auto hResult = dispatch->NameSpace(variantDir, &folder);
+    auto result = dispatch->NameSpace(variantDir, &folder);
 
-    if (!SUCCEEDED(hResult)) {
-        XLOG::l("Error during NameSpace 1 /unzip/ {:#X}", hResult);
+    if (!SUCCEEDED(result)) {
+        XLOG::l("Error during NameSpace 1 /unzip/ {:#X}", result);
         return nullptr;
     }
 

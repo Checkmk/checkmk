@@ -76,16 +76,16 @@ public:
         ConvertToUTF16(WinService::pathToRegistry(cma::srv::kServiceName));
 
     void SetUp() override {
-        save_ec_ = WinService::ReadUint32(cma::srv::kServiceName, name_ec_);
+        save_ec_ = WinService::readUint32(cma::srv::kServiceName, name_ec_);
         save_start_ =
-            WinService::ReadUint32(cma::srv::kServiceName, name_start_);
+            WinService::readUint32(cma::srv::kServiceName, name_start_);
         save_delayed_ =
-            WinService::ReadUint32(cma::srv::kServiceName, name_delayed_);
+            WinService::readUint32(cma::srv::kServiceName, name_delayed_);
     }
 
     void TearDown() override {
         if (save_ec_ !=
-            WinService::ReadUint32(cma::srv::kServiceName, name_ec_)) {
+            WinService::readUint32(cma::srv::kServiceName, name_ec_)) {
             for (auto c : checks_ec_) {
                 if (c.first == save_ec_) {
                     ws_.configureError(c.second);
@@ -94,13 +94,13 @@ public:
             }
         }
         if (save_start_ !=
-            WinService::ReadUint32(cma::srv::kServiceName, name_start_)) {
+            WinService::readUint32(cma::srv::kServiceName, name_start_)) {
             SetRegistryValue(reg_path_, ConvertToUTF16(name_start_),
                              save_start_);
         }
 
         if (save_delayed_ !=
-            WinService::ReadUint32(cma::srv::kServiceName, name_delayed_)) {
+            WinService::readUint32(cma::srv::kServiceName, name_delayed_)) {
             SetRegistryValue(reg_path_, ConvertToUTF16(name_delayed_),
                              save_delayed_);
         }
@@ -138,7 +138,7 @@ TEST_F(WtoolsServiceFunc, ConfigServiceErrorControl) {
 
     for (auto c : checks_ec_) {
         ASSERT_TRUE(ws_.configureError(c.second));
-        EXPECT_EQ(WinService::ReadUint32(cma::srv::kServiceName, name_ec_),
+        EXPECT_EQ(WinService::readUint32(cma::srv::kServiceName, name_ec_),
                   c.first);
     }
 }
@@ -169,9 +169,9 @@ TEST_F(WtoolsServiceFunc, ConfigService) {
 
     for (auto c : checks) {
         ASSERT_TRUE(ws_.configureStart(c.mode));
-        EXPECT_EQ(WinService::ReadUint32(cma::srv::kServiceName, name_start_),
+        EXPECT_EQ(WinService::readUint32(cma::srv::kServiceName, name_start_),
                   c.reg_value_main);
-        EXPECT_EQ(WinService::ReadUint32(cma::srv::kServiceName, name_delayed_),
+        EXPECT_EQ(WinService::readUint32(cma::srv::kServiceName, name_delayed_),
                   c.reg_value_delayed);
     }
 }

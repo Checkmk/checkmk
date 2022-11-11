@@ -78,13 +78,13 @@ std::wstring MessageResolver::resolveInt(DWORD event_id, LPCWSTR dllpath,
     std::wstring result;
     result.resize(8192);
 
-    DWORD dwFlags = FORMAT_MESSAGE_ARGUMENT_ARRAY | FORMAT_MESSAGE_FROM_SYSTEM;
+    DWORD flags = FORMAT_MESSAGE_ARGUMENT_ARRAY | FORMAT_MESSAGE_FROM_SYSTEM;
     if (dll) {
-        dwFlags |= FORMAT_MESSAGE_FROM_HMODULE;
+        flags |= FORMAT_MESSAGE_FROM_HMODULE;
     }
 
     DWORD len = ::FormatMessageW(
-        dwFlags, dll, event_id,
+        flags, dll, event_id,
         0,  // accept any language
         result.data(), static_cast<DWORD>(result.size()), (char **)parameters);
 

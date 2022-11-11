@@ -170,8 +170,8 @@ public:
     ExternalPort &operator=(ExternalPort &&) = delete;
 
     struct IoParam {
-        uint16_t port;  /// can be 0 for mailslot
-        LocalOnly local_only;
+        uint16_t port{0};  /// can be 0 for mailslot
+        LocalOnly local_only{false};
         std::optional<uint32_t> pid;
     };
 

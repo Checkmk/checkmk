@@ -142,10 +142,19 @@ class Plugin:
     metrics: Sequence[str]
     results: Sequence[Result]
     function: Callable[..., CheckResult]
+    percentile_metrics: Sequence[tuple[str, Sequence[int]]] = field(default_factory=list)
     default_value: float = 42.0
     override_values: Mapping[str, float] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
-        assert len(self.metrics) == len(
+        num_percentile_metrics = sum(len(percentiles) for _, percentiles in self.percentile_metrics)
+        assert len(self.metrics) + num_percentile_metrics == len(
             self.results
         ), "expect to have the same number of metrics and results"
+
+    def expected_metrics(self) -> set:
+        return set(self.metrics) | {
+            f"{metric}_{percentile}"
+            for metric, percentiles in self.percentile_metrics
+            for percentile in percentiles
+        }

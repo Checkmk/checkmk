@@ -32,14 +32,15 @@ class AggregationKey:
     key: str
 
 
-Key = Union[ResourceKey, MetricKey]
+LabelKey = Union[ResourceKey, MetricKey]
+Key = Union[LabelKey, AggregationKey]
 
 
 @dataclass(frozen=True)
 class GCPLabels:
     _data: Mapping[str, Any]
 
-    def __getitem__(self, key: Key) -> str:
+    def __getitem__(self, key: LabelKey) -> str:
         return self._data[key.prefix]["labels"][key.key]
 
 
@@ -141,7 +142,7 @@ class AssetSection:
 
 
 def parse_gcp(
-    string_table: StringTable, label_key: Key, extract: Callable[[str], str] = lambda x: x
+    string_table: StringTable, label_key: LabelKey, extract: Callable[[str], str] = lambda x: x
 ) -> Section:
     rows = [GCPResult.deserialize(row[0]) for row in string_table]
     items = {row.labels[label_key] for row in rows}
@@ -156,9 +157,25 @@ def parse_piggyback(string_table: StringTable) -> PiggyBackSection:
 
 
 @dataclass(frozen=True)
+class GCPAlignerMap:
+    gcp_aligner: int  # google.cloud.monitoring_v3.types.Aggregation.Aligner value
+    percentile: int
+
+
+PERCENTILE_MAPPING = [
+    GCPAlignerMap(gcp_aligner=18, percentile=99),
+    GCPAlignerMap(gcp_aligner=19, percentile=95),
+    GCPAlignerMap(gcp_aligner=20, percentile=50),
+]
+
+
+@dataclass(frozen=True)
 class Filter:
     key: Key
-    value: str
+    value: str | int
+
+
+LEVEL_EXTRACTOR_TYPE = Callable[[Mapping[str, Any], str], tuple[float, float] | None]
 
 
 @dataclass(frozen=True)
@@ -173,12 +190,23 @@ class MetricSpec:
     render_func: Callable
     scale: float = 1.0
     filter_by: Filter | None = None
+    level_extractor: LEVEL_EXTRACTOR_TYPE | None = None
 
 
 def validate_asset_section(section_gcp_assets: AssetSection | None, service: str) -> AssetSection:
     if section_gcp_assets is None or not section_gcp_assets.config.is_enabled(service):
         return AssetSection(Project(""), Config(services=[]), _assets={})
     return section_gcp_assets
+
+
+def _filter_by_value(result: GCPResult, filter_by: Filter) -> bool:
+    filter_match = True
+    match filter_by.key:
+        case MetricKey() | ResourceKey():
+            filter_match = result.labels[filter_by.key] == filter_by.value
+        case AggregationKey():
+            filter_match = result.aggregation[filter_by.key] == filter_by.value
+    return filter_match
 
 
 def get_value(timeseries: Sequence[GCPResult], spec: MetricSpec) -> float:
@@ -190,7 +218,7 @@ def get_value(timeseries: Sequence[GCPResult], spec: MetricSpec) -> float:
         filter_by = spec.filter_by
 
         def filter_func(r: GCPResult) -> bool:
-            return r.metric_type == spec.metric_type and r.labels[filter_by.key] == filter_by.value
+            return r.metric_type == spec.metric_type and _filter_by_value(r, filter_by)
 
     else:
 
@@ -220,7 +248,7 @@ def get_boolean_value(results: Sequence[GCPResult], spec: MetricSpec) -> bool | 
         type_match = r.metric_type == spec.metric_type
         if spec.filter_by is None:
             return type_match
-        return type_match and r.labels[spec.filter_by.key] == spec.filter_by.value
+        return type_match and _filter_by_value(r, spec.filter_by)
 
     ret_vals = [int(r.points[-1]["value"]["int64_value"]) for r in results if filter_func(r)]
     if len(ret_vals) > 1:
@@ -238,7 +266,10 @@ def generic_check(
 ) -> CheckResult:
     for metric_name, metric_spec in metrics.items():
         value = get_value(timeseries, metric_spec)
-        levels_upper = params[metric_name]
+        if metric_spec.level_extractor:
+            levels_upper = metric_spec.level_extractor(params, metric_name)
+        else:
+            levels_upper = params[metric_name]
         if isinstance(levels_upper, dict):
             yield from check_levels_predictive(
                 value,

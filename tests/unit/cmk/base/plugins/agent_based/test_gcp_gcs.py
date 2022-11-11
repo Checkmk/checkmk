@@ -152,7 +152,7 @@ def test_yield_results_as_specified(plugin: Plugin) -> None:
 @pytest.mark.parametrize("plugin", PLUGINS)
 def test_yield_metrics_as_specified(plugin: Plugin) -> None:
     results = {r.name for r in generate_results(plugin) if isinstance(r, Metric)}
-    assert results == set(plugin.metrics)
+    assert results == plugin.expected_metrics()
 
 
 def test_check_summary() -> None:

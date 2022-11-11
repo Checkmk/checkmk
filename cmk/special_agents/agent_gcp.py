@@ -595,6 +595,18 @@ FUNCTIONS = Service(
         Metric(
             name="cloudfunctions.googleapis.com/function/user_memory_bytes",
             aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_PERCENTILE_50,
+            ),
+        ),
+        Metric(
+            name="cloudfunctions.googleapis.com/function/user_memory_bytes",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_PERCENTILE_95,
+            ),
+        ),
+        Metric(
+            name="cloudfunctions.googleapis.com/function/user_memory_bytes",
+            aggregation=Aggregation(
                 per_series_aligner=Aligner.ALIGN_PERCENTILE_99,
             ),
         ),
@@ -602,6 +614,18 @@ FUNCTIONS = Service(
             name="cloudfunctions.googleapis.com/function/instance_count",
             aggregation=Aggregation(
                 per_series_aligner=Aligner.ALIGN_MAX,
+            ),
+        ),
+        Metric(
+            name="cloudfunctions.googleapis.com/function/execution_times",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_PERCENTILE_50,
+            ),
+        ),
+        Metric(
+            name="cloudfunctions.googleapis.com/function/execution_times",
+            aggregation=Aggregation(
+                per_series_aligner=Aligner.ALIGN_PERCENTILE_95,
             ),
         ),
         Metric(

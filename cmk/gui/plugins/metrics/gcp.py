@@ -5,7 +5,7 @@
 
 
 from cmk.gui.i18n import _l
-from cmk.gui.plugins.metrics.utils import metric_info
+from cmk.gui.plugins.metrics.utils import graph_info, metric_info
 
 # .
 #   .--Metrics-------------------------------------------------------------.
@@ -39,15 +39,64 @@ metric_info["faas_execution_count"] = {
     "unit": "count",
     "color": "11/a",
 }
-metric_info["faas_execution_times"] = {
-    "title": _l("Request latency"),
+
+metric_info["faas_execution_times_50"] = {
+    "title": _l("Request latency (50th percentile)"),
     "unit": "s",
     "color": "12/a",
 }
 
+metric_info["faas_execution_times_95"] = {
+    "title": _l("Request latency (95th percentile)"),
+    "unit": "s",
+    "color": "14/a",
+}
+
+metric_info["faas_execution_times_99"] = {
+    "title": _l("Request latency (99th percentile)"),
+    "unit": "s",
+    "color": "16/a",
+}
+
+
+metric_info["faas_memory_size_absolute_50"] = {
+    "title": _l("Memory Size (50th percentile)"),
+    "unit": "bytes",
+    "color": "12/a",
+}
+
+metric_info["faas_memory_size_absolute_95"] = {
+    "title": _l("Memory Size (95th percentile)"),
+    "unit": "bytes",
+    "color": "14/a",
+}
+
+metric_info["faas_memory_size_absolute_99"] = {
+    "title": _l("Memory Size (99th percentile)"),
+    "unit": "bytes",
+    "color": "16/a",
+}
 
 metric_info["gcp_billable_time"] = {
     "title": _l("Billable time"),
     "unit": "s/s",
     "color": "12/a",
+}
+
+graph_info["faas_execution_times"] = {
+    "title": _l("Request latencies"),
+    "metrics": [
+        ("faas_execution_times_50", "line"),
+        ("faas_execution_times_95", "line"),
+        ("faas_execution_times_99", "line"),
+    ],
+}
+
+graph_info["faas_memory_size_absolute"] = {
+    "title": _l("Memory Size"),
+    "metrics": [
+        ("faas_memory_size_absolute_50", "line"),
+        ("faas_memory_size_absolute_95", "line"),
+        ("faas_memory_size_absolute_99", "line"),
+    ],
 }

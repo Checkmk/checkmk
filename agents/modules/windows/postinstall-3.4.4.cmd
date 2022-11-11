@@ -9,4 +9,4 @@
 if not exist .\.venv\Scripts powershell Write-Host "`absent required folder .venv" -foreground red && exit /b 1
 if not exist .\Lib powershell Write-Host "`absent required folder lib" -foreground red && exit /b 2
 
-:: at the moment nothing to do
+mklink /J DLLs .\.venv\Scripts

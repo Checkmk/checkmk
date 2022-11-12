@@ -1,0 +1,13 @@
+Title: Regression in python active directory
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1667835631
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p17
+
+Due to a regression, our shipped python active directory modules was unable to support netlogon.
+The relevant patch is now active again.

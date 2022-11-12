@@ -149,7 +149,7 @@ apispec-oneofschema = "==3.0.0"  # direct dependency
 typing_extensions = "==4.3.0"   # required by pydantic
 pydantic = "==1.8.2"  # needed by special agents
 paho-mqtt = "==1.6.1"  # needed for MQTT special agent
-python-active-directory = "==1.0.5"
+python-active-directory = "==2.0.1"
 rrdtool = "==0.1.15"  # Actually we ship the binding which comes with rrdtool itself...
 docstring_parser = "==0.13"  # direct dependency
 yapf = "==0.31.0"  # formatter for REST-API documentation code examples

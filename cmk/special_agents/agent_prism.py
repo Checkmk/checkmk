@@ -5,7 +5,7 @@
 
 import logging
 import sys
-from typing import Optional, Sequence
+from collections.abc import Sequence
 
 from cmk.special_agents.utils.agent_common import special_agent_main
 from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
@@ -18,7 +18,7 @@ def write_title(section: str) -> None:
     sys.stdout.write("<<<prism_%s:sep(0)>>>\n" % (section))
 
 
-def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
+def parse_arguments(argv: Sequence[str] | None) -> Args:
     parser = create_default_argument_parser(description=__doc__)
     parser.add_argument(
         "--timeout",

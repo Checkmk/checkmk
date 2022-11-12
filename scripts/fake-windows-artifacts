@@ -22,6 +22,7 @@ touch agents/windows/check_mk.example.ini
 touch agents/windows/check_mk.user.yml
 touch agents/windows/python-3.cab
 touch agents/windows/python-3.4.cab
+touch agents/windows/unsign-msi.patch
 
 touch agents/windows/OpenHardwareMonitorCLI.exe
 chmod +x agents/windows/OpenHardwareMonitorCLI.exe

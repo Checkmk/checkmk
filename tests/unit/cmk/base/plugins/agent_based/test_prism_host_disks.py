@@ -58,7 +58,7 @@ SECTION = {
             id="For every disk, a Service is discovered.",
         ),
         pytest.param(
-            [],
+            {"disk_hardware_configs": {"1": None, "2": None, "3": None}},
             [],
             id="If there are no items in the input, nothing is discovered.",
         ),

@@ -218,6 +218,7 @@ def test_format_nagios_object() -> None:
         ),
     ],
 )
+@pytest.mark.usefixtures("fixup_ip_lookup")
 def test_create_nagios_host_spec(
     hostname_str: str, result: Dict[str, str], monkeypatch: MonkeyPatch
 ) -> None:

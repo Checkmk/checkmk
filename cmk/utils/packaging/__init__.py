@@ -1050,66 +1050,7 @@ def disable_outdated() -> None:
 def _raise_for_too_new_cmk_version(
     package_name: PackageName, package_info: PackageInfo, version: str
 ) -> None:
-    """Raise an exception if a package is considered outated for the Checmk version
-
-    >>> def i(*args):
-    ...     try:
-    ...         _raise_for_too_new_cmk_version(*args)
-    ...     except:
-    ...         return True
-    ...     return False
-
-    >>> i('a', {'version.usable_until': None}, '1.7.0i1')
-    False
-
-    >>> i('a', {'version.usable_until': '1.6.0'}, '1.7.0i1')
-    True
-
-    >>> i('a', {'version.usable_until': '1.7.0'}, '1.7.0i1')
-    False
-
-    >>> i('a', {'version.usable_until': '1.7.0i1'}, '1.7.0i1')
-    True
-
-    >>> i('a', {'version.usable_until': '1.7.0i1'}, '1.7.0i2')
-    True
-
-    >>> i('a', {'version.usable_until': '1.7.0'}, '1.7.0')
-    True
-
-    >>> i('a', {'version.usable_until': '2010.02.01'}, '1.7.0')
-    False
-
-    >>> i('a', {'version.usable_until': '1.7.0'}, '2010.02.01')
-    False
-
-    >>> i('a', {'version.usable_until': '1.6.0'}, '1.6.0-2010.02.01')
-    True
-
-    >>> i('a', {'version.usable_until': '1.6.0-2010.02.01'}, '1.6.0')
-    True
-
-    >>> i('a', {'version.usable_until': ''}, '1.6.0')
-    False
-
-    >>> i('a', {'version.usable_until': '1.6.0'}, '')
-    False
-
-    # Checkmk 1.6 shipped the first feature pack MKPs which sadly had no
-    # "version.usable_until" attribute set. To be able to disable them automatically
-    # we use a hard coded list of package names below. All of these packages start
-    # with the version number "1.". To ensure the known and possible future packages
-    # are removed, we consider the known packages to be outdated.
-
-    >>> i('azure_ad', {'version': '1.0', 'version.usable_until': ''}, '1.7.0i1')
-    True
-
-    >>> i('prometheus', {'version': '1.3', 'version.usable_until': ''}, '1.7.0i1')
-    True
-
-    >>> i('prometheus', {'version': '2.0', 'version.usable_until': ''}, '1.7.0i1')
-    False
-    """
+    """Raise an exception if a package is considered outated for the Checmk version"""
     until_version = package_info["version.usable_until"]
 
     if _is_16_feature_pack_package(package_name, package_info):
@@ -1160,6 +1101,13 @@ def _raise_for_too_new_cmk_version(
 
 
 def _is_16_feature_pack_package(package_name: PackageName, package_info: PackageInfo) -> bool:
+    """
+    Checkmk 1.6 shipped the first feature pack MKPs which sadly had no
+    "version.usable_until" attribute set. To be able to disable them automatically
+    we use a hard coded list of package names below. All of these packages start
+    with the version number "1.". To ensure the known and possible future packages
+    are removed, we consider the known packages to be outdated.
+    """
     if package_name not in {
         "agent_rabbitmq",
         "azure_ad",

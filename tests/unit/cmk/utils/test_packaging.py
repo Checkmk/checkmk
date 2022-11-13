@@ -442,3 +442,60 @@ def test_reload_gui_with_web_part(  # type:ignore[no-untyped-def]
     packaging._execute_post_package_change_actions(package)
     build_setup_search_index.assert_called_once()
     reload_apache.assert_called_once()
+
+
+def _get_test_package_info(properties: packaging.PackageInfo) -> packaging.PackageInfo:
+    pi = packaging.get_initial_package_info("test-package")
+    pi.update(properties)
+    return pi
+
+
+@pytest.mark.parametrize(
+    "package_info, site_version",
+    [
+        (_get_test_package_info({"version.usable_until": "1.6.0"}), "2.0.0i1"),
+        (_get_test_package_info({"version.usable_until": "2.0.0i1"}), "2.0.0i2"),
+        (_get_test_package_info({"version.usable_until": "2.0.0"}), "2.0.0"),
+        (_get_test_package_info({"version.usable_until": "1.6.0"}), "1.6.0-2010.02.01"),
+        (_get_test_package_info({"version.usable_until": "1.6.0-2010.02.01"}), "1.6.0"),
+        (
+            _get_test_package_info(
+                {"name": "azure_ad", "version": "1.0", "version.usable_until": ""}
+            ),
+            "1.7.0i1",
+        ),
+        (
+            _get_test_package_info(
+                {"name": "prometheus", "version": "1.3", "version.usable_until": ""}
+            ),
+            "1.7.0i1",
+        ),
+    ],
+)
+def test_raise_for_too_new_cmk_version_raises(
+    package_info: packaging.PackageInfo, site_version: str
+) -> None:
+    with pytest.raises(packaging.PackageException):
+        packaging._raise_for_too_new_cmk_version(package_info["name"], package_info, site_version)
+
+
+@pytest.mark.parametrize(
+    "package_info, site_version",
+    [
+        (_get_test_package_info({"version.usable_until": None}), "2.0.0i1"),
+        (_get_test_package_info({"version.usable_until": "2.0.0"}), "2.0.0i1"),
+        (_get_test_package_info({"version.usable_until": "2.0.0"}), "2010.02.01"),
+        (_get_test_package_info({"version.usable_until": ""}), "1.6.0"),
+        (_get_test_package_info({"version.usable_until": "1.6.0"}), ""),
+        (
+            _get_test_package_info(
+                {"name": "prometheus", "version": "2.0", "version.usable_until": ""}
+            ),
+            "2.0.0i1",
+        ),
+    ],
+)
+def test_raise_for_too_new_cmk_version_ok(
+    package_info: packaging.PackageInfo, site_version: str
+) -> None:
+    packaging._raise_for_too_new_cmk_version(package_info["name"], package_info, site_version)

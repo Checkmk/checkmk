@@ -587,12 +587,8 @@ class Site:
             paths += [
                 cmc_path() + "/bin",
                 cmc_path() + "/agents/plugins",
-                cmc_path() + "/modules",
-                cmc_path() + "/cmk/base",
-                cmc_path() + "/cmk",
                 cmc_path() + "/web",
                 cmc_path() + "/alert_handlers",
-                cmc_path() + "/misc",
                 cmc_path() + "/core",
                 # TODO: Do not invoke the chroot build mechanism here, which is very time
                 # consuming when not initialized yet
@@ -602,7 +598,6 @@ class Site:
         if os.path.exists(cme_path()) and self.version.is_managed_edition():
             paths += [
                 cme_path(),
-                cme_path() + "/cmk/base",
             ]
 
         for path in paths:

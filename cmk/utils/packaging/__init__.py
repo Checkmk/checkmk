@@ -1053,11 +1053,6 @@ def _raise_for_too_new_cmk_version(
     """Raise an exception if a package is considered outated for the Checmk version"""
     until_version = package_info["version.usable_until"]
 
-    if _is_16_feature_pack_package(package_name, package_info):
-        msg = "Outdated 1.6 feature pack package"
-        logger.log(VERBOSE, "[%s]: %s", package_name, msg)
-        raise PackageException(msg)
-
     if until_version is None:
         logger.log(VERBOSE, '[%s]: "Until version" is not set', package_name)
         return
@@ -1098,37 +1093,6 @@ def _raise_for_too_new_cmk_version(
     logger.log(VERBOSE, "[%s]: %s", package_name, msg)
     if is_outdated:
         raise PackageException(msg)
-
-
-def _is_16_feature_pack_package(package_name: PackageName, package_info: PackageInfo) -> bool:
-    """
-    Checkmk 1.6 shipped the first feature pack MKPs which sadly had no
-    "version.usable_until" attribute set. To be able to disable them automatically
-    we use a hard coded list of package names below. All of these packages start
-    with the version number "1.". To ensure the known and possible future packages
-    are removed, we consider the known packages to be outdated.
-    """
-    if package_name not in {
-        "agent_rabbitmq",
-        "azure_ad",
-        "cisco_asa_sessions",
-        "cisco_webex_teams_notifications",
-        "couchbase",
-        "fortigate_sslvpn",
-        "graylog_special_agent",
-        "huawei_switches",
-        "jenkins_special_agent",
-        "jira_special_agent",
-        "k8s_extensions",
-        "mongodb",
-        "prometheus",
-        "pulse_secure",
-        "redis",
-        "tplink_checks",
-    }:
-        return False
-
-    return package_info.get("version", "").startswith("1.")
 
 
 def _execute_post_package_change_actions(package: PackageInfo | None) -> None:

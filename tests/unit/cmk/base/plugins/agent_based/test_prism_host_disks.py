@@ -32,7 +32,7 @@ SECTION = {
             "serial_number": "S456NW0R504278",
             "location": 2,
             "bad": True,
-            "mounted": True,
+            "mounted": False,
             "model": "SAMSUNG MZ7LH3T8HMLT-00005",
             "vendor": "Not Available",
             "boot_disk": True,
@@ -47,7 +47,7 @@ SECTION = {
 
 
 @pytest.mark.parametrize(
-    "section, expected_discovery_result",
+    ["section", "expected_discovery_result"],
     [
         pytest.param(
             SECTION,
@@ -72,9 +72,11 @@ def test_discovery_prism_host_disks(
 
 
 @pytest.mark.parametrize(
-    "section, expected_check_result",
+    ["item", "params", "section", "expected_check_result"],
     [
         pytest.param(
+            "1",
+            {"mounted": True},
             SECTION,
             [
                 Result(state=State.OK, summary="Model: SAMSUNG MZ7LH3T8HMLT-00005"),
@@ -84,17 +86,34 @@ def test_discovery_prism_host_disks(
             ],
             id="If the disk is in expected mount state and healthy, the check result is OK.",
         ),
+        pytest.param(
+            "2",
+            {"mounted": True},
+            SECTION,
+            [
+                Result(state=State.OK, summary="Model: SAMSUNG MZ7LH3T8HMLT-00005"),
+                Result(state=State.OK, summary="Serial: S456NW0R504278"),
+                Result(state=State.WARN, summary="State: unhealthy"),
+                Result(
+                    state=State.WARN,
+                    summary="Mount state: disk is not mounted - expected: disk is mounted",
+                ),
+            ],
+            id="If the disk is not in expected mount state and unhealthy, the check result is WARN.",
+        ),
     ],
 )
 def test_check_prism_host_disks(
+    item,
+    params,
     section: Dict[str, Any],
     expected_check_result: Sequence[Result],
 ) -> None:
     assert (
         list(
             check_prism_host_disks(
-                item="1",
-                params={"mounted": True},
+                item=item,
+                params=params,
                 section=section,
             )
         )

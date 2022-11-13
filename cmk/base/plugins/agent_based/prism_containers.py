@@ -5,9 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 # ported by (c) Andreas Doehler <andreas.doehler@bechtle.com/andreas.doehler@gmail.com>
 import ast
+from contextlib import suppress
 from typing import Any, Dict, Mapping
 
-from .agent_based_api.v1 import get_value_store, register, Service
+from .agent_based_api.v1 import get_value_store, GetRateError, register, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_LEVELS
 
@@ -47,16 +48,17 @@ def check_prism_container(item: str, params: Mapping[str, Any], section: Section
         ),
     )
 
-    yield from df_check_filesystem_single(
-        value_store,
-        item,
-        capacity / 1024**2,
-        freebytes / 1024**2,
-        0,
-        None,
-        None,
-        params=params,
-    )
+    with suppress(GetRateError):
+        yield from df_check_filesystem_single(
+            value_store,
+            item,
+            capacity / 1024**2,
+            freebytes / 1024**2,
+            0,
+            None,
+            None,
+            params=params,
+        )
 
 
 register.check_plugin(

@@ -50,7 +50,7 @@ def check_prism_host_disks(item: str, params: Mapping[str, Any], section: Sectio
     yield Result(state=State.OK, summary=f"Serial: {serial}")
 
     if faulty:
-        yield Result(state=State.WARN, summary="State: unhealty")
+        yield Result(state=State.WARN, summary="State: unhealthy")
     else:
         yield Result(state=State.OK, summary="State: healthy")
 
